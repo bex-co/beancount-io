@@ -46,6 +46,27 @@ const koOverview: Record<string, TranslationEntry> = {
     description:
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
+  "page.overview.cashFlowToCash": {
+    message: "현금 및 현금성자산으로",
+    description:
+      "Sankey node label for the period's net increase in cash and cash equivalents",
+  },
+  "page.overview.cashFlowFromCash": {
+    message: "현금 및 현금성자산에서",
+    description:
+      "Sankey node label for the period's net decrease in cash and cash equivalents",
+  },
+  "page.overview.cashFlowUnshownUnits": {
+    message:
+      "{currency} 기준으로 표시합니다. {units}는 {currency} 가격이 없어 차트에 포함되지 않았습니다.",
+    description:
+      "Caption under the cash flow chart listing units that could not be converted to the presentation currency",
+  },
+  "page.overview.cashFlowNoFlows": {
+    message: "이 기간에는 {currency} 흐름이 없습니다.",
+    description:
+      "Empty state shown when the cash flow chart has no movement in the presentation currency",
+  },
   "page.overview.starButton.star": {
     message: "즐겨찾기",
     description: "Button label to star a ledger",

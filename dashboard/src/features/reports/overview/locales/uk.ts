@@ -47,6 +47,27 @@ const ukOverview: Record<string, TranslationEntry> = {
     description:
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
+  "page.overview.cashFlowToCash": {
+    message: "До грошових коштів",
+    description:
+      "Sankey node label for the period's net increase in cash and cash equivalents",
+  },
+  "page.overview.cashFlowFromCash": {
+    message: "З грошових коштів",
+    description:
+      "Sankey node label for the period's net decrease in cash and cash equivalents",
+  },
+  "page.overview.cashFlowUnshownUnits": {
+    message:
+      "Показано в {currency}. Для {units} немає ціни в {currency}, тому їх немає на діаграмі.",
+    description:
+      "Caption under the cash flow chart listing units that could not be converted to the presentation currency",
+  },
+  "page.overview.cashFlowNoFlows": {
+    message: "У цьому періоді немає потоків у {currency}.",
+    description:
+      "Empty state shown when the cash flow chart has no movement in the presentation currency",
+  },
   "page.overview.starButton.star": {
     message: "Зірка",
     description: "Button label to star a ledger",

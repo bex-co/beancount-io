@@ -1,288 +1,229 @@
 import { describe, it, expect } from "vitest";
 import {
   transformToSankeyData,
-  aggregateHierarchyBalance,
+  SANKEY_CASH_NODE,
+  SANKEY_HUB_NODE,
+  type SankeyData,
+  type SankeyLink,
 } from "../sankey-data-transformer";
+import {
+  buildCashFlowStatement,
+  type AccountMetaMap,
+  type IntervalAccountChanges,
+} from "@/features/reports/cash-flow/lib/model";
+import { sumBalanceRecords } from "@/features/reports/export/model";
 
-describe("sankey-data-transformer", () => {
-  describe("aggregateHierarchyBalance", () => {
-    it("should return balance for leaf nodes", () => {
-      const node = {
-        account: "Income:Salary",
-        balance: { USD: -5000 },
-        children: [],
-      };
+const PRIMARY = "USD";
 
-      expect(aggregateHierarchyBalance(node, true)).toBe(5000);
-    });
+/**
+ * Build a real statement rather than hand-writing one: the identity the
+ * Sankey relies on (netChange === sum of row amounts) is produced by
+ * buildCashFlowStatement, so the fixtures must go through it.
+ */
+function statementFrom(
+  intervals: IntervalAccountChanges[],
+  accountMeta?: AccountMetaMap,
+) {
+  return buildCashFlowStatement({
+    intervals,
+    closingCashAccounts: [],
+    primaryCurrency: PRIMARY,
+    accountMeta,
+  });
+}
 
-    it("should sum balances from children", () => {
-      const node = {
-        account: "Income",
-        balance: null,
-        children: [
-          { account: "Income:Salary", balance: { USD: -5000 }, children: [] },
-          {
-            account: "Income:Freelance",
-            balance: { USD: -1500 },
-            children: [],
-          },
-        ],
-      };
+/** Exact decimal sum of the emitted link values on one side of the hub. */
+function sumSide(links: SankeyLink[], side: "into" | "outOf"): string {
+  const matching = links.filter((link) =>
+    side === "into"
+      ? link.target === SANKEY_HUB_NODE
+      : link.source === SANKEY_HUB_NODE,
+  );
+  return (
+    sumBalanceRecords(
+      matching.map((link) => ({ [PRIMARY]: String(link.value) })),
+    )[PRIMARY] ?? "0"
+  );
+}
 
-      expect(aggregateHierarchyBalance(node, true)).toBe(6500);
-    });
+function expectBalanced(data: SankeyData): void {
+  expect(sumSide(data.links, "into")).toBe(sumSide(data.links, "outOf"));
+}
 
-    it("should handle nested hierarchies", () => {
-      const node = {
-        account: "Expenses",
-        balance: null,
-        children: [
-          {
-            account: "Expenses:Food",
-            balance: null,
-            children: [
-              {
-                account: "Expenses:Food:Restaurant",
-                balance: { USD: 300 },
-                children: [],
-              },
-              {
-                account: "Expenses:Food:Groceries",
-                balance: { USD: 500 },
-                children: [],
-              },
-            ],
-          },
-          {
-            account: "Expenses:Transport",
-            balance: { USD: 200 },
-            children: [],
-          },
-        ],
-      };
+function linkBetween(
+  data: SankeyData,
+  source: string,
+  target: string,
+): SankeyLink | undefined {
+  return data.links.find(
+    (link) => link.source === source && link.target === target,
+  );
+}
 
-      expect(aggregateHierarchyBalance(node)).toBe(1000);
-    });
+describe("transformToSankeyData", () => {
+  it("draws the cash node on the outflow side when the period ran a surplus", () => {
+    const statement = statementFrom([
+      {
+        date: "2026-01-01",
+        accountChanges: {
+          "Income:Salary": { USD: "-5000.00" },
+          "Expenses:Rent": { USD: "2000.00" },
+        },
+      },
+    ]);
+
+    const data = transformToSankeyData({ statement, primaryCurrency: PRIMARY });
+
+    expect(linkBetween(data, "Income:Salary", SANKEY_HUB_NODE)?.value).toBe(
+      5000,
+    );
+    expect(linkBetween(data, SANKEY_HUB_NODE, "Expenses:Rent")?.value).toBe(
+      2000,
+    );
+    expect(linkBetween(data, SANKEY_HUB_NODE, SANKEY_CASH_NODE)?.value).toBe(
+      3000,
+    );
+    expect(
+      linkBetween(data, SANKEY_CASH_NODE, SANKEY_HUB_NODE),
+    ).toBeUndefined();
+    expectBalanced(data);
   });
 
-  describe("transformToSankeyData", () => {
-    it("should transform hierarchy data to Sankey nodes and links", () => {
-      const incomeData = {
-        account: "Income",
-        balance: null,
-        children: [
-          { account: "Income:Salary", balance: { USD: -5000 }, children: [] },
-          {
-            account: "Income:Freelance",
-            balance: { USD: -1000 },
-            children: [],
+  it("draws the cash node on the inflow side when a deficit is funded by cash and a growing liability", () => {
+    const statement = statementFrom([
+      {
+        date: "2026-01-01",
+        accountChanges: {
+          "Income:Salary": { USD: "-2000.00" },
+          "Expenses:Rent": { USD: "4000.00" },
+          // The card balance grows more negative: a financing inflow.
+          "Liabilities:CreditCard": { USD: "-1000.00" },
+        },
+      },
+    ]);
+
+    const data = transformToSankeyData({ statement, primaryCurrency: PRIMARY });
+
+    expect(
+      linkBetween(data, "Liabilities:CreditCard", SANKEY_HUB_NODE)?.value,
+    ).toBe(1000);
+    expect(linkBetween(data, SANKEY_CASH_NODE, SANKEY_HUB_NODE)?.value).toBe(
+      1000,
+    );
+    expect(
+      linkBetween(data, SANKEY_HUB_NODE, SANKEY_CASH_NODE),
+    ).toBeUndefined();
+    expectBalanced(data);
+  });
+
+  it("draws a refund (negative expense) as an inflow instead of dropping it", () => {
+    const statement = statementFrom([
+      {
+        date: "2026-01-01",
+        accountChanges: {
+          "Income:Salary": { USD: "-1000.00" },
+          "Expenses:Groceries": { USD: "-50.00" },
+        },
+      },
+    ]);
+
+    const data = transformToSankeyData({ statement, primaryCurrency: PRIMARY });
+
+    expect(
+      linkBetween(data, "Expenses:Groceries", SANKEY_HUB_NODE)?.value,
+    ).toBe(50);
+    expect(
+      linkBetween(data, SANKEY_HUB_NODE, "Expenses:Groceries"),
+    ).toBeUndefined();
+    expectBalanced(data);
+  });
+
+  it("links only the presentation currency and lists every other unit as unshown", () => {
+    const statement = statementFrom([
+      {
+        date: "2026-01-01",
+        accountChanges: {
+          "Income:Salary": { USD: "-5000.00", TRY: "-20000.00" },
+          "Expenses:Rent": { USD: "2000.00" },
+          "Assets:Crypto:USDT": { USDT: "100.00" },
+        },
+      },
+    ]);
+
+    const data = transformToSankeyData({ statement, primaryCurrency: PRIMARY });
+
+    // The USDT-only row contributes no link at all.
+    expect(
+      data.links.some(
+        (link) =>
+          link.source === "Assets:Crypto" || link.target === "Assets:Crypto",
+      ),
+    ).toBe(false);
+    expect(data.unshownUnits).toEqual(["TRY", "USDT"]);
+    expectBalanced(data);
+  });
+
+  it("aggregates rows at the requested depth, after cash accounts are excluded", () => {
+    const accountMeta: AccountMetaMap = new Map([
+      ["Assets:Investments:Sweep", { "cash-flow-role": "cash" }],
+    ]);
+    const statement = statementFrom(
+      [
+        {
+          date: "2026-01-01",
+          accountChanges: {
+            "Income:Salary": { USD: "-5000.00" },
+            "Assets:Investments:Brokerage": { USD: "1000.00" },
+            "Assets:Investments:Bonds": { USD: "500.00" },
+            // Declared cash: never a row, so never part of the aggregate.
+            "Assets:Investments:Sweep": { USD: "900.00" },
           },
-        ],
-      };
+        },
+      ],
+      accountMeta,
+    );
 
-      const expensesData = {
-        account: "Expenses",
-        balance: null,
-        children: [
-          { account: "Expenses:Food", balance: { USD: 800 }, children: [] },
-          {
-            account: "Expenses:Housing",
-            balance: { USD: 2000 },
-            children: [],
-          },
-        ],
-      };
+    const data = transformToSankeyData({ statement, primaryCurrency: PRIMARY });
 
-      const result = transformToSankeyData({
-        incomeHierarchyData: incomeData,
-        expensesHierarchyData: expensesData,
-        assetsHierarchyData: undefined,
-        liabilitiesHierarchyData: undefined,
-        depth: 2,
-      });
+    expect(
+      linkBetween(data, SANKEY_HUB_NODE, "Assets:Investments")?.value,
+    ).toBe(1500);
+    expect(
+      data.nodes.some((node) => node.name === "Assets:Investments:Sweep"),
+    ).toBe(false);
+    expectBalanced(data);
+  });
 
-      // Should have nodes: Income:Salary, Income:Freelance, Cash Flow, Expenses:Food, Expenses:Housing, Savings
-      expect(result.nodes).toHaveLength(6);
-      expect(result.nodes.map((n) => n.name)).toContain("Cash Flow");
-      expect(result.nodes.map((n) => n.name)).toContain("Income:Salary");
-      expect(result.nodes.map((n) => n.name)).toContain("Savings");
+  it("shows an Equity opening balance as a financing inflow", () => {
+    const statement = statementFrom([
+      {
+        date: "2026-01-01",
+        accountChanges: {
+          "Equity:Opening-Balances": { USD: "-10000.00" },
+          "Expenses:Rent": { USD: "2000.00" },
+        },
+      },
+    ]);
 
-      // Should have links from income to Cash Flow, Cash Flow to expenses, Cash Flow to Savings
-      expect(result.links.length).toBeGreaterThan(0);
+    const data = transformToSankeyData({ statement, primaryCurrency: PRIMARY });
 
-      const cashFlowLinks = result.links.filter(
-        (l) => l.target === "Cash Flow",
-      );
-      expect(cashFlowLinks).toHaveLength(2); // From Income:Salary and Income:Freelance
+    expect(
+      linkBetween(data, "Equity:Opening-Balances", SANKEY_HUB_NODE)?.value,
+    ).toBe(10000);
+    expect(
+      data.nodes.find((node) => node.name === "Equity:Opening-Balances")?.kind,
+    ).toBe("account");
+    expectBalanced(data);
+  });
 
-      const expenseLinks = result.links.filter(
-        (l) => l.source === "Cash Flow" && l.target.startsWith("Expenses:"),
-      );
-      expect(expenseLinks).toHaveLength(2); // To Food and Housing
+  it("emits no nodes for a statement with no movement", () => {
+    const data = transformToSankeyData({
+      statement: statementFrom([]),
+      primaryCurrency: PRIMARY,
     });
 
-    it("should exclude cash-equivalent assets from investing category", () => {
-      const assetsData = {
-        account: "Assets",
-        balance: null,
-        children: [
-          {
-            account: "Assets:US:BofA:Checking",
-            balance: { USD: 1000 },
-            children: [],
-          },
-          {
-            account: "Assets:Investments:Stocks",
-            balance: { USD: 5000 },
-            children: [],
-          },
-        ],
-      };
-
-      const result = transformToSankeyData({
-        incomeHierarchyData: undefined,
-        expensesHierarchyData: undefined,
-        assetsHierarchyData: assetsData,
-        liabilitiesHierarchyData: undefined,
-        depth: 2,
-      });
-
-      // Should only include Stocks, not Checking
-      const assetNodes = result.nodes.filter((n) =>
-        n.name.startsWith("Assets:"),
-      );
-      expect(assetNodes).toHaveLength(1);
-      expect(assetNodes[0].name).toBe("Assets:Investments");
-    });
-
-    it("should exclude an account declared cash that the patterns miss", () => {
-      const assetsData = {
-        account: "Assets",
-        balance: null,
-        children: [
-          {
-            account: "Assets:Property:House",
-            balance: { USD: 300000 },
-            children: [],
-          },
-          {
-            account: "Assets:Investments:Stocks",
-            balance: { USD: 5000 },
-            children: [],
-          },
-        ],
-      };
-      const accountMeta = new Map([
-        ["Assets:Property:House", { "cash-flow-role": "cash" }],
-      ]);
-
-      const result = transformToSankeyData({
-        assetsHierarchyData: assetsData,
-        depth: 2,
-        accountMeta,
-      });
-
-      const assetNodes = result.nodes.filter((n) =>
-        n.name.startsWith("Assets:"),
-      );
-      expect(assetNodes).toHaveLength(1);
-      expect(assetNodes[0].name).toBe("Assets:Investments");
-    });
-
-    it("should keep an account declared investing that the patterns capture", () => {
-      const assetsData = {
-        account: "Assets",
-        balance: null,
-        children: [
-          {
-            account: "Assets:US:Bank:CD",
-            balance: { USD: 10000 },
-            children: [],
-          },
-        ],
-      };
-
-      // Without metadata the bank account is excluded as cash-equivalent.
-      const unannotated = transformToSankeyData({
-        assetsHierarchyData: assetsData,
-        depth: 2,
-      });
-      expect(
-        unannotated.nodes.filter((n) => n.name.startsWith("Assets:")),
-      ).toHaveLength(0);
-
-      const accountMeta = new Map([
-        ["Assets:US:Bank:CD", { "cash-flow-role": "investing" }],
-      ]);
-      const result = transformToSankeyData({
-        assetsHierarchyData: assetsData,
-        depth: 2,
-        accountMeta,
-      });
-
-      const assetNodes = result.nodes.filter((n) =>
-        n.name.startsWith("Assets:"),
-      );
-      expect(assetNodes).toHaveLength(1);
-      expect(assetNodes[0].name).toBe("Assets:US");
-      const link = result.links.find((l) => l.target === "Assets:US");
-      expect(link?.value).toBe(10000);
-    });
-
-    it("should keep Income nodes as source even when declared cash", () => {
-      const incomeData = {
-        account: "Income",
-        balance: null,
-        children: [
-          { account: "Income:Salary", balance: { USD: -5000 }, children: [] },
-        ],
-      };
-      const accountMeta = new Map([
-        ["Income:Salary", { "cash-flow-role": "cash" }],
-      ]);
-
-      const result = transformToSankeyData({
-        incomeHierarchyData: incomeData,
-        depth: 2,
-        accountMeta,
-      });
-
-      expect(result.nodes.map((n) => n.name)).toContain("Income:Salary");
-      const link = result.links.find((l) => l.source === "Income:Salary");
-      expect(link?.target).toBe("Cash Flow");
-      expect(link?.value).toBe(5000);
-    });
-
-    it("should reproduce unannotated categories when the meta map has no entry", () => {
-      const assetsData = {
-        account: "Assets",
-        balance: null,
-        children: [
-          {
-            account: "Assets:US:BofA:Checking",
-            balance: { USD: 1000 },
-            children: [],
-          },
-          {
-            account: "Assets:Investments:Stocks",
-            balance: { USD: 5000 },
-            children: [],
-          },
-        ],
-      };
-
-      const withoutMeta = transformToSankeyData({
-        assetsHierarchyData: assetsData,
-        depth: 2,
-      });
-      const withEmptyMeta = transformToSankeyData({
-        assetsHierarchyData: assetsData,
-        depth: 2,
-        accountMeta: new Map(),
-      });
-
-      expect(withEmptyMeta).toEqual(withoutMeta);
-    });
+    expect(data.links).toEqual([]);
+    expect(data.nodes).toEqual([]);
+    expect(data.unshownUnits).toEqual([]);
   });
 });

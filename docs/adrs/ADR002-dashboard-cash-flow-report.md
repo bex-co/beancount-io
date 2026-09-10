@@ -7,6 +7,8 @@
 
 > Extended by [ADR003](./ADR003-dashboard-cash-flow-ledger-roles.md) (2026-08-25): accounts can now declare their classification via `cash-flow-role` metadata on `open` directives, taking precedence over the heuristics described here. The heuristics below remain the fallback for unannotated accounts.
 
+> Extended by [ADR004](./ADR004-dashboard-sankey-cash-flow-projection.md) (2026-09-10): the overview Sankey named here is now a projection of this statement model in a single presentation unit, with the net change in cash & equivalents as its balancing node.
+
 ## Context
 
 The dashboard ships two financial statements — Income Statement and Balance Sheet — plus an overview page whose Sankey already tells a rough cash-flow story. What no page answers is the classic cash-flow question ([Investopedia](https://www.investopedia.com/terms/c/cashflow.asp)): **net cash flow = total inflow − total outflow**, grouped into **operating / investing / financing** activities, with the net change in cash and cash equivalents (CCE) as the bottom line. This is the one insight the existing statements cannot produce: a user can be "profitable" on the Income Statement while bleeding cash into investments.

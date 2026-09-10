@@ -48,6 +48,7 @@ import {
   useDashboardLayout,
 } from "./hooks/use-dashboard-layout";
 import { useAccountMeta } from "./hooks/use-account-meta";
+import { useSankeyStatement } from "./hooks/use-sankey-statement";
 import { ReportEmptyState } from "@/common/components/state-components";
 import { hasOverviewActivity } from "./lib/overview-utils";
 import { EmptyLedgerSetup } from "./components/empty-ledger-setup";
@@ -88,6 +89,13 @@ export default function LedgerOverviewPage() {
   });
 
   const { accountMeta, pending: accountMetaPending } = useAccountMeta(ledgerId);
+  const { statement: sankeyStatement, pending: sankeyPending } =
+    useSankeyStatement(
+      ledgerId,
+      primaryCurrency,
+      ledgerFilters.searchParams,
+      accountMeta,
+    );
 
   if (isLoading && !data?.getLedgerOverview) {
     return (
@@ -279,12 +287,10 @@ export default function LedgerOverviewPage() {
           </CardHeader>
           <CardContent>
             <CashFlowSankey
-              incomeHierarchyData={overview?.incomeHierarchyData}
-              expensesHierarchyData={overview?.expensesHierarchyData}
-              assetsHierarchyData={overview?.assetsHierarchyData}
-              liabilitiesHierarchyData={overview?.liabilitiesHierarchyData}
+              statement={sankeyStatement}
+              primaryCurrency={primaryCurrency}
               accountMeta={accountMeta}
-              accountMetaPending={accountMetaPending}
+              pending={accountMetaPending || sankeyPending}
             />
           </CardContent>
         </Card>

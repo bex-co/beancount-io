@@ -1,4 +1,5 @@
 import { categorizeAccount } from "./account-categorizer";
+import type { SankeyNode } from "./sankey-data-transformer";
 
 export interface SankeyColorScheme {
   income: string;
@@ -6,7 +7,7 @@ export interface SankeyColorScheme {
   expenses: string;
   investing: string;
   financing: string;
-  savings: string;
+  cash: string;
 }
 
 /**
@@ -27,7 +28,7 @@ export function getSankeyColorScheme(isDark: boolean): SankeyColorScheme {
       expenses: "#f3813f", // --chart-5 orange - operating outflows
       investing: "#e068d8", // --chart-4 magenta - investing activities
       financing: "#f94144", // --chart-8 red - debt/financing
-      savings: "#00afaf", // --chart-6 teal - surplus
+      cash: "#00afaf", // --chart-6 teal - net change in cash & equivalents
     };
   }
 
@@ -37,30 +38,30 @@ export function getSankeyColorScheme(isDark: boolean): SankeyColorScheme {
     expenses: "#c25500", // --chart-5 orange - operating outflows
     investing: "#ad36a7", // --chart-4 magenta - investing activities
     financing: "#d40924", // --chart-8 red - debt/financing
-    savings: "#007f7f", // --chart-6 teal - surplus
+    cash: "#007f7f", // --chart-6 teal - net change in cash & equivalents
   };
 }
 
 /**
- * Get color for a specific Sankey node based on its account name.
- * Optional open-directive `meta` (cash-flow-role declarations) keeps the
- * color consistent with the category the node was placed in.
+ * Get color for a Sankey node from its kind, never from its label.
+ *
+ * The hub and cash nodes carry stable ids (`__hub__`/`__cash__`) whose labels
+ * are translated at render time, so matching on a display string would break
+ * in every locale but English. Account nodes keep resolving through
+ * `categorizeAccount`, with the optional open-directive `meta` so the color
+ * agrees with the category the node was placed in.
  */
 export function getSankeyNodeColor(
-  nodeName: string,
+  node: SankeyNode,
   isDark: boolean,
   meta?: Record<string, unknown> | null,
 ): string {
   const colors = getSankeyColorScheme(isDark);
 
-  // Special nodes
-  if (nodeName === "Cash Flow") return colors.cashFlow;
-  if (nodeName === "Savings") return colors.savings;
+  if (node.kind === "hub") return colors.cashFlow;
+  if (node.kind === "cash") return colors.cash;
 
-  // Categorize by account type
-  const category = categorizeAccount(nodeName, meta);
-
-  switch (category) {
+  switch (categorizeAccount(node.name, meta)) {
     case "source":
       return colors.income;
     case "operating":

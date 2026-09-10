@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { getSankeyNodeColor, getSankeyColorScheme } from "../sankey-colors";
+import {
+  SANKEY_CASH_NODE,
+  SANKEY_HUB_NODE,
+  type SankeyNode,
+} from "../sankey-data-transformer";
+
+function account(name: string): SankeyNode {
+  return { name, kind: "account" };
+}
 
 describe("sankey-colors", () => {
   describe("getSankeyColorScheme", () => {
@@ -11,7 +20,7 @@ describe("sankey-colors", () => {
       expect(colors.expenses).toBeDefined();
       expect(colors.investing).toBeDefined();
       expect(colors.financing).toBeDefined();
-      expect(colors.savings).toBeDefined();
+      expect(colors.cash).toBeDefined();
     });
 
     it("should return dark theme colors", () => {
@@ -26,33 +35,50 @@ describe("sankey-colors", () => {
 
   describe("getSankeyNodeColor", () => {
     it("should return income color for Income accounts", () => {
-      const color = getSankeyNodeColor("Income:Salary", false);
+      const color = getSankeyNodeColor(account("Income:Salary"), false);
       expect(color).toBe(getSankeyColorScheme(false).income);
     });
 
     it("should return expenses color for Expenses accounts", () => {
-      const color = getSankeyNodeColor("Expenses:Food", false);
+      const color = getSankeyNodeColor(account("Expenses:Food"), false);
       expect(color).toBe(getSankeyColorScheme(false).expenses);
     });
 
     it("should return investing color for Assets accounts", () => {
-      const color = getSankeyNodeColor("Assets:Investments", false);
+      const color = getSankeyNodeColor(account("Assets:Investments"), false);
       expect(color).toBe(getSankeyColorScheme(false).investing);
     });
 
     it("should return financing color for Liabilities accounts", () => {
-      const color = getSankeyNodeColor("Liabilities:CreditCard", false);
+      const color = getSankeyNodeColor(
+        account("Liabilities:CreditCard"),
+        false,
+      );
       expect(color).toBe(getSankeyColorScheme(false).financing);
     });
 
-    it("should return cashFlow color for Cash Flow node", () => {
-      const color = getSankeyNodeColor("Cash Flow", false);
+    it("should return financing color for Equity accounts", () => {
+      const color = getSankeyNodeColor(
+        account("Equity:Opening-Balances"),
+        false,
+      );
+      expect(color).toBe(getSankeyColorScheme(false).financing);
+    });
+
+    it("should color the hub node by kind, not by its label", () => {
+      const color = getSankeyNodeColor(
+        { name: SANKEY_HUB_NODE, kind: "hub" },
+        false,
+      );
       expect(color).toBe(getSankeyColorScheme(false).cashFlow);
     });
 
-    it("should return savings color for Savings node", () => {
-      const color = getSankeyNodeColor("Savings", false);
-      expect(color).toBe(getSankeyColorScheme(false).savings);
+    it("should color the cash node by kind, not by its label", () => {
+      const color = getSankeyNodeColor(
+        { name: SANKEY_CASH_NODE, kind: "cash" },
+        false,
+      );
+      expect(color).toBe(getSankeyColorScheme(false).cash);
     });
   });
 });

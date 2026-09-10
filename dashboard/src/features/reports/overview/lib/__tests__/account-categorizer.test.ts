@@ -27,8 +27,8 @@ describe("account-categorizer", () => {
       expect(categorizeAccount("Liabilities:Loan:Mortgage")).toBe("financing");
     });
 
-    it("should exclude Equity accounts", () => {
-      expect(categorizeAccount("Equity:Opening-Balances")).toBe("exclude");
+    it("should categorize Equity accounts as financing", () => {
+      expect(categorizeAccount("Equity:Opening-Balances")).toBe("financing");
     });
 
     it("should honor a declared activity role for non-Income accounts", () => {
@@ -59,18 +59,21 @@ describe("account-categorizer", () => {
       ).toBe("investing");
     });
 
-    it("should never remap Income or Equity roots via declarations", () => {
+    it("should never remap the Income root via declarations", () => {
       expect(
         categorizeAccount("Income:Salary", { "cash-flow-role": "investing" }),
       ).toBe("source");
       expect(
         categorizeAccount("Income:Salary", { "cash-flow-role": "cash" }),
       ).toBe("source");
+    });
+
+    it("should honor a declared activity role on an Equity account", () => {
       expect(
         categorizeAccount("Equity:Opening-Balances", {
           "cash-flow-role": "operating",
         }),
-      ).toBe("exclude");
+      ).toBe("operating");
     });
   });
 
@@ -102,15 +105,18 @@ describe("account-categorizer", () => {
       ).toBe(false);
     });
 
-    it("should ignore declarations on Income and Equity roots", () => {
+    it("should ignore declarations on the Income root", () => {
       expect(
         isExcludedAccount("Income:Salary", { "cash-flow-role": "cash" }),
       ).toBe(false);
+    });
+
+    it("should honor a declared cash role on an Equity account", () => {
       expect(
         isExcludedAccount("Equity:Opening-Balances", {
           "cash-flow-role": "cash",
         }),
-      ).toBe(false);
+      ).toBe(true);
     });
 
     it("should treat an invalid declared value as absent", () => {

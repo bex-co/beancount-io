@@ -1,0 +1,76 @@
+# Period flows for the overview Sankey, in one presentation currency.
+#
+# Deliberately leaner than cash-flow/graphql/cash-flow.graphql: the Sankey is a
+# projection of the statement's `rows` and `netChange` only, so it needs no
+# balance sheet (no closing CCE snapshot) and no account directives (the
+# overview already loads those through GetLedgerAccountMeta). `interval` is
+# fixed to "yearly" because buildCashFlowStatement sums rows across intervals —
+# granularity cannot change the Sankey, only the payload size.
+query GetLedgerCashFlowSankey(
+  $ledgerId: String!
+  $conversion: String!
+  $time: String
+  $filter: String
+  $account: String
+) {
+  incomeIntervals: getLedgerIntervalTotals(
+    accountName: "Income"
+    ledgerId: $ledgerId
+    interval: "yearly"
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    accountBalances
+  }
+  expenseIntervals: getLedgerIntervalTotals(
+    accountName: "Expenses"
+    ledgerId: $ledgerId
+    interval: "yearly"
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    accountBalances
+  }
+  assetIntervals: getLedgerIntervalTotals(
+    accountName: "Assets"
+    ledgerId: $ledgerId
+    interval: "yearly"
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    accountBalances
+  }
+  liabilityIntervals: getLedgerIntervalTotals(
+    accountName: "Liabilities"
+    ledgerId: $ledgerId
+    interval: "yearly"
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    accountBalances
+  }
+  equityIntervals: getLedgerIntervalTotals(
+    accountName: "Equity"
+    ledgerId: $ledgerId
+    interval: "yearly"
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    accountBalances
+  }
+}

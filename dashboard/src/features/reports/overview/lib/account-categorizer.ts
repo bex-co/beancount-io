@@ -7,11 +7,17 @@ export type AccountCategory =
   | "financing"
   | "exclude";
 
-/** Root heuristic for the roots that can carry a cash-flow activity. */
+/**
+ * Root heuristic for the roots that can carry a cash-flow activity. Mirrors
+ * `CASH_FLOW_ACTIVITY_BY_ROOT` (cash-flow/config.ts), Equity included: the
+ * Sankey and the statement must classify the same account the same way
+ * (ADR003).
+ */
 const ROOT_CATEGORIES: Record<string, AccountCategory> = {
   Expenses: "operating",
   Assets: "investing",
   Liabilities: "financing",
+  Equity: "financing",
 };
 
 /**
@@ -24,7 +30,7 @@ const ROOT_CATEGORIES: Record<string, AccountCategory> = {
  * Sankey vocabulary is unchanged and declarations never remap it:
  * - `Income` is always the `source` side (even when declared otherwise, e.g.
  *   `Income:X` with `cash-flow-role: "investing"` stays `source`);
- * - `Equity` and unknown roots stay `exclude`;
+ * - unknown roots stay `exclude`;
  * - a resolved `"cash"` role has no Sankey category — those accounts are
  *   dropped from the flow nodes via `isExcludedAccount`, so this falls back
  *   to the root's own category.
@@ -43,9 +49,6 @@ export function categorizeAccount(
 
   if (prefix === "Income") {
     return "source";
-  }
-  if (prefix === "Equity") {
-    return "exclude";
   }
 
   const rootCategory = ROOT_CATEGORIES[prefix];
@@ -67,9 +70,9 @@ export function categorizeAccount(
  * `cash-flow-role: "investing"` on `Assets:US:Bank:CD`). With no `meta`
  * this reduces to the `CASH_EQUIVALENT_PATTERNS` check, exactly as before.
  *
- * `Income`/`Equity` roots keep their fixed Sankey vocabulary — a declared
- * role never remaps them, so it cannot exclude them either. (The name
- * heuristic is anchored to `Assets:` and already never matches them.)
+ * The `Income` root keeps its fixed Sankey vocabulary — a declared role never
+ * remaps it, so it cannot exclude it either. (The name heuristic is anchored
+ * to `Assets:` and already never matches it.)
  */
 export function isExcludedAccount(
   accountName: string,
@@ -80,8 +83,7 @@ export function isExcludedAccount(
   }
 
   const prefix = accountName.split(":")[0];
-  const effectiveMeta =
-    prefix === "Income" || prefix === "Equity" ? null : meta;
+  const effectiveMeta = prefix === "Income" ? null : meta;
   return resolveCashFlowRole(accountName, effectiveMeta).role === "cash";
 }
 

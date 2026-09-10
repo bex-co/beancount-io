@@ -3,75 +3,85 @@ import { ReactECharts } from "@/common/components/react-echarts";
 import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { transformToSankeyData } from "../lib/sankey-data-transformer";
+import {
+  transformToSankeyData,
+  SANKEY_CASH_NODE,
+  SANKEY_HUB_NODE,
+} from "../lib/sankey-data-transformer";
 import { getSankeyNodeColor } from "../lib/sankey-colors";
-import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
-import type { SerializableTreeNode } from "@/graphql/definitions";
+import type {
+  AccountMetaMap,
+  CashFlowStatement,
+} from "@/features/reports/cash-flow/lib/model";
 
 const SANKEY_HEIGHT = "400px";
 
 interface CashFlowSankeyProps {
-  incomeHierarchyData?: SerializableTreeNode;
-  expensesHierarchyData?: SerializableTreeNode;
-  assetsHierarchyData?: SerializableTreeNode;
-  liabilitiesHierarchyData?: SerializableTreeNode;
+  /** The period's cash-flow statement; undefined until it has loaded. */
+  statement?: CashFlowStatement;
+  /** The single unit every link is drawn in. */
+  primaryCurrency: string;
   depth?: 1 | 2 | 3;
   /** Open-directive metadata per account (cash-flow-role declarations). */
   accountMeta?: AccountMetaMap;
   /**
-   * The declarations are still loading. Declared roles are authoritative, so
-   * the chart reserves its space instead of showing the heuristic layout as
-   * if it were final.
+   * The flows or the declarations are still loading. Declared roles are
+   * authoritative, so the chart reserves its space instead of showing a
+   * provisional layout as if it were final.
    */
-  accountMetaPending?: boolean;
+  pending?: boolean;
 }
 
 export default function CashFlowSankey({
-  incomeHierarchyData,
-  expensesHierarchyData,
-  assetsHierarchyData,
-  liabilitiesHierarchyData,
+  statement,
+  primaryCurrency,
   depth = 2,
   accountMeta,
-  accountMetaPending = false,
+  pending = false,
 }: CashFlowSankeyProps) {
   const isDark = useIsDarkTheme();
   const formatNum = useFormatNumber();
   const { t } = useTranslations();
 
-  const sankeyData = useMemo(() => {
-    return transformToSankeyData({
-      incomeHierarchyData,
-      expensesHierarchyData,
-      assetsHierarchyData,
-      liabilitiesHierarchyData,
-      depth,
-      accountMeta,
-    });
-  }, [
-    incomeHierarchyData,
-    expensesHierarchyData,
-    assetsHierarchyData,
-    liabilitiesHierarchyData,
-    depth,
-    accountMeta,
-  ]);
+  const sankeyData = useMemo(
+    () => transformToSankeyData({ statement, primaryCurrency, depth }),
+    [statement, primaryCurrency, depth],
+  );
 
-  // Apply colors to nodes
+  /**
+   * Display labels per node id. The hub and cash nodes carry stable ids, so
+   * their names are translated here rather than baked into the data — and the
+   * cash node's wording follows the direction of its link, which is the whole
+   * point of the node.
+   */
+  const labels = useMemo(() => {
+    const map = new Map<string, string>();
+    map.set(SANKEY_HUB_NODE, t("page.overview.cashFlow"));
+    const cashIsTarget = sankeyData.links.some(
+      (link) => link.target === SANKEY_CASH_NODE,
+    );
+    map.set(
+      SANKEY_CASH_NODE,
+      cashIsTarget
+        ? t("page.overview.cashFlowToCash")
+        : t("page.overview.cashFlowFromCash"),
+    );
+    return map;
+  }, [sankeyData.links, t]);
+
+  const labelFor = (name: string | undefined) =>
+    (name && labels.get(name)) || name || "";
+
   const nodesWithColors = useMemo(() => {
     return sankeyData.nodes.map((node) => ({
       ...node,
       itemStyle: {
-        color: getSankeyNodeColor(
-          node.name,
-          isDark,
-          accountMeta?.get(node.name),
-        ),
+        color: getSankeyNodeColor(node, isDark, accountMeta?.get(node.name)),
       },
     }));
   }, [sankeyData.nodes, isDark, accountMeta]);
 
-  if (accountMetaPending) {
+  if (pending) {
     return (
       <div
         role="status"
@@ -86,6 +96,36 @@ export default function CashFlowSankey({
             {t("page.overview.cashFlowRolesPending")}
           </p>
         </div>
+      </div>
+    );
+  }
+
+  /**
+   * Units with movement but no price to the presentation currency. Disclosed
+   * rather than converted or dropped: a chart that silently omits a third of
+   * the ledger's activity is worse than one that says so.
+   */
+  const caption =
+    sankeyData.unshownUnits.length > 0
+      ? t("page.overview.cashFlowUnshownUnits", {
+          currency: primaryCurrency,
+          units: sankeyData.unshownUnits.join(", "),
+        })
+      : null;
+
+  if (sankeyData.links.length === 0) {
+    return (
+      <div
+        className="flex w-full flex-col items-center justify-center gap-2 text-center"
+        style={{ height: SANKEY_HEIGHT }}
+        data-testid="cash-flow-sankey-empty"
+      >
+        <p className="text-sm text-muted-foreground">
+          {t("page.overview.cashFlowNoFlows", { currency: primaryCurrency })}
+        </p>
+        {caption ? (
+          <p className="text-xs text-muted-foreground">{caption}</p>
+        ) : null}
       </div>
     );
   }
@@ -105,13 +145,13 @@ export default function CashFlowSankey({
         if (p.dataType === "edge" && p.data) {
           const { source, target, value } = p.data;
           return `
-            <strong>${source} → ${target}</strong><br/>
-            ${formatNum(Number(value))} USD
+            <strong>${labelFor(source)} → ${labelFor(target)}</strong><br/>
+            ${formatNum(Number(value))} ${primaryCurrency}
           `;
         }
 
         if (p.dataType === "node") {
-          return `<strong>${p.name}</strong>`;
+          return `<strong>${labelFor(p.name)}</strong>`;
         }
 
         return "";
@@ -136,6 +176,8 @@ export default function CashFlowSankey({
         label: {
           color: isDark ? "#ffffff" : "#000000",
           fontSize: 12,
+          formatter: (params: unknown) =>
+            labelFor((params as { name?: string }).name),
         },
         data: nodesWithColors,
         links: sankeyData.links,
@@ -152,6 +194,9 @@ export default function CashFlowSankey({
         style={{ height: SANKEY_HEIGHT, width: "100%" }}
         className="w-full"
       />
+      {caption ? (
+        <p className="mt-2 text-xs text-muted-foreground">{caption}</p>
+      ) : null}
     </div>
   );
 }

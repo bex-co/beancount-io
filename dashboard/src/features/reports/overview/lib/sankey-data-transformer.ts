@@ -1,19 +1,21 @@
-import {
-  categorizeAccount,
-  extractAccountAtDepth,
-  isExcludedAccount,
-} from "./account-categorizer";
-import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
-import type { SerializableTreeNode } from "@/graphql/definitions";
+import { extractAccountAtDepth } from "./account-categorizer";
+import { sumBalanceRecords } from "@/features/reports/export/model";
+import type { CashFlowStatement } from "@/features/reports/cash-flow/lib/model";
 
-type HierarchyNode = {
-  account: string;
-  balance?: Record<string, unknown> | null;
-  children?: HierarchyNode[];
-};
+/**
+ * Stable node ids for the two nodes that are not accounts. They are ids, not
+ * labels — the component translates them at render time — and the `__…__`
+ * shape keeps them from ever colliding with a beancount account path.
+ */
+export const SANKEY_HUB_NODE = "__hub__";
+export const SANKEY_CASH_NODE = "__cash__";
+
+export type SankeyNodeKind = "hub" | "cash" | "account";
 
 export type SankeyNode = {
+  /** Account path, or one of the two stable ids above. */
   name: string;
+  kind: SankeyNodeKind;
   itemStyle?: { color: string };
 };
 
@@ -26,219 +28,107 @@ export type SankeyLink = {
 export type SankeyData = {
   nodes: SankeyNode[];
   links: SankeyLink[];
+  /**
+   * Units that carry movement in this period but have no price path to the
+   * presentation currency, sorted. They are disclosed under the chart — never
+   * summed into it and never silently dropped.
+   */
+  unshownUnits: string[];
 };
 
-/**
- * Extract numeric amount from balance object
- */
-function pickNumericAmount(
-  balance?: Record<string, unknown> | null,
-  inverse = false,
-): number {
-  if (!balance) return 0;
-
-  const value = balance["USD"] ?? Object.values(balance)[0];
-  if (value == null) return 0;
-
-  const num = typeof value === "string" ? parseFloat(value) : Number(value);
-  const result = Number.isFinite(num) ? num : 0;
-
-  return inverse ? -result : result;
-}
-
-/**
- * Recursively aggregate balance from hierarchy node and all descendants
- */
-export function aggregateHierarchyBalance(
-  node: HierarchyNode,
-  inverse = false,
-): number {
-  if (!node.children || node.children.length === 0) {
-    return pickNumericAmount(node.balance, inverse);
-  }
-
-  return node.children.reduce(
-    (sum, child) => sum + aggregateHierarchyBalance(child, inverse),
-    0,
-  );
-}
-
-/**
- * Extract nodes at specified depth from hierarchy
- */
-function extractNodesAtDepth(
-  roots: SerializableTreeNode | undefined | null | HierarchyNode[],
-  targetDepth: number,
-  inverse = false,
-  accountMeta?: AccountMetaMap,
-): Map<string, number> {
-  const nodeMap = new Map<string, number>();
-
-  // Handle undefined, null, or empty data
-  if (!roots) {
-    return nodeMap;
-  }
-
-  // Normalize to array
-  // Handle both single node and array of nodes (for backward compatibility with tests)
-  const rootsArray = Array.isArray(roots)
-    ? (roots as HierarchyNode[])
-    : [roots as unknown as HierarchyNode];
-
-  function traverse(node: HierarchyNode, currentDepth: number) {
-    // Guard against nodes without account property
-    if (!node || !node.account) {
-      return;
-    }
-
-    const accountAtDepth = extractAccountAtDepth(node.account, targetDepth);
-    const meta = accountMeta?.get(node.account);
-    const category = categorizeAccount(node.account, meta);
-
-    // Skip excluded accounts
-    if (category === "exclude" || isExcludedAccount(node.account, meta)) {
-      return;
-    }
-
-    if (
-      currentDepth === targetDepth ||
-      !node.children ||
-      node.children.length === 0
-    ) {
-      // Reached target depth or leaf node
-      const balance = aggregateHierarchyBalance(node, inverse);
-
-      if (balance !== 0) {
-        const existing = nodeMap.get(accountAtDepth) || 0;
-        nodeMap.set(accountAtDepth, existing + balance);
-      }
-    } else {
-      // Continue traversing
-      node.children?.forEach((child) => traverse(child, currentDepth + 1));
-    }
-  }
-
-  rootsArray.forEach((root) => traverse(root, 1));
-  return nodeMap;
-}
-
 interface TransformOptions {
-  incomeHierarchyData?: SerializableTreeNode;
-  expensesHierarchyData?: SerializableTreeNode;
-  assetsHierarchyData?: SerializableTreeNode;
-  liabilitiesHierarchyData?: SerializableTreeNode;
-  depth?: 1 | 2 | 3;
   /**
-   * Open-directive metadata per account (cash-flow-role declarations), the
-   * `meta` of getLedgerAccountDirectives. Omitted/empty means every account
-   * resolves by the name heuristics, exactly as before.
+   * The period's cash-flow statement. Only `rows` and `netChange` are read:
+   * by the double-entry identity `netChange` equals the sum of every row, and
+   * that is exactly what makes inflow equal outflow below.
    */
-  accountMeta?: AccountMetaMap;
+  statement?: CashFlowStatement;
+  /** The single unit every link value is expressed in. */
+  primaryCurrency: string;
+  depth?: 1 | 2 | 3;
+}
+
+const ZERO_DECIMAL = /^[+-]?0+(?:\.0+)?$/;
+
+function isZero(amount: string | undefined): boolean {
+  return amount === undefined || ZERO_DECIMAL.test(amount.trim());
 }
 
 /**
- * Transform hierarchy data into Sankey diagram data structure
+ * Project a cash-flow statement onto a Sankey.
+ *
+ * One hub node, one node per account (rolled up to `depth`), and one node for
+ * the net change in cash & equivalents. A node's aggregate decides its side:
+ * positive is money reaching the hub, negative is money leaving it. Nothing is
+ * dropped for being negative, so the two sides balance exactly — the cash node
+ * absorbs the difference, which is what it means.
+ *
+ * Amounts stay exact decimal strings through aggregation (`sumBalanceRecords`)
+ * and become JS numbers only when a link is emitted, because that is the only
+ * form ECharts accepts.
  */
 export function transformToSankeyData(options: TransformOptions): SankeyData {
-  const {
-    incomeHierarchyData,
-    expensesHierarchyData,
-    assetsHierarchyData,
-    liabilitiesHierarchyData,
-    depth = 2,
-    accountMeta,
-  } = options;
+  const { statement, primaryCurrency, depth = 2 } = options;
 
   const nodes: SankeyNode[] = [];
   const links: SankeyLink[] = [];
+  const unshownUnits = new Set<string>();
 
-  // Extract nodes at target depth
-  const incomeNodes = extractNodesAtDepth(
-    incomeHierarchyData,
-    depth,
-    true,
-    accountMeta,
-  ); // Inverse for income
-  const expenseNodes = extractNodesAtDepth(
-    expensesHierarchyData,
-    depth,
-    false,
-    accountMeta,
-  );
-
-  // Filter assets to only include investing (exclude cash-equivalent)
-  const assetNodes = new Map<string, number>();
-  extractNodesAtDepth(assetsHierarchyData, depth, false, accountMeta).forEach(
-    (value, key) => {
-      if (!isExcludedAccount(key, accountMeta?.get(key))) {
-        assetNodes.set(key, value);
-      }
-    },
-  );
-
-  const liabilityNodes = extractNodesAtDepth(
-    liabilitiesHierarchyData,
-    depth,
-    false,
-    accountMeta,
-  );
-
-  // Calculate totals
-  const totalIncome = Array.from(incomeNodes.values()).reduce(
-    (sum, val) => sum + val,
-    0,
-  );
-  const totalExpenses = Array.from(expenseNodes.values()).reduce(
-    (sum, val) => sum + val,
-    0,
-  );
-  const totalInvesting = Array.from(assetNodes.values()).reduce(
-    (sum, val) => sum + val,
-    0,
-  );
-  const totalFinancing = Array.from(liabilityNodes.values()).reduce(
-    (sum, val) => sum + val,
-    0,
-  );
-  const totalSavings =
-    totalIncome - totalExpenses - totalInvesting - totalFinancing;
-
-  // Add Cash Flow center node
-  nodes.push({ name: "Cash Flow" });
-
-  // Add income nodes and links
-  incomeNodes.forEach((value, name) => {
-    if (value <= 0) return;
-    nodes.push({ name });
-    links.push({ source: name, target: "Cash Flow", value });
-  });
-
-  // Add expense nodes and links
-  expenseNodes.forEach((value, name) => {
-    if (value <= 0) return;
-    nodes.push({ name });
-    links.push({ source: "Cash Flow", target: name, value });
-  });
-
-  // Add investing nodes and links
-  assetNodes.forEach((value, name) => {
-    if (value <= 0) return;
-    nodes.push({ name });
-    links.push({ source: "Cash Flow", target: name, value });
-  });
-
-  // Add financing nodes and links
-  liabilityNodes.forEach((value, name) => {
-    if (value <= 0) return;
-    nodes.push({ name });
-    links.push({ source: "Cash Flow", target: name, value });
-  });
-
-  // Add savings node if there's surplus
-  if (totalSavings > 0) {
-    nodes.push({ name: "Savings" });
-    links.push({ source: "Cash Flow", target: "Savings", value: totalSavings });
+  if (!statement) {
+    return { nodes, links, unshownUnits: [] };
   }
 
-  return { nodes, links };
+  const byPath = new Map<string, Record<string, unknown>[]>();
+
+  statement.rows.forEach((row) => {
+    Object.entries(row.amounts).forEach(([unit, amount]) => {
+      if (unit !== primaryCurrency && !isZero(amount)) {
+        unshownUnits.add(unit);
+      }
+    });
+
+    const amount = row.amounts[primaryCurrency];
+    if (isZero(amount)) return;
+
+    const path = extractAccountAtDepth(row.accountPath, depth);
+    const bucket = byPath.get(path) ?? [];
+    if (bucket.length === 0) byPath.set(path, bucket);
+    bucket.push({ [primaryCurrency]: amount });
+  });
+
+  Object.entries(statement.netChange).forEach(([unit, amount]) => {
+    if (unit !== primaryCurrency && !isZero(amount)) {
+      unshownUnits.add(unit);
+    }
+  });
+
+  byPath.forEach((amounts, path) => {
+    const total = sumBalanceRecords(amounts)[primaryCurrency];
+    if (isZero(total)) return;
+
+    const value = Number(total);
+    nodes.push({ name: path, kind: "account" });
+    links.push(
+      value > 0
+        ? { source: path, target: SANKEY_HUB_NODE, value }
+        : { source: SANKEY_HUB_NODE, target: path, value: -value },
+    );
+  });
+
+  const netChange = statement.netChange[primaryCurrency];
+  if (!isZero(netChange)) {
+    const value = Number(netChange);
+    nodes.push({ name: SANKEY_CASH_NODE, kind: "cash" });
+    links.push(
+      value > 0
+        ? { source: SANKEY_HUB_NODE, target: SANKEY_CASH_NODE, value }
+        : { source: SANKEY_CASH_NODE, target: SANKEY_HUB_NODE, value: -value },
+    );
+  }
+
+  if (links.length > 0) {
+    nodes.unshift({ name: SANKEY_HUB_NODE, kind: "hub" });
+  }
+
+  return { nodes, links, unshownUnits: [...unshownUnits].sort() };
 }
