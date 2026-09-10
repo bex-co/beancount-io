@@ -23,14 +23,12 @@ import {
   RANGE_LABEL_KEYS,
   TIME_RANGES,
   TimeRange,
-  alignMonthlySeries,
-  filterSeriesByRange,
-  pointsToMonthlySeries,
 } from "@/common/series-util";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 import { useIncomeStatement } from "./hooks/use-income-statement";
 import { selectRangedAccountTree } from "./selectors/select-ranged-account-tree";
+import { selectIncomeExpenseChartSeries } from "./selectors/select-income-expense-chart";
 import { topNWithOther } from "./selectors/select-breakdown-rows";
 import {
   CategoryBreakdown,
@@ -93,20 +91,19 @@ const ReportsScreenImpl = (): JSX.Element => {
     label: t(RANGE_LABEL_KEYS[key]),
   }));
 
-  // Combined chart: income (negated to a positive magnitude) and expense bars
-  // plus the signed net line, each range-filtered then aligned onto one axis.
-  const chart = useMemo(() => {
-    const income = pointsToMonthlySeries(currency, stmt?.incomeData ?? []).map(
-      (point) => ({ ...point, value: -point.value }),
-    );
-    const expense = pointsToMonthlySeries(currency, stmt?.expensesData ?? []);
-    const net = pointsToMonthlySeries(currency, stmt?.netProfitData ?? []);
-    return alignMonthlySeries({
-      income: filterSeriesByRange(income, timeRange),
-      expense: filterSeriesByRange(expense, timeRange),
-      net: filterSeriesByRange(net, timeRange),
-    });
-  }, [currency, stmt, timeRange]);
+  // Combined chart: income and net profit are credit-normal in the API, so
+  // negate both at the presentation boundary; expenses stay as debits.
+  const chart = useMemo(
+    () =>
+      selectIncomeExpenseChartSeries(
+        currency,
+        stmt?.incomeData,
+        stmt?.expensesData,
+        stmt?.netProfitData,
+        timeRange,
+      ),
+    [currency, stmt, timeRange],
+  );
 
   const expense = useMemo(
     () =>
