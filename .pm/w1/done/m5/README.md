@@ -1,6 +1,6 @@
 # w1 · m5 — OAuth 2.1-aligned native mobile authentication
 
-**Worker:** worker1 **Goal:** hosted and self-hosted mobile users authenticate through an external-browser authorization-code flow with PKCE, scoped API access, and safely rotated refresh credentials **Status:** todo (t001–t010 done; t011 next)
+**Worker:** worker1 **Goal:** hosted and self-hosted mobile users authenticate through an external-browser authorization-code flow with PKCE, scoped API access, and safely rotated refresh credentials **Status:** done
 
 ## Tasks (in order)
 
@@ -16,11 +16,11 @@
 | t008 | Add secure OAuth session and refresh management         | 1h  | t007                        | — **DONE**
 | t009 | Integrate OAuth refresh and logout with Apollo          | 1h  | t008                        | — **DONE**
 | t010 | Stage legacy-session compatibility and bridge retirement | 45m | t009                      | — **DONE**
-| t011 | Verify the hosted and self-hosted deployment contract   | 1h  | t004, t005, t006, t009, t010 |
-| t012 | Adoption surface                                        | 30m | t011                        |
-| t013 | Simplify                                                | 30m | t012                        |
-| t014 | Test coverage                                           | 1h  | t012                        |
-| t015 | Closeout                                                | 15m | t014                        |
+| t011 | Verify the hosted and self-hosted deployment contract   | 1h  | t004, t005, t006, t009, t010 | — **DONE**
+| t012 | Adoption surface                                        | 30m | t011                        | — **DONE**
+| t013 | Simplify                                                | 30m | t012                        | — **DONE**
+| t014 | Test coverage                                           | 1h  | t012                        | — **DONE**
+| t015 | Closeout                                                | 15m | t014                        | — **DONE**
 
 ## Definition of done
 

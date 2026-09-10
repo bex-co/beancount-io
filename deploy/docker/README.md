@@ -66,6 +66,16 @@ Once the health checks pass, open:
 | API | `https://<API_DOMAIN>/api-gateway/` |
 | Gitea | `https://<GIT_DOMAIN>` |
 
+### OAuth signing key
+
+Set `OAUTH_JWKS` in `.env` to a JSON JWK set stored only on the host (never in
+git). Empty or invalid → backend boots and serves legacy login/API traffic, but
+every `/oauth/*` and well-known OAuth metadata route returns `503
+oauth_not_configured`, so the native mobile app cannot complete discovery.
+`DASHBOARD_URL` / `SERVER_URL` are derived from `APP_DOMAIN` / `API_DOMAIN` in
+Compose; see [`backend-v2` OAuth deployment contract](../../backend-cluster/backend-v2/README.md#oauth-deployment-contract)
+for the reverse-proxy well-known routes.
+
 If startup stops at either one-shot service, inspect it directly:
 
 ```zsh

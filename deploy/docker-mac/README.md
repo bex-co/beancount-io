@@ -104,3 +104,13 @@ Set `DASHBOARD_URL` to the public HTTPS dashboard front door; it is also the
 production OAuth issuer and interaction origin. Keep `OAUTH_JWKS` in the secret
 manager. If no valid signing JWKS is available, backend-v2 continues serving
 legacy login and API traffic while OAuth endpoints return `503`.
+
+## Local OAuth (this stack)
+
+Leave `OAUTH_JWKS` empty in `.env`. Backend-v2 mints an ephemeral development
+signing key and advertises the localhost `SERVER_URL` / `DASHBOARD_URL` pair
+from `.env.example`, so the mobile app's compatibility probe treats this stack
+as a compatible issuer rather than production. See
+[`backend-cluster/backend-v2/README.md`](../../backend-cluster/backend-v2/README.md)
+("OAuth deployment contract") for the well-known routes a reverse-proxied
+self-host must expose.
