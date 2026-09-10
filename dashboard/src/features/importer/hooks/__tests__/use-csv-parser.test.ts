@@ -53,6 +53,57 @@ describe("useCSVParser", () => {
       expect(parsed.errorCount).toBe(0);
     });
 
+    it("keeps a headerless first row whose payee/description contain header words", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        "2025-12-01,QA Date Shop,Prepaid amount,-4.50",
+        "2025-12-02,QA Grocery,Regular purchase,-45.67",
+      ].join("\n");
+
+      const parsed = result.current.parseCSV(csv);
+
+      expect(parsed.validCount).toBe(2);
+      expect(parsed.errorCount).toBe(0);
+      expect(parsed.rows).toHaveLength(2);
+      expect(parsed.rows.map((row) => row.payee)).toEqual([
+        "QA Date Shop",
+        "QA Grocery",
+      ]);
+      expect(parsed.rows.map((row) => row.amount)).toEqual([-4.5, -45.67]);
+    });
+
+    it("keeps both rows when the same file has an explicit header", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        "Date,Payee,Description,Amount",
+        "2025-12-01,QA Date Shop,Prepaid amount,-4.50",
+        "2025-12-02,QA Grocery,Regular purchase,-45.67",
+      ].join("\n");
+
+      const parsed = result.current.parseCSV(csv);
+
+      expect(parsed.validCount).toBe(2);
+      expect(parsed.rows.map((row) => row.date)).toEqual([
+        "2025-12-01",
+        "2025-12-02",
+      ]);
+    });
+
+    it("surfaces a malformed first data row instead of discarding it as a header", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        "not-a-date,QA Broken,Missing amount fields",
+        "2025-12-02,QA Grocery,Regular purchase,-45.67",
+      ].join("\n");
+
+      const parsed = result.current.parseCSV(csv);
+
+      expect(parsed.rows).toHaveLength(2);
+      expect(parsed.errorCount).toBeGreaterThan(0);
+      expect(parsed.rows[0].errors?.length).toBeGreaterThan(0);
+      expect(parsed.rows[1].payee).toBe("QA Grocery");
+    });
+
     it("should parse multiple valid rows correctly", () => {
       const { result } = renderHook(() => useCSVParser());
       const csv = [

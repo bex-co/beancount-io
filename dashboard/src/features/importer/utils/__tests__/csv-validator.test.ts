@@ -233,29 +233,42 @@ describe("csv-validator", () => {
 
   describe("isHeaderRow", () => {
     it("should detect header row with 'date' and 'payee'", () => {
-      expect(isHeaderRow("Date,Payee,Description,Amount")).toBe(true);
-    });
-
-    it("should detect header row with 'date' and 'description'", () => {
-      expect(isHeaderRow("date,description,amount")).toBe(true);
-    });
-
-    it("should detect header row with 'date' and 'amount'", () => {
-      expect(isHeaderRow("date,narration,amount")).toBe(true);
-    });
-
-    it("should be case-insensitive", () => {
-      expect(isHeaderRow("DATE,PAYEE,AMOUNT")).toBe(true);
-    });
-
-    it("should return false for a data row", () => {
-      expect(isHeaderRow("2024-01-15,Coffee Shop,Morning coffee,5.00")).toBe(
-        false,
+      expect(isHeaderRow(["Date", "Payee", "Description", "Amount"])).toBe(
+        true,
       );
     });
 
+    it("should detect header row with 'date' and 'description'", () => {
+      expect(isHeaderRow(["date", "description", "amount"])).toBe(true);
+    });
+
+    it("should detect header row with 'date' and 'amount'", () => {
+      expect(isHeaderRow(["date", "narration", "amount"])).toBe(true);
+    });
+
+    it("should be case-insensitive", () => {
+      expect(isHeaderRow(["DATE", "PAYEE", "AMOUNT"])).toBe(true);
+    });
+
+    it("should return false for a data row", () => {
+      expect(
+        isHeaderRow(["2024-01-15", "Coffee Shop", "Morning coffee", "5.00"]),
+      ).toBe(false);
+    });
+
     it("should return false when only 'date' is present without payee/description/amount", () => {
-      expect(isHeaderRow("date,time,location")).toBe(false);
+      expect(isHeaderRow(["date", "time", "location"])).toBe(false);
+    });
+
+    it("should return false when header tokens appear inside data fields", () => {
+      expect(
+        isHeaderRow([
+          "2025-12-01",
+          "QA Date Shop",
+          "Prepaid amount",
+          "-4.50",
+        ]),
+      ).toBe(false);
     });
   });
 

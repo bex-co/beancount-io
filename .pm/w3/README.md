@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [045](./045.md) — Smart Import silently treats a real first transaction as a CSV header
 - [046](./046.md) — Missing files are presented as failed requests with only a retry action
 - [047](./047.md) — Import cell buttons ignore Space and lose focus when editing ends
 - [048](./048.md) — An empty Overview filter result claims the whole ledger has no activity

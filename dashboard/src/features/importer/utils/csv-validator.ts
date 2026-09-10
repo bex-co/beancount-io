@@ -145,16 +145,30 @@ export function isValidRowFormat(columns: string[]): boolean {
 }
 
 /**
- * Check if a line is a header row
+ * True when the first CSV record is a supported header row.
+ *
+ * Matches whole fields against the import schema (`date` plus a companion
+ * `payee` / `description` / `amount` / `narration`), not substrings inside
+ * transaction text. A first field that is already a calendar date is data.
  */
-export function isHeaderRow(line: string): boolean {
-  const lower = line.toLowerCase();
-  return (
-    lower.includes("date") &&
-    (lower.includes("payee") ||
-      lower.includes("description") ||
-      lower.includes("amount"))
+export function isHeaderRow(columns: string[]): boolean {
+  if (columns.length === 0) return false;
+
+  const normalized = columns.map((column) => column.trim().toLowerCase());
+  if (isValidDateFormat(normalized[0])) {
+    return false;
+  }
+
+  const hasDateHeader = normalized.some((column) => column === "date");
+  const hasCompanionHeader = normalized.some(
+    (column) =>
+      column === "payee" ||
+      column === "description" ||
+      column === "amount" ||
+      column === "narration",
   );
+
+  return hasDateHeader && hasCompanionHeader;
 }
 
 /**

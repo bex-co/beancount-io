@@ -139,7 +139,7 @@ export function useCSVParser() {
       };
     }
 
-    const hasHeader = isHeaderRow(records[0].join(","));
+    const hasHeader = isHeaderRow(records[0]);
     const dataRecords = hasHeader ? records.slice(1) : records;
 
     const rows: ParsedRow[] = dataRecords.map((columns, idx) => {
