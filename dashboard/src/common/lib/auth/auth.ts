@@ -14,18 +14,37 @@ export const getSafeRedirectPath = (
   return next;
 };
 
+type RequireAuthLocation = {
+  pathname: string;
+  searchStr?: string;
+  hash?: string;
+};
+
 /**
  * Creates a beforeLoad function that checks authentication using the root route context.
  * The root route's beforeLoad fetches userProfile once and passes it down via context,
  * so this function avoids duplicate network requests.
+ *
+ * When unauthenticated, `next` prefers the requested location (path + search + hash)
+ * so deep links like `/settings/api-keys` survive login. `fallbackPath` is used only
+ * when the location cannot form a safe relative path.
  */
-export const requireAuth = (redirectPath?: string) => {
-  return ({ context }: { context: { userProfile: unknown } }): void => {
+export const requireAuth = (fallbackPath?: string) => {
+  return ({
+    context,
+    location,
+  }: {
+    context: { userProfile: unknown };
+    location: RequireAuthLocation;
+  }): void => {
     if (!context.userProfile) {
+      const requested = getSafeRedirectPath(
+        `${location.pathname}${location.searchStr ?? ""}${location.hash ?? ""}`,
+      );
       throw redirect({
         to: "/auth/login",
         search: {
-          next: redirectPath,
+          next: requested ?? fallbackPath,
         },
       });
     }
