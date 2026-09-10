@@ -17,6 +17,16 @@ const bgFileEditor: Record<string, { message: string; description: string }> = {
     message: "Неуспешно зареждане на съдържанието на файла",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "Файлът не е намерен: {path}",
+    description:
+      "Съобщение, когато пътят към файл в регистъра не съществува (съдържа {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Преглед на родителската директория",
+    description:
+      "Бутон за отваряне на родителската директория Files след липсващ файл",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "Файлът е изтрит успешно",
     description: "Success message when file is deleted",

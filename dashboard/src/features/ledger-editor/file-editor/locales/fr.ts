@@ -17,6 +17,16 @@ const frFileEditor: Record<string, { message: string; description: string }> = {
     message: "Échec du chargement du contenu du fichier",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "Fichier introuvable : {path}",
+    description:
+      "Message lorsqu'un chemin de fichier du grand livre n'existe pas (contient {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Parcourir le dossier parent",
+    description:
+      "Bouton pour ouvrir le dossier Files parent après un fichier manquant",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "Fichier supprimé avec succès",
     description: "Success message when file is deleted",

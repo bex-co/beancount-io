@@ -17,6 +17,16 @@ const skFileEditor: Record<string, { message: string; description: string }> = {
     message: "Načítanie obsahu súboru zlyhalo",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "Súbor sa nenašiel: {path}",
+    description:
+      "Správa, keď cesta k súboru knihy neexistuje (obsahuje {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Otvoriť nadradený adresár",
+    description:
+      "Tlačidlo na otvorenie nadradeného adresára Files po chýbajúcom súbore",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "Súbor bol úspešne vymazaný",
     description: "Success message when file is deleted",

@@ -17,6 +17,16 @@ const ukFileEditor: Record<string, { message: string; description: string }> = {
     message: "Не вдалося завантажити вміст файлу",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "Файл не знайдено: {path}",
+    description:
+      "Повідомлення, коли шлях до файлу книги не існує (містить {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Відкрити батьківський каталог",
+    description:
+      "Кнопка відкриття батьківського каталогу Files після відсутнього файлу",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "Файл успішно видалено",
     description: "Success message when file is deleted",

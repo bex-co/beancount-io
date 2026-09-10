@@ -17,6 +17,16 @@ const caFileEditor: Record<string, { message: string; description: string }> = {
     message: "Error en carregar el contingut del fitxer",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "No s'ha trobat el fitxer: {path}",
+    description:
+      "Missatge quan una ruta de fitxer del llibre no existeix (conté {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Explora el directori pare",
+    description:
+      "Botó per obrir el directori Files pare després d'un fitxer inexistent",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "Fitxer eliminat correctament",
     description: "Success message when file is deleted",

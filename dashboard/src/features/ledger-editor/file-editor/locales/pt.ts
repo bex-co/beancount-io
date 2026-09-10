@@ -17,6 +17,16 @@ const ptFileEditor: Record<string, { message: string; description: string }> = {
     message: "Falha ao carregar conteúdo do arquivo",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "Arquivo não encontrado: {path}",
+    description:
+      "Mensagem quando um caminho de arquivo do razão não existe (contém {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Abrir diretório pai",
+    description:
+      "Botão para abrir o diretório Files pai após um arquivo ausente",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "Arquivo excluído com sucesso",
     description: "Success message when file is deleted",

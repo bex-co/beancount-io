@@ -17,6 +17,16 @@ const nlFileEditor: Record<string, { message: string; description: string }> = {
     message: "Bestandsinhoud laden mislukt",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "Bestand niet gevonden: {path}",
+    description:
+      "Bericht wanneer een ledger-bestandspad niet bestaat (bevat {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Bovenliggende map openen",
+    description:
+      "Knop om de bovenliggende Files-map te openen na een ontbrekend bestand",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "Bestand succesvol verwijderd",
     description: "Success message when file is deleted",

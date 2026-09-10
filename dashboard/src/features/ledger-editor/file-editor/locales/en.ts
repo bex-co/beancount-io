@@ -17,6 +17,16 @@ const enFileEditor: Record<string, { message: string; description: string }> = {
     message: "Failed to load file content",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "File not found: {path}",
+    description:
+      "Message when a ledger file path does not exist (contains {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Browse parent directory",
+    description:
+      "Button to open the parent Files directory after a missing file",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "File deleted successfully",
     description: "Success message when file is deleted",

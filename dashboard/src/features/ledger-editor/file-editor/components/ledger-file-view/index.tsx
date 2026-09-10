@@ -21,7 +21,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { getParentPath, getFilename } from "../../../shared/lib/utils";
-import { FileLoadingView, FileErrorView } from "./file-loading-error-views";
+import { FileLoadingView, FileErrorView, FileNotFoundView } from "./file-loading-error-views";
 import { FileContentView } from "./file-content-view";
 
 interface LedgerFileViewProps {
@@ -51,7 +51,6 @@ export default function LedgerFileView({
   });
   const {
     data,
-    loading: isLoading,
     error,
   } = useQuery(GetLedgerFileDocument, {
     variables: {
@@ -159,12 +158,25 @@ export default function LedgerFileView({
     });
   };
 
-  if (isLoading) {
+  if (error) {
+    return <FileErrorView filename={getFilename(filePath)} />;
+  }
+
+  // cache-and-network can keep loading true after the first result; only treat
+  // absence as confirmed when the query has a settled payload.
+  if (data === undefined) {
     return <FileLoadingView filename={getFilename(filePath)} />;
   }
 
-  if (error || !fileContent) {
-    return <FileErrorView filename={getFilename(filePath)} />;
+  if (!fileContent) {
+    return (
+      <FileNotFoundView
+        filePath={filePath}
+        onBrowseParent={() => {
+          fileNavigate(ledgerId, "dir", getParentPath(filePath));
+        }}
+      />
+    );
   }
 
   return (

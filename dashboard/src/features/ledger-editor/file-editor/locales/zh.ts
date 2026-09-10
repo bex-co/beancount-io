@@ -16,6 +16,14 @@ const zhFileEditor: Record<string, { message: string; description: string }> = {
     message: "加载文件内容失败",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "未找到文件：{path}",
+    description: "账本文件路径不存在时的提示（含 {path}）",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "浏览上级目录",
+    description: "缺失文件后打开上级 Files 目录的按钮",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "文件删除成功",
     description: "Success message when file is deleted",

@@ -17,6 +17,14 @@ const faFileEditor: Record<string, { message: string; description: string }> = {
     message: "بارگذاری محتوای فایل ناموفق بود",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "پرونده یافت نشد: {path}",
+    description: "پیام وقتی مسیر پرونده دفتر وجود ندارد (شامل {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "مرور پوشه والد",
+    description: "دکمه باز کردن پوشه Files والد پس از پروندهٔ گم‌شده",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "فایل با موفقیت حذف شد",
     description: "Success message when file is deleted",

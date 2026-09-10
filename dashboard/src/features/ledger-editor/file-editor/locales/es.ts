@@ -17,6 +17,16 @@ const esFileEditor: Record<string, { message: string; description: string }> = {
     message: "Error al cargar el contenido del archivo",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "Archivo no encontrado: {path}",
+    description:
+      "Mensaje cuando una ruta de archivo del libro no existe (contiene {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Explorar directorio superior",
+    description:
+      "Botón para abrir el directorio Files superior tras un archivo ausente",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "Archivo eliminado exitosamente",
     description: "Success message when file is deleted",

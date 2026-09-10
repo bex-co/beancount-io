@@ -17,6 +17,16 @@ const ruFileEditor: Record<string, { message: string; description: string }> = {
     message: "Не удалось загрузить содержимое файла",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "Файл не найден: {path}",
+    description:
+      "Сообщение, когда путь к файлу книги не существует (содержит {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Открыть родительский каталог",
+    description:
+      "Кнопка открытия родительского каталога Files после отсутствующего файла",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "Файл успешно удалён",
     description: "Success message when file is deleted",

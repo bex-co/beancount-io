@@ -17,6 +17,16 @@ const deFileEditor: Record<string, { message: string; description: string }> = {
     message: "Dateiinhalt konnte nicht geladen werden",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "Datei nicht gefunden: {path}",
+    description:
+      "Meldung, wenn ein Ledger-Dateipfad nicht existiert (enthält {path})",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "Übergeordnetes Verzeichnis öffnen",
+    description:
+      "Schaltfläche zum Öffnen des übergeordneten Files-Verzeichnisses nach fehlender Datei",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "Datei erfolgreich gelöscht",
     description: "Success message when file is deleted",

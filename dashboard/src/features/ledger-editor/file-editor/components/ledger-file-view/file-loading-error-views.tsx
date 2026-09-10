@@ -10,6 +10,11 @@ interface FileErrorViewProps {
   filename: string;
 }
 
+interface FileNotFoundViewProps {
+  filePath: string;
+  onBrowseParent: () => void;
+}
+
 /**
  * Loading view component for file content
  */
@@ -51,6 +56,34 @@ export const FileErrorView = ({ filename }: FileErrorViewProps) => {
           </p>
           <Button onClick={() => window.location.reload()}>
             {t("common.tryAgain")}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Settled success with a null file — the path is absent, not a failed request.
+ */
+export const FileNotFoundView = ({
+  filePath,
+  onBrowseParent,
+}: FileNotFoundViewProps) => {
+  const { t } = useTranslations();
+  return (
+    <div>
+      <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 mb-4">
+        <FileText className="h-5 w-5" />
+        {filePath}
+      </h2>
+      <div className="flex items-center justify-center py-8">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground">
+            {t("ledgerEditor.fileNotFound", { path: filePath })}
+          </p>
+          <Button type="button" onClick={onBrowseParent}>
+            {t("ledgerEditor.browseParentDirectory")}
           </Button>
         </div>
       </div>

@@ -16,6 +16,15 @@ const jaFileEditor: Record<string, { message: string; description: string }> = {
     message: "ファイルの内容の読み込みに失敗しました",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "ファイルが見つかりません: {path}",
+    description:
+      "台帳のファイルパスが存在しないときのメッセージ（{path} を含む）",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "親ディレクトリを開く",
+    description: "欠落ファイルの後に親の Files ディレクトリを開くボタン",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "ファイルが正常に削除されました",
     description: "Success message when file is deleted",

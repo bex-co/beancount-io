@@ -17,6 +17,14 @@ const koFileEditor: Record<string, { message: string; description: string }> = {
     message: "파일 내용 불러오기 실패",
     description: "Error message when file content fails to load",
   },
+  "ledgerEditor.fileNotFound": {
+    message: "파일을 찾을 수 없음: {path}",
+    description: "원장 파일 경로가 없을 때 메시지({path} 포함)",
+  },
+  "ledgerEditor.browseParentDirectory": {
+    message: "상위 디렉터리 열기",
+    description: "없는 파일 이후 상위 Files 디렉터리를 여는 버튼",
+  },
   "ledgerEditor.fileDeletedSuccess": {
     message: "파일이 성공적으로 삭제되었습니다",
     description: "Success message when file is deleted",
