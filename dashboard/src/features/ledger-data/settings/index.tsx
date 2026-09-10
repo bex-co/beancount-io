@@ -47,7 +47,7 @@ function SettingsSkeleton() {
   );
 }
 
-function LedgerSettingsContent({
+export function LedgerSettingsContent({
   ledger,
   ledgerId,
 }: {
@@ -74,9 +74,9 @@ function LedgerSettingsContent({
       <Authenticated>
         <VisibilitySection ledger={ledger} ledgerId={ledgerId} />
       </Authenticated>
-      <Authenticated>
+      <LedgerAdminPermission>
         <CollaboratorsSection ledgerId={ledgerId} />
-      </Authenticated>
+      </LedgerAdminPermission>
       <BeancountOptionsSection ledger={ledger} />
       <FavaOptionsSection ledger={ledger} />
       <LedgerAdminPermission>

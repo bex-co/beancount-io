@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [014](./014.md) — Public-reader Settings requests an admin-only collaborator list
 - [015](./015.md) — Smart Import splits quoted multiline CSV fields into invalid rows
 - [016](./016.md) — Mobile Reports plots profitable months as negative Net Profit
 - [017](./017.md) — Mobile merchant transaction counts actually count postings
