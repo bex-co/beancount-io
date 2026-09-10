@@ -1,5 +1,6 @@
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
+import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerErrorsDocument } from "@/graphql/definitions";
 import { useParams } from "@tanstack/react-router";
@@ -167,7 +168,7 @@ export default function LedgerErrorsPage() {
         links={[
           {
             label: t("common.relatedLinks.files"),
-            to: `/ledger/${ledgerOwner}/${ledgerName}/files`,
+            to: getLedgerFilesRootPath(ledgerOwner, ledgerName),
           },
           {
             label: t("common.relatedLinks.statistics"),

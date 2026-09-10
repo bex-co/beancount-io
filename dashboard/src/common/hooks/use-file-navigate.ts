@@ -1,6 +1,15 @@
 import { decodeLedgerId } from "@/common/lib/utils/encode.ts";
 import { useNavigate } from "@tanstack/react-router";
 
+/** Canonical Files browser root (matches the sidebar and registered tree route). */
+export function getLedgerFilesRootPath(
+  ledgerOwner: string,
+  ledgerName: string,
+  branch = "main",
+): string {
+  return `/ledger/${ledgerOwner}/${ledgerName}/files/tree/${branch}`;
+}
+
 /**
  * Hook for navigating to files and directories using GitHub-style URLs
  *

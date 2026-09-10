@@ -1,5 +1,6 @@
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
+import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
 import { useState, useRef } from "react";
 import type { DragEvent } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
@@ -365,7 +366,7 @@ const UploadFilesPage = () => {
         links={[
           {
             label: t("common.relatedLinks.files"),
-            to: `/ledger/${ledgerOwner}/${ledgerName}/files`,
+            to: getLedgerFilesRootPath(ledgerOwner, ledgerName),
           },
           {
             label: t("common.relatedLinks.createFile"),

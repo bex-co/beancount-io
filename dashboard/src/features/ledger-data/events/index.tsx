@@ -1,5 +1,6 @@
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
+import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
 import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { useState, useMemo, useEffect, useRef } from "react";
@@ -261,7 +262,7 @@ export default function LedgerEventsPage() {
           },
           {
             label: t("common.relatedLinks.files"),
-            to: `/ledger/${ledgerOwner}/${ledgerName}/files`,
+            to: getLedgerFilesRootPath(ledgerOwner, ledgerName),
           },
         ]}
       />

@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [033](./033.md) — Related Files links navigate to a missing route
 - [034](./034.md) — BQL charts replace valid Decimal and Inventory values with invented numbers
 - [035](./035.md) — Holdings rounds real crypto quantities to zero in the table and CSV
 - [036](./036.md) — Holdings by Currency keeps unnamed rows for fully sold assets

@@ -1,13 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useFileNavigate } from "../use-file-navigate";
+import { getLedgerFilesRootPath, useFileNavigate } from "../use-file-navigate";
+import { routeTree } from "@/routeTree.gen";
 
 // Mock @tanstack/react-router
 const mockNavigate = vi.fn();
 
-vi.mock("@tanstack/react-router", () => ({
-  useNavigate: () => mockNavigate,
-}));
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@tanstack/react-router")>();
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+describe("getLedgerFilesRootPath", () => {
+  it("points at the registered files tree root route", () => {
+    expect(getLedgerFilesRootPath("open_ledger", "walmart")).toBe(
+      "/ledger/open_ledger/walmart/files/tree/main",
+    );
+    const ids = JSON.stringify(routeTree);
+    expect(ids).toContain('/files/tree/$branch/$');
+    expect(ids).not.toContain('"/files"');
+  });
+});
 
 describe("useFileNavigate", () => {
   beforeEach(() => {
