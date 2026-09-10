@@ -130,8 +130,9 @@ const enJournal: Record<string, TranslationEntry> = {
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
-    message: "Download currently filtered entries as a Beancount file",
-    description: "Description for export journal dialog",
+    message:
+      "Downloads source transactions and balance assertions narrowed by the selected date, account, and search expression. Entry type and transaction status filters do not apply.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "Entry Context",

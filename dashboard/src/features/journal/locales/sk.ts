@@ -130,8 +130,9 @@ const skJournal: Record<string, TranslationEntry> = {
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
-    message: "Stiahnuť aktuálne filtrované záznamy ako Beancount súbor",
-    description: "Description for export journal dialog",
+    message:
+      "Stiahne zdrojové transakcie a kontrolné zostatky obmedzené vybraným dátumom, účtom a vyhľadávacím výrazom. Filtre typu záznamu a stavu transakcie sa neuplatňujú.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "Kontext záznamu",

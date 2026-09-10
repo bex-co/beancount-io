@@ -130,8 +130,9 @@ const nlJournal: Record<string, TranslationEntry> = {
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
-    message: "Download gefilterde posten als Beancount bestand",
-    description: "Description for export journal dialog",
+    message:
+      "Downloadt brontransacties en saldoassertions beperkt door de geselecteerde datum, rekening en zoekexpressie. Filters voor boekingstype en transactiestatus gelden niet.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "Context van boeking",

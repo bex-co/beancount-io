@@ -130,8 +130,9 @@ const zhJournal: Record<string, TranslationEntry> = {
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
-    message: "将当前筛选的条目下载为 Beancount 文件",
-    description: "Description for export journal dialog",
+    message:
+      "下载按所选日期、账户和搜索表达式筛选的源交易与余额断言。分录类型与交易状态筛选器不适用。",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "条目上下文",

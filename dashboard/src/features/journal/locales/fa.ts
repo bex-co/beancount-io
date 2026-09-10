@@ -130,8 +130,9 @@ const faJournal: Record<string, TranslationEntry> = {
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
-    message: "دانلود ثبت‌های فعلی فیلتر شده به عنوان فایل Beancount",
-    description: "Description for export journal dialog",
+    message:
+      "تراکنش\u200cهای منبع و اظهارات مانده را محدود به تاریخ، حساب و عبارت جستجوی انتخاب\u200cشده دانلود می\u200cکند. فیلترهای نوع سند و وضعیت تراکنش اعمال نمی\u200cشوند.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "متن ثبت",

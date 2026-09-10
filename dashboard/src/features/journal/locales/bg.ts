@@ -130,8 +130,9 @@ const bgJournal: Record<string, TranslationEntry> = {
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
-    message: "Изтегляне на текущо филтрираните записи като Beancount файл",
-    description: "Description for export journal dialog",
+    message:
+      "Изтегля изходни транзакции и балансови проверки, ограничени по избраната дата, сметка и израз за търсене. Филтрите за тип запис и статус на транзакция не важат.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "Контекст на запис",

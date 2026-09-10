@@ -127,8 +127,9 @@ const koJournal: Record<string, TranslationEntry> = {
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
-    message: "현재 필터링된 항목을 Beancount 파일로 다운로드",
-    description: "Description for export journal dialog",
+    message:
+      "선택한 날짜, 계정, 검색식으로 좁힌 원본 거래와 잔액 단언을 다운로드합니다. 항목 유형 및 거래 상태 필터는 적용되지 않습니다.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "항목 컨텍스트",

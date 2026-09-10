@@ -130,8 +130,9 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
-    message: "Download currently filtered entries as a Beancount file",
-    description: "Description for export journal dialog",
+    message:
+      "Скачивает исходные транзакции и проверки баланса, ограниченные выбранной датой, счётом и поисковым выражением. Фильтры типа записи и статуса транзакции не применяются.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "Запись Context",

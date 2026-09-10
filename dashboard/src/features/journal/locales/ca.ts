@@ -131,8 +131,8 @@ const caJournal: Record<string, TranslationEntry> = {
   },
   "journal.downloadFilteredEntries": {
     message:
-      "Descarregar les entrades filtrades actualment com a fitxer de Beancount",
-    description: "Description for export journal dialog",
+      "Descarrega transaccions d'origen i assercions de saldo acotades per la data, el compte i l'expressió de cerca seleccionades. Els filtres de tipus d'assentament i estat de transacció no s'apliquen.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "Context de l'entrada",

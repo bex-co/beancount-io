@@ -131,8 +131,8 @@ const esJournal: Record<string, TranslationEntry> = {
   },
   "journal.downloadFilteredEntries": {
     message:
-      "Descargar las entradas filtradas actualmente como un archivo Beancount",
-    description: "Description for export journal dialog",
+      "Descarga transacciones de origen y asientos de saldo acotados por la fecha, la cuenta y la expresión de búsqueda seleccionadas. Los filtros de tipo de asiento y estado de transacción no se aplican.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "Contexto de Entrada",

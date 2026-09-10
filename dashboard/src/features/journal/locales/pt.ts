@@ -131,8 +131,8 @@ const ptJournal: Record<string, TranslationEntry> = {
   },
   "journal.downloadFilteredEntries": {
     message:
-      "Baixar lançamentos filtrados atualmente como um arquivo Beancount",
-    description: "Description for export journal dialog",
+      "Baixa transações de origem e asserções de saldo limitadas pela data, conta e expressão de busca selecionadas. Filtros de tipo de lançamento e status de transação não se aplicam.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "Contexto do Lançamento",

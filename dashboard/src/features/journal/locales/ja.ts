@@ -128,8 +128,8 @@ const jaJournal: Record<string, TranslationEntry> = {
   },
   "journal.downloadFilteredEntries": {
     message:
-      "現在のフィルタリングされたエントリをBeancountファイルとしてダウンロード",
-    description: "Description for export journal dialog",
+      "選択した日付・口座・検索式で絞り込んだ元の取引と残高アサーションをダウンロードします。エントリ種別と取引ステータスのフィルタは適用されません。",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "エントリコンテキスト",

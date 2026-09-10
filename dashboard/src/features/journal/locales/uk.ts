@@ -130,8 +130,9 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
-    message: "Вownload currently filtered entries as a Beancount file",
-    description: "Description for export journal dialog",
+    message:
+      "Завантажує вихідні транзакції та перевірки балансу, обмежені вибраною датою, рахунком і пошуковим виразом. Фільтри типу запису та статусу транзакції не застосовуються.",
+    description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
     message: "Контекст запису",
