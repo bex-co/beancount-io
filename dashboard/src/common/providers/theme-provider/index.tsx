@@ -1,7 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ThemeProviderContext } from "./context.ts";
-import type { Theme } from "./type.ts";
-import { getSystemTheme, THEME_STORAGE_KEY } from "./utils.ts";
+import type { ResolvedTheme, Theme } from "./type.ts";
+import {
+  getSystemTheme,
+  subscribeSystemTheme,
+  THEME_STORAGE_KEY,
+} from "./utils.ts";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -60,6 +64,8 @@ export function ThemeProvider({
   // Always start with defaultTheme to match server-side rendering
   // This prevents hydration mismatch
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [systemTheme, setSystemTheme] =
+    useState<ResolvedTheme>(getSystemTheme);
 
   // After first render (hydration complete), mark as hydrated
   useEffect(() => {
@@ -85,6 +91,16 @@ export function ThemeProvider({
     // If neither exists, keep defaultTheme (already set)
   }, [storageKey, isHydrated]);
 
+  // Keep system appearance reactive while the preference is "system".
+  useEffect(() => {
+    if (!isHydrated) return;
+    setSystemTheme(getSystemTheme());
+    return subscribeSystemTheme(setSystemTheme);
+  }, [isHydrated]);
+
+  const resolvedTheme: ResolvedTheme =
+    theme === "system" ? systemTheme : theme;
+
   // Apply theme to DOM by adding/removing class on <html> element
   // ONLY apply after hydration to prevent mismatch
   useEffect(() => {
@@ -99,33 +115,34 @@ export function ThemeProvider({
         ? "light"
         : null;
 
-    // Resolve "system" theme to actual "light" or "dark" based on user's OS preference
-    const targetTheme = theme === "system" ? getSystemTheme() : theme;
-
     // Only update DOM if theme actually changed (prevents unnecessary reflows)
-    if (currentClass !== targetTheme) {
+    if (currentClass !== resolvedTheme) {
       root.classList.remove("light", "dark");
-      root.classList.add(targetTheme);
+      root.classList.add(resolvedTheme);
     }
-  }, [theme, isHydrated]);
+  }, [resolvedTheme, isHydrated]);
 
-  const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
+  const value = useMemo(
+    () => ({
+      theme,
+      resolvedTheme,
+      setTheme: (next: Theme) => {
+        localStorage.setItem(storageKey, next);
 
-      // Sync theme to cookie for SSR theme detection
-      // This ensures server can detect theme on next request
-      // Cookie expires in 1 year (same as typical localStorage behavior)
-      try {
-        document.cookie = `vite-ui-theme=${theme}; path=/; max-age=31536000; SameSite=Lax`;
-      } catch {
-        // Ignore cookie errors (incognito mode, etc.)
-      }
+        // Sync theme to cookie for SSR theme detection
+        // This ensures server can detect theme on next request
+        // Cookie expires in 1 year (same as typical localStorage behavior)
+        try {
+          document.cookie = `vite-ui-theme=${next}; path=/; max-age=31536000; SameSite=Lax`;
+        } catch {
+          // Ignore cookie errors (incognito mode, etc.)
+        }
 
-      setTheme(theme);
-    },
-  };
+        setTheme(next);
+      },
+    }),
+    [theme, resolvedTheme, storageKey],
+  );
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>
