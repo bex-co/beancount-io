@@ -18,6 +18,14 @@ const frDirectoryBrowse: Record<
     message: "Ce répertoire est vide",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "Copier l’URL de clonage HTTP",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "Copier l’URL de clonage SSH",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default frDirectoryBrowse;

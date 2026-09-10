@@ -18,6 +18,14 @@ const ruDirectoryBrowse: Record<
     message: "Этот каталог пуст",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "Скопировать HTTP URL клонирования",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "Скопировать SSH URL клонирования",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default ruDirectoryBrowse;

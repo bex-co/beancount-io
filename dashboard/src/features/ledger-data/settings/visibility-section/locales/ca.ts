@@ -63,6 +63,14 @@ const caVisibilitySection: Record<string, TranslationEntry> = {
     message: "No s'ha pogut copiar el codi",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "Copia l’URL compartible",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "Copia el codi d’incrustació",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default caVisibilitySection;

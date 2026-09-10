@@ -61,6 +61,14 @@ const koVisibilitySection: Record<string, TranslationEntry> = {
     message: "코드 복사에 실패했습니다",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "공유 URL 복사",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "임베드 코드 복사",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default koVisibilitySection;

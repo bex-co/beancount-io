@@ -18,6 +18,14 @@ const deDirectoryBrowse: Record<
     message: "Dieses Verzeichnis ist leer",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "HTTP-Klon-URL kopieren",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "SSH-Klon-URL kopieren",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default deDirectoryBrowse;

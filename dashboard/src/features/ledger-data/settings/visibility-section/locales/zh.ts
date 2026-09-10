@@ -61,6 +61,14 @@ const zhVisibilitySection: Record<string, TranslationEntry> = {
     message: "复制代码失败",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "复制可分享链接",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "复制嵌入代码",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default zhVisibilitySection;

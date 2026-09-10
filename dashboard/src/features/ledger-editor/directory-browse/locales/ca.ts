@@ -18,6 +18,14 @@ const caDirectoryBrowse: Record<
     message: "Aquest directori està buit",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "Copia l’URL de clonatge HTTP",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "Copia l’URL de clonatge SSH",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default caDirectoryBrowse;

@@ -32,6 +32,7 @@ interface LedgerCloneUrlMenuProps {
 
 interface CloneUrlInputProps {
   url: string;
+  copyLabel: string;
 }
 
 /**
@@ -39,7 +40,7 @@ interface CloneUrlInputProps {
  * Displays a read-only input field with URL and a copy button
  * Manages its own copy status internally
  */
-function CloneUrlInput({ url }: CloneUrlInputProps) {
+export function CloneUrlInput({ url, copyLabel }: CloneUrlInputProps) {
   const formatError = useErrorMessage();
   const [copied, setCopied] = useState<boolean>(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
@@ -76,6 +77,7 @@ function CloneUrlInput({ url }: CloneUrlInputProps) {
         variant="outline"
         onClick={handleCopy}
         className="shrink-0"
+        aria-label={copyLabel}
       >
         {copied ? (
           <Check className="h-4 w-4 text-green-600" />
@@ -146,10 +148,16 @@ export default function LedgerCloneUrlMenu({
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="https">
-                <CloneUrlInput url={httpUrl} />
+                <CloneUrlInput
+                  url={httpUrl}
+                  copyLabel={t("ledgerEditor.copyHttpCloneUrl")}
+                />
               </TabsContent>
               <TabsContent value="ssh">
-                <CloneUrlInput url={sshUrl} />
+                <CloneUrlInput
+                  url={sshUrl}
+                  copyLabel={t("ledgerEditor.copySshCloneUrl")}
+                />
               </TabsContent>
             </Tabs>
           </div>

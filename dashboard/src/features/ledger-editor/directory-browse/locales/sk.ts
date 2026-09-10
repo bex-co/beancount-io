@@ -18,6 +18,14 @@ const skDirectoryBrowse: Record<
     message: "Tento priečinok je prázdny",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "Kopírovať HTTP URL klonu",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "Kopírovať SSH URL klonu",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default skDirectoryBrowse;

@@ -62,6 +62,14 @@ const esVisibilitySection: Record<string, TranslationEntry> = {
     message: "No se pudo copiar el código",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "Copiar URL para compartir",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "Copiar código de inserción",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default esVisibilitySection;

@@ -18,6 +18,14 @@ const koDirectoryBrowse: Record<
     message: "이 디렉터리는 비어 있습니다",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "HTTP 클론 URL 복사",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "SSH 클론 URL 복사",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default koDirectoryBrowse;

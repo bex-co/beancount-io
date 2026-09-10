@@ -63,6 +63,14 @@ const deVisibilitySection: Record<string, TranslationEntry> = {
     message: "Code konnte nicht kopiert werden",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "Teilbare URL kopieren",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "Einbettungscode kopieren",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default deVisibilitySection;

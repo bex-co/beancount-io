@@ -18,6 +18,14 @@ const jaDirectoryBrowse: Record<
     message: "このディレクトリは空です",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "HTTPクローンURLをコピー",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "SSHクローンURLをコピー",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default jaDirectoryBrowse;

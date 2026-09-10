@@ -18,6 +18,14 @@ const ukDirectoryBrowse: Record<
     message: "Ця директорія порожня",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "Скопіювати HTTP URL клонування",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "Скопіювати SSH URL клонування",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default ukDirectoryBrowse;

@@ -218,6 +218,7 @@ export function VisibilitySection({
                   size="icon"
                   onClick={handleCopyUrl}
                   className="shrink-0"
+                  aria-label={t("page.settings.copyShareableUrl")}
                 >
                   {copiedUrl ? (
                     <Check className="h-4 w-4" />
@@ -243,6 +244,7 @@ export function VisibilitySection({
                   size="icon"
                   onClick={handleCopyCode}
                   className="shrink-0"
+                  aria-label={t("page.settings.copyEmbedCode")}
                 >
                   {copiedCode ? (
                     <Check className="h-4 w-4" />

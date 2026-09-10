@@ -61,6 +61,14 @@ const jaVisibilitySection: Record<string, TranslationEntry> = {
     message: "コードのコピーに失敗しました",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "共有用URLをコピー",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "埋め込みコードをコピー",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default jaVisibilitySection;

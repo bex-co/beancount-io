@@ -18,6 +18,14 @@ const faDirectoryBrowse: Record<
     message: "این پوشه خالی است",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "کپی نشانی کلون HTTP",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "کپی نشانی کلون SSH",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default faDirectoryBrowse;

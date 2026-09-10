@@ -18,6 +18,14 @@ const ptDirectoryBrowse: Record<
     message: "Este diretório está vazio",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "Copiar URL de clone HTTP",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "Copiar URL de clone SSH",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default ptDirectoryBrowse;

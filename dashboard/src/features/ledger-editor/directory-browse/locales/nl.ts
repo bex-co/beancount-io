@@ -18,6 +18,14 @@ const nlDirectoryBrowse: Record<
     message: "Deze map is leeg",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "HTTP-kloon-URL kopiëren",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "SSH-kloon-URL kopiëren",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default nlDirectoryBrowse;

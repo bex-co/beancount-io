@@ -63,6 +63,14 @@ const ruVisibilitySection: Record<string, TranslationEntry> = {
     message: "Не удалось скопировать код",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "Скопировать общедоступный URL",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "Скопировать код встраивания",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default ruVisibilitySection;

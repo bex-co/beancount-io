@@ -63,6 +63,14 @@ const ptVisibilitySection: Record<string, TranslationEntry> = {
     message: "Falha ao copiar o código",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "Copiar URL compartilhável",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "Copiar código de incorporação",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default ptVisibilitySection;

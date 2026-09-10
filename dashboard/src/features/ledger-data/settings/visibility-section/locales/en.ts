@@ -62,6 +62,14 @@ const enVisibilitySection: Record<string, TranslationEntry> = {
     message: "Failed to copy code",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "Copy shareable URL",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "Copy embed code",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default enVisibilitySection;

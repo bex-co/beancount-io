@@ -62,6 +62,14 @@ const nlVisibilitySection: Record<string, TranslationEntry> = {
     message: "Kopiëren van code mislukt",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "Deelbare URL kopiëren",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "Insluitcode kopiëren",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default nlVisibilitySection;

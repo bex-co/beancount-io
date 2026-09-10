@@ -62,6 +62,14 @@ const ukVisibilitySection: Record<string, TranslationEntry> = {
     message: "Не вдалося скопіювати код",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "Скопіювати URL для спільного доступу",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "Скопіювати код вбудовування",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default ukVisibilitySection;

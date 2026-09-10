@@ -18,6 +18,14 @@ const enDirectoryBrowse: Record<
     message: "This directory is empty",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "Copy HTTP clone URL",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "Copy SSH clone URL",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default enDirectoryBrowse;

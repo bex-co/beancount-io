@@ -18,6 +18,14 @@ const zhDirectoryBrowse: Record<
     message: "此目录为空",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "复制 HTTP 克隆地址",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "复制 SSH 克隆地址",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default zhDirectoryBrowse;

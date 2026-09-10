@@ -62,6 +62,14 @@ const bgVisibilitySection: Record<string, TranslationEntry> = {
     message: "Неуспешно копиране на кода",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "Копирай споделимия URL",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "Копирай кода за вграждане",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default bgVisibilitySection;

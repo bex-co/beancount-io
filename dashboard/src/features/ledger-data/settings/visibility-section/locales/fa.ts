@@ -63,6 +63,14 @@ const faVisibilitySection: Record<string, TranslationEntry> = {
     message: "کپی کد ناموفق بود",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "کپی نشانی قابل اشتراک",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "کپی کد جاسازی",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default faVisibilitySection;

@@ -18,6 +18,14 @@ const esDirectoryBrowse: Record<
     message: "Este directorio está vacío",
     description: "Message shown when directory has no contents",
   },
+  "ledgerEditor.copyHttpCloneUrl": {
+    message: "Copiar URL de clonación HTTP",
+    description: "Accessible name for copying the HTTP clone URL",
+  },
+  "ledgerEditor.copySshCloneUrl": {
+    message: "Copiar URL de clonación SSH",
+    description: "Accessible name for copying the SSH clone URL",
+  },
 };
 
 export default esDirectoryBrowse;

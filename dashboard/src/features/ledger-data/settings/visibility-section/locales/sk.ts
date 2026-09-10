@@ -62,6 +62,14 @@ const skVisibilitySection: Record<string, TranslationEntry> = {
     message: "Kód sa nepodarilo skopírovať",
     description: "Toast when copying the embed code failed",
   },
+  "page.settings.copyShareableUrl": {
+    message: "Kopírovať zdieľateľnú URL",
+    description: "Accessible name for the button that copies the shareable URL",
+  },
+  "page.settings.copyEmbedCode": {
+    message: "Kopírovať kód na vloženie",
+    description: "Accessible name for the button that copies the embed code",
+  },
 };
 
 export default skVisibilitySection;
