@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [025](./025.md) — Narrow statement tables split digits across lines
 - [026](./026.md) — Statement account expanders expose no accessible name or state
 - [027](./027.md) — A language parameter makes the manual language selector ineffective
 - [029](./029.md) — Settings sign-in redirects discard the requested subpage

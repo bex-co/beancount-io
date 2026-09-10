@@ -67,7 +67,7 @@ function PrimaryCurrencyColumn({
   if (isZeroAmount(raw)) return <Dash />;
   const value = Number(raw);
   return (
-    <div className="text-sm font-mono">
+    <div className="text-sm font-mono tabular-nums whitespace-nowrap [overflow-wrap:normal]">
       {formatNum(inverted ? -value : value)}
     </div>
   );
@@ -106,8 +106,11 @@ function OtherBalancesColumn({
   return (
     <div className="space-y-1">
       {otherBalances.slice(0, 3).map(({ commodity, value }) => (
-        <div key={commodity} className="text-sm">
-          <span className="text-muted-foreground font-mono">
+        <div
+          key={commodity}
+          className="text-sm whitespace-nowrap [overflow-wrap:normal]"
+        >
+          <span className="text-muted-foreground font-mono tabular-nums">
             {formatNum(inverted ? -value : value)}
           </span>{" "}
           <span className="text-muted-foreground">{commodity}</span>
@@ -405,39 +408,51 @@ export function HierarchyList({
       />
 
       <div
-        className={`hierarchy-scroll ${className || ""}`}
+        className={`hierarchy-scroll overflow-x-auto ${className || ""}`}
         style={{
           scrollbarWidth: "thin",
           scrollbarColor:
             "hsl(var(--muted-foreground) / 0.3) hsl(var(--muted))",
         }}
       >
-        {/* Table Header */}
-        <div
-          className={cn(
-            ROW_CLASS,
-            "bg-muted font-semibold text-sm text-muted-foreground",
-          )}
-        >
-          <div className="col-span-6">{t("common.accountColumn")}</div>
-          <div className="col-span-3 text-right">{primaryCurrency}</div>
-          <div className="col-span-3 text-right">{t("common.otherColumn")}</div>
+        {/*
+          Keep amount columns wide enough that signed decimals stay one line;
+          narrow viewports scroll horizontally instead of wrapping digits.
+        */}
+        <div className="min-w-[40rem]">
+          {/* Table Header */}
+          <div
+            className={cn(
+              ROW_CLASS,
+              "bg-muted font-semibold text-sm text-muted-foreground",
+            )}
+          >
+            <div className="col-span-6">{t("common.accountColumn")}</div>
+            <div className="col-span-3 text-right">{primaryCurrency}</div>
+            <div className="col-span-3 text-right">
+              {t("common.otherColumn")}
+            </div>
+          </div>
+
+          {data.map((node) => (
+            <TreeNode
+              key={node.account}
+              node={node}
+              level={0}
+              expandedNodes={expandedNodes}
+              onToggle={handleToggle}
+              primaryCurrency={primaryCurrency}
+            />
+          ))}
+
+          {summaryRows.map((row, index) => (
+            <SummaryRow
+              key={index}
+              row={row}
+              primaryCurrency={primaryCurrency}
+            />
+          ))}
         </div>
-
-        {data.map((node) => (
-          <TreeNode
-            key={node.account}
-            node={node}
-            level={0}
-            expandedNodes={expandedNodes}
-            onToggle={handleToggle}
-            primaryCurrency={primaryCurrency}
-          />
-        ))}
-
-        {summaryRows.map((row, index) => (
-          <SummaryRow key={index} row={row} primaryCurrency={primaryCurrency} />
-        ))}
       </div>
     </>
   );
