@@ -22,3 +22,18 @@
 - [x] **m16** — No-code CSV import: column mapping and rules without a Python importer (8 tasks) ← from CLI UX review 2026-09-08 (developer and beancount-user walkthrough of `cli/` docs and `bea 0.1.0`); user routed to w1 — sequenced after m14
 - [x] **m17** — CLI docs from one source: landing README, generated reference, executable examples, first-month tutorial (8 tasks) ← from CLI UX review 2026-09-08 (developer and beancount-user walkthrough of `cli/` docs and `bea 0.1.0`); user routed to w1 — sequenced after m13, m15, m16
 - [x] **m18** — Ledger skills converge on `bea` (8 tasks) ← from CLI UX review 2026-09-08 (developer and beancount-user walkthrough of `cli/` docs and `bea 0.1.0`); user routed to w1 — sequenced after m14 and the w2/m25 release
+
+## CLI QA inbox
+
+- [010](./010.md) — BQL can report another ledger when a filename contains # or ?
+- [011](./011.md) — Cost labels lose backslashes when CLI transactions are written
+- [012](./012.md) — A zero posting blocks CLI imports into its account
+- [013](./013.md) — Small scalar numbers are written as commodity amounts
+- [014](./014.md) — CSV import rejects documented whitespace-trimmed headers
+- [015](./015.md) — Duplicate CSV amount columns silently choose the last value
+- [016](./016.md) — Unterminated CSV quotes silently absorb subsequent transactions
+- [017](./017.md) — BQL JSON drops acquisition dates and labels from cost lots
+- [018](./018.md) — Report account regex errors are misclassified and help says substring
+- [019](./019.md) — Init rejects a one-satoshi BTC opening balance
+- [020](./020.md) — Filtered balance keeps unrelated totals and valuation requirements
+- [021](./021.md) — Tolerated ledger warnings corrupt subsequent JSON error output

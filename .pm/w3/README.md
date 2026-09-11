@@ -49,8 +49,18 @@
 
 - [104](./104.md) — Guest Star and Follow discard the sign-in return destination
 
+- [105](./105.md) — Mobile Settings clips invitation copy in Spanish and at larger text sizes
+
+- [106](./106.md) — Mobile transaction detail crashes on a missing selector import
+
 - [107](./107.md) — Star remains selected after the server reports failure
 
 - [108](./108.md) — Money movement month labels ignore the selected language
 
+- [109](./109.md) — Mobile Home and journal round nonzero crypto rewards to zero
+
 - [110](./110.md) — Browser-default number formatting breaks report hydration
+
+- [111](./111.md) — Mobile recurring switch has no accessible name
+
+- [112](./112.md) — Mobile Ethereum 2.0 merchant detail rejects its own journal filter
