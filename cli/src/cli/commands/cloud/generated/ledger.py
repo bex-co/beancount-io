@@ -54,10 +54,10 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
     def ledger_show(
         full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],
     ) -> None:
+        owner, name = owner_and_name(full_name)
         from cli.api.client import authenticated_client, unwrap
         from cli.api.rest_client.api.ledger_v_1 import get_ledger
 
-        owner, name = owner_and_name(full_name)
         result = unwrap(get_ledger.sync_detailed(owner, name, client=authenticated_client()))
         data = result if isinstance(result, list) else [result]
         rows = [snake_keys(item.to_dict()) for item in data]
@@ -74,13 +74,12 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
     def ledger_delete(
         full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],
     ) -> None:
+        owner, name = owner_and_name(full_name)
         if not context.current().confirm(f"Permanently delete ledger '{full_name}'?"):
             output.success("Cancelled.")
             return
         from cli.api.client import authenticated_client, unwrap
         from cli.api.rest_client.api.ledger_v_1 import delete_ledger
-
-        owner, name = owner_and_name(full_name)
         import httpx
 
         from cli.errors import unknown_write_outcome

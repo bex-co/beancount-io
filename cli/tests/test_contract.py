@@ -367,6 +367,22 @@ class TestJsonOutput:
 
 
 class TestNoInput:
+    @pytest.mark.parametrize("command", ["show", "delete", "clone"])
+    @pytest.mark.parametrize("signed_in", [True, False], ids=["signed-in", "signed-out"])
+    def test_a_malformed_full_name_is_a_usage_error_before_confirmation_or_auth(
+        self, monkeypatch: pytest.MonkeyPatch, command: str, signed_in: bool
+    ) -> None:
+        if signed_in:
+            monkeypatch.setenv("BEA_TOKEN", "test-token")
+
+        with patch("typer.confirm") as confirm:
+            result = runner.invoke(app, ["--json", "cloud", "ledger", command, "open_ledger"])
+
+        confirm.assert_not_called()
+        assert result.exit_code == 2
+        assert error_object(result)["message"] == "'open_ledger' is not a ledger full name; expected 'owner/name'."
+        assert "--yes" not in error_object(result)["message"]
+
     def test_a_destructive_command_refuses_to_run_unconfirmed(self, logged_in: None) -> None:
         result = runner.invoke(app, ["cloud", "ledger", "delete", "alice/books"])
 

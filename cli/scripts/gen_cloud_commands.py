@@ -164,6 +164,11 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
     lines.extend(signature)
     lines.append(") -> None:")
 
+    # Path arguments are validated first: a malformed name is a usage error
+    # whether or not anyone is there to confirm, and a garbage target must not
+    # be answered with "pass --yes".
+    lines.extend(body)
+
     if cmd.confirm:
         lines.append(f'    if not context.current().confirm(f"{esc(cmd.confirm)}"):')
         lines.append('        output.success("Cancelled.")')
@@ -171,7 +176,6 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
 
     lines.append("    from cli.api.client import authenticated_client, unwrap")
     lines.append(f"    from cli.api.rest_client.api.ledger_v_1 import {module}")
-    lines.extend(body)
 
     call = f"{module}.sync_detailed({', '.join(call_args)}{', ' if call_args else ''}client=authenticated_client())"
     if method == "get":
