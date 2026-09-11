@@ -37,8 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [093](./093.md) — Mobile transaction search rejects punctuation in existing merchant names
-
 - [094](./094.md) — Mobile transaction postings round recorded commodity quantities to two decimals
 
 - [095](./095.md) — Mobile account journal drops the sign of negative running balances
