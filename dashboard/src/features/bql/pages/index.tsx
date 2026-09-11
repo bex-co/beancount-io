@@ -255,56 +255,56 @@ export default function LedgerQueryPage() {
                 // Configure Beancount/SQL syntax highlighting
                 const languageConfig =
                   monaco.languages.setLanguageConfiguration("sql", {
-                  comments: {
-                    lineComment: "--",
-                    blockComment: ["/*", "*/"],
-                  },
-                  brackets: [
-                    ["{", "}"],
-                    ["[", "]"],
-                    ["(", ")"],
-                  ],
-                  autoClosingPairs: [
-                    { open: "{", close: "}" },
-                    { open: "[", close: "]" },
-                    { open: "(", close: ")" },
-                    { open: '"', close: '"' },
-                    { open: "'", close: "'" },
-                  ],
-                  surroundingPairs: [
-                    { open: "{", close: "}" },
-                    { open: "[", close: "]" },
-                    { open: "(", close: ")" },
-                    { open: '"', close: '"' },
-                    { open: "'", close: "'" },
-                  ],
-                });
+                    comments: {
+                      lineComment: "--",
+                      blockComment: ["/*", "*/"],
+                    },
+                    brackets: [
+                      ["{", "}"],
+                      ["[", "]"],
+                      ["(", ")"],
+                    ],
+                    autoClosingPairs: [
+                      { open: "{", close: "}" },
+                      { open: "[", close: "]" },
+                      { open: "(", close: ")" },
+                      { open: '"', close: '"' },
+                      { open: "'", close: "'" },
+                    ],
+                    surroundingPairs: [
+                      { open: "{", close: "}" },
+                      { open: "[", close: "]" },
+                      { open: "(", close: ")" },
+                      { open: '"', close: '"' },
+                      { open: "'", close: "'" },
+                    ],
+                  });
 
                 // Add Beancount-specific keywords
                 const completionProvider =
                   monaco.languages.registerCompletionItemProvider("sql", {
-                  provideCompletionItems: (model, position) => {
-                    const word = model.getWordUntilPosition(position);
-                    const lineContent = model.getLineContent(
-                      position.lineNumber,
-                    );
-                    if (!shouldOfferBqlQuerySnippets(lineContent, word)) {
-                      return { suggestions: [] };
-                    }
-                    const range = bqlQuerySnippetRange(
-                      position.lineNumber,
-                      word,
-                    );
-                    const suggestions = BQL_QUERY_SNIPPETS.map((snippet) => ({
-                      label: snippet.label,
-                      kind: monaco.languages.CompletionItemKind.Snippet,
-                      insertText: snippet.insertText,
-                      documentation: snippet.documentation,
-                      range,
-                    }));
-                    return { suggestions };
-                  },
-                });
+                    provideCompletionItems: (model, position) => {
+                      const word = model.getWordUntilPosition(position);
+                      const lineContent = model.getLineContent(
+                        position.lineNumber,
+                      );
+                      if (!shouldOfferBqlQuerySnippets(lineContent, word)) {
+                        return { suggestions: [] };
+                      }
+                      const range = bqlQuerySnippetRange(
+                        position.lineNumber,
+                        word,
+                      );
+                      const suggestions = BQL_QUERY_SNIPPETS.map((snippet) => ({
+                        label: snippet.label,
+                        kind: monaco.languages.CompletionItemKind.Snippet,
+                        insertText: snippet.insertText,
+                        documentation: snippet.documentation,
+                        range,
+                      }));
+                      return { suggestions };
+                    },
+                  });
 
                 for (const disposable of monacoDisposablesRef.current) {
                   disposable.dispose();

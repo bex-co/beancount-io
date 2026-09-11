@@ -119,6 +119,7 @@ vi.mock("@/common/components/monaco-editor", () => ({
         getValue: () => string;
         addCommand: (keybinding: number, handler: () => void) => void;
         focus: () => void;
+        onDidDispose: (handler: () => void) => void;
       },
       monaco: {
         KeyMod: { CtrlCmd: number };
@@ -139,6 +140,9 @@ vi.mock("@/common/components/monaco-editor", () => ({
           monacoHarness.commandHandler = handler;
         },
         focus: vi.fn(),
+        // Production disposes Monaco providers on editor dispose
+        // (index.tsx). The mock must expose it or onMount throws.
+        onDidDispose: vi.fn(),
       };
       const monaco = {
         KeyMod: { CtrlCmd: monacoHarness.KeyModCtrlCmd },
