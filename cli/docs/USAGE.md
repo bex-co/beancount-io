@@ -690,7 +690,7 @@ The envelope is always:
 }
 ```
 
-`target` is `{"file": "<absolute path>"}` for commands that resolve a ledger (including formatting one file), `{"directory": "<absolute path>"}` for formatting a directory, and `{"server": "<api url>"}` for hosted commands. Bounded lists also carry `limit`. Amounts use decimal **strings** — never floats — and dates are ISO `YYYY-MM-DD`.
+`target` is `{"file": "<absolute path>"}` for commands that resolve a ledger (including formatting one file), `{"directory": "<absolute path>"}` for formatting a directory, and `{"server": "<api url>"}` for hosted commands. Bounded lists also carry `limit`, and paged hosted lists (`cloud ledger list`) also carry the `page` that was served. Amounts use decimal **strings** — never floats — and dates are ISO `YYYY-MM-DD`.
 
 ```bash
 $ bea --json check

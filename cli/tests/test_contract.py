@@ -335,6 +335,16 @@ class TestJsonOutput:
         assert result.exit_code == 0, result.stderr
         assert envelope(result)["data"][0]["full_name"] == "alice/books"
 
+    def test_ledger_list_echoes_the_page_it_served(self, logged_in: None, httpx_mock: HTTPXMock) -> None:
+        httpx_mock.add_response(url=f"{V1}/ledgers?page=2&limit=3", json=[ledger_item()] * 3)
+
+        result = runner.invoke(app, ["--json", "cloud", "ledger", "list", "--page", "2", "--limit", "3"])
+
+        assert result.exit_code == 0, result.stderr
+        assert envelope(result)["page"] == 2
+        assert envelope(result)["limit"] == 3
+        assert envelope(result)["truncated"] is True
+
 
 class TestNoInput:
     def test_a_destructive_command_refuses_to_run_unconfirmed(self, logged_in: None) -> None:

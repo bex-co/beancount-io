@@ -190,8 +190,10 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
     lines.append("    rows = [snake_keys(item.to_dict()) for item in data]")
 
     if cmd.columns:
-        has_limit = any(p["name"] == "limit" for p in query_params(op))
-        truncated = "truncated=len(rows) >= limit, limit=limit" if has_limit else ""
+        names = {p["name"] for p in query_params(op)}
+        truncated = "truncated=len(rows) >= limit, limit=limit" if "limit" in names else ""
+        if truncated and "page" in names:
+            truncated += ", page=page"
         lines.append("    if context.current().json_output:")
         lines.append(f"        output.emit(rows, target=output.server_target(){', ' + truncated if truncated else ''})")
         lines.append("        return")

@@ -107,6 +107,7 @@ def emit(
     target: dict[str, Any] | None = None,
     truncated: bool = False,
     limit: int | None = None,
+    page: int | None = None,
 ) -> None:
     """Print the documented JSON envelope on stdout."""
     envelope: dict[str, Any] = {
@@ -117,6 +118,10 @@ def emit(
     }
     if limit is not None:
         envelope["limit"] = limit
+    if page is not None:
+        # Paged lists echo the page they served so a script can build the next
+        # request from the payload alone.
+        envelope["page"] = page
     print(json.dumps(envelope))
 
 

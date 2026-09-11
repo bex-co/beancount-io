@@ -32,7 +32,7 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
         data = result if isinstance(result, list) else [result]
         rows = [snake_keys(item.to_dict()) for item in data]
         if context.current().json_output:
-            output.emit(rows, target=output.server_target(), truncated=len(rows) >= limit, limit=limit)
+            output.emit(rows, target=output.server_target(), truncated=len(rows) >= limit, limit=limit, page=page)
             return
         output.table(
             ["NAME", "FULLNAME", "PRIVATE", "CREATED"],
