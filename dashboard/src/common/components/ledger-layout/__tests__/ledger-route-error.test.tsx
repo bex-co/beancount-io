@@ -74,7 +74,7 @@ describe("LedgerRouteError", () => {
     mocks.unauthenticated = true;
     render(
       <LedgerRouteError
-        error={new Error("session expired")}
+        error={new Error("unauthenticated")}
         reset={vi.fn()}
         info={undefined}
       />,
@@ -85,7 +85,6 @@ describe("LedgerRouteError", () => {
         to: "/auth/login",
         search: {
           next: "/ledger/alice/books/commits",
-          reason: "expired",
         },
       });
     });

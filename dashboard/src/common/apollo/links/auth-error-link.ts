@@ -52,11 +52,11 @@ export function shouldRedirectForUnauthenticatedError(
 }
 
 /**
- * Catches UNAUTHENTICATED GraphQL errors (expired/revoked JWT cookie) from
- * authenticated queries and mutations *mounted on the client* and bounces the
- * user to the login page instead of letting the error surface as a generic
- * "something went wrong" screen. Nullable identity probes are intentionally
- * excluded because they also run on public pages.
+ * Catches UNAUTHENTICATED GraphQL errors from authenticated queries and
+ * mutations *mounted on the client* and bounces the user to the login page
+ * instead of letting the error surface as a generic "something went wrong"
+ * screen. Nullable identity probes are intentionally excluded because they
+ * also run on public pages.
  *
  * CSR-only: on the server there's no `window` to redirect from, and — as
  * important — no live router-invoked callback to safely construct a
@@ -69,7 +69,15 @@ export function shouldRedirectForUnauthenticatedError(
  * A full-page navigation (not router.navigate) is used deliberately: it
  * resets all in-memory state (Apollo cache, React state) in one step without
  * needing a reference to the client or router instance from this link.
+ *
+ * Generic UNAUTHENTICATED is not the same as a known expired session — do
+ * not attach `reason=expired` here. Reserve that query flag for callers that
+ * positively know the session expired.
  */
+export function buildUnauthenticatedLoginHref(next: string): string {
+  return `/auth/login?next=${encodeURIComponent(next)}`;
+}
+
 export const authErrorLink = new ErrorLink(({ error, operation }) => {
   if (typeof window === "undefined") return;
   if (redirecting) return;
@@ -78,7 +86,5 @@ export const authErrorLink = new ErrorLink(({ error, operation }) => {
 
   redirecting = true;
   const next = window.location.pathname + window.location.search;
-  window.location.assign(
-    `/auth/login?next=${encodeURIComponent(next)}&reason=expired`,
-  );
+  window.location.assign(buildUnauthenticatedLoginHref(next));
 });

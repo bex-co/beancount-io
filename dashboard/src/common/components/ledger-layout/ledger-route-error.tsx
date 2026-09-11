@@ -22,7 +22,7 @@ export function LedgerRouteError({ error, reset }: ErrorComponentProps) {
 
     void navigate({
       to: "/auth/login",
-      search: { next: pathname, reason: "expired" },
+      search: { next: pathname },
     });
   }, [navigate, pathname, unauthenticated]);
 

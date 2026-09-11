@@ -29,7 +29,7 @@ export default function ErrorPage({ error, reset }: ErrorComponentProps) {
     if (!unauthenticated) return;
     void navigate({
       to: "/auth/login",
-      search: { next: pathname, reason: "expired" },
+      search: { next: pathname },
     });
   }, [unauthenticated, pathname, navigate]);
 
@@ -67,14 +67,14 @@ export default function ErrorPage({ error, reset }: ErrorComponentProps) {
           <div className="space-y-4">
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
               {unauthenticated
-                ? t("common.sessionExpiredTitle")
+                ? t("auth.signIn")
                 : isValidationError
                   ? t("common.invalidParameters")
                   : t("common.errorTitle")}
             </h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto">
               {unauthenticated
-                ? t("common.sessionExpiredDescription")
+                ? t("common.errors.unauthenticated")
                 : isValidationError
                   ? t("common.invalidParametersDescription")
                   : t("common.errorDescription")}

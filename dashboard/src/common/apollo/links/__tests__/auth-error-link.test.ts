@@ -1,6 +1,9 @@
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { describe, expect, it } from "vitest";
-import { shouldRedirectForUnauthenticatedError } from "../auth-error-link";
+import {
+  buildUnauthenticatedLoginHref,
+  shouldRedirectForUnauthenticatedError,
+} from "../auth-error-link";
 
 function graphQLError(code: string): CombinedGraphQLErrors {
   return new CombinedGraphQLErrors({
@@ -21,7 +24,7 @@ describe("shouldRedirectForUnauthenticatedError", () => {
     },
   );
 
-  it("still redirects protected operations after a session expires", () => {
+  it("still redirects protected operations after authentication fails", () => {
     expect(
       shouldRedirectForUnauthenticatedError(
         graphQLError("UNAUTHENTICATED"),
@@ -46,5 +49,17 @@ describe("shouldRedirectForUnauthenticatedError", () => {
         "GetLedgerSettings",
       ),
     ).toBe(false);
+  });
+});
+
+describe("buildUnauthenticatedLoginHref", () => {
+  it("sends guests to login without claiming the session expired", () => {
+    expect(
+      buildUnauthenticatedLoginHref(
+        "/ledger/open_ledger/budgeting-envelopes/commits",
+      ),
+    ).toBe(
+      "/auth/login?next=%2Fledger%2Fopen_ledger%2Fbudgeting-envelopes%2Fcommits",
+    );
   });
 });
