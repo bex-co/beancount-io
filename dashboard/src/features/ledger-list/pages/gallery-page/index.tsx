@@ -16,6 +16,7 @@ import { decodeLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import { PageSEO } from "@/common/components/seo/page-seo";
+import { Button } from "@/common/components/ui/button";
 
 /**
  * Empty state component for gallery search
@@ -191,12 +192,20 @@ export default function GalleryPage() {
           {/* Header Section */}
           <header className="flex flex-col items-center justify-center py-12 sm:py-16 space-y-6">
             <div className="flex flex-col items-center space-y-4 text-center">
-              <img
-                src="/lgasset/logo.png"
-                alt={t("common.beancountLogo")}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={t("common.back")}
                 onClick={() => window.history.back()}
-                className="h-16 w-16 sm:h-20 sm:w-20 cursor-pointer"
-              />
+                className="h-16 w-16 sm:h-20 sm:w-20 rounded-full p-0"
+              >
+                <img
+                  src="/lgasset/logo.png"
+                  alt=""
+                  className="h-full w-full"
+                />
+              </Button>
               <div className="space-y-2">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">
                   {t("page.gallery.ledgerGallery")}
