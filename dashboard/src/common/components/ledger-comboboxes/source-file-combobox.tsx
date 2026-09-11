@@ -1,6 +1,10 @@
 import { useQuery } from "@apollo/client/react";
 import { useMemo } from "react";
-import { Combobox, type ComboboxOption } from "@/common/components/ui/combobox";
+import {
+  Combobox,
+  type ComboboxFieldProps,
+  type ComboboxOption,
+} from "@/common/components/ui/combobox";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
@@ -11,7 +15,7 @@ import {
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 
-interface SourceFileComboboxProps {
+interface SourceFileComboboxProps extends ComboboxFieldProps {
   ledgerId: string;
   value: string;
   onValueChange: (value: string) => void;
@@ -34,6 +38,7 @@ export function SourceFileCombobox({
   placeholder,
   disabled = false,
   className,
+  ...fieldProps
 }: SourceFileComboboxProps) {
   const { t } = useTranslations();
   const defaultPlaceholder =
@@ -78,6 +83,7 @@ export function SourceFileCombobox({
       emptyText={t("component.sourceFileCombobox.noFilesFound")}
       disabled={disabled}
       className={className}
+      {...fieldProps}
     />
   );
 }
