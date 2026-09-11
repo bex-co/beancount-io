@@ -4,6 +4,8 @@
 
 ## Milestones
 
+- [ ] **m34** — Preserve decimal amounts in native multi-posting drafts (6 tasks) ← from native QA 2026-09-11
+
 - [ ] **m1** — Budget read-only: Home panel + /budget page (13 tasks) ← from budget-on-mobile PM spec 2026-08-09
 - [ ] **m2** — Budget management: add, update, delete from mobile (9 tasks) ← from budget-on-mobile PM spec 2026-08-09 — sequenced after m1
 - [x] **m3** — Budget localization & analytics-driven iteration (7 tasks) ← from budget-on-mobile PM spec 2026-08-09 — sequenced after m2
@@ -34,11 +36,105 @@
 - [x] **m28** — Keep BQL values connected to their columns (6 tasks) ← promoted028 and repeated dashboard QA, 2026-09-08
 - [x] **m29** — Protect file drafts during navigation and cancellation (6 tasks) ← promoted041 and repeated dashboard QA, 2026-09-08
 
+- [ ] **m30** — Apply shared account filters to account-journal reads (8 tasks) ← continuous dashboard QA, 2026-09-11
+
+- [ ] **m31** — Complete the Entry Context keyboard journey (6 tasks) ← continuous dashboard QA,2026-09-11
+
+- [ ] **m32** — Expose statement hierarchy tables to assistive technology (6 tasks) ← continuous dashboard QA,2026-09-11
+
+- [ ] **m33** — Preserve import configuration across Back (6 tasks) ← continuous dashboard QA,2026-09-11
+
+- [ ] **m35** — Keep report results and exports tied to their completed request (7 tasks) ← promoted129 and pending-conversion QA
+
+- [ ] **m36** — Reject lossy CSV amount conversions before import (6 tasks) ← residual m19 validation boundary, dashboard QA2026-09-11
+
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
 - [105](./105.md) — Mobile Settings clips invitation copy in Spanish and at larger text sizes
 - [109](./109.md) — Mobile Home and journal round nonzero crypto rewards to zero
 - [111](./111.md) — Mobile recurring switch has no accessible name
+<<<<<<< Updated upstream
 - [112](./112.md) — Mobile Ethereum 2.0 merchant detail rejects its own journal filter
 - [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
+=======
+
+- [112](./112.md) — Mobile merchant detail fails for punctuated payee names
+
+- [113](./113.md) — Mobile accepts a reversed custom date range and breaks Transactions
+
+- [114](./114.md) — Read-only account filter offers Create and sends users to a blocked screen
+
+- [115](./115.md) — Mobile carries an account filter into a different ledger and hides its journal
+
+- [116](./116.md) — Journal truncates nonzero units and precise quotes to two decimals
+
+- [117](./117.md) — Download ZIP fails without user feedback when archive discovery rejects
+- [118](./118.md) — Smart Import accepts reordered CSV headers but swaps monetary values
+>>>>>>> Stashed changes
+- [119](./119.md) — m17 follow-up: initial virtual diff selection is consumed before the list is ready
+- [120](./120.md) — Accounts loses search and type selection on browser Back
+- [125](./125.md) — Hierarchy chart clicks move accounts off-screen with no reset control
+
+- [126](./126.md) — Trial Balance narrow view selection leaves the wrong chart displayed
+
+- [127](./127.md) — Collapsed report charts remain keyboard-focusable
+
+
+- [131](./131.md) — Journal loses the current page after an account drill-down
+
+- [132](./132.md) — Current plan summary ignores the selected app language
+
+- [133](./133.md) — Report pages discard invalid-input error guidance
+
+- [134](./134.md) — Cash Flow keeps an old error after the filter is corrected
+
+- [135](./135.md) — Editing a multiline import description joins its lines
+
+- [136](./136.md) — Import Select All hides partially selected state
+
+- [138](./138.md) — Empty Statistics periods render NaN percentages
+
+- [139](./139.md) — A one-month Net Worth chart has no visible data point
+
+- [141](./141.md) — Import rejects a valid calendar date in a different browser timezone
+
+- [142](./142.md) — Import preview hides existing field errors until an unrelated edit
+
+- [144](./144.md) — Net Worth and Recent Activity dates ignore the selected language
+
+- [145](./145.md) — Money Movement drill-down widens a range spanning partial months
+
+- [146](./146.md) — Generated padding rows open an unusable Entry Context dialog
+
+- [147](./147.md) — Report chart toolbars clip conversion controls on narrow screens
+
+- [148](./148.md) — Trial Balance hides its conversion selector below desktop width
+
+- [150](./150.md) — Holdings hides CSV downloads on narrow screens
+
+- [152](./152.md) — Missing public profiles become internal server errors
+
+- [153](./153.md) — Dark-theme statement PDFs retain black page margins
+
+- [155](./155.md) — Generated payee suggestions treat literal punctuation as regex syntax
+
+- [157](./157.md) — Unsupported BQL integer results are reported as a temporary outage
+
+- [158](./158.md) — Balance Sheet chart controls reset collapsed account branches
+
+- [160](./160.md) — Holdings loses its grouping after account drill-down and Back
+
+- [161](./161.md) — Closing the narrow sidebar loses keyboard focus
+
+- [163](./163.md) — Gallery Escape abandons keyboard focus in search
+
+- [164](./164.md) — Public collection loses search, sorting and expansion on Back
+
+- [166](./166.md) — Errors table source navigation is pointer-only (controlled fixture)
+
+- [169](./169.md) — Account suggestions extend above short browser viewports
+
+- [170](./170.md) — Auth next guard accepts a tab-obfuscated external redirect
+
+- [172](./172.md) — Password reset calls a validation outage an expired token
