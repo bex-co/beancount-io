@@ -91,11 +91,19 @@ export function createMockMutationTuple<TData>(
  * Creates a type-safe mock lazy query result tuple
  */
 export function createMockLazyQueryTuple<TData>(
-  queryFn: MockedFunction<(options?: unknown) => Promise<void>>,
+  queryFn: MockedFunction<(options?: unknown) => Promise<unknown>>,
   overrides: Partial<MockLazyQueryResult<TData>> = {},
 ): MockLazyQueryTuple<TData> {
+  const executeWithRetain = ((options?: unknown) => {
+    const promise = Promise.resolve(queryFn(options)) as Promise<unknown> & {
+      retain: () => typeof promise;
+    };
+    promise.retain = () => promise;
+    return promise;
+  }) as MockedFunction<(options?: unknown) => Promise<unknown>>;
+
   return [
-    queryFn,
+    executeWithRetain,
     {
       data: undefined,
       loading: false,

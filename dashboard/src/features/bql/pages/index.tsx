@@ -89,7 +89,7 @@ export default function LedgerQueryPage() {
             ledgerId: requestLedgerId,
             query: query.trim(),
           },
-        });
+        }).retain();
 
         // A ledger switch (or remount) must not accept a late previous result.
         if (ledgerIdRef.current !== requestLedgerId) {
