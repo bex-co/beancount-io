@@ -65,11 +65,11 @@ export function NewDirectiveDialog({
           }
           className="w-full flex flex-col flex-1 min-h-0"
         >
-          <div className="flex items-center gap-4 mb-4 shrink-0">
-            <DialogTitle className="text-left">
+          <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <DialogTitle className="min-w-0 shrink-0 text-left sm:shrink">
               {t("journal.newEntry")}
             </DialogTitle>
-            <TabsList className="grid grid-cols-4 shrink-0">
+            <TabsList className="grid w-full grid-cols-4 sm:w-auto sm:shrink-0">
               <TabsTrigger value="transaction">
                 {t("journal.transaction")}
               </TabsTrigger>
