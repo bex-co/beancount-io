@@ -33,6 +33,11 @@ const koUploadFiles: Record<string, { message: string; description: string }> =
       description:
         "Conjunction word between drag and drop and file picker options",
     },
+    "ledgerEditor.removeSelectedFile": {
+      message: "{fileName} 제거",
+      description:
+        "Aria label for removing a staged upload file; {fileName} is the file name",
+    },
     "ledgerEditor.selectedFiles": {
       message: "선택된 파일 ({count}개)",
       description:

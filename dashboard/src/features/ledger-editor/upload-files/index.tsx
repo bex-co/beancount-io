@@ -311,6 +311,9 @@ const UploadFilesPage = () => {
                         onClick={() => handleRemoveFile(index)}
                         disabled={isUploading}
                         className="shrink-0"
+                        aria-label={t("ledgerEditor.removeSelectedFile", {
+                          fileName: file.name,
+                        })}
                       >
                         <X className="h-4 w-4" />
                       </Button>

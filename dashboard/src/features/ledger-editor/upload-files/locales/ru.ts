@@ -33,6 +33,11 @@ const ruUploadFiles: Record<string, { message: string; description: string }> =
       description:
         "Conjunction word between drag and drop and file picker options",
     },
+    "ledgerEditor.removeSelectedFile": {
+      message: "Удалить {fileName}",
+      description:
+        "Aria label for removing a staged upload file; {fileName} is the file name",
+    },
     "ledgerEditor.selectedFiles": {
       message: "Выбранные файлы ({count})",
       description:
