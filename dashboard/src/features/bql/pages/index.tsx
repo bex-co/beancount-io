@@ -19,6 +19,11 @@ import { QueryResultCard } from "../components/query-result-card";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { track } from "@/common/analytics";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
+import {
+  BQL_QUERY_SNIPPETS,
+  bqlQuerySnippetRange,
+  shouldOfferBqlQuerySnippets,
+} from "../lib/bql-completion-snippets";
 
 const DEFAULT_QUERY = "select * from accounts";
 
@@ -263,57 +268,25 @@ export default function LedgerQueryPage() {
 
                 // Add Beancount-specific keywords
                 monaco.languages.registerCompletionItemProvider("sql", {
-                  provideCompletionItems: (_model, position) => {
-                    const suggestions = [
-                      {
-                        label: "select * from accounts",
-                        kind: monaco.languages.CompletionItemKind.Snippet,
-                        insertText: "select * from accounts",
-                        documentation: "Select all accounts",
-                        range: {
-                          startLineNumber: position.lineNumber,
-                          endLineNumber: position.lineNumber,
-                          startColumn: position.column,
-                          endColumn: position.column,
-                        },
-                      },
-                      {
-                        label: "select * from entries",
-                        kind: monaco.languages.CompletionItemKind.Snippet,
-                        insertText: "select * from entries",
-                        documentation: "Select all entries",
-                        range: {
-                          startLineNumber: position.lineNumber,
-                          endLineNumber: position.lineNumber,
-                          startColumn: position.column,
-                          endColumn: position.column,
-                        },
-                      },
-                      {
-                        label: "select * from transactions",
-                        kind: monaco.languages.CompletionItemKind.Snippet,
-                        insertText: "select * from transactions",
-                        documentation: "Select all transactions",
-                        range: {
-                          startLineNumber: position.lineNumber,
-                          endLineNumber: position.lineNumber,
-                          startColumn: position.column,
-                          endColumn: position.column,
-                        },
-                      },
-                      {
-                        label: "select * from balances",
-                        kind: monaco.languages.CompletionItemKind.Snippet,
-                        insertText: "select * from balances",
-                        documentation: "Select all balances",
-                        range: {
-                          startLineNumber: position.lineNumber,
-                          endLineNumber: position.lineNumber,
-                          startColumn: position.column,
-                          endColumn: position.column,
-                        },
-                      },
-                    ];
+                  provideCompletionItems: (model, position) => {
+                    const word = model.getWordUntilPosition(position);
+                    const lineContent = model.getLineContent(
+                      position.lineNumber,
+                    );
+                    if (!shouldOfferBqlQuerySnippets(lineContent, word)) {
+                      return { suggestions: [] };
+                    }
+                    const range = bqlQuerySnippetRange(
+                      position.lineNumber,
+                      word,
+                    );
+                    const suggestions = BQL_QUERY_SNIPPETS.map((snippet) => ({
+                      label: snippet.label,
+                      kind: monaco.languages.CompletionItemKind.Snippet,
+                      insertText: snippet.insertText,
+                      documentation: snippet.documentation,
+                      range,
+                    }));
                     return { suggestions };
                   },
                 });
