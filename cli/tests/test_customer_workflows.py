@@ -478,3 +478,83 @@ def test_report_intervals_cover_the_full_period(
     text = runner.invoke(app, ["--file", str(file), "report", "income-statement", *args])
     assert text.exit_code == 0, text.output
     assert start in text.stdout and end in text.stdout
+
+
+SPLIT_BOOK = (
+    'option "operating_currency" "USD"\n'
+    "2026-01-01 open Assets:Checking USD\n"
+    "2026-01-01 open Assets:Savings USD\n"
+    "2026-01-01 open Equity:Opening USD\n"
+    '2026-02-01 * "Opening"\n  Assets:Checking 100 USD\n  Assets:Savings 200 USD\n  Equity:Opening -300 USD\n'
+)
+
+
+class TestBalanceScope:
+    def test_filtered_totals_match_the_selected_subtree(self, tmp_path: Path) -> None:
+        file = tmp_path / "main.bean"
+        file.write_text(SPLIT_BOOK)
+
+        data = json.loads(run(file, "balance", "Checking").stdout)["data"]
+        whole = json.loads(run(file, "balance").stdout)["data"]
+
+        assert data["account_filter"] == "Checking"
+        assert data["assets"]["balance_children"] == {"USD": "100"}
+        [child] = data["assets"]["children"]
+        assert child["account"] == "Assets:Checking" and child["balance_children"] == {"USD": "100"}
+        assert whole["account_filter"] is None
+        assert whole["assets"]["balance_children"] == {"USD": "300"}
+
+    def test_unrelated_unpriced_holdings_do_not_block_a_filtered_balance(self, tmp_path: Path) -> None:
+        file = tmp_path / "main.bean"
+        file.write_text(
+            SPLIT_BOOK.replace("open Equity:Opening USD", "open Equity:Opening")
+            + '2026-01-01 open Assets:Crypto BTC\n2026-02-02 * "Buy"\n  Assets:Crypto 1 BTC\n  Equity:Opening -1 BTC\n'
+        )
+
+        result = run(file, "balance", "Checking")
+
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.stdout)["data"]
+        assert data["valuation"] == "complete" and data["assets"]["balance_children"] == {"USD": "100"}
+        assert run(file, "balance", "Crypto").exit_code == 1
+
+    def test_closed_parent_keeps_its_open_funded_child(self, tmp_path: Path) -> None:
+        file = tmp_path / "main.bean"
+        file.write_text(
+            SPLIT_BOOK
+            + "2026-01-01 open Assets:Parent USD\n2026-01-01 open Assets:Parent:Child USD\n"
+            + '2026-02-03 * "Fund"\n  Assets:Parent:Child 50 USD\n  Assets:Checking -50 USD\n'
+            + "2026-03-01 close Assets:Parent\n"
+        )
+
+        data = json.loads(run(file, "balance", "Parent").stdout)["data"]
+
+        [parent] = data["assets"]["children"]
+        assert parent["account"] == "Assets:Parent" and parent["balance_children"] == {"USD": "50"}
+        [child] = parent["children"]
+        assert child["account"] == "Assets:Parent:Child" and child["balance_children"] == {"USD": "50"}
+        assert data["assets"]["balance_children"] == {"USD": "50"}
+
+
+class TestReportAccountFilter:
+    def test_a_malformed_expression_is_a_usage_error(self, tmp_path: Path) -> None:
+        file = tmp_path / "main.bean"
+        file.write_text(SPLIT_BOOK)
+
+        result = run(file, "report", "overview", "--account", "[")
+        human = runner.invoke(app, ["--file", str(file), "report", "overview", "--account", "["])
+
+        assert result.exit_code == human.exit_code == 2
+        error = json.loads(result.stderr)["error"]
+        assert error["category"] == "usage" and "account filter '['" in error["message"]
+        assert "account filter '['" in human.stderr
+
+    @pytest.mark.parametrize("pattern", ["Assets:Checking", "Assets:(Checking|Nothing)", "Checking"])
+    def test_valid_patterns_still_filter(self, tmp_path: Path, pattern: str) -> None:
+        file = tmp_path / "main.bean"
+        file.write_text(SPLIT_BOOK)
+
+        result = run(file, "report", "trial-balance", "--account", pattern)
+
+        assert result.exit_code == 0, result.output
+        assert json.loads(result.stdout)["data"]["account_filter"] == pattern

@@ -502,8 +502,10 @@ bea report balance-sheet --conversion EUR
 ```
 
 Each report states its period, as-of date, account filter, and valuation.
-Invalid intervals, dates, or reversed ranges exit **2**. Account filters select
-transactions involving matching accounts and retain all their postings.
+Invalid intervals, dates, reversed ranges, and malformed account filters exit
+**2**. `--account` takes a parent account (`Expenses:Food`) or a regular
+expression (`'Expenses:(Food|Rent)'`); it selects transactions involving
+matching accounts and retains all their postings.
 
 Account trees retain Beancount signs: income, liabilities, and equity are
 normally negative. `net_profit` is `-(income + expenses)`, so a gain is positive

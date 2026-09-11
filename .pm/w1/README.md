@@ -25,6 +25,4 @@
 
 ## CLI QA inbox
 
-- [018](./018.md) — Report account regex errors are misclassified and help says substring
-- [020](./020.md) — Filtered balance keeps unrelated totals and valuation requirements
 - [021](./021.md) — Tolerated ledger warnings corrupt subsequent JSON error output

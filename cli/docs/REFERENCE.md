@@ -537,7 +537,7 @@ Usage: bea report overview [OPTIONS]
 | --- | --- | --- | --- |
 | `--conversion, -x` | str |  | Currency; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
-| `--account, -a` | str |  | Account filter (substring) |
+| `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--interval, -i` | choice: monthly \| quarterly \| yearly \| weekly \| daily | monthly | Reporting interval |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
@@ -553,7 +553,7 @@ Usage: bea report income-statement [OPTIONS]
 | --- | --- | --- | --- |
 | `--conversion, -x` | str |  | Currency; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
-| `--account, -a` | str |  | Account filter (substring) |
+| `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--interval, -i` | choice: monthly \| quarterly \| yearly \| weekly \| daily | monthly | Reporting interval |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
@@ -569,7 +569,7 @@ Usage: bea report balance-sheet [OPTIONS]
 | --- | --- | --- | --- |
 | `--conversion, -x` | str |  | Currency; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
-| `--account, -a` | str |  | Account filter (substring) |
+| `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--interval, -i` | choice: monthly \| quarterly \| yearly \| weekly \| daily | monthly | Reporting interval |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
@@ -585,7 +585,7 @@ Usage: bea report trial-balance [OPTIONS]
 | --- | --- | --- | --- |
 | `--conversion, -x` | str |  | Currency; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
-| `--account, -a` | str |  | Account filter (substring) |
+| `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
 ## CLI maintenance

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import re
 from collections.abc import Iterable, Mapping
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal, localcontext
@@ -41,7 +42,9 @@ ConversionOpt = Annotated[
 TimeOpt = Annotated[
     str | None, typer.Option("--time", "-t", help='Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06"')
 ]
-AccountOpt = Annotated[str | None, typer.Option("--account", "-a", help="Account filter (substring)")]
+AccountOpt = Annotated[
+    str | None, typer.Option("--account", "-a", help="Account filter: a parent account or a regular expression")
+]
 IntervalOpt = Annotated[ReportInterval, typer.Option("--interval", "-i", help="Reporting interval")]
 AllowErrorsOpt = Annotated[
     bool,
@@ -153,6 +156,13 @@ def _load(
     ledger = FavaLedger(entries, errors, options)
     try:
         filtered = ledger.get_filtered(account=account, time=time)
+    except re.error as exc:
+        # The account filter is matched as a regular expression (and as a
+        # whole account component); only that input can fail to compile.
+        raise UsageError(
+            f"Invalid account filter {account!r}: {exc}. "
+            "Pass a parent account such as Expenses:Food, or a regular expression such as 'Expenses:(Food|Rent)'."
+        ) from exc
     except (ValueError, OverflowError, FilterError) as exc:
         raise UsageError(
             f"Invalid time filter {time!r}. Use month, year, YYYY, YYYY-MM, "
@@ -508,19 +518,25 @@ def _prune_tree(
 ) -> SerialisedTreeNode | None:
     """Keep nodes matching any term plus their ancestors for structure.
 
-    In a filtered view, closed accounts (and their subtrees) drop out;
-    ancestors stay for structure and keep their subtree totals.
+    In a filtered view, closed accounts drop out unless a still-open
+    descendant was kept; ancestors stay for structure. Every retained node's
+    subtree total is recomputed from what was kept, so a parent never reports
+    the balance of a sibling the filter excluded.
     """
-    if closed and node.account in closed:
-        return None
     kept = []
     for child in node.children:
         pruned = _prune_tree(child, terms, closed)
         if pruned is not None:
             kept.append(pruned)
-    if any(term in node.account.casefold() for term in terms) or kept:
-        return dataclasses.replace(node, children=kept)
-    return None
+    is_closed = bool(closed) and node.account in (closed or ())
+    matches = not is_closed and any(term in node.account.casefold() for term in terms)
+    if not (matches or kept):
+        return None
+    return dataclasses.replace(
+        node,
+        children=kept,
+        balance_children=_sum(node.balance, *(child.balance_children for child in kept)),
+    )
 
 
 def balance(
@@ -542,12 +558,6 @@ def balance(
     sections = {
         name: getattr(data, f"{name}_hierarchy") for name in ("assets", "liabilities", "equity", "income", "expenses")
     }
-    metadata = _metadata(filtered, conversion) | _valuation(
-        conversion,
-        ((filtered.end_date, balance) for tree in sections.values() for balance in _tree_balances(tree)),
-        allow_errors,
-        filtered.ledger.prices,
-    )
     terms = [(term or "").casefold() for term in accounts or []]
     if not terms:
         pruned = {name: tree for name, tree in sections.items()}
@@ -557,6 +567,23 @@ def balance(
             if isinstance(entry, Close):
                 closed.add(entry.account)
         pruned = {name: _prune_tree(tree, terms, closed) for name, tree in sections.items()}
+    # Valuation covers only the accounts being shown: an unrelated unpriced
+    # holding must not make a USD checking balance fail.
+    metadata = (
+        _metadata(filtered, conversion)
+        | {"account_filter": " ".join(accounts) if accounts else None}
+        | _valuation(
+            conversion,
+            (
+                (filtered.end_date, balance)
+                for tree in pruned.values()
+                if tree is not None
+                for balance in _tree_balances(tree)
+            ),
+            allow_errors,
+            filtered.ledger.prices,
+        )
+    )
     if context.current().json_output:
         output.emit(
             metadata | {name: (_tree_json(tree) if tree is not None else None) for name, tree in pruned.items()},
