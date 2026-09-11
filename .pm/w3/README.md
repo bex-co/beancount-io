@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [076](./076.md) — Cancel retains drafts in SSH setup and Open Account
 - [077](./077.md) — Opening another BQL history query cancels the first
 - [078](./078.md) — SSH setup describes the key as an API credential
 - [079](./079.md) — Gallery’s Back logo cannot be reached with the keyboard
