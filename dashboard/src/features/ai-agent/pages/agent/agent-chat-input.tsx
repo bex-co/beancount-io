@@ -20,7 +20,7 @@ interface AgentChatInputProps {
   placeholder?: string;
   stagedFiles?: StagedFile[];
   onFilesSelected?: (files: File[]) => void;
-  onRemoveFile?: (index: number) => void;
+  onRemoveFile?: (id: string) => void;
 }
 
 const INTERACTIVE_TARGET_SELECTOR = [
@@ -215,11 +215,11 @@ export function AgentChatInput({
       {/* Staged file chips — shown inside the container at the top */}
       {stagedFiles.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
-          {stagedFiles.map((sf, idx) => (
+          {stagedFiles.map((sf) => (
             <StagedFileChip
-              key={idx}
+              key={sf.id}
               stagedFile={sf}
-              onRemove={() => onRemoveFile?.(idx)}
+              onRemove={() => onRemoveFile?.(sf.id)}
             />
           ))}
         </div>

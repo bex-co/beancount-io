@@ -25,7 +25,13 @@ import { getLedgerAgentCanonicalUrl } from "@/common/lib/seo/indexability";
 
 import { useTempAssetUpload } from "@/features/importer/hooks/use-temp-asset-upload";
 import { useTempAssetDownloadUrl } from "./use-temp-asset-download-url";
-import type { StagedFile } from "./attachment";
+import {
+  createStagedEntries,
+  markStagedUploadFailed,
+  markStagedUploadSucceeded,
+  removeStagedFile,
+  type StagedFile,
+} from "./attachment";
 import { useAgentSession } from "../../hooks/use-agent-session";
 import { ChevronDown, LockKeyhole } from "lucide-react";
 
@@ -205,48 +211,24 @@ export function AgentPageImpl({
   };
 
   const handleFilesSelected = async (files: File[]) => {
-    const newEntries: StagedFile[] = files.map((file) => ({
-      file,
-      uploading: true,
-      previewObjectUrl: file.type.startsWith("image/")
-        ? URL.createObjectURL(file)
-        : undefined,
-    }));
+    const newEntries = createStagedEntries(files);
+    setStagedFiles((prev) => [...prev, ...newEntries]);
 
-    setStagedFiles((prev) => {
-      const startIdx = prev.length;
-
-      files.forEach((file, i) => {
-        const idx = startIdx + i;
-        void uploadFile(file)
-          .then(({ objectKey }) => {
-            setStagedFiles((curr) =>
-              curr.map((sf, sfIdx) =>
-                sfIdx === idx ? { ...sf, uploading: false, objectKey } : sf,
-              ),
-            );
-          })
-          .catch(() => {
-            setStagedFiles((curr) =>
-              curr.map((sf, sfIdx) =>
-                sfIdx === idx
-                  ? { ...sf, uploading: false, error: "Upload failed" }
-                  : sf,
-              ),
-            );
-          });
-      });
-
-      return [...prev, ...newEntries];
-    });
+    for (const entry of newEntries) {
+      void uploadFile(entry.file)
+        .then(({ objectKey }) => {
+          setStagedFiles((curr) =>
+            markStagedUploadSucceeded(curr, entry.id, objectKey),
+          );
+        })
+        .catch(() => {
+          setStagedFiles((curr) => markStagedUploadFailed(curr, entry.id));
+        });
+    }
   };
 
-  const handleRemoveFile = (idx: number) => {
-    setStagedFiles((prev) => {
-      const f = prev[idx];
-      if (f?.previewObjectUrl) URL.revokeObjectURL(f.previewObjectUrl);
-      return prev.filter((_, i) => i !== idx);
-    });
+  const handleRemoveFile = (id: string) => {
+    setStagedFiles((prev) => removeStagedFile(prev, id));
   };
 
   const handleSubmit = async () => {

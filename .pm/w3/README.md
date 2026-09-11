@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [068](./068.md) — Removing an earlier AI attachment leaves a later upload stuck
 - [069](./069.md) — The date calendar cannot reach a valid next-year date
 - [070](./070.md) — File-upload removal buttons have no accessible names
 - [071](./071.md) — A removed upload file cannot be selected again
