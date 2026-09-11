@@ -25,7 +25,6 @@
 
 ## CLI QA inbox
 
-- [013](./013.md) — Small scalar numbers are written as commodity amounts
 - [014](./014.md) — CSV import rejects documented whitespace-trimmed headers
 - [015](./015.md) — Duplicate CSV amount columns silently choose the last value
 - [016](./016.md) — Unterminated CSV quotes silently absorb subsequent transactions

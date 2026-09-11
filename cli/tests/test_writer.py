@@ -333,3 +333,63 @@ class TestCostLabelEscaping:
         assert '"lot\\\\A"' in file.read_text()
         listing = CliRunner().invoke(app, ["--json", "--file", str(file), "list", "transaction"])
         assert '"label": "lot\\\\A"' in listing.stdout
+
+
+class TestScalarFixedPoint:
+    """Scalar Decimals are written as fixed-point text, never in scientific notation."""
+
+    VALUES = ["0.00000001", "-0.00000001", "1E+30", "0.000001", "1234.56", "0"]
+
+    @pytest.mark.parametrize("value", VALUES)
+    def test_custom_number_survives_write_and_reload(self, tmp_bean_file: Path, value: str) -> None:
+        from beancount import loader
+        from beancount.core.data import Custom
+
+        writer.write_custom(
+            tmp_bean_file,
+            CustomDirective(
+                date=datetime.date(2026, 2, 1),
+                type="qa",
+                values=[
+                    CustomDirectiveValueNumber(kind="number", value=Decimal(value)),
+                    CustomDirectiveValueText(kind="text", value="1E-8"),
+                    CustomDirectiveValueAmount(kind="amount", number=Decimal(value), currency="USD"),
+                ],
+            ),
+        )
+        assert "E" not in tmp_bean_file.read_text().splitlines()[-1].replace('"1E-8"', "")
+        entries, errors, _ = loader.load_file(str(tmp_bean_file))
+        assert not errors, errors
+        [custom] = [e for e in entries if isinstance(e, Custom)]
+        number, text, amount = custom.values
+        assert number.dtype is Decimal and number.value == Decimal(value)
+        assert text.value == "1E-8"
+        assert amount.value.number == Decimal(value) and amount.value.currency == "USD"
+
+    @pytest.mark.parametrize("value", VALUES)
+    def test_numeric_metadata_survives_on_transactions_and_postings(self, tmp_bean_file: Path, value: str) -> None:
+        from beancount import loader
+        from beancount.core.data import Transaction
+
+        writer.write_transaction(
+            tmp_bean_file,
+            TransactionDirective(
+                date=datetime.date(2026, 2, 1),
+                narration="Meta",
+                meta={"rate": {"kind": "number", "value": value}, "note": "1E-8"},
+                postings=[
+                    Posting(
+                        account="Expenses:Food",
+                        units=Amount(number=Decimal("1"), currency="USD"),
+                        meta={"weight": {"kind": "number", "value": value}},
+                    ),
+                    Posting(account="Assets:Cash", units=Amount(number=Decimal("-1"), currency="USD")),
+                ],
+            ),
+        )
+        entries, errors, _ = loader.load_file(str(tmp_bean_file))
+        assert not errors, errors
+        [txn] = [e for e in entries if isinstance(e, Transaction) and e.narration == "Meta"]
+        assert txn.meta["rate"] == Decimal(value) and isinstance(txn.meta["rate"], Decimal)
+        assert txn.meta["note"] == "1E-8"
+        assert txn.postings[0].meta["weight"] == Decimal(value)

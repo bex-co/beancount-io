@@ -61,6 +61,26 @@ class _ValueType(NamedTuple):
 escape_string: Callable[[str], str] = misc_utils.escape_string
 
 
+class _FixedPointDecimal(Decimal):
+    """A Decimal that prints as fixed-point text, never `1E-8`.
+
+    The upstream printer renders scalar metadata and custom values with
+    `str()`, which switches to scientific notation below 1E-6; Beancount then
+    reads `1E-8` back as the number 1 in commodity `E-8`.
+    """
+
+    def __str__(self) -> str:
+        return format(self, "f")
+
+
+def _fixed_point(value: Any) -> Any:
+    return _FixedPointDecimal(value) if isinstance(value, Decimal) else value
+
+
+def _fixed_point_metadata(meta: dict[str, Any] | None) -> dict[str, Any]:
+    return {key: _fixed_point(value) for key, value in (meta or {}).items()}
+
+
 def normalize_entry_strings(entry: Any) -> Any:
     """Flatten untrusted transaction text and metadata without mutating the input.
 
@@ -105,13 +125,22 @@ def format_entry(entry: Any) -> str:
         entry = entry._replace(**{field: escape_string(getattr(entry, field)) for field in fields})
     if isinstance(entry, Custom):
         entry = entry._replace(
-            values=[_ValueType(escape_string(v.value) if v.dtype is str else v.value, v.dtype) for v in entry.values]
+            values=[
+                _ValueType(escape_string(v.value) if v.dtype is str else _fixed_point(v.value), v.dtype)
+                for v in entry.values
+            ]
         )
+    entry = entry._replace(meta=_fixed_point_metadata(entry.meta))
     if isinstance(entry, Transaction):
         # Upstream quotes a lot label but never escapes it, so `lot\A` reloads
         # as `lotA` and a quote inside breaks the line. Cost and CostSpec are
         # both namedtuples; copy rather than mutate the caller's value.
-        entry = entry._replace(postings=[_escape_cost_label(p) for p in entry.postings])
+        entry = entry._replace(
+            postings=[
+                _escape_cost_label(p)._replace(meta=_fixed_point_metadata(p.meta) if p.meta else p.meta)
+                for p in entry.postings
+            ]
+        )
     rendered = str(upstream_format_entry(entry))
     first, separator, rest = rendered.partition("\n")
     if isinstance(entry, Open | Balance):
