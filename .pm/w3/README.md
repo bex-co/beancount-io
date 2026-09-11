@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [083](./083.md) — A background quota read redirects guests from the empty Ask page
 - [084](./084.md) — Open Account validation remains English in localized forms
 - [085](./085.md) — New Entry squeezes its heading into letters on narrow screens
 - [086](./086.md) — Compact date fields clip the year before editing

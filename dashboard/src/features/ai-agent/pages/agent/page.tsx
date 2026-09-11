@@ -328,7 +328,9 @@ export function AgentPageImpl({
               })}
               className="gap-1.5 space-y-0 pb-1 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-foreground [&_p]:leading-5"
             />
-            <AiCfoUpgradePanel className="mb-0" />
+            {isAuthenticated ? (
+              <AiCfoUpgradePanel className="mb-0" />
+            ) : null}
             {isReadOnly ? (
               <div
                 role="status"
