@@ -38,10 +38,13 @@ export function AccountCombobox({ children }: AccountComboboxProps) {
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const navigate = useNavigate();
   const { setOpenMobile, isMobile } = useSidebar();
-  const { data, loading, error, refetch } = useQuery(GetLedgerAccountsDocument, {
-    variables: { ledgerId: ledgerId },
-    skip: !ledgerId || !open,
-  });
+  const { data, loading, error, refetch } = useQuery(
+    GetLedgerAccountsDocument,
+    {
+      variables: { ledgerId: ledgerId },
+      skip: !ledgerId || !open,
+    },
+  );
 
   const onOpenChange = useCallback((nextOpen: boolean) => {
     setOpen(nextOpen);
@@ -57,7 +60,12 @@ export function AccountCombobox({ children }: AccountComboboxProps) {
     <div className="flex items-center space-x-4">
       <Popover open={open} onOpenChange={onOpenChange}>
         <PopoverTrigger asChild>{children}</PopoverTrigger>
-        <PopoverContent className="p-0" side="right" align="start">
+        <PopoverContent
+          className={isMobile ? "w-[min(18rem,calc(100vw-1rem))] p-0" : "p-0"}
+          side={isMobile ? "bottom" : "right"}
+          align={isMobile ? "end" : "start"}
+          collisionPadding={8}
+        >
           <Command>
             <CommandInput
               placeholder={t("component.accountCombobox.placeholder")}
