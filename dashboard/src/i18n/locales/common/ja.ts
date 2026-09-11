@@ -734,17 +734,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "エラー",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "セッションが期限切れです",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message:
-      "ログインセッションの有効期限が切れました。続行するには再度ログインしてください。",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "続行するにはサインインしてください。",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

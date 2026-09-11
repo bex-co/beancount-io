@@ -70,7 +70,11 @@ vi.mock("@/common/components/seo/ledger-page-seo", () => ({
 
 vi.mock("@/common/components/monaco-editor", () => ({
   MonacoEditor: () => (
-    <textarea data-testid="bql-editor" aria-label="bql-editor" defaultValue="" />
+    <textarea
+      data-testid="bql-editor"
+      aria-label="bql-editor"
+      defaultValue=""
+    />
   ),
 }));
 
@@ -196,11 +200,9 @@ describe("LedgerQueryPage concurrent query retention", () => {
     expect(pending.has(QUERY_A)).toBe(true);
 
     await act(async () => {
-      pending.get(QUERY_B)?.resolve([
-        ["Assets:B1"],
-        ["Assets:B2"],
-        ["Assets:B3"],
-      ]);
+      pending
+        .get(QUERY_B)
+        ?.resolve([["Assets:B1"], ["Assets:B2"], ["Assets:B3"]]);
     });
     await waitFor(() => {
       expect(screen.getByTestId(`result-rows-${QUERY_B}`)).toHaveTextContent(

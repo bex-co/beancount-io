@@ -736,16 +736,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "خطا",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "نشست منقضی شد",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message: "نشست ورود شما منقضی شده است. برای ادامه دوباره وارد شوید.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "برای ادامه وارد شوید.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

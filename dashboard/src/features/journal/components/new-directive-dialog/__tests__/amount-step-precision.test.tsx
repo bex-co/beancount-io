@@ -147,7 +147,9 @@ describe("directive amount precision", () => {
 
     render(<TransactionForm ledgerId="open_ledger/minimax" />);
 
-    expect(screen.getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: "Status" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Add posting" }),
     ).toBeInTheDocument();

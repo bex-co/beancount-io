@@ -55,10 +55,10 @@ describe("LedgerLayoutError", () => {
     );
 
     expect(screen.getByText("Sign in required")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Sign In" })).toBeInTheDocument();
     expect(
-      screen.getByText("Please sign in to continue."),
+      screen.getByRole("heading", { name: "Sign In" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Please sign in to continue.")).toBeInTheDocument();
     expect(screen.queryByText(/session has expired/i)).not.toBeInTheDocument();
   });
 });

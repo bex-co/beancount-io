@@ -744,17 +744,6 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "Error",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "Sessió Caducada",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message:
-      "La teva sessió d'inici ha caducat. Torna a iniciar sessió per continuar.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "Inicieu la sessió per continuar.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

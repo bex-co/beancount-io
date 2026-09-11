@@ -697,7 +697,8 @@ describe("LedgerSEO Component", () => {
   describe("Title prefix", () => {
     it("prefixes browser and social titles without leaving a generic competitor", () => {
       mockT.mockImplementation((key: string) => {
-        if (key === "seo.ledgerFiles.title") return "Files - budgeting-envelopes";
+        if (key === "seo.ledgerFiles.title")
+          return "Files - budgeting-envelopes";
         return key;
       });
 

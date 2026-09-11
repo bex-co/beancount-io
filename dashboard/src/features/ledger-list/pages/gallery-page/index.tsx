@@ -200,11 +200,7 @@ export default function GalleryPage() {
                 onClick={() => window.history.back()}
                 className="h-16 w-16 sm:h-20 sm:w-20 rounded-full p-0"
               >
-                <img
-                  src="/lgasset/logo.png"
-                  alt=""
-                  className="h-full w-full"
-                />
+                <img src="/lgasset/logo.png" alt="" className="h-full w-full" />
               </Button>
               <div className="space-y-2">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">

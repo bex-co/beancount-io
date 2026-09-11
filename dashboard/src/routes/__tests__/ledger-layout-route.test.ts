@@ -69,7 +69,9 @@ describe("ledger layout route loader", () => {
 
   it("redirects guests to login with the full relative destination before SSR strips Apollo codes", async () => {
     const query = vi.fn(() =>
-      Promise.reject(graphqlDenied("UNAUTHENTICATED", "Authentication required")),
+      Promise.reject(
+        graphqlDenied("UNAUTHENTICATED", "Authentication required"),
+      ),
     );
 
     let thrown: unknown;

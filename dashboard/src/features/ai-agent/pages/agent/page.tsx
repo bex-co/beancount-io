@@ -328,9 +328,7 @@ export function AgentPageImpl({
               })}
               className="gap-1.5 space-y-0 pb-1 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-foreground [&_p]:leading-5"
             />
-            {isAuthenticated ? (
-              <AiCfoUpgradePanel className="mb-0" />
-            ) : null}
+            {isAuthenticated ? <AiCfoUpgradePanel className="mb-0" /> : null}
             {isReadOnly ? (
               <div
                 role="status"
@@ -408,7 +406,7 @@ export function AgentPageImpl({
                 onValueChange={setInput}
                 onSubmit={() => void handleSubmit()}
                 onStop={() => {
-                  stop();
+                  void stop();
                   toast.message(t("aiAgent.stopped"));
                 }}
                 placeholder={t("aiAgent.placeholder")}

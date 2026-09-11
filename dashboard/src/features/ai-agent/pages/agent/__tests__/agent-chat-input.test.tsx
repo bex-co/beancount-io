@@ -112,7 +112,9 @@ describe("AgentChatInput type-to-focus", () => {
 
     const ask = screen.getByRole("button", { name: "Ask" });
     expect(ask).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Attach file" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Attach file" }),
+    ).toBeInTheDocument();
   });
 
   it("keeps the Ask name when the composer has a sendable draft", () => {
@@ -176,7 +178,9 @@ describe("AgentChatInput type-to-focus", () => {
     );
 
     const stop = screen.getByRole("button", { name: /^stop$/i });
-    expect(screen.queryByRole("button", { name: /^ask$/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^ask$/i }),
+    ).not.toBeInTheDocument();
     await user.click(stop);
     expect(onStop).toHaveBeenCalledOnce();
   });

@@ -31,9 +31,7 @@ describe("KeyCreateDialog cancel resets draft", () => {
       screen.getByRole("heading", { name: "Create New SSH Key" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Add a new SSH public key for Git repository access.",
-      ),
+      screen.getByText("Add a new SSH public key for Git repository access."),
     ).toBeInTheDocument();
 
     const title = screen.getByLabelText("Key Title");

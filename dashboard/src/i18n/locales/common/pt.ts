@@ -736,17 +736,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Erro",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "Sessão Expirada",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message:
-      "Sua sessão de login expirou. Faça login novamente para continuar.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "Inicie sessão para continuar.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

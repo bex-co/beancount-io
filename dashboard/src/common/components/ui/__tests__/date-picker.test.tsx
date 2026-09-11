@@ -111,9 +111,9 @@ describe("DatePicker calendar year range", () => {
 
     await user.click(screen.getByRole("button", { name: "Select date" }));
 
-    expect(screen.getByRole("combobox", { name: "Choose the Year" })).toHaveTextContent(
-      "2027",
-    );
+    expect(
+      screen.getByRole("combobox", { name: "Choose the Year" }),
+    ).toHaveTextContent("2027");
     expect(
       screen.getByRole("combobox", { name: "Choose the Month" }),
     ).toHaveTextContent("January");
@@ -138,9 +138,9 @@ describe("DatePicker calendar year range", () => {
     expect(next).toBeEnabled();
     await user.click(next);
 
-    expect(screen.getByRole("combobox", { name: "Choose the Year" })).toHaveTextContent(
-      "2027",
-    );
+    expect(
+      screen.getByRole("combobox", { name: "Choose the Year" }),
+    ).toHaveTextContent("2027");
     expect(
       screen.getByRole("combobox", { name: "Choose the Month" }),
     ).toHaveTextContent("January");

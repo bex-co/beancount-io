@@ -736,17 +736,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Грешка",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "Сесията изтече",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message:
-      "Сесията ви за вход изтече. Моля, влезте отново, за да продължите.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "Влезте, за да продължите.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",
