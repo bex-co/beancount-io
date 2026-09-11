@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unit tests for ci-check.py's `bea` resolution path and bea-first matcher.
+"""Unit tests for skill separation, validation, and `bea` preferences.
 
 Stdlib unittest only (the skills CI has no pytest): run with
 `python3 skills/scripts/test_ci_check.py` from the repository root.
@@ -7,7 +7,10 @@ Stdlib unittest only (the skills CI has no pytest): run with
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
+import io
+import json
 import os
 import subprocess
 import sys
@@ -28,6 +31,99 @@ def load_ci_check():
 
 
 ci_check = load_ci_check()
+
+
+class TestSkillTrees(unittest.TestCase):
+    def setUp(self):
+        scratch = SCRIPTS_DIR.parent / "tmp"
+        scratch.mkdir(exist_ok=True)
+        temporary = tempfile.TemporaryDirectory(dir=scratch)
+        self.addCleanup(temporary.cleanup)
+        self.repo = Path(temporary.name)
+        self.customer = self.repo / "skills/.claude/skills"
+        self.development = self.repo / ".agents/skills"
+        self.customer.mkdir(parents=True)
+        self.development.mkdir(parents=True)
+        (self.repo / "skills/CLAUDE.md").write_text("Customer skill guidance\n")
+        (self.repo / "skills/AGENTS.md").symlink_to("CLAUDE.md")
+        (self.repo / ".claude").mkdir()
+        (self.repo / ".claude/skills").symlink_to("../.agents/skills")
+        patches = mock.patch.multiple(
+            ci_check,
+            REPO_ROOT=self.repo,
+            SKILLS_ROOT=self.repo / "skills",
+            SKILLS_DIR=self.customer,
+            DEV_SKILLS_DIR=self.development,
+        )
+        patches.start()
+        self.addCleanup(patches.stop)
+        self.write_skill(self.customer, "beancount-ask")
+        self.write_skill(self.development, "ship")
+
+    def write_skill(self, directory: Path, name: str) -> Path:
+        path = directory / name / "SKILL.md"
+        path.parent.mkdir(parents=True)
+        path.write_text(f"---\nname: {name}\ndescription: A fixture skill.\n---\n")
+        return path
+
+    def test_separate_trees_are_validated(self):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            ci_check.check_symlinks()
+            ci_check.check_skill_md()
+        self.assertIn("OK frontmatter .agents/skills/ship/SKILL.md", output.getvalue())
+        self.assertIn(
+            "OK frontmatter skills/.claude/skills/beancount-ask/SKILL.md",
+            output.getvalue(),
+        )
+
+    def test_old_shared_customer_symlink_is_rejected(self):
+        self.development.rename(self.development.with_name("old-skills"))
+        self.development.symlink_to("../skills/.claude/skills")
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            ci_check.check_symlinks()
+
+    def test_claude_must_load_development_skills(self):
+        link = self.repo / ".claude/skills"
+        link.unlink()
+        link.symlink_to("../skills/.claude/skills")
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            ci_check.check_symlinks()
+
+    def test_skills_in_the_wrong_audience_tree_are_rejected(self):
+        for directory, name in (
+            (self.development, "beancount-import"),
+            (self.customer, "mobile-release"),
+        ):
+            with self.subTest(name=name):
+                path = self.write_skill(directory, name)
+                error = io.StringIO()
+                with (
+                    contextlib.redirect_stdout(io.StringIO()),
+                    contextlib.redirect_stderr(error),
+                    self.assertRaises(SystemExit),
+                ):
+                    ci_check.check_skill_md()
+                self.assertIn("belongs in", error.getvalue())
+                path.unlink()
+                path.parent.rmdir()
+
+    def test_invalid_development_frontmatter_is_rejected(self):
+        (self.development / "ship/SKILL.md").write_text("---\nname: ship\n---\n")
+        error = io.StringIO()
+        with contextlib.redirect_stderr(error), self.assertRaises(SystemExit):
+            ci_check.check_skill_md()
+        self.assertIn(".agents/skills/ship/SKILL.md", error.getvalue())
+        self.assertIn("missing 'description'", error.getvalue())
+
+    def test_development_eval_fixtures_are_checked(self):
+        evals = self.development / "ship/evals/evals.json"
+        evals.parent.mkdir()
+        evals.write_text(json.dumps({"evals": [{"id": 1, "files": ["missing.csv"]}]}))
+        error = io.StringIO()
+        with contextlib.redirect_stderr(error), self.assertRaises(SystemExit):
+            ci_check.check_evals()
+        self.assertIn("referenced file missing: missing.csv", error.getvalue())
 
 
 class TestFindBea(unittest.TestCase):

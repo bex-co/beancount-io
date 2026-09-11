@@ -93,6 +93,15 @@ Review your finances, add transactions, scan receipts, and edit ledger files fro
 
 The dashboard and mobile app are clients for the Beancount.io API, served by `backend-cluster/` — hosted, or self-run via `deploy/docker-mac/`. The CLI and ledger skills also support local-first workflows that do not require the hosted service.
 
+Skills have two audiences:
+
+| Audience | Location | Workflows |
+| -------- | -------- | --------- |
+| Beancount users | [`skills/`](./skills/README.md), with implementations in [`skills/.claude/skills/`](./skills/.claude/skills) | The eight `beancount-*` ledger skills |
+| Repository contributors | [`.agents/skills/`](./.agents/skills), documented in [`.agents/CLAUDE.md`](./.agents/CLAUDE.md) | PM, shipping, mobile releases, QA, code maintenance, and Mermaid diagrams |
+
+The root `.claude/skills` links to `.agents/skills` so Claude Code and Codex share the internal development workflows.
+
 ## Choose your entry point
 
 There is no root package to install. Each package owns its dependencies and checks.

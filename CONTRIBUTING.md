@@ -11,7 +11,8 @@ repository is a monorepo of independent packages; read this guide and the root
 | `mobile/`    | React Native iOS & Android app (Expo, Apollo, TS) |
 | `dashboard/` | Web client (React 19, TanStack Start, Apollo, TS) |
 | `cli/`       | CLI tool (Python/uv) — includes vendored `fava` reporting library |
-| `skills/`    | Agent skills (SKILL.md + evals + fixtures)        |
+| `skills/`    | Customer-facing Beancount skills (SKILL.md + evals + fixtures) |
+| `.agents/skills/` | Internal development skills: PM, releases, QA, code maintenance, and diagrams |
 
 Each package owns its own dependencies, scripts, and `yarn.lock`/`uv.lock`.
 Packages are independent — do not add cross-package imports. Scope every change to

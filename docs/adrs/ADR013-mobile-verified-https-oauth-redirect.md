@@ -60,7 +60,7 @@ The adoption payoff is one fewer tap on the most common path (a signed-in hosted
 2. Dashboard: serve `/oauth/callback` as the app-return page with a manual custom-scheme fallback; skip the **Continue as** step only for https redirects.
 3. Mobile: choose the redirect per server and OS (`currentOAuthRedirectUri`), pass `preferUniversalLinks` to `openAuthSessionAsync`, extend the Android intent filter, and keep the custom-scheme path tested.
 4. Deploy: document `APP_LINKS_*` for the callback and the self-built-app caveat; verify end to end on a signed iOS build (Universal Links do not verify in the simulator) and a Play-signed Android build.
-5. Standing closing tasks per `skills/.claude/skills/pm/SKILL.md`.
+5. Standing closing tasks per `.agents/skills/pm/SKILL.md`.
 
 ## Consequences
 

@@ -64,20 +64,23 @@ def main() -> int:
                 f"{relative(agents)} has no tracked/visible sibling CLAUDE.md"
             )
 
-    # Both agents must read the same skill tree: Claude Code via .claude/skills,
-    # Codex via .agents/skills. Each is a relative symlink to the canonical tree.
-    expected_target = "../skills/.claude/skills"
-    canonical_skills = (REPO_ROOT / "skills/.claude/skills").resolve()
-    for link in (".claude/skills", ".agents/skills"):
-        shared_skills = REPO_ROOT / link
-        if not shared_skills.is_symlink():
-            errors.append(f"{link} must be a relative symlink")
-        elif os.readlink(shared_skills) != expected_target:
-            errors.append(
-                f"{link} points to {os.readlink(shared_skills)!r}, expected {expected_target!r}"
-            )
-        elif shared_skills.resolve() != canonical_skills:
-            errors.append(f"{link} does not resolve to skills/.claude/skills")
+    # Development skills are real files in .agents/skills; Claude Code uses
+    # a relative alias. Customer ledger skills remain a separate package.
+    for directory in (".agents/skills", "skills/.claude/skills"):
+        skills = REPO_ROOT / directory
+        if skills.is_symlink() or not skills.is_dir():
+            errors.append(f"{directory} must be a real directory")
+
+    shared_skills = REPO_ROOT / ".claude/skills"
+    expected_target = "../.agents/skills"
+    if not shared_skills.is_symlink():
+        errors.append(".claude/skills must be a relative symlink")
+    elif os.readlink(shared_skills) != expected_target:
+        errors.append(
+            f".claude/skills points to {os.readlink(shared_skills)!r}, expected {expected_target!r}"
+        )
+    elif shared_skills.resolve() != (REPO_ROOT / ".agents/skills").resolve():
+        errors.append(".claude/skills does not resolve to .agents/skills")
 
     if errors:
         for error in errors:
@@ -86,7 +89,7 @@ def main() -> int:
 
     print(
         f"OK: {len(claude_files)} CLAUDE.md scopes have matching AGENTS.md links; "
-        ".claude/skills and .agents/skills resolve to the canonical skill tree."
+        ".claude/skills resolves to .agents/skills; customer skills are separate."
     )
     return 0
 

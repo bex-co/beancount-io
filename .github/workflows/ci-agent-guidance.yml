@@ -10,6 +10,8 @@ on:
       - "**/AGENTS.md"
       - ".claude/skills"
       - ".agents/skills"
+      - ".agents/skills/**"
+      - "skills/.claude/skills/**"
       - "scripts/check-agent-guidance.py"
       - ".github/workflows/ci-agent-guidance.yml"
   pull_request:
@@ -21,6 +23,8 @@ on:
       - "**/AGENTS.md"
       - ".claude/skills"
       - ".agents/skills"
+      - ".agents/skills/**"
+      - "skills/.claude/skills/**"
       - "scripts/check-agent-guidance.py"
       - ".github/workflows/ci-agent-guidance.yml"
 

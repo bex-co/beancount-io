@@ -5,13 +5,15 @@ on:
     branches: [main]
     paths:
       - "skills/**"
-      - ".agents/skills"
+      - ".agents/**"
+      - ".claude/skills"
       - ".github/workflows/ci-skills.yml"
   pull_request:
     branches: [main]
     paths:
       - "skills/**"
-      - ".agents/skills"
+      - ".agents/**"
+      - ".claude/skills"
       - ".github/workflows/ci-skills.yml"
 
 concurrency:
@@ -24,6 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
@@ -35,3 +40,5 @@ jobs:
         run: python3 skills/scripts/ci-check.py
       - name: Run ci-check unit tests
         run: python3 skills/scripts/test_ci_check.py
+      - name: Run development QA helper tests
+        run: node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Structural CI checks for the skills package.
+"""Structural CI checks for customer-facing and repository development skills.
 
 Validates SKILL.md frontmatter, evals.json, referenced fixtures, Python
 syntax, and both bean-check and `bea check` on ledger fixtures. Some fixtures
@@ -22,10 +22,11 @@ from pathlib import Path
 SKILLS_ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = SKILLS_ROOT / ".claude" / "skills"
 REPO_ROOT = SKILLS_ROOT.parent
+DEV_SKILLS_DIR = REPO_ROOT / ".agents" / "skills"
 
 # Ledger fixtures that must fail bean-check (failure-mode evals).
 EXPECTED_BEAN_CHECK_FAILURES = {
-    "beancount-close/evals/files/eval5_ledger.beancount",
+    "skills/.claude/skills/beancount-close/evals/files/eval5_ledger.beancount",
 }
 
 
@@ -54,19 +55,31 @@ def check_symlinks() -> None:
     if not agents.is_symlink() or agents.readlink().as_posix() != "CLAUDE.md":
         fail("skills/AGENTS.md must be a relative symlink to CLAUDE.md")
 
-    agents_skills = REPO_ROOT / ".agents" / "skills"
-    expected = Path("../skills/.claude/skills")
-    if not agents_skills.is_symlink() or agents_skills.readlink() != expected:
-        fail(".agents/skills must be a relative symlink to ../skills/.claude/skills")
+    for directory in (SKILLS_DIR, DEV_SKILLS_DIR):
+        if directory.is_symlink() or not directory.is_dir():
+            fail(f"{directory.relative_to(REPO_ROOT)} must be a real directory")
+
+    claude_skills = REPO_ROOT / ".claude" / "skills"
+    expected = Path("../.agents/skills")
+    if not claude_skills.is_symlink() or claude_skills.readlink() != expected:
+        fail(".claude/skills must be a relative symlink to ../.agents/skills")
+
+
+def skill_files(pattern: str) -> list[Path]:
+    return sorted(
+        path
+        for directory in (SKILLS_DIR, DEV_SKILLS_DIR)
+        for path in directory.glob(pattern)
+    )
 
 
 def parse_frontmatter(path: Path) -> dict[str, str]:
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
-        fail(f"{path.relative_to(SKILLS_ROOT)}: missing YAML frontmatter")
+        fail(f"{path.relative_to(REPO_ROOT)}: missing YAML frontmatter")
     end = text.find("\n---\n", 4)
     if end < 0:
-        fail(f"{path.relative_to(SKILLS_ROOT)}: unclosed YAML frontmatter")
+        fail(f"{path.relative_to(REPO_ROOT)}: unclosed YAML frontmatter")
     meta: dict[str, str] = {}
     for line in text[4:end].splitlines():
         if not line.strip() or line.lstrip().startswith("#"):
@@ -79,12 +92,16 @@ def parse_frontmatter(path: Path) -> dict[str, str]:
 
 
 def check_skill_md() -> None:
-    skill_files = sorted(SKILLS_DIR.glob("*/SKILL.md"))
-    if not skill_files:
-        fail("no SKILL.md files found under skills/.claude/skills/")
-    for path in skill_files:
+    for directory in (SKILLS_DIR, DEV_SKILLS_DIR):
+        if not any(directory.glob("*/SKILL.md")):
+            fail(f"no SKILL.md files found under {directory.relative_to(REPO_ROOT)}")
+    for path in skill_files("*/SKILL.md"):
+        customer_facing = path.parent.name.startswith("beancount-")
+        if customer_facing != (path.parent.parent == SKILLS_DIR):
+            destination = SKILLS_DIR if customer_facing else DEV_SKILLS_DIR
+            fail(f"{path.relative_to(REPO_ROOT)} belongs in {destination.relative_to(REPO_ROOT)}")
         meta = parse_frontmatter(path)
-        rel = path.relative_to(SKILLS_ROOT)
+        rel = path.relative_to(REPO_ROOT)
         for key in ("name", "description"):
             if not meta.get(key):
                 fail(f"{rel}: frontmatter missing '{key}'")
@@ -92,15 +109,15 @@ def check_skill_md() -> None:
 
 
 def check_evals() -> None:
-    for evals_path in sorted(SKILLS_DIR.glob("*/evals/evals.json")):
-        rel = evals_path.relative_to(SKILLS_ROOT)
+    for evals_path in skill_files("*/evals/evals.json"):
+        rel = evals_path.relative_to(REPO_ROOT)
         try:
             data = json.loads(evals_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             fail(f"{rel}: invalid JSON ({exc})")
         if "evals" not in data or not isinstance(data["evals"], list):
             fail(f"{rel}: missing 'evals' array")
-        # Paths in evals.json are relative to the skill root (…/beancount-*/).
+        # Paths in evals.json are relative to that skill's root.
         skill_root = evals_path.parent.parent
         for entry in data["evals"]:
             if not isinstance(entry, dict) or "id" not in entry:
@@ -113,12 +130,12 @@ def check_evals() -> None:
 
 
 def check_python() -> None:
-    for path in sorted(SKILLS_DIR.rglob("*.py")):
+    for path in skill_files("**/*.py"):
         try:
             py_compile.compile(str(path), doraise=True)
         except py_compile.PyCompileError as exc:
             fail(str(exc))
-        print(f"OK python {path.relative_to(SKILLS_ROOT)}")
+        print(f"OK python {path.relative_to(REPO_ROOT)}")
 
 
 def resolve_tool(candidates: list[list[str]], probe: str, missing: str) -> list[str]:
@@ -160,7 +177,7 @@ def find_bea() -> list[str]:
 def check_ledgers() -> None:
     bean_check = find_bean_check()
     bea = find_bea()
-    ledgers = sorted(SKILLS_DIR.rglob("*ledger.beancount"))
+    ledgers = skill_files("**/*ledger.beancount")
     if not ledgers:
         fail("no *ledger.beancount fixtures found")
 
@@ -170,7 +187,7 @@ def check_ledgers() -> None:
     bea_disagree: list[str] = []
 
     for path in ledgers:
-        rel = path.relative_to(SKILLS_DIR).as_posix()
+        rel = path.relative_to(REPO_ROOT).as_posix()
         result = subprocess.run(
             [*bean_check, str(path)],
             capture_output=True,
@@ -208,7 +225,7 @@ def check_ledgers() -> None:
             status = "expected-fail" if expected_fail else "pass"
             print(f"OK bean-check ({status}) {rel}")
 
-    unknown = EXPECTED_BEAN_CHECK_FAILURES - {p.relative_to(SKILLS_DIR).as_posix() for p in ledgers}
+    unknown = EXPECTED_BEAN_CHECK_FAILURES - {p.relative_to(REPO_ROOT).as_posix() for p in ledgers}
     if unknown:
         fail(f"EXPECTED_BEAN_CHECK_FAILURES entries not found: {sorted(unknown)}")
     if unexpected_pass:
