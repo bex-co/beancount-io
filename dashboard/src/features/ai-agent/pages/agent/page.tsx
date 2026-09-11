@@ -10,7 +10,10 @@ import {
 import { Button } from "@/common/components/ui/button";
 import { PageHeader } from "@/common/components/page-header";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useErrorMessage } from "@/common/lib/errors/error-message";
+import {
+  useErrorMessage,
+  getErrorMessageKey,
+} from "@/common/lib/errors/error-message";
 import { toast } from "sonner";
 import { AiCfoUpgradePanel } from "@/common/components/ai-cfo-upgrade-panel";
 import { useLedger } from "@/common/hooks/use-ledger";
@@ -123,22 +126,35 @@ export function AgentPageImpl({
     [],
   );
 
-  const { messages, sendMessage, status, stop, addToolApprovalResponse } =
-    useChat<AgentUIMessage>({
-      transport,
-      messages: initialMessages,
-      sendAutomaticallyWhen:
-        lastAssistantMessageIsCompleteWithApprovalResponses,
-      onError: (error) => {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return;
-        }
-        console.error("Agent chat error:", error);
-        toast.error(formatError(error));
-      },
-    });
+  const {
+    messages,
+    sendMessage,
+    status,
+    stop,
+    error,
+    regenerate,
+    addToolApprovalResponse,
+  } = useChat<AgentUIMessage>({
+    transport,
+    messages: initialMessages,
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
+    onError: (chatError) => {
+      if (
+        chatError instanceof DOMException &&
+        chatError.name === "AbortError"
+      ) {
+        return;
+      }
+      console.error("Agent chat error:", chatError);
+      toast.error(formatError(chatError));
+    },
+  });
 
   const isLoading = status === "submitted" || status === "streaming";
+  const canRetryNetworkError =
+    Boolean(error) &&
+    getErrorMessageKey(error) === "common.errors.network" &&
+    !isLoading;
 
   const isAwaitingApproval = useMemo(() => {
     if (messages.length === 0) return false;
@@ -366,6 +382,28 @@ export function AgentPageImpl({
           <div className="relative z-40 shrink-0">
             <div className="pointer-events-none absolute inset-x-0 -top-8 h-8 bg-gradient-to-t from-background to-transparent" />
             <div className="mx-auto w-full max-w-3xl px-1 pb-1 pt-2 sm:px-3 sm:pb-2">
+              {canRetryNetworkError ? (
+                <div
+                  role="alert"
+                  className="mb-2 flex flex-col gap-2 rounded-lg border border-border/70 bg-muted/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <p className="text-sm text-muted-foreground">
+                    {formatError(error)}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 self-start sm:self-auto"
+                    disabled={isLoading}
+                    onClick={() => {
+                      void regenerate();
+                    }}
+                  >
+                    {t("common.tryAgain")}
+                  </Button>
+                </div>
+              ) : null}
               <AgentChatInput
                 value={input}
                 onValueChange={setInput}
