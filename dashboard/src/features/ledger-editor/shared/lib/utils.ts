@@ -240,6 +240,19 @@ export const getMimeTypeFromExtension = (filename: string): string => {
 };
 
 /**
+ * MIME for the download Blob. Extensionless text basenames (Makefile,
+ * LICENSE, …) stay text/plain for preview/editor classification, but Chrome
+ * appends .txt when a text/plain download has no extension — use octet-stream
+ * so the suggested filename keeps the repository basename.
+ */
+export const getDownloadMimeType = (filename: string): string => {
+  if (TEXT_BASENAMES.has(getNormalizedBasename(filename))) {
+    return "application/octet-stream";
+  }
+  return getMimeTypeFromExtension(filename);
+};
+
+/**
  * Download a file from base64 content
  * @param filename - The name of the file to download
  * @param base64Content - The base64 encoded file content
@@ -263,7 +276,7 @@ export const downloadFile = (filename: string, base64Content: string): void => {
   // Handle text files
   if (isTextFile(filename)) {
     const text = base64Decode(base64Content);
-    const mime = `${getMimeTypeFromExtension(filename)};charset=utf-8`;
+    const mime = `${getDownloadMimeType(filename)};charset=utf-8`;
     const blob = new Blob([text], { type: mime });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
