@@ -4,7 +4,6 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { format } from "date-fns";
 import {
@@ -30,22 +29,7 @@ import {
   FormMessage,
 } from "@/common/components/ui/form";
 import { DatePicker } from "@/common/components/ui/date-picker";
-
-function buildOpenAccountSchema(
-  prefixes: string[],
-  messages: { required: string; mustStartWith: string },
-) {
-  return z.object({
-    date: z.date(),
-    account: z
-      .string()
-      .min(1, messages.required)
-      .refine(
-        (val) => prefixes.some((p) => val.startsWith(p + ":")),
-        messages.mustStartWith,
-      ),
-  });
-}
+import { buildOpenAccountSchema } from "@/common/lib/beancount/open-account-schema";
 
 type OpenAccountFormData = {
   date: Date;
@@ -96,6 +80,7 @@ export function OpenAccountDialog({
         mustStartWith: t("page.accounts.accountMustStartWith", {
           prefixes: accountPrefixes.join(", "),
         }),
+        invalid: t("page.accounts.accountNameInvalid"),
       }),
     [accountPrefixes, t],
   );

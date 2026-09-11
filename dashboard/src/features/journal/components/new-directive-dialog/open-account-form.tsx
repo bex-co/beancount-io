@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { format } from "date-fns";
 import {
@@ -23,6 +22,7 @@ import { DatePicker } from "@/common/components/ui/date-picker";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { track } from "@/common/analytics";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
+import { buildOpenAccountSchema } from "@/common/lib/beancount/open-account-schema";
 
 interface OpenAccountFormProps {
   ledgerId: string;
@@ -54,26 +54,20 @@ export function OpenAccountForm({ ledgerId, onSuccess }: OpenAccountFormProps) {
 
   const schema = useMemo(
     () =>
-      z.object({
-        date: z.date(),
-        account: z
-          .string()
-          .min(1, t("page.accounts.accountNameRequired"))
-          .refine(
-            (val) =>
-              accountPrefixes.length === 0 ||
-              accountPrefixes.some((p) => val.startsWith(p + ":")),
-            accountPrefixes.length > 0
-              ? t("page.accounts.accountMustStartWith", {
-                  prefixes: accountPrefixes.join(", "),
-                })
-              : t("page.accounts.accountNameRequired"),
-          ),
+      buildOpenAccountSchema(accountPrefixes, {
+        required: t("page.accounts.accountNameRequired"),
+        mustStartWith: t("page.accounts.accountMustStartWith", {
+          prefixes: accountPrefixes.join(", "),
+        }),
+        invalid: t("page.accounts.accountNameInvalid"),
       }),
     [accountPrefixes, t],
   );
 
-  type FormData = z.infer<typeof schema>;
+  type FormData = {
+    date: Date;
+    account: string;
+  };
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),

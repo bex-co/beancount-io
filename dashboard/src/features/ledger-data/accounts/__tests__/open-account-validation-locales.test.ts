@@ -22,4 +22,19 @@ describe("open account validation locales", () => {
       enAccounts["page.accounts.accountNameRequired"].message,
     );
   });
+
+  it("localizes the complete-token syntax error in fr, ca, and uk", () => {
+    expect(enAccounts["page.accounts.accountNameInvalid"].message).toMatch(
+      /colon-separated/i,
+    );
+    expect(frAccounts["page.accounts.accountNameInvalid"].message).not.toBe(
+      enAccounts["page.accounts.accountNameInvalid"].message,
+    );
+    expect(caAccounts["page.accounts.accountNameInvalid"].message).not.toBe(
+      enAccounts["page.accounts.accountNameInvalid"].message,
+    );
+    expect(ukAccounts["page.accounts.accountNameInvalid"].message).not.toBe(
+      enAccounts["page.accounts.accountNameInvalid"].message,
+    );
+  });
 });

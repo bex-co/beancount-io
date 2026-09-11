@@ -20,6 +20,12 @@ const skAccounts: Record<string, TranslationEntry> = {
     message: "Názov účtu je povinný",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Použite komponenty účtu oddelené dvojbodkou bez medzier a prázdnych častí",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:

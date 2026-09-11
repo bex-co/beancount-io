@@ -20,6 +20,12 @@ const nlAccounts: Record<string, TranslationEntry> = {
     message: "Rekeningnaam is verplicht",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Gebruik door dubbele punten gescheiden rekeningdelen zonder spaties of lege onderdelen",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:

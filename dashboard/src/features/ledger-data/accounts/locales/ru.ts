@@ -20,6 +20,12 @@ const ruAccounts: Record<string, TranslationEntry> = {
     message: "Название счёта обязательно",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Используйте компоненты счёта через двоеточие без пробелов и пустых частей",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:

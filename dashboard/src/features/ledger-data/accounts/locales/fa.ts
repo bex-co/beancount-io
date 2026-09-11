@@ -20,6 +20,12 @@ const faAccounts: Record<string, TranslationEntry> = {
     message: "نام حساب الزامی است",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "از اجزای حساب جداشده با دونقطه بدون فاصله یا بخش خالی استفاده کنید",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:

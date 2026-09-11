@@ -20,6 +20,11 @@ const zhAccounts: Record<string, TranslationEntry> = {
     message: "账户名称为必填项",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message: "请使用冒号分隔的账户组件，不要包含空格或空段",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:

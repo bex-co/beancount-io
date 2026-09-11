@@ -20,6 +20,11 @@ const koAccounts: Record<string, TranslationEntry> = {
     message: "계정명은 필수입니다",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message: "공백이나 빈 부분 없이 콜론으로 구분된 계정 구성요소를 사용하세요",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "계정:하위계정",
     description:

@@ -20,6 +20,12 @@ const ptAccounts: Record<string, TranslationEntry> = {
     message: "O nome da conta é obrigatório",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Use componentes de conta separados por dois-pontos, sem espaços ou partes vazias",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:

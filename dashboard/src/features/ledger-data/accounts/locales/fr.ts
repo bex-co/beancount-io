@@ -21,6 +21,12 @@ const frAccounts: Record<string, TranslationEntry> = {
     message: "Le nom du compte est requis",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Utilisez des composants de compte séparés par des deux-points, sans espaces ni parties vides",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:

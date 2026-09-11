@@ -20,6 +20,12 @@ const caAccounts: Record<string, TranslationEntry> = {
     message: "El nom del compte és obligatori",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Utilitzeu components de compte separats per dos punts, sense espais ni parts buides",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:
