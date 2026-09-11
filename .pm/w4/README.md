@@ -13,3 +13,5 @@
 - [x] **m6** — Create a ledger from mobile (8 tasks) ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - [x] **m7** — Screen-reader pass on the mobile core journeys (9 tasks) ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - [ ] **m8** — Localized Google Play listing from the canonical metadata (8 tasks) ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
+- [ ] **m9** — `bea price fetch`: keep commodity and currency prices current through upstream bean-price (9 tasks) ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11 (issue 176)
+- [ ] **m10** — GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues (9 tasks) ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11
