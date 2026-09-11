@@ -37,8 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [097](./097.md) — Shared mobile commit links stack the destination twice
-
 - [098](./098.md) — BQL completion keeps the typed prefix before the suggested query
 
 - [099](./099.md) — BQL suggestions accumulate duplicates after returning to Query
