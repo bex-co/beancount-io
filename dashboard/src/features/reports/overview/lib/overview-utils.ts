@@ -335,6 +335,22 @@ export function getMovementSnapshot({
   };
 }
 
+/**
+ * Formats a period date as a month-and-year label in the application language.
+ *
+ * `language` is required: with an undefined locale `Intl.DateTimeFormat` falls
+ * back to the browser's preference, so a French app viewed in an en-US browser
+ * renders "December 2016" next to French headings (and vice versa).
+ */
+export function formatPeriodMonth(date: string, language: string): string {
+  const parsed = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return new Intl.DateTimeFormat(language, {
+    month: "long",
+    year: "numeric",
+  }).format(parsed);
+}
+
 export function isPartialMonthlyPeriod(
   date: string,
   now = new Date(),

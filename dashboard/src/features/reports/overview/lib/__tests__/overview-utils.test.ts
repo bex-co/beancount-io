@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildAccountBalanceRows,
+  formatPeriodMonth,
   getMovementSnapshot,
   hasOverviewActivity,
   isPartialMonthlyPeriod,
@@ -131,5 +132,17 @@ describe("overview financial selectors", () => {
         },
       }),
     ).toBe(true);
+  });
+});
+
+describe("formatPeriodMonth", () => {
+  it("uses the supplied application language, not the runtime default", () => {
+    expect(formatPeriodMonth("2016-12-31", "en")).toBe("December 2016");
+    expect(formatPeriodMonth("2016-12-31", "fr")).toBe("décembre 2016");
+    expect(formatPeriodMonth("2016-12-31", "de")).toBe("Dezember 2016");
+  });
+
+  it("falls back to the raw value for an unparseable date", () => {
+    expect(formatPeriodMonth("not-a-date", "fr")).toBe("not-a-date");
   });
 });

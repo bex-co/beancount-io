@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useIsAuthenticated } from "@/common/hooks/use-is-authenticated";
+import { useLoginNextPath } from "@/common/hooks/use-login-next-path";
 
 interface FollowButtonProps {
   username: string;
@@ -24,6 +25,7 @@ export function FollowButton({
   const { unfollowUser, loading: unfollowLoading } = useUnfollowUser();
   const [localIsFollowing, setLocalIsFollowing] = useState(initialIsFollowing);
   const isUserAuthenticated = useIsAuthenticated();
+  const next = useLoginNextPath();
 
   // Sync local state with prop when it changes (e.g., after refetch)
   useEffect(() => {
@@ -33,9 +35,9 @@ export function FollowButton({
   const loading = followLoading || unfollowLoading;
 
   const handleClick = async () => {
-    // If not logged in, redirect to login
+    // If not logged in, redirect to login and come back to this profile after.
     if (!isUserAuthenticated) {
-      void navigate({ to: "/auth/login" });
+      void navigate({ to: "/auth/login", search: { next } });
       return;
     }
 

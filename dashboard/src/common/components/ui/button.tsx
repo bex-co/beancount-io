@@ -61,11 +61,16 @@ function Button({
         isLoading && "relative",
       )}
       disabled={disabled || loading}
+      aria-busy={isLoading || undefined}
       {...props}
     >
       {isLoading ? (
         <>
-          <span className="invisible inline-flex items-center gap-2">
+          {/* `opacity-0` rather than `invisible`: visibility:hidden text is
+              excluded from the accessible name computation, so a pending button
+              would announce as an unnamed spinner. Transparent text still
+              occupies layout and still names the button. */}
+          <span className="opacity-0 inline-flex items-center gap-2">
             {children}
           </span>
           <span className="absolute inset-0 flex items-center justify-center">

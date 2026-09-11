@@ -19,15 +19,37 @@ describe("Button", () => {
     expect(screen.getByRole("button")).toBeDisabled();
   });
 
-  it("should show spinner and hide children text when loading is true", () => {
+  it("should show spinner while keeping the label when loading is true", () => {
     render(<Button loading>Submit</Button>);
     const button = screen.getByRole("button");
     expect(button).toBeDisabled();
-    const invisibleSpan = button.querySelector("span.invisible");
-    expect(invisibleSpan).toBeInTheDocument();
-    expect(invisibleSpan?.textContent).toBe("Submit");
+    expect(button).toHaveAttribute("aria-busy", "true");
     const spinner = button.querySelector("span.animate-spin");
     expect(spinner).toBeInTheDocument();
+    expect(button.textContent).toContain("Submit");
+  });
+
+  it("should keep a pending button's accessible name", () => {
+    render(<Button loading>Submit</Button>);
+    const button = screen.getByRole("button");
+    // The label is hidden with transparency, not `visibility: hidden`:
+    // visibility-hidden text is excluded from the accessible name computation,
+    // so a pending button would announce as an unnamed spinner.
+    const label = button.querySelector("span:not(.absolute)");
+    expect(label?.textContent).toBe("Submit");
+    expect(label).toHaveClass("opacity-0");
+    expect(label).not.toHaveClass("invisible");
+    expect(label).not.toHaveAttribute("aria-hidden");
+    expect(button).toHaveAccessibleName("Submit");
+  });
+
+  it("should keep an explicit aria-label on a pending button", () => {
+    render(
+      <Button loading aria-label="Execute query">
+        Submit
+      </Button>,
+    );
+    expect(screen.getByRole("button")).toHaveAccessibleName("Execute query");
   });
 
   it("should have relative positioning class when loading", () => {

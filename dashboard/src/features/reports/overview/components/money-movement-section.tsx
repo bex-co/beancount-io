@@ -23,21 +23,13 @@ import type {
   MovementSnapshot,
 } from "../lib/overview-utils";
 import {
+  formatPeriodMonth,
   getIntervalDates,
   getMovementSnapshot,
   isPartialMonthlyPeriod,
   resolveMovementTimeFilter,
 } from "../lib/overview-utils";
 import { FormattedAmounts } from "./formatted-amounts";
-
-function formatMonth(date: string): string {
-  const parsed = new Date(`${date}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return date;
-  return new Intl.DateTimeFormat(undefined, {
-    month: "long",
-    year: "numeric",
-  }).format(parsed);
-}
 
 function MovementCard({
   kind,
@@ -52,7 +44,7 @@ function MovementCard({
   ledgerName: string;
   timeFilter: string;
 }) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
   const navigateToAccount = useLedgerNavigateToAccount();
   const isIncome = kind === "in";
   const topLabel = isIncome
@@ -82,7 +74,9 @@ function MovementCard({
                 ? t("page.overview.moneyIn")
                 : t("page.overview.moneyOut")}
             </CardTitle>
-            <CardDescription>{formatMonth(snapshot.date)}</CardDescription>
+            <CardDescription>
+              {formatPeriodMonth(snapshot.date, i18n.language)}
+            </CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -182,7 +176,7 @@ export function MoneyMovementSection({
   ledgerOwner: string;
   ledgerName: string;
 }) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
   const { searchParams } = useLedgerSearchParams();
   const dates = useMemo(
     () => getIntervalDates(income, expenses),
@@ -256,7 +250,7 @@ export function MoneyMovementSection({
             <ChevronLeft className="size-4" />
           </Button>
           <div className="min-w-36 px-2 text-center text-sm font-medium">
-            {formatMonth(selectedDate)}
+            {formatPeriodMonth(selectedDate, i18n.language)}
             {isPartialMonthlyPeriod(selectedDate) && (
               <span className="ml-1 text-xs font-normal text-muted-foreground">
                 · {t("page.overview.partialPeriod")}

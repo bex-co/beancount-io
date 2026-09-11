@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useLedger } from "@/common/hooks/use-ledger";
+import { useTranslations } from "@/common/hooks/use-translations";
 import { formatNumber } from "@/common/lib/format/format-number";
 
 /**
@@ -11,9 +12,11 @@ import { formatNumber } from "@/common/lib/format/format-number";
  */
 export function useFormatNumber(): (value: number) => string {
   const { ledgerData } = useLedger();
+  const { i18n } = useTranslations();
   const renderCommas = ledgerData.options.renderCommas ?? true;
+  const language = i18n.language;
   return useCallback(
-    (value: number) => formatNumber(value, renderCommas),
-    [renderCommas],
+    (value: number) => formatNumber(value, renderCommas, language),
+    [renderCommas, language],
   );
 }

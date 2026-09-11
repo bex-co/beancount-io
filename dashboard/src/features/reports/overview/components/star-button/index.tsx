@@ -6,6 +6,7 @@ import { useUnstarLedger } from "./use-unstar-ledger";
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useIsAuthenticated } from "@/common/hooks/use-is-authenticated";
+import { useLoginNextPath } from "@/common/hooks/use-login-next-path";
 import { useTranslations } from "@/common/hooks/use-translations";
 
 interface StarButtonProps {
@@ -29,6 +30,7 @@ export function StarButton({
   const { unstarLedger, loading: unstarLoading } = useUnstarLedger(ledgerId);
   const [localIsStarred, setLocalIsStarred] = useState(initialIsStarred);
   const isUserAuthenticated = useIsAuthenticated();
+  const next = useLoginNextPath();
 
   // Sync local state with prop when it changes (e.g., after refetch)
   useEffect(() => {
@@ -38,25 +40,31 @@ export function StarButton({
   const loading = starLoading || unstarLoading;
 
   const handleClick = async () => {
-    // If not logged in, redirect to login
+    // If not logged in, redirect to login and come back to this ledger after.
     if (!isUserAuthenticated) {
-      void navigate({ to: "/auth/login" });
+      void navigate({ to: "/auth/login", search: { next } });
       return;
     }
 
-    // Optimistic update
-    setLocalIsStarred(!localIsStarred);
+    const wasStarred = localIsStarred;
 
-    // Toggle star/unstar
+    // Optimistic update
+    setLocalIsStarred(!wasStarred);
+
+    // Toggle star/unstar. A fulfilled mutation can still report success:false
+    // (e.g. the backend's Gitea write failed); that is a failure too, so roll
+    // the optimistic state back and let the next click retry the same action.
     try {
-      if (localIsStarred) {
-        await unstarLedger();
+      if (wasStarred) {
+        const result = await unstarLedger();
+        if (!result.data?.unstarLedger.success) setLocalIsStarred(wasStarred);
       } else {
-        await starLedger();
+        const result = await starLedger();
+        if (!result.data?.starLedger.success) setLocalIsStarred(wasStarred);
       }
     } catch {
-      // Revert optimistic update on failure
-      setLocalIsStarred(localIsStarred);
+      // Revert optimistic update on transport failure
+      setLocalIsStarred(wasStarred);
     }
   };
 
