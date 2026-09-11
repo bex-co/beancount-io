@@ -120,4 +120,44 @@ describe("AgentChatInput type-to-focus", () => {
 
     expect(screen.getByRole("button", { name: "Ask" })).toBeEnabled();
   });
+
+  it("does not submit while an IME composition is confirming Enter", () => {
+    const onSubmit = vi.fn();
+    render(
+      <AgentChatInput
+        value="How do I record "
+        onValueChange={vi.fn()}
+        onSubmit={onSubmit}
+        placeholder="Ask anything"
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByPlaceholderText("Ask anything"), {
+      key: "Enter",
+      shiftKey: false,
+      isComposing: true,
+    });
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("submits on ordinary Enter after composition has finished", () => {
+    const onSubmit = vi.fn();
+    render(
+      <AgentChatInput
+        value="How do I record 记账"
+        onValueChange={vi.fn()}
+        onSubmit={onSubmit}
+        placeholder="Ask anything"
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByPlaceholderText("Ask anything"), {
+      key: "Enter",
+      shiftKey: false,
+      isComposing: false,
+    });
+
+    expect(onSubmit).toHaveBeenCalledOnce();
+  });
 });

@@ -172,6 +172,8 @@ export function AgentChatInput({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
+      // IME candidate confirmation uses Enter while composition is active.
+      if (e.nativeEvent.isComposing) return;
       e.preventDefault();
       const anyUploading = stagedFiles.some((sf) => sf.uploading);
       if (

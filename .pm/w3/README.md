@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [063](./063.md) — Confirming composed text submits an unfinished AI question
 - [064](./064.md) — Enter rejects precise amounts that a mouse submission accepts
 - [065](./065.md) — Budget selectors discard their form labels and descriptions
 - [066](./066.md) — New Transaction leaves status and posting actions unnamed
