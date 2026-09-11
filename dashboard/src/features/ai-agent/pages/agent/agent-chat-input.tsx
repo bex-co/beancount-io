@@ -254,6 +254,7 @@ export function AgentChatInput({
           size="icon-sm"
           disabled={!canSend}
           className="shrink-0 rounded-full"
+          aria-label={t("aiAgent.ask")}
           onClick={(e) => {
             e.preventDefault();
             onSubmit();

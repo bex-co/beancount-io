@@ -106,4 +106,18 @@ describe("AgentChatInput type-to-focus", () => {
     fireEvent.keyDown(document.body, { key: "x" });
     expect(screen.getByPlaceholderText("Ask anything")).toHaveValue("");
   });
+
+  it("exposes a named Ask submit control even when empty", () => {
+    render(<AgentChatInputHarness />);
+
+    const ask = screen.getByRole("button", { name: "Ask" });
+    expect(ask).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Attach file" })).toBeInTheDocument();
+  });
+
+  it("keeps the Ask name when the composer has a sendable draft", () => {
+    render(<AgentChatInputHarness initialValue="What is double-entry?" />);
+
+    expect(screen.getByRole("button", { name: "Ask" })).toBeEnabled();
+  });
 });
