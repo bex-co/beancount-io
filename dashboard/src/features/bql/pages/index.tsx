@@ -72,6 +72,19 @@ export default function LedgerQueryPage() {
   const ledgerIdRef = useRef(ledgerId);
   ledgerIdRef.current = ledgerId;
 
+  // Monaco language features are process-global; dispose page registrations
+  // when this editor goes away so Journal→Back does not stack duplicate snippets.
+  const monacoDisposablesRef = useRef<monacoType.IDisposable[]>([]);
+
+  useEffect(() => {
+    return () => {
+      for (const disposable of monacoDisposablesRef.current) {
+        disposable.dispose();
+      }
+      monacoDisposablesRef.current = [];
+    };
+  }, []);
+
   // Track queries we've already executed to prevent double-firing from URL sync
   const executedQueriesRef = useRef<Set<string>>(new Set());
 
@@ -240,7 +253,8 @@ export default function LedgerQueryPage() {
                 );
 
                 // Configure Beancount/SQL syntax highlighting
-                monaco.languages.setLanguageConfiguration("sql", {
+                const languageConfig =
+                  monaco.languages.setLanguageConfiguration("sql", {
                   comments: {
                     lineComment: "--",
                     blockComment: ["/*", "*/"],
@@ -267,7 +281,8 @@ export default function LedgerQueryPage() {
                 });
 
                 // Add Beancount-specific keywords
-                monaco.languages.registerCompletionItemProvider("sql", {
+                const completionProvider =
+                  monaco.languages.registerCompletionItemProvider("sql", {
                   provideCompletionItems: (model, position) => {
                     const word = model.getWordUntilPosition(position);
                     const lineContent = model.getLineContent(
@@ -289,6 +304,21 @@ export default function LedgerQueryPage() {
                     }));
                     return { suggestions };
                   },
+                });
+
+                for (const disposable of monacoDisposablesRef.current) {
+                  disposable.dispose();
+                }
+                monacoDisposablesRef.current = [
+                  languageConfig,
+                  completionProvider,
+                ].filter(Boolean) as monacoType.IDisposable[];
+
+                editor.onDidDispose(() => {
+                  for (const disposable of monacoDisposablesRef.current) {
+                    disposable.dispose();
+                  }
+                  monacoDisposablesRef.current = [];
                 });
 
                 editor.focus();
