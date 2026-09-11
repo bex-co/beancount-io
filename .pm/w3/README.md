@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [085](./085.md) — New Entry squeezes its heading into letters on narrow screens
 - [086](./086.md) — Compact date fields clip the year before editing
 - [087](./087.md) — Direct ledger loads lose their structured access errors
 - [088](./088.md) — Try Again does not retry the failed ledger read
