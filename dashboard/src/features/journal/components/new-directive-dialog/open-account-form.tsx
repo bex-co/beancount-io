@@ -58,17 +58,19 @@ export function OpenAccountForm({ ledgerId, onSuccess }: OpenAccountFormProps) {
         date: z.date(),
         account: z
           .string()
-          .min(1, "Account name is required")
+          .min(1, t("page.accounts.accountNameRequired"))
           .refine(
             (val) =>
               accountPrefixes.length === 0 ||
               accountPrefixes.some((p) => val.startsWith(p + ":")),
             accountPrefixes.length > 0
-              ? `Account must start with one of: ${accountPrefixes.join(", ")}`
-              : "Account name is required",
+              ? t("page.accounts.accountMustStartWith", {
+                  prefixes: accountPrefixes.join(", "),
+                })
+              : t("page.accounts.accountNameRequired"),
           ),
       }),
-    [accountPrefixes],
+    [accountPrefixes, t],
   );
 
   type FormData = z.infer<typeof schema>;

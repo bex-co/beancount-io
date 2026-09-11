@@ -17,7 +17,7 @@ const ukAccounts: Record<string, TranslationEntry> = {
     description: "Form label for account name input",
   },
   "page.accounts.accountNameRequired": {
-    message: "Account name is required",
+    message: "Назва рахунку обов'язкова",
     description: "Validation error when account name field is empty",
   },
   "page.accounts.accountSubAccountPlaceholder": {

@@ -9,7 +9,8 @@ const frAccounts: Record<string, TranslationEntry> = {
     description: "Table column header for account name",
   },
   "page.accounts.accountMustStartWith": {
-    message: "Account must start with one of: {prefixes}",
+    message:
+      "Le compte doit commencer par l'un des éléments suivants : {prefixes}",
     description: "Validation error when account prefix is invalid",
   },
   "page.accounts.accountName": {
