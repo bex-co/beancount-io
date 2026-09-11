@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [071](./071.md) — A removed upload file cannot be selected again
 - [072](./072.md) — Account search calls loading and failed reads an empty ledger
 - [073](./073.md) — Narrow account search clips the start of account names
 - [074](./074.md) — Account and ledger search inputs have empty accessible names

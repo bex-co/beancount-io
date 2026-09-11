@@ -155,6 +155,8 @@ const UploadFilesPage = () => {
     if (files && files.length > 0) {
       setSelectedFiles((prev) => [...prev, ...Array.from(files)]);
     }
+    // Allow selecting the same path again after remove/cancel.
+    event.target.value = "";
   };
 
   /**
@@ -198,6 +200,9 @@ const UploadFilesPage = () => {
    */
   const handleRemoveFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
