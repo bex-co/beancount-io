@@ -25,9 +25,6 @@
 
 ## CLI QA inbox
 
-- [014](./014.md) — CSV import rejects documented whitespace-trimmed headers
-- [015](./015.md) — Duplicate CSV amount columns silently choose the last value
-- [016](./016.md) — Unterminated CSV quotes silently absorb subsequent transactions
 - [017](./017.md) — BQL JSON drops acquisition dates and labels from cost lots
 - [018](./018.md) — Report account regex errors are misclassified and help says substring
 - [020](./020.md) — Filtered balance keeps unrelated totals and valuation requirements

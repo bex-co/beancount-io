@@ -861,3 +861,97 @@ def test_zero_postings_do_not_block_imports_into_the_account(book: Path, isolate
     again = csv_result(book, rows, "--apply")
     assert again.exit_code == 0, again.output
     assert json.loads(again.stdout)["data"]["written"] == 0
+
+
+def _checking_amounts(book: Path) -> list[str]:
+    entries, errors, _ = loader.load_file(book)
+    assert not errors, errors
+    return [
+        str(p.units)
+        for e in entries
+        if isinstance(e, Transaction)
+        for p in e.postings
+        if p.account == "Assets:Checking"
+    ]
+
+
+@pytest.mark.parametrize("mapping", ["auto", "date=Date,narration=Description,amount=Amount"])
+@pytest.mark.parametrize("bom", ["", "﻿"], ids=["plain", "bom"])
+def test_csv_padded_headers_are_stripped_everywhere(book: Path, isolated_config: Path, mapping: str, bom: str) -> None:
+    """IMPORTING.md promises header stripping; discovery, date inference, and extraction must all agree."""
+    rows = f"{bom} Date , Description , Amount \n2026-08-15,Shop,-12.34\n"
+
+    result = csv_result(book, rows, "--apply", mapping=mapping)
+
+    assert result.exit_code == 0, result.output
+    assert _checking_amounts(book) == ["-12.34 USD"]
+
+
+def test_csv_headers_that_collide_after_stripping_are_rejected(book: Path, isolated_config: Path) -> None:
+    before = book.read_text()
+
+    result = csv_result(
+        book,
+        "Date, Date ,Description,Amount\n2026-08-15,2026-08-16,Shop,-12.34\n",
+        "--apply",
+        mapping="date=Date,narration=Description,amount=Amount",
+    )
+
+    assert result.exit_code == 2, result.output
+    assert "'Date'" in result.stderr and "2 times" in result.stderr
+    assert book.read_text() == before
+
+
+def test_csv_duplicate_mapped_amount_column_is_rejected_before_writing(book: Path, isolated_config: Path) -> None:
+    before = book.read_text()
+
+    result = csv_result(
+        book,
+        "Date,Description,Amount,Amount\n2026-08-15,Shop,-12.34,-99\n",
+        "--apply",
+        mapping="date=Date,narration=Description,amount=Amount",
+    )
+
+    assert result.exit_code == 2, result.output
+    assert "'Amount'" in result.stderr and "ambiguous" in result.stderr
+    assert book.read_text() == before
+
+
+def test_csv_duplicate_unmapped_columns_are_fine(book: Path, isolated_config: Path) -> None:
+    result = csv_result(
+        book,
+        "Date,Description,Amount,Note,Note\n2026-08-15,Shop,-12.34,a,b\n",
+        "--apply",
+        mapping="date=Date,narration=Description,amount=Amount",
+    )
+
+    assert result.exit_code == 0, result.output
+    assert _checking_amounts(book) == ["-12.34 USD"]
+
+
+def test_csv_unterminated_quote_is_rejected_with_its_line(book: Path, isolated_config: Path) -> None:
+    before = book.read_text()
+    malformed = 'Date,Amount,Description\n2026-08-15,-12.34,"Shop\n2026-08-16,-56.78,Second\n'
+
+    result = csv_result(book, malformed, "--apply", mapping="date=Date,narration=Description,amount=Amount")
+
+    assert result.exit_code == 2, result.output
+    assert "not well-formed CSV" in result.stderr and "quote" in result.stderr
+    assert book.read_text() == before
+
+    fixed = csv_result(
+        book, malformed.replace('"Shop', '"Shop"'), "--apply", mapping="date=Date,narration=Description,amount=Amount"
+    )
+    assert fixed.exit_code == 0, fixed.output
+    assert _checking_amounts(book) == ["-12.34 USD", "-56.78 USD"]
+
+
+def test_csv_quoted_multiline_and_escaped_quotes_still_import(book: Path, isolated_config: Path) -> None:
+    rows = 'Date,Amount,Description\n2026-08-15,-12.34,"Shop\nsecond line"\n2026-08-16,-1,"say ""hi"""\n'
+
+    result = csv_result(book, rows, "--apply", mapping="date=Date,narration=Description,amount=Amount")
+
+    assert result.exit_code == 0, result.output
+    entries, _, _ = loader.load_file(book)
+    narrations = [e.narration for e in entries if isinstance(e, Transaction) and e.narration]
+    assert "Shop second line" in narrations and 'say "hi"' in narrations

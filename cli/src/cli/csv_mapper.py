@@ -12,6 +12,8 @@ import csv
 import hashlib
 import re
 from collections import Counter
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
@@ -186,6 +188,41 @@ def infer_mapping(headers: list[str] | None) -> InferredMapping | None:
     )
 
 
+def _malformed(source: Path, line: int, exc: csv.Error) -> UsageError:
+    return UsageError(
+        f"Line {line}: {source.name} is not well-formed CSV ({exc}). "
+        "An unclosed quote swallows every row after it; close the quote and retry. Nothing was written."
+    )
+
+
+@contextmanager
+def open_records(source: Path) -> Iterator[tuple[list[str], Iterator[dict[str, str]]]]:
+    """The stripped header row and one dict per data row, keyed by those names.
+
+    This is the one reader every CSV path shares, so discovery, date inference,
+    and extraction agree on what a column is called: names are stripped (and
+    the BOM dropped) exactly as `IMPORTING.md` promises. Quoting is strict —
+    a quote left open at end of file fails with its line instead of silently
+    folding every later row into one field.
+    """
+    with open(source, encoding="utf-8-sig", newline="") as stream:
+        reader = csv.reader(stream, strict=True)
+        try:
+            first = next(reader, None)
+        except csv.Error as exc:
+            raise _malformed(source, reader.line_num, exc) from None
+        headers = [cell.strip() for cell in first or []]
+
+        def rows() -> Iterator[dict[str, str]]:
+            try:
+                for record in reader:
+                    yield {name: record[i] if i < len(record) else "" for i, name in enumerate(headers)}
+            except csv.Error as exc:
+                raise _malformed(source, reader.line_num, exc) from None
+
+        yield headers, rows()
+
+
 def infer_date_format(source: Path, column: str, limit: int = 200) -> tuple[str | None, bool]:
     """The one date format that parses this column, and whether others also did.
 
@@ -195,16 +232,16 @@ def infer_date_format(source: Path, column: str, limit: int = 200) -> tuple[str 
     """
     values: list[str] = []
     try:
-        with open(source, encoding="utf-8-sig", newline="") as stream:
-            for row in csv.DictReader(stream):
-                if column not in row:
-                    return None, False
-                value = (row[column] or "").strip()
+        with open_records(source) as (headers, rows):
+            if column not in headers:
+                return None, False
+            for row in rows:
+                value = row[column].strip()
                 if value:
                     values.append(value)
                 if len(values) >= limit:
                     break
-    except (OSError, UnicodeDecodeError, csv.Error):
+    except (OSError, UnicodeDecodeError, UsageError):
         return None, False
     if not values:
         return None, False
@@ -231,12 +268,10 @@ def header_signature(headers: list[str] | None) -> str | None:
 def read_header(source: Path) -> list[str] | None:
     """Read a CSV header row, or None when the file is not a readable CSV."""
     try:
-        with open(source, encoding="utf-8-sig", newline="") as stream:
-            for row in csv.reader(stream):
-                return [cell.strip() for cell in row]
-    except (OSError, UnicodeDecodeError, csv.Error):
+        with open_records(source) as (headers, _rows):
+            return headers or None
+    except (OSError, UnicodeDecodeError, UsageError):
         return None
-    return None
 
 
 class CsvImporter:
@@ -269,13 +304,28 @@ class CsvImporter:
     def account(self, filepath: str) -> str:
         return self._account
 
-    def _cell(self, row: dict[str, str | None], line: int, field: str) -> str:
+    def _cell(self, row: dict[str, str], line: int, field: str) -> str:
         column = self._mapping.column(field)
         if column is None:
             return ""
         if column not in row:
             raise UsageError(f"Row {line}: the mapping names column {column!r} for {field}, which the CSV lacks.")
-        return (row[column] or "").strip()
+        return row[column].strip()
+
+    def _check_columns(self, source: Path, headers: list[str], category_header: str | None) -> None:
+        """Every column this run reads must exist exactly once, or a row could silently take the wrong cell."""
+        counts = Counter(headers)
+        wanted = dict(self._mapping.columns)
+        if category_header is not None:
+            wanted.setdefault("category", category_header)
+        for role, column in wanted.items():
+            if counts[column] == 0:
+                raise UsageError(f"The mapping names column {column!r} for {role}, which {source.name} lacks.")
+            if counts[column] > 1:
+                raise UsageError(
+                    f"Column {column!r} appears {counts[column]} times in the header of {source.name}, so {role} "
+                    "is ambiguous. Rename the duplicates so each mapped column is unique. Nothing was written."
+                )
 
     def _parse_decimal(self, line: int, column: str, value: str) -> Decimal:
         try:
@@ -290,11 +340,12 @@ class CsvImporter:
         columns = self._mapping.columns
         category_header = columns.get("category")
         rows: list[Any] = []
-        with open(filepath, encoding="utf-8-sig", newline="") as stream:
-            reader = csv.DictReader(stream)
+        source = Path(filepath)
+        with open_records(source) as (headers, records):
             if category_header is None:
-                category_header = next((h for h in reader.fieldnames or [] if h.casefold() == "category"), None)
-            for index, row in enumerate(reader):
+                category_header = next((h for h in headers if h.casefold() == "category"), None)
+            self._check_columns(source, headers, category_header)
+            for index, row in enumerate(records):
                 line = index + 2
                 date_column = columns["date"]
                 try:
@@ -341,7 +392,7 @@ class CsvImporter:
 
     def _categorize(
         self,
-        row: dict[str, str | None],
+        row: dict[str, str],
         line: int,
         payee: str | None,
         narration: str,
@@ -356,7 +407,7 @@ class CsvImporter:
         if category_header is not None:
             if category_header not in row:
                 raise UsageError(f"Row {line}: the CSV lacks category column {category_header!r}.")
-            category = (row[category_header] or "").strip()
+            category = row[category_header].strip()
             if category and is_valid(category):
                 return category, "*", category
             if category:
