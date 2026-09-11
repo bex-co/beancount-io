@@ -187,7 +187,7 @@ export function BalanceForm({ ledgerId, onSuccess }: BalanceFormProps) {
                   <Input
                     id="amount"
                     type="number"
-                    step="0.01"
+                    step="any"
                     placeholder={t("journal.amountPlaceholder")}
                     {...field}
                   />

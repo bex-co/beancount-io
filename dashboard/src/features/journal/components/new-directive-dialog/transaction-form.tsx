@@ -451,7 +451,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
                               <Input
                                 id={`amount-${index}`}
                                 type="number"
-                                step="0.01"
+                                step="any"
                                 placeholder={
                                   autoBalance
                                     ? formatInferredAmount(autoBalance.amount)

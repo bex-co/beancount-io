@@ -298,7 +298,7 @@ export function AddBudgetDialog({
                       <Input
                         type="number"
                         placeholder="500"
-                        step="0.01"
+                        step="any"
                         {...field}
                       />
                     </FormControl>

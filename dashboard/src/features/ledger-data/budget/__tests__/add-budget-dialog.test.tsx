@@ -224,4 +224,41 @@ describe("AddBudgetDialog", () => {
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
   });
+
+  it("accepts precise amounts on Enter while the amount field stays focused", async () => {
+    const user = userEvent.setup();
+    const mockAddBudget = vi.fn().mockResolvedValue({
+      data: { bulkEntries: { success: true } },
+    });
+    mockUseMutation.mockReturnValue([
+      mockAddBudget,
+      { loading: false },
+    ] as unknown as ReturnType<typeof useMutation>);
+
+    render(<AddBudgetDialog {...defaultProps} />);
+
+    await user.type(
+      screen.getByTestId("account-combobox"),
+      "Expenses:CostOfRevenue",
+    );
+    await user.type(screen.getByTestId("currency-combobox"), "MUSD");
+
+    const amount = screen.getByRole("spinbutton", { name: /amount/i });
+    await user.clear(amount);
+    await user.type(amount, "0.001");
+
+    expect(amount).toHaveFocus();
+    expect((amount as HTMLInputElement).validity.stepMismatch).toBe(false);
+    expect((amount as HTMLInputElement).validationMessage).toBe("");
+
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => {
+      expect(mockAddBudget).toHaveBeenCalled();
+    });
+
+    const variables = mockAddBudget.mock.calls[0]?.[0]?.variables;
+    const number = variables?.entries?.[0]?.budget?.amount?.number;
+    expect(number).toBe("0.001");
+  });
 });
