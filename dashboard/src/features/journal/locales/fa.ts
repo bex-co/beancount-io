@@ -372,6 +372,15 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "(خالی)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "افزودن ردیف سند",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "حذف ردیف سند {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "خودکار",
     description: "Label for an automatically balanced amount",

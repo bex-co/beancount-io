@@ -344,11 +344,21 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
               <FormItem>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-9 w-9 [&>svg]:hidden">
+                    <SelectTrigger
+                      className="h-9 w-9 [&>svg]:hidden"
+                      aria-label={t("common.status")}
+                    >
                       <SelectValue>
-                        {field.value === "*" && "*"}
-                        {field.value === "!" && "!"}
-                        {field.value === " " && " "}
+                        <span aria-hidden="true">
+                          {field.value === "*" && "*"}
+                          {field.value === "!" && "!"}
+                          {field.value === " " && " "}
+                        </span>
+                        <span className="sr-only">
+                          {field.value === "*" && t("journal.clearedStatus")}
+                          {field.value === "!" && t("journal.pendingStatus")}
+                          {field.value === " " && t("journal.blankStatus")}
+                        </span>
                       </SelectValue>
                     </SelectTrigger>
                   </FormControl>
@@ -500,6 +510,9 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
                           size="sm"
                           onClick={() => removePosting(index)}
                           className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                          aria-label={t("journal.removePosting", {
+                            number: index + 1,
+                          })}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -510,6 +523,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
                           size="sm"
                           onClick={addPosting}
                           className="h-9 w-9 p-0 text-muted-foreground hover:text-primary shrink-0"
+                          aria-label={t("journal.addPosting")}
                         >
                           <Plus className="h-4 w-4" />
                         </Button>

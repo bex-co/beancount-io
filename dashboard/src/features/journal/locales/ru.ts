@@ -372,6 +372,15 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "(пусто)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Добавить проводку",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Удалить проводку {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "авто",
     description: "Label for an automatically balanced amount",

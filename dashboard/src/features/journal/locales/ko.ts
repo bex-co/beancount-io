@@ -367,6 +367,15 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "(공백)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "분개 추가",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "분개 {number} 삭제",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "자동",
     description: "Label for an automatically balanced amount",

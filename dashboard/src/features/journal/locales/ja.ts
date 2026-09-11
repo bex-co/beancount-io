@@ -369,6 +369,15 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "(空白)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "仕訳行を追加",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "仕訳行 {number} を削除",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "自動",
     description: "Label for an automatically balanced amount",

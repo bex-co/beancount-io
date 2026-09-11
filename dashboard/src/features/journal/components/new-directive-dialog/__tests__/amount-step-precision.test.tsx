@@ -137,4 +137,27 @@ describe("directive amount precision", () => {
     expect(postings?.[0]?.units?.number).toBe("0.001");
     expect(postings?.[1]?.units?.number).toBe("-0.001");
   });
+
+  it("names the status control and posting row actions", async () => {
+    const user = userEvent.setup();
+    mockUseMutation.mockReturnValue([
+      vi.fn(),
+      { loading: false },
+    ] as unknown as ReturnType<typeof useMutation>);
+
+    render(<TransactionForm ledgerId="open_ledger/minimax" />);
+
+    expect(screen.getByRole("combobox", { name: "Status" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Add posting" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Add posting" }));
+    expect(
+      screen.getByRole("button", { name: "Remove posting 1" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Remove posting 3" }),
+    ).toBeInTheDocument();
+  });
 });

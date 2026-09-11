@@ -372,6 +372,15 @@ const esJournal: Record<string, TranslationEntry> = {
     message: "(en blanco)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Añadir asiento",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Eliminar asiento {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "automático",
     description: "Label for an automatically balanced amount",

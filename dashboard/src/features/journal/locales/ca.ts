@@ -372,6 +372,15 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "(en blanc)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Afegeix apunt",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Elimina l'apunt {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "automàtic",
     description: "Label for an automatically balanced amount",
