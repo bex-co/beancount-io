@@ -185,7 +185,7 @@ export function KeyCreateDialog({ children }: KeyCreateDialogProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => handleOpenChange(false)}
                 disabled={createKeyLoading}
               >
                 {t("common.cancel")}
