@@ -37,8 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [095](./095.md) — Mobile account journal drops the sign of negative running balances
-
 - [096](./096.md) — Download adds .txt to extensionless repository files
 
 - [097](./097.md) — Shared mobile commit links stack the destination twice

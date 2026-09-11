@@ -5,10 +5,8 @@ import { AmountText } from "@/components/amount-text";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import {
-  formatMoneyWithCurrency,
-  formatSignedMoneyWithCurrency,
-} from "@/common/number-utils";
+import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
+import { formatAccountJournalBalance } from "@/screens/account-detail-screen/utils/format-account-journal-balance";
 import { AccountJournalRow } from "@/screens/account-detail-screen/selectors/select-account-journal";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
@@ -104,7 +102,7 @@ export function AccountEntryRow({
           {formatSignedMoneyWithCurrency(row.change, currency, true)}
         </AmountText>
         <AmountText style={styles.balance}>
-          {t("balance")}: {formatMoneyWithCurrency(row.balance, currency)}
+          {t("balance")}: {formatAccountJournalBalance(row.balance, currency)}
         </AmountText>
       </View>
     </>
