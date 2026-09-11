@@ -13,9 +13,11 @@ from cli.errors import AuthError
 ENVIRONMENT = "environment"
 FILE = "file"
 
-# HTTP header values reject control characters; a pasted token with a trailing
-# newline must fail here rather than leak through httpx/h11 into the error text.
-_INVALID_TOKEN = re.compile(r"[\x00-\x1f\x7f]")
+# HTTP header values reject control characters, and a bearer token never
+# contains whitespace of any kind: a pasted token with a trailing newline or
+# space must fail here, as an auth error, rather than reach httpx/h11 and
+# surface as a transport failure with the token in the exception text.
+_INVALID_TOKEN = re.compile(r"[\s\x00-\x1f\x7f]")
 
 
 def _validate_token(token: str) -> str:
