@@ -1,6 +1,16 @@
 # w3 · m18 — Keep lot reductions from replacing current market prices
 
-**Worker:** worker3 **Goal:** Holdings and BQL value the remaining assets using valid market quotes after a sale **Status:** todo
+**Worker:** worker3 **Goal:** Holdings and BQL value the remaining assets using valid market quotes after a sale **Status:** abandoned (2026-09-10) — blocked on a corrected upstream engine artifact that does not exist
+
+> **Abandoned, not fixed.** t002's prerequisite was checked against the npm
+> registry on 2026-09-10: `@rustledger/wasm` 0.24.0 (2026-09-06) is the newest
+> release and m18 already proved it fails, while the `1.0.0-rc.*` line is older
+> (rc.18 published 2026-01-14) and npm-deprecated — not a corrected artifact.
+> With no supported price-policy interface and this repo's ban on vendoring
+> upstream bytes, no task here is actionable. The defect is real and unfixed;
+> it is carried forward as inbox note [w3/113](../113.md), which points back to
+> this directory for the full evidence. Re-promote when upstream ships a
+> booking-aware implicit-price fix.
 
 ## Tasks (in order)
 

@@ -21,7 +21,7 @@
 - [x] **m15** — Keep ledger filters consistent with navigation and history (7 tasks) ← repeated dashboard QA, 2026-09-08
 - [x] **m16** — Preserve parent-account postings in Cash Flow (6 tasks) ← repeated dashboard QA, 2026-09-08
 - [x] **m17** — Make commit file links reach deferred and virtualized diffs (6 tasks) ← repeated dashboard QA, 2026-09-08
-- [ ] **m18** — Keep lot reductions from replacing current market prices (7 tasks) ← repeated dashboard QA, 2026-09-08
+- [x] **m18** — Keep lot reductions from replacing current market prices (7 tasks) ← repeated dashboard QA, 2026-09-08 — **ABANDONED** 2026-09-10, blocked on an upstream engine fix that does not exist; carried forward as [113](./113.md)
 - [x] **m19** — Keep import values valid from parsing through configuration (8 tasks) ← promoted038 and repeated dashboard QA, 2026-09-08
 - [x] **m20** — Expose reporting filters on Cash Flow and narrow layouts (7 tasks) ← promoted004 and repeated dashboard QA, 2026-09-08
 - [x] **m21** — Continue profile social lists beyond the first page (7 tasks) ← repeated dashboard QA, 2026-09-08
@@ -37,30 +37,8 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [099](./099.md) — BQL suggestions accumulate duplicates after returning to Query
-
-- [100](./100.md) — Mobile file editor retains the previous ledger document after a link switch
-
-- [101](./101.md) — Mobile picker confirms the first option instead of its displayed initial selection
-
-- [102](./102.md) — Valid BQL block comments fail in hosted queries
-
-- [103](./103.md) — Loading buttons lose their accessible names
-
-- [104](./104.md) — Guest Star and Follow discard the sign-in return destination
-
 - [105](./105.md) — Mobile Settings clips invitation copy in Spanish and at larger text sizes
-
-- [106](./106.md) — Mobile transaction detail crashes on a missing selector import
-
-- [107](./107.md) — Star remains selected after the server reports failure
-
-- [108](./108.md) — Money movement month labels ignore the selected language
-
 - [109](./109.md) — Mobile Home and journal round nonzero crypto rewards to zero
-
-- [110](./110.md) — Browser-default number formatting breaks report hydration
-
 - [111](./111.md) — Mobile recurring switch has no accessible name
-
 - [112](./112.md) — Mobile Ethereum 2.0 merchant detail rejects its own journal filter
+- [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
