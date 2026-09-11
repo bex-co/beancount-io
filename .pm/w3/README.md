@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [059](./059.md) — Switching ledgers leaves the narrow sidebar over the destination
 - [060](./060.md) — A fresh guest is incorrectly told their session has expired
 - [061](./061.md) — Public file titles lose the file path after rendering
 - [062](./062.md) — The AI composer's send button has no accessible name

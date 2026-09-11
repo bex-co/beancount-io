@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as apolloClient from "@apollo/client/react";
 import type { ListLedgersQuery } from "@/graphql/definitions";
 import { LedgerSwitcher } from "../ledger-switcher";
+import { SidebarProvider, useSidebar } from "@/common/components/ui/sidebar";
 
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -24,7 +25,7 @@ vi.mock("@tanstack/react-router", () => ({
       {children}
     </a>
   ),
-  useLocation: () => ({ pathname: "/ledger/open_ledger/ledger-1" }),
+  useLocation: () => ({ pathname: "/ledger/open_ledger/ledger-1/journal" }),
   useNavigate: () => mockNavigate,
 }));
 
@@ -67,9 +68,41 @@ function makeLedgers(count: number): ListLedgersQuery["listLedgers"] {
   });
 }
 
+function MobileDrawerProbe() {
+  const { openMobile, setOpenMobile, isMobile } = useSidebar();
+  return (
+    <div>
+      <div data-testid="is-mobile">{isMobile ? "mobile" : "desktop"}</div>
+      <div data-testid="open-mobile">{openMobile ? "open" : "closed"}</div>
+      <button type="button" onClick={() => setOpenMobile(true)}>
+        Open drawer
+      </button>
+    </div>
+  );
+}
+
 describe("LedgerSwitcher", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 1440,
+    });
     vi.mocked(apolloClient.useQuery).mockReturnValue({
       data: { listLedgers: makeLedgers(20) },
       loading: false,
@@ -83,11 +116,13 @@ describe("LedgerSwitcher", () => {
   it("scrolls ledger results while keeping global actions outside the list", async () => {
     const user = userEvent.setup();
     render(
-      <LedgerSwitcher
-        currentLedgerId="open_ledger/ledger-1"
-        currentLedgerName="ledger-1"
-        currentLedgerFullName="open_ledger/ledger-1"
-      />,
+      <SidebarProvider>
+        <LedgerSwitcher
+          currentLedgerId="open_ledger/ledger-1"
+          currentLedgerName="ledger-1"
+          currentLedgerFullName="open_ledger/ledger-1"
+        />
+      </SidebarProvider>,
     );
 
     await user.click(screen.getByRole("combobox", { name: "Select a ledger" }));
@@ -111,5 +146,71 @@ describe("LedgerSwitcher", () => {
       "border-t",
       "bg-popover",
     );
+  });
+
+  it("closes the narrow sidebar drawer after selecting another ledger", async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query.includes("max-width"),
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 390,
+    });
+    vi.mocked(apolloClient.useQuery).mockReturnValue({
+      data: {
+        listLedgers: makeLedgers(2).concat([
+          {
+            ...makeLedgers(1)[0],
+            id: "open_ledger/minimax",
+            name: "minimax",
+            fullName: "open_ledger/minimax",
+          },
+        ]),
+      },
+      loading: false,
+    } as ReturnType<typeof apolloClient.useQuery>);
+
+    render(
+      <SidebarProvider>
+        <MobileDrawerProbe />
+        <LedgerSwitcher
+          currentLedgerId="open_ledger/ledger-1"
+          currentLedgerName="ledger-1"
+          currentLedgerFullName="open_ledger/ledger-1"
+        />
+      </SidebarProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("is-mobile")).toHaveTextContent("mobile");
+    });
+
+    await user.click(screen.getByRole("button", { name: "Open drawer" }));
+    expect(screen.getByTestId("open-mobile")).toHaveTextContent("open");
+
+    await user.click(screen.getByRole("combobox", { name: "Select a ledger" }));
+    const destination = await screen.findByRole("option", {
+      name: (_, element) =>
+        element.getAttribute("data-value") === "open_ledger/minimax minimax",
+    });
+    await user.click(destination);
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalled();
+      expect(screen.getByTestId("open-mobile")).toHaveTextContent("closed");
+    });
   });
 });
