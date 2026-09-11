@@ -97,3 +97,61 @@ describe("DatePicker typing contract", () => {
     );
   });
 });
+
+describe("DatePicker calendar year range", () => {
+  it("opens on a next-year value with that month selected", async () => {
+    const user = userEvent.setup();
+    const onValue = vi.fn();
+    render(
+      <ControlledDatePicker
+        initial={new Date(2027, 0, 15)}
+        onValue={onValue}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Select date" }));
+
+    expect(screen.getByRole("combobox", { name: "Choose the Year" })).toHaveTextContent(
+      "2027",
+    );
+    expect(
+      screen.getByRole("combobox", { name: "Choose the Month" }),
+    ).toHaveTextContent("January");
+    expect(
+      screen.getByRole("gridcell", { name: "15", selected: true }),
+    ).toBeInTheDocument();
+  });
+
+  it("navigates from December into the next calendar year", async () => {
+    const user = userEvent.setup();
+    const onValue = vi.fn();
+    render(
+      <ControlledDatePicker
+        initial={new Date(2026, 11, 1)}
+        onValue={onValue}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Select date" }));
+
+    const next = screen.getByRole("button", { name: "Go to the Next Month" });
+    expect(next).toBeEnabled();
+    await user.click(next);
+
+    expect(screen.getByRole("combobox", { name: "Choose the Year" })).toHaveTextContent(
+      "2027",
+    );
+    expect(
+      screen.getByRole("combobox", { name: "Choose the Month" }),
+    ).toHaveTextContent("January");
+
+    const day15 = screen.getByRole("gridcell", { name: "15" });
+    const dayButton = day15.querySelector("button");
+    expect(dayButton).toBeTruthy();
+    await user.click(dayButton!);
+    expect(onValue).toHaveBeenLastCalledWith(expect.any(Date));
+    expect(format(onValue.mock.calls.at(-1)![0] as Date, "yyyy-MM-dd")).toBe(
+      "2027-01-15",
+    );
+  });
+});

@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [069](./069.md) — The date calendar cannot reach a valid next-year date
 - [070](./070.md) — File-upload removal buttons have no accessible names
 - [071](./071.md) — A removed upload file cannot be selected again
 - [072](./072.md) — Account search calls loading and failed reads an empty ledger
