@@ -179,6 +179,13 @@ describe("ApiKeyCreateDialog", () => {
       await screen.findByText("Select at least one permission."),
     ).toBeInTheDocument();
     expect(mockCreate).not.toHaveBeenCalled();
+
+    const firstScope = screen.getByRole("checkbox", { name: "ledger.read" });
+    expect(firstScope).toHaveFocus();
+    expect(firstScope).toHaveAttribute("aria-invalid", "true");
+    expect(firstScope).toHaveAccessibleDescription(
+      /Select at least one permission/i,
+    );
   });
 
   it("cannot be dismissed with Escape while creation is in flight", () => {
