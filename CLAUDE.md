@@ -91,7 +91,7 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
 - The Python CLI exposes `make deadcode` for high-confidence Vulture detection and `make deadcode-fix` for Ruff-removable unused imports/variables; `make check-all` includes detection.
 - From the repository root, `scripts/lint-deadcode.sh` runs every package's detector plus Vulture over the root and skills support scripts; `scripts/fix-deadcode.sh` applies every package's safe fixes. The latter can delete files; always review its diff and run the native package checks afterward.
 - CI — path-filtered workflows on push/PR to `main`:
-  - `.github/workflows/ci.yml` (`CI`) → `mobile/**`: `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit`.
+  - `.github/workflows/ci.yml` (`CI`) → `mobile/**`: `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit`; a macOS job runs `yarn metadata:validate`, `yarn screenshots:build`, and `yarn screenshots:validate` for Apple and Play listing assets.
   - `.github/workflows/ci-dashboard.yml` (`CI (dashboard)`) → `dashboard/**`: `yarn format:check`, `yarn lint`, `yarn test`, `yarn build`.
   - `.github/workflows/ci-cli.yml` (`CI (cli)`) → `cli/**`: `make check-all`.
   - `.github/workflows/ci-skills.yml` (`CI (skills)`) → `skills/**`: `python3 skills/scripts/ci-check.py` (SKILL.md frontmatter, evals.json, fixture paths, Python syntax, bean-check on `*ledger.beancount`).

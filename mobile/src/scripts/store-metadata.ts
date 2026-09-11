@@ -51,6 +51,8 @@ export interface StoreLocaleManifest {
   runtimeLocales: string[];
   storeLocales: string[];
   runtimeToStore: Record<string, string[]>;
+  runtimeToPlay: Record<string, string[]>;
+  playToStore: Record<string, string>;
   fallbacks: Record<string, { storeLocale: string; reason: string }>;
 }
 
@@ -65,6 +67,13 @@ export interface ScreenshotManifest {
   }>;
   stories: Array<{ order: number; id: string; source: string }>;
   captions: Record<string, string[]>;
+  playDisplayTypes: Array<{
+    name: string;
+    width: number;
+    height: number;
+    layout: "phone" | "feature";
+  }>;
+  playOnlyCaptions: Record<string, string[]>;
 }
 
 export interface ScreenshotReviewEntry {
@@ -487,11 +496,100 @@ export function validateScreenshotManifest(
   return errors;
 }
 
+export function validatePlayArtworkManifest(
+  locales: StoreLocaleManifest,
+  screenshots: ScreenshotManifest,
+): string[] {
+  const errors: string[] = [];
+  const expected = [
+    "en-US",
+    "zh-CN",
+    "bg",
+    "ca",
+    "de-DE",
+    "es-ES",
+    "es-419",
+    "fa",
+    "fr-FR",
+    "fr-CA",
+    "nl-NL",
+    "pt-BR",
+    "pt-PT",
+    "ru-RU",
+    "sk",
+    "uk",
+  ];
+  requireExactSet(
+    errors,
+    "Play runtime locales",
+    Object.keys(locales.runtimeToPlay ?? {}),
+    EXPECTED_RUNTIME_LOCALES,
+  );
+  requireExactSet(
+    errors,
+    "Play locales",
+    Object.values(locales.runtimeToPlay ?? {}).flat(),
+    expected,
+  );
+  for (const [runtime, playLocales] of Object.entries(
+    locales.runtimeToPlay ?? {},
+  )) {
+    for (const locale of playLocales) {
+      const source = locales.playToStore?.[locale];
+      if (runtime === "bg" || runtime === "fa") {
+        if (source || locale !== runtime)
+          errors.push(`${runtime} requires its own Play localization`);
+      } else if (!(locales.runtimeToStore[runtime] ?? []).includes(source)) {
+        errors.push(
+          `${locale} must derive from the matching canonical runtime locale`,
+        );
+      }
+      const captions = source
+        ? screenshots.captions[source]
+        : screenshots.playOnlyCaptions?.[locale];
+      if (
+        !captions ||
+        captions.length !== 3 ||
+        captions.some((caption) => !caption.trim())
+      ) {
+        errors.push(`${locale} must have three nonempty Play captions`);
+      }
+    }
+  }
+  requireExactSet(
+    errors,
+    "Play-only caption locales",
+    Object.keys(screenshots.playOnlyCaptions ?? {}),
+    ["bg", "fa"],
+  );
+  const displays = screenshots.playDisplayTypes ?? [];
+  requireExactSet(
+    errors,
+    "Play display types",
+    displays.map((display) => display.name),
+    ["phoneScreenshots", "featureGraphic"],
+  );
+  for (const display of displays) {
+    const feature = display.name === "featureGraphic";
+    if (
+      display.width !== (feature ? 1024 : 1080) ||
+      display.height !== (feature ? 500 : 1920) ||
+      display.layout !== (feature ? "feature" : "phone")
+    ) {
+      errors.push(`${display.name} has invalid Play dimensions or layout`);
+    }
+  }
+  return errors;
+}
+
 export function validateStoreMetadata(root: string): string[] {
   const errors: string[] = [];
   const localeManifest = loadStoreLocaleManifest(root);
   const screenshotManifest = loadScreenshotManifest(root);
   errors.push(...validateLocaleManifest(localeManifest));
+  errors.push(
+    ...validatePlayArtworkManifest(localeManifest, screenshotManifest),
+  );
   errors.push(
     ...validateScreenshotManifest(root, localeManifest, screenshotManifest),
   );
@@ -573,15 +671,27 @@ export function validateStoreMetadata(root: string): string[] {
 
 export function validateGeneratedScreenshots(root: string): string[] {
   const errors: string[] = [];
-  const locales = loadStoreLocaleManifest(root).storeLocales;
+  const localeManifest = loadStoreLocaleManifest(root);
   const manifest = loadScreenshotManifest(root);
+  errors.push(...validatePlayArtworkManifest(localeManifest, manifest));
+  const targets = [
+    ...localeManifest.storeLocales.map((locale) => ({
+      locale,
+      displays: manifest.displayTypes,
+    })),
+    ...Object.values(localeManifest.runtimeToPlay)
+      .flat()
+      .map((locale) => ({ locale, displays: manifest.playDisplayTypes })),
+  ];
   const outputRoot = path.join(root, "metadata/screenshots");
   const expectedFiles = manifest.stories.map(
     (story) => `${String(story.order).padStart(2, "0")}-${story.id}.png`,
   );
 
-  for (const locale of locales) {
-    for (const display of manifest.displayTypes) {
+  for (const { locale, displays } of targets) {
+    for (const display of displays) {
+      const displayFiles =
+        display.name === "featureGraphic" ? ["feature.png"] : expectedFiles;
       const directory = path.join(outputRoot, locale, display.name);
       const files = fs.existsSync(directory)
         ? fs
@@ -589,7 +699,7 @@ export function validateGeneratedScreenshots(root: string): string[] {
             .filter((file) => file.endsWith(".png"))
             .sort()
         : [];
-      if (JSON.stringify(files) !== JSON.stringify(expectedFiles)) {
+      if (JSON.stringify(files) !== JSON.stringify(displayFiles)) {
         errors.push(
           `${locale}/${display.name} has the wrong screenshot names or order`,
         );
@@ -673,6 +783,7 @@ export function storeInputDigest(root: string, version: string): string {
     SCREENSHOT_MANIFEST,
     "scripts/build-screenshots.sh",
     "src/scripts/build-screenshots.ts",
+    "src/scripts/screenshot-font.ts",
     ...locales.map((locale) => `metadata/app-info/${locale}.json`),
     ...locales.map((locale) => `metadata/version/${version}/${locale}.json`),
     ...screenshotManifest.stories.map((story) => story.source),

@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Deterministically build the 14-locale × 2-device × 3-story screenshot matrix.
+# Build the canonical Apple screenshot and Google Play artwork matrices.
 # Set LOCALE or DISPLAY_TYPE to render a focused subset during iteration.
 set -eu
 
