@@ -703,7 +703,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     // Serialize and apply display selectors before total/offset/limit so paging
     // and counts match the selected rows while change/balance retain the
     // unfiltered running-balance values for each kept row.
-    let items = accountJournalItems(filtered, query.account, {
+    const items = accountJournalItems(filtered, query.account, {
       withChildren,
       conversion,
       prices,

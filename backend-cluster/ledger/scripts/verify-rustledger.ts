@@ -32,6 +32,7 @@ import {
   queryResultToShellResult,
   queryResultToText,
 } from "@/features/ledger/service/ledger-shell-mappers";
+import { stripBqlBlockComments } from "@/features/ledger/service/bql-comments";
 import {
   accountBalanceSeries,
   accountHierarchy,
@@ -433,6 +434,41 @@ async function main(): Promise<void> {
   assert(
     query.rows[0].account === "Expenses:Food",
     "grouped account is Expenses:Food",
+  );
+
+  // Block comments: the engine's own parser only skips whitespace, so the
+  // shell service normalizes them away first. Verify against the LIVE engine
+  // that (a) the raw annotated query really does still fail there, and (b) the
+  // normalized query returns exactly the uncommented query's rows.
+  const COMMENTED_QUERY =
+    "/* qa */ SELECT account, sum(position) AS total /* pick */ WHERE account ~ 'Expenses' GROUP BY account";
+  const rawCommented = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    COMMENTED_QUERY,
+  );
+  assert(
+    rawCommented.errors.some((e) => e.severity === "error"),
+    "engine still rejects a raw block-commented query (normalization is load-bearing)",
+  );
+  const normalizedCommented = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    stripBqlBlockComments(COMMENTED_QUERY),
+  );
+  assert(
+    normalizedCommented.rows.length === query.rows.length &&
+      normalizedCommented.rows[0].account === query.rows[0].account,
+    "normalized block-commented query returns the uncommented query's rows",
+  );
+  const quotedComment = await queryLedgerFiles(
+    FILES,
+    "main.beancount",
+    stripBqlBlockComments("SELECT '/* literal */' AS kept LIMIT 1"),
+  );
+  assert(
+    quotedComment.rows[0].kept === "/* literal */",
+    "comment syntax inside a string literal survives normalization byte-for-byte",
   );
 
   const count = await countDirectives(
