@@ -311,7 +311,7 @@ export function AddBudgetDialog({
                 control={form.control}
                 name="currency"
                 render={({ field }) => (
-                  <FormItem className="w-36">
+                  <FormItem className="w-48">
                     <FormLabel>{t("page.budget.budgetCurrency")}</FormLabel>
                     <FormControl>
                       <CurrencyCombobox

@@ -489,7 +489,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
                         control={form.control}
                         name={`postings.${index}.currency`}
                         render={({ field }) => (
-                          <FormItem className="w-20">
+                          <FormItem className="w-48">
                             <FormControl>
                               <CurrencyCombobox
                                 ledgerId={ledgerId}
