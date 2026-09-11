@@ -534,6 +534,48 @@ class TestLenientReads:
         assert envelope(result)["data"][0]["payee"] == "Blue Bottle"
 
 
+class TestToleratedWarningsStayParseable:
+    """A JSON failure after `--allow-errors` is still one object on stderr."""
+
+    @pytest.fixture
+    def warned(self, tmp_path: Path) -> Path:
+        file = tmp_path / "main.bean"
+        file.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n2026-01-01 open Equity:Opening USD\n"
+            '2026-02-01 * "Opening"\n  Assets:Checking 100 USD\n  Equity:Opening -100 USD\n'
+            "2026-03-01 balance Assets:Checking 999 USD\n"
+        )
+        return file
+
+    @pytest.mark.parametrize(
+        "command",
+        [["query", "SELECT does_not_exist"], ["report", "overview", "--time", "not-a-period"]],
+        ids=["query", "report"],
+    )
+    def test_failure_after_tolerated_warnings_is_one_json_object(self, warned: Path, command: list[str]) -> None:
+        result = runner.invoke(app, ["--file", str(warned), "--json", *command, "--allow-errors"])
+
+        assert result.exit_code == 2, result.output
+        assert result.stdout == ""
+        error = error_object(result)  # would raise if the warning line preceded the object
+        assert error["category"] == "usage"
+        assert len(error["ledger_warnings"]) == 1 and "Balance failed" in error["ledger_warnings"][0]
+
+    def test_success_after_tolerated_warnings_keeps_the_envelope_and_the_warnings(self, warned: Path) -> None:
+        result = runner.invoke(app, ["--file", str(warned), "--json", "list", "transaction", "--allow-errors"])
+
+        assert result.exit_code == 0, result.output
+        assert envelope(result)["data"][0]["narration"] == "Opening"
+        assert "Balance failed" in result.stderr and not result.stderr.startswith("{")
+
+    def test_a_valid_ledger_failure_carries_no_warning_field(self) -> None:
+        result = runner.invoke(app, ["--file", str(VALID), "--json", "query", "SELECT does_not_exist"])
+
+        assert result.exit_code == 2
+        assert "ledger_warnings" not in error_object(result)
+
+
 class TestPartialValuation:
     """Reports convert what has a price and keep the rest in units (w1/m13)."""
 

@@ -76,11 +76,13 @@ class _GuardedGroup(TyperGroup):
         try:
             result = super().invoke(ctx)
         except (typer.Exit, typer.Abort):  # click's own control flow, not a failure
+            output.flush_warnings()
             raise
         except Exception as e:
             output.error(e)
         # After the command's own output, and only on the way out cleanly: a
         # courtesy line has no business interleaving with an error report.
+        output.flush_warnings()
         update.print_notice()
         return result
 

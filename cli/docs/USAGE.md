@@ -175,7 +175,9 @@ Reads are lenient in a terminal and strict everywhere else. `query`, `list`,
 and `report` print the data with the loader errors as a banner on stderr and
 exit 0 when stdout is a terminal; under `--json`, when stdout is piped, when
 `CI` is truthy, or with `--strict`, they exit 1 instead unless `--allow-errors`
-opts into the partial answer (the errors still print on stderr). `bea check`
+opts into the partial answer (the errors still print on stderr). If a JSON
+command tolerates loader errors and then fails anyway, stderr still holds one
+object: the loader lines ride along as `error.ledger_warnings`. `bea check`
 always exits 1 on errors — reporting them is its whole job, so it has no
 `--allow-errors` flag.
 The same validation gate runs before the interactive BQL shell opens. Missing

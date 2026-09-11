@@ -27,6 +27,19 @@ def _json_mode() -> bool:
     return context.current().json_output
 
 
+# Loader warnings a tolerant JSON read has not printed yet. In JSON mode stderr
+# must stay one parseable object, so they wait: a later failure folds them into
+# its error object, and a clean exit prints them after the envelope.
+_pending_warnings: list[str] = []
+
+
+def flush_warnings() -> None:
+    """Print deferred loader warnings; called on the way out of a successful command."""
+    for line in _pending_warnings:
+        print(line, file=sys.stderr)
+    _pending_warnings.clear()
+
+
 def success(message: str | None = None) -> None:
     """Print a human-readable confirmation. Silent in JSON mode — the envelope says it."""
     if message and not _json_mode():
@@ -61,6 +74,9 @@ def error(exc: BaseException | str) -> NoReturn:
             payload["details"] = err.details
         if err.result is not None:
             payload["result"] = jsonable(err.result)
+        if _pending_warnings:
+            payload["ledger_warnings"] = list(_pending_warnings)
+            _pending_warnings.clear()
         if trace:
             payload["traceback"] = trace
         print(json.dumps({"error": payload}), file=sys.stderr)
@@ -207,6 +223,9 @@ def render_ledger_errors(
             message or f"Ledger has {len(formatted)} error(s). Pass --allow-errors to report anyway.",
             details=formatted,
         )
+    if _json_mode():
+        _pending_warnings.extend(formatted)
+        return
     for line in formatted:
         print(line, file=sys.stderr)
 
