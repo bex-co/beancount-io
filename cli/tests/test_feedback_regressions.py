@@ -72,7 +72,7 @@ def test_precision_matches_json_in_cli_interactive_query_and_ask(book: Path, mon
     monkeypatch.setattr("beanquery.shell.readline", None)
     monkeypatch.setattr("beanquery.shell.INIT_FILENAME", str(book.parent / "no-init"))
     stream = io.StringIO()
-    query_shell("beancount:" + str(book), stream).onecmd(query)
+    query_shell(book, stream).onecmd(query)
     assert "82.35 USD" in stream.getvalue()
 
     agent = make_agent("gpt-4o", "http://unused", "test")
@@ -326,3 +326,54 @@ def test_a_query_error_is_reported_as_json_when_json_was_asked_for(book: Path) -
     error = json.loads(run(book, "query", "SELCT foo").stderr)["error"]
     assert error["category"] == "usage" and error["exit_code"] == 2
     assert "syntax error" in error["message"]
+
+
+@pytest.mark.parametrize("suffix", ["#target.bean", "?target.bean"])
+def test_query_loads_the_exact_file_when_its_name_has_url_characters(
+    tmp_path: Path, suffix: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`beancount:<path>` is urlparse()d by beanquery; `#`/`?` must not swap the ledger."""
+    ledger = (
+        "2026-01-01 open Assets:Cash USD\n"
+        "2026-01-01 open Equity:Opening USD\n"
+        '2026-02-01 * "QA"\n  Assets:Cash {n} USD\n  Equity:Opening -{n} USD\n'
+    )
+    decoy = tmp_path / "main.bean"
+    decoy.write_text(ledger.format(n=999))
+    target = tmp_path / f"main.bean{suffix}"
+    target.write_text(ledger.format(n=10))
+    query = "SELECT sum(position) WHERE account = 'Assets:Cash'"
+
+    result = run(target, "query", query)
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.stdout)
+    assert envelope["target"] == {"file": str(target)}
+    assert envelope["data"]["rows"][0][0][0]["units"]["number"] == "10"
+
+    monkeypatch.setattr("beanquery.shell.readline", None)
+    monkeypatch.setattr("beanquery.shell.INIT_FILENAME", str(tmp_path / "no-init"))
+    stream = io.StringIO()
+    query_shell(target, stream).onecmd(query)
+    assert "10 USD" in stream.getvalue() and "999" not in stream.getvalue()
+
+    agent = make_agent("gpt-4o", "http://unused", "test")
+    tool = agent._function_toolset.tools["run_bql_query"].function
+    assert "10 USD" in tool(SimpleNamespace(deps=BqlDeps(file=target)), query)
+
+
+def test_query_honors_relative_includes_from_a_url_character_filename(tmp_path: Path) -> None:
+    (tmp_path / "accounts.bean").write_text("2026-01-01 open Assets:Cash USD\n2026-01-01 open Equity:Opening USD\n")
+    target = tmp_path / "books#2026.bean"
+    target.write_text('include "accounts.bean"\n2026-02-01 * "QA"\n  Assets:Cash 10 USD\n  Equity:Opening -10 USD\n')
+
+    result = run(target, "query", "SELECT sum(position) WHERE account = 'Assets:Cash'")
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["rows"][0][0][0]["units"]["number"] == "10"
+
+
+def test_query_still_fails_a_missing_file_with_url_characters(tmp_path: Path) -> None:
+    result = run(tmp_path / "missing#x.bean", "query", "SELECT 1")
+
+    assert result.exit_code == 2
+    assert "missing#x.bean" in result.stderr

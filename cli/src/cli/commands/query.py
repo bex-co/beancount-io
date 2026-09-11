@@ -22,20 +22,19 @@ def query(
     shell (needs a terminal).
     """
     ctx = context.current()
-    file = ctx.entry_file()
-    source = "beancount:" + str(file.resolve())
+    file = ctx.entry_file().resolve()
 
-    from beanquery import connect
+    from cli.query_render import connect_ledger
 
     if not query_string and ctx.no_input:
         raise UsageError("A query is required without a terminal. Pass it as an argument.")
-    conn = connect(source)
+    conn = connect_ledger(file)
     output.render_ledger_errors(list(conn.errors), allow=allow_errors)
 
     if not query_string:
         from cli.query_render import query_shell
 
-        query_shell(source, sys.stdout).cmdloop()
+        query_shell(file, sys.stdout).cmdloop()
         return
 
     from beanquery import Error as BeanqueryError

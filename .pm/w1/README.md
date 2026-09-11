@@ -25,7 +25,6 @@
 
 ## CLI QA inbox
 
-- [010](./010.md) — BQL can report another ledger when a filename contains # or ?
 - [011](./011.md) — Cost labels lose backslashes when CLI transactions are written
 - [012](./012.md) — A zero posting blocks CLI imports into its account
 - [013](./013.md) — Small scalar numbers are written as commodity amounts

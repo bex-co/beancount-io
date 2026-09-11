@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal, localcontext
+from pathlib import Path
 from typing import Any, TextIO
 
 
@@ -59,11 +60,51 @@ def render_query(description: Any, rows: Any, stream: TextIO) -> None:
     render(description, rows, stream, dcontext=result_context(rows))
 
 
-def query_shell(source: str, stream: TextIO) -> Any:
+def load_for_bql(file: Path) -> dict[str, Any]:
+    """Load exactly this ledger file for a beanquery connection.
+
+    Beanquery's `beancount:<path>` DSN goes through `urlparse`, which reads
+    `#` and `?` in a filename as fragment and query markers and silently loads
+    a different file. Loading here and attaching the entries directly is the
+    only way to honor the resolved path byte for byte.
+    """
+    from beancount import loader
+
+    entries, errors, options = loader.load_file(str(file))
+    return {"entries": entries, "errors": errors, "options": options}
+
+
+LEDGER_DSN = "beancount:"
+"""A pathless beanquery DSN: the source attaches the entries handed to it instead of loading a file."""
+
+
+def connect_ledger(file: Path) -> Any:
+    """A beanquery connection on the exact ledger file, includes and load errors intact."""
+    from beanquery import connect
+
+    return connect(LEDGER_DSN, **load_for_bql(file))
+
+
+def query_shell(file: Path, stream: TextIO) -> Any:
     from beanquery.numberify import numberify_results
     from beanquery.shell import FORMATS, BQLShell
 
     class PreciseShell(BQLShell):  # type: ignore[misc]  # beanquery does not ship type annotations
+        def do_reload(self, arg: Any = None) -> None:
+            """Reload the Beancount input file."""
+            # Upstream attaches by DSN and therefore inherits its urlparse()
+            # path mangling; attach the freshly loaded entries instead.
+            import sys
+
+            from beancount.parser import printer
+
+            self.context.errors.clear()
+            self.context.options.clear()
+            self.context.attach(LEDGER_DSN, **load_for_bql(file))
+            self._extract_queries(self.context.tables["entries"].entries)
+            if self.context.errors and self.show_load_errors:
+                printer.print_errors(self.context.errors, file=sys.stderr)  # type: ignore[no-untyped-call]
+
         def onecmd(self, line: str) -> Any:
             # Keep familiar shell commands as quiet aliases for beanquery's
             # dot commands. SQL and genuine query warnings are unchanged.
@@ -87,4 +128,4 @@ def query_shell(source: str, stream: TextIO) -> Any:
                 render = FORMATS[self.settings.format]
                 return render(description, rows, out, dcontext=dcontext, **self.settings.todict())
 
-    return PreciseShell(source, stream, interactive=True, runinit=True)
+    return PreciseShell(LEDGER_DSN, stream, interactive=True, runinit=True)

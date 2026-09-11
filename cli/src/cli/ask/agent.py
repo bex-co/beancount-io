@@ -88,12 +88,9 @@ def make_agent(
     @agent.tool(retries=2)
     def run_bql_query(ctx: RunContext[BqlDeps], query: str) -> str:
         """Run a BQL (Beancount Query Language) query against the user's Beancount ledger."""
-        from beanquery import connect
+        from cli.query_render import connect_ledger, render_query
 
-        from cli.query_render import render_query
-
-        source = "beancount:" + str(ctx.deps.file.resolve())
-        conn = connect(source)
+        conn = connect_ledger(ctx.deps.file.resolve())
         if conn.errors:
             raise ModelRetry("Ledger is invalid: " + "; ".join(output.format_ledger_error(e) for e in conn.errors))
         try:
