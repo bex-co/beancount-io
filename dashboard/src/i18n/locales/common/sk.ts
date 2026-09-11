@@ -736,17 +736,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Chyba",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "Relácia vypršala",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message:
-      "Vaša prihlasovacia relácia vypršala. Prihláste sa znova a pokračujte.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "Prihláste sa, aby ste mohli pokračovať.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

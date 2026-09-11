@@ -1,6 +1,10 @@
 import { useQuery } from "@apollo/client/react";
 import { useMemo } from "react";
-import { Combobox, type ComboboxOption } from "@/common/components/ui/combobox";
+import {
+  Combobox,
+  type ComboboxFieldProps,
+  type ComboboxOption,
+} from "@/common/components/ui/combobox";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
@@ -11,7 +15,7 @@ import {
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 
-interface AccountComboboxProps {
+interface AccountComboboxProps extends ComboboxFieldProps {
   ledgerId: string;
   value: string;
   onValueChange: (value: string) => void;
@@ -33,6 +37,7 @@ export function AccountCombobox({
   disabled = false,
   className,
   filterPrefix,
+  ...fieldProps
 }: AccountComboboxProps) {
   const { t } = useTranslations();
   const defaultPlaceholder = placeholder || t("journal.selectAccount");
@@ -82,6 +87,7 @@ export function AccountCombobox({
       emptyText={t("component.accountCombobox.noAccountsFound")}
       disabled={disabled}
       className={className}
+      {...fieldProps}
     />
   );
 }

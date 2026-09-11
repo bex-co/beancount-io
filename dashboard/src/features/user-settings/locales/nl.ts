@@ -81,13 +81,14 @@ const nlUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "Nieuwe API-sleutel aanmaken",
-    description: "Dialog title for creating API key",
+    message: "Nieuwe SSH-sleutel maken",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
     message:
-      "Voeg een nieuwe openbare sleutel toe om te authenticeren met de Beancount API.",
-    description: "Dialog description for creating API key",
+      "Voeg een nieuwe openbare SSH-sleutel toe voor toegang tot de Git-repository.",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "Nieuwe sleutel aanmaken",

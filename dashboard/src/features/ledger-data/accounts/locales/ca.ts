@@ -9,7 +9,7 @@ const caAccounts: Record<string, TranslationEntry> = {
     description: "Table column header for account name",
   },
   "page.accounts.accountMustStartWith": {
-    message: "Account must start with one of: {prefixes}",
+    message: "El compte ha de començar amb un d'aquests: {prefixes}",
     description: "Validation error when account prefix is invalid",
   },
   "page.accounts.accountName": {
@@ -19,6 +19,12 @@ const caAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountNameRequired": {
     message: "El nom del compte és obligatori",
     description: "Validation error when account name field is empty",
+  },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Utilitzeu components de compte separats per dos punts, sense espais ni parts buides",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
   },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",

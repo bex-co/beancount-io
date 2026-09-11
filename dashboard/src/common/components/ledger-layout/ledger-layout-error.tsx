@@ -81,14 +81,14 @@ const VARIANT_CONFIG = {
     descriptionKey: "common.errorDescription",
   },
   unauthenticated: {
-    badge: "Session Expired",
+    badge: "Sign in required",
     Icon: LogIn,
     iconColor: "text-amber-500",
     badgeClass:
       "bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-amber-500/20",
     glowClass: "bg-amber-500/10",
-    titleKey: "common.sessionExpiredTitle",
-    descriptionKey: "common.sessionExpiredDescription",
+    titleKey: "auth.signIn",
+    descriptionKey: "common.errors.unauthenticated",
   },
   unknown: {
     badge: "Error",

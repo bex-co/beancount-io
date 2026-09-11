@@ -9,7 +9,8 @@ const frAccounts: Record<string, TranslationEntry> = {
     description: "Table column header for account name",
   },
   "page.accounts.accountMustStartWith": {
-    message: "Account must start with one of: {prefixes}",
+    message:
+      "Le compte doit commencer par l'un des éléments suivants : {prefixes}",
     description: "Validation error when account prefix is invalid",
   },
   "page.accounts.accountName": {
@@ -19,6 +20,12 @@ const frAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountNameRequired": {
     message: "Le nom du compte est requis",
     description: "Validation error when account name field is empty",
+  },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Utilisez des composants de compte séparés par des deux-points, sans espaces ni parties vides",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
   },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",

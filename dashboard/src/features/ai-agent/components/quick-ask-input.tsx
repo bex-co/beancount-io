@@ -25,6 +25,8 @@ export function QuickAskInput() {
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
+      // IME candidate confirmation uses Enter while composition is active.
+      if (e.nativeEvent.isComposing) return;
       e.preventDefault();
       handleSubmit();
     }

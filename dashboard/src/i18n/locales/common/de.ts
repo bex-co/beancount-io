@@ -737,17 +737,6 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Fehler",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "Sitzung abgelaufen",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message:
-      "Ihre Anmeldesitzung ist abgelaufen. Bitte melden Sie sich erneut an, um fortzufahren.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "Bitte melden Sie sich an, um fortzufahren.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

@@ -606,7 +606,7 @@ Usage: bea upgrade [OPTIONS]
 
 ### `bea cloud login`
 
-Log in via the browser device flow (stores a session in ~/.config/bea/credentials.json).
+Log in via the browser device flow (stores credentials.json under $BEA_CONFIG_DIR, default ~/.config/bea).
 
 ```text
 Usage: bea cloud login [OPTIONS]

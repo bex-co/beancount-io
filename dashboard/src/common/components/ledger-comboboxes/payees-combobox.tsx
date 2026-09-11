@@ -1,6 +1,10 @@
 import { useQuery } from "@apollo/client/react";
 import { useMemo } from "react";
-import { Combobox, type ComboboxOption } from "@/common/components/ui/combobox";
+import {
+  Combobox,
+  type ComboboxFieldProps,
+  type ComboboxOption,
+} from "@/common/components/ui/combobox";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
@@ -11,7 +15,7 @@ import {
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 
-interface PayeesComboboxProps {
+interface PayeesComboboxProps extends ComboboxFieldProps {
   ledgerId: string;
   value: string;
   onValueChange: (value: string) => void;
@@ -31,6 +35,7 @@ export function PayeesCombobox({
   placeholder,
   disabled = false,
   className,
+  ...fieldProps
 }: PayeesComboboxProps) {
   const { t } = useTranslations();
   const defaultPlaceholder = placeholder || t("journal.selectPayee");
@@ -75,6 +80,7 @@ export function PayeesCombobox({
       emptyText={t("journal.noPayeesFound")}
       disabled={disabled}
       className={className}
+      {...fieldProps}
     />
   );
 }

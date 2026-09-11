@@ -62,6 +62,19 @@ describe("QuickAskInput", () => {
     expect(mockNavigate).toHaveBeenCalledTimes(1);
   });
 
+  it("does not navigate when Enter confirms an IME composition", () => {
+    render(<QuickAskInput />);
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "How do I record " },
+    });
+    fireEvent.keyDown(screen.getByRole("textbox"), {
+      key: "Enter",
+      shiftKey: false,
+      isComposing: true,
+    });
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it("does NOT navigate when input is empty", () => {
     render(<QuickAskInput />);
     fireEvent.keyDown(screen.getByRole("textbox"), {

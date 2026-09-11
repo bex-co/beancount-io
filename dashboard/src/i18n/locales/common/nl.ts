@@ -737,16 +737,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Fout",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "Sessie Verlopen",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message: "Uw inlogsessie is verlopen. Log opnieuw in om door te gaan.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "Log in om door te gaan.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

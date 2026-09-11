@@ -20,6 +20,12 @@ const enAccounts: Record<string, TranslationEntry> = {
     message: "Account name is required",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Use colon-separated account components without spaces or empty parts",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:

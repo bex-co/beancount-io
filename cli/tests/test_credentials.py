@@ -40,12 +40,21 @@ class TestCredentials:
         with pytest.raises(AuthError, match="expired"):
             require_credentials()
 
-    def test_require_credentials_rejects_token_with_newline(
-        self, bea_config_dir: Path, monkeypatch: pytest.MonkeyPatch
+    @pytest.mark.parametrize(
+        "token",
+        ["value\n", "value\t", "value ", " value", "val ue", "value\r"],
+        ids=["newline", "tab", "trailing-space", "leading-space", "inner-space", "carriage-return"],
+    )
+    def test_require_credentials_rejects_token_with_whitespace(
+        self, bea_config_dir: Path, monkeypatch: pytest.MonkeyPatch, token: str
     ) -> None:
-        monkeypatch.setenv("BEA_TOKEN", "qa-synthetic-sensitive-value\n")
+        monkeypatch.setenv("BEA_TOKEN", "qa-synthetic-" + token)
         with pytest.raises(AuthError, match="Invalid BEA_TOKEN"):
             require_credentials()
+
+    def test_require_credentials_accepts_a_plain_token(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("BEA_TOKEN", "qa-synthetic-value.with-dashes_and.dots")
+        assert require_credentials().token == "qa-synthetic-value.with-dashes_and.dots"
 
 
 def _write_stored(config_dir: Path, token: str, expire_at: str) -> Path:

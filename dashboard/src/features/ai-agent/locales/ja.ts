@@ -37,6 +37,14 @@ const jaAiAgent: Record<string, TranslationEntry> = {
     message: "質問する",
     description: "Button text to submit quick question",
   },
+  "aiAgent.stop": {
+    message: "停止",
+    description: "Accessible name for stopping an in-progress AI response",
+  },
+  "aiAgent.stopped": {
+    message: "生成を停止しました",
+    description: "Toast shown after the user stops an in-progress AI response",
+  },
   "aiAgent.upgradeTitle": {
     message: "AIリクエスト残数が少なくなっています",
     description: "Title for upgrade panel when near AI usage cap",

@@ -1,5 +1,10 @@
 import { useEffect } from "react";
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import {
+  Link,
+  useNavigate,
+  useRouter,
+  useRouterState,
+} from "@tanstack/react-router";
 import { Home, ArrowLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/common/components/ui/button.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
@@ -21,15 +26,22 @@ import { isUnauthenticatedError } from "@/common/apollo/links/auth-error-link";
 export default function ErrorPage({ error, reset }: ErrorComponentProps) {
   const { t } = useTranslations();
   const navigate = useNavigate();
+  const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const unauthenticated = isUnauthenticatedError(error);
+
+  const handleRetry = () => {
+    void router.invalidate().finally(() => {
+      reset();
+    });
+  };
 
   useEffect(() => {
     if (!unauthenticated) return;
     void navigate({
       to: "/auth/login",
-      search: { next: pathname, reason: "expired" },
+      search: { next: pathname },
     });
   }, [unauthenticated, pathname, navigate]);
 
@@ -67,14 +79,14 @@ export default function ErrorPage({ error, reset }: ErrorComponentProps) {
           <div className="space-y-4">
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
               {unauthenticated
-                ? t("common.sessionExpiredTitle")
+                ? t("auth.signIn")
                 : isValidationError
                   ? t("common.invalidParameters")
                   : t("common.errorTitle")}
             </h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto">
               {unauthenticated
-                ? t("common.sessionExpiredDescription")
+                ? t("common.errors.unauthenticated")
                 : isValidationError
                   ? t("common.invalidParametersDescription")
                   : t("common.errorDescription")}
@@ -108,7 +120,7 @@ export default function ErrorPage({ error, reset }: ErrorComponentProps) {
               <Button
                 variant="outline"
                 size="lg"
-                onClick={reset}
+                onClick={handleRetry}
                 className="min-w-[140px]"
               >
                 {t("common.tryAgain")}

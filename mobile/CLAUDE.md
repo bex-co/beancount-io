@@ -257,11 +257,34 @@ yarn screenshots:validate
 ./scripts/app-store-release.sh plan <version>
 ```
 
-The build produces 84 opaque assets: 14 locales × two device types × the three
-ordered stories in `metadata/screenshots.json`. Uploads only work against
+The build produces 84 opaque Apple assets: 14 locales × two device types × the
+three ordered stories in `metadata/screenshots.json`, plus the 64 Play assets
+described below. Apple uploads only work against
 `PREPARE_FOR_SUBMISSION`; all planning, review, replacement, and ordering use
 upstream `asc screenshots` commands. See `docs/app-store-localization.md` for the
 complete pre-auto-submit choreography.
+
+### Google Play listing
+
+`metadata/store-locales.json` also maps the 13 runtime languages to 16 Play
+locales. Play copy is generated into `metadata/play/` from canonical app-info and
+version metadata; `metadata/play-source/bg.json` and `fa.json` supply the two
+languages Apple cannot offer. Never hand-edit generated Play JSON. Play artwork
+uses the same screenshot manifest and demo sources: three 1080×1920 phone images
+and one 1024×500 feature graphic per locale, all gitignored. Chromium/headless
+shell supplies Persian text shaping (`CHROME_BIN` can select the executable).
+
+Run `yarn play:baseline` with `GOOGLE_PLAY_SERVICE_ACCOUNT` set to a local ignored
+JSON key path. Inspect the actual locale coverage in
+`tmp/play-baseline/baseline.json` before `yarn play:generate`. Metadata validation
+checks Play limits and generated-copy drift; screenshot validation checks both
+stores. `./scripts/play-release.sh plan-play` is offline and prints every locale's
+diff. After reviewing the text and images within the user's authorization, use
+`apply-play <plan-sha256>` and `verify-play`. The helper checks local/remote drift,
+validates and commits the edit, and verifies copy and image checksums. It does
+not manage tracks or release notes. API parity is not public availability; check
+review/publishing state before calling the listing live. See
+`docs/app-store-localization.md` for the exact steps.
 
 ## Roadmap board (`.pm/`)
 
@@ -274,7 +297,7 @@ Conventions live canonically in `.claude/commands/pm.md`. Product pillars are in
 
 ## CI / Deploy
 
-- CI (`../.github/workflows/ci.yml`) runs `yarn format:check`, `yarn lint`, `yarn typecheck`, and `yarn test:unit` on push/PR to `main`.
+- CI (`../.github/workflows/ci.yml`) runs `yarn format:check`, `yarn lint`, `yarn typecheck`, and `yarn test:unit` on push/PR to `main`. A macOS job validates committed Apple/Play metadata, builds all store artwork, and runs `yarn screenshots:validate` with font-capable ImageMagick and Chromium.
 - Release (`../.github/workflows/deploy.yml`, workflow name `Release (mobile)`) runs on every `mobile/**` push to `main` and verifies checks, but deploys only if `package.json`'s version has no `mobile-v<version>` git tag yet. A new version must also carry `metadata/releases/<version>.json`, written by the ASC parity check and bound to the exact listing inputs; a missing or stale receipt blocks EAS before auto-submit. On success it sends the OTA update and runs the EAS build/submit, then pushes the tag and a GitHub Release. A push without a version bump deploys nothing — use `yarn bump` to cut a release; a failed release retries automatically on the next push because the tag is only created after success.
 
 ## Repo

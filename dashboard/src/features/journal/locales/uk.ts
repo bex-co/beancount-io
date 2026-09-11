@@ -372,6 +372,15 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "(порожній)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Додати проводку",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Видалити проводку {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "авто",
     description: "Label for an automatically balanced amount",

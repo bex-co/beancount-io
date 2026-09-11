@@ -725,16 +725,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "错误",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "登录已过期",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message: "你的登录会话已过期，请重新登录以继续。",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "请登录后继续。",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

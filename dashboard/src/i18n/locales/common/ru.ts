@@ -735,17 +735,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Ошибка",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "Сессия истекла",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message:
-      "Срок действия вашей сессии входа истёк. Войдите снова, чтобы продолжить.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "Войдите, чтобы продолжить.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

@@ -164,6 +164,11 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
     lines.extend(signature)
     lines.append(") -> None:")
 
+    # Path arguments are validated first: a malformed name is a usage error
+    # whether or not anyone is there to confirm, and a garbage target must not
+    # be answered with "pass --yes".
+    lines.extend(body)
+
     if cmd.confirm:
         lines.append(f'    if not context.current().confirm(f"{esc(cmd.confirm)}"):')
         lines.append('        output.success("Cancelled.")')
@@ -171,7 +176,6 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
 
     lines.append("    from cli.api.client import authenticated_client, unwrap")
     lines.append(f"    from cli.api.rest_client.api.ledger_v_1 import {module}")
-    lines.extend(body)
 
     call = f"{module}.sync_detailed({', '.join(call_args)}{', ' if call_args else ''}client=authenticated_client())"
     if method == "get":
@@ -190,8 +194,10 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
     lines.append("    rows = [snake_keys(item.to_dict()) for item in data]")
 
     if cmd.columns:
-        has_limit = any(p["name"] == "limit" for p in query_params(op))
-        truncated = "truncated=len(rows) >= limit, limit=limit" if has_limit else ""
+        names = {p["name"] for p in query_params(op)}
+        truncated = "truncated=len(rows) >= limit, limit=limit" if "limit" in names else ""
+        if truncated and "page" in names:
+            truncated += ", page=page"
         lines.append("    if context.current().json_output:")
         lines.append(f"        output.emit(rows, target=output.server_target(){', ' + truncated if truncated else ''})")
         lines.append("        return")

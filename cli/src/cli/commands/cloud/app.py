@@ -23,7 +23,7 @@ cloud_app.add_typer(ledger_app, name="ledger")
 
 @cloud_app.command("login")
 def cloud_login() -> None:
-    """Log in via the browser device flow (stores a session in ~/.config/bea/credentials.json)."""
+    """Log in via the browser device flow (stores credentials.json under $BEA_CONFIG_DIR, default ~/.config/bea)."""
     ctx = context.current()
     if ctx.no_input:
         from cli.errors import UsageError
@@ -43,11 +43,21 @@ def cloud_logout() -> None:
     """Revoke the token and clear stored credentials."""
     from cli.api.client import bearer_client, unwrap
     from cli.api.rest_client.api.ledger_v_1 import logout
-    from cli.auth.credentials import clear_credentials, load_credentials
+    from cli.auth.credentials import ENVIRONMENT, clear_credentials, load_credentials
 
     creds = load_credentials()
     if creds is None:
         output.success("Already logged out.")
+        return
+    if creds.source == ENVIRONMENT:
+        # `BEA_TOKEN` is the shared, unattended credential: a CI job or a
+        # teammate may be using the same value right now. Revoking it from a
+        # routine logout would silently kill every other consumer, and this
+        # process cannot unset the caller's shell anyway.
+        output.success(
+            "BEA_TOKEN is set in this shell; 'bea cloud logout' leaves it "
+            "unchanged and does not revoke it. Unset BEA_TOKEN to stop using it."
+        )
         return
     try:
         unwrap(logout.sync_detailed(client=bearer_client(creds.token)))
@@ -66,12 +76,16 @@ def cloud_status() -> None:
     from cli.api.client import bearer_client, unwrap_or_none
     from cli.api.rest_client.api.ledger_v_1 import get_user_profile
     from cli.auth.credentials import require_credentials
-    from cli.errors import AuthError
+    from cli.errors import error_from_status
 
     creds = require_credentials()
     user = unwrap_or_none(get_user_profile.sync_detailed(client=bearer_client(creds.token)))
     if user is None:
-        raise AuthError("Not authenticated. Run 'bea cloud login'.")
+        # A revoked or unknown bearer answers this endpoint with an empty
+        # profile rather than a 401. Report it exactly the way every other
+        # hosted command reports a rejected credential, so a script that
+        # branches on the message sees one auth story.
+        raise error_from_status(401, f"the server does not recognize this {creds.source} credential")
     # The generated model marks optional fields with `Unset`, which is neither
     # printable nor JSON-serializable; normalize once here.
     username = user.username if isinstance(user.username, str) else None

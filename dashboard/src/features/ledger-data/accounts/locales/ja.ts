@@ -20,6 +20,12 @@ const jaAccounts: Record<string, TranslationEntry> = {
     message: "口座名は必須です",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "スペースや空の部分を含めず、コロンで区切った勘定科目名を入力してください",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "口座:サブ口座",
     description:

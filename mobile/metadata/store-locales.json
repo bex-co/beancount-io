@@ -56,5 +56,36 @@
       "storeLocale": "en-US",
       "reason": "App Store Connect does not offer Persian metadata localization."
     }
+  },
+  "runtimeToPlay": {
+    "en": ["en-US"],
+    "zh": ["zh-CN"],
+    "bg": ["bg"],
+    "ca": ["ca"],
+    "de": ["de-DE"],
+    "es": ["es-ES", "es-419"],
+    "fa": ["fa"],
+    "fr": ["fr-FR", "fr-CA"],
+    "nl": ["nl-NL"],
+    "pt": ["pt-BR", "pt-PT"],
+    "ru": ["ru-RU"],
+    "sk": ["sk"],
+    "uk": ["uk"]
+  },
+  "playToStore": {
+    "en-US": "en-US",
+    "ca": "ca",
+    "de-DE": "de-DE",
+    "es-ES": "es-ES",
+    "fr-FR": "fr-FR",
+    "fr-CA": "fr-CA",
+    "nl-NL": "nl-NL",
+    "pt-BR": "pt-BR",
+    "pt-PT": "pt-PT",
+    "sk": "sk",
+    "uk": "uk",
+    "zh-CN": "zh-Hans",
+    "es-419": "es-MX",
+    "ru-RU": "ru"
   }
 }

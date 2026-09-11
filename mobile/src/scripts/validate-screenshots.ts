@@ -8,5 +8,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  "All 84 localized screenshots have the required order, size, and opacity.",
+  "All localized Apple and Play assets have the required order, size, and opacity.",
 );

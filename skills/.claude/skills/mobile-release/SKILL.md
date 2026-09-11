@@ -1,6 +1,6 @@
 ---
 name: mobile-release
-description: Summarize mobile changes since the previous release, bump the Beancount mobile version, prepare localized release notes, and release to the Apple App Store and Google Play. Use for $mobile-release or requests to cut a mobile store release. Skip ordinary code shipping, OTA-only updates, release-status questions, and requests to create or edit this skill.
+description: Summarize mobile changes since the previous release, bump the Beancount mobile version, prepare localized release notes and listings, and release to the Apple App Store and Google Play. Use for $mobile-release or requests to cut a mobile store release. Skip ordinary code shipping, OTA-only updates, release-status questions, and requests to create or edit this skill.
 ---
 
 # Mobile release
@@ -11,7 +11,7 @@ Carry a release through preparation, verification, shipping, and both stores. A 
 
 ## Establish release state
 
-Locate the repository with `git rev-parse --show-toplevel`. Read root and mobile `CLAUDE.md`, `mobile/docs/app-store-localization.md`, `mobile/scripts/app-store-release.sh`, `mobile/eas.json`, and `.github/workflows/deploy.yml`. Run package commands inside `mobile/`; keep scratch artifacts in `mobile/tmp/`. Discover installed `gh`, `asc`, and the workflow's pinned EAS CLI capabilities with `--help` rather than assuming newer commands exist.
+Locate the repository with `git rev-parse --show-toplevel`. Read root and mobile `CLAUDE.md`, `mobile/docs/app-store-localization.md`, `mobile/scripts/app-store-release.sh`, `mobile/scripts/play-release.sh`, `mobile/eas.json`, and `.github/workflows/deploy.yml`. Run package commands inside `mobile/`; keep scratch artifacts in `mobile/tmp/`. Discover installed `gh`, `asc`, and the workflow's pinned EAS CLI capabilities with `--help` rather than assuming newer commands exist.
 
 Inspect branch, staged and unstaged changes, and remote state. Fetch origin and tags. Preserve unrelated work; release only reviewed changes. Bring the release base up to date before preparing notes. Do not push a version bump until its store staging receipt is ready.
 
@@ -21,7 +21,7 @@ Check GitHub release runs, EAS builds/submissions, App Store Connect versions, a
 
 If the current version is untagged or has incomplete jobs, determine whether it is an existing release to resume before bumping. Do not create another version merely to retry. Do not edit an Apple version already in review; report the pending review as the blocker to a new release.
 
-Verify credentials and access without printing secrets. Check the effective Android submission profile, Google Play application identity, service-account access, production track, release status, and review settings. At creation of this skill, `submit.production` only specifies iOS configuration; do not assume `--platform all` supplies a working Android production release. Resolve needed non-secret configuration within release scope, or identify the precise missing access. Never substitute a testing track for the requested production release.
+Verify credentials and access without printing secrets. Check the effective Android submission profile, Google Play application identity, service-account access, production track, release status, and review settings. `submit.production.android` currently targets production with completed release status; verify service-account access separately because the profile does not contain a local key path. Resolve needed non-secret configuration within release scope, or identify the precise missing access. Never substitute a testing track for the requested production release.
 
 ## Summarize and bump
 
@@ -32,6 +32,12 @@ For a new release, run `yarn bump` once. Use the version it emits: this reposito
 Fill every `metadata/version/<version>/<locale>.json` `whatsNew` using the same factual summary, translated using shipped terminology and `metadata/store-locales.json`. Preserve stable listing copy unless the release warrants a change. Keep template `whatsNew` blank. Fill the Android changelog emitted by the bump script, if present; inspect the actual script/output rather than assuming the legacy fastlane directory exists or is uploaded by EAS. Ensure the same notes are applied to the Google Play release through available authenticated tooling.
 
 EAS uses remote native build numbers with auto-increment. Inspect the actual resulting iOS build number and Android version code; do not assume they equal the local suffix when selecting builds or attaching Android notes.
+
+## Prepare Google Play listing copy
+
+Set `GOOGLE_PLAY_SERVICE_ACCOUNT` to the local JSON key path used by EAS Submit, without printing the key or token. Run `yarn play:baseline`, inspect `tmp/play-baseline/baseline.json`, and record the actual locale coverage. Do not assume the existing listing is English-only. Baseline reads create and delete an uncommitted edit; avoid concurrent Play edits with that account.
+
+Run `yarn play:generate` after the bump and baseline review. It derives `metadata/play/<locale>.json` from canonical app-info/version metadata, using `metadata/play-source/bg.json` and `fa.json` for the languages Apple cannot offer. The result must cover all 16 Play locales / 13 runtime languages. Regenerate after any canonical listing change. Keep the baseline and credentials ignored; commit only the generated public copy and its canonical inputs.
 
 ## Stage Apple listing before pushing
 
@@ -56,6 +62,14 @@ yarn store:staging-check
 Inspect helper assumptions before using it (including its metadata-copy source and automatic release setting). The verification writes `metadata/releases/<version>.json` bound to the exact listing inputs. Never fabricate or hand-edit that receipt. If any bound input changes afterward, repeat the affected plan/review/apply and parity verification. Keep `.asc/`, generated screenshots, credentials, and raw remote responses out of Git.
 
 If authorization is actually missing, finish all possible local preparation first, present the target version, notes, intended store actions, and available plans, then ask only for the missing scope. Cite the precise applicable instruction if it requires additional human approval. Do not claim to have obtained operator approval that was never given.
+
+## Apply and verify Google Play listing
+
+After building and validating all screenshots, run `./scripts/play-release.sh plan-play` (also the default command). It uses the recorded baseline without credentials or network access and writes `tmp/play-release/plan.txt` and `plan.json`. Review every locale's title, short/full description diff, and ordered phone screenshots/feature graphic. Visually inspect the generated Play images, including Persian text shaping.
+
+Run `./scripts/play-release.sh apply-play <plan-sha256>` with the exact SHA-256 printed by the reviewed plan, within the release authorization already given. The helper checks for changed local inputs and remote baseline drift, updates only listing text and the phone/feature images, validates, and commits. It refuses to cancel another review in progress. It then checks all 16 locales' text and image checksums; rerun `./scripts/play-release.sh verify-play` to repeat that read-only parity check. After drift, pull a new baseline and review a new plan rather than bypassing the check.
+
+API parity does not prove publication. Check the review/publishing state in Play Console and sample the public listings, including Bulgarian and Persian. If review is pending, report that state and resume verification when it completes. Do not manage tracks or release notes through the listing helper; those remain part of the platform release steps below.
 
 ## Ship and follow both platforms
 

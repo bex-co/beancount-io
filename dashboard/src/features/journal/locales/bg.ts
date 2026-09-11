@@ -372,6 +372,15 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "(празно)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Добави запис",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Премахни запис {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "авто",
     description: "Label for an automatically balanced amount",

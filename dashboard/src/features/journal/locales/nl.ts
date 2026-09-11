@@ -372,6 +372,15 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "(leeg)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Boekingsregel toevoegen",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Boekingsregel {number} verwijderen",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "automatisch",
     description: "Label for an automatically balanced amount",

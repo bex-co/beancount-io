@@ -372,6 +372,15 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "(vide)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Ajouter une écriture",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Supprimer l'écriture {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "automatique",
     description: "Label for an automatically balanced amount",

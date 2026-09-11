@@ -735,16 +735,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "오류",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "세션이 만료되었습니다",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message: "로그인 세션이 만료되었습니다. 계속하려면 다시 로그인하세요.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "계속하려면 로그인하세요.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

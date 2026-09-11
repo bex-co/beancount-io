@@ -14,7 +14,11 @@ import {
   PopoverTrigger,
 } from "@/common/components/ui/popover";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { DISPLAY_PATTERN, parseStrictCalendarDate } from "./date-picker-utils";
+import {
+  DISPLAY_PATTERN,
+  parseStrictCalendarDate,
+  rollingCalendarBounds,
+} from "./date-picker-utils";
 
 function formatDate(date: Date | undefined, short = false) {
   if (!date || !isValid(date)) {
@@ -104,6 +108,10 @@ export function DatePicker({
     setOpen(false);
   };
 
+  const boundsAnchor =
+    month ?? (value && isValid(value) ? value : undefined) ?? new Date();
+  const { startMonth, endMonth } = rollingCalendarBounds(boundsAnchor);
+
   return (
     <div className={`space-y-2 ${className}`}>
       {label && (
@@ -111,7 +119,7 @@ export function DatePicker({
           {label}
         </Label>
       )}
-      <div className="relative flex gap-2 w-[128px]">
+      <div className="relative flex gap-2 w-[160px]">
         <Input
           id={id}
           value={inputValue}
@@ -170,6 +178,8 @@ export function DatePicker({
               selected={value}
               captionLayout="dropdown"
               month={month}
+              startMonth={startMonth}
+              endMonth={endMonth}
               onMonthChange={setMonth}
               onSelect={handleCalendarSelect}
             />

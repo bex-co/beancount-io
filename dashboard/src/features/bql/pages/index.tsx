@@ -19,6 +19,11 @@ import { QueryResultCard } from "../components/query-result-card";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { track } from "@/common/analytics";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
+import {
+  BQL_QUERY_SNIPPETS,
+  bqlQuerySnippetRange,
+  shouldOfferBqlQuerySnippets,
+} from "../lib/bql-completion-snippets";
 
 const DEFAULT_QUERY = "select * from accounts";
 
@@ -67,6 +72,19 @@ export default function LedgerQueryPage() {
   const ledgerIdRef = useRef(ledgerId);
   ledgerIdRef.current = ledgerId;
 
+  // Monaco language features are process-global; dispose page registrations
+  // when this editor goes away so Journal→Back does not stack duplicate snippets.
+  const monacoDisposablesRef = useRef<monacoType.IDisposable[]>([]);
+
+  useEffect(() => {
+    return () => {
+      for (const disposable of monacoDisposablesRef.current) {
+        disposable.dispose();
+      }
+      monacoDisposablesRef.current = [];
+    };
+  }, []);
+
   // Track queries we've already executed to prevent double-firing from URL sync
   const executedQueriesRef = useRef<Set<string>>(new Set());
 
@@ -89,7 +107,7 @@ export default function LedgerQueryPage() {
             ledgerId: requestLedgerId,
             query: query.trim(),
           },
-        });
+        }).retain();
 
         // A ledger switch (or remount) must not accept a late previous result.
         if (ledgerIdRef.current !== requestLedgerId) {
@@ -235,87 +253,72 @@ export default function LedgerQueryPage() {
                 );
 
                 // Configure Beancount/SQL syntax highlighting
-                monaco.languages.setLanguageConfiguration("sql", {
-                  comments: {
-                    lineComment: "--",
-                    blockComment: ["/*", "*/"],
-                  },
-                  brackets: [
-                    ["{", "}"],
-                    ["[", "]"],
-                    ["(", ")"],
-                  ],
-                  autoClosingPairs: [
-                    { open: "{", close: "}" },
-                    { open: "[", close: "]" },
-                    { open: "(", close: ")" },
-                    { open: '"', close: '"' },
-                    { open: "'", close: "'" },
-                  ],
-                  surroundingPairs: [
-                    { open: "{", close: "}" },
-                    { open: "[", close: "]" },
-                    { open: "(", close: ")" },
-                    { open: '"', close: '"' },
-                    { open: "'", close: "'" },
-                  ],
-                });
+                const languageConfig =
+                  monaco.languages.setLanguageConfiguration("sql", {
+                    comments: {
+                      lineComment: "--",
+                      blockComment: ["/*", "*/"],
+                    },
+                    brackets: [
+                      ["{", "}"],
+                      ["[", "]"],
+                      ["(", ")"],
+                    ],
+                    autoClosingPairs: [
+                      { open: "{", close: "}" },
+                      { open: "[", close: "]" },
+                      { open: "(", close: ")" },
+                      { open: '"', close: '"' },
+                      { open: "'", close: "'" },
+                    ],
+                    surroundingPairs: [
+                      { open: "{", close: "}" },
+                      { open: "[", close: "]" },
+                      { open: "(", close: ")" },
+                      { open: '"', close: '"' },
+                      { open: "'", close: "'" },
+                    ],
+                  });
 
                 // Add Beancount-specific keywords
-                monaco.languages.registerCompletionItemProvider("sql", {
-                  provideCompletionItems: (_model, position) => {
-                    const suggestions = [
-                      {
-                        label: "select * from accounts",
+                const completionProvider =
+                  monaco.languages.registerCompletionItemProvider("sql", {
+                    provideCompletionItems: (model, position) => {
+                      const word = model.getWordUntilPosition(position);
+                      const lineContent = model.getLineContent(
+                        position.lineNumber,
+                      );
+                      if (!shouldOfferBqlQuerySnippets(lineContent, word)) {
+                        return { suggestions: [] };
+                      }
+                      const range = bqlQuerySnippetRange(
+                        position.lineNumber,
+                        word,
+                      );
+                      const suggestions = BQL_QUERY_SNIPPETS.map((snippet) => ({
+                        label: snippet.label,
                         kind: monaco.languages.CompletionItemKind.Snippet,
-                        insertText: "select * from accounts",
-                        documentation: "Select all accounts",
-                        range: {
-                          startLineNumber: position.lineNumber,
-                          endLineNumber: position.lineNumber,
-                          startColumn: position.column,
-                          endColumn: position.column,
-                        },
-                      },
-                      {
-                        label: "select * from entries",
-                        kind: monaco.languages.CompletionItemKind.Snippet,
-                        insertText: "select * from entries",
-                        documentation: "Select all entries",
-                        range: {
-                          startLineNumber: position.lineNumber,
-                          endLineNumber: position.lineNumber,
-                          startColumn: position.column,
-                          endColumn: position.column,
-                        },
-                      },
-                      {
-                        label: "select * from transactions",
-                        kind: monaco.languages.CompletionItemKind.Snippet,
-                        insertText: "select * from transactions",
-                        documentation: "Select all transactions",
-                        range: {
-                          startLineNumber: position.lineNumber,
-                          endLineNumber: position.lineNumber,
-                          startColumn: position.column,
-                          endColumn: position.column,
-                        },
-                      },
-                      {
-                        label: "select * from balances",
-                        kind: monaco.languages.CompletionItemKind.Snippet,
-                        insertText: "select * from balances",
-                        documentation: "Select all balances",
-                        range: {
-                          startLineNumber: position.lineNumber,
-                          endLineNumber: position.lineNumber,
-                          startColumn: position.column,
-                          endColumn: position.column,
-                        },
-                      },
-                    ];
-                    return { suggestions };
-                  },
+                        insertText: snippet.insertText,
+                        documentation: snippet.documentation,
+                        range,
+                      }));
+                      return { suggestions };
+                    },
+                  });
+
+                for (const disposable of monacoDisposablesRef.current) {
+                  disposable.dispose();
+                }
+                monacoDisposablesRef.current = [
+                  languageConfig,
+                  completionProvider,
+                ].filter(Boolean) as monacoType.IDisposable[];
+
+                editor.onDidDispose(() => {
+                  for (const disposable of monacoDisposablesRef.current) {
+                    disposable.dispose();
+                  }
+                  monacoDisposablesRef.current = [];
                 });
 
                 editor.focus();

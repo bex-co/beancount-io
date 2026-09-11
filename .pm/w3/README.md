@@ -37,52 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [059](./059.md) — Switching ledgers leaves the narrow sidebar over the destination
-- [060](./060.md) — A fresh guest is incorrectly told their session has expired
-- [061](./061.md) — Public file titles lose the file path after rendering
-- [062](./062.md) — The AI composer's send button has no accessible name
-- [063](./063.md) — Confirming composed text submits an unfinished AI question
-- [064](./064.md) — Enter rejects precise amounts that a mouse submission accepts
-- [065](./065.md) — Budget selectors discard their form labels and descriptions
-- [066](./066.md) — New Transaction leaves status and posting actions unnamed
-- [068](./068.md) — Removing an earlier AI attachment leaves a later upload stuck
-- [069](./069.md) — The date calendar cannot reach a valid next-year date
-- [070](./070.md) — File-upload removal buttons have no accessible names
-- [071](./071.md) — A removed upload file cannot be selected again
-- [072](./072.md) — Account search calls loading and failed reads an empty ledger
-- [073](./073.md) — Narrow account search clips the start of account names
-- [074](./074.md) — Account and ledger search inputs have empty accessible names
-- [075](./075.md) — Token permission errors lack focus and field associations
-- [076](./076.md) — Cancel retains drafts in SSH setup and Open Account
-- [077](./077.md) — Opening another BQL history query cancels the first
-- [078](./078.md) — SSH setup describes the key as an API credential
-- [079](./079.md) — Gallery’s Back logo cannot be reached with the keyboard
-- [080](./080.md) — Ask has no control to stop a pending request
-- [081](./081.md) — Ask network failures offer no retry of the submitted question
-- [082](./082.md) — Ask sign-in can discard the question and selected mode
-- [083](./083.md) — A background quota read redirects guests from the empty Ask page
-- [084](./084.md) — Open Account validation remains English in localized forms
-- [085](./085.md) — New Entry squeezes its heading into letters on narrow screens
-- [086](./086.md) — Compact date fields clip the year before editing
-- [087](./087.md) — Direct ledger loads lose their structured access errors
-- [088](./088.md) — Try Again does not retry the failed ledger read
-- [089](./089.md) — Small Journal amounts become invalid Beancount scientific notation
-- [090](./090.md) — Currency fields clip MUSD, USDT and longer commodity symbols
-- [091](./091.md) — Open Account accepts names that are not complete account tokens
-- [092](./092.md) — Keyboard Save bypasses the file editor's pending-write protection
-
-- [093](./093.md) — Mobile transaction search rejects punctuation in existing merchant names
-
-- [094](./094.md) — Mobile transaction postings round recorded commodity quantities to two decimals
-
-- [095](./095.md) — Mobile account journal drops the sign of negative running balances
-
-- [096](./096.md) — Download adds .txt to extensionless repository files
-
-- [097](./097.md) — Shared mobile commit links stack the destination twice
-
-- [098](./098.md) — BQL completion keeps the typed prefix before the suggested query
-
 - [099](./099.md) — BQL suggestions accumulate duplicates after returning to Query
 
 - [100](./100.md) — Mobile file editor retains the previous ledger document after a link switch
@@ -94,3 +48,19 @@
 - [103](./103.md) — Loading buttons lose their accessible names
 
 - [104](./104.md) — Guest Star and Follow discard the sign-in return destination
+
+- [105](./105.md) — Mobile Settings clips invitation copy in Spanish and at larger text sizes
+
+- [106](./106.md) — Mobile transaction detail crashes on a missing selector import
+
+- [107](./107.md) — Star remains selected after the server reports failure
+
+- [108](./108.md) — Money movement month labels ignore the selected language
+
+- [109](./109.md) — Mobile Home and journal round nonzero crypto rewards to zero
+
+- [110](./110.md) — Browser-default number formatting breaks report hydration
+
+- [111](./111.md) — Mobile recurring switch has no accessible name
+
+- [112](./112.md) — Mobile Ethereum 2.0 merchant detail rejects its own journal filter

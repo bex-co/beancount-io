@@ -40,6 +40,14 @@ const ptAiAgent: Record<string, TranslationEntry> = {
     message: "Perguntar",
     description: "Button text to submit quick question",
   },
+  "aiAgent.stop": {
+    message: "Parar",
+    description: "Accessible name for stopping an in-progress AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Geração interrompida",
+    description: "Toast shown after the user stops an in-progress AI response",
+  },
   "aiAgent.upgradeTitle": {
     message: "Solicitações de IA estão acabando",
     description: "Title for upgrade panel when near AI usage cap",

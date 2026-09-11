@@ -20,6 +20,12 @@ const bgAccounts: Record<string, TranslationEntry> = {
     message: "Наименованието на сметката е задължително",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Използвайте компоненти на сметка, разделени с двоеточие, без интервали или празни части",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:

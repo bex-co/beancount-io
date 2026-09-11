@@ -97,10 +97,14 @@ def ledger_clone(
 ) -> None:
     """Clone an existing ledger to disk."""
     from cli.api.client import authenticated_client
+    from cli.utils import owner_and_name
 
     from . import manager
 
     ctx = context.current()
+    # Validate the argument before touching credentials: a malformed name is
+    # a usage error on every `cloud ledger` command, signed in or not.
+    owner_and_name(full_name)
     ledger = manager.get_ledger(authenticated_client(), full_name)
     target = directory or Path.cwd() / ledger.name
     output.note(f"Cloning '{ledger.full_name}' to '{target}'...")

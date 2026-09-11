@@ -17,8 +17,14 @@ const ukAccounts: Record<string, TranslationEntry> = {
     description: "Form label for account name input",
   },
   "page.accounts.accountNameRequired": {
-    message: "Account name is required",
+    message: "Назва рахунку обов'язкова",
     description: "Validation error when account name field is empty",
+  },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Використовуйте компоненти рахунку через двокрапку без пробілів і порожніх частин",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
   },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",

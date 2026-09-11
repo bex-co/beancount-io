@@ -370,6 +370,15 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "（空白）",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "添加分录",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "删除分录 {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "汽车",
     description: "Label for an automatically balanced amount",

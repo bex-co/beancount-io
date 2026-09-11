@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TextFileView } from "../text-file-view";
@@ -193,5 +193,97 @@ describe("TextFileView write permission", () => {
     );
     expect(screen.queryByText("common.save")).not.toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("shares one in-flight save across toolbar and keyboard until settlement", async () => {
+    let releaseSave!: () => void;
+    const pendingSave = new Promise<void>((resolve) => {
+      releaseSave = resolve;
+    });
+    const onSave = vi.fn(() => pendingSave);
+    const onExitEditMode = vi.fn();
+
+    render(
+      <TextFileView
+        filePath="accounts.bean"
+        fileContent={fileContent}
+        onSave={onSave}
+        onDelete={vi.fn()}
+        isSaving={false}
+        isEditMode
+        onEnterEditMode={vi.fn()}
+        onExitEditMode={onExitEditMode}
+      />,
+    );
+
+    const editor = screen.getByLabelText("file-source");
+    fireEvent.change(editor, {
+      target: { value: "; qa-20260908-file-save-pending\n" },
+    });
+
+    fireEvent.click(screen.getByText("common.save"));
+    fireEvent.keyDown(editor, { key: "s", metaKey: true });
+    fireEvent.click(screen.getByText("common.save"));
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onExitEditMode).not.toHaveBeenCalled();
+
+    releaseSave();
+    await pendingSave;
+    await Promise.resolve();
+
+    expect(onExitEditMode).toHaveBeenCalledTimes(1);
+
+    fireEvent.change(screen.getByLabelText("file-source"), {
+      target: { value: "; deliberate-retry\n" },
+    });
+    fireEvent.keyDown(screen.getByLabelText("file-source"), {
+      key: "s",
+      metaKey: true,
+    });
+    expect(onSave).toHaveBeenCalledTimes(2);
+  });
+
+  it("retains the draft and allows retry after a failed save", async () => {
+    const onSave = vi
+      .fn()
+      .mockImplementationOnce(async () => {
+        throw new Error("network");
+      })
+      .mockImplementationOnce(async () => undefined);
+    const onExitEditMode = vi.fn();
+
+    render(
+      <TextFileView
+        filePath="accounts.bean"
+        fileContent={fileContent}
+        onSave={onSave}
+        onDelete={vi.fn()}
+        isSaving={false}
+        isEditMode
+        onEnterEditMode={vi.fn()}
+        onExitEditMode={onExitEditMode}
+      />,
+    );
+
+    const editor = screen.getByLabelText("file-source");
+    fireEvent.change(editor, {
+      target: { value: "; keep-on-failure\n" },
+    });
+
+    fireEvent.click(screen.getByText("common.save"));
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledTimes(1);
+    });
+    expect(onExitEditMode).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("file-source")).toHaveValue(
+      "; keep-on-failure\n",
+    );
+
+    fireEvent.click(screen.getByText("common.save"));
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledTimes(2);
+      expect(onExitEditMode).toHaveBeenCalledTimes(1);
+    });
   });
 });

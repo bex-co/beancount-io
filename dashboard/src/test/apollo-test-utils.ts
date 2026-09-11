@@ -51,7 +51,10 @@ export interface MockLazyQueryResult<TData> {
 }
 
 export type MockLazyQueryTuple<TData> = [
-  MockedFunction<(options?: unknown) => Promise<void>>,
+  // The execute fn resolves to the query result (not void), and carries a
+  // `retain()` method — the production BQL page calls `.retain()` on it
+  // (features/bql/pages/index.tsx). `unknown` keeps the mock permissive.
+  MockedFunction<(options?: unknown) => Promise<unknown>>,
   MockLazyQueryResult<TData>,
 ];
 
@@ -91,11 +94,21 @@ export function createMockMutationTuple<TData>(
  * Creates a type-safe mock lazy query result tuple
  */
 export function createMockLazyQueryTuple<TData>(
-  queryFn: MockedFunction<(options?: unknown) => Promise<void>>,
+  queryFn: MockedFunction<(options?: unknown) => Promise<unknown>>,
   overrides: Partial<MockLazyQueryResult<TData>> = {},
 ): MockLazyQueryTuple<TData> {
+  const executeWithRetain = ((options?: unknown) => {
+    const promise = Promise.resolve(queryFn(options)) as Promise<unknown> & {
+      retain: () => typeof promise;
+    };
+    promise.retain = () => promise;
+    return promise;
+    // A plain closure standing in for a vitest mock — cast through unknown
+    // since it lacks the MockInstance surface (tests assert on `queryFn`).
+  }) as unknown as MockedFunction<(options?: unknown) => Promise<unknown>>;
+
   return [
-    queryFn,
+    executeWithRetain,
     {
       data: undefined,
       loading: false,

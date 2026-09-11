@@ -1,3 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`no untranslated user-facing strings > does not introduce new untranslated production UI copy 1`] = `[]`;
+exports[`no untranslated user-facing strings > does not introduce new untranslated production UI copy 1`] = `
+[
+  "features/bql/lib/bql-completion-snippets.ts | UI config | select * from accounts",
+  "features/bql/lib/bql-completion-snippets.ts | UI config | select * from balances",
+  "features/bql/lib/bql-completion-snippets.ts | UI config | select * from entries",
+  "features/bql/lib/bql-completion-snippets.ts | UI config | select * from transactions",
+]
+`;

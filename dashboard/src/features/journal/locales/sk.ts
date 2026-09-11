@@ -372,6 +372,15 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "(prázdne)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Pridať položku",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Odstrániť položku {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "auto",
     description: "Label for an automatically balanced amount",

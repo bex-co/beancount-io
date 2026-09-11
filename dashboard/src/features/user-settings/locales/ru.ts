@@ -81,13 +81,13 @@ const ruUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "Создать новый API-ключ",
-    description: "Dialog title for creating API key",
+    message: "Создать новый SSH-ключ",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
-    message:
-      "Добавьте новый публичный ключ для аутентификации в API Beancount.",
-    description: "Dialog description for creating API key",
+    message: "Добавьте новый открытый SSH-ключ для доступа к Git-репозиторию.",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "Создать новый ключ",

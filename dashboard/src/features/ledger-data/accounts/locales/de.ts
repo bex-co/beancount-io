@@ -20,6 +20,12 @@ const deAccounts: Record<string, TranslationEntry> = {
     message: "Kontoname ist erforderlich",
     description: "Validation error when account name field is empty",
   },
+  "page.accounts.accountNameInvalid": {
+    message:
+      "Verwenden Sie durch Doppelpunkte getrennte Kontokomponenten ohne Leerzeichen oder leere Teile",
+    description:
+      "Validation error when the account name is not a complete Beancount account token",
+  },
   "page.accounts.accountSubAccountPlaceholder": {
     message: "Account:SubAccount",
     description:

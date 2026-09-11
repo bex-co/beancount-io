@@ -736,17 +736,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Помилка",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "Сесію завершено",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message:
-      "Термін дії вашої сесії входу закінчився. Увійдіть знову, щоб продовжити.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "Увійдіть, щоб продовжити.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

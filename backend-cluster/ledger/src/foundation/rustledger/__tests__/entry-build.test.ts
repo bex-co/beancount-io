@@ -331,4 +331,88 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
     });
     expect(out).toContain("#alpha#zeta^mno");
   });
+
+  it("expands scientific notation into ordinary decimals for WASM-safe source", () => {
+    const transaction = entryInputToText({
+      type: "transaction",
+      entry: {
+        date: "2024-09-08",
+        flag: "*",
+        narration: "Tiny",
+        postings: [
+          {
+            units: { number: "1e-8", currency: "MUSD" },
+            account: "Expenses:CostOfRevenue",
+          },
+          {
+            units: { number: "-1e-8", currency: "MUSD" },
+            account: "Assets:Current:Cash",
+          },
+        ],
+      },
+    });
+    expect(transaction).toContain("0.00000001 MUSD");
+    expect(transaction).toContain("-0.00000001 MUSD");
+    expect(transaction).not.toMatch(/1e-8/i);
+
+    const balance = entryInputToText({
+      type: "balance",
+      entry: {
+        date: "2024-09-08",
+        account: "Assets:Current:Cash",
+        amount: { number: "1e-8", currency: "MUSD" },
+      },
+    });
+    expect(balance).toContain("0.00000001 MUSD");
+    expect(balance).not.toMatch(/1e-8/i);
+
+    const price = entryInputToText({
+      type: "price",
+      entry: {
+        date: "2024-09-08",
+        currency: "BTC",
+        amount: { number: "1e+21", currency: "USD" },
+      },
+    });
+    expect(price).toContain("1000000000000000000000 USD");
+    expect(price).not.toMatch(/1e\+?21/i);
+
+    const custom = entryInputToText({
+      type: "custom",
+      entry: {
+        date: "2024-09-08",
+        type: "example",
+        values: [
+          { kind: "number", value: "1e-8" },
+          { kind: "amount", number: "-1E-8", currency: "MUSD" },
+        ],
+      },
+    });
+    expect(custom).toBe(
+      '2024-09-08 custom "example" 0.00000001 -0.00000001 MUSD\n\n',
+    );
+
+    const budget = entryInputToText({
+      type: "budget",
+      entry: {
+        date: "2024-09-08",
+        account: "Expenses:Food",
+        interval: "monthly",
+        amount: { number: "1e-8", currency: "USD" },
+      },
+    });
+    expect(budget).toContain("0.00000001 USD");
+  });
+
+  it("preserves ordinary decimal scale without rewriting through BigNumber", () => {
+    const out = entryInputToText({
+      type: "balance",
+      entry: {
+        date: "2024-09-08",
+        account: "Assets:Checking",
+        amount: { number: "1.2300", currency: "USD" },
+      },
+    });
+    expect(out).toContain("1.2300 USD");
+  });
 });

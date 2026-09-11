@@ -372,6 +372,15 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "(em branco)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Adicionar lançamento",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Remover lançamento {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "automático",
     description: "Label for an automatically balanced amount",

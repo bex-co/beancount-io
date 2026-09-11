@@ -33,6 +33,11 @@ const zhUploadFiles: Record<string, { message: string; description: string }> =
       description:
         "Conjunction word between drag and drop and file picker options",
     },
+    "ledgerEditor.removeSelectedFile": {
+      message: "移除 {fileName}",
+      description:
+        "Aria label for removing a staged upload file; {fileName} is the file name",
+    },
     "ledgerEditor.selectedFiles": {
       message: "已选文件 ({count})",
       description:

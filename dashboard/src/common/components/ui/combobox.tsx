@@ -22,7 +22,13 @@ export interface ComboboxOption {
   indent?: number; // For hierarchical display
 }
 
-interface ComboboxProps {
+/** Native input identity/ARIA props FormControl (Radix Slot) expects to reach. */
+export type ComboboxFieldProps = Pick<
+  React.ComponentPropsWithoutRef<"input">,
+  "id" | "aria-describedby" | "aria-invalid"
+>;
+
+interface ComboboxProps extends ComboboxFieldProps {
   options: ComboboxOption[];
   value: string;
   onValueChange: (value: string) => void;
@@ -44,6 +50,9 @@ export function Combobox({
   className,
   disabled = false,
   triggerOn = "change",
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: ComboboxProps) {
   const { t } = useTranslations();
   const defaultPlaceholder = placeholder || t("component.combobox.placeholder");
@@ -209,6 +218,9 @@ export function Combobox({
           <div className="relative">
             <Input
               ref={inputRef}
+              id={id}
+              aria-describedby={ariaDescribedBy}
+              aria-invalid={ariaInvalid}
               value={inputValue}
               onChange={handleInputChange}
               onFocus={handleInputFocus}

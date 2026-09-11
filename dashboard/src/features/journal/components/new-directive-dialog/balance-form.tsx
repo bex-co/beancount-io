@@ -187,7 +187,7 @@ export function BalanceForm({ ledgerId, onSuccess }: BalanceFormProps) {
                   <Input
                     id="amount"
                     type="number"
-                    step="0.01"
+                    step="any"
                     placeholder={t("journal.amountPlaceholder")}
                     {...field}
                   />
@@ -201,7 +201,7 @@ export function BalanceForm({ ledgerId, onSuccess }: BalanceFormProps) {
             control={form.control}
             name="currency"
             render={({ field }) => (
-              <FormItem className="w-20">
+              <FormItem className="w-48">
                 <FormControl>
                   <CurrencyCombobox
                     ledgerId={ledgerId}

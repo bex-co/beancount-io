@@ -372,6 +372,15 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "(leer)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Buchungszeile hinzufügen",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Buchungszeile {number} entfernen",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "auto",
     description: "Label for an automatically balanced amount",

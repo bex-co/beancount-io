@@ -76,7 +76,7 @@ release notes are fresh. The Android changelog path remains intact. Fastlane is
 not an iOS metadata authority.
 
 Generated screenshot PNGs and raw comparison renders are ignored. The build
-creates exactly 84 final assets: 14 locales × `APP_IPHONE_65` and
+creates 84 final Apple assets: 14 locales × `APP_IPHONE_65` and
 `APP_IPAD_PRO_3GEN_129` × three ordered stories. It strips alpha and uses
 Apple-accepted `1284×2778` and `2064×2752` output sizes. The release plan runs
 `asc screenshots validate` against every one of the 28 locale/device sets as
@@ -139,6 +139,106 @@ after metadata, screenshot source checksums, and keyword parity are clean
 should that receipt and the version bump reach `main`. The release workflow
 rejects a missing or stale receipt before it starts the EAS build and
 auto-submit for an untagged version.
+
+## Google Play listing
+
+Play coverage is defined by `runtimeToPlay` in `metadata/store-locales.json`:
+16 storefronts cover all 13 runtime languages. `playToStore` reuses canonical
+Apple copy/captions where a matching localization exists. Bulgarian (`bg`) and
+Persian (`fa`) have their own Play captions, without changing Apple's fallback
+policy. These are the intended targets; they do not prove the listing is live.
+
+Before generating Play listing copy, pull the actual listing baseline with the
+service account used by EAS Submit. Keep the key outside the repository or under
+ignored `tmp/`; pass only its path:
+
+```zsh
+export GOOGLE_PLAY_SERVICE_ACCOUNT=/absolute/path/to/service-account.json
+yarn play:baseline
+```
+
+The command prints each existing locale's text presence and phone/feature image
+counts, and saves public listing text and image metadata to
+`tmp/play-baseline/baseline.json`. Authentication uses Node's built-in RSA signing
+and HTTP support. It creates an edit, reads the listing, and deletes the edit
+without committing. Do not run it concurrently with another Play edit using the
+same account. Authentication error output excludes response bodies and request
+diagnostics. The baseline, key, and tokens must never be committed.
+
+`yarn screenshots:build` also renders three 1080×1920 phone screenshots and one
+1024×500 feature graphic per Play locale. `metadata/screenshots.json` holds the
+Play display targets and Bulgarian/Persian captions alongside the existing Apple
+stories. All generated PNGs remain ignored. Chromium renders the Play typography
+and Persian UI overlays with Unicode shaping; ImageMagick produces opaque PNGs.
+For Apple captions and demo overlays, Arial Unicode MS is preferred when
+available. macOS runners can instead use Arial for Latin/Cyrillic and Heiti SC
+for Chinese; the build rejects missing font coverage.
+Current Homebrew installations need `imagemagick-full` for font discovery:
+`brew install imagemagick-full`, then put `$(brew --prefix imagemagick-full)/bin`
+on `PATH`. The CI job does this explicitly.
+Set `CHROME_BIN` to a Chromium/headless-shell executable if needed. The renderer
+otherwise looks for an existing Playwright headless-shell installation, then
+Chrome on macOS or `chromium` on Linux. No browser package is installed by the
+build. All image sources are embedded local public demo assets.
+
+```zsh
+yarn screenshots:build
+yarn screenshots:validate
+# Focused visual review during development:
+LOCALE=fa DISPLAY_TYPE=phoneScreenshots yarn screenshots:build
+LOCALE=bg DISPLAY_TYPE=featureGraphic yarn screenshots:build
+```
+
+The full validator checks both storefront matrices, filename order, dimensions,
+and absence of an alpha channel. Review the phone sets and feature graphics at
+their actual size before any upload. Play's locale codes and image requirements
+are documented in [Google's localization guide](https://support.google.com/googleplay/android-developer/answer/9844778)
+and [preview asset requirements](https://support.google.com/googleplay/android-developer/answer/9866151).
+
+### Generate, review, apply, verify
+
+After inspecting the baseline, run `yarn play:generate`. This emits 16 public
+`metadata/play/<locale>.json` files from the current `metadata/app-info` and
+`metadata/version/<version>` inputs. Bulgarian and Persian canonical copy lives
+in `metadata/play-source/` because Apple has no corresponding localizations.
+Short descriptions combine subtitle and promotional text, trimmed to complete clauses where possible and otherwise at Unicode
+word boundaries. `yarn metadata:validate` checks the 30/80/4000-character limits,
+complete locale coverage, and generated-copy drift. Run generation after each
+version bump or canonical listing edit; do not hand-edit generated Play files.
+
+```zsh
+yarn play:generate
+yarn metadata:validate
+yarn screenshots:build
+yarn screenshots:validate
+./scripts/play-release.sh plan-play
+```
+
+Planning is offline and needs no credential. It writes `tmp/play-release/plan.txt`
+and `plan.json`, including every locale's text diff, image replacement counts,
+ordered filenames and SHA-256 hashes. Inspect those artifacts and the images.
+After operator authorization for the reviewed listing changes:
+
+```zsh
+./scripts/play-release.sh apply-play <plan-sha256>
+./scripts/play-release.sh verify-play
+```
+
+The SHA-256 is printed by the plan command. Apply rejects stale local inputs or
+a changed remote baseline. It replaces the phone screenshots and feature graphic,
+updates title and descriptions while preserving existing videos, validates the
+edit, and commits. It preserves other locale listings, image types, tracks, and
+release notes. A review already in progress blocks the commit instead of being
+cancelled. Failed pre-commit edits are abandoned; after a commit or uncertain
+network outcome, inspect Play Console and use `verify-play` before retrying.
+Never blindly rerun an uncertain commit.
+
+Verification saves public remote state to `tmp/play-release/verification.json`
+and compares all 16 locales' copy, image counts, checksums, and ordering. This
+proves API parity, not public availability: check Play Console review/publishing
+status and sample the localized public listings, including `bg` and `fa`, before
+calling the listing live. Read the [Developer API edit lifecycle](https://developers.google.com/android-publisher/edits)
+and [commit review behavior](https://developers.google.com/android-publisher/api-ref/rest/v3/edits/commit).
 
 ## Measurement
 

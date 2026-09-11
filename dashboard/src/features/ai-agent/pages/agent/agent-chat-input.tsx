@@ -8,6 +8,7 @@ import {
   FileImage,
   Loader2,
   Paperclip,
+  Square,
   X,
 } from "lucide-react";
 import type { StagedFile } from "./attachment";
@@ -16,11 +17,12 @@ interface AgentChatInputProps {
   value: string;
   onValueChange: (value: string) => void;
   onSubmit: () => void;
+  onStop?: () => void;
   disabled?: boolean;
   placeholder?: string;
   stagedFiles?: StagedFile[];
   onFilesSelected?: (files: File[]) => void;
-  onRemoveFile?: (index: number) => void;
+  onRemoveFile?: (id: string) => void;
 }
 
 const INTERACTIVE_TARGET_SELECTOR = [
@@ -104,6 +106,7 @@ export function AgentChatInput({
   value,
   onValueChange,
   onSubmit,
+  onStop,
   disabled,
   placeholder,
   stagedFiles = [],
@@ -172,6 +175,8 @@ export function AgentChatInput({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
+      // IME candidate confirmation uses Enter while composition is active.
+      if (e.nativeEvent.isComposing) return;
       e.preventDefault();
       const anyUploading = stagedFiles.some((sf) => sf.uploading);
       if (
@@ -213,11 +218,11 @@ export function AgentChatInput({
       {/* Staged file chips — shown inside the container at the top */}
       {stagedFiles.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
-          {stagedFiles.map((sf, idx) => (
+          {stagedFiles.map((sf) => (
             <StagedFileChip
-              key={idx}
+              key={sf.id}
               stagedFile={sf}
-              onRemove={() => onRemoveFile?.(idx)}
+              onRemove={() => onRemoveFile?.(sf.id)}
             />
           ))}
         </div>
@@ -249,22 +254,40 @@ export function AgentChatInput({
           <Paperclip className="h-4 w-4" />
         </Button>
 
-        <Button
-          type="submit"
-          size="icon-sm"
-          disabled={!canSend}
-          className="shrink-0 rounded-full"
-          onClick={(e) => {
-            e.preventDefault();
-            onSubmit();
-          }}
-        >
-          {anyUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <CornerDownLeft className="h-4 w-4" />
-          )}
-        </Button>
+        {disabled && onStop ? (
+          <Button
+            type="button"
+            size="icon-sm"
+            className="shrink-0 rounded-full"
+            aria-label={t("aiAgent.stop")}
+            onClick={() => {
+              onStop();
+              requestAnimationFrame(() => {
+                textareaRef.current?.focus();
+              });
+            }}
+          >
+            <Square className="h-3.5 w-3.5 fill-current" />
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            size="icon-sm"
+            disabled={!canSend}
+            className="shrink-0 rounded-full"
+            aria-label={t("aiAgent.ask")}
+            onClick={(e) => {
+              e.preventDefault();
+              onSubmit();
+            }}
+          >
+            {anyUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CornerDownLeft className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

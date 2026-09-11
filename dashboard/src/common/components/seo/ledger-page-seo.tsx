@@ -6,6 +6,7 @@ export function LedgerPageSEO({
   params,
   noIndex = false,
   canonicalUrl,
+  titlePrefix,
 }: {
   seoKey: string;
   params?: Record<string, string>;
@@ -16,6 +17,8 @@ export function LedgerPageSEO({
   noIndex?: boolean;
   /** Bespoke canonical URL — see `LedgerSEO`'s prop of the same name. */
   canonicalUrl?: string;
+  /** Optional path/identity prefix kept in sync with route `head()` titles. */
+  titlePrefix?: string;
 }) {
   const { ledgerDisplayName, ledgerDescription, ledgerData } = useLedger();
   return (
@@ -28,6 +31,7 @@ export function LedgerPageSEO({
       noIndex={noIndex}
       canonicalUrl={canonicalUrl}
       smartAppBanner={!ledgerData.private}
+      titlePrefix={titlePrefix}
     />
   );
 }

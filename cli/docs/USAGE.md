@@ -593,7 +593,7 @@ configuration directory.
 
 ## Cloud: authentication
 
-Hosted commands need a session. `bea cloud login` prints a one-time code and opens the dashboard's device page; enter the code there, check that the device shown is this machine, and approve. The link itself carries no secret, so a device page opened from anywhere else cannot authorize this CLI. The credential is stored at `~/.config/bea/credentials.json` (mode 0600, in a 0700 directory).
+Hosted commands need a session. `bea cloud login` prints a one-time code and opens the dashboard's device page; enter the code there, check that the device shown is this machine, and approve. The link itself carries no secret, so a device page opened from anywhere else cannot authorize this CLI. The credential is stored as `credentials.json` in the configuration directory — `$BEA_CONFIG_DIR` when set, else `~/.config/bea` (mode 0600, in a 0700 directory).
 
 ```bash norun
 # Needs a browser and hosted credentials.
@@ -602,7 +602,7 @@ bea cloud status
 bea cloud logout
 ```
 
-`bea cloud status` reports the credential source (`file` or `environment`), its expiry, and the account it belongs to. For CI, set `BEA_TOKEN` instead of logging in — it is never written to disk, and `cloud status` reports `source: environment`. `cloud logout` attempts a remote logout and clears stored credentials, but does not unset `BEA_TOKEN` in the shell.
+`bea cloud status` reports the credential source (`file` or `environment`), its expiry, and the account it belongs to. For CI, set `BEA_TOKEN` instead of logging in — it is never written to disk, and `cloud status` reports `source: environment`. `cloud logout` revokes the stored session and deletes the credential file. When `BEA_TOKEN` is set, `cloud logout` changes nothing: it neither revokes the token (another job may share it) nor unsets it in the shell — unset the variable yourself, or revoke the token from the dashboard.
 
 ## Cloud: hosted ledgers
 
@@ -677,7 +677,7 @@ advertised to a Homebrew installation before the tap can install them.
 
 ## JSON output
 
-Every read-side command accepts global `--json`: `check`, `query`, `list <type>`, all four `report` commands, `cloud status`, and `cloud ledger list`. `init`, `import`, `format`, and `add` also emit an envelope so a script can confirm what was written. Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
+Every read-side command accepts global `--json`: `check`, `query`, `list <type>`, all four `report` commands, `cloud status`, `cloud ledger list`, and `cloud ledger show`. `init`, `import`, `format`, `add`, `cloud ledger create`, and `cloud ledger delete` also emit an envelope so a script can confirm what was written (create returns the new ledger's metadata, delete the deleted ledger's id). Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
 
 The envelope is always:
 
@@ -690,7 +690,7 @@ The envelope is always:
 }
 ```
 
-`target` is `{"file": "<absolute path>"}` for commands that resolve a ledger (including formatting one file), `{"directory": "<absolute path>"}` for formatting a directory, and `{"server": "<api url>"}` for hosted commands. Bounded lists also carry `limit`. Amounts use decimal **strings** — never floats — and dates are ISO `YYYY-MM-DD`.
+`target` is `{"file": "<absolute path>"}` for commands that resolve a ledger (including formatting one file), `{"directory": "<absolute path>"}` for formatting a directory, and `{"server": "<api url>"}` for hosted commands. Bounded lists also carry `limit`, and paged hosted lists (`cloud ledger list`) also carry the `page` that was served. Amounts use decimal **strings** — never floats — and dates are ISO `YYYY-MM-DD`.
 
 ```bash
 $ bea --json check

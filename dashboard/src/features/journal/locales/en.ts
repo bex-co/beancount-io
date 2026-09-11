@@ -371,6 +371,15 @@ const enJournal: Record<string, TranslationEntry> = {
     message: "(blank)",
     description: "Blank transaction status option",
   },
+  "journal.addPosting": {
+    message: "Add posting",
+    description: "Accessible name for adding a transaction posting row",
+  },
+  "journal.removePosting": {
+    message: "Remove posting {number}",
+    description:
+      "Accessible name for removing a numbered transaction posting row",
+  },
   "journal.autoAmount": {
     message: "auto",
     description: "Label for an automatically balanced amount",

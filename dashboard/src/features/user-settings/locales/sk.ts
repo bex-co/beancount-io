@@ -81,12 +81,13 @@ const skUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "Vytvoriť nový API klúč",
-    description: "Dialog title for creating API key",
+    message: "Vytvoriť nový SSH kľúč",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
-    message: "Pridajte nový verejný klúč pre autentifikáciu s Beancount API.",
-    description: "Dialog description for creating API key",
+    message: "Pridajte nový verejný SSH kľúč na prístup k Git repozitáru.",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "Vytvoriť nový klúč",

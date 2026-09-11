@@ -40,6 +40,14 @@ const faAiAgent: Record<string, TranslationEntry> = {
     message: "بپرس",
     description: "Button text to submit quick question",
   },
+  "aiAgent.stop": {
+    message: "توقف",
+    description: "Accessible name for stopping an in-progress AI response",
+  },
+  "aiAgent.stopped": {
+    message: "تولید متوقف شد",
+    description: "Toast shown after the user stops an in-progress AI response",
+  },
   "aiAgent.upgradeTitle": {
     message: "درخواست‌های هوش مصنوعی رو به اتمام است",
     description: "Title for upgrade panel when near AI usage cap",

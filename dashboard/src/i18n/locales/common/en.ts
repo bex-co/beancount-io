@@ -744,16 +744,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Error",
     description: "Generic error label",
   },
-  "common.sessionExpiredTitle": {
-    message: "Session Expired",
-    description:
-      "Title shown when a page load fails because the auth session expired",
-  },
-  "common.sessionExpiredDescription": {
-    message: "Your login session has expired. Please log in again to continue.",
-    description:
-      "Description shown when a page load fails because the auth session expired",
-  },
   "common.errors.unauthenticated": {
     message: "Please sign in to continue.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

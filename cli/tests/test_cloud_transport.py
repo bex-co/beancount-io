@@ -83,3 +83,51 @@ def test_unknown_write_outcome_omits_exception_text() -> None:
     err = unknown_write_outcome("Creating ledger", httpx.LocalProtocolError(f"Bearer {marker}"))
     assert marker.strip() not in str(err)
     assert "LocalProtocolError" in str(err)
+
+
+class TestLogout:
+    """`cloud logout` only revokes what it owns: a stored session, never `BEA_TOKEN`."""
+
+    @staticmethod
+    def _spy_logout(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+        from cli.api.rest_client.api.ledger_v_1 import logout
+
+        revoked: list[str] = []
+
+        def fake_sync_detailed(*, client: object) -> object:
+            revoked.append(getattr(client, "token", "?"))
+            return httpx.Response(200, json={}, request=httpx.Request("POST", "http://test/logout"))
+
+        monkeypatch.setattr(logout, "sync_detailed", fake_sync_detailed)
+        monkeypatch.setattr("cli.api.client.unwrap", lambda response: response)
+        return revoked
+
+    def test_environment_token_is_not_revoked(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from typer.testing import CliRunner
+
+        from cli.main import app
+
+        revoked = self._spy_logout(monkeypatch)
+        monkeypatch.setenv("BEA_TOKEN", "shared-ci-token")
+
+        result = CliRunner().invoke(app, ["cloud", "logout"])
+
+        assert result.exit_code == 0, result.output
+        assert revoked == []
+        assert "BEA_TOKEN" in result.stdout
+        assert "unchanged" in result.stdout
+
+    def test_stored_session_is_revoked_and_cleared(self, monkeypatch: pytest.MonkeyPatch, bea_config_dir: Path) -> None:
+        from typer.testing import CliRunner
+
+        from cli.auth.credentials import save_credentials
+        from cli.main import app
+
+        revoked = self._spy_logout(monkeypatch)
+        save_credentials("stored-token", "2099-01-01T00:00:00Z")
+
+        result = CliRunner().invoke(app, ["cloud", "logout"])
+
+        assert result.exit_code == 0, result.output
+        assert revoked == ["stored-token"]
+        assert not (bea_config_dir / "credentials.json").exists()

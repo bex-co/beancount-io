@@ -34,6 +34,11 @@ const deUploadFiles: Record<string, { message: string; description: string }> =
       description:
         "Conjunction word between drag and drop and file picker options",
     },
+    "ledgerEditor.removeSelectedFile": {
+      message: "{fileName} entfernen",
+      description:
+        "Aria label for removing a staged upload file; {fileName} is the file name",
+    },
     "ledgerEditor.selectedFiles": {
       message: "Ausgewählte Dateien ({count})",
       description:

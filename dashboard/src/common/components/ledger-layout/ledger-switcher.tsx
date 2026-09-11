@@ -40,6 +40,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { Authenticated } from "../authenticated";
 import { useReactNativeContext } from "@/common/providers/react-native-bridge-provider";
+import { useSidebar } from "@/common/components/ui/sidebar";
 
 interface LedgerSwitcherProps {
   currentLedgerId: string;
@@ -101,8 +102,15 @@ function LedgerAuthenticatedSwitcher({
   const formatError = useErrorMessage();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isMobile, setOpenMobile } = useSidebar();
   const [open, setOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+  const closeMobileDrawer = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   // Derive fullName from ledgerId if not provided
   const fullName =
@@ -155,16 +163,19 @@ function LedgerAuthenticatedSwitcher({
       });
     }
     setOpen(false);
+    closeMobileDrawer();
   };
 
   const handleSelectOwner = (owner: string) => {
     void navigate({ to: `/ledger/${owner}` });
     setOpen(false);
+    closeMobileDrawer();
   };
 
   const handleManageLedgers = () => {
     void navigate({ to: "/ledger" });
     setOpen(false);
+    closeMobileDrawer();
   };
 
   const handleCreateLedger = async (data: CreateLedgerMutationVariables) => {
@@ -172,6 +183,7 @@ function LedgerAuthenticatedSwitcher({
       const result = await createLedgerMutation({ variables: data });
       setIsCreateDialogOpen(false);
       setOpen(false);
+      closeMobileDrawer();
       toast.success(t("page.dashboard.ledgerCreatedSuccess"));
 
       // Navigate to the new ledger
@@ -233,7 +245,10 @@ function LedgerAuthenticatedSwitcher({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[300px] p-0" align="start">
-              <Command className="max-h-[min(340px,var(--radix-popover-content-available-height))] [&_[cmdk-input-wrapper]]:shrink-0">
+              <Command
+                label={t("page.dashboard.searchLedgers")}
+                className="max-h-[min(340px,var(--radix-popover-content-available-height))] [&_[cmdk-input-wrapper]]:shrink-0"
+              >
                 <CommandInput placeholder={t("page.dashboard.searchLedgers")} />
                 <CommandList className="min-h-0 flex-1">
                   <CommandEmpty>

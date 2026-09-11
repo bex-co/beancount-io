@@ -106,4 +106,82 @@ describe("AgentChatInput type-to-focus", () => {
     fireEvent.keyDown(document.body, { key: "x" });
     expect(screen.getByPlaceholderText("Ask anything")).toHaveValue("");
   });
+
+  it("exposes a named Ask submit control even when empty", () => {
+    render(<AgentChatInputHarness />);
+
+    const ask = screen.getByRole("button", { name: "Ask" });
+    expect(ask).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Attach file" }),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the Ask name when the composer has a sendable draft", () => {
+    render(<AgentChatInputHarness initialValue="What is double-entry?" />);
+
+    expect(screen.getByRole("button", { name: "Ask" })).toBeEnabled();
+  });
+
+  it("does not submit while an IME composition is confirming Enter", () => {
+    const onSubmit = vi.fn();
+    render(
+      <AgentChatInput
+        value="How do I record "
+        onValueChange={vi.fn()}
+        onSubmit={onSubmit}
+        placeholder="Ask anything"
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByPlaceholderText("Ask anything"), {
+      key: "Enter",
+      shiftKey: false,
+      isComposing: true,
+    });
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("submits on ordinary Enter after composition has finished", () => {
+    const onSubmit = vi.fn();
+    render(
+      <AgentChatInput
+        value="How do I record 记账"
+        onValueChange={vi.fn()}
+        onSubmit={onSubmit}
+        placeholder="Ask anything"
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByPlaceholderText("Ask anything"), {
+      key: "Enter",
+      shiftKey: false,
+      isComposing: false,
+    });
+
+    expect(onSubmit).toHaveBeenCalledOnce();
+  });
+
+  it("shows a Stop control while disabled and invokes onStop", async () => {
+    const user = userEvent.setup();
+    const onStop = vi.fn();
+    render(
+      <AgentChatInput
+        value=""
+        onValueChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onStop={onStop}
+        disabled
+        placeholder="Ask anything"
+      />,
+    );
+
+    const stop = screen.getByRole("button", { name: /^stop$/i });
+    expect(
+      screen.queryByRole("button", { name: /^ask$/i }),
+    ).not.toBeInTheDocument();
+    await user.click(stop);
+    expect(onStop).toHaveBeenCalledOnce();
+  });
 });

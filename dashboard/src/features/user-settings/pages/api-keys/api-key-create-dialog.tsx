@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type Ref } from "react";
 import { useMutation } from "@apollo/client/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Check, Copy, KeyRound, Loader2 } from "lucide-react";
@@ -29,6 +29,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  useFormField,
 } from "@/common/components/ui/form";
 import { Input } from "@/common/components/ui/input";
 import { Label } from "@/common/components/ui/label";
@@ -70,6 +71,70 @@ const scopeDescriptionKeys: Record<
   "ledger.write": "userSettings.apiKeyWriteScopeDescription",
   "ledger.admin": "userSettings.apiKeyAdminScopeDescription",
 };
+
+function ApiKeyScopesField({
+  value,
+  onChange,
+  onBlur,
+  name,
+  ref,
+}: {
+  value: ApiKeyScope[];
+  onChange: (scopes: ApiKeyScope[]) => void;
+  onBlur: () => void;
+  name: string;
+  ref: Ref<HTMLButtonElement>;
+}) {
+  const { t } = useTranslations();
+  const { error, formDescriptionId, formMessageId } = useFormField();
+  const describedBy = error
+    ? `${formDescriptionId} ${formMessageId}`
+    : formDescriptionId;
+
+  return (
+    <fieldset
+      className="space-y-3"
+      aria-invalid={error ? true : undefined}
+      aria-describedby={describedBy}
+    >
+      <legend className="text-sm font-medium">
+        {t("userSettings.apiKeyScopes")}
+      </legend>
+      <FormDescription>
+        {t("userSettings.apiKeyScopesDescription")}
+      </FormDescription>
+      {API_KEY_SCOPES.map((scope, index) => (
+        <div key={scope} className="flex items-start gap-3">
+          <Checkbox
+            id={`scope-${scope}`}
+            name={name}
+            ref={index === 0 ? ref : undefined}
+            checked={value.includes(scope)}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
+            onBlur={index === 0 ? onBlur : undefined}
+            onCheckedChange={(checked) =>
+              onChange(
+                checked === true
+                  ? [...value, scope]
+                  : value.filter((candidate) => candidate !== scope),
+              )
+            }
+          />
+          <div className="grid gap-1">
+            <Label htmlFor={`scope-${scope}`} className="font-mono">
+              {scope}
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              {t(scopeDescriptionKeys[scope])}
+            </p>
+          </div>
+        </div>
+      ))}
+      <FormMessage role="alert" />
+    </fieldset>
+  );
+}
 
 export function ApiKeyCreateDialog({ children }: ApiKeyCreateDialogProps) {
   const { t } = useTranslations();
@@ -266,43 +331,13 @@ export function ApiKeyCreateDialog({ children }: ApiKeyCreateDialogProps) {
                 name="scopes"
                 render={({ field }) => (
                   <FormItem>
-                    <fieldset className="space-y-3">
-                      <legend className="text-sm font-medium">
-                        {t("userSettings.apiKeyScopes")}
-                      </legend>
-                      <FormDescription>
-                        {t("userSettings.apiKeyScopesDescription")}
-                      </FormDescription>
-                      {API_KEY_SCOPES.map((scope) => (
-                        <div key={scope} className="flex items-start gap-3">
-                          <Checkbox
-                            id={`scope-${scope}`}
-                            checked={field.value.includes(scope)}
-                            onCheckedChange={(checked) =>
-                              field.onChange(
-                                checked === true
-                                  ? [...field.value, scope]
-                                  : field.value.filter(
-                                      (candidate) => candidate !== scope,
-                                    ),
-                              )
-                            }
-                          />
-                          <div className="grid gap-1">
-                            <Label
-                              htmlFor={`scope-${scope}`}
-                              className="font-mono"
-                            >
-                              {scope}
-                            </Label>
-                            <p className="text-xs text-muted-foreground">
-                              {t(scopeDescriptionKeys[scope])}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                      <FormMessage />
-                    </fieldset>
+                    <ApiKeyScopesField
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
                   </FormItem>
                 )}
               />

@@ -118,6 +118,52 @@ describe("selectPostingRows", () => {
     expect(row.amount).toBe("+$1,234.50");
   });
 
+  it("preserves recorded commodity precision from the API string", () => {
+    const rows = selectPostingRows(
+      txn([
+        posting("Assets:US:Vanguard:RGAGX", "1.843", "RGAGX"),
+        posting("Assets:US:Vanguard:Cash", "-150.02"),
+      ]),
+    );
+    expect(rows).toEqual([
+      {
+        account: "Assets:US:Vanguard:RGAGX",
+        amount: "+1.843 RGAGX",
+        sign: 1,
+      },
+      {
+        account: "Assets:US:Vanguard:Cash",
+        amount: "-$150.02",
+        sign: -1,
+      },
+    ]);
+  });
+
+  it("keeps tiny nonzero quantities and long decimals", () => {
+    expect(
+      selectPostingRows(txn([posting("Assets:Dust", "0.0001", "XYZ")]))[0],
+    ).toEqual({
+      account: "Assets:Dust",
+      amount: "+0.0001 XYZ",
+      sign: 1,
+    });
+    expect(
+      selectPostingRows(
+        txn([posting("Assets:Precise", "1.23456789", "ABC")]),
+      )[0].amount,
+    ).toBe("+1.23456789 ABC");
+  });
+
+  it("formats zero without a sign prefix", () => {
+    expect(
+      selectPostingRows(txn([posting("Assets:Zero", "0.00")]))[0],
+    ).toEqual({
+      account: "Assets:Zero",
+      amount: "$0.00",
+      sign: 0,
+    });
+  });
+
   it("passes unparseable amounts through verbatim", () => {
     const [row] = selectPostingRows(txn([posting("Assets:X", "abc")]));
     expect(row).toEqual({ account: "Assets:X", amount: "abc USD", sign: 0 });

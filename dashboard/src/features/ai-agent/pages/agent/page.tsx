@@ -10,7 +10,10 @@ import {
 import { Button } from "@/common/components/ui/button";
 import { PageHeader } from "@/common/components/page-header";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useErrorMessage } from "@/common/lib/errors/error-message";
+import {
+  useErrorMessage,
+  getErrorMessageKey,
+} from "@/common/lib/errors/error-message";
 import { toast } from "sonner";
 import { AiCfoUpgradePanel } from "@/common/components/ai-cfo-upgrade-panel";
 import { useLedger } from "@/common/hooks/use-ledger";
@@ -23,9 +26,16 @@ import { AgentMessageList, type AgentUIMessage } from "./agent-message-list";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { getLedgerAgentCanonicalUrl } from "@/common/lib/seo/indexability";
 
+import { buildUnauthenticatedLoginHref } from "@/common/apollo/links/auth-error-link";
 import { useTempAssetUpload } from "@/features/importer/hooks/use-temp-asset-upload";
 import { useTempAssetDownloadUrl } from "./use-temp-asset-download-url";
-import type { StagedFile } from "./attachment";
+import {
+  createStagedEntries,
+  markStagedUploadFailed,
+  markStagedUploadSucceeded,
+  removeStagedFile,
+  type StagedFile,
+} from "./attachment";
 import { useAgentSession } from "../../hooks/use-agent-session";
 import { ChevronDown, LockKeyhole } from "lucide-react";
 
@@ -37,10 +47,6 @@ export interface AgentPageImplProps {
    */
   chatApi?: string;
   /**
-   * Route suffix used for the login-return path. Defaults to "agent".
-   */
-  routeSuffix?: string;
-  /**
    * Extra fields merged into the request body — e.g. { conversationId, mode }
    * for the sandbox-agent route.
    */
@@ -49,7 +55,6 @@ export interface AgentPageImplProps {
 
 export function AgentPageImpl({
   chatApi = "agent",
-  routeSuffix = "agent",
   bodyExtra,
 }: AgentPageImplProps = {}) {
   // strict:false so this component works under both the /agent and /ask routes.
@@ -95,13 +100,14 @@ export function AgentPageImpl({
         fetch: async (url, options) => {
           const response = await fetch(url as string, options as RequestInit);
           if (response.status === 401) {
-            const currentPath = `/ledger/${ledgerOwner}/${ledgerName}/${routeSuffix}`;
-            window.location.href = `/auth/login?next=${encodeURIComponent(currentPath)}`;
+            // Keep q/mode/lang so login return can auto-submit the same Ask.
+            const next = window.location.pathname + window.location.search;
+            window.location.assign(buildUnauthenticatedLoginHref(next));
           }
           return response;
         },
       }),
-    [ledgerOwner, ledgerName, sessionId, chatApi, routeSuffix, bodyExtra],
+    [ledgerOwner, ledgerName, sessionId, chatApi, bodyExtra],
   );
 
   const initialMessages = useMemo<AgentUIMessage[]>(
@@ -117,19 +123,35 @@ export function AgentPageImpl({
     [],
   );
 
-  const { messages, sendMessage, status, addToolApprovalResponse } =
-    useChat<AgentUIMessage>({
-      transport,
-      messages: initialMessages,
-      sendAutomaticallyWhen:
-        lastAssistantMessageIsCompleteWithApprovalResponses,
-      onError: (error) => {
-        console.error("Agent chat error:", error);
-        toast.error(formatError(error));
-      },
-    });
+  const {
+    messages,
+    sendMessage,
+    status,
+    stop,
+    error,
+    regenerate,
+    addToolApprovalResponse,
+  } = useChat<AgentUIMessage>({
+    transport,
+    messages: initialMessages,
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
+    onError: (chatError) => {
+      if (
+        chatError instanceof DOMException &&
+        chatError.name === "AbortError"
+      ) {
+        return;
+      }
+      console.error("Agent chat error:", chatError);
+      toast.error(formatError(chatError));
+    },
+  });
 
   const isLoading = status === "submitted" || status === "streaming";
+  const canRetryNetworkError =
+    Boolean(error) &&
+    getErrorMessageKey(error) === "common.errors.network" &&
+    !isLoading;
 
   const isAwaitingApproval = useMemo(() => {
     if (messages.length === 0) return false;
@@ -205,48 +227,24 @@ export function AgentPageImpl({
   };
 
   const handleFilesSelected = async (files: File[]) => {
-    const newEntries: StagedFile[] = files.map((file) => ({
-      file,
-      uploading: true,
-      previewObjectUrl: file.type.startsWith("image/")
-        ? URL.createObjectURL(file)
-        : undefined,
-    }));
+    const newEntries = createStagedEntries(files);
+    setStagedFiles((prev) => [...prev, ...newEntries]);
 
-    setStagedFiles((prev) => {
-      const startIdx = prev.length;
-
-      files.forEach((file, i) => {
-        const idx = startIdx + i;
-        void uploadFile(file)
-          .then(({ objectKey }) => {
-            setStagedFiles((curr) =>
-              curr.map((sf, sfIdx) =>
-                sfIdx === idx ? { ...sf, uploading: false, objectKey } : sf,
-              ),
-            );
-          })
-          .catch(() => {
-            setStagedFiles((curr) =>
-              curr.map((sf, sfIdx) =>
-                sfIdx === idx
-                  ? { ...sf, uploading: false, error: "Upload failed" }
-                  : sf,
-              ),
-            );
-          });
-      });
-
-      return [...prev, ...newEntries];
-    });
+    for (const entry of newEntries) {
+      void uploadFile(entry.file)
+        .then(({ objectKey }) => {
+          setStagedFiles((curr) =>
+            markStagedUploadSucceeded(curr, entry.id, objectKey),
+          );
+        })
+        .catch(() => {
+          setStagedFiles((curr) => markStagedUploadFailed(curr, entry.id));
+        });
+    }
   };
 
-  const handleRemoveFile = (idx: number) => {
-    setStagedFiles((prev) => {
-      const f = prev[idx];
-      if (f?.previewObjectUrl) URL.revokeObjectURL(f.previewObjectUrl);
-      return prev.filter((_, i) => i !== idx);
-    });
+  const handleRemoveFile = (id: string) => {
+    setStagedFiles((prev) => removeStagedFile(prev, id));
   };
 
   const handleSubmit = async () => {
@@ -330,7 +328,7 @@ export function AgentPageImpl({
               })}
               className="gap-1.5 space-y-0 pb-1 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-foreground [&_p]:leading-5"
             />
-            <AiCfoUpgradePanel className="mb-0" />
+            {isAuthenticated ? <AiCfoUpgradePanel className="mb-0" /> : null}
             {isReadOnly ? (
               <div
                 role="status"
@@ -381,10 +379,36 @@ export function AgentPageImpl({
           <div className="relative z-40 shrink-0">
             <div className="pointer-events-none absolute inset-x-0 -top-8 h-8 bg-gradient-to-t from-background to-transparent" />
             <div className="mx-auto w-full max-w-3xl px-1 pb-1 pt-2 sm:px-3 sm:pb-2">
+              {canRetryNetworkError ? (
+                <div
+                  role="alert"
+                  className="mb-2 flex flex-col gap-2 rounded-lg border border-border/70 bg-muted/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <p className="text-sm text-muted-foreground">
+                    {formatError(error)}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 self-start sm:self-auto"
+                    disabled={isLoading}
+                    onClick={() => {
+                      void regenerate();
+                    }}
+                  >
+                    {t("common.tryAgain")}
+                  </Button>
+                </div>
+              ) : null}
               <AgentChatInput
                 value={input}
                 onValueChange={setInput}
                 onSubmit={() => void handleSubmit()}
+                onStop={() => {
+                  void stop();
+                  toast.message(t("aiAgent.stopped"));
+                }}
                 placeholder={t("aiAgent.placeholder")}
                 disabled={isLoading}
                 stagedFiles={stagedFiles}

@@ -9,6 +9,7 @@ import {
   getFileLanguage,
   getFilename,
   getMimeTypeFromExtension,
+  getDownloadMimeType,
   getFileType,
   downloadFile,
 } from "../utils";
@@ -529,6 +530,24 @@ describe("Files Utility", () => {
     });
   });
 
+  describe("getDownloadMimeType", () => {
+    it("uses octet-stream for extensionless text basenames so Chrome keeps the name", () => {
+      expect(getDownloadMimeType("Makefile")).toBe("application/octet-stream");
+      expect(getDownloadMimeType("LICENSE")).toBe("application/octet-stream");
+      expect(getDownloadMimeType("a/b/Dockerfile")).toBe(
+        "application/octet-stream",
+      );
+      expect(getDownloadMimeType(".gitignore")).toBe(
+        "application/octet-stream",
+      );
+    });
+
+    it("keeps text/plain for ordinary text extensions", () => {
+      expect(getDownloadMimeType("README.md")).toBe("text/plain");
+      expect(getDownloadMimeType("main.bean")).toBe("text/plain");
+    });
+  });
+
   describe("getFileType", () => {
     it("should return 'image' for image files", () => {
       expect(getFileType("photo.jpg")).toBe("image");
@@ -633,6 +652,19 @@ describe("Files Utility", () => {
       expect(clickSpy).toHaveBeenCalled();
       expect(removeSpy).toHaveBeenCalled();
       expect(revokeObjectURLSpy).toHaveBeenCalledWith("blob:mock-url");
+    });
+
+    it("downloads Makefile with octet-stream so the basename stays extensionless", () => {
+      const blobSpy = vi.spyOn(globalThis, "Blob");
+      downloadFile("Makefile", btoa("all:\n\techo ok\n"));
+      expect(mockLink.download).toBe("Makefile");
+      expect(blobSpy).toHaveBeenCalledWith(
+        [expect.any(String)],
+        expect.objectContaining({
+          type: "application/octet-stream;charset=utf-8",
+        }),
+      );
+      blobSpy.mockRestore();
     });
 
     it("should create a download link for unknown files as binary", () => {

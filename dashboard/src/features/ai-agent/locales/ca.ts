@@ -40,6 +40,14 @@ const caAiAgent: Record<string, TranslationEntry> = {
     message: "Preguntar",
     description: "Button text to submit quick question",
   },
+  "aiAgent.stop": {
+    message: "Atura",
+    description: "Accessible name for stopping an in-progress AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Generació aturada",
+    description: "Toast shown after the user stops an in-progress AI response",
+  },
   "aiAgent.upgradeTitle": {
     message: "Les sol·licituds d'IA s'estan esgotant",
     description: "Title for upgrade panel when near AI usage cap",

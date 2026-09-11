@@ -81,12 +81,13 @@ const faUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "ایجاد کلید API جدید",
-    description: "Dialog title for creating API key",
+    message: "ایجاد کلید SSH جدید",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
-    message: "یک کلید عمومی جدید برای احراز هویت با API Beancount اضافه کنید.",
-    description: "Dialog description for creating API key",
+    message: "یک کلید عمومی SSH جدید برای دسترسی به مخزن Git اضافه کنید.",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "ایجاد کلید جدید",

@@ -1,8 +1,5 @@
 import type { JournalTransaction } from "../../transactions-screen/types";
-import {
-  formatAmount,
-  selectTransactionAmount,
-} from "../../transactions-screen/utils/transaction-display-utils";
+import { selectTransactionAmount } from "../../transactions-screen/utils/transaction-display-utils";
 
 // Beancount/Fava reserve these flags for entries synthesized by reports or
 // plugins. They are not standalone source directives, so asking the source
@@ -54,24 +51,58 @@ export type PostingDisplayRow = {
   sign: -1 | 0 | 1;
 };
 
+/**
+ * Format a posting units number from its recorded decimal string so commodity
+ * quantities keep their source scale (e.g. 1.843 RGAGX). USD still pads to
+ * two fraction digits when the source is shorter. Avoids parseFloat →
+ * maximumFractionDigits: 2 which rounded share quantities away.
+ */
+export function formatPostingUnits(
+  number: string,
+  currency: string,
+): {
+  amount: string;
+  sign: -1 | 0 | 1;
+} {
+  const trimmed = number.trim();
+  if (!/^[+-]?\d+(\.\d+)?$/.test(trimmed)) {
+    return { amount: `${number} ${currency}`, sign: 0 };
+  }
+
+  const negative = trimmed.startsWith("-");
+  const unsigned = trimmed.replace(/^[+-]/, "");
+  const isZero = /^0+(\.0+)?$/.test(unsigned);
+  const [intPart, fracPart = ""] = unsigned.split(".");
+  const displayFrac =
+    currency === "USD" && fracPart.length < 2
+      ? fracPart.padEnd(2, "0")
+      : fracPart;
+  const groupedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const body =
+    displayFrac.length > 0 ? `${groupedInt}.${displayFrac}` : groupedInt;
+  const magnitude = currency === "USD" ? `$${body}` : `${body} ${currency}`;
+
+  if (isZero) {
+    return { amount: magnitude, sign: 0 };
+  }
+  if (negative) {
+    return { amount: `-${magnitude}`, sign: -1 };
+  }
+  return { amount: `+${magnitude}`, sign: 1 };
+}
+
 export function selectPostingRows(
   txn: JournalTransaction,
 ): PostingDisplayRow[] {
   return (txn.postings ?? []).map((p) => {
-    const value = parseFloat(p.units.number);
-    if (!Number.isFinite(value)) {
-      return {
-        account: p.account,
-        amount: `${p.units.number} ${p.units.currency}`,
-        sign: 0 as const,
-      };
-    }
-    const formatted = formatAmount(value, p.units.currency);
+    const { amount, sign } = formatPostingUnits(
+      p.units.number,
+      p.units.currency,
+    );
     return {
       account: p.account,
-      amount:
-        value > 0 ? `+${formatted}` : value < 0 ? `-${formatted}` : formatted,
-      sign: value > 0 ? (1 as const) : value < 0 ? (-1 as const) : (0 as const),
+      amount,
+      sign,
     };
   });
 }

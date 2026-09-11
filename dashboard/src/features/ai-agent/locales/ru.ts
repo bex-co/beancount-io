@@ -40,6 +40,14 @@ const ruAiAgent: Record<string, TranslationEntry> = {
     message: "Спросить",
     description: "Button text to submit quick question",
   },
+  "aiAgent.stop": {
+    message: "Остановить",
+    description: "Accessible name for stopping an in-progress AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Генерация остановлена",
+    description: "Toast shown after the user stops an in-progress AI response",
+  },
   "aiAgent.upgradeTitle": {
     message: "Запросы к ИИ заканчиваются",
     description: "Title for upgrade panel when near AI usage cap",

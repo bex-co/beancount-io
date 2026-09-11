@@ -394,6 +394,10 @@ describe("remote release gate", () => {
       });
       fs.mkdirSync(path.join(fixtureRoot, "scripts"), { recursive: true });
       fs.writeFileSync(
+        path.join(fixtureRoot, "src/scripts/screenshot-font.ts"),
+        "font selection",
+      );
+      fs.writeFileSync(
         path.join(fixtureRoot, "src/scripts/build-screenshots.ts"),
         "// deterministic renderer",
       );
@@ -416,6 +420,14 @@ describe("remote release gate", () => {
         "// changed deterministic renderer",
       );
       expect(storeInputDigest(fixtureRoot, version) === translatedDigest).toBe(
+        false,
+      );
+      const renderedDigest = storeInputDigest(fixtureRoot, version);
+      fs.writeFileSync(
+        path.join(fixtureRoot, "src/scripts/screenshot-font.ts"),
+        "changed font selection",
+      );
+      expect(storeInputDigest(fixtureRoot, version) === renderedDigest).toBe(
         false,
       );
     } finally {

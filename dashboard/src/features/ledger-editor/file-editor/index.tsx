@@ -46,6 +46,7 @@ export default function LedgerFilePage() {
     <div className="flex flex-col h-full min-h-0">
       <LedgerPageSEO
         seoKey="ledgerFiles"
+        titlePrefix={filePath || undefined}
         noIndex={Boolean(search.editMode)}
         canonicalUrl={getLedgerFileCanonicalUrl({
           ledgerOwner,
