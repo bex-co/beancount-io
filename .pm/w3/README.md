@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [086](./086.md) — Compact date fields clip the year before editing
 - [087](./087.md) — Direct ledger loads lose their structured access errors
 - [088](./088.md) — Try Again does not retry the failed ledger read
 - [089](./089.md) — Small Journal amounts become invalid Beancount scientific notation

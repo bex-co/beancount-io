@@ -119,7 +119,7 @@ export function DatePicker({
           {label}
         </Label>
       )}
-      <div className="relative flex gap-2 w-[128px]">
+      <div className="relative flex gap-2 w-[160px]">
         <Input
           id={id}
           value={inputValue}
