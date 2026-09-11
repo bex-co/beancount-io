@@ -245,21 +245,51 @@ function ErrorBanner({
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
+/**
+ * Binds one editor session to one (ledger, path) pair.
+ *
+ * The session keeps document content, SHA, revision tracker and the one-shot
+ * `initialized` guard in component state. Those are only valid for the file
+ * they were loaded from, so switching ledgers — an app link can change the
+ * selected ledger under a retained screen — must start a fresh session rather
+ * than leave the previous ledger's buffer on screen while every read and write
+ * now addresses the new one.
+ */
 export function LedgerFileEditorScreen(): JSX.Element {
+  const ledgerId = useLedgerGuard();
+  const { path, initialLine } = useLocalSearchParams<{
+    path: string;
+    initialLine?: string;
+  }>();
+
+  return (
+    <LedgerFileEditorSession
+      key={`${ledgerId}\u0000${path}`}
+      ledgerId={ledgerId}
+      path={path}
+      initialLine={initialLine}
+    />
+  );
+}
+
+function LedgerFileEditorSession({
+  ledgerId,
+  path,
+  initialLine,
+}: {
+  ledgerId: string;
+  path: string;
+  initialLine?: string;
+}): JSX.Element {
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const ledgerId = useLedgerGuard();
   const { canWrite } = useLedgerAccess();
   const { userId } = useSession();
   const { currencies: operatingCurrencies } = useLedgerMeta(userId, ledgerId);
 
-  const { path, initialLine } = useLocalSearchParams<{
-    path: string;
-    initialLine?: string;
-  }>();
   const beancount = isBeancountFile(path);
 
   // ── File load ─────────────────────────────────────────────────────────────

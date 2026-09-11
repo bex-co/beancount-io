@@ -19,7 +19,7 @@ describe("toPlainSearchFilter", () => {
   });
 
   it("keeps a usable literal when both quote kinds appear", () => {
-    expect(toPlainSearchFilter(`say "hi" 'there'`)).toBe('"say hi \'there\'"');
+    expect(toPlainSearchFilter(`say "hi" 'there'`)).toBe("\"say hi 'there'\"");
   });
 
   it("trims surrounding whitespace before encoding", () => {

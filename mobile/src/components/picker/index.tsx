@@ -22,7 +22,12 @@ import { easeStandard } from "@/common/theme/motion-easing";
 import { ColorTheme } from "@/types/theme-props";
 
 const { height: screenHeight } = Dimensions.get("window");
-const ITEM_HEIGHT = 50;
+import {
+  ITEM_HEIGHT,
+  wheelIndexAtOffset,
+  wheelOffsetForValue,
+} from "./wheel-position";
+
 const VISIBLE_ITEMS = 5;
 const WHEEL_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 
@@ -154,17 +159,29 @@ export const Picker: React.FC<PickerProps> = ({
   const styles = getStyles(theme);
 
   const translateY = useSharedValue(screenHeight);
-  const scrollY = useSharedValue(0);
   const overlayOpacity = useSharedValue(0);
   const scrollViewRef = useAnimatedRef<ScrollView>();
 
-  const selectedIndex = useMemo(() => {
-    if (!selectedValue) return 0;
-    const index = items.findIndex((item) => item.value === selectedValue);
-    return index >= 0 ? index : 0;
-  }, [items, selectedValue]);
+  const initialScrollY = useMemo(
+    () => wheelOffsetForValue(items, selectedValue),
+    [items, selectedValue],
+  );
 
-  const initialScrollY = selectedIndex * ITEM_HEIGHT;
+  // Seeded from the current selection, not 0. `handleDone` derives the
+  // confirmed item from `scrollY`, but the wheel is positioned through the
+  // ScrollView's `contentOffset`, which does not reliably emit an initial
+  // scroll event — so an untouched picker used to confirm items[0] instead of
+  // the option it was visibly showing.
+  const scrollY = useSharedValue(initialScrollY);
+
+  useEffect(() => {
+    // Re-seed when the picker opens or its selection/item set changes, so a
+    // reused picker never carries a stale offset into new choices. This does
+    // not run while the user scrolls, so it cannot fight an in-progress drag.
+    if (visible) {
+      scrollY.value = initialScrollY;
+    }
+  }, [visible, initialScrollY, scrollY]);
 
   const showModal = useCallback(() => {
     overlayOpacity.value = withTiming(1, {
@@ -214,9 +231,7 @@ export const Picker: React.FC<PickerProps> = ({
   });
 
   const handleDone = useCallback(() => {
-    const currentIndex = Math.round(scrollY.value / ITEM_HEIGHT);
-    const clampedIndex = Math.max(0, Math.min(currentIndex, items.length - 1));
-    onSelect(items[clampedIndex]);
+    onSelect(items[wheelIndexAtOffset(scrollY.value, items.length)]);
     hideModal();
   }, [scrollY, items, onSelect, hideModal]);
 

@@ -6,7 +6,8 @@ import {
   type TimeRange,
 } from "../../../common/series-util";
 
-type BalanceSeries = ReadonlyArray<DateBalancePoint | null | undefined> | null | undefined;
+type BalanceSeries =
+  ReadonlyArray<DateBalancePoint | null | undefined> | null | undefined;
 
 /**
  * Convert IncomeStatement series for the Reports combined chart.

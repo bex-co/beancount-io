@@ -19,11 +19,7 @@ import {
   LEGEND_HEIGHT,
 } from "@/common/d3/income-expense-bar-chart";
 import { TimeRangePills } from "@/components/time-range-pills";
-import {
-  RANGE_LABEL_KEYS,
-  TIME_RANGES,
-  TimeRange,
-} from "@/common/series-util";
+import { RANGE_LABEL_KEYS, TIME_RANGES, TimeRange } from "@/common/series-util";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 import { useIncomeStatement } from "./hooks/use-income-statement";

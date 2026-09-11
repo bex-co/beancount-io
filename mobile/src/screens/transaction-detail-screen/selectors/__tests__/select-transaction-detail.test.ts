@@ -155,13 +155,13 @@ describe("selectPostingRows", () => {
   });
 
   it("formats zero without a sign prefix", () => {
-    expect(
-      selectPostingRows(txn([posting("Assets:Zero", "0.00")]))[0],
-    ).toEqual({
-      account: "Assets:Zero",
-      amount: "$0.00",
-      sign: 0,
-    });
+    expect(selectPostingRows(txn([posting("Assets:Zero", "0.00")]))[0]).toEqual(
+      {
+        account: "Assets:Zero",
+        amount: "$0.00",
+        sign: 0,
+      },
+    );
   });
 
   it("passes unparseable amounts through verbatim", () => {

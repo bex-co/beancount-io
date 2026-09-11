@@ -49,6 +49,7 @@ import {
   selectPostingRows,
   selectTransactionTitle,
 } from "./selectors/select-transaction-detail";
+import { shouldShowTransactionWriteActions } from "./selectors/select-transaction-write-actions";
 import { PostingRow } from "./components/posting-row";
 import { buildLedgerUrl } from "@/common/app-links/build-ledger-url";
 import {

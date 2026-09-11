@@ -23,9 +23,10 @@ export function toPlainSearchFilter(raw: string): string | undefined {
   // Lexer forms: `"[^"]*"` and `'[^']*'`. Prefer double quotes; fall back to
   // single quotes when the needle itself contains `"`. If both quote kinds
   // appear, drop embedded doubles so a double-quoted literal stays lexable.
-  const forLiteral = trimmed.includes('"') && trimmed.includes("'")
-    ? trimmed.replace(/"/g, "")
-    : trimmed;
+  const forLiteral =
+    trimmed.includes('"') && trimmed.includes("'")
+      ? trimmed.replace(/"/g, "")
+      : trimmed;
   const escaped = escapeRegExp(forLiteral);
 
   if (!escaped.includes('"')) {

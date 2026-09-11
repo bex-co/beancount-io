@@ -57,7 +57,7 @@ export type PostingDisplayRow = {
  * two fraction digits when the source is shorter. Avoids parseFloat →
  * maximumFractionDigits: 2 which rounded share quantities away.
  */
-export function formatPostingUnits(
+function formatPostingUnits(
   number: string,
   currency: string,
 ): {

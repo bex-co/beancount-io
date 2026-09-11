@@ -10,8 +10,7 @@ import type { AppLinkTarget } from "./resolve-app-link";
 export { isOAuthCallbackUrl } from "./oauth-callback-url";
 
 export type OpenAppLinkResult =
-  | { ok: true }
-  | { ok: false; reason: "unreadable" | "aborted" };
+  { ok: true } | { ok: false; reason: "unreadable" | "aborted" };
 
 /**
  * Wait until the root navigators (esp. iOS NativeTabs) have finished their

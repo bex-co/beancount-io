@@ -62,9 +62,12 @@ describe("merchant transaction-count BQL relation", () => {
 
       const hoogleMeta = runBql(buildMerchantMetaBql("Hoogle"));
       expect(hoogleMeta.includes("2025-01-15")).toBe(true);
-      expect(hoogleMeta.trim().split("\n").some((line) => /^\s*1\b/.test(line))).toBe(
-        true,
-      );
+      expect(
+        hoogleMeta
+          .trim()
+          .split("\n")
+          .some((line) => /^\s*1\b/.test(line)),
+      ).toBe(true);
 
       // Directory ordering must prefer Cafe (2) over Hoogle (1), not posting counts.
       const mapped = aggregatePayees({
