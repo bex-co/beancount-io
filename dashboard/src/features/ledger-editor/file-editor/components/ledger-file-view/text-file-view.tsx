@@ -129,14 +129,27 @@ export const TextFileView = ({
 
   // Save changes then exit edit mode. Scroll position is preserved naturally
   // because the same editor instance stays mounted in read-only mode.
+  // Keyboard ⌘S and the toolbar share this callback; a sync ref blocks a
+  // second activation before React can flip isSaving (which only disables
+  // the button, not the editor shortcut).
+  const saveInFlightRef = useRef(false);
   const handleSaveClick = useCallback(
     async (contentOverride?: string) => {
       if (!canWrite) return;
-      const contentToSave = contentOverride ?? editedContent;
-      if (contentToSave !== plainContent) {
-        await onSave(contentToSave);
+      if (saveInFlightRef.current) return;
+      saveInFlightRef.current = true;
+      try {
+        const contentToSave = contentOverride ?? editedContent;
+        if (contentToSave !== plainContent) {
+          await onSave(contentToSave);
+        }
+        onExitEditMode();
+      } catch {
+        // Keep the draft and release the guard so the user can retry.
+        // Parent save handlers already surface the failure (toast).
+      } finally {
+        saveInFlightRef.current = false;
       }
-      onExitEditMode();
     },
     [canWrite, editedContent, plainContent, onSave, onExitEditMode],
   );
