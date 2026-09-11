@@ -1,4 +1,5 @@
 import type { DirectiveJson, TypedValueJson } from "@rustledger/wasm";
+import BigNumber from "bignumber.js";
 import type {
   CustomValueInput,
   LedgerEntryInput,
@@ -29,18 +30,33 @@ import { directiveToText } from "@/foundation/rustledger/journal-serialize";
  * Number formatting: freshly built directives carry no ledger-wide
  * `DisplayContext`, so beancount's `DEFAULT_DISPLAY_CONTEXT` renders each number
  * as its own source string (no thousands separators, no re-scaling to a
- * ledger-common precision). The input `number` strings are therefore emitted
- * verbatim, which matches the Python builder exactly (see PARITY NOTES).
+ * ledger-common precision). Ordinary decimal source (including trailing scale
+ * like `1.2300`) is emitted verbatim. Scientific notation from JS
+ * `Number#toString` / wire numbers (`1e-8`) is expanded to an ordinary decimal
+ * via BigNumber so rustledger-WASM can parse the generated text — matching
+ * Python Decimal → `format_entries` behavior.
  */
 
 // --- input → DirectiveJson mapping ---------------------------------------
 
 /**
+ * Beancount source rejects scientific notation. Keep ordinary decimals
+ * (including trailing zeros) byte-identical; expand only finite exponent forms.
+ */
+function toBeancountNumber(value: string | number): string {
+  const raw = typeof value === "number" ? String(value) : value;
+  if (!/[eE]/.test(raw)) return raw;
+  const amount = new BigNumber(raw);
+  if (!amount.isFinite()) return raw;
+  return amount.toFixed();
+}
+
+/**
  * Map a wire custom value onto the engine's `TypedValueJson`. The wire tags by
  * `kind` and the engine by `type`, and the two name things differently — the
  * wire's `text` is the engine's quoted `string`, and the wire's flat `amount`
- * (`number` + `currency` siblings) nests under `value` here. Numbers stay
- * strings so they are emitted verbatim, matching the rest of this module.
+ * (`number` + `currency` siblings) nests under `value` here. Numbers are
+ * normalized through `toBeancountNumber` like every other numeric mapping.
  */
 function toTypedValue(value: CustomValueInput): TypedValueJson {
   switch (value.kind) {
@@ -49,11 +65,14 @@ function toTypedValue(value: CustomValueInput): TypedValueJson {
     case "text":
       return { type: "string", value: value.value };
     case "number":
-      return { type: "number", value: String(value.value) };
+      return { type: "number", value: toBeancountNumber(value.value) };
     case "amount":
       return {
         type: "amount",
-        value: { number: String(value.number), currency: value.currency },
+        value: {
+          number: toBeancountNumber(value.number),
+          currency: value.currency,
+        },
       };
   }
 }
@@ -85,7 +104,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
           ...(posting.units
             ? {
                 units: {
-                  number: posting.units.number,
+                  number: toBeancountNumber(posting.units.number),
                   currency: posting.units.currency,
                 },
               }
@@ -93,7 +112,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
           ...(posting.price
             ? {
                 price: {
-                  number: posting.price.number,
+                  number: toBeancountNumber(posting.price.number),
                   currency: posting.price.currency,
                 },
               }
@@ -116,7 +135,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         date: entry.date,
         currency: entry.currency,
         amount: {
-          number: entry.amount.number,
+          number: toBeancountNumber(entry.amount.number),
           currency: entry.amount.currency,
         },
       };
@@ -134,7 +153,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         date: input.entry.date,
         account: input.entry.account,
         amount: {
-          number: input.entry.amount.number,
+          number: toBeancountNumber(input.entry.amount.number),
           currency: input.entry.amount.currency,
         },
       };
@@ -171,7 +190,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         {
           type: "amount",
           value: {
-            number: entry.amount.number,
+            number: toBeancountNumber(entry.amount.number),
             currency: entry.amount.currency,
           },
         },
