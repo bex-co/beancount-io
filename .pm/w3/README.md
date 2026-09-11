@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [088](./088.md) — Try Again does not retry the failed ledger read
 - [089](./089.md) — Small Journal amounts become invalid Beancount scientific notation
 - [090](./090.md) — Currency fields clip MUSD, USDT and longer commodity symbols
 - [091](./091.md) — Open Account accepts names that are not complete account tokens
