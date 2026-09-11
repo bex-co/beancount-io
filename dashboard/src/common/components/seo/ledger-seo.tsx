@@ -5,6 +5,7 @@ import {
   NOINDEX_ROBOTS_CONTENT,
   getSelfCanonicalUrl,
 } from "@/common/lib/seo/indexability";
+import { withLedgerFileTitlePrefix } from "@/common/lib/seo/ledger-file-title";
 import { HreflangLinks } from "./hreflang-links";
 
 interface LedgerSEOProps {
@@ -45,6 +46,11 @@ interface LedgerSEOProps {
    * open or install the native app on this ledger URL.
    */
   smartAppBanner?: boolean;
+  /**
+   * Optional path/identity prefix shown before the localized page title
+   * (e.g. `accounts.bean · Files - ledger`). Keep in sync with route `head()`.
+   */
+  titlePrefix?: string;
 }
 
 export const APP_STORE_ID = "1527950512";
@@ -75,6 +81,7 @@ export function LedgerSEO({
   noIndex = false,
   canonicalUrl,
   smartAppBanner = false,
+  titlePrefix,
 }: LedgerSEOProps) {
   const { t, i18n } = useTranslations();
   const location = useLocation();
@@ -95,7 +102,10 @@ export function LedgerSEO({
   const smartAppBannerContent = `app-id=${APP_STORE_ID}, app-argument=${appArgument}`;
 
   // Generate the title with interpolated ledger name and additional params
-  const title = t(titleKey, { ledgerName, ...params });
+  const title = withLedgerFileTitlePrefix(
+    titlePrefix ?? "",
+    t(titleKey, { ledgerName, ...params }),
+  );
 
   // Use custom description if available, otherwise use the default i18n one
   const description = ledgerDescription

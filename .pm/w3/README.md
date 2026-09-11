@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [061](./061.md) — Public file titles lose the file path after rendering
 - [062](./062.md) — The AI composer's send button has no accessible name
 - [063](./063.md) — Confirming composed text submits an unfinished AI question
 - [064](./064.md) — Enter rejects precise amounts that a mouse submission accepts

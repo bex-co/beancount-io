@@ -693,4 +693,36 @@ describe("LedgerSEO Component", () => {
       ).toBeNull();
     });
   });
+
+  describe("Title prefix", () => {
+    it("prefixes browser and social titles without leaving a generic competitor", () => {
+      mockT.mockImplementation((key: string) => {
+        if (key === "seo.ledgerFiles.title") return "Files - budgeting-envelopes";
+        return key;
+      });
+
+      render(
+        <LedgerSEO
+          titleKey="seo.ledgerFiles.title"
+          descriptionKey="seo.ledgerFiles.description"
+          ledgerName="budgeting-envelopes"
+          titlePrefix="accounts.bean"
+        />,
+      );
+
+      const expected = "accounts.bean · Files - budgeting-envelopes";
+      expect(document.title).toBe(expected);
+      expect(
+        document.head
+          .querySelector('meta[property="og:title"]')
+          ?.getAttribute("content"),
+      ).toBe(expected);
+      expect(
+        document.head
+          .querySelector('meta[name="twitter:title"]')
+          ?.getAttribute("content"),
+      ).toBe(expected);
+      expect(document.title).not.toBe("Files - budgeting-envelopes");
+    });
+  });
 });
