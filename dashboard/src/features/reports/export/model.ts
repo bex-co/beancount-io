@@ -51,7 +51,7 @@ export interface StatementExportContext {
   primaryCurrency: string;
   conversion: ConversionOption;
   interval: ChartInterval;
-  filters: LedgerSearchParams;
+  filters: Pick<LedgerSearchParams, "account" | "filter" | "time">;
   reportingPeriod: StatementReportingPeriod;
   generatedAt: string;
 }

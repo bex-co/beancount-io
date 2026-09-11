@@ -616,6 +616,15 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "태그, 수취인 등으로 필터...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "통화",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "개별 통화",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "{ledgerName}의 {sectionName} 상세 분석 (USD 및 기타 상품 값 포함)",
@@ -698,10 +707,6 @@ const koCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "계정 검색...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "변환 선택",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "기간 선택",

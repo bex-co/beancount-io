@@ -57,11 +57,10 @@ const faOverview: Record<string, TranslationEntry> = {
     description:
       "Sankey node label for the period's net decrease in cash and cash equivalents",
   },
-  "page.overview.cashFlowUnshownUnits": {
-    message:
-      "نمایش بر حسب {currency}. برای {units} قیمتی به {currency} وجود ندارد، بنابراین در نمودار نیامده‌اند.",
+  "page.overview.notConvertedUnits": {
+    message: "تبدیل نشده: {units}",
     description:
-      "Caption under the cash flow chart listing units that could not be converted to the presentation currency",
+      "Muted note under a net worth or account balance headline listing units that have no price to the presentation currency",
   },
   "page.overview.cashFlowNoFlows": {
     message: "در این بازه هیچ جریانی به {currency} وجود ندارد.",

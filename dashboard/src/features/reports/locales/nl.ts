@@ -7,6 +7,12 @@ import nlOverview from "../overview/locales/nl";
 import nlExport from "../export/locales/nl";
 
 const nlReportsShared = {
+  "reports.unconvertedUnits": {
+    message:
+      "Weergegeven in {currency}. Geen prijs in {currency} voor: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Gedetailleerde uitsplitsing van {ledgerName} {sectionName} met USD- en andere grondstofwaarden",

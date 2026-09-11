@@ -7,6 +7,11 @@ import jaOverview from "../overview/locales/ja";
 import jaExport from "../export/locales/ja";
 
 const jaReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "{currency} で表示。{currency} への価格がないもの: {units}。",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message: "{ledgerName}の{sectionName}の詳細内訳（USDおよびその他の商品値）",
     description: "Description for hierarchy list with dynamic section name",

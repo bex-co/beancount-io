@@ -616,6 +616,15 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "タグ、支払先などでフィルター...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "通貨",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "個別通貨",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message: "{ledgerName}の{sectionName}の詳細内訳（USDおよびその他の商品値）",
     description: "Description for hierarchy list with dynamic section name",
@@ -697,10 +706,6 @@ const jaCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "口座を検索...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "変換を選択",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "期間を選択",

@@ -7,6 +7,11 @@ import skOverview from "../overview/locales/sk";
 import skExport from "../export/locales/sk";
 
 const skReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "Zobrazené v {currency}. Bez ceny v {currency} pre: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Podrobný rozpis {ledgerName} {sectionName} s hodnotami v USD a iných komoditách",

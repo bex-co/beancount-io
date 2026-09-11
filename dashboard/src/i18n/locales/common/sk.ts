@@ -617,6 +617,15 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Filtrovať podľa značky, príjemcu, ...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "Mena",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "Vlastné meny",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Podrobný rozpis {ledgerName} {sectionName} s hodnotami v USD a iných komoditách",
@@ -699,10 +708,6 @@ const skCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "Hľadať účty...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "Vyberte konverziu",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "Vyberte časové obdobie",

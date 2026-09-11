@@ -7,6 +7,11 @@ import faOverview from "../overview/locales/fa";
 import faExport from "../export/locales/fa";
 
 const faReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "نمایش بر حسب {currency}. بدون قیمت به {currency} برای: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "تجزیه تفصیلی {ledgerName} {sectionName} با مقادیر USD و سایر کالاها",

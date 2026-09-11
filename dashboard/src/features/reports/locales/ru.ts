@@ -7,6 +7,11 @@ import ruOverview from "../overview/locales/ru";
 import ruExport from "../export/locales/ru";
 
 const ruReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "Показано в {currency}. Нет цены в {currency} для: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Подробная разбивка {ledgerName} {sectionName} со значениями в USD и других товарах",

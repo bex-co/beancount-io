@@ -7,6 +7,11 @@ import zhOverview from "../overview/locales/zh";
 import zhExport from "../export/locales/zh";
 
 const zhReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "以 {currency} 显示。没有 {currency} 价格：{units}。",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message: "{ledgerName}{sectionName}的详细分解，包括美元和其他商品价值",
     description: "Description for hierarchy list with dynamic section name",

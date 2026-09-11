@@ -607,6 +607,15 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "按标签、收款人等筛选...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "货币",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "各自货币",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message: "{ledgerName}{sectionName}的详细分解，包括美元和其他商品价值",
     description: "Description for hierarchy list with dynamic section name",
@@ -688,10 +697,6 @@ const zhCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "搜索账户...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "选择转换",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "选择时间段",

@@ -153,6 +153,30 @@ pending states; a loader may start them in the browser with
 them, and it must not start them during SSR. Measurement method and evidence:
 `docs/performance-route-loading.md`.
 
+## Presentation Currency
+
+The `conversion` search param is router-owned, like `account`/`filter`/`time`
+(retained and reset alongside them, see Route Loaders above) — report pages
+never hold it in local state. `resolvePresentationConversion` (in
+`common/lib/ledger-search-params/conversion.ts`) is the single owner of its
+default and fallback: an empty value or a currency outside the ledger's
+declared operating currencies resolves to `"at_cost"` (own currencies).
+`isCurrencyConversion` tells apart the three keywords (`at_cost`, `at_value`,
+`units`) from an actual currency selection.
+
+**Presentation currency** is the selected currency when the user picked one
+(`isCurrencyConversion(conversion)` is true); **`primaryCurrency`** is always
+the ledger's first operating currency, regardless of selection — the two are
+the same value only when nothing else was chosen. A card or export that
+converts to one number must use the presentation currency, never
+`primaryCurrency` unconditionally, or its single figure silently reverts to
+the ledger's own currency under a different selection.
+
+`export/units.ts`'s `collectUnits`/`collectHierarchyRecords` and
+`components/unconverted-units-notice.tsx` are the shared disclosure for units
+with no price to the presentation currency — every report page and the
+overview cards use them rather than inventing a page-local notice.
+
 ## Locales
 
 15 language files in `locales/` — shared across all sub-reports. Export strings

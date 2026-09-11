@@ -73,8 +73,8 @@ export function LayoutHeader({
   // it opens the off-canvas sheet, so only show it while the sheet is closed.
   const showTrigger = isMobile ? !openMobile : true;
   const shouldShowFilters = shouldShowLedgerFilters(location.pathname);
-  const activeFilterCount = Object.values(searchParams).filter(
-    (value) => value !== "",
+  const activeFilterCount = Object.entries(searchParams).filter(
+    ([key, value]) => key !== "conversion" && value !== "",
   ).length;
 
   return (

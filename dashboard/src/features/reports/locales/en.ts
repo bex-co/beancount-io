@@ -7,6 +7,11 @@ import enOverview from "../overview/locales/en";
 import enExport from "../export/locales/en";
 
 const enReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "Shown in {currency}. No price to {currency} for: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyTitle": {
     message: "{sectionName} Hierarchy",
     description:

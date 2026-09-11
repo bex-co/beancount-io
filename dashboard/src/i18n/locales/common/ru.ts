@@ -616,6 +616,15 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Фильтр по тегу, получателю платежа, ...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "Валюта",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "Собственные валюты",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Подробная разбивка {ledgerName} {sectionName} со значениями в USD и других товарах",
@@ -698,10 +707,6 @@ const ruCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "Поиск счетов...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "Выберите конвертацию",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "Выберите временной период",

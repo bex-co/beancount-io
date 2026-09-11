@@ -57,11 +57,10 @@ const ruOverview: Record<string, TranslationEntry> = {
     description:
       "Sankey node label for the period's net decrease in cash and cash equivalents",
   },
-  "page.overview.cashFlowUnshownUnits": {
-    message:
-      "Показано в {currency}. Для {units} нет цены в {currency}, поэтому они не вошли в диаграмму.",
+  "page.overview.notConvertedUnits": {
+    message: "Не конвертировано: {units}",
     description:
-      "Caption under the cash flow chart listing units that could not be converted to the presentation currency",
+      "Muted note under a net worth or account balance headline listing units that have no price to the presentation currency",
   },
   "page.overview.cashFlowNoFlows": {
     message: "В этом периоде нет потоков в {currency}.",

@@ -617,6 +617,15 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Фільтрувати за тегом, отримувачем, ...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "Валюта",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "Власні валюти",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Детальна розбивка {ledgerName} {sectionName} зі значеннями в USD та інших товарах",
@@ -699,10 +708,6 @@ const ukCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "Пошук accounts...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "Виберіть конвертацію",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "Виберіть часовий період",

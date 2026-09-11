@@ -167,6 +167,30 @@ export function getComparableAmount(
   );
 }
 
+export type PresentationAmounts = {
+  headline: CurrencyAmount | null;
+  residual: CurrencyAmount[];
+};
+
+/**
+ * Split amounts into the one presentation-currency headline and the units
+ * with no price path to it, for callers rendering a single converted figure
+ * (never as peer headlines) plus a muted disclosure of what's left out.
+ */
+export function splitPresentationAmounts(
+  amounts: CurrencyAmount[],
+  presentationCurrency: string,
+): PresentationAmounts {
+  return {
+    headline:
+      amounts.find((amount) => amount.currency === presentationCurrency) ??
+      null,
+    residual: amounts.filter(
+      (amount) => amount.currency !== presentationCurrency,
+    ),
+  };
+}
+
 export function pickNumericAmount(
   balance?: Record<string, unknown> | null,
   inverse?: boolean,

@@ -7,6 +7,11 @@ import caOverview from "../overview/locales/ca";
 import caExport from "../export/locales/ca";
 
 const caReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "Mostrat en {currency}. Sense preu a {currency} per a: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Desglossament detallat de {ledgerName} {sectionName} amb valors en USD i altres matèries primeres",

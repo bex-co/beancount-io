@@ -12,7 +12,6 @@ import {
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
 import { IntervalSelect } from "@/common/components/interval-select";
 import type { ChartInterval, ConversionOption } from "@/common/types/chart";
-import { ConversionSelect } from "@/common/components/conversion-select";
 import { DollarSign, Activity } from "lucide-react";
 import {
   GetLedgerAccountReportDocument,
@@ -47,10 +46,16 @@ import { useLedger } from "@/common/hooks/use-ledger";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { accountQueryDefaults } from "./constants";
+import {
+  isCurrencyConversion,
+  resolvePresentationConversion,
+} from "@/common/lib/ledger-search-params/conversion";
 import { getAccountJournalWithChildren } from "@/common/lib/fava-options";
 
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { isAccountReportEmpty } from "./lib/account-report-empty";
+import { collectUnits } from "@/features/reports/export/units";
+import { UnconvertedUnitsNotice } from "@/features/reports/components/unconverted-units-notice";
 
 /**
  * Account Journal Table component
@@ -304,6 +309,11 @@ export default function AccountPage() {
   });
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const ledgerFilters = useLedgerSearchParams();
+  const {
+    primaryCurrency,
+    ledgerName: ledgerDisplayName,
+    ledgerData,
+  } = useLedger();
   const [selectedTab, setSelectedTab] = useState<string>("accountBalance");
   const tabOptions = [
     { label: t("page.accountReport.accountBalance"), value: "accountBalance" },
@@ -315,8 +325,9 @@ export default function AccountPage() {
   const [timeInterval, setTimeInterval] = useState<ChartInterval>(
     accountQueryDefaults.interval,
   );
-  const [conversion, setConversion] = useState<ConversionOption>(
-    accountQueryDefaults.conversion,
+  const conversion = resolvePresentationConversion(
+    ledgerFilters.searchParams.conversion,
+    ledgerData.options.operatingCurrency,
   );
 
   const {
@@ -336,8 +347,6 @@ export default function AccountPage() {
     },
     fetchPolicy: "cache-first",
   });
-
-  const { primaryCurrency, ledgerName: ledgerDisplayName } = useLedger();
 
   const accountReportData =
     data?.getLedgerAccountReport || previousData?.getLedgerAccountReport;
@@ -380,6 +389,16 @@ export default function AccountPage() {
   }
 
   const chartsEmpty = isAccountReportEmpty(accountReportData);
+  const unconvertedUnits = isCurrencyConversion(conversion)
+    ? collectUnits(
+        [
+          ...accountReportData.accountBalanceData.map((point) => point.balance),
+          ...accountReportData.intervalTotalsData.map((point) => point.balance),
+          ...accountReportData.linechartData.map((point) => point.balance),
+        ],
+        conversion,
+      )
+    : [];
 
   return (
     <div className="space-y-4">
@@ -390,6 +409,7 @@ export default function AccountPage() {
           ledgerName: ledgerDisplayName ?? ledgerName,
         })}
       />
+      <UnconvertedUnitsNotice currency={conversion} units={unconvertedUnits} />
       {/* Chart Tabs with Improved Layout */}
       <Tabs
         defaultValue={selectedTab}
@@ -407,11 +427,6 @@ export default function AccountPage() {
             <IntervalSelect
               value={timeInterval}
               onValueChange={setTimeInterval}
-            />
-            <ConversionSelect
-              value={conversion}
-              onValueChange={setConversion}
-              currency={primaryCurrency}
             />
           </div>
         </div>

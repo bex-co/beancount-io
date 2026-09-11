@@ -56,11 +56,10 @@ const koOverview: Record<string, TranslationEntry> = {
     description:
       "Sankey node label for the period's net decrease in cash and cash equivalents",
   },
-  "page.overview.cashFlowUnshownUnits": {
-    message:
-      "{currency} 기준으로 표시합니다. {units}는 {currency} 가격이 없어 차트에 포함되지 않았습니다.",
+  "page.overview.notConvertedUnits": {
+    message: "환산 안 됨: {units}",
     description:
-      "Caption under the cash flow chart listing units that could not be converted to the presentation currency",
+      "Muted note under a net worth or account balance headline listing units that have no price to the presentation currency",
   },
   "page.overview.cashFlowNoFlows": {
     message: "이 기간에는 {currency} 흐름이 없습니다.",

@@ -22,13 +22,15 @@ import { useState } from "react";
 import type { ChartInterval, ConversionOption } from "@/common/types/chart";
 import { useCookieStorageState } from "@/common/hooks/use-cookie-storage-state";
 import { IntervalSelect } from "@/common/components/interval-select";
-import { ConversionSelect } from "@/common/components/conversion-select";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
+import { isCurrencyConversion } from "@/common/lib/ledger-search-params/conversion";
 import { filterAccountHierarchy } from "./utils";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
 import { StatementExportMenu } from "../export/statement-export-menu";
+import { collectHierarchyRecords, collectUnits } from "../export/units";
+import { UnconvertedUnitsNotice } from "../components/unconverted-units-notice";
 import {
   buildBalanceSheetDocument,
   type ReportingEntitySource,
@@ -44,7 +46,6 @@ interface BalanceSheetContentProps {
   ledgerOwner: string;
   ledgerNameParam: string;
   conversion: ConversionOption;
-  onConversionChange: (value: ConversionOption) => void;
   timeInterval: ChartInterval;
   onTimeIntervalChange: (value: ChartInterval) => void;
   invertIncomeLiabilitiesEquity: boolean;
@@ -66,7 +67,6 @@ export function BalanceSheetContent({
   ledgerOwner,
   ledgerNameParam,
   conversion,
-  onConversionChange,
   timeInterval,
   onTimeIntervalChange,
   invertIncomeLiabilitiesEquity,
@@ -121,12 +121,25 @@ export function BalanceSheetContent({
     balanceSheetData.equityHierarchyData as SerializableTreeNode,
     hierarchyFilterOptions,
   );
+  const unconvertedUnits = isCurrencyConversion(conversion)
+    ? collectUnits(
+        [
+          ...collectHierarchyRecords(assetsHierarchy),
+          ...collectHierarchyRecords(liabilitiesHierarchy),
+          ...collectHierarchyRecords(equityHierarchy),
+        ],
+        conversion,
+      )
+    : [];
+  const exportPrimaryCurrency = isCurrencyConversion(conversion)
+    ? conversion
+    : primaryCurrency;
   const exportDocument = buildBalanceSheetDocument({
     title: t("common.balanceSheet"),
     reportingEntity: reportingEntityName,
     reportingEntitySource,
     ledgerName: ledgerDisplayName,
-    primaryCurrency,
+    primaryCurrency: exportPrimaryCurrency,
     conversion,
     interval: timeInterval,
     filters,
@@ -174,6 +187,9 @@ export function BalanceSheetContent({
           </div>
         </ClientOnly>
       </div>
+
+      <UnconvertedUnitsNotice currency={conversion} units={unconvertedUnits} />
+
       {/* Collapsible Chart Section */}
       <div
         className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
@@ -198,11 +214,6 @@ export function BalanceSheetContent({
                   <IntervalSelect
                     value={timeInterval}
                     onValueChange={onTimeIntervalChange}
-                  />
-                  <ConversionSelect
-                    value={conversion}
-                    onValueChange={onConversionChange}
-                    currency={primaryCurrency}
                   />
                 </div>
               </ClientOnly>

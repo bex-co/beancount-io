@@ -619,6 +619,15 @@ const caCommon: Record<string, TranslationEntry> = {
       "Error en carregar la informació general del llibre. Si us plau, torneu-ho a intentar més tard.",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "Moneda",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "Monedes pròpies",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Desglossament detallat de {ledgerName} {sectionName} amb valors en USD i altres matèries primeres",
@@ -706,10 +715,6 @@ const caCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "Error de consulta",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "Cercar comptes...",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "Seleccionar conversió",

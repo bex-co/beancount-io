@@ -1,6 +1,10 @@
 import type { RouteLoader } from "@/common/types/route-loader";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
-import { GetLedgerBalanceSheetDocument } from "@/graphql/definitions";
+import {
+  GetLedgerBalanceSheetDocument,
+  GetLedgerDocument,
+} from "@/graphql/definitions";
+import { resolvePresentationConversion } from "@/common/lib/ledger-search-params/conversion";
 import { balanceSheetQueryDefaults } from "./constants";
 
 export const balanceSheetLoader: RouteLoader<
@@ -9,6 +13,14 @@ export const balanceSheetLoader: RouteLoader<
   LedgerSearchParams
 > = async ({ params, context, deps }) => {
   const ledgerId = `${params.ledgerOwner}/${params.ledgerName}`;
+  const ledgerResult = await context.client.query({
+    query: GetLedgerDocument,
+    variables: { ledgerId },
+  });
+  const conversion = resolvePresentationConversion(
+    deps.conversion,
+    ledgerResult.data?.getLedger.options.operatingCurrency ?? [],
+  );
   await Promise.allSettled([
     context.client.query({
       query: GetLedgerBalanceSheetDocument,
@@ -18,7 +30,7 @@ export const balanceSheetLoader: RouteLoader<
         filter: deps.filter,
         time: deps.time,
         interval: balanceSheetQueryDefaults.interval,
-        conversion: balanceSheetQueryDefaults.conversion,
+        conversion,
       },
     }),
   ]);

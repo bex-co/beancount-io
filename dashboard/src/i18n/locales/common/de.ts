@@ -618,6 +618,15 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Nach Tag, Zahlungsempfänger filtern...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "Währung",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "Eigene Währungen",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Detaillierte Aufschlüsselung {ledgerName} {sectionName} mit USD- und anderen Rohstoffwerten",
@@ -700,10 +709,6 @@ const deCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "Konten suchen...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "Umrechnung auswählen",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "Zeitraum auswählen",

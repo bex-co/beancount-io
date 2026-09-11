@@ -4,6 +4,7 @@ import {
   getMovementSnapshot,
   hasOverviewActivity,
   isPartialMonthlyPeriod,
+  splitPresentationAmounts,
 } from "../overview-utils";
 
 describe("overview financial selectors", () => {
@@ -131,5 +132,35 @@ describe("overview financial selectors", () => {
         },
       }),
     ).toBe(true);
+  });
+
+  it("splits out the presentation-currency headline from residual units", () => {
+    const amounts = [
+      { currency: "USD", value: 1200 },
+      { currency: "TRX", value: 19.953 },
+    ];
+
+    expect(splitPresentationAmounts(amounts, "USD")).toEqual({
+      headline: { currency: "USD", value: 1200 },
+      residual: [{ currency: "TRX", value: 19.953 }],
+    });
+  });
+
+  it("reports no headline when the presentation currency is absent", () => {
+    const amounts = [{ currency: "TRX", value: 19.953 }];
+
+    expect(splitPresentationAmounts(amounts, "USD")).toEqual({
+      headline: null,
+      residual: [{ currency: "TRX", value: 19.953 }],
+    });
+  });
+
+  it("leaves residual empty when only the presentation currency is present", () => {
+    const amounts = [{ currency: "USD", value: 1200 }];
+
+    expect(splitPresentationAmounts(amounts, "USD")).toEqual({
+      headline: { currency: "USD", value: 1200 },
+      residual: [],
+    });
   });
 });

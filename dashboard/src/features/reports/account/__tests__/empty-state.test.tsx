@@ -19,7 +19,7 @@ vi.mock("@tanstack/react-router", () => ({
 
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({
   useLedgerSearchParams: () => ({
-    searchParams: { account: "", filter: "", time: "" },
+    searchParams: { account: "", filter: "", time: "", conversion: "" },
   }),
 }));
 
@@ -27,7 +27,7 @@ vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({
     primaryCurrency: "USD",
     ledgerName: "Empty ledger",
-    ledgerData: {},
+    ledgerData: { options: { operatingCurrency: ["USD"] } },
   }),
 }));
 

@@ -617,6 +617,15 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Filtrar por tag, beneficiário, ...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "Moeda",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "Moedas próprias",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Detalhamento de {ledgerName} {sectionName} com valores em USD e outras commodities",
@@ -699,10 +708,6 @@ const ptCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "Pesquisar contas...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "Selecionar conversão",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "Selecionar período de tempo",

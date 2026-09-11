@@ -217,4 +217,33 @@ describe("LedgerSwitcher", () => {
       expect(screen.getByTestId("open-mobile")).toHaveTextContent("closed");
     });
   });
+
+  it("drops the presentation currency when switching ledgers", async () => {
+    const user = userEvent.setup();
+    render(
+      <SidebarProvider>
+        <LedgerSwitcher
+          currentLedgerId="open_ledger/ledger-1"
+          currentLedgerName="ledger-1"
+          currentLedgerFullName="open_ledger/ledger-1"
+        />
+      </SidebarProvider>,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Select a ledger" }));
+    await user.click(await screen.findByText("ledger-2"));
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "/ledger/open_ledger/ledger-2/journal" }),
+    );
+    const { search } = mockNavigate.mock.calls[0][0];
+    expect(search({ conversion: "IRT", account: "Assets" })).toEqual(
+      expect.objectContaining({
+        account: undefined,
+        filter: undefined,
+        time: undefined,
+        conversion: undefined,
+      }),
+    );
+  });
 });

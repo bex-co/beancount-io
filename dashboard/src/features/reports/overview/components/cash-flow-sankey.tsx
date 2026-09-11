@@ -107,7 +107,7 @@ export default function CashFlowSankey({
    */
   const caption =
     sankeyData.unshownUnits.length > 0
-      ? t("page.overview.cashFlowUnshownUnits", {
+      ? t("reports.unconvertedUnits", {
           currency: primaryCurrency,
           units: sankeyData.unshownUnits.join(", "),
         })

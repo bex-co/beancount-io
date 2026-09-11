@@ -7,6 +7,12 @@ import frOverview from "../overview/locales/fr";
 import frExport from "../export/locales/fr";
 
 const frReportsShared = {
+  "reports.unconvertedUnits": {
+    message:
+      "Affiché en {currency}. Pas de cours en {currency} pour : {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Répartition détaillée de {ledgerName} {sectionName} avec valeurs en USD et autres matières premières",

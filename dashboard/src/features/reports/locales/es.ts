@@ -7,6 +7,11 @@ import esOverview from "../overview/locales/es";
 import esExport from "../export/locales/es";
 
 const esReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "Mostrado en {currency}. Sin precio a {currency} para: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Desglose detallado de {ledgerName} {sectionName} con valores en USD y otras materias primas",

@@ -29,6 +29,15 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import CashFlowSankey from "./components/cash-flow-sankey";
 import { overviewQueryDefaults } from "./constants";
+import {
+  isCurrencyConversion,
+  resolvePresentationConversion,
+} from "@/common/lib/ledger-search-params/conversion";
+import {
+  collectHierarchyRecords,
+  collectUnits,
+} from "@/features/reports/export/units";
+import { UnconvertedUnitsNotice } from "@/features/reports/components/unconverted-units-notice";
 import { ReadmeCard } from "@/common/components/readme-card";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { getInvertIncomeLiabilitiesEquity } from "@/common/lib/fava-options";
@@ -72,6 +81,10 @@ export default function LedgerOverviewPage() {
   const { ledgerData } = useLedger();
   const invertIncomeLiabilitiesEquity =
     getInvertIncomeLiabilitiesEquity(ledgerData);
+  const conversion = resolvePresentationConversion(
+    ledgerFilters.searchParams.conversion,
+    ledgerData.options.operatingCurrency,
+  );
 
   const {
     data,
@@ -83,7 +96,8 @@ export default function LedgerOverviewPage() {
       account: ledgerFilters.searchParams.account,
       filter: ledgerFilters.searchParams.filter,
       time: ledgerFilters.searchParams.time,
-      ...overviewQueryDefaults,
+      interval: overviewQueryDefaults.interval,
+      conversion,
     },
     fetchPolicy: "cache-first",
   });
@@ -92,6 +106,7 @@ export default function LedgerOverviewPage() {
   const { statement: sankeyStatement, pending: sankeyPending } =
     useSankeyStatement(
       ledgerId,
+      conversion,
       primaryCurrency,
       ledgerFilters.searchParams,
       accountMeta,
@@ -149,6 +164,16 @@ export default function LedgerOverviewPage() {
     ledgerFilters.searchParams.filter ||
     ledgerFilters.searchParams.time,
   );
+  const unconvertedUnits = isCurrencyConversion(conversion)
+    ? collectUnits(
+        [
+          ...(overview?.netWorthData ?? []).map((point) => point.balance),
+          ...collectHierarchyRecords(overview?.assetsHierarchyData),
+          ...collectHierarchyRecords(overview?.liabilitiesHierarchyData),
+        ],
+        conversion,
+      )
+    : [];
   const widgets: Record<DashboardWidgetId, ReactNode> = {
     "financial-position": (
       <section
@@ -166,15 +191,21 @@ export default function LedgerOverviewPage() {
             {t("page.overview.financialPositionDescription")}
           </p>
         </div>
+        <UnconvertedUnitsNotice
+          currency={conversion}
+          units={unconvertedUnits}
+        />
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(19rem,0.8fr)]">
           <NetWorthCard
             data={overview?.netWorthData ?? []}
             primaryCurrency={primaryCurrency}
+            conversion={conversion}
           />
           <AccountBalancesCard
             assets={overview?.assetsHierarchyData}
             liabilities={overview?.liabilitiesHierarchyData}
             primaryCurrency={primaryCurrency}
+            conversion={conversion}
             invertLiabilities={invertIncomeLiabilitiesEquity}
             ledgerOwner={ledgerOwner}
             ledgerName={ledgerName}

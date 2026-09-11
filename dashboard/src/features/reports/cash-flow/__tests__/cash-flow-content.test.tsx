@@ -36,7 +36,8 @@ vi.mock("@/common/hooks/use-format-number", () => ({
 
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
-    t: (key: string) => key,
+    t: (key: string, params?: Record<string, string | number>) =>
+      params ? `${key} ${JSON.stringify(params)}` : key,
     i18n: { language: "en", dir: () => "ltr" },
   }),
 }));
@@ -55,9 +56,6 @@ vi.mock("../export/statement-export-menu", () => ({
 }));
 vi.mock("@/common/components/seo/ledger-page-seo", () => ({
   LedgerPageSEO: () => null,
-}));
-vi.mock("@/common/components/conversion-select", () => ({
-  ConversionSelect: () => null,
 }));
 vi.mock("@/common/components/interval-select", () => ({
   IntervalSelect: () => null,
@@ -111,10 +109,15 @@ const closingCashAccounts: CashAccountSnapshot[] = [
   },
 ];
 
-function renderContent() {
+function renderContent(
+  overrides: {
+    statement?: CashFlowStatement;
+    conversion?: string;
+  } = {},
+) {
   return render(
     <CashFlowContent
-      statement={statement}
+      statement={overrides.statement ?? statement}
       closingCashAccounts={closingCashAccounts}
       cashAccountRows={[]}
       primaryCurrency="USD"
@@ -124,11 +127,10 @@ function renderContent() {
       ledgerOwner="demo"
       ledgerNameParam="books"
       showClosedAccounts={false}
-      conversion="at_cost"
-      onConversionChange={() => {}}
+      conversion={overrides.conversion ?? "at_cost"}
       timeInterval="monthly"
       onTimeIntervalChange={() => {}}
-      filters={{ time: "", account: "", filter: "" }}
+      filters={{ time: "", account: "", filter: "", conversion: "" }}
       fiscalYearEnd={{ month: 12, day: 31 }}
       collapsePatterns={[]}
     />,
@@ -214,5 +216,37 @@ describe("CashFlowContent statement tables", () => {
     expect(closingAt).toBeGreaterThan(checkingAt);
     expect(openingAt).toBeGreaterThan(closingAt);
     expect(netChangeAt).toBeGreaterThan(openingAt);
+  });
+});
+
+describe("CashFlowContent unconverted units disclosure", () => {
+  const statementWithTry: CashFlowStatement = {
+    ...statement,
+    rows: [
+      ...statement.rows,
+      {
+        accountPath: "Income:Freelance",
+        label: "Freelance",
+        activity: "operating",
+        roleSource: "heuristic",
+        amounts: { TRY: "-20000.00" },
+      },
+    ],
+  };
+
+  it("discloses units with no price to the presentation currency", () => {
+    renderContent({ statement: statementWithTry, conversion: "USD" });
+
+    expect(
+      screen.getByText("reports.unconvertedUnits", { exact: false }),
+    ).toHaveTextContent("TRY");
+  });
+
+  it("stays silent when not converting to a single currency", () => {
+    renderContent({ statement: statementWithTry, conversion: "at_cost" });
+
+    expect(
+      screen.queryByText("reports.unconvertedUnits", { exact: false }),
+    ).not.toBeInTheDocument();
   });
 });

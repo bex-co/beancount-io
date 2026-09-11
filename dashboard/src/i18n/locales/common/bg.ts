@@ -617,6 +617,15 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Филтриране по етикет, получател, ...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "Валута",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "Собствени валути",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Подробна разбивка на {ledgerName} {sectionName} със стойности в USD и други стоки",
@@ -699,10 +708,6 @@ const bgCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "Търсене на сметки...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "Изберете преобразуване",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "Изберете времеви период",

@@ -49,6 +49,7 @@ export function parseLedgerFilterSearch(
     account: normalizeLedgerSearchValue(record.account),
     filter: normalizeLedgerSearchValue(record.filter),
     time: normalizeLedgerSearchValue(record.time),
+    conversion: normalizeLedgerSearchValue(record.conversion),
   };
 }
 
@@ -76,6 +77,7 @@ export function applyLedgerFilterSearch(
     account: next.account || undefined,
     filter: next.filter || undefined,
     time: toLedgerFilterSearchParam(next.time),
+    conversion: next.conversion || undefined,
   };
 }
 
@@ -102,5 +104,6 @@ export function clearLedgerFilterSearch(
     account: "",
     filter: "",
     time: "",
+    conversion: "",
   });
 }

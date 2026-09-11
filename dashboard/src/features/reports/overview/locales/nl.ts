@@ -57,11 +57,10 @@ const nlOverview: Record<string, TranslationEntry> = {
     description:
       "Sankey node label for the period's net decrease in cash and cash equivalents",
   },
-  "page.overview.cashFlowUnshownUnits": {
-    message:
-      "Weergegeven in {currency}. Voor {units} is er geen koers naar {currency}, dus die staan niet in de grafiek.",
+  "page.overview.notConvertedUnits": {
+    message: "Niet omgerekend: {units}",
     description:
-      "Caption under the cash flow chart listing units that could not be converted to the presentation currency",
+      "Muted note under a net worth or account balance headline listing units that have no price to the presentation currency",
   },
   "page.overview.cashFlowNoFlows": {
     message: "Geen {currency}-stromen in deze periode.",

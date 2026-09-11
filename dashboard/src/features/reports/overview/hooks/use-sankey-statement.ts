@@ -7,6 +7,8 @@ import {
   type AccountMetaMap,
   type CashFlowStatement,
 } from "@/features/reports/cash-flow/lib/model";
+import { isCurrencyConversion } from "@/common/lib/ledger-search-params/conversion";
+import type { ConversionOption } from "@/common/types/chart";
 
 export interface SankeyStatementState {
   /**
@@ -30,9 +32,10 @@ interface LedgerFilterVariables {
  * Period flows for the overview Sankey, as a cash-flow statement.
  *
  * Fetched apart from GetLedgerOverview on purpose: the overview route loader
- * has no `primaryCurrency` to pass as the conversion target, and keeping this
- * a client-side hook leaves the loader's SSR path untouched while letting a
- * failure degrade the Sankey card alone (same shape as `useAccountMeta`).
+ * has no `presentationCurrency` to pass as the conversion target, and keeping
+ * this a client-side hook leaves the loader's SSR path untouched while
+ * letting a failure degrade the Sankey card alone (same shape as
+ * `useAccountMeta`).
  *
  * The statement is built with `closingCashAccounts: []` — the Sankey reads
  * only `rows` and `netChange`, so `opening`/`closing` are meaningless here and
@@ -40,14 +43,18 @@ interface LedgerFilterVariables {
  */
 export function useSankeyStatement(
   ledgerId: string,
-  primaryCurrency: string,
+  conversion: ConversionOption,
+  presentationCurrency: string,
   filters: LedgerFilterVariables,
   accountMeta?: AccountMetaMap,
 ): SankeyStatementState {
+  const targetCurrency = isCurrencyConversion(conversion)
+    ? conversion
+    : presentationCurrency;
   const { data, loading } = useQuery(GetLedgerCashFlowSankeyDocument, {
     variables: {
       ledgerId,
-      conversion: primaryCurrency,
+      conversion: targetCurrency,
       account: filters.account,
       filter: filters.filter,
       time: filters.time,
@@ -69,10 +76,10 @@ export function useSankeyStatement(
     return buildCashFlowStatement({
       intervals,
       closingCashAccounts: [],
-      primaryCurrency,
+      primaryCurrency: targetCurrency,
       accountMeta,
     });
-  }, [data, primaryCurrency, accountMeta]);
+  }, [data, targetCurrency, accountMeta]);
 
   return { statement, pending: loading && !data };
 }

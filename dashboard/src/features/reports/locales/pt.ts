@@ -7,6 +7,11 @@ import ptOverview from "../overview/locales/pt";
 import ptExport from "../export/locales/pt";
 
 const ptReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "Exibido em {currency}. Sem preço em {currency} para: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Detalhamento de {ledgerName} {sectionName} com valores em USD e outras commodities",

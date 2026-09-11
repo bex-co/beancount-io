@@ -618,6 +618,15 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Filteren op tag, begunstigde, ...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "Valuta",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "Eigen valuta's",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Gedetailleerde uitsplitsing van {ledgerName} {sectionName} met USD- en andere grondstofwaarden",
@@ -700,10 +709,6 @@ const nlCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "Rekeningen zoeken...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "Selecteer conversie",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "Selecteer tijdsperiode",

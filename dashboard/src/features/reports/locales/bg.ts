@@ -7,6 +7,11 @@ import bgOverview from "../overview/locales/bg";
 import bgExport from "../export/locales/bg";
 
 const bgReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "Показано в {currency}. Няма цена до {currency} за: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Подробна разбивка на {ledgerName} {sectionName} със стойности в USD и други стоки",

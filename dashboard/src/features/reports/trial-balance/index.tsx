@@ -1,18 +1,17 @@
 import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerTrialBalanceDocument } from "@/graphql/definitions";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { createLedgerId } from "@/common/lib/utils/encode";
-import type { ConversionOption } from "@/common/types/chart";
+import { resolvePresentationConversion } from "@/common/lib/ledger-search-params/conversion";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
   ReportLoadingState,
   ReportErrorState,
   ReportEmptyState,
 } from "@/common/components/state-components";
-import { trialBalanceQueryDefaults } from "./constants";
 import {
   getShowAccountsWithZeroBalance,
   getShowAccountsWithZeroTransactions,
@@ -39,8 +38,9 @@ export default function TrialBalancePage() {
     ledgerName: ledgerDisplayName,
     ledgerData,
   } = useLedger();
-  const [conversion, setConversion] = useState<ConversionOption>(
-    trialBalanceQueryDefaults.conversion,
+  const conversion = resolvePresentationConversion(
+    ledgerFilters.searchParams.conversion,
+    ledgerData.options.operatingCurrency,
   );
 
   const {
@@ -94,7 +94,6 @@ export default function TrialBalancePage() {
       ledgerOwner={ledgerOwner}
       ledgerNameParam={ledgerName}
       conversion={conversion}
-      onConversionChange={setConversion}
       invertIncomeLiabilitiesEquity={invertIncomeLiabilitiesEquity}
       showZeroBalance={showZeroBalance}
       showZeroTransactions={showZeroTransactions}

@@ -15,7 +15,7 @@ the reasoning lives in ADR002/ADR003 and in the tests named below.
   `assetsHierarchyData` / `incomeHierarchyData` to build links — those are
   cumulative balances, not period flows. The data source and its conversion
   target are visible at
-  `dashboard/src/features/reports/overview/hooks/use-sankey-statement.ts:50`.
+  `dashboard/src/features/reports/overview/hooks/use-sankey-statement.ts:57`.
 
 - **A link value is one unit's amount, never a sum across units.** Wrong code:
   `balance["USD"] ?? Object.values(balance)[0]`, or adding IRT to TRY. Units

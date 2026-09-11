@@ -3,9 +3,11 @@ import type { LedgerSearchParams } from "@/common/providers/ledger-search-params
 import { prefetchOptionalQuery } from "@/common/apollo/prefetch";
 import {
   GetLedgerAccountMetaDocument,
+  GetLedgerDocument,
   GetLedgerFileDocument,
   GetLedgerOverviewDocument,
 } from "@/graphql/definitions";
+import { resolvePresentationConversion } from "@/common/lib/ledger-search-params/conversion";
 import { overviewQueryDefaults } from "./constants";
 
 export const overviewLoader: RouteLoader<
@@ -15,6 +17,14 @@ export const overviewLoader: RouteLoader<
 > = async ({ params, context, deps }) => {
   const ledgerId = `${params.ledgerOwner}/${params.ledgerName}`;
   const { account, filter, time } = deps;
+  const ledgerResult = await context.client.query({
+    query: GetLedgerDocument,
+    variables: { ledgerId },
+  });
+  const conversion = resolvePresentationConversion(
+    deps.conversion,
+    ledgerResult.data?.getLedger.options.operatingCurrency ?? [],
+  );
 
   // The README card and the account open-directive metadata (cash-flow-role
   // declarations behind the Sankey) are optional panels that own their
@@ -40,7 +50,7 @@ export const overviewLoader: RouteLoader<
         filter,
         time,
         interval: overviewQueryDefaults.interval,
-        conversion: overviewQueryDefaults.conversion,
+        conversion,
       },
     })
     .catch(() => undefined);

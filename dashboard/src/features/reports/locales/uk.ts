@@ -7,6 +7,11 @@ import ukOverview from "../overview/locales/uk";
 import ukExport from "../export/locales/uk";
 
 const ukReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "Показано в {currency}. Немає ціни в {currency} для: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Детальна розбивка {ledgerName} {sectionName} зі значеннями в USD та інших товарах",

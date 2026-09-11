@@ -624,10 +624,6 @@ const enCommon: Record<string, TranslationEntry> = {
     description: "Daily interval option",
   },
   // component.conversionSelect — conversion-select.tsx
-  "component.conversionSelect.placeholder": {
-    message: "Select conversion",
-    description: "Placeholder for conversion select dropdown",
-  },
   "component.conversionSelect.atCost": {
     message: "At Cost",
     description: "Conversion option for cost-based display",
@@ -702,6 +698,16 @@ const enCommon: Record<string, TranslationEntry> = {
   "component.searchControls.filterByTagPayee": {
     message: "Filter by tag, payee, ...",
     description: "Placeholder for filter input with tags and payees",
+  },
+  "component.searchControls.conversion": {
+    message: "Currency",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  // component.presentationCurrencySelect — presentation-currency-select.tsx
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "Own currencies",
+    description:
+      "Presentation currency option showing every amount in its own unit",
   },
   // component.accountCombobox — account-combobox.tsx + go-to-account.tsx
   "component.accountCombobox.noAccountsFound": {

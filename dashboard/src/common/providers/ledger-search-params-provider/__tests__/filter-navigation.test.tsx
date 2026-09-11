@@ -29,6 +29,7 @@ function FilterControls() {
       <div data-testid="time">{searchParams.time}</div>
       <div data-testid="account">{searchParams.account}</div>
       <div data-testid="filter">{searchParams.filter}</div>
+      <div data-testid="conversion">{searchParams.conversion}</div>
       <button
         type="button"
         onClick={() => setSearchParams({ ...searchParams, time: "2017-09" })}
@@ -37,11 +38,18 @@ function FilterControls() {
       </button>
       <button
         type="button"
+        onClick={() => setSearchParams({ ...searchParams, conversion: "IRT" })}
+      >
+        set-conversion-irt
+      </button>
+      <button
+        type="button"
         onClick={() =>
           setSearchParams({
             account: "",
             filter: "",
             time: "",
+            conversion: searchParams.conversion,
           })
         }
       >
@@ -89,7 +97,9 @@ async function mountAt(initialEntry: string) {
     path: "/ledger/$ledgerOwner/$ledgerName",
     validateSearch: (search) => ledgerFilterSearchSchema.parse(search),
     search: {
-      middlewares: [retainSearchParams(["account", "filter", "time"])],
+      middlewares: [
+        retainSearchParams(["account", "filter", "time", "conversion"]),
+      ],
     },
     component: () => (
       <LedgerSearchParamsProvider>
@@ -230,10 +240,41 @@ describe("ledger filter navigation and history", () => {
     expect(screen.getByTestId("filter")).toHaveTextContent('payee:"100%"');
   });
 
+  it("writes ?conversion=IRT and keeps it across Related Pages navigation and remount", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt("/ledger/open_ledger/example/journal");
+
+    await user.click(screen.getByText("set-conversion-irt"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("conversion")).toHaveTextContent("IRT");
+      expect(screen.getByTestId("href").textContent).toMatch(
+        /[?&]conversion=IRT(?:&|$)/,
+      );
+    });
+
+    await user.click(screen.getByText("related-balance-sheet"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("page")).toHaveTextContent("balance-sheet");
+    });
+    expect(screen.getByTestId("conversion")).toHaveTextContent("IRT");
+    expect(screen.getByTestId("href").textContent).toMatch(
+      /[?&]conversion=IRT(?:&|$)/,
+    );
+
+    const destination = router.state.location.href;
+    const remounted = await mountAt(destination);
+    expect(screen.getByTestId("conversion")).toHaveTextContent("IRT");
+    expect(remounted.state.location.search).toMatchObject({
+      conversion: "IRT",
+    });
+  });
+
   it("resets filters when switching ledgers", async () => {
     const user = userEvent.setup();
     const router = await mountAt(
-      "/ledger/open_ledger/example/journal?time=2016",
+      "/ledger/open_ledger/example/journal?time=2016&conversion=IRT",
     );
 
     await user.click(screen.getByText("switch-ledger"));
@@ -243,7 +284,11 @@ describe("ledger filter navigation and history", () => {
         "/ledger/other/books/journal",
       );
       expect(screen.getByTestId("time")).toHaveTextContent("");
+      expect(screen.getByTestId("conversion")).toHaveTextContent("");
       expect(screen.getByTestId("href").textContent).not.toMatch(/[?&]time=/);
+      expect(screen.getByTestId("href").textContent).not.toMatch(
+        /[?&]conversion=/,
+      );
     });
   });
 });

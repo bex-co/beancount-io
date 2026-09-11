@@ -5,4 +5,4 @@ export type ChartInterval =
   | "weekly"
   | "daily";
 
-export type ConversionOption = "at_cost" | "at_value" | "units" | "USD";
+export type ConversionOption = "at_cost" | "at_value" | "units" | string;

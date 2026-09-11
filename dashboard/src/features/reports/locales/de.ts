@@ -7,6 +7,11 @@ import deOverview from "../overview/locales/de";
 import deExport from "../export/locales/de";
 
 const deReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "Angezeigt in {currency}. Kein Preis zu {currency} für: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "Detaillierte Aufschlüsselung {ledgerName} {sectionName} mit USD- und anderen Rohstoffwerten",

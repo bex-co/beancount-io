@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { RouterContext } from "@/common/types/router-context";
 import {
   GetLedgerAccountMetaDocument,
+  GetLedgerDocument,
   GetLedgerFileDocument,
   GetLedgerOverviewDocument,
 } from "@/graphql/definitions";
@@ -17,6 +18,7 @@ function loaderInput(query: (options: QueryOptions) => Promise<unknown>) {
       account: "Assets:Checking",
       filter: "",
       time: "2025",
+      conversion: "",
     },
     abortController: new AbortController(),
     preload: false,
@@ -29,6 +31,17 @@ function pending() {
   return new Promise<never>(() => {});
 }
 
+function resolvesLedger(query: (options: QueryOptions) => Promise<unknown>) {
+  return (options: QueryOptions) =>
+    options.query === GetLedgerDocument
+      ? Promise.resolve({
+          data: {
+            getLedger: { options: { operatingCurrency: ["USD"] } },
+          },
+        })
+      : query(options);
+}
+
 describe("overviewLoader", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -36,10 +49,12 @@ describe("overviewLoader", () => {
 
   it("resolves once the overview is cached even while README and metadata are still loading", async () => {
     vi.stubEnv("SSR", false);
-    const query = vi.fn((options: QueryOptions) =>
-      options.query === GetLedgerOverviewDocument
-        ? Promise.resolve({ data: { getLedgerOverview: {} } })
-        : pending(),
+    const query = vi.fn(
+      resolvesLedger((options: QueryOptions) =>
+        options.query === GetLedgerOverviewDocument
+          ? Promise.resolve({ data: { getLedgerOverview: {} } })
+          : pending(),
+      ),
     );
 
     await expect(overviewLoader(loaderInput(query))).resolves.toBeUndefined();
@@ -68,18 +83,20 @@ describe("overviewLoader", () => {
         },
       ]),
     );
-    expect(requested).toHaveLength(3);
+    expect(requested).toHaveLength(4);
   });
 
   it("starts the optional panels before awaiting the overview", async () => {
     vi.stubEnv("SSR", false);
     const order: unknown[] = [];
-    const query = vi.fn((options: QueryOptions) => {
-      order.push(options.query);
-      return options.query === GetLedgerOverviewDocument
-        ? Promise.resolve({ data: {} })
-        : pending();
-    });
+    const query = vi.fn(
+      resolvesLedger((options: QueryOptions) => {
+        order.push(options.query);
+        return options.query === GetLedgerOverviewDocument
+          ? Promise.resolve({ data: {} })
+          : pending();
+      }),
+    );
 
     await overviewLoader(loaderInput(query));
 
@@ -88,10 +105,12 @@ describe("overviewLoader", () => {
 
   it("leaves an overview failure to the page's own error state", async () => {
     vi.stubEnv("SSR", false);
-    const query = vi.fn((options: QueryOptions) =>
-      options.query === GetLedgerOverviewDocument
-        ? Promise.reject(new Error("ledger failed to load"))
-        : pending(),
+    const query = vi.fn(
+      resolvesLedger((options: QueryOptions) =>
+        options.query === GetLedgerOverviewDocument
+          ? Promise.reject(new Error("ledger failed to load"))
+          : pending(),
+      ),
     );
 
     await expect(overviewLoader(loaderInput(query))).resolves.toBeUndefined();
@@ -99,21 +118,48 @@ describe("overviewLoader", () => {
 
   it("does not start README or metadata during SSR", async () => {
     vi.stubEnv("SSR", true);
-    const query = vi.fn(() => Promise.resolve({ data: {} }));
+    const query = vi.fn(resolvesLedger(() => Promise.resolve({ data: {} })));
 
     await overviewLoader(loaderInput(query));
 
-    expect(query).toHaveBeenCalledTimes(1);
-    expect(query.mock.calls[0][0]).toMatchObject({
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query.mock.calls[1][0]).toMatchObject({
       query: GetLedgerOverviewDocument,
     });
   });
 
+  it("resolves the same conversion the page's useQuery call resolves for the same URL", async () => {
+    vi.stubEnv("SSR", true);
+    const query = vi.fn((options: QueryOptions) =>
+      options.query === GetLedgerDocument
+        ? Promise.resolve({
+            data: {
+              getLedger: { options: { operatingCurrency: ["USD", "IRT"] } },
+            },
+          })
+        : Promise.resolve({ data: {} }),
+    );
+    const input = loaderInput(query);
+    input.deps = { ...input.deps, conversion: "IRT" };
+
+    await overviewLoader(input);
+
+    const overviewCall = query.mock.calls.find(
+      ([options]) => options.query === GetLedgerOverviewDocument,
+    );
+    expect(overviewCall?.[0].variables).toMatchObject({ conversion: "IRT" });
+  });
+
   it("uses destination loader deps rather than a global URL snapshot", async () => {
     vi.stubEnv("SSR", false);
-    const query = vi.fn(() => Promise.resolve({ data: {} }));
+    const query = vi.fn(resolvesLedger(() => Promise.resolve({ data: {} })));
     const input = loaderInput(query);
-    input.deps = { account: "", filter: "payee:Rent", time: "2025-10" };
+    input.deps = {
+      account: "",
+      filter: "payee:Rent",
+      time: "2025-10",
+      conversion: "",
+    };
 
     await overviewLoader(input);
 

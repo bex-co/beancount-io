@@ -231,7 +231,7 @@ describe("CashFlowSankey", () => {
 
     render(<CashFlowSankey statement={statement} primaryCurrency="USD" />);
 
-    expect(screen.getByText(/cashFlowUnshownUnits/)).toHaveTextContent(
+    expect(screen.getByText(/reports.unconvertedUnits/)).toHaveTextContent(
       "TRY, USDT",
     );
   });

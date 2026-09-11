@@ -41,6 +41,7 @@ describe("parseLedgerFilterSearch / schema", () => {
       account: "Assets",
       filter: "",
       time: "2016",
+      conversion: "",
     });
   });
 
@@ -73,6 +74,7 @@ describe("parseLedgerFilterSearch / schema", () => {
         account: "Assets:Cash",
         filter: "",
         time: "2017-09",
+        conversion: "",
       }),
     ).toEqual({
       action: "new-entry",
@@ -80,6 +82,7 @@ describe("parseLedgerFilterSearch / schema", () => {
       account: "Assets:Cash",
       filter: undefined,
       time: "2017-09",
+      conversion: undefined,
       q: "select *",
     });
 
@@ -88,6 +91,7 @@ describe("parseLedgerFilterSearch / schema", () => {
         account: "",
         filter: "",
         time: "2016",
+        conversion: "",
       }),
     ).toEqual({
       action: "new-entry",
@@ -95,6 +99,7 @@ describe("parseLedgerFilterSearch / schema", () => {
       account: undefined,
       filter: undefined,
       time: 2016,
+      conversion: undefined,
       q: "select *",
     });
 
@@ -104,7 +109,62 @@ describe("parseLedgerFilterSearch / schema", () => {
       account: undefined,
       filter: undefined,
       time: undefined,
+      conversion: undefined,
       q: "select *",
+    });
+  });
+});
+
+describe("conversion search param", () => {
+  it.each(["at_cost", "units", "IRT"])(
+    "round-trips %s through the schema and apply/clear helpers",
+    (value) => {
+      expect(ledgerFilterSearchSchema.parse({ conversion: value })).toEqual({
+        conversion: value,
+      });
+      expect(parseLedgerFilterSearch({ conversion: value })).toEqual({
+        account: "",
+        filter: "",
+        time: "",
+        conversion: value,
+      });
+      expect(
+        applyLedgerFilterSearch(
+          {},
+          { account: "", filter: "", time: "", conversion: value },
+        ),
+      ).toEqual({
+        account: undefined,
+        filter: undefined,
+        time: undefined,
+        conversion: value,
+      });
+    },
+  );
+
+  it("drops the key from the validated schema object when empty", () => {
+    expect(ledgerFilterSearchSchema.parse({ conversion: "" })).toEqual({});
+    expect(ledgerFilterSearchSchema.parse({})).toEqual({});
+  });
+
+  it("passes an unknown conversion value through unchanged", () => {
+    expect(ledgerFilterSearchSchema.parse({ conversion: "XYZ" })).toEqual({
+      conversion: "XYZ",
+    });
+    expect(parseLedgerFilterSearch({ conversion: "XYZ" })).toEqual({
+      account: "",
+      filter: "",
+      time: "",
+      conversion: "XYZ",
+    });
+  });
+
+  it("clears conversion along with the other shared filters", () => {
+    expect(clearLedgerFilterSearch({ conversion: "IRT" })).toEqual({
+      account: undefined,
+      filter: undefined,
+      time: undefined,
+      conversion: undefined,
     });
   });
 });

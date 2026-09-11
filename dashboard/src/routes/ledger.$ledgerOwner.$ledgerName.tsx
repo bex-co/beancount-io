@@ -25,10 +25,13 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName")({
   errorComponent: LedgerRouteError,
   validateSearch: (search) => ledgerFilterSearchSchema.parse(search),
   search: {
-    // Keep account/filter/time across same-ledger report navigation (Related
-    // Pages, sidebar). Explicit clears set the keys to undefined so retention
-    // does not restore them. Ledger switches clear these in the switcher.
-    middlewares: [retainSearchParams(["account", "filter", "time"])],
+    // Keep account/filter/time/conversion across same-ledger report
+    // navigation (Related Pages, sidebar). Explicit clears set the keys to
+    // undefined so retention does not restore them. Ledger switches clear
+    // these in the switcher.
+    middlewares: [
+      retainSearchParams(["account", "filter", "time", "conversion"]),
+    ],
   },
   loader: async ({ params, context, location }) => {
     const ledgerId = `${params.ledgerOwner}/${params.ledgerName}`;

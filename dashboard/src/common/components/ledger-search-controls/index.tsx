@@ -17,6 +17,9 @@ import {
 import { getIndentLevel } from "./utils.ts";
 import { generateAllAccountPaths } from "@/common/lib/utils/account-utils.ts";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
+import { useLedger } from "@/common/providers/ledger-provider";
+import { resolvePresentationConversion } from "@/common/lib/ledger-search-params/conversion";
+import { PresentationCurrencySelect } from "./presentation-currency-select";
 
 interface SearchControlComboboxProps {
   items: string[];
@@ -80,6 +83,7 @@ export const LedgerSearchControls = ({
   const { searchParams, setSearchParams } = useContext(
     LedgerSearchParamsContext,
   );
+  const { ledgerData } = useLedger();
   const { data, loading, error } = useQuery(GetLedgerAttributesDocument, {
     variables: { ledgerId },
   });
@@ -96,14 +100,15 @@ export const LedgerSearchControls = ({
 
   const handleClearAll = () => {
     setSearchParams({
+      ...searchParams,
       account: "",
       filter: "",
       time: "",
     });
   };
 
-  const hasActiveFilters = Object.values(searchParams).some(
-    (value) => value !== "",
+  const hasActiveFilters = Object.entries(searchParams).some(
+    ([key, value]) => key !== "conversion" && value !== "",
   );
   const isStack = layout === "stack";
 
@@ -208,6 +213,16 @@ export const LedgerSearchControls = ({
           allowCustom={true}
           hierarchical={false}
           triggerOn="blur"
+        />
+
+        <PresentationCurrencySelect
+          value={resolvePresentationConversion(
+            searchParams.conversion,
+            ledgerData.options.operatingCurrency,
+          )}
+          operatingCurrencies={ledgerData.options.operatingCurrency}
+          onValueChange={(value) => handleFilterChange("conversion", value)}
+          className={isStack ? "w-full" : undefined}
         />
       </div>
     </div>

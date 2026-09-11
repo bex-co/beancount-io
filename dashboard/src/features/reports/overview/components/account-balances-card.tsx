@@ -10,14 +10,69 @@ import {
 } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { useLedgerNavigateToAccount } from "@/common/hooks/use-ledger";
-import { buildAccountBalanceRows } from "../lib/overview-utils";
+import { isCurrencyConversion } from "@/common/lib/ledger-search-params/conversion";
+import type { ConversionOption } from "@/common/types/chart";
+import {
+  buildAccountBalanceRows,
+  splitPresentationAmounts,
+  type CurrencyAmount,
+} from "../lib/overview-utils";
 import { FormattedAmounts } from "./formatted-amounts";
+
+function AccountRowAmounts({
+  amounts,
+  presentationCurrency,
+  isConverting,
+}: {
+  amounts: CurrencyAmount[];
+  presentationCurrency: string;
+  isConverting: boolean;
+}) {
+  const { t } = useTranslations();
+  const formatNumber = useFormatNumber();
+
+  if (!isConverting) {
+    return (
+      <FormattedAmounts
+        amounts={amounts}
+        className="shrink-0 text-right text-sm font-medium"
+      />
+    );
+  }
+
+  const { headline, residual } = splitPresentationAmounts(
+    amounts,
+    presentationCurrency,
+  );
+
+  return (
+    <span className="shrink-0 text-right">
+      <FormattedAmounts
+        amounts={headline ? [headline] : []}
+        className="text-sm font-medium"
+      />
+      {residual.length > 0 && (
+        <span className="block text-xs text-muted-foreground">
+          {t("page.overview.notConvertedUnits", {
+            units: residual
+              .map(
+                (amount) => `${formatNumber(amount.value)} ${amount.currency}`,
+              )
+              .join(", "),
+          })}
+        </span>
+      )}
+    </span>
+  );
+}
 
 export function AccountBalancesCard({
   assets,
   liabilities,
   primaryCurrency,
+  conversion,
   invertLiabilities,
   ledgerOwner,
   ledgerName,
@@ -25,16 +80,20 @@ export function AccountBalancesCard({
   assets?: unknown;
   liabilities?: unknown;
   primaryCurrency: string;
+  conversion: ConversionOption;
   invertLiabilities: boolean;
   ledgerOwner: string;
   ledgerName: string;
 }) {
   const { t } = useTranslations();
   const navigateToAccount = useLedgerNavigateToAccount();
+  const presentationCurrency = isCurrencyConversion(conversion)
+    ? conversion
+    : primaryCurrency;
   const accounts = buildAccountBalanceRows({
     assets,
     liabilities,
-    preferredCurrency: primaryCurrency,
+    preferredCurrency: presentationCurrency,
     invertLiabilities,
   }).slice(0, 7);
 
@@ -86,9 +145,10 @@ export function AccountBalancesCard({
                   {account.account}
                 </span>
               </span>
-              <FormattedAmounts
+              <AccountRowAmounts
                 amounts={account.amounts}
-                className="shrink-0 text-right text-sm font-medium"
+                presentationCurrency={presentationCurrency}
+                isConverting={isCurrencyConversion(conversion)}
               />
             </button>
           ))

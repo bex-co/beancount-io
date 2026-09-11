@@ -617,6 +617,15 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "فیلتر بر اساس برچسب، دریافت‌کننده، ...",
     description: "Placeholder for filter input with tags and payees",
   },
+  "component.searchControls.conversion": {
+    message: "ارز",
+    description: "Label for the ledger-wide presentation currency select",
+  },
+  "component.presentationCurrencySelect.ownCurrencies": {
+    message: "ارز‌های خود",
+    description:
+      "Presentation currency option showing every amount in its own unit",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "تجزیه تفصیلی {ledgerName} {sectionName} با مقادیر USD و سایر کالاها",
@@ -699,10 +708,6 @@ const faCommon: Record<string, TranslationEntry> = {
   "component.accountCombobox.placeholder": {
     message: "جستجوی حساب‌ها...",
     description: "Placeholder for account search",
-  },
-  "component.conversionSelect.placeholder": {
-    message: "انتخاب تبدیل",
-    description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
     message: "انتخاب دوره زمانی",

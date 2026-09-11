@@ -57,11 +57,10 @@ const bgOverview: Record<string, TranslationEntry> = {
     description:
       "Sankey node label for the period's net decrease in cash and cash equivalents",
   },
-  "page.overview.cashFlowUnshownUnits": {
-    message:
-      "Показано в {currency}. За {units} няма цена в {currency}, затова не са в диаграмата.",
+  "page.overview.notConvertedUnits": {
+    message: "Неконвертирано: {units}",
     description:
-      "Caption under the cash flow chart listing units that could not be converted to the presentation currency",
+      "Muted note under a net worth or account balance headline listing units that have no price to the presentation currency",
   },
   "page.overview.cashFlowNoFlows": {
     message: "Няма потоци в {currency} за този период.",

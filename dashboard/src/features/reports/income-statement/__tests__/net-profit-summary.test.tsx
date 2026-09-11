@@ -72,9 +72,6 @@ vi.mock("@/common/components/responsive-tab-trigger-list", () => ({
 vi.mock("@/common/components/interval-select", () => ({
   IntervalSelect: () => null,
 }));
-vi.mock("@/common/components/conversion-select", () => ({
-  ConversionSelect: () => null,
-}));
 vi.mock("../../balance-sheet/line-chart", () => ({ LineChart: () => null }));
 vi.mock("../../balance-sheet/hierarchy-visualization-card", () => ({
   HierarchyVisualizationCard: () => null,

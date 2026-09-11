@@ -19,7 +19,7 @@ vi.mock("@tanstack/react-router", () => ({
 
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({
   useLedgerSearchParams: () => ({
-    searchParams: { account: "", filter: "", time: "" },
+    searchParams: { account: "", filter: "", time: "", conversion: "" },
   }),
 }));
 
@@ -27,7 +27,7 @@ vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({
     primaryCurrency: "USD",
     ledgerName: "crypto-example",
-    ledgerData: {},
+    ledgerData: { options: { operatingCurrency: ["USD"] } },
   }),
 }));
 
@@ -53,10 +53,6 @@ vi.mock("@/features/reports/income-statement/date-balance-chart", () => ({
 
 vi.mock("@/common/components/interval-select", () => ({
   IntervalSelect: () => <div data-testid="interval-select">Monthly</div>,
-}));
-
-vi.mock("@/common/components/conversion-select", () => ({
-  ConversionSelect: () => <div data-testid="conversion-select">At Cost</div>,
 }));
 
 vi.mock("@/common/components/responsive-tab-trigger-list", () => ({
@@ -95,11 +91,10 @@ describe("AccountPage narrow report selectors", () => {
     });
   });
 
-  it("keeps interval and conversion selectors in the toolbar layout", () => {
+  it("keeps the interval selector in the toolbar layout", () => {
     const { container } = render(<AccountPage />);
 
     expect(screen.getByTestId("interval-select")).toBeInTheDocument();
-    expect(screen.getByTestId("conversion-select")).toBeInTheDocument();
 
     const hiddenDesktopOnly = container.querySelector(".hidden.sm\\:flex");
     expect(hiddenDesktopOnly).toBeNull();

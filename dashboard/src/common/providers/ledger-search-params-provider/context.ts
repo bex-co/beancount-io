@@ -4,6 +4,7 @@ export interface LedgerSearchParams {
   account: string;
   filter: string;
   time: string;
+  conversion: string;
 }
 
 interface ILedgerSearchParamsContext {
@@ -15,6 +16,7 @@ const defaultSearchParams: LedgerSearchParams = {
   account: "",
   filter: "",
   time: "",
+  conversion: "",
 };
 
 export const LedgerSearchParamsContext =

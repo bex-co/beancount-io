@@ -74,12 +74,13 @@ function node(
   account: string,
   amount: string,
   children: SerializableTreeNode[] = [],
+  currency = "USD",
 ): SerializableTreeNode {
   return {
     __typename: "SerializableTreeNode",
     account,
-    balance: { USD: amount },
-    balanceChildren: { USD: amount },
+    balance: { [currency]: amount },
+    balanceChildren: { [currency]: amount },
     children: children as unknown as Array<Record<string, unknown>>,
     cost: null,
     costChildren: null,
@@ -106,9 +107,9 @@ const sharedProps = {
     time: "2026-01-01 - 2026-06-30",
     account: "Assets|Income",
     filter: "tag:reviewed",
+    conversion: "",
   },
   fiscalYearEnd: { month: 12, day: 31 },
-  onConversionChange: vi.fn(),
   onTimeIntervalChange: vi.fn(),
 };
 
@@ -182,5 +183,61 @@ describe("financial statement export wiring", () => {
     expect(exported.sections[2].rows[0].amounts).toEqual([
       { unit: "USD", rawAmount: "-6.00", displayAmount: "6.00" },
     ]);
+  });
+
+  it("exports the Balance Sheet valued in the selected currency, not the ledger's own", () => {
+    const data = {
+      assetsHierarchyData: node("Assets", "100", [
+        node("Assets:Cash", "100", [], "EUR"),
+      ]),
+      liabilitiesHierarchyData: node("Liabilities", "-40", [], "EUR"),
+      equityHierarchyData: node("Equity", "-60", [], "EUR"),
+      netWorthData: [{ date: "2026-06-30", balance: { EUR: "0" } }],
+      assetsData: [],
+      liabilitiesData: [],
+      equityData: [],
+    } as unknown as GetLedgerBalanceSheetQuery["getLedgerBalanceSheet"];
+
+    render(
+      <BalanceSheetContent
+        {...sharedProps}
+        conversion="EUR"
+        balanceSheetData={data}
+      />,
+    );
+
+    const exported = captureDocument.mock
+      .lastCall?.[0] as StatementExportDocument;
+    expect(exported.context.primaryCurrency).toBe("EUR");
+    expect(exported.context.conversion).toBe("EUR");
+  });
+
+  it("exports the P&L valued in the selected currency, not the ledger's own", () => {
+    const data = {
+      incomeHierarchyData: node("Income", "-10", [], "EUR"),
+      expensesHierarchyData: node("Expenses", "4", [], "EUR"),
+      incomeData: [],
+      expensesData: [],
+      netProfitData: [
+        {
+          __typename: "DateAndBalance",
+          date: "2026-06-30",
+          balance: { EUR: "-6.00" },
+        },
+      ],
+    } as unknown as GetLedgerIncomeStatementQuery["getLedgerIncomeStatement"];
+
+    render(
+      <IncomeStatementContent
+        {...sharedProps}
+        conversion="EUR"
+        incomeStatementData={data}
+      />,
+    );
+
+    const exported = captureDocument.mock
+      .lastCall?.[0] as StatementExportDocument;
+    expect(exported.context.primaryCurrency).toBe("EUR");
+    expect(exported.context.conversion).toBe("EUR");
   });
 });

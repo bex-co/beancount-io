@@ -7,6 +7,11 @@ import koOverview from "../overview/locales/ko";
 import koExport from "../export/locales/ko";
 
 const koReportsShared = {
+  "reports.unconvertedUnits": {
+    message: "{currency} 기준 표시. {currency} 가격 없음: {units}.",
+    description:
+      "Muted disclosure note listing units with no price to the presentation currency, shared across report pages",
+  },
   "page.reports.hierarchyListDescription": {
     message:
       "{ledgerName}의 {sectionName} 상세 분석 (USD 및 기타 상품 값 포함)",

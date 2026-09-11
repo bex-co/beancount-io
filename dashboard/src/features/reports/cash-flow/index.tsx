@@ -6,7 +6,8 @@ import {
   GetLedgerCashFlowDocument,
   type SerializableTreeNode,
 } from "@/graphql/definitions";
-import type { ChartInterval, ConversionOption } from "@/common/types/chart";
+import type { ChartInterval } from "@/common/types/chart";
+import { resolvePresentationConversion } from "@/common/lib/ledger-search-params/conversion";
 import { cashFlowQueryDefaults } from "./constants";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
@@ -52,8 +53,9 @@ export default function LedgerCashFlowPage() {
   const [timeInterval, setTimeInterval] = useState<ChartInterval>(
     cashFlowQueryDefaults.interval,
   );
-  const [conversion, setConversion] = useState<ConversionOption>(
-    cashFlowQueryDefaults.conversion,
+  const conversion = resolvePresentationConversion(
+    ledgerFilters.searchParams.conversion,
+    ledgerData.options.operatingCurrency,
   );
 
   const {
@@ -156,7 +158,6 @@ export default function LedgerCashFlowPage() {
       ledgerNameParam={ledgerName}
       showClosedAccounts={getShowClosedAccounts(ledgerData)}
       conversion={conversion}
-      onConversionChange={setConversion}
       timeInterval={timeInterval}
       onTimeIntervalChange={setTimeInterval}
       filters={ledgerFilters.searchParams}

@@ -13,11 +13,13 @@ import { HierarchyList } from "../balance-sheet/hierarchy-list";
 import { HierarchyVisualizationCard } from "../balance-sheet/hierarchy-visualization-card";
 import { ChevronDown, ChevronUp, List } from "lucide-react";
 import type { ConversionOption } from "@/common/types/chart";
-import { ConversionSelect } from "@/common/components/conversion-select";
 import { useCookieStorageState } from "@/common/hooks/use-cookie-storage-state";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
+import { isCurrencyConversion } from "@/common/lib/ledger-search-params/conversion";
 import { filterAccountHierarchy } from "../balance-sheet/utils";
+import { collectHierarchyRecords, collectUnits } from "../export/units";
+import { UnconvertedUnitsNotice } from "../components/unconverted-units-notice";
 
 interface TrialBalanceContentProps {
   trialBalanceData: GetLedgerTrialBalanceQuery["getLedgerTrialBalance"];
@@ -26,7 +28,6 @@ interface TrialBalanceContentProps {
   ledgerOwner: string;
   ledgerNameParam: string;
   conversion: ConversionOption;
-  onConversionChange: (value: ConversionOption) => void;
   invertIncomeLiabilitiesEquity: boolean;
   showZeroBalance: boolean;
   showZeroTransactions: boolean;
@@ -42,7 +43,6 @@ export function TrialBalanceContent({
   ledgerOwner,
   ledgerNameParam,
   conversion,
-  onConversionChange,
   invertIncomeLiabilitiesEquity,
   showZeroBalance,
   showZeroTransactions,
@@ -96,6 +96,18 @@ export function TrialBalanceContent({
     trialBalanceData.equityHierarchyData as SerializableTreeNode,
     filterOptions,
   );
+  const unconvertedUnits = isCurrencyConversion(conversion)
+    ? collectUnits(
+        [
+          ...collectHierarchyRecords(assetsHierarchy),
+          ...collectHierarchyRecords(liabilitiesHierarchy),
+          ...collectHierarchyRecords(incomeHierarchy),
+          ...collectHierarchyRecords(expensesHierarchy),
+          ...collectHierarchyRecords(equityHierarchy),
+        ],
+        conversion,
+      )
+    : [];
 
   const hierarchyData = useMemo(() => {
     const opts = {
@@ -170,6 +182,9 @@ export function TrialBalanceContent({
           </div>
         </ClientOnly>
       </div>
+
+      <UnconvertedUnitsNotice currency={conversion} units={unconvertedUnits} />
+
       {/* Collapsible Chart Section */}
       <div
         className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
@@ -185,15 +200,6 @@ export function TrialBalanceContent({
                 setSelectedTab={setSelectedTab}
                 tabOptions={tabOptions}
               />
-              <ClientOnly>
-                <div className="items-center gap-2 hidden lg:flex">
-                  <ConversionSelect
-                    value={conversion}
-                    onValueChange={onConversionChange}
-                    currency={primaryCurrency}
-                  />
-                </div>
-              </ClientOnly>
             </div>
 
             {/* Assets Tab */}
