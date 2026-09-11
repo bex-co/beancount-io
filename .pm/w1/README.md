@@ -30,6 +30,5 @@
 - [016](./016.md) — Unterminated CSV quotes silently absorb subsequent transactions
 - [017](./017.md) — BQL JSON drops acquisition dates and labels from cost lots
 - [018](./018.md) — Report account regex errors are misclassified and help says substring
-- [019](./019.md) — Init rejects a one-satoshi BTC opening balance
 - [020](./020.md) — Filtered balance keeps unrelated totals and valuation requirements
 - [021](./021.md) — Tolerated ledger warnings corrupt subsequent JSON error output

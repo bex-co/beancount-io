@@ -126,8 +126,10 @@ def init(
     nonzero = {account: amount for account, amount in balances.items() if amount}
     if nonzero:
         content += f'\n{day} * "Opening balances"\n'
-        content += "".join(f"  {account}  {amount} {currency}\n" for account, amount in nonzero.items())
-        content += f"  Equity:OpeningBalances  {-sum(nonzero.values())} {currency}\n"
+        # Fixed-point text: str(Decimal) turns a one-satoshi balance into
+        # `1E-8`, which Beancount cannot parse as an amount.
+        content += "".join(f"  {account}  {amount:f} {currency}\n" for account, amount in nonzero.items())
+        content += f"  Equity:OpeningBalances  {-sum(nonzero.values()):f} {currency}\n"
     else:
         content += (
             "\n; Record opening balances with a transaction against Equity:OpeningBalances.\n"

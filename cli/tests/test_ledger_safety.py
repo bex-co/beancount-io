@@ -3,6 +3,7 @@
 import datetime
 import json
 import os
+import re
 import subprocess
 import sys
 from decimal import Decimal
@@ -446,3 +447,25 @@ def test_format_accepts_crlf_and_is_idempotent(tmp_path: Path) -> None:
     assert b"\r\r\n" not in file.read_bytes()
     result = runner.invoke(app, ["--json", "format", str(file), "--check"])
     assert result.exit_code == 0, result.output
+
+
+@pytest.mark.parametrize(
+    "balances", [["Assets:Checking 0.00000001"], ["Assets:Checking -0.00000001", "Assets:Savings 0.00000003"]]
+)
+def test_init_writes_tiny_opening_balances_as_fixed_point(tmp_path: Path, balances: list[str]) -> None:
+    args = ["--currency", "BTC", "--date", "2026-01-01"]
+    for balance in balances:
+        args += ["--opening-balance", balance]
+
+    result = runner.invoke(app, ["--json", "init", str(tmp_path), *args])
+
+    assert result.exit_code == 0, result.output
+    text = (tmp_path / "main.bean").read_text()
+    assert "E-" not in text
+    for balance in balances:
+        account, number = balance.split()
+        assert re.search(rf"{re.escape(account)} +{re.escape(number)} BTC", text)
+    check = runner.invoke(app, ["--json", "--file", str(tmp_path / "main.bean"), "check"])
+    assert check.exit_code == 0, check.output
+    total = -sum(Decimal(b.split()[1]) for b in balances)
+    assert re.search(rf"Equity:OpeningBalances +{total:f} BTC", text)
