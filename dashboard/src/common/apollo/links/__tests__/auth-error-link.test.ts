@@ -62,4 +62,12 @@ describe("buildUnauthenticatedLoginHref", () => {
       "/auth/login?next=%2Fledger%2Fopen_ledger%2Fbudgeting-envelopes%2Fcommits",
     );
   });
+
+  it("preserves Ask search so login return keeps question and mode", () => {
+    const next =
+      "/ledger/open_ledger/example/ask?mode=sandbox&q=qa-20260908-login-context+%2B+%E9%9B%B6+%26+savings&lang=en";
+    expect(buildUnauthenticatedLoginHref(next)).toBe(
+      `/auth/login?next=${encodeURIComponent(next)}`,
+    );
+  });
 });

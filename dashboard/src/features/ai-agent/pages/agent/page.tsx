@@ -26,6 +26,7 @@ import { AgentMessageList, type AgentUIMessage } from "./agent-message-list";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { getLedgerAgentCanonicalUrl } from "@/common/lib/seo/indexability";
 
+import { buildUnauthenticatedLoginHref } from "@/common/apollo/links/auth-error-link";
 import { useTempAssetUpload } from "@/features/importer/hooks/use-temp-asset-upload";
 import { useTempAssetDownloadUrl } from "./use-temp-asset-download-url";
 import {
@@ -46,10 +47,6 @@ export interface AgentPageImplProps {
    */
   chatApi?: string;
   /**
-   * Route suffix used for the login-return path. Defaults to "agent".
-   */
-  routeSuffix?: string;
-  /**
    * Extra fields merged into the request body — e.g. { conversationId, mode }
    * for the sandbox-agent route.
    */
@@ -58,7 +55,6 @@ export interface AgentPageImplProps {
 
 export function AgentPageImpl({
   chatApi = "agent",
-  routeSuffix = "agent",
   bodyExtra,
 }: AgentPageImplProps = {}) {
   // strict:false so this component works under both the /agent and /ask routes.
@@ -104,13 +100,14 @@ export function AgentPageImpl({
         fetch: async (url, options) => {
           const response = await fetch(url as string, options as RequestInit);
           if (response.status === 401) {
-            const currentPath = `/ledger/${ledgerOwner}/${ledgerName}/${routeSuffix}`;
-            window.location.href = `/auth/login?next=${encodeURIComponent(currentPath)}`;
+            // Keep q/mode/lang so login return can auto-submit the same Ask.
+            const next = window.location.pathname + window.location.search;
+            window.location.assign(buildUnauthenticatedLoginHref(next));
           }
           return response;
         },
       }),
-    [ledgerOwner, ledgerName, sessionId, chatApi, routeSuffix, bodyExtra],
+    [ledgerOwner, ledgerName, sessionId, chatApi, bodyExtra],
   );
 
   const initialMessages = useMemo<AgentUIMessage[]>(

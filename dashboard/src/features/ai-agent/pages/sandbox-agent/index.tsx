@@ -23,7 +23,6 @@ export default function SandboxAgentPage() {
     <ClientOnly>
       <AgentPageImpl
         chatApi="sandbox-agent"
-        routeSuffix="ask"
         bodyExtra={{ conversationId, mode: agentMode }}
       />
     </ClientOnly>
