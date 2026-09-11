@@ -10,24 +10,8 @@ import type { AppLinkTarget } from "./resolve-app-link";
 export { isOAuthCallbackUrl } from "./oauth-callback-url";
 
 export type OpenAppLinkResult =
-  { ok: true } | { ok: false; reason: "unreadable" | "aborted" };
-
-const TAB_PATHS = new Set([
-  "/",
-  "/transactions",
-  "/reports",
-  "/accounts",
-  "/ledger",
-  "/(app)/(tabs)",
-  "/(app)/(tabs)/transactions",
-  "/(app)/(tabs)/reports",
-  "/(app)/(tabs)/accounts",
-  "/(app)/(tabs)/ledger",
-]);
-
-function isTabsHref(href: Href): href is string {
-  return typeof href === "string" && TAB_PATHS.has(href);
-}
+  | { ok: true }
+  | { ok: false; reason: "unreadable" | "aborted" };
 
 /**
  * Wait until the root navigators (esp. iOS NativeTabs) have finished their
@@ -78,12 +62,10 @@ export async function openAppLinkTarget(args: {
     return { ok: false, reason: "aborted" };
   }
 
-  // Tab routes replace so a link doesn't stack a duplicate tabs frame on Home.
-  const href = target.href;
-  if (isTabsHref(href)) {
-    router.replace(href);
-  } else {
-    router.push(href as Href);
-  }
+  // Expo Router's +native-intent rewrite already navigates to `target.href`.
+  // Always replace: a second push stacked an identical screen so commit/entry
+  // deep links needed two Back taps. Tab links also replace so we do not stack
+  // a duplicate tabs frame on Home.
+  router.replace(target.href as Href);
   return { ok: true };
 }
