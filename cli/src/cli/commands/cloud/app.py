@@ -23,7 +23,7 @@ cloud_app.add_typer(ledger_app, name="ledger")
 
 @cloud_app.command("login")
 def cloud_login() -> None:
-    """Log in via the browser device flow (stores a session in ~/.config/bea/credentials.json)."""
+    """Log in via the browser device flow (stores credentials.json under $BEA_CONFIG_DIR, default ~/.config/bea)."""
     ctx = context.current()
     if ctx.no_input:
         from cli.errors import UsageError
