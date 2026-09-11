@@ -15,6 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/common/components/ui/popover.tsx";
+import { Button } from "@/common/components/ui/button.tsx";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerAccountsDocument } from "@/graphql/definitions.ts";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -37,17 +38,20 @@ export function AccountCombobox({ children }: AccountComboboxProps) {
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const navigate = useNavigate();
   const { setOpenMobile, isMobile } = useSidebar();
-  const { data } = useQuery(GetLedgerAccountsDocument, {
+  const { data, loading, error, refetch } = useQuery(GetLedgerAccountsDocument, {
     variables: { ledgerId: ledgerId },
     skip: !ledgerId || !open,
   });
 
-  const onOpenChange = useCallback((open: boolean) => {
-    setOpen(open);
+  const onOpenChange = useCallback((nextOpen: boolean) => {
+    setOpen(nextOpen);
   }, []);
 
-  const fullAccounts = data?.getLedgerAccounts || [];
+  const accountsLoaded = data?.getLedgerAccounts !== undefined;
+  const fullAccounts = data?.getLedgerAccounts ?? [];
   const accounts = generateAllAccountPaths(fullAccounts);
+  const showLoading = loading && !accountsLoaded;
+  const showError = Boolean(error) && !accountsLoaded && !loading;
 
   return (
     <div className="flex items-center space-x-4">
@@ -59,34 +63,61 @@ export function AccountCombobox({ children }: AccountComboboxProps) {
               placeholder={t("component.accountCombobox.placeholder")}
             />
             <CommandList>
-              <CommandEmpty>
-                {t("component.accountCombobox.noAccountsFound")}
-              </CommandEmpty>
-              <CommandGroup>
-                {accounts.map((acc) => (
-                  <CommandItem
-                    key={acc}
-                    value={acc}
-                    onSelect={(value) => {
-                      void navigate({
-                        to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
-                        params: {
-                          ledgerOwner: ledgerOwner,
-                          ledgerName: ledgerName,
-                          accountName: value,
-                        },
-                      });
-                      setOpen(false);
-                      // Close mobile sidebar after navigation
-                      if (isMobile) {
-                        setOpenMobile(false);
-                      }
+              {showLoading ? (
+                <div
+                  className="py-6 text-center text-sm text-muted-foreground"
+                  role="status"
+                >
+                  {t("common.loadingData")}
+                </div>
+              ) : showError ? (
+                <div className="flex flex-col items-center gap-2 px-3 py-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {t("common.failedToLoadData")}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      void refetch();
                     }}
                   >
-                    {acc}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+                    {t("common.tryAgain")}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <CommandEmpty>
+                    {t("component.accountCombobox.noAccountsFound")}
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {accounts.map((acc) => (
+                      <CommandItem
+                        key={acc}
+                        value={acc}
+                        onSelect={(value) => {
+                          void navigate({
+                            to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+                            params: {
+                              ledgerOwner: ledgerOwner,
+                              ledgerName: ledgerName,
+                              accountName: value,
+                            },
+                          });
+                          setOpen(false);
+                          // Close mobile sidebar after navigation
+                          if (isMobile) {
+                            setOpenMobile(false);
+                          }
+                        }}
+                      >
+                        {acc}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>

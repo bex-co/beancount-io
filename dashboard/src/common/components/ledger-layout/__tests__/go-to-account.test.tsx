@@ -57,6 +57,96 @@ describe("AccountCombobox", () => {
       },
       loading: false,
       error: undefined,
+      refetch: vi.fn(),
+    });
+  });
+
+  it("shows loading instead of empty while the first accounts read is pending", async () => {
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      loading: true,
+      error: undefined,
+      refetch: vi.fn(),
+    });
+
+    render(
+      <SidebarProvider>
+        <AccountCombobox>
+          <button>Go to Account</button>
+        </AccountCombobox>
+      </SidebarProvider>,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /go to account/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent(/loading/i);
+    });
+    expect(screen.queryByText(/no accounts found/i)).not.toBeInTheDocument();
+  });
+
+  it("shows a retry action when the accounts read fails", async () => {
+    const refetch = vi.fn().mockResolvedValue({});
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      loading: false,
+      error: new Error("network"),
+      refetch,
+    });
+
+    render(
+      <SidebarProvider>
+        <AccountCombobox>
+          <button>Go to Account</button>
+        </AccountCombobox>
+      </SidebarProvider>,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /go to account/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /try again/i }),
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/no accounts found/i)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /try again/i }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  it("shows empty only after a successful load with no accounts", async () => {
+    mockUseQuery.mockReturnValue({
+      data: { getLedgerAccounts: [] },
+      loading: false,
+      error: undefined,
+      refetch: vi.fn(),
+    });
+
+    render(
+      <SidebarProvider>
+        <AccountCombobox>
+          <button>Go to Account</button>
+        </AccountCombobox>
+      </SidebarProvider>,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /go to account/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/no accounts found/i)).toBeInTheDocument();
     });
   });
 
