@@ -37,8 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [098](./098.md) — BQL completion keeps the typed prefix before the suggested query
-
 - [099](./099.md) — BQL suggestions accumulate duplicates after returning to Query
 
 - [100](./100.md) — Mobile file editor retains the previous ledger document after a link switch
