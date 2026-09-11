@@ -677,7 +677,7 @@ advertised to a Homebrew installation before the tap can install them.
 
 ## JSON output
 
-Every read-side command accepts global `--json`: `check`, `query`, `list <type>`, all four `report` commands, `cloud status`, and `cloud ledger list`. `init`, `import`, `format`, and `add` also emit an envelope so a script can confirm what was written. Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
+Every read-side command accepts global `--json`: `check`, `query`, `list <type>`, all four `report` commands, `cloud status`, `cloud ledger list`, and `cloud ledger show`. `init`, `import`, `format`, `add`, `cloud ledger create`, and `cloud ledger delete` also emit an envelope so a script can confirm what was written (create returns the new ledger's metadata, delete the deleted ledger's id). Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
 
 The envelope is always:
 
