@@ -169,6 +169,9 @@ describe("AccountCombobox", () => {
     await waitFor(() => {
       expect(screen.getByRole("combobox")).toBeInTheDocument();
     });
+    expect(screen.getByRole("combobox")).toHaveAccessibleName(
+      /search accounts/i,
+    );
 
     // Type to search for an account
     const searchInput = screen.getByRole("combobox");

@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [074](./074.md) — Account and ledger search inputs have empty accessible names
 - [075](./075.md) — Token permission errors lack focus and field associations
 - [076](./076.md) — Cancel retains drafts in SSH setup and Open Account
 - [077](./077.md) — Opening another BQL history query cancels the first

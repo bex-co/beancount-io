@@ -245,7 +245,10 @@ function LedgerAuthenticatedSwitcher({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[300px] p-0" align="start">
-              <Command className="max-h-[min(340px,var(--radix-popover-content-available-height))] [&_[cmdk-input-wrapper]]:shrink-0">
+              <Command
+                label={t("page.dashboard.searchLedgers")}
+                className="max-h-[min(340px,var(--radix-popover-content-available-height))] [&_[cmdk-input-wrapper]]:shrink-0"
+              >
                 <CommandInput placeholder={t("page.dashboard.searchLedgers")} />
                 <CommandList className="min-h-0 flex-1">
                   <CommandEmpty>

@@ -66,7 +66,7 @@ export function AccountCombobox({ children }: AccountComboboxProps) {
           align={isMobile ? "end" : "start"}
           collisionPadding={8}
         >
-          <Command>
+          <Command label={t("component.accountCombobox.placeholder")}>
             <CommandInput
               placeholder={t("component.accountCombobox.placeholder")}
             />

@@ -127,6 +127,10 @@ describe("LedgerSwitcher", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Select a ledger" }));
 
+    expect(
+      screen.getByRole("combobox", { name: /search ledgers/i }),
+    ).toBeInTheDocument();
+
     const ledgerList = await screen.findByRole("listbox");
     const createButton = screen.getByRole("button", { name: "Create Ledger" });
     const manageButton = screen.getByRole("button", {
