@@ -1,7 +1,7 @@
 ---
 name: qa-find-bugs-dashboard
 description: >-
-  Exercise the running Beancount.io dashboard with Playwright, use QA_EMAIL and
+  Exercise the running Beancount.io dashboard with headless Playwright, use QA_EMAIL and
   QA_PASSWORD for login, reproduce bugs, trace fixes to source, and deduplicate
   findings. Use for dashboard QA or a browser bug hunt. Skip ordinary code review,
   bug implementation, and native-mobile QA (use qa-find-bugs-mobile).
@@ -16,6 +16,40 @@ Arguments: optional server URL, journey names, `wN`, `SHIP=1`, `DRY_RUN=1`.
 Default to production and report mode. A target URL changes the client under
 test; inspect its API origin independently. Record whether the running client
 matches local HEAD before declaring a source fix missing from production.
+
+## Run in the background
+
+- Default to a **headless browser with an isolated QA profile**. Keep the user's
+  windows, tabs, mouse, keyboard, and system clipboard undisturbed. A fresh
+  context inside a headed browser can still open a visible window; it does not
+  satisfy this requirement.
+- Launch Playwright MCP with `--headless --isolated`. For Claude Code, check
+  `mcpServers.playwright.args` in the repo's `.mcp.json`; for Codex, check the
+  active `[mcp_servers.playwright]` configuration, normally in
+  `~/.codex/config.toml`. Inspect effective launch settings, including overrides
+  and any attached-browser endpoint, before the first browser action. A config
+  edit takes effect on a new MCP server/browser session, not an already-running
+  headed session. Do not attach to the user's regular browser.
+- If the current MCP session is headed, establish a separate headless session
+  before continuing UI checks. An already available Playwright runtime in a
+  QA-owned process is an acceptable fallback when MCP cannot be restarted
+  safely. Preserve the same login and evidence workflow. If no background
+  session is available, report the UI checks as blocked and continue independent
+  source/API investigation; do not silently launch a visible browser or stop
+  another task's browser server.
+- Use Playwright's page/context APIs for clicks, typing, keyboard navigation,
+  focus assertions, viewport changes, screenshots, and downloads. Do not call
+  `bringToFront`, activate desktop apps, drive the OS mouse/keyboard, or open
+  downloaded artifacts in desktop viewers. Browser-local focus checks remain
+  part of accessibility QA.
+- For uploads, use file inputs/file-chooser APIs with authorized fixtures. For
+  print checks, inspect print media or a headless PDF where supported; this does
+  not verify the native print dialog. Run visible-browser, native-dialog, or
+  actual screen-reader checks only when explicitly requested. Otherwise record
+  that coverage as unverified and continue the background journeys.
+- Record the browser mode and session ownership with the run evidence. Reuse
+  the owned headless browser with fresh contexts as needed, and close only this
+  run's contexts, browsers, and helper processes during cleanup.
 
 ## Prepare the browser
 
