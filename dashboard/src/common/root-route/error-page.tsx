@@ -1,5 +1,10 @@
 import { useEffect } from "react";
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import {
+  Link,
+  useNavigate,
+  useRouter,
+  useRouterState,
+} from "@tanstack/react-router";
 import { Home, ArrowLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/common/components/ui/button.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
@@ -21,9 +26,16 @@ import { isUnauthenticatedError } from "@/common/apollo/links/auth-error-link";
 export default function ErrorPage({ error, reset }: ErrorComponentProps) {
   const { t } = useTranslations();
   const navigate = useNavigate();
+  const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const unauthenticated = isUnauthenticatedError(error);
+
+  const handleRetry = () => {
+    void router.invalidate().finally(() => {
+      reset();
+    });
+  };
 
   useEffect(() => {
     if (!unauthenticated) return;
@@ -108,7 +120,7 @@ export default function ErrorPage({ error, reset }: ErrorComponentProps) {
               <Button
                 variant="outline"
                 size="lg"
-                onClick={reset}
+                onClick={handleRetry}
                 className="min-w-[140px]"
               >
                 {t("common.tryAgain")}

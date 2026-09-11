@@ -5,11 +5,13 @@ import { LedgerRouteError } from "../ledger-route-error";
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
+  invalidate: vi.fn(() => Promise.resolve()),
   unauthenticated: false,
 }));
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mocks.navigate,
+  useRouter: () => ({ invalidate: mocks.invalidate }),
   useRouterState: ({ select }: { select: (state: unknown) => unknown }) =>
     select({ location: { pathname: "/ledger/alice/books/commits" } }),
 }));
@@ -67,7 +69,10 @@ describe("LedgerRouteError", () => {
         ?.getAttribute("content"),
     ).toBe("noindex, follow");
     await user.click(screen.getByRole("button", { name: "Retry" }));
-    expect(reset).toHaveBeenCalledOnce();
+    expect(mocks.invalidate).toHaveBeenCalledOnce();
+    await waitFor(() => {
+      expect(reset).toHaveBeenCalledOnce();
+    });
   });
 
   it("preserves the existing unauthenticated redirect contract", async () => {
