@@ -833,3 +833,31 @@ def test_shared_csv_headers_require_account_and_preserve_each_mapping(
     purchases = {entry.payee: entry for entry in entries if isinstance(entry, Transaction)}
     assert [p.account for p in purchases["Cafe"].postings] == ["Assets:Checking", "Expenses:Uncategorized"]
     assert [p.account for p in purchases["Savings fee"].postings] == ["Assets:Savings", "Expenses:Fees"]
+
+
+def test_zero_postings_do_not_block_imports_into_the_account(book: Path, isolated_config: Path) -> None:
+    """Beancount's Amount is falsy at zero; a `0 USD` posting is explicit, not missing."""
+    with book.open("a") as stream:
+        stream.write('2026-08-01 * "Zero"\n  Assets:Checking 0 USD\n  Assets:Savings 0 USD\n')
+    rows = CSV_HEADER + "2026-08-02,Shop,Purchase,-10\n2026-08-03,Shop,Nothing,0\n"
+
+    result = csv_result(book, rows, "--apply")
+
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.stdout)["data"]
+    assert data["written"] == 2
+    assert sorted(row["amount"] for row in data["rows"]) == ["-10 USD", "0 USD"]
+    entries, errors, _ = loader.load_file(book)
+    assert not errors
+    amounts = [
+        str(p.units)
+        for e in entries
+        if isinstance(e, Transaction)
+        for p in e.postings
+        if p.account == "Assets:Checking"
+    ]
+    assert amounts == ["0 USD", "-10 USD", "0 USD"]
+
+    again = csv_result(book, rows, "--apply")
+    assert again.exit_code == 0, again.output
+    assert json.loads(again.stdout)["data"]["written"] == 0

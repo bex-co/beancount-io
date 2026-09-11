@@ -203,17 +203,26 @@ def _name(importer: Any) -> str:
     return name
 
 
+def _has_explicit_units(posting: Any) -> bool:
+    """True when the posting carries a real amount — including an explicit zero.
+
+    Beancount's `Amount` is falsy at zero, so a truthiness test here would read
+    `0 USD` as a missing amount and refuse a legitimate import.
+    """
+    units = posting.units
+    return units is not None and isinstance(getattr(units, "number", None), Decimal)
+
+
+def _source_postings(entry: Any, account: str) -> list[Any]:
+    return [p for p in entry.postings if p.account == account and _has_explicit_units(p)]
+
+
 def _fingerprint(entry: Any, account: str) -> tuple[Any, ...]:
     """A possible match, never proof: two real purchases can have these values."""
-    source_postings = [p for p in entry.postings if p.account == account]
-    if any(not p.units or not isinstance(p.units.number, Decimal) for p in source_postings):
+    if any(not _has_explicit_units(p) for p in entry.postings if p.account == account):
         raise LedgerError(f"The importer must supply explicit source amounts for {account} before duplicate matching.")
     amounts = tuple(
-        sorted(
-            (str(p.units.number.normalize()), p.units.currency)
-            for p in entry.postings
-            if p.account == account and p.units
-        )
+        sorted((str(p.units.number.normalize()), p.units.currency) for p in _source_postings(entry, account))
     )
     return (
         entry.date,
@@ -280,8 +289,7 @@ def _hash_import_id(entry: Any, account: str, seen: dict[str, int]) -> str:
     file take an occurrence suffix (`…|account|2`) so N identical rows map to
     N distinct entries while re-imports still match 1:1.
     """
-    source = [p for p in entry.postings if p.account == account and p.units]
-    amounts = sorted((p.units.number, p.units.currency) for p in source)
+    amounts = sorted((p.units.number, p.units.currency) for p in _source_postings(entry, account))
     if len(amounts) == 1:
         normalized_amount = f"{amounts[0][0]:.2f}"
     else:
@@ -299,7 +307,7 @@ def _candidate_key(entry: Any, account: str) -> tuple[Any, ...]:
 
 
 def _source_amounts(entry: Any, account: str) -> str:
-    return ", ".join(f"{p.units.number} {p.units.currency}" for p in entry.postings if p.account == account and p.units)
+    return ", ".join(f"{p.units.number} {p.units.currency}" for p in _source_postings(entry, account))
 
 
 def import_entries(

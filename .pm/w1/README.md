@@ -25,7 +25,6 @@
 
 ## CLI QA inbox
 
-- [012](./012.md) — A zero posting blocks CLI imports into its account
 - [013](./013.md) — Small scalar numbers are written as commodity amounts
 - [014](./014.md) — CSV import rejects documented whitespace-trimmed headers
 - [015](./015.md) — Duplicate CSV amount columns silently choose the last value
