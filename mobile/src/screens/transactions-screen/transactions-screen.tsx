@@ -36,6 +36,7 @@ import {
   JournalSection,
   groupToSections,
 } from "./utils/transaction-display-utils";
+import { toPlainSearchFilter } from "./utils/plain-search-filter";
 import {
   countActiveFilters,
   toFilterQuery,
@@ -99,9 +100,10 @@ const TransactionList = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Search runs server-side through `query.filter`, so it reaches transactions
-  // past the first page — but only once typing settles.
+  // past the first page — but only once typing settles. Quote + escape so
+  // ordinary merchant punctuation is a STRING literal, not advanced-filter syntax.
   const search = useDebouncedValue(searchQuery.trim(), 300);
-  const filter = search || undefined;
+  const filter = useMemo(() => toPlainSearchFilter(search), [search]);
 
   // Status / date range / account, picked in the filter modal. Like the search
   // they narrow the query itself, so paging stays consistent with the filter.
