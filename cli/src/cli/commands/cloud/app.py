@@ -43,11 +43,21 @@ def cloud_logout() -> None:
     """Revoke the token and clear stored credentials."""
     from cli.api.client import bearer_client, unwrap
     from cli.api.rest_client.api.ledger_v_1 import logout
-    from cli.auth.credentials import clear_credentials, load_credentials
+    from cli.auth.credentials import ENVIRONMENT, clear_credentials, load_credentials
 
     creds = load_credentials()
     if creds is None:
         output.success("Already logged out.")
+        return
+    if creds.source == ENVIRONMENT:
+        # `BEA_TOKEN` is the shared, unattended credential: a CI job or a
+        # teammate may be using the same value right now. Revoking it from a
+        # routine logout would silently kill every other consumer, and this
+        # process cannot unset the caller's shell anyway.
+        output.success(
+            "BEA_TOKEN is set in this shell; 'bea cloud logout' leaves it "
+            "unchanged and does not revoke it. Unset BEA_TOKEN to stop using it."
+        )
         return
     try:
         unwrap(logout.sync_detailed(client=bearer_client(creds.token)))
