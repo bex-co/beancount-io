@@ -40,6 +40,14 @@ const ukAiAgent: Record<string, TranslationEntry> = {
     message: "Запитати",
     description: "Button text to submit quick question",
   },
+  "aiAgent.stop": {
+    message: "Зупинити",
+    description: "Accessible name for stopping an in-progress AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Генерацію зупинено",
+    description: "Toast shown after the user stops an in-progress AI response",
+  },
   "aiAgent.upgradeTitle": {
     message: "Запити до ШІ закінчуються",
     description: "Title for upgrade panel when near AI usage cap",

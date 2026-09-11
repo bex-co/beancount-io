@@ -123,13 +123,16 @@ export function AgentPageImpl({
     [],
   );
 
-  const { messages, sendMessage, status, addToolApprovalResponse } =
+  const { messages, sendMessage, status, stop, addToolApprovalResponse } =
     useChat<AgentUIMessage>({
       transport,
       messages: initialMessages,
       sendAutomaticallyWhen:
         lastAssistantMessageIsCompleteWithApprovalResponses,
       onError: (error) => {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
         console.error("Agent chat error:", error);
         toast.error(formatError(error));
       },
@@ -367,6 +370,10 @@ export function AgentPageImpl({
                 value={input}
                 onValueChange={setInput}
                 onSubmit={() => void handleSubmit()}
+                onStop={() => {
+                  stop();
+                  toast.message(t("aiAgent.stopped"));
+                }}
                 placeholder={t("aiAgent.placeholder")}
                 disabled={isLoading}
                 stagedFiles={stagedFiles}

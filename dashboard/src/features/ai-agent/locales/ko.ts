@@ -37,6 +37,14 @@ const koAiAgent: Record<string, TranslationEntry> = {
     message: "질문",
     description: "Button text to submit quick question",
   },
+  "aiAgent.stop": {
+    message: "중지",
+    description: "Accessible name for stopping an in-progress AI response",
+  },
+  "aiAgent.stopped": {
+    message: "생성이 중지되었습니다",
+    description: "Toast shown after the user stops an in-progress AI response",
+  },
   "aiAgent.upgradeTitle": {
     message: "AI 요청이 얼마 남지 않았습니다",
     description: "Title for upgrade panel when near AI usage cap",

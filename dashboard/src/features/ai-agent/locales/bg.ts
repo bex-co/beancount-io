@@ -40,6 +40,14 @@ const bgAiAgent: Record<string, TranslationEntry> = {
     message: "Попитай",
     description: "Button text to submit quick question",
   },
+  "aiAgent.stop": {
+    message: "Стоп",
+    description: "Accessible name for stopping an in-progress AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Генерирането е спряно",
+    description: "Toast shown after the user stops an in-progress AI response",
+  },
   "aiAgent.upgradeTitle": {
     message: "AI заявките свършват",
     description: "Title for upgrade panel when near AI usage cap",

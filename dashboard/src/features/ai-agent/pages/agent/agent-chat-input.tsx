@@ -8,6 +8,7 @@ import {
   FileImage,
   Loader2,
   Paperclip,
+  Square,
   X,
 } from "lucide-react";
 import type { StagedFile } from "./attachment";
@@ -16,6 +17,7 @@ interface AgentChatInputProps {
   value: string;
   onValueChange: (value: string) => void;
   onSubmit: () => void;
+  onStop?: () => void;
   disabled?: boolean;
   placeholder?: string;
   stagedFiles?: StagedFile[];
@@ -104,6 +106,7 @@ export function AgentChatInput({
   value,
   onValueChange,
   onSubmit,
+  onStop,
   disabled,
   placeholder,
   stagedFiles = [],
@@ -251,23 +254,40 @@ export function AgentChatInput({
           <Paperclip className="h-4 w-4" />
         </Button>
 
-        <Button
-          type="submit"
-          size="icon-sm"
-          disabled={!canSend}
-          className="shrink-0 rounded-full"
-          aria-label={t("aiAgent.ask")}
-          onClick={(e) => {
-            e.preventDefault();
-            onSubmit();
-          }}
-        >
-          {anyUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <CornerDownLeft className="h-4 w-4" />
-          )}
-        </Button>
+        {disabled && onStop ? (
+          <Button
+            type="button"
+            size="icon-sm"
+            className="shrink-0 rounded-full"
+            aria-label={t("aiAgent.stop")}
+            onClick={() => {
+              onStop();
+              requestAnimationFrame(() => {
+                textareaRef.current?.focus();
+              });
+            }}
+          >
+            <Square className="h-3.5 w-3.5 fill-current" />
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            size="icon-sm"
+            disabled={!canSend}
+            className="shrink-0 rounded-full"
+            aria-label={t("aiAgent.ask")}
+            onClick={(e) => {
+              e.preventDefault();
+              onSubmit();
+            }}
+          >
+            {anyUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CornerDownLeft className="h-4 w-4" />
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

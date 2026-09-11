@@ -40,6 +40,14 @@ const enAiAgent: Record<string, TranslationEntry> = {
     message: "Ask",
     description: "Button text to submit quick question",
   },
+  "aiAgent.stop": {
+    message: "Stop",
+    description: "Accessible name for stopping an in-progress AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Generation stopped",
+    description: "Toast shown after the user stops an in-progress AI response",
+  },
   "aiAgent.upgradeTitle": {
     message: "Running low on AI tokens",
     description: "Title for upgrade panel when near AI usage cap",

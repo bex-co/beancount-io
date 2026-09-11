@@ -40,6 +40,14 @@ const nlAiAgent: Record<string, TranslationEntry> = {
     message: "Vragen",
     description: "Button text to submit quick question",
   },
+  "aiAgent.stop": {
+    message: "Stoppen",
+    description: "Accessible name for stopping an in-progress AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Generatie gestopt",
+    description: "Toast shown after the user stops an in-progress AI response",
+  },
   "aiAgent.upgradeTitle": {
     message: "AI-verzoeken raken op",
     description: "Title for upgrade panel when near AI usage cap",

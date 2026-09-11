@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [080](./080.md) — Ask has no control to stop a pending request
 - [081](./081.md) — Ask network failures offer no retry of the submitted question
 - [082](./082.md) — Ask sign-in can discard the question and selected mode
 - [083](./083.md) — A background quota read redirects guests from the empty Ask page

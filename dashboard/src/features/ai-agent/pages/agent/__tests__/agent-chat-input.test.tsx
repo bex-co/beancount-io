@@ -160,4 +160,24 @@ describe("AgentChatInput type-to-focus", () => {
 
     expect(onSubmit).toHaveBeenCalledOnce();
   });
+
+  it("shows a Stop control while disabled and invokes onStop", async () => {
+    const user = userEvent.setup();
+    const onStop = vi.fn();
+    render(
+      <AgentChatInput
+        value=""
+        onValueChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onStop={onStop}
+        disabled
+        placeholder="Ask anything"
+      />,
+    );
+
+    const stop = screen.getByRole("button", { name: /^stop$/i });
+    expect(screen.queryByRole("button", { name: /^ask$/i })).not.toBeInTheDocument();
+    await user.click(stop);
+    expect(onStop).toHaveBeenCalledOnce();
+  });
 });
