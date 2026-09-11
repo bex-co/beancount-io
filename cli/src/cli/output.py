@@ -156,7 +156,14 @@ def jsonable(value: Any) -> Any:
     number = getattr(value, "number", None)
     currency = getattr(value, "currency", None)
     if number is not None and currency is not None:
-        return {"number": jsonable(number), "currency": currency}
+        amount = {"number": jsonable(number), "currency": currency}
+        if hasattr(value, "date") and hasattr(value, "label"):
+            # A Cost is an Amount plus the lot's acquisition date and label —
+            # the two fields that tell one lot from another. Dropping them
+            # would make two distinct lots read as duplicates.
+            amount["date"] = jsonable(value.date)
+            amount["label"] = value.label
+        return amount
 
     for attr in ("model_dump", "_asdict"):
         method = getattr(value, attr, None)

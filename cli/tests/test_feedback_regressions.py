@@ -377,3 +377,21 @@ def test_query_still_fails_a_missing_file_with_url_characters(tmp_path: Path) ->
 
     assert result.exit_code == 2
     assert "missing#x.bean" in result.stderr
+
+
+def test_query_json_keeps_both_lots_of_an_inventory(tmp_path: Path) -> None:
+    file = tmp_path / "main.bean"
+    file.write_text(
+        "2026-01-01 open Assets:Stock AAPL\n2026-01-01 open Assets:Cash USD\n"
+        '2026-02-01 * "First"\n  Assets:Stock 1 AAPL {100 USD, "first"}\n  Assets:Cash -100 USD\n'
+        '2026-02-02 * "Second"\n  Assets:Stock 1 AAPL {100 USD, "second"}\n  Assets:Cash -100 USD\n'
+    )
+
+    result = run(file, "query", "SELECT sum(position) WHERE account = 'Assets:Stock'")
+
+    assert result.exit_code == 0, result.output
+    [[lots]] = json.loads(result.stdout)["data"]["rows"]
+    assert sorted((lot["cost"]["date"], lot["cost"]["label"]) for lot in lots) == [
+        ("2026-02-01", "first"),
+        ("2026-02-02", "second"),
+    ]

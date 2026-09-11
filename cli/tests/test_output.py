@@ -99,3 +99,32 @@ def test_terminal_keeps_fitting_rows_single_line(monkeypatch: pytest.MonkeyPatch
 
     assert len(lines) == 3
     assert "Expenses:Dining:AVeryLongRestaurantName: 12.50 USD; Assets:Checking: -12.50 USD" in lines[2]
+
+
+def test_jsonable_keeps_lot_dates_and_labels_on_costs() -> None:
+    import datetime
+    from decimal import Decimal
+
+    from beancount.core.amount import Amount
+    from beancount.core.inventory import Inventory
+    from beancount.core.position import Cost, Position
+
+    from cli.output import jsonable
+
+    first = Position(Amount(Decimal("1"), "AAPL"), Cost(Decimal("100"), "USD", datetime.date(2026, 2, 1), "first"))
+    second = Position(Amount(Decimal("1"), "AAPL"), Cost(Decimal("100"), "USD", datetime.date(2026, 2, 2), "second"))
+    inventory = Inventory([first, second])
+
+    assert jsonable(Amount(Decimal("5"), "USD")) == {"number": "5", "currency": "USD"}
+    assert jsonable(Position(Amount(Decimal("5"), "USD"), None)) == {
+        "units": {"number": "5", "currency": "USD"},
+        "cost": None,
+    }
+    assert jsonable(first)["cost"] == {"number": "100", "currency": "USD", "date": "2026-02-01", "label": "first"}
+    assert jsonable(Cost(Decimal("1"), "USD", None, None)) == {
+        "number": "1",
+        "currency": "USD",
+        "date": None,
+        "label": None,
+    }
+    assert sorted(lot["cost"]["label"] for lot in jsonable(inventory)) == ["first", "second"]
