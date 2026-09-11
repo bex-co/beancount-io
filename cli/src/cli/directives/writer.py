@@ -84,6 +84,14 @@ def normalize_entry_strings(entry: Any) -> Any:
     return entry
 
 
+def _escape_cost_label(posting: Posting) -> Posting:
+    cost = posting.cost
+    label = getattr(cost, "label", None)
+    if cost is None or not isinstance(label, str):
+        return posting
+    return posting._replace(cost=cost._replace(label=escape_string(label)))
+
+
 def format_entry(entry: Any) -> str:
     """Fill upstream printer escaping gaps without changing the input entry."""
     entry = normalize_entry_strings(entry)
@@ -99,6 +107,11 @@ def format_entry(entry: Any) -> str:
         entry = entry._replace(
             values=[_ValueType(escape_string(v.value) if v.dtype is str else v.value, v.dtype) for v in entry.values]
         )
+    if isinstance(entry, Transaction):
+        # Upstream quotes a lot label but never escapes it, so `lot\A` reloads
+        # as `lotA` and a quote inside breaks the line. Cost and CostSpec are
+        # both namedtuples; copy rather than mutate the caller's value.
+        entry = entry._replace(postings=[_escape_cost_label(p) for p in entry.postings])
     rendered = str(upstream_format_entry(entry))
     first, separator, rest = rendered.partition("\n")
     if isinstance(entry, Open | Balance):

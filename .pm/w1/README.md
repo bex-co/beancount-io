@@ -25,7 +25,6 @@
 
 ## CLI QA inbox
 
-- [011](./011.md) — Cost labels lose backslashes when CLI transactions are written
 - [012](./012.md) — A zero posting blocks CLI imports into its account
 - [013](./013.md) — Small scalar numbers are written as commodity amounts
 - [014](./014.md) — CSV import rejects documented whitespace-trimmed headers

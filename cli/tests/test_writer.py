@@ -267,3 +267,69 @@ class TestWriteCustom:
         assert "1000" in content
         assert "500 USD" in content
         assert "Assets:Cash" in content
+
+
+class TestCostLabelEscaping:
+    """Lot labels are quoted by the upstream printer but never escaped."""
+
+    @staticmethod
+    def _stock_book(tmp_path: Path) -> Path:
+        file = tmp_path / "main.bean"
+        file.write_text("2026-01-01 open Assets:Stock AAPL\n2026-01-01 open Assets:Cash USD\n")
+        return file
+
+    @pytest.mark.parametrize("label", ["lot\\A", 'say "hi"', "lot-one", "back\\\\slash"])
+    def test_label_survives_a_write_and_reload(self, tmp_path: Path, label: str) -> None:
+        from beancount import loader
+        from beancount.core.data import Transaction
+
+        from cli.directives.models import Cost
+
+        file = self._stock_book(tmp_path)
+        directive = TransactionDirective(
+            date=datetime.date(2026, 2, 1),
+            narration="Buy",
+            postings=[
+                Posting(
+                    account="Assets:Stock",
+                    units=Amount(number=Decimal("1"), currency="AAPL"),
+                    cost=Cost(number=Decimal("100"), currency="USD", label=label),
+                ),
+                Posting(account="Assets:Cash", units=Amount(number=Decimal("-100"), currency="USD")),
+            ],
+        )
+        writer.write_transaction(file, directive)
+
+        assert directive.postings[0].cost is not None and directive.postings[0].cost.label == label
+        entries, errors, _ = loader.load_file(str(file))
+        assert not errors, errors
+        [txn] = [e for e in entries if isinstance(e, Transaction)]
+        assert txn.postings[0].cost.label == label
+
+    def test_a_native_label_is_not_double_escaped(self, tmp_path: Path) -> None:
+        """`add transaction -p` parses native syntax first; the parsed label must be escaped once."""
+        from typer.testing import CliRunner
+
+        from cli.main import app
+
+        file = self._stock_book(tmp_path)
+        result = CliRunner().invoke(
+            app,
+            [
+                "--file",
+                str(file),
+                "add",
+                "transaction",
+                "Buy",
+                "--date",
+                "2026-02-01",
+                "-p",
+                'Assets:Stock 1 AAPL {100 USD, "lot\\\\A"}',
+                "-p",
+                "Assets:Cash -100 USD",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert '"lot\\\\A"' in file.read_text()
+        listing = CliRunner().invoke(app, ["--json", "--file", str(file), "list", "transaction"])
+        assert '"label": "lot\\\\A"' in listing.stdout
