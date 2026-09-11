@@ -76,12 +76,16 @@ def cloud_status() -> None:
     from cli.api.client import bearer_client, unwrap_or_none
     from cli.api.rest_client.api.ledger_v_1 import get_user_profile
     from cli.auth.credentials import require_credentials
-    from cli.errors import AuthError
+    from cli.errors import error_from_status
 
     creds = require_credentials()
     user = unwrap_or_none(get_user_profile.sync_detailed(client=bearer_client(creds.token)))
     if user is None:
-        raise AuthError("Not authenticated. Run 'bea cloud login'.")
+        # A revoked or unknown bearer answers this endpoint with an empty
+        # profile rather than a 401. Report it exactly the way every other
+        # hosted command reports a rejected credential, so a script that
+        # branches on the message sees one auth story.
+        raise error_from_status(401, f"the server does not recognize this {creds.source} credential")
     # The generated model marks optional fields with `Unset`, which is neither
     # printable nor JSON-serializable; normalize once here.
     username = user.username if isinstance(user.username, str) else None

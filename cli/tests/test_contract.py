@@ -327,6 +327,26 @@ class TestJsonOutput:
         assert data["source"] == "environment"
         assert data["email"] == "a@example.com"
 
+    def test_a_revoked_credential_reads_the_same_on_status_and_list(
+        self, logged_in: None, httpx_mock: HTTPXMock
+    ) -> None:
+        # The profile endpoint answers a dead bearer with an empty body while
+        # the ledger endpoints answer 401; both must surface as one auth story.
+        httpx_mock.add_response(url=f"{V1}/user-profile", content=b"null", headers={"Content-Type": "application/json"})
+        httpx_mock.add_response(
+            url=f"{V1}/ledgers?page=1&limit=50", status_code=401, json=v1_error("UNAUTHENTICATED", "x")
+        )
+
+        status = runner.invoke(app, ["--json", "cloud", "status"])
+        listing = runner.invoke(app, ["--json", "cloud", "ledger", "list"])
+
+        assert status.exit_code == listing.exit_code == 3
+        for result in (status, listing):
+            assert error_object(result)["category"] == "auth"
+            assert error_object(result)["message"].startswith("Not authorized (")
+            assert "bea cloud login" in error_object(result)["message"]
+        assert "environment" in error_object(status)["message"]
+
     def test_ledger_list_emits_the_envelope(self, logged_in: None, httpx_mock: HTTPXMock) -> None:
         httpx_mock.add_response(url=f"{V1}/ledgers?page=1&limit=50", json=[ledger_item()])
 
