@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [091](./091.md) — Open Account accepts names that are not complete account tokens
 - [092](./092.md) — Keyboard Save bypasses the file editor's pending-write protection
 
 - [093](./093.md) — Mobile transaction search rejects punctuation in existing merchant names
