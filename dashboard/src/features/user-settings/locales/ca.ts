@@ -81,13 +81,14 @@ const caUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "Crear clau d'API nova",
-    description: "Dialog title for creating API key",
+    message: "Crea una clau SSH nova",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
     message:
-      "Afegeix una clau pública nova per autenticar-te amb l'API de Beancount.",
-    description: "Dialog description for creating API key",
+      "Afegeix una clau pública SSH nova per a l’accés al repositori Git.",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "Crear clau nova",

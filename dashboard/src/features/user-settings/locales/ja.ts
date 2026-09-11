@@ -52,12 +52,13 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "新しいAPIキーを作成",
-    description: "Dialog title for creating API key",
+    message: "新しい SSH キーを作成",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
-    message: "Beancount APIで認証するための新しい公開鍵を追加します。",
-    description: "Dialog description for creating API key",
+    message: "Git リポジトリへのアクセス用に新しい SSH 公開鍵を追加します。",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "新しいキーを作成",

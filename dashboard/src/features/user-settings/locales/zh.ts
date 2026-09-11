@@ -80,12 +80,13 @@ const zhUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "创建新 API 密钥",
-    description: "Dialog title for creating API key",
+    message: "创建新 SSH 密钥",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
-    message: "添加新的公钥以通过 Beancount API 进行身份验证。",
-    description: "Dialog description for creating API key",
+    message: "添加新的 SSH 公钥以访问 Git 仓库。",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "创建新密钥",

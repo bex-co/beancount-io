@@ -81,13 +81,14 @@ const deUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "Neuen API-Schlüssel erstellen",
-    description: "Dialog title for creating API key",
+    message: "Neuen SSH-Schlüssel erstellen",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
     message:
-      "Fügen Sie einen neuen öffentlichen Schlüssel hinzu, um sich bei der Beancount-API zu authentifizieren.",
-    description: "Dialog description for creating API key",
+      "Fügen Sie einen neuen öffentlichen SSH-Schlüssel für den Git-Repository-Zugriff hinzu.",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "Neuen Schlüssel erstellen",

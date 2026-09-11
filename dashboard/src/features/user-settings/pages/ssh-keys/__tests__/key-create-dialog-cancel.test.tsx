@@ -27,6 +27,15 @@ describe("KeyCreateDialog cancel resets draft", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "New SSH key" }));
 
+    expect(
+      screen.getByRole("heading", { name: "Create New SSH Key" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Add a new SSH public key for Git repository access.",
+      ),
+    ).toBeInTheDocument();
+
     const title = screen.getByLabelText("Key Title");
     const publicKey = screen.getByLabelText("Public Key");
     fireEvent.change(title, { target: { value: "qa-discard" } });

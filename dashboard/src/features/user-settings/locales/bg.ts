@@ -81,12 +81,13 @@ const bgUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "Създаване на нов API ключ",
-    description: "Dialog title for creating API key",
+    message: "Създаване на нов SSH ключ",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
-    message: "Добавете нов публичен ключ за удостоверяване с Beancount API.",
-    description: "Dialog description for creating API key",
+    message: "Добавете нов публичен SSH ключ за достъп до Git хранилището.",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "Създаване на нов ключ",

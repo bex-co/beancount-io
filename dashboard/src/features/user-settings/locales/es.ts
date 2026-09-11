@@ -81,13 +81,14 @@ const esUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "Crear Nueva Clave API",
-    description: "Dialog title for creating API key",
+    message: "Crear nueva clave SSH",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
     message:
-      "Agregue una nueva clave pública para autenticarse con la API de Beancount.",
-    description: "Dialog description for creating API key",
+      "Añade una nueva clave pública SSH para acceder al repositorio Git.",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "Crear Nueva Clave",

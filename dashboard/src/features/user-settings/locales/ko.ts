@@ -48,12 +48,13 @@ const koUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to create key",
   },
   "userSettings.createNewApiKey": {
-    message: "새 API 키 생성",
-    description: "Dialog title for creating API key",
+    message: "새 SSH 키 만들기",
+    description: "Dialog title for creating an SSH public key",
   },
   "userSettings.createNewApiKeyDescription": {
-    message: "Beancount API 인증을 위한 새 공개 키를 추가합니다.",
-    description: "Dialog description for creating API key",
+    message: "Git 저장소 접근을 위한 새 SSH 공개 키를 추가합니다.",
+    description:
+      "Dialog description for creating an SSH public key for Git access",
   },
   "userSettings.createNewKey": {
     message: "새 키 생성",
