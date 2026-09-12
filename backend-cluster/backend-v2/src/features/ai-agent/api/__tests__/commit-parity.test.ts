@@ -11,6 +11,7 @@ import { CommitsResolver } from "@/features/gitea/commits/api/commits-resolver";
 import { CommitsService } from "@/features/gitea/commits/service/commits-service";
 import { AuthorizationService } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { formatError } from "@/server/graphql/format-error";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import {
   startV1TestServer,
@@ -269,8 +270,17 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
       const result = await f.gql(
         `getCommitDetails(ledgerId: "alice/main", sha: "${sha}") { sha }`,
       );
-      expect(result.data?.getCommitDetails).toBeNull();
-      expect(result.errors?.[0]?.extensions?.code).toBe("NOT_FOUND");
+      // `getCommitDetails` is non-nullable, so a throw nulls `data` itself
+      // rather than the field; and raw `graphql()` bypasses Apollo's
+      // `formatError`, which is what puts the category in `extensions.code`.
+      // Run that formatter here so the NOT_FOUND mapping is proven on the
+      // GraphQL surface rather than assumed.
+      expect(result.data).toBeNull();
+      const [graphqlError] = result.errors ?? [];
+      expect(graphqlError).toBeDefined();
+      expect(
+        formatError(graphqlError.toJSON(), graphqlError).extensions?.code,
+      ).toBe("NOT_FOUND");
     } finally {
       await f.close();
     }
