@@ -3,24 +3,23 @@ import type { MobileConsentSearch } from "./mobile-consent-search";
 export type MobileOAuthConsentState =
   | { step: "login" | "forgot_password" | "register" }
   | { step: "otp"; sessionId: string; email: string }
-  | { step: "continue"; email: string }
-  | { step: "returning"; email?: string; error?: string };
+  | { step: "choose_account"; email: string }
+  | { step: "approve"; email?: string };
 
 export type MobileOAuthConsentAction =
   | { type: "show_login" }
   | { type: "show_forgot_password" }
   | { type: "show_register" }
   | { type: "registration_submitted"; sessionId: string; email: string }
-  | { type: "authenticated"; email?: string }
-  | { type: "return_failed"; email?: string; error: string }
-  | { type: "retry_return" };
+  | { type: "authenticated"; email?: string };
 
 export type MobileOAuthScreenHint = MobileConsentSearch["screen_hint"];
 
 /**
- * A signed-in browser always needs one tap before the custom-scheme redirect
- * (RFC 8252 §8.6). The sign-up hint only changes copy/actions on that step —
- * never auto-approves into the existing account.
+ * The sign-up hint only ever adds a step in the user's favour: a signed-out
+ * browser opens on registration instead of login, and a signed-in one is asked
+ * which account to use instead of being approved straight into the existing
+ * one — the silent path that made a "Sign Up" tap look like a broken sign-up.
  */
 export function initialMobileOAuthConsentState({
   userProfile,
@@ -30,13 +29,15 @@ export function initialMobileOAuthConsentState({
   screenHint: MobileOAuthScreenHint;
 }): MobileOAuthConsentState {
   if (userProfile) {
-    return { step: "continue", email: userProfile.email };
+    return screenHint === "signup"
+      ? { step: "choose_account", email: userProfile.email }
+      : { step: "approve", email: userProfile.email };
   }
   return { step: screenHint === "signup" ? "register" : "login" };
 }
 
 export function mobileOAuthConsentReducer(
-  state: MobileOAuthConsentState,
+  _state: MobileOAuthConsentState,
   action: MobileOAuthConsentAction,
 ): MobileOAuthConsentState {
   switch (action.type) {
@@ -53,17 +54,6 @@ export function mobileOAuthConsentReducer(
         email: action.email,
       };
     case "authenticated":
-      return { step: "returning", email: action.email };
-    case "return_failed":
-      return {
-        step: "returning",
-        email: action.email,
-        error: action.error,
-      };
-    case "retry_return":
-      if (state.step !== "returning") {
-        return state;
-      }
-      return { step: "returning", email: state.email };
+      return { step: "approve", email: action.email };
   }
 }

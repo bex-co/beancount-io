@@ -608,27 +608,13 @@ const frAuth: Record<string, TranslationEntry> = {
     description:
       "Mobile OAuth button that signs the browser out and opens registration",
   },
-  "auth.oauthMobileContinueTitle": {
-    message: "Continue to Beancount Mobile",
-    description:
-      "Mobile OAuth one-tap step title for a signed-in browser (first-party, no permission list)",
+  "auth.oauthMobileAllowTitle": {
+    message: "Autoriser Beancount Mobile ?",
+    description: "Mobile OAuth approval title",
   },
-  "auth.oauthMobileReturningTitle": {
-    message: "Returning to Beancount…",
-    description:
-      "Brief interstitial while the mobile OAuth grant POST redirects to the app",
-  },
-  "auth.oauthMobileReturningDescription": {
-    message: "Finishing sign-in in the app.",
-    description: "Supporting line under the returning interstitial",
-  },
-  "auth.oauthMobileReturnFailed": {
-    message: "Could not return to the app. Please try again.",
-    description: "Error when the programmatic mobile grant POST fails",
-  },
-  "auth.oauthMobileReturnRetry": {
-    message: "Try again",
-    description: "Retry button after a failed mobile grant POST",
+  "auth.oauthMobileGrantDescription": {
+    message: "Cette subvention à l'échelle du compte permet à l'application :",
+    description: "Introduction to mobile OAuth permissions",
   },
   "auth.oauthSwitchAccountFailed": {
     message: "Impossible de changer de compte. Veuillez réessayer.",

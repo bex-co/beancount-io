@@ -7,7 +7,7 @@
 
 ## Context
 
-The native client is registered with two custom-scheme redirect URIs (`backend-v2/src/features/oauth/data/config.ts`, mirrored in `mobile/src/common/oauth/discovery.ts`). Any app on the device can claim a custom scheme, so RFC 8252 §8.6 asks the authorization server to obtain end-user interaction before redirecting to one. That is why w1/m7 kept exactly one **Continue as <email>** tap on the dashboard's mobile interaction page for a browser that already holds a session (`dashboard/src/features/oauth/funcs/mobile-consent-state.ts`), even though every other consent UI was removed.
+The native client is registered with two custom-scheme redirect URIs (`backend-v2/src/features/oauth/data/config.ts`, mirrored in `mobile/src/common/oauth/discovery.ts`). Any app on the device can claim a custom scheme, so RFC 8252 §8.6 asks the authorization server to obtain end-user interaction before redirecting to one. The dashboard mobile interaction page therefore still requires an explicit approve step (and, for a signed-in browser on Sign Up, a continue-as / create-different-account choice) before posting the grant (`dashboard/src/features/oauth/pages/mobile-consent.tsx`).
 
 RFC 8252 §7.2 recommends claimed https redirects instead: the platform verifies the app's identity against a file the site publishes, so only the genuine app can receive the response and the interaction requirement no longer applies. The question is whether the stack can adopt them, and for whom.
 
@@ -31,13 +31,13 @@ Chrome Custom Tabs honor verified App Links on the authorization server's final 
 
 ### Self-hosted origins cannot be verified by the store build
 
-Universal Links and App Links bind a specific host into the app binary: `applinks:beancount.io` is an entitlement signed at build time, and the Android intent filter's host is compiled into the manifest. A self-hoster's origin is not in either list, so no voucher they publish can make the store build receive an https redirect for their domain. Their only options are to keep the custom-scheme redirect or to build and sign their own app with their host in `app.json` (and then publish the vouchers below). This is the decisive constraint: verified https redirects are a hosted-origin feature; the custom-scheme path must remain a first-class client configuration, and the one-tap **Continue as** step must remain for it.
+Universal Links and App Links bind a specific host into the app binary: `applinks:beancount.io` is an entitlement signed at build time, and the Android intent filter's host is compiled into the manifest. A self-hoster's origin is not in either list, so no voucher they publish can make the store build receive an https redirect for their domain. Their only options are to keep the custom-scheme redirect or to build and sign their own app with their host in `app.json` (and then publish the vouchers below). This is the decisive constraint: verified https redirects are a hosted-origin feature; the custom-scheme path must remain a first-class client configuration, and custom-scheme requests must keep requiring end-user interaction.
 
 ### What the backend needs
 
 - Register a third redirect URI for the `beancount-mobile` client: `https://beancount.io/oauth/callback` on the hosted deployment. Because self-hosted issuers keep the custom schemes, the https entry should be derived from the deployment's dashboard origin and only added when the app-links environment variables are set, matching how the vouchers themselves appear.
 - Serve `/oauth/callback` on the dashboard origin as a plain page. Universal Links open the app only when the link is followed from another app or a redirect; a user who lands on the URL in Safari itself sees the page, which should say "Return to the Beancount app" and offer the custom-scheme URL as a manual fallback.
-- Let the provider skip the interaction requirement only when the request's `redirect_uri` is the claimed https one. The `native_client_prompt` policy noted in w1/m7 keys on the client being native; the check has to move to the redirect URI, so a custom-scheme request from the same client still gets the tap.
+- Let the provider skip the interaction requirement only when the request's `redirect_uri` is the claimed https one. The provider's `native_client_prompt` policy keys on the client being native; the check has to move to the redirect URI, so a custom-scheme request from the same client still requires an approve (or continue-as) tap.
 
 ### What a self-hoster would have to publish (only if they build their own app)
 
@@ -50,14 +50,14 @@ The `deploy/docker/.env.example` and `deploy/docker-mac/.env.example` comments a
 
 ## Recommendation
 
-**Yes, for the hosted origin; keep custom schemes for everyone else.** Adopt `https://beancount.io/oauth/callback` as the redirect for store builds talking to `https://beancount.io` on iOS 17.4+ and Android, and drop the **Continue as** tap for requests that arrive with that redirect URI. Keep `io.beancount.ios:/oauth/callback` and `io.beancount.android:/oauth/callback` registered and selected whenever the chosen server is not the hosted origin, the OS cannot intercept an https callback, or the user opened the link outside an auth session; those requests keep the one-tap interaction exactly as m7 built it.
+**Yes, for the hosted origin; keep custom schemes for everyone else.** Adopt `https://beancount.io/oauth/callback` as the redirect for store builds talking to `https://beancount.io` on iOS 17.4+ and Android, and allow the dashboard to skip the approve / continue-as interaction for requests that arrive with that redirect URI. Keep `io.beancount.ios:/oauth/callback` and `io.beancount.android:/oauth/callback` registered and selected whenever the chosen server is not the hosted origin, the OS cannot intercept an https callback, or the user opened the link outside an auth session; those requests keep requiring end-user interaction.
 
-The adoption payoff is one fewer tap on the most common path (a signed-in hosted user re-authenticating the app) plus a stronger security story to cite in the README. The cost is bounded because the vouchers, the app-links config, and the callback classification already exist. It is not worth restructuring the self-hosted contract for: self-hosters get nothing from it unless they ship their own binary.
+The adoption payoff is fewer taps on the most common path (a signed-in hosted user re-authenticating the app) plus a stronger security story to cite in the README. The cost is bounded because the vouchers, the app-links config, and the callback classification already exist. It is not worth restructuring the self-hosted contract for: self-hosters get nothing from it unless they ship their own binary.
 
 ### Milestone outline (when promoted)
 
 1. Backend: add the https redirect URI to the mobile client on hosted deployments; widen the AASA/asset-links vouchers to `/oauth/callback`; move the interaction requirement from "native client" to "custom-scheme redirect"; update ADR009's path table.
-2. Dashboard: serve `/oauth/callback` as the app-return page with a manual custom-scheme fallback; skip the **Continue as** step only for https redirects.
+2. Dashboard: serve `/oauth/callback` as the app-return page with a manual custom-scheme fallback; skip the approve / continue-as interaction only for https redirects.
 3. Mobile: choose the redirect per server and OS (`currentOAuthRedirectUri`), pass `preferUniversalLinks` to `openAuthSessionAsync`, extend the Android intent filter, and keep the custom-scheme path tested.
 4. Deploy: document `APP_LINKS_*` for the callback and the self-built-app caveat; verify end to end on a signed iOS build (Universal Links do not verify in the simulator) and a Play-signed Android build.
 5. Standing closing tasks per `.agents/skills/pm/SKILL.md`.

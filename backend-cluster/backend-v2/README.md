@@ -158,15 +158,6 @@ recognise is dropped rather than rejected, so an app newer than a self-hosted
 server still gets a login form. The hint is never forwarded to MCP or
 identity-client interaction pages.
 
-Mobile is a first-party client: the dashboard interaction never shows a
-permission list or an Approve/Cancel pair. A just-completed password login or
-OTP posts the grant immediately; a browser that already holds a session needs
-exactly one **Continue as** tap (RFC 8252 §8.6 for custom-scheme redirects).
-The native app still sends `prompt=consent` on the authorization request —
-without it, this provider strips `offline_access` and no refresh token is
-issued. That parameter is a refresh-token requirement on the wire, not a UI
-promise. MCP and identity-client consent screens are unchanged.
-
 OAuth capabilities use one closed operation matrix on GraphQL, REST, and MCP:
 reads require `ledger.read`, ordinary mutations require
 `ledger.write`, and ledger control-plane operations such as deleting a ledger,

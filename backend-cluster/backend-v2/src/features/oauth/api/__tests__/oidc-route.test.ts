@@ -632,18 +632,12 @@ describe("oidc-route: unified MCP + identity provider", () => {
   // ── Native mobile flow (static public client) ─────────────────────────────
 
   it("mobile flow: completes code+PKCE without a client secret and mints an unpinned API token", async () => {
-    // First-party mobile UI posts the grant from the login/OTP result alone —
-    // there is no separate consent submission. driveAuthorizationCode mirrors
-    // that by finishing the interaction with a single /interaction/:uid/login
-    // POST that carries the requested resource scopes.
     const resource = `${ISSUER}/v1`;
     const redirectUri = MOBILE_REDIRECT_URIS[0];
-    const scope =
-      "openid offline_access ledger.read ledger.write ledger.admin";
     const { code, verifier } = await driveAuthorizationCode({
       clientId: MOBILE_CLIENT_ID,
       clientAuth: "",
-      scope,
+      scope: "openid offline_access ledger.read ledger.write ledger.admin",
       redirectUri,
       prompt: "consent",
       resource,
@@ -663,9 +657,6 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(claims.sub).toBe(TEST_USER.id);
     expect(claims.client_id).toBe(MOBILE_CLIENT_ID);
     expect(claims.ledger_id).toBeUndefined();
-    expect(String(claims.scope).split(" ").sort()).toEqual(
-      scope.split(" ").sort(),
-    );
 
     const profileResponse = await fetch(`${ISSUER}/api-gateway/`, {
       method: "POST",
