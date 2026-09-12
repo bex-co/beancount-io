@@ -57,10 +57,7 @@ producer is an upstream `@rustledger/wasm` defect with no released fix (re-check
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
 - [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
-- [115](./115.md) — Mobile carries an account filter into a different ledger and hides its journal
 - [120](./120.md) — Accounts loses search and type selection on browser Back
-- [122](./122.md) — Mobile Back revives an account route under a different ledger
-- [130](./130.md) — Mobile Reports recent entries use a different month from the chart
 - [131](./131.md) — Journal loses the current page after an account drill-down
 - [137](./137.md) — Transaction Share link closes its menu without opening the iOS share sheet
 - [143](./143.md) — Chart contact leaves the ledger drawer unresponsive
@@ -71,9 +68,5 @@ producer is an upstream `@rustledger/wasm` defect with no released fix (re-check
 - [160](./160.md) — Holdings loses the selected grouping after an account drill-down
 - [162](./162.md) — Make native wheel selection emphasis follow the option Confirm will save
 - [164](./164.md) — Public ledger collection loses search, sorting and expansion on Back
-- [165](./165.md) — Accept supported digit-led and Unicode names in native Open Account
 - [168](./168.md) — Open the receipt photo picker without requiring broad library access
-- [171](./171.md) — Preserve the exact target amount when chart counting finishes
 - [175](./175.md) — Keep zero-balance accounts inside their actual parent branches
-- [178](./178.md) — Retain directive types in the mobile account journal
-- [179](./179.md) — Show a missing-file state when the editor query returns null
