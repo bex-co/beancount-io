@@ -50,6 +50,11 @@
 
 ## Inbox
 
+[129](./129.md) is not listed below: it was promoted into [m35](./m35/README.md),
+which links it as its reproduction record. [113](./113.md) stays parked — its
+producer is an upstream `@rustledger/wasm` defect with no released fix (re-checked
+2026-09-11, newest published version is still 0.24.0).
+
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
 - [105](./105.md) — Mobile Settings clips invitation copy in Spanish and at larger text sizes
 - [109](./109.md) — Mobile Home and journal round nonzero crypto rewards to zero
@@ -71,7 +76,6 @@
 - [126](./126.md) — Trial Balance narrow view selection leaves the wrong chart displayed
 - [127](./127.md) — Collapsed report charts remain keyboard-focusable
 - [128](./128.md) — Expandable mobile report categories omit accessible amounts
-- [129](./129.md) — Report filter changes expose old results without pending feedback
 - [130](./130.md) — Mobile Reports recent entries use a different month from the chart
 - [131](./131.md) — Journal loses the current page after an account drill-down
 - [132](./132.md) — Current plan summary ignores the selected app language
