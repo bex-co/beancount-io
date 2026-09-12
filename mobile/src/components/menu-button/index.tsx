@@ -4,18 +4,20 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { createPendingMenuAction } from "./pending-action";
-import { fontSizes } from "@/common/theme";
+import { fontSizes, fontWeights } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { ColorTheme } from "@/types/theme-props";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 export type MenuButtonItem = {
   label: string;
+  testID?: string;
   /** Trailing glyph, drawn at the row's right edge. */
   icon?: ReactNode;
   onPress: () => void;
@@ -26,6 +28,8 @@ type MenuButtonProps = {
   icon: ReactNode;
   accessibilityLabel: string;
   items: MenuButtonItem[];
+  title?: string;
+  description?: string;
   testID?: string;
 };
 
@@ -34,6 +38,8 @@ const getStyles = (theme: ColorTheme) =>
     trigger: {
       alignItems: "center",
       justifyContent: "center",
+      minWidth: 44,
+      minHeight: 44,
       // No negative margin: the icon sits at the header's 16px gutter like every
       // other header action (e.g. the Transactions tab's add button), so the glyph
       // stays symmetric with the left-side icons and lines up across tabs.
@@ -46,7 +52,6 @@ const getStyles = (theme: ColorTheme) =>
     },
     menu: {
       position: "absolute",
-      minWidth: 240,
       borderRadius: 14,
       backgroundColor: theme.white,
       // Shadows read as nothing on a dark surface, so a hairline border does
@@ -59,6 +64,22 @@ const getStyles = (theme: ColorTheme) =>
       shadowRadius: 8,
       elevation: 4,
       overflow: "hidden",
+    },
+    header: {
+      padding: 16,
+      gap: 8,
+    },
+    title: {
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
+      color: theme.black,
+      textAlign: LEADING_TEXT_ALIGN,
+    },
+    description: {
+      fontSize: fontSizes.sm,
+      lineHeight: 20,
+      color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     item: {
       flexDirection: "row",
@@ -92,19 +113,36 @@ export const MenuButton = ({
   icon,
   accessibilityLabel,
   items,
+  title,
+  description,
   testID,
 }: MenuButtonProps): JSX.Element => {
   const styles = useThemeStyle(getStyles);
   const anchorRef = useRef<View>(null);
   const [visible, setVisible] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  const [menuPos, setMenuPos] = useState({
+    top: 0,
+    right: 0,
+    width: 240,
+    maxHeight: 400,
+  });
   // A tapped row's callback waits here until the menu is actually off screen.
   const pending = useMemo(() => createPendingMenuAction(), []);
 
   const openMenu = () => {
     anchorRef.current?.measureInWindow((x, y, width, height) => {
-      const screenWidth = Dimensions.get("window").width;
-      setMenuPos({ top: y + height + 4, right: screenWidth - (x + width) });
+      const screen = Dimensions.get("window");
+      const menuWidth = Math.min(title ? 300 : 260, screen.width - 32);
+      const top = Math.min(y + height + 4, screen.height / 2);
+      setMenuPos({
+        top,
+        right: Math.max(
+          16,
+          Math.min(screen.width - (x + width), screen.width - menuWidth - 16),
+        ),
+        width: menuWidth,
+        maxHeight: screen.height - top - 48,
+      });
       setVisible(true);
     });
   };
@@ -133,6 +171,7 @@ export const MenuButton = ({
         testID={testID}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
+        accessibilityState={{ expanded: visible }}
         style={({ pressed }) => [
           styles.trigger,
           pressed && styles.triggerPressed,
@@ -150,27 +189,47 @@ export const MenuButton = ({
         onRequestClose={cancelMenu}
         onDismiss={pending.flush}
       >
-        <Pressable style={styles.backdrop} onPress={cancelMenu}>
+        <View style={styles.backdrop} accessibilityViewIsModal>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            accessible={false}
+            importantForAccessibility="no"
+            onPress={cancelMenu}
+          />
           <View
-            style={[styles.menu, { top: menuPos.top, right: menuPos.right }]}
+            style={[styles.menu, menuPos]}
+            onAccessibilityEscape={cancelMenu}
           >
-            {items.map((item, i) => (
-              <Pressable
-                key={item.label}
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  styles.item,
-                  i > 0 && styles.itemDivider,
-                  pressed && styles.itemPressed,
-                ]}
-                onPress={() => selectItem(item)}
-              >
-                <Text style={styles.itemLabel}>{item.label}</Text>
-                {item.icon}
-              </Pressable>
-            ))}
+            <ScrollView bounces={false}>
+              {title ? (
+                <View style={styles.header}>
+                  <Text accessibilityRole="header" style={styles.title}>
+                    {title}
+                  </Text>
+                  {description ? (
+                    <Text style={styles.description}>{description}</Text>
+                  ) : null}
+                </View>
+              ) : null}
+              {items.map((item, i) => (
+                <Pressable
+                  key={item.label}
+                  testID={item.testID}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.item,
+                    (i > 0 || !!title) && styles.itemDivider,
+                    pressed && styles.itemPressed,
+                  ]}
+                  onPress={() => selectItem(item)}
+                >
+                  <Text style={styles.itemLabel}>{item.label}</Text>
+                  {item.icon}
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
-        </Pressable>
+        </View>
       </Modal>
     </View>
   );

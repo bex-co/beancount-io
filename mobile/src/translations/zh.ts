@@ -2,7 +2,7 @@ import { en } from "./en";
 
 export const zh: typeof en = {
   ...en,
-  discoveryTitle: "发现账本",
+  discoveryTitle: "浏览账本",
   discoveryTab_yours: "你的账本",
   discoveryTab_starred: "已收藏",
   discoveryTab_explore: "探索",
@@ -32,9 +32,13 @@ export const zh: typeof en = {
   journal: "流水",
   settings: "设置",
   merchants: "商户",
-  visitWebsite: "访问网站",
+  openInBrowser: "在浏览器中打开",
   shareLink: "分享链接",
   copyLink: "复制链接",
+  drawerNew: "新建",
+  drawerLedgerActions: "{{name}} 的操作",
+  drawerPrivateLinkHint: "接收者需要访问权限才能打开此链接。",
+  drawerPublicLinkHint: "任何持有链接的人都可以查看此账本。",
   merchantsSearchPlaceholder: {
     one: "搜索 {{count}} 个商户…",
     other: "搜索 {{count}} 个商户…",

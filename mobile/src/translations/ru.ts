@@ -2,7 +2,7 @@ import { en } from "./en";
 
 export const ru: typeof en = {
   ...en,
-  discoveryTitle: "Найти книги",
+  discoveryTitle: "Обзор книг",
   discoveryTab_yours: "Ваши книги",
   discoveryTab_starred: "Избранное",
   discoveryTab_explore: "Обзор",
@@ -36,9 +36,15 @@ export const ru: typeof en = {
   journal: "Журнал",
   settings: "Настройки",
   merchants: "Получатели",
-  visitWebsite: "Посетить сайт",
+  openInBrowser: "Открыть в браузере",
   shareLink: "Поделиться ссылкой",
   copyLink: "Копировать ссылку",
+  drawerNew: "Новая",
+  drawerLedgerActions: "Действия для {{name}}",
+  drawerPrivateLinkHint:
+    "Для открытия ссылки получателям нужен доступ к книге.",
+  drawerPublicLinkHint:
+    "Любой, у кого есть ссылка, может просматривать эту книгу.",
   merchantsSearchPlaceholder: {
     one: "Поиск по {{count}} получателю…",
     other: "Поиск по {{count}} получателям…",

@@ -1,17 +1,3 @@
-import fs from "fs";
-import path from "path";
-
-const drawerSource = fs.readFileSync(
-  path.join(
-    __dirname,
-    "..",
-    "components",
-    "ledger-drawer",
-    "ledger-drawer.tsx",
-  ),
-  "utf8",
-);
-
 describe("settings navigation (m5)", () => {
   describe("translation keys required by the settings drawer menu and pushed screen", () => {
     it("has a 'settings' key", () => {
@@ -29,9 +15,9 @@ describe("settings navigation (m5)", () => {
       expect(en.ledgers).toBeTruthy();
     });
 
-    it("has a 'visitWebsite' key for the external website row", () => {
+    it("has a 'openInBrowser' key for the ledger menu", () => {
       const { en } = require("../translations/en");
-      expect(en.visitWebsite).toBe("Visit website");
+      expect(en.openInBrowser).toBe("Open in browser");
     });
   });
 
@@ -44,28 +30,6 @@ describe("settings navigation (m5)", () => {
     it("accountSettings is 'Account'", () => {
       const { en } = require("../translations/en");
       expect(en.accountSettings).toBe("Account");
-    });
-  });
-
-  describe("website drawer row", () => {
-    it("opens the current ledger URL (or the hosted ledger home fallback)", () => {
-      expect(drawerSource.includes("buildLedgerUrl")).toBe(true);
-      expect(
-        drawerSource.includes(
-          'void Linking.openURL(currentLedgerUrl ?? "https://beancount.io/ledger")',
-        ),
-      ).toBe(true);
-    });
-
-    it("sits between Merchants and Settings with an external-link icon", () => {
-      const merchants = drawerSource.indexOf('testID="drawer-merchants-row"');
-      const website = drawerSource.indexOf('testID="drawer-website-row"');
-      const settings = drawerSource.indexOf('testID="drawer-settings-row"');
-
-      expect(merchants < website && website < settings).toBe(true);
-      expect(
-        drawerSource.slice(website, settings).includes('name="open-outline"'),
-      ).toBe(true);
     });
   });
 });

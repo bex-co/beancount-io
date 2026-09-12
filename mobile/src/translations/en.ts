@@ -1,5 +1,5 @@
 export const en = {
-  discoveryTitle: "Discover ledgers",
+  discoveryTitle: "Browse ledgers",
   discoveryTab_yours: "Your ledgers",
   discoveryTab_starred: "Starred",
   discoveryTab_explore: "Explore",
@@ -31,9 +31,13 @@ export const en = {
   journal: "Journal",
   settings: "Settings",
   merchants: "Merchants",
-  visitWebsite: "Visit website",
+  openInBrowser: "Open in browser",
   shareLink: "Share link",
   copyLink: "Copy link",
+  drawerNew: "New",
+  drawerLedgerActions: "Actions for {{name}}",
+  drawerPrivateLinkHint: "Recipients need access to open this link.",
+  drawerPublicLinkHint: "Anyone with the link can view this ledger.",
   merchantsSearchPlaceholder: {
     one: "Search {{count}} merchant…",
     other: "Search {{count}} merchants…",

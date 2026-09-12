@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   BackHandler,
   Image,
   Linking,
@@ -29,7 +28,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { type EdgeSwipeGestureRef } from "@/common/horizontal-swipe-owner";
-import { useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  gutter,
+  space,
+  useTheme,
+} from "@/common/theme";
 import { useThemeStyle, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ledgerVar } from "@/common/vars";
@@ -44,10 +49,27 @@ import {
   layoutDirectionFactor,
   LEADING_TEXT_ALIGN,
 } from "@/common/rtl";
-import { useListLedgersQuery } from "@/generated-graphql/graphql";
+import {
+  useGetLedgerQuery,
+  useListLedgersQuery,
+} from "@/generated-graphql/graphql";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { clampProgress, settleTarget } from "./drawer-motion";
-import { groupLedgersByOwner } from "./group-ledgers-by-owner";
+import { LoadingTile } from "@/components/loading-tile";
+import { MenuButton } from "@/components/menu-button";
+import { SearchBar } from "@/components/search-bar";
+import {
+  filterLedgers,
+  getDrawerLedgers,
+  groupLedgersByOwner,
+} from "./drawer-ledgers";
+
+const skeletonWidths = [140, 112, 160];
+
+// A collection this size no longer fits the drawer on any phone, so finding a
+// book means scrolling for it. Below the threshold the whole list is already
+// on screen and a filter field would only take a row away from it.
+const FILTER_FROM_LEDGERS = 10;
 
 // Rightward swipes only open the drawer when they start in this strip along the
 // content's left edge, so horizontal carousels and chips keep working. Enforced
@@ -108,123 +130,210 @@ const getStyles = (theme: ColorTheme) =>
     brandRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 10,
-      paddingHorizontal: 20,
-      paddingTop: 16,
+      gap: space.sm,
+      paddingHorizontal: gutter,
+      paddingTop: space.sm,
+      paddingBottom: space.sm,
     },
-    brandLogo: {
-      width: 32,
-      height: 32,
-      borderRadius: 8,
-    },
+    brandLogo: { width: 28, height: 28, borderRadius: space.sm },
     brandText: {
-      fontSize: 20,
-      fontWeight: "700",
-      color: theme.text01,
+      flex: 1,
+      fontSize: fontSizes.xl,
+      fontWeight: fontWeights.medium,
+      color: theme.black90,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: space.sm,
+      paddingStart: gutter + space.md,
+      paddingEnd: gutter,
+      marginTop: space.sm,
+      marginBottom: space.xs,
     },
     sectionLabel: {
-      fontSize: 13,
-      fontWeight: "600",
-      color: theme.black60,
-      paddingHorizontal: 20,
-      paddingTop: 24,
-      paddingBottom: 8,
+      flexShrink: 1,
+      fontSize: fontSizes.sm,
+      lineHeight: 20,
+      fontWeight: fontWeights.medium,
+      color: theme.black80,
+    },
+    newButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: space.xs,
+      minHeight: 44,
+      paddingHorizontal: space.md,
+      flexShrink: 1,
+    },
+    newButtonText: {
+      flexShrink: 1,
+      fontSize: fontSizes.md,
+      lineHeight: 20,
+      fontWeight: fontWeights.medium,
+      color: theme.primary,
     },
     listItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 14,
-      gap: 12,
+      borderRadius: space.md,
+      // Carried by every row, transparent until selected, so marking one
+      // doesn't nudge its title a pixel sideways.
+      borderWidth: 1,
+      borderColor: "transparent",
+      marginBottom: space.xs,
+      paddingEnd: space.xs,
     },
+    // The active book is marked by the pill itself — tint plus an accent
+    // outline — and a medium-weight title. No leading checkmark: it forced a
+    // blank 28pt column onto every other row, which read as a checklist
+    // waiting to be filled in rather than as a list with one thing selected.
+    // The outline keeps the mark off the text, so the title stays at full
+    // contrast instead of the 4.38:1 that accent-on-tint would have given it.
     listItemSelected: {
       backgroundColor: theme.controlSelected,
+      borderColor: theme.primary,
     },
-    listItemContent: {
+    selectButton: {
       flex: 1,
+      minHeight: 48,
+      justifyContent: "center",
+      paddingHorizontal: space.md,
+      paddingVertical: space.sm,
     },
-    // Ledger names, descriptions and owner handles are user data — Latin more
-    // often than not — so they need the alignment said out loud or they drift
-    // to the opposite edge from the drawer's own localized chrome. See
-    // `LEADING_TEXT_ALIGN`.
+    // The account a group of ledgers belongs to. Sticky, and opaque so rows
+    // scroll under it rather than through it — which is also why the spacing
+    // under the rule is padding and not a margin.
+    ownerHeader: {
+      backgroundColor: theme.white,
+      paddingHorizontal: space.md,
+      paddingTop: space.md,
+      paddingBottom: space.xs,
+    },
+    // Typography from the app's other section headers (merchants, journal):
+    // smaller, uppercase, letterspaced, muted. A header styled like this can
+    // never be mistaken for one of the ledger titles under it, which are
+    // full-size regular text — and the distinction costs the rows no shift.
+    ownerHeaderText: {
+      fontSize: fontSizes.sm,
+      lineHeight: 18,
+      fontWeight: fontWeights.medium,
+      color: theme.black80,
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+      textAlign: LEADING_TEXT_ALIGN,
+    },
+    ownerHeaderRule: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: theme.black20,
+      marginTop: space.xs,
+    },
     listItemName: {
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: fontSizes.lg,
+      lineHeight: 24,
+      fontWeight: fontWeights.regular,
       color: theme.black,
       textAlign: LEADING_TEXT_ALIGN,
     },
-    listItemDescription: {
-      marginTop: 2,
-      fontSize: 13,
-      color: theme.black60,
-      textAlign: LEADING_TEXT_ALIGN,
-    },
-    ownerHeader: {
-      paddingHorizontal: 20,
-      paddingTop: 12,
-      paddingBottom: 4,
-      fontSize: 13,
-      fontWeight: "600",
-      color: theme.black60,
-      backgroundColor: theme.white,
-      textAlign: LEADING_TEXT_ALIGN,
+    selectedName: { fontWeight: fontWeights.medium },
+    skeletonRow: {
+      minHeight: 48,
+      justifyContent: "center",
+      paddingHorizontal: space.md,
+      paddingVertical: space.sm,
+      marginBottom: space.xs,
     },
     stateContainer: {
       alignItems: "center",
-      paddingVertical: 40,
+      paddingVertical: space.xl,
+      paddingHorizontal: space.sm,
+      gap: space.md,
+    },
+    stateTitle: {
+      fontSize: fontSizes.lg,
+      lineHeight: 24,
+      fontWeight: fontWeights.medium,
+      color: theme.black,
+      textAlign: "center",
     },
     stateText: {
-      fontSize: 14,
-      color: theme.black60,
+      fontSize: fontSizes.md,
+      lineHeight: 22,
+      color: theme.black80,
       textAlign: "center",
-      paddingHorizontal: 20,
-    },
-    emptyActions: {
-      flexDirection: "row",
-      gap: 12,
-      marginTop: 16,
-      flexWrap: "wrap",
-      justifyContent: "center",
-      paddingHorizontal: 20,
     },
     emptyAction: {
+      minHeight: 44,
+      justifyContent: "center",
       backgroundColor: theme.primary,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      borderRadius: 8,
+      paddingHorizontal: space.lg,
+      paddingVertical: space.md,
+      borderRadius: space.md,
     },
     emptyActionText: {
       color: theme.white,
-      fontSize: 15,
-      fontWeight: "600",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
     },
-    ledgerListArea: {
-      flex: 1,
-    },
-    // Fills the frame when the ledger list is empty, so the "no entries" state
-    // sits inside the scrollable list and stays pull-to-refreshable.
-    ledgerListContent: {
-      flexGrow: 1,
-    },
-    menuSection: {
+    filterField: { marginHorizontal: gutter, marginBottom: space.sm },
+    ledgerList: { flex: 1 },
+    ledgerListContent: { paddingHorizontal: gutter, paddingBottom: space.sm },
+    // Everything that isn't a ledger lives here, pinned to the bottom of the
+    // drawer. However many books the list holds, these stay one tap away.
+    navSection: {
+      marginHorizontal: gutter,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.black20,
-      paddingTop: 4,
-      paddingBottom: 4,
+      paddingVertical: space.sm,
     },
     menuItem: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 20,
-      paddingVertical: 14,
-      gap: 12,
+      minHeight: 44,
+      paddingHorizontal: space.md,
+      paddingVertical: space.sm,
+      gap: space.md,
     },
     menuItemText: {
-      fontSize: 16,
-      fontWeight: "500",
+      flex: 1,
+      fontSize: fontSizes.lg,
+      lineHeight: 24,
+      fontWeight: fontWeights.regular,
       color: theme.text01,
     },
   });
+
+/** One row of the drawer's pinned bottom menu. */
+function DrawerMenuRow({
+  testID,
+  icon,
+  label,
+  onPress,
+}: {
+  testID: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  label: string;
+  onPress: () => void;
+}): JSX.Element {
+  const styles = useThemeStyle(getStyles);
+  const theme = useTheme().colorTheme;
+
+  return (
+    <TouchableOpacity
+      testID={testID}
+      style={styles.menuItem}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <Ionicons name={icon} size={20} color={theme.black80} />
+      <Text style={styles.menuItemText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
 
 type LedgerDrawerProps = {
   open: boolean;
@@ -268,19 +377,54 @@ export function LedgerDrawer({
   const insets = useSafeAreaInsets();
 
   const ledgerId = useReactiveVar(ledgerVar);
-  const { data, loading, refetch } = useListLedgersQuery();
+  const { data, loading, error, refetch } = useListLedgersQuery();
   const ledgers = useMemo(() => data?.listLedgers ?? [], [data?.listLedgers]);
-  const ledgerSections = useMemo(() => groupLedgersByOwner(ledgers), [ledgers]);
+  const listedCurrent = ledgers.find(
+    (ledger) => ledger.id === ledgerId || ledger.fullName === ledgerId,
+  );
+  const { data: selectedData } = useGetLedgerQuery({
+    variables: { ledgerId: ledgerId ?? "" },
+    skip: !open || !ledgerId || !!listedCurrent,
+  });
+  const drawerLedgers = useMemo(
+    () => getDrawerLedgers(ledgers, ledgerId, selectedData?.getLedger),
+    [ledgers, ledgerId, selectedData?.getLedger],
+  );
+  const currentLedger = drawerLedgers.find(
+    (ledger) => ledger.id === ledgerId || ledger.fullName === ledgerId,
+  );
+  const [query, setQuery] = useState("");
+  // Filtering is offered on the unfiltered count, so narrowing to one match
+  // can't pull the field out from under the query that produced it.
+  const showFilter = drawerLedgers.length >= FILTER_FROM_LEDGERS;
+  const drawerSections = useMemo(
+    () =>
+      groupLedgersByOwner(
+        showFilter ? filterLedgers(drawerLedgers, query) : drawerLedgers,
+      ),
+    [drawerLedgers, showFilter, query],
+  );
+  const filteredEmpty = drawerSections.length === 0 && query.trim() !== "";
+
+  // A query belongs to the visit that typed it: reopening the drawer starts
+  // from the whole collection rather than yesterday's search.
+  useEffect(() => {
+    if (!open) {
+      setQuery("");
+    }
+  }, [open]);
 
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       await refetch();
+    } catch {
+      toast.showToast({ message: t("discoveryLoadError"), type: "error" });
     } finally {
       setRefreshing(false);
     }
-  }, [refetch]);
+  }, [refetch, t, toast]);
 
   // The one source of truth for where the drawer is: 0 = closed, 1 = open.
   const progress = useSharedValue(open ? 1 : 0);
@@ -407,9 +551,16 @@ export function LedgerDrawer({
     router.push("/(app)/merchants");
   };
 
-  const currentLedgerUrl = ledgerId
-    ? buildLedgerUrl({ kind: "home", ledgerFullName: ledgerId }, getServerUrl())
+  const currentLedgerUrl = currentLedger
+    ? buildLedgerUrl(
+        { kind: "home", ledgerFullName: currentLedger.fullName },
+        getServerUrl(),
+      )
     : null;
+  const linkDescription =
+    currentLedger?.private === undefined
+      ? undefined
+      : `${t(currentLedger.private ? "discoveryPrivate" : "discoveryPublic")} · ${t(currentLedger.private ? "drawerPrivateLinkHint" : "drawerPublicLinkHint")}`;
 
   const handleShareLinkPress = () => {
     if (!currentLedgerUrl) return;
@@ -426,8 +577,19 @@ export function LedgerDrawer({
   };
 
   const handleWebsitePress = () => {
+    if (!currentLedgerUrl) return;
     onClose();
-    void Linking.openURL(currentLedgerUrl ?? "https://beancount.io/ledger");
+    void Linking.openURL(currentLedgerUrl);
+  };
+
+  const handleCreatePress = () => {
+    onClose();
+    router.push("/(app)/create-ledger");
+  };
+
+  const handleBrowsePress = () => {
+    onClose();
+    router.push("/(app)/ledger-selection");
   };
 
   const handleSettingsPress = () => {
@@ -440,6 +602,10 @@ export function LedgerDrawer({
       {/* Always mounted: mounting the ledger list at the first frame of an
           opening drag is the one piece of work heavy enough to be felt. */}
       <View
+        accessibilityElementsHidden={!open}
+        importantForAccessibility={open ? "yes" : "no-hide-descendants"}
+        accessibilityViewIsModal={open}
+        onAccessibilityEscape={onClose}
         style={[
           styles.drawerLayer,
           {
@@ -453,210 +619,228 @@ export function LedgerDrawer({
           <Image
             source={require("@/assets/images/icon.png")}
             style={styles.brandLogo}
+            accessible={false}
           />
-          <Text style={styles.brandText}>Beancount.io</Text>
+          <Text
+            style={styles.brandText}
+            numberOfLines={1}
+            maxFontSizeMultiplier={1.3}
+          >
+            Beancount.io
+          </Text>
         </View>
-        <Text style={styles.sectionLabel}>{t("ledgers")}</Text>
 
-        <View style={styles.ledgerListArea}>
-          {loading && ledgers.length === 0 ? (
-            <View style={styles.stateContainer}>
-              <ActivityIndicator color={theme.primary} />
+        <View style={styles.sectionHeader}>
+          <Text accessibilityRole="header" style={styles.sectionLabel}>
+            {t("ledgers")}
+          </Text>
+          <TouchableOpacity
+            testID="drawer-create-ledger-row"
+            style={styles.newButton}
+            onPress={handleCreatePress}
+            accessibilityRole="button"
+            accessibilityLabel={t("createLedgerDrawerRow")}
+          >
+            <Ionicons name="add" size={20} color={theme.primary} />
+            <Text style={styles.newButtonText}>{t("drawerNew")}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {showFilter ? (
+          <SearchBar
+            testID="drawer-ledger-filter"
+            style={styles.filterField}
+            value={query}
+            onChangeText={setQuery}
+            placeholder={t("discoverySearch")}
+          />
+        ) : null}
+
+        <SectionList
+          style={styles.ledgerList}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={styles.ledgerListContent}
+          alwaysBounceVertical
+          stickySectionHeadersEnabled
+          sections={drawerSections}
+          extraData={ledgerId}
+          keyExtractor={(item) => item.fullName}
+          renderSectionHeader={({ section }) => (
+            <View style={styles.ownerHeader}>
+              <Text
+                accessibilityRole="header"
+                style={styles.ownerHeaderText}
+                numberOfLines={1}
+              >
+                {section.owner}
+              </Text>
+              <View style={styles.ownerHeaderRule} />
             </View>
-          ) : (
-            // Always render the list past first load — even with no ledgers — so
-            // the empty state lives inside a pull-to-refreshable SectionList rather
-            // than a static View that can't be refreshed.
-            <SectionList
-              style={{ flex: 1 }}
-              contentContainerStyle={styles.ledgerListContent}
-              alwaysBounceVertical
-              sections={ledgerSections}
-              keyExtractor={(item) => item.id}
-              refreshControl={
-                <ThemedRefreshControl
-                  refreshing={refreshing}
-                  onRefresh={handleRefresh}
-                />
-              }
-              stickySectionHeadersEnabled={false}
-              ListEmptyComponent={
-                <View style={styles.stateContainer}>
+          )}
+          refreshControl={
+            <ThemedRefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+            />
+          }
+          ListEmptyComponent={
+            filteredEmpty ? (
+              <View style={styles.stateContainer}>
+                <Text style={styles.stateText}>{t("discoveryNoMatches")}</Text>
+              </View>
+            ) : loading ? (
+              <View
+                accessibilityLabel={t("discoveryLoading")}
+                accessible
+                accessibilityState={{ busy: true }}
+              >
+                {skeletonWidths.map((width) => (
+                  <View key={width} style={styles.skeletonRow}>
+                    <LoadingTile width={width} height={24} />
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.stateContainer}>
+                <Text style={styles.stateTitle}>
+                  {t(error ? "discoveryLoadError" : "createLedgerEmptyTitle")}
+                </Text>
+                {!error ? (
                   <Text style={styles.stateText}>
-                    {t("createLedgerEmptyTitle")}
-                  </Text>
-                  <Text style={[styles.stateText, { marginTop: 8 }]}>
                     {t("createLedgerEmptyBody")}
                   </Text>
-                  <View style={styles.emptyActions}>
-                    <TouchableOpacity
-                      testID="drawer-empty-create"
-                      style={styles.emptyAction}
-                      onPress={() => {
-                        onClose();
-                        router.push("/(app)/create-ledger");
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={t("createLedgerEmptyCreate")}
-                    >
-                      <Text style={styles.emptyActionText}>
-                        {t("createLedgerEmptyCreate")}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      testID="drawer-empty-discover"
-                      style={styles.emptyAction}
-                      onPress={() => {
-                        onClose();
-                        router.push("/(app)/ledger-selection");
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={t("createLedgerEmptyDiscover")}
-                    >
-                      <Text style={styles.emptyActionText}>
-                        {t("createLedgerEmptyDiscover")}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              }
-              renderSectionHeader={({ section }) => (
-                <Text style={styles.ownerHeader} numberOfLines={1}>
-                  {section.owner}
-                </Text>
-              )}
-              renderItem={({ item }) => {
-                const isSelected = item.id === ledgerId;
-                return (
-                  <TouchableOpacity
-                    testID={`ledger-drawer-item-${item.fullName}`}
+                ) : null}
+                <TouchableOpacity
+                  testID={error ? "drawer-retry" : "drawer-empty-create"}
+                  style={styles.emptyAction}
+                  onPress={error ? handleRefresh : handleCreatePress}
+                  accessibilityRole="button"
+                  accessibilityLabel={t(
+                    error ? "discoveryRetry" : "createLedgerEmptyCreate",
+                  )}
+                >
+                  <Text style={styles.emptyActionText}>
+                    {t(error ? "discoveryRetry" : "createLedgerEmptyCreate")}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )
+          }
+          renderItem={({ item }) => {
+            const isSelected =
+              item.id === ledgerId || item.fullName === ledgerId;
+            return (
+              <View
+                style={[styles.listItem, isSelected && styles.listItemSelected]}
+              >
+                <TouchableOpacity
+                  testID={`ledger-drawer-item-${item.fullName}`}
+                  style={styles.selectButton}
+                  onPress={() => handleSelect(item.id)}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.fullName}
+                  accessibilityState={{ selected: isSelected }}
+                >
+                  <Text
                     style={[
-                      styles.listItem,
-                      isSelected && styles.listItemSelected,
+                      styles.listItemName,
+                      isSelected && styles.selectedName,
                     ]}
-                    onPress={() => handleSelect(item.id)}
-                    activeOpacity={0.7}
                   >
-                    <View style={styles.listItemContent}>
-                      <Text style={styles.listItemName} numberOfLines={1}>
-                        {item.name}
-                      </Text>
-                      {item.description ? (
-                        <Text
-                          style={styles.listItemDescription}
-                          numberOfLines={1}
-                        >
-                          {item.description}
-                        </Text>
-                      ) : null}
-                    </View>
-                    {isSelected && (
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+                {isSelected ? (
+                  <MenuButton
+                    testID="drawer-ledger-actions"
+                    accessibilityLabel={t("drawerLedgerActions", {
+                      name: item.name,
+                    })}
+                    title={item.fullName}
+                    description={linkDescription}
+                    icon={
                       <Ionicons
-                        name="checkmark-circle"
+                        name="ellipsis-horizontal"
                         size={22}
                         color={theme.primary}
                       />
-                    )}
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          )}
-        </View>
+                    }
+                    items={[
+                      {
+                        testID: "drawer-share-link-row",
+                        label: t("shareLink"),
+                        icon: (
+                          <Ionicons
+                            name="share-outline"
+                            size={20}
+                            color={theme.black80}
+                          />
+                        ),
+                        onPress: handleShareLinkPress,
+                      },
+                      {
+                        testID: "drawer-copy-link-row",
+                        label: t("copyLink"),
+                        icon: (
+                          <Ionicons
+                            name="link-outline"
+                            size={20}
+                            color={theme.black80}
+                          />
+                        ),
+                        onPress: handleCopyLinkPress,
+                      },
+                      {
+                        testID: "drawer-website-row",
+                        label: t("openInBrowser"),
+                        icon: (
+                          <Ionicons
+                            name="open-outline"
+                            size={20}
+                            color={theme.black80}
+                          />
+                        ),
+                        onPress: handleWebsitePress,
+                      },
+                    ]}
+                  />
+                ) : null}
+              </View>
+            );
+          }}
+        />
 
-        <View style={styles.menuSection}>
-          <TouchableOpacity
-            testID="drawer-create-ledger-row"
-            style={styles.menuItem}
-            accessibilityRole="button"
-            accessibilityLabel={t("createLedgerDrawerRow")}
-            onPress={() => {
-              onClose();
-              router.push("/(app)/create-ledger");
-            }}
-          >
-            <Ionicons
-              name="add-circle-outline"
-              size={22}
-              color={theme.black60}
-            />
-            <Text style={styles.menuItemText}>
-              {t("createLedgerDrawerRow")}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+        {/* Pinned: a collection of any size scrolls above this, never over it. */}
+        <View style={styles.navSection}>
+          <DrawerMenuRow
             testID="drawer-discovery-row"
-            style={styles.menuItem}
-            accessibilityRole="button"
-            onPress={() => {
-              onClose();
-              router.push("/(app)/ledger-selection");
-            }}
-          >
-            <Ionicons name="search-outline" size={22} color={theme.black60} />
-            <Text style={styles.menuItemText}>{t("discoveryTitle")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            testID="drawer-merchants-row"
-            style={styles.menuItem}
-            onPress={handleMerchantsPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="storefront-outline"
-              size={22}
-              color={theme.black60}
+            icon="compass-outline"
+            label={t("discoveryTitle")}
+            onPress={handleBrowsePress}
+          />
+          {ledgerId ? (
+            <DrawerMenuRow
+              testID="drawer-merchants-row"
+              icon="storefront-outline"
+              label={t("merchants")}
+              onPress={handleMerchantsPress}
             />
-            <Text style={styles.menuItemText}>{t("merchants")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            testID="drawer-share-link-row"
-            style={styles.menuItem}
-            onPress={handleShareLinkPress}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={t("shareLink")}
-            disabled={!currentLedgerUrl}
-          >
-            <Ionicons name="share-outline" size={22} color={theme.black60} />
-            <Text style={styles.menuItemText}>{t("shareLink")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            testID="drawer-copy-link-row"
-            style={styles.menuItem}
-            onPress={handleCopyLinkPress}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={t("copyLink")}
-            disabled={!currentLedgerUrl}
-          >
-            <Ionicons name="link-outline" size={22} color={theme.black60} />
-            <Text style={styles.menuItemText}>{t("copyLink")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            testID="drawer-website-row"
-            style={styles.menuItem}
-            onPress={handleWebsitePress}
-            activeOpacity={0.7}
-            accessibilityRole="link"
-          >
-            <Ionicons name="open-outline" size={22} color={theme.black60} />
-            <Text style={styles.menuItemText}>{t("visitWebsite")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          ) : null}
+          <DrawerMenuRow
             testID="drawer-settings-row"
-            style={styles.menuItem}
+            icon="settings-outline"
+            label={t("settings")}
             onPress={handleSettingsPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="settings-outline" size={22} color={theme.black60} />
-            <Text style={styles.menuItemText}>{t("settings")}</Text>
-          </TouchableOpacity>
+          />
         </View>
       </View>
 
       <GestureDetector gesture={panGesture}>
         <Animated.View
+          accessibilityElementsHidden={open}
+          importantForAccessibility={open ? "no-hide-descendants" : "auto"}
           style={[styles.content, revealed && styles.contentOpen, contentStyle]}
         >
           {children}

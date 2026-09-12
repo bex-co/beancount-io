@@ -51,9 +51,9 @@ Beancount Mobile Community Edition turns a Beancount.io ledger into a native wor
 - **Record clean transactions** — enter balanced multi-posting transactions, reuse account suggestions, and scan receipts.
 - **Investigate every entry** — search and filter the journal, inspect postings and balance context, then correct the underlying directive in a syntax-highlighted source editor with quick-insert keys (dates, flags, quotes, accounts, operating currencies) and checksum-protected saves.
 - **Work with the ledger itself** — browse and edit `.bean` files with syntax highlighting and review Git commit diffs.
-- **Discover and save ledgers** — open **Discover ledgers** in the ledger drawer to search your books, browse public examples in **Explore**, and revisit account-synced **Starred** favorites. Public books remain read-only unless you have editing permission.
-- **Create a ledger** — **New ledger** in the drawer (or Create when you have none) starts a Starter or Sample book with a name, optional description, and private toggle.
-- **Open and share ledger links** — a `https://beancount.io/ledger/...` link opens the matching screen when the app is installed; **Share link** and **Copy link** in the drawer (and on a transaction) produce the same canonical URL.
+- **Browse and save ledgers** — open **Browse ledgers** in the ledger drawer to search your books, browse public examples in **Explore**, and revisit account-synced **Starred** favorites. Public books remain read-only unless you have editing permission.
+- **Create a ledger** — **+ New** beside the drawer's **Ledgers** heading (or Create when you have none) starts a Starter or Sample book with a name, optional description, and private toggle.
+- **Open and share ledger links** — a `https://beancount.io/ledger/...` link opens the matching screen when the app is installed; **Share link** and **Copy link** in the current ledger's **⋯** menu (and on a transaction) produce the same canonical URL.
 - **Stay connected** — switch ledgers, review notifications, invite collaborators, and use light or dark themes.
 - **Accessible by default** — icon-only controls carry VoiceOver/TalkBack labels; `yarn test:unit` includes a guardrail that fails unlabeled icon-only pressables under `src/screens` and `src/components`.
 - **Use your language** — the app ships with 13 locales and follows the device language when supported.
@@ -109,7 +109,7 @@ The mobile client defaults to the hosted Beancount.io API. A signed-out user can
 
 ### Ledger discovery
 
-Open the ledger drawer and choose **Discover ledgers**. **Your ledgers** searches
+Open the ledger drawer and choose **Browse ledgers**. **Your ledgers** searches
 all books available in your account list; **Starred** searches your saved books;
 **Explore** searches public ledger names and descriptions on the selected server.
 Explore places `open_ledger` examples first among loaded results and offers **Load more**. Account lists load every page before local
@@ -140,8 +140,14 @@ xcrun simctl openurl <udid> \
   "beancount:///ledger/open_ledger/example/balance-sheet"
 ```
 
-From the ledger drawer, **Share link** and **Copy link** publish the canonical
-https URL for the current ledger. On a transaction, the same actions share an
+The drawer groups your books under the account that owns them and marks the
+current one where it sits — switching books never moves a ledger in the list. A
+book opened from a public link is added at the top, having no place of its own in
+the collection. From ten ledgers up, a filter field narrows the list by account or
+ledger name. Open the current book's **⋯** menu for **Share link**, **Copy link**,
+and **Open in browser**. The menu identifies the book and its visibility; sharing a
+private book's URL does not grant access. These actions use the canonical https URL
+for the current ledger. On a transaction, the same sharing actions share an
 `…/entry/<hash>` URL that opens that entry in the app.
 
 After AASA is deployed, the https form is the user-facing check:

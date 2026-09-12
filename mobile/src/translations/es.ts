@@ -2,7 +2,7 @@ import { en } from "./en";
 
 export const es: typeof en = {
   ...en,
-  discoveryTitle: "Descubrir libros",
+  discoveryTitle: "Explorar libros",
   discoveryTab_yours: "Tus libros",
   discoveryTab_starred: "Favoritos",
   discoveryTab_explore: "Explorar",
@@ -36,9 +36,14 @@ export const es: typeof en = {
   journal: "Diario",
   settings: "Configuración",
   merchants: "Comerciantes",
-  visitWebsite: "Visitar sitio web",
+  openInBrowser: "Abrir en el navegador",
   shareLink: "Compartir enlace",
   copyLink: "Copiar enlace",
+  drawerNew: "Nuevo",
+  drawerLedgerActions: "Acciones para {{name}}",
+  drawerPrivateLinkHint:
+    "Los destinatarios necesitan acceso para abrir este enlace.",
+  drawerPublicLinkHint: "Cualquier persona con el enlace puede ver este libro.",
   merchantsSearchPlaceholder: {
     one: "Buscar {{count}} comerciante…",
     other: "Buscar {{count}} comerciantes…",

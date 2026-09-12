@@ -2,7 +2,7 @@ import { en } from "./en";
 
 export const ca: typeof en = {
   ...en,
-  discoveryTitle: "Descobreix llibres",
+  discoveryTitle: "Explora els llibres",
   discoveryTab_yours: "Els teus llibres",
   discoveryTab_starred: "Preferits",
   discoveryTab_explore: "Explora",
@@ -36,9 +36,15 @@ export const ca: typeof en = {
   journal: "Diari",
   settings: "Configuració",
   merchants: "Comerciants",
-  visitWebsite: "Visita el lloc web",
+  openInBrowser: "Obre al navegador",
   shareLink: "Comparteix l'enllaç",
   copyLink: "Copia l'enllaç",
+  drawerNew: "Nou",
+  drawerLedgerActions: "Accions per a {{name}}",
+  drawerPrivateLinkHint:
+    "Els destinataris necessiten accés per obrir aquest enllaç.",
+  drawerPublicLinkHint:
+    "Qualsevol persona amb l’enllaç pot consultar aquest llibre.",
   merchantsSearchPlaceholder: {
     one: "Cerca {{count}} comerciant…",
     other: "Cerca {{count}} comerciants…",

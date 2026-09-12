@@ -2,7 +2,7 @@ import { en } from "./en";
 
 export const fa: typeof en = {
   ...en,
-  discoveryTitle: "کشف دفترها",
+  discoveryTitle: "مرور دفترها",
   discoveryTab_yours: "دفترهای شما",
   discoveryTab_starred: "ستاره‌دار",
   discoveryTab_explore: "کاوش",
@@ -36,9 +36,14 @@ export const fa: typeof en = {
   journal: "روزنامه",
   settings: "تنظیمات",
   merchants: "پذیرندگان",
-  visitWebsite: "بازدید از وب‌سایت",
+  openInBrowser: "باز کردن در مرورگر",
   shareLink: "اشتراک‌گذاری پیوند",
   copyLink: "کپی پیوند",
+  drawerNew: "جدید",
+  drawerLedgerActions: "عملیات برای {{name}}",
+  drawerPrivateLinkHint:
+    "گیرندگان برای باز کردن این پیوند به مجوز دسترسی نیاز دارند.",
+  drawerPublicLinkHint: "هر کسی با این پیوند می‌تواند این دفتر را مشاهده کند.",
   merchantsSearchPlaceholder: {
     one: "جستجوی {{count}} پذیرنده…",
     other: "جستجوی {{count}} پذیرنده…",

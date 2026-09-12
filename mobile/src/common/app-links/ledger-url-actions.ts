@@ -1,8 +1,9 @@
 import * as Clipboard from "expo-clipboard";
-import { Share } from "react-native";
+import { Platform, Share } from "react-native";
 
 export function shareLedgerUrl(url: string): void {
-  void Share.share({ message: url, url });
+  // iOS treats message + url as two share items; Android shares the message.
+  void Share.share(Platform.OS === "ios" ? { url } : { message: url });
 }
 
 export function copyLedgerUrl(url: string, onCopied: () => void): void {

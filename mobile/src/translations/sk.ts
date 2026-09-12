@@ -2,7 +2,7 @@ import { en } from "./en";
 
 export const sk: typeof en = {
   ...en,
-  discoveryTitle: "Objaviť knihy",
+  discoveryTitle: "Prehľad kníh",
   discoveryTab_yours: "Vaše knihy",
   discoveryTab_starred: "Obľúbené",
   discoveryTab_explore: "Preskúmať",
@@ -36,9 +36,14 @@ export const sk: typeof en = {
   journal: "Denník",
   settings: "Nastavenia",
   merchants: "Obchodníci",
-  visitWebsite: "Navštíviť web",
+  openInBrowser: "Otvoriť v prehliadači",
   shareLink: "Zdieľať odkaz",
   copyLink: "Kopírovať odkaz",
+  drawerNew: "Nová",
+  drawerLedgerActions: "Akcie pre {{name}}",
+  drawerPrivateLinkHint:
+    "Príjemcovia potrebujú prístup na otvorenie tohto odkazu.",
+  drawerPublicLinkHint: "Ktokoľvek s odkazom si môže prezerať túto knihu.",
   merchantsSearchPlaceholder: {
     one: "Hľadať {{count}} obchodníka…",
     other: "Hľadať {{count}} obchodníkov…",

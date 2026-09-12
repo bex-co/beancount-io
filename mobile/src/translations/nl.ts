@@ -2,7 +2,7 @@ import { en } from "./en";
 
 export const nl: typeof en = {
   ...en,
-  discoveryTitle: "Boeken ontdekken",
+  discoveryTitle: "Boekhoudingen bekijken",
   discoveryTab_yours: "Je boeken",
   discoveryTab_starred: "Favorieten",
   discoveryTab_explore: "Ontdekken",
@@ -36,9 +36,14 @@ export const nl: typeof en = {
   journal: "Journaal",
   settings: "Instellingen",
   merchants: "Winkels",
-  visitWebsite: "Website bezoeken",
+  openInBrowser: "Openen in browser",
   shareLink: "Link delen",
   copyLink: "Link kopiëren",
+  drawerNew: "Nieuw",
+  drawerLedgerActions: "Acties voor {{name}}",
+  drawerPrivateLinkHint:
+    "Ontvangers hebben toegang nodig om deze link te openen.",
+  drawerPublicLinkHint: "Iedereen met de link kan deze boekhouding bekijken.",
   merchantsSearchPlaceholder: {
     one: "{{count}} winkel zoeken…",
     other: "{{count}} winkels zoeken…",

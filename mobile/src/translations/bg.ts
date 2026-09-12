@@ -2,7 +2,7 @@ import { en } from "./en";
 
 export const bg: typeof en = {
   ...en,
-  discoveryTitle: "Откриване на книги",
+  discoveryTitle: "Преглед на книги",
   discoveryTab_yours: "Вашите книги",
   discoveryTab_starred: "Любими",
   discoveryTab_explore: "Разглеждане",
@@ -36,9 +36,14 @@ export const bg: typeof en = {
   journal: "Журнал",
   settings: "Настройки",
   merchants: "Търговци",
-  visitWebsite: "Посетете уебсайта",
+  openInBrowser: "Отвори в браузър",
   shareLink: "Сподели връзка",
   copyLink: "Копирай връзка",
+  drawerNew: "Нова",
+  drawerLedgerActions: "Действия за {{name}}",
+  drawerPrivateLinkHint:
+    "Получателите се нуждаят от достъп, за да отворят тази връзка.",
+  drawerPublicLinkHint: "Всеки с връзката може да преглежда тази книга.",
   merchantsSearchPlaceholder: {
     one: "Търсене в {{count}} търговец…",
     other: "Търсене в {{count}} търговци…",
