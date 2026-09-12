@@ -143,10 +143,47 @@ def upgrade(
         raise UsageError(f"'{channel.command[0]}' is not on PATH, so `{printed}` could not run.") from exc
     if completed.returncode != 0:
         raise BeaError(f"`{printed}` failed (exit {completed.returncode}); bea was not changed.")
+
+    # After the frontend package updates, refresh the managed engine so the
+    # helper/version pins stay matched (ADR014 t017). Homebrew already
+    # provisions `libexec/engine` at install time; PyPI/uv installs rely on
+    # this path. Failures here are reported — do not silently keep a stale env.
+    engine_refreshed = _refresh_engine()
+
     if ctx.json_output:
-        output.emit({"channel": channel.name, "command": list(channel.command), "ran": True})
+        output.emit(
+            {
+                "channel": channel.name,
+                "command": list(channel.command),
+                "ran": True,
+                "engine_refreshed": engine_refreshed,
+            }
+        )
     else:
         output.success(f"`{printed}` finished. Run 'bea --version' to see the installed version.")
+
+
+def _refresh_engine() -> bool:
+    """Rebuild the managed engine for the new frontend, when one is managed.
+
+    Returns whether a rebuild ran. Overrides (`BEA_ENGINE_PYTHON`), checkouts
+    (helper runs from the tree), and missing uv are left alone — the next local
+    command will surface a clear provision error if the engine is still required.
+    """
+    from cli.engine import paths, provision
+
+    if paths.python_override() is not None:
+        return False
+    if paths.checkout_source_root() is not None:
+        return False
+    try:
+        provision.repair_engine()
+    except Exception as exc:  # noqa: BLE001 — surface through BeaError below
+        raise BeaError(
+            "bea upgraded, but refreshing the Beancount engine failed.",
+            details=[str(exc), "Retry with a local command such as 'bea check', or set BEA_ENGINE_PYTHON."],
+        ) from exc
+    return True
 
 
 def _report(channel: Channel, current: str, latest: str | None) -> None:

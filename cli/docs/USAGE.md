@@ -24,6 +24,27 @@ bea upgrade [--check]
 
 Everything outside `bea cloud` works on local files (`ask` is the one exception: its model calls run through the hosted AI proxy). Everything under `bea cloud` needs a session from `bea cloud login` or `BEA_TOKEN`.
 
+## One install — no separate Beancount setup
+
+Install `bea` from Homebrew or PyPI. Customers do **not** install Beancount,
+Beanquery, or Fava themselves, and do not put `bean-*` tools on `PATH`. The
+`bea` frontend never loads those libraries; local ledger work runs through a
+managed engine environment that `bea` provisions.
+
+| Channel | Provisioning | Offline reuse | Upgrade |
+| --- | --- | --- | --- |
+| Homebrew (`brew install bex-co/tap/bea`) | Frontend and engine virtualenvs are created during installation | Local commands use the keg-local engine with no further download | `bea upgrade` → `brew upgrade bea` refreshes both |
+| PyPI (`uv tool install beancount-io` or pipx) | First local command that needs the engine downloads the hash-pinned combination (needs network and `uv` on `PATH`) | Later commands reuse `$XDG_DATA_HOME/bea/engine/<version>` (default `~/.local/share/bea/engine/…`) | `bea upgrade` upgrades the frontend and rebuilds the matching engine |
+
+If first-use or upgrade provisioning fails, fix network/`uv` availability and
+retry a local command such as `bea check` — do not `pip install beancount`.
+A broken managed environment is discarded and rebuilt on the next successful
+provision; global `bean-check` decoys on `PATH` are ignored.
+
+Optional Beangulp ingest adapters and Beanprice quote fetching are **not** in
+the base install (tracked as milestone m20). Ledger-skill instructions that
+still suggest installing Beancount separately are pending alignment (m21).
+
 ## Global options
 
 Global options come before the command.
@@ -153,16 +174,40 @@ Lowercase input such as `usd` is normalized to `USD`.
 # Parse, validate and realize the ledger
 bea check
 
-# Format a file, or every .bean/.beancount file under a directory
-bea format main.bean
-bea format .
-bea format . --dry-run
-bea format . --check     # CI/pre-commit: exit 1 if any files need formatting
+# Format to stdout, or rewrite the files with --in-place / -i
+bea format main.bean               # formatted text on stdout; the file is untouched
+bea format main.bean -o clean.bean # or to a file of your choosing
+bea format -i main.bean            # rewrite it
+bea format -i .                    # rewrite every .bean/.beancount file under a directory
+bea format . --dry-run             # write nothing; list the files that would change
+bea format . --check               # CI/pre-commit: exit 1 if any files need formatting
 
 # Run a BQL query and print a table; omit the query for the interactive shell
 bea query "SELECT account, sum(position) GROUP BY account"
+bea query "PRINT"          # parseable directives, not a table
 bea query                  # needs a terminal; exits 2 without one
+
+# Upstream's own diagnostics and generators
+bea doctor context main.bean 2026-01-02
+bea example --seed 1 -o example.beancount
+bea treeify < balances.txt
 ```
+
+### `bea format` writes to stdout unless you ask for a file
+
+Formatting used to rewrite whatever path it was given. It now prints the
+formatted text and leaves the file alone; `--in-place` (`-i`) is what rewrites
+it, and `--output FILE` (`-o`) writes somewhere else. `bea format -i .` is the
+old `bea format .`.
+
+This follows the formatter `bea` now runs, `bean-format`, whose default is the
+safe one — a command that reads a path and silently rewrites it cannot be tried
+out first. The same formatter is a text transformation and not a parse, so
+formatting no longer refuses a file with a syntax error: it aligns the amounts
+it recognises and leaves the rest alone. Run `bea check` to validate.
+
+In `--json` mode the destination has to be explicit, because stdout carries the
+envelope and nothing else: pass `-i`, `-o FILE`, `--check` or `--dry-run`.
 
 Query tables preserve the precision of result values, including calculated
 amounts and commodity quantities. Interactive queries and the `ask` BQL tool
@@ -259,7 +304,9 @@ formatted file stays formatted after an add; when a new amount or account is
 wider than any before it, a later `bea format` realigns only the older lines.
 Writes respect the destination file's permissions: a read-only file produces
 exit **3**, even when its directory permits replacement. This also applies to
-import and format. A read-only root can still validate a writable `--into` file.
+import. A read-only root can still validate a writable `--into` file.
+`bea format -i` is upstream's formatter writing the file itself, so a read-only
+file fails there with exit **1** and the formatter's own message.
 
 Payees, narrations, and string metadata are written on one line: runs of CR/LF
 line breaks become spaces in single adds, bulk JSON, and imports. Quotes and
@@ -633,7 +680,9 @@ Cloning uses `git clone` over SSH, so it needs Git and working SSH access. If a 
 ## Updating
 
 `bea upgrade` hands the update to whichever package manager installed this copy
-— Homebrew, uv, or pipx — and never rewrites its own installed files.
+— Homebrew, uv, or pipx — and never rewrites its own installed files. After the
+manager finishes, it also refreshes the managed Beancount engine so frontend
+and engine versions stay paired.
 
 ```bash norun
 # Needs network for the latest-version check; versions vary by machine.
@@ -745,10 +794,16 @@ select targets, endpoints, and state directories:
 | `BEA_FILE` | — | Ledger entry file, when `--file` is not passed |
 | `BEA_TOKEN` | — | Hosted credential for unattended jobs; never written to disk |
 | `BEA_CONFIG_DIR` | `$XDG_CONFIG_HOME/bea`, else `~/.config/bea` | Per-user state: credentials, `ask` history, user skills |
+| `XDG_DATA_HOME` | `~/.local/share` | Root for the managed PyPI engine under `…/bea/engine/<version>` |
 | `BEA_API_URL` | `https://api.v3.beancount.io` | API base URL |
 | `BEA_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL, used by the device login flow |
 | `BEA_NO_UPDATE_NOTIFIER` | — | Truthy disables the update notice entirely |
 | `CI` | — | Truthy implies `--no-input`, and disables the update notice |
+
+Homebrew sets `BEA_ENGINE_DIR` to the keg-local engine so installs never look
+for a separately provisioned copy. Advanced overrides (`BEA_ENGINE_PYTHON`,
+`BEA_UV`) exist for tests and recovery tooling; ordinary installs do not need
+them.
 
 Truthy values are `1`, `true`, `yes`, and `on`, ignoring case and surrounding
 whitespace. The configuration directory holds `credentials.json` (mode 0600 on

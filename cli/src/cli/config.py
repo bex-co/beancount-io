@@ -35,6 +35,17 @@ def cache_dir() -> Path:
     return base / "bea"
 
 
+def data_dir() -> Path:
+    """Managed installations — today the Beancount engine — under `$XDG_DATA_HOME/bea`.
+
+    Not `cache_dir()`: a provisioned engine is not recomputable from local
+    state, so a cache cleaner deleting it would leave every local command
+    needing a download before it could run again.
+    """
+    base = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share").expanduser()
+    return base / "bea"
+
+
 def history_path() -> Path:
     return config_dir() / "ask_history"
 

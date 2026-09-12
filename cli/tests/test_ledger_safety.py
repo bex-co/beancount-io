@@ -14,8 +14,8 @@ from beancount import loader
 from beancount.core.data import Custom, Document, Event, Note, Transaction
 from typer.testing import CliRunner
 
-from cli import ledger_write
-from cli.errors import ConflictError
+from bea_engine.ledger import write as ledger_write
+from bea_engine.protocol import ConflictError
 from cli.main import app
 
 runner = CliRunner()
@@ -322,7 +322,7 @@ def test_format_still_realigns_the_whole_file(tmp_path: Path) -> None:
         "  Assets:Cash  100.00 USD\n"
         "  Equity:OpeningBalances      -100.00 USD\n"
     )
-    result = invoke(book, "format", str(book))
+    result = invoke(book, "format", str(book), "--in-place")
     assert result.exit_code == 0, result.output
     assert "  Assets:Cash  100.00 USD\n" not in book.read_text()
     assert "  Equity:OpeningBalances  -100.00 USD\n" in book.read_text()
@@ -358,7 +358,7 @@ def test_appended_lines_are_what_format_would_write(tmp_path: Path) -> None:
     _add_transaction(book, "2026-01-04", "Rent", "Expenses:Rent 1234.56", "Assets:Checking")
     _assert_appended_lines_are_formatted(book, before)
     added = book.read_bytes()[len(before) :]
-    formatted = invoke(book, "format", str(tmp_path))
+    formatted = invoke(book, "format", str(tmp_path), "--in-place")
     assert formatted.exit_code == 0, formatted.output
     assert book.read_bytes().endswith(added)
 
@@ -442,7 +442,7 @@ def test_candidate_preserves_existing_line_endings(tmp_path: Path) -> None:
 def test_format_accepts_crlf_and_is_idempotent(tmp_path: Path) -> None:
     file = tmp_path / "windows.bean"
     file.write_bytes(b'2026-01-01 * "Food"\r\n Assets:Cash -1 USD\r\n Expenses:Food 1 USD\r\n')
-    result = runner.invoke(app, ["--json", "format", str(file)])
+    result = runner.invoke(app, ["--json", "format", str(file), "--in-place"])
     assert result.exit_code == 0, result.output
     assert b"\r\r\n" not in file.read_bytes()
     result = runner.invoke(app, ["--json", "format", str(file), "--check"])

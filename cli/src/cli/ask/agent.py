@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import io
+import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -9,9 +9,9 @@ from pydantic_ai import Agent, ModelRetry, RunContext
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
-from cli import ledger_write, output
 from cli.ask.skills import AgentSkill, build_skills_index_prompt
-from cli.errors import BeaError
+from cli.engine import launch
+from cli.errors import BeaError, LedgerError
 
 _SYSTEM_PROMPT = """You are a helpful Beancount accounting assistant.
 Use the run_bql_query tool to retrieve data from the user's ledger, then answer their question.
@@ -88,51 +88,31 @@ def make_agent(
     @agent.tool(retries=2)
     def run_bql_query(ctx: RunContext[BqlDeps], query: str) -> str:
         """Run a BQL (Beancount Query Language) query against the user's Beancount ledger."""
-        from cli.query_render import connect_ledger, render_query
-
-        conn = connect_ledger(ctx.deps.file.resolve())
-        if conn.errors:
-            raise ModelRetry("Ledger is invalid: " + "; ".join(output.format_ledger_error(e) for e in conn.errors))
         try:
-            cursor = conn.execute(query)
-        except Exception as e:
-            raise ModelRetry(f"BQL error: {e}. Fix the query and retry.") from e
-        if cursor.description is None:
-            return "(no results)"
-        rows = cursor.fetchall()
-        if not rows:
+            data = launch.helper_json(["query", "--file", str(ctx.deps.file.resolve()), query, "--format", "text"])
+        except LedgerError as exc:
+            detail = "; ".join(exc.details) if exc.details else str(exc)
+            raise ModelRetry("Ledger is invalid: " + detail) from exc
+        except BeaError as exc:
+            raise ModelRetry(f"BQL error: {exc}. Fix the query and retry.") from exc
+        text = str(data.get("text", ""))
+        if not text.strip():
             return "(empty result set)"
-        buf = io.StringIO()
-        render_query(cursor.description, rows, buf)
-        return buf.getvalue()
+        return text
 
     @agent.tool()
     def write_directive(ctx: RunContext[BqlDeps], directive: str) -> str:
         """Append a beancount directive to the ledger file. Use valid beancount syntax."""
-        from beancount.parser import lexer, parser
-
         perm = ctx.deps.write_permission
         if perm.deny_all:
             return "Write denied (you denied all writes this session)."
-        # This tool adds dated directives, not executable plugins or includes.
-        if any(
-            kind in {"INCLUDE", "PLUGIN", "OPTION", "PUSHTAG", "POPTAG", "PUSHMETA", "POPMETA"}
-            for kind, *_ in lexer.lex_iter_string(directive)  # type: ignore[no-untyped-call]
-        ):
-            return (
-                "Write rejected: provide dated ledger directives only; "
-                "configure options, plugins and includes separately."
-            )
-        entries, errors, _ = parser.parse_string(directive)
-        if errors or not entries:
-            return "Write rejected: " + (
-                "; ".join(output.format_ledger_error(e) for e in errors) or "No dated directives were supplied."
-            )
+        argv = ["append", "--file", str(ctx.deps.file.resolve()), "--text", "-"]
+        if ctx.deps.into is not None:
+            argv += ["--into", str(ctx.deps.into)]
         try:
-            snapshot = ledger_write.LedgerSnapshot.capture(ctx.deps.file)
-            ledger_write.validate_append(ctx.deps.file, [directive], into=ctx.deps.into, snapshot=snapshot)
+            preview = launch.helper_json([*argv, "--dry-run"], stdin=directive)
         except BeaError as exc:
-            return "Write rejected; nothing was written: " + str(exc) + " " + "; ".join(exc.details)
+            return _write_rejection(exc)
         if not perm.approve_all:
             if perm.confirm_fn is None:
                 return "Write skipped (non-interactive mode does not support writes)."
@@ -145,10 +125,13 @@ def make_agent(
             elif answer == "n":
                 return "Write cancelled by user."
         try:
-            ledger_write.append(ctx.deps.file, [directive], into=ctx.deps.into, snapshot=snapshot)
+            result = launch.helper_json(
+                [*argv, "--token", json.dumps(preview["token"])],
+                stdin=directive,
+            )
         except BeaError as exc:
-            return "Write rejected; nothing was written: " + str(exc) + " " + "; ".join(exc.details)
-        return f"Added {len(entries)} directive(s) to {ledger_write.destination(ctx.deps.file, ctx.deps.into)}."
+            return _write_rejection(exc)
+        return f"Added {result['written']} directive(s) to {result['target']}."
 
     @agent.tool()
     def get_skill_body(ctx: RunContext[BqlDeps], name: str) -> str:
@@ -160,3 +143,11 @@ def make_agent(
         return skill.body or "(no body content)"
 
     return agent
+
+
+def _write_rejection(exc: BeaError) -> str:
+    """Tool-facing write failure: keep the soft 'rejected' wording the model already sees."""
+    message = str(exc)
+    if message.startswith("Write rejected"):
+        return message if not exc.details else message + " " + "; ".join(exc.details)
+    return "Write rejected; nothing was written: " + message + (" " + "; ".join(exc.details) if exc.details else "")

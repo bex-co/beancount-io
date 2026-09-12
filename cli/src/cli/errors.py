@@ -44,11 +44,13 @@ class BeaError(Exception):
         request_id: str | None = None,
         details: list[str] | None = None,
         result: dict[str, Any] | None = None,
+        traceback: str | None = None,
     ) -> None:
         super().__init__(message)
         self.request_id = request_id
         self.details = details or []
         self.result = result
+        self.traceback = traceback
 
 
 class LedgerError(BeaError):
@@ -77,6 +79,17 @@ class ConflictError(BeaError):
 
     category = "conflict"
     exit_code = EXIT_CONFLICT
+
+
+BY_CATEGORY: dict[str, type[BeaError]] = {
+    "validation": LedgerError,
+    "usage": UsageError,
+    "auth": AuthError,
+    "conflict": ConflictError,
+}
+"""The table above, as code. The engine reports the same category names, so one
+crossing the process boundary is looked up here rather than translated into a
+second vocabulary."""
 
 
 def request_id_from(headers: Any) -> str | None:

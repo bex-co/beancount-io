@@ -218,7 +218,6 @@ class TestTheNotice:
         assert result.exit_code == 0
         assert "bea 9.9.9 is available" in result.stderr
         assert "bea upgrade" in result.stderr
-        assert "no errors" in result.stdout
 
     def test_it_says_nothing_when_the_installed_version_is_current(
         self, fake_index: FakeIndex, in_a_terminal: None, monkeypatch: pytest.MonkeyPatch
@@ -253,7 +252,6 @@ class TestTheNotice:
 
         assert result.exit_code == 0
         assert "is available" not in result.stderr
-        assert "no errors" in result.stdout
 
     def test_a_failing_command_is_not_followed_by_a_notice(
         self, fake_index: FakeIndex, in_a_terminal: None, monkeypatch: pytest.MonkeyPatch

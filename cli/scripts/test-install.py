@@ -10,6 +10,24 @@ from pathlib import Path
 from runpy import run_path
 
 
+def _prepare_engine_find_links(scripts: Path, scratch: Path) -> Path:
+    """Build the sibling engine wheel so first-use provisioning can resolve it.
+
+    Released installs fetch `beancount-io-engine` from the index (published next
+    to `beancount-io`). Local/CI rehearsals have the engine project in-tree but
+    not on PyPI, so point uv at a disposable find-links directory instead.
+    """
+    index = scratch / "engine-index"
+    index.mkdir(parents=True, exist_ok=True)
+    engine = scripts.parent / "engine"
+    subprocess.run(
+        ["uv", "build", "--wheel", "--out-dir", str(index)],
+        cwd=engine,
+        check=True,
+    )
+    return index
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("artifact", type=Path)
@@ -23,7 +41,16 @@ def main() -> None:
     scratch.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="install-", dir=scratch) as work:
         root = Path(work).resolve()
-        env = {**os.environ, "UV_TOOL_DIR": str(root / "tools"), "UV_TOOL_BIN_DIR": str(root / "bin")}
+        engine_index = _prepare_engine_find_links(scripts, root)
+        env = {
+            **os.environ,
+            "UV_TOOL_DIR": str(root / "tools"),
+            "UV_TOOL_BIN_DIR": str(root / "bin"),
+            # First-use provisioning runs `uv pip install beancount-io-engine==…`.
+            "UV_FIND_LINKS": str(engine_index),
+        }
+        # smoke-installed.py inherits os.environ; keep find-links visible there too.
+        os.environ["UV_FIND_LINKS"] = str(engine_index)
         env.pop("PYTHONPATH", None)
         spec = str(artifact) + ("[ask]" if args.ask else "")
         if args.installer == "uv":

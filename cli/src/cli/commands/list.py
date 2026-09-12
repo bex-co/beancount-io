@@ -1,9 +1,14 @@
 """`bea list <type>` — read directives out of a local ledger.
 
-The eleven directive types differ only in which reader they call, how a row is
-formatted, and which filter they accept, so they are declared as data and
+The reading happens in the engine (`bea-engine list`); this module is the option
+surface and the rendering. The eleven directive types differ only in how a row is
+formatted and which filter they accept, so they are declared as data and
 registered from three shared command shapes. Loading, error handling, limit
 truncation, and the JSON envelope are then written once.
+
+Rows arrive as the JSON the helper answered with, so nothing here knows a
+Beancount type: a cell is a string in a dict, and `--details` renders the
+Beancount syntax the helper already produced.
 """
 
 from __future__ import annotations
@@ -38,99 +43,91 @@ AllowErrorsOpt = Annotated[
 
 @dataclass(frozen=True)
 class _Spec:
-    """One directive type: where to read it, how to show it, what filter it takes."""
+    """One directive type: how to show it, and what filter it takes."""
 
-    reader: str
     headers: list[str]
-    row: Callable[[Any], list[str]]
+    row: Callable[[dict[str, Any]], list[str]]
     empty: str
     filter: str | None = None  # "account", "currency", or nothing but dates
 
 
-def _format_custom_values(custom: Any) -> str:
+def _format_custom_values(custom: dict[str, Any]) -> str:
     parts = []
-    for value in custom.values:
-        if value.kind == "amount":
-            parts.append(f"{value.number} {value.currency}")
+    for value in custom["values"]:
+        if value["kind"] == "amount":
+            parts.append(f"{value['number']} {value['currency']}")
         else:
-            parts.append(str(value.value))
+            parts.append(str(value["value"]))
     return " ".join(parts)
+
+
+def _amount(amount: dict[str, Any]) -> str:
+    return f"{amount['number']} {amount['currency']}"
 
 
 SPECS: dict[str, _Spec] = {
     "transaction": _Spec(
-        reader="list_transactions",
         headers=["DATE", "FLAG", "PAYEE", "NARRATION", "POSTINGS"],
-        row=lambda t: [str(t.date), t.flag, t.payee or "", t.narration or "", str(len(t.postings))],
+        row=lambda t: [t["date"], t["flag"], t["payee"] or "", t["narration"] or "", str(len(t["postings"]))],
         empty="No transactions found.",
         filter="account",
     ),
     "note": _Spec(
-        reader="list_notes",
         headers=["DATE", "ACCOUNT", "COMMENT"],
-        row=lambda n: [str(n.date), n.account, n.comment],
+        row=lambda n: [n["date"], n["account"], n["comment"]],
         empty="No notes found.",
         filter="account",
     ),
     "balance": _Spec(
-        reader="list_balances",
         headers=["DATE", "ACCOUNT", "AMOUNT"],
-        row=lambda b: [str(b.date), b.account, f"{b.amount.number} {b.amount.currency}"],
+        row=lambda b: [b["date"], b["account"], _amount(b["amount"])],
         empty="No balance assertions found.",
         filter="account",
     ),
     "open": _Spec(
-        reader="list_opens",
         headers=["DATE", "ACCOUNT", "CURRENCIES"],
-        row=lambda o: [str(o.date), o.account, ", ".join(o.currencies)],
+        row=lambda o: [o["date"], o["account"], ", ".join(o["currencies"])],
         empty="No open directives found.",
         filter="account",
     ),
     "close": _Spec(
-        reader="list_closes",
         headers=["DATE", "ACCOUNT"],
-        row=lambda c: [str(c.date), c.account],
+        row=lambda c: [c["date"], c["account"]],
         empty="No close directives found.",
         filter="account",
     ),
     "document": _Spec(
-        reader="list_documents",
         headers=["DATE", "ACCOUNT", "FILENAME"],
-        row=lambda d: [str(d.date), d.account, d.filename],
+        row=lambda d: [d["date"], d["account"], d["filename"]],
         empty="No documents found.",
         filter="account",
     ),
     "pad": _Spec(
-        reader="list_pads",
         headers=["DATE", "ACCOUNT", "SOURCE"],
-        row=lambda p: [str(p.date), p.account, p.source_account],
+        row=lambda p: [p["date"], p["account"], p["source_account"]],
         empty="No pad directives found.",
         filter="account",
     ),
     "price": _Spec(
-        reader="list_prices",
         headers=["DATE", "CURRENCY", "AMOUNT"],
-        row=lambda p: [str(p.date), p.currency, f"{p.amount.number} {p.amount.currency}"],
+        row=lambda p: [p["date"], p["currency"], _amount(p["amount"])],
         empty="No prices found.",
         filter="currency",
     ),
     "commodity": _Spec(
-        reader="list_commodities",
         headers=["DATE", "CURRENCY"],
-        row=lambda c: [str(c.date), c.currency],
+        row=lambda c: [c["date"], c["currency"]],
         empty="No commodity directives found.",
         filter="currency",
     ),
     "event": _Spec(
-        reader="list_events",
         headers=["DATE", "TYPE", "DESCRIPTION"],
-        row=lambda e: [str(e.date), e.type, e.description],
+        row=lambda e: [e["date"], e["type"], e["description"]],
         empty="No events found.",
     ),
     "custom": _Spec(
-        reader="list_customs",
         headers=["DATE", "TYPE", "VALUES"],
-        row=lambda c: [str(c.date), c.type, _format_custom_values(c)],
+        row=lambda c: [c["date"], c["type"], _format_custom_values(c)],
         empty="No custom directives found.",
     ),
 }
@@ -199,58 +196,75 @@ def _transaction_table(headers: list[str], rows: list[tuple[list[str], list[tupl
             typer.echo(f"{sep}{account.ljust(pad)}: {amount}")
 
 
-def _run(spec: _Spec, limit: int, allow_errors: bool, *, details: bool = False, **filters: Any) -> None:
-    """Load the ledger, list one directive type, and render it for the active mode."""
+def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: bool = False, **filters: Any) -> None:
+    """Ask the engine for one directive type, and render it for the active mode."""
+    from cli.engine import launch
+
     ctx = context.current()
     if filters.get("from_date") and filters.get("to_date") and filters["from_date"] > filters["to_date"]:
         raise UsageError("--from-date must be on or before --to-date.")
     file = ctx.entry_file()
-    from cli.directives import reader
 
-    entries, errors = reader.load_file(file)
-    output.render_ledger_errors(errors, allow=allow_errors)
+    # --details only feeds the human rendering, and the JSON envelope returns
+    # before it is used; asking for it there would render Beancount for nothing.
+    rendering = details and not ctx.json_output
+    argv = ["list", "--file", str(file), "--type", name, "--limit", str(limit)]
+    for option, value in (("--from-date", filters.get("from_date")), ("--to-date", filters.get("to_date"))):
+        if value is not None:
+            argv += [option, value.isoformat()]
+    for option, value in (
+        ("--account", filters.get("account")),
+        ("--currency", filters.get("currency")),
+        ("--flag", filters.get("flag")),
+    ):
+        if value is not None:
+            argv += [option, str(value)]
+    for option, values in (
+        ("--search", filters.get("search")),
+        ("--tag", filters.get("tags")),
+        ("--link", filters.get("links")),
+    ):
+        for value in values or []:
+            argv += [option, str(value)]
+    if filters.get("newest"):
+        argv.append("--newest")
+    if rendering:
+        argv.append("--details")
 
-    # One extra row tells truncation from an exact fit without a second pass.
-    items = getattr(reader, spec.reader)(entries, limit=limit + 1, **filters)
-    truncated = len(items) > limit
-    items = items[:limit]
+    data = launch.helper_json(argv)
+    output.render_ledger_errors(data.get("errors") or [], allow=allow_errors)
+    items: list[dict[str, Any]] = list(data["items"])
+    truncated = bool(data["truncated"])
 
     if ctx.json_output:
-        output.emit(
-            [item.model_dump(mode="json") for item in items],
-            target=output.file_target(file),
-            truncated=truncated,
-            limit=limit,
-        )
+        output.emit(items, target=output.file_target(file), truncated=truncated, limit=limit)
         return
 
     if not items:
         typer.echo(spec.empty)
         return
-    if details:
-        from cli.directives.writer import format_transaction
-
+    if rendering:
         output.note("Transactions rendered in Beancount syntax: all postings, with source locations.")
-        for item in items:
-            if item.source:
-                typer.echo(f"{item.source.filename}:{item.source.lineno}")
-            typer.echo(format_transaction(item))
-    elif spec.reader == "list_transactions":
+        for item, rendered in zip(items, data["rendered"], strict=True):
+            if item.get("source"):
+                typer.echo(f"{item['source']['filename']}:{item['source']['lineno']}")
+            typer.echo(rendered)
+    elif name == "transaction":
         account = (filters.get("account") or "").casefold()
         _transaction_table(
             ["DATE", "FLAG", "PAYEE", "NARRATION", "MATCHING POSTING AMOUNTS" if account else "POSTING AMOUNTS"],
             [
                 (
                     [
-                        str(item.date),
-                        item.flag,
-                        item.payee or "",
-                        item.narration or "(no narration)",
+                        item["date"],
+                        item["flag"],
+                        item["payee"] or "",
+                        item["narration"] or "(no narration)",
                     ],
                     [
-                        (p.account, f"{p.units.number} {p.units.currency}")
-                        for p in item.postings
-                        if p.units and (not account or account in p.account.casefold())
+                        (p["account"], _amount(p["units"]))
+                        for p in item["postings"]
+                        if p["units"] and (not account or account in p["account"].casefold())
                     ],
                 )
                 for item in items
@@ -262,7 +276,7 @@ def _run(spec: _Spec, limit: int, allow_errors: bool, *, details: bool = False, 
         output.note(f"Showing the first {limit}; pass --limit for more.")
 
 
-def _account_command(spec: _Spec) -> Callable[..., None]:
+def _account_command(name: str, spec: _Spec) -> Callable[..., None]:
     def command(
         limit: LimitOpt = 50,
         from_date: FromDateOpt = None,
@@ -271,6 +285,7 @@ def _account_command(spec: _Spec) -> Callable[..., None]:
         allow_errors: AllowErrorsOpt = False,
     ) -> None:
         _run(
+            name,
             spec,
             limit,
             allow_errors,
@@ -282,7 +297,7 @@ def _account_command(spec: _Spec) -> Callable[..., None]:
     return command
 
 
-def _currency_command(spec: _Spec) -> Callable[..., None]:
+def _currency_command(name: str, spec: _Spec) -> Callable[..., None]:
     def command(
         limit: LimitOpt = 50,
         from_date: FromDateOpt = None,
@@ -291,6 +306,7 @@ def _currency_command(spec: _Spec) -> Callable[..., None]:
         allow_errors: AllowErrorsOpt = False,
     ) -> None:
         _run(
+            name,
             spec,
             limit,
             allow_errors,
@@ -302,7 +318,7 @@ def _currency_command(spec: _Spec) -> Callable[..., None]:
     return command
 
 
-def _plain_command(spec: _Spec) -> Callable[..., None]:
+def _plain_command(name: str, spec: _Spec) -> Callable[..., None]:
     def command(
         limit: LimitOpt = 50,
         from_date: FromDateOpt = None,
@@ -310,6 +326,7 @@ def _plain_command(spec: _Spec) -> Callable[..., None]:
         allow_errors: AllowErrorsOpt = False,
     ) -> None:
         _run(
+            name,
             spec,
             limit,
             allow_errors,
@@ -327,7 +344,7 @@ _COMMANDS = {"account": _account_command, "currency": _currency_command, None: _
 for _name, _spec in SPECS.items():
     if _name == "transaction":
         continue
-    list_app.command(_name, help=f"List {_name} directives from a .bean file.")(_COMMANDS[_spec.filter](_spec))
+    list_app.command(_name, help=f"List {_name} directives from a .bean file.")(_COMMANDS[_spec.filter](_name, _spec))
 
 
 class TransactionSort(StrEnum):
@@ -358,10 +375,9 @@ def transactions(
 ) -> None:
     """List recent transactions and their amounts; --details adds metadata and source."""
     if flag is not None and len(flag) != 1:
-        from cli.errors import UsageError
-
         raise UsageError("--flag must be one character, such as '!' or '*'.")
     _run(
+        "transaction",
         SPECS["transaction"],
         limit,
         allow_errors,

@@ -221,31 +221,38 @@ def test_format_check_gates_ci_and_dry_run_remains_a_preview(book: Path) -> None
     error = json.loads(check.stderr)["error"]
     assert error["result"]["formatted"] == [str(book)] and error["result"]["check"] is True
     assert book.read_bytes() == before
-    assert invoke(book, "format", str(book)).exit_code == 0
+    assert invoke(book, "format", str(book), "--in-place").exit_code == 0
     assert invoke(book, "format", str(book), "--check").exit_code == 0
 
 
-@pytest.mark.parametrize("flags", [[], ["--dry-run"], ["--check"]])
-def test_format_reports_syntax_errors_and_preserves_bad_files(book: Path, flags: list[str]) -> None:
-    bad = book.parent / "broken.beancount"
-    bad.write_text("2026-01-01 open assets:lower USD\n")
-    before = bad.read_bytes()
-    result = invoke(book, "format", str(book.parent), *flags)
-    assert result.exit_code == 1, result.output
-    assert result.stdout == ""
-    error = json.loads(result.stderr)["error"]
-    assert "syntax" in error["message"].lower()
-    assert str(bad) + ":1:" in " ".join(error["details"])
-    assert error["result"]["skipped"] == [str(bad)]
-    assert bad.read_bytes() == before
-    human = runner.invoke(app, ["format", str(bad), *flags])
-    assert human.exit_code == 1 and "skipped" in human.stderr.lower()
+def test_format_check_detects_misalignment_and_in_place_fixes_it(book: Path) -> None:
+    misaligned = book.parent / "misaligned.beancount"
+    misaligned.write_text('2026-01-01 * "Food"\n Assets:Checking -1 USD\n Expenses:Food 1 USD\n')
+    before = misaligned.read_bytes()
+    check = invoke(book, "format", str(misaligned), "--check")
+    assert check.exit_code == 1, check.output
+    assert misaligned.read_bytes() == before
+    error = json.loads(check.stderr)["error"]
+    assert error["result"]["formatted"] == [str(misaligned)] and error["result"]["check"] is True
+    dry_run = invoke(book, "format", str(misaligned), "--dry-run")
+    assert dry_run.exit_code == 0, dry_run.output
+    assert json.loads(dry_run.stdout)["data"]["formatted"] == [str(misaligned)]
+    assert invoke(book, "format", str(misaligned), "--in-place").exit_code == 0
+    assert misaligned.read_bytes() != before
+    assert invoke(book, "format", str(misaligned), "--check").exit_code == 0
+    # bean-format is a text transform; invalid account names are not parse-checked.
+    bad_account = book.parent / "bad-account.beancount"
+    bad_account.write_text("2026-01-01 open assets:lower USD\n")
+    before_bad = bad_account.read_bytes()
+    assert invoke(book, "format", str(bad_account), "--check").exit_code == 0
+    assert invoke(book, "format", str(bad_account), "--in-place").exit_code == 0
+    assert bad_account.read_bytes() == before_bad
 
 
 def test_formatting_split_files_does_not_require_root_options_or_account_opens(book: Path) -> None:
     book.write_text('option "name_assets" "Actif"\ninclude "year.bean"\n')
     year = book.parent / "year.bean"
     year.write_text('2026-01-02 * "Food"\n Actif:Épargne -1 USD\n Expenses:Food 1 USD\n')
-    result = invoke(book, "format", str(book.parent))
+    result = invoke(book, "format", str(book.parent), "--in-place")
     assert result.exit_code == 0, result.output
     assert invoke(book, "format", str(book.parent), "--check").exit_code == 0

@@ -1,13 +1,17 @@
 # Beancount.io CLI
 
-Python 3.12 CLI for local and hosted Beancount workflows. The distribution is `beancount-io` and it installs one command, `bea`. It uses Typer, Beancount v3, Beanquery, Pydantic, and uv, and includes the vendored Fava reporting library under `src/fava/`.
+Python 3.12 CLI for local and hosted Beancount workflows. The distribution is `beancount-io` and it installs one command, `bea`. It uses Typer, Pydantic, and uv. Ledger loading lives in the separate `beancount-io-engine` distribution (`src/bea_engine/` plus vendored `src/fava/`).
 
 ## Layout
 
 ```
 cli/
-├── src/cli/       # Commands, API client, credentials, directives, reports, ask
-├── src/fava/      # Vendored Fava reporting subset used by the CLI
+├── src/cli/       # Commands, API client, credentials, reports, ask
+├── src/cli/engine/# Frontend client for the engine: paths, provisioning, launching
+├── src/bea_engine/# `bea-engine` helper — the ledger operations that load Beancount
+├── src/bea_engine/ledger/ # Directive models, reader, writer, atomic ledger writes
+├── src/fava/      # Vendored Fava reporting subset, now engine-side
+├── engine/        # Build config for the `beancount-io-engine` distribution
 ├── openapi/       # Pinned v1 OpenAPI snapshot the REST client is generated from
 ├── tests/         # Pytest suite
 ├── scripts/       # Release plumbing plus scripts/gen_reference.py (docs/REFERENCE.md generator)
@@ -56,7 +60,20 @@ the resulting diff.
 - Use strict typing: mypy is configured with `strict = true`, and Ruff owns import order and formatting.
 - Put tests in `tests/` and use existing fixtures/helpers in `tests/conftest.py`.
 - Keep local-ledger operations local by default. Hosted mutations must use the existing credentials/API abstractions and surface failures without hiding them.
-- Preserve vendored Fava attribution and licensing (`NOTICE.fava`) when changing `src/fava/`.
+- Preserve vendored Fava attribution and licensing (`NOTICE.fava`) when changing `src/fava/`. `engine/NOTICE.fava` is a verbatim copy that ships in the engine distribution; `tests/test_engine_helper.py` fails if the two diverge.
+
+## The engine boundary
+
+[ADR014](../docs/adrs/ADR014-cli-beancount-parity.md) splits this package into two distributions built from one source tree:
+
+- **Frontend** — `beancount-io` (`pyproject.toml`), the `bea` command. It must not import `beancount`, `beanquery`, `fava`, or `bea_engine`, directly or transitively. Customer wheel packages only `src/cli`. Dev/test may still list Beancount in the `dev` dependency group so the checkout helper path and ledger fixtures work. `bea ask` keeps AI SDKs in-process and runs ledger query/validate/write only through `cli.engine.launch.helper_json` (w1/m19 t022/t023).
+- **Engine** — `beancount-io-engine` (`engine/pyproject.toml`), which packages `src/bea_engine/` plus `src/fava/`. It owns all Beancount loading and ships no frontend code, no HTTP client, and no AI SDK.
+
+`engine/src` is a symlink to `../src`, which is what lets the engine's build config reach the shared tree while every path stays inside its own project root — a root that reaches above itself cannot produce an sdist a wheel can be built from. Build both with `uv build` from the owning directory.
+
+Directive models, reading and validated writing live in `src/bea_engine/ledger/` (`models`, `reader`, `writer`, `write`, and the `listing`/`adding` answers behind `bea-engine list` / `bea-engine add`). `bea list` and `bea add` are pure frontend: they own the option surface, the date and notation checks, and the rendering, and everything Beancount has to read — a posting, a balance tolerance, an account name, a typed metadata value — crosses as a JSON request.
+
+New engine-dependent behavior goes in `src/bea_engine/` as a command answering one JSON envelope (contract: `src/bea_engine/README.md`), and the frontend calls it with `cli.engine.launch.helper_json` and renders the result through `cli.output`. Use `run_engine_argv`/`run_native` instead when upstream should own the streams and exit status. `cli/src/cli/engine/manifest.json` pins what gets provisioned; bump `engine_version` there, in `engine/pyproject.toml`, and in `bea_engine.FALLBACK_VERSION` together. `BEA_ENGINE_PYTHON` points at a prepared interpreter, and `BEA_ENGINE_DIR` relocates the managed environment.
 
 ## Releasing
 

@@ -3,10 +3,13 @@
 #
 #   bash scripts/render-formula.sh <version> <sdist-sha256> <sdist-url> > bea.rb
 #
-# The formula is thin on purpose: PyPI is the single release source, and the
-# only thing Homebrew adds is a managed virtualenv. Dependencies come from the
-# `requirements.lock` the sdist carries — a full hash-pinned export of the same
-# resolution CI tested — so an install resolves nothing and compiles nothing.
+# The formula installs two environments (ADR014):
+# - `libexec/venv` — the MIT frontend (`bea`) and its non-engine deps
+# - `libexec/engine` — the Beancount/Beanquery helper (`bea-engine`) and natives
+#
+# Frontend deps come from `requirements.lock`. Engine deps come from
+# `engine-requirements.lock` plus the `engine/` project shipped in the sdist.
+# Both locks are hash-pinned exports of the resolutions CI tested.
 set -euo pipefail
 
 version="${1:?usage: render-formula.sh <version> <sdist-sha256> <sdist-url>}"
@@ -48,7 +51,7 @@ class Bea < Formula
 
   def install
     project = libexec/"project"
-    project.install "pyproject.toml", "README.md", "requirements.lock", "src"
+    project.install "pyproject.toml", "README.md", "requirements.lock", "engine-requirements.lock", "src", "engine"
 
     uv = Formula["uv"].opt_bin/"uv"
     system uv, "venv", "--python", Formula["python@3.12"].opt_bin/"python3.12", libexec/"venv"
@@ -56,7 +59,13 @@ class Bea < Formula
     # relocation pass — and installing it here is what makes bin/bea a real
     # file at the moment the keg is linked.
     system uv, "pip", "install", "--python", libexec/"venv/bin/python", "--no-deps", project
-    bin.install_symlink libexec/"venv/bin/bea"
+    # Point bea at the keg-local engine so local commands never look for a
+    # global bean-* tool or download on first use.
+    (bin/"bea").write <<~EOS
+      #!/bin/bash
+      export BEA_ENGINE_DIR="#{libexec}/engine"
+      exec "#{libexec}/venv/bin/bea" "\$@"
+    EOS
     pkgshare.install "scripts/smoke-installed.py"
     pkgshare.install "docs/examples/csv_importers.py"
   end
@@ -70,9 +79,20 @@ class Bea < Formula
   # after that pass has already run. --require-hashes pins every one of them to
   # the exact artifact the release tested.
   def post_install
-    system Formula["uv"].opt_bin/"uv", "pip", "install",
+    uv = Formula["uv"].opt_bin/"uv"
+    system uv, "pip", "install",
            "--python", libexec/"venv/bin/python",
            "--require-hashes", "--only-binary", ":all:", "--requirement", libexec/"project/requirements.lock"
+    # Separate engine environment (ADR014): relocatable so console-script
+    # shebangs survive any keg move; hash-pinned upstream packages; helper
+    # from the sdist's engine/ project with --no-deps.
+    system uv, "venv", "--relocatable", "--python", Formula["python@3.12"].opt_bin/"python3.12", libexec/"engine"
+    system uv, "pip", "install",
+           "--python", libexec/"engine/bin/python",
+           "--require-hashes", "--only-binary", ":all:", "--requirement", libexec/"project/engine-requirements.lock"
+    system uv, "pip", "install",
+           "--python", libexec/"engine/bin/python",
+           "--no-deps", libexec/"project/engine"
   end
 
   test do

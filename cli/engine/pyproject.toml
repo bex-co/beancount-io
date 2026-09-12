@@ -1,0 +1,71 @@
+# The engine distribution: everything that loads Beancount.
+#
+# ADR014 puts the process boundary here. `beancount-io` (the frontend, one
+# directory up) owns the `bea` command, the cloud client and the optional AI
+# SDKs, and must never import beancount, beanquery or fava. This distribution
+# owns those three and ships the `bea-engine` helper the frontend calls as a
+# child process. See `../src/bea_engine/README.md` for the command protocol, and
+# `../src/cli/engine/manifest.json` for the versions the frontend provisions —
+# that manifest is the provisioner's input, so it ships with the frontend.
+#
+# Deliberately absent: httpx, pydantic-settings, openai and pydantic-ai. The
+# engine never reaches the network or a model, so `bea ask` keeps its AI SDKs on
+# the frontend side (ADR014 t022).
+[project]
+name = "beancount-io-engine"
+version = "0.1.0"
+description = "Beancount.io engine helper — the ledger operations that load Beancount"
+license = { text = "GPL-2.0-only" }
+requires-python = ">=3.12"
+dependencies = [
+    "beancount>=3.2",
+    "beanquery>=0.2",
+    "typer>=0.12",
+    "pydantic>=2.0",
+    "python-dateutil>=2.9.0",
+    "ply>=3.11",
+    "pyexcel>=0.7.3",
+    "prompt-toolkit>=3.0",
+    "python-frontmatter>=1.1",
+    "attrs>=23",
+]
+
+[project.urls]
+Homepage = "https://beancount.io"
+Repository = "https://github.com/bex-co/beancount-io"
+
+[project.scripts]
+bea-engine = "bea_engine.main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# One source tree, two distributions. `bea_engine` and `fava` stay at `cli/src/`
+# beside the frontend, so a single checkout, one ruff config and one mypy run
+# cover both sides of the boundary instead of a second copy of `src/fava` to
+# keep in sync. `src` and `NOTICE.fava` here are symlinks into `cli/`, which is
+# what lets every path below stay inside this project root — a build root cannot
+# reach above itself and still produce an sdist a wheel can be built from.
+#
+# The two mechanisms differ on symlinks, and the config leans on that: hatchling
+# follows a symlinked directory when it walks `include`/`packages` but skips a
+# symlinked file, while `force-include` follows both. So `src/` arrives through
+# the walk and `NOTICE.fava` through force-include. In an unpacked sdist both are
+# real paths in the same places, so the sdist -> wheel build works unchanged.
+[tool.hatch.build.targets.wheel]
+packages = ["src/bea_engine", "src/fava"]
+
+# After the migration this is the only distribution shipping Fava's code, so it
+# carries Fava's notice (ADR014 licensing boundary).
+[tool.hatch.build.targets.wheel.force-include]
+"NOTICE.fava" = "bea_engine/NOTICE.fava"
+
+# Named explicitly rather than `src/`: the same tree holds the frontend, and an
+# engine artifact must not ship `src/cli`.
+[tool.hatch.build.targets.sdist]
+include = ["src/bea_engine/", "src/fava/", "pyproject.toml"]
+exclude = ["**/__pycache__", "**/*.py[co]"]
+
+[tool.hatch.build.targets.sdist.force-include]
+"NOTICE.fava" = "NOTICE.fava"

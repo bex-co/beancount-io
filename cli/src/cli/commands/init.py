@@ -1,9 +1,12 @@
-"""Create a small, usable personal ledger without installing another tool."""
+"""Create a small, usable personal ledger without installing another tool.
+
+Starter content, alignment, validation, and atomic creation run in
+`bea-engine init`. This module owns prompts, option checks, and next-step UX.
+"""
 
 from __future__ import annotations
 
 import datetime
-import os
 import re
 import shlex
 from decimal import Decimal, InvalidOperation
@@ -12,10 +15,12 @@ from typing import Annotated
 
 import typer
 
-from cli import context, ledger_write, output
+from cli import context, output
 from cli.errors import ConflictError, UsageError
 from cli.utils import parse_date
 
+# Must match `bea_engine.initiating.ACCOUNTS` — the engine builds the template;
+# the frontend only uses this list to validate interactive opening balances.
 _ACCOUNTS = (
     "Assets:Checking",
     "Assets:Savings",
@@ -29,8 +34,6 @@ _ACCOUNTS = (
     "Expenses:Transport",
     "Expenses:Utilities",
     "Expenses:Fees",
-    # `bea import` books every uncategorized row here, so a fresh ledger can
-    # take an export without a second `bea add open` first.
     "Expenses:Uncategorized",
     "Equity:OpeningBalances",
 )
@@ -74,6 +77,8 @@ def init(
     Credit card debt uses a negative opening balance.
     New ledger files are private (0600 on POSIX); chmod explicitly to share.
     """
+    from cli.engine import launch
+
     ctx = context.current()
     if ctx.file is not None:
         if directory != Path("."):
@@ -119,36 +124,11 @@ def init(
             f"Checking opening balance on {day} (negative for an overdraft)", default="0", value_proc=_opening_amount
         )
 
-    content = f'option "title" "Personal ledger"\noption "operating_currency" "{currency}"\n\n'
-    content += "; Add more accounts with bea add open. Amounts on credit accounts are negative.\n"
-    content += "; bea import books rows it cannot categorize to Expenses:Uncategorized with flag '!'.\n"
-    content += "".join(f"{day} open {account} {currency}\n" for account in _ACCOUNTS)
-    nonzero = {account: amount for account, amount in balances.items() if amount}
-    if nonzero:
-        content += f'\n{day} * "Opening balances"\n'
-        # Fixed-point text: str(Decimal) turns a one-satoshi balance into
-        # `1E-8`, which Beancount cannot parse as an amount.
-        content += "".join(f"  {account}  {amount:f} {currency}\n" for account, amount in nonzero.items())
-        content += f"  Equity:OpeningBalances  {-sum(nonzero.values()):f} {currency}\n"
-    else:
-        content += (
-            "\n; Record opening balances with a transaction against Equity:OpeningBalances.\n"
-            f'; {day} * "Opening balance"\n'
-            f";   Assets:Checking          1000.00 {currency}\n"
-            f";   Equity:OpeningBalances  -1000.00 {currency}\n"
-        )
-    file.parent.mkdir(parents=True, exist_ok=True)
-    from beancount.scripts.format import align_beancount
-
-    content = align_beancount(content)  # type: ignore[no-untyped-call]
-    with ledger_write.candidate_file(file, content) as candidate:
-        ledger_write.validate_candidate(candidate, file)
-        try:
-            # Atomic creation without replacing a file another process created.
-            os.link(candidate, file)
-        except FileExistsError as exc:
-            raise ConflictError(f"Already exists: {file}; nothing was overwritten.") from exc
-    data = {"created": str(file), "currency": currency, "date": day, "accounts": list(_ACCOUNTS)}
+    argv = ["init", "--file", str(file), "--currency", currency, "--date", day.isoformat()]
+    for account, amount in balances.items():
+        if amount:
+            argv += ["--opening-balance", f"{account} {amount:f}"]
+    data = launch.helper_json(argv)
     if warnings:
         data["warnings"] = warnings
     if ctx.json_output:
@@ -156,7 +136,8 @@ def init(
     else:
         for warning in warnings:
             output.note(warning)
-        output.success(f"Created {file} with {len(_ACCOUNTS)} accounts in {currency}.")
+        accounts = data.get("accounts") or list(_ACCOUNTS)
+        output.success(f"Created {file} with {len(accounts)} accounts in {currency}.")
         try:
             shown = f"~/{file.relative_to(Path.home())}"
         except ValueError:

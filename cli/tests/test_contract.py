@@ -674,6 +674,7 @@ class TestVersion:
             "beancount",
             "beanquery",
             "fava",
+            "bea_engine",
             "openai",
             "pydantic_ai",
             "pydantic_settings",

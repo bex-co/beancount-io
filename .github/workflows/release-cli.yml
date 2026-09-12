@@ -86,16 +86,12 @@ jobs:
       - name: Run all checks
         run: make check-all
 
-      - name: Export the hash-pinned dependency lock
-        run: make release-lock
-
-      - name: Build the sdist and wheel
+      - name: Build release artifacts
         run: |
-          uv build --out-dir dist
-          # uv drops a `.gitignore` in the output directory. Nothing downstream
-          # should have to reason about whether a glob picks up a dotfile when
-          # the thing being globbed is "everything we are about to publish".
-          rm -f dist/.gitignore
+          # Locks + frontend/engine wheels and sdists. PyPI first-use provisions
+          # `beancount-io-engine` by name; Homebrew builds the helper from the
+          # sdist's engine/ tree. `make release-artifacts` also exports the locks.
+          make release-artifacts
           ls -l dist
 
       - name: Verify the sdist carries the lock

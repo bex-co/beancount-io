@@ -1,6 +1,6 @@
 # Beancount.io CLI - Development Makefile
 
-.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all release-check release-lock spec-check spec-sync docs docs-check
+.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all release-check release-lock release-artifacts spec-check spec-sync docs docs-check
 
 # Default target
 help:
@@ -22,6 +22,7 @@ help:
 	@echo "  make spec-sync        - Refresh openapi/v1.json from the canonical spec"
 	@echo "  make release-check    - Validate the release tag against pyproject.toml"
 	@echo "  make release-lock     - Export the hash-pinned requirements.lock for a release"
+	@echo "  make release-artifacts - Build frontend + engine wheels/sdists into dist/"
 	@echo "  make docs             - Regenerate docs/REFERENCE.md from the command tree"
 	@echo "  make docs-check       - Fail if docs/REFERENCE.md drifted from the command tree"
 	@echo "  make check-all        - Run lint + format-check + typecheck + test + spec-check + docs-check"
@@ -45,20 +46,20 @@ lint:
 	uv run ruff check src/ tests/
 
 deadcode:
-	uv run vulture src/cli src/fava --min-confidence 100 --exclude src/cli/api/rest_client/,src/cli/commands/cloud/generated/ --ignore-names repo
+	uv run vulture src/cli src/bea_engine src/fava --min-confidence 100 --exclude src/cli/api/rest_client/,src/cli/commands/cloud/generated/ --ignore-names repo
 
 deadcode-fix:
 	uv run ruff check src/ tests/ --fix --select F401,F841
 	$(MAKE) deadcode
 
 format:
-	uv run ruff format src/cli tests/
+	uv run ruff format src/cli src/bea_engine tests/
 
 format-check:
-	uv run ruff format --check src/cli tests/
+	uv run ruff format --check src/cli src/bea_engine tests/
 
 typecheck:
-	uv run mypy src/cli
+	uv run mypy src/cli src/bea_engine
 
 test:
 	uv run pytest tests/ -n auto
@@ -84,6 +85,24 @@ release-check:
 
 release-lock:
 	uv export --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o requirements.lock
+	$(MAKE) engine-release-lock
+
+# Hash-pinned engine graph for PyPI first-use provisioning and Homebrew's
+# install-time engine venv. Generated from `engine/` so the frontend never
+# resolves Beancount at install time once the frontend deps drop it.
+engine-release-lock:
+	cd engine && uv export --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o ../engine-requirements.lock
+
+# Build frontend + engine artifacts into dist/ (release CI publishes both).
+# The engine wheel is what a PyPI-installed frontend provisions by name;
+# Homebrew builds the helper from the sdist's `engine/` tree instead.
+release-artifacts: release-lock
+	rm -rf dist
+	mkdir -p dist
+	cd engine && uv build --out-dir ../dist
+	uv build --out-dir dist
+	rm -f dist/.gitignore
+	ls -l dist
 
 # The canonical spec lives in the backend package; the CLI builds only from its
 # own pinned copy so a `cli/` checkout is self-sufficient and reproducible.

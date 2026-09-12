@@ -1,26 +1,25 @@
-"""Preview and apply entries extracted by configured Beangulp importers."""
+"""Preview and apply entries extracted by configured Beangulp importers.
+
+Extraction, deduplication, validation, and writes run in `bea-engine import`.
+This module owns option parsing, remembered importer/CSV paths, preview display,
+and apply/duplicate decisions that the customer types on the command line.
+"""
 
 from __future__ import annotations
 
-import copy
-import difflib
 import hashlib
-import io
 import json
 import os
-import runpy
-import sys
-from contextlib import redirect_stderr, redirect_stdout
-from decimal import Decimal
+import tempfile
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
 
 import typer
 
-from cli import context, ledger_write, output
+from cli import context, output
 from cli.config import config_dir
-from cli.errors import BeaError, ConflictError, LedgerError, UsageError
+from cli.errors import BeaError, UsageError
 
 
 class Duplicates(StrEnum):
@@ -89,12 +88,25 @@ def _inferred_mapping(source: Path, *, explicit: bool, notes: list[str]) -> str 
     return inferred.spec
 
 
+def _atomic_write(path: Path, content: str) -> None:
+    """Replace `path` with `content` without a half-written file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix=".bea-", suffix=".tmp", dir=path.parent)
+    candidate = Path(name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(candidate, path)
+    finally:
+        candidate.unlink(missing_ok=True)
+
+
 def _remember_config(file: Path, config: Path) -> None:
     record = _config_record(file)
     try:
-        record.parent.mkdir(parents=True, exist_ok=True)
-        with ledger_write.candidate_file(record, json.dumps({"config": str(config)})) as candidate:
-            os.replace(candidate, record)
+        _atomic_write(record, json.dumps({"config": str(config)}))
     except OSError as exc:
         output.note(f"Could not remember the importer path: {exc}. Pass --config on the next import.")
 
@@ -165,149 +177,10 @@ def _remember_csv(file: Path, source: Path, spec: dict[str, Any]) -> None:
                 and entry.get("account") == spec["account"]
             )
         ]
-        record.parent.mkdir(parents=True, exist_ok=True)
         payload = json.dumps({"sources": [*sources, {"headers": headers, **spec}]})
-        with ledger_write.candidate_file(record, payload) as candidate:
-            os.replace(candidate, record)
+        _atomic_write(record, payload)
     except OSError as exc:
         output.note(f"Could not remember the column mapping: {exc}. Pass --csv on the next import.")
-
-
-def _importer(config: Path, source: Path, name: str | None) -> Any:
-    if not config.is_file():
-        raise UsageError(f"Importer configuration not found: {config}")
-    # A config is ordinary local Python, including its sibling modules. Only
-    # an explicit import command executes the selected or remembered config.
-    namespace = runpy.run_path(str(config))
-    configured = namespace.get("CONFIG")
-    if not isinstance(configured, list | tuple):
-        raise UsageError("Importer configuration must export CONFIG = [importer, ...]. See docs/IMPORTING.md.")
-    if name is not None:
-        available = [_name(importer) for importer in configured]
-        if name not in available:
-            raise UsageError(f"No importer named {name!r}; available: {', '.join(available) or '(none)'}.")
-        configured = [importer for importer in configured if _name(importer) == name]
-    matches = [importer for importer in configured if importer.identify(str(source))]
-    if not matches:
-        selected = f"Importer {name!r} does not recognize" if name else "No configured importer recognizes"
-        raise UsageError(f"{selected} {source.name}. Check --config and the export format.")
-    if len(matches) > 1:
-        raise UsageError("Multiple importers match; choose one with --importer.", details=[_name(i) for i in matches])
-    return matches[0]
-
-
-def _name(importer: Any) -> str:
-    name = getattr(importer, "name", type(importer).__name__)
-    if not isinstance(name, str):
-        raise UsageError("Use the current Beangulp Importer interface (name property and file paths).")
-    return name
-
-
-def _has_explicit_units(posting: Any) -> bool:
-    """True when the posting carries a real amount — including an explicit zero.
-
-    Beancount's `Amount` is falsy at zero, so a truthiness test here would read
-    `0 USD` as a missing amount and refuse a legitimate import.
-    """
-    units = posting.units
-    return units is not None and isinstance(getattr(units, "number", None), Decimal)
-
-
-def _source_postings(entry: Any, account: str) -> list[Any]:
-    return [p for p in entry.postings if p.account == account and _has_explicit_units(p)]
-
-
-def _fingerprint(entry: Any, account: str) -> tuple[Any, ...]:
-    """A possible match, never proof: two real purchases can have these values."""
-    if any(not _has_explicit_units(p) for p in entry.postings if p.account == account):
-        raise LedgerError(f"The importer must supply explicit source amounts for {account} before duplicate matching.")
-    amounts = tuple(
-        sorted((str(p.units.number.normalize()), p.units.currency) for p in _source_postings(entry, account))
-    )
-    return (
-        entry.date,
-        " ".join((entry.payee or "").casefold().split()),
-        " ".join((entry.narration or "").casefold().split()),
-        amounts,
-    )
-
-
-# The `import-id` namespace each stable-ID metadata key maps to. `bank_id`,
-# `transaction_id`, and `imported_id` are bank-supplied row IDs; `fitid` is the
-# OFX transaction ID, matching the skill's own `ofx:` example. A custom
-# `--id-key` uses its own name as the namespace. An `import-id` value is
-# already namespaced and passes through verbatim.
-_IDENTITY_KINDS = {
-    "bank_id": "bank",
-    "fitid": "ofx",
-    "transaction_id": "bank",
-    "imported_id": "bank",
-}
-
-_DEFAULT_ID_KEYS = ["bank_id", "fitid", "transaction_id", "imported_id"]
-
-
-def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, str, str]]:
-    """Every stable identity an entry claims, in `import-id` value form.
-
-    `import-id` and `import-id-2` are the interop rail from
-    `skills/.../beancount-import/references/dedup.md` and always match;
-    `bea_import_id` is the pre-release legacy key and still matches.
-    """
-    meta = entry.meta or {}
-    identities = []
-    for key in ["import-id", *keys]:
-        value = meta.get(key)
-        if value in (None, ""):
-            continue
-        if key == "import-id":
-            identities.append((account, "import-id", str(value)))
-        else:
-            identities.append((account, "bank", f"{_IDENTITY_KINDS.get(key, key)}:{value}"))
-    if meta.get("import-id-2") not in (None, ""):
-        identities.append((account, "import-id", str(meta["import-id-2"])))
-    if meta.get("bea_import_id"):
-        identities.append((account, "file", str(meta["bea_import_id"])))
-    return identities
-
-
-def _native_import_id(meta: dict[str, Any], keys: list[str]) -> str | None:
-    """The `import-id` for an importer-supplied native stable ID, if any."""
-    for key in keys:
-        value = meta.get(key)
-        if value not in (None, ""):
-            return f"{_IDENTITY_KINDS.get(key, key)}:{value}"
-    return None
-
-
-def _hash_import_id(entry: Any, account: str, seen: dict[str, int]) -> str:
-    """The `csv:sha256:` identity for a row without a native stable ID.
-
-    Hash input follows `dedup.md`: `date|amount|description|account`, where
-    the description is the entry's narration (or payee when narration is
-    empty), uppercased with whitespace collapsed. Identical inputs within one
-    file take an occurrence suffix (`…|account|2`) so N identical rows map to
-    N distinct entries while re-imports still match 1:1.
-    """
-    amounts = sorted((p.units.number, p.units.currency) for p in _source_postings(entry, account))
-    if len(amounts) == 1:
-        normalized_amount = f"{amounts[0][0]:.2f}"
-    else:
-        normalized_amount = "+".join(f"{number} {currency}" for number, currency in amounts)
-    description = " ".join(str(entry.narration or entry.payee or "").upper().split())
-    base = f"{entry.date.isoformat()}|{normalized_amount}|{description}|{account}"
-    seen[base] = seen.get(base, 0) + 1
-    digest_input = base if seen[base] == 1 else f"{base}|{seen[base]}"
-    return "csv:sha256:" + hashlib.sha256(digest_input.encode("utf-8")).hexdigest()[:16]
-
-
-def _candidate_key(entry: Any, account: str) -> tuple[Any, ...]:
-    date, payee, _narration, amounts = _fingerprint(entry, account)
-    return date, payee, amounts
-
-
-def _source_amounts(entry: Any, account: str) -> str:
-    return ", ".join(f"{p.units.number} {p.units.currency}" for p in _source_postings(entry, account))
 
 
 def import_entries(
@@ -372,11 +245,8 @@ def import_entries(
     Possible duplicates require an explicit --duplicates skip/include decision
     before applying.
     """
-    from beancount import loader
-    from beancount.core.data import Transaction
-
-    from cli.csv_mapper import CsvImporter, infer_date_format, load_rules, parse_mapping
-    from cli.directives.writer import format_entry, normalize_entry_strings
+    from cli.csv_mapper import infer_date_format, parse_mapping
+    from cli.engine import launch
 
     file = context.current().entry_file()
     source = source.expanduser().resolve()
@@ -384,26 +254,12 @@ def import_entries(
         raise UsageError("Pass --csv or --config, not both.")
     if not source.is_file():
         raise UsageError(f"Export file not found: {source}")
-    source_bytes = source.read_bytes()
-    snapshot = ledger_write.LedgerSnapshot.capture(file)
-    target = ledger_write.destination(file, into)
-    snapshot.require_target(target)
-    original = target.read_bytes()
-    existing, errors, options = loader.load_file(file)
-    if not allow_errors:
-        # A ledger that already fails validation fails it again with rows
-        # appended; the message names the flag that opts past that.
-        output.render_ledger_errors(
-            errors,
-            allow=False,
-            message=f"Ledger has {len(errors)} error(s). Pass --allow-errors to preview and apply anyway.",
-        )
-    logs = io.StringIO()
+
     csv_request: str | None = csv_mapping
     config_to_remember: Path | None = None
     csv_origin = "--csv"
     csv_run_account: str | None = csv_account
-    csv_rules_arg: str | None = str(rules_file.expanduser().resolve()) if rules_file is not None else None
+    csv_rules_arg: Path | None = rules_file.expanduser().resolve() if rules_file is not None else None
     remembered_run = False
     inferred_notes: list[str] = []
     # Only a date format the caller chose is worth remembering. An inferred one
@@ -420,23 +276,28 @@ def import_entries(
             csv_run_account = csv_account or remembered["account"]
             remembered_run = True
             csv_origin = "remembered --csv"
-            # Memory fills the blanks the caller left; it never overrules an
-            # option they typed on this run.
             if csv_rules_arg is None and isinstance(remembered.get("rules"), str):
-                csv_rules_arg = remembered["rules"]
+                csv_rules_arg = Path(remembered["rules"])
             if default_account is None and isinstance(remembered.get("default_account"), str):
                 default_account = remembered["default_account"]
             if date_format is None and isinstance(remembered.get("date_format"), str):
                 date_format = remembered["date_format"]
         elif config is None and _config_available(file) is None:
-            # Nothing configured and nothing remembered: read the header row
-            # rather than making a first-time importer spell out columns the
-            # file already names. A preview writes nothing, and the mapping is
-            # printed, so a wrong guess costs one glance rather than an edit.
             csv_request = _inferred_mapping(source, explicit=False, notes=inferred_notes)
             if csv_request is not None:
                 csv_origin = "inferred --csv"
+
     csv_mode = csv_request is not None
+    argv = ["import", "--file", str(file), "--source", str(source), "--duplicates", duplicates.value]
+    if apply:
+        argv.append("--apply")
+    if allow_errors:
+        argv.append("--allow-errors")
+    if into is not None:
+        argv += ["--into", str(into)]
+    for key in id_key or []:
+        argv += ["--id-key", key]
+
     if csv_mode:
         if csv_run_account is None or csv_request is None:
             if csv_origin == "inferred --csv":
@@ -451,7 +312,6 @@ def import_entries(
                 details=inferred_notes,
             )
         mapping = parse_mapping(csv_request)
-        default_account = default_account or "Expenses:Uncategorized"
         if date_format is None:
             date_format, ambiguous = infer_date_format(source, mapping.columns["date"])
             if date_format is None:
@@ -461,16 +321,7 @@ def import_entries(
                     f"Dates parse as {date_format} but the column has no day past the twelfth, so day-first and "
                     "month-first cannot be told apart. Pass --date-format if that is the wrong reading."
                 )
-        operating = options.get("operating_currency") or []
-        importer = CsvImporter(
-            account=csv_run_account,
-            mapping=mapping,
-            date_format=date_format,
-            rules=load_rules(Path(csv_rules_arg)) if csv_rules_arg is not None else None,
-            default_account=default_account,
-            currency=operating[0] if len(operating) == 1 else None,
-        )
-        preview_config, config_source = csv_request, csv_origin
+        default_account = default_account or "Expenses:Uncategorized"
         if remembered_run:
             output.note(f"Using remembered column mapping for {source.name} (--date-format {date_format}).")
         elif csv_origin == "inferred --csv":
@@ -482,23 +333,10 @@ def import_entries(
             output.note("Using column mapping (--csv).")
         for line in inferred_notes:
             output.note(line)
-        try:
-            account = str(importer.account(str(source)))
-            entries = copy.deepcopy(list(importer.extract(str(source), existing)))
-        except BeaError:
-            raise
-        except Exception as exc:
-            raise LedgerError(
-                f"Importer failed ({type(exc).__name__}): {exc}. Pass --debug before the command for a traceback."
-            ) from exc
-        if importer.rejected_categories:
-            examples = ", ".join(repr(name) for name in list(importer.rejected_categories)[:3])
-            count = sum(importer.rejected_categories.values())
-            output.note(
-                f"{count} row(s) carry a category that is not an account name ({examples}); they post to "
-                f"{default_account} with flag '!'. Categorize them with --rules, or map a column of full "
-                "account names with --csv category=Column."
-            )
+        argv += ["--csv", csv_request, "--account", csv_run_account, "--config-source", csv_origin]
+        argv += ["--date-format", date_format, "--default-account", default_account]
+        if csv_rules_arg is not None:
+            argv += ["--rules", str(csv_rules_arg)]
         if not remembered_run:
             _remember_csv(
                 file,
@@ -506,193 +344,44 @@ def import_entries(
                 {
                     "mapping": csv_request,
                     "account": csv_run_account,
-                    "rules": csv_rules_arg,
+                    "rules": str(csv_rules_arg) if csv_rules_arg is not None else None,
                     "default_account": default_account,
                     "date_format": chosen_date_format,
                 },
             )
     else:
-        config, config_source = _config_path(file, config)
-        preview_config = str(config)
-        config_to_remember = config
-        output.note(f"Using importers from {config} ({config_source})")
-        # Importer chatter is retained in the preview instead of corrupting JSON.
-        sys.path.insert(0, str(config.parent))
-        try:
-            with redirect_stdout(logs), redirect_stderr(logs):
-                importer = _importer(config, source, importer_name)
-                account = str(importer.account(str(source)))
-                entries = copy.deepcopy(list(importer.extract(str(source), existing)))
-        except BeaError:
-            raise
-        except ImportError as exc:
-            raise UsageError(
-                f"Importer dependency is unavailable: {exc}. Run bea in an environment containing your importer's "
-                "dependencies; see docs/IMPORTING.md. Pass --debug before the command for a traceback."
-            ) from exc
-        except Exception as exc:
-            raise LedgerError(
-                f"Importer failed ({type(exc).__name__}): {exc}. Pass --debug before the command for a traceback."
-            ) from exc
-        finally:
-            sys.path.pop(0)
-    # `import-id` / `import-id-2` always match: they are the shared rail with
-    # the ledger skills, independent of the importer's native-ID key choice.
-    keys = id_key or _DEFAULT_ID_KEYS
-    identities: dict[tuple[str, str, str], Any] = {}
-    fingerprints: dict[tuple[Any, ...], Any] = {}
-    for entry in existing:
-        entry = normalize_entry_strings(entry)
-        if isinstance(entry, Transaction) and any(p.account == account for p in entry.postings):
-            for identity in _identities(entry, account, keys):
-                identities[identity] = entry
-            fingerprints[_candidate_key(entry, account)] = entry
-    if source.read_bytes() != source_bytes:
-        raise ConflictError("The export changed during extraction; nothing was written. Retry.")
-    source_hash = hashlib.sha256(source_bytes).hexdigest()
-    other_entries = {format_entry(entry) for entry in existing if not isinstance(entry, Transaction)}
-    rows: list[dict[str, Any]] = []
-    texts: list[str] = []
-    conflicts = False
-    seen_inputs: dict[str, int] = {}
-    batch_rows: dict[int, int] = {}
-    for index, entry in enumerate(entries):
-        entry = normalize_entry_strings(entry)
-        status, reason, match = "new", None, None
-        if isinstance(entry, Transaction):
-            if not any(p.account == account for p in entry.postings):
-                raise LedgerError(f"Importer row {index + 1} has no posting to its source account {account}.")
-            fingerprint = _fingerprint(entry, account)
-            if not entry.meta.get("import-id"):
-                native = _native_import_id(entry.meta, keys)
-                entry.meta["import-id"] = native if native is not None else _hash_import_id(entry, account, seen_inputs)
-            ids = _identities(entry, account, keys)
-            # Look up, but never write, the pre-release identity so ledgers
-            # written before `import-id` still deduplicate on re-import.
-            ids.append((account, "file", hashlib.sha256(f"{account}:{source_hash}:{index}".encode()).hexdigest()))
-            hits = [(key, identities[key]) for key in ids if key in identities]
-            if hits:
-                (_, kind, matched_value), match = hits[0]
-                if any(_fingerprint(m, account) != fingerprint for _, m in hits):
-                    status, reason, conflicts = (
-                        "conflict",
-                        "Stable ID matches an entry with different transaction data.",
-                        True,
-                    )
-                elif kind == "file":
-                    status, reason = "duplicate", "Previously imported source row matches."
-                else:
-                    status, reason = "duplicate", f"import-id {matched_value} is already in the ledger."
-            elif _candidate_key(entry, account) in fingerprints:
-                status, reason, match = (
-                    "possible_duplicate",
-                    "Date, payee and source amount match; different bank IDs or narration do not rule out a duplicate.",
-                    fingerprints[_candidate_key(entry, account)],
-                )
-            if status == "new" or (status == "possible_duplicate" and duplicates == Duplicates.include):
-                for identity in ids:
-                    identities[identity] = entry
-                fingerprints[_candidate_key(entry, account)] = entry
-                batch_rows[id(entry)] = index + 1
-        # The mapper stashes its rule name in metadata for the preview; pop it
-        # before rendering so it never reaches the ledger.
-        rule = entry.meta.pop("_csv_rule", None) if isinstance(entry, Transaction) else None
-        text = format_entry(entry)
-        if not isinstance(entry, Transaction):
-            if text in other_entries:
-                status, reason = "duplicate", "Identical directive already exists."
-            other_entries.add(text)
-        include = status == "new" or (status == "possible_duplicate" and duplicates == Duplicates.include)
-        if include:
-            texts.append(text)
-        row_dict: dict[str, Any] = {
-            "row": index + 1,
-            "status": status,
-            "reason": reason,
-            "include": include,
-            "entry": text,
-            "accounts": [p.account for p in entry.postings] if isinstance(entry, Transaction) else [],
-            "date": entry.date.isoformat(),
-            "payee": entry.payee if isinstance(entry, Transaction) else None,
-            "narration": entry.narration if isinstance(entry, Transaction) else None,
-            "amount": _source_amounts(entry, account) if isinstance(entry, Transaction) else "",
-            "match": {
-                "filename": match.meta.get("filename"),
-                "lineno": match.meta.get("lineno"),
-                "row": batch_rows.get(id(match)),
-                "entry": format_entry(match),
-            }
-            if match
-            else None,
-        }
-        if csv_mode:
-            row_dict["rule"] = rule
-        rows.append(row_dict)
-    proposed = ledger_write.appended_content(original, texts)
-    validation_errors: list[str] = []
-    validation_warnings: list[str] = []
+        config_path, config_source = _config_path(file, config)
+        config_to_remember = config_path
+        output.note(f"Using importers from {config_path} ({config_source})")
+        argv += ["--config", str(config_path), "--config-source", config_source]
+        if importer_name is not None:
+            argv += ["--importer", importer_name]
+
     try:
-        validation_warnings = ledger_write.validate_append(
-            file, texts, allow_errors=allow_errors, into=into, snapshot=snapshot
-        )
-    except LedgerError as exc:
-        validation_errors = exc.details or [str(exc)]
-    preview = {
-        "source": str(source),
-        "config": preview_config,
-        "config_source": config_source,
-        "into": str(target),
-        "importer": _name(importer),
-        "account": account,
-        "rows": rows,
-        "ready": len(texts),
-        "written": 0,
-        "duplicates": sum(row["status"] == "duplicate" for row in rows),
-        "possible_duplicates": sum(row["status"] == "possible_duplicate" for row in rows),
-        "validation_errors": validation_errors,
-        "validation_warnings": validation_warnings,
-        "importer_output": logs.getvalue(),
-        "diff": "".join(
-            difflib.unified_diff(
-                original.decode("utf-8").splitlines(True),
-                proposed.splitlines(True),
-                fromfile=str(target),
-                tofile=str(target),
-            )
-        ),
-    }
-    if apply:
-        if conflicts or (preview["possible_duplicates"] and duplicates == Duplicates.review):
-            review = [
-                f"Row {row['row']} ({row['status']}): {row['reason']}"
-                for row in rows
-                if row["status"] == "conflict"
-                or (row["status"] == "possible_duplicate" and duplicates == Duplicates.review)
-            ]
-            raise ConflictError(
-                "Import needs review; nothing was written. Resolve ID conflicts or choose --duplicates skip/include.",
-                details=review,
-                result=preview,
-            )
-        if validation_errors:
-            raise LedgerError(
-                "Import would leave the ledger invalid; nothing was written.", details=validation_errors, result=preview
-            )
-        snapshot.verify()
-        ledger_write.append(file, texts, allow_errors=allow_errors, expected=original, into=into, snapshot=snapshot)
-        preview["written"] = len(texts)
+        preview = launch.helper_json(argv)
+    except BeaError as exc:
+        # Extraction finished far enough to build a preview (conflict / invalid
+        # apply). Surface the engine's notes the same way a successful preview does.
+        if isinstance(exc.result, dict):
+            for note in exc.result.get("notes") or []:
+                output.note(str(note))
+        raise
+    for note in preview.pop("notes", []) or []:
+        output.note(str(note))
     if config_to_remember is not None:
         _remember_config(file, config_to_remember)
+
     if context.current().json_output:
         output.emit(preview, target=output.file_target(file))
     else:
         typer.echo(
-            f"{_name(importer)} → {account}: {len(texts)} ready, "
+            f"{preview['importer']} → {preview['account']}: {preview['ready']} ready, "
             f"{preview['duplicates']} exact duplicates, {preview['possible_duplicates']} possible duplicates"
         )
         headers = ["ROW", "STATUS", "DATE", "PAYEE / NARRATION", "SOURCE AMOUNT"]
         if csv_mode:
             headers.append("RULE")
+        rows = preview["rows"]
         output.table(
             headers,
             [
@@ -718,13 +407,13 @@ def import_entries(
                     )
                 typer.echo(match["entry"])
         typer.echo(preview["diff"])
-        for error in validation_errors:
+        for error in preview["validation_errors"]:
             output.note(error)
-        for warning in validation_warnings:
+        for warning in preview["validation_warnings"]:
             output.note(warning)
-        if logs.getvalue():
-            output.note(logs.getvalue())
+        if preview.get("importer_output"):
+            output.note(preview["importer_output"])
         if apply:
-            output.success(f"Wrote {len(texts)} entries to {target}.")
+            output.success(f"Wrote {preview['written']} entries to {preview['into']}.")
         else:
             typer.echo("Preview only. Review the entries, then repeat with --apply to write.")

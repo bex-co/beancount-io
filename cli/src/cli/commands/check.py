@@ -1,24 +1,21 @@
+"""`bea check` — native bean-check, with bea's JSON envelope via the helper."""
+
 from __future__ import annotations
 
 import typer
 
 from cli import context, output
+from cli.engine import launch
 
 
-def check() -> None:
+def check(ctx: typer.Context) -> None:
     """Parse, check and realize a beancount ledger."""
-    ctx = context.current()
-    file = ctx.entry_file()
-    from fava.core.loader import load_file
-
-    _entries, errors, _options = load_file(str(file))
-
-    # `bea check` has no --allow-errors: reporting the errors is the whole job.
-    output.render_ledger_errors(
-        list(errors), allow=False, message=f"{file}: {len(errors)} error(s).", always_strict=True
-    )
-
-    if ctx.json_output:
-        output.emit({"valid": True, "errors": []}, target=output.file_target(file))
-    else:
-        typer.echo(f"{file}: no errors")
+    current = context.current()
+    file = current.entry_file()
+    if current.json_output:
+        # Keep bea's documented JSON envelope; native --json is a different shape.
+        data = launch.helper_json(["check", "--file", str(file), *ctx.args])
+        output.emit(data, target=output.file_target(file))
+        return
+    code = launch.run_native("bean-check", [str(file), *ctx.args])
+    raise typer.Exit(code)

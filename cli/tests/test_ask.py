@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
@@ -12,6 +15,9 @@ from typer.testing import CliRunner
 from cli.ask.agent import _SYSTEM_PROMPT, BqlDeps, make_agent
 from cli.ask.skills import AgentSkill, _parse_skill, build_skills_index_prompt, load_skills
 from cli.main import app
+
+CLI_ROOT = Path(__file__).parent.parent
+SOURCE_ROOT = CLI_ROOT / "src"
 
 
 def _test_agent(text: str) -> Agent[BqlDeps, str]:
@@ -36,6 +42,42 @@ class TestAgent:
     def test_bql_tool_registered(self, tmp_bean_file: Path) -> None:
         agent = make_agent("gpt-4o", "http://x", "tok")
         assert agent is not None
+
+    def test_ask_tools_do_not_load_beancount_in_the_frontend(self, tmp_path: Path) -> None:
+        """ADR014 t022: query/write go through the engine child, not in-process imports."""
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(
+            "2024-01-01 open Assets:Cash USD\n"
+            "2024-01-01 open Expenses:Food USD\n"
+            "2024-01-01 open Equity:Opening USD\n"
+            '2024-01-01 * "Opening"\n  Assets:Cash 100 USD\n  Equity:Opening -100 USD\n'
+        )
+        script = f"""
+import json, sys
+from types import SimpleNamespace
+from cli.ask.agent import BqlDeps, WritePermission, make_agent
+agent = make_agent("gpt-4o", "http://unused", "test")
+deps = BqlDeps(file=__import__("pathlib").Path({str(ledger)!r}), write_permission=WritePermission(approve_all=True))
+ctx = SimpleNamespace(deps=deps)
+query = agent._function_toolset.tools["run_bql_query"].function
+write = agent._function_toolset.tools["write_directive"].function
+assert "Assets:Cash" in query(ctx, "SELECT DISTINCT account ORDER BY account")
+assert "Added" in write(ctx, '''2024-03-01 * "Coffee"
+  Expenses:Food 4.00 USD
+  Assets:Cash -4.00 USD
+''')
+loaded = [m for m in ("beancount", "beanquery", "fava", "bea_engine") if m in sys.modules]
+print(json.dumps(loaded))
+"""
+        completed = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=CLI_ROOT,
+            env={**os.environ, "PYTHONPATH": str(SOURCE_ROOT)},
+        )
+        assert completed.stdout.strip() == "[]", completed.stdout + completed.stderr
 
 
 class TestAskCommand:

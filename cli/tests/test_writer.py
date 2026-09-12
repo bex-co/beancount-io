@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from cli.directives import writer
-from cli.directives.models import (
+from bea_engine.ledger import writer
+from bea_engine.ledger.models import (
     Amount,
     BalanceDirective,
     CloseDirective,
@@ -283,7 +283,7 @@ class TestCostLabelEscaping:
         from beancount import loader
         from beancount.core.data import Transaction
 
-        from cli.directives.models import Cost
+        from bea_engine.ledger.models import Cost
 
         file = self._stock_book(tmp_path)
         directive = TransactionDirective(

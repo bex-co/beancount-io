@@ -12,11 +12,11 @@ from beancount import loader
 from beancount.core.data import Transaction
 from typer.testing import CliRunner
 
-from cli import ledger_write
+from bea_engine.ledger import write as ledger_write
+from bea_engine.protocol import ConflictError
+from bea_engine.query import build_shell
 from cli.ask.agent import BqlDeps, WritePermission, make_agent
-from cli.errors import ConflictError
 from cli.main import app
-from cli.query_render import query_shell
 
 runner = CliRunner()
 ACCOUNTS = """2020-01-01 open Assets:Checking USD
@@ -72,7 +72,7 @@ def test_precision_matches_json_in_cli_interactive_query_and_ask(book: Path, mon
     monkeypatch.setattr("beanquery.shell.readline", None)
     monkeypatch.setattr("beanquery.shell.INIT_FILENAME", str(book.parent / "no-init"))
     stream = io.StringIO()
-    query_shell(book, stream).onecmd(query)
+    build_shell(book, stream).onecmd(query)
     assert "82.35 USD" in stream.getvalue()
 
     agent = make_agent("gpt-4o", "http://unused", "test")
@@ -353,7 +353,7 @@ def test_query_loads_the_exact_file_when_its_name_has_url_characters(
     monkeypatch.setattr("beanquery.shell.readline", None)
     monkeypatch.setattr("beanquery.shell.INIT_FILENAME", str(tmp_path / "no-init"))
     stream = io.StringIO()
-    query_shell(target, stream).onecmd(query)
+    build_shell(target, stream).onecmd(query)
     assert "10 USD" in stream.getvalue() and "999" not in stream.getvalue()
 
     agent = make_agent("gpt-4o", "http://unused", "test")

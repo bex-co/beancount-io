@@ -95,20 +95,25 @@ Usage: bea import [OPTIONS] {source}
 
 ### `bea format`
 
-Format a file or every .bean/.beancount file under a directory.
+Format ledger files to stdout; rewrite them with --in-place.
 
 ```text
-Usage: bea format [OPTIONS] [directory]
+Usage: bea format [OPTIONS] [paths]...
 ```
 
 | Argument | Type | Required | Help |
 | --- | --- | --- | --- |
-| `directory` | path | no | Ledger file or directory to format recursively |
+| `paths` | path | no | Ledger files, or directories to expand recursively (default: stdin) |
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--dry-run` | flag |  | Show files that would change without modifying them |
-| `--check` | flag |  | Check formatting without writing; exit 1 if files need formatting |
+| `--in-place, -i` | flag |  | Rewrite each file instead of writing stdout |
+| `--output, -o` | path |  | Write to this file instead of stdout |
+| `--check` | flag |  | Write nothing; exit 1 if any file needs formatting |
+| `--dry-run` | flag |  | Write nothing; report what would change |
+| `--prefix-width, -w` | int |  | Force fixed prefix width |
+| `--num-width, -W` | int |  | Force fixed numbers width |
+| `--currency-column, -c` | int |  | Align currencies to this column |
 
 ### `bea query`
 
@@ -125,6 +130,9 @@ Usage: bea query [OPTIONS] [query_string]
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
 | `--allow-errors` | flag |  | Answer with errors on stderr; opts strict reads into partial answers |
+| `--format` | str | text | Rendering for a printed result: text, csv, beancount |
+| `--output, -o` | str |  | Write the result to this file instead of stdout |
+| `--numberify, -m` | flag |  | Split amounts into one column per currency |
 
 ### `bea ask`
 
@@ -142,6 +150,22 @@ Usage: bea ask [OPTIONS] [question]
 | --- | --- | --- | --- |
 | `--print, -p` | flag |  | Print mode: answer once and exit (non-interactive) |
 | `--into` | path |  | Write to an included file, relative to the root ledger |
+
+### `bea example`
+
+Generate an example Beancount history (delegates to bean-example).
+
+```text
+Usage: bea example [OPTIONS]
+```
+
+### `bea treeify`
+
+Render a hierarchical column as an ASCII tree (delegates to treeify).
+
+```text
+Usage: bea treeify [OPTIONS]
+```
 
 ### `bea add transaction`
 
@@ -587,6 +611,102 @@ Usage: bea report trial-balance [OPTIONS]
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
+
+### `bea doctor lex`
+
+Run bean-doctor lex.
+
+```text
+Usage: bea doctor lex [OPTIONS]
+```
+
+### `bea doctor parse`
+
+Run bean-doctor parse.
+
+```text
+Usage: bea doctor parse [OPTIONS]
+```
+
+### `bea doctor roundtrip`
+
+Run bean-doctor roundtrip.
+
+```text
+Usage: bea doctor roundtrip [OPTIONS]
+```
+
+### `bea doctor directories`
+
+Run bean-doctor directories.
+
+```text
+Usage: bea doctor directories [OPTIONS]
+```
+
+### `bea doctor list-options`
+
+Run bean-doctor list-options.
+
+```text
+Usage: bea doctor list-options [OPTIONS]
+```
+
+### `bea doctor print-options`
+
+Run bean-doctor print-options.
+
+```text
+Usage: bea doctor print-options [OPTIONS]
+```
+
+### `bea doctor context`
+
+Run bean-doctor context.
+
+```text
+Usage: bea doctor context [OPTIONS]
+```
+
+### `bea doctor linked`
+
+Run bean-doctor linked.
+
+```text
+Usage: bea doctor linked [OPTIONS]
+```
+
+### `bea doctor region`
+
+Run bean-doctor region.
+
+```text
+Usage: bea doctor region [OPTIONS]
+```
+
+### `bea doctor missing-open`
+
+Run bean-doctor missing-open.
+
+```text
+Usage: bea doctor missing-open [OPTIONS]
+```
+
+### `bea doctor display-context`
+
+Run bean-doctor display-context.
+
+```text
+Usage: bea doctor display-context [OPTIONS]
+```
+
+### `bea doctor dump-lexer`
+
+Alias for bean-doctor lex.
+
+```text
+Usage: bea doctor dump-lexer [OPTIONS]
+```
 
 ## CLI maintenance
 

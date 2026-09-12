@@ -18,11 +18,24 @@ you have installed.
 
 ## Install
 
+Install **`bea` once**. You do not install Beancount, Beanquery, or Fava
+yourself — `bea` manages a separate engine environment automatically.
+
 ```bash norun
 # Installs software; needs Homebrew or uv plus network.
-brew install bex-co/tap/bea      # macOS and Linuxbrew
-uv tool install beancount-io     # anywhere with uv and Python 3.12+
+brew install bex-co/tap/bea      # macOS and Linuxbrew — dual venv at install time
+uv tool install beancount-io     # anywhere with uv and Python 3.12+ — engine on first use
 ```
+
+| Channel | When the engine appears | After that |
+| --- | --- | --- |
+| Homebrew | During `brew install` (frontend + engine venvs in the keg) | Local commands work offline |
+| PyPI (`uv tool` / pipx) | First local command that needs the ledger engine | Same environment is reused offline |
+
+`bea upgrade` updates the frontend through its package manager and refreshes the
+matching engine. If a first-use or upgrade provision fails, retry a local
+command such as `bea check` once the network is available — do not
+`pip install beancount`.
 
 The default installation omits AI dependencies. For `bea ask`, install the
 extra (or run it without replacing your `bea`):
@@ -42,6 +55,7 @@ cd books
 bea add transaction "Coffee" --date 2026-08-02 \
   --posting "Expenses:Dining 12.50" --posting "Assets:Checking"
 bea check
+bea format -i main.bean
 bea list transaction --limit 10
 bea report balance-sheet
 ```
@@ -61,8 +75,11 @@ for your first month end to end, follow the
 | `bea import SOURCE` | Preview or apply a bank CSV (`--csv`) or importer (`--config`) |
 | `bea list TYPE` | Inspect directives and filter transactions |
 | `bea check` | Validate the complete ledger |
-| `bea format [PATH]` | Format a file or recursively format a directory |
+| `bea format [PATH…]` | Format to stdout (safe default); `--in-place` / `-i` rewrites, `-o` writes elsewhere |
 | `bea query [BQL]` | Run a query or start the interactive BQL shell |
+| `bea doctor OP` | Beancount's eleven diagnostic operations |
+| `bea example` | Generate an example ledger history |
+| `bea treeify` | Render an account column in any text as a tree |
 | `bea report TYPE` | Overview, income statement, balance sheet, or trial balance |
 | `bea balance [ACCOUNT…]` | Trial-balance subtrees for matching accounts |
 | `bea ask [QUESTION]` | Ask about a local ledger through the hosted AI service |
@@ -115,16 +132,19 @@ uv run bea --help
 make check-all
 ```
 
-Python 3.12+, Typer, Beancount v3, Beanquery, Pydantic, and a vendored Fava
-reporting subset (it does not start the Fava web interface). `src/cli/` holds
-command UX; `src/fava/` the vendored library (retain `NOTICE.fava`
-attribution); `tests/` the pytest suite; `docs/` the guides above;
-`openapi/v1.json` the pinned contract for hosted commands. `make check-all`
-is the handoff gate: lint, deadcode, format-check, typecheck, test,
-spec-check, and docs-check. Do not hand-edit generated API clients, command
-stubs, `docs/REFERENCE.md`, or lockfiles; keep scratch files under `tmp/`.
+Python 3.12+, Typer, and Pydantic for the `beancount-io` frontend. The frontend
+never loads Beancount, Beanquery, or Fava; those live in the separate
+`beancount-io-engine` package (retain `NOTICE.fava` attribution with Fava).
+`src/cli/` holds command UX; `src/bea_engine/` and `src/fava/` are engine-side;
+`tests/` the pytest suite; `docs/` the guides above; `openapi/v1.json` the
+pinned contract for hosted commands. `make check-all` is the handoff gate:
+lint, deadcode, format-check, typecheck, test, spec-check, and docs-check. Do
+not hand-edit generated API clients, command stubs, `docs/REFERENCE.md`, or
+lockfiles; keep scratch files under `tmp/`.
 See the [package guide](https://github.com/bex-co/beancount-io/blob/main/cli/CLAUDE.md)
 for architecture boundaries and contribution rules.
+Optional Beangulp/Beanprice adapters and ledger-skill onboarding updates are
+tracked separately (milestones m20 / m21) and are not part of the base install.
 
 ## Releases
 

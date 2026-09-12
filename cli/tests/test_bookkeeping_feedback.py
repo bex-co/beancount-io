@@ -9,7 +9,7 @@ import pytest
 from beancount import loader
 from typer.testing import CliRunner
 
-from cli import ledger_write
+from bea_engine.ledger import write as ledger_write
 from cli.main import app
 
 runner = CliRunner()
@@ -98,9 +98,12 @@ def test_init_reprompts_without_losing_valid_answers(tmp_path: Path, monkeypatch
     assert str(entries[0].date) == "2026-01-01"
 
 
-@pytest.mark.parametrize("operation", ["format", "import"])
-def test_readonly_ledger_refuses_other_writes(book: Path, operation: str) -> None:
-    args = ["format", str(book)]
+@pytest.mark.parametrize(
+    ("operation", "expected_exit"),
+    [("format", 1), ("import", 3)],
+)
+def test_readonly_ledger_refuses_other_writes(book: Path, operation: str, expected_exit: int) -> None:
+    args = ["format", str(book), "--in-place"]
     if operation == "import":
         source = book.parent / "bank.csv"
         source.write_text(
@@ -112,13 +115,16 @@ def test_readonly_ledger_refuses_other_writes(book: Path, operation: str) -> Non
     book.chmod(0o444)
     try:
         result = runner.invoke(app, ["--json", *args])
-        assert result.exit_code == 3, result.output
+        assert result.exit_code == expected_exit, result.output
         assert book.read_bytes() == before
     finally:
         book.chmod(0o600)
 
 
 def test_permissions_changed_during_validation_are_respected(book: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Race coverage lives in the write module: `bea add` runs it in a child process."""
+    from bea_engine.protocol import AuthError
+
     validate = ledger_write.validate_candidate
     before = book.read_bytes()
 
@@ -129,10 +135,8 @@ def test_permissions_changed_during_validation_are_respected(book: Path, monkeyp
 
     monkeypatch.setattr(ledger_write, "validate_candidate", change_permissions)
     try:
-        result = runner.invoke(
-            app, ["--json", "-f", str(book), "add", "open", "--date", "2026-01-01", "--account", "Assets:Stock"]
-        )
-        assert result.exit_code == 3, result.output
+        with pytest.raises(AuthError, match="read-only|Permission|writable"):
+            ledger_write.append(book, ["2026-01-01 open Assets:Stock"])
         assert book.read_bytes() == before
         assert book.stat().st_mode & 0o777 == 0o444
     finally:

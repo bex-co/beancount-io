@@ -1,0 +1,25 @@
+fava-slim — third-party notices
+===============================
+
+fava-slim is a derivative work of Fava (https://github.com/beancount/fava),
+stripped down to its Python core (ledger loading, account trees, financial
+reports). Fava is distributed under the MIT license:
+
+    Copyright (c) 2015-2016 Dominik Aumayr <dominik@aumayr.name>
+
+The original copyright and permission notice are retained in this package's
+LICENSE file.
+
+Files with separate provenance
+------------------------------
+
+fava/plugins/amortize_over.py
+    Copyright (c) 2017 Cary Kempston
+    License: MIT (full license text retained in the file header)
+
+fava/plugins/forecast.py
+    Copyright (c) 2019-2026 Beancount.io, MIT — an independent
+    reimplementation of the narration-marker convention established by the
+    `beancount.plugins.forecast` example plugin from Beancount v2
+    (https://github.com/beancount/beancount). It is syntax-compatible with
+    that plugin but contains none of its (GPL-2.0-only) code.

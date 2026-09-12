@@ -1,28 +1,21 @@
-"""Financial reports with explicit periods, accounting signs, and valuation."""
+"""Financial reports with explicit periods, accounting signs, and valuation.
+
+Computation runs in `bea-engine` (`report` / `balance`); this module is the
+option surface and the human/JSON rendering. Amounts arrive as strings, dates
+as ISO, and trees as ordinary dicts — nothing here imports Beancount or Fava.
+"""
 
 from __future__ import annotations
 
-import dataclasses
-import re
-from collections.abc import Iterable, Mapping
-from datetime import date, timedelta
+from collections.abc import Mapping
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from enum import StrEnum
-from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import Annotated, Any
 
 import typer
 
 from cli import context, output
-from cli.errors import LedgerError, UsageError
-
-if TYPE_CHECKING:
-    from fava.core.inventory import SimpleCounterInventory
-    from fava.core.tree import SerialisedTreeNode
-    from fava.ledger import FilteredLedger
-    from fava.modules.chart import DateAndBalance, DateAndBalanceWithAccountBalance
-    from fava.util.date import Interval
-
+from cli.engine import launch
 
 report_app = typer.Typer(help="Financial reports from a local ledger", no_args_is_help=True, rich_markup_mode=None)
 
@@ -55,7 +48,7 @@ AllowErrorsOpt = Annotated[
 ]
 
 
-def _quantize(number: Decimal, currency: str, dcontext: Any | None) -> Decimal:
+def _quantize(number: Decimal, currency: str, precision: Mapping[str, int] | None) -> Decimal:
     """Round a text-report amount to the currency's display precision, half up.
 
     The precision is the finest the ledger itself uses for the currency
@@ -66,26 +59,30 @@ def _quantize(number: Decimal, currency: str, dcontext: Any | None) -> Decimal:
     ledger never wrote has no precision to infer, so it keeps its own
     exponent. JSON is untouched: it keeps the full-precision decimal string.
     """
-    if dcontext is None:
+    if precision is None or currency not in precision:
         return number
-    ccontext = getattr(dcontext, "ccontexts", {}).get(currency)
-    if ccontext is None:
-        return number
-    from beancount.core.display_context import Precision
-
-    fractional = ccontext.get_fractional(Precision.MAXIMUM)
-    if fractional is None:
-        return number
+    fractional = precision[currency]
     with localcontext() as ctx:
         ctx.prec = max(ctx.prec, len(number.as_tuple().digits) + fractional)
         return number.quantize(Decimal(1).scaleb(-fractional), rounding=ROUND_HALF_UP)
 
 
-def _amounts(balance: Mapping[str, Decimal | None], conversion: str | None = None, dcontext: Any | None = None) -> str:
-    def render(currency: str, number: Decimal | None) -> str:
-        if number is None:
+def _as_decimal(number: Decimal | str | int | None) -> Decimal | None:
+    if number is None:
+        return None
+    if isinstance(number, Decimal):
+        return number
+    return Decimal(str(number))
+
+
+def _amounts(
+    balance: Mapping[str, Any], conversion: str | None = None, precision: Mapping[str, int] | None = None
+) -> str:
+    def render(currency: str, number: Any) -> str:
+        value = _as_decimal(number)
+        if value is None:
             return f"Unavailable {currency}"
-        shown = _quantize(number, currency, dcontext)
+        shown = _quantize(value, currency, precision)
         return f"{shown:,.{max(2, -int(shown.as_tuple().exponent))}f} {currency}"
 
     return "  ".join(render(currency, number) for currency, number in sorted(balance.items())) or (
@@ -93,178 +90,26 @@ def _amounts(balance: Mapping[str, Decimal | None], conversion: str | None = Non
     )
 
 
-def _tree_json(node: SerialisedTreeNode) -> dict[str, Any]:
-    return {
-        "account": node.account,
-        "balance": output.jsonable(node.balance),
-        "balance_children": output.jsonable(node.balance_children),
-        "has_txns": node.has_txns,
-        "children": [_tree_json(child) for child in node.children],
-    }
-
-
-def _print_tree(
-    node: SerialisedTreeNode, depth: int = 0, *, conversion: str | None = None, dcontext: Any | None = None
-) -> None:
-    label = node.account.rsplit(":", 1)[-1] if depth else node.account
-    typer.echo(f"  {'  ' * depth + label:<46}  {_amounts(node.balance_children, conversion, dcontext)}")
-    for child in node.children:
-        _print_tree(child, depth + 1, conversion=conversion, dcontext=dcontext)
-
-
-def _negated(balance: Mapping[str, Decimal]) -> dict[str, Decimal | None]:
+def _negated(balance: Mapping[str, Any]) -> dict[str, Decimal | None]:
     """The same balance in the opposite sign convention, for translating a credit."""
-    return {currency: -number for currency, number in balance.items()}
-
-
-def _tree_balances(node: SerialisedTreeNode) -> Iterable[Mapping[str, Decimal]]:
-    yield node.balance
-    for child in node.children:
-        yield from _tree_balances(child)
-
-
-def _series_json(series: Iterable[DateAndBalance | DateAndBalanceWithAccountBalance]) -> list[dict[str, Any]]:
-    return [{"date": point.date.isoformat(), "balance": output.jsonable(point.balance)} for point in series]
-
-
-def _sum(*balances: Mapping[str, Decimal]) -> SimpleCounterInventory:
-    from fava.core.inventory import SimpleCounterInventory
-
-    result = SimpleCounterInventory()
-    for balance in balances:
-        for currency, amount in balance.items():
-            result.add(currency, amount)
+    result: dict[str, Decimal | None] = {}
+    for currency, number in balance.items():
+        value = _as_decimal(number)
+        result[currency] = None if value is None else -value
     return result
 
 
-def _summary(balance: Mapping[str, Decimal], conversion: str, *, incomplete: bool = False) -> dict[str, Decimal | None]:
-    if conversion in {"units", "at_cost", "at_value"}:
-        return dict(balance.items())
-    return {conversion: None if incomplete else balance.get(conversion, Decimal(0))}
-
-
-def _load(
-    account: str | None, time: str | None, conversion: str | None, allow_errors: bool
-) -> tuple[FilteredLedger, Path, str]:
-    file = context.current().entry_file()
-    from fava.core.filters import FilterError
-    from fava.core.loader import load_file
-    from fava.ledger import FavaLedger
-
-    entries, errors, options = load_file(file)
-    output.render_ledger_errors(list(errors), allow=allow_errors)
-    ledger = FavaLedger(entries, errors, options)
-    try:
-        filtered = ledger.get_filtered(account=account, time=time)
-    except re.error as exc:
-        # The account filter is matched as a regular expression (and as a
-        # whole account component); only that input can fail to compile.
-        raise UsageError(
-            f"Invalid account filter {account!r}: {exc}. "
-            "Pass a parent account such as Expenses:Food, or a regular expression such as 'Expenses:(Food|Rent)'."
-        ) from exc
-    except (ValueError, OverflowError, FilterError) as exc:
-        raise UsageError(
-            f"Invalid time filter {time!r}. Use month, year, YYYY, YYYY-MM, "
-            f"or a date range such as '2026-01 - 2026-06'. {exc}"
-        ) from exc
-    currencies = options["operating_currency"]
-    return filtered, file, conversion or (currencies[0] if len(currencies) == 1 else "units")
-
-
-def _interval(value: ReportInterval) -> Interval:
-    from fava.util.date import INTERVALS
-
-    return INTERVALS[value.value]
-
-
-def _metadata(filtered: FilteredLedger, conversion: str, interval: ReportInterval | None = None) -> dict[str, Any]:
-    from fava.beans.abc import Close, Commodity, Open
-
-    # Every dated fact the report covers sets the period, not transactions
-    # alone: a period-end balance assertion is the last thing a close writes,
-    # and a report that stopped before it would omit its own evidence. Opens,
-    # closes and commodities are declarations — a commodity conventionally
-    # carries a placeholder date decades before any activity.
-    start: date | None
-    end: date | None
-    if filtered.date_range:
-        start, end = filtered.date_range.begin, filtered.date_range.end
-    else:
-        dates = [entry.date for entry in filtered.entries if not isinstance(entry, Open | Close | Commodity)]
-        start = min(dates) if dates else None
-        end = max(dates) + timedelta(days=1) if dates else None
-    data: dict[str, Any] = {
-        "conversion": conversion,
-        "period": {"start": start, "end_exclusive": end},
-        "as_of": end - timedelta(days=1) if end else None,
-        "account_filter": filtered.account,
-        "balance_signs": "beancount",
-        "ledger_valid": not filtered.ledger.load_errors,
-        "ledger_errors": [output.format_ledger_error(error) for error in filtered.ledger.load_errors],
-    }
-    if interval:
-        data["interval"] = interval.value
-    return data
-
-
-def _price_summary_lines(
-    missing: list[str], dated: list[dict[str, Any]], conversion: str, prices: Any | None
-) -> list[str]:
-    """One line per unconverted commodity: never one line per interval date."""
-    lines = []
-    for currency in missing:
-        if prices is not None:
-            all_prices = prices.get_all_prices((currency, conversion))
-            if not all_prices:
-                lines.append(f"{currency} has no {conversion} price at any date; shown in units")
-                continue
-            earliest = min(point[0] for point in all_prices)
-            lines.append(f"{currency} → {conversion} has no price before {earliest}; earlier rows shown in {currency}")
-            continue
-        dates = [item["date"] for item in dated if item["from"] == currency and item["date"]]
-        if dates:
-            lines.append(
-                f"{currency} → {conversion} has no price before {min(dates)}; earlier rows shown in {currency}"
-            )
-        else:
-            lines.append(f"{currency} has no {conversion} price at any date; shown in units")
-    return lines
-
-
-def _valuation(
-    conversion: str,
-    balances: Iterable[tuple[date | None, Mapping[str, Decimal]]],
-    allow_errors: bool,
-    prices: Any | None = None,
-) -> dict[str, Any]:
-    missing_dates = {
-        (currency, when)
-        for when, balance in balances
-        for currency, amount in balance.items()
-        if amount and currency != conversion and conversion not in {"units", "at_cost", "at_value"}
-    }
-    missing = sorted({currency for currency, _ in missing_dates})
-    pairs = [{"from": currency, "to": conversion} for currency in missing]
-    dated = [
-        {"from": currency, "to": conversion, "date": when}
-        for currency, when in sorted(missing_dates, key=lambda item: (item[1] or date.min, item[0]))
-    ]
-    summary = _price_summary_lines(missing, dated, conversion, prices)
-    if pairs and not allow_errors and context.current().strict_reads():
-        raise LedgerError(
-            f"Missing prices for {', '.join(missing)} → {conversion}. "
-            "Each report row uses its own valuation date. Add prices covering the dates below "
-            "or pass --allow-errors for partial balances.",
-            details=summary,
-            result={"missing_prices": pairs, "missing_price_dates": dated},
-        )
-    return {
-        "valuation": "partial" if pairs else "complete",
-        "missing_prices": pairs,
-        "missing_price_dates": dated,
-        "missing_price_summary": summary,
-    }
+def _print_tree(
+    node: dict[str, Any],
+    depth: int = 0,
+    *,
+    conversion: str | None = None,
+    precision: Mapping[str, int] | None = None,
+) -> None:
+    label = node["account"].rsplit(":", 1)[-1] if depth else node["account"]
+    typer.echo(f"  {'  ' * depth + label:<46}  {_amounts(node['balance_children'], conversion, precision)}")
+    for child in node["children"]:
+        _print_tree(child, depth + 1, conversion=conversion, precision=precision)
 
 
 def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False) -> None:
@@ -283,6 +128,52 @@ def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False)
             output.note(line)
 
 
+def _ask(
+    kind: str,
+    *,
+    conversion: str | None,
+    time: str | None,
+    account: str | None = None,
+    interval: ReportInterval | None = None,
+    accounts: list[str] | None = None,
+    allow_errors: bool,
+) -> tuple[Any, dict[str, Any]]:
+    """Ask the engine for one report payload and surface tolerated load errors."""
+    ctx = context.current()
+    file = ctx.entry_file()
+    argv: list[str]
+    if kind == "balances":
+        argv = ["balance", "--file", str(file)]
+        for term in accounts or []:
+            argv.append(term)
+    else:
+        argv = ["report", "--file", str(file), "--kind", kind]
+        if account is not None:
+            argv += ["--account", account]
+        if interval is not None:
+            argv += ["--interval", interval.value]
+    if conversion is not None:
+        argv += ["--conversion", conversion]
+    if time is not None:
+        argv += ["--time", time]
+    if allow_errors or not ctx.strict_reads():
+        argv.append("--allow-errors")
+
+    data = launch.helper_json(argv)
+    output.render_ledger_errors([str(error) for error in data.get("ledger_errors", [])], allow=True)
+    return file, data
+
+
+def _precision(data: dict[str, Any]) -> dict[str, int]:
+    raw = data.get("display_precision") or {}
+    return {str(currency): int(digits) for currency, digits in raw.items()}
+
+
+def _emit_json(file: Any, data: dict[str, Any]) -> None:
+    payload = {key: value for key, value in data.items() if key != "display_precision"}
+    output.emit(payload, target=output.file_target(file))
+
+
 @report_app.command("overview")
 def overview(
     conversion: ConversionOpt = None,
@@ -292,59 +183,32 @@ def overview(
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Assets, liabilities, income, expenses, and net worth."""
-    from fava.modules.financial_statements import FinancialStatementsModule
-
-    filtered, file, conversion = _load(account, time, conversion, allow_errors)
-    data = FinancialStatementsModule().overview(filtered, _interval(interval), conversion)
-    trees = (data.assets_hierarchy, data.liabilities_hierarchy, data.income_hierarchy, data.expenses_hierarchy)
-    balances = [(filtered.end_date, balance) for tree in trees for balance in _tree_balances(tree)]
-    for series in (data.assets_data, data.liabilities_data, data.income_interval_data, data.expenses_interval_data):
-        balances.extend((point.date, point.balance) for point in series)
-    valuation = _valuation(conversion, balances, allow_errors, filtered.ledger.prices)
-    metadata = _metadata(filtered, conversion, interval) | valuation
-    assets, liabilities, income, expenses = (tree.balance_children for tree in trees)
-    worth = _summary(_sum(assets, liabilities), conversion, incomplete=bool(valuation["missing_prices"]))
-    totals: dict[str, Mapping[str, Decimal | None]] = {
-        "assets": assets,
-        "liabilities": liabilities,
-        "income": income,
-        "expenses": expenses,
-        "net_worth": worth,
-    }
+    file, data = _ask(
+        "overview", conversion=conversion, time=time, account=account, interval=interval, allow_errors=allow_errors
+    )
     if context.current().json_output:
-        output.emit(
-            metadata
-            | {
-                "totals": totals,
-                "series": {
-                    "assets": _series_json(data.assets_data),
-                    "liabilities": _series_json(data.liabilities_data),
-                    "income": _series_json(data.income_interval_data),
-                    "expenses": _series_json(data.expenses_interval_data),
-                },
-            },
-            target=output.file_target(file),
-        )
+        _emit_json(file, data)
         return
-    _heading("Financial Overview", metadata)
-    dcontext = filtered.ledger.options["dcontext"]
-    for title, balance in totals.items():
-        typer.echo(f"  {title.replace('_', ' ').title() + ':':<16} {_amounts(balance, conversion, dcontext)}")
-    typer.echo(f"\n{interval.value.title()} breakdown")
+    conversion = str(data["conversion"])
+    _heading("Financial Overview", data)
+    precision = _precision(data)
+    for title, balance in data["totals"].items():
+        typer.echo(f"  {title.replace('_', ' ').title() + ':':<16} {_amounts(balance, conversion, precision)}")
+    typer.echo(f"\n{data['interval'].title()} breakdown")
     # Join flow and balance series by their valuation date.
-    assets_by_date = {point.date: point.balance for point in data.assets_data}
-    liabilities_by_date = {point.date: point.balance for point in data.liabilities_data}
+    assets_by_date = {point["date"]: point["balance"] for point in data["series"]["assets"]}
+    liabilities_by_date = {point["date"]: point["balance"] for point in data["series"]["liabilities"]}
     output.table(
         ["DATE", "ASSETS", "LIABILITIES", "INCOME (CREDIT)", "EXPENSES"],
         [
             [
-                str(flow.date),
-                _amounts(assets_by_date.get(flow.date, {}), conversion, dcontext),
-                _amounts(liabilities_by_date.get(flow.date, {}), conversion, dcontext),
-                _amounts(flow.balance, conversion, dcontext),
-                _amounts(expense.balance, conversion, dcontext),
+                str(flow["date"]),
+                _amounts(assets_by_date.get(flow["date"], {}), conversion, precision),
+                _amounts(liabilities_by_date.get(flow["date"], {}), conversion, precision),
+                _amounts(flow["balance"], conversion, precision),
+                _amounts(expense["balance"], conversion, precision),
             ]
-            for flow, expense in zip(data.income_interval_data, data.expenses_interval_data, strict=True)
+            for flow, expense in zip(data["series"]["income"], data["series"]["expenses"], strict=True)
         ],
     )
 
@@ -358,61 +222,35 @@ def income_statement(
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Income, expenses, and profit, with an interval breakdown."""
-    from fava.modules.financial_statements import FinancialStatementsModule
-
-    filtered, file, conversion = _load(account, time, conversion, allow_errors)
-    data = FinancialStatementsModule().income_statement(filtered, _interval(interval), conversion)
-    trees = (data.income_hierarchy, data.expenses_hierarchy)
-    balances = [(filtered.end_date, balance) for tree in trees for balance in _tree_balances(tree)]
-    for series in (data.income_data, data.expenses_data):
-        balances.extend((point.date, point.balance) for point in series)
-    valuation = _valuation(conversion, balances, allow_errors, filtered.ledger.prices)
-    metadata = _metadata(filtered, conversion, interval) | valuation
-    net = _summary(
-        -_sum(*(tree.balance_children for tree in trees)), conversion, incomplete=bool(valuation["missing_prices"])
+    file, data = _ask(
+        "income-statement",
+        conversion=conversion,
+        time=time,
+        account=account,
+        interval=interval,
+        allow_errors=allow_errors,
     )
-    periods: list[dict[str, Any]] = [
-        {
-            "date": profit.date,
-            "income": income.balance,
-            "expenses": expenses.balance,
-            "net_profit": _summary(
-                -profit.balance,
-                conversion,
-                incomplete=bool(
-                    _valuation(conversion, [(income.date, income.balance), (expenses.date, expenses.balance)], True)[
-                        "missing_prices"
-                    ]
-                ),
-            ),
-        }
-        for income, expenses, profit in zip(data.income_data, data.expenses_data, data.net_profit_data, strict=True)
-    ]
     if context.current().json_output:
-        output.emit(
-            metadata
-            | {"net_profit_signs": "positive_for_gain"}
-            | {"income": _tree_json(trees[0]), "expenses": _tree_json(trees[1]), "net_profit": net, "periods": periods},
-            target=output.file_target(file),
-        )
+        _emit_json(file, data)
         return
-    _heading("Income Statement", metadata, profit_line=True)
-    dcontext = filtered.ledger.options["dcontext"]
-    for tree in trees:
+    conversion = str(data["conversion"])
+    _heading("Income Statement", data, profit_line=True)
+    precision = _precision(data)
+    for tree in (data["income"], data["expenses"]):
         typer.echo("")
-        _print_tree(tree, conversion=conversion, dcontext=dcontext)
-    typer.echo(f"\nNet Profit: {_amounts(net, conversion, dcontext)}")
-    typer.echo(f"\n{interval.value.title()} breakdown")
+        _print_tree(tree, conversion=conversion, precision=precision)
+    typer.echo(f"\nNet Profit: {_amounts(data['net_profit'], conversion, precision)}")
+    typer.echo(f"\n{data['interval'].title()} breakdown")
     output.table(
         ["PERIOD END", "INCOME", "EXPENSES", "NET PROFIT"],
         [
             [
                 str(period["date"]),
-                _amounts(period["income"], conversion, dcontext),
-                _amounts(period["expenses"], conversion, dcontext),
-                _amounts(period["net_profit"], conversion, dcontext),
+                _amounts(period["income"], conversion, precision),
+                _amounts(period["expenses"], conversion, precision),
+                _amounts(period["net_profit"], conversion, precision),
             ]
-            for period in periods
+            for period in data["periods"]
         ],
     )
 
@@ -426,57 +264,39 @@ def balance_sheet(
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Assets, liabilities, and equity including current earnings and valuation adjustments."""
-    from fava.modules.financial_statements import FinancialStatementsModule
-
-    filtered, file, conversion = _load(account, time, conversion, allow_errors)
-    data = FinancialStatementsModule().balance_sheet(filtered, _interval(interval), conversion)
-    trees = (data.assets_hierarchy, data.liabilities_hierarchy, data.equity_hierarchy)
-    balances = [(filtered.end_date, balance) for tree in trees for balance in _tree_balances(tree)]
-    balances.append((filtered.end_date, data.current_earnings))
-    balances.extend((point.date, point.balance) for point in data.net_worth_data)
-    valuation = _valuation(conversion, balances, allow_errors, filtered.ledger.prices)
-    metadata = _metadata(filtered, conversion, interval) | valuation
-    incomplete = bool(valuation["missing_prices"])
-    worth = _summary(_sum(trees[0].balance_children, trees[1].balance_children), conversion, incomplete=incomplete)
-    reconciled = not incomplete and not filtered.ledger.load_errors and conversion != "units"
+    file, data = _ask(
+        "balance-sheet",
+        conversion=conversion,
+        time=time,
+        account=account,
+        interval=interval,
+        allow_errors=allow_errors,
+    )
     if context.current().json_output:
-        output.emit(
-            metadata
-            | {
-                "assets": _tree_json(trees[0]),
-                "liabilities": _tree_json(trees[1]),
-                "equity": _tree_json(trees[2]),
-                "current_earnings": data.current_earnings,
-                "current_earnings_signs": "negative_for_gain",
-                "net_profit": _negated(data.current_earnings),
-                "valuation_adjustment": data.valuation_adjustment if reconciled else None,
-                "equity_total": data.equity_total if reconciled else None,
-                "equity_reconciled": reconciled,
-                "net_worth": worth,
-                "net_worth_series": _series_json(data.net_worth_data),
-            },
-            target=output.file_target(file),
-        )
+        _emit_json(file, data)
         return
-    _heading("Balance Sheet", metadata)
-    dcontext = filtered.ledger.options["dcontext"]
-    for tree in trees:
+    conversion = str(data["conversion"])
+    _heading("Balance Sheet", data)
+    precision = _precision(data)
+    for tree in (data["assets"], data["liabilities"], data["equity"]):
         typer.echo("")
-        _print_tree(tree, conversion=conversion, dcontext=dcontext)
-    typer.echo(f"  {'Current-period earnings (credit):':<46}  {_amounts(data.current_earnings, conversion, dcontext)}")
-    if reconciled:
-        adjustment = _amounts(data.valuation_adjustment, conversion, dcontext)
+        _print_tree(tree, conversion=conversion, precision=precision)
+    earnings = _amounts(data["current_earnings"], conversion, precision)
+    typer.echo(f"  {'Current-period earnings (credit):':<46}  {earnings}")
+    if data.get("equity_reconciled"):
+        adjustment = _amounts(data["valuation_adjustment"] or {}, conversion, precision)
         typer.echo(f"  {'Valuation/translation adjustment (credit):':<46}  {adjustment}")
-        typer.echo(f"  {'Total equity (credit):':<46}  {_amounts(data.equity_total, conversion, dcontext)}")
+        equity_total = _amounts(data["equity_total"] or {}, conversion, precision)
+        typer.echo(f"  {'Total equity (credit):':<46}  {equity_total}")
     # The credit lines above carry the opposite sign to the income statement's
     # Net Profit, which is the same quantity. Say so, and say what it equals.
-    profit = _amounts(_negated(data.current_earnings), conversion, dcontext)
+    profit = _amounts(_negated(data["current_earnings"]), conversion, precision)
     typer.echo(f"\nCredit lines above are negative for a gain; the same period's Net Profit is {profit}.")
-    typer.echo(f"Net Worth: {_amounts(worth, conversion, dcontext)}")
-    typer.echo(f"\n{interval.value.title()} net worth")
+    typer.echo(f"Net Worth: {_amounts(data['net_worth'], conversion, precision)}")
+    typer.echo(f"\n{str(data['interval']).title()} net worth")
     output.table(
         ["DATE", "NET WORTH"],
-        [[str(point.date), _amounts(point.balance, conversion, dcontext)] for point in data.net_worth_data],
+        [[str(point["date"]), _amounts(point["balance"], conversion, precision)] for point in data["net_worth_series"]],
     )
 
 
@@ -488,55 +308,16 @@ def trial_balance(
     allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """All five account types, retaining signed ledger balances."""
-    from fava.modules.financial_statements import FinancialStatementsModule
-
-    filtered, file, conversion = _load(account, time, conversion, allow_errors)
-    data = FinancialStatementsModule().trial_balance(filtered, conversion)
-    sections = {
-        name: getattr(data, f"{name}_hierarchy") for name in ("assets", "liabilities", "equity", "income", "expenses")
-    }
-    metadata = _metadata(filtered, conversion) | _valuation(
-        conversion,
-        ((filtered.end_date, balance) for tree in sections.values() for balance in _tree_balances(tree)),
-        allow_errors,
-        filtered.ledger.prices,
-    )
+    file, data = _ask("trial-balance", conversion=conversion, time=time, account=account, allow_errors=allow_errors)
     if context.current().json_output:
-        output.emit(
-            metadata | {name: _tree_json(tree) for name, tree in sections.items()}, target=output.file_target(file)
-        )
+        _emit_json(file, data)
         return
-    _heading("Trial Balance", metadata)
-    dcontext = filtered.ledger.options["dcontext"]
-    for tree in sections.values():
+    conversion = str(data["conversion"])
+    _heading("Trial Balance", data)
+    precision = _precision(data)
+    for name in ("assets", "liabilities", "equity", "income", "expenses"):
         typer.echo("")
-        _print_tree(tree, conversion=conversion, dcontext=dcontext)
-
-
-def _prune_tree(
-    node: SerialisedTreeNode, terms: list[str], closed: set[str] | None = None
-) -> SerialisedTreeNode | None:
-    """Keep nodes matching any term plus their ancestors for structure.
-
-    In a filtered view, closed accounts drop out unless a still-open
-    descendant was kept; ancestors stay for structure. Every retained node's
-    subtree total is recomputed from what was kept, so a parent never reports
-    the balance of a sibling the filter excluded.
-    """
-    kept = []
-    for child in node.children:
-        pruned = _prune_tree(child, terms, closed)
-        if pruned is not None:
-            kept.append(pruned)
-    is_closed = bool(closed) and node.account in (closed or ())
-    matches = not is_closed and any(term in node.account.casefold() for term in terms)
-    if not (matches or kept):
-        return None
-    return dataclasses.replace(
-        node,
-        children=kept,
-        balance_children=_sum(node.balance, *(child.balance_children for child in kept)),
-    )
+        _print_tree(data[name], conversion=conversion, precision=precision)
 
 
 def balance(
@@ -549,53 +330,18 @@ def balance(
 
     With no filter, prints the trial balance.
     """
-    from beancount.core.data import Close
-
-    from fava.modules.financial_statements import FinancialStatementsModule
-
-    filtered, file, conversion = _load(None, time, conversion, allow_errors)
-    data = FinancialStatementsModule().trial_balance(filtered, conversion)
-    sections = {
-        name: getattr(data, f"{name}_hierarchy") for name in ("assets", "liabilities", "equity", "income", "expenses")
-    }
-    terms = [(term or "").casefold() for term in accounts or []]
-    if not terms:
-        pruned = {name: tree for name, tree in sections.items()}
-    else:
-        closed: set[str] = set()
-        for entry in filtered.entries:
-            if isinstance(entry, Close):
-                closed.add(entry.account)
-        pruned = {name: _prune_tree(tree, terms, closed) for name, tree in sections.items()}
-    # Valuation covers only the accounts being shown: an unrelated unpriced
-    # holding must not make a USD checking balance fail.
-    metadata = (
-        _metadata(filtered, conversion)
-        | {"account_filter": " ".join(accounts) if accounts else None}
-        | _valuation(
-            conversion,
-            (
-                (filtered.end_date, balance)
-                for tree in pruned.values()
-                if tree is not None
-                for balance in _tree_balances(tree)
-            ),
-            allow_errors,
-            filtered.ledger.prices,
-        )
-    )
+    file, data = _ask("balances", conversion=conversion, time=time, accounts=accounts, allow_errors=allow_errors)
     if context.current().json_output:
-        output.emit(
-            metadata | {name: (_tree_json(tree) if tree is not None else None) for name, tree in pruned.items()},
-            target=output.file_target(file),
-        )
+        _emit_json(file, data)
         return
-    _heading("Trial Balance", metadata)
-    dcontext = filtered.ledger.options["dcontext"]
-    if not any(pruned.values()):
+    conversion = str(data["conversion"])
+    _heading("Trial Balance", data)
+    precision = _precision(data)
+    trees = [data[name] for name in ("assets", "liabilities", "equity", "income", "expenses")]
+    if not any(trees):
         output.note(f"No accounts match {' '.join(accounts or [])}.")
         return
-    for tree in pruned.values():
+    for tree in trees:
         if tree is not None:
             typer.echo("")
-            _print_tree(tree, conversion=conversion, dcontext=dcontext)
+            _print_tree(tree, conversion=conversion, precision=precision)

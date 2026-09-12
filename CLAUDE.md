@@ -4,7 +4,7 @@ Monorepo for [Beancount.io](https://beancount.io/) — double-entry bookkeeping 
 
 This file holds repo-wide rules. Per-package guidance lives next to the code:
 
-- `cli/CLAUDE.md` — Python CLI and vendored Fava reporting code
+- `cli/CLAUDE.md` — Python CLI (`bea` frontend + `beancount-io-engine`)
 - `dashboard/CLAUDE.md` — web client
 - `mobile/CLAUDE.md` — React Native app
 - `backend-cluster/backend-v2/CLAUDE.md` — API gateway and background services
@@ -31,7 +31,7 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 | ------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dashboard/`       | active | Web client (React 19, TanStack Start, Apollo, TypeScript)                                                                                                                                                  |
 | `mobile/`          | active | React Native iOS/Android app (Expo, Apollo, TypeScript)                                                                                                                                                    |
-| `cli/`             | active | `beancount-io` — the `bea` command: directives, bean-check/format, BQL queries, reports, local-ledger ask (Python, Typer) — includes vendored `fava` reporting library. Ships to PyPI and the `bex-co/homebrew-tap` Homebrew tap on `cli-v*` tags |
+| `cli/`             | active | `beancount-io` — the `bea` command: directives, native check/format/query/doctor/example/treeify, BQL, reports, local-ledger ask (Python, Typer). Frontend never loads Beancount; managed engine via Homebrew install-time dual venv or PyPI first-use. Ships to PyPI and the `bex-co/homebrew-tap` Homebrew tap on `cli-v*` tags |
 | `backend-cluster/` | active | Backend services: `backend-v2` (GraphQL/REST/MCP API), `ledger` (rustledger-WASM ledger service), `idl` (OpenAPI specs + generated clients), `agent-box` (Cloudflare Worker sandbox control plane)         |
 | `skills/`          | active | Customer-facing `beancount-*` ledger skills: init, import, importer-author, reconcile, migrate, ask, close, options (see `skills/CLAUDE.md`) |
 | `.agents/skills/`  | active | Internal development skills: `routine-*` code maintenance, `qa-find-bugs-*`, mermaid, pm, pm-brainstorm, loop-worker, mobile-release, ship (see `.agents/CLAUDE.md`) |

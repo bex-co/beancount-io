@@ -143,15 +143,10 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
-    { name = "beancount" },
-    { name = "beanquery" },
     { name = "httpx" },
-    { name = "ply" },
     { name = "prompt-toolkit" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
-    { name = "pyexcel" },
-    { name = "python-dateutil" },
     { name = "python-frontmatter" },
     { name = "typer" },
 ]
@@ -164,13 +159,18 @@ ask = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "beancount" },
     { name = "beancount-io", extra = ["ask"] },
+    { name = "beanquery" },
     { name = "mypy" },
     { name = "openapi-python-client" },
+    { name = "ply" },
+    { name = "pyexcel" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-httpx" },
     { name = "pytest-xdist" },
+    { name = "python-dateutil" },
     { name = "ruff" },
     { name = "types-python-dateutil" },
     { name = "vulture" },
@@ -179,17 +179,12 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "attrs", specifier = ">=23" },
-    { name = "beancount", specifier = ">=3.2" },
-    { name = "beanquery", specifier = ">=0.2" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "openai", marker = "extra == 'ask'", specifier = ">=1.0" },
-    { name = "ply", specifier = ">=3.11" },
     { name = "prompt-toolkit", specifier = ">=3.0" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pydantic-ai", marker = "extra == 'ask'", specifier = ">=0.3" },
     { name = "pydantic-settings", specifier = ">=2.0" },
-    { name = "pyexcel", specifier = ">=0.7.3" },
-    { name = "python-dateutil", specifier = ">=2.9.0" },
     { name = "python-frontmatter", specifier = ">=1.1" },
     { name = "typer", specifier = ">=0.12" },
 ]
@@ -197,13 +192,18 @@ provides-extras = ["ask"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "beancount", specifier = ">=3.2" },
     { name = "beancount-io", extras = ["ask"] },
+    { name = "beanquery", specifier = ">=0.2" },
     { name = "mypy", specifier = ">=1.17.1" },
     { name = "openapi-python-client", specifier = ">=0.29.1" },
+    { name = "ply", specifier = ">=3.11" },
+    { name = "pyexcel", specifier = ">=0.7.3" },
     { name = "pytest", specifier = ">=8" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
     { name = "pytest-httpx", specifier = ">=0.30" },
     { name = "pytest-xdist", specifier = ">=3.6" },
+    { name = "python-dateutil", specifier = ">=2.9.0" },
     { name = "ruff", specifier = ">=0.12.12" },
     { name = "types-python-dateutil", specifier = ">=2.9.0.20251008" },
     { name = "vulture", specifier = ">=2.14" },

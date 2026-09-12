@@ -1,9 +1,8 @@
-"""No-code CSV import: a column mapping plus optional pattern rules as an importer.
+"""No-code CSV import helpers that need no Beancount.
 
-The mapper implements the same Beangulp identify/account/extract shape as a
-Python importer, so everything downstream (preview, duplicate matching,
-validation, diff, apply) is unchanged. Standard library only: beangulp stays
-optional (see the ADR on why it is not a hard dependency).
+Header inference, date-format discovery, and remembered-mapping signatures stay
+in the frontend. Entry extraction (`CsvImporter`) lives in
+`bea_engine.csv_mapper` and runs only inside `bea-engine import`.
 """
 
 from __future__ import annotations
@@ -11,12 +10,10 @@ from __future__ import annotations
 import csv
 import hashlib
 import re
-from collections import Counter
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -272,147 +269,3 @@ def read_header(source: Path) -> list[str] | None:
             return headers or None
     except (OSError, UnicodeDecodeError, UsageError):
         return None
-
-
-class CsvImporter:
-    """A column-mapping importer with the Beangulp shape (`name = "csv"`)."""
-
-    name = "csv"
-
-    def __init__(
-        self,
-        *,
-        account: str,
-        mapping: CsvMapping,
-        date_format: str = "%Y-%m-%d",
-        rules: list[CsvRule] | None = None,
-        default_account: str = "Expenses:Uncategorized",
-        currency: str | None = None,
-    ) -> None:
-        self._account = account
-        self._mapping = mapping
-        self._date_format = date_format
-        self._rules = rules or []
-        self._default_account = default_account
-        self._currency = currency
-        # Category values that were not account names, for the caller to report once.
-        self.rejected_categories: Counter[str] = Counter()
-
-    def identify(self, filepath: str) -> bool:
-        return True
-
-    def account(self, filepath: str) -> str:
-        return self._account
-
-    def _cell(self, row: dict[str, str], line: int, field: str) -> str:
-        column = self._mapping.column(field)
-        if column is None:
-            return ""
-        if column not in row:
-            raise UsageError(f"Row {line}: the mapping names column {column!r} for {field}, which the CSV lacks.")
-        return row[column].strip()
-
-    def _check_columns(self, source: Path, headers: list[str], category_header: str | None) -> None:
-        """Every column this run reads must exist exactly once, or a row could silently take the wrong cell."""
-        counts = Counter(headers)
-        wanted = dict(self._mapping.columns)
-        if category_header is not None:
-            wanted.setdefault("category", category_header)
-        for role, column in wanted.items():
-            if counts[column] == 0:
-                raise UsageError(f"The mapping names column {column!r} for {role}, which {source.name} lacks.")
-            if counts[column] > 1:
-                raise UsageError(
-                    f"Column {column!r} appears {counts[column]} times in the header of {source.name}, so {role} "
-                    "is ambiguous. Rename the duplicates so each mapped column is unique. Nothing was written."
-                )
-
-    def _parse_decimal(self, line: int, column: str, value: str) -> Decimal:
-        try:
-            return Decimal(value.strip())
-        except InvalidOperation:
-            raise UsageError(f"Row {line}: cannot parse amount {value!r} in column {column!r}.") from None
-
-    def extract(self, filepath: str, existing: Any) -> list[Any]:
-        from beancount.core.amount import Amount
-        from beancount.core.data import Posting, Transaction, new_metadata
-
-        columns = self._mapping.columns
-        category_header = columns.get("category")
-        rows: list[Any] = []
-        source = Path(filepath)
-        with open_records(source) as (headers, records):
-            if category_header is None:
-                category_header = next((h for h in headers if h.casefold() == "category"), None)
-            self._check_columns(source, headers, category_header)
-            for index, row in enumerate(records):
-                line = index + 2
-                date_column = columns["date"]
-                try:
-                    day = datetime.strptime(self._cell(row, line, "date"), self._date_format).date()
-                except ValueError:
-                    raise UsageError(
-                        f"Row {line}: cannot parse date {self._cell(row, line, 'date')!r} "
-                        f"in column {date_column!r} with format {self._date_format!r}."
-                    ) from None
-                if "amount" in columns:
-                    amount_column = columns["amount"]
-                    number = self._parse_decimal(line, amount_column, self._cell(row, line, "amount"))
-                else:
-                    debit = self._cell(row, line, "debit")
-                    credit = self._cell(row, line, "credit")
-                    if bool(debit) == bool(credit):
-                        raise UsageError(
-                            f"Row {line}: fill exactly one of {columns['debit']!r} or {columns['credit']!r}."
-                        )
-                    side = "credit" if credit else "debit"
-                    number = self._parse_decimal(line, columns[side], credit or debit)
-                    number = number if credit else -number
-                if self._mapping.sign == "ledger":
-                    number = -number
-                currency = self._cell(row, line, "currency") or self._currency
-                if not currency:
-                    raise UsageError(f"Row {line}: no currency column and the ledger has no single operating currency.")
-                # An unmapped or blank payee is absent, not empty: a bare `""`
-                # payee would be printed into every entry the mapping writes.
-                payee = self._cell(row, line, "payee") or None
-                narration = self._cell(row, line, "narration")
-                counter, flag, rule = self._categorize(row, line, payee, narration, category_header)
-                meta = new_metadata(filepath, line)
-                meta["_csv_rule"] = rule
-                native_id = self._cell(row, line, "id")
-                if native_id:
-                    meta["bank_id"] = native_id
-                postings = [
-                    Posting(self._account, Amount(number, currency), None, None, None, None),
-                    Posting(counter, Amount(-number, currency), None, None, None, None),
-                ]
-                rows.append(Transaction(meta, day, flag, payee, narration, frozenset(), frozenset(), postings))
-        return rows
-
-    def _categorize(
-        self,
-        row: dict[str, str],
-        line: int,
-        payee: str | None,
-        narration: str,
-        category_header: str | None,
-    ) -> tuple[str, str, str]:
-        """Counter account, flag, and rule name: rules beat the category column."""
-        from beancount.core.account import is_valid
-
-        for rule in self._rules:
-            if rule.expression.search(payee or "") or rule.expression.search(narration):
-                return rule.account, "*", rule.pattern
-        if category_header is not None:
-            if category_header not in row:
-                raise UsageError(f"Row {line}: the CSV lacks category column {category_header!r}.")
-            category = row[category_header].strip()
-            if category and is_valid(category):
-                return category, "*", category
-            if category:
-                # A card export's own label ("Groceries", "Food & Drink") is
-                # not an account, and written verbatim it is a syntax error on
-                # every row. The row queues for review instead.
-                self.rejected_categories[category] += 1
-        return self._default_account, "!", "unmatched"

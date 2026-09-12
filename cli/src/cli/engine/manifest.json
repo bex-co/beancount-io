@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "engine_version": "0.1.0",
+  "requires_python": "3.12",
+  "comment": "The engine combination the frontend provisions, and ADR014's reviewed baseline. `engine_version` also names the managed environment's directory, so bumping it provisions a fresh venv instead of mutating the one in use. When `engine-requirements.lock` ships beside the frontend (release sdists / Homebrew), provisioning installs with --require-hashes.",
+  "requirements": [
+    "beancount==3.2.3",
+    "beanquery==0.2.0"
+  ],
+  "helper": "beancount-io-engine==0.1.0",
+  "lockfile": "engine-requirements.lock"
+}

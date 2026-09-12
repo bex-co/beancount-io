@@ -1,0 +1,200 @@
+"""Install the managed engine environment, once, on first use.
+
+ADR014 promises one customer installation: nobody installs Beancount or
+Beanquery themselves, and there is no separate setup command. So the first
+local command that needs the engine builds it here and every later command
+reuses it offline.
+
+Two properties make the reuse safe. Installing happens in a sibling `.partial`
+directory that is renamed into place only after it succeeds, so an interrupted
+or failed provision never leaves a half-built environment that later runs
+would trust. And the destination is versioned (`paths.engine_root`), so a
+future engine lands beside the current one instead of replacing it underneath a
+running command.
+
+Release artifacts ship `engine-requirements.lock` (see `make engine-release-lock`);
+when that lock is present beside the installed package or in the sdist, installs
+use `--require-hashes`. Checkouts without the lock fall back to the version pins
+in `manifest.json` plus an editable `cli/engine` install.
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+from importlib import resources
+from pathlib import Path
+
+from cli import output
+from cli.engine import paths
+from cli.errors import BeaError
+
+UV_ENV = "BEA_UV"
+
+
+def ensure_engine() -> Path:
+    """Return the engine interpreter, installing the environment if it is missing."""
+    override = paths.python_override()
+    if override is not None:
+        return override
+
+    root = paths.engine_root()
+    if paths.is_provisioned(root):
+        return paths.venv_python(root)
+
+    provision(root)
+    return paths.venv_python(root)
+
+
+def repair_engine() -> Path:
+    """Rebuild the managed engine after a failed or incomplete install."""
+    override = paths.python_override()
+    if override is not None:
+        return override
+    root = paths.engine_root()
+    if root.exists():
+        discarded = root.with_name(f"{root.name}.repair-discard.{os.getpid()}")
+        os.replace(root, discarded)
+        shutil.rmtree(discarded, ignore_errors=True)
+    provision(root)
+    return paths.venv_python(root)
+
+
+def provision(root: Path) -> None:
+    """Build the engine environment at `root`, atomically."""
+    uv = _find_uv()
+    version = paths.engine_version()
+    manifest = paths.manifest()
+
+    # Per-process, so two commands provisioning at the same time build in
+    # separate directories and the loser's rename is simply redundant.
+    partial = root.with_name(f"{root.name}.partial.{os.getpid()}")
+    shutil.rmtree(partial, ignore_errors=True)
+    partial.parent.mkdir(parents=True, exist_ok=True)
+
+    output.note(f"Installing the Beancount engine {version} (one time) in {root}...")
+    try:
+        _run(
+            # `--relocatable` is what makes the rename below survivable. A
+            # normal venv bakes its own absolute path into the shebang of every
+            # console script, so `bean-check` and friends would point at the
+            # `.partial` directory that no longer exists; a relocatable one
+            # resolves its interpreter relative to the script.
+            [uv, "venv", "--relocatable", "--python", str(manifest["requires_python"]), str(partial)],
+            failure=f"Could not create the engine environment in {partial}",
+        )
+        python = str(paths.venv_python(partial))
+        lock = _lockfile()
+        helper = paths.checkout_engine_project()
+        if lock is not None and helper is None:
+            # Released frontend: hash-pinned transitive graph, then the helper
+            # wheel with --no-deps so pip does not re-resolve unhashed edges.
+            _run(
+                [
+                    uv,
+                    "pip",
+                    "install",
+                    "--python",
+                    python,
+                    "--require-hashes",
+                    "--only-binary",
+                    ":all:",
+                    "-r",
+                    str(lock),
+                ],
+                failure="Could not install the hash-pinned engine packages",
+            )
+            _run(
+                [uv, "pip", "install", "--python", python, "--no-deps", str(manifest["helper"])],
+                failure="Could not install the engine helper",
+            )
+        else:
+            _run(
+                [uv, "pip", "install", "--python", python, *_requirements()],
+                failure="Could not install the engine's packages",
+            )
+        _publish(partial, root)
+    except BaseException:
+        shutil.rmtree(partial, ignore_errors=True)
+        raise
+    output.note(f"Beancount engine {version} ready.")
+
+
+def _lockfile() -> Path | None:
+    """Locate `engine-requirements.lock` next to the installed package or checkout."""
+    name = str(paths.manifest().get("lockfile") or "engine-requirements.lock")
+    # Checkout: cli/engine-requirements.lock (generated by make engine-release-lock).
+    checkout = paths.checkout_engine_project()
+    if checkout is not None:
+        candidate = checkout.parent / name
+        if candidate.is_file():
+            return candidate
+    # Installed wheel/sdist: adjacent to the distribution root.
+    package_root = Path(__file__).resolve().parents[2]  # .../site-packages or .../src
+    for candidate in (package_root.parent / name, package_root / name):
+        if candidate.is_file():
+            return candidate
+    try:
+        traversable = resources.files("cli").joinpath(name)
+        if traversable.is_file():
+            # Wheels store package data inside a zip; uv needs a real filesystem
+            # path, so materialize once beside the managed engines.
+            cache = paths.engine_root().parent / name
+            cache.parent.mkdir(parents=True, exist_ok=True)
+            data = traversable.read_bytes()
+            if not cache.is_file() or cache.read_bytes() != data:
+                cache.write_bytes(data)
+            return cache
+    except (FileNotFoundError, TypeError, AttributeError, OSError):
+        pass
+    return None
+
+
+def _publish(partial: Path, root: Path) -> None:
+    """Move a finished environment into place under the name commands look for."""
+    if root.exists():
+        # Something unusable is already there — `ensure_engine` only calls us
+        # when `is_provisioned` said no. Move it out of the way first, because
+        # renaming onto a non-empty directory fails.
+        discarded = root.with_name(f"{root.name}.discarded.{os.getpid()}")
+        os.replace(root, discarded)
+        shutil.rmtree(discarded, ignore_errors=True)
+    os.replace(partial, root)
+
+
+def _requirements() -> list[str]:
+    """Version-pin list used when no hash lock is available (checkouts / tests).
+
+    Prefer the two-step hashed install in `provision()` for released frontends.
+    """
+    manifest = paths.manifest()
+    helper = paths.checkout_engine_project()
+    return [*(str(spec) for spec in manifest["requirements"]), str(helper) if helper else str(manifest["helper"])]
+
+
+def _find_uv() -> str:
+    """Locate uv, which builds the environment."""
+    override = os.environ.get(UV_ENV)
+    if override:
+        return override
+    found = shutil.which("uv")
+    if found:
+        return found
+    raise BeaError(
+        "The Beancount engine needs uv to install, and uv was not found on PATH. "
+        "Install it from https://docs.astral.sh/uv/ or set BEA_UV to its path."
+    )
+
+
+def _run(command: list[str], *, failure: str) -> None:
+    """Run one provisioning step, keeping its output for the error message.
+
+    Captured rather than inherited: in JSON mode the frontend's stderr must
+    stay a single parseable object, and uv is chatty. On failure the output is
+    what explains it, so it becomes the error's details.
+    """
+    completed = subprocess.run(command, capture_output=True, text=True, check=False)
+    if completed.returncode != 0:
+        details = [line for line in (completed.stderr or completed.stdout or "").splitlines() if line.strip()]
+        raise BeaError(f"{failure} (uv exited {completed.returncode}).", details=details[-20:])

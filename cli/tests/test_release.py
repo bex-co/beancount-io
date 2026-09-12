@@ -35,8 +35,17 @@ def test_the_sdist_carries_the_hashed_lock() -> None:
     """
     pyproject = tomllib.loads((CLI_ROOT / "pyproject.toml").read_text())
     sdist = pyproject["tool"]["hatch"]["build"]["targets"]["sdist"]
+    only = sdist["only-include"]
+    force = sdist["force-include"]
 
-    assert "requirements.lock" in sdist["include"]
+    assert "requirements.lock" in only
+    assert "engine-requirements.lock" in only
+    assert "engine/pyproject.toml" in only
+    assert "src" in only
+    assert force["src/bea_engine"] == "engine/src/bea_engine"
+    assert force["src/fava"] == "engine/src/fava"
+    assert "NOTICE.fava" in only
+    assert "engine/NOTICE.fava" in only
     assert sdist["ignore-vcs"] is True, "requirements.lock is gitignored, so VCS ignores must not filter the sdist"
 
 

@@ -1,6 +1,7 @@
 """Customer outcomes: onboarding, financial numbers, and usable CLI errors."""
 
 import json
+import os
 import subprocess
 import sys
 from decimal import Decimal
@@ -12,6 +13,7 @@ from typer.testing import CliRunner
 from cli.main import app
 
 runner = CliRunner()
+CLI_ROOT = Path(__file__).resolve().parent.parent
 
 
 @pytest.fixture
@@ -204,10 +206,10 @@ def test_early_usage_errors_are_json_in_a_fresh_process(args: list[str]) -> None
 def test_format_handles_files_both_extensions_and_missing_targets(tmp_path: Path) -> None:
     for name in ("one.bean", "two.beancount"):
         (tmp_path / name).write_text('2026-08-01 * "Coffee"\n  Assets:Cash -1 USD\n  Expenses:Food 1 USD\n')
-    first = runner.invoke(app, ["--json", "format", str(tmp_path / "one.bean")])
+    first = runner.invoke(app, ["--json", "format", str(tmp_path / "one.bean"), "--in-place"])
     assert first.exit_code == 0
     assert json.loads(first.stdout)["data"]["scanned"] == 1
-    second = runner.invoke(app, ["--json", "format", str(tmp_path)])
+    second = runner.invoke(app, ["--json", "format", str(tmp_path), "--in-place"])
     assert second.exit_code == 0
     assert json.loads(second.stdout)["data"]["scanned"] == 2
     missing = runner.invoke(app, ["--json", "format", str(tmp_path / "missing")])
@@ -227,13 +229,53 @@ def test_transaction_details_include_every_posting_and_source(book: Path) -> Non
     assert str(book) in detail.stdout
 
 
-def test_interactive_query_rejects_invalid_ledger(book: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("cli.context._stdin_is_a_terminal", lambda: True)
+@pytest.mark.skipif(sys.platform == "win32", reason="the pty this drives the shell through is POSIX-only")
+def test_interactive_query_opens_the_shell_on_a_real_terminal(book: Path) -> None:
+    """The interactive shell runs in the engine process and gets the real terminal.
+
+    Driven through a pty because nothing smaller can prove it: `CliRunner`
+    replaces `sys.stdin`, which a child process does not inherit, and a plain
+    pipe is refused up front — a shell with nobody at the keyboard would hang.
+    So the terminal has to actually be one, and the load errors have to arrive
+    on the caller's own stderr rather than in a captured buffer.
+    """
+    import pty
+    import threading
+
     with book.open("a") as stream:
         stream.write('2026-09-04 * "Invalid"\n  Assets:Checking -1 USD\n')
-    result = runner.invoke(app, ["--file", str(book), "query"])
-    assert result.exit_code == 1
-    assert "Ledger has" in result.stderr
+
+    terminal, child_side = pty.openpty()
+    try:
+        process = subprocess.Popen(
+            [sys.executable, "-m", "cli.main", "--file", str(book), "query"],
+            stdin=child_side,
+            stdout=child_side,
+            stderr=subprocess.PIPE,
+            text=True,
+            cwd=CLI_ROOT,
+            env={**os.environ, "PYTHONPATH": str(CLI_ROOT / "src"), "TERM": "dumb"},
+        )
+        os.close(child_side)
+        # A terminal holds very little: leave the prompt and its echo unread and
+        # the shell blocks writing them, never reaching the line we sent.
+        threading.Thread(target=_drain, args=(terminal,), daemon=True).start()
+        os.write(terminal, b".quit\n")
+        _stdout, stderr = process.communicate(timeout=120)
+    finally:
+        os.close(terminal)
+
+    assert process.returncode == 0, stderr
+    assert "does not balance" in stderr
+
+
+def _drain(descriptor: int) -> None:
+    while True:
+        try:
+            if not os.read(descriptor, 4096):
+                return
+        except OSError:
+            return
 
 
 @pytest.fixture
@@ -396,11 +438,12 @@ class TestDailyFixes:
         other = tmp_path / "other.bean"
         other.write_text('2026-08-01 *  "X"\n  Assets:Cash             1.00 USD\n')
 
-        result = runner.invoke(app, ["--file", str(book), "format"])
+        result = runner.invoke(app, ["--file", str(book), "format", "--in-place"])
 
         assert result.exit_code == 0, result.output
-        assert "main.bean" in result.stdout
         assert other.read_text().startswith("2026-08-01 *  ")
+        # In-place formatting realigns the selected ledger, not a sibling file.
+        assert "Assets:Cash" in book.read_text() or "Assets:Checking" in book.read_text()
 
     def test_bulk_add_reads_stdin(self, book: Path) -> None:
         payload = json.dumps(

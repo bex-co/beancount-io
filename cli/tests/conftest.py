@@ -32,7 +32,12 @@ def bea_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[
     monkeypatch.setenv("BEA_CONFIG_DIR", str(directory))
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg-config"))
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg-cache"))
-    for name in ("BEA_FILE", "BEA_TOKEN", "CI"):
+    # `XDG_DATA_HOME` is where a provisioned Beancount engine lives. Pointed at
+    # tmp so no test can reuse — or corrupt — the developer's real engine; with
+    # nothing installed there, `cli.engine.launch` falls through to running the
+    # helper out of this checkout instead of provisioning one.
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdg-data"))
+    for name in ("BEA_FILE", "BEA_TOKEN", "CI", "BEA_ENGINE_PYTHON", "BEA_ENGINE_DIR"):
         monkeypatch.delenv(name, raising=False)
     # No test may reach the real index. The notifier is off by default and its
     # endpoint points at a closed port, so a check that slips past the gate

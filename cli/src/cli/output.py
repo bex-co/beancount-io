@@ -57,10 +57,13 @@ def error(exc: BaseException | str) -> NoReturn:
     err = to_bea_error(exc)
     exit_code = err.exit_code
     trace = None
-    if context.current().debug and isinstance(exc, BaseException):
-        import traceback
+    if context.current().debug:
+        if err.traceback:
+            trace = err.traceback
+        elif isinstance(exc, BaseException):
+            import traceback
 
-        trace = "".join(traceback.format_exception(exc))
+            trace = "".join(traceback.format_exception(exc))
 
     if _json_mode():
         payload: dict[str, Any] = {
@@ -231,6 +234,11 @@ def render_ledger_errors(
 
 
 def format_ledger_error(err: Any) -> str:
+    # A string is an error the engine already formatted: it crossed the process
+    # boundary as `file:line: message`, because formatting a Beancount error
+    # object requires Beancount and this side has none.
+    if isinstance(err, str):
+        return err
     source = getattr(err, "source", None) or {}
     filename = source.get("filename", "<ledger>")
     lineno = source.get("lineno", 0)

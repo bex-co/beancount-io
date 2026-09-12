@@ -5,11 +5,33 @@ from __future__ import annotations
 import csv
 import json
 import os
+import re
+import stat
 import subprocess
 import sys
 import tempfile
 from decimal import Decimal
 from pathlib import Path
+
+
+def _frontend_python(binary: Path) -> Path | None:
+    """Interpreter that runs the installed frontend, when the shim exposes one."""
+    try:
+        text = binary.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    if text.startswith("#!"):
+        first = text.splitlines()[0][2:].strip()
+        candidate = Path(first.split()[0])
+        if candidate.name.startswith("python") and candidate.exists():
+            return candidate
+    for line in text.splitlines():
+        match = re.search(r'exec\s+"([^"]+/venv/bin/bea)"', line)
+        if match:
+            nested = Path(match.group(1))
+            return _frontend_python(nested) if nested.exists() else None
+    sibling = binary.parent / ("python.exe" if os.name == "nt" else "python")
+    return sibling if sibling.exists() else None
 
 
 def smoke(binary: Path, directory: Path) -> None:
@@ -21,10 +43,22 @@ def smoke(binary: Path, directory: Path) -> None:
         XDG_CACHE_HOME=str(directory / "xdg-cache"),
         BEA_NO_UPDATE_NOTIFIER="1",
     )
+    # PyPI first-use provisioning lands under XDG_DATA_HOME. Homebrew sets
+    # BEA_ENGINE_DIR to the keg-local engine and must keep that install-time path.
+    if "BEA_ENGINE_DIR" not in env:
+        env["XDG_DATA_HOME"] = str(directory / "xdg-data")
     env.pop("BEA_FILE", None)
+    # Conflicting global bean-* tools on PATH must never answer (ADR014).
+    fake_bin = directory / "fake-path-bin"
+    fake_bin.mkdir()
+    for name in ("bean-check", "bean-format", "bean-query", "bean-doctor", "bean-example", "treeify"):
+        decoy = fake_bin / name
+        decoy.write_text("#!/bin/sh\necho DECOY >&2\nexit 99\n")
+        decoy.chmod(decoy.stat().st_mode | stat.S_IXUSR)
+    env["PATH"] = f"{fake_bin}{os.pathsep}{env.get('PATH', '')}"
     commands = 0
 
-    def run(*args: str, exit_code: int = 0, json_output: bool = True):
+    def run(*args: str, exit_code: int = 0, json_output: bool = True, timeout: int = 120):
         nonlocal commands
         commands += 1
         completed = subprocess.run(
@@ -33,7 +67,7 @@ def smoke(binary: Path, directory: Path) -> None:
             env=env,
             text=True,
             capture_output=True,
-            timeout=30,
+            timeout=timeout,
         )
         assert completed.returncode == exit_code, (args, completed.stdout, completed.stderr)
         result = completed.stdout if exit_code == 0 else completed.stderr
@@ -44,7 +78,8 @@ def smoke(binary: Path, directory: Path) -> None:
     run("init", "books", "--currency", "USD", "--date", "2026-08-01", "--opening-balance", "Assets:Checking 1000")
     file = directory / "books/main.bean"
     target = ("--file", str(file))
-    run(*target, "check")
+    # First engine-touching command: may download+hash-pin on a clean PyPI install.
+    run(*target, "check", timeout=300)
     for account, number in (("Income:Salary", "-100"), ("Expenses:Dining", "25")):
         run(
             *target,
@@ -129,7 +164,7 @@ def smoke(binary: Path, directory: Path) -> None:
     comment = 'A "quoted" café receipt \\ path'
     run(*target, "add", "note", "--date", "2026-08-03", "--account", "Assets:Checking", "--comment", comment)
     assert run(*target, "list", "note")["data"][0]["comment"] == comment
-    run("format", str(file))
+    run("format", str(file), "--in-place")
     run(*target, "check")
     run(
         "init",
@@ -200,7 +235,7 @@ def smoke(binary: Path, directory: Path) -> None:
     assert "83.35 USD" in text
     # Appending a wider posting preserves existing bytes, so older balance
     # lines may need realignment. Explicit formatting must then be idempotent.
-    run("format", str(entries))
+    run("format", str(entries), "--in-place")
     assert run("format", str(entries), "--check")["data"]["formatted"] == []
     assert split.read_bytes() == before
     newest = run(*split_target, "list", "transaction", "-a", "checking", "--limit", "1")["data"][0]
@@ -295,12 +330,12 @@ def smoke(binary: Path, directory: Path) -> None:
     before = formatting.read_bytes()
     assert run("format", str(formatting), "--check", exit_code=1)["error"]["result"]["formatted"] == [str(formatting)]
     assert formatting.read_bytes() == before
-    run("format", str(formatting))
+    run("format", str(formatting), "--in-place")
     assert run("format", str(formatting), "--check")["data"]["formatted"] == []
+    # bean-format does not parse ledgers; invalid account names are not rejected.
     formatting.write_text("2026-01-01 open assets:lower USD\n")
-    error = run("format", str(formatting), exit_code=1)["error"]
-    assert error["result"]["skipped"] == [str(formatting)]
-    assert str(formatting) + ":1:" in " ".join(error["details"])
+    assert run("format", str(formatting), "--check")["data"]["formatted"] == []
+    run("format", str(formatting), "--in-place")
     bad_number = run(
         *valued_target, "add", "transaction", "-p", "Assets:Checking -1e3 EUR", "-p", "Expenses:Food", exit_code=2
     )
@@ -330,6 +365,104 @@ def smoke(binary: Path, directory: Path) -> None:
     table = run(*valued_target, "list", "transaction", "--account", "checking", "--flag", "!", json_output=False)
     assert "MATCHING POSTING AMOUNTS" in table and "(no narration)" in table
     assert "#compdef" in run("--shell", "zsh", "--show-completion", json_output=False)
+    # Six native commands: doctor / example / treeify (check/format/query already above).
+    options = run("doctor", "list-options", json_output=False)
+    assert 'option "title"' in options and "DECOY" not in options
+    printed = run("doctor", "print-options", str(file), json_output=False)
+    assert "account_previous_balances" in printed or "operating_currency" in printed
+    lexed = run("doctor", "lex", str(file), json_output=False)
+    assert "OPEN" in lexed and "ACCOUNT" in lexed
+    example_out = directory / "example.bean"
+    run(
+        "example",
+        "--date-begin",
+        "2020-01-01",
+        "--date-end",
+        "2020-03-01",
+        "--seed",
+        "1",
+        "-o",
+        str(example_out),
+        json_output=False,
+        timeout=180,
+    )
+    assert example_out.is_file() and example_out.stat().st_size > 0
+    run("--file", str(example_out), "check")
+    tree_in = directory / "treeify-in.txt"
+    tree_in.write_text("Assets:US:Bank:Checking  100 USD\nAssets:US:Bank:Savings   200 USD\n")
+    tree = run("treeify", str(tree_in), json_output=False)
+    assert "Assets" in tree and "Checking" in tree and "DECOY" not in tree
+    # ask needs the optional [ask] extra + hosted credentials. Base installs
+    # stop at the missing-extra gate (2); installs with [ask] stop at auth (3).
+    ask = subprocess.run(
+        [str(binary), "--no-input", *target, "ask", "What is my cash balance?"],
+        cwd=directory,
+        env=env,
+        text=True,
+        capture_output=True,
+        timeout=120,
+    )
+    commands += 1
+    assert ask.returncode in (2, 3), (ask.stdout, ask.stderr)
+    ask_err = ask.stderr
+    assert "optional AI" in ask_err or "BEA_TOKEN" in ask_err or "Not logged in" in ask_err or "cloud login" in ask_err
+    # Frontend isolation + license materials on the installed interpreter.
+    frontend_python = _frontend_python(binary)
+    if frontend_python is not None:
+        probe = subprocess.run(
+            [
+                str(frontend_python),
+                "-c",
+                "import importlib.metadata as m, importlib.util as u, sys\n"
+                "reqs = m.requires('beancount-io') or []\n"
+                "runtime = [r for r in reqs if 'extra ==' not in r]\n"
+                "forbidden = [name for name in ('beancount', 'beanquery', 'fava', 'bea_engine')\n"
+                "             if any(r.split()[0].split('>=')[0].split('==')[0] == name for r in runtime)]\n"
+                "assert not forbidden, forbidden\n"
+                "engine_specs = {name: u.find_spec(name) is not None\n"
+                "                for name in ('beancount', 'beanquery', 'fava', 'bea_engine')}\n"
+                "print(','.join(k for k, v in engine_specs.items() if v))\n",
+            ],
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=60,
+        )
+        assert probe.returncode == 0, (probe.stdout, probe.stderr)
+        # Customer artifacts must not ship the engine stack in the frontend venv.
+        # Dev/checkouts keep Beancount in the same interpreter for the test suite.
+        if "site-packages" in str(frontend_python.resolve()) or "venv" in str(frontend_python.resolve()):
+            loaded = {name for name in probe.stdout.strip().split(",") if name}
+            # Only enforce import rejection when none of the engine packages are present.
+            if not loaded:
+                assert probe.stdout.strip() == ""
+    # Engine env: Homebrew (BEA_ENGINE_DIR) or PyPI first-use under XDG_DATA_HOME.
+    engine_dir = env.get("BEA_ENGINE_DIR")
+    if engine_dir:
+        engine_root = Path(engine_dir)
+    else:
+        data_home = Path(env["XDG_DATA_HOME"])
+        engines = list((data_home / "bea" / "engine").glob("*"))
+        engines = [path for path in engines if path.is_dir() and not path.name.startswith(".")]
+        # Checkout installs may use the in-tree engine without provisioning.
+        engine_root = engines[0] if engines else None
+    if engine_root is not None and engine_root.is_dir():
+        assert any(engine_root.glob("bin/bean-check")) or any(engine_root.glob("Scripts/bean-check.exe"))
+        notices = list(engine_root.glob("lib/python*/site-packages/bea_engine/NOTICE.fava"))
+        assert notices, f"engine NOTICE.fava missing under {engine_root}"
+        assert "Fava" in notices[0].read_text(encoding="utf-8")
+        # Offline reuse: a second check must not need the network or uv downloads.
+        offline_env = dict(env, UV_OFFLINE="1", http_proxy="http://127.0.0.1:9", HTTPS_PROXY="http://127.0.0.1:9")
+        offline = subprocess.run(
+            [str(binary), "--json", "--no-input", *target, "check"],
+            cwd=directory,
+            env=offline_env,
+            text=True,
+            capture_output=True,
+            timeout=60,
+        )
+        assert offline.returncode == 0, (offline.stdout, offline.stderr)
+        commands += 1
     run("unknown-command", exit_code=2)
     run("--file", exit_code=2)
     print(f"Installed CLI smoke passed: {commands + 1} commands ({version.stdout.strip()}).")

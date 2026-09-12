@@ -1,4 +1,12 @@
-"""`bea add <type>` — append beancount directives to a local ledger."""
+"""`bea add <type>` — append beancount directives to a local ledger.
+
+The validating and the writing happen in the engine (`bea-engine add`); this
+module owns the option surface, the checks that need no Beancount (dates,
+numeric notation, which options may be combined), and the messages a person
+reads. What the customer typed travels across as a JSON request, because a
+posting, a balance tolerance and a typed metadata value are Beancount syntax and
+only the engine can read them.
+"""
 
 from __future__ import annotations
 
@@ -6,16 +14,15 @@ import datetime
 import json
 import re
 import sys
-from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Annotated, Any
 
 import typer
 
-from cli import context, ledger_write, output
+from cli import context, output
 from cli.errors import LedgerError, UsageError
-from cli.utils import parse_account, parse_date, single_line
+from cli.utils import parse_date
 
 add_app = typer.Typer(
     help="Add beancount directives to a local .bean file", no_args_is_help=True, rich_markup_mode=None
@@ -64,78 +71,43 @@ def _check_decimal_notation(text: str) -> None:
         )
 
 
-def _parse_metadata(items: list[str]) -> dict[str, Any]:
-    from beancount.core.data import Transaction
-    from beancount.parser import parser
+def _write(
+    directive_type: str,
+    request: dict[str, Any],
+    *,
+    allow_errors: bool = False,
+    into: Path | None = None,
+    strict_read: bool = False,
+) -> tuple[Path, dict[str, Any]]:
+    """Hand one write request to the engine and return the ledger it wrote to plus its answer.
 
-    metadata: dict[str, Any] = {}
-    for item in items:
-        key, separator, raw = item.partition(":")
-        key, raw = key.strip(), single_line(raw).strip()
-        if not separator or not re.fullmatch(r"[a-z][A-Za-z0-9_-]*", key) or key in {"filename", "lineno"} or not raw:
-            raise UsageError(
-                "Each --meta must be 'key:value', such as 'receipt:IMG_1234.jpg'; use '\"\"' for empty text."
-            )
-        if key in metadata:
-            raise UsageError(f"Metadata key {key!r} was supplied more than once; use one --meta per key.")
-        entries, errors, _ = parser.parse_string(f'2000-01-01 * ""\n  {key}: {raw}\n')
-        if not errors and len(entries) == 1 and isinstance(entries[0], Transaction) and key in entries[0].meta:
-            metadata[key] = entries[0].meta[key]
-        elif raw.startswith('"'):
-            raise UsageError(
-                f"Invalid --meta {key!r}; close the quoted string or supply a bare value such as '{key}:hello'.",
-                details=[str(error.message) for error in errors],
-            )
-        else:
-            metadata[key] = raw
-    return metadata
-
-
-def _parse_balance_amount(text: str) -> tuple[Decimal, str, Decimal | None]:
-    from beancount.core.data import Balance
-    from beancount.parser import parser
-
-    if "\n" in text or "\r" in text:
-        raise UsageError("Balance amount must be one line: 'NUMBER [~ TOLERANCE] CURRENCY'.")
-    _check_decimal_notation(text)
-    entries, errors, _ = parser.parse_string(f"2000-01-01 balance Assets:Balance {text}\n")
-    if errors or len(entries) != 1 or not isinstance(entries[0], Balance):
-        raise UsageError(
-            "Balance amount must be 'NUMBER [~ TOLERANCE] CURRENCY', for example '1538 ~ 1 EUR'.",
-            details=[f"--amount: {error.message}" for error in errors],
-        )
-    entry = entries[0]
-    if entry.amount.number is None:
-        raise UsageError("Supply a balance number, for example '1538 ~ 1 EUR'.")
-    if entry.tolerance is not None and entry.tolerance < 0:
-        raise UsageError("Balance tolerance must be nonnegative.")
-    return entry.amount.number, entry.amount.currency, entry.tolerance
-
-
-def _append(build: Callable[[], Any], *, allow_errors: bool = False, into: Path | None = None) -> None:
-    """Resolve the target, build the directive, append it, and report — the same way for every type.
-
-    `build` runs after the target is known so that a bad argument fails as a
-    usage error before anything touches the ledger file. Which writer to call
-    and what to call the directive both follow from its type, so no call site
-    repeats either as a string that could drift from `cli.directives.writer`.
+    The request goes over stdin rather than in the argument list: a batch of
+    transactions does not fit in argv, and a posting full of quotes and braces
+    needs no escaping on the way through a pipe.
     """
-    ctx = context.current()
-    file = ctx.entry_file()
-    from cli.directives import writer
+    from cli.engine import launch
 
-    directive = build()
-    name = type(directive).__name__.removesuffix("Directive")
-    warnings = getattr(writer, f"write_{name.lower()}")(file, directive, allow_errors=allow_errors, into=into)
-    if ctx.json_output:
-        output.emit(
-            {"written": 1, "directive": directive.model_dump(mode="json"), "warnings": warnings},
-            target={**output.file_target(file), "into": str(ledger_write.destination(file, into))},
-        )
+    file = context.current().entry_file()
+    argv = ["add", "--file", str(file), "--type", directive_type, "--request", "-"]
+    if into is not None:
+        argv += ["--into", str(into)]
+    if allow_errors:
+        argv.append("--allow-errors")
+    if strict_read:
+        argv.append("--strict-read")
+    return file, launch.helper_json(argv, stdin=json.dumps(request))
+
+
+def _appended(name: str, file: Path, data: dict[str, Any]) -> None:
+    """Report one appended directive — the same way for every type."""
+    target = data.pop("target")
+    warnings = data.pop("warnings", [])
+    if context.current().json_output:
+        output.emit({**data, "warnings": warnings}, target={**output.file_target(file), "into": target})
     else:
         for warning in warnings:
             output.note(warning)
-        output.success(f"Added 1 {name.lower()} to {ledger_write.destination(file, into)}.")
+        output.success(f"Added 1 {name} to {target}.")
 
 
 @add_app.command("transaction")
@@ -174,101 +146,22 @@ def add_transaction(
         )
     narration = narration_arg if narration_arg is not None else narration
 
-    from beancount import loader
-    from beancount.core.data import Open, Transaction
-    from beancount.core.number import MISSING
-    from beancount.parser import parser
-    from beancount.parser.grammar import ParserError
-
-    from cli.directives.models import TransactionDirective
-    from cli.directives.writer import format_entry, format_transaction
-
-    file = context.current().entry_file()
     if any("\n" in p or "\r" in p for p in postings):
         raise UsageError("Each --posting must be one line; repeat -p for another posting.")
     for posting_text in postings:
-        parts = posting_text.split()
-        # Native posting flags are single characters; accounts never are.
-        if parts and len(parts[0]) == 1:
-            parts = parts[1:]
-        parse_account(parts[0] if parts else "")
         _check_decimal_notation(posting_text)
-    header = TransactionDirective(
-        date=parse_date(date) if date else datetime.date.today(),
-        flag=flag,
-        payee=payee,
-        narration=narration,
-        postings=[],
-        tags=list(tag or []),
-        links=list(link or []),
-        meta=_parse_metadata(meta or []),
-    )
-    header_text = format_transaction(header)
-    text = header_text + "".join(f"  {item.strip()}\n" for item in postings)
-    entries, errors, _ = parser.parse_string(text)
-    # Root names are ledger options. The full candidate validation below
-    # checks them in that context; this standalone parse only checks syntax.
-    errors = [e for e in errors if not (isinstance(e, ParserError) and e.message.startswith("Invalid account name:"))]
-    if errors or len(entries) != 1 or not isinstance(entries[0], Transaction):
-        details = []
-        for error in errors:
-            posting_number = error.source.get("lineno", 0) - len(header_text.splitlines())
-            location = f"--posting {posting_number}" if 0 < posting_number <= len(postings) else "Transaction options"
-            details.append(f"{location}: {error.message}")
-        raise UsageError(
-            "Invalid transaction options; use postings such as 'Assets:Checking -30 USD'. Nothing was written.",
-            details=details,
-        )
-    entry = entries[0]
-    snapshot = None
-    currencies: list[str] = []
-    allowed: dict[str, list[str] | None] = {}
-    raw_postings: Any = entry.postings
-    if any(p.units is not MISSING and p.units.currency is MISSING for p in raw_postings):
-        snapshot = ledger_write.LedgerSnapshot.capture(file)
-        existing, _, options = loader.load_file(file)
-        currencies = options["operating_currency"]
-        allowed = {e.account: e.currencies for e in existing if isinstance(e, Open)}
-    normalized = []
-    elided = 0
-    for posting in entry.postings:
-        # Beancount annotates booked postings; the parser also returns MISSING.
-        units: Any = posting.units
-        if units is MISSING or units.number is MISSING:
-            elided += 1
-        if units is not MISSING and units.currency is MISSING:
-            choices = allowed.get(posting.account) or []
-            if len(choices) != 1 and len(currencies) == 1 and (not choices or currencies[0] in choices):
-                choices = currencies
-            if len(choices) != 1:
-                raise UsageError(
-                    f"Currency is ambiguous for {posting.account}; specify NUMBER CURRENCY explicitly.",
-                    details=ledger_write.root_ledger_hints(file),
-                )
-            units = units._replace(currency=choices[0])
-        normalized.append(posting._replace(units=units, meta={}))
-    if elided > 1:
-        raise UsageError("Only one posting may omit its amount; supply amounts for the other postings.")
-    entry = entry._replace(postings=normalized, meta=ledger_write.metadata_for_write(entry.meta))
-    text = format_entry(entry)
-    warnings = ledger_write.append(file, [text], allow_errors=allow_errors, into=into, snapshot=snapshot)
-    target = ledger_write.destination(file, into)
-    if context.current().json_output:
-        from cli.directives.reader import metadata_to_json
-
-        output.emit(
-            {
-                "written": 1,
-                "directive": entry._replace(meta=metadata_to_json(entry.meta)),
-                "entry": text,
-                "warnings": warnings,
-            },
-            target={**output.file_target(file), "into": str(target)},
-        )
-    else:
-        for warning in warnings:
-            output.note(warning)
-        output.success(f"Added 1 transaction to {target}.")
+    request = {
+        "date": (parse_date(date) if date else datetime.date.today()).isoformat(),
+        "flag": flag,
+        "payee": payee,
+        "narration": narration,
+        "postings": list(postings),
+        "tags": list(tag or []),
+        "links": list(link or []),
+        "meta": list(meta or []),
+    }
+    file, data = _write("transaction", request, allow_errors=allow_errors, into=into)
+    _appended("transaction", file, data)
 
 
 @add_app.command("open")
@@ -280,15 +173,13 @@ def add_open(
     into: IntoOpt = None,
 ) -> None:
     """Append an open directive."""
-
-    def build() -> Any:
-        from cli.directives.models import OpenDirective
-
-        return OpenDirective(
-            date=parse_date(date), account=parse_account(account), currencies=list(currency) if currency else []
-        )
-
-    _append(build, allow_errors=allow_errors, into=into)
+    request = {
+        "date": parse_date(date).isoformat(),
+        "account": account,
+        "currencies": list(currency) if currency else [],
+    }
+    file, data = _write("open", request, allow_errors=allow_errors, into=into)
+    _appended("open", file, data)
 
 
 @add_app.command("close")
@@ -299,13 +190,10 @@ def add_close(
     into: IntoOpt = None,
 ) -> None:
     """Append a close directive."""
-
-    def build() -> Any:
-        from cli.directives.models import CloseDirective
-
-        return CloseDirective(date=parse_date(date), account=parse_account(account))
-
-    _append(build, allow_errors=allow_errors, into=into)
+    file, data = _write(
+        "close", {"date": parse_date(date).isoformat(), "account": account}, allow_errors=allow_errors, into=into
+    )
+    _appended("close", file, data)
 
 
 @add_app.command("balance")
@@ -328,54 +216,34 @@ def add_balance(
     --pad-from writes both directives atomically. It creates an adjustment;
     review missing transactions before using it to reconcile a discrepancy.
     """
-
     if pad_date is not None and pad_from is None:
         raise UsageError("--pad-date requires --pad-from.")
-    if pad_from is not None:
-        from beancount.core.amount import Amount as BcAmount
-        from beancount.core.data import Balance, Pad
-
-        from cli.directives.writer import format_entry
-
-        file = context.current().entry_file()
-        day = parse_date(date)
-        if day == datetime.date.min and pad_date is None:
-            raise UsageError("The balance date must allow an earlier pad date.")
-        padded = parse_date(pad_date) if pad_date else day - datetime.timedelta(days=1)
-        if padded >= day:
-            raise UsageError(
-                "--pad-date must be earlier than the balance date (assertions run at the start of the day)."
-            )
-        number, currency, tolerance = _parse_balance_amount(amount)
-        entries = [
-            Pad({}, padded, parse_account(account), parse_account(pad_from)),
-            Balance({}, day, parse_account(account), BcAmount(number, currency), tolerance, None),
-        ]
-        warnings = ledger_write.append(file, [format_entry(e) for e in entries], allow_errors=allow_errors, into=into)
-        target = ledger_write.destination(file, into)
-        if context.current().json_output:
-            output.emit(
-                {"written": 2, "directives": entries, "warnings": warnings},
-                target={**output.file_target(file), "into": str(target)},
-            )
-        else:
-            for warning in warnings:
-                output.note(warning)
-            output.success(f"Added 1 pad and 1 balance to {target}.")
+    if "\n" not in amount and "\r" not in amount:
+        # Multi-line text is the engine's complaint to make; this only rejects
+        # an exponent, which no Beancount amount accepts.
+        _check_decimal_notation(amount)
+    day = parse_date(date)
+    request: dict[str, Any] = {"date": day.isoformat(), "account": account, "amount": amount}
+    if pad_from is None:
+        file, data = _write("balance", request, allow_errors=allow_errors, into=into)
+        _appended("balance", file, data)
         return
 
-    def build() -> Any:
-        from cli.directives.models import Amount, BalanceDirective
-
-        number, currency, tolerance = _parse_balance_amount(amount)
-        return BalanceDirective(
-            date=parse_date(date),
-            account=parse_account(account),
-            amount=Amount(number=number, currency=currency),
-            tolerance=tolerance,
-        )
-
-    _append(build, allow_errors=allow_errors, into=into)
+    if day == datetime.date.min and pad_date is None:
+        raise UsageError("The balance date must allow an earlier pad date.")
+    padded = parse_date(pad_date) if pad_date else day - datetime.timedelta(days=1)
+    if padded >= day:
+        raise UsageError("--pad-date must be earlier than the balance date (assertions run at the start of the day).")
+    request |= {"pad_from": pad_from, "pad_date": padded.isoformat()}
+    file, data = _write("balance", request, allow_errors=allow_errors, into=into)
+    target = data.pop("target")
+    warnings = data.pop("warnings", [])
+    if context.current().json_output:
+        output.emit({**data, "warnings": warnings}, target={**output.file_target(file), "into": target})
+    else:
+        for warning in warnings:
+            output.note(warning)
+        output.success(f"Added 1 pad and 1 balance to {target}.")
 
 
 @add_app.command("pad")
@@ -387,13 +255,9 @@ def add_pad(
     into: IntoOpt = None,
 ) -> None:
     """Append a pad directive."""
-
-    def build() -> Any:
-        from cli.directives.models import PadDirective
-
-        return PadDirective(date=parse_date(date), account=parse_account(account), source_account=parse_account(source))
-
-    _append(build, allow_errors=allow_errors, into=into)
+    request = {"date": parse_date(date).isoformat(), "account": account, "source_account": source}
+    file, data = _write("pad", request, allow_errors=allow_errors, into=into)
+    _appended("pad", file, data)
 
 
 @add_app.command("note")
@@ -405,13 +269,9 @@ def add_note(
     into: IntoOpt = None,
 ) -> None:
     """Append a note directive."""
-
-    def build() -> Any:
-        from cli.directives.models import NoteDirective
-
-        return NoteDirective(date=parse_date(date), account=parse_account(account), comment=comment)
-
-    _append(build, allow_errors=allow_errors, into=into)
+    request = {"date": parse_date(date).isoformat(), "account": account, "comment": comment}
+    file, data = _write("note", request, allow_errors=allow_errors, into=into)
+    _appended("note", file, data)
 
 
 @add_app.command("event")
@@ -423,13 +283,9 @@ def add_event(
     into: IntoOpt = None,
 ) -> None:
     """Append an event directive."""
-
-    def build() -> Any:
-        from cli.directives.models import EventDirective
-
-        return EventDirective(date=parse_date(date), type=type, description=description)
-
-    _append(build, allow_errors=allow_errors, into=into)
+    request = {"date": parse_date(date).isoformat(), "type": type, "description": description}
+    file, data = _write("event", request, allow_errors=allow_errors, into=into)
+    _appended("event", file, data)
 
 
 @add_app.command("price")
@@ -441,62 +297,33 @@ def add_price(
     into: IntoOpt = None,
 ) -> None:
     """Append a price, or report an exact existing date/commodity/amount match."""
-    from beancount import loader
-    from beancount.core.data import Price
-
-    from cli.directives.models import Amount, PriceDirective
-    from cli.directives.writer import format_entry
-
-    file = context.current().entry_file()
     number, price_currency = _parse_amount(amount)
-    directive = PriceDirective(
-        date=parse_date(date), currency=currency, amount=Amount(number=number, currency=price_currency)
+    request = {
+        "date": parse_date(date).isoformat(),
+        "currency": currency,
+        "number": str(number),
+        "amount_currency": price_currency,
+    }
+    ctx = context.current()
+    # Finding a duplicate means reading the ledger, so this one write has a read
+    # to gate: strict callers refuse a ledger that does not load, a person at a
+    # terminal gets the errors as a banner and the write goes ahead.
+    file, data = _write(
+        "price",
+        request,
+        allow_errors=allow_errors,
+        into=into,
+        strict_read=not allow_errors and ctx.strict_reads(),
     )
-    snapshot = ledger_write.LedgerSnapshot.capture(file)
-    target = ledger_write.destination(file, into)
-    snapshot.require_target(target)
-    entries, errors, _ = loader.load_file(file)
-    if errors and not allow_errors:
-        output.render_ledger_errors(errors, allow=False)
-    match = next(
-        (
-            entry
-            for entry in entries
-            if isinstance(entry, Price)
-            and entry.date == directive.date
-            and entry.currency == currency
-            and entry.amount.number == number
-            and entry.amount.currency == price_currency
-        ),
-        None,
-    )
-    source = None
-    if match is not None:
-        snapshot.verify()
-        source = {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
-        warnings = [output.format_ledger_error(error) for error in errors]
-        written = 0
+    ledger_errors = data.pop("ledger_errors", [])
+    if not allow_errors:
+        output.render_ledger_errors(ledger_errors, allow=True)
+    target = data.pop("target")
+    source = data["source"]
+    if ctx.json_output:
+        output.emit(data, target={**output.file_target(file), "into": target})
     else:
-        from beancount.core.amount import Amount as BcAmount
-
-        entry = Price({}, directive.date, currency, BcAmount(number, price_currency))
-        warnings = ledger_write.append(
-            file, [format_entry(entry)], allow_errors=allow_errors, into=into, snapshot=snapshot
-        )
-        written = 1
-    if context.current().json_output:
-        output.emit(
-            {
-                "written": written,
-                "directive": directive.model_dump(mode="json"),
-                "warnings": warnings,
-                "duplicate": match is not None,
-                "source": source,
-            },
-            target={**output.file_target(file), "into": str(target)},
-        )
-    else:
-        for warning in warnings:
+        for warning in data["warnings"]:
             output.note(warning)
         if source:
             output.success(f"Price already recorded at {source['filename']}:{source['lineno']}; nothing was written.")
@@ -512,13 +339,9 @@ def add_commodity(
     into: IntoOpt = None,
 ) -> None:
     """Append a commodity directive."""
-
-    def build() -> Any:
-        from cli.directives.models import CommodityDirective
-
-        return CommodityDirective(date=parse_date(date), currency=currency)
-
-    _append(build, allow_errors=allow_errors, into=into)
+    request = {"date": parse_date(date).isoformat(), "currency": currency}
+    file, data = _write("commodity", request, allow_errors=allow_errors, into=into)
+    _appended("commodity", file, data)
 
 
 @add_app.command("document")
@@ -535,19 +358,15 @@ def add_document(
     into: IntoOpt = None,
 ) -> None:
     """Append a document directive."""
-
-    def build() -> Any:
-        from cli.directives.models import DocumentDirective
-
-        return DocumentDirective(
-            date=parse_date(date),
-            account=parse_account(account),
-            filename=filename,
-            tags=list(tag) if tag else [],
-            links=list(link) if link else [],
-        )
-
-    _append(build, allow_errors=allow_errors, into=into)
+    request = {
+        "date": parse_date(date).isoformat(),
+        "account": account,
+        "filename": filename,
+        "tags": list(tag) if tag else [],
+        "links": list(link) if link else [],
+    }
+    file, data = _write("document", request, allow_errors=allow_errors, into=into)
+    _appended("document", file, data)
 
 
 @add_app.command("custom")
@@ -573,41 +392,33 @@ def add_custom(
       --value 'amount:500 USD'
       --value 'account:Assets:Cash'
     """
+    request = {
+        "date": parse_date(date).isoformat(),
+        "type": type,
+        "values": [_parse_custom_value(v) for v in value or []],
+    }
+    file, data = _write("custom", request, allow_errors=allow_errors, into=into)
+    _appended("custom", file, data)
 
-    def build() -> Any:
-        from cli.directives.models import CustomDirective
 
-        return CustomDirective(date=parse_date(date), type=type, values=[_parse_custom_value(v) for v in value or []])
-
-    _append(build, allow_errors=allow_errors, into=into)
-
-
-def _parse_custom_value(raw: str) -> Any:
-    from cli.directives.models import (
-        CustomDirectiveValueAccount,
-        CustomDirectiveValueAmount,
-        CustomDirectiveValueBoolean,
-        CustomDirectiveValueDate,
-        CustomDirectiveValueNumber,
-        CustomDirectiveValueText,
-    )
-
+def _parse_custom_value(raw: str) -> dict[str, Any]:
+    """Classify one `kind:VALUE`. An account's spelling is the engine's to judge."""
     if ":" not in raw:
         raise typer.BadParameter(f"Value must be 'kind:VALUE', got: {raw!r}")
     kind, rest = raw.split(":", 1)
     if kind == "text":
-        return CustomDirectiveValueText(kind="text", value=rest)
+        return {"kind": "text", "value": rest}
     if kind == "number":
-        return CustomDirectiveValueNumber(kind="number", value=_parse_number(rest))
+        return {"kind": "number", "value": str(_parse_number(rest))}
     if kind == "amount":
         number, currency = _parse_amount(rest)
-        return CustomDirectiveValueAmount(kind="amount", number=number, currency=currency)
+        return {"kind": "amount", "number": str(number), "currency": currency}
     if kind == "account":
-        return CustomDirectiveValueAccount(kind="account", value=parse_account(rest))
+        return {"kind": "account", "value": rest}
     if kind == "bool" and rest.lower() in {"true", "false"}:
-        return CustomDirectiveValueBoolean(kind="bool", value=rest.lower() == "true")
+        return {"kind": "bool", "value": rest.lower() == "true"}
     if kind == "date":
-        return CustomDirectiveValueDate(kind="date", value=parse_date(rest))
+        return {"kind": "date", "value": parse_date(rest).isoformat()}
     raise typer.BadParameter(f"Invalid value kind or value {raw!r}. Use: text, number, amount, account, bool, date")
 
 
@@ -634,13 +445,6 @@ def add_transactions(
     A posting can instead use "units":{"number":"30","currency":"USD"}.
     Pass --from - to read the array from stdin.
     """
-    ctx = context.current()
-    file = ctx.entry_file()
-    from pydantic import ValidationError
-
-    from cli.directives.models import TransactionDirective
-    from cli.directives.writer import format_transaction, write_transactions
-
     try:
         raw = json.loads(sys.stdin.read() if str(from_file) == "-" else from_file.read_text())
     except json.JSONDecodeError as exc:
@@ -648,78 +452,16 @@ def add_transactions(
     if not isinstance(raw, list):
         raise LedgerError("JSON file must contain an array of transactions.")
 
-    valid: list[tuple[int, TransactionDirective]] = []
-    rejected: list[str] = []
-    rejected_rows: list[int] = []
-    for index, item in enumerate(raw):
-        try:
-            valid.append((index, TransactionDirective.model_validate(item)))
-        except ValidationError as exc:
-            for error in exc.errors(include_url=False, include_input=False):
-                location = ".".join(str(part) for part in error["loc"]) or "transaction"
-                rejected.append(f"Row {index + 1}, {location}: {error['msg']}")
-            rejected_rows.append(index)
-
-    if rejected:
-        rejected.append(
-            'Example posting: {"account":"Assets:Checking","amount":"-30 USD"}. '
-            "Use bea add transactions --help for a complete row."
-        )
-
-    if rejected and not partial:
-        raise LedgerError(
-            f"{len(rejected_rows)} of {len(raw)} row(s) are invalid; nothing was written. "
-            f"Fix them, or pass --partial to append the {len(valid)} valid row(s).",
-            details=rejected,
-            result={"written": 0, "written_rows": [], "rejected_rows": rejected_rows},
-        )
-
-    # Validate the entire batch first: an earlier sale may depend on a buy that
-    # appears later in the input. Only partial recovery needs sequential trials.
-    try:
-        ledger_write.validate_append(
-            file, [format_transaction(d) for _, d in valid], allow_errors=allow_errors, into=into
-        )
-    except LedgerError as batch_error:
-        if not partial:
-            batch_error.result = {"written": 0, "written_rows": [], "unwritten_rows": [index for index, _ in valid]}
-            raise
-        accepted: list[tuple[int, TransactionDirective]] = []
-        texts: list[str] = []
-        for index, directive in valid:
-            try:
-                text = format_transaction(directive)
-                ledger_write.validate_append(file, [*texts, text], allow_errors=allow_errors, into=into)
-            except LedgerError as err:
-                rejected.append(f"row {index}: {'; '.join(err.details) or str(err)}")
-                rejected_rows.append(index)
-            else:
-                accepted.append((index, directive))
-                texts.append(text)
-        valid = accepted
-
-    warnings = write_transactions(file, [d for _, d in valid], allow_errors=allow_errors, into=into)
-
-    if rejected:
-        count = len(rejected_rows)
-        noun = "row was" if count == 1 else "rows were"
-        raise LedgerError(
-            f"Added {len(valid)} of {len(raw)} transactions; {count} {noun} rejected.",
-            details=rejected,
-            result={
-                "written": len(valid),
-                "written_rows": [index for index, _ in valid],
-                "rejected_rows": rejected_rows,
-            },
-        )
-
-    if ctx.json_output:
-        data: dict[str, Any] = {"written": len(valid), "rejected": []}
+    file, data = _write("transactions", {"rows": raw, "partial": partial}, allow_errors=allow_errors, into=into)
+    target = data.pop("target")
+    warnings = data.pop("warnings", [])
+    written = int(data["written"])
+    if context.current().json_output:
         if warnings:
             data["warnings"] = warnings
-        output.emit(data, target={**output.file_target(file), "into": str(ledger_write.destination(file, into))})
+        output.emit(data, target={**output.file_target(file), "into": target})
     else:
         for warning in warnings:
             output.note(warning)
-        noun = "transaction" if len(valid) == 1 else "transactions"
-        output.success(f"Added {len(valid)} {noun} to {ledger_write.destination(file, into)}.")
+        noun = "transaction" if written == 1 else "transactions"
+        output.success(f"Added {written} {noun} to {target}.")

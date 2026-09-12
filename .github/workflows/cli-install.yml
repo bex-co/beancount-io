@@ -39,13 +39,13 @@ jobs:
           DISTRIBUTION: ${{ matrix.distribution }}
         run: |
           if [ "$DISTRIBUTION" = wheel ]; then
-            python scripts/test-install.py dist/*.whl --python "$PYTHON_VERSION" --installer uv
+            python scripts/test-install.py dist/beancount_io-*.whl --python "$PYTHON_VERSION" --installer uv
           else
-            python scripts/test-install.py dist/*.tar.gz --python "$PYTHON_VERSION" --installer pip
+            python scripts/test-install.py dist/beancount_io-*.tar.gz --python "$PYTHON_VERSION" --installer pip
           fi
       - name: Verify optional AI dependencies
         if: matrix.distribution == 'wheel' && matrix.python == '3.12'
-        run: python scripts/test-install.py dist/*.whl --python 3.12 --ask
+        run: python scripts/test-install.py dist/beancount_io-*.whl --python 3.12 --ask
 
   homebrew:
     name: Homebrew (${{ matrix.os }})
@@ -63,4 +63,4 @@ jobs:
           path: cli/dist
       - name: Install sdist through a disposable tap
         working-directory: cli
-        run: bash scripts/test-homebrew.sh dist/*.tar.gz
+        run: bash scripts/test-homebrew.sh dist/beancount_io-*.tar.gz
