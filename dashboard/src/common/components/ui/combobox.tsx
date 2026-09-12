@@ -252,7 +252,12 @@ export function Combobox({
 
         <PopoverContent
           className="p-0"
-          style={{ width: popoverWidth ? `${popoverWidth}px` : undefined }}
+          style={{
+            width: popoverWidth ? `${popoverWidth}px` : undefined,
+            // Never extend past the space Radix measured between the anchor and
+            // the viewport edge; short windows otherwise push the list off-screen.
+            maxHeight: "var(--radix-popover-content-available-height)",
+          }}
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
           onInteractOutside={(e) => {
@@ -263,7 +268,17 @@ export function Combobox({
           }}
         >
           <Command shouldFilter={false}>
-            <CommandList>
+            {/*
+              `CommandList`'s shared `max-h-[300px]` is a hard cap, so the scroll
+              region must additionally shrink to the available popover height.
+              Keeping it on this consumer leaves `command.tsx` untouched.
+            */}
+            <CommandList
+              style={{
+                maxHeight:
+                  "min(300px, var(--radix-popover-content-available-height))",
+              }}
+            >
               <CommandEmpty>
                 {defaultEmptyText}
                 {allowCustom && inputValue && (

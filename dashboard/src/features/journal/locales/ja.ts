@@ -382,6 +382,21 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "自動",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "自動生成されたエントリ",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "このエントリは Beancount が pad ディレクティブから生成したため、表示・編集・削除できるソース行がありません。",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "摘要",
+    description: "Label for narration field",
+  },
 };
 
 export default jaJournal;

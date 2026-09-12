@@ -1,15 +1,18 @@
 import { useMemo, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
-import { ChevronDown, ChevronUp, DollarSign, Layers } from "lucide-react";
+import { DollarSign, Layers } from "lucide-react";
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
-import { Button } from "@/common/components/ui/button";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
 import { ConversionSelect } from "@/common/components/conversion-select";
 import { IntervalSelect } from "@/common/components/interval-select";
-import { useCookieStorageState } from "@/common/hooks/use-cookie-storage-state";
+import {
+  ChartsToggleButton,
+  CollapsibleChartsSection,
+} from "../components/collapsible-charts-section";
+import { useChartsVisibility } from "../components/use-charts-visibility";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { sortUsdFirst } from "@/common/lib/utils/sort";
 import type { ChartInterval, ConversionOption } from "@/common/types/chart";
@@ -111,15 +114,8 @@ export function CashFlowContent({
     { label: t("page.cashFlow.netCashFlow"), value: "netCashFlow" },
     { label: t("page.cashFlow.byActivity"), value: "byActivity" },
   ];
-  const [chartsVisible, setChartsVisible] = useCookieStorageState(
-    "beancount.chartsVisible.cashFlow",
-    true,
-    {
-      serializer: (v) => String(v),
-      deserializer: (v) => v !== "false",
-    },
-  );
-  const toggleChartsVisible = () => setChartsVisible((prev) => !prev);
+  const { chartsVisible, toggleChartsVisible, chartsSectionId } =
+    useChartsVisibility("cashFlow");
 
   const exportDocument = buildCashFlowDocument({
     title: t("common.cashFlow"),
@@ -197,92 +193,84 @@ export function CashFlowContent({
         <ClientOnly>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
             <StatementExportMenu document={exportDocument} />
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={toggleChartsVisible}
-              aria-label={
-                chartsVisible ? t("common.hideCharts") : t("common.showCharts")
-              }
-            >
-              {chartsVisible ? <ChevronUp /> : <ChevronDown />}
-            </Button>
+            <ChartsToggleButton
+              chartsVisible={chartsVisible}
+              onToggle={toggleChartsVisible}
+              chartsSectionId={chartsSectionId}
+            />
           </div>
         </ClientOnly>
       </div>
 
       {/* Collapsible Chart Section */}
-      <div
-        className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
-          chartsVisible ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
+      <CollapsibleChartsSection
+        id={chartsSectionId}
+        chartsVisible={chartsVisible}
       >
-        <div className="min-h-0 overflow-hidden">
-          <Tabs
-            defaultValue={selectedTab}
-            value={selectedTab}
-            onValueChange={setSelectedTab}
-            className="w-full flex-col justify-start gap-6"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <ResponsiveTabTriggerList
-                selectedTab={selectedTab}
-                setSelectedTab={setSelectedTab}
-                tabOptions={tabOptions}
-              />
-              <ClientOnly>
-                <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                  <IntervalSelect
-                    value={timeInterval}
-                    onValueChange={onTimeIntervalChange}
-                  />
-                  <ConversionSelect
-                    value={conversion}
-                    onValueChange={onConversionChange}
-                    currency={primaryCurrency}
-                  />
-                </div>
-              </ClientOnly>
+        <Tabs
+          defaultValue={selectedTab}
+          value={selectedTab}
+          onValueChange={setSelectedTab}
+          className="w-full flex-col justify-start gap-6"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <ResponsiveTabTriggerList
+              selectedTab={selectedTab}
+              setSelectedTab={setSelectedTab}
+              tabOptions={tabOptions}
+            />
+            <ClientOnly>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <IntervalSelect
+                  value={timeInterval}
+                  onValueChange={onTimeIntervalChange}
+                />
+                <ConversionSelect
+                  value={conversion}
+                  onValueChange={onConversionChange}
+                  currency={primaryCurrency}
+                />
+              </div>
+            </ClientOnly>
+          </div>
+          <TabsContent value="netCashFlow" className="mt-0 space-y-3">
+            <div>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                {t("page.cashFlow.netCashFlow")}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t("page.cashFlow.netCashFlowDescription", {
+                  ledgerName: ledgerDisplayName,
+                })}
+              </p>
             </div>
-            <TabsContent value="netCashFlow" className="mt-0 space-y-3">
-              <div>
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  {t("page.cashFlow.netCashFlow")}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t("page.cashFlow.netCashFlowDescription", {
-                    ledgerName: ledgerDisplayName,
-                  })}
-                </p>
-              </div>
-              <NetCashFlowChart
-                data={statement.intervals}
-                interval={timeInterval}
-                primarySeries={primaryCurrency}
-              />
-            </TabsContent>
-            <TabsContent value="byActivity" className="mt-0 space-y-3">
-              <div>
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <Layers className="h-5 w-5" />
-                  {t("page.cashFlow.byActivity")}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t("page.cashFlow.byActivityDescription", {
-                    ledgerName: ledgerDisplayName,
-                  })}
-                </p>
-              </div>
-              <ActivityBreakdownChart
-                data={statement.intervals}
-                interval={timeInterval}
-                primarySeries={primaryCurrency}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+            <NetCashFlowChart
+              data={statement.intervals}
+              interval={timeInterval}
+              primarySeries={primaryCurrency}
+            />
+          </TabsContent>
+          <TabsContent value="byActivity" className="mt-0 space-y-3">
+            <div>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Layers className="h-5 w-5" />
+                {t("page.cashFlow.byActivity")}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t("page.cashFlow.byActivityDescription", {
+                  ledgerName: ledgerDisplayName,
+                })}
+              </p>
+            </div>
+            <ActivityBreakdownChart
+              data={statement.intervals}
+              interval={timeInterval}
+              primarySeries={primaryCurrency}
+            />
+          </TabsContent>
+        </Tabs>
+      </CollapsibleChartsSection>
 
       {/* 2 Column Grid: Operating + bottom line (left) | Investing + Financing (right) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

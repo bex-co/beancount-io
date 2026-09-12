@@ -68,13 +68,35 @@ export default function ResetPasswordPage() {
     data: validationData,
     loading: isValidating,
     error: validationError,
+    refetch: refetchValidation,
+    networkStatus,
   } = useQuery<ValidateEmailTokenQuery, ValidateEmailTokenQueryVariables>(
     ValidateEmailTokenDocument,
     {
       variables: { token: token || "" },
       skip: !token,
+      notifyOnNetworkStatusChange: true,
     },
   );
+
+  // `networkStatus === 4` is Apollo's `refetch`; a local flag covers the gap
+  // between the click and Apollo reporting the in-flight request.
+  const [isRetrying, setIsRetrying] = useState(false);
+  const isRetryInFlight = isRetrying || networkStatus === 4;
+
+  const handleRetryValidation = () => {
+    if (isRetryInFlight) return;
+    const pending = refetchValidation?.();
+    if (!pending) return;
+    setIsRetrying(true);
+    void pending
+      .catch(() => {
+        // The query's own `error` already drives the UI.
+      })
+      .finally(() => {
+        setIsRetrying(false);
+      });
+  };
 
   // Mutation to reset password
   const [resetPassword, { loading: isResetting }] = useMutation<
@@ -153,12 +175,60 @@ export default function ResetPasswordPage() {
     );
   }
 
-  // Show error if token is missing, validation failed, or token is invalid
-  if (
-    !token ||
-    validationError ||
-    !validationData?.validateEmailToken.isValid
-  ) {
+  // Validation could not be performed (transport/server failure). The link may
+  // well still be valid, so offer a retry instead of declaring it expired.
+  if (token && validationError) {
+    return (
+      <>
+        <PageSEO
+          titleKey="seo.resetPassword.title"
+          descriptionKey="seo.resetPassword.description"
+          noIndex
+        />
+        <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+          <div className="w-full max-w-md">
+            <Card>
+              <CardHeader className="space-y-1">
+                <CardTitle className="text-2xl font-bold text-center">
+                  {t("auth.tokenValidationUnavailable")}
+                </CardTitle>
+                <CardDescription className="text-center">
+                  {t("auth.tokenValidationUnavailableDescription")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    {formatError(validationError)}
+                  </AlertDescription>
+                </Alert>
+                <Button
+                  type="button"
+                  onClick={handleRetryValidation}
+                  disabled={isRetryInFlight}
+                  className="mt-4 w-full"
+                  size="lg"
+                >
+                  {t("common.tryAgain")}
+                </Button>
+                <div className="mt-4 text-center">
+                  <Link
+                    to="/auth/login"
+                    className="text-sm font-medium text-muted-foreground hover:text-primary/80 transition-colors"
+                  >
+                    {t("auth.backToSignIn")}
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Show error if the token is missing or validation confirmed it is invalid
+  if (!token || !validationData?.validateEmailToken.isValid) {
     return (
       <>
         <PageSEO

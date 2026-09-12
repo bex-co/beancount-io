@@ -10,6 +10,10 @@ const bgDirectoryBrowse: Record<
     message: "Изтегляне като ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipFailed": {
+    message: "Изтеглянето не можа да бъде подготвено. Опитайте отново.",
+    description: "Error shown when preparing the ZIP download fails",
+  },
   "ledgerEditor.manageSshKeys": {
     message: "Управление на SSH ключове",
     description: "Menu item for SSH key management",

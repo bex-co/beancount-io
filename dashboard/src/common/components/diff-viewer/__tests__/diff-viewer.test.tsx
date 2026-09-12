@@ -1,20 +1,27 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import { useEffect } from "react";
 import type { CSSProperties, ComponentType } from "react";
 import { DiffViewer } from "../diff-viewer";
 import { getDiffFileId } from "../diff-file-id";
 
 const scrollToRow = vi.fn();
 
+/**
+ * Models react-window ^2.2.4: the imperative handle exists as soon as the list
+ * mounts, but its `element` is attached later. A scroll issued while `element`
+ * is null silently no-ops, which is exactly the window the viewer must survive.
+ */
+const listHandle: { scrollToRow: typeof scrollToRow; element: Element | null } =
+  {
+    scrollToRow,
+    element: null,
+  };
+
+let elementAttachMode: "async" | "sync" | "never" = "async";
+
 vi.mock("react-window", () => ({
-  useListRef: () => ({
-    current: {
-      scrollToRow,
-      get element() {
-        return null;
-      },
-    },
-  }),
+  useListRef: () => ({ current: listHandle }),
   List: ({
     rowCount,
     rowComponent: RowComponent,
@@ -33,13 +40,21 @@ vi.mock("react-window", () => ({
     listRef?: { current: unknown };
   }) => {
     if (listRef && "current" in listRef) {
-      listRef.current = {
-        scrollToRow,
-        get element() {
-          return null;
-        },
-      };
+      listRef.current = listHandle;
     }
+    // Attach after commit, so the consumer's layout effect observes the handle
+    // without an element first — the real sequencing.
+    useEffect(() => {
+      if (elementAttachMode === "never") return;
+      if (elementAttachMode === "sync") {
+        listHandle.element = document.createElement("div");
+        return;
+      }
+      const timer = setTimeout(() => {
+        listHandle.element = document.createElement("div");
+      }, 0);
+      return () => clearTimeout(timer);
+    }, []);
     return (
       <div data-testid="virtualized-diff" style={style}>
         {Array.from({ length: Math.min(rowCount, 20) }, (_, index) => (
@@ -91,6 +106,12 @@ ${second}`;
 describe("DiffViewer", () => {
   beforeEach(() => {
     scrollToRow.mockClear();
+    listHandle.element = null;
+    elementAttachMode = "async";
+  });
+
+  afterEach(() => {
+    elementAttachMode = "async";
   });
 
   it("renders empty state when diff is empty", () => {
@@ -165,7 +186,7 @@ index 7654321..gfedcba 100644
     ).toBeInTheDocument();
   });
 
-  it("scrolls a virtualized list to the requested file header", () => {
+  it("scrolls a virtualized list to the requested file header", async () => {
     const fileId = getDiffFileId("FY2027/FY2027Q2.bean");
     render(
       <DiffViewer
@@ -174,11 +195,76 @@ index 7654321..gfedcba 100644
       />,
     );
 
-    expect(scrollToRow).toHaveBeenCalledWith({
-      index: 401, // 1 header + 400 lines for early.bean
-      align: "start",
-      behavior: "auto",
+    await waitFor(() => {
+      expect(scrollToRow).toHaveBeenCalledWith({
+        index: 401, // 1 header + 400 lines for early.bean
+        align: "start",
+        behavior: "auto",
+      });
     });
+  });
+
+  it("keeps the initial focus token until the list can actually scroll", async () => {
+    const fileId = getDiffFileId("FY2027/FY2027Q2.bean");
+    const focusRequest = { fileId, token: 11 };
+    const { rerender } = render(
+      <DiffViewer
+        diff={createMultiFileLargeDiff()}
+        focusRequest={focusRequest}
+      />,
+    );
+
+    // The handle exists but its element does not yet: nothing may be consumed.
+    expect(listHandle.element).toBeNull();
+    expect(scrollToRow).not.toHaveBeenCalled();
+
+    // Once the element attaches, the still-pending token lands the scroll.
+    await waitFor(() => {
+      expect(scrollToRow).toHaveBeenCalledWith({
+        index: 401,
+        align: "start",
+        behavior: "auto",
+      });
+    });
+    expect(scrollToRow).toHaveBeenCalledTimes(1);
+
+    // And it is consumed exactly once: a re-render with the same token is a no-op.
+    rerender(
+      <DiffViewer
+        diff={createMultiFileLargeDiff()}
+        focusRequest={focusRequest}
+      />,
+    );
+    expect(scrollToRow).toHaveBeenCalledTimes(1);
+
+    // A new token scrolls again.
+    rerender(
+      <DiffViewer
+        diff={createMultiFileLargeDiff()}
+        focusRequest={{ fileId, token: 12 }}
+      />,
+    );
+    await waitFor(() => {
+      expect(scrollToRow).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("gives up without spinning when the list never becomes scrollable", async () => {
+    elementAttachMode = "never";
+    const fileId = getDiffFileId("FY2027/FY2027Q2.bean");
+    render(
+      <DiffViewer
+        diff={createMultiFileLargeDiff()}
+        focusRequest={{ fileId, token: 21 }}
+      />,
+    );
+
+    // Let the retry budget run down; the frames must stop on their own.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(scrollToRow).not.toHaveBeenCalled();
+    expect(screen.getByTestId("virtualized-diff")).toBeInTheDocument();
   });
 
   it("scrolls a small-diff file into view when a focus request arrives", () => {

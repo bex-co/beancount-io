@@ -383,6 +383,21 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "汽车",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "自动生成的条目",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "Beancount 根据 pad 指令生成了这个条目，因此没有可查看、编辑或删除的源代码行。",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "摘要",
+    description: "Label for narration field",
+  },
 };
 
 export default zhJournal;

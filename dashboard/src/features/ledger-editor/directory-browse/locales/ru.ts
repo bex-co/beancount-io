@@ -10,6 +10,10 @@ const ruDirectoryBrowse: Record<
     message: "Скачать ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipFailed": {
+    message: "Не удалось подготовить загрузку. Попробуйте снова.",
+    description: "Error shown when preparing the ZIP download fails",
+  },
   "ledgerEditor.manageSshKeys": {
     message: "Управление SSH-ключами",
     description: "Menu item for SSH key management",

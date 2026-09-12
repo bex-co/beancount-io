@@ -94,6 +94,19 @@ as in the exports). The cash-flow page builds its real-account forests in
 `cash-flow/lib/statement-tree.ts` and labels its summary rows with the shared
 `cashFlowSummaryLabelKey` keys from `export/presentation.ts`.
 
+## Shared report components
+
+`reports/components/` holds pieces every statement page shares.
+`collapsible-charts-section.tsx` owns the chart show/hide region: it pairs
+`ChartsToggleButton` (which carries `aria-expanded` and `aria-controls`) with
+the collapsing wrapper, and it is the only place that should implement that
+collapse. The wrapper sets `inert` the moment the section collapses and defers
+`hidden` until `transitionend`, so the grid-row animation still plays while the
+collapsed content leaves the tab order immediately. `use-charts-visibility.ts`
+holds the cookie-backed state and the section id (`<reportKey>-charts`); it
+lives apart from the components because `react-refresh/only-export-components`
+forbids exporting a hook beside them.
+
 ## Chart Library
 
 All charts use **ECharts 6+**. Chart options are constructed in component files, not in separate config files.

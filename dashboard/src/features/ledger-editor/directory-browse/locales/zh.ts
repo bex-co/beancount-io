@@ -10,6 +10,10 @@ const zhDirectoryBrowse: Record<
     message: "下载 ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipFailed": {
+    message: "无法准备下载，请重试。",
+    description: "Error shown when preparing the ZIP download fails",
+  },
   "ledgerEditor.manageSshKeys": {
     message: "管理 SSH 密钥",
     description: "Menu item for SSH key management",

@@ -201,7 +201,9 @@ export function HierarchyTreeMap({
           type: "treemap",
           data: [treeMapData],
           roam: false,
-          nodeClick: "zoomToNode",
+          // Zooming into a node with roam disabled and no breadcrumb leaves the
+          // user stranded off-screen with no way back, so clicks are inert.
+          nodeClick: false,
           top: "0%",
           bottom: "5%",
           left: "0%",

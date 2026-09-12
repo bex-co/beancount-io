@@ -14,7 +14,7 @@ import {
   Combobox,
   type ComboboxOption,
 } from "@/common/components/ui/combobox.tsx";
-import { getIndentLevel } from "./utils.ts";
+import { getIndentLevel, serializePayeeFilter } from "./utils.ts";
 import { generateAllAccountPaths } from "@/common/lib/utils/account-utils.ts";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
 
@@ -146,7 +146,7 @@ export const LedgerSearchControls = ({
   const fql_filter_suggestions = [
     ...tags.map((tag) => `#${tag}`),
     ...links.map((link) => `^${link}`),
-    ...payees.map((payee) => `payee:"${payee}"`),
+    ...payees.map((payee) => serializePayeeFilter(payee)),
   ];
 
   const comboboxClass = isStack ? "w-full min-w-0" : undefined;

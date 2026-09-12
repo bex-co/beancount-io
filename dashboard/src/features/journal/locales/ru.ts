@@ -385,6 +385,21 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "авто",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "Сгенерированная запись",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "Beancount создал эту запись из директивы pad, поэтому у неё нет исходной строки для просмотра, изменения или удаления.",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "Описание",
+    description: "Label for narration field",
+  },
 };
 
 export default ruJournal;

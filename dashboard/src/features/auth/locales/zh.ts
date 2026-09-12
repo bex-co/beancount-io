@@ -342,6 +342,15 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "密码重置令牌已过期或无效",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "无法验证你的重置链接",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "我们无法连接服务器来验证你的密码重置链接。该链接可能仍然有效，请重试。",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message: "此密码重置令牌已过期。请请求新的令牌。",
     description: "Alert message for expired token",

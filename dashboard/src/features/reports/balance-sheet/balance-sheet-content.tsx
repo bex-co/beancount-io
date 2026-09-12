@@ -2,15 +2,7 @@ import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
 import { ClientOnly } from "@tanstack/react-router";
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
-import { Button } from "@/common/components/ui/button";
-import {
-  TrendingUp,
-  Wallet,
-  TrendingDown,
-  Scale,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
+import { TrendingUp, Wallet, TrendingDown, Scale } from "lucide-react";
 import type {
   GetLedgerBalanceSheetQuery,
   SerializableTreeNode,
@@ -18,9 +10,13 @@ import type {
 import { LineChart } from "./line-chart";
 import { HierarchyVisualizationCard } from "./hierarchy-visualization-card";
 import { HierarchyListCard } from "./hierarchy-list-card";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ChartInterval, ConversionOption } from "@/common/types/chart";
-import { useCookieStorageState } from "@/common/hooks/use-cookie-storage-state";
+import {
+  ChartsToggleButton,
+  CollapsibleChartsSection,
+} from "../components/collapsible-charts-section";
+import { useChartsVisibility } from "../components/use-charts-visibility";
 import { IntervalSelect } from "@/common/components/interval-select";
 import { ConversionSelect } from "@/common/components/conversion-select";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
@@ -92,34 +88,50 @@ export function BalanceSheetContent({
     },
     { label: t("page.balanceSheet.equityBreakdown"), value: "equityBreakdown" },
   ];
-  const [chartsVisible, setChartsVisible] = useCookieStorageState(
-    "beancount.chartsVisible.balanceSheet",
-    true,
-    {
-      serializer: (v) => String(v),
-      deserializer: (v) => v !== "false",
-    },
-  );
-  const toggleChartsVisible = () => setChartsVisible((prev) => !prev);
+  const { chartsVisible, toggleChartsVisible, chartsSectionId } =
+    useChartsVisibility("balanceSheet");
 
-  const hierarchyFilterOptions = {
-    showZeroBalance,
-    showZeroTransactions,
-    showClosedAccounts,
-    closedAccountNames,
-  };
+  // Memoized so unrelated re-renders (for example toggling the charts section)
+  // keep the same tree identities — HierarchyList re-derives its expanded nodes
+  // whenever `data` changes identity, which would reopen collapsed branches.
+  const hierarchyFilterOptions = useMemo(
+    () => ({
+      showZeroBalance,
+      showZeroTransactions,
+      showClosedAccounts,
+      closedAccountNames,
+    }),
+    [
+      showZeroBalance,
+      showZeroTransactions,
+      showClosedAccounts,
+      closedAccountNames,
+    ],
+  );
 
-  const assetsHierarchy = filterAccountHierarchy(
-    balanceSheetData.assetsHierarchyData as SerializableTreeNode,
-    hierarchyFilterOptions,
+  const assetsHierarchy = useMemo(
+    () =>
+      filterAccountHierarchy(
+        balanceSheetData.assetsHierarchyData as SerializableTreeNode,
+        hierarchyFilterOptions,
+      ),
+    [balanceSheetData.assetsHierarchyData, hierarchyFilterOptions],
   );
-  const liabilitiesHierarchy = filterAccountHierarchy(
-    balanceSheetData.liabilitiesHierarchyData as SerializableTreeNode,
-    hierarchyFilterOptions,
+  const liabilitiesHierarchy = useMemo(
+    () =>
+      filterAccountHierarchy(
+        balanceSheetData.liabilitiesHierarchyData as SerializableTreeNode,
+        hierarchyFilterOptions,
+      ),
+    [balanceSheetData.liabilitiesHierarchyData, hierarchyFilterOptions],
   );
-  const equityHierarchy = filterAccountHierarchy(
-    balanceSheetData.equityHierarchyData as SerializableTreeNode,
-    hierarchyFilterOptions,
+  const equityHierarchy = useMemo(
+    () =>
+      filterAccountHierarchy(
+        balanceSheetData.equityHierarchyData as SerializableTreeNode,
+        hierarchyFilterOptions,
+      ),
+    [balanceSheetData.equityHierarchyData, hierarchyFilterOptions],
   );
   const exportDocument = buildBalanceSheetDocument({
     title: t("common.balanceSheet"),
@@ -161,182 +173,165 @@ export function BalanceSheetContent({
         <ClientOnly>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
             <StatementExportMenu document={exportDocument} />
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={toggleChartsVisible}
-              aria-label={
-                chartsVisible ? t("common.hideCharts") : t("common.showCharts")
-              }
-            >
-              {chartsVisible ? <ChevronUp /> : <ChevronDown />}
-            </Button>
+            <ChartsToggleButton
+              chartsVisible={chartsVisible}
+              onToggle={toggleChartsVisible}
+              chartsSectionId={chartsSectionId}
+            />
           </div>
         </ClientOnly>
       </div>
       {/* Collapsible Chart Section */}
-      <div
-        className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
-          chartsVisible ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
+      <CollapsibleChartsSection
+        id={chartsSectionId}
+        chartsVisible={chartsVisible}
       >
-        <div className="min-h-0 overflow-hidden">
-          <Tabs
-            defaultValue={selectedTab}
-            value={selectedTab}
-            onValueChange={setSelectedTab}
-            className="w-full flex-col justify-start gap-6"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <ResponsiveTabTriggerList
-                selectedTab={selectedTab}
-                setSelectedTab={setSelectedTab}
-                tabOptions={tabOptions}
-              />
-              <ClientOnly>
-                <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                  <IntervalSelect
-                    value={timeInterval}
-                    onValueChange={onTimeIntervalChange}
-                  />
-                  <ConversionSelect
-                    value={conversion}
-                    onValueChange={onConversionChange}
-                    currency={primaryCurrency}
-                  />
-                </div>
-              </ClientOnly>
+        <Tabs
+          defaultValue={selectedTab}
+          value={selectedTab}
+          onValueChange={setSelectedTab}
+          className="w-full flex-col justify-start gap-6"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <ResponsiveTabTriggerList
+              selectedTab={selectedTab}
+              setSelectedTab={setSelectedTab}
+              tabOptions={tabOptions}
+            />
+            <ClientOnly>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <IntervalSelect
+                  value={timeInterval}
+                  onValueChange={onTimeIntervalChange}
+                />
+                <ConversionSelect
+                  value={conversion}
+                  onValueChange={onConversionChange}
+                  currency={primaryCurrency}
+                />
+              </div>
+            </ClientOnly>
+          </div>
+          <TabsContent value="netWorth" className="mt-0 space-y-3">
+            <div>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                {t("common.netWorth")}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t("page.balanceSheet.netWorthDescription", {
+                  ledgerName: ledgerDisplayName,
+                })}
+              </p>
             </div>
-            <TabsContent value="netWorth" className="mt-0 space-y-3">
-              <div>
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  {t("common.netWorth")}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t("page.balanceSheet.netWorthDescription", {
-                    ledgerName: ledgerDisplayName,
-                  })}
-                </p>
-              </div>
-              <LineChart
-                data={balanceSheetData.netWorthData}
-                interval={timeInterval}
-                primarySeries={primaryCurrency}
-              />
-            </TabsContent>
-            <TabsContent value="assets" className="mt-0 space-y-3">
-              <div>
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <Wallet className="h-5 w-5" />
-                  {t("common.assets")}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t("page.balanceSheet.assetsDescription", {
-                    ledgerName: ledgerDisplayName,
-                  })}
-                </p>
-              </div>
-              <LineChart
-                data={balanceSheetData.assetsData}
-                interval={timeInterval}
-                primarySeries={primaryCurrency}
-              />
-            </TabsContent>
-            <TabsContent value="liabilities" className="mt-0 space-y-3">
-              <div>
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <TrendingDown className="h-5 w-5" />
-                  {t("common.liabilities")}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t("page.balanceSheet.liabilitiesDescription", {
-                    ledgerName: ledgerDisplayName,
-                  })}
-                </p>
-              </div>
-              <LineChart
-                data={balanceSheetData.liabilitiesData}
-                interval={timeInterval}
-                primarySeries={primaryCurrency}
-                inverted={invertIncomeLiabilitiesEquity}
-              />
-            </TabsContent>
-            <TabsContent value="equity" className="mt-0 space-y-3">
-              <div>
-                <h2 className="text-xl font-semibold flex items-center gap-2">
-                  <Scale className="h-5 w-5" />
-                  {t("common.equity")}
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t("page.balanceSheet.equityDescription", {
-                    ledgerName: ledgerDisplayName,
-                  })}
-                </p>
-              </div>
-              <LineChart
-                data={balanceSheetData.equityData}
-                interval={timeInterval}
-                primarySeries={primaryCurrency}
-                inverted={invertIncomeLiabilitiesEquity}
-              />
-            </TabsContent>
-            <TabsContent value="assetsBreakdown" className="mt-0">
-              <HierarchyVisualizationCard
-                data={assetsHierarchy}
-                title={t("page.reports.hierarchyTitle", {
-                  sectionName: t("common.assets"),
+            <LineChart
+              data={balanceSheetData.netWorthData}
+              interval={timeInterval}
+              primarySeries={primaryCurrency}
+            />
+          </TabsContent>
+          <TabsContent value="assets" className="mt-0 space-y-3">
+            <div>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Wallet className="h-5 w-5" />
+                {t("common.assets")}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t("page.balanceSheet.assetsDescription", {
+                  ledgerName: ledgerDisplayName,
                 })}
-                description={t(
-                  "page.reports.hierarchyVisualizationDescription",
-                  {
-                    ledgerName: ledgerDisplayName,
-                    sectionName: t("common.assets"),
-                  },
-                )}
-                hierarchyTitle={t("common.assets")}
-                currency={primaryCurrency}
-              />
-            </TabsContent>
-            <TabsContent value="liabilitiesBreakdown" className="mt-0">
-              <HierarchyVisualizationCard
-                data={liabilitiesHierarchy}
-                title={t("page.reports.hierarchyTitle", {
-                  sectionName: t("common.liabilities"),
+              </p>
+            </div>
+            <LineChart
+              data={balanceSheetData.assetsData}
+              interval={timeInterval}
+              primarySeries={primaryCurrency}
+            />
+          </TabsContent>
+          <TabsContent value="liabilities" className="mt-0 space-y-3">
+            <div>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <TrendingDown className="h-5 w-5" />
+                {t("common.liabilities")}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t("page.balanceSheet.liabilitiesDescription", {
+                  ledgerName: ledgerDisplayName,
                 })}
-                description={t(
-                  "page.reports.hierarchyVisualizationDescription",
-                  {
-                    ledgerName: ledgerDisplayName,
-                    sectionName: t("common.liabilities"),
-                  },
-                )}
-                hierarchyTitle={t("common.liabilities")}
-                inverse
-                currency={primaryCurrency}
-              />
-            </TabsContent>
-            <TabsContent value="equityBreakdown" className="mt-0">
-              <HierarchyVisualizationCard
-                data={equityHierarchy}
-                title={t("page.reports.hierarchyTitle", {
-                  sectionName: t("common.equity"),
+              </p>
+            </div>
+            <LineChart
+              data={balanceSheetData.liabilitiesData}
+              interval={timeInterval}
+              primarySeries={primaryCurrency}
+              inverted={invertIncomeLiabilitiesEquity}
+            />
+          </TabsContent>
+          <TabsContent value="equity" className="mt-0 space-y-3">
+            <div>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Scale className="h-5 w-5" />
+                {t("common.equity")}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t("page.balanceSheet.equityDescription", {
+                  ledgerName: ledgerDisplayName,
                 })}
-                description={t(
-                  "page.reports.hierarchyVisualizationDescription",
-                  {
-                    ledgerName: ledgerDisplayName,
-                    sectionName: t("common.equity"),
-                  },
-                )}
-                hierarchyTitle={t("common.equity")}
-                inverse
-                currency={primaryCurrency}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+              </p>
+            </div>
+            <LineChart
+              data={balanceSheetData.equityData}
+              interval={timeInterval}
+              primarySeries={primaryCurrency}
+              inverted={invertIncomeLiabilitiesEquity}
+            />
+          </TabsContent>
+          <TabsContent value="assetsBreakdown" className="mt-0">
+            <HierarchyVisualizationCard
+              data={assetsHierarchy}
+              title={t("page.reports.hierarchyTitle", {
+                sectionName: t("common.assets"),
+              })}
+              description={t("page.reports.hierarchyVisualizationDescription", {
+                ledgerName: ledgerDisplayName,
+                sectionName: t("common.assets"),
+              })}
+              hierarchyTitle={t("common.assets")}
+              currency={primaryCurrency}
+            />
+          </TabsContent>
+          <TabsContent value="liabilitiesBreakdown" className="mt-0">
+            <HierarchyVisualizationCard
+              data={liabilitiesHierarchy}
+              title={t("page.reports.hierarchyTitle", {
+                sectionName: t("common.liabilities"),
+              })}
+              description={t("page.reports.hierarchyVisualizationDescription", {
+                ledgerName: ledgerDisplayName,
+                sectionName: t("common.liabilities"),
+              })}
+              hierarchyTitle={t("common.liabilities")}
+              inverse
+              currency={primaryCurrency}
+            />
+          </TabsContent>
+          <TabsContent value="equityBreakdown" className="mt-0">
+            <HierarchyVisualizationCard
+              data={equityHierarchy}
+              title={t("page.reports.hierarchyTitle", {
+                sectionName: t("common.equity"),
+              })}
+              description={t("page.reports.hierarchyVisualizationDescription", {
+                ledgerName: ledgerDisplayName,
+                sectionName: t("common.equity"),
+              })}
+              hierarchyTitle={t("common.equity")}
+              inverse
+              currency={primaryCurrency}
+            />
+          </TabsContent>
+        </Tabs>
+      </CollapsibleChartsSection>
 
       {/* 2 Column Grid: Assets List (left) | Liabilities + Equity Lists (right) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

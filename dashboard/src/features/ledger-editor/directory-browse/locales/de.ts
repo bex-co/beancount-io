@@ -10,6 +10,11 @@ const deDirectoryBrowse: Record<
     message: "ZIP herunterladen",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipFailed": {
+    message:
+      "Der Download konnte nicht vorbereitet werden. Bitte erneut versuchen.",
+    description: "Error shown when preparing the ZIP download fails",
+  },
   "ledgerEditor.manageSshKeys": {
     message: "SSH-Schlüssel verwalten",
     description: "Menu item for SSH key management",

@@ -385,6 +385,21 @@ const esJournal: Record<string, TranslationEntry> = {
     message: "automático",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "Entrada generada",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "Beancount generó esta entrada a partir de una directiva pad, por lo que no tiene una línea de origen que ver, editar o eliminar.",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "Descripción",
+    description: "Label for narration field",
+  },
 };
 
 export default esJournal;

@@ -1,5 +1,24 @@
 import { describe, it, expect } from "vitest";
-import { getIndentLevel } from "../utils";
+import {
+  escapeFilterRegex,
+  getIndentLevel,
+  serializePayeeFilter,
+} from "../utils";
+
+/**
+ * Mirrors the ledger service's STRING token + matcher: strip the delimiters
+ * without interpreting escapes, then compile the remainder as a case-insensitive
+ * regex and substring-search the payee.
+ */
+const matchLikeBackend = (suggestion: string, payee: string): boolean => {
+  const quoted = suggestion.slice("payee:".length);
+  const delimiter = quoted[0];
+  expect(delimiter === '"' || delimiter === "'").toBe(true);
+  const body = quoted.slice(1, -1);
+  // The lexer's STRING regex cannot span its own delimiter.
+  expect(body.includes(delimiter)).toBe(false);
+  return new RegExp(body, "i").test(payee);
+};
 
 describe("getIndentLevel", () => {
   it("should return 0 for items with no colons", () => {
@@ -94,5 +113,83 @@ describe("getIndentLevel", () => {
     expect(getIndentLevel("income:work")).toBeLessThan(
       getIndentLevel("income:work:salary"),
     );
+  });
+});
+
+describe("escapeFilterRegex", () => {
+  it("escapes every regex metacharacter with a single backslash", () => {
+    expect(escapeFilterRegex(".^$*+?()[]{}|\\")).toBe(
+      "\\.\\^\\$\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\\\",
+    );
+  });
+
+  it("leaves plain text untouched", () => {
+    expect(escapeFilterRegex("Acme Coffee")).toBe("Acme Coffee");
+  });
+
+  it("does not touch quote characters (not regex syntax)", () => {
+    expect(escapeFilterRegex(`He said "hi"`)).toBe(`He said "hi"`);
+  });
+});
+
+describe("serializePayeeFilter", () => {
+  it("wraps a plain payee in double quotes", () => {
+    expect(serializePayeeFilter("Acme Coffee")).toBe(`payee:"Acme Coffee"`);
+  });
+
+  it("escapes punctuation so it is matched literally", () => {
+    expect(serializePayeeFilter("Amazon.com")).toBe(`payee:"Amazon\\.com"`);
+    expect(serializePayeeFilter("Foo (Bar)")).toBe(`payee:"Foo \\(Bar\\)"`);
+    expect(serializePayeeFilter("A+B")).toBe(`payee:"A\\+B"`);
+    expect(serializePayeeFilter("Cafe [Old]")).toBe(`payee:"Cafe \\[Old\\]"`);
+  });
+
+  it("emits single backslashes, unlike JSON.stringify", () => {
+    const suggestion = serializePayeeFilter("C:\\Shop");
+    expect(suggestion).toBe(`payee:"C:\\\\Shop"`);
+    expect(suggestion).not.toContain("\\\\\\\\");
+  });
+
+  it("falls back to single quotes when the payee contains a double quote", () => {
+    expect(serializePayeeFilter(`The "Best" Cafe`)).toBe(
+      `payee:'The "Best" Cafe'`,
+    );
+  });
+
+  it("encodes the double quote when both quote characters are present", () => {
+    expect(serializePayeeFilter(`Bob's "Diner"`)).toBe(
+      `payee:"Bob's \\x22Diner\\x22"`,
+    );
+  });
+
+  it("matches the intended payee and not a regex-confusable sibling", () => {
+    const suggestion = serializePayeeFilter("Amazon.com");
+    expect(matchLikeBackend(suggestion, "Amazon.com")).toBe(true);
+    expect(matchLikeBackend(suggestion, "AmazonXcom")).toBe(false);
+  });
+
+  it("produces a valid pattern for every punctuation-heavy payee", () => {
+    const payees = [
+      "Amazon.com",
+      "Foo (Bar)",
+      "A+B",
+      "Cafe [Old]",
+      "What?",
+      "100% Store",
+      "a|b",
+      "{Brace}",
+      "^Start",
+      "End$",
+      "C:\\Shop",
+      `The "Best" Cafe`,
+      `Bob's Diner`,
+      `Bob's "Diner"`,
+    ];
+
+    for (const payee of payees) {
+      const suggestion = serializePayeeFilter(payee);
+      expect(matchLikeBackend(suggestion, payee)).toBe(true);
+      expect(matchLikeBackend(suggestion, "completely unrelated")).toBe(false);
+    }
   });
 });

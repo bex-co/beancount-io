@@ -353,6 +353,15 @@ const frAuth: Record<string, TranslationEntry> = {
       "Le jeton de réinitialisation du mot de passe est expiré ou invalide",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "Impossible de vérifier votre lien de réinitialisation",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "Nous n'avons pas pu joindre le serveur pour vérifier votre lien de réinitialisation de mot de passe. Il est peut-être encore valide : veuillez réessayer.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "Ce jeton de réinitialisation du mot de passe est expiré. Veuillez en demander un nouveau.",

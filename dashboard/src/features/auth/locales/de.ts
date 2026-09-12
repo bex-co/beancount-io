@@ -349,6 +349,15 @@ const deAuth: Record<string, TranslationEntry> = {
     message: "Der Passwort-Reset-Token ist abgelaufen oder ungültig",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "Zurücksetzungs-Link konnte nicht geprüft werden",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "Der Server war nicht erreichbar, um Ihren Link zum Zurücksetzen des Passworts zu prüfen. Der Link ist möglicherweise noch gültig – bitte erneut versuchen.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "Dieser Passwort-Reset-Token ist abgelaufen. Bitte fordern Sie einen neuen an.",

@@ -88,3 +88,42 @@ describe("Combobox explicit selection vs blur", () => {
     );
   });
 });
+
+/**
+ * jsdom neither lays out Radix's floating content nor resolves
+ * `--radix-popover-content-available-height`, so the only thing assertable here
+ * is that the suggestion list is bounded by that custom property instead of a
+ * fixed pixel height. Confirming the list actually stops at the viewport edge on
+ * a short window requires a real browser.
+ */
+describe("Combobox suggestion list height", () => {
+  it("bounds the popover and its scroll region by the available height", async () => {
+    const user = userEvent.setup();
+    render(
+      <Combobox
+        options={options}
+        value=""
+        onValueChange={vi.fn()}
+        allowCustom
+        triggerOn="blur"
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox"));
+
+    const item = await screen.findByText("Assets:Crypto:Binance:BTC");
+    const list = item.closest("[cmdk-list]") as HTMLElement;
+    const content = list.closest("[data-radix-popper-content-wrapper] > *");
+
+    expect(content).not.toBeNull();
+    expect((content as HTMLElement).style.maxHeight).toBe(
+      "var(--radix-popover-content-available-height)",
+    );
+    // The shared `command.tsx` cap stays at 300px; this consumer narrows it.
+    expect(list.style.maxHeight).toBe(
+      "min(300px, var(--radix-popover-content-available-height))",
+    );
+    // Shrinking must not turn off internal scrolling.
+    expect(list.className).toContain("overflow-y-auto");
+  });
+});

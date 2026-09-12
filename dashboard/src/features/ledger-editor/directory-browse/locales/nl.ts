@@ -10,6 +10,10 @@ const nlDirectoryBrowse: Record<
     message: "ZIP downloaden",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipFailed": {
+    message: "Kan de download niet voorbereiden. Probeer het opnieuw.",
+    description: "Error shown when preparing the ZIP download fails",
+  },
   "ledgerEditor.manageSshKeys": {
     message: "SSH-sleutels beheren",
     description: "Menu item for SSH key management",

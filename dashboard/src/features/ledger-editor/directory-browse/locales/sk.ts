@@ -10,6 +10,10 @@ const skDirectoryBrowse: Record<
     message: "Stiahnuť ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipFailed": {
+    message: "Stiahnutie sa nepodarilo pripraviť. Skúste to znova.",
+    description: "Error shown when preparing the ZIP download fails",
+  },
   "ledgerEditor.manageSshKeys": {
     message: "Spravovať SSH kľúče",
     description: "Menu item for SSH key management",

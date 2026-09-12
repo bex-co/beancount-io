@@ -251,6 +251,15 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "비밀번호 재설정 토큰이 만료되었거나 유효하지 않습니다",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "재설정 링크를 확인할 수 없습니다",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "비밀번호 재설정 링크를 확인하기 위해 서버에 연결할 수 없습니다. 링크가 여전히 유효할 수 있습니다. 다시 시도해 주세요.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "이 비밀번호 재설정 토큰이 만료되었습니다. 새 토큰을 요청해 주세요.",

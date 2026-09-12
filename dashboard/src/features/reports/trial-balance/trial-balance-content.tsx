@@ -2,7 +2,6 @@ import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
 import { ClientOnly } from "@tanstack/react-router";
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
-import { Button } from "@/common/components/ui/button";
 import {
   type GetLedgerTrialBalanceQuery,
   type SerializableTreeNode,
@@ -11,10 +10,14 @@ import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-tri
 import { useMemo, useState } from "react";
 import { HierarchyList } from "../balance-sheet/hierarchy-list";
 import { HierarchyVisualizationCard } from "../balance-sheet/hierarchy-visualization-card";
-import { ChevronDown, ChevronUp, List } from "lucide-react";
+import { List } from "lucide-react";
 import type { ConversionOption } from "@/common/types/chart";
 import { ConversionSelect } from "@/common/components/conversion-select";
-import { useCookieStorageState } from "@/common/hooks/use-cookie-storage-state";
+import {
+  ChartsToggleButton,
+  CollapsibleChartsSection,
+} from "../components/collapsible-charts-section";
+import { useChartsVisibility } from "../components/use-charts-visibility";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { filterAccountHierarchy } from "../balance-sheet/utils";
@@ -59,15 +62,8 @@ export function TrialBalanceContent({
     { label: t("common.expenses"), value: "expenses" },
     { label: t("common.equity"), value: "equity" },
   ];
-  const [chartsVisible, setChartsVisible] = useCookieStorageState(
-    "beancount.chartsVisible.trialBalance",
-    true,
-    {
-      serializer: (v) => String(v),
-      deserializer: (v) => v !== "false",
-    },
-  );
-  const toggleChartsVisible = () => setChartsVisible((prev) => !prev);
+  const { chartsVisible, toggleChartsVisible, chartsSectionId } =
+    useChartsVisibility("trialBalance");
 
   const filterOptions = {
     showZeroBalance,
@@ -157,125 +153,114 @@ export function TrialBalanceContent({
         />
         <ClientOnly>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={toggleChartsVisible}
-              aria-label={
-                chartsVisible ? t("common.hideCharts") : t("common.showCharts")
-              }
-            >
-              {chartsVisible ? <ChevronUp /> : <ChevronDown />}
-            </Button>
+            <ChartsToggleButton
+              chartsVisible={chartsVisible}
+              onToggle={toggleChartsVisible}
+              chartsSectionId={chartsSectionId}
+            />
           </div>
         </ClientOnly>
       </div>
       {/* Collapsible Chart Section */}
-      <div
-        className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
-          chartsVisible ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
+      <CollapsibleChartsSection
+        id={chartsSectionId}
+        chartsVisible={chartsVisible}
       >
-        <div className="min-h-0 overflow-hidden">
-          {/* Tabbed Interface */}
-          <Tabs
-            defaultValue={selectedTab}
-            value={selectedTab}
-            onValueChange={setSelectedTab}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-              <ResponsiveTabTriggerList
-                selectedTab={selectedTab}
-                setSelectedTab={setSelectedTab}
-                tabOptions={tabOptions}
-              />
-              <ClientOnly>
-                <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                  <ConversionSelect
-                    value={conversion}
-                    onValueChange={onConversionChange}
-                    currency={primaryCurrency}
-                  />
-                </div>
-              </ClientOnly>
-            </div>
+        {/* Tabbed Interface */}
+        <Tabs
+          defaultValue={selectedTab}
+          value={selectedTab}
+          onValueChange={setSelectedTab}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <ResponsiveTabTriggerList
+              selectedTab={selectedTab}
+              setSelectedTab={setSelectedTab}
+              tabOptions={tabOptions}
+            />
+            <ClientOnly>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <ConversionSelect
+                  value={conversion}
+                  onValueChange={onConversionChange}
+                  currency={primaryCurrency}
+                />
+              </div>
+            </ClientOnly>
+          </div>
 
-            {/* Assets Tab */}
-            <TabsContent value="assets">
-              <HierarchyVisualizationCard
-                data={assetsHierarchy}
-                title={t("page.trialBalance.assetsHierarchy")}
-                description={t("page.trialBalance.assetsHierarchyDescription", {
+          {/* Assets Tab */}
+          <TabsContent value="assets">
+            <HierarchyVisualizationCard
+              data={assetsHierarchy}
+              title={t("page.trialBalance.assetsHierarchy")}
+              description={t("page.trialBalance.assetsHierarchyDescription", {
+                ledgerName: ledgerDisplayName,
+              })}
+              hierarchyTitle={t("common.assets")}
+              currency={primaryCurrency}
+            />
+          </TabsContent>
+
+          {/* Liabilities Tab */}
+          <TabsContent value="liabilities">
+            <HierarchyVisualizationCard
+              data={liabilitiesHierarchy}
+              title={t("page.trialBalance.liabilitiesHierarchy")}
+              description={t(
+                "page.trialBalance.liabilitiesHierarchyDescription",
+                {
                   ledgerName: ledgerDisplayName,
-                })}
-                hierarchyTitle={t("common.assets")}
-                currency={primaryCurrency}
-              />
-            </TabsContent>
+                },
+              )}
+              hierarchyTitle={t("common.liabilities")}
+              inverse
+              currency={primaryCurrency}
+            />
+          </TabsContent>
 
-            {/* Liabilities Tab */}
-            <TabsContent value="liabilities">
-              <HierarchyVisualizationCard
-                data={liabilitiesHierarchy}
-                title={t("page.trialBalance.liabilitiesHierarchy")}
-                description={t(
-                  "page.trialBalance.liabilitiesHierarchyDescription",
-                  {
-                    ledgerName: ledgerDisplayName,
-                  },
-                )}
-                hierarchyTitle={t("common.liabilities")}
-                inverse
-                currency={primaryCurrency}
-              />
-            </TabsContent>
+          {/* Income Tab */}
+          <TabsContent value="income">
+            <HierarchyVisualizationCard
+              data={incomeHierarchy}
+              title={t("page.trialBalance.incomeHierarchy")}
+              description={t("page.trialBalance.incomeHierarchyDescription", {
+                ledgerName: ledgerDisplayName,
+              })}
+              hierarchyTitle={t("common.income")}
+              inverse
+              currency={primaryCurrency}
+            />
+          </TabsContent>
 
-            {/* Income Tab */}
-            <TabsContent value="income">
-              <HierarchyVisualizationCard
-                data={incomeHierarchy}
-                title={t("page.trialBalance.incomeHierarchy")}
-                description={t("page.trialBalance.incomeHierarchyDescription", {
-                  ledgerName: ledgerDisplayName,
-                })}
-                hierarchyTitle={t("common.income")}
-                inverse
-                currency={primaryCurrency}
-              />
-            </TabsContent>
+          {/* Expenses Tab */}
+          <TabsContent value="expenses">
+            <HierarchyVisualizationCard
+              data={expensesHierarchy}
+              title={t("page.trialBalance.expensesHierarchy")}
+              description={t("page.trialBalance.expensesHierarchyDescription", {
+                ledgerName: ledgerDisplayName,
+              })}
+              hierarchyTitle={t("common.expenses")}
+              currency={primaryCurrency}
+            />
+          </TabsContent>
 
-            {/* Expenses Tab */}
-            <TabsContent value="expenses">
-              <HierarchyVisualizationCard
-                data={expensesHierarchy}
-                title={t("page.trialBalance.expensesHierarchy")}
-                description={t(
-                  "page.trialBalance.expensesHierarchyDescription",
-                  {
-                    ledgerName: ledgerDisplayName,
-                  },
-                )}
-                hierarchyTitle={t("common.expenses")}
-                currency={primaryCurrency}
-              />
-            </TabsContent>
-
-            {/* Equity Tab */}
-            <TabsContent value="equity">
-              <HierarchyVisualizationCard
-                data={equityHierarchy}
-                title={t("page.trialBalance.equityHierarchy")}
-                description={t("page.trialBalance.equityHierarchyDescription", {
-                  ledgerName: ledgerDisplayName,
-                })}
-                hierarchyTitle={t("common.equity")}
-                inverse
-                currency={primaryCurrency}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+          {/* Equity Tab */}
+          <TabsContent value="equity">
+            <HierarchyVisualizationCard
+              data={equityHierarchy}
+              title={t("page.trialBalance.equityHierarchy")}
+              description={t("page.trialBalance.equityHierarchyDescription", {
+                ledgerName: ledgerDisplayName,
+              })}
+              hierarchyTitle={t("common.equity")}
+              inverse
+              currency={primaryCurrency}
+            />
+          </TabsContent>
+        </Tabs>
+      </CollapsibleChartsSection>
 
       <div>
         <div className="space-y-2">

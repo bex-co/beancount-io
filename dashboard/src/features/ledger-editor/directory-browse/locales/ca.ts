@@ -10,6 +10,10 @@ const caDirectoryBrowse: Record<
     message: "Descarregar ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipFailed": {
+    message: "No s'ha pogut preparar la baixada. Torna-ho a provar.",
+    description: "Error shown when preparing the ZIP download fails",
+  },
   "ledgerEditor.manageSshKeys": {
     message: "Gestionar claus SSH",
     description: "Menu item for SSH key management",

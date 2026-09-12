@@ -349,6 +349,15 @@ const ptAuth: Record<string, TranslationEntry> = {
     message: "O token de redefinição de senha está expirado ou inválido",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "Não foi possível verificar o seu link de redefinição",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "Não conseguimos contactar o servidor para verificar o seu link de redefinição de senha. O link pode continuar válido — tente novamente.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "Este token de redefinição de senha está expirado. Por favor, solicite um novo.",

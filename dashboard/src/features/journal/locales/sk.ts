@@ -385,6 +385,21 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "auto",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "Vygenerovaný záznam",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "Beancount vytvoril tento záznam z direktívy pad, takže nemá žiadny zdrojový riadok na zobrazenie, úpravu ani odstránenie.",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "Popis",
+    description: "Label for narration field",
+  },
 };
 
 export default skJournal;

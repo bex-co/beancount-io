@@ -16,6 +16,18 @@
     display: none !important;
   }
 
+  /* Reset the print canvas for statements only. In dark mode the app sets
+     `color-scheme: dark` and a dark `--background` on html/body, so the page
+     margins printed black around the white statement. Portal-conditioned so
+     non-statement print pages keep the app's own canvas. */
+  html:has(body > .statement-print-root),
+  body:has(> .statement-print-root) {
+    background: #fff !important;
+    background-image: none !important;
+    color: #111 !important;
+    color-scheme: light;
+  }
+
   .statement-print-root {
     display: block !important;
     position: static;

@@ -347,6 +347,15 @@ const ukAuth: Record<string, TranslationEntry> = {
     message: "Токен скидання пароля прострочений або недійсний",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "Не вдалося перевірити посилання для скидання",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "Не вдалося зв'язатися із сервером, щоб перевірити посилання для скидання пароля. Можливо, посилання ще дійсне — спробуйте ще раз.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "Цей токен скидання пароля прострочений. Будь ласка, запросіть новий.",

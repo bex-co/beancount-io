@@ -10,6 +10,10 @@ const ukDirectoryBrowse: Record<
     message: "Вownload ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipFailed": {
+    message: "Не вдалося підготувати завантаження. Спробуйте ще раз.",
+    description: "Error shown when preparing the ZIP download fails",
+  },
   "ledgerEditor.manageSshKeys": {
     message: "Керування SSH ключами",
     description: "Menu item for SSH key management",

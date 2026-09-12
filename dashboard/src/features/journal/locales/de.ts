@@ -385,6 +385,21 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "auto",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "Generierter Eintrag",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "Beancount hat diesen Eintrag aus einer pad-Direktive erzeugt, daher gibt es keine Quellzeile zum Ansehen, Bearbeiten oder Löschen.",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "Beschreibung",
+    description: "Label for narration field",
+  },
 };
 
 export default deJournal;

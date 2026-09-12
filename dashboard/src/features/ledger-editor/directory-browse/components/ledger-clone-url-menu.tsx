@@ -98,7 +98,10 @@ export default function LedgerCloneUrlMenu({
   ledgerId,
 }: LedgerCloneUrlMenuProps) {
   const { t } = useTranslations();
+  const formatError = useErrorMessage();
   const [activeTab, setActiveTab] = useState<string>("ssh");
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<boolean>(false);
   const { ledgerData } = useLedger();
 
   const { refetch: fetchArchiveUrl } = useQuery<
@@ -110,10 +113,24 @@ export default function LedgerCloneUrlMenu({
   });
 
   const handleDownloadZip = async () => {
-    const result = await fetchArchiveUrl({ ledgerId });
-    const downloadUrl = result.data?.getLedgerArchiveDownloadUrl?.downloadUrl;
-    if (downloadUrl) {
+    // Archive discovery can reject (transport or server error). Without this the
+    // rejection became an unhandled promise and the popover said nothing.
+    setDownloadError(null);
+    setDownloading(true);
+    try {
+      const result = await fetchArchiveUrl({ ledgerId });
+      const downloadUrl = result.data?.getLedgerArchiveDownloadUrl?.downloadUrl;
+      if (!downloadUrl) {
+        setDownloadError(t("ledgerEditor.downloadZipFailed"));
+        return;
+      }
       window.open(downloadUrl, "_blank");
+    } catch (err) {
+      console.error("Failed to prepare ZIP download:", err);
+      setDownloadError(formatError(err) || t("ledgerEditor.downloadZipFailed"));
+    } finally {
+      // Always re-enable so the user can retry.
+      setDownloading(false);
     }
   };
 
@@ -175,11 +192,17 @@ export default function LedgerCloneUrlMenu({
             </Authenticated>
             <button
               onClick={handleDownloadZip}
+              disabled={downloading}
               className="flex items-center gap-2 py-2 px-2 rounded-md hover:bg-accent transition-colors text-sm w-full text-left cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-4 w-4" />
               <span>{t("ledgerEditor.downloadZip")}</span>
             </button>
+            {downloadError && (
+              <p role="alert" className="px-2 text-xs text-destructive">
+                {downloadError}
+              </p>
+            )}
           </div>
         </div>
       </PopoverContent>

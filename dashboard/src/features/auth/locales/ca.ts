@@ -351,6 +351,15 @@ const caAuth: Record<string, TranslationEntry> = {
     message: "El token de restabliment de contrasenya ha caducat o és invàlid",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "No s'ha pogut comprovar l'enllaç de restabliment",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "No hem pogut contactar amb el servidor per verificar l'enllaç de restabliment de contrasenya. Potser encara és vàlid: torna-ho a provar.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "Aquest token de restabliment de contrasenya ha caducat. Si us plau, sol·liciteu-ne un de nou.",

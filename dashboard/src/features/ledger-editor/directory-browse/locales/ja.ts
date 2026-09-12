@@ -10,6 +10,10 @@ const jaDirectoryBrowse: Record<
     message: "ZIPでダウンロード",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipFailed": {
+    message: "ダウンロードを準備できませんでした。もう一度お試しください。",
+    description: "Error shown when preparing the ZIP download fails",
+  },
   "ledgerEditor.manageSshKeys": {
     message: "SSHキーを管理",
     description: "Menu item for SSH key management",

@@ -385,6 +385,21 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "automatisch",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "Gegenereerde boeking",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "Beancount heeft deze boeking gegenereerd op basis van een pad-richtlijn, dus er is geen bronregel om te bekijken, te bewerken of te verwijderen.",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "Omschrijving",
+    description: "Label for narration field",
+  },
 };
 
 export default nlJournal;

@@ -385,6 +385,21 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "خودکار",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "ورودی تولیدشده",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "Beancount این ورودی را از یک دستور pad تولید کرده است، بنابراین خط منبعی برای دیدن، ویرایش یا حذف ندارد.",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "شرح",
+    description: "Label for narration field",
+  },
 };
 
 export default faJournal;

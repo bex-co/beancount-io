@@ -24,6 +24,7 @@ import {
 } from "@/common/components/ui/tooltip.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
 import { useCookieStorageState } from "@/common/hooks/use-cookie-storage-state";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close.ts";
 import {
   SIDEBAR_STATE_COOKIE,
   SIDEBAR_WIDTH_COOKIE,
@@ -38,6 +39,17 @@ import {
   deserializeSidebarWidth,
 } from "./sidebar-state.ts";
 
+/**
+ * Focus fallback for the narrow sidebar: after an in-sheet navigation the opener
+ * is unmounted, so focus returns to the current page's sidebar trigger. Only a
+ * genuinely focusable element qualifies — focusing a non-tabbable node would
+ * send focus to the body, which is the behavior this is fixing.
+ */
+function findSidebarTriggerOnPage(): HTMLElement | null {
+  if (typeof document === "undefined") return null;
+  return document.querySelector<HTMLElement>('[data-slot="sidebar-trigger"]');
+}
+
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
@@ -47,9 +59,15 @@ type SidebarContextProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
   openMobile: boolean;
-  setOpenMobile: (open: boolean) => void;
+  setOpenMobile: React.Dispatch<React.SetStateAction<boolean>>;
   isMobile: boolean;
   toggleSidebar: () => void;
+  /**
+   * Element that opened the narrow (Sheet) sidebar. The Sheet is controlled and
+   * has no `SheetTrigger`, so Radix never records a trigger to return focus to;
+   * this ref stands in for it on close.
+   */
+  mobileOpenerRef: React.RefObject<HTMLElement | null>;
   /** Current sidebar width in pixels (desktop, expanded). */
   width: number;
   /** Commit a new sidebar width; clamped and persisted to a cookie. */
@@ -84,8 +102,27 @@ function SidebarProvider({
 }) {
   // Pass isHydrated to useIsMobile
   const isMobile = useIsMobile();
-  const [openMobile, setOpenMobile] = React.useState(false);
+  const [openMobile, _setOpenMobile] = React.useState(false);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
+  const mobileOpenerRef = React.useRef<HTMLElement | null>(null);
+
+  // Remember what had focus at the moment the narrow sidebar opens so the Sheet
+  // can hand focus back on close (see `mobileOpenerRef`).
+  const setOpenMobile = React.useCallback(
+    (value: boolean | ((value: boolean) => boolean)) => {
+      const next = typeof value === "function" ? value(openMobile) : value;
+      if (next && !openMobile) {
+        const active =
+          typeof document === "undefined" ? null : document.activeElement;
+        mobileOpenerRef.current =
+          active instanceof HTMLElement && active !== document.body
+            ? active
+            : null;
+      }
+      _setOpenMobile(next);
+    },
+    [openMobile],
+  );
 
   // Internal open state, seeded from (and persisted to) the sidebar_state
   // cookie so collapse/expand survives reloads. useCookieStorageState reads
@@ -167,6 +204,7 @@ function SidebarProvider({
       width,
       setWidth,
       wrapperRef,
+      mobileOpenerRef,
     }),
     [
       state,
@@ -223,7 +261,8 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const { isMobile, state, openMobile, setOpenMobile, mobileOpenerRef } =
+    useSidebar();
   const { t } = useTranslations();
 
   // Track hydration for this component to prevent conditional rendering mismatch
@@ -263,6 +302,16 @@ function Sidebar({
             } as React.CSSProperties
           }
           side={side}
+          onCloseAutoFocus={(event) => {
+            // Radix has no triggerRef for this controlled Sheet, so close-autofocus
+            // would drop focus on the body. Return it to the opener, or — when a
+            // navigation unmounted it — to the trigger on the current page.
+            restoreFocusOnDialogClose(
+              event,
+              mobileOpenerRef.current,
+              findSidebarTriggerOnPage(),
+            );
+          }}
         >
           <SheetHeader className="sr-only">
             <SheetTitle>{t("common.sidebar")}</SheetTitle>

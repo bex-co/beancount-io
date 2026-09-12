@@ -349,6 +349,15 @@ const bgAuth: Record<string, TranslationEntry> = {
     message: "Токенът за нулиране на парола е изтекъл или невалиден",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "Връзката за нулиране не можа да бъде проверена",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "Не успяхме да се свържем със сървъра, за да проверим връзката за нулиране на паролата. Възможно е връзката още да е валидна — опитайте отново.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message: "Този токен за нулиране на парола е изтекъл. Моля, поискайте нов.",
     description: "Alert message for expired token",

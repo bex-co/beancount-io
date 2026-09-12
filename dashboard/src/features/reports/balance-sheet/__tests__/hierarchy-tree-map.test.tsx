@@ -283,7 +283,9 @@ describe("HierarchyTreeMap", () => {
       expect(option.tooltip.trigger).toBe("item");
     });
 
-    it("should configure zoom on node click", () => {
+    it("should not zoom into a node on click", () => {
+      // roam is false and the breadcrumb is hidden, so a zoom-to-node click
+      // would strand the user off-screen with no way to pan or navigate back.
       const data = createNode({
         account: "Assets",
         balanceChildren: { USD: 1000 },
@@ -296,7 +298,9 @@ describe("HierarchyTreeMap", () => {
         chartElement.getAttribute("data-option") || "{}",
       );
 
-      expect(option.series[0].nodeClick).toBe("zoomToNode");
+      expect(option.series[0].nodeClick).toBe(false);
+      expect(option.series[0].roam).toBe(false);
+      expect(option.series[0].breadcrumb.show).toBe(false);
     });
 
     it("should hide breadcrumb navigation", () => {

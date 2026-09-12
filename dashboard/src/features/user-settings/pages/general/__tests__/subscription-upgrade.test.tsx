@@ -170,6 +170,8 @@ vi.mock("@/common/hooks/use-translations", () => ({
       }
       return key;
     },
+    // The app-locale number formatter reads `i18n.language`.
+    i18n: { language: "en" },
   }),
 }));
 vi.mock("../stripe-config", () => ({

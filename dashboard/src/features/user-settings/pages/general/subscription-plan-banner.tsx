@@ -3,6 +3,7 @@ import { Badge } from "@/common/components/ui/badge";
 import { type UserTier } from "@/common/hooks/use-user-limits";
 import { getTierInfo } from "@/common/lib/subscription/tier-config";
 import { type TierQuota } from "@/common/hooks/use-all-tier-quotas";
+import { useQuotaNumberFormat } from "./use-quota-number-format";
 
 export function CurrentPlanBanner({
   tier,
@@ -15,6 +16,7 @@ export function CurrentPlanBanner({
   tierQuota: TierQuota | null;
   t: (key: string, params?: Record<string, string>) => string;
 }) {
+  const formatCount = useQuotaNumberFormat();
   const tierInfo = getTierInfo(tier);
   const isFree = tier === "FREE";
   const isEnterprise = tier === "ENTERPRISE";
@@ -27,14 +29,28 @@ export function CurrentPlanBanner({
         ? t(tierInfo.labelKey)
         : t("userSettings.freePlan");
 
+  // Same translated quota strings the upgrade cards use, so the current plan is
+  // described in the app language instead of hardcoded English.
   const featureSummary = tierQuota
     ? [
-        `${tierQuota.aiCfoTokensMax.toLocaleString()} AI tokens`,
-        `${tierQuota.maxLedgers} ${tierQuota.maxLedgers === 1 ? "ledger" : "ledgers"}`,
+        t("userSettings.aiTokensPerMonth", {
+          count: formatCount(tierQuota.aiCfoTokensMax),
+        }),
+        tierQuota.maxLedgers === -1
+          ? t("userSettings.unlimitedLedgers")
+          : t("userSettings.includedLedgers", {
+              count: formatCount(tierQuota.maxLedgers),
+            }),
         tierQuota.maxDirectives === -1
-          ? "Unlimited directives"
-          : `${tierQuota.maxDirectives.toLocaleString()} directives`,
-        `${tierQuota.maxCollaboratorsPerLedger} ${tierQuota.maxCollaboratorsPerLedger === 1 ? "collaborator" : "collaborators"}/ledger`,
+          ? t("userSettings.unlimitedDirectives")
+          : t("userSettings.includedDirectives", {
+              count: formatCount(tierQuota.maxDirectives),
+            }),
+        tierQuota.maxCollaboratorsPerLedger === -1
+          ? t("userSettings.unlimitedCollaborators")
+          : t("userSettings.collaboratorsPerLedger", {
+              count: formatCount(tierQuota.maxCollaboratorsPerLedger),
+            }),
       ].join(" · ")
     : isEnterprise
       ? t("userSettings.unlimited")

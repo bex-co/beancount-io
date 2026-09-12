@@ -255,6 +255,15 @@ const enAuth: Record<string, TranslationEntry> = {
     message: "The password reset token is expired or invalid",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "Couldn't check your reset link",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "We couldn't reach the server to verify your password reset link. Your link may still be valid — please try again.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message: "This password reset token is expired. Please request a new one.",
     description: "Alert message for expired token",

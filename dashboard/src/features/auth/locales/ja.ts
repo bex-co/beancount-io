@@ -254,6 +254,15 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "パスワードリセットトークンの有効期限が切れているか無効です",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "リセットリンクを確認できませんでした",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "パスワードリセットリンクを確認するためにサーバーへ接続できませんでした。リンクはまだ有効な可能性があります。もう一度お試しください。",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "このパスワードリセットトークンの有効期限が切れています。新しいトークンをリクエストしてください。",

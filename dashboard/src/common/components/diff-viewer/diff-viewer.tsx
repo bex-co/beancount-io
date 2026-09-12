@@ -16,6 +16,8 @@ const VIRTUAL_SCROLL_THRESHOLD = 500; // Lines
 const ROW_HEIGHT = 22; // Pixels per line
 const FILE_HEADER_HEIGHT = 36;
 const CONTAINER_HEIGHT = 600; // Max height in pixels
+/** ~1s of frames waiting for the virtual list to become scrollable. */
+const MAX_FOCUS_SCROLL_RETRIES = 60;
 
 /** One-shot request to reveal a file once the parsed diff is ready. */
 export interface DiffFileFocusRequest {
@@ -46,6 +48,11 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useListRef(null);
   const handledTokenRef = useRef<number | null>(null);
+  // Bumped per animation frame while waiting for the virtual list's scroller
+  // element, so the focus effect re-runs until the scroll can actually apply.
+  const [listReadyTick, setListReadyTick] = useState(0);
+  const retryTokenRef = useRef<number | null>(null);
+  const retryCountRef = useRef(0);
 
   // Parse the unified diff into file objects
   const files: FileData[] = useMemo(() => {
@@ -154,9 +161,30 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
       const index = flattenedRows.findIndex(
         (row) => row.type === "file-header" && fileMatches(row.data, filename),
       );
-      if (index < 0 || !listRef.current) return;
+      if (index < 0) return;
 
-      listRef.current.scrollToRow({
+      const list = listRef.current;
+      // react-window exposes its imperative handle before the scroller element
+      // is attached; `scrollToRow` then silently no-ops. Consuming the token
+      // here lost deep-linked selections on first load, so wait for readiness.
+      if (!list?.element) {
+        if (retryTokenRef.current !== focusRequest.token) {
+          retryTokenRef.current = focusRequest.token;
+          retryCountRef.current = 0;
+        }
+        if (retryCountRef.current >= MAX_FOCUS_SCROLL_RETRIES) {
+          // The list never became scrollable; stop retrying rather than spin.
+          handledTokenRef.current = focusRequest.token;
+          return;
+        }
+        retryCountRef.current += 1;
+        const frame = requestAnimationFrame(() =>
+          setListReadyTick((tick) => tick + 1),
+        );
+        return () => cancelAnimationFrame(frame);
+      }
+
+      list.scrollToRow({
         index,
         align: "start",
         behavior: "auto",
@@ -173,7 +201,14 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
 
     target.scrollIntoView({ block: "start", behavior: "auto" });
     handledTokenRef.current = focusRequest.token;
-  }, [focusRequest, files, flattenedRows, listRef, shouldVirtualize]);
+  }, [
+    focusRequest,
+    files,
+    flattenedRows,
+    listRef,
+    shouldVirtualize,
+    listReadyTick,
+  ]);
 
   // Clear handled-token tracking when the request is cancelled (commit change).
   useEffect(() => {

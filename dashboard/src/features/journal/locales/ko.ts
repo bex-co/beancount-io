@@ -380,6 +380,21 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "자동",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "생성된 항목",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "이 항목은 Beancount가 pad 지시문에서 생성했으므로 보거나 편집하거나 삭제할 소스 줄이 없습니다.",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "내역",
+    description: "Label for narration field",
+  },
 };
 
 export default koJournal;

@@ -347,6 +347,15 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "توکن بازنشانی رمز عبور منقضی یا نامعتبر است",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "بررسی پیوند بازنشانی ممکن نشد",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "برای بررسی پیوند بازنشانی گذرواژه نتوانستیم به سرور دسترسی پیدا کنیم. ممکن است پیوند شما هنوز معتبر باشد — لطفاً دوباره تلاش کنید.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "این توکن بازنشانی رمز عبور منقضی شده است. لطفاً یک توکن جدید درخواست کنید.",

@@ -385,6 +385,21 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "авто",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "Генериран запис",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "Beancount генерира този запис от директива pad, затова той няма изходен ред за преглед, редактиране или изтриване.",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "Описание",
+    description: "Label for narration field",
+  },
 };
 
 export default bgJournal;

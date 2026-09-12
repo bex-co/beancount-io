@@ -346,6 +346,15 @@ const skAuth: Record<string, TranslationEntry> = {
     message: "Token na resetovanie hesla vypršal alebo je neplatný",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "Odkaz na obnovenie sa nepodarilo overiť",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "Nepodarilo sa nám spojiť so serverom a overiť váš odkaz na obnovenie hesla. Odkaz môže byť stále platný – skúste to znova.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "Tento token na resetovanie hesla vypršal. Prosím požiadajte o nový.",

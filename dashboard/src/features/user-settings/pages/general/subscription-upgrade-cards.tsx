@@ -5,6 +5,7 @@ import { track } from "@/common/analytics";
 import { type TierInfo } from "@/common/lib/subscription/tier-config";
 import { type TierQuota } from "@/common/hooks/use-all-tier-quotas";
 import { type SubscriptionTier } from "./stripe-config";
+import { useQuotaNumberFormat } from "./use-quota-number-format";
 
 export function UpgradeTierCards({
   upgradeTiers,
@@ -25,6 +26,9 @@ export function UpgradeTierCards({
   onUpgradeCheckout: (tier: SubscriptionTier) => void;
   onUpgradeExisting: (tier: SubscriptionTier) => void;
 }) {
+  // App-locale counts; `toLocaleString()` would follow the browser locale.
+  const formatCount = useQuotaNumberFormat();
+
   if (upgradeTiers.length === 0) return null;
 
   return (
@@ -79,28 +83,28 @@ export function UpgradeTierCards({
               <ul className="space-y-1 mb-4 flex-1">
                 <li className="text-xs text-muted-foreground">
                   {t("userSettings.aiTokensPerMonth", {
-                    count: tokens.toLocaleString(),
+                    count: formatCount(tokens),
                   })}
                 </li>
                 <li className="text-xs text-muted-foreground">
                   {maxLedgers === -1
                     ? t("userSettings.unlimitedLedgers")
                     : t("userSettings.includedLedgers", {
-                        count: String(maxLedgers),
+                        count: formatCount(maxLedgers),
                       })}
                 </li>
                 <li className="text-xs text-muted-foreground">
                   {maxDirectives === -1
                     ? t("userSettings.unlimitedDirectives")
                     : t("userSettings.includedDirectives", {
-                        count: maxDirectives.toLocaleString(),
+                        count: formatCount(maxDirectives),
                       })}
                 </li>
                 <li className="text-xs text-muted-foreground">
                   {maxCollaborators === -1
                     ? t("userSettings.unlimitedCollaborators")
                     : t("userSettings.collaboratorsPerLedger", {
-                        count: String(maxCollaborators),
+                        count: formatCount(maxCollaborators),
                       })}
                 </li>
               </ul>

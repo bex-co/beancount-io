@@ -10,6 +10,10 @@ const enDirectoryBrowse: Record<
     message: "Download ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipFailed": {
+    message: "Could not prepare the download. Please try again.",
+    description: "Error shown when preparing the ZIP download fails",
+  },
   "ledgerEditor.manageSshKeys": {
     message: "Manage SSH Keys",
     description: "Menu item for SSH key management",

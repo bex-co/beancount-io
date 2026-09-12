@@ -53,6 +53,26 @@ describe("statement print stylesheet delivery", () => {
     expect(printStyles).not.toContain("body > *:not(.statement-print-root)");
   });
 
+  it("resets the print canvas so dark mode cannot print black page margins", () => {
+    // jsdom does not evaluate `@media print` or `:has()` for computed style, so
+    // this asserts the stylesheet contract; a real dark-mode print/PDF render is
+    // the only end-to-end check.
+    const printBlock = printStyles.slice(printStyles.indexOf("@media print"));
+    const canvasRule = printBlock.match(
+      /html:has\(body > \.statement-print-root\),\s*body:has\(> \.statement-print-root\)\s*\{(?<declarations>[^}]*)\}/,
+    )?.groups?.declarations;
+
+    expect(canvasRule).toBeDefined();
+    // `.dark` sets `color-scheme: dark` plus a dark `--background` on html/body,
+    // and `body { @apply bg-background }` applies it unconditionally.
+    expect(canvasRule).toMatch(/background:\s*#fff\s*!important/);
+    expect(canvasRule).toMatch(/color-scheme:\s*light/);
+
+    // Scoped to the statement portal: other routes keep the app's own canvas.
+    expect(printStyles).not.toMatch(/@media print[\s\S]*\n\s*html\s*\{/);
+    expect(printStyles).not.toMatch(/@media print[\s\S]*\n\s*body\s*\{/);
+  });
+
   it("keeps ordinary pages printable when no statement portal is present", () => {
     document.body.innerHTML = "";
     const style = document.createElement("style");

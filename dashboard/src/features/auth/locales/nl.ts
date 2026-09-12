@@ -348,6 +348,15 @@ const nlAuth: Record<string, TranslationEntry> = {
     message: "De wachtwoord reset token is verlopen of ongeldig",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "Kan je herstellink niet controleren",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "We konden de server niet bereiken om je link voor het opnieuw instellen van je wachtwoord te verifiëren. De link is mogelijk nog geldig — probeer het opnieuw.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message: "Deze wachtwoord reset token is verlopen. Vraag een nieuwe aan.",
     description: "Alert message for expired token",

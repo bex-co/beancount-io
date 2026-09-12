@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { SubscriptionSection } from "../subscription-section";
+import { CurrentPlanBanner } from "../subscription-plan-banner";
+import { en } from "@/i18n/locales";
 import {
   MOCK_TIER_QUOTAS,
   mockActiveSubscriptionData,
@@ -21,7 +23,9 @@ const {
   mockUseUserLimits,
   mockUseAiCfoUsage,
   mockUseAllTierQuotas,
+  mockLanguage,
 } = vi.hoisted(() => ({
+  mockLanguage: { current: "en" },
   mockUseQuery: vi.fn(),
   mockCancelSubscription: vi.fn(),
   mockResumeSubscription: vi.fn(),
@@ -170,6 +174,8 @@ vi.mock("@/common/hooks/use-translations", () => ({
       }
       return key;
     },
+    // The app-locale number formatter reads `i18n.language`.
+    i18n: { language: mockLanguage.current },
   }),
 }));
 vi.mock("../stripe-config", () => ({
@@ -235,8 +241,28 @@ function setUserLimits(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockLanguage.current = "en";
   setUserLimits();
 });
+
+/** Real English messages, so the rendered summary is asserted, not a key. */
+const translate = (key: string, params?: Record<string, string>): string => {
+  const entry = (en as Record<string, unknown>)[key];
+  let text = key;
+  if (typeof entry === "string") {
+    text = entry;
+  } else if (
+    typeof entry === "object" &&
+    entry !== null &&
+    "message" in entry
+  ) {
+    text = String((entry as { message: string }).message);
+  }
+  for (const [k, v] of Object.entries(params ?? {})) {
+    text = text.replace(new RegExp(`\\{${k}\\}`, "g"), v);
+  }
+  return text;
+};
 
 describe("Current Plan Banner", () => {
   it("should show current tier name for free user", () => {
@@ -461,5 +487,108 @@ describe("Current Plan Banner - Detailed", () => {
     // Canceled subscription: renewalDate should be null (cancelAt is set)
     // The billing section will have accessUntil, but banner should not have renewsOn
     expect(screen.getByText("aiAgent.premiumTier")).toBeInTheDocument();
+  });
+});
+
+describe("CurrentPlanBanner quota summary localization", () => {
+  const renderBanner = (
+    tierQuota: {
+      tier: string;
+      aiCfoTokensMax: number;
+      maxLedgers: number;
+      maxCollaboratorsPerLedger: number;
+      maxDirectives: number;
+    } | null,
+  ) =>
+    render(
+      <CurrentPlanBanner
+        tier="PREMIUM"
+        renewalDate={null}
+        tierQuota={tierQuota}
+        t={translate}
+      />,
+    );
+
+  const quota = {
+    tier: "PREMIUM",
+    aiCfoTokensMax: 500_000,
+    maxLedgers: 5,
+    maxCollaboratorsPerLedger: 5,
+    maxDirectives: 20_000,
+  };
+
+  it("renders finite quotas through the translated keys", () => {
+    renderBanner(quota);
+
+    expect(screen.getByTestId("feature-summary")).toHaveTextContent(
+      "500,000 AI tokens / month · 5 ledger(s) · 20,000 directives · Up to 5 collaborator(s) per ledger",
+    );
+  });
+
+  it("uses the singular-capable ledger and collaborator copy for a count of one", () => {
+    renderBanner({
+      ...quota,
+      aiCfoTokensMax: 50_000,
+      maxLedgers: 1,
+      maxCollaboratorsPerLedger: 1,
+      maxDirectives: 1000,
+    });
+
+    const summary = screen.getByTestId("feature-summary");
+    expect(summary).toHaveTextContent("1 ledger(s)");
+    expect(summary).toHaveTextContent("Up to 1 collaborator(s) per ledger");
+    // No hardcoded English pluralization left behind.
+    expect(summary.textContent).not.toContain("collaborators/ledger");
+  });
+
+  it("keeps the unlimited branches for -1 quotas", () => {
+    renderBanner({
+      ...quota,
+      maxDirectives: -1,
+      maxLedgers: -1,
+      maxCollaboratorsPerLedger: -1,
+    });
+
+    const summary = screen.getByTestId("feature-summary");
+    expect(summary).toHaveTextContent("Unlimited directives");
+    expect(summary).toHaveTextContent("Unlimited ledgers");
+    expect(summary).toHaveTextContent("Unlimited collaborators");
+  });
+
+  it("formats counts in the app language, not the browser locale", () => {
+    mockLanguage.current = "de";
+    renderBanner(quota);
+
+    const summary = screen.getByTestId("feature-summary");
+    expect(summary).toHaveTextContent("500.000 AI tokens / month");
+    expect(summary).toHaveTextContent("20.000 directives");
+  });
+
+  it("falls back to the enterprise unlimited label when the quota is missing", () => {
+    render(
+      <CurrentPlanBanner
+        tier="ENTERPRISE"
+        renewalDate={null}
+        tierQuota={null}
+        t={translate}
+      />,
+    );
+
+    expect(screen.getByTestId("feature-summary")).toHaveTextContent(
+      "Unlimited",
+    );
+  });
+
+  it("renders no summary when a non-enterprise tier has no quota", () => {
+    render(
+      <CurrentPlanBanner
+        tier="PREMIUM"
+        renewalDate={null}
+        tierQuota={null}
+        t={translate}
+      />,
+    );
+
+    expect(screen.queryByTestId("feature-summary")).toBeNull();
   });
 });

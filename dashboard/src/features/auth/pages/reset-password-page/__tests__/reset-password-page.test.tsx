@@ -340,16 +340,44 @@ describe("ResetPasswordPage", () => {
       expect(screen.getByText("Token Expired")).toBeInTheDocument();
     });
 
-    it("should show error when validation query fails", () => {
+    it("should not blame the token when validation itself fails", () => {
       mockUseQuery.mockReturnValue({
         data: null,
         loading: false,
         error: new Error("Validation failed"),
+        refetch: vi.fn(),
+      });
+
+      render(<ResetPasswordPage />);
+
+      // A transport failure is not evidence that the link expired.
+      expect(screen.queryByText("Token Expired")).not.toBeInTheDocument();
+      expect(
+        screen.getByText("Couldn't check your reset link"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Try Again" }),
+      ).toBeInTheDocument();
+      // The escape hatch stays available.
+      expect(
+        screen.getByRole("link", { name: "Back to Sign in" }),
+      ).toBeInTheDocument();
+    });
+
+    it("still reports an expired token when validation says it is invalid", () => {
+      mockUseQuery.mockReturnValue({
+        data: { validateEmailToken: { isValid: false } },
+        loading: false,
+        error: null,
+        refetch: vi.fn(),
       });
 
       render(<ResetPasswordPage />);
 
       expect(screen.getByText("Token Expired")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Try Again" }),
+      ).not.toBeInTheDocument();
     });
 
     it("should show back to sign in link on error page", () => {
@@ -360,6 +388,108 @@ describe("ResetPasswordPage", () => {
       expect(
         screen.getByRole("link", { name: "Back to Sign in" }),
       ).toBeInTheDocument();
+    });
+  });
+  describe("when token validation is unavailable", () => {
+    const serviceUnavailable = () => {
+      const error = new Error("503 Service Unavailable");
+      return {
+        data: null,
+        loading: false,
+        error,
+      };
+    };
+
+    it("recovers into the reset form when the retry succeeds", async () => {
+      const user = userEvent.setup();
+      const refetch = vi.fn(() => {
+        mockUseQuery.mockReturnValue({
+          data: { validateEmailToken: { isValid: true } },
+          loading: false,
+          error: null,
+          refetch,
+        });
+        return Promise.resolve({
+          data: { validateEmailToken: { isValid: true } },
+        });
+      });
+      mockUseQuery.mockReturnValue({ ...serviceUnavailable(), refetch });
+
+      render(<ResetPasswordPage />);
+      expect(
+        screen.getByText("Couldn't check your reset link"),
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Try Again" }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Reset your password")).toBeInTheDocument();
+      });
+      expect(refetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("shows the expired-token card when the retry proves the token invalid", async () => {
+      const user = userEvent.setup();
+      const refetch = vi.fn(() => {
+        mockUseQuery.mockReturnValue({
+          data: { validateEmailToken: { isValid: false } },
+          loading: false,
+          error: null,
+          refetch,
+        });
+        return Promise.resolve({
+          data: { validateEmailToken: { isValid: false } },
+        });
+      });
+      mockUseQuery.mockReturnValue({ ...serviceUnavailable(), refetch });
+
+      render(<ResetPasswordPage />);
+      await user.click(screen.getByRole("button", { name: "Try Again" }));
+
+      await waitFor(() => {
+        expect(screen.getByText("Token Expired")).toBeInTheDocument();
+      });
+    });
+
+    it("keeps the unavailable card and stays retryable when the retry fails again", async () => {
+      const user = userEvent.setup();
+      const refetch = vi.fn(() => Promise.reject(new Error("still down")));
+      mockUseQuery.mockReturnValue({ ...serviceUnavailable(), refetch });
+
+      render(<ResetPasswordPage />);
+      const retryButton = screen.getByRole("button", { name: "Try Again" });
+      await user.click(retryButton);
+
+      await waitFor(() => {
+        expect(retryButton).not.toBeDisabled();
+      });
+      expect(
+        screen.getByText("Couldn't check your reset link"),
+      ).toBeInTheDocument();
+      expect(refetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("ignores double clicks while a retry is in flight", async () => {
+      const user = userEvent.setup();
+      let resolveRefetch: (value: unknown) => void = () => {};
+      const refetch = vi.fn(
+        () =>
+          new Promise((resolve) => {
+            resolveRefetch = resolve;
+          }),
+      );
+      mockUseQuery.mockReturnValue({ ...serviceUnavailable(), refetch });
+
+      render(<ResetPasswordPage />);
+      const retryButton = screen.getByRole("button", { name: "Try Again" });
+      await user.click(retryButton);
+      await waitFor(() => expect(retryButton).toBeDisabled());
+      await user.click(retryButton);
+
+      expect(refetch).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        resolveRefetch({ data: { validateEmailToken: { isValid: true } } });
+      });
     });
   });
 });

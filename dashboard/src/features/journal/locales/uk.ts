@@ -385,6 +385,21 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "авто",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "Згенерований запис",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "Beancount створив цей запис із директиви pad, тому він не має вихідного рядка для перегляду, редагування чи видалення.",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "Опис",
+    description: "Label for narration field",
+  },
 };
 
 export default ukJournal;

@@ -349,6 +349,15 @@ const ruAuth: Record<string, TranslationEntry> = {
       "Срок действия токена сброса пароля истёк или токен недействителен",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "Не удалось проверить ссылку для сброса",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "Не удалось связаться с сервером, чтобы проверить ссылку для сброса пароля. Возможно, ссылка ещё действительна — попробуйте снова.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "Срок действия этого токена сброса пароля истёк. Пожалуйста, запросите новый.",

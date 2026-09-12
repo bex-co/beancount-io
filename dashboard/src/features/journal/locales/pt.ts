@@ -385,6 +385,21 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "automático",
     description: "Label for an automatically balanced amount",
   },
+  "journal.generatedEntryTitle": {
+    message: "Lançamento gerado",
+    description:
+      "Heading for the read-only panel shown for a generated (padding) entry",
+  },
+  "journal.generatedEntryExplanation": {
+    message:
+      "O Beancount gerou este lançamento a partir de uma diretiva pad, por isso não há linha de origem para ver, editar ou excluir.",
+    description:
+      "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.narration": {
+    message: "Descrição",
+    description: "Label for narration field",
+  },
 };
 
 export default ptJournal;

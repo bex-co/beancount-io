@@ -353,6 +353,15 @@ const esAuth: Record<string, TranslationEntry> = {
       "El token de restablecimiento de contraseña está expirado o no es válido",
     description: "Description when token is expired",
   },
+  "auth.tokenValidationUnavailable": {
+    message: "No se pudo comprobar tu enlace de restablecimiento",
+    description: "Title when the reset-token validation request itself fails",
+  },
+  "auth.tokenValidationUnavailableDescription": {
+    message:
+      "No pudimos contactar con el servidor para verificar tu enlace de restablecimiento de contraseña. Puede que siga siendo válido: inténtalo de nuevo.",
+    description: "Explanation shown when reset-token validation is unavailable",
+  },
   "auth.tokenExpiredMessage": {
     message:
       "Este token de restablecimiento de contraseña está expirado. Por favor solicite uno nuevo.",
