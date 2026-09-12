@@ -107,9 +107,10 @@ def sync_detailed(
     client: AuthenticatedClient,
     narration: str,
 ) -> Response[Any | V1Error]:
-    """Get a narration's transactions
+    """Get a narration's most recent transaction
 
-     The transaction recorded against one narration string.
+     The single most recent transaction recorded against this narration string, or null if there is none.
+    Fava's autocomplete lookup, like payee-transactions.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -144,9 +145,10 @@ def sync(
     client: AuthenticatedClient,
     narration: str,
 ) -> Any | V1Error | None:
-    """Get a narration's transactions
+    """Get a narration's most recent transaction
 
-     The transaction recorded against one narration string.
+     The single most recent transaction recorded against this narration string, or null if there is none.
+    Fava's autocomplete lookup, like payee-transactions.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -176,9 +178,10 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     narration: str,
 ) -> Response[Any | V1Error]:
-    """Get a narration's transactions
+    """Get a narration's most recent transaction
 
-     The transaction recorded against one narration string.
+     The single most recent transaction recorded against this narration string, or null if there is none.
+    Fava's autocomplete lookup, like payee-transactions.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -211,9 +214,10 @@ async def asyncio(
     client: AuthenticatedClient,
     narration: str,
 ) -> Any | V1Error | None:
-    """Get a narration's transactions
+    """Get a narration's most recent transaction
 
-     The transaction recorded against one narration string.
+     The single most recent transaction recorded against this narration string, or null if there is none.
+    Fava's autocomplete lookup, like payee-transactions.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

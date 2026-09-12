@@ -153,11 +153,15 @@ def sync_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset):
         filter_ (str | Unset):
-        time (str | Unset):
+        time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
+            range. It bounds transactions only — undated structural directives such as `open` and
+            `close` carry the epoch date and appear in every window, so a single-day journal still
+            lists them. Use directiveTypes to ask for transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
-        directive_types (str | Unset): JSON-encoded string array, including [] for an empty filter
-            list
+        directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
+            ["Transaction"]. Omitted, every kind is returned — including the epoch-dated
+            `open`/`close` directives that fall inside any time window.
         transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
             filter list
         document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
@@ -218,11 +222,15 @@ def sync(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset):
         filter_ (str | Unset):
-        time (str | Unset):
+        time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
+            range. It bounds transactions only — undated structural directives such as `open` and
+            `close` carry the epoch date and appear in every window, so a single-day journal still
+            lists them. Use directiveTypes to ask for transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
-        directive_types (str | Unset): JSON-encoded string array, including [] for an empty filter
-            list
+        directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
+            ["Transaction"]. Omitted, every kind is returned — including the epoch-dated
+            `open`/`close` directives that fall inside any time window.
         transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
             filter list
         document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
@@ -278,11 +286,15 @@ async def asyncio_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset):
         filter_ (str | Unset):
-        time (str | Unset):
+        time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
+            range. It bounds transactions only — undated structural directives such as `open` and
+            `close` carry the epoch date and appear in every window, so a single-day journal still
+            lists them. Use directiveTypes to ask for transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
-        directive_types (str | Unset): JSON-encoded string array, including [] for an empty filter
-            list
+        directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
+            ["Transaction"]. Omitted, every kind is returned — including the epoch-dated
+            `open`/`close` directives that fall inside any time window.
         transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
             filter list
         document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
@@ -341,11 +353,15 @@ async def asyncio(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset):
         filter_ (str | Unset):
-        time (str | Unset):
+        time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
+            range. It bounds transactions only — undated structural directives such as `open` and
+            `close` carry the epoch date and appear in every window, so a single-day journal still
+            lists them. Use directiveTypes to ask for transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
-        directive_types (str | Unset): JSON-encoded string array, including [] for an empty filter
-            list
+        directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
+            ["Transaction"]. Omitted, every kind is returned — including the epoch-dated
+            `open`/`close` directives that fall inside any time window.
         transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
             filter list
         document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty

@@ -124,7 +124,10 @@ def sync_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset):
         filter_ (str | Unset):
-        time (str | Unset):
+        time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
+            range. It bounds transactions only — undated structural directives such as `open` and
+            `close` carry the epoch date and appear in every window, so a single-day journal still
+            lists them. Use directiveTypes to ask for transactions alone.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -167,7 +170,10 @@ def sync(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset):
         filter_ (str | Unset):
-        time (str | Unset):
+        time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
+            range. It bounds transactions only — undated structural directives such as `open` and
+            `close` carry the epoch date and appear in every window, so a single-day journal still
+            lists them. Use directiveTypes to ask for transactions alone.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -205,7 +211,10 @@ async def asyncio_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset):
         filter_ (str | Unset):
-        time (str | Unset):
+        time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
+            range. It bounds transactions only — undated structural directives such as `open` and
+            `close` carry the epoch date and appear in every window, so a single-day journal still
+            lists them. Use directiveTypes to ask for transactions alone.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -246,7 +255,10 @@ async def asyncio(
         name (str): Ledger (repository) name Example: main-ledger.
         account (str | Unset):
         filter_ (str | Unset):
-        time (str | Unset):
+        time (str | Unset): Fava time expression: a day (2026-09-05), month (2026-09), year, or
+            range. It bounds transactions only — undated structural directives such as `open` and
+            `close` carry the epoch date and appear in every window, so a single-day journal still
+            lists them. Use directiveTypes to ask for transactions alone.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

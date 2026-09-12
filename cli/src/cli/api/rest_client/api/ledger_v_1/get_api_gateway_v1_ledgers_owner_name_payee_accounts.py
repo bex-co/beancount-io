@@ -107,10 +107,12 @@ def sync_detailed(
     client: AuthenticatedClient,
     payee: str,
 ) -> Response[Any | V1Error]:
-    """List the accounts a payee posts to
+    """Rank every account by this payee's history
 
-     Which accounts this payee has historically been booked against — what an agent should reach for when
-    categorising a new one.
+     Every account in the ledger, re-sorted by how recently and often this payee was booked against it
+    (exponential decay). Accounts the payee never touched are still present, at the back — the leading
+    entries are the suggestion, not the whole list. Reach for the first few when categorising a new
+    transaction for this payee.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -145,10 +147,12 @@ def sync(
     client: AuthenticatedClient,
     payee: str,
 ) -> Any | V1Error | None:
-    """List the accounts a payee posts to
+    """Rank every account by this payee's history
 
-     Which accounts this payee has historically been booked against — what an agent should reach for when
-    categorising a new one.
+     Every account in the ledger, re-sorted by how recently and often this payee was booked against it
+    (exponential decay). Accounts the payee never touched are still present, at the back — the leading
+    entries are the suggestion, not the whole list. Reach for the first few when categorising a new
+    transaction for this payee.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -178,10 +182,12 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     payee: str,
 ) -> Response[Any | V1Error]:
-    """List the accounts a payee posts to
+    """Rank every account by this payee's history
 
-     Which accounts this payee has historically been booked against — what an agent should reach for when
-    categorising a new one.
+     Every account in the ledger, re-sorted by how recently and often this payee was booked against it
+    (exponential decay). Accounts the payee never touched are still present, at the back — the leading
+    entries are the suggestion, not the whole list. Reach for the first few when categorising a new
+    transaction for this payee.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -214,10 +220,12 @@ async def asyncio(
     client: AuthenticatedClient,
     payee: str,
 ) -> Any | V1Error | None:
-    """List the accounts a payee posts to
+    """Rank every account by this payee's history
 
-     Which accounts this payee has historically been booked against — what an agent should reach for when
-    categorising a new one.
+     Every account in the ledger, re-sorted by how recently and often this payee was booked against it
+    (exponential decay). Accounts the payee never touched are still present, at the back — the leading
+    entries are the suggestion, not the whole list. Reach for the first few when categorising a new
+    transaction for this payee.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

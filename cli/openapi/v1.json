@@ -7785,9 +7785,11 @@
           },
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone."
             },
             "required": false,
+            "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone.",
             "name": "time",
             "in": "query"
           },
@@ -7814,10 +7816,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "JSON-encoded string array, including [] for an empty filter list"
+              "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]. Omitted, every kind is returned — including the epoch-dated `open`/`close` directives that fall inside any time window."
             },
             "required": false,
-            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]. Omitted, every kind is returned — including the epoch-dated `open`/`close` directives that fall inside any time window.",
             "name": "directiveTypes",
             "in": "query"
           },
@@ -8014,9 +8016,11 @@
           },
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone."
             },
             "required": false,
+            "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone.",
             "name": "time",
             "in": "query"
           }
@@ -8183,9 +8187,11 @@
           },
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone."
             },
             "required": false,
+            "description": "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. It bounds transactions only — undated structural directives such as `open` and `close` carry the epoch date and appear in every window, so a single-day journal still lists them. Use directiveTypes to ask for transactions alone.",
             "name": "time",
             "in": "query"
           },
@@ -8232,10 +8238,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "JSON-encoded string array, including [] for an empty filter list"
+              "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]. Omitted, every kind is returned — including the epoch-dated `open`/`close` directives that fall inside any time window."
             },
             "required": false,
-            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]. Omitted, every kind is returned — including the epoch-dated `open`/`close` directives that fall inside any time window.",
             "name": "directiveTypes",
             "in": "query"
           },
@@ -13968,8 +13974,8 @@
     },
     "/api-gateway/v1/ledgers/{owner}/{name}/payee-transactions": {
       "get": {
-        "summary": "Get a payee's transactions",
-        "description": "The transaction recorded against one payee.",
+        "summary": "Get a payee's most recent transaction",
+        "description": "The single most recent transaction recorded against this payee, or null if there is none. This is Fava's autocomplete lookup — a template for the next entry, not a history. For every transaction by a payee, query the journal or BQL instead.",
         "tags": [
           "Ledger v1"
         ],
@@ -14019,7 +14025,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Get a payee's transactions",
+            "description": "Get a payee's most recent transaction",
             "content": {
               "application/json": {
                 "schema": {
@@ -14123,8 +14129,8 @@
     },
     "/api-gateway/v1/ledgers/{owner}/{name}/narration-transactions": {
       "get": {
-        "summary": "Get a narration's transactions",
-        "description": "The transaction recorded against one narration string.",
+        "summary": "Get a narration's most recent transaction",
+        "description": "The single most recent transaction recorded against this narration string, or null if there is none. Fava's autocomplete lookup, like payee-transactions.",
         "tags": [
           "Ledger v1"
         ],
@@ -14174,7 +14180,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Get a narration's transactions",
+            "description": "Get a narration's most recent transaction",
             "content": {
               "application/json": {
                 "schema": {
@@ -14278,8 +14284,8 @@
     },
     "/api-gateway/v1/ledgers/{owner}/{name}/payee-accounts": {
       "get": {
-        "summary": "List the accounts a payee posts to",
-        "description": "Which accounts this payee has historically been booked against — what an agent should reach for when categorising a new one.",
+        "summary": "Rank every account by this payee's history",
+        "description": "Every account in the ledger, re-sorted by how recently and often this payee was booked against it (exponential decay). Accounts the payee never touched are still present, at the back — the leading entries are the suggestion, not the whole list. Reach for the first few when categorising a new transaction for this payee.",
         "tags": [
           "Ledger v1"
         ],
@@ -14329,7 +14335,7 @@
         ],
         "responses": {
           "200": {
-            "description": "List the accounts a payee posts to",
+            "description": "Rank every account by this payee's history",
             "content": {
               "application/json": {
                 "schema": {

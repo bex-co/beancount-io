@@ -107,9 +107,11 @@ def sync_detailed(
     client: AuthenticatedClient,
     payee: str,
 ) -> Response[Any | V1Error]:
-    """Get a payee's transactions
+    """Get a payee's most recent transaction
 
-     The transaction recorded against one payee.
+     The single most recent transaction recorded against this payee, or null if there is none. This is
+    Fava's autocomplete lookup — a template for the next entry, not a history. For every transaction by
+    a payee, query the journal or BQL instead.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -144,9 +146,11 @@ def sync(
     client: AuthenticatedClient,
     payee: str,
 ) -> Any | V1Error | None:
-    """Get a payee's transactions
+    """Get a payee's most recent transaction
 
-     The transaction recorded against one payee.
+     The single most recent transaction recorded against this payee, or null if there is none. This is
+    Fava's autocomplete lookup — a template for the next entry, not a history. For every transaction by
+    a payee, query the journal or BQL instead.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -176,9 +180,11 @@ async def asyncio_detailed(
     client: AuthenticatedClient,
     payee: str,
 ) -> Response[Any | V1Error]:
-    """Get a payee's transactions
+    """Get a payee's most recent transaction
 
-     The transaction recorded against one payee.
+     The single most recent transaction recorded against this payee, or null if there is none. This is
+    Fava's autocomplete lookup — a template for the next entry, not a history. For every transaction by
+    a payee, query the journal or BQL instead.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -211,9 +217,11 @@ async def asyncio(
     client: AuthenticatedClient,
     payee: str,
 ) -> Any | V1Error | None:
-    """Get a payee's transactions
+    """Get a payee's most recent transaction
 
-     The transaction recorded against one payee.
+     The single most recent transaction recorded against this payee, or null if there is none. This is
+    Fava's autocomplete lookup — a template for the next entry, not a history. For every transaction by
+    a payee, query the journal or BQL instead.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
