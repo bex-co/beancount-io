@@ -43,9 +43,11 @@ import { AccountPrefixNavigation } from "./account-prefix-navigation";
 import { getClickableRowProps } from "@/common/components/clickable-row";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import {
+  ACCOUNT_TYPE_ALL,
   OPEN_ACCOUNT_ACTION,
   OPEN_ACCOUNT_ACTION_SEARCH,
 } from "@/common/lib/ledger-action-search";
+import { normalizeListSearchText } from "@/common/lib/list-search-params";
 
 function getAccountType(account: string, accountTypes: string[]): string {
   return (
@@ -283,8 +285,36 @@ export default function LedgerAccountsPage() {
     });
   };
 
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
+  // Search and type live in the URL so a drill-down plus browser Back (or a
+  // shared link, or a reload) rebuilds the same filtered list. Edits replace
+  // the entry, matching the shared ledger-filter convention, so typing does
+  // not bury the previous page under one history entry per keystroke.
+  //
+  // The values are re-coerced here because the router still surfaces raw URL
+  // values the route schema omitted (an array `?search=["x"]` arrives as an
+  // array), and the root names come from per-ledger options the schema cannot
+  // see: an unknown type means "all".
+  const search = normalizeListSearchText(actionSearch.search) ?? "";
+  const requestedType =
+    normalizeListSearchText(actionSearch.type) ?? ACCOUNT_TYPE_ALL;
+  const typeFilter = accountTypes.includes(requestedType)
+    ? requestedType
+    : ACCOUNT_TYPE_ALL;
+
+  const setListSearch = (next: { search?: string; type?: string }): void => {
+    void navigate({
+      to: ".",
+      search: (previous) => ({ ...previous, ...next }),
+      replace: true,
+    });
+  };
+
+  const setSearch = (value: string) =>
+    setListSearch({ search: value === "" ? undefined : value });
+
+  const setTypeFilter = (value: string) =>
+    setListSearch({ type: value === ACCOUNT_TYPE_ALL ? undefined : value });
+
   const [deleteTarget, setDeleteTarget] = useState<AccountDirective | null>(
     null,
   );
@@ -330,17 +360,16 @@ export default function LedgerAccountsPage() {
         .toLowerCase()
         .includes(search.toLowerCase());
       const matchesType =
-        typeFilter === "all" ||
+        typeFilter === ACCOUNT_TYPE_ALL ||
         getAccountType(a.account, accountTypes) === typeFilter;
       return matchesSearch && matchesType;
     });
   }, [accountTypes, accounts, search, typeFilter]);
 
-  const hasActiveFilters = search.length > 0 || typeFilter !== "all";
+  const hasActiveFilters = search.length > 0 || typeFilter !== ACCOUNT_TYPE_ALL;
 
   const clearFilters = () => {
-    setSearch("");
-    setTypeFilter("all");
+    setListSearch({ search: undefined, type: undefined });
   };
 
   return (
@@ -401,7 +430,7 @@ export default function LedgerAccountsPage() {
               role="group"
               aria-label={t("page.accounts.type")}
             >
-              {["all", ...accountTypes].map((accountType) => {
+              {[ACCOUNT_TYPE_ALL, ...accountTypes].map((accountType) => {
                 const isActive = typeFilter === accountType;
                 return (
                   <Button
@@ -418,7 +447,7 @@ export default function LedgerAccountsPage() {
                     aria-pressed={isActive}
                     onClick={() => setTypeFilter(accountType)}
                   >
-                    {accountType === "all"
+                    {accountType === ACCOUNT_TYPE_ALL
                       ? t("page.accounts.allTypes")
                       : accountType}
                   </Button>

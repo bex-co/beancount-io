@@ -20,7 +20,13 @@ import {
 import { Button } from "@/common/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useState,
+  useMemo,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { useLocalStorageState } from "@/common/hooks/use-local-storage-state";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { NewDirectiveDialog } from "@/features/journal/components/new-directive-dialog";
@@ -41,10 +47,12 @@ import { useLedger } from "@/common/hooks/use-ledger";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import {
+  JOURNAL_MAX_OFFSET,
   NEW_ENTRY_ACTION,
   NEW_TRANSACTION_ACTION_SEARCH,
   type JournalDirectiveAction,
 } from "@/common/lib/ledger-action-search";
+import { normalizeListSearchOffset } from "@/common/lib/list-search-params";
 
 const DEFAULT_DIRECTIVE_TYPES: DirectiveType[] = [DirectiveType.TRANSACTION];
 const DEFAULT_STRING_FILTER: string[] = [];
@@ -116,14 +124,44 @@ const JournalContent = () => {
     ],
   );
 
-  // Pagination: combine filterKey + offset so changing filters resets to page 0 atomically
-  const [pagination, setPagination] = useState({ filterKey: "", offset: 0 });
-  const offset = pagination.filterKey === filterKey ? pagination.offset : 0;
-  const setOffset: Dispatch<SetStateAction<number>> = (value) => {
-    const newOffset = typeof value === "function" ? value(offset) : value;
-    setPagination({ filterKey, offset: newOffset });
-  };
   const limit = 60;
+
+  // Pagination lives in the route's validated search params so a drill-down
+  // into an account (or a reload, or a shared link) plus browser Back returns
+  // to the page the user was reading. Page moves replace the history entry, as
+  // the shared ledger filters do, so Back leaves the journal rather than
+  // walking back through every page visited. The offset stays keyed to the
+  // filter identity: changing a filter still resets to the first page.
+  // Re-coerced here: the router still surfaces raw URL values the route schema
+  // omitted, so `?offset=-5` or `?offset=abc` must not reach the query.
+  const searchOffset =
+    normalizeListSearchOffset(actionSearch.offset, JOURNAL_MAX_OFFSET) ?? 0;
+  const [appliedFilterKey, setAppliedFilterKey] = useState(filterKey);
+  const offset = appliedFilterKey === filterKey ? searchOffset : 0;
+
+  const replaceOffset = (newOffset: number) => {
+    void navigate({
+      to: ".",
+      search: (previous) => ({
+        ...previous,
+        offset: newOffset > 0 ? newOffset : undefined,
+      }),
+      replace: true,
+    });
+  };
+
+  const setOffset: Dispatch<SetStateAction<number>> = (value) => {
+    replaceOffset(typeof value === "function" ? value(offset) : value);
+  };
+
+  useEffect(() => {
+    if (appliedFilterKey === filterKey) return;
+    setAppliedFilterKey(filterKey);
+    if (searchOffset !== 0) replaceOffset(0);
+    // replaceOffset is re-created per render; the guard above runs it once per
+    // filter change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedFilterKey, filterKey, searchOffset]);
 
   // State for entry context dialog
   const [isEntryContextDialogOpen, setIsEntryContextDialogOpen] =
@@ -181,6 +219,17 @@ const JournalContent = () => {
   const total = typeof rawTotal === "number" ? rawTotal : 0;
   const firstVisibleEntry = total === 0 ? 0 : Math.min(offset + 1, total);
   const lastVisibleEntry = Math.min(offset + journalTableData.length, total);
+
+  // A URL may ask for a page past the end (stale link, deleted entries). Once
+  // the real total is known, fall back to the last page instead of showing an
+  // empty journal.
+  useEffect(() => {
+    if (loading || total === 0 || offset === 0 || offset < total) return;
+    replaceOffset(Math.floor((total - 1) / limit) * limit);
+    // replaceOffset is re-created per render; the guard above makes this a
+    // one-shot correction.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, offset, total]);
 
   return (
     <>

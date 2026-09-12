@@ -1,12 +1,26 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { BookOpen, ChevronDown, Search, SearchX, X } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
 import { useTranslations } from "@/common/hooks/use-translations";
 import type { UserRepository } from "@/graphql/definitions";
 import { RepositoryListItem } from "./repository-list-item";
+import {
+  normalizeListSearchCount,
+  normalizeListSearchText,
+} from "@/common/lib/list-search-params";
+import {
+  DEFAULT_LEDGER_COLLECTION_SORT,
+  isLedgerCollectionSort,
+  LEDGER_COLLECTION_MAX_SHOW,
+  LEDGER_COLLECTION_PAGE_SIZE as PAGE_SIZE,
+  type LedgerCollectionSort,
+  type UserProfileSearch,
+} from "../lib/search";
 
-const PAGE_SIZE = 12;
+/** Delay before a keystroke reaches the URL, so typing adds no history churn. */
+const QUERY_URL_DEBOUNCE_MS = 250;
 
 export function LedgerCollection({
   username,
@@ -17,9 +31,60 @@ export function LedgerCollection({
 }) {
   const { t } = useTranslations();
   const searchInput = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState("updated");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // Search, ordering, and the revealed count live in the profile URL beside
+  // `tab`, so opening a ledger and pressing Back rebuilds this list. Writes
+  // replace the history entry and the query write is debounced, so neither
+  // typing nor "Show more" buries the profile in history.
+  const profileSearch = useSearch({ from: "/ledger/$username" });
+  const navigate = useNavigate({ from: "/ledger/$username" });
+  // Re-coerced here because the router still surfaces raw URL values the route
+  // schema omitted, so an array `?q=["x"]` or `?sort=sideways` can arrive.
+  const urlQuery = normalizeListSearchText(profileSearch.q) ?? "";
+  const sort: LedgerCollectionSort = isLedgerCollectionSort(profileSearch.sort)
+    ? profileSearch.sort
+    : DEFAULT_LEDGER_COLLECTION_SORT;
+  const requestedShow =
+    normalizeListSearchCount(profileSearch.show, {
+      step: PAGE_SIZE,
+      max: LEDGER_COLLECTION_MAX_SHOW,
+    }) ?? PAGE_SIZE;
+
+  const updateSearch = (next: Partial<UserProfileSearch>) => {
+    void navigate({
+      to: ".",
+      search: (previous) => ({ ...previous, ...next }),
+      replace: true,
+    });
+  };
+
+  // The input stays instantly responsive while the URL catches up. A URL value
+  // that no longer matches the draft came from outside (Back/Forward, a fresh
+  // link), so the draft follows it.
+  const [query, setQuery] = useState(urlQuery);
+  const lastUrlQuery = useRef(urlQuery);
+  if (lastUrlQuery.current !== urlQuery) {
+    lastUrlQuery.current = urlQuery;
+    if (query !== urlQuery) setQuery(urlQuery);
+  }
+
+  useEffect(() => {
+    if (query === urlQuery) return;
+    const timer = setTimeout(() => {
+      updateSearch({ q: query === "" ? undefined : query });
+    }, QUERY_URL_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+    // updateSearch is re-created per render; the query/URL pair drives this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, urlQuery]);
+
+  // Editing the query collapses the list back to one page right away — it must
+  // not wait for the debounced write, or a cleared search would keep showing a
+  // slice the user never asked for.
+  const editQuery = (value: string) => {
+    setQuery(value);
+    if (requestedShow > PAGE_SIZE) updateSearch({ show: undefined });
+  };
+
   const search = query.trim().toLocaleLowerCase();
   const filtered = repositories
     .filter((repo) =>
@@ -33,15 +98,16 @@ export function LedgerCollection({
         : (Date.parse(b.updatedAt) || 0) - (Date.parse(a.updatedAt) || 0) ||
           a.name.localeCompare(b.name),
     );
+  // A restored count is clamped against the live result count, so a shrunken
+  // collection (or a filtered one) never claims to show more than it has.
+  const visibleCount = Math.min(
+    requestedShow,
+    Math.max(filtered.length, PAGE_SIZE),
+  );
   const visible = filtered.slice(0, visibleCount);
 
-  const updateQuery = (value: string) => {
-    setQuery(value);
-    setVisibleCount(PAGE_SIZE);
-  };
-
   const clearSearch = () => {
-    updateQuery("");
+    editQuery("");
     searchInput.current?.focus();
   };
 
@@ -74,7 +140,7 @@ export function LedgerCollection({
               aria-label={t("userProfile.searchLedgers")}
               placeholder={t("userProfile.searchLedgers")}
               value={query}
-              onChange={(event) => updateQuery(event.target.value)}
+              onChange={(event) => editQuery(event.target.value)}
               className="h-11 bg-card ps-10 pe-11 shadow-none [&::-webkit-search-cancel-button]:appearance-none"
             />
             {query && (
@@ -94,8 +160,14 @@ export function LedgerCollection({
               aria-label={t("userProfile.sortLedgers")}
               value={sort}
               onChange={(event) => {
-                setSort(event.target.value);
-                setVisibleCount(PAGE_SIZE);
+                const nextSort = event.target.value as LedgerCollectionSort;
+                updateSearch({
+                  sort:
+                    nextSort === DEFAULT_LEDGER_COLLECTION_SORT
+                      ? undefined
+                      : nextSort,
+                  show: undefined,
+                });
               }}
               className="h-11 w-full cursor-pointer appearance-none rounded-md border bg-card ps-3 pe-9 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:w-auto"
             >
@@ -159,7 +231,7 @@ export function LedgerCollection({
           {visible.length < filtered.length && (
             <Button
               variant="outline"
-              onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+              onClick={() => updateSearch({ show: visibleCount + PAGE_SIZE })}
               className="h-11 px-6"
             >
               {t("userProfile.showMoreLedgers")}

@@ -19,6 +19,9 @@ vi.mock("@tanstack/react-router", () => ({
     </a>
   ),
   useNavigate: () => mockNavigate,
+  // The ledger collection reads its list state (q/sort/show) from the profile
+  // route's search params.
+  useSearch: () => ({}),
 }));
 
 // Mock hook results
@@ -384,12 +387,16 @@ describe("UserProfileTabs", () => {
       await user.click(
         screen.getByRole("button", { name: "userProfile.showMoreLedgers" }),
       );
-      expect(container.querySelectorAll('a[href*="/ledger/"]')).toHaveLength(
-        15,
-      );
-      expect(
-        screen.queryByRole("button", { name: "userProfile.showMoreLedgers" }),
-      ).not.toBeInTheDocument();
+
+      // The revealed count is profile URL state (so Back restores it), so the
+      // reveal is a replace navigation rather than local state. The rendered
+      // result of that navigation is covered in ledger-collection.test.tsx.
+      const navigation = mockNavigate.mock.calls.at(-1)?.[0];
+      expect(navigation).toMatchObject({ to: ".", replace: true });
+      expect(navigation.search({ tab: "overview" })).toEqual({
+        tab: "overview",
+        show: 24,
+      });
     });
   });
 

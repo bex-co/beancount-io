@@ -1,15 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import UserProfilePage from "@/features/user-profile/pages/user-profile-page";
 import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
-
-const userProfileSearchSchema = z.object({
-  tab: z.enum(["overview", "starred", "following", "followers"]).optional(),
-});
+import { userProfileSearchSchema } from "@/features/user-profile/lib/search";
 
 export const Route = createFileRoute("/ledger/$username")({
   component: UserProfilePage,
-  validateSearch: userProfileSearchSchema,
+  validateSearch: (search) => userProfileSearchSchema.parse(search),
   head: ({ params, match }) =>
     createHeadMeta(
       match.context.localization.i18n,
