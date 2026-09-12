@@ -63,6 +63,7 @@ import { setWellKnownRoutes } from "@/features/well-known/api/well-known-route";
 import { setMcpRoute, setupAiAgentRoutes } from "@/features/ai-agent/api";
 import { setGitProxyHandler } from "@/features/gitea/api/git-proxy-handler";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
+import { MCP_PROMPTS } from "@/features/ai-agent/api/mcp-prompts";
 import {
   MCP_RESOURCES,
   listLedgerResources,
@@ -499,6 +500,34 @@ export function assembleMcpRegistry(
         mimeType: descriptor.mimeType,
       },
       makeMcpResourceHandler(toolCtx, descriptor, config),
+    );
+  }
+
+  // Prompts are static playbook text (w2/008): user-initiated, selected
+  // explicitly by name, and performing no domain work of their own. So there
+  // is no `gateMcpCall` here and no op in the matrix — everything a playbook
+  // tells the agent to do is charged and authorized by the tool or resource
+  // it names, at the moment the agent actually calls it. Building the body
+  // per request is what lets it address this caller's ledger pin.
+  for (const descriptor of MCP_PROMPTS) {
+    server.registerPrompt(
+      descriptor.name,
+      {
+        title: descriptor.title,
+        description: descriptor.description,
+        argsSchema: descriptor.argsSchema,
+      },
+      (args) => ({
+        messages: [
+          {
+            role: "user" as const,
+            content: {
+              type: "text" as const,
+              text: descriptor.build(args, toolCtx.identity),
+            },
+          },
+        ],
+      }),
     );
   }
 

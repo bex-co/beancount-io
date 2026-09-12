@@ -81,6 +81,7 @@ export function buildInstructions(identity: Identity): string {
     "Reads: beancount://{owner}/{name}/<errors|accounts|payees|metadata>, e.g. beancount://alice/personal/errors.",
     "Files: beancount://{owner}/{name}/files/{path}; catalog: beancount://catalog/ledgers.",
     "Prefer resources over tools when your client fetches URIs; reads cost less.",
+    "Multi-step jobs have playbooks: prompts/list offers close-month, reconcile-account, categorize-imports, spending-report.",
     "After any write, check `validation.newErrors` or call `checkLedger`.",
     "BQL rows are postings: LIMIT counts postings, not transactions; use `runBqlQueryStructured` for typed numbers.",
     "Every tool returns {ok, result} or {ok:false, error:{code,message,hint}} with isError; branch on error.code and follow error.hint.",

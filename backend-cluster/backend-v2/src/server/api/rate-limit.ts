@@ -68,6 +68,11 @@ const MCP_HANDSHAKE_METHODS: ReadonlySet<string> = new Set([
   "notifications/initialized",
   "tools/list",
   "resources/templates/list",
+  // Prompt discovery is the same shape as `tools/list`: a static enumeration
+  // that reaches no service (w2/008). `prompts/get` is deliberately absent —
+  // it is the caller choosing to do something, even if the something it
+  // returns is text.
+  "prompts/list",
   "ping",
 ]);
 
