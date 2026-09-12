@@ -11,9 +11,9 @@ Customer-facing `beancount-*` ledger skills belong in [`skills/.claude/skills/`]
 | Skill | Purpose |
 | ----- | ------- |
 | `mermaid` | Draw and syntax-check architecture and dependency diagrams. |
-| `pm` | Maintain the public `.pm` board; canonical board conventions and the only workflow that writes board state. |
+| `pm` | Maintain the public `.pm` board; canonical board conventions and the only workflow that writes board state (create, close, drop). |
 | `pm-brainstorm` | Propose roadmap milestones and tasks as text for `/pm` to materialize. |
-| `loop-worker` | Implement and ship a workstream one milestone at a time. |
+| `loop-worker` | Triage each pending milestone in a workstream — work on it, close it as already done, or drop it — then implement and ship the survivors one at a time. |
 | `ship` | Rebase, commit, and push the current `main` branch. |
 | `mobile-release` | Prepare and publish mobile store releases and localized listings. |
 | `qa-find-bugs-cli` | Exercise real `bea` commands against isolated synthetic ledgers. |

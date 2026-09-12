@@ -44,7 +44,7 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
 
 ## Roadmap board (`.pm/`)
 
-`.pm/` is the public TPM board for growing adoption in the open-source and agentic-coding community (workstreams → milestones → tasks). Conventions live canonically in `.agents/skills/pm/SKILL.md`; `/pm` is the **only** skill that writes to `.pm/`, `/pm-brainstorm` proposes work as text, and `/loop-worker <wN>` drains a workstream milestone by milestone (implement → `/pm done` → `/ship`). Read `.pm/DO_NOT_DO.md` before proposing roadmap work. The board is public — no secrets, no private-repo references.
+`.pm/` is the public TPM board for growing adoption in the open-source and agentic-coding community (workstreams → milestones → tasks). Conventions live canonically in `.agents/skills/pm/SKILL.md`; `/pm` is the **only** skill that writes to `.pm/`, `/pm-brainstorm` proposes work as text, and `/loop-worker <wN>` drains a workstream milestone by milestone (triage → implement → `/pm done` → `/ship`, or `/pm drop` for work that should no longer be done). Read `.pm/DO_NOT_DO.md` before proposing roadmap work. The board is public — no secrets, no private-repo references.
 
 ## Repo-wide rules
 
