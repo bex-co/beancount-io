@@ -14,10 +14,19 @@ describe("formatAmountWithCurrency", () => {
     ).toBe("1234.50 EUR");
   });
 
-  it("truncates to two decimal places", () => {
+  it("preserves the recorded decimal scale", () => {
     expect(
       formatAmountWithCurrency({ number: "3.14159", currency: "USD" }),
-    ).toBe("3.14 USD");
+    ).toBe("3.14159 USD");
+  });
+
+  it("keeps small nonzero quantities visible", () => {
+    expect(formatAmountWithCurrency({ number: "0.004", currency: "ETH" })).toBe(
+      "0.004 ETH",
+    );
+    expect(
+      formatAmountWithCurrency({ number: "0.0230", currency: "USD" }),
+    ).toBe("0.0230 USD");
   });
 
   it("leaves an integer amount untouched", () => {

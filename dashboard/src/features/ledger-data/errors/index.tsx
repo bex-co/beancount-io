@@ -127,10 +127,7 @@ export default function LedgerErrorsPage() {
                 {r.map((err, index) => (
                   <TableRow
                     key={`${err.filename ?? ""}-${String(err.lineno ?? 0)}-${index}`}
-                    className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() =>
-                      handleGoToFile(err.filename || "", err.lineno || 0)
-                    }
+                    className="hover:bg-muted/50"
                   >
                     <TableCell className="font-medium px-2 sm:px-3 py-1.5 sm:py-2">
                       <div className="flex items-start gap-2">
@@ -141,9 +138,27 @@ export default function LedgerErrorsPage() {
                     <TableCell className="px-2 sm:px-3 py-1.5 sm:py-2">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <FileText className="h-4 w-4" />
-                        <span className="truncate">
-                          {err.filename || t("page.errors.unknownFile")}
-                        </span>
+                        {err.filename ? (
+                          // The source location is the row's only action, so it
+                          // lives on a real button: the whole row used to be
+                          // pointer-only and unreachable by keyboard.
+                          <button
+                            type="button"
+                            className="truncate underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                            onClick={() =>
+                              handleGoToFile(
+                                err.filename || "",
+                                err.lineno || 0,
+                              )
+                            }
+                          >
+                            {err.filename}
+                          </button>
+                        ) : (
+                          <span className="truncate">
+                            {t("page.errors.unknownFile")}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="px-2 sm:px-3 py-1.5 sm:py-2">

@@ -79,7 +79,7 @@ export default function TrialBalancePage() {
   }
 
   if (error) {
-    return <ReportErrorState />;
+    return <ReportErrorState error={error} />;
   }
 
   if (!trialBalanceData) {

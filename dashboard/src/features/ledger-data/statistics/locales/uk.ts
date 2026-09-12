@@ -73,6 +73,11 @@ const ukStatistics: Record<string, TranslationEntry> = {
     message: "Відсоток",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "Не застосовується",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "Проводки на {account}",
     description:

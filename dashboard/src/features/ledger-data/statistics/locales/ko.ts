@@ -73,6 +73,11 @@ const koStatistics: Record<string, TranslationEntry> = {
     message: "비율",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "해당 없음",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "{account}당 게시",
     description:

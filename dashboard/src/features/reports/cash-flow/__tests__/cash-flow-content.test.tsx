@@ -57,7 +57,7 @@ vi.mock("@/common/components/seo/ledger-page-seo", () => ({
   LedgerPageSEO: () => null,
 }));
 vi.mock("@/common/components/conversion-select", () => ({
-  ConversionSelect: () => null,
+  ConversionSelect: () => <div data-testid="conversion-select" />,
 }));
 vi.mock("@/common/components/interval-select", () => ({
   IntervalSelect: () => null,
@@ -154,6 +154,22 @@ describe("CashFlowContent declared/inferred indicators", () => {
         '[title="page.cashFlow.declaredRoleTooltip"]',
       ),
     ).toBeNull();
+  });
+});
+
+describe("CashFlowContent chart toolbar", () => {
+  it("lets the toolbar stack so the conversion group is not clipped when narrow", () => {
+    renderContent();
+
+    const conversionGroup =
+      screen.getByTestId("conversion-select").parentElement;
+    const toolbarRow = conversionGroup?.parentElement;
+
+    // The toolbar lives inside the collapse wrapper's `overflow-hidden`, so a
+    // non-wrapping row pushes this group out of view behind a long View label.
+    expect(toolbarRow?.className).toMatch(/\bflex-wrap\b/);
+    // The control group itself must stay unshrunk — wrapping is what gives room.
+    expect(conversionGroup?.className).toMatch(/\bshrink-0\b/);
   });
 });
 

@@ -73,6 +73,11 @@ const esStatistics: Record<string, TranslationEntry> = {
     message: "Porcentaje",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "No aplicable",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "Asientos por {account}",
     description:

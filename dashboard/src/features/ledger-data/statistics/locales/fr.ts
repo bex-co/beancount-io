@@ -73,6 +73,11 @@ const frStatistics: Record<string, TranslationEntry> = {
     message: "Pourcentage",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "Non applicable",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "Écritures par {account}",
     description:

@@ -398,9 +398,19 @@ export function intervalDateToTimeFilter(
   return `${monthStart} - ${end}`;
 }
 
+/** Last day of the month containing an inclusive `YYYY-MM-DD` date. */
+function monthEndISODate(date: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) return date;
+  const [, year, month] = match;
+  return toLocalISODate(new Date(Number(year), Number(month), 0));
+}
+
 /**
- * Prefer an existing global time filter when it already lies inside the
- * selected month (do not widen a narrower selection to a full month).
+ * Narrow the drill-down period to the intersection of the selected month and
+ * the existing global time filter, so a selection spanning partial months (for
+ * example `2026-01-15 - 2026-02-15`) is never widened to a whole month. Falls
+ * back to the derived month only when the ranges are disjoint or unparseable.
  */
 export function resolveMovementTimeFilter(
   selectedDate: string,
@@ -413,16 +423,28 @@ export function resolveMovementTimeFilter(
 
   const existingRange = parseConcreteTimeFilter(existing);
   const derivedRange = parseConcreteTimeFilter(derived);
+  if (!existingRange || !derivedRange) return derived;
+
+  const startDate =
+    existingRange.startDate > derivedRange.startDate
+      ? existingRange.startDate
+      : derivedRange.startDate;
+  const endDate =
+    existingRange.endDate < derivedRange.endDate
+      ? existingRange.endDate
+      : derivedRange.endDate;
+  if (startDate > endDate) return derived;
+
+  // Collapse to the bare month key when the intersection is the whole month.
   if (
-    existingRange &&
-    derivedRange &&
-    existingRange.startDate >= derivedRange.startDate &&
-    existingRange.endDate <= derivedRange.endDate
+    /^(\d{4})-(\d{2})-01$/.test(startDate) &&
+    endDate === monthEndISODate(startDate) &&
+    startDate.slice(0, 7) === endDate.slice(0, 7)
   ) {
-    return existing;
+    return startDate.slice(0, 7);
   }
 
-  return derived;
+  return `${startDate} - ${endDate}`;
 }
 
 export function buildDistributionData(

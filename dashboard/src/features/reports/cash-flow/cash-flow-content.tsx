@@ -224,7 +224,7 @@ export function CashFlowContent({
             onValueChange={setSelectedTab}
             className="w-full flex-col justify-start gap-6"
           >
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <ResponsiveTabTriggerList
                 selectedTab={selectedTab}
                 setSelectedTab={setSelectedTab}

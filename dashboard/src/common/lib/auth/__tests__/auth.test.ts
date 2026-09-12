@@ -26,6 +26,36 @@ describe("getSafeRedirectPath", () => {
     expect(getSafeRedirectPath("//evil.example")).toBeUndefined();
     expect(getSafeRedirectPath("/\\evil.example")).toBeUndefined();
   });
+
+  it("rejects control characters that browsers strip before resolving", () => {
+    // new URL("/\t/evil.example/p", base).href === "https://evil.example/p"
+    expect(getSafeRedirectPath("/\t/evil.example/probe")).toBeUndefined();
+    expect(getSafeRedirectPath("/\t\\evil.example/probe")).toBeUndefined();
+    expect(getSafeRedirectPath("/\n/evil.example")).toBeUndefined();
+    expect(getSafeRedirectPath("/\r/evil.example")).toBeUndefined();
+    expect(getSafeRedirectPath("/\u0000/evil.example")).toBeUndefined();
+    expect(getSafeRedirectPath("/\u007F/evil.example")).toBeUndefined();
+  });
+
+  it("never returns a path that resolves off-origin", () => {
+    const candidates = [
+      "/\t/evil.example/probe",
+      "/\t\\evil.example",
+      "/\n//evil.example",
+      "//evil.example",
+      "/\\evil.example",
+      "/settings/api-keys?lang=en",
+      "/ledger#top",
+    ];
+
+    for (const candidate of candidates) {
+      const safe = getSafeRedirectPath(candidate);
+      if (safe === undefined) continue;
+      expect(new URL(safe, "https://beancount.io").origin).toBe(
+        "https://beancount.io",
+      );
+    }
+  });
 });
 
 describe("requireAuth", () => {

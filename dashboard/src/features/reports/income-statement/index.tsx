@@ -85,7 +85,7 @@ export default function LedgerIncomeStatementPage() {
   }
 
   if (error) {
-    return <ReportErrorState />;
+    return <ReportErrorState error={error} />;
   }
 
   if (!incomeStatementData) {

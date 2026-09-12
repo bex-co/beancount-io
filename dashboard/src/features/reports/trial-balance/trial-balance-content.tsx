@@ -178,15 +178,19 @@ export function TrialBalanceContent({
       >
         <div className="min-h-0 overflow-hidden">
           {/* Tabbed Interface */}
-          <Tabs defaultValue="assets">
-            <div className="flex items-center justify-between mb-2">
+          <Tabs
+            defaultValue={selectedTab}
+            value={selectedTab}
+            onValueChange={setSelectedTab}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
               <ResponsiveTabTriggerList
                 selectedTab={selectedTab}
                 setSelectedTab={setSelectedTab}
                 tabOptions={tabOptions}
               />
               <ClientOnly>
-                <div className="items-center gap-2 hidden lg:flex">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
                   <ConversionSelect
                     value={conversion}
                     onValueChange={onConversionChange}

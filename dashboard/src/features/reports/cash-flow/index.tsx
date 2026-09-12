@@ -124,7 +124,7 @@ export default function LedgerCashFlowPage() {
   }
 
   if (error) {
-    return <ReportErrorState />;
+    return <ReportErrorState error={error} />;
   }
 
   if (

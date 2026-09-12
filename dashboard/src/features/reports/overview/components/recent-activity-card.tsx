@@ -30,10 +30,14 @@ const EntryContextDialog = lazy(async () => {
   return { default: module.EntryContextDialog };
 });
 
-function formatActivityDate(date: string): string {
+/**
+ * `language` is required: with an undefined locale `Intl.DateTimeFormat` falls
+ * back to the browser's preference instead of the selected app language.
+ */
+function formatActivityDate(date: string, language: string): string {
   const parsed = new Date(`${date}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) return date;
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(language, {
     month: "short",
     day: "numeric",
   }).format(parsed);
@@ -82,7 +86,8 @@ export function RecentActivityCard({
   expensesRoot: string;
   canWrite: boolean;
 }) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
+  const language = i18n.language;
   const [selectedEntry, setSelectedEntry] =
     useState<JournalDirectiveType | null>(null);
   const [isEntryOpen, setIsEntryOpen] = useState(false);
@@ -227,7 +232,7 @@ export function RecentActivityCard({
                       }}
                     >
                       <span className="hidden text-xs text-muted-foreground sm:block">
-                        {formatActivityDate(transaction.date)}
+                        {formatActivityDate(transaction.date, language)}
                       </span>
                       <span className="flex size-9 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
                         {getInitials(title)}
@@ -256,7 +261,7 @@ export function RecentActivityCard({
                             .join(" · ")}
                         </span>
                         <span className="mt-0.5 block text-xs text-muted-foreground sm:hidden">
-                          {formatActivityDate(transaction.date)}
+                          {formatActivityDate(transaction.date, language)}
                         </span>
                       </span>
                       <span className="hidden truncate text-right text-xs text-muted-foreground sm:block">

@@ -78,7 +78,7 @@ export default function LedgerBalanceSheetPage() {
   }
 
   if (error) {
-    return <ReportErrorState />;
+    return <ReportErrorState error={error} />;
   }
 
   if (!balanceSheetData) {

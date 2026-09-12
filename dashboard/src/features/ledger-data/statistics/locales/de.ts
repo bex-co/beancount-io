@@ -73,6 +73,11 @@ const deStatistics: Record<string, TranslationEntry> = {
     message: "Prozentsatz",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "Nicht zutreffend",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "Buchungen pro {account}",
     description:

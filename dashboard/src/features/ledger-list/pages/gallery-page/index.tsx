@@ -126,7 +126,9 @@ export default function GalleryPage() {
       e.preventDefault();
       setIsDropdownOpen(false);
       setHighlightedIndex(-1);
-      inputRef.current?.blur();
+      // Keep focus in the field so editing continues after dismissal. The
+      // `!isDropdownOpen` guard below already stops Enter from selecting from
+      // the closed list.
       return;
     }
 

@@ -405,4 +405,39 @@ describe("GalleryPage", () => {
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
     expect(searchInput).not.toHaveAttribute("aria-activedescendant");
   });
+
+  it("Escape keeps focus in the search field so editing can continue", async () => {
+    const mockQueryTuple: SearchLedgersQueryTuple = createMockLazyQueryTuple(
+      mockSearchLedgers,
+      {
+        data: { searchLedgers: [] },
+        loading: false,
+        error: undefined,
+      },
+    );
+
+    vi.mocked(apolloClient.useLazyQuery).mockReturnValue(mockQueryTuple);
+
+    const user = userEvent.setup();
+    render(<GalleryPage />);
+
+    const searchInput = screen.getByRole("combobox");
+    await user.type(searchInput, "grocery");
+
+    await waitFor(() => {
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+    });
+
+    await user.keyboard("{Escape}");
+
+    // Escape used to blur the input, stranding keyboard users.
+    expect(searchInput).toHaveFocus();
+
+    await user.keyboard("{Backspace}");
+    expect(searchInput).toHaveValue("grocer");
+
+    // A closed list must not be selectable from.
+    await user.keyboard("{Enter}");
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
 });

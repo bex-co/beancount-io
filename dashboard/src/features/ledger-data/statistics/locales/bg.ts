@@ -73,6 +73,11 @@ const bgStatistics: Record<string, TranslationEntry> = {
     message: "Процент",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "Не е приложимо",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "Проводки на {account}",
     description:

@@ -73,6 +73,11 @@ const zhStatistics: Record<string, TranslationEntry> = {
     message: "百分比",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "不适用",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "每个{account}的过账",
     description:

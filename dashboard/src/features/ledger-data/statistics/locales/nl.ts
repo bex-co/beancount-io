@@ -73,6 +73,11 @@ const nlStatistics: Record<string, TranslationEntry> = {
     message: "Percentage",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "Niet van toepassing",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "Boekingen per {account}",
     description:

@@ -140,9 +140,12 @@ function EntriesCountTable({
             </TableHeader>
             <TableBody>
               {entries.map((entry) => {
-                const percentage = ((entry.number / totalCount) * 100).toFixed(
-                  1,
-                );
+                // An all-zero period (the ledger service zero-fills every
+                // directive type) would divide by zero and render "NaN%".
+                const percentage =
+                  totalCount === 0
+                    ? null
+                    : ((entry.number / totalCount) * 100).toFixed(1);
                 return (
                   <TableRow key={entry.type}>
                     <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">
@@ -152,7 +155,17 @@ function EntriesCountTable({
                       {formatNum(entry.number)}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
-                      {percentage}%
+                      {percentage === null ? (
+                        <span
+                          aria-label={t(
+                            "page.statistics.percentageNotApplicable",
+                          )}
+                        >
+                          —
+                        </span>
+                      ) : (
+                        `${percentage}%`
+                      )}
                     </TableCell>
                   </TableRow>
                 );

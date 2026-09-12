@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useQuery } from "@apollo/client/react";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import LedgerCashFlowPage from "../index";
 import type { CashFlowContent } from "../cash-flow-content";
 
@@ -72,6 +73,15 @@ function mockQuery(data: unknown) {
   } as never);
 }
 
+function mockQueryError(error: unknown) {
+  vi.mocked(useQuery).mockReturnValue({
+    data: undefined,
+    previousData: undefined,
+    loading: false,
+    error,
+  } as never);
+}
+
 const emptyPayload = {
   incomeIntervals: [],
   expenseIntervals: [],
@@ -134,6 +144,31 @@ describe("LedgerCashFlowPage", () => {
 
     expect(screen.getByText("page.cashFlow.noData")).toBeInTheDocument();
     expect(captureProps).not.toHaveBeenCalled();
+  });
+
+  it("surfaces the mapped guidance for an invalid-input error", () => {
+    mockQueryError(
+      new CombinedGraphQLErrors({
+        errors: [
+          {
+            message: "raw internal server message",
+            extensions: { code: "BAD_USER_INPUT" },
+          },
+        ],
+      }),
+    );
+
+    render(<LedgerCashFlowPage />);
+
+    // The page owns the error (its loader settles instead of throwing), so the
+    // user gets the invalid-filter guidance rather than the generic retry copy.
+    expect(screen.getByText("common.errors.badUserInput")).toBeInTheDocument();
+    expect(
+      screen.queryByText("component.errorState.retry"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/raw internal server message/),
+    ).not.toBeInTheDocument();
   });
 
   it("builds the statement from interval totals and closing cash balances", () => {

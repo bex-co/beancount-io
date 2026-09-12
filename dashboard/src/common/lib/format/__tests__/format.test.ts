@@ -104,28 +104,36 @@ describe("Format Utility", () => {
       expect(formatAmount("1,234.56")).toBe("1234.56");
     });
 
-    it("should truncate amounts with more than 2 decimal places", () => {
-      expect(formatAmount("123.456")).toBe("123.45");
-      expect(formatAmount("123.4567")).toBe("123.45");
-      expect(formatAmount("123.999")).toBe("123.99");
-      expect(formatAmount("1,234.56789")).toBe("1234.56");
+    it("should preserve amounts with more than 2 decimal places", () => {
+      expect(formatAmount("123.456")).toBe("123.456");
+      expect(formatAmount("123.4567")).toBe("123.4567");
+      expect(formatAmount("123.999")).toBe("123.999");
+      expect(formatAmount("1,234.56789")).toBe("1234.56789");
+    });
+
+    it("should preserve small nonzero crypto quantities", () => {
+      // A fixed two-decimal cap used to display these as "0.00".
+      expect(formatAmount("0.004")).toBe("0.004");
+      expect(formatAmount("0.005")).toBe("0.005");
+      expect(formatAmount("0.0230")).toBe("0.0230");
+      expect(formatAmount("-0.004")).toBe("-0.004");
     });
 
     it("should handle zero values", () => {
       expect(formatAmount("0")).toBe("0");
       expect(formatAmount("0.00")).toBe("0.00");
-      expect(formatAmount("0.000")).toBe("0.00");
+      expect(formatAmount("0.000")).toBe("0.000");
     });
 
     it("should handle negative amounts", () => {
       expect(formatAmount("-123.45")).toBe("-123.45");
       expect(formatAmount("-1,234.56")).toBe("-1234.56");
-      expect(formatAmount("-123.456")).toBe("-123.45");
+      expect(formatAmount("-123.456")).toBe("-123.456");
     });
 
     it("should handle amounts with only decimal part", () => {
       expect(formatAmount(".45")).toBe(".45");
-      expect(formatAmount(".456")).toBe(".45");
+      expect(formatAmount(".456")).toBe(".456");
     });
 
     it("should handle edge case with empty decimal part", () => {
@@ -134,13 +142,13 @@ describe("Format Utility", () => {
 
     it("should handle very small amounts", () => {
       expect(formatAmount("0.01")).toBe("0.01");
-      expect(formatAmount("0.001")).toBe("0.00");
-      expect(formatAmount("0.999")).toBe("0.99");
+      expect(formatAmount("0.001")).toBe("0.001");
+      expect(formatAmount("0.999")).toBe("0.999");
     });
 
     it("should handle very large amounts", () => {
       expect(formatAmount("999,999,999.99")).toBe("999999999.99");
-      expect(formatAmount("1,000,000.001")).toBe("1000000.00");
+      expect(formatAmount("1,000,000.001")).toBe("1000000.001");
     });
   });
 });

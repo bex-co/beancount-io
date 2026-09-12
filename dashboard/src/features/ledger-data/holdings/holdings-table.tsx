@@ -111,12 +111,10 @@ export const DatasetTable = React.memo(
               onClick={handleExportCSV}
               size="sm"
               variant="outline"
-              className="items-center gap-2 w-full hidden sm:flex sm:w-fit"
+              className="flex items-center gap-2 w-full sm:w-fit"
             >
               <Download className="h-4 w-4" />
-              <span className="hidden sm:block">
-                {t("page.holdings.exportCsv")}
-              </span>
+              <span>{t("page.holdings.exportCsv")}</span>
             </Button>
           </div>
           <div className="overflow-hidden w-full">

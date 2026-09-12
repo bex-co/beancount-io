@@ -73,6 +73,11 @@ const skStatistics: Record<string, TranslationEntry> = {
     message: "Percento",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "Neuplatňuje sa",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "Zápisy na {account}",
     description:

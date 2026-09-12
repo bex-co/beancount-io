@@ -73,6 +73,11 @@ const faStatistics: Record<string, TranslationEntry> = {
     message: "درصد",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "قابل اعمال نیست",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "سندها بر اساس {account}",
     description:

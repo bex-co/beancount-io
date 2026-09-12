@@ -16,8 +16,8 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
-// Mock csv-export
-vi.mock("@/common/lib/format/csv-export", () => ({
+// Mock csv-export (the module the table actually imports)
+vi.mock("@/common/lib/utils/csv-export", () => ({
   downloadCSV: vi.fn(),
 }));
 
@@ -332,6 +332,41 @@ describe("DatasetTable", () => {
         },
         fetchPolicy: "cache-first",
       });
+    });
+  });
+
+  describe("CSV export availability", () => {
+    const tableResult = {
+      queryShell: {
+        resultType: "table",
+        table: {
+          types: [{ name: "account" }, { name: "balance" }],
+          rows: [["Assets:Bank", "1000.00"]],
+        },
+        text: null,
+      },
+    };
+
+    it("offers a named export control regardless of viewport width", async () => {
+      const user = userEvent.setup();
+      const { downloadCSV } = await import("@/common/lib/utils/csv-export");
+      vi.mocked(useQuery).mockReturnValue({
+        data: tableResult,
+        loading: false,
+        error: undefined,
+      });
+
+      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+
+      // The control used to be `hidden sm:flex`, so narrow viewports had no way
+      // to download the dataset at all.
+      const exportButton = screen.getByRole("button", {
+        name: /export .*csv/i,
+      });
+      expect(exportButton.className).not.toMatch(/(^|\s)hidden(\s|$)/);
+
+      await user.click(exportButton);
+      expect(downloadCSV).toHaveBeenCalled();
     });
   });
 });

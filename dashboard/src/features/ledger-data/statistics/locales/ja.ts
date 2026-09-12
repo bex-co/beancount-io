@@ -73,6 +73,11 @@ const jaStatistics: Record<string, TranslationEntry> = {
     message: "割合",
     description: "Table column header for percentage",
   },
+  "page.statistics.percentageNotApplicable": {
+    message: "該当なし",
+    description:
+      "Accessible label shown instead of a percentage when the period has no entries",
+  },
   "page.statistics.postingsPerAccount": {
     message: "{account}ごとのポスティング",
     description:

@@ -99,6 +99,77 @@ describe("EntriesCountByType", () => {
     ).toBeInTheDocument();
   });
 
+  describe("zero-count periods", () => {
+    const ALL_TYPES = [
+      "Transaction",
+      "Balance",
+      "Open",
+      "Close",
+      "Commodity",
+      "Pad",
+      "Event",
+      "Query",
+      "Price",
+      "Note",
+      "Document",
+      "Custom",
+    ];
+
+    it("renders a not-applicable marker instead of NaN% for a zero-filled period", () => {
+      vi.mocked(apolloClient.useQuery).mockReturnValue(
+        createEntriesMockData(ALL_TYPES.map((type) => ({ type, number: 0 }))),
+      );
+
+      render(<EntriesCountByType ledgerId="test-id" />);
+
+      expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
+      const markers = screen.getAllByLabelText("Not applicable");
+      expect(markers).toHaveLength(ALL_TYPES.length);
+      markers.forEach((marker) => expect(marker).toHaveTextContent("—"));
+      expect(
+        screen.getByText(/Total 0 entries across 12 types/),
+      ).toBeInTheDocument();
+    });
+
+    it("renders no rows and no NaN for an empty entries array", () => {
+      vi.mocked(apolloClient.useQuery).mockReturnValue(
+        createEntriesMockData([]),
+      );
+
+      render(<EntriesCountByType ledgerId="test-id" />);
+
+      expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
+      expect(screen.queryAllByLabelText("Not applicable")).toHaveLength(0);
+      expect(
+        screen.getByText(/Total 0 entries across 0 types/),
+      ).toBeInTheDocument();
+    });
+
+    it("switches from the marker to real percentages when counts arrive", () => {
+      vi.mocked(apolloClient.useQuery).mockReturnValue(
+        createEntriesMockData([
+          { type: "Transaction", number: 0 },
+          { type: "Balance", number: 0 },
+        ]),
+      );
+
+      const { rerender } = render(<EntriesCountByType ledgerId="test-id" />);
+      expect(screen.getAllByLabelText("Not applicable")).toHaveLength(2);
+
+      vi.mocked(apolloClient.useQuery).mockReturnValue(
+        createEntriesMockData([
+          { type: "Transaction", number: 3 },
+          { type: "Balance", number: 1 },
+        ]),
+      );
+      rerender(<EntriesCountByType ledgerId="test-id" />);
+
+      expect(screen.queryAllByLabelText("Not applicable")).toHaveLength(0);
+      expect(screen.getByText("75.0%")).toBeInTheDocument();
+      expect(screen.getByText("25.0%")).toBeInTheDocument();
+    });
+  });
+
   describe("Card component removal refactoring", () => {
     it("should use div wrapper instead of Card component", () => {
       vi.mocked(apolloClient.useQuery).mockReturnValue(

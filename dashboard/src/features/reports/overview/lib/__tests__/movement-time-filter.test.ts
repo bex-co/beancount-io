@@ -40,4 +40,42 @@ describe("resolveMovementTimeFilter", () => {
       "2025-10",
     );
   });
+
+  it("intersects the first partial month of a multi-month selection", () => {
+    const now = new Date("2026-09-08T12:00:00");
+    expect(
+      resolveMovementTimeFilter("2026-01-31", "2026-01-15 - 2026-02-15", now),
+    ).toBe("2026-01-15 - 2026-01-31");
+  });
+
+  it("intersects the last partial month of a multi-month selection", () => {
+    const now = new Date("2026-09-08T12:00:00");
+    expect(
+      resolveMovementTimeFilter("2026-02-28", "2026-01-15 - 2026-02-15", now),
+    ).toBe("2026-02-01 - 2026-02-15");
+  });
+
+  it("collapses an intermediate fully covered month to its month key", () => {
+    const now = new Date("2026-09-08T12:00:00");
+    expect(
+      resolveMovementTimeFilter("2026-02-28", "2026-01-15 - 2026-03-10", now),
+    ).toBe("2026-02");
+    expect(resolveMovementTimeFilter("2026-02-28", "2026", now)).toBe(
+      "2026-02",
+    );
+  });
+
+  it("keeps the derived month when the ranges are disjoint", () => {
+    const now = new Date("2026-09-08T12:00:00");
+    expect(
+      resolveMovementTimeFilter("2026-05-31", "2026-01-15 - 2026-02-15", now),
+    ).toBe("2026-05");
+  });
+
+  it("intersects with an unfinished current month bounded by today", () => {
+    const now = new Date("2026-07-15T12:00:00");
+    expect(
+      resolveMovementTimeFilter("2026-07-31", "2026-07-10 - 2026-08-20", now),
+    ).toBe("2026-07-10 - 2026-07-15");
+  });
 });

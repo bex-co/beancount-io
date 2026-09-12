@@ -24,13 +24,28 @@ import {
 } from "../lib/overview-utils";
 import { FormattedAmounts } from "./formatted-amounts";
 
-function formatMonth(date: string): string {
+/**
+ * `language` is required: with an undefined locale `Intl.DateTimeFormat` falls
+ * back to the browser's preference instead of the selected app language.
+ */
+function formatMonth(date: string, language: string): string {
   const parsed = new Date(`${date}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) return date;
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(language, {
     month: "short",
     year: "numeric",
   }).format(parsed);
+}
+
+/**
+ * A series with a single finite point draws no line segment, so it needs a
+ * visible marker or the chart looks empty.
+ */
+function isSinglePointSeries(data: ReadonlyArray<number | null>): boolean {
+  return (
+    data.filter((value) => value !== null && Number.isFinite(value)).length ===
+    1
+  );
 }
 
 export function NetWorthCard({
@@ -40,7 +55,8 @@ export function NetWorthCard({
   data: DataSeries;
   primaryCurrency: string;
 }) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
+  const language = i18n.language;
   const formatNumber = useFormatNumber();
   const [view, setView] = useState<"chart" | "table">("chart");
   const visibleData = useMemo(() => data.slice(-12), [data]);
@@ -102,7 +118,7 @@ export function NetWorthCard({
             if (Number.isNaN(parsed.getTime())) {
               return formatDateAxis(value, "monthly");
             }
-            return new Intl.DateTimeFormat(undefined, {
+            return new Intl.DateTimeFormat(language, {
               month: "short",
             }).format(parsed);
           },
@@ -114,22 +130,28 @@ export function NetWorthCard({
         axisLabel: { formatter: formatYAxisNumber },
         scale: true,
       },
-      series: displayedCurrencies.map((currency) => ({
-        name: currency,
-        type: "line" as const,
-        smooth: 0.25,
-        symbol: "none",
-        lineStyle: { width: 2 },
-        areaStyle: { opacity: 0.12 },
-        data: visibleData.map(
+      series: displayedCurrencies.map((currency) => {
+        const data = visibleData.map(
           (point) =>
             getBalanceAmounts(point.balance).find(
               (amount) => amount.currency === currency,
             )?.value ?? null,
-        ),
-      })),
+        );
+        const singlePoint = isSinglePointSeries(data);
+        return {
+          name: currency,
+          type: "line" as const,
+          smooth: 0.25,
+          symbol: singlePoint ? ("circle" as const) : ("none" as const),
+          symbolSize: singlePoint ? 7 : undefined,
+          showSymbol: singlePoint,
+          lineStyle: { width: 2 },
+          areaStyle: { opacity: 0.12 },
+          data,
+        };
+      }),
     };
-  }, [formatNumber, primaryCurrency, visibleData]);
+  }, [formatNumber, language, primaryCurrency, visibleData]);
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0">
@@ -209,7 +231,7 @@ export function NetWorthCard({
                 className="flex items-center justify-between gap-4 px-3 py-2.5 text-sm"
               >
                 <span className="text-muted-foreground">
-                  {formatMonth(point.date)}
+                  {formatMonth(point.date, language)}
                 </span>
                 <FormattedAmounts
                   amounts={prioritizeCurrency(
