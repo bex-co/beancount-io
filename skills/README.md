@@ -2,9 +2,11 @@
 
 Skills for Beancount users working with a ledger through a coding agent. The eight workflows below support Claude Code and Codex; their source files live in [`.claude/skills/`](.claude/skills).
 
+Install **`bea`** once ([Homebrew](https://github.com/bex-co/homebrew-tap) or `uv tool install beancount-io`). Skills use that single install for check, query, report, import, and writes — they do not ask you to `pip install beancount`. Optional Beangulp/Beanprice features: `bea engine enable beangulp|beanprice`. Fava's browser UI is optional and separate from `bea` ledger operations.
+
 | Skill | Use it to |
 | ----- | --------- |
-| [beancount-init](.claude/skills/beancount-init/SKILL.md) | Create a ledger repository with Beancount, Fava, and uv. |
+| [beancount-init](.claude/skills/beancount-init/SKILL.md) | Create a ledger with `bea init` (optional Fava browser setup). |
 | [beancount-import](.claude/skills/beancount-import/SKILL.md) | Import and categorize bank exports with duplicate detection. |
 | [beancount-importer-author](.claude/skills/beancount-importer-author/SKILL.md) | Write or repair a reusable, tested bank importer. |
 | [beancount-reconcile](.claude/skills/beancount-reconcile/SKILL.md) | Compare an account with a bank or broker statement. |

@@ -1,6 +1,6 @@
 {
   "skill_name": "beancount-import",
-  "notes": "Each eval maps the fixture ledger to ./ledger.beancount and the fixture export to ./export.csv (or .ofx) in a scratch dir. bean-check via `uv run --project cli bean-check` in this repo (`pip install beancount` elsewhere). eval1-5 cover the happy paths (signed CSV, debit/credit split, OFX FITID, overlap dedup, pending rows); eval6-9 are failure-mode/guarantee checks (ambiguity must ask, no write without confirm, missing target file, idempotent re-import).",
+  "notes": "Each eval maps the fixture ledger to ./ledger.beancount and the fixture export to ./export.csv (or .ofx) in a scratch dir. Validate with `bea check` when bea is installed; oracle/CI uses `uv run --project cli bean-check` separately. Do not `pip install beancount` as the customer path. eval1-5 cover the happy paths (signed CSV, debit/credit split, OFX FITID, overlap dedup, pending rows); eval6-9 are failure-mode/guarantee checks (ambiguity must ask, no write without confirm, missing target file, idempotent re-import).",
   "evals": [
     {
       "id": 1,

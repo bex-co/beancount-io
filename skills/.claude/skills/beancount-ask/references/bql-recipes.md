@@ -1,6 +1,6 @@
 # BQL recipes — tested against beanquery (beancount v3)
 
-All queries below are verified against beanquery ≥ 0.2. Run as `bea --file <ledger> query "<query>"` (`bean-query <ledger> "<query>"` without `bea` — same BQL either way). Adjust date literals (`2026-06-01`) to the resolved period; date literals are unquoted. `~` is regex match.
+All queries below are verified against beanquery ≥ 0.2. Prefer `bea --file <ledger> query "<query>"` (managed engine). Without `bea`, `bean-query <ledger> "<query>"` is the developer fallback — same BQL either way. Adjust date literals (`2026-06-01`) to the resolved period; date literals are unquoted. `~` is regex match.
 
 ## Sign traps (read first)
 

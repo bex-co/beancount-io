@@ -14,8 +14,10 @@ This skill exists because trustworthy books come from ritual, not heroics: the s
 Check once with `command -v bea`. When the `bea` CLI is installed, verify
 with `bea check` and generate the committed summary with
 `bea report income-statement --time <month>`; without it, use `bean-check`
-and `bean-query`. One rule, stated once — the phases below name the `bea`
-form first and the fallback second.
+and `bean-query` only if already available, otherwise suggest installing
+`bea`. Do not `pip install beancount` or silently replace a broken managed
+engine with a global bean-* tool while `bea` is installed. One rule, stated
+once — the phases below name the `bea` form first and the fallback second.
 
 ## Scope
 

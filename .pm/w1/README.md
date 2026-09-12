@@ -4,11 +4,11 @@
 
 ## Milestones
 
-Execution order: **m19 → m20 → m21**. Milestone m18 remains completed history. m19–m20 are done; the next open milestone is **m21**.
+Execution order: **m19 → m20 → m21**. Milestone m18 remains completed history. m19–m21 are done; no pending ADR014 follow-up milestones remain in this workstream.
 
 - [x] **m19** — [Independent Beancount engine and complete bea command parity](./done/m19/README.md) (23 tasks) ← ADR014 replan, 2026-09-11; license resolution, complete engine separation, and installed-artifact proof
 - [x] **m20** — [Optional accounting tools in the independent engine](./done/m20/README.md) (8 tasks) ← ADR014 replan, 2026-09-11; after m19; optional tools stay in the engine
-- [ ] **m21** — [Ledger skills follow the one-install engine design](./m21/README.md) (8 tasks) ← ADR014 replan, 2026-09-11; after m20; follow-up to completed m18
+- [x] **m21** — [Ledger skills follow the one-install engine design](./done/m21/README.md) (8 tasks) ← ADR014 replan, 2026-09-11; after m20; follow-up to completed m18
 
 - [x] **m1** — Ask-page quick wins: focus, preset questions, stop & retry (9 tasks) ← from `/pm` invocation capturing the AI-chat UX review (2026-07-31)
 - [x] **m2** — Scope useLedgerMeta to the selected ledger (fix wrong currency display) (5 tasks) ← from `/pm` invocation capturing the expo-mcp currency investigation (2026-07-31)

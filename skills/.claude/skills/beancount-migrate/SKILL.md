@@ -1,6 +1,6 @@
 ---
 name: beancount-migrate
-description: Migrate transaction history from a personal-finance app export (Mint, Monarch, QuickBooks Online, Copilot, Bench handoff, or any category-tagged CSV export) into a new beancount ledger. Use this skill whenever the user has a full-history export from a finance app and wants out — "migrate me from Mint", "Monarch export to beancount", "my bookkeeping service shut down, here's the CSV", "convert my QuickBooks history to plain text". The skill proposes an account hierarchy from the export's categories, converts all history with transfer deduplication and opening balances, verifies counts and balances against the source, and ends with a running Fava. SKIP when the user wants to import an ongoing bank export into an existing ledger (beancount-import), reconcile against a statement (beancount-reconcile), start fresh with no history (beancount-init alone), or record individual transactions. The core trigger is "here is my old app's full export — turn it into a beancount ledger".
+description: Migrate transaction history from a personal-finance app export (Mint, Monarch, QuickBooks Online, Copilot, Bench handoff, or any category-tagged CSV export) into a new beancount ledger. Use this skill whenever the user has a full-history export from a finance app and wants out — "migrate me from Mint", "Monarch export to beancount", "my bookkeeping service shut down, here's the CSV", "convert my QuickBooks history to plain text". The skill proposes an account hierarchy from the export's categories, converts all history with transfer deduplication and opening balances, verifies counts and balances against the source, and optionally starts Fava when requested. SKIP when the user wants to import an ongoing bank export into an existing ledger (beancount-import), reconcile against a statement (beancount-reconcile), start fresh with no history (beancount-init alone), or record individual transactions. The core trigger is "here is my old app's full export — turn it into a beancount ledger".
 ---
 
 # beancount-migrate
@@ -9,9 +9,19 @@ Turn a finance-app export into a complete, verified beancount ledger — mapped 
 
 This skill exists because every app shutdown (Mint, Bench, …) strands users with one CSV and no way to trust a conversion: categories don't map 1:1 to double-entry accounts, transfers appear twice (once per account), and a silently dropped row is invisible until a balance is wrong months later. The skill converts *with receipts*: every count and balance is reconciled against the source, and everything unmappable is surfaced, never guessed.
 
+## Prefer `bea`; fall back without it
+
+Check once with `command -v bea`. Prefer scaffolding via `beancount-init`'s
+bea path, writing confirmed batches with `bea add` where practical, and
+verifying with `bea check`. Do not `pip install beancount` or configure
+private engine paths. Without `bea`, follow init's template fallback and a
+developer `bean-check` if present; suggest installing `bea` as the primary fix.
+Optional Fava (`make start`) is only for users who want the browser UI — not
+required to finish a migration.
+
 ## Scope — what this skill does and does not touch
 
-**Does:** convert one export (possibly covering many source accounts) into a fresh ledger; propose and confirm the account hierarchy before converting; pair transfers; construct opening balances; emit a migration report; run `bean-check`.
+**Does:** convert one export (possibly covering many source accounts) into a fresh ledger; propose and confirm the account hierarchy before converting; pair transfers; construct opening balances; emit a migration report; run `bea check` (or `bean-check` without `bea`).
 
 **Does not:** talk to any app's API (exports only); backfill investment lots/prices (holdings rows are surfaced as follow-up work, not converted); merge into an existing populated ledger (offer `beancount-import` for that); invent category mappings the user didn't confirm.
 
@@ -29,7 +39,7 @@ Also ask up front for each source account's **current balance** (from the old ap
 
 ### 2. Scaffold
 
-If the working directory has no ledger, scaffold one via the **beancount-init** skill's flow (main.bean + Fava + uv + Makefile) — do not duplicate that logic here. Then **backdate the scaffold's today-dated `open` directives** to on/before the earliest migrated entry (migrated history posting to an account opened later fails `bean-check` with "reference to inactive account"). If a populated ledger already exists, stop: this skill targets fresh starts; offer `beancount-import` instead.
+If the working directory has no ledger, scaffold one via the **beancount-init** skill's flow (prefer `bea init` + `bea check`; Fava/uv/Makefile only when the user wants the browser) — do not duplicate that logic here. Then **backdate the scaffold's today-dated `open` directives** to on/before the earliest migrated entry (migrated history posting to an account opened later fails the check with "reference to inactive account"). If a populated ledger already exists, stop: this skill targets fresh starts; offer `beancount-import` instead.
 
 ### 3. Map
 
@@ -54,8 +64,8 @@ Present all three tables together as one review; the user edits them in place an
 Run the checks; a migration that can't show its math didn't happen:
 
 - **Row count**: source rows = non-transfer transactions written + 2×(transfer pairs merged) + skipped rows (each listed with a reason) — a merged pair is 2 source rows but 1 transaction, so count it on the pairs side, not the transactions side.
-- **Balances**: per account, opening + Σ(rows) must equal the stated current balance — this is what the appended `balance` assertion enforces via `bean-check`.
-- **bean-check** on the ledger. Any failure: surface the exact output, do not report success.
+- **Balances**: per account, opening + Σ(rows) must equal the stated current balance — this is what the appended `balance` assertion enforces via `bea check`.
+- **`bea check`** on the ledger (`bean-check` only without `bea`). Any failure: surface the exact output, do not report success.
 
 If a stated balance and the computed sum disagree, the `balance` assertion will fail — **surface the delta and its likely causes** (rows missing from the export, pending transactions, wrong stated balance); never adjust numbers to force a pass, never delete the assertion to hide it. Offer the residual as an explicit `Equity:Migration-Residual` posting **only** if the user explicitly accepts the discrepancy.
 
@@ -69,8 +79,8 @@ Converted: 1,180 transactions   Transfer pairs merged: 16 (32 rows)
 Skipped: 2 rows (listed below, with reasons)
 Unmapped categories → Expenses:Uncategorized: "Misc" (14 rows), "Stuff" (3 rows)
 Balances: Assets:Bank:Checking ✓ ties to 3,412.55   Liabilities:CC:Amex ✓ ties to -210.40
-bean-check: PASS
-Next steps: refine Expenses:Uncategorized rows; run `make start` for Fava; use beancount-import for ongoing weekly imports.
+bea check: PASS
+Next steps: refine Expenses:Uncategorized rows; optional `make start` for Fava if scaffolded; use beancount-import for ongoing weekly imports.
 ```
 
 ## What NOT to do

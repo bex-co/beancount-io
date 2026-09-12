@@ -91,4 +91,4 @@ After generating an assignment transaction, verify:
 - For covered calls: stock disposal price = strike + premium per share; `Income:Trading:CapitalGains` auto-balances
 - No `Income:Trading:OptionPremium` posting on assignment
 - Link matches the original opening transaction's link
-- Run `bean-check` on the file — should pass with no errors
+- Run `bea check` on the file (or `bean-check` without `bea`) — should pass with no errors

@@ -1,6 +1,6 @@
 # ADR 014: One bea installation with independent Beancount commands
 
-- Status: Accepted — m19 base verified in local installed-artifact rehearsals (t008); optional Beangulp/Beanprice enablement verified in m20/t004 installed wheel+sdist smoke; ledger-skills onboarding (**m21**) remains pending; publishing `beancount-io-engine` beside the frontend on PyPI is a release gate, not claimed by this ADR alone
+- Status: Accepted — m19 base verified in local installed-artifact rehearsals (t008); optional Beangulp/Beanprice enablement verified in m20/t004 installed wheel+sdist smoke; ledger-skills onboarding (**m21**) adapts customer skills to one-install bea; publishing `beancount-io-engine` beside the frontend on PyPI is a release gate, not claimed by this ADR alone
 - Date: 2026-09-11
 - Decision owners: CLI (`cli/`)
 - Related: [ADR012 — optional Beangulp dependency](./ADR012-cli-beangulp-not-a-hard-dependency.md)
@@ -9,7 +9,7 @@
 
 Customers should install `bea` once and use it for both native Beancount commands and existing bea features. The frontend invokes independent command-line programs instead of loading Beancount in its own Python process.
 
-The assessed **pre-migration** baseline is commit `fc038fa08bcdb2e09fffb1c959c78209d1e193d3`, `beancount-io` 0.1.0, Beancount 3.2.3, and Beanquery 0.2.0 (in-process library use). As of 2026-09-12, the m19 implementation lands the process boundary and one-install provisioning; see [Checklist](#checklist) and t008 evidence. Optional Beangulp/Beanprice coverage stays in **m20**; skills that still tell agents to `pip install beancount` stay in **m21**.
+The assessed **pre-migration** baseline is commit `fc038fa08bcdb2e09fffb1c959c78209d1e193d3`, `beancount-io` 0.1.0, Beancount 3.2.3, and Beanquery 0.2.0 (in-process library use). As of 2026-09-12, the m19 implementation lands the process boundary and one-install provisioning; see [Checklist](#checklist) and t008 evidence. Optional Beangulp/Beanprice coverage stays in **m20**; customer ledger skills follow one-install bea in **m21**.
 
 ## Decision
 
@@ -99,7 +99,7 @@ Audited against the ADR014 baseline (`beancount-io` 0.1.0 layout, Beancount 3.2.
 
 1. Combined-work assessment for frontend↔engine communication remains factual (ordinary CLI vs tightly coupled). Owner: release review after t023/t008 evidence; not certified by this matrix alone.
 2. Optional Beangulp/Beanprice adapters and installed verification are in **m20** (t001–t004). See [Optional ecosystem licenses](#optional-ecosystem-licenses-m20) and `cli/tmp/m20-t004-installed-artifact-evidence.md`. Adoption docs and closeout remain t005–t008.
-3. Customer-facing ledger skills still instruct `pip install beancount` as a no-`bea` fallback; aligning them with one-install bea is **m21** (pending) — do not treat skills as updated by m19 adoption docs alone.
+3. Customer-facing ledger skills use one `bea` install (no `pip install beancount` recovery) — aligned in **m21**; see `skills/CLAUDE.md` and `skills/scripts/m21-rehearsal-evidence.md`.
 4. Production PyPI first-use requires publishing `beancount-io-engine` next to `beancount-io` (built in `make release-artifacts`; not claimed published by local t008 rehearsal). Homebrew clean-env install remains CI-gated when a host already has `brew` `bea`.
 
 ### Optional ecosystem licenses (m20)
@@ -159,7 +159,7 @@ Sources: [bea import](../../cli/src/cli/commands/import_.py), [bea ingest](../..
 - [x] Record product policy: no transitive engine-dep license gate (Beancount+regex out of scope); verify frontend/engine notices we ship (`NOTICE.fava`, package licenses) in release artifacts (t013).
 - [x] Run CLI checks and clean installed-artifact smoke tests for both channels without preinstalled Beancount. Verify frontend isolation and offline engine reuse; rerun affected comparisons when upstream versions change. (t008: PyPI wheel+sdist local rehearsal green; Homebrew formula suite green; clean `brew` install blocked on this host by an existing tap install — see `cli/tmp/t008-installed-artifact-evidence.md`.)
 - [x] Separately add and verify optional Beangulp and Beanprice adapters for full ecosystem coverage. (**m20** — t001–t004: provisioning, adapters, installed wheel+sdist smoke with `bea engine enable` + ingest/price; Homebrew clean-env still blocked on hosts with existing `brew` `bea`, same as m19; evidence `cli/tmp/m20-t004-installed-artifact-evidence.md`)
-- [ ] Align ledger skills with one-install bea (stop redundant Beancount installs for agents that already have `bea`). (**m21** — pending)
+- [x] Align ledger skills with one-install bea (stop redundant Beancount installs for agents that already have `bea`). (**m21**)
 
 Native parity covers the six commands in the native comparison table. The installation and process-boundary requirements also cover existing local bea features. Optional integrations and skills onboarding have their own milestones.
 

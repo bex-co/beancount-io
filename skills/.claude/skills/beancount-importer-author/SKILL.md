@@ -15,7 +15,21 @@ This skill exists because importers are the most-complained-about chore in beanc
 
 **Does not:** import transactions into the ledger (that's running the importer, or `beancount-import`); categorize (beangulp extraction posts the source leg; categorization stays with `smart_importer` or `beancount-import` — don't hardcode guessed counter-accounts); scrape banks; edit the ledger.
 
-Read `references/beangulp-api.md` before writing any code. **Verify the installed API before trusting it or this reference**: `python -c "import beangulp, inspect; help(beangulp.Importer)"` — beangulp's API has sharp edges and versions differ.
+Read `references/beangulp-api.md` before writing any code. Prefer enabling
+Beangulp in the managed engine when `bea` is installed:
+
+```bash
+bea engine enable beangulp   # once; needs system libmagic
+bea engine status
+```
+
+Do **not** `pip install beangulp` into the agent/frontend process or into bea's
+frontend environment. Authoring still needs a project that can `import beangulp`
+for the golden harness — use a local uv/venv in the ledger repo (developer
+path), or run identify/extract through `bea ingest` after wiring. **Verify the
+installed API before trusting it or this reference**:
+`python -c "import beangulp, inspect; help(beangulp.Importer)"` inside that
+project venv — beangulp's API has sharp edges and versions differ.
 
 ## Workflow
 
@@ -50,7 +64,10 @@ python importers/<source>.py test importers/tests/<source>       # must be green
 
 The golden-file eyeball is the human gate: generated goldens encode whatever the importer *does*, right or wrong — confirm a few rows against the raw sample before blessing them. Iterate draft ↔ test until green. **A red harness is never handed over as done** — if it can't be made green, say exactly what's unresolved.
 
-Also sanity-run `extract` and `bean-check` the output appended to a scratch copy of the ledger when the user wants end-to-end proof.
+Also sanity-run `extract` and verify output with `bea check` (or `bean-check`
+without `bea`) when the user wants end-to-end proof. After wiring, prefer
+`bea ingest identify|extract|archive --config ingest.py …` over invoking
+upstream scripts by hand.
 
 ### 4. Wire
 

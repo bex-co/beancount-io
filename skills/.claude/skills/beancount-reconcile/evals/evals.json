@@ -1,6 +1,6 @@
 {
   "skill_name": "beancount-reconcile",
-  "notes": "Each eval maps the fixture ledger to ./ledger.beancount and the fixture statement to ./statement.csv in a scratch dir. Expectations are graded against the skill's reported diff and any appended entries. bean-check via `uv run --project cli bean-check` in this repo (`pip install beancount` elsewhere). eval1-7 cover the happy path and each mismatch class; eval8-10 are failure-mode checks.",
+  "notes": "Each eval maps the fixture ledger to ./ledger.beancount and the fixture statement to ./statement.csv in a scratch dir. Expectations are graded against the skill's reported diff and any appended entries. Validate with `bea check` when bea is installed; oracle/CI uses `uv run --project cli bean-check` separately. Do not `pip install beancount` as the customer path. eval1-7 cover the happy path and each mismatch class; eval8-10 are failure-mode checks.",
   "evals": [
     {
       "id": 1,

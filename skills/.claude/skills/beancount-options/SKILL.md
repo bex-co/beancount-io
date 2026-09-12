@@ -9,6 +9,14 @@ Turn natural-language options descriptions into correct beancount transactions.
 
 This skill exists because options accounting in beancount has subtle mechanics that are easy to get wrong by hand: short-position cost basis lives in negative-quantity holdings, premium becomes part of stock cost basis on assignment, multi-leg trades need link grouping, and the four close paths (close, expire, assign, exercise) produce different P&L treatment. The skill takes a description, infers the strategy and outcome, generates the correct transaction(s), and — only after explicit confirmation — appends them to the user's ledger.
 
+## Prefer `bea`; fall back to hand-append
+
+Check once with `command -v bea`. When installed, write confirmed entries with
+`bea add transactions --from -` (open accounts first with `bea add open`) and
+verify with `bea check`. Do not `pip install beancount` or silently fall back
+to a global `bean-check` while `bea` is installed. Without `bea`, append text
+and use a developer `bean-check` if present; otherwise suggest installing `bea`.
+
 ## When to use this skill
 
 Use whenever the user:
@@ -129,20 +137,26 @@ When appending:
 
 ### 5. Verify
 
-After appending, run `bean-check` on the modified file:
+After appending, verify with `bea check` when `bea` is installed:
 
 ```bash
-bean-check ./ledger.beancount   # this repo: uv run --project cli bean-check
+bea check                               # when bea is installed
+bean-check ./ledger.beancount           # no-bea / developer fallback only
 ```
 
-If `bean-check` reports **any** errors (transaction does not balance, lot booking failure, undeclared account, etc.), do NOT report success. Instead:
-1. Surface the exact `bean-check` output to the user.
+Prefer writing through `bea add transactions --from -` (and `bea add open`
+for new accounts) when `bea` is present — same confirm gate, validated write.
+Without `bea`, append text then run `bean-check` if available.
+
+If the check reports **any** errors (transaction does not balance, lot booking
+failure, undeclared account, etc.), do NOT report success. Instead:
+1. Surface the exact check output to the user.
 2. If you can identify the cause from the error, propose a fix.
 3. Do not silently revert. The user needs to see the error to investigate.
 
 This step exists because the cost-basis arithmetic is subtle, especially for assignment, exercise, and multi-leg trades. Catching an error now is much cheaper than discovering it later during 1099-B reconciliation.
 
-If `bean-check` is unavailable, mention it to the user (`pip install beancount` to install) and at minimum compute the per-transaction posting weights manually to verify each new transaction sums to zero.
+If neither tool is available, suggest installing `bea` and at minimum compute the per-transaction posting weights manually to verify each new transaction sums to zero.
 
 ## Universal mechanics
 

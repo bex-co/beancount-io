@@ -141,6 +141,51 @@ class TestFindBea(unittest.TestCase):
                 assert ctx.exception.code == 1
 
 
+class TestOracleAndIsolation(unittest.TestCase):
+    def test_oracle_uses_cli_project_not_path_bean_check(self):
+        oracle = ci_check.find_bean_check_oracle()
+        self.assertEqual(oracle[:3], ["uv", "run", "--project"])
+        self.assertTrue(oracle[-1] == "bean-check" or oracle[-1].endswith("bean-check"))
+
+    def test_path_scrub_drops_bean_check_dirs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            decoy = Path(tmp) / "decoy"
+            decoy.mkdir()
+            (decoy / "bean-check").write_text("#!/bin/sh\nexit 0\n")
+            (decoy / "bean-check").chmod(0o755)
+            keep = Path(tmp) / "keep"
+            keep.mkdir()
+            (keep / "bea").write_text("#!/bin/sh\nexit 0\n")
+            (keep / "bea").chmod(0o755)
+            with mock.patch.dict(
+                os.environ,
+                {"PATH": f"{decoy}{os.pathsep}{keep}"},
+                clear=False,
+            ):
+                env = ci_check.env_without_global_bean_tools()
+            self.assertFalse(ci_check.path_has_bean_check(env))
+            self.assertIn(str(keep), env["PATH"])
+            self.assertNotIn(str(decoy), env["PATH"])
+
+    def test_pip_install_beancount_instruction_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            skills_dir = repo / "skills/.claude/skills"
+            skill = skills_dir / "beancount-ask" / "SKILL.md"
+            skill.parent.mkdir(parents=True)
+            skill.write_text(
+                "---\nname: beancount-ask\ndescription: x\n---\n"
+                "If missing, pip install beancount.\n"
+            )
+            with mock.patch.multiple(
+                ci_check,
+                REPO_ROOT=repo,
+                SKILLS_DIR=skills_dir,
+            ):
+                with self.assertRaises(SystemExit):
+                    ci_check.check_no_redundant_installs()
+
+
 class TestRawAppendMatcher(unittest.TestCase):
     def flagged(self, line: str) -> bool:
         return bool(

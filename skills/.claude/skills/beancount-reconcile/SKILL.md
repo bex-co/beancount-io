@@ -1,13 +1,13 @@
 ---
 name: beancount-reconcile
-description: Reconcile one beancount account against a bank or broker statement. Use this skill whenever the user wants to check that their ledger matches a statement — "reconcile my checking account", "does my ledger match my May Chase statement", "find the missing transactions for last month", "why is my balance off", or when they paste/point to a statement (CSV export or PDF text) and ask to compare it to the ledger. The skill reports a diff (missing, duplicate, amount-mismatch, date-drift) and, only after explicit confirmation, appends the missing transactions plus a period-end balance assertion, then runs bean-check. SKIP when the user wants to bulk-import a statement as the primary source of new transactions (that is an import workflow, not reconciliation), record a single specific trade or transaction, ask analytics/reporting questions ("top expenses"), or edit existing entries. The core trigger is "check my ledger against this statement and fix what's missing".
+description: Reconcile one beancount account against a bank or broker statement. Use this skill whenever the user wants to check that their ledger matches a statement — "reconcile my checking account", "does my ledger match my May Chase statement", "find the missing transactions for last month", "why is my balance off", or when they paste/point to a statement (CSV export or PDF text) and ask to compare it to the ledger. The skill reports a diff (missing, duplicate, amount-mismatch, date-drift) and, only after explicit confirmation, appends the missing transactions plus a period-end balance assertion, then verifies with bea check (bean-check only when bea is absent). SKIP when the user wants to bulk-import a statement as the primary source of new transactions (that is an import workflow, not reconciliation), record a single specific trade or transaction, ask analytics/reporting questions ("top expenses"), or edit existing entries. The core trigger is "check my ledger against this statement and fix what's missing".
 ---
 
 # beancount-reconcile
 
 Reconcile **one account** against **one statement period**: find every discrepancy between the ledger and the statement, and — only after the user confirms — append the missing transactions and a period-end balance assertion that proves the account ties out.
 
-This skill exists because reconciliation is the deterministic trust check for a ledger, and doing it by hand is tedious and error-prone: statement sign conventions differ from ledger conventions, pending-vs-settled timing shifts dates, and the only real proof of correctness is a `balance` assertion that beancount itself verifies. The skill normalizes the statement, diffs it against the ledger, classifies each discrepancy, and lands a balance assertion whose success (via `bean-check`) is the reconciliation's definition of done.
+This skill exists because reconciliation is the deterministic trust check for a ledger, and doing it by hand is tedious and error-prone: statement sign conventions differ from ledger conventions, pending-vs-settled timing shifts dates, and the only real proof of correctness is a `balance` assertion that beancount itself verifies. The skill normalizes the statement, diffs it against the ledger, classifies each discrepancy, and lands a balance assertion whose success (via `bea check`, or `bean-check` without `bea`) is the reconciliation's definition of done.
 
 ## Prefer `bea`; fall back to hand-appended text
 
@@ -18,8 +18,11 @@ the confirm gate — and writes through `bea`: missing entries with
 assertion with `bea add balance`, an explicit opening adjustment (first
 reconcile with no prior assertion and a nonzero opening gap) with
 `bea add balance --pad-from`, and verification with `bea check`. It never
-appends ledger text directly on this path. Without `bea`, append text as the
-Propose and Verify phases describe and verify with `bean-check`.
+appends ledger text directly on this path. Do not `pip install beancount` or
+silently fall back to a global `bean-check` while `bea` is installed — repair
+the managed engine instead. Without `bea`, append text as the Propose and
+Verify phases describe and verify with `bean-check` if available; otherwise
+suggest installing `bea`.
 
 ## Scope — what this skill does and does not touch
 
@@ -161,7 +164,7 @@ After writing, verify with `bea check` when `bea` is installed, otherwise `bean-
 
 ```bash
 bea check                               # when bea is installed
-bean-check ./ledger.beancount   # this repo: uv run --project cli bean-check
+bean-check ./ledger.beancount           # no-bea / developer fallback only
 ```
 
 In the clean case, you wrote the missing entries plus a passing `balance` assertion — that assertion is the reconciliation's proof, and the check verifies it:
@@ -172,7 +175,7 @@ In the clean case, you wrote the missing entries plus a passing `balance` assert
 
 Recall from Propose that when the account does **not** tie out (unresolved suspect / mismatch / duplicate), you never wrote an assertion at all — you reported the residual instead. So a well-run partial reconcile leaves the check green (no failing assertion), with the residual and its causes reported in prose for the user to fix.
 
-If neither tool is available, tell the user (`pip install beancount`) and, at minimum, sum the target account's postings over the period by hand and compare to the statement ending balance.
+If neither tool is available, suggest installing `bea` and, at minimum, sum the target account's postings over the period by hand and compare to the statement ending balance.
 
 ## Balance-assertion date — the one subtlety to get right
 

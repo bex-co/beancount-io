@@ -1,85 +1,85 @@
 ---
 name: beancount-init
 description: >-
-  Scaffold a brand-new beancount + fava personal ledger repository in the
-  current working directory. Builds main.bean on `bea init` when the bea
-  CLI is installed (same fourteen accounts, same file), otherwise writes
-  that template directly; plus a Makefile whose `make start` boots Fava on
-  a randomized unusual port, an initialized uv Python project with beancount
-  and fava installed, and a .gitignore tuned for Python/uv/fava. Trigger
-  this skill whenever the user types /beancount-init, or asks to "set up a
-  new beancount repo", "scaffold a beancount ledger", "start a new ledger",
-  "bootstrap fava", "initialize a beancount project", or anything similar
-  about beginning a fresh accounting repository. Do NOT trigger for
-  questions about an existing ledger or for editing transactions.
+  Scaffold a brand-new personal ledger in the current working directory.
+  With `bea` installed, creates and validates `main.bean` through `bea init`
+  and `bea check` — no separate Beancount install. Optional Fava browser
+  setup (uv + Makefile) is a separate workflow when the user asks for it.
+  Without `bea`, writes the same fourteen-account template. Trigger on
+  /beancount-init, "set up a new beancount repo", "scaffold a beancount
+  ledger", "start a new ledger", "bootstrap fava", or "initialize a
+  beancount project". Do NOT trigger for questions about an existing ledger
+  or for editing transactions.
 ---
 
 # beancount-init
 
-Scaffold a fresh beancount + fava ledger in the current working directory. Goal: from empty dir to running Fava in two commands (`/beancount-init`, then `make start`).
+Scaffold a fresh ledger in the current working directory. Prefer a single
+`bea` installation for create + validate. Fava's browser UI is optional and
+has its own runtime — it is not a prerequisite for `bea` ledger work.
 
-Run the steps in order. Stop if a preflight check fails — partial scaffolding is worse than no scaffolding.
+Run the steps in order. Stop if a preflight check fails — partial scaffolding
+is worse than no scaffolding.
+
+## Prefer `bea`; Fava and no-`bea` are explicit side paths
+
+Check once with `command -v bea`. When `bea` is installed:
+
+- Create the starter with `bea init` and validate with `bea check`.
+- Do **not** `pip install beancount`, `uv add beancount`, or set `BEA_ENGINE` /
+  manual engine venvs. The managed engine provisions on first use.
+- If provisioning or `bea check` fails: fix network/`uv` availability and
+  retry `bea check` (or `bea upgrade`). Do **not** silently fall back to a
+  global `bean-check` while `bea` is installed.
+
+Without `bea`, write the template below (developer / no-bea fallback). Suggest
+installing `bea` (`brew install bex-co/tap/bea` or
+`uv tool install beancount-io`) rather than a second Beancount CLI. If the
+user already has a developer `bean-check`, they may use it to validate the
+template — that is an independent developer environment, not the customer path.
+
+Fava setup runs only when the user asks for a browser UI (`make start`,
+"bootstrap fava", "with Fava"). It needs `uv` and installs Fava into a local
+project venv; it does not replace `bea` for check/query/import.
 
 ## Step 1 — Preflight
 
 Run `pwd && ls -A` to see the working directory.
 
-**Hard-refuse** if any of these already exist: `main.bean`, `pyproject.toml`, `Makefile`. Print which ones are present and stop. Do not overwrite — the user almost certainly didn't mean to scaffold over an existing project.
+**Hard-refuse** if any of these already exist: `main.bean`, `pyproject.toml`,
+`Makefile`. Print which ones are present and stop. Do not overwrite.
 
-If the directory contains other files but none of those markers, warn the user and ask once for confirmation before continuing.
+If the directory contains other files but none of those markers, warn once and
+ask for confirmation before continuing.
 
-Verify `uv` is on PATH with `command -v uv`. If it isn't, stop and tell the user to install it:
+Check `command -v bea` and remember BEA (yes/no). Ask for the operating
+currency (default `USD`) and an optional checking opening balance; call the
+answers CURRENCY and OPENING (empty when none). Detect FAVA: yes when the
+user asked for Fava / `make start` / "bootstrap fava", otherwise ask once
+(default **no** when BEA is yes; default **yes** only when BEA is no and they
+still want a browser — otherwise they can install `bea` later).
 
-- macOS: `brew install uv`
-- Otherwise: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+When FAVA is yes, verify `uv` with `command -v uv`. If missing, stop and tell
+them to install it (`brew install uv` on macOS, or
+`curl -LsSf https://astral.sh/uv/install.sh | sh`).
 
-Check whether the `bea` CLI is installed with `command -v bea` and remember
-the answer as BEA (yes/no) for Step 5. Either way, ask the user for the
-operating currency (default `USD`) and an optional checking opening balance,
-and call the answers CURRENCY and OPENING (empty when the user gave none).
+## Step 2 — Capture today's date
 
-## Step 2 — Pick a random port
+Run `date +%Y-%m-%d` and call the result `TODAY` (open-date for all root accounts).
 
-Run this once and capture stdout:
+## Step 3 — Write `main.bean`
 
-```
-python3 -c "import random; bad={50000,55555,60000,65000}; ps=[p for p in range(49152,65536) if p not in bad and p%1000]; print(random.choice(ps))"
-```
-
-That gives an integer in IANA dynamic range (49152–65535), excluding round thousands and a few obvious "memorable" values. Each scaffolded ledger gets a different port — useful when running multiple ledgers concurrently. Call this value `PORT`.
-
-If `python3` is somehow not available (very rare on macOS):
-
-```
-awk 'BEGIN{srand(); print 49152 + int(rand()*16384)}'
-```
-
-## Step 3 — Capture today's date
-
-Run `date +%Y-%m-%d` and call the result `TODAY`. Used as the open-date for all root accounts.
-
-## Step 4 — Initialize the uv project
-
-```
-uv init --bare
-uv add fava beancount
-```
-
-`--bare` skips the `hello.py` / `README.md` / `src/` boilerplate that doesn't belong in a ledger repo. The two commands produce `pyproject.toml` and `uv.lock` and download fava and beancount into `.venv/`.
-
-## Step 5 — Write `main.bean`: prefer `bea`, fall back to the template
-
-When BEA is yes, the ledger comes from the CLI so it can never drift from
-`bea init`. Substitute CURRENCY, TODAY, and OPENING:
+When BEA is yes, substitute CURRENCY, TODAY, and OPENING:
 
 ```
 bea --no-input init . --currency CURRENCY --date TODAY \
   --opening-balance "Assets:Checking OPENING"    # only when OPENING is non-empty
+bea --file ./main.bean check
 ```
 
-`bea init .` writes `./main.bean` in the working directory. Do not write any
-template yourself on this path — the produced file equals `bea init`'s output
-byte-for-byte. Skip to Step 6.
+`bea init .` writes `./main.bean`. Do not write any template on this path — the
+file equals `bea init` byte-for-byte. Skip to Step 4 when FAVA is yes; otherwise
+Step 5.
 
 When BEA is no, write the same fourteen-account template `bea init` writes,
 substituting `{{TODAY}}`, `{{CURRENCY}}`, and the `{{TAIL}}` block:
@@ -108,9 +108,8 @@ option "operating_currency" "{{CURRENCY}}"
 {{TAIL}}
 ```
 
-When OPENING is non-empty, `{{TAIL}}` is the live opening transaction for a
-single checking balance, with the amount exactly as the user wrote it (bea
-renders the Decimal verbatim, so `100` stays `100`):
+When OPENING is non-empty, `{{TAIL}}` is the live opening transaction (amount
+exactly as the user wrote it — `100` stays `100`):
 
 ```
 {{TODAY}} * "Opening balances"
@@ -118,8 +117,7 @@ renders the Decimal verbatim, so `100` stays `100`):
   Equity:OpeningBalances  -100 {{CURRENCY}}
 ```
 
-For several balances, align the amounts one space past the longest account
-name instead. When OPENING is empty, `{{TAIL}}` is the commented example:
+When OPENING is empty, `{{TAIL}}` is the commented example:
 
 ```
 ; Record opening balances with a transaction against Equity:OpeningBalances.
@@ -128,12 +126,36 @@ name instead. When OPENING is empty, `{{TAIL}}` is the commented example:
 ;   Equity:OpeningBalances  -1000.00 {{CURRENCY}}
 ```
 
-The equity account is always `Equity:OpeningBalances` — constrained to the
-operating currency, matching `bea init`.
+The equity account is always `Equity:OpeningBalances`.
 
-## Step 6 — Write `Makefile`
+## Step 4 — Optional Fava browser setup
 
-Substitute `{{PORT}}` with the integer from Step 2. **The recipe line must be tab-indented**, not spaces — `make` rejects spaces with a "missing separator" error. Write the file verbatim; do not re-format.
+Skip this entire step when FAVA is no.
+
+### Port
+
+```
+python3 -c "import random; bad={50000,55555,60000,65000}; ps=[p for p in range(49152,65536) if p not in bad and p%1000]; print(random.choice(ps))"
+```
+
+Call the integer `PORT`. If `python3` is missing:
+`awk 'BEGIN{srand(); print 49152 + int(rand()*16384)}'`.
+
+### uv project + Fava
+
+```
+uv init --bare
+uv add fava
+```
+
+`--bare` skips hello-world boilerplate. `uv add fava` pulls Fava's own runtime
+deps (including Beancount for the browser) into `.venv/` — that is Fava's
+environment, not a second customer CLI. Do **not** also `uv add beancount` for
+`bea` operations.
+
+### Makefile
+
+Tab-indent the recipe line. Substitute `{{PORT}}`:
 
 ```
 .PHONY: start
@@ -143,11 +165,9 @@ start:
 	uv run fava main.bean -p $(PORT)
 ```
 
-`PORT ?=` lets users override at runtime — e.g., `make start PORT=49999` if the baked-in port collides with something later.
+### `.gitignore`
 
-## Step 7 — Write `.gitignore`
-
-Overwrite whatever `uv init --bare` may have written. Sections cover Python, macOS, Linux, JetBrains IDEs, VS Code, and Fava — the entries every personal repo on a mac with a JetBrains/VS Code setup tends to need:
+Overwrite whatever `uv init --bare` wrote:
 
 ```
 # Python
@@ -201,18 +221,19 @@ out/
 .fava/
 ```
 
-`uv.lock` and `pyproject.toml` are intentionally tracked — reproducible installs and dep declarations both belong in version control.
+## Step 5 — `git init` (only if needed)
 
-## Step 8 — `git init` (only if needed)
+If `.git/` does not already exist, run `git init`. Don't stage anything.
 
-If `.git/` does not already exist, run `git init`. Don't stage anything — the user should review the scaffold before committing. If `.git/` already exists, skip silently.
+## Step 6 — Report
 
-## Step 9 — Report
+Print:
 
-Print to the user:
+- Files created (`main.bean`; plus `Makefile`, `.gitignore`, `pyproject.toml`,
+  `uv.lock`, `.venv/` when FAVA ran).
+- When BEA validated: `bea check` passed.
+- When FAVA: the port and `make start` → `http://localhost:<PORT>`.
+- When BEA only: next steps such as `bea check`, `bea import`, or
+  `bea --json query`.
 
-- Files created (e.g., `main.bean`, `Makefile`, `.gitignore`, `pyproject.toml`, `uv.lock`, plus `.git/` and `.venv/` if just created).
-- The chosen port.
-- Next step: run `make start`, then open `http://localhost:<PORT>` in a browser.
-
-Keep the report tight — one short line per item, no narration.
+Keep the report tight — one short line per item.

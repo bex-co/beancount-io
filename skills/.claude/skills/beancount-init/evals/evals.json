@@ -1,29 +1,41 @@
 {
   "skill_name": "beancount-init",
-  "notes": "Fixture-free evals: the agent works in an empty scratch dir, so no fixture files are referenced. Expectations are graded against the produced main.bean. bean-check via `uv run --project cli bean-check` in this repo (`pip install beancount` elsewhere).",
+  "notes": "Fixture-free evals in an empty scratch dir. With bea: validate via `bea check` (managed engine). Without bea: template write; optional developer bean-check. Do not require `pip install beancount` or Fava for the bea-ledger path.",
   "evals": [
     {
       "id": 1,
       "name": "init-with-bea",
-      "prompt": "Set up a new beancount ledger here (USD, no opening balance). `bea` is on PATH.",
-      "expected_output": "The skill runs `bea --no-input init . --currency USD --date <TODAY>` and writes no template itself. main.bean equals `bea init` output byte-for-byte: fourteen opens dated TODAY plus the commented opening-balance example. bean-check passes.",
+      "prompt": "Set up a new beancount ledger here (USD, no opening balance, no Fava). `bea` is on PATH.",
+      "expected_output": "The skill runs `bea --no-input init . --currency USD --date <TODAY>` then `bea check`. It writes no template itself and does not run `uv add beancount` or `pip install beancount`. main.bean equals `bea init` byte-for-byte: fourteen opens dated TODAY plus the commented opening-balance example. No Makefile/pyproject unless the user asked for Fava.",
       "expectations": [
         "main.bean is byte-identical to running `bea --no-input init . --currency USD --date <TODAY>` directly",
         "main.bean opens exactly the fourteen template accounts (Checking, Savings, Cash, CreditCard, Salary, Interest, Groceries, Dining, Rent, Transport, Utilities, Fees, Uncategorized, OpeningBalances)",
         "The equity account is spelled `Equity:OpeningBalances`",
-        "bean-check passes with no errors"
+        "`bea check` passes with no errors",
+        "No `pip install beancount` / `uv add beancount` and no private engine-path configuration"
       ]
     },
     {
       "id": 2,
       "name": "init-without-bea",
       "prompt": "Set up a new beancount ledger here (EUR, checking opening balance 100). `bea` is NOT on PATH.",
-      "expected_output": "The skill writes the fourteen-account template itself with TODAY opens, the operating currency, and a live opening-balances transaction for Assets:Checking 100. bean-check passes.",
+      "expected_output": "The skill writes the fourteen-account template itself with TODAY opens, the operating currency, and a live opening-balances transaction for Assets:Checking 100. It suggests installing bea rather than `pip install beancount` as the primary recovery.",
       "expectations": [
         "main.bean opens exactly the fourteen template accounts dated TODAY in EUR",
         "The equity account is spelled `Equity:OpeningBalances` with the operating currency",
         "A live `Opening balances` transaction posts Assets:Checking 100 against Equity:OpeningBalances -100 (no commented example alongside it)",
-        "bean-check passes with no errors"
+        "Does not instruct `pip install beancount` as the default install path"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "init-with-bea-and-fava",
+      "prompt": "Bootstrap a new beancount ledger with Fava here (USD, no opening). `bea` and `uv` are on PATH.",
+      "expected_output": "bea init + bea check for main.bean; separately uv init --bare, uv add fava (not beancount), Makefile with make start on a dynamic port, and .gitignore. Fava's venv is not used as a substitute for bea check.",
+      "expectations": [
+        "main.bean comes from bea init; validated with bea check",
+        "uv add fava runs; uv add beancount does not",
+        "Makefile start recipe runs `uv run fava main.bean -p $(PORT)`"
       ]
     }
   ]

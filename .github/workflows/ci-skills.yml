@@ -33,10 +33,12 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: cli/uv.lock
-      - name: Install bean-check (via cli)
+      - name: Sync CLI (customer bea + upstream oracle)
         working-directory: cli
         run: uv sync --all-groups
       - name: Run skills checks
+        # Customer leg: bea check with bean-* scrubbed from PATH.
+        # Oracle leg: uv run --project cli bean-check (locked upstream).
         run: python3 skills/scripts/ci-check.py
       - name: Run ci-check unit tests
         run: python3 skills/scripts/test_ci_check.py

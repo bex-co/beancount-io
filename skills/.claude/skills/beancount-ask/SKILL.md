@@ -1,13 +1,13 @@
 ---
 name: beancount-ask
-description: Answer questions about a beancount ledger with BQL queries — spending, trends, net worth, burn rate, subscriptions, anomalies. Use this skill whenever the user asks an analytical/reporting question about their ledger — "how much did I spend on groceries last month", "what's my net worth", "what subscriptions am I paying for", "did anything unusual happen in May", "what's my monthly burn" — or asks for a spending report/summary. Every figure in an answer comes from a bea --json query run the user can see and re-run (bean-query when bea is unavailable); the skill is strictly read-only. SKIP when the user wants to record transactions (beancount-options / beancount-import), reconcile against a statement (beancount-reconcile), migrate from another app (beancount-migrate), edit the ledger in any way, or asks how beancount/BQL works in general (that's a docs question, not a query over their data). The core trigger is "answer this question from my ledger's data".
+description: Answer questions about a beancount ledger with BQL queries — spending, trends, net worth, burn rate, subscriptions, anomalies. Use this skill whenever the user asks an analytical/reporting question about their ledger — "how much did I spend on groceries last month", "what's my net worth", "what subscriptions am I paying for", "did anything unusual happen in May", "what's my monthly burn" — or asks for a spending report/summary. Every figure in an answer comes from a bea --json query run the user can see and re-run (bean-query only when bea is unavailable); the skill is strictly read-only. SKIP when the user wants to record transactions (beancount-options / beancount-import), reconcile against a statement (beancount-reconcile), migrate from another app (beancount-migrate), edit the ledger in any way, or asks how beancount/BQL works in general (that's a docs question, not a query over their data). The core trigger is "answer this question from my ledger's data".
 ---
 
 # beancount-ask
 
 Answer ledger questions with **shown, re-runnable BQL** — never with model arithmetic.
 
-This skill exists because a fluent-but-unverifiable answer about money is worse than no answer: the entire credibility of plain-text accounting is that every number is reproducible. So the contract is: every figure cited comes from a shown query execution, the query is shown with the answer, and the ledger is never modified. Prefer `bea` for reads when installed, fall back to bean-* — stated once here, not repeated below.
+This skill exists because a fluent-but-unverifiable answer about money is worse than no answer: the entire credibility of plain-text accounting is that every number is reproducible. So the contract is: every figure cited comes from a shown query execution, the query is shown with the answer, and the ledger is never modified. Prefer `bea` for reads when installed, fall back to bean-* only when `bea` is absent — stated once here, not repeated below.
 
 ## Scope
 
@@ -23,9 +23,10 @@ Find the main ledger file (same procedure as the sibling skills: `fd -e beancoun
 
 Tooling, in order of preference:
 
-1. `bea --file <ledger> --json query "<BQL>"` — this repo's CLI (wraps beanquery), when the user has it installed; drop `--json` when reading the table yourself. `bea --file <ledger> --json balance` gives the pruned trial-balance subtree (same shape as `report trial-balance`), and `bea list transaction --search/--tag/--link` finds entries without BQL.
-2. `bean-query <ledger> "<BQL>"` (from the `beanquery` package; if not on PATH, `pip install beanquery` — in this repo's CLI environment, `uv run --project cli bean-query`).
-3. For polished statements (income statement, balance sheet trees), `bea --file <ledger> report income-statement` / Fava beat raw BQL — say so rather than rebuilding them in BQL.
+1. `bea --file <ledger> --json query "<BQL>"` — when `bea` is installed (managed engine runs Beanquery). Drop `--json` when reading the table yourself. `bea --file <ledger> --json balance` gives the pruned trial-balance subtree, and `bea list transaction --search/--tag/--link` finds entries without BQL. Do not `pip install beanquery` or configure private engine paths while `bea` is present; if the engine fails, repair/retry provisioning rather than switching to a global `bean-query`.
+2. Without `bea`: `bean-query <ledger> "<BQL>"` if a developer environment already provides it; otherwise suggest installing `bea`.
+3. For polished statements (income statement, balance sheet trees), `bea --file <ledger> report income-statement` beats raw BQL — say so rather than rebuilding them in BQL.
+4. Optional quotes: `bea price …` needs `bea engine enable beanprice` first; recording a known quote uses `bea add price` without that feature.
 
 ### 2. Translate the question
 

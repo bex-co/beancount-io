@@ -1,19 +1,19 @@
 # w1 · m21 — Ledger skills follow the one-install engine design
 
-**Worker:** worker1 **Goal:** Claude Code and Codex complete existing ledger workflows through bea without redundant accounting-tool installation or assumptions about its private engine **Status:** todo
+**Worker:** worker1 **Goal:** Claude Code and Codex complete existing ledger workflows through bea without redundant accounting-tool installation or assumptions about its private engine **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Adapt ledger initialization to the single bea installation | 45m | w1/m20/t008 |
-| t002 | Align ledger skills with independent engine commands | 60m | t001 |
-| t003 | Validate skills against installed isolated bea artifacts | 60m | t002 |
-| t004 | Rehearse core and optional workflows for both agents | 45m | t003 |
-| t005 | Adoption surface | 25m | t004 |
-| t006 | Simplify | 30m | t005 |
-| t007 | CI + test coverage | 45m | t005, t006 |
-| t008 | Closeout | 15m | t007 |
+| t001 | Adapt ledger initialization to the single bea installation — **DONE** | 45m | w1/m20/t008 |
+| t002 | Align ledger skills with independent engine commands — **DONE** | 60m | t001 |
+| t003 | Validate skills against installed isolated bea artifacts — **DONE** | 60m | t002 |
+| t004 | Rehearse core and optional workflows for both agents — **DONE** | 45m | t003 |
+| t005 | Adoption surface — **DONE** | 25m | t004 |
+| t006 | Simplify — **DONE** | 30m | t005 |
+| t007 | CI + test coverage — **DONE** | 45m | t005, t006 |
+| t008 | Closeout — **DONE** | 15m | t007 |
 
 ## Definition of done
 

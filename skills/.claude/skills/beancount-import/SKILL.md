@@ -1,6 +1,6 @@
 ---
 name: beancount-import
-description: Import a bank or card export (CSV, OFX, QIF) into a beancount ledger as categorized, deduplicated transactions. Use this skill whenever the user has an export file from a bank, credit card, or brokerage cash account and wants those transactions recorded — "import this CSV", "record my May bank export", "add these transactions to my ledger", or when they point to a downloaded export file and ask to book it. The skill stages every row, suggests a category for each from the ledger's own history, skips rows already imported (via import-id metadata), and appends only after the user confirms a review table, then runs bean-check. SKIP when the user wants to check the ledger against a statement and fix discrepancies (beancount-reconcile), migrate full history from Mint/Monarch/QuickBooks (beancount-migrate), build a reusable Python importer for a source (beancount-importer-author), or record a single described trade (beancount-options). The core trigger is "here is an export file — put these transactions in my ledger".
+description: Import a bank or card export (CSV, OFX, QIF) into a beancount ledger as categorized, deduplicated transactions. Use this skill whenever the user has an export file from a bank, credit card, or brokerage cash account and wants those transactions recorded — "import this CSV", "record my May bank export", "add these transactions to my ledger", or when they point to a downloaded export file and ask to book it. The skill stages every row, suggests a category for each from the ledger's own history, skips rows already imported (via import-id metadata), and appends only after the user confirms a review table, then verifies with bea check (or bean-check only when bea is absent). SKIP when the user wants to check the ledger against a statement and fix discrepancies (beancount-reconcile), migrate full history from Mint/Monarch/QuickBooks (beancount-migrate), build a reusable Python importer for a source (beancount-importer-author), or record a single described trade (beancount-options). The core trigger is "here is an export file — put these transactions in my ledger".
 ---
 
 # beancount-import
@@ -15,12 +15,14 @@ Check once with `command -v bea`. When the `bea` CLI is installed, this skill
 keeps its judgment — format detection, sign confirmation, categorization from
 history, the confirm gate — and delegates staging, duplicate review,
 validation, and the atomic write to `bea`. It never appends ledger text
-directly on this path. Without `bea`, run the seven-stage pipeline below,
-which appends text itself and verifies with `bean-check`.
+directly on this path. Do not `pip install beancount`, configure private
+engine paths, or silently switch to a global `bean-check` when `bea` fails —
+retry engine provisioning (`bea check` / `bea upgrade`) instead.
 
 - **CSV with `bea`:** map the columns into `--csv date=…,amount=…(or debit=…,credit=…),payee=…,narration=…`, write the Suggest-stage categories into a temporary `[[rule]]` TOML file (`match` = payee pattern, `account` = suggested account), and run the preview: `bea --file LEDGER import EXPORT --csv … --account SOURCE --rules /tmp/….toml`. Present `bea`'s duplicate table as the review table (exact `import-id` matches are already skipped; possible duplicates need a `--duplicates skip/include` decision). Write only with `bea … --apply` after the user's yes. A re-run previews zero new rows. `bea` remembers the mapping per ledger, so repeat imports need no flags — there is no config block to maintain on this path, and no importer-author nudge (the mapping already persists).
 - **OFX/QIF — or a CSV the mapping cannot express — with `bea`:** run Discover, Normalize, Dedup, Suggest, and Confirm below as written, but write the confirmed batch with `bea add transactions --from -` (JSON array on stdin, each entry carrying its `import-id` in `meta`) instead of appending text. Open any needed accounts first with `bea add open`. `bea` validates the whole ledger before writing; verify afterward with `bea check`.
-- **Without `bea`:** the pipeline below, unchanged.
+- **Optional Beangulp ingest:** for a tested `ingest.py` workflow, enable once with `bea engine enable beangulp` (needs system libmagic), then `bea ingest identify|extract|archive`. Do not `pip install beangulp` into the agent/frontend process. Ordinary CSV import does **not** need Beangulp.
+- **Without `bea`:** the pipeline below (hand-append + developer `bean-check` if present); suggest installing `bea` as the primary recovery.
 
 ## Scope — what this skill does and does not touch
 
@@ -156,16 +158,17 @@ On **yes**:
 
 - Update the config block (`imports:` count; mapping if it was just learned).
 
-Then run `bean-check` on the main file:
+Then verify:
 
 ```bash
-bean-check ./main.beancount   # if not on PATH: pip install beancount (this repo: uv run --project cli bean-check)
+bea check                               # when bea is installed
+bean-check ./main.beancount             # no-bea / developer fallback only
 ```
 
 - **Passes** → report: N imported, M skipped as already-imported, suspected-duplicate decisions, and any `Expenses:Uncategorized` rows to refine. Suggest `beancount-reconcile` for the period if the import was large.
 - **Fails** → do NOT report success. Surface the exact output, propose a fix, never silently revert.
 
-If `bean-check` is unavailable, say so (`pip install beancount`) and at minimum verify each new transaction's postings sum to zero.
+If neither tool is available, suggest installing `bea` and at minimum verify each new transaction's postings sum to zero.
 
 ## What NOT to do
 

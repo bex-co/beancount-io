@@ -6,9 +6,10 @@ Diff the normalized statement lines (from `statement-formats.md`) against the le
 
 - **Statement lines**: `{date, amount (ledger sign), description}` for the period.
 - **Ledger postings**: every posting to the target account with a date in `[period_start, period_end]`. Get them from the ledger directly, or via:
-  ```bash
-  bean-query ./ledger.beancount "SELECT date, position, narration WHERE account = 'Assets:Bank:Checking' AND date >= 2026-05-01 AND date <= 2026-05-31 ORDER BY date"
-  ```
+```bash
+  bea --file ./ledger.beancount query "SELECT date, position, narration WHERE account = 'Assets:Bank:Checking' AND date >= 2026-05-01 AND date <= 2026-05-31 ORDER BY date"
+  # without bea: bean-query ./ledger.beancount "…"
+```
 - **Anchor**: the prior `balance` assertion for the account (from Discover). Reconcile forward from it; you do not need to re-match anything before it.
 
 ## Matching algorithm — three passes, then classify

@@ -34,8 +34,8 @@
 
 This milestone remains the completed bea-first skills baseline; its task IDs, completion records, and original definition of done are retained. [ADR014](../../../../docs/adrs/ADR014-cli-beancount-parity.md) introduces a separate engine and changes the installation assumptions used above.
 
-- [m19](../../m19/README.md) owns the complete CLI process boundary, engine provisioning, license resolution, and release verification.
-- [m20](../../m20/README.md) keeps optional importer/provider execution inside the reviewed engine environment.
-- [m21](../../m21/README.md) owns the pending skills/CI follow-up: one bea-ledger installation, explicit Fava/developer workflows, supported optional activation, independent reference checks, and equivalent behavior for Claude Code and Codex.
+- [m19](../m19/README.md) owns the complete CLI process boundary, engine provisioning, license resolution, and release verification (**done**).
+- [m20](../m20/README.md) keeps optional importer/provider execution inside the reviewed engine environment (**done**).
+- [m21](../../m21/README.md) adapts skills/CI to one bea-ledger installation, explicit Fava/developer workflows, supported optional activation, independent reference checks, and equivalent behavior for Claude Code and Codex.
 
 The prior shared-venv and unconditional upstream-install guidance must not be reused as proof of ADR014 completion. The original template, deduplication, and validated-write work is not being reopened.

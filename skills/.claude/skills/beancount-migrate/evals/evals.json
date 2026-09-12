@@ -1,6 +1,6 @@
 {
   "skill_name": "beancount-migrate",
-  "notes": "Each eval runs in an empty scratch dir with the fixture export copied in as ./export.csv. bean-check via `uv run --project cli bean-check` in this repo (`pip install beancount` elsewhere). eval1-3 are per-source happy paths (Mint, Monarch, QBO); eval4-6 are failure-mode checks (balance delta surfaced, unmapped category never guessed, no conversion before mapping confirm). Fixture arithmetic: eval1 Chase flows sum +1935.81 (opening 1000.00 -> stated 2935.81), Amex flows +370.76 in ledger sign (opening -500.00 -> stated -129.24); eval2 Checking +1945.80 (opening 500.00 -> 2445.80), Savings +501.25 (opening 1000.00 -> 1501.25).",
+  "notes": "Each eval runs in an empty scratch dir with the fixture export copied in as ./export.csv. Validate with `bea check` when bea is installed; oracle/CI uses `uv run --project cli bean-check` separately. Do not `pip install beancount` as the customer path. eval1-3 are per-source happy paths (Mint, Monarch, QBO); eval4-6 are failure-mode checks (balance delta surfaced, unmapped category never guessed, no conversion before mapping confirm). Fixture arithmetic: eval1 Chase flows sum +1935.81 (opening 1000.00 -> stated 2935.81), Amex flows +370.76 in ledger sign (opening -500.00 -> stated -129.24); eval2 Checking +1945.80 (opening 500.00 -> 2445.80), Savings +501.25 (opening 1000.00 -> 1501.25).",
   "evals": [
     {
       "id": 1,
