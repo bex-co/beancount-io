@@ -50,19 +50,24 @@
 
 ## Inbox
 
-[129](./129.md) is not listed below: it was promoted into [m35](./m35/README.md),
-which links it as its reproduction record. [113](./113.md) stays parked — its
-producer is an upstream `@rustledger/wasm` defect with no released fix (re-checked
-2026-09-11, newest published version is still 0.24.0).
+A full triage pass on 2026-09-11 took this list from 78 notes to 4. Every note
+was re-verified against current code first: none had gone stale, so none was
+deleted — 74 were fixed and shipped (each closed note in [`done/`](./done)
+names the commit that fixed it), and the rest are accounted for below.
+
+[129](./129.md) is not listed: it was promoted into [m35](./m35/README.md),
+which links it as its reproduction record.
+
+The four that remain are deliberately not "next up":
+
+- [113](./113.md) — parked. Its producer is an upstream `@rustledger/wasm`
+  defect with no released fix (re-checked 2026-09-11, newest published version
+  is still 0.24.0), and vendoring the engine is forbidden here.
+- [003](./003.md), [152](./152.md), [157](./157.md) — held for a decision.
+  003 needs an idempotency contract across REST, GraphQL and MCP together (the
+  repo-wide parity rule), and 152/157 change backend error classification.
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
 - [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
-- [137](./137.md) — Transaction Share link closes its menu without opening the iOS share sheet
-- [143](./143.md) — Chart contact leaves the ledger drawer unresponsive
 - [152](./152.md) — Missing public profiles become internal server errors
-- [154](./154.md) — Reveal the selected account when the native picker opens
-- [156](./156.md) — Keep the last-posting automatic-balance toggle available when off
 - [157](./157.md) — Unsupported BQL integer results are reported as a temporary outage
-- [162](./162.md) — Make native wheel selection emphasis follow the option Confirm will save
-- [168](./168.md) — Open the receipt photo picker without requiring broad library access
-- [175](./175.md) — Keep zero-balance accounts inside their actual parent branches
