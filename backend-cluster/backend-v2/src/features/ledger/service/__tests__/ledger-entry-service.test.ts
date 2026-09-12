@@ -81,6 +81,11 @@ describe("LedgerEntryService", () => {
     service = new LedgerEntryService(
       createLedgerEntryWriter(mockFavaClientFactory as any),
       {} as any,
+      // Appending text is DirectiveAppendWorkflow's job now (w2/012) and has
+      // its own suite; this one covers structured entries.
+      {
+        appendDirectiveText: jest.fn(),
+      } as any,
     );
   });
 
@@ -645,7 +650,13 @@ describe("LedgerEntryService", () => {
         },
       ];
       await expect(
-        service.addBulkEntries(IDENTITY, "testuser", "test-ledger", entries, "web"),
+        service.addBulkEntries(
+          IDENTITY,
+          "testuser",
+          "test-ledger",
+          entries,
+          "web",
+        ),
       ).rejects.toThrow();
 
       expect(mockCreateLedgerFile).toHaveBeenCalledTimes(1);

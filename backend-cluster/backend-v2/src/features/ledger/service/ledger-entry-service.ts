@@ -15,19 +15,6 @@ import { logger } from "@/shared/logger";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
 import { BadUserInputError } from "@/shared/errors";
 import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
-import {
-  insertDirectives,
-  parseDirectiveText,
-} from "@/features/ledger/utils/directive-text";
-import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
-import { unifiedDiff } from "@/shared/unified-diff";
-import { decodeFileContent } from "@/shared/file-content";
-import {
-  diffBeanCheckErrors,
-  toBeanCheckErrors,
-  type BeanCheckError,
-} from "@/features/ledger/utils/bean-check-errors";
-import { UnbalancedTransactionError, ValidationError } from "@/shared/errors";
 import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
 import type { FavaApiClient } from "@/foundation/fava";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
@@ -142,85 +129,17 @@ const ENTRY_FILE_TYPE: Record<
   event: "Event",
 };
 
-/**
- * Most directives one `appendDirectiveText` call will accept (w2/m28:t005).
- *
- * A bounded batch keeps the projected bean-check — which loads the whole
- * ledger — proportional to one call, and a caller sending thousands of
- * directives wants an import, not an append.
- */
-export const MAX_APPENDED_DIRECTIVES = 50;
+import type {
+  AppendDirectiveTextInput,
+  AppendDirectiveTextResult,
+} from "@/features/ledger/utils/directive-text-contract";
+import type { IDirectiveAppendWorkflow } from "@/features/ledger/workflow/directive-append-workflow";
 
-/**
- * The refusal for text that would break the ledger.
- *
- * An unbalanced transaction gets its own code because it is the one failure
- * an agent can act on mechanically — add the missing posting, or say
- * `allowInvalid` and mean it — and because `addLedgerEntries` already answers
- * `UNBALANCED` for the same mistake made in the structured dialect. The two
- * write paths refusing the same thing under different codes is exactly the
- * dialect problem this milestone is removing.
- */
-function unbalancedOrValidationError(
-  newErrors: readonly DirectiveTextError[],
-): Error {
-  const detail = newErrors
-    .map((error) =>
-      error.source ? `${error.message} (${error.source})` : error.message,
-    )
-    .join("; ");
-  const unbalanced = newErrors.some((error) =>
-    /does not balance|residual/i.test(error.message),
-  );
-  if (unbalanced) {
-    // bean-check states the residual in its own message; carrying it through
-    // means the error's hint names the amount that is missing.
-    const residual = /residual\s+(\S+\s*\S*)/i.exec(detail)?.[1] ?? "unknown";
-    return new UnbalancedTransactionError(
-      `Appending this text would leave a transaction unbalanced: ${detail}`,
-      residual,
-    );
-  }
-  return new ValidationError(
-    "text",
-    `appending it would introduce ${newErrors.length} new bean-check error${newErrors.length === 1 ? "" : "s"}: ${detail}`,
-  );
-}
-
-/** What appending Beancount text asks for. */
-export interface AppendDirectiveTextInput {
-  /** Beancount directive text, as an agent would write it into a file. */
-  readonly text: string;
-  /** Target file. Omitted, each directive routes by the ledger's own rules. */
-  readonly path?: string;
-  /** Run every check and report the result without committing. */
-  readonly dryRun?: boolean;
-  /** Commit even when the text introduces new bean-check errors. */
-  readonly allowInvalid?: boolean;
-}
-
-/** One bean-check error as the ledger service reports it. */
-type DirectiveTextError = BeanCheckError;
-
-export interface AppendDirectiveTextResult {
-  readonly success: boolean;
-  readonly message: string;
-  readonly dryRun: boolean;
-  /** Directives parsed out of the text. */
-  readonly count: number;
-  /** Where each directive landed: file and 1-based line. */
-  readonly wrote: readonly { path: string; line: number }[];
-  /** Unified diff per touched file. Populated on dry runs only. */
-  readonly diff: readonly { path: string; diff: string }[];
-  readonly errorsBefore: number;
-  readonly errorsAfter: number;
-  readonly newErrors: readonly DirectiveTextError[];
-  /**
-   * Files whose existing directives were out of date order, so the new ones
-   * were appended at the end instead of threaded in.
-   */
-  readonly appendedUnsorted: readonly string[];
-}
+export {
+  MAX_APPENDED_DIRECTIVES,
+  type AppendDirectiveTextInput,
+  type AppendDirectiveTextResult,
+} from "@/features/ledger/utils/directive-text-contract";
 
 export interface ILedgerEntryService {
   addBulkEntries(
@@ -257,19 +176,13 @@ export interface ILedgerEntryWriter {
     platform: "web" | "mobile",
     allowInvalid?: boolean,
   ): Promise<AddBulkEntriesResult>;
-
-  writeDirectiveText(
-    userId: string,
-    ledgerOwner: string,
-    ledgerName: string,
-    input: AppendDirectiveTextInput,
-  ): Promise<AppendDirectiveTextResult>;
 }
 
 export class LedgerEntryService implements ILedgerEntryService {
   constructor(
     private readonly writer: ILedgerEntryWriter,
     private readonly authorization: IAuthorizationService,
+    private readonly directiveAppend: IDirectiveAppendWorkflow,
   ) {}
 
   async addBulkEntries(
@@ -312,12 +225,15 @@ export class LedgerEntryService implements ILedgerEntryService {
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
       { authorization: this.authorization },
     );
-    return this.writer.writeDirectiveText(
-      identity.userId,
-      ledgerOwner,
-      ledgerName,
+    // The coordination itself lives in a workflow that drives the repository
+    // service, so the append is guarded exactly like every other write to
+    // these files rather than by a second implementation of the same rules
+    // (w2/012). This service keeps the authorization decision.
+    return this.directiveAppend.appendDirectiveText({
+      identity,
+      ledgerId: `${ledgerOwner}/${ledgerName}`,
       input,
-    );
+    });
   }
 }
 
@@ -409,184 +325,6 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       message: `Added ${inputs.length} ${noun} successfully`,
       files: distinctFiles,
     };
-  }
-
-  /**
-   * Append directive text, in date order, after proving it does not break the
-   * ledger (w2/m28:t005).
-   *
-   * The order matters: parse, route, project, *check the projection*, then
-   * commit. Checking after the commit would leave the caller holding a broken
-   * ledger and a refusal, which is the failure mode `allowInvalid` exists to
-   * make a deliberate choice rather than an accident.
-   */
-  async writeDirectiveText(
-    userId: string,
-    ledgerOwner: string,
-    ledgerName: string,
-    input: AppendDirectiveTextInput,
-  ): Promise<AppendDirectiveTextResult> {
-    const { text, path, dryRun = false, allowInvalid = false } = input;
-    const directives = parseDirectiveText(text);
-    if (directives.length > MAX_APPENDED_DIRECTIVES) {
-      throw new BadUserInputError(
-        `text holds ${directives.length} directives; at most ${MAX_APPENDED_DIRECTIVES} may be appended per call. Split the text into several calls.`,
-      );
-    }
-    if (path !== undefined) assertSafeRepoPath(path, "path");
-
-    const ledgerId = `${ledgerOwner}/${ledgerName}`;
-    const favaApiClient = await this.favaClientFactory.getPublicApiClient(
-      ledgerId,
-      userId,
-    );
-    const bcioData = await this.fetchBcioOptions(
-      favaApiClient,
-      ledgerOwner,
-      ledgerName,
-    );
-
-    // Group by target file so one commit covers however many files the
-    // ledger's own routing rules spread the text across.
-    const byPath = new Map<string, typeof directives>();
-    for (const directive of directives) {
-      const target =
-        path ??
-        (bcioData
-          ? resolveEntryFile(
-              directive.kind,
-              directive.date ? new Date(directive.date) : new Date(),
-              bcioData,
-            )
-          : "main.bean");
-      const group = byPath.get(target);
-      if (group) group.push(directive);
-      else byPath.set(target, [directive]);
-    }
-
-    // One record per touched file rather than five collections keyed on the
-    // same path: the sha, the projected text, and where each directive landed
-    // travel together, so nothing has to be re-looked-up to build the commit.
-    const targets = await Promise.all(
-      [...byPath].map(async ([target, targetDirectives]) => {
-        const current = await this.readFile(
-          favaApiClient,
-          ledgerOwner,
-          ledgerName,
-          target,
-        );
-        const before = current?.content ?? "";
-        const result = insertDirectives(before, targetDirectives);
-        return {
-          path: target,
-          sha: current?.sha,
-          before: current ? before : null,
-          content: result.content,
-          base64: Buffer.from(result.content, "utf8").toString("base64"),
-          lines: result.inserted.map((inserted) => inserted.line),
-          appended: result.appended,
-        };
-      }),
-    );
-
-    const [baseline, projected] = await Promise.all([
-      this.checkProjected(favaApiClient, ledgerOwner, ledgerName, []),
-      this.checkProjected(favaApiClient, ledgerOwner, ledgerName, targets),
-    ]);
-    const newErrors = diffBeanCheckErrors(baseline, projected);
-
-    if (newErrors.length > 0 && !allowInvalid) {
-      throw unbalancedOrValidationError(newErrors);
-    }
-
-    const paths = targets.map((target) => target.path);
-    const noun = directives.length === 1 ? "directive" : "directives";
-    const summary = `${directives.length} ${noun} to ${paths.join(", ")}`;
-    if (!dryRun) {
-      await unwrapFavaResponse(
-        favaApiClient.ledgers.changeLedgerFiles(ledgerOwner, ledgerName, {
-          files: targets.map((target) => ({
-            operation: target.sha ? ("update" as const) : ("create" as const),
-            path: target.path,
-            content: target.base64,
-            ...(target.sha && { sha: target.sha }),
-          })),
-          message: `Add ${summary}`,
-        }),
-        "append ledger directives",
-        (cause) => operationNotAllowedFromCause("append ledger directives", cause),
-      );
-      this.logger.info("Appended directive text", {
-        ledgerOwner,
-        ledgerName,
-        count: directives.length,
-        paths,
-      });
-    }
-
-    return {
-      success: true,
-      message: dryRun ? `Would add ${summary}` : `Added ${summary}`,
-      dryRun,
-      count: directives.length,
-      wrote: dryRun
-        ? []
-        : targets.flatMap((target) =>
-            target.lines.map((line) => ({ path: target.path, line })),
-          ),
-      // A commit's diff is the ledger's history; a preview's diff is the only
-      // place the caller can see what it approved — so it is only computed
-      // when it will be read. A line-by-line diff of a whole ledger file is
-      // not free.
-      diff: dryRun
-        ? targets.map((target) => ({
-            path: target.path,
-            diff: unifiedDiff(target.path, target.before, target.content),
-          }))
-        : [],
-      errorsBefore: baseline.length,
-      errorsAfter: projected.length,
-      newErrors,
-      appendedUnsorted: targets
-        .filter((target) => target.appended)
-        .map((target) => target.path),
-    };
-  }
-
-  /** One file's current text and sha, or `undefined` when it does not exist. */
-  private async readFile(
-    favaApiClient: LedgerEntryFavaClient,
-    ledgerOwner: string,
-    ledgerName: string,
-    path: string,
-  ): Promise<{ content: string; sha: string } | undefined> {
-    const response = await favaApiClient.ledgers.getLedgerFile(
-      ledgerOwner,
-      ledgerName,
-      { path },
-    );
-    const file = response.data.success ? response.data.data : undefined;
-    if (!file) return undefined;
-    return { content: decodeFileContent(file), sha: file.sha };
-  }
-
-  /** bean-check over the ledger with these files replaced. */
-  private async checkProjected(
-    favaApiClient: LedgerEntryFavaClient,
-    ledgerOwner: string,
-    ledgerName: string,
-    overlays: readonly { path: string; base64: string }[],
-  ): Promise<DirectiveTextError[]> {
-    const errors = await unwrapFavaResponse(
-      favaApiClient.reports.checkProjectedErrors(ledgerOwner, ledgerName, {
-        files: overlays.map((overlay) => ({
-          path: overlay.path,
-          content: overlay.base64,
-        })),
-      }),
-      "check projected ledger",
-    );
-    return toBeanCheckErrors(errors);
   }
 
   private buildEntry(

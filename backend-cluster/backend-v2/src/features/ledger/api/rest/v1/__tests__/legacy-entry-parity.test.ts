@@ -119,6 +119,14 @@ async function fixture(caller = identity, ledgerId?: string | null) {
         fava as never,
       ),
     ),
+    // These suites exercise structured entries, not text appends; a stub that
+    // refuses makes an accidental call a visible failure rather than a silent
+    // undefined.
+    {
+      appendDirectiveText: () => {
+        throw new Error("appendDirectiveText not exercised by this suite");
+      },
+    },
   );
   const workflow = new LegacyEntryWorkflow(
     fava as never,

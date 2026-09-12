@@ -28,6 +28,7 @@ import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service
 import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { LedgerCollaboratorsWorkflow } from "@/features/ledger/workflow/ledger-collaborators-workflow";
 import { LedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
+import { DirectiveAppendWorkflow } from "@/features/ledger/workflow/directive-append-workflow";
 import { AccountService } from "@/features/auth/service/account-service";
 import { AuthService } from "@/features/auth/service/auth-service";
 import { AuthSessionWorkflow } from "@/features/auth/workflow/auth-session-workflow";
@@ -102,6 +103,18 @@ export function buildServiceLayer(input: {
   const ledgerEntryWriter = createLedgerEntryWriter(
     input.clients.favaClientFactory,
   );
+  // Built ahead of the literal rather than inside it: appending directive text
+  // coordinates over the repository service (w2/012), so `ledgerEntry` needs a
+  // workflow that needs `ledgerRepo` — and a property of the object under
+  // construction is not available to name.
+  const ledgerRepo = new LedgerRepoService(
+    input.clients.favaClientFactory,
+    authorization,
+  );
+  const directiveAppend = new DirectiveAppendWorkflow(
+    ledgerRepo,
+    input.clients.favaClientFactory,
+  );
   return {
     authorization,
     stripe,
@@ -133,7 +146,11 @@ export function buildServiceLayer(input: {
       input.config,
       authorization,
     ),
-    ledgerEntry: new LedgerEntryService(ledgerEntryWriter, authorization),
+    ledgerEntry: new LedgerEntryService(
+      ledgerEntryWriter,
+      authorization,
+      directiveAppend,
+    ),
     ledgerEntryWriter,
     ledgerFinance: new LedgerFinanceService(
       input.clients.favaClientFactory,
@@ -155,10 +172,7 @@ export function buildServiceLayer(input: {
       input.clients.favaClientFactory,
       authorization,
     ),
-    ledgerRepo: new LedgerRepoService(
-      input.clients.favaClientFactory,
-      authorization,
-    ),
+    ledgerRepo,
     plaidItem: new PlaidItemService(
       input.clients.plaidClient,
       input.clients.favaClientFactory,

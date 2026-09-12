@@ -105,10 +105,10 @@ const entries: LedgerEntryInput[] = [
 ];
 async function fixture(
   caller = identity,
-  errorBatches: { message: string; source?: { filename: string; lineno: number } }[][] = [
-    [],
-    [],
-  ],
+  errorBatches: {
+    message: string;
+    source?: { filename: string; lineno: number };
+  }[][] = [[], []],
 ) {
   const committed: unknown[] = [];
   const state = { writable: true, failCommit: false, unbalanced: false };
@@ -170,6 +170,14 @@ async function fixture(
         fava as never,
       ),
     ),
+    // These suites exercise structured entries, not text appends; a stub that
+    // refuses makes an accidental call a visible failure rather than a silent
+    // undefined.
+    {
+      appendDirectiveText: () => {
+        throw new Error("appendDirectiveText not exercised by this suite");
+      },
+    },
   );
   resolver = new LedgerEntryMutationResolver(service);
   const rest = await startV1TestServer(
@@ -180,8 +188,7 @@ async function fixture(
   const ledgerData = {
     getErrors: jest.fn(async () => {
       const batch =
-        errorBatches[Math.min(errorCalls.count, errorBatches.length - 1)] ??
-        [];
+        errorBatches[Math.min(errorCalls.count, errorBatches.length - 1)] ?? [];
       errorCalls.count += 1;
       return batch;
     }),
@@ -469,71 +476,65 @@ describe.each(["rest", "gql", "mcp"])(
   },
 );
 
-describe.each(["rest", "gql", "mcp"])(
-  "elided postings via %s",
-  (surface) => {
-    const elidedBatch = [
+describe.each(["rest", "gql", "mcp"])("elided postings via %s", (surface) => {
+  const elidedBatch = [
+    {
+      type: "transaction",
+      entry: {
+        date,
+        flag: "*",
+        narration: "Food",
+        postings: [
+          {
+            account: "Expenses:Food",
+            units: { number: "10.00", currency: "USD" },
+          },
+          { account: "Assets:Cash" },
+        ],
+      },
+    },
+  ] as unknown as LedgerEntryInput[];
+
+  it("accepts one elided posting and writes it elided", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, elidedBatch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      const committed = f.committed[0] as {
+        item: { postings: Record<string, unknown>[] };
+      };
+      expect(committed.item.postings[0]).toMatchObject({
+        account: "Expenses:Food",
+      });
+      expect(committed.item.postings[1]).not.toHaveProperty("units");
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses two elided postings before committing", async () => {
+    const batch = [
       {
         type: "transaction",
         entry: {
           date,
           flag: "*",
-          narration: "Food",
-          postings: [
-            {
-              account: "Expenses:Food",
-              units: { number: "10.00", currency: "USD" },
-            },
-            { account: "Assets:Cash" },
-          ],
+          postings: [{ account: "Expenses:Food" }, { account: "Assets:Cash" }],
         },
       },
     ] as unknown as LedgerEntryInput[];
-
-    it("accepts one elided posting and writes it elided", async () => {
-      const f = await fixture();
-      try {
-        const result = await f.call(surface, elidedBatch);
-        expect(result.success).toBe(true);
-        expect(f.committed).toHaveLength(1);
-        const committed = f.committed[0] as {
-          item: { postings: Record<string, unknown>[] };
-        };
-        expect(committed.item.postings[0]).toMatchObject({
-          account: "Expenses:Food",
-        });
-        expect(committed.item.postings[1]).not.toHaveProperty("units");
-      } finally {
-        await f.close();
-      }
-    });
-
-    it("refuses two elided postings before committing", async () => {
-      const batch = [
-        {
-          type: "transaction",
-          entry: {
-            date,
-            flag: "*",
-            postings: [
-              { account: "Expenses:Food" },
-              { account: "Assets:Cash" },
-            ],
-          },
-        },
-      ] as unknown as LedgerEntryInput[];
-      const f = await fixture();
-      try {
-        const result = await f.call(surface, batch);
-        expect(result.success).toBe(false);
-        expect(f.write).not.toHaveBeenCalled();
-        expect(f.committed).toEqual([]);
-      } finally {
-        await f.close();
-      }
-    });
-  },
-);
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(false);
+      expect(f.write).not.toHaveBeenCalled();
+      expect(f.committed).toEqual([]);
+    } finally {
+      await f.close();
+    }
+  });
+});
 
 describe.each(["rest", "gql", "mcp"])(
   "structured entries via %s",

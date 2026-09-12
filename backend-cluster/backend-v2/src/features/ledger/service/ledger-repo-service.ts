@@ -1,6 +1,7 @@
 import { parseLedgerId } from "@/shared/str";
 import { unwrapFavaResponse } from "@/foundation/fava";
 import { decodeFileContent } from "@/shared/file-content";
+import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
 import type {
   BeancountErrorPublic,
   LedgerChangeFileOperation,
@@ -269,6 +270,12 @@ export class LedgerRepoService
         message,
       }),
       "commit file operations",
+      // A pre-receive hook refusal — the directive limit, a push policy — has
+      // no HTTP response to classify, so without this it surfaced as a generic
+      // internal error. The entry service's own commit path always translated
+      // it; routing appends through here (w2/012) would have lost that, and
+      // every other caller of this method wanted it too.
+      (cause) => operationNotAllowedFromCause("commit file operations", cause),
     );
   }
 

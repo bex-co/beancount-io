@@ -11,6 +11,8 @@ import {
   LedgerEntryService,
   createLedgerEntryWriter,
 } from "@/features/ledger/service/ledger-entry-service";
+import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
+import { DirectiveAppendWorkflow } from "@/features/ledger/workflow/directive-append-workflow";
 import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
@@ -141,6 +143,22 @@ async function fixture(caller = identity) {
                 }
               : null,
           ),
+        getLedgerFilesContent: async (
+          _o: string,
+          _n: string,
+          body: { files: string[] },
+        ) =>
+          // Missing files are absent from the result, not an error — that is
+          // how the append tells a create from an update.
+          envelope(
+            body.files
+              .filter((path) => state.files.has(path))
+              .map((path) => ({
+                path,
+                sha: `sha-${path}`,
+                content: state.files.get(path),
+              })),
+          ),
         changeLedgerFiles,
       },
     }),
@@ -151,15 +169,20 @@ async function fixture(caller = identity) {
       getById: async () => ({ id: caller.userId, ledger_username: "alice" }),
     },
   };
+  const authorization = new AuthorizationService(
+    new SourceBackedRelationshipEvaluator(
+      {} as never,
+      models as never,
+      {} as never,
+      fava as never,
+    ),
+  );
   const service = new LedgerEntryService(
     createLedgerEntryWriter(fava as never),
-    new AuthorizationService(
-      new SourceBackedRelationshipEvaluator(
-        {} as never,
-        models as never,
-        {} as never,
-        fava as never,
-      ),
+    authorization,
+    new DirectiveAppendWorkflow(
+      new LedgerRepoService(fava as never, authorization),
+      fava as never,
     ),
   );
   resolver = new LedgerEntryMutationResolver(service);
@@ -257,13 +280,15 @@ describe("appending Beancount text through the real adapters", () => {
         expect(data.count).toBe(1);
         expect(data.wrote).toEqual([{ path: "main.bean", line: 7 }]);
         // The reported line is where the directive actually is.
-        expect(
-          f.state.files.get("main.bean")!.split("\n")[6],
-        ).toBe('2026-02-05 * "Cafe" "Coffee"');
+        expect(f.state.files.get("main.bean")!.split("\n")[6]).toBe(
+          '2026-02-05 * "Cafe" "Coffee"',
+        );
         expect(data.appendedUnsorted).toEqual([]);
 
         const dates = [
-          ...f.state.files.get("main.bean")!.matchAll(/^(\d{4}-\d{2}-\d{2}) \*/gm),
+          ...f.state.files
+            .get("main.bean")!
+            .matchAll(/^(\d{4}-\d{2}-\d{2}) \*/gm),
         ].map((match) => match[1]);
         expect(dates).toEqual(["2026-01-05", "2026-02-05", "2026-03-05"]);
         expect(f.commits).toHaveLength(1);
@@ -378,7 +403,10 @@ describe("appending Beancount text through the real adapters", () => {
     const f = await fixture();
     try {
       const many = Array.from({ length: 51 }, (_, i) =>
-        TXN.replace("2026-02-05", `2026-02-${String((i % 28) + 1).padStart(2, "0")}`),
+        TXN.replace(
+          "2026-02-05",
+          `2026-02-${String((i % 28) + 1).padStart(2, "0")}`,
+        ),
       ).join("\n\n");
       const result = await f.call("mcp", { text: many });
       expect(result.ok).toBe(false);
@@ -444,9 +472,9 @@ describe("appending Beancount text through the real adapters", () => {
       const data = result.ok ? (result.data as Record<string, never>) : {};
       expect(data.appendedUnsorted).toEqual(["main.bean"]);
       expect(String(data.summary)).toContain("not in date order");
-      expect(f.state.files.get("main.bean")!.trimEnd().endsWith("-4.50 USD")).toBe(
-        true,
-      );
+      expect(
+        f.state.files.get("main.bean")!.trimEnd().endsWith("-4.50 USD"),
+      ).toBe(true);
     } finally {
       await f.close();
     }
