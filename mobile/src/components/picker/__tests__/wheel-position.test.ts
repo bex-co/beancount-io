@@ -45,6 +45,48 @@ describe("picker wheel position", () => {
     expect(wheelIndexAtOffset(ITEM_HEIGHT * 99, THEMES.length)).toBe(2);
   });
 
+  it("emphasizes the row Confirm will save, not the committed value", () => {
+    // The regression: emphasis compared each row to the committed prop while
+    // Confirm read the wheel's pending position, so mid-scroll two different
+    // rows claimed to be the selection.
+    const committed = "light";
+    const draggedTowardSystem = ITEM_HEIGHT * 1.6;
+    const pending = wheelIndexAtOffset(draggedTowardSystem, THEMES.length);
+
+    expect(THEMES[pending].value).toBe("system");
+    // Same offset, same index: emphasis and Confirm now read one mapping.
+    expect(pending).toBe(
+      wheelIndexAtOffset(draggedTowardSystem, THEMES.length),
+    );
+    expect(selectedIndexForValue(THEMES, committed)).toBe(0);
+    expect(selectedIndexForValue(THEMES, committed) === pending).toBe(false);
+  });
+
+  it("seeds the emphasis from the committed value before any scroll", () => {
+    // An untouched wheel must emphasize exactly what it is showing, which is
+    // also what Confirm saves — the `contentOffset` positioning emits no scroll
+    // event, so the seed is the only thing that can get this right.
+    for (const item of THEMES) {
+      const seeded = selectedIndexForValue(THEMES, item.value);
+      expect(seeded).toBe(
+        wheelIndexAtOffset(
+          wheelOffsetForValue(THEMES, item.value),
+          THEMES.length,
+        ),
+      );
+    }
+  });
+
+  it("moves the emphasis only as the centered row changes", () => {
+    // The scroll handler crosses back to JS on index change, so the emphasis
+    // must be stable within a row and flip exactly at its midpoint.
+    const withinFirstRow = [0, ITEM_HEIGHT * 0.2, ITEM_HEIGHT * 0.49];
+    for (const offset of withinFirstRow) {
+      expect(wheelIndexAtOffset(offset, THEMES.length)).toBe(0);
+    }
+    expect(wheelIndexAtOffset(ITEM_HEIGHT * 0.5, THEMES.length)).toBe(1);
+  });
+
   it("re-seeds against a new item set instead of carrying a stale offset", () => {
     // A reused picker (Settings theme, then Settings language) must position
     // from the new list's selection, not the previous list's offset.

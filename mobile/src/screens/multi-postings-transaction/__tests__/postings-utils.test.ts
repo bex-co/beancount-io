@@ -2,6 +2,7 @@ import {
   addPosting,
   buildEntryInput,
   createPrefilledPostings,
+  lastPostingAutoToggle,
   makePosting,
   postingAmountAccessibility,
   removePosting,
@@ -113,6 +114,65 @@ test("toggleLastPostingAuto flips isAuto on last posting and recomputes", () => 
   expect(postings[1].isAuto).toBe(true);
   expect(postings[1].amountCents).toBe(5000);
   expect(postings[1].amountInput).toBe("50.00");
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// lastPostingAutoToggle (which rows show the switch, and when it reads as on)
+// ──────────────────────────────────────────────────────────────────────────────
+
+test("the final row keeps its auto switch after it is turned off", () => {
+  // The regression: the control was mounted only while `isAuto` was true, so
+  // turning it off (or editing the last amount, which clears the flag) removed
+  // the only way to turn it back on.
+  expect(lastPostingAutoToggle({ isLast: true, isAuto: true })).toEqual({
+    rendered: true,
+    selected: true,
+  });
+  expect(lastPostingAutoToggle({ isLast: true, isAuto: false })).toEqual({
+    rendered: true,
+    selected: false,
+  });
+});
+
+test("earlier rows never show the auto switch", () => {
+  // Only the last posting can absorb the remainder, so only it can be auto.
+  expect(lastPostingAutoToggle({ isLast: false, isAuto: false })).toEqual({
+    rendered: false,
+    selected: false,
+  });
+  expect(lastPostingAutoToggle({ isLast: false, isAuto: true })).toEqual({
+    rendered: false,
+    selected: false,
+  });
+});
+
+test("the switch the rendered row offers round-trips through both directions", () => {
+  // What the UI predicate now makes reachable, end to end: off, then on again.
+  let postings = [
+    posting("Assets:Bank", "-50.00", -5000, false),
+    posting("Expenses:Food", "50.00", 5000, true),
+  ];
+  expect(
+    lastPostingAutoToggle({ isLast: true, isAuto: postings[1].isAuto })
+      .selected,
+  ).toBe(true);
+
+  postings = toggleLastPostingAuto(postings);
+  const off = lastPostingAutoToggle({
+    isLast: true,
+    isAuto: postings[1].isAuto,
+  });
+  // Still rendered while off — that is the whole fix.
+  expect(off).toEqual({ rendered: true, selected: false });
+
+  postings = updatePostingAmount(postings, 0, "-80.00");
+  postings = toggleLastPostingAuto(postings);
+  expect(postings[1].isAuto).toBe(true);
+  expect(postings[1].amountInput).toBe("80.00");
+  expect(
+    lastPostingAutoToggle({ isLast: true, isAuto: postings[1].isAuto })
+      .selected,
+  ).toBe(true);
 });
 
 // ──────────────────────────────────────────────────────────────────────────────

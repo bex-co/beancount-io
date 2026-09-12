@@ -8,7 +8,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { haptics } from "@/common/haptics";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { useReceiptWorkflow } from "./use-receipt-workflow";
-import { receiptErrorKey, mimeToExt } from "./receipt-utils";
+import { receiptErrorKey, shotFromLibraryResult } from "./receipt-utils";
 import { CameraView, type CapturedShot } from "./camera-view";
 import { PreviewView } from "./preview-view";
 import { CHROME } from "./chrome";
@@ -45,25 +45,29 @@ const ReceiptCaptureScreenImpl = () => {
   const failed = useRef(false);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // No permission request in front of this. For this call shape — images only,
+  // no `allowsEditing`, not the camera — expo-image-picker presents the iOS
+  // PHPicker and Android's system photo picker, both of which hand back the one
+  // chosen image out of process and need no library grant. The gate was
+  // self-imposed: it made the app ask for access to the user's whole library
+  // just to attach a single receipt, and denying it blocked a pick that would
+  // otherwise have worked.
   const pickFromLibrary = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (perm.status !== "granted") {
+    try {
+      const picked = shotFromLibraryResult(
+        await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ["images"],
+          quality: 0.85,
+        }),
+      );
+      if (picked) {
+        setShot(picked);
+      }
+    } catch {
+      // Only a genuine picker rejection reaches here — a device that restricts
+      // photo access outright, or a picker that could not be presented.
       Alert.alert(t("receiptLibraryPermission"));
-      return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      quality: 0.85,
-    });
-    if (result.canceled || !result.assets?.[0]) return;
-
-    const asset = result.assets[0];
-    const mimeType = asset.mimeType ?? "image/jpeg";
-    setShot({
-      uri: asset.uri,
-      mimeType,
-      filename: asset.fileName ?? `receipt.${mimeToExt(mimeType)}`,
-    });
   };
 
   const handleCapture = (captured: CapturedShot) => {

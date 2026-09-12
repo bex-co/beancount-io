@@ -52,6 +52,7 @@ import {
   buildEntryInput,
   createInitialPostings,
   createPrefilledPostings,
+  lastPostingAutoToggle,
   makePosting,
   postingAmountAccessibility,
   removePosting,
@@ -143,10 +144,24 @@ const getStyles = (theme: ColorTheme) =>
       padding: 0,
       minWidth: 88,
     },
+    // The final row's automatic-balance switch is always mounted, so the two
+    // states have to be told apart by more than colour: the enabled tag is
+    // filled and weighted, the disabled one a plain outline.
     postingAutoTag: {
       fontSize: fontSizes.xs,
-      color: theme.black60,
+      color: theme.black40,
       marginStart: 2,
+      paddingHorizontal: 4,
+      paddingVertical: 1,
+      borderRadius: 4,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.black40,
+    },
+    postingAutoTagActive: {
+      color: theme.black,
+      fontWeight: fontWeights.medium,
+      backgroundColor: theme.controlSelected,
+      borderColor: theme.black60,
     },
     deleteAction: {
       backgroundColor: theme.error,
@@ -246,6 +261,11 @@ const PostingRow = ({
       ? "rgba(229,73,55,0.12)"
       : "rgba(7,163,90,0.12)";
 
+  const autoToggle = lastPostingAutoToggle({
+    isLast,
+    isAuto: posting.isAuto,
+  });
+
   const amountA11y = postingAmountAccessibility({
     account: posting.account,
     amountInput: posting.amountInput,
@@ -328,14 +348,26 @@ const PostingRow = ({
             accessibilityValue={{ text: amountA11y.value }}
             accessibilityHint={t("postingAmountHint")}
           />
-          {isLast && posting.isAuto ? (
+          {/* Mounted for the whole life of the final row, not only while it is
+              automatic: gating the mount on `isAuto` made the switch vanish the
+              moment it was turned off, so the reverse transition
+              `toggleLastPostingAuto` implements was unreachable. */}
+          {autoToggle.rendered ? (
             <TouchableOpacity
               onPress={onToggleAuto}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel={t("autoLabel")}
+              accessibilityState={{ selected: autoToggle.selected }}
             >
-              <Text style={styles.postingAutoTag}>{t("autoLabel")}</Text>
+              <Text
+                style={[
+                  styles.postingAutoTag,
+                  autoToggle.selected && styles.postingAutoTagActive,
+                ]}
+              >
+                {t("autoLabel")}
+              </Text>
             </TouchableOpacity>
           ) : null}
         </View>

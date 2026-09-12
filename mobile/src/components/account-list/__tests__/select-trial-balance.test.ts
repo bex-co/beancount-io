@@ -194,6 +194,135 @@ describe("selectTrialBalanceCategories", () => {
     ]);
   });
 
+  it("keeps a zero-balance account the API returns inside its real parent", () => {
+    // The regression: a zero leaf was filtered out of the tree and then pushed
+    // back on flat at category level, so it escaped the branch that owns it.
+    const data = createTrialBalance({
+      assets: {
+        account: "Assets",
+        total: { USD: 15 },
+        children: [
+          {
+            account: "Assets:Bank",
+            balanceChildren: { USD: 10 },
+            children: [
+              { account: "Assets:Bank:Checking", balanceChildren: { USD: 10 } },
+              { account: "Assets:Bank:Savings", balanceChildren: { USD: 0 } },
+            ],
+          },
+          // A second top-level branch, so the category's own pass-through skip
+          // doesn't flatten Bank's row before we can look at its children.
+          { account: "Assets:Cash", balanceChildren: { USD: 5 } },
+        ],
+      },
+    });
+    const [assets] = selectTrialBalanceCategories("USD", data, [
+      "Assets:Bank:Checking",
+      "Assets:Bank:Savings",
+    ]);
+    expect(assets.children.map((node) => node.account)).toEqual([
+      "Assets:Bank",
+      "Assets:Cash",
+    ]);
+    expect(assets.children[0].children.map((node) => node.account)).toEqual([
+      "Assets:Bank:Checking",
+      "Assets:Bank:Savings",
+    ]);
+    // Balances are untouched by the inclusion.
+    expect(assets.children[0].value).toBe(10);
+    expect(assets.children[0].children[1].value).toBe(0);
+  });
+
+  it("creates the missing intermediate parent of a metadata-only account", () => {
+    const data = createTrialBalance({
+      assets: {
+        account: "Assets",
+        total: { USD: 120 },
+        children: [
+          {
+            account: "Assets:NonCurrent",
+            balanceChildren: { USD: 100 },
+            children: [
+              {
+                account: "Assets:NonCurrent:Property",
+                balanceChildren: { USD: 100 },
+              },
+            ],
+          },
+          { account: "Assets:Current", balanceChildren: { USD: 20 } },
+        ],
+      },
+    });
+    const [assets] = selectTrialBalanceCategories("USD", data, [
+      "Assets:NonCurrent:Goodwill",
+    ]);
+    // Goodwill joins the NonCurrent branch rather than becoming a sibling of it.
+    expect(assets.children.map((node) => node.account)).toEqual([
+      "Assets:NonCurrent",
+      "Assets:Current",
+    ]);
+    expect(assets.children[0].children.map((node) => node.name)).toEqual([
+      "Property",
+      "Goodwill",
+    ]);
+  });
+
+  it("does not duplicate an intermediate shared by two metadata accounts", () => {
+    const data = createTrialBalance({
+      assets: {
+        account: "Assets",
+        total: { USD: 20 },
+        children: [{ account: "Assets:Current", balanceChildren: { USD: 20 } }],
+      },
+    });
+    const [assets] = selectTrialBalanceCategories("USD", data, [
+      "Assets:NonCurrent:Goodwill",
+      "Assets:NonCurrent:Goodwill",
+      "Assets:NonCurrent:Patents",
+    ]);
+    // One NonCurrent row holding both leaves, each listed once.
+    expect(assets.children.map((node) => node.name)).toEqual([
+      "Current",
+      "NonCurrent",
+    ]);
+    expect(assets.children[1].children.map((node) => node.name)).toEqual([
+      "Goodwill",
+      "Patents",
+    ]);
+  });
+
+  it("compresses a chain that is zero all the way down, like any other chain", () => {
+    const data = createTrialBalance({});
+    const [assets] = selectTrialBalanceCategories("USD", data, [
+      "Assets:NonCurrent:Intangible:Goodwill",
+    ]);
+    // Single-child chains carrying one balance fold into a row whose label
+    // keeps every segment — the same rule `Liabilities:US:Chase:Slate` follows.
+    expect(assets.children).toEqual([
+      {
+        account: "Assets:NonCurrent:Intangible:Goodwill",
+        name: "NonCurrent:Intangible:Goodwill",
+        value: 0,
+        children: [],
+      },
+    ]);
+  });
+
+  it("ignores metadata accounts belonging to another category", () => {
+    const data = createTrialBalance({
+      assets: { account: "Assets", total: { USD: 100 } },
+    });
+    const result = selectTrialBalanceCategories("USD", data, [
+      "Expenses:Food:Coffee",
+    ]);
+    const assets = result.find((category) => category.key === "assets");
+    const expenses = result.find((category) => category.key === "expenses");
+    expect(assets?.children).toEqual([]);
+    expect(expenses?.children.map((node) => node.account)).toEqual([
+      "Expenses:Food:Coffee",
+    ]);
+  });
+
   it("compresses each category's account tree", () => {
     const data = createTrialBalance({
       liabilities: {

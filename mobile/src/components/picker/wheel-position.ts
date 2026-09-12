@@ -52,8 +52,16 @@ export function selectedIndexForValue(
   return index >= 0 ? index : 0;
 }
 
-/** The item the wheel is centered on at `offset`, clamped to `items`. */
+/**
+ * The item the wheel is centered on at `offset`, clamped to `items`.
+ *
+ * A worklet as well as a plain function: the scroll handler runs on the UI
+ * thread and needs the *pending* index to drive which row is emphasized, and
+ * that has to be the same rounding Confirm uses — a second copy of it is how
+ * the highlighted row and the saved row came to disagree mid-scroll.
+ */
 export function wheelIndexAtOffset(offset: number, itemCount: number): number {
+  "worklet";
   const index = Math.round(offset / ITEM_HEIGHT);
   return Math.max(0, Math.min(index, itemCount - 1));
 }

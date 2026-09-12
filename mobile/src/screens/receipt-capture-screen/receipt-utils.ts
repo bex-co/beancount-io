@@ -56,3 +56,44 @@ function graphQLErrorCodes(err: unknown): string[] {
 /** Derive file extension from a MIME type, falling back to jpg. */
 export const mimeToExt = (mimeType: string): string =>
   mimeType.split("/")[1] ?? "jpg";
+
+/** The shape of `launchImageLibraryAsync`'s result this screen depends on. */
+export type LibraryPickResult = {
+  canceled: boolean;
+  assets?:
+    | ({
+        uri: string;
+        mimeType?: string | null;
+        fileName?: string | null;
+      } | null)[]
+    | null;
+};
+
+/** What a picked receipt hands to the preview (mirrors `CapturedShot`). */
+export type PickedShot = {
+  uri: string;
+  mimeType: string;
+  filename: string;
+};
+
+/**
+ * Normalize one library pick into a shot, or `null` when there is nothing to
+ * use (the user cancelled, or the picker returned no asset).
+ *
+ * Pure so the library-pick path can be unit-tested without a picker: the screen
+ * passes whatever `ImagePicker.launchImageLibraryAsync` resolved to straight in.
+ */
+export const shotFromLibraryResult = (
+  result: LibraryPickResult | null | undefined,
+): PickedShot | null => {
+  const asset = result && !result.canceled ? result.assets?.[0] : null;
+  if (!asset?.uri) {
+    return null;
+  }
+  const mimeType = asset.mimeType ?? "image/jpeg";
+  return {
+    uri: asset.uri,
+    mimeType,
+    filename: asset.fileName ?? `receipt.${mimeToExt(mimeType)}`,
+  };
+};

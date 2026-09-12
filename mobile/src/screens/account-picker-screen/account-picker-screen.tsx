@@ -33,6 +33,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { SelectedAccount } from "@/common/globalFnFactory";
 import { pushOpenAccount } from "@/screens/open-account-screen/push-open-account";
 import { accountOrderFor } from "./push-account-picker";
+import {
+  SCROLL_RETRY_DELAY_MS,
+  SCROLL_SETTLE_MS,
+  initialScrollRetryState,
+  scrollRetryAfterFailure,
+} from "./scroll-to-selected";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -288,24 +294,114 @@ function AccountPickerScreenComponent(): JSX.Element {
   );
 
   const listRef = useRef<SectionList<string, PickerSection>>(null);
+  // True only once a scroll actually landed (or the policy gave up). Setting it
+  // when the scroll was merely *issued* was the bug: an unmeasured target makes
+  // `scrollToLocation` a no-op, and nothing ever tried again.
   const hasScrolledToSelected = useRef(false);
+  const scrollTarget = useRef<{
+    sectionIndex: number;
+    itemIndex: number;
+  } | null>(null);
+  const scrollRetry = useRef(initialScrollRetryState);
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const stopScrollingToSelected = useCallback((settled: boolean) => {
+    if (retryTimer.current) {
+      clearTimeout(retryTimer.current);
+      retryTimer.current = null;
+    }
+    if (settleTimer.current) {
+      clearTimeout(settleTimer.current);
+      settleTimer.current = null;
+    }
+    scrollTarget.current = null;
+    if (settled) {
+      hasScrolledToSelected.current = true;
+    }
+  }, []);
+
+  const scrollToSelected = useCallback(() => {
+    const location = scrollTarget.current;
+    if (!location) {
+      return;
+    }
+    listRef.current?.scrollToLocation({
+      ...location,
+      viewPosition: 0.5,
+      animated: false,
+    });
+    // No success callback exists, and `onScrollToIndexFailed` is raised during
+    // the attempt — so a quiet window means the row was reached.
+    if (settleTimer.current) {
+      clearTimeout(settleTimer.current);
+    }
+    settleTimer.current = setTimeout(() => {
+      settleTimer.current = null;
+      stopScrollingToSelected(true);
+    }, SCROLL_SETTLE_MS);
+  }, [stopScrollingToSelected]);
+
+  // A new query or chip re-lays the list out, so a retry aimed at the old
+  // layout must not fire into the new one. Declared before the effect that
+  // starts the scroll, so mounting cancels nothing it just scheduled.
+  useEffect(() => {
+    stopScrollingToSelected(false);
+  }, [query, activeRoot, stopScrollingToSelected]);
 
   // Bring the caller's current account into view once, on the browse list.
   useEffect(() => {
-    if (hasScrolledToSelected.current || isSearching) {
+    if (hasScrolledToSelected.current || scrollTarget.current || isSearching) {
       return;
     }
     const location = findAccountLocation(visibleSections, selectedItem);
     if (!location) {
       return;
     }
-    hasScrolledToSelected.current = true;
-    listRef.current?.scrollToLocation({
-      ...location,
-      viewPosition: 0.5,
-      animated: false,
-    });
-  }, [selectedItem, isSearching, visibleSections]);
+    scrollRetry.current = initialScrollRetryState;
+    scrollTarget.current = location;
+    scrollToSelected();
+  }, [selectedItem, isSearching, visibleSections, scrollToSelected]);
+
+  // Nothing may fire for a screen that is gone.
+  useEffect(
+    () => () => stopScrollingToSelected(false),
+    [stopScrollingToSelected],
+  );
+
+  // Rows vary in height only with the OS font scale, so there is no reliable
+  // `getItemLayout` to give the list; recovery is a bounded re-issue instead.
+  const onScrollToIndexFailed = useCallback(
+    (info: { highestMeasuredFrameIndex: number }) => {
+      if (!scrollTarget.current) {
+        return;
+      }
+      if (settleTimer.current) {
+        clearTimeout(settleTimer.current);
+        settleTimer.current = null;
+      }
+      const { retry, state } = scrollRetryAfterFailure(
+        scrollRetry.current,
+        info,
+      );
+      scrollRetry.current = state;
+      if (!retry) {
+        // Out of budget: stop trying rather than redboxing or looping.
+        stopScrollingToSelected(true);
+        return;
+      }
+      retryTimer.current = setTimeout(() => {
+        retryTimer.current = null;
+        scrollToSelected();
+      }, SCROLL_RETRY_DELAY_MS);
+    },
+    [scrollToSelected, stopScrollingToSelected],
+  );
+
+  // The user taking over beats any pending correction of ours.
+  const onScrollBeginDrag = useCallback(() => {
+    stopScrollingToSelected(true);
+  }, [stopScrollingToSelected]);
 
   // The one exit, so every way out of the picker records the pick — a created
   // account is the likeliest of all to be wanted again, and used to leave no
@@ -418,9 +514,10 @@ function AccountPickerScreenComponent(): JSX.Element {
         // capable of blanking content, and the windowing already does the work.
         windowSize={5}
         maxToRenderPerBatch={12}
-        // Rows vary in height only with the OS font scale, so a missed target
-        // is harmless — let the list settle rather than redboxing.
-        onScrollToIndexFailed={() => undefined}
+        // A missed target is recovered from, not swallowed: the row the caller
+        // came in on has to end up visible.
+        onScrollToIndexFailed={onScrollToIndexFailed}
+        onScrollBeginDrag={onScrollBeginDrag}
         renderSectionHeader={({ section }) =>
           section.title ? (
             <View style={styles.sectionHeader}>

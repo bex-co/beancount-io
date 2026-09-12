@@ -253,6 +253,52 @@ describe("selectAccountTreeFromRoot", () => {
     expect(result[0].children).toEqual([]);
   });
 
+  it("keeps omitting zero-balance accounts for the Reports path, which opts out", () => {
+    // The Reports category views share these selectors and must keep the
+    // filtering they had: zero inclusion is opt-in, and the three-argument call
+    // the Reports selector makes never asks for it.
+    const root = createIncomeRoot("Income", [
+      { account: "Income:Empty", balanceChildren: { USD: 0 } },
+      { account: "Income:Salary", balanceChildren: { USD: 5000 } },
+    ]);
+    expect(
+      selectAccountTreeFromRoot("USD", root, CATEGORY_SIGN.income).map(
+        (n) => n.name,
+      ),
+    ).toEqual(["Salary"]);
+    // Even naming the zero account has no effect without the opt-in payload.
+    expect(
+      selectAccountTreeFromRoot("USD", root, 1, {}).map((n) => n.name),
+    ).toEqual(["Salary"]);
+  });
+
+  it("keeps an opted-in zero account nested under its real parent", () => {
+    const root = createIncomeRoot("Income", [
+      {
+        account: "Income:Salary",
+        balanceChildren: { USD: 5000 },
+        children: [
+          { account: "Income:Salary:Base", balanceChildren: { USD: 5000 } },
+          { account: "Income:Salary:Old", balanceChildren: { USD: 0 } },
+        ],
+      },
+      // A second top-level branch, so the category's own pass-through skip
+      // doesn't flatten Salary's row away before we can look at its children.
+      { account: "Income:Interest", balanceChildren: { USD: 12 } },
+    ]);
+    const [salary] = selectAccountTreeFromRoot("USD", root, 1, {
+      accounts: ["Income:Salary:Old"],
+      rootAccount: "Income",
+    });
+    // Salary now has two children, so nothing folds and the zero account stays
+    // inside the branch whose disclosure controls it.
+    expect(salary.name).toBe("Salary");
+    expect(salary.children.map((n) => n.account)).toEqual([
+      "Income:Salary:Base",
+      "Income:Salary:Old",
+    ]);
+  });
+
   it("parses string balances and falls back to USD when the currency is missing", () => {
     const root = createIncomeRoot("Income", [
       { account: "Income:Salary", balanceChildren: { USD: "5000.50" } },

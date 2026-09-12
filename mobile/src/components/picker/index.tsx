@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -29,6 +29,7 @@ import { ColorTheme } from "@/types/theme-props";
 const { height: screenHeight } = Dimensions.get("window");
 import {
   ITEM_HEIGHT,
+  selectedIndexForValue,
   wheelIndexAtOffset,
   wheelOffsetForValue,
   wheelTextMaxFontSizeMultiplier,
@@ -181,10 +182,23 @@ export const Picker: React.FC<PickerProps> = ({
   const overlayOpacity = useSharedValue(0);
   const scrollViewRef = useAnimatedRef<ScrollView>();
 
+  const committedIndex = useMemo(
+    () => selectedIndexForValue(items, selectedValue),
+    [items, selectedValue],
+  );
   const initialScrollY = useMemo(
     () => wheelOffsetForValue(items, selectedValue),
     [items, selectedValue],
   );
+
+  // Which row reads as chosen. Driven by the *pending* wheel position — the one
+  // `handleDone` will save — not by the committed prop: comparing each row to
+  // `selectedValue` left the emphasis on the old option all the way through a
+  // scroll, so the highlighted row and the row Confirm would save disagreed.
+  const [pendingIndex, setPendingIndex] = useState(committedIndex);
+  // The same number on the UI thread, so the scroll handler only crosses back to
+  // JS when the centered row actually changes (a few times per drag, not 60/s).
+  const reportedIndex = useSharedValue(committedIndex);
 
   // Seeded from the current selection, not 0. `handleDone` derives the
   // confirmed item from `scrollY`, but the wheel is positioned through the
@@ -199,8 +213,10 @@ export const Picker: React.FC<PickerProps> = ({
     // not run while the user scrolls, so it cannot fight an in-progress drag.
     if (visible) {
       scrollY.value = initialScrollY;
+      reportedIndex.value = committedIndex;
+      setPendingIndex(committedIndex);
     }
-  }, [visible, initialScrollY, scrollY]);
+  }, [visible, initialScrollY, scrollY, committedIndex, reportedIndex]);
 
   const showModal = useCallback(() => {
     overlayOpacity.value = withTiming(1, {
@@ -246,6 +262,11 @@ export const Picker: React.FC<PickerProps> = ({
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
+      const index = wheelIndexAtOffset(event.contentOffset.y, items.length);
+      if (index !== reportedIndex.value) {
+        reportedIndex.value = index;
+        runOnJS(setPendingIndex)(index);
+      }
     },
   });
 
@@ -259,9 +280,8 @@ export const Picker: React.FC<PickerProps> = ({
   }, [hideModal]);
 
   const renderItem = useCallback(
-    (item: PickerItem) => {
-      const isSelected = item.value === selectedValue;
-      // const isSelected = Math.round(scrollY.value / ITEM_HEIGHT) === index;
+    (item: PickerItem, index: number) => {
+      const isSelected = index === pendingIndex;
       return (
         <View
           key={item.value}
@@ -290,7 +310,7 @@ export const Picker: React.FC<PickerProps> = ({
       styles.wheelItemText,
       styles.selectedItemText,
       styles.wheelItem,
-      selectedValue,
+      pendingIndex,
     ],
   );
 

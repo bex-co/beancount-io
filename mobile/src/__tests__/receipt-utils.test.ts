@@ -3,6 +3,7 @@ import {
   receiptErrorKey,
   parseErrorCode,
   mimeToExt,
+  shotFromLibraryResult,
 } from "../screens/receipt-capture-screen/receipt-utils";
 import { getFormatDate } from "../common/format-util";
 
@@ -96,4 +97,69 @@ test("mimeToExt extracts png subtype", () => {
 
 test("mimeToExt falls back to jpg for malformed mime", () => {
   expect(mimeToExt("invalidmime")).toBe("jpg");
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// shotFromLibraryResult (the library-pick path, with a stand-in picker)
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Stands in for `ImagePicker.launchImageLibraryAsync`. The screen now calls it
+ * with no permission request in front of it, so what is worth pinning down is
+ * how each result shape is turned into a shot.
+ */
+const pick = async (result: unknown) =>
+  shotFromLibraryResult(
+    (await Promise.resolve(result)) as Parameters<
+      typeof shotFromLibraryResult
+    >[0],
+  );
+
+test("a picked image becomes a shot, carrying its own mime type and name", async () => {
+  expect(
+    await pick({
+      canceled: false,
+      assets: [
+        { uri: "file:///r.png", mimeType: "image/png", fileName: "r.png" },
+      ],
+    }),
+  ).toEqual({
+    uri: "file:///r.png",
+    mimeType: "image/png",
+    filename: "r.png",
+  });
+});
+
+test("a picked image with no metadata falls back to a jpeg receipt name", async () => {
+  expect(
+    await pick({ canceled: false, assets: [{ uri: "file:///r" }] }),
+  ).toEqual({
+    uri: "file:///r",
+    mimeType: "image/jpeg",
+    filename: "receipt.jpeg",
+  });
+});
+
+test("a png without a filename is named from its mime type", async () => {
+  expect(
+    await pick({
+      canceled: false,
+      assets: [{ uri: "file:///r", mimeType: "image/png", fileName: null }],
+    }),
+  ).toEqual({
+    uri: "file:///r",
+    mimeType: "image/png",
+    filename: "receipt.png",
+  });
+});
+
+test("cancelling the picker yields no shot", async () => {
+  expect(await pick({ canceled: true, assets: null })).toBe(null);
+});
+
+test("a result with no usable asset yields no shot", async () => {
+  expect(await pick({ canceled: false, assets: [] })).toBe(null);
+  expect(await pick({ canceled: false, assets: [null] })).toBe(null);
+  expect(await pick({ canceled: false })).toBe(null);
+  expect(await pick(undefined)).toBe(null);
 });

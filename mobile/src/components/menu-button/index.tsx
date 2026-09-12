@@ -1,12 +1,14 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Dimensions,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { createPendingMenuAction } from "./pending-action";
 import { fontSizes } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { ColorTheme } from "@/types/theme-props";
@@ -96,6 +98,8 @@ export const MenuButton = ({
   const anchorRef = useRef<View>(null);
   const [visible, setVisible] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  // A tapped row's callback waits here until the menu is actually off screen.
+  const pending = useMemo(() => createPendingMenuAction(), []);
 
   const openMenu = () => {
     anchorRef.current?.measureInWindow((x, y, width, height) => {
@@ -103,6 +107,24 @@ export const MenuButton = ({
       setMenuPos({ top: y + height + 4, right: screenWidth - (x + width) });
       setVisible(true);
     });
+  };
+
+  /** Dismissal without a choice — the backdrop or the hardware back button. */
+  const cancelMenu = () => {
+    pending.cancel();
+    setVisible(false);
+  };
+
+  const selectItem = (item: MenuButtonItem) => {
+    pending.select(item.onPress);
+    setVisible(false);
+    // iOS runs it from `onDismiss`, once the modal's view controller is really
+    // gone — presenting a share sheet or a picker from a controller that is
+    // still dismissing does nothing at all. Android's Modal never calls
+    // `onDismiss`, so there the close and the action stay in one turn.
+    if (Platform.OS !== "ios") {
+      pending.flush();
+    }
   };
 
   return (
@@ -125,9 +147,10 @@ export const MenuButton = ({
         visible={visible}
         transparent
         animationType="none"
-        onRequestClose={() => setVisible(false)}
+        onRequestClose={cancelMenu}
+        onDismiss={pending.flush}
       >
-        <Pressable style={styles.backdrop} onPress={() => setVisible(false)}>
+        <Pressable style={styles.backdrop} onPress={cancelMenu}>
           <View
             style={[styles.menu, { top: menuPos.top, right: menuPos.right }]}
           >
@@ -140,10 +163,7 @@ export const MenuButton = ({
                   i > 0 && styles.itemDivider,
                   pressed && styles.itemPressed,
                 ]}
-                onPress={() => {
-                  setVisible(false);
-                  item.onPress();
-                }}
+                onPress={() => selectItem(item)}
               >
                 <Text style={styles.itemLabel}>{item.label}</Text>
                 {item.icon}

@@ -61,14 +61,15 @@ function toNode(
   currency: string,
   sign: 1 | -1,
   displayName: (account: string) => string,
+  keep: ReadonlySet<string>,
 ): AccountNode {
   return {
     account: raw.account,
     name: displayName(raw.account),
     value: sign * resolveCurrencyBalance(raw.balance_children, currency),
     children: (raw.children ?? [])
-      .map((child) => toNode(child, currency, sign, leafName))
-      .filter((node) => node.value !== 0)
+      .map((child) => toNode(child, currency, sign, leafName, keep))
+      .filter((node) => node.value !== 0 || keep.has(node.account))
       // By magnitude: a large negative belongs next to its large siblings, not
       // sunk to the bottom of the list.
       .sort((a, b) => Math.abs(b.value) - Math.abs(a.value)),
@@ -160,10 +161,13 @@ function buildTopLevel(
   topLevel: RawChild[],
   currency: string,
   sign: 1 | -1,
+  keep: ReadonlySet<string>,
 ): AccountNode[] {
   const rows = topLevel
-    .map((child) => toNode(child, currency, sign, dropRoot))
-    .filter((accountNode) => accountNode.value !== 0)
+    .map((child) => toNode(child, currency, sign, dropRoot, keep))
+    .filter(
+      (accountNode) => accountNode.value !== 0 || keep.has(accountNode.account),
+    )
     .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
     .map(compressChain);
   return skipPassThroughLevels(rows);
@@ -211,6 +215,97 @@ function fromSerializable(node: SerializableChild): RawChild {
   };
 }
 
+/** Every account the raw hierarchy already carries, at any depth. */
+function rawAccounts(children: readonly RawChild[]): Set<string> {
+  const accounts = new Set<string>();
+  const visit = (nodes: readonly RawChild[]) => {
+    for (const node of nodes) {
+      accounts.add(node.account);
+      visit(node.children ?? []);
+    }
+  };
+  visit(children);
+  return accounts;
+}
+
+/** Opt-in inclusion of accounts the hierarchy omits because they are zero. */
+export type ZeroBalanceOptions = {
+  /**
+   * Full account names (from ledger metadata) to keep even at zero — the
+   * Accounts view's "a newly opened account must be visible before its first
+   * transaction". Report category views pass nothing, so their zero-filtering
+   * is untouched.
+   */
+  accounts?: readonly string[];
+  /**
+   * The hierarchy root's own account ("Assets", or a renamed root). Needed
+   * because a root node can come back without one.
+   */
+  rootAccount?: string;
+};
+
+/**
+ * Graft the zero-balance accounts into the raw hierarchy **at their real
+ * structural level**, creating any absent intermediate ancestors, and return
+ * the accounts the zero-filter must then spare.
+ *
+ * Grafting before the tree is built is the whole point: appending these rows
+ * after compression put `Assets:NonCurrent:Goodwill` straight under `Assets`,
+ * outside the `NonCurrent` branch whose disclosure should control it.
+ */
+function graftZeroAccounts(
+  children: readonly RawChild[],
+  options: ZeroBalanceOptions,
+): { children: RawChild[]; keep: Set<string> } {
+  const keep = new Set<string>();
+  const wanted = options.accounts ?? [];
+  const root = options.rootAccount ?? "";
+  if (wanted.length === 0 || !root) {
+    return { children: children as RawChild[], keep };
+  }
+
+  const existing = rawAccounts(children);
+  // Copied, never mutated in place: the raw nodes belong to the Apollo cache.
+  const clone = (node: RawChild): RawChild => ({
+    account: node.account,
+    balance_children: node.balance_children,
+    children: (node.children ?? []).map(clone),
+  });
+  const grafted = children.map(clone);
+
+  for (const account of wanted) {
+    if (!account.startsWith(`${root}:`)) {
+      continue;
+    }
+    // An ancestor of accounts the hierarchy already renders: those rows stand
+    // in for it, so it needs neither a graft nor a reprieve from the filter.
+    if (
+      Array.from(existing).some((rendered) =>
+        rendered.startsWith(`${account}:`),
+      )
+    ) {
+      continue;
+    }
+    let siblings = grafted;
+    let path = root;
+    for (const segment of account.slice(root.length + 1).split(":")) {
+      path = `${path}:${segment}`;
+      // Every ancestor is kept too, so an existing zero ancestor cannot be
+      // filtered out from under the account it holds.
+      keep.add(path);
+      let node = siblings.find((sibling) => sibling.account === path);
+      if (!node) {
+        node = { account: path, balance_children: {}, children: [] };
+        siblings.push(node);
+      }
+      node.children = node.children ?? [];
+      siblings = node.children;
+    }
+  }
+
+  return { children: grafted, keep };
+}
+
 /**
  * Build the account tree under an IncomeStatement hierarchy root
  * (`incomeHierarchyData` / `expensesHierarchyData`): a single node whose
@@ -223,15 +318,27 @@ function fromSerializable(node: SerializableChild): RawChild {
  * `sign` defaults to leaving the ledger's own signs alone (what the Accounts tab
  * wants); pass `CATEGORY_SIGN[category]` to flip a credit-normal category into
  * positive magnitudes (what the Reports tab wants).
+ *
+ * `zeroBalance` is opt-in and empty by default: only the Accounts view asks for
+ * zero-balance accounts to survive, so a report category view keeps exactly the
+ * filtering it had.
  */
 export function selectAccountTreeFromRoot(
   currency: string,
   root?: SerializableTreeNodeLike | null,
   sign: 1 | -1 = 1,
+  zeroBalance: ZeroBalanceOptions = {},
 ): AccountNode[] {
-  if (!currency || !root?.children) {
+  // A root without children is still worth walking when zero-balance accounts
+  // are opted in: a ledger whose accounts are all freshly opened has an empty
+  // hierarchy and nothing but metadata to show.
+  if (!currency || !root || (!root.children && !zeroBalance.accounts?.length)) {
     return [];
   }
   const children = root.children as SerializableChild[] | null | undefined;
-  return buildTopLevel((children ?? []).map(fromSerializable), currency, sign);
+  const { children: raw, keep } = graftZeroAccounts(
+    (children ?? []).map(fromSerializable),
+    zeroBalance,
+  );
+  return buildTopLevel(raw, currency, sign, keep);
 }

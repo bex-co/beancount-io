@@ -129,6 +129,27 @@ export function postingAmountAccessibility({
   };
 }
 
+/**
+ * Whether a posting row carries the automatic-balance switch, and whether that
+ * switch reads as on.
+ *
+ * The two questions are deliberately separate. Only the final row can balance
+ * the rest, so only it gets a switch — but it keeps that switch whether or not
+ * it is currently automatic. Gating the *mount* on `isAuto` is what made the
+ * control disappear the first time it was turned off (editing the last amount
+ * clears `isAuto` too), leaving `toggleLastPostingAuto`'s enable direction with
+ * nothing to call it.
+ */
+export function lastPostingAutoToggle({
+  isLast,
+  isAuto,
+}: {
+  isLast: boolean;
+  isAuto: boolean;
+}): { rendered: boolean; selected: boolean } {
+  return { rendered: isLast, selected: isLast && isAuto };
+}
+
 export function remainder(postings: Posting[]): number {
   return postings.reduce((s, p) => s + p.amountCents, 0);
 }
