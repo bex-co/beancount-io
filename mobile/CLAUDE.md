@@ -293,7 +293,7 @@ File-based product roadmap, managed only through two slash commands:
 - `/pm-brainstorm <topic>` — proposes milestones/tasks as text (writes nothing).
 - `/pm <subcommand>` — the only writer: materializes workstreams/milestones/tasks, marks done, prints status.
 
-Conventions live canonically in `.claude/commands/pm.md`. Product pillars are in `.pm/GOAL.md`; anti-goals in `.pm/DO_NOT_DO.md`. Don't edit `.pm/` by hand outside `/pm`.
+Conventions live canonically in [`../.agents/skills/pm/SKILL.md`](../.agents/skills/pm/SKILL.md). Product pillars for this board are in `.pm/GOAL.md`; anti-goals in `.pm/DO_NOT_DO.md`. Don't edit `.pm/` by hand outside `/pm`. `mobile/.pm/` is the app's historical board; the monorepo's active adoption board is the root `../.pm/`.
 
 ## CI / Deploy
 
