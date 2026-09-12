@@ -154,13 +154,14 @@ def native_command(name: str) -> Path:
     docstring. A checkout resolves it beside the interpreter running the
     frontend, which is where `uv sync` puts `bean-check` and friends.
     """
+    filename = f"{name}.exe" if sys.platform == "win32" else name
     for directory in _candidate_bin_dirs():
-        executable = directory / name
+        executable = directory / filename
         if executable.exists():
             return executable
 
     directory = paths.bin_dir_for(provision.ensure_engine())
-    executable = directory / name
+    executable = directory / filename
     if not executable.exists():
         raise BeaError(
             f"The engine environment has no '{name}' ({directory}). "

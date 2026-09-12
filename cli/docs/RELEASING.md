@@ -23,23 +23,24 @@ rolled back automatically.
 
 ## Prepare and tag
 
-After choosing the release version, update `pyproject.toml` and regenerate
-the lock with `uv lock`. From `cli/`, validate and test the installation:
+After choosing the release version, update the frontend and engine `pyproject.toml` versions,
+`src/cli/engine/manifest.json` (engine version and helper requirement), and
+`src/bea_engine/__init__.py` (`FALLBACK_VERSION`). Regenerate locks with
+`uv lock` and `make release-lock`. From `cli/`, validate and test the installation:
 
 ```bash norun
-# Needs Homebrew with no installed bea, plus network for the tap test.
+# Needs Homebrew and network for the tap test.
 make check-all
-make release-lock
+make release-artifacts
 release_version=$(make -s release-check)
-uv build --out-dir tmp/release
-python3 scripts/test-install.py "tmp/release/beancount_io-${release_version}-py3-none-any.whl"
-python3 scripts/test-install.py "tmp/release/beancount_io-${release_version}.tar.gz" --installer pip
-bash scripts/test-homebrew.sh "tmp/release/beancount_io-${release_version}.tar.gz"
+python3 scripts/test-install.py "dist/beancount_io-${release_version}-py3-none-any.whl"
+python3 scripts/test-install.py "dist/beancount_io-${release_version}.tar.gz" --installer pip
+bash scripts/test-homebrew.sh "dist/beancount_io-${release_version}.tar.gz"
 ```
 
-The local Homebrew test requires that `bea` is not already installed through
-Homebrew. It installs an unlinked keg and cleans up that keg and its temporary
-tap on exit. Python and uv prerequisites installed by Homebrew may remain.
+The local Homebrew test uses a uniquely named formula with the same install
+and test methods, so an existing `bea` can remain installed. It installs an
+unlinked keg and cleans up that keg and its temporary tap on exit. Python and uv prerequisites installed by Homebrew may remain.
 
 Commit the version change and land it on `main` before tagging that commit:
 
@@ -54,7 +55,8 @@ git push origin "cli-v${release_version}"
 
 Configure these once outside the repository:
 
-- **PyPI trusted publishing:** register project `beancount-io` with owner
+- **PyPI trusted publishing:** register **both** projects `beancount-io` and
+  `beancount-io-engine` with owner
   `bex-co`, repository `beancount-io`, workflow `release-cli.yml`, and
   environment `production`. Configure TestPyPI likewise for rehearsals;
   publishing uses no stored PyPI API token.
@@ -73,7 +75,8 @@ Publishing page (the project need not exist yet):
 - PyPI: https://pypi.org/manage/account/publishing/
 - TestPyPI: https://test.pypi.org/manage/account/publishing/
 
-Use project name `beancount-io`, owner `bex-co`, repository `beancount-io`,
+Create a publisher for **each** project name, `beancount-io` and
+`beancount-io-engine`, with owner `bex-co`, repository `beancount-io`,
 workflow filename `release-cli.yml`, and environment `production` on both.
 See [PyPI's pending-publisher guide](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/).
 A successful upload creates the project. A missing publisher fails the upload;
@@ -91,3 +94,18 @@ Keep the distribution name `beancount-io` and executable `bea`. A normal main
 push validates the CLI but does not publish it. Only `cli-vX.Y.Z` tags publish
 to production. Preserve the version and artifacts when retrying a partially
 published release; publish fixes under a new version.
+
+## 0.2.0 migration
+
+Install `bea` once; the matching GPL engine is provisioned separately and automatically.
+`bea format FILE` now prints formatted text; use `--in-place` to rewrite the file.
+`bea query` accepts BQL on stdin, and `--source URI` exposes native Beanquery
+sources and streaming output. Use local `--file` mode for bea's JSON envelope,
+strict validation, exact filename handling and result precision fixes.
+
+Both distributions include their full license text. The engine includes the
+Fava copyright and MIT permission notice. Publish the engine sdist beside its
+wheel: it contains the helper and vendored Fava source and build configuration.
+The frontend sdist also contains the engine tree and release/install scripts.
+Upstream Beancount and Beanquery artifacts are downloaded directly from PyPI
+using the release locks; they are not embedded binaries in either bea wheel.

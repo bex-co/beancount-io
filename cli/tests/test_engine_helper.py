@@ -427,6 +427,8 @@ class TestDistribution:
             assert any(name.startswith("bea_engine/") for name in names)
             assert any(name.startswith("fava/") for name in names)
             assert not any(name.startswith("cli/") for name in names)
+            license_name = next(name for name in names if name.endswith("/licenses/LICENSE"))
+            assert "GNU GENERAL PUBLIC LICENSE" in archive.read(license_name).decode()
             notice = next(name for name in names if name.endswith("bea_engine/NOTICE.fava"))
             assert archive.read(notice).decode() == (CLI_ROOT / "NOTICE.fava").read_text()
 
@@ -465,6 +467,8 @@ class TestDistribution:
         with zipfile.ZipFile(wheels[0]) as archive:
             names = archive.namelist()
             assert any(name.startswith("cli/") for name in names)
+            license_name = next(name for name in names if name.endswith("/licenses/LICENSE"))
+            assert "Permission is hereby granted" in archive.read(license_name).decode()
             assert "cli/engine-requirements.lock" in names
             assert "cli/engine-optional-beangulp.lock" in names
             assert "cli/engine-optional-beanprice.lock" in names
