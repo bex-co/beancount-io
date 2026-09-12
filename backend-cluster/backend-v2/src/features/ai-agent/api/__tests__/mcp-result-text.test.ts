@@ -99,30 +99,6 @@ describe("renderToolText", () => {
     ).toBe("12 files");
   });
 
-  /**
-   * `checkLedger` is the tool an agent calls to learn one fact, and its
-   * payload is a per-directive-type census too long to repeat. Before this it
-   * summarized as "checkLedger: ok", which does not answer what was asked.
-   */
-  it("leads a verdict payload with its error count", () => {
-    expect(
-      renderToolText("checkLedger", {
-        ok: true,
-        result: { errors: [], entriesCount: [{ type: "Open", number: 30 }] },
-      }),
-    ).toContain("No errors");
-
-    expect(
-      renderToolText("checkLedger", {
-        ok: true,
-        result: {
-          errors: [{ message: "a" }, { message: "b" }],
-          entriesCount: [],
-        },
-      }).split("\n")[0],
-    ).toBe("2 errors");
-  });
-
   it("says something rather than nothing for a payload it cannot summarize", () => {
     expect(renderToolText("deleteAccount", { ok: true, result: true })).toBe(
       "deleteAccount: true",

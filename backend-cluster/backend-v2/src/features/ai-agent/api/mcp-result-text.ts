@@ -88,15 +88,6 @@ function summaryLine(toolName: string, payload: unknown): string {
   const record = payload as Record<string, unknown>;
   // Every write tool leads with `summary` for exactly this reason (w2/m26).
   if (typeof record.summary === "string") return firstLine(record.summary);
-  // A payload carrying `errors` is a verdict, and the count is the whole
-  // verdict — `checkLedger` is the tool an agent calls precisely to learn it,
-  // and its payload is a per-type census too long to repeat underneath.
-  if (Array.isArray(record.errors)) {
-    const count = record.errors.length;
-    return count === 0
-      ? "No errors — the ledger loads cleanly."
-      : countNoun(count, "error");
-  }
   if (typeof record.rowCount === "number") {
     const truncated = record.truncated === true ? " (truncated)" : "";
     return `${countNoun(record.rowCount, "row")}${truncated}`;

@@ -17,7 +17,6 @@ bea ask ["question"]                      # requires beancount-io[ask] and hoste
 # Cloud — the beancount.io hosted service
 bea cloud login | logout | status
 bea cloud ledger list | create [--clone] | show | clone | delete
-bea cloud mcp config [--client …] [--write]
 
 # CLI maintenance
 bea upgrade [--check]
@@ -608,34 +607,6 @@ bea cloud logout
 ```
 
 `bea cloud status` reports the credential source (`file` or `environment`), its expiry, and the account it belongs to. For CI, set `BEA_TOKEN` instead of logging in — it is never written to disk, and `cloud status` reports `source: environment`. `cloud logout` revokes the stored session and deletes the credential file. When `BEA_TOKEN` is set, `cloud logout` changes nothing: it neither revokes the token (another job may share it) nor unsets it in the shell — unset the variable yourself, or revoke the token from the dashboard.
-
-## Cloud: connect an MCP client
-
-`bea cloud mcp config` prints the configuration that points Claude Code,
-Cursor, or Claude Desktop at the server you are logged in to. The endpoint
-comes from that server's own `/.well-known/mcp.json`, so a self-host gets its
-own address rather than beancount.io's.
-
-```bash norun
-# Needs a personal access token; mint one in the dashboard.
-bea cloud mcp config --client claude-code --key bcio_...
-bea cloud mcp config --client cursor --key bcio_...
-bea cloud mcp config --client claude-desktop --key bcio_...
-```
-
-The CLI cannot mint a key — the server does not let a key mint a key — so pass
-one with `--key` or `BEA_MCP_KEY`. Without one, the command still prints the
-configuration with a `bcio_your_token` placeholder and tells you where to mint.
-
-`--write` merges the entry into the client's own config file — `.mcp.json` in
-the current project for Claude Code, `~/.cursor/mcp.json` for Cursor,
-`claude_desktop_config.json` for Claude Desktop — after printing the diff and
-asking. Other servers already in that file are preserved. It refuses without a
-real key, and under `--no-input` (including `--json` and CI) it refuses unless
-`--yes` is passed.
-
-`--json` redacts the key unless `--show-key` is given, so a captured
-transcript does not leak it.
 
 ## Cloud: hosted ledgers
 

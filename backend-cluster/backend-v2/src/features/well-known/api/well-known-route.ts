@@ -1,4 +1,5 @@
 import Router from "@koa/router";
+import { toJSONSchema } from "zod";
 import type { AppConfig } from "@/config/config";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import {
@@ -16,23 +17,7 @@ Policy: https://beancount.io/security#report-a-vulnerability
 `;
 
 function mcpManifest(config: AppConfig) {
-  // Every machine-reachable URL comes from the issuer (w2/m29:t002). The
-  // manifest used to mix origins: `endpoint` and `openapi` from the dashboard
-  // URL, `auth` from the issuer — so on a deployment where those differ it
-  // advertised an MCP address that serves the dashboard's HTML. The 401's
-  // `WWW-Authenticate` pointer already used the issuer and was right; this
-  // makes the manifest agree with the rest of discovery.
-  //
-  // Scope, precisely: outside production `oauth.issuer` is `SERVER_URL`, so
-  // this is the real fix for a split-origin self-host — `deploy/docker-mac`
-  // serves the dashboard on :42600 and the API on :42601, and the manifest
-  // now names :42601. In production `config.ts` sets `oauthIssuer =
-  // dashboardUrl` and `assertOAuthInteractionHost` requires the two to share a
-  // host, so both expressions are the same string and nothing changes. A
-  // production-mode deployment that genuinely splits the two origins still
-  // has no way to say so — `AppConfig` has no "API public URL" distinct from
-  // the OIDC issuer identity. That missing concept is w2/015.
-  const apiOrigin = config.oauth.issuer;
+  const publicOrigin = config.dashboard.url;
 
   return {
     name: "beancount",
@@ -40,36 +25,32 @@ function mcpManifest(config: AppConfig) {
     version: "1.0.0",
     description:
       "Talk to your Beancount ledger from Claude, Cursor, and any MCP client.",
-    endpoint: `${apiOrigin}/api-gateway/mcp`,
+    endpoint: `${publicOrigin}/api-gateway/mcp`,
     transport: "streamable-http",
     transports: ["streamable-http"],
     // Resources are declared alongside tools because the server serves both.
     // A manifest listing only tools would tell a client the read surface does
     // not exist — and the read surface is most of it (ADR 0008 D2).
     capabilities: { tools: {}, resources: {}, streaming: true },
-    // Names and addresses, nothing else. Publishing every tool's input and
-    // output schema made this ~20 KB on an anonymous, cached GET whose job is
-    // only to say what exists and where. A client that wants descriptions or
-    // schemas calls `tools/list` and `resources/templates/list`, which answer
-    // authoritatively and per credential — this document cannot, because it
-    // has no caller to answer for.
-    tools: MCP_TOOLS.map((tool) => tool.name),
+    tools: MCP_TOOLS.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      inputSchema: toJSONSchema(tool.inputSchema, { io: "input" }),
+      outputSchema: toJSONSchema(tool.outputSchema),
+    })),
     resources: MCP_RESOURCES.map((resource) => ({
       name: resource.name,
+      description: resource.description,
       uriTemplate: resourceTemplateFor(resource).uriTemplate.toString(),
+      mimeType: resource.mimeType,
     })),
     auth: {
       type: "oauth2",
-      authorizationUrl: `${apiOrigin}/api-gateway/oauth/auth`,
-      tokenUrl: `${apiOrigin}/api-gateway/oauth/token`,
+      authorizationUrl: `${config.oauth.issuer}/api-gateway/oauth/auth`,
+      tokenUrl: `${config.oauth.issuer}/api-gateway/oauth/token`,
       scopes: API_SCOPES,
     },
-    openapi: `${apiOrigin}/api-gateway/v1/openapi.json`,
-    /** Human-facing only: where a person mints a key or reads the guide. */
-    links: {
-      dashboard: config.dashboard.url,
-      apiKeys: `${config.dashboard.url}/settings/api-keys`,
-    },
+    openapi: `${publicOrigin}/api-gateway/v1/openapi.json`,
   };
 }
 

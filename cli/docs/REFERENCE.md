@@ -699,18 +699,3 @@ Usage: bea cloud ledger clone [OPTIONS] {full_name}
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
 | `--dir` | path |  | Local directory for the git clone |
-
-### `bea cloud mcp config`
-
-Print (or write) the MCP client configuration for the logged-in server.
-
-```text
-Usage: bea cloud mcp config [OPTIONS]
-```
-
-| Option | Type | Default | Help |
-| --- | --- | --- | --- |
-| `--client` | choice: claude-code \| cursor \| claude-desktop \| json | claude-code | Which client to configure. |
-| `--key` | str |  | A bcio_ personal access token. Mint one in the dashboard; the CLI cannot. |
-| `--write` | flag |  | Write the configuration into the client's config file after showing the diff. |
-| `--show-key` | flag |  | Include the key in --json output. Off by default so a logged transcript does not leak it. |

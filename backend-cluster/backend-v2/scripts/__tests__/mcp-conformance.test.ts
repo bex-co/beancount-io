@@ -32,7 +32,6 @@ const [
   checkOptionalUserId,
   checkDiscoveryWorkload,
   checkResultShape,
-  checkManifest,
 ] = CHECKS;
 
 const ledgerScoped: Identity = {
@@ -174,15 +173,6 @@ describe("MCP conformance checks", () => {
   it("check 10 skips rather than fails without a credential", async () => {
     const result = await checkResultShape({ baseUrl });
     expect(result.outcome).toBe("skip");
-  });
-
-  it("check 11 fails when the manifest points somewhere that is not MCP", async () => {
-    // The harness mounts only the MCP route, so there is no manifest to read
-    // — which is exactly the shape of the failure this check exists for: a
-    // client that trusts `.well-known/mcp.json` and reaches nothing.
-    const result = await checkManifest({ baseUrl });
-    expect(result.outcome).toBe("fail");
-    expect(result.detail).toMatch(/mcp\.json/);
   });
 
   it("check 6 passes when nothing internal leaks to an unknown credential", async () => {

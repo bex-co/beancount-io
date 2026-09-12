@@ -379,18 +379,11 @@ The backend exposes GraphQL APIs through Apollo Server. You can explore the API 
 
 ## Connecting an MCP client
 
-Mint a key at `/settings/api-keys` — the dialog shows the setup for Claude
-Code, Cursor, and Claude Desktop with the key already filled in — then:
-
-```bash
-claude mcp add --transport http beancount https://your-deployment/api-gateway/mcp \
-  --header "Authorization: Bearer bcio_your_ledger_scoped_key"
-```
-
-Or, from the CLI: `bea cloud mcp config --client claude-code --key bcio_...`
-(`--write` merges it into `.mcp.json` after showing the diff).
-
-For a client configured by file:
+The backend serves a stateless Streamable HTTP endpoint at
+`/api-gateway/mcp`. Connect with an OAuth grant for that resource or a `bcio_`
+API key. Ledger tools accept `ledger: "owner/name"`; a ledger-pinned credential
+defaults to its pin and cannot select a different ledger. Unpinned credentials
+must select a ledger per call; account tools need no ledger.
 
 ```json
 {
@@ -404,19 +397,11 @@ For a client configured by file:
 }
 ```
 
-The backend serves a stateless Streamable HTTP endpoint at
-`/api-gateway/mcp`; `/.well-known/mcp.json` names it for a given deployment.
-Connect with an OAuth grant for that resource or a `bcio_` API key. Ledger
-tools accept `ledger: "owner/name"`; a ledger-pinned credential defaults to its
-pin and cannot select a different ledger. Unpinned credentials must select a
-ledger per call; account tools need no ledger.
-
 Every result carries a readable text block and a typed `structuredContent`;
 every failure carries `{code, message, hint}` with `isError` set, so an agent
 branches on a code rather than on prose.
 
-The [Beancount.io MCP guide](./docs/mcp.md) opens with that quickstart, then
-explains OAuth and API-key
+The [Beancount.io MCP guide](./docs/mcp.md) explains setup, OAuth and API-key
 permissions, how requests reach the ledger, all 26 tools and 64 resource
 templates, the result envelope and its failure codes, writing directives as
 Beancount text, file-edit previews, bank imports, protocol examples, and

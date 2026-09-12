@@ -19,48 +19,11 @@ This ADR is that index. It does not re-implement or re-decide anything — `oidc
 | `/.well-known/oauth-protected-resource`                                                               | RFC 9728                            | `oidc-route.ts` (literal)                                                                                                | Protected-resource metadata for the MCP resource; MCP clients discover it through this stable unqualified path.                                    |
 | `/.well-known/oauth-protected-resource/v1` (`/.well-known/oauth-protected-resource/{issuer-path}/v1`) | RFC 9728                            | `oidc-route.ts` (`oauthWellKnownPath` over the catalog's application-API resource binding)                               | Path-derived metadata for the historical application API resource shared by GraphQL and REST; the resource identifier is not an HTTP mount.        |
 | `/.well-known/security.txt`                                                                           | RFC 9116                            | `well-known-route.ts`                                                                                                    | Security contact, policy, expiry, and preferred language metadata. Migrated from the CMS project's static `public/.well-known/security.txt`.       |
-| `/.well-known/mcp.json`                                                                               | Beancount.io MCP discovery contract | `well-known-route.ts`                                                                                                    | MCP transport endpoint, tool names, resource URI templates, OAuth endpoints, and public API contract pointer. Every machine-reachable URL derives from the issuer (see below). Migrated from the CMS project's MCP manifest handler. |
+| `/.well-known/mcp.json`                                                                               | Beancount.io MCP discovery contract | `well-known-route.ts`                                                                                                    | MCP transport endpoint, current tool list, OAuth endpoints, and public API contract pointer. Migrated from the CMS project's MCP manifest handler. |
 | `/.well-known/apple-app-site-association`                                                             | Apple Universal Links               | `well-known-route.ts`                                                                                                    | AASA voucher for `io.beancount.ios` on `/ledger/*`. Served only when `APP_LINKS_APPLE_TEAM_ID` is set; otherwise 404.                              |
 | `/.well-known/assetlinks.json`                                                                        | Android App Links (Digital Asset Links) | `well-known-route.ts`                                                                                                | Asset-links voucher for `io.beancount.android` on `/ledger`. Served only when `APP_LINKS_ANDROID_SHA256` is set; otherwise 404.                    |
 
 When OAuth signing keys are absent (`config.oauth.jwks` unset), all three OAuth discovery routes are replaced with a `503 oauth_not_configured` handler instead of removed — the path still exists, it just can't answer (the early no-JWKS branch in `setOidcRoutes`).
-
-### The MCP manifest's origins (w2/m29)
-
-Every URL in `/.well-known/mcp.json` that a *client* follows — `endpoint`,
-`auth.authorizationUrl`, `auth.tokenUrl`, `openapi` — is derived from
-`config.oauth.issuer`, the API's own origin. The dashboard URL appears only
-under `links`, where a person goes to mint a key or read the guide.
-
-This was not always true: `endpoint` and `openapi` came from the dashboard URL
-while `auth` came from the issuer. That is indistinguishable from correct on a
-deployment where both are the same host, and wrong on every deployment where
-they are not — on `deploy/docker-mac` the dashboard is `:42600` and the API is
-`:42601`, so the manifest advertised an MCP endpoint that serves the
-dashboard's HTML. The 401's `WWW-Authenticate` pointer and
-`oauth-protected-resource` already used the issuer and were right, so the
-manifest was the one document disagreeing with the rest.
-
-The scope of that fix is bounded by what `AppConfig` can express. Outside
-production `oauth.issuer` is `SERVER_URL`, so the manifest now names the API
-origin — which is what makes the local split-origin stack correct. In
-production `config.ts` sets `oauthIssuer = dashboardUrl` and
-`assertOAuthInteractionHost` requires them to share a host, so the two
-expressions are identical and the manifest is unchanged. A production-mode
-deployment that genuinely splits dashboard and API origins still cannot say so:
-there is no `api.publicUrl` distinct from the OIDC issuer identity. Adding that
-concept — and deriving the manifest, the `WWW-Authenticate` pointer, and the
-issuer from it — is tracked as `w2/015`.
-
-`yarn mcp:conformance` check 11 holds the invariant: it reads the manifest and
-proves the advertised `endpoint` answers an unauthenticated POST with the MCP
-handler's 401 challenge, and that the `auth` and `openapi` URLs resolve.
-
-The manifest lists tool **names** and resource **URI templates**, not
-descriptions or JSON schemas. Publishing every tool's input and output schema
-made it ~20 KB on an anonymous, cached GET whose only job is to say what exists
-and where. `tools/list` and `resources/templates/list` answer authoritatively
-and per credential; the manifest has no caller to answer for.
 
 ### How the issuer path segment works
 

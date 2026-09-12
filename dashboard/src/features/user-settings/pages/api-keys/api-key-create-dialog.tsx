@@ -36,7 +36,6 @@ import { Label } from "@/common/components/ui/label";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { ApiKeysDocument, CreateApiKeyDocument } from "@/graphql/definitions";
-import { McpSetup } from "./mcp-setup";
 import {
   API_KEY_SCOPES,
   type ApiKeyScope,
@@ -274,7 +273,6 @@ export function ApiKeyCreateDialog({ children }: ApiKeyCreateDialogProps) {
                 </Button>
               </div>
             </div>
-            <McpSetup token={plaintext} />
             <DialogFooter>
               <Button type="button" onClick={() => handleOpenChange(false)}>
                 {t("userSettings.apiKeyDone")}
