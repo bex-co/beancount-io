@@ -4,6 +4,12 @@
 
 ## Milestones
 
+Execution order: **m19 → m20 → m21**. Milestone m18 remains completed history. The next task is `w1/m19/t001`; dependent implementation and closeout require the recorded licensing conditions to be resolved.
+
+- [ ] **m19** — [Independent Beancount engine and complete bea command parity](./m19/README.md) (23 tasks) ← ADR014 replan, 2026-09-11; license resolution, complete engine separation, and installed-artifact proof
+- [ ] **m20** — [Optional accounting tools in the independent engine](./m20/README.md) (8 tasks) ← ADR014 replan, 2026-09-11; after m19; optional tools stay in the engine
+- [ ] **m21** — [Ledger skills follow the one-install engine design](./m21/README.md) (8 tasks) ← ADR014 replan, 2026-09-11; after m20; follow-up to completed m18
+
 - [x] **m1** — Ask-page quick wins: focus, preset questions, stop & retry (9 tasks) ← from `/pm` invocation capturing the AI-chat UX review (2026-07-31)
 - [x] **m2** — Scope useLedgerMeta to the selected ledger (fix wrong currency display) (5 tasks) ← from `/pm` invocation capturing the expo-mcp currency investigation (2026-07-31)
 - [x] **m3** — Drag-to-resize left sidebar (7 tasks) ← from `/pm` invocation capturing the sidebar-resize research spike (2026-08-16)
@@ -20,4 +26,4 @@
 - [x] **m15** — Daily-use ergonomics for `bea`: search, balance, positional narration, terminal-width tables, small fixes (9 tasks) ← from CLI UX review 2026-09-08 (developer and beancount-user walkthrough of `cli/` docs and `bea 0.1.0`); user routed to w1
 - [x] **m16** — No-code CSV import: column mapping and rules without a Python importer (8 tasks) ← from CLI UX review 2026-09-08 (developer and beancount-user walkthrough of `cli/` docs and `bea 0.1.0`); user routed to w1 — sequenced after m14
 - [x] **m17** — CLI docs from one source: landing README, generated reference, executable examples, first-month tutorial (8 tasks) ← from CLI UX review 2026-09-08 (developer and beancount-user walkthrough of `cli/` docs and `bea 0.1.0`); user routed to w1 — sequenced after m13, m15, m16
-- [x] **m18** — Ledger skills converge on `bea` (8 tasks) ← from CLI UX review 2026-09-08 (developer and beancount-user walkthrough of `cli/` docs and `bea 0.1.0`); user routed to w1 — sequenced after m14 and the w2/m25 release
+- [x] **m18** — [Ledger skills converge on `bea`](./done/m18/README.md) (8 tasks) ← CLI UX review 2026-09-08; completed baseline; ADR014 installation/skills follow-up is tracked in m21
