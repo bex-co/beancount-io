@@ -92,6 +92,43 @@ export function createPrefilledPostings(
   ]);
 }
 
+/**
+ * Spoken identity of one posting's amount field.
+ *
+ * The field shows only the magnitude — the sign lives in a separate toggle
+ * button — so a screen reader landing on the input would otherwise hear neither
+ * which account it belongs to nor whether the amount is a debit or a credit.
+ * The label names the account (or the row's position, for a posting whose
+ * account is not picked yet) and the value speaks the signed amount with its
+ * currency.
+ *
+ * Pure so it can be unit-tested: `t` is injected rather than hooked.
+ */
+export function postingAmountAccessibility({
+  account,
+  amountInput,
+  index,
+  currency,
+  t,
+}: {
+  account: string;
+  amountInput: string;
+  index: number;
+  currency: string;
+  t: (key: string, params?: Record<string, unknown>) => string;
+}): { label: string; value: string } {
+  const isNegative = amountInput.trim().startsWith("-");
+  const magnitude =
+    (isNegative ? amountInput.trim().slice(1) : amountInput.trim()) || "0.00";
+  return {
+    // A 1-based position, because "Posting 0" reads as a bug to anyone hearing it.
+    label: t("postingAmountLabel", {
+      account: account || t("postingNumber", { number: index + 1 }),
+    }),
+    value: `${isNegative ? "-" : ""}${magnitude} ${currency}`,
+  };
+}
+
 export function remainder(postings: Posting[]): number {
   return postings.reduce((s, p) => s + p.amountCents, 0);
 }

@@ -559,4 +559,14 @@ export const uk: typeof en = {
     "Грошовий потік від доходів до витрат. Доходи {{income}}, витрати {{expenses}}.",
   ledgerNavigateUp: "На рівень вище",
   openLedgerDrawer: "Відкрити меню",
+  back: "Назад",
+  postingAmountLabel: "Сума для {{account}}",
+  postingNumber: "Проведення {{number}}",
+  postingAmountHint:
+    "Введіть суму. Кнопка знака переключає між плюсом і мінусом.",
+  expandAccount: "Розгорнути {{account}}",
+  collapseAccount: "Згорнути {{account}}",
+  breakdownRowShare: "{{amount}}, {{percent}}% від підсумку",
+  budgetChartSummary:
+    "Бюджет і факт за {{span}}. Факт {{actual}} із {{budget}} за {{count}} періодів, {{over}} понад ціль.",
 };

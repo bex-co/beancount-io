@@ -563,4 +563,14 @@ export const bg: typeof en = {
     "Паричен поток от приходи към разходи. Приходи {{income}}, разходи {{expenses}}.",
   ledgerNavigateUp: "Нагоре една папка",
   openLedgerDrawer: "Отвори менюто",
+  back: "Назад",
+  postingAmountLabel: "Сума за {{account}}",
+  postingNumber: "Ред {{number}}",
+  postingAmountHint:
+    "Въведете сумата. Използвайте бутона за знак, за да смените между положителна и отрицателна.",
+  expandAccount: "Разгъни {{account}}",
+  collapseAccount: "Сгъни {{account}}",
+  breakdownRowShare: "{{amount}}, {{percent}}% от общото",
+  budgetChartSummary:
+    "Бюджет спрямо действителни за {{span}}. Действителни {{actual}} от бюджет {{budget}} за {{count}} периода, {{over}} над целта.",
 };

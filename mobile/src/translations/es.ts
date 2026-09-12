@@ -564,4 +564,14 @@ export const es: typeof en = {
     "Flujo de caja de ingresos a gastos. Ingresos {{income}}, gastos {{expenses}}.",
   ledgerNavigateUp: "Subir una carpeta",
   openLedgerDrawer: "Abrir menú",
+  back: "Atrás",
+  postingAmountLabel: "Importe de {{account}}",
+  postingNumber: "Apunte {{number}}",
+  postingAmountHint:
+    "Introduce el importe. Usa el botón de signo para cambiar entre positivo y negativo.",
+  expandAccount: "Expandir {{account}}",
+  collapseAccount: "Contraer {{account}}",
+  breakdownRowShare: "{{amount}}, {{percent}}% del total",
+  budgetChartSummary:
+    "Presupuesto frente a real de {{span}}. Real {{actual}} de {{budget}} presupuestado en {{count}} periodos, {{over}} por encima del objetivo.",
 };

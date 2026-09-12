@@ -19,6 +19,7 @@ import { AmountText } from "@/components/amount-text";
 import { DashboardCard } from "@/components/dashboard-card";
 import { LoadingTile } from "@/components/loading-tile";
 import { AccountNode } from "@/components/account-list/select-account-list";
+import { breakdownRowAccessibilityValue } from "../selectors/select-breakdown-rows";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 /** One step of tree indent for expanded sub-rows (matches AccountListPage). */
@@ -175,15 +176,15 @@ export function CategoryBreakdown({
       <View style={styles.leaf} />
     );
 
+    const amountText = formatMoneyWithCurrency(node.value, currency);
+
     const rowContent = (
       <>
         {chevron}
         <Text style={styles.childName} numberOfLines={1}>
           {node.name}
         </Text>
-        <AmountText style={styles.childValue}>
-          {formatMoneyWithCurrency(node.value, currency)}
-        </AmountText>
+        <AmountText style={styles.childValue}>{amountText}</AmountText>
       </>
     );
 
@@ -195,6 +196,9 @@ export function CategoryBreakdown({
             onPress={() => toggle(node.account, isExpanded)}
             accessibilityRole="button"
             accessibilityLabel={node.name}
+            accessibilityValue={{
+              text: breakdownRowAccessibilityValue(amountText, null, t),
+            }}
             accessibilityState={{ expanded: isExpanded }}
           >
             {rowContent}
@@ -217,13 +221,15 @@ export function CategoryBreakdown({
     const pct =
       total > 0 ? Math.max(0, Math.min(100, (node.value / total) * 100)) : 0;
 
+    const amountText = formatMoneyWithCurrency(node.value, currency);
+
     const line1 = (
       <View style={styles.topLine}>
         <Text style={styles.topName} numberOfLines={1}>
           {node.name}
         </Text>
         <AmountText mono="medium" style={styles.topValue}>
-          {formatMoneyWithCurrency(node.value, currency)}
+          {amountText}
         </AmountText>
         {hasChildren && (
           <Ionicons
@@ -260,6 +266,9 @@ export function CategoryBreakdown({
             onPress={() => toggle(node.account, isExpanded)}
             accessibilityRole="button"
             accessibilityLabel={node.name}
+            accessibilityValue={{
+              text: breakdownRowAccessibilityValue(amountText, pct, t),
+            }}
             accessibilityState={{ expanded: isExpanded }}
           >
             {line1}

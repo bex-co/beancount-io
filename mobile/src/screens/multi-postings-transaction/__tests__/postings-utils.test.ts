@@ -3,6 +3,7 @@ import {
   buildEntryInput,
   createPrefilledPostings,
   makePosting,
+  postingAmountAccessibility,
   removePosting,
   remainder,
   toggleLastPostingAuto,
@@ -10,6 +11,7 @@ import {
   updatePostingAmount,
   validatePostings,
 } from "../postings-utils";
+import { en } from "../../../translations/en";
 
 // helpers to build test postings without touching the ID counter
 function posting(
@@ -319,4 +321,77 @@ test("updatePostingAccount sets account without touching amounts", () => {
   expect(updated[0].account).toBe("Assets:New");
   expect(updated[0].amountCents).toBe(-5000);
   expect(updated[1].account).toBe("Expenses:Old");
+});
+
+// Interpolates the real English copy, so these assertions break if a key is
+// renamed or loses a token — not just if the helper's wiring changes.
+const t = (key: string, params?: Record<string, unknown>) =>
+  String((en as unknown as Record<string, string>)[key]).replace(
+    /{{(\w+)}}/g,
+    (_match, name: string) => String(params?.[name]),
+  );
+
+describe("postingAmountAccessibility", () => {
+  it("names the field by its account and speaks a positive amount with currency", () => {
+    expect(
+      postingAmountAccessibility({
+        account: "Expenses:Groceries",
+        amountInput: "42.50",
+        index: 1,
+        currency: "USD",
+        t,
+      }),
+    ).toEqual({
+      label: "Amount for Expenses:Groceries",
+      value: "42.50 USD",
+    });
+  });
+
+  it("keeps the sign the separate toggle owns, which the field itself hides", () => {
+    expect(
+      postingAmountAccessibility({
+        account: "Assets:Cash",
+        amountInput: "-42.50",
+        index: 0,
+        currency: "EUR",
+        t,
+      }).value,
+    ).toBe("-42.50 EUR");
+  });
+
+  it("falls back to a 1-based posting position when no account is picked", () => {
+    expect(
+      postingAmountAccessibility({
+        account: "",
+        amountInput: "0.00",
+        index: 2,
+        currency: "USD",
+        t,
+      }).label,
+    ).toBe("Amount for Posting 3");
+  });
+
+  it("reads a blank field as zero rather than as a bare currency code", () => {
+    expect(
+      postingAmountAccessibility({
+        account: "Assets:Cash",
+        amountInput: "",
+        index: 0,
+        currency: "USD",
+        t,
+      }).value,
+    ).toBe("0.00 USD");
+  });
+
+  it("tolerates surrounding whitespace around a negative amount", () => {
+    expect(
+      postingAmountAccessibility({
+        account: "Assets:Cash",
+        amountInput: " -7.25 ",
+        index: 0,
+        currency: "USD",
+        t,
+      }).value,
+    ).toBe("-7.25 USD");
+  });
 });

@@ -560,4 +560,14 @@ export const ru: typeof en = {
     "Денежный поток от доходов к расходам. Доходы {{income}}, расходы {{expenses}}.",
   ledgerNavigateUp: "На уровень выше",
   openLedgerDrawer: "Открыть меню",
+  back: "Назад",
+  postingAmountLabel: "Сумма для {{account}}",
+  postingNumber: "Проводка {{number}}",
+  postingAmountHint:
+    "Введите сумму. Кнопка знака переключает между плюсом и минусом.",
+  expandAccount: "Развернуть {{account}}",
+  collapseAccount: "Свернуть {{account}}",
+  breakdownRowShare: "{{amount}}, {{percent}}% от итога",
+  budgetChartSummary:
+    "Бюджет и факт за {{span}}. Факт {{actual}} из {{budget}} за {{count}} периодов, {{over}} сверх цели.",
 };

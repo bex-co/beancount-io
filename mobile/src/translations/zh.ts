@@ -527,4 +527,13 @@ export const zh: typeof en = {
     "从收入到支出的现金流。收入 {{income}}，支出 {{expenses}}。",
   ledgerNavigateUp: "返回上级文件夹",
   openLedgerDrawer: "打开菜单",
+  back: "返回",
+  postingAmountLabel: "{{account}} 的金额",
+  postingNumber: "第 {{number}} 条分录",
+  postingAmountHint: "输入金额。使用正负号按钮切换收支方向。",
+  expandAccount: "展开 {{account}}",
+  collapseAccount: "收起 {{account}}",
+  breakdownRowShare: "{{amount}}，占总额 {{percent}}%",
+  budgetChartSummary:
+    "{{span}} 的预算与实际对比。{{count}} 个周期内实际 {{actual}}，预算 {{budget}}，其中 {{over}} 个周期超出目标。",
 };

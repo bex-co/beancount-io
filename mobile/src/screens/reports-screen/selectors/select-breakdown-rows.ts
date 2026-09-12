@@ -35,3 +35,30 @@ export function topNWithOther(
     { account: otherAccount, name: otherLabel, value, children: rest },
   ];
 }
+
+/**
+ * What an expandable breakdown row announces *besides* its account name.
+ *
+ * An expandable row is a `TouchableOpacity` labelled with the account name, and
+ * a label replaces its subtree — so the amount and the share percentage, both
+ * descendants, drop out of the accessibility tree. Published as the row's
+ * `accessibilityValue` instead, which is read after the label rather than
+ * replacing it. Leaf rows keep their plain `View` and need none of this.
+ *
+ * `percent` is `null` for a sub-account row, which draws no bar and therefore
+ * has no share to speak. Pure (`t` injected, `amountText` pre-formatted) so the
+ * wording is unit-testable.
+ */
+export function breakdownRowAccessibilityValue(
+  amountText: string,
+  percent: number | null,
+  t: (key: string, params?: Record<string, unknown>) => string,
+): string {
+  if (percent === null) return amountText;
+  return t("breakdownRowShare", {
+    amount: amountText,
+    // Rounded to match the visible % label exactly — two different numbers for
+    // one bar is worse than none.
+    percent: Math.round(percent),
+  });
+}

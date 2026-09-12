@@ -2,16 +2,27 @@ import fs from "fs";
 import path from "path";
 
 /**
- * Static guardrail: icon-only TouchableOpacity/Pressable under screens and
- * components must carry an accessibilityLabel on the opening tag.
+ * Static guardrail: icon-only TouchableOpacity/Pressable under screens,
+ * components, and the Expo Router `app/` tree must carry an accessibilityLabel
+ * on the opening tag.
  *
  * Heuristic (matches w4/m7): if the ~400 characters after the opening tag
  * contain Ionicons or Image and do not contain <Text, require
  * accessibilityLabel in the opening element (multiline props OK).
+ *
+ * `app/` is scanned from a second base path: route files live outside `src`, and
+ * header controls declared there (the stack's default Back button) are as
+ * icon-only as anything under `components`.
  */
 
-const ROOTS = ["screens", "components"] as const;
 const SRC_ROOT = path.join(__dirname, "..");
+const PKG_ROOT = path.join(SRC_ROOT, "..");
+/** Each scan root, with the base its allowlist paths are relative to. */
+const SCAN_ROOTS = [
+  { base: SRC_ROOT, dir: path.join(SRC_ROOT, "screens") },
+  { base: SRC_ROOT, dir: path.join(SRC_ROOT, "components") },
+  { base: PKG_ROOT, dir: path.join(PKG_ROOT, "app") },
+] as const;
 const ALLOWLIST_PATH = path.join(
   __dirname,
   "accessibility-label-allowlist.json",
@@ -106,16 +117,29 @@ describe("accessibility labels on icon-only pressables (w4/m7)", () => {
     expect(silent).toEqual([]);
   });
 
+  // Without this, a wrong `app/` path would make the scan below silently cover
+  // two thirds of the tree and still look green.
+  it("scans the Expo Router app tree, not only src", () => {
+    const relPaths = SCAN_ROOTS.filter(({ dir }) => fs.existsSync(dir)).flatMap(
+      ({ base, dir }) =>
+        walkTsxFiles(dir).map((file) =>
+          path.relative(base, file).split(path.sep).join("/"),
+        ),
+    );
+    expect(relPaths.some((rel) => rel.startsWith("app/"))).toBe(true);
+    expect(relPaths.some((rel) => rel.startsWith("screens/"))).toBe(true);
+    expect(relPaths.some((rel) => rel.startsWith("components/"))).toBe(true);
+  });
+
   it("icon-only TouchableOpacity/Pressable carry accessibilityLabel", () => {
     const violations: string[] = [];
 
-    for (const root of ROOTS) {
-      const rootDir = path.join(SRC_ROOT, root);
+    for (const { base, dir: rootDir } of SCAN_ROOTS) {
       if (!fs.existsSync(rootDir)) continue;
 
       for (const file of walkTsxFiles(rootDir)) {
         const source = fs.readFileSync(file, "utf8");
-        const relFile = path.relative(SRC_ROOT, file).split(path.sep).join("/");
+        const relFile = path.relative(base, file).split(path.sep).join("/");
 
         OPEN_TAG.lastIndex = 0;
         let match: RegExpExecArray | null;

@@ -135,3 +135,33 @@ export function flattenRows(
 
   return rows;
 }
+
+/** An accessibility action the row offers plus the chevron's own spoken name. */
+export type RowDisclosure = {
+  actions: Array<{ name: "expand" | "collapse"; label: string }>;
+  chevronLabel: string;
+};
+
+/**
+ * The expand/collapse affordance, spelled out for assistive tech.
+ *
+ * A navigating row is a `TouchableOpacity` wrapping the chevron's own
+ * `TouchableOpacity`, and iOS groups that nested control away — so the row needs
+ * to publish the toggle as an accessibility *action* of its own, or the tree can
+ * be walked but never opened. `null` for a leaf row, which has nothing to
+ * disclose.
+ *
+ * Pure (`t` injected) so the wording is unit-testable.
+ */
+export function rowDisclosure(
+  row: Pick<TableRow, "hasChildren" | "expanded">,
+  label: string,
+  t: (key: string, params?: Record<string, unknown>) => string,
+): RowDisclosure | null {
+  if (!row.hasChildren) return null;
+  const name = row.expanded ? "collapse" : "expand";
+  const text = t(row.expanded ? "collapseAccount" : "expandAccount", {
+    account: label,
+  });
+  return { actions: [{ name, label: text }], chevronLabel: text };
+}

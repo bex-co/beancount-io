@@ -562,4 +562,14 @@ export const sk: typeof en = {
     "Peňažný tok z príjmov do výdavkov. Príjmy {{income}}, výdavky {{expenses}}.",
   ledgerNavigateUp: "O úroveň vyššie",
   openLedgerDrawer: "Otvoriť menu",
+  back: "Späť",
+  postingAmountLabel: "Suma pre {{account}}",
+  postingNumber: "Riadok {{number}}",
+  postingAmountHint:
+    "Zadajte sumu. Tlačidlom znamienka prepnete medzi plusom a mínusom.",
+  expandAccount: "Rozbaliť {{account}}",
+  collapseAccount: "Zbaliť {{account}}",
+  breakdownRowShare: "{{amount}}, {{percent}} % z celku",
+  budgetChartSummary:
+    "Rozpočet verzus skutočnosť za {{span}}. Skutočnosť {{actual}} z rozpočtu {{budget}} za {{count}} období, {{over}} nad cieľom.",
 };

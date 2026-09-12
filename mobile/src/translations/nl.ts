@@ -561,4 +561,14 @@ export const nl: typeof en = {
     "Kasstroom van inkomsten naar uitgaven. Inkomsten {{income}}, uitgaven {{expenses}}.",
   ledgerNavigateUp: "Eén map omhoog",
   openLedgerDrawer: "Menu openen",
+  back: "Terug",
+  postingAmountLabel: "Bedrag voor {{account}}",
+  postingNumber: "Boekingsregel {{number}}",
+  postingAmountHint:
+    "Voer het bedrag in. Gebruik de tekenknop om tussen positief en negatief te wisselen.",
+  expandAccount: "{{account}} uitklappen",
+  collapseAccount: "{{account}} inklappen",
+  breakdownRowShare: "{{amount}}, {{percent}}% van het totaal",
+  budgetChartSummary:
+    "Budget versus werkelijk voor {{span}}. Werkelijk {{actual}} van {{budget}} begroot over {{count}} periodes, {{over}} boven het doel.",
 };

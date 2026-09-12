@@ -27,7 +27,7 @@ import {
   CATEGORY_SIGN,
   type AccountCategory,
 } from "@/components/account-list/select-account-list";
-import { flattenRows, type TableRow } from "./flatten-rows";
+import { flattenRows, rowDisclosure, type TableRow } from "./flatten-rows";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 /**
@@ -179,7 +179,9 @@ const AccountTableRow = memo(function AccountTableRow({
 }: AccountTableRowProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
+  const { t } = useTranslations();
   const isCategory = row.depth === 0;
+  const disclosure = rowDisclosure(row, label, t);
 
   const nameStyle = [
     styles.name,
@@ -227,6 +229,7 @@ const AccountTableRow = memo(function AccountTableRow({
       <TouchableOpacity
         onPress={() => onToggle(row)}
         accessibilityRole="button"
+        accessibilityLabel={disclosure?.chevronLabel}
         accessibilityState={{ expanded: row.expanded }}
         // Widened to keep a comfortable target under the smaller glyph.
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -279,6 +282,19 @@ const AccountTableRow = memo(function AccountTableRow({
         style={rowStyle}
         onPress={() => onPressAccount?.(row.account)}
         accessibilityRole="button"
+        // Drill-down stays the default action; expanding is published as a
+        // custom action because the nested chevron is grouped away on iOS.
+        accessibilityActions={disclosure?.actions}
+        onAccessibilityAction={
+          disclosure
+            ? (event) => {
+                const action = event.nativeEvent.actionName;
+                if (action === "expand" || action === "collapse") {
+                  onToggle(row);
+                }
+              }
+            : undefined
+        }
       >
         {content}
       </TouchableOpacity>

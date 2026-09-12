@@ -553,4 +553,14 @@ export const fa: typeof en = {
     "جریان نقدی از درآمد به هزینه. درآمد {{income}}، هزینه {{expenses}}.",
   ledgerNavigateUp: "رفتن به پوشه بالاتر",
   openLedgerDrawer: "باز کردن منو",
+  back: "بازگشت",
+  postingAmountLabel: "مبلغ {{account}}",
+  postingNumber: "سطر {{number}}",
+  postingAmountHint:
+    "مبلغ را وارد کنید. برای تغییر بین مثبت و منفی از دکمه علامت استفاده کنید.",
+  expandAccount: "باز کردن {{account}}",
+  collapseAccount: "بستن {{account}}",
+  breakdownRowShare: "{{amount}}، {{percent}}٪ از کل",
+  budgetChartSummary:
+    "بودجه در برابر واقعی برای {{span}}. واقعی {{actual}} از بودجه {{budget}} در {{count}} دوره، {{over}} دوره بیش از هدف.",
 };

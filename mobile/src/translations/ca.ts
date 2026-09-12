@@ -565,4 +565,14 @@ export const ca: typeof en = {
     "Flux de caixa d'ingressos a despeses. Ingressos {{income}}, despeses {{expenses}}.",
   ledgerNavigateUp: "Puja una carpeta",
   openLedgerDrawer: "Obre el menú",
+  back: "Enrere",
+  postingAmountLabel: "Import de {{account}}",
+  postingNumber: "Apunt {{number}}",
+  postingAmountHint:
+    "Introdueix l'import. Fes servir el botó de signe per canviar entre positiu i negatiu.",
+  expandAccount: "Desplega {{account}}",
+  collapseAccount: "Plega {{account}}",
+  breakdownRowShare: "{{amount}}, {{percent}}% del total",
+  budgetChartSummary:
+    "Pressupost i real de {{span}}. Real {{actual}} d'un pressupost de {{budget}} en {{count}} períodes, {{over}} per sobre de l'objectiu.",
 };

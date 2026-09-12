@@ -1,5 +1,10 @@
 import { AccountNode } from "@/components/account-list/select-account-list";
-import { topNWithOther, OTHER_ACCOUNT } from "../select-breakdown-rows";
+import {
+  breakdownRowAccessibilityValue,
+  topNWithOther,
+  OTHER_ACCOUNT,
+} from "../select-breakdown-rows";
+import { en } from "../../../../translations/en";
 
 function node(name: string, value: number): AccountNode {
   return { account: `Expenses:${name}`, name, value, children: [] };
@@ -45,5 +50,34 @@ describe("topNWithOther", () => {
     const result = topNWithOther(items, 2, "Other", "__other_expenses__");
     expect(result[2].account).toBe("__other_expenses__");
     expect(result[2].value).toBe(50);
+  });
+});
+
+// Interpolates the real English copy, so a renamed key or a dropped token fails
+// here rather than shipping "undefined" into a spoken value.
+const t = (key: string, params?: Record<string, unknown>) =>
+  String((en as unknown as Record<string, string>)[key]).replace(
+    /{{(\w+)}}/g,
+    (_match, name: string) => String(params?.[name]),
+  );
+
+describe("breakdownRowAccessibilityValue", () => {
+  it("pairs the amount with the row's share for a top-level category", () => {
+    expect(breakdownRowAccessibilityValue("$1,234.00", 42.6, t)).toBe(
+      "$1,234.00, 43% of total",
+    );
+  });
+
+  it("rounds the share exactly as the visible % label does", () => {
+    expect(breakdownRowAccessibilityValue("$1.00", 0.4, t)).toBe(
+      "$1.00, 0% of total",
+    );
+    expect(breakdownRowAccessibilityValue("$1.00", 99.5, t)).toBe(
+      "$1.00, 100% of total",
+    );
+  });
+
+  it("speaks only the amount for a sub-account row, which draws no bar", () => {
+    expect(breakdownRowAccessibilityValue("-$20.00", null, t)).toBe("-$20.00");
   });
 });

@@ -551,4 +551,14 @@ export const en = {
   ledgerGuardTitle: "No ledger selected",
   ledgerGuardMessage: "Create a ledger or discover one to continue.",
   ledgerGuardSelect: "Select ledger",
+  back: "Back",
+  postingAmountLabel: "Amount for {{account}}",
+  postingNumber: "Posting {{number}}",
+  postingAmountHint:
+    "Enter the amount. Use the sign button to switch between positive and negative.",
+  expandAccount: "Expand {{account}}",
+  collapseAccount: "Collapse {{account}}",
+  breakdownRowShare: "{{amount}}, {{percent}}% of total",
+  budgetChartSummary:
+    "Budget versus actual for {{span}}. Actual {{actual}} of {{budget}} budgeted across {{count}} periods, {{over}} over target.",
 };

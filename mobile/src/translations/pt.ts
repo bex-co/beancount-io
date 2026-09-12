@@ -565,4 +565,14 @@ export const pt: typeof en = {
     "Fluxo de caixa de receitas para despesas. Receitas {{income}}, despesas {{expenses}}.",
   ledgerNavigateUp: "Subir uma pasta",
   openLedgerDrawer: "Abrir menu",
+  back: "Voltar",
+  postingAmountLabel: "Valor de {{account}}",
+  postingNumber: "Lançamento {{number}}",
+  postingAmountHint:
+    "Informe o valor. Use o botão de sinal para alternar entre positivo e negativo.",
+  expandAccount: "Expandir {{account}}",
+  collapseAccount: "Recolher {{account}}",
+  breakdownRowShare: "{{amount}}, {{percent}}% do total",
+  budgetChartSummary:
+    "Orçado versus realizado em {{span}}. Realizado {{actual}} de {{budget}} orçado em {{count}} períodos, {{over}} acima da meta.",
 };

@@ -4,6 +4,7 @@
  * unit-testable.
  */
 import { getFormatDate } from "../../../common/format-util";
+import { shortNumber } from "../../../common/number-utils";
 import { formatTimeFilter } from "../../transactions-screen/filters/select-filter-query";
 import type { VarianceStatus } from "./budget-selectors";
 
@@ -113,4 +114,48 @@ export function timeSpanToFilter(
     default:
       return undefined;
   }
+}
+
+/**
+ * Screen-reader summary of the budget-vs-actual chart.
+ *
+ * `ScrollableAxisChart` wraps the plot in `accessible` — so with no label the
+ * whole group collapses to the axis and legend text and the series itself is
+ * unreadable. Same shape as `incomeExpenseChartSummary`: span, totals, and the
+ * one judgement the bars encode (how many periods landed on the wrong side of
+ * their target).
+ *
+ * `undefined` when there is nothing charted: that branch renders
+ * `ChartPlaceholder`, whose visible "not enough data" text is already the
+ * summary, and a second one would double-announce.
+ */
+export function budgetChartSummary(
+  series: {
+    labels: string[];
+    actuals: number[];
+    budgets: number[];
+    favorables: boolean[];
+    currencySymbol: string;
+  },
+  t: (key: string, params?: Record<string, unknown>) => string,
+): string | undefined {
+  const { labels, actuals, budgets, favorables, currencySymbol } = series;
+  if (labels.length === 0) return undefined;
+
+  const money = (values: number[]) =>
+    `${currencySymbol}${shortNumber(values.reduce((sum, value) => sum + value, 0))}`;
+  const span =
+    labels.length === 1
+      ? labels[0]
+      : `${labels[0]}–${labels[labels.length - 1]}`;
+
+  return t("budgetChartSummary", {
+    span,
+    count: labels.length,
+    actual: money(actuals),
+    budget: money(budgets),
+    // Only an explicit `false` is unfavorable; a period the selectors could not
+    // judge (no budget yet) is not counted against the target.
+    over: favorables.filter((favorable) => favorable === false).length,
+  });
 }

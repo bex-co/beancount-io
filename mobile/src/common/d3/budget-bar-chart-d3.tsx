@@ -33,6 +33,15 @@ type BudgetBarChartProps = {
    */
   favorables: boolean[];
   currencySymbol: string;
+  /**
+   * Screen-reader summary of the series — `ScrollableAxisChart` wraps the plot in
+   * `accessible`, so without this the chart announces only its axis and legend.
+   * Built by `budgetChartSummary` in the budget screen's selectors (which owns
+   * the budget vocabulary); `undefined` only for an empty series, where the
+   * placeholder's own visible text is the summary. Required rather than optional
+   * so a second caller has to make the same decision deliberately.
+   */
+  accessibilityLabel: string | undefined;
   height?: number;
 };
 
@@ -54,6 +63,7 @@ function BudgetBarChart({
   budgets,
   favorables,
   currencySymbol,
+  accessibilityLabel,
   height = 200,
 }: BudgetBarChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
@@ -107,6 +117,7 @@ function BudgetBarChart({
       yTicks={yScale.ticks(5)}
       yScale={yScale}
       currencySymbol={currencySymbol}
+      accessibilityLabel={accessibilityLabel}
       legend={
         <>
           <LegendItem color={theme.primary} label={t("budgetActual")} />

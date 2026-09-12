@@ -1,4 +1,5 @@
-import { flattenRows } from "../flatten-rows";
+import { flattenRows, rowDisclosure } from "../flatten-rows";
+import { en } from "../../../translations/en";
 import type {
   AccountCategory,
   AccountNode,
@@ -177,5 +178,53 @@ describe("flattenRows", () => {
 
   it("returns nothing for an empty ledger", () => {
     expect(flattenRows([], {})).toEqual([]);
+  });
+});
+
+// Interpolates the real English copy, so a renamed key or a dropped token fails
+// here rather than shipping "undefined" into a spoken label.
+const t = (key: string, params?: Record<string, unknown>) =>
+  String((en as unknown as Record<string, string>)[key]).replace(
+    /{{(\w+)}}/g,
+    (_match, name: string) => String(params?.[name]),
+  );
+
+describe("rowDisclosure", () => {
+  it("offers expand on a collapsed parent, and says which account", () => {
+    expect(
+      rowDisclosure({ hasChildren: true, expanded: false }, "BofA", t),
+    ).toEqual({
+      actions: [{ name: "expand", label: "Expand BofA" }],
+      chevronLabel: "Expand BofA",
+    });
+  });
+
+  it("flips to collapse once the row is open", () => {
+    expect(
+      rowDisclosure({ hasChildren: true, expanded: true }, "BofA", t),
+    ).toEqual({
+      actions: [{ name: "collapse", label: "Collapse BofA" }],
+      chevronLabel: "Collapse BofA",
+    });
+  });
+
+  it("offers nothing on a leaf row, which has nothing to disclose", () => {
+    expect(
+      rowDisclosure({ hasChildren: false, expanded: false }, "Savings", t),
+    ).toBe(null);
+  });
+
+  it("describes every parent row a real tree produces", () => {
+    const rows = flattenRows(categories, {});
+    const parents = rows.filter((row) => row.hasChildren);
+    expect(parents.length > 0).toBe(true);
+    for (const row of parents) {
+      const disclosure = rowDisclosure(row, row.label, t);
+      expect(disclosure).not.toBe(null);
+      expect(disclosure?.actions[0].name).toBe(
+        row.expanded ? "collapse" : "expand",
+      );
+      expect(disclosure?.chevronLabel.includes("undefined")).toBe(false);
+    }
   });
 });

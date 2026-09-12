@@ -566,4 +566,14 @@ export const fr: typeof en = {
     "Flux de trésorerie des revenus vers les dépenses. Revenus {{income}}, dépenses {{expenses}}.",
   ledgerNavigateUp: "Remonter d'un dossier",
   openLedgerDrawer: "Ouvrir le menu",
+  back: "Retour",
+  postingAmountLabel: "Montant de {{account}}",
+  postingNumber: "Écriture {{number}}",
+  postingAmountHint:
+    "Saisissez le montant. Utilisez le bouton de signe pour passer du positif au négatif.",
+  expandAccount: "Développer {{account}}",
+  collapseAccount: "Replier {{account}}",
+  breakdownRowShare: "{{amount}}, {{percent}} % du total",
+  budgetChartSummary:
+    "Budget et réel pour {{span}}. Réel {{actual}} sur {{budget}} budgété sur {{count}} périodes, {{over}} au-dessus de l'objectif.",
 };

@@ -571,4 +571,14 @@ export const de: typeof en = {
     "Cashflow von Einnahmen zu Ausgaben. Einnahmen {{income}}, Ausgaben {{expenses}}.",
   ledgerNavigateUp: "Eine Ebene nach oben",
   openLedgerDrawer: "Menü öffnen",
+  back: "Zurück",
+  postingAmountLabel: "Betrag für {{account}}",
+  postingNumber: "Buchungszeile {{number}}",
+  postingAmountHint:
+    "Betrag eingeben. Mit der Vorzeichentaste zwischen positiv und negativ wechseln.",
+  expandAccount: "{{account}} ausklappen",
+  collapseAccount: "{{account}} einklappen",
+  breakdownRowShare: "{{amount}}, {{percent}} % des Gesamtbetrags",
+  budgetChartSummary:
+    "Budget gegen Ist für {{span}}. Ist {{actual}} von geplanten {{budget}} über {{count}} Perioden, {{over}} über dem Ziel.",
 };

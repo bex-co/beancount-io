@@ -52,6 +52,7 @@ import {
   createInitialPostings,
   createPrefilledPostings,
   makePosting,
+  postingAmountAccessibility,
   removePosting,
   remainder,
   toggleLastPostingAuto,
@@ -207,6 +208,7 @@ const PostingRow = ({
   index,
   isLast,
   canRemove,
+  currency,
   onPickAccount,
   onChangeAmount,
   onToggleAuto,
@@ -216,6 +218,8 @@ const PostingRow = ({
   index: number;
   isLast: boolean;
   canRemove: boolean;
+  /** Spoken with the amount, which otherwise reads as a bare number. */
+  currency: string;
   onPickAccount: () => void;
   onChangeAmount: (input: string) => void;
   onToggleAuto: () => void;
@@ -240,6 +244,14 @@ const PostingRow = ({
     : isNegative
       ? "rgba(229,73,55,0.12)"
       : "rgba(7,163,90,0.12)";
+
+  const amountA11y = postingAmountAccessibility({
+    account: posting.account,
+    amountInput: posting.amountInput,
+    index,
+    currency,
+    t,
+  });
 
   const handleAbsValueChange = (input: string) => {
     onChangeAmount(isNegative ? `-${input}` : input);
@@ -311,6 +323,9 @@ const PostingRow = ({
             placeholder="0.00"
             placeholderTextColor={theme.controlPlaceholder}
             selectTextOnFocus
+            accessibilityLabel={amountA11y.label}
+            accessibilityValue={{ text: amountA11y.value }}
+            accessibilityHint={t("postingAmountHint")}
           />
           {isLast && posting.isAuto ? (
             <TouchableOpacity
@@ -544,6 +559,7 @@ const MultiPostingsTransactionScreenComponent = () => {
                   index={i}
                   isLast={i === postings.length - 1}
                   canRemove={postings.length > 2}
+                  currency={currency}
                   onPickAccount={() => pickAccountForPosting(i)}
                   onChangeAmount={(input) =>
                     setPostings((prev) => updatePostingAmount(prev, i, input))

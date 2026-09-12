@@ -31,6 +31,7 @@ import {
   selectPointFavorability,
 } from "@/screens/budget-screen/selectors/select-budget-card-stats";
 import {
+  budgetChartSummary,
   intervalLabelKey,
   periodAxisLabel,
   STATUS_LABEL_KEYS,
@@ -169,6 +170,18 @@ export function BudgetGroupCard({
   const stats = selectBudgetCardStats(group, series);
   const favorables = selectPointFavorability(series, direction);
 
+  // One object so the chart and its spoken summary can never describe different
+  // series.
+  const chartSeries = {
+    labels: series.map((point) =>
+      periodAxisLabel(point.date, group.interval, t),
+    ),
+    actuals: series.map((point) => point.actual),
+    budgets: series.map((point) => point.budget),
+    favorables,
+    currencySymbol: getCurrencySymbol(currency),
+  };
+
   const formatAmount = (value: number) =>
     formatMoneyWithCurrency(value, currency);
 
@@ -260,13 +273,8 @@ export function BudgetGroupCard({
         ) : (
           <FadeInView>
             <BudgetBarChartD3
-              labels={series.map((point) =>
-                periodAxisLabel(point.date, group.interval, t),
-              )}
-              actuals={series.map((point) => point.actual)}
-              budgets={series.map((point) => point.budget)}
-              favorables={favorables}
-              currencySymbol={getCurrencySymbol(currency)}
+              {...chartSeries}
+              accessibilityLabel={budgetChartSummary(chartSeries, t)}
               height={CHART_HEIGHT}
             />
           </FadeInView>
