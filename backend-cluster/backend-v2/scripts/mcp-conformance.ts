@@ -345,7 +345,9 @@ async function checkScopeRefusal(o: Options): Promise<CheckResult> {
     | {
         isError?: boolean;
         content?: Array<{ text?: string }>;
-        structuredContent?: { error?: string };
+        structuredContent?: {
+          error?: { code?: string; message?: string; hint?: string };
+        };
       }
     | undefined;
   if (result?.isError !== true) {
@@ -353,16 +355,76 @@ async function checkScopeRefusal(o: Options): Promise<CheckResult> {
       "the refusal did not set isError — an agent branching on it reads this as success",
     );
   }
+  // w2/m28:t003 — one envelope on every refusal. A message an agent has to
+  // parse is what four dialects looked like before there was a code.
+  const error = result.structuredContent?.error;
+  if (!error?.code || !error.hint) {
+    return v.fail(
+      `the refusal carried no {code, hint} envelope: ${JSON.stringify(result.structuredContent ?? null).slice(0, 200)}. An agent has nothing to branch on`,
+    );
+  }
   const refusalText = [
     ...(result.content ?? []).map(({ text }) => text ?? ""),
-    result.structuredContent?.error ?? "",
+    error.message ?? "",
   ].join(" ");
   if (!refusalText.includes("ledger.write")) {
     return v.fail(
       "the tool failed, but not because write authority was refused — an unrelated validation or repository error is not authorization evidence",
     );
   }
-  return v.pass("refused with isError: true");
+  return v.pass(`refused with isError: true and code ${error.code}`);
+}
+
+/** 10 — a result reads as text and parses as data (w2/m28:t001). */
+async function checkResultShape(o: Options): Promise<CheckResult> {
+  const v = verdict(
+    "10 result-shape",
+    "A BQL result leads with its row count and carries typed structured content",
+  );
+  const token = o.readOnlyToken ?? o.token;
+  if (!token) {
+    return v.skip("needs --token or --read-only-token to run a query");
+  }
+  const res = await probe(`${o.baseUrl}${MCP_PATH}`, {
+    method: "POST",
+    headers: jsonRpcHeaders(token),
+    body: rpc(
+      "tools/call",
+      { name: "runBqlQuery", arguments: { query: "SELECT account LIMIT 1" } },
+      10,
+    ),
+  });
+  if (!res.ok) return v.fail(res.error);
+  const result = parseRpc(res.body)?.result as
+    | {
+        isError?: boolean;
+        content?: Array<{ text?: string }>;
+        structuredContent?: { ok?: boolean };
+      }
+    | undefined;
+  if (result?.isError) {
+    return v.skip(
+      "the query was refused — the credential reaches no ledger, so result shape could not be observed",
+    );
+  }
+  const text = result?.content?.[0]?.text ?? "";
+  const firstLine = text.split("\n")[0];
+  if (!/^\d+ rows?$|^0 rows —/.test(firstLine)) {
+    return v.fail(
+      `text content began with ${JSON.stringify(firstLine.slice(0, 120))} rather than a row count. An agent cannot tell an empty result from a wrong query`,
+    );
+  }
+  if (text.trimStart().startsWith("{")) {
+    return v.fail(
+      "text content is JSON. The text block is what a person reads; the structured block is what a program parses",
+    );
+  }
+  if (result?.structuredContent?.ok !== true) {
+    return v.fail(
+      "the call succeeded but published no structuredContent.ok — clients cannot validate what they received",
+    );
+  }
+  return v.pass(`text leads with ${JSON.stringify(firstLine)}`);
 }
 
 /** 6 — no internal error message reaches a caller. */
@@ -580,6 +642,7 @@ export const CHECKS = [
   checkAdvertisedPath,
   checkOptionalUserId,
   checkDiscoveryWorkload,
+  checkResultShape,
 ] as const;
 
 export type { CheckResult, Options, Outcome };
@@ -590,7 +653,7 @@ async function main(): Promise<void> {
 
   const results: CheckResult[] = [];
   // Sequential on purpose: several checks re-probe the endpoint, and a readable
-  // transcript beats saving a few seconds on a nine-request run.
+  // transcript beats saving a few seconds on a ten-request run.
   for (const check of CHECKS) {
     const result = await check(options);
     results.push(result);
@@ -615,7 +678,7 @@ async function main(): Promise<void> {
 }
 
 // Only when invoked as a command — importing this module (from a test, or to
-// reuse one check) must not fire nine HTTP probes and call process.exit.
+// reuse one check) must not fire ten HTTP probes and call process.exit.
 if (require.main === module) {
   void main();
 }

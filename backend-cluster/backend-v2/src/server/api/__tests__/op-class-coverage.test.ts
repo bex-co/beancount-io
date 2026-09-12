@@ -90,9 +90,11 @@ describe("op-class coverage", () => {
     expect(graphqlOps.filter((op) => op.startsWith("GQL Query.")).length).toBe(
       77,
     );
+    // 63 since w2/m28:t005 added `appendLedgerText`, the Beancount-text
+    // dialect of `bulkEntries`, on all three surfaces.
     expect(
       graphqlOps.filter((op) => op.startsWith("GQL Mutation.")).length,
-    ).toBe(62);
+    ).toBe(63);
   });
 
   it("gives every GraphQL root field exactly one explicit access mode", () => {
@@ -211,7 +213,12 @@ describe("op-class coverage", () => {
     // do not surface the resource twins. It also folds the three key tools
     // into manageApiKeys and drops the legacy compat tool from MCP, for a
     // net of 25.
-    expect(tools).toHaveLength(25);
+    // w2/m28 adds the 26th, appendLedgerText: agents write Beancount, and the
+    // alternative they actually used was string surgery through
+    // editLedgerFiles, which is how entries landed out of date order. A write
+    // verb has to be a tool — a resource cannot take an action — and this one
+    // earns its selection slot by replacing a worse use of an existing slot.
+    expect(tools).toHaveLength(26);
 
     // Resources are counted apart on purpose. They do not compete for tool
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can

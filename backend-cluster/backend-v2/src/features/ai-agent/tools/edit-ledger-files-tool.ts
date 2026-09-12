@@ -13,7 +13,7 @@ import {
   toWriteValidation,
   withPostWriteValidation,
 } from "./write-validation";
-import { unifiedDiff } from "./file-diff";
+import { unifiedDiff } from "@/shared/unified-diff";
 
 const toolLogger = logger.child({ module: "tool:edit-ledger-files" });
 

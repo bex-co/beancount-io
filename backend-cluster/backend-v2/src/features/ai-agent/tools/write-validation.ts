@@ -1,23 +1,20 @@
 import { logger } from "@/shared/logger";
 import type { Identity } from "@/server/api/identity";
 import type { ToolServices } from "./types";
-import type { BeanCheckError, WriteValidation } from "./types";
+import {
+  toBeanCheckErrors,
+  toWriteValidation,
+  type BeanCheckError,
+  type WriteValidation,
+} from "@/features/ledger/utils/bean-check-errors";
 
 const validationLogger = logger.child({ module: "tool:write-validation" });
 
 type ValidationServices = Pick<ToolServices, "ledgerData">;
 
-function toErrorShape(error: {
-  message: string;
-  source?: { filename: string; lineno: number } | null;
-}): BeanCheckError {
-  return {
-    message: error.message,
-    ...(error.source
-      ? { source: `${error.source.filename}:${error.source.lineno}` }
-      : {}),
-  };
-}
+// Re-exported so the tools keep one import for the whole validation vocabulary
+// while the shaping and diffing live beside the ledger they describe (w2/m28).
+export { toBeanCheckErrors, toWriteValidation };
 
 /**
  * Read the ledger's current bean-check errors through the same call the
@@ -47,32 +44,6 @@ export async function readBeanCheckErrors(
   }
 }
 
-/** Errors in `after` that were not already in `before`, by message+source. */
-function diffBeanCheckErrors(
-  before: BeanCheckError[],
-  after: BeanCheckError[],
-): BeanCheckError[] {
-  return after.filter(
-    (candidate) =>
-      !before.some(
-        (existing) =>
-          existing.message === candidate.message &&
-          existing.source === candidate.source,
-      ),
-  );
-}
-
-export function toWriteValidation(
-  before: BeanCheckError[],
-  after: BeanCheckError[],
-): WriteValidation {
-  return {
-    errorsBefore: before.length,
-    errorsAfter: after.length,
-    newErrors: diffBeanCheckErrors(before, after),
-  };
-}
-
 /**
  * Run a write, then report bean-check's verdict around it: the same `errors`
  * check before and after, diffed by message+source. The check is fail-open —
@@ -97,16 +68,6 @@ export async function withPostWriteValidation<T>(
     ledgerId,
   );
   return { written, validation: toWriteValidation(before, after) };
-}
-
-/** Reduce ledger-service errors to the agent-actionable shape. */
-export function toBeanCheckErrors(
-  errors: {
-    message: string;
-    source?: { filename: string; lineno: number } | null;
-  }[],
-): BeanCheckError[] {
-  return (errors ?? []).map(toErrorShape);
 }
 
 /**

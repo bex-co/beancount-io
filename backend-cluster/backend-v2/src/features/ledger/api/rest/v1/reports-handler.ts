@@ -3,6 +3,12 @@ import { z } from "@/shared/zod-openapi-setup";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
+import type { ServiceLayer } from "@/foundation/composition";
+import type { Identity } from "@/server/api/identity";
+import {
+  summarizeBalanceSheet,
+  summarizeIncomeStatement,
+} from "@/features/ledger/utils/report-summaries";
 
 export const accountsQuerySchema = z.object({
   status: z.string().optional().openapi({
@@ -15,6 +21,23 @@ const statementParamsSchema = ledgerPathSchema.extend({
   statement: z.enum(["balance-sheet", "income-statement"]).openapi({
     description: "Which statement to render",
     example: "balance-sheet",
+  }),
+});
+
+/**
+ * Which shape a report comes back in (w2/m28:t002).
+ *
+ * `summary` is the default because it is what a caller asking for a balance
+ * sheet wants: totals and the accounts carrying them, in one stated currency.
+ * `fava` returns the chart payload the dashboard consumes — every interval
+ * series and the full account tree — which is the only shape that existed
+ * before and is preserved exactly.
+ */
+export const shapeQuery = z.object({
+  shape: z.enum(["summary", "fava"]).default("summary").openapi({
+    description:
+      "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
+    example: "summary",
   }),
 });
 
@@ -34,6 +57,41 @@ export const statementQuerySchema = z.object({
     example: "month",
   }),
 });
+
+/** The statements' query contract, on both surfaces. */
+export const statementReadQuery = statementQuerySchema.extend(shapeQuery.shape);
+
+/**
+ * Fetch one statement in the requested shape.
+ *
+ * The one seam REST and MCP both call (ADR 0008 D5): the projection is applied
+ * here rather than in each adapter, so the two surfaces cannot come to return
+ * different things for the same `shape`.
+ */
+export async function fetchStatement(
+  services: Pick<ServiceLayer, "ledgerFinance">,
+  params: {
+    ledgerId: string;
+    identity: Identity | undefined;
+    statement: "balance-sheet" | "income-statement";
+    query: z.infer<typeof statementReadQuery>;
+  },
+): Promise<unknown> {
+  const { shape, ...rest } = params.query;
+  const args = {
+    ledgerId: params.ledgerId,
+    identity: params.identity,
+    ...rest,
+  };
+  if (params.statement === "balance-sheet") {
+    const data = await services.ledgerFinance.getBalanceSheet(args);
+    return shape === "fava" ? data : summarizeBalanceSheet(data, rest.conversion);
+  }
+  const data = await services.ledgerFinance.getIncomeStatement(args);
+  return shape === "fava"
+    ? data
+    : summarizeIncomeStatement(data, rest.conversion);
+}
 
 /**
  * The read core of v1: journal, accounts, and the two statements.
@@ -92,17 +150,18 @@ export const REPORT_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
     summary: "Get a financial statement",
     description:
-      "Renders the balance sheet or the income statement for the period, with optional currency conversion and interval bucketing.",
+      "Renders the balance sheet or the income statement for the period, with optional currency conversion and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts; `shape=fava` returns the full chart payload.",
     params: statementParamsSchema,
-    query: statementQuerySchema,
+    query: statementReadQuery,
     responses: {
       200: json("The rendered statement"),
     },
-    handler: async ({ layers }, { identity, params, query }) => {
-      const args = { ledgerId: ledgerIdOf(params), identity, ...query };
-      return params.statement === "balance-sheet"
-        ? layers.services.ledgerFinance.getBalanceSheet(args)
-        : layers.services.ledgerFinance.getIncomeStatement(args);
-    },
+    handler: async ({ layers }, { identity, params, query }) =>
+      fetchStatement(layers.services, {
+        ledgerId: ledgerIdOf(params),
+        identity,
+        statement: params.statement,
+        query,
+      }),
   }),
 ] as const;

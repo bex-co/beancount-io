@@ -28,7 +28,6 @@ import type { ZodTypeAny } from "zod";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { logger } from "@/shared/logger";
-import { DomainError } from "@/shared/errors";
 import { runWithOperationId } from "@/shared/async-context";
 
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
@@ -72,6 +71,14 @@ import {
 } from "@/features/ai-agent/api/mcp-resources";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import { buildInstructions } from "@/features/ai-agent/api/mcp-context";
+import {
+  envelopeFromThrown,
+  splitToolFailure,
+  McpResourceFailure,
+  renderErrorText,
+  type McpErrorEnvelope,
+} from "@/features/ai-agent/api/mcp-errors";
+import { renderToolText } from "@/features/ai-agent/api/mcp-result-text";
 
 import {
   gqlOpId,
@@ -543,34 +550,58 @@ function makeMcpResourceHandler(
         ledgerId: toolCtx.ledgerId,
         userId: toolCtx.identity.userId,
       });
-      await gateMcpCall(opId, toolCtx, config);
-      const result = await descriptor.read(toolCtx, variables);
-      return {
-        contents: [
-          typeof result === "string"
-            ? { uri: uri.href, mimeType: descriptor.mimeType, text: result }
-            : { uri: uri.href, ...result },
-        ],
-      };
+      try {
+        await gateMcpCall(opId, toolCtx, config);
+        const result = await descriptor.read(toolCtx, variables);
+        return {
+          contents: [
+            typeof result === "string"
+              ? { uri: uri.href, mimeType: descriptor.mimeType, text: result }
+              : { uri: uri.href, ...result },
+          ],
+        };
+      } catch (err) {
+        // A resource has no `isError` result to put a refusal in — the only
+        // channel is the JSON-RPC error — so the envelope travels as `data`
+        // beside the right code, and the message stays unprefixed so the
+        // client's own `McpError` adds the one prefix (w2/m28:t003).
+        const envelope = envelopeFromThrown(err);
+        mcpLogger.error("MCP resource read failed", {
+          resource: descriptor.name,
+          code: envelope.code,
+          error: envelope.message,
+        });
+        throw new McpResourceFailure(envelope);
+      }
     });
   };
 }
 
 /**
- * Render a thrown tool failure as the MCP client's plain-text error (w2/m26).
+ * One refusal, in both channels (w2/m28:t003).
  *
- * A DomainError's metadata hint is the actionable half of the error (env vars
- * to set, flags to pass); MCP tool failures travel as plain text, so the hint
- * rides along instead of staying behind in metadata that only REST and
- * GraphQL merge onto the wire.
+ * `isError` is what an agent branches on, the structured half is what it
+ * reads, and the text half says the same thing in the words a person would
+ * use — never a different failure from the structured one, which is how the
+ * four dialects arose in the first place.
  */
-export function mcpToolErrorText(err: unknown): string {
-  const text = err instanceof Error ? err.message : "Tool execution failed";
-  const hint =
-    err instanceof DomainError && typeof err.metadata?.hint === "string"
-      ? err.metadata.hint
-      : undefined;
-  return hint ? `${text}\nHint: ${hint}` : text;
+function toolFailureResult(
+  tool: string,
+  envelope: McpErrorEnvelope,
+  /**
+   * What the failing result carried besides its error. Some tools refuse with
+   * a domain payload attached — a pull-request review returns the PR's
+   * current state alongside "PR is no longer open" — and that payload is the
+   * reason the caller does not have to go read it back.
+   */
+  rest: Record<string, unknown> = {},
+): CallToolResult {
+  return {
+    isError: true,
+    content: [{ type: "text" as const, text: renderErrorText(envelope) }],
+    structuredContent: { ...rest, ok: false, error: { ...envelope } },
+    _meta: { "beancount/tool": tool },
+  };
 }
 
 function makeMcpToolHandler(
@@ -604,21 +635,39 @@ function makeMcpToolHandler(
           typeof result === "object" &&
           result !== null &&
           (result as { ok?: unknown }).ok === false;
+        if (failed) {
+          // Normalized here rather than in each tool: the boundary is the one
+          // place every failure passes through, so it is the only place that
+          // can promise a client `error.code` and `error.hint` exist
+          // (w2/m28:t003).
+          const { envelope, rest } = splitToolFailure(
+            result as Record<string, unknown>,
+          );
+          return toolFailureResult(descriptor.name, envelope, rest);
+        }
+        // Text is what a person would read; the structured channel keeps the
+        // full typed payload (w2/m28:t001).
         return {
-          ...(failed && { isError: true }),
-          content: [{ type: "text" as const, text: JSON.stringify(result) }],
+          content: [
+            {
+              type: "text" as const,
+              text: renderToolText(descriptor.name, result),
+            },
+          ],
           structuredContent: result as Record<string, unknown>,
         };
       } catch (err) {
-        const text = mcpToolErrorText(err);
+        // A throw that got past the tool's own boundary — the per-call gate's
+        // rate-limit and scope refusals arrive here. It stays an `isError`
+        // result rather than a transport error: the caller is an agent
+        // mid-conversation, and ending the session tells it nothing.
+        const envelope = envelopeFromThrown(err);
         mcpLogger.error("MCP tool execution failed", {
           tool: descriptor.name,
-          error: err instanceof Error ? err.message : String(err),
+          code: envelope.code,
+          error: envelope.message,
         });
-        return {
-          isError: true,
-          content: [{ type: "text" as const, text }],
-        };
+        return toolFailureResult(descriptor.name, envelope);
       }
     });
   };

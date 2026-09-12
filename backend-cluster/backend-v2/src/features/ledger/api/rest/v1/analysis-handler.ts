@@ -1,4 +1,8 @@
-import { statementQuerySchema } from "./reports-handler";
+import { shapeQuery, statementQuerySchema } from "./reports-handler";
+import {
+  summarizeIntervalTotals,
+  summarizeOverview,
+} from "@/features/ledger/utils/report-summaries";
 import { z } from "@/shared/zod-openapi-setup";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { v1Route } from "@/server/rest/v1-route";
@@ -103,11 +107,18 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     segment: "overview",
     summary: "Get the ledger overview",
     description:
-      "Net worth, account hierarchies, and income/expense series with the full reporting filters.",
-    query: statementQuerySchema,
+      "Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard charts.",
+    query: statementQuerySchema.extend(shapeQuery.shape),
     uriPath: "",
-    fetch: (s, { ledgerId, identity, query }) =>
-      s.ledgerFinance.getOverview({ ledgerId, identity, ...query }),
+    fetch: async (s, { ledgerId, identity, query }) => {
+      const { shape, ...rest } = query;
+      const data = await s.ledgerFinance.getOverview({
+        ledgerId,
+        identity,
+        ...rest,
+      });
+      return shape === "fava" ? data : summarizeOverview(data, rest.conversion);
+    },
   },
   {
     segment: "documents",
@@ -137,23 +148,29 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     segment: "interval-totals",
     summary: "Get totals per interval",
     description:
-      "Balances grouped by period — the series behind a spending-over-time view, without the view.",
+      "Balances grouped by period — the series behind a spending-over-time view, without the view. `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the raw per-currency balances.",
     query: conversionQuery.extend({
       accountName: z.string().optional().openapi({
         description: "Restrict the totals to one account",
       }),
+      ...shapeQuery.shape,
     }),
     uriPath: "",
-    fetch: (s, { ledgerId, identity, query }) =>
-      s.ledgerData.getIntervalTotals({
+    fetch: async (s, { ledgerId, identity, query }) => {
+      const { shape, ...rest } = query;
+      const data = await s.ledgerData.getIntervalTotals({
         ledgerId,
         identity,
-        // Spread first: `...query` carries `accountName` as an explicit
+        // Spread first: `...rest` carries `accountName` as an explicit
         // `undefined` when the caller omitted it, which would overwrite the
         // default if it came last.
-        ...query,
-        accountName: query.accountName ?? "",
-      }),
+        ...rest,
+        accountName: rest.accountName ?? "",
+      });
+      return shape === "fava"
+        ? data
+        : summarizeIntervalTotals(data, rest.conversion);
+    },
   },
   {
     segment: "account-report",

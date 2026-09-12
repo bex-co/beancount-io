@@ -1,4 +1,4 @@
-import { unifiedDiff } from "@/features/ai-agent/tools/file-diff";
+import { unifiedDiff } from "@/shared/unified-diff";
 
 describe("unifiedDiff", () => {
   it("renders a creation as all additions", () => {

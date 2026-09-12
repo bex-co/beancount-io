@@ -1,5 +1,4 @@
 import { entriesBodySchema } from "@/features/ledger/api/rest/v1/entries-handler";
-import { UnbalancedTransactionError } from "@/shared/errors";
 import { parseLedgerId } from "@/shared/str";
 import {
   sourceSliceInput,
@@ -85,6 +84,12 @@ import {
   executeEditLedgerFiles,
   description as editDescription,
 } from "../tools/edit-ledger-files-tool";
+import {
+  appendLedgerTextDescription,
+  appendLedgerTextInputSchema,
+  appendLedgerTextOutputSchema,
+  executeAppendLedgerText,
+} from "../tools/append-ledger-text-tool";
 import {
   executeManageApiKeys,
   manageApiKeysDescription,
@@ -326,86 +331,65 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     description:
       "Append entries [{type,entry}] to the ledger. Supports transaction, commodity, price, note, balance, open, close, budget, document, event. Budget interval uses lowercase daily/weekly/monthly/quarterly/yearly. One posting per transaction may omit its amount and is written elided. An unbalanced transaction is refused with UNBALANCED unless allowInvalid records it deliberately. ledger is required unless pinned.",
     inputSchema: addLedgerEntriesInput,
-    outputSchema: z.object({
-      ok: z
-        .boolean()
-        .describe(
-          "True when the tool succeeded; false when it refused or failed.",
-        ),
-      result: withWriteOutcome({
-        success: z.boolean(),
-        message: z.string().optional(),
-        files: z.array(z.string()).optional(),
-      })
-        .optional()
-        .describe("The tool's payload. Present when `ok` is true."),
-      error: z
-        .object({
-          code: z.string(),
-          message: z.string(),
-          hint: z.string(),
-        })
-        .optional()
-        .describe(
-          "Why the tool refused or failed. Present when `ok` is false, alongside `isError` on the result.",
-        ),
-    }),
+    outputSchema: mcpOutputSchema(
+      toolOutputSchema(
+        withWriteOutcome({
+          success: z.boolean(),
+          message: z.string().optional(),
+          files: z.array(z.string()).optional(),
+        }),
+      ),
+    ),
     execute: async (context, input) => {
       const { ledger, entries, allowInvalid } =
         addLedgerEntriesInput.parse(input);
       const ledgerId = resolveMcpLedger(context, ledger);
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
-      let written: Awaited<
-        ReturnType<typeof context.ledgerEntryService.addBulkEntries>
-      >;
-      try {
-        const outcome = await withPostWriteValidation(
-          context.services,
-          context.identity,
-          ledgerId,
-          () =>
-            context.ledgerEntryService.addBulkEntries(
-              context.identity,
-              ledgerOwner,
-              ledgerName,
-              entries,
-              "web",
-              allowInvalid ?? false,
-            ),
-        );
-        written = outcome.written;
-        const files = written.files ?? [];
-        const noun = entries.length === 1 ? "entry" : "entries";
-        return {
-          ok: true,
-          result: {
-            summary: summarizeWrite(
-              `Added ${entries.length} ${noun}${files.length > 0 ? ` to ${files.join(", ")}` : ""}`,
-              outcome.validation,
-            ),
-            ...written,
-            wrote: files.map((path) => ({ path })),
-            entryHashes: [],
-            validation: outcome.validation,
-          },
-        };
-      } catch (error) {
-        if (error instanceof UnbalancedTransactionError) {
-          const metadata = error.metadata as
-            | { residual?: unknown; hint?: unknown }
-            | undefined;
-          const hint =
-            typeof metadata?.hint === "string"
-              ? metadata.hint
-              : "add a posting or pass allowInvalid: true";
-          return {
-            ok: false,
-            error: { code: "UNBALANCED", message: error.message, hint },
-          };
-        }
-        throw error;
-      }
+      // No hand-built refusal here: an `UnbalancedTransactionError` carries
+      // its own UNBALANCED category and hint, and the MCP boundary turns any
+      // throw into exactly that envelope (w2/m28:t003). Catching it to
+      // rebuild the same object by hand was the last tool speaking its own
+      // error dialect.
+      const outcome = await withPostWriteValidation(
+        context.services,
+        context.identity,
+        ledgerId,
+        () =>
+          context.ledgerEntryService.addBulkEntries(
+            context.identity,
+            ledgerOwner,
+            ledgerName,
+            entries,
+            "web",
+            allowInvalid ?? false,
+          ),
+      );
+      const written = outcome.written;
+      const files = written.files ?? [];
+      const noun = entries.length === 1 ? "entry" : "entries";
+      return {
+        ok: true,
+        result: {
+          summary: summarizeWrite(
+            `Added ${entries.length} ${noun}${files.length > 0 ? ` to ${files.join(", ")}` : ""}`,
+            outcome.validation,
+          ),
+          ...written,
+          wrote: files.map((path) => ({ path })),
+          entryHashes: [],
+          validation: outcome.validation,
+        },
+      };
     },
+  },
+  {
+    name: "appendLedgerText",
+    title: "Append Beancount Directive Text",
+    annotations: APPEND,
+    description: appendLedgerTextDescription,
+    inputSchema: appendLedgerTextInputSchema,
+    outputSchema: mcpOutputSchema(appendLedgerTextOutputSchema),
+    execute: executeAppendLedgerText,
   },
   {
     name: "insertReceiptTransaction",

@@ -179,6 +179,7 @@ the principal inputs; inspect the schema before constructing a call.
 | `getEntryContext`       | `entryHash`; the source context around one entry — read before editing it.                                                                   | Read       |
 | `listLedgerFiles`       | Optional `dir_path`; lists one directory level, directories first.                                                                           | Read       |
 | `readLedgerFiles`       | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                           | Read       |
+| `appendLedgerText`      | `text`, optional `path`, `dry_run`, `allowInvalid`; appends Beancount directive text, routed by type and date and inserted in date order.    | Write      |
 | `editLedgerFiles`       | `description`, `files`, optional `dry_run`; batches create/update/replace/delete operations into one commit.                                 | Write      |
 | `manageApiKeys`         | `operation: list / create / revoke`, operation-specific arguments. `create` returns plaintext once; requires OAuth on MCP and a paid plan.    | Admin      |
 | `manageBankImport`      | `operation: sync / submit / discard`, operation-specific arguments, optional `dry_run`.                                                      | Write      |
@@ -195,6 +196,34 @@ scopes or widen its ledger restriction. MCP key results use
 `key_prefix`, `ledger_scope`, `last_used_at`, `expires_at`, `revoked_at`, and
 `created_at` for REST/GraphQL's camelCase fields; `revoked` remains available
 for compatibility. Only creation returns the plaintext key.
+
+### Writing directives as Beancount text
+
+`appendLedgerText` takes the text you would write into a file:
+
+```json
+{
+  "text": "2026-01-02 * \"Cafe\" \"Coffee\"\n  Expenses:Food   4.50 USD\n  Assets:Cash    -4.50 USD"
+}
+```
+
+It parses the text into directives and refuses anything that is not one —
+prose, a diff, JSON — before writing. Each directive goes to the file the
+ledger's own `bcio` options assign its type and date, unless `path` names one,
+and is inserted after the last directive dated on or before it rather than at
+the end of the file. A file whose own directives are out of date order gets
+them appended, and says so in `appendedUnsorted`.
+
+Before committing, it bean-checks the projected ledger. New errors are a
+refusal — `UNBALANCED` when a transaction does not balance — unless
+`allowInvalid` records them deliberately. `dry_run` returns the unified diff
+and the projected errors without committing. At most 50 directives per call.
+
+Prefer it over `editLedgerFiles` for adding directives: `editLedgerFiles`
+replaces file contents, so appending with it means reading, concatenating, and
+writing the whole file back — which is how entries end up at the bottom of
+`main.bean` out of order. Use `editLedgerFiles` to restructure files and
+`editEntrySource` to change a directive that already exists.
 
 ### Reading and editing files
 
@@ -576,25 +605,71 @@ calls per minute; `manageApiKeys` carries the five-per-minute mint override
 because its create branch mints. These are
 operation-class budgets, not one combined allowance for the entire MCP endpoint.
 
-Tool results normally contain both a text block with serialized JSON and
-`structuredContent` with the same object:
+The MCP endpoint itself also carries a read-class transport budget, and the
+handshake — `initialize`, its acknowledgement, `tools/list`,
+`resources/templates/list`, and `ping` — is not charged at all. A long session
+is therefore bounded by the work it does, not by how many JSON-RPC messages it
+took to do it.
+
+### The result envelope
+
+The text block is what a person would read and `structuredContent` is what a
+program parses. They are no longer the same bytes: a BQL result arrives as the
+row count and the rendered table, while the typed rows stay in
+`structuredContent`.
 
 ```json
 { "ok": true, "result": "tool-specific payload" }
 ```
 
-Handled execution failures use `{ "ok": false, "error": "reason" }` and set
-the MCP result's **`isError: true`**. Errors caught at the registry gate can
-instead return `isError: true` with only text content. Check `isError` first;
-do not assume `structuredContent` is always present or that HTTP 200 means the
-tool succeeded. Resource-read failures use JSON-RPC errors rather than this tool
-envelope.
+A failure sets the MCP result's **`isError: true`** and carries one envelope on
+every tool:
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "UNBALANCED",
+    "message": "Transaction does not balance: residual 5 USD",
+    "hint": "Postings do not sum to zero. Add the missing posting, elide one amount, or pass `allowInvalid: true` to record it deliberately."
+  }
+}
+```
+
+Branch on `error.code`; `error.hint` names the next call to make. `retryAfter`
+is present only for `RATE_LIMITED`. Check `isError` first — HTTP 200 does not
+mean the tool succeeded.
 
 Each tool advertises an object `outputSchema`: `ok` is required, with optional
-`result` and `error`. The runtime success/failure convention is stronger than
-that published schema because the SDK requires an object schema here. See
+`result` and `error`. Its fields are intentionally undocumented there — the
+envelope is identical on every tool, so describing it once here costs one copy
+instead of twenty-five in each `tools/list`. The runtime success/failure
+convention is stronger than that published schema because the SDK requires an
+object schema here. See
 [`types.ts`](../src/features/ai-agent/tools/types.ts) and MCP's
 [structured tool results](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#structured-content).
+
+### Failure codes
+
+The same codes reach resource reads, as the JSON-RPC error's `data`, with the
+message unprefixed so a client's SDK adds exactly one `MCP error <n>:` prefix.
+
+| `error.code`             | JSON-RPC | What it means and what to do                                                                                |
+| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------ |
+| `BAD_USER_INPUT`         | `-32602` | An argument is wrong. `tools/list` publishes each tool's input schema.                                        |
+| `VALIDATION_FAILED`      | `-32602` | A field failed a business rule. The message names the field path.                                             |
+| `UNBALANCED`             | `-32602` | Postings do not sum to zero. Add a posting, elide an amount, or pass `allowInvalid: true`.                     |
+| `NOT_FOUND`              | `-32002` | No such ledger, file, entry, or revision. `listLedgers` and `listLedgerFiles` say what exists.                 |
+| `FORBIDDEN`              | `-32003` | The credential lacks authority, or a pinned credential named another ledger. Read the ledger's `metadata`.     |
+| `UNAUTHENTICATED`        | `-32003` | The credential expired or was revoked. Re-run the OAuth flow, or use a live API key.                          |
+| `PREMIUM_REQUIRED`       | `-32003` | The operation needs a paid plan on the credential's account.                                                  |
+| `RESOURCE_LIMIT_REACHED` | `-32003` | A plan limit is reached. Remove something or upgrade.                                                         |
+| `OPERATION_NOT_ALLOWED`  | `-32003` | The ledger's current state forbids it.                                                                        |
+| `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`.          |
+| `RATE_LIMITED`           | `-32000` | Over budget. Wait `retryAfter` seconds; batch writes rather than looping.                                      |
+| `SERVICE_UNAVAILABLE`    | `-32000` | A dependency is down. Retry with backoff; the request is not the problem.                                     |
+| `CONFIGURATION_ERROR`    | `-32000` | The deployment is missing configuration. Nothing about the request will fix it.                               |
+| `INTERNAL_SERVER_ERROR`  | `-32000` | Server-side failure. Retry once; changing the request will not help.                                          |
 
 | Symptom                                           | Meaning and next step                                                                                                              |
 | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -603,7 +678,7 @@ that published schema because the SDK requires an object schema here. See
 | Tool error requesting a ledger                    | Pass `ledger: "owner/name"` when using an unpinned credential.                                                                     |
 | `405`, `Allow: POST`, on authenticated GET/DELETE | Expected behavior; use Streamable HTTP POST.                                                                                       |
 | `400`/`406` before tool execution                 | Check JSON-RPC, protocol version, content type, and both Accept values.                                                            |
-| `isError: true`                                   | Read the tool's error; check arguments, scopes, current access, and rate limits.                                                   |
+| `isError: true`                                   | Read `structuredContent.error.code` and follow `error.hint`; the table above lists every code.                                     |
 | Resources appear absent                           | Call `resources/templates/list`; verify the client supports resource reads.                                                        |
 | OAuth metadata returns `503 oauth_not_configured` | Fix the deployment's signing configuration. A valid API key can still authenticate independently of OAuth.                         |
 

@@ -6,6 +6,9 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.get_api_gateway_v1_ledgers_owner_name_interval_totals_shape import (
+    GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape,
+)
 from ...models.v1_error import V1Error
 from ...types import UNSET, Response, Unset
 
@@ -20,6 +23,8 @@ def _get_kwargs(
     interval: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
     account_name: str | Unset = UNSET,
+    shape: GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape
+    | Unset = GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -35,6 +40,12 @@ def _get_kwargs(
     params["conversion"] = conversion
 
     params["accountName"] = account_name
+
+    json_shape: str | Unset = UNSET
+    if not isinstance(shape, Unset):
+        json_shape = shape.value
+
+    params["shape"] = json_shape
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -126,10 +137,14 @@ def sync_detailed(
     interval: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
     account_name: str | Unset = UNSET,
+    shape: GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape
+    | Unset = GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY,
 ) -> Response[Any | V1Error]:
     """Get totals per interval
 
      Balances grouped by period — the series behind a spending-over-time view, without the view.
+    `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the
+    raw per-currency balances.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -142,6 +157,9 @@ def sync_detailed(
             month.
         conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
         account_name (str | Unset): Restrict the totals to one account
+        shape (GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape | Unset): summary returns totals
+            and non-zero accounts in one currency; fava returns the full chart payload. Default:
+            GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -160,6 +178,7 @@ def sync_detailed(
         interval=interval,
         conversion=conversion,
         account_name=account_name,
+        shape=shape,
     )
 
     response = client.get_httpx_client().request(
@@ -180,10 +199,14 @@ def sync(
     interval: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
     account_name: str | Unset = UNSET,
+    shape: GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape
+    | Unset = GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY,
 ) -> Any | V1Error | None:
     """Get totals per interval
 
      Balances grouped by period — the series behind a spending-over-time view, without the view.
+    `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the
+    raw per-currency balances.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -196,6 +219,9 @@ def sync(
             month.
         conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
         account_name (str | Unset): Restrict the totals to one account
+        shape (GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape | Unset): summary returns totals
+            and non-zero accounts in one currency; fava returns the full chart payload. Default:
+            GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -215,6 +241,7 @@ def sync(
         interval=interval,
         conversion=conversion,
         account_name=account_name,
+        shape=shape,
     ).parsed
 
 
@@ -229,10 +256,14 @@ async def asyncio_detailed(
     interval: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
     account_name: str | Unset = UNSET,
+    shape: GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape
+    | Unset = GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY,
 ) -> Response[Any | V1Error]:
     """Get totals per interval
 
      Balances grouped by period — the series behind a spending-over-time view, without the view.
+    `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the
+    raw per-currency balances.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -245,6 +276,9 @@ async def asyncio_detailed(
             month.
         conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
         account_name (str | Unset): Restrict the totals to one account
+        shape (GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape | Unset): summary returns totals
+            and non-zero accounts in one currency; fava returns the full chart payload. Default:
+            GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -263,6 +297,7 @@ async def asyncio_detailed(
         interval=interval,
         conversion=conversion,
         account_name=account_name,
+        shape=shape,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -281,10 +316,14 @@ async def asyncio(
     interval: str | Unset = UNSET,
     conversion: str | Unset = UNSET,
     account_name: str | Unset = UNSET,
+    shape: GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape
+    | Unset = GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY,
 ) -> Any | V1Error | None:
     """Get totals per interval
 
      Balances grouped by period — the series behind a spending-over-time view, without the view.
+    `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the
+    raw per-currency balances.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -297,6 +336,9 @@ async def asyncio(
             month.
         conversion (str | Unset): Convert postings to this currency before totalling Example: USD.
         account_name (str | Unset): Restrict the totals to one account
+        shape (GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape | Unset): summary returns totals
+            and non-zero accounts in one currency; fava returns the full chart payload. Default:
+            GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -317,5 +359,6 @@ async def asyncio(
             interval=interval,
             conversion=conversion,
             account_name=account_name,
+            shape=shape,
         )
     ).parsed

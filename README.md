@@ -173,12 +173,16 @@ Point an MCP client at a deployment to query and edit a ledger from an agent:
 }
 ```
 
-Twenty-four tools — BQL queries, file listing, reads, edits, entry and receipt
-insertion, statement parsing, pull requests, collaborators, API-key management,
-and bank import — plus sixty-six URI-addressed **resources** an agent fetches
-without spending a tool call: the ledger's vocabulary (payees, currencies,
-tags, …), its journals and analysis reads (trial balance, account reports, …),
-its linked banks, category suggestions, and file contents. Every eligible
+Twenty-six tools — BQL queries, file listing, reads, edits, entry and receipt
+insertion, appending directives as plain Beancount text, statement parsing,
+pull requests, collaborators, API-key management, and bank import — plus
+sixty-four URI-addressed **resources** an agent fetches without spending a tool
+call: the ledger's vocabulary (payees, currencies, tags, …), its journals and
+analysis reads (trial balance, account reports, …), its linked banks, category
+suggestions, and file contents. Statements answer with totals and the accounts
+behind them rather than a chart payload, every failure names a machine code and
+the next call to make, and the transport's budget is sized for a whole agent
+session. Every eligible
 GraphQL operation now has a REST and MCP twin over the same protected service
 call — the parity gap is held at zero by CI. Bank imports are drivable end to
 end after a one-time browser link, with `dry_run` on everything that writes.

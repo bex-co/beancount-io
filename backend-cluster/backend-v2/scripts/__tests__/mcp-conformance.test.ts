@@ -31,6 +31,7 @@ const [
   checkAdvertisedPath,
   checkOptionalUserId,
   checkDiscoveryWorkload,
+  checkResultShape,
 ] = CHECKS;
 
 const ledgerScoped: Identity = {
@@ -60,7 +61,17 @@ beforeAll(async () => {
   const layers = {
     database: {},
     services: {
-      ledgerShell: { queryShellText: async () => "Assets:Cash 100 USD" },
+      // The shape the real service returns: `{ text }` holding the rendered
+      // table, header rule and all.
+      ledgerShell: {
+        queryShellText: async () => ({
+          text: [
+            "   account         balance",
+            "------------ -------------",
+            "Assets:Cash     100.00 USD",
+          ].join("\n"),
+        }),
+      },
       ledgerData: { getSourceFiles: async () => ["main.bean"] },
       ledgerRepo: {
         changeFiles: async ({ identity }: { identity: Identity }) => {
@@ -141,6 +152,27 @@ describe("MCP conformance checks", () => {
     acceptTokens({ ro: readOnly });
     const result = await checkScopeRefusal({ baseUrl, readOnlyToken: "ro" });
     expect(result.outcome).toBe("pass");
+  });
+
+  it("check 5 reports the machine code the refusal carried", async () => {
+    acceptTokens({ ro: readOnly });
+    // w2/m28:t003 — the check now requires `{code, hint}`, not just prose, so
+    // a server that regressed to the bare-text dialect fails it.
+    const result = await checkScopeRefusal({ baseUrl, readOnlyToken: "ro" });
+    expect(result.outcome).toBe("pass");
+    expect(result.detail).toMatch(/code [A-Z_]+/);
+  });
+
+  it("check 10 passes when a BQL result leads with its row count", async () => {
+    acceptTokens({ good: ledgerScoped });
+    const result = await checkResultShape({ baseUrl, token: "good" });
+    expect(result.outcome).toBe("pass");
+    expect(result.detail).toContain("1 row");
+  });
+
+  it("check 10 skips rather than fails without a credential", async () => {
+    const result = await checkResultShape({ baseUrl });
+    expect(result.outcome).toBe("skip");
   });
 
   it("check 6 passes when nothing internal leaks to an unknown credential", async () => {

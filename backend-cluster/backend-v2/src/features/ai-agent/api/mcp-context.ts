@@ -15,6 +15,7 @@ import type { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow
 import type { ToolContext } from "../tools/types";
 import type { Identity } from "@/server/api/identity";
 import { BadUserInputError, ForbiddenError } from "@/shared/errors";
+import { CLASS_BUDGETS } from "@/server/api/rate-limit";
 import { z } from "zod";
 
 /**
@@ -44,7 +45,10 @@ export type McpRequestContext = Omit<ToolContext, "ledgerId"> & {
     IAssetStorageService,
     "generateUploadUrl" | "generateTempDownloadUrl"
   >;
-  ledgerEntryService: Pick<ILedgerEntryService, "addBulkEntries">;
+  ledgerEntryService: Pick<
+    ILedgerEntryService,
+    "addBulkEntries" | "appendDirectiveText"
+  >;
   aiCfoUsage: Pick<IAiCfoUsageService, "getUsage">;
   subscriptionService: Pick<ISubscriptionService, "allTierQuotas">;
   legacyEntryWorkflow: ILegacyEntryWorkflow;
@@ -79,7 +83,11 @@ export function buildInstructions(identity: Identity): string {
     "Prefer resources over tools when your client fetches URIs; reads cost less.",
     "After any write, check `validation.newErrors` or call `checkLedger`.",
     "BQL rows are postings: LIMIT counts postings, not transactions; use `runBqlQueryStructured` for typed numbers.",
-    "Reads share a generous budget, writes are tightly limited; a 429 means back off, not retry now.",
+    "Every tool returns {ok, result} or {ok:false, error:{code,message,hint}} with isError; branch on error.code and follow error.hint.",
+    // Interpolated, not restated: the instruction string is the contract every
+    // session reads, and a retuned budget must not leave it advertising a
+    // number the limiter does not enforce.
+    `Budgets per minute: ${CLASS_BUDGETS.read.max} reads, ${CLASS_BUDGETS.write.max} writes, ${CLASS_BUDGETS.admin.max} admin; the handshake is free. Over budget is code RATE_LIMITED with retryAfter — wait, do not retry now.`,
   ].join("\n");
 }
 

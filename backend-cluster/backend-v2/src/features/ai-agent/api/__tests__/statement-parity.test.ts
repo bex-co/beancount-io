@@ -24,6 +24,11 @@ import type { McpRequestContext } from "../mcp-context";
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const balance = { USD: "9007199254740993.12", EUR: "-45.60" };
+// The same value as a JS number. Written via `Number` rather than as a
+// literal because it is deliberately past 2^53 — the point of the fixture is
+// that transports do not reformat it — and the summary reports it as a
+// number, so the rounding below is the contract, not an accident.
+const usd = Number(balance.USD);
 // A full daily year proves that transport mappings preserve more than 100 rows.
 const series = Array.from({ length: 365 }, (_, day) => ({
   date: new Date(Date.UTC(2026, 0, day + 1)).toISOString().slice(0, 10),
@@ -217,7 +222,10 @@ describe("statement adapter contracts", () => {
     const f = await fixture();
     try {
       const query = entry.filtered ? params : {};
-      const uri = `${entry.path}?${new URLSearchParams(query)}`;
+      // `shape=fava` is the chart payload this test has always pinned; the
+      // default is now the agent summary (w2/m28:t002), covered below. It is
+      // a REST/MCP switch only — GraphQL keeps the one payload it always had.
+      const uri = `${entry.path}?${new URLSearchParams({ ...query, shape: "fava" })}`;
       const response = await f.rest(uri);
       expect(response.status).toBe(200);
       expect(await response.json()).toEqual(entry.payload);
@@ -259,6 +267,105 @@ describe("statement adapter contracts", () => {
     } finally {
       await f.close();
     }
+  });
+
+  /**
+   * w2/m28:t002. The audit's agents never used the statements — they
+   * recomputed net worth with BQL, because pulling a number out of a chart
+   * payload is harder than writing a query. These pin the shape that made
+   * them usable and the size that made them affordable.
+   */
+  describe("the agent summary is what a statement returns by default", () => {
+    it("reduces the balance sheet to totals and non-zero accounts", async () => {
+      const f = await fixture();
+      try {
+        const summary = await f.mcp("statements/balance-sheet");
+        expect(summary).toEqual({
+          asOf: "2026-12-31",
+          currency: "USD",
+          // One `tree` node stands in for each of the three hierarchies, so
+          // each contributes its own balance plus its children's.
+          assets: 2 * usd,
+          liabilities: 2 * usd,
+          equity: 2 * usd,
+          netWorth: usd,
+          byAccount: [
+            { account: "Assets", balance: usd },
+            { account: "Assets", balance: usd },
+            { account: "Assets", balance: usd },
+          ],
+        });
+        // REST is the same seam, so it answers identically.
+        expect(await (await f.rest("statements/balance-sheet")).json()).toEqual(
+          summary,
+        );
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("honours conversion when choosing the currency to report in", async () => {
+      const f = await fixture();
+      try {
+        const summary = await f.mcp(
+          "statements/balance-sheet?conversion=EUR",
+        );
+        expect(summary.currency).toBe("EUR");
+        expect(summary.netWorth).toBe(-45.6);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("states income, expenses, and the profit they imply", async () => {
+      const f = await fixture();
+      try {
+        const summary = await f.mcp("statements/income-statement");
+        expect(summary.period).toEqual({ from: "2026-01-01", to: "2026-12-31" });
+        expect(summary.currency).toBe("USD");
+        expect(summary.income).toBe(2 * usd);
+        expect(summary.expenses).toBe(2 * usd);
+        // Beancount signs income negative, so profit is the negated sum.
+        expect(summary.net).toBe(-(summary.income + summary.expenses));
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("reduces the overview to the net-worth series", async () => {
+      const f = await fixture();
+      try {
+        const summary = await f.mcp("overview");
+        expect(summary.currency).toBe("USD");
+        expect(summary.netWorth).toBe(usd);
+        expect(summary.series).toHaveLength(365);
+        expect(summary.series[0]).toEqual({
+          date: "2026-01-01",
+          netWorth: usd,
+        });
+        // The chart payload is still one query away.
+        expect(Object.keys(await f.mcp("overview?shape=fava"))).toContain(
+          "assets_hierarchy_data",
+        );
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("is an order of magnitude smaller than the chart payload", async () => {
+      const f = await fixture();
+      try {
+        const summary = JSON.stringify(
+          await f.mcp("statements/balance-sheet"),
+        ).length;
+        const fava = JSON.stringify(
+          await f.mcp("statements/balance-sheet?shape=fava"),
+        ).length;
+        expect(summary).toBeLessThan(fava / 10);
+      } finally {
+        await f.close();
+      }
+    });
   });
 
   it.each([undefined, "open", "closed", "all"])(

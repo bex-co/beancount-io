@@ -12,6 +12,8 @@ import {
   consume,
   consumeAnonymous,
   enforceRateLimit,
+  isMcpHandshakeRequest,
+  MCP_TRANSPORT_OP_ID,
 } from "../rate-limit";
 import { RateLimitedError } from "@/shared/errors";
 import type { Identity } from "../identity";
@@ -191,6 +193,62 @@ describe("budgets", () => {
     expect(anonymousFamily("/api-gateway/v1/ledgers")).toBe("default");
     // A flood against one must not be able to exhaust another.
     expect(new Set(Object.keys(ANONYMOUS_BUDGETS)).size).toBe(4);
+  });
+});
+
+/**
+ * w2/m28:t004. One agent session is dozens of POSTs to one path, and the MCP
+ * transport op was unclassified — so it fell to the write-class default and a
+ * 55-call session of mostly reads hit 429 mid-conversation, throwing the SDK
+ * client out of the session.
+ */
+describe("the MCP transport", () => {
+  it("gets a read-class budget rather than the write-class default", () => {
+    expect(OP_BUDGETS[MCP_TRANSPORT_OP_ID].max).toBe(CLASS_BUDGETS.read.max);
+    expect(OP_BUDGETS[MCP_TRANSPORT_OP_ID].max).toBeGreaterThan(
+      CLASS_BUDGETS.write.max,
+    );
+  });
+
+  it.each([
+    "initialize",
+    "notifications/initialized",
+    "tools/list",
+    "resources/templates/list",
+    "ping",
+  ])("treats %s as handshake traffic", (method) => {
+    expect(isMcpHandshakeRequest({ jsonrpc: "2.0", method, id: 1 })).toBe(true);
+  });
+
+  it.each(["tools/call", "resources/read", "resources/list"])(
+    "charges %s, which is work rather than handshake",
+    (method) => {
+      expect(isMcpHandshakeRequest({ jsonrpc: "2.0", method, id: 1 })).toBe(
+        false,
+      );
+    },
+  );
+
+  it("exempts a batch only when every message in it is handshake", () => {
+    expect(
+      isMcpHandshakeRequest([
+        { method: "initialize" },
+        { method: "tools/list" },
+      ]),
+    ).toBe(true);
+    // A real call must not ride along inside a batch for free.
+    expect(
+      isMcpHandshakeRequest([
+        { method: "initialize" },
+        { method: "tools/call" },
+      ]),
+    ).toBe(false);
+  });
+
+  it("charges anything it cannot read as handshake", () => {
+    expect(isMcpHandshakeRequest(undefined)).toBe(false);
+    expect(isMcpHandshakeRequest([])).toBe(false);
+    expect(isMcpHandshakeRequest("not json-rpc")).toBe(false);
   });
 });
 

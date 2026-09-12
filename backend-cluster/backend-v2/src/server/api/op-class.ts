@@ -1161,6 +1161,10 @@ const LEDGER_WRITE_ACTION_BY_VERB = {
   "Mutation.updateLedgerEntrySourceSlice":
     AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
   "Mutation.addEntries": AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
+  // Appending Beancount text is the same capability as appending structured
+  // entries, in the dialect an agent already writes (w2/m28:t005). Same
+  // canonical action, so the dialect is never the authorization ceiling.
+  "Mutation.appendLedgerText": AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
   "Mutation.renameLedgerFile": AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
 } as const satisfies Readonly<Record<string, AuthorizationAction>>;
 
@@ -1230,6 +1234,13 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.addEntries",
     rest: "POST /api-gateway/v1/legacy/entries",
     mcpExempt: M.compatOnly,
+  },
+  {
+    verb: "Mutation.appendLedgerText",
+    class: "write" as const,
+    gql: "Mutation.appendLedgerText",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/directives/text",
+    mcp: "appendLedgerText",
   },
   {
     verb: "Mutation.renameLedgerFile",

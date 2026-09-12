@@ -43,6 +43,54 @@ const ARCHIVE_VERBS = new Set([
 const ARCHIVE_DOWNLOAD_BUCKET = "REST archive-download";
 
 /**
+ * The MCP endpoint's transport op id (w2/m28).
+ *
+ * Lives here rather than being spelled at each use so the budget below, the
+ * handshake exemption, and the middleware that consults them cannot disagree
+ * about which mount they mean.
+ */
+export const MCP_TRANSPORT_OP_ID = "REST POST /api-gateway/mcp";
+
+/**
+ * JSON-RPC methods that are handshake traffic, not work.
+ *
+ * A client must `initialize`, acknowledge, and list what is available before
+ * it can call anything — that is protocol overhead the caller did not choose,
+ * and charging a session's budget for it means a client that merely connects
+ * has already spent part of its allowance. Everything these methods can lead
+ * to is metered where it happens: `tools/call` and `resources/read` each
+ * charge their own op. `resources/list` is deliberately absent — it enumerates
+ * ledgers and source files, which is real work, and its list callbacks charge
+ * the matching resource op.
+ */
+const MCP_HANDSHAKE_METHODS: ReadonlySet<string> = new Set([
+  "initialize",
+  "notifications/initialized",
+  "tools/list",
+  "resources/templates/list",
+  "ping",
+]);
+
+/**
+ * Whether this MCP request is handshake traffic only.
+ *
+ * A JSON-RPC batch is exempt only when *every* member is a handshake method,
+ * so a real call cannot ride along inside one free of charge.
+ */
+export function isMcpHandshakeRequest(body: unknown): boolean {
+  const messages = Array.isArray(body) ? body : [body];
+  if (messages.length === 0) return false;
+  return messages.every(
+    (message) =>
+      typeof message === "object" &&
+      message !== null &&
+      MCP_HANDSHAKE_METHODS.has(
+        (message as { method?: unknown }).method as string,
+      ),
+  );
+}
+
+/**
  * Budgets by op class. Writes are deliberately much smaller than reads: a read
  * that costs us a Fava query is bounded work, while a write commits to a git
  * repository, and the free-tier directive limit is not a rate limit.
@@ -70,6 +118,13 @@ export const CLASS_BUDGETS: Record<OpClass, Budget> = {
  * property of whichever resolver remembered to construct a limiter.
  */
 export const OP_BUDGETS: Record<string, Budget> = {
+  // The MCP endpoint is a *transport*, not an operation: one agent session is
+  // dozens of JSON-RPC POSTs to this one path, and almost all of them are
+  // reads. Unclassified it fell to the write-class default, so a session of
+  // ~57 mostly-read calls hit 429 and the SDK client threw out of the session
+  // (w2/m28). The work each call actually performs is metered a level in, by
+  // the per-tool and per-resource budgets `gateMcpCall` charges.
+  [MCP_TRANSPORT_OP_ID]: { windowMs: MINUTE, max: 300 },
   "GQL Mutation.generateTempAssetUploadUrl": { windowMs: MINUTE, max: 10 },
   "GQL Query.getUserByExactMatch": { windowMs: MINUTE, max: 20 },
   // Minting a durable credential is rare by nature, and a flood of attempts is

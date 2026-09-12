@@ -397,11 +397,16 @@ must select a ledger per call; account tools need no ledger.
 }
 ```
 
+Every result carries a readable text block and a typed `structuredContent`;
+every failure carries `{code, message, hint}` with `isError` set, so an agent
+branches on a code rather than on prose.
+
 The [Beancount.io MCP guide](./docs/mcp.md) explains setup, OAuth and API-key
-permissions, how requests reach the ledger, all 24 tools and 66 resource
-templates, file-edit previews, bank imports, protocol examples, and deployment
-diagnostics. It also documents the limits of the conformance check and current
-client-facing differences from REST.
+permissions, how requests reach the ledger, all 26 tools and 64 resource
+templates, the result envelope and its failure codes, writing directives as
+Beancount text, file-edit previews, bank imports, protocol examples, and
+deployment diagnostics. It also documents the limits of the conformance check
+and current client-facing differences from REST.
 
 For the design decisions, see
 [ADR 0007](../../docs/adrs/ADR007-backend-v2-mcp-surface.md) (transport contract)

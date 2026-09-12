@@ -88,6 +88,11 @@ const SAMPLE_QUERY: Record<string, string> = {
   narration: "groceries",
   entryHash: "abc123",
   accountName: "Expenses:Groceries",
+  // This suite's property is that both surfaces resolve through the same
+  // service call, which it checks by comparing the raw result — so it asks
+  // for the unprojected shape (w2/m28:t002). The summary projection has its
+  // own coverage in statement-parity.
+  shape: "fava",
 };
 
 const queryFor = (read: (typeof ANALYSIS_READS)[number]) =>

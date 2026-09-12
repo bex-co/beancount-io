@@ -26,7 +26,8 @@ import {
 import { COMMIT_READS } from "@/features/gitea/commits/api/commit-reads";
 import { JOURNAL_READS } from "@/features/ledger/api/rest/v1/journal-reads";
 import {
-  statementQuerySchema,
+  fetchStatement,
+  statementReadQuery,
   accountsQuerySchema,
 } from "@/features/ledger/api/rest/v1/reports-handler";
 import { CATALOG_READS } from "@/features/ledger/api/rest/v1/catalog-reads";
@@ -173,7 +174,7 @@ const vocabularyResources: readonly McpResourceDescriptor[] =
         ledgerId,
         identity: toolCtx.identity,
       });
-      return JSON.stringify(result, null, 2);
+      return JSON.stringify(result);
     },
   }));
 
@@ -224,7 +225,7 @@ const analysisResources: readonly McpResourceDescriptor[] = ANALYSIS_READS.map(
         identity: toolCtx.identity,
         query,
       });
-      return JSON.stringify(result, null, 2);
+      return JSON.stringify(result);
     },
   }),
 );
@@ -250,8 +251,6 @@ const bankResources: readonly McpResourceDescriptor[] = [
           ctx.identity,
           resolveLedgerId(ctx, vars),
         ),
-        null,
-        2,
       ),
   },
   {
@@ -267,8 +266,6 @@ const bankResources: readonly McpResourceDescriptor[] = [
           ctx.identity,
           String(vars.itemId ?? ""),
         ),
-        null,
-        2,
       );
     },
   },
@@ -285,8 +282,6 @@ const bankResources: readonly McpResourceDescriptor[] = [
           String(vars.itemId ?? ""),
           resolveLedgerId(ctx, vars),
         ),
-        null,
-        2,
       ),
   },
   {
@@ -302,8 +297,6 @@ const bankResources: readonly McpResourceDescriptor[] = [
           ctx.identity,
           resolveLedgerId(ctx, vars),
         ),
-        null,
-        2,
       ),
   },
   {
@@ -321,8 +314,6 @@ const bankResources: readonly McpResourceDescriptor[] = [
           bankAccountQuery.parse(vars).accountId,
           resolveLedgerId(ctx, vars),
         ),
-        null,
-        2,
       ),
   },
   {
@@ -340,8 +331,6 @@ const bankResources: readonly McpResourceDescriptor[] = [
           resolveLedgerId(ctx, vars),
           bankAccountQuery.parse(vars).accountId,
         ),
-        null,
-        2,
       ),
   },
   {
@@ -358,8 +347,6 @@ const bankResources: readonly McpResourceDescriptor[] = [
           resolveLedgerId(ctx, vars),
           String(vars.itemId ?? ""),
         ),
-        null,
-        2,
       ),
   },
 ];
@@ -695,18 +682,18 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       mimeType: "application/json",
       uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/statements/${statement}`,
       listSegment: `statements/${statement}`,
-      queryNames: Object.keys(statementQuerySchema.shape),
+      queryNames: Object.keys(statementReadQuery.shape),
       read: async (context, variables) => {
         const { owner: _owner, name: _name, ...query } = variables;
-        const params = {
-          ledgerId: resolveLedgerId(context, variables),
-          identity: context.identity,
-          ...statementQuerySchema.parse(query),
-        };
+        // The same seam the REST route calls, so `shape` cannot mean two
+        // different things on the two surfaces (w2/m28:t002).
         return JSON.stringify(
-          statement === "balance-sheet"
-            ? await context.services.ledgerFinance.getBalanceSheet(params)
-            : await context.services.ledgerFinance.getIncomeStatement(params),
+          await fetchStatement(context.services, {
+            ledgerId: resolveLedgerId(context, variables),
+            identity: context.identity,
+            statement,
+            query: statementReadQuery.parse(query),
+          }),
         );
       },
     }),

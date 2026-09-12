@@ -82,7 +82,16 @@ describe("MCP tools publish their output contract", () => {
       properties: {
         ok: { type: "boolean" },
         result: { type: "string" },
-        error: { type: "string" },
+        // One envelope across every tool and resource (w2/m28:t003): a
+        // machine code and the next call to make, not just prose.
+        error: {
+          type: "object",
+          properties: {
+            code: { type: "string" },
+            message: { type: "string" },
+            hint: { type: "string" },
+          },
+        },
       },
       required: ["ok"],
     });
@@ -126,7 +135,11 @@ describe("MCP tools publish their output contract", () => {
     expect(result.isError).toBe(true);
     expect(result.structuredContent).toEqual({
       ok: false,
-      error: "You no longer have access to this ledger",
+      error: {
+        code: "FORBIDDEN",
+        message: "You no longer have access to this ledger",
+        hint: expect.stringContaining("metadata"),
+      },
     });
     await close();
   });
@@ -144,7 +157,14 @@ describe("mcpOutputSchema", () => {
     const schema = mcpOutputSchema(toolOutputSchema(z.string()));
 
     expect(schema.safeParse({ ok: true, result: "hi" }).success).toBe(true);
-    expect(schema.safeParse({ ok: false, error: "nope" }).success).toBe(true);
+    expect(
+      schema.safeParse({
+        ok: false,
+        error: { code: "NOT_FOUND", message: "nope", hint: "look again" },
+      }).success,
+    ).toBe(true);
+    // The bare-string dialect the boundary normalizes away (w2/m28:t003).
+    expect(schema.safeParse({ ok: false, error: "nope" }).success).toBe(false);
     expect(schema.safeParse({ result: "no ok field" }).success).toBe(false);
   });
 

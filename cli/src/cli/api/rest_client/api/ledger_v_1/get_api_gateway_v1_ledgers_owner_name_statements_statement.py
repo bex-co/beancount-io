@@ -6,6 +6,9 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.get_api_gateway_v1_ledgers_owner_name_statements_statement_shape import (
+    GetApiGatewayV1LedgersOwnerNameStatementsStatementShape,
+)
 from ...models.get_api_gateway_v1_ledgers_owner_name_statements_statement_statement import (
     GetApiGatewayV1LedgersOwnerNameStatementsStatementStatement,
 )
@@ -23,6 +26,8 @@ def _get_kwargs(
     time: str | Unset = UNSET,
     conversion: str | Unset = "USD",
     interval: str | Unset = "monthly",
+    shape: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape
+    | Unset = GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -36,6 +41,12 @@ def _get_kwargs(
     params["conversion"] = conversion
 
     params["interval"] = interval
+
+    json_shape: str | Unset = UNSET
+    if not isinstance(shape, Unset):
+        json_shape = shape.value
+
+    params["shape"] = json_shape
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -128,11 +139,14 @@ def sync_detailed(
     time: str | Unset = UNSET,
     conversion: str | Unset = "USD",
     interval: str | Unset = "monthly",
+    shape: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape
+    | Unset = GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY,
 ) -> Response[Any | V1Error]:
     """Get a financial statement
 
      Renders the balance sheet or the income statement for the period, with optional currency conversion
-    and interval bucketing.
+    and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts;
+    `shape=fava` returns the full chart payload.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -146,6 +160,10 @@ def sync_detailed(
         conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
+        shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
+            totals and non-zero accounts in one currency; fava returns the full chart payload.
+            Default: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example:
+            summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -164,6 +182,7 @@ def sync_detailed(
         time=time,
         conversion=conversion,
         interval=interval,
+        shape=shape,
     )
 
     response = client.get_httpx_client().request(
@@ -184,11 +203,14 @@ def sync(
     time: str | Unset = UNSET,
     conversion: str | Unset = "USD",
     interval: str | Unset = "monthly",
+    shape: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape
+    | Unset = GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY,
 ) -> Any | V1Error | None:
     """Get a financial statement
 
      Renders the balance sheet or the income statement for the period, with optional currency conversion
-    and interval bucketing.
+    and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts;
+    `shape=fava` returns the full chart payload.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -202,6 +224,10 @@ def sync(
         conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
+        shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
+            totals and non-zero accounts in one currency; fava returns the full chart payload.
+            Default: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example:
+            summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -221,6 +247,7 @@ def sync(
         time=time,
         conversion=conversion,
         interval=interval,
+        shape=shape,
     ).parsed
 
 
@@ -235,11 +262,14 @@ async def asyncio_detailed(
     time: str | Unset = UNSET,
     conversion: str | Unset = "USD",
     interval: str | Unset = "monthly",
+    shape: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape
+    | Unset = GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY,
 ) -> Response[Any | V1Error]:
     """Get a financial statement
 
      Renders the balance sheet or the income statement for the period, with optional currency conversion
-    and interval bucketing.
+    and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts;
+    `shape=fava` returns the full chart payload.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -253,6 +283,10 @@ async def asyncio_detailed(
         conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
+        shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
+            totals and non-zero accounts in one currency; fava returns the full chart payload.
+            Default: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example:
+            summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -271,6 +305,7 @@ async def asyncio_detailed(
         time=time,
         conversion=conversion,
         interval=interval,
+        shape=shape,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -289,11 +324,14 @@ async def asyncio(
     time: str | Unset = UNSET,
     conversion: str | Unset = "USD",
     interval: str | Unset = "monthly",
+    shape: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape
+    | Unset = GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY,
 ) -> Any | V1Error | None:
     """Get a financial statement
 
      Renders the balance sheet or the income statement for the period, with optional currency conversion
-    and interval bucketing.
+    and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts;
+    `shape=fava` returns the full chart payload.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -307,6 +345,10 @@ async def asyncio(
         conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
+        shape (GetApiGatewayV1LedgersOwnerNameStatementsStatementShape | Unset): summary returns
+            totals and non-zero accounts in one currency; fava returns the full chart payload.
+            Default: GetApiGatewayV1LedgersOwnerNameStatementsStatementShape.SUMMARY. Example:
+            summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -327,5 +369,6 @@ async def asyncio(
             time=time,
             conversion=conversion,
             interval=interval,
+            shape=shape,
         )
     ).parsed

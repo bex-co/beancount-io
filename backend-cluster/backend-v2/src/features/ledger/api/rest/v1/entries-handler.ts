@@ -140,6 +140,60 @@ export const entriesBodySchema = z
   });
 
 /**
+ * The Beancount-text dialect of the same capability (w2/m28:t005).
+ *
+ * `entries` takes the structured directive schema; this takes the text an
+ * agent would write into a file. One capability, two dialects, one
+ * authorization action — so the dialect is never the ceiling.
+ */
+const directiveTextBodySchema = z
+  .strictObject({
+    text: z.string().openapi({
+      description:
+        "Beancount directive text, with a transaction's postings indented beneath it",
+      example:
+        '2026-01-02 * "Cafe" "Coffee"\n  Expenses:Food   4.50 USD\n  Assets:Cash    -4.50 USD',
+    }),
+    path: nullToUndefined(z.string()).openapi({
+      description:
+        "Target file. Omitted, each directive routes to the file the ledger's own options assign it.",
+    }),
+    dryRun: nullToUndefined(z.boolean())
+      .optional()
+      .openapi({
+        description:
+          "Run every check and return the diff and projected errors without committing",
+      }),
+    allowInvalid: nullToUndefined(z.boolean())
+      .optional()
+      .openapi({
+        description:
+          "Commit even when the text introduces new bean-check errors, instead of refusing with UNBALANCED or VALIDATION_FAILED",
+      }),
+  })
+  .openapi("DirectiveTextRequest", {
+    description: "Beancount directive text to append to the ledger",
+  });
+
+const directiveTextResultSchema = z.strictObject({
+  success: z.boolean(),
+  message: z.string(),
+  dryRun: z.boolean(),
+  count: z.number().int(),
+  wrote: z.array(z.strictObject({ path: z.string(), line: z.number().int() })),
+  diff: z.array(z.strictObject({ path: z.string(), diff: z.string() })),
+  errorsBefore: z.number().int(),
+  errorsAfter: z.number().int(),
+  newErrors: z.array(
+    z.strictObject({
+      message: z.string(),
+      source: z.string().optional(),
+    }),
+  ),
+  appendedUnsorted: z.array(z.string()),
+});
+
+/**
  * `POST /api-gateway/v1/ledgers/{owner}/{name}/entries` — append directives without
  * knowing which file they belong in.
  *
@@ -186,5 +240,30 @@ export const ENTRY_ROUTES = [
       // write outcome; the v1 contract stays `{success, message}`.
       return { success: result.success, message: result.message };
     },
+  }),
+
+  v1Route({
+    method: "post",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/directives/text",
+    summary: "Append Beancount directive text",
+    description:
+      "Appends directive text as written, routed to the right file by type and date unless `path` names one, and inserted in date order rather than at the end. Refuses text that is not Beancount directives, refuses more than 50 directives per call, and refuses text that would introduce new bean-check errors — UNBALANCED for a transaction that does not balance — unless allowInvalid records it deliberately. `dryRun` returns the diff and the projected errors without committing.",
+    params: ledgerPathSchema,
+    body: directiveTextBodySchema,
+    responses: {
+      200: json("What was appended, or would be", directiveTextResultSchema),
+    },
+    handler: async ({ layers }, { identity, params, body }) =>
+      layers.services.ledgerEntry.appendDirectiveText(
+        identity,
+        params.owner,
+        params.name,
+        {
+          text: body.text,
+          path: body.path,
+          dryRun: body.dryRun ?? false,
+          allowInvalid: body.allowInvalid ?? false,
+        },
+      ),
   }),
 ] as const;

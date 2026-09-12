@@ -43,10 +43,33 @@ export async function executeBqlQuery(
   });
 }
 
+/**
+ * Most rows one structured BQL call will hand back (w2/m28:t001).
+ *
+ * A `SELECT` with no `LIMIT` over a real ledger is tens of thousands of
+ * postings, and the whole table arrives in the model's context whether it
+ * needed the tail or not. The cap is a documented ceiling rather than a
+ * silent slice: `truncated` says it happened and `rowCount` says how many
+ * rows came back, so an agent can narrow the query instead of believing it
+ * has seen everything.
+ */
+export const MAX_STRUCTURED_BQL_ROWS = 1000;
+
 /** Preserve the typed shell representation used by REST and GraphQL. */
 export const structuredBqlOutputSchema = toolOutputSchema(
   z.object({
     resultType: z.enum(["table", "text"]),
+    rowCount: z
+      .number()
+      .int()
+      .describe(
+        "Rows returned. BQL rows are postings, so this counts postings, not transactions.",
+      ),
+    truncated: z
+      .boolean()
+      .describe(
+        `True when the result hit the ${MAX_STRUCTURED_BQL_ROWS}-row ceiling and rows were dropped. Add a LIMIT or a narrower WHERE to see a complete result.`,
+      ),
     table: z
       .object({
         types: z.array(z.object({ name: z.string(), dtype: z.string() })),
@@ -77,12 +100,21 @@ export async function executeStructuredBqlQuery(
   return runToolSafely({
     logger: toolLogger,
     message: "Structured BQL query failed",
-    execute: () =>
-      ctx.services.ledgerShell.queryShell({
+    execute: async () => {
+      const result = await ctx.services.ledgerShell.queryShell({
         identity: ctx.identity,
         ledgerId: ctx.ledgerId,
         query: input.query,
-      }),
+      });
+      const rows = result.table?.rows ?? [];
+      const kept = rows.slice(0, MAX_STRUCTURED_BQL_ROWS);
+      return {
+        ...result,
+        rowCount: kept.length,
+        truncated: rows.length > kept.length,
+        ...(result.table && { table: { ...result.table, rows: kept } }),
+      };
+    },
   });
 }
 

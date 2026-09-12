@@ -42,8 +42,38 @@ export interface ToolContext {
 const toolErrorSchema = z.object({
   ok: z.literal(false),
   error: z.string(),
+  /**
+   * The thrown error's {@link ErrorCategory}, when it had one (w2/m28). The
+   * MCP boundary turns this into the machine `code` an agent branches on;
+   * `runToolSafely` is the only place the error's class is still available.
+   */
+  errorCode: z.string().optional(),
+  /** The actionable next step the error carried, when it carried one. */
+  errorHint: z.string().optional(),
+  /** Seconds to wait, for a rate-limit refusal. */
+  retryAfter: z.number().optional(),
 });
 export type ToolError = z.infer<typeof toolErrorSchema>;
+
+/**
+ * The failure half of every MCP tool result (w2/m28:t003).
+ *
+ * One shape across tools and resources: a machine code, prose, and the next
+ * call to make. Published in `tools/list` so a client can rely on `code` and
+ * `hint` existing rather than parsing the message.
+ *
+ * Deliberately undocumented field by field. This object is inlined into every
+ * tool's published output schema, so a sentence here is paid ~25 times per
+ * `tools/list`; the field names carry their own meaning, and what the codes
+ * are and how to react to them is stated once in the server instructions and
+ * the MCP guide, where it costs one copy.
+ */
+export const mcpErrorSchema = z.object({
+  code: z.string(),
+  message: z.string(),
+  hint: z.string(),
+  retryAfter: z.number().optional(),
+});
 
 /**
  * One bean-check error, reduced to what an agent can act on: the message plus
@@ -56,7 +86,8 @@ const beanCheckErrorSchema = z.object({
     .optional()
     .describe("`file:line` of the offending directive, when known"),
 });
-export type BeanCheckError = z.infer<typeof beanCheckErrorSchema>;
+// The named type lives in `@/features/ledger/utils/bean-check-errors`; this
+// schema exists only to shape `withWriteOutcome` below.
 
 /**
  * bean-check's verdict around a write: how many errors existed before and
@@ -67,7 +98,7 @@ export const writeValidationSchema = z.object({
   errorsAfter: z.number().int(),
   newErrors: z.array(beanCheckErrorSchema),
 });
-export type WriteValidation = z.infer<typeof writeValidationSchema>;
+
 
 export const wroteFileSchema = z.object({
   path: z.string(),
@@ -142,7 +173,7 @@ export function mcpOutputSchema(
 ): z.ZodObject<{
   ok: z.ZodBoolean;
   result: z.ZodOptional<z.ZodTypeAny>;
-  error: z.ZodOptional<z.ZodString>;
+  error: z.ZodOptional<typeof mcpErrorSchema>;
 }> {
   type SuccessBranch = Extract<
     (typeof union.options)[number],
@@ -160,20 +191,14 @@ export function mcpOutputSchema(
         "toolOutputSchema's shape changed and the MCP output contract cannot be derived",
     );
   }
+  // The envelope carries no per-field descriptions, and deliberately so: it is
+  // the *same* three fields on all ~25 tools, so a sentence here is published
+  // 25 times in one `tools/list`. `ok`/`result`/`error` and the failure codes
+  // are stated once in the server instructions and once in `docs/mcp.md`
+  // (w2/m28) — one copy per session instead of 25.
   return z.object({
-    ok: z
-      .boolean()
-      .describe(
-        "True when the tool succeeded; false when it refused or failed.",
-      ),
-    result: success.shape.result
-      .optional()
-      .describe("The tool's payload. Present when `ok` is true."),
-    error: z
-      .string()
-      .optional()
-      .describe(
-        "Why the tool refused or failed. Present when `ok` is false, alongside `isError` on the result.",
-      ),
+    ok: z.boolean(),
+    result: success.shape.result.optional(),
+    error: mcpErrorSchema.optional(),
   });
 }

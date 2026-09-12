@@ -6,6 +6,7 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.get_api_gateway_v1_ledgers_owner_name_overview_shape import GetApiGatewayV1LedgersOwnerNameOverviewShape
 from ...models.v1_error import V1Error
 from ...types import UNSET, Response, Unset
 
@@ -19,6 +20,7 @@ def _get_kwargs(
     time: str | Unset = UNSET,
     conversion: str | Unset = "USD",
     interval: str | Unset = "monthly",
+    shape: GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset = GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -32,6 +34,12 @@ def _get_kwargs(
     params["conversion"] = conversion
 
     params["interval"] = interval
+
+    json_shape: str | Unset = UNSET
+    if not isinstance(shape, Unset):
+        json_shape = shape.value
+
+    params["shape"] = json_shape
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -122,10 +130,13 @@ def sync_detailed(
     time: str | Unset = UNSET,
     conversion: str | Unset = "USD",
     interval: str | Unset = "monthly",
+    shape: GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset = GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY,
 ) -> Response[Any | V1Error]:
     """Get the ledger overview
 
-     Net worth, account hierarchies, and income/expense series with the full reporting filters.
+     Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one
+    currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard
+    charts.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -137,6 +148,9 @@ def sync_detailed(
         conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
+        shape (GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset): summary returns totals and
+            non-zero accounts in one currency; fava returns the full chart payload. Default:
+            GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -154,6 +168,7 @@ def sync_detailed(
         time=time,
         conversion=conversion,
         interval=interval,
+        shape=shape,
     )
 
     response = client.get_httpx_client().request(
@@ -173,10 +188,13 @@ def sync(
     time: str | Unset = UNSET,
     conversion: str | Unset = "USD",
     interval: str | Unset = "monthly",
+    shape: GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset = GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY,
 ) -> Any | V1Error | None:
     """Get the ledger overview
 
-     Net worth, account hierarchies, and income/expense series with the full reporting filters.
+     Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one
+    currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard
+    charts.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -188,6 +206,9 @@ def sync(
         conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
+        shape (GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset): summary returns totals and
+            non-zero accounts in one currency; fava returns the full chart payload. Default:
+            GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -206,6 +227,7 @@ def sync(
         time=time,
         conversion=conversion,
         interval=interval,
+        shape=shape,
     ).parsed
 
 
@@ -219,10 +241,13 @@ async def asyncio_detailed(
     time: str | Unset = UNSET,
     conversion: str | Unset = "USD",
     interval: str | Unset = "monthly",
+    shape: GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset = GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY,
 ) -> Response[Any | V1Error]:
     """Get the ledger overview
 
-     Net worth, account hierarchies, and income/expense series with the full reporting filters.
+     Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one
+    currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard
+    charts.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -234,6 +259,9 @@ async def asyncio_detailed(
         conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
+        shape (GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset): summary returns totals and
+            non-zero accounts in one currency; fava returns the full chart payload. Default:
+            GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -251,6 +279,7 @@ async def asyncio_detailed(
         time=time,
         conversion=conversion,
         interval=interval,
+        shape=shape,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -268,10 +297,13 @@ async def asyncio(
     time: str | Unset = UNSET,
     conversion: str | Unset = "USD",
     interval: str | Unset = "monthly",
+    shape: GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset = GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY,
 ) -> Any | V1Error | None:
     """Get the ledger overview
 
-     Net worth, account hierarchies, and income/expense series with the full reporting filters.
+     Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one
+    currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard
+    charts.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -283,6 +315,9 @@ async def asyncio(
         conversion (str | Unset): Convert amounts to this currency Default: 'USD'. Example: USD.
         interval (str | Unset): Bucket the period: day, week, month, quarter, year Default:
             'monthly'. Example: month.
+        shape (GetApiGatewayV1LedgersOwnerNameOverviewShape | Unset): summary returns totals and
+            non-zero accounts in one currency; fava returns the full chart payload. Default:
+            GetApiGatewayV1LedgersOwnerNameOverviewShape.SUMMARY. Example: summary.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -302,5 +337,6 @@ async def asyncio(
             time=time,
             conversion=conversion,
             interval=interval,
+            shape=shape,
         )
     ).parsed

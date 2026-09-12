@@ -138,7 +138,17 @@ describe("structured BQL across actual adapters", () => {
           arguments: { query },
         });
         expect(mcp.isError).not.toBe(true);
-        expect(mcp.structuredContent).toEqual({ ok: true, result: expected });
+        // MCP alone adds the row count and the truncation flag (w2/m28:t001):
+        // an agent needs to know whether it has seen the whole result, and
+        // REST/GraphQL clients page for themselves.
+        expect(mcp.structuredContent).toEqual({
+          ok: true,
+          result: {
+            ...expected,
+            rowCount: expected.table?.rows.length ?? 0,
+            truncated: false,
+          },
+        });
         expect(f.queryShell).toHaveBeenCalledTimes(3);
         for (const call of f.queryShell.mock.calls)
           expect(call).toEqual(["alice", "main", { query }]);

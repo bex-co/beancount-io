@@ -35,6 +35,7 @@ from .delete_api_gateway_v1_ledgers_owner_name_star_response_200 import (
     DeleteApiGatewayV1LedgersOwnerNameStarResponse200,
 )
 from .delete_ledger_response_200 import DeleteLedgerResponse200
+from .directive_text_request import DirectiveTextRequest
 from .entries_request import EntriesRequest
 from .entries_request_entries_item_type_0 import EntriesRequestEntriesItemType0
 from .entries_request_entries_item_type_0_entry import EntriesRequestEntriesItemType0Entry
@@ -101,6 +102,13 @@ from .get_api_gateway_v1_ledgers_owner_name_collaborators_response_200_item impo
 )
 from .get_api_gateway_v1_ledgers_owner_name_collaborators_response_200_item_permission import (
     GetApiGatewayV1LedgersOwnerNameCollaboratorsResponse200ItemPermission,
+)
+from .get_api_gateway_v1_ledgers_owner_name_interval_totals_shape import (
+    GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape,
+)
+from .get_api_gateway_v1_ledgers_owner_name_overview_shape import GetApiGatewayV1LedgersOwnerNameOverviewShape
+from .get_api_gateway_v1_ledgers_owner_name_statements_statement_shape import (
+    GetApiGatewayV1LedgersOwnerNameStatementsStatementShape,
 )
 from .get_api_gateway_v1_ledgers_owner_name_statements_statement_statement import (
     GetApiGatewayV1LedgersOwnerNameStatementsStatementStatement,
@@ -172,6 +180,18 @@ from .post_api_gateway_v1_ledgers_owner_name_banks_item_id_refresh_dry_run impor
 )
 from .post_api_gateway_v1_ledgers_owner_name_banks_item_id_sync_dry_run import (
     PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun,
+)
+from .post_api_gateway_v1_ledgers_owner_name_directives_text_response_200 import (
+    PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200,
+)
+from .post_api_gateway_v1_ledgers_owner_name_directives_text_response_200_diff_item import (
+    PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200DiffItem,
+)
+from .post_api_gateway_v1_ledgers_owner_name_directives_text_response_200_new_errors_item import (
+    PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200NewErrorsItem,
+)
+from .post_api_gateway_v1_ledgers_owner_name_directives_text_response_200_wrote_item import (
+    PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200WroteItem,
 )
 from .post_api_gateway_v1_ledgers_owner_name_entries_response_200 import (
     PostApiGatewayV1LedgersOwnerNameEntriesResponse200,
@@ -317,6 +337,7 @@ __all__ = (
     "DeleteApiGatewayV1LedgersOwnerNameStarBody",
     "DeleteApiGatewayV1LedgersOwnerNameStarResponse200",
     "DeleteLedgerResponse200",
+    "DirectiveTextRequest",
     "EntriesRequest",
     "EntriesRequestEntriesItemType0",
     "EntriesRequestEntriesItemType0Entry",
@@ -368,6 +389,9 @@ __all__ = (
     "GetApiGatewayV1LedgersOwnerNameCollaboratorsPermissionResponse200User",
     "GetApiGatewayV1LedgersOwnerNameCollaboratorsResponse200Item",
     "GetApiGatewayV1LedgersOwnerNameCollaboratorsResponse200ItemPermission",
+    "GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape",
+    "GetApiGatewayV1LedgersOwnerNameOverviewShape",
+    "GetApiGatewayV1LedgersOwnerNameStatementsStatementShape",
     "GetApiGatewayV1LedgersOwnerNameStatementsStatementStatement",
     "GetApiGatewayV1LegacyJournalEntriesDetailed",
     "GetApiGatewayV1PublicKeysResponse200Item",
@@ -407,6 +431,10 @@ __all__ = (
     "PostApiGatewayV1LedgersOwnerNameBanksItemIdRefreshDryRun",
     "PostApiGatewayV1LedgersOwnerNameBanksItemIdSyncDryRun",
     "PostApiGatewayV1LedgersOwnerNameBankTransactionsSubmitDryRun",
+    "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200",
+    "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200DiffItem",
+    "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200NewErrorsItem",
+    "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200WroteItem",
     "PostApiGatewayV1LedgersOwnerNameEntriesResponse200",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteBody",
     "PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyBody",

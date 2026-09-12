@@ -314,6 +314,49 @@ function requirePayload<T>(input: AddEntryInput, payload: T | undefined): T {
   return payload;
 }
 
+/** One directive's landing place, or the file a preview would touch. */
+@ObjectType()
+class AppendedDirective {
+  @Field(() => String) path!: string;
+  @Field(() => Number, { description: "1-based line the directive landed on" })
+  line!: number;
+}
+
+@ObjectType()
+class DirectiveTextDiff {
+  @Field(() => String) path!: string;
+  @Field(() => String) diff!: string;
+}
+
+@ObjectType()
+class DirectiveTextError {
+  @Field(() => String) message!: string;
+  @Field(() => String, { nullable: true }) source?: string;
+}
+
+/** What appending Beancount text did, or would do (w2/m28:t005). */
+@ObjectType()
+class AppendDirectiveTextResponse {
+  @Field(() => Boolean) success!: boolean;
+  @Field(() => String) message!: string;
+  @Field(() => Boolean) dryRun!: boolean;
+  @Field(() => Number, { description: "Directives parsed out of the text" })
+  count!: number;
+  @Field(() => [AppendedDirective]) wrote!: AppendedDirective[];
+  @Field(() => [DirectiveTextDiff], {
+    description: "Unified diff per touched file; populated on dry runs only",
+  })
+  diff!: DirectiveTextDiff[];
+  @Field(() => Number) errorsBefore!: number;
+  @Field(() => Number) errorsAfter!: number;
+  @Field(() => [DirectiveTextError]) newErrors!: DirectiveTextError[];
+  @Field(() => [String], {
+    description:
+      "Files whose directives were not in date order, so these were appended at the end",
+  })
+  appendedUnsorted!: string[];
+}
+
 @Resolver()
 export class LedgerEntryMutationResolver {
   constructor(private readonly ledgerEntry: ILedgerEntryService) {}
@@ -342,5 +385,58 @@ export class LedgerEntryMutationResolver {
       ctx.platform,
       allowInvalid ?? false,
     );
+  }
+
+  @Authenticated()
+  @Mutation(() => AppendDirectiveTextResponse, {
+    description:
+      "Append Beancount directive text to a ledger, routed by type and date and inserted in date order",
+  })
+  async appendLedgerText(
+    @Arg("ledgerId", () => String) ledgerId: string,
+    @Arg("text", () => String, {
+      description:
+        "Beancount directive text, with a transaction's postings indented beneath it",
+    })
+    text: string,
+    @Ctx() ctx: IContext,
+    @Arg("path", () => String, {
+      nullable: true,
+      description:
+        "Target file; omitted, each directive routes to the file the ledger's own options assign it",
+    })
+    path?: string,
+    @Arg("dryRun", () => Boolean, {
+      nullable: true,
+      description:
+        "Run every check and return the diff and projected errors without committing",
+    })
+    dryRun?: boolean,
+    @Arg("allowInvalid", () => Boolean, {
+      nullable: true,
+      description:
+        "Commit even when the text introduces new bean-check errors",
+    })
+    allowInvalid?: boolean,
+  ): Promise<AppendDirectiveTextResponse> {
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    const result = await this.ledgerEntry.appendDirectiveText(
+      ctx.getCurrentIdentity(),
+      ledgerOwner,
+      ledgerName,
+      {
+        text,
+        path: path ?? undefined,
+        dryRun: dryRun ?? false,
+        allowInvalid: allowInvalid ?? false,
+      },
+    );
+    return {
+      ...result,
+      wrote: [...result.wrote],
+      diff: [...result.diff],
+      newErrors: [...result.newErrors],
+      appendedUnsorted: [...result.appendedUnsorted],
+    };
   }
 }

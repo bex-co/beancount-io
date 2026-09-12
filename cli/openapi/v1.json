@@ -752,6 +752,36 @@
         "additionalProperties": false,
         "description": "One or more directives to add to the ledger"
       },
+      "DirectiveTextRequest": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Beancount directive text, with a transaction's postings indented beneath it",
+            "example": "2026-01-02 * \"Cafe\" \"Coffee\"\n  Expenses:Food   4.50 USD\n  Assets:Cash    -4.50 USD"
+          },
+          "path": {
+            "type": "string",
+            "nullable": true,
+            "description": "Target file. Omitted, each directive routes to the file the ledger's own options assign it."
+          },
+          "dryRun": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Run every check and return the diff and projected errors without committing"
+          },
+          "allowInvalid": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Commit even when the text introduces new bean-check errors, instead of refusing with UNBALANCED or VALIDATION_FAILED"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "additionalProperties": false,
+        "description": "Beancount directive text to append to the ledger"
+      },
       "BankTransactionSubmission": {
         "type": "object",
         "properties": {
@@ -8650,7 +8680,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}": {
       "get": {
         "summary": "Get a financial statement",
-        "description": "Renders the balance sheet or the income statement for the period, with optional currency conversion and interval bucketing.",
+        "description": "Renders the balance sheet or the income statement for the period, with optional currency conversion and interval bucketing. `shape=summary` (the default) returns totals and non-zero accounts; `shape=fava` returns the full chart payload.",
         "tags": [
           "Ledger v1"
         ],
@@ -8751,6 +8781,22 @@
             "required": false,
             "description": "Bucket the period: day, week, month, quarter, year",
             "name": "interval",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "summary",
+                "fava"
+              ],
+              "default": "summary",
+              "description": "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
+              "example": "summary"
+            },
+            "required": false,
+            "description": "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
+            "name": "shape",
             "in": "query"
           }
         ],
@@ -9764,6 +9810,255 @@
                   },
                   "required": [
                     "success"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The action needs a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the permission this business action requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with the resource's current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed; the request may be retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api-gateway/v1/ledgers/{owner}/{name}/directives/text": {
+      "post": {
+        "summary": "Append Beancount directive text",
+        "description": "Appends directive text as written, routed to the right file by type and date unless `path` names one, and inserted in date order rather than at the end. Refuses text that is not Beancount directives, refuses more than 50 directives per call, and refuses text that would introduce new bean-check errors — UNBALANCED for a transaction that does not balance — unless allowInvalid records it deliberately. `dryRun` returns the diff and the projected errors without committing.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Ledger owner's username",
+              "example": "alice"
+            },
+            "required": true,
+            "description": "Ledger owner's username",
+            "name": "owner",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Ledger (repository) name",
+              "example": "main-ledger"
+            },
+            "required": true,
+            "description": "Ledger (repository) name",
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectiveTextRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "What was appended, or would be",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "wrote": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "line": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "line"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "diff": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "diff": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "diff"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "errorsBefore": {
+                      "type": "integer"
+                    },
+                    "errorsAfter": {
+                      "type": "integer"
+                    },
+                    "newErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "appendedUnsorted": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "message",
+                    "dryRun",
+                    "count",
+                    "wrote",
+                    "diff",
+                    "errorsBefore",
+                    "errorsAfter",
+                    "newErrors",
+                    "appendedUnsorted"
                   ],
                   "additionalProperties": false
                 }
@@ -12113,7 +12408,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/overview": {
       "get": {
         "summary": "Get the ledger overview",
-        "description": "Net worth, account hierarchies, and income/expense series with the full reporting filters.",
+        "description": "Net worth now and over time. `shape=summary` (the default) returns the net-worth series in one currency; `shape=fava` returns the account hierarchies and income/expense series the dashboard charts.",
         "tags": [
           "Ledger v1"
         ],
@@ -12199,6 +12494,22 @@
             "required": false,
             "description": "Bucket the period: day, week, month, quarter, year",
             "name": "interval",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "summary",
+                "fava"
+              ],
+              "default": "summary",
+              "description": "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
+              "example": "summary"
+            },
+            "required": false,
+            "description": "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
+            "name": "shape",
             "in": "query"
           }
         ],
@@ -12687,7 +12998,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/interval-totals": {
       "get": {
         "summary": "Get totals per interval",
-        "description": "Balances grouped by period — the series behind a spending-over-time view, without the view.",
+        "description": "Balances grouped by period — the series behind a spending-over-time view, without the view. `shape=summary` (the default) states one currency and drops zero accounts; `shape=fava` returns the raw per-currency balances.",
         "tags": [
           "Ledger v1"
         ],
@@ -12787,6 +13098,22 @@
             "required": false,
             "description": "Restrict the totals to one account",
             "name": "accountName",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "summary",
+                "fava"
+              ],
+              "default": "summary",
+              "description": "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
+              "example": "summary"
+            },
+            "required": false,
+            "description": "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
+            "name": "shape",
             "in": "query"
           }
         ],
