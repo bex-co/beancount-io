@@ -39,6 +39,7 @@ import {
 import { toPlainSearchFilter } from "./utils/plain-search-filter";
 import {
   countActiveFilters,
+  selectFiltersForLedger,
   toFilterQuery,
 } from "./filters/select-filter-query";
 import { transactionFiltersVar } from "./filters/var";
@@ -107,7 +108,14 @@ const TransactionList = () => {
 
   // Status / date range / account, picked in the filter modal. Like the search
   // they narrow the query itself, so paging stays consistent with the filter.
-  const filters = useReactiveVar(transactionFiltersVar);
+  // Resolved against the selected ledger: an account filter picked in another
+  // ledger is dropped rather than queried here, where it would match nothing
+  // and read as an empty journal.
+  const scopedFilters = useReactiveVar(transactionFiltersVar);
+  const filters = useMemo(
+    () => selectFiltersForLedger(scopedFilters, ledgerId),
+    [scopedFilters, ledgerId],
+  );
   const activeFilterCount = countActiveFilters(filters, new Date());
   const filterQuery = useMemo(
     () => toFilterQuery(filters, new Date()),

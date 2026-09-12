@@ -6,7 +6,9 @@ import {
   mergeAccountJournalItems,
   selectAccountJournalRows,
   groupAccountJournalRowsToSections,
+  directiveTypeLabelKey,
 } from "../select-account-journal";
+import { en } from "../../../../translations/en";
 
 /** Build a display row directly (used by groupAccountJournalRowsToSections tests). */
 function row(
@@ -126,6 +128,7 @@ describe("selectAccountJournalRows", () => {
         flag: undefined,
         payee: "Blue Bottle",
         postings: [],
+        directiveType: undefined,
         change: -4.5,
         balance: 120.5,
       },
@@ -277,5 +280,93 @@ describe("groupAccountJournalRowsToSections", () => {
       "USD",
     );
     expect(section.displayDate).toBe("not-a-date");
+  });
+});
+
+describe("directive types on account-journal rows (note 178)", () => {
+  // The bug: `title` falls back payee → narration → account → directive_type, so
+  // an Open / Balance / Pad instruction on the account rendered as the bare
+  // account name — indistinguishable from a transaction. The type now travels
+  // with the row so the row can label it, and the title is unchanged.
+  it("carries the directive type alongside the existing title", () => {
+    const [open, balance, pad] = selectAccountJournalRows("USD", [
+      item({
+        entry_hash: "o",
+        directive_type: "Open",
+        account: "Assets:Bank:Checking",
+      }),
+      item({
+        entry_hash: "b",
+        directive_type: "Balance",
+        account: "Assets:Bank:Checking",
+      }),
+      item({
+        entry_hash: "p",
+        directive_type: "Pad",
+        account: "Assets:Bank:Checking",
+      }),
+    ]);
+    expect([
+      open.directiveType,
+      balance.directiveType,
+      pad.directiveType,
+    ]).toEqual(["Open", "Balance", "Pad"]);
+    // The account identity still shows — the type is a label, not a replacement.
+    expect(open.title).toBe("Assets:Bank:Checking");
+    expect(balance.title).toBe("Assets:Bank:Checking");
+    expect(pad.title).toBe("Assets:Bank:Checking");
+  });
+
+  it("marks a transaction's type too, so the row can choose not to label it", () => {
+    const [row] = selectAccountJournalRows("USD", [
+      item({
+        entry_hash: "t",
+        directive_type: "Transaction",
+        payee: "Blue Bottle",
+      }),
+    ]);
+    expect(row.directiveType).toBe("Transaction");
+    expect(directiveTypeLabelKey(row.directiveType)).toBe(null);
+  });
+
+  it("leaves the type undefined when the entry has none", () => {
+    const [row] = selectAccountJournalRows("USD", [
+      item({ entry_hash: "x", payee: "Blue Bottle" }),
+    ]);
+    expect(row.directiveType).toBe(undefined);
+    expect(directiveTypeLabelKey(row.directiveType)).toBe(null);
+  });
+
+  it("maps each labelled directive type to its translation key", () => {
+    expect(directiveTypeLabelKey("Open")).toBe("open");
+    expect(directiveTypeLabelKey("Close")).toBe("close");
+    expect(directiveTypeLabelKey("Balance")).toBe("balance");
+    expect(directiveTypeLabelKey("Pad")).toBe("pad");
+    expect(directiveTypeLabelKey("Note")).toBe("note");
+    expect(directiveTypeLabelKey("Document")).toBe("document");
+    expect(directiveTypeLabelKey("Price")).toBe("price");
+    expect(directiveTypeLabelKey("Custom")).toBe("custom");
+  });
+
+  it("only returns keys the English base actually defines", () => {
+    const keys = [
+      "Open",
+      "Close",
+      "Balance",
+      "Pad",
+      "Note",
+      "Document",
+      "Price",
+      "Custom",
+    ].map(directiveTypeLabelKey);
+    const missing = keys.filter((key) => key !== null && !(key in en));
+    expect(missing.join(", ")).toBe("");
+  });
+
+  it("has no label for types without a translation key", () => {
+    // Commodity and Event have no label key; a badge reading the raw key would
+    // render the key itself.
+    expect(directiveTypeLabelKey("Commodity")).toBe(null);
+    expect(directiveTypeLabelKey("Event")).toBe(null);
   });
 });

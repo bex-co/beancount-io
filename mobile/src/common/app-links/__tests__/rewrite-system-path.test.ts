@@ -37,7 +37,7 @@ describe("rewriteSystemPath", () => {
     );
     expect(target === null).toBe(false);
     expect(hrefToPath(target!.href)).toBe(
-      "/account-detail?account=Assets%3ACash",
+      "/account-detail?account=Assets%3ACash&ledger=open_ledger%2Fexample",
     );
   });
 });

@@ -282,7 +282,7 @@ export const ca: typeof en = {
   openAccountNameRequired: "Escriu almenys un component del nom.",
   openAccountEmptyComponent: "Els components del nom no poden ser buits.",
   openAccountUppercaseComponent:
-    "Cada component del nom ha de començar amb majúscula.",
+    "Cada component del nom ha de començar amb majúscula o xifra.",
   openAccountInvalidCharacters:
     "Als noms de compte, fes servir només lletres, xifres i guions.",
   closeAccount: "Tancar compte",
@@ -290,6 +290,8 @@ export const ca: typeof en = {
   loadingMore: "Carregant més...",
   noMoreEntries: "No hi ha més entrades",
   noEntries: "Cap entrada",
+  accountDetailUnavailable:
+    "Aquest compte no està disponible al llibre seleccionat.",
   journalLoadError: "Error en carregar el diari: ",
   accountsPlural: "comptes",
   // entry context (transactions screen)
@@ -442,6 +444,8 @@ export const ca: typeof en = {
   ledgerEditorSaveSuccess: "Fitxer desat",
   ledgerEditorSaveFailed: "No s'ha pogut desar",
   ledgerEditorLoadFailed: "No s'ha pogut carregar el fitxer",
+  ledgerEditorFileUnavailable: "Aquest fitxer ja no és al llibre.",
+  ledgerEditorBackToFiles: "Torna als fitxers",
   ledgerEditorUnsavedTitle: "Canvis sense desar",
   ledgerEditorUnsavedMessage: "Vols descartar els canvis?",
   ledgerEditorDiscardChanges: "Descarta",

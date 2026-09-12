@@ -282,7 +282,7 @@ export const bg: typeof en = {
   openAccountEmptyComponent:
     "Частите от името на сметката не може да са празни.",
   openAccountUppercaseComponent:
-    "Всяка част от името на сметката трябва да започва с главна буква.",
+    "Всяка част от името на сметката трябва да започва с главна буква или цифра.",
   openAccountInvalidCharacters:
     "В имената на сметки използвайте само букви, цифри и тирета.",
   closeAccount: "Затвори сметка",
@@ -290,6 +290,7 @@ export const bg: typeof en = {
   loadingMore: "Зарежда се още...",
   noMoreEntries: "Няма повече записи",
   noEntries: "Няма записи",
+  accountDetailUnavailable: "Тази сметка не е налична в избраната книга.",
   journalLoadError: "Неуспешно зареждане на журнала: ",
   accountsPlural: "сметки",
   // entry context (transactions screen)
@@ -442,6 +443,8 @@ export const bg: typeof en = {
   ledgerEditorSaveSuccess: "Файлът е запазен",
   ledgerEditorSaveFailed: "Запазването е неуспешно",
   ledgerEditorLoadFailed: "Файлът не беше зареден",
+  ledgerEditorFileUnavailable: "Този файл вече не е в книгата.",
+  ledgerEditorBackToFiles: "Назад към файловете",
   ledgerEditorUnsavedTitle: "Незапазени промени",
   ledgerEditorUnsavedMessage: "Да се отхвърлят ли промените?",
   ledgerEditorDiscardChanges: "Отхвърли",

@@ -279,7 +279,7 @@ export const uk: typeof en = {
   openAccountNameRequired: "Введіть хоча б одну частину назви рахунку.",
   openAccountEmptyComponent: "Частини назви рахунку не можуть бути порожніми.",
   openAccountUppercaseComponent:
-    "Кожна частина назви рахунку має починатися з великої літери.",
+    "Кожна частина назви рахунку має починатися з великої літери або цифри.",
   openAccountInvalidCharacters:
     "У назвах рахунків використовуйте лише літери, цифри та дефіси.",
   closeAccount: "Закрити рахунок",
@@ -287,6 +287,7 @@ export const uk: typeof en = {
   loadingMore: "Завантажується ще...",
   noMoreEntries: "Більше записів немає",
   noEntries: "Немає записів",
+  accountDetailUnavailable: "Цей рахунок недоступний у вибраній книзі.",
   journalLoadError: "Помилка завантаження журналу: ",
   accountsPlural: "рахунки",
   // entry context (transactions screen)
@@ -437,6 +438,8 @@ export const uk: typeof en = {
   ledgerEditorSaveSuccess: "Файл збережено",
   ledgerEditorSaveFailed: "Не вдалося зберегти",
   ledgerEditorLoadFailed: "Не вдалося завантажити файл",
+  ledgerEditorFileUnavailable: "Цього файлу більше немає в книзі.",
+  ledgerEditorBackToFiles: "Назад до файлів",
   ledgerEditorUnsavedTitle: "Незбережені зміни",
   ledgerEditorUnsavedMessage: "Скасувати ваші зміни?",
   ledgerEditorDiscardChanges: "Скасувати",

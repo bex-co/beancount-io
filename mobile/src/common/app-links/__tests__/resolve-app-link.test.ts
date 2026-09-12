@@ -25,7 +25,7 @@ describe("resolveAppLink", () => {
       ledgerFullName: LEDGER,
       href: {
         pathname: "/account-detail",
-        params: { account: "Assets:Cash" },
+        params: { account: "Assets:Cash", ledger: LEDGER },
       },
     });
     expect(
@@ -108,7 +108,7 @@ describe("resolveAppLink", () => {
       ledgerFullName: LEDGER,
       href: {
         pathname: "/account-detail",
-        params: { account: "Assets:Bank Checking" },
+        params: { account: "Assets:Bank Checking", ledger: LEDGER },
       },
     });
   });
@@ -191,7 +191,7 @@ describe("buildLedgerUrl round trip", () => {
       if (input.kind === "account") {
         expect(resolved!.href).toEqual({
           pathname: "/account-detail",
-          params: { account: input.account },
+          params: { account: input.account, ledger: LEDGER },
         });
         return;
       }

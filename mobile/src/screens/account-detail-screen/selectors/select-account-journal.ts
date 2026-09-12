@@ -21,9 +21,45 @@ export type AccountJournalRow = {
   /** Every posting the entry touches (account + amount); drives the row's icon,
    * including amount-weighted category selection. */
   postings: PostingLite[];
+  /**
+   * The entry's Beancount directive type ("Open", "Balance", "Pad", …) when the
+   * response carries one. `title` falls back to the directive's own account, so
+   * without this a non-transaction instruction is indistinguishable from a
+   * transaction on that account; the row renders a label for it.
+   */
+  directiveType?: string;
   change: number;
   balance: number;
 };
+
+/**
+ * Translation key for a directive-type label, or null for a transaction (the
+ * default row shape, which needs no label) and for types with no label key.
+ */
+export function directiveTypeLabelKey(
+  directiveType: string | undefined,
+): string | null {
+  switch (directiveType) {
+    case "Open":
+      return "open";
+    case "Close":
+      return "close";
+    case "Balance":
+      return "balance";
+    case "Pad":
+      return "pad";
+    case "Note":
+      return "note";
+    case "Document":
+      return "document";
+    case "Price":
+      return "price";
+    case "Custom":
+      return "custom";
+    default:
+      return null;
+  }
+}
 
 function asString(value: number | string | undefined): string {
   return typeof value === "string" ? value : "";
@@ -166,6 +202,7 @@ export function selectAccountJournalRows(
     payee:
       asString(item.entry.payee) || asString(item.entry.narration) || undefined,
     postings: entryPostings(item.entry),
+    directiveType: asString(item.entry.directive_type) || undefined,
     change: resolveCurrencyBalance(item.change, currency),
     balance: resolveCurrencyBalance(item.balance, currency),
   }));

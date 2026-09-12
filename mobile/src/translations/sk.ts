@@ -279,7 +279,7 @@ export const sk: typeof en = {
   openAccountNameRequired: "Zadajte aspoň jednu časť názvu účtu.",
   openAccountEmptyComponent: "Časti názvu účtu nemôžu byť prázdne.",
   openAccountUppercaseComponent:
-    "Každá časť názvu účtu musí začínať veľkým písmenom.",
+    "Každá časť názvu účtu musí začínať veľkým písmenom alebo číslicou.",
   openAccountInvalidCharacters:
     "V názvoch účtov používajte len písmená, číslice a spojovníky.",
   closeAccount: "Zatvoriť účet",
@@ -287,6 +287,7 @@ export const sk: typeof en = {
   loadingMore: "Načítava sa viac...",
   noMoreEntries: "Žiadne ďalšie záznamy",
   noEntries: "Žiadne záznamy",
+  accountDetailUnavailable: "Tento účet nie je vo zvolenej knihe dostupný.",
   journalLoadError: "Načítanie denníka zlyhalo: ",
   accountsPlural: "účty",
   // entry context (transactions screen)
@@ -439,6 +440,8 @@ export const sk: typeof en = {
   ledgerEditorSaveSuccess: "Súbor uložený",
   ledgerEditorSaveFailed: "Uloženie zlyhalo",
   ledgerEditorLoadFailed: "Súbor sa nepodarilo načítať",
+  ledgerEditorFileUnavailable: "Tento súbor už v knihe nie je.",
+  ledgerEditorBackToFiles: "Späť na súbory",
   ledgerEditorUnsavedTitle: "Neuložené zmeny",
   ledgerEditorUnsavedMessage: "Zahodiť vaše zmeny?",
   ledgerEditorDiscardChanges: "Zahodiť",

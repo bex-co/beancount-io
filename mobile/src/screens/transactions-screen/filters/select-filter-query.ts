@@ -1,5 +1,25 @@
 import { getFormatDate } from "../../../common/format-util";
-import { TransactionFilters } from "./types";
+import {
+  NO_FILTERS,
+  ScopedTransactionFilters,
+  TransactionFilters,
+} from "./types";
+
+/**
+ * The filters that apply to `ledgerId`, or `NO_FILTERS` when the stored
+ * selection belongs to a different ledger (or to none).
+ *
+ * Every reader of `transactionFiltersVar` goes through here, so switching
+ * ledgers cannot carry an account restriction into the new ledger's journal —
+ * whether the transactions tab was mounted at the time or not. Navigating
+ * within the same ledger keeps the selection, which is the whole point of
+ * storing it outside the tab.
+ */
+export const selectFiltersForLedger = (
+  scoped: ScopedTransactionFilters,
+  ledgerId: string | null | undefined,
+): TransactionFilters =>
+  ledgerId && scoped.ledgerId === ledgerId ? scoped.filters : NO_FILTERS;
 
 /** An inclusive `YYYY-MM-DD` window. */
 export type DateRange = { start: string; end: string };

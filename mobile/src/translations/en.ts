@@ -273,7 +273,7 @@ export const en = {
   openAccountNameRequired: "Enter at least one account name component.",
   openAccountEmptyComponent: "Account components cannot be empty.",
   openAccountUppercaseComponent:
-    "Each account component must start with an uppercase letter.",
+    "Each account component must start with an uppercase letter or a number.",
   openAccountInvalidCharacters:
     "Use only letters, numbers, and hyphens in account names.",
   closeAccount: "Close Account",
@@ -281,6 +281,8 @@ export const en = {
   loadingMore: "Loading more...",
   noMoreEntries: "No more entries",
   noEntries: "No entries",
+  accountDetailUnavailable:
+    "This account isn't available in the selected ledger.",
   journalLoadError: "Failed to load journal: ",
   accountsPlural: "accounts",
   // entry context (transactions screen)
@@ -436,6 +438,8 @@ export const en = {
   ledgerEditorSaveSuccess: "File saved",
   ledgerEditorSaveFailed: "Failed to save",
   ledgerEditorLoadFailed: "Failed to load file",
+  ledgerEditorFileUnavailable: "This file is no longer in the ledger.",
+  ledgerEditorBackToFiles: "Back to Files",
   ledgerEditorUnsavedTitle: "Unsaved Changes",
   ledgerEditorUnsavedMessage: "Discard your changes?",
   ledgerEditorDiscardChanges: "Discard",

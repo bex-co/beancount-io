@@ -45,6 +45,13 @@ type AccountTransactionsCardProps = {
   /** Translation key for the empty-state message. */
   emptyKey: string;
   timeRange: TimeRange;
+  /**
+   * The report's anchor month ("YYYY-MM") — the latest month its statement has
+   * data for — or null while that is unresolved. The time-range window is
+   * measured back from here so this list and the chart above it always cover the
+   * same months.
+   */
+  anchorMonth: string | null;
   refreshing: boolean;
 };
 
@@ -60,6 +67,7 @@ export function AccountTransactionsCard({
   titleKey,
   emptyKey,
   timeRange,
+  anchorMonth,
   refreshing,
 }: AccountTransactionsCardProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
@@ -92,8 +100,9 @@ export function AccountTransactionsCard({
           []) as unknown as JournalDirectiveType[],
         accountPrefix,
         timeRange,
+        anchorMonth,
       ),
-    [data, accountPrefix, timeRange],
+    [data, accountPrefix, timeRange, anchorMonth],
   );
 
   return (

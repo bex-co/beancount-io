@@ -275,7 +275,8 @@ export const fa: typeof en = {
   openAccountInvalidRoot: "یک نوع حساب معتبر انتخاب کنید.",
   openAccountNameRequired: "دست‌کم یک بخش از نام حساب را وارد کنید.",
   openAccountEmptyComponent: "بخش‌های نام حساب نمی‌توانند خالی باشند.",
-  openAccountUppercaseComponent: "هر بخش نام حساب باید با حرف بزرگ آغاز شود.",
+  openAccountUppercaseComponent:
+    "هر بخش نام حساب باید با حرف بزرگ یا رقم آغاز شود.",
   openAccountInvalidCharacters:
     "در نام حساب‌ها فقط از حروف، ارقام و خط تیره استفاده کنید.",
   closeAccount: "بستن حساب",
@@ -283,6 +284,7 @@ export const fa: typeof en = {
   loadingMore: "در حال بارگذاری بیشتر...",
   noMoreEntries: "رکورد دیگری نیست",
   noEntries: "بدون رکورد",
+  accountDetailUnavailable: "این حساب در دفتر کل انتخاب‌شده موجود نیست.",
   journalLoadError: "بارگذاری روزنامه ناموفق بود: ",
   accountsPlural: "حساب",
   // entry context (transactions screen)
@@ -434,6 +436,8 @@ export const fa: typeof en = {
   ledgerEditorSaveSuccess: "فایل ذخیره شد",
   ledgerEditorSaveFailed: "ذخیره ناموفق بود",
   ledgerEditorLoadFailed: "بارگذاری فایل ناموفق بود",
+  ledgerEditorFileUnavailable: "این فایل دیگر در دفتر کل نیست.",
+  ledgerEditorBackToFiles: "بازگشت به فایل‌ها",
   ledgerEditorUnsavedTitle: "تغییرات ذخیره‌نشده",
   ledgerEditorUnsavedMessage: "تغییرات شما کنار گذاشته شود؟",
   ledgerEditorDiscardChanges: "کنار گذاشتن",

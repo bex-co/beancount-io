@@ -106,7 +106,10 @@ export function resolveAppLink(
         ledgerFullName,
         href: {
           pathname: "/account-detail",
-          params: { account: tail[0] },
+          // `ledger` binds the entry to the link's ledger: `openAppLinkTarget`
+          // replaces only the current history entry, so without it a Back tap
+          // could revive this account under whatever ledger is selected then.
+          params: { account: tail[0], ledger: ledgerFullName },
         },
       };
     }

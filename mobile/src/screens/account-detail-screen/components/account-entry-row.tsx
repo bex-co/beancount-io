@@ -7,7 +7,10 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
 import { formatAccountJournalBalance } from "@/screens/account-detail-screen/utils/format-account-journal-balance";
-import { AccountJournalRow } from "@/screens/account-detail-screen/selectors/select-account-journal";
+import {
+  AccountJournalRow,
+  directiveTypeLabelKey,
+} from "@/screens/account-detail-screen/selectors/select-account-journal";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
@@ -43,6 +46,18 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.medium,
       color: "#fff",
     },
+    typeBadge: {
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+      borderRadius: 4,
+      backgroundColor: theme.black10,
+      flexShrink: 0,
+    },
+    typeBadgeText: {
+      fontSize: fontSizes.xs,
+      fontWeight: fontWeights.medium,
+      color: theme.black80,
+    },
     trailing: {
       alignItems: "flex-end",
     },
@@ -72,6 +87,9 @@ export function AccountEntryRow({
   const { t } = useTranslations();
 
   const isPending = row.flag === "!";
+  // Open / Balance / Pad / … rows read as plain transactions otherwise: the
+  // title falls back to the directive's own account name.
+  const typeLabelKey = directiveTypeLabelKey(row.directiveType);
   const changeColor =
     row.change > 0
       ? theme.success
@@ -87,6 +105,11 @@ export function AccountEntryRow({
         <Text style={styles.title} numberOfLines={1}>
           {row.title || t("transactions")}
         </Text>
+        {typeLabelKey && (
+          <View style={styles.typeBadge}>
+            <Text style={styles.typeBadgeText}>{t(typeLabelKey)}</Text>
+          </View>
+        )}
         {isPending && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>P</Text>

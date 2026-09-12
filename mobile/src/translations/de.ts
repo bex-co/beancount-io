@@ -286,7 +286,7 @@ export const de: typeof en = {
   openAccountNameRequired: "Geben Sie mindestens einen Namensbestandteil ein.",
   openAccountEmptyComponent: "Namensbestandteile dürfen nicht leer sein.",
   openAccountUppercaseComponent:
-    "Jeder Namensbestandteil muss mit einem Großbuchstaben beginnen.",
+    "Jeder Namensbestandteil muss mit einem Großbuchstaben oder einer Ziffer beginnen.",
   openAccountInvalidCharacters:
     "Verwenden Sie in Kontonamen nur Buchstaben, Ziffern und Bindestriche.",
   closeAccount: "Konto schließen",
@@ -294,6 +294,8 @@ export const de: typeof en = {
   loadingMore: "Lädt mehr...",
   noMoreEntries: "Keine weiteren Einträge",
   noEntries: "Keine Einträge",
+  accountDetailUnavailable:
+    "Dieses Konto ist im ausgewählten Hauptbuch nicht verfügbar.",
   journalLoadError: "Fehler beim Laden des Journals: ",
   accountsPlural: "Konten",
   // entry context (transactions screen)
@@ -448,6 +450,8 @@ export const de: typeof en = {
   ledgerEditorSaveSuccess: "Datei gespeichert",
   ledgerEditorSaveFailed: "Speichern fehlgeschlagen",
   ledgerEditorLoadFailed: "Datei konnte nicht geladen werden",
+  ledgerEditorFileUnavailable: "Diese Datei ist nicht mehr im Hauptbuch.",
+  ledgerEditorBackToFiles: "Zurück zu Dateien",
   ledgerEditorUnsavedTitle: "Nicht gespeicherte Änderungen",
   ledgerEditorUnsavedMessage: "Änderungen verwerfen?",
   ledgerEditorDiscardChanges: "Verwerfen",

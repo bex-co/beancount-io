@@ -24,7 +24,10 @@ import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 import { useIncomeStatement } from "./hooks/use-income-statement";
 import { selectRangedAccountTree } from "./selectors/select-ranged-account-tree";
-import { selectIncomeExpenseChartSeries } from "./selectors/select-income-expense-chart";
+import {
+  selectIncomeExpenseChartSeries,
+  selectStatementAnchorMonth,
+} from "./selectors/select-income-expense-chart";
 import { topNWithOther } from "./selectors/select-breakdown-rows";
 import {
   CategoryBreakdown,
@@ -99,6 +102,19 @@ const ReportsScreenImpl = (): JSX.Element => {
         timeRange,
       ),
     [currency, stmt, timeRange],
+  );
+
+  // One anchor month for the whole report, derived from the same statement the
+  // chart is built from — so the recent-transactions list below cannot window on
+  // a different month than the chart above.
+  const anchorMonth = useMemo(
+    () =>
+      selectStatementAnchorMonth(
+        stmt?.incomeData,
+        stmt?.expensesData,
+        stmt?.netProfitData,
+      ),
+    [stmt],
   );
 
   const expense = useMemo(
@@ -209,6 +225,7 @@ const ReportsScreenImpl = (): JSX.Element => {
           titleKey="recentTransactions"
           emptyKey="recentTransactionsEmpty"
           timeRange={timeRange}
+          anchorMonth={anchorMonth}
           refreshing={refreshing}
         />
       </DashboardScrollView>

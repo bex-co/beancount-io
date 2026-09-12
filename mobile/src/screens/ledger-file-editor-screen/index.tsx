@@ -13,6 +13,7 @@ import {
   useLocalSearchParams,
   useNavigation,
   useFocusEffect,
+  useRouter,
 } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -59,6 +60,7 @@ import {
   resetRevisionTracker,
 } from "@/components/code-editor/revision-tracker";
 import { isConflictError, filterFileErrors } from "./utils";
+import { selectLedgerFileEditorState } from "./select-editor-state";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
@@ -156,6 +158,16 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.error,
       padding: 24,
       textAlign: "center",
+    },
+    unavailableActions: {
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 24,
+    },
+    unavailableAction: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.primary,
     },
   });
 
@@ -286,6 +298,7 @@ function LedgerFileEditorSession({
   const styles = useThemeStyle(getStyles);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const router = useRouter();
   const { canWrite } = useLedgerAccess();
   const { userId } = useSession();
   const { currencies: operatingCurrencies } = useLedgerMeta(userId, ledgerId);
@@ -553,7 +566,13 @@ function LedgerFileEditorSession({
 
   // ── Render ───────────────────────────────────────────────────────────────
 
-  const isFirstLoad = fileLoading && !initialized;
+  const editorState = selectLedgerFileEditorState({
+    loading: fileLoading,
+    hasError: Boolean(fileError),
+    hasData: Boolean(fileData),
+    hasFile: Boolean(fileData?.getLedgerFile),
+    initialized,
+  });
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
@@ -577,19 +596,49 @@ function LedgerFileEditorSession({
       )}
 
       <View style={styles.editorWrapper}>
-        {isFirstLoad ? (
+        {editorState === "loading" ? (
           <View style={styles.skeletonWrap}>
             {SKELETON_WIDTHS.map((w, i) => (
               <LoadingTile key={i} height={16} width={w} />
             ))}
           </View>
-        ) : fileError && !initialized ? (
+        ) : editorState === "error" ? (
           <FadeInView>
             <Text style={styles.loadErrorText}>
               {t("ledgerEditorLoadFailed")}
             </Text>
           </FadeInView>
-        ) : initialized ? (
+        ) : editorState === "unavailable" ? (
+          <FadeInView>
+            <Text style={styles.loadErrorText}>
+              {t("ledgerEditorFileUnavailable")}
+            </Text>
+            <View style={styles.unavailableActions}>
+              <TouchableOpacity
+                onPress={() => {
+                  void refetch();
+                }}
+              >
+                <Text style={styles.unavailableAction}>
+                  {t("ledgerEditorReload")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  if (router.canGoBack()) {
+                    router.back();
+                    return;
+                  }
+                  router.replace("/(app)/(tabs)/ledger");
+                }}
+              >
+                <Text style={styles.unavailableAction}>
+                  {t("ledgerEditorBackToFiles")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </FadeInView>
+        ) : editorState === "content" ? (
           <FadeInView fill>
             <CodeEditor
               ref={editorRef}

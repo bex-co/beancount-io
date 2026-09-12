@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleProp, TextStyle } from "react-native";
 import {
   useAnimatedReaction,
@@ -9,6 +9,10 @@ import { scheduleOnRN } from "react-native-worklets";
 import { durations } from "@/common/theme";
 import { easeDecelerate } from "@/common/theme/motion-easing";
 import { AmountText } from "./amount-text";
+import {
+  selectAnimatedAmountValue,
+  shouldSettleAnimatedAmount,
+} from "./select-animated-amount";
 
 type AnimatedAmountProps = {
   /** The figure to show. */
@@ -51,7 +55,9 @@ type AnimatedAmountProps = {
  * change inside an `<Svg>` repaints the whole tree.
  *
  * Reduce-motion needs no handling: `withTiming` defaults to
- * `ReduceMotion.System`, so the value lands immediately when the setting is on.
+ * `ReduceMotion.System`, so the value lands immediately when the setting is on —
+ * and its completion callback still fires, which is what puts the exact (not
+ * cent-rounded) figure on screen at rest.
  */
 export function AnimatedAmount({
   value,
@@ -64,18 +70,48 @@ export function AnimatedAmount({
   const displayed = useSharedValue(0);
   const [shown, setShown] = useState(0);
 
+  // The counting frames are rounded to cents, so they must not survive as the
+  // resting figure. `settled` flips on the tween's own completion callback and is
+  // cleared whenever the target (or `animate`) changes.
+  const [settled, setSettled] = useState(false);
+  const targetRef = useRef(value);
+  targetRef.current = value;
+
+  const markSettled = useCallback(
+    (finished: boolean | undefined, completedTarget: number) => {
+      // A callback from a superseded tween must not settle the component on an
+      // old target while the live one is still counting.
+      if (
+        shouldSettleAnimatedAmount(finished, completedTarget, targetRef.current)
+      ) {
+        setSettled(true);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
+    setSettled(false);
     if (animate) {
-      displayed.value = withTiming(value, {
-        duration: durations.chart,
-        easing: easeDecelerate,
-      });
+      const target = value;
+      displayed.value = withTiming(
+        value,
+        {
+          duration: durations.chart,
+          easing: easeDecelerate,
+        },
+        (finished) => {
+          scheduleOnRN(markSettled, finished, target);
+        },
+      );
       return;
     }
     // Keep the tween's origin current while it is bypassed, so re-enabling it
-    // (finger lifted) doesn't animate back from a stale figure.
+    // (finger lifted) doesn't animate back from a stale figure. A bypassed value
+    // is at rest immediately — nothing is counting towards it.
     displayed.value = value;
-  }, [value, animate, displayed]);
+    setSettled(true);
+  }, [value, animate, displayed, markSettled]);
 
   useAnimatedReaction(
     // Round to cents: the formatter shows two decimals, so anything finer is a
@@ -89,6 +125,8 @@ export function AnimatedAmount({
   );
 
   return (
-    <AmountText style={style}>{format(animate ? shown : value)}</AmountText>
+    <AmountText style={style}>
+      {format(selectAnimatedAmountValue({ value, shown, animate, settled }))}
+    </AmountText>
   );
 }

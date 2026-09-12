@@ -62,9 +62,14 @@ const AccountsScreenImpl = (): JSX.Element => {
 
   const handlePressAccount = useCallback(
     (account: string) => {
-      router.push({ pathname: "/account-detail", params: { account } });
+      // `ledger` binds the pushed entry to this ledger, so a later ledger
+      // switch cannot revive it under a different one.
+      router.push({
+        pathname: "/account-detail",
+        params: { account, ledger: ledgerId },
+      });
     },
-    [router],
+    [router, ledgerId],
   );
 
   const {

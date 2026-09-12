@@ -278,7 +278,7 @@ export const nl: typeof en = {
   openAccountNameRequired: "Voer minstens één naamdeel in.",
   openAccountEmptyComponent: "Naamdelen mogen niet leeg zijn.",
   openAccountUppercaseComponent:
-    "Elk naamdeel moet met een hoofdletter beginnen.",
+    "Elk naamdeel moet met een hoofdletter of cijfer beginnen.",
   openAccountInvalidCharacters:
     "Gebruik in accountnamen alleen letters, cijfers en koppeltekens.",
   closeAccount: "Account sluiten",
@@ -286,6 +286,8 @@ export const nl: typeof en = {
   loadingMore: "Meer laden...",
   noMoreEntries: "Geen verdere vermeldingen",
   noEntries: "Geen boekingen",
+  accountDetailUnavailable:
+    "Dit account is niet beschikbaar in het geselecteerde grootboek.",
   journalLoadError: "Laden van journaal mislukt: ",
   accountsPlural: "accounts",
   // entry context (transactions screen)
@@ -438,6 +440,8 @@ export const nl: typeof en = {
   ledgerEditorSaveSuccess: "Bestand opgeslagen",
   ledgerEditorSaveFailed: "Opslaan mislukt",
   ledgerEditorLoadFailed: "Laden van bestand mislukt",
+  ledgerEditorFileUnavailable: "Dit bestand staat niet meer in het grootboek.",
+  ledgerEditorBackToFiles: "Terug naar bestanden",
   ledgerEditorUnsavedTitle: "Niet-opgeslagen wijzigingen",
   ledgerEditorUnsavedMessage: "Je wijzigingen verwerpen?",
   ledgerEditorDiscardChanges: "Verwerpen",

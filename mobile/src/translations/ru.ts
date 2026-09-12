@@ -280,7 +280,7 @@ export const ru: typeof en = {
   openAccountNameRequired: "Введите хотя бы одну часть названия счёта.",
   openAccountEmptyComponent: "Части названия счёта не могут быть пустыми.",
   openAccountUppercaseComponent:
-    "Каждая часть названия счёта должна начинаться с заглавной буквы.",
+    "Каждая часть названия счёта должна начинаться с заглавной буквы или цифры.",
   openAccountInvalidCharacters:
     "В названиях счетов используйте только буквы, цифры и дефисы.",
   closeAccount: "Закрыть счёт",
@@ -288,6 +288,7 @@ export const ru: typeof en = {
   loadingMore: "Загружается ещё...",
   noMoreEntries: "Больше записей нет",
   noEntries: "Нет записей",
+  accountDetailUnavailable: "Этот счёт недоступен в выбранной книге.",
   journalLoadError: "Ошибка загрузки журнала: ",
   accountsPlural: "счета",
   // entry context (transactions screen)
@@ -439,6 +440,8 @@ export const ru: typeof en = {
   ledgerEditorSaveSuccess: "Файл сохранён",
   ledgerEditorSaveFailed: "Не удалось сохранить",
   ledgerEditorLoadFailed: "Не удалось загрузить файл",
+  ledgerEditorFileUnavailable: "Этого файла больше нет в книге.",
+  ledgerEditorBackToFiles: "Назад к файлам",
   ledgerEditorUnsavedTitle: "Несохранённые изменения",
   ledgerEditorUnsavedMessage: "Отменить изменения?",
   ledgerEditorDiscardChanges: "Отменить",

@@ -284,7 +284,7 @@ export const pt: typeof en = {
   openAccountEmptyComponent:
     "As partes do nome da conta não podem ficar vazias.",
   openAccountUppercaseComponent:
-    "Cada parte do nome da conta precisa começar com letra maiúscula.",
+    "Cada parte do nome da conta precisa começar com letra maiúscula ou número.",
   openAccountInvalidCharacters:
     "Use apenas letras, números e hifens nos nomes de conta.",
   closeAccount: "Fechar conta",
@@ -292,6 +292,8 @@ export const pt: typeof en = {
   loadingMore: "Carregando mais...",
   noMoreEntries: "Não há mais entradas",
   noEntries: "Sem registros",
+  accountDetailUnavailable:
+    "Esta conta não está disponível no livro-razão selecionado.",
   journalLoadError: "Falha ao carregar o diário: ",
   accountsPlural: "contas",
   // entry context (transactions screen)
@@ -443,6 +445,8 @@ export const pt: typeof en = {
   ledgerEditorSaveSuccess: "Arquivo salvo",
   ledgerEditorSaveFailed: "Falha ao salvar",
   ledgerEditorLoadFailed: "Falha ao carregar o arquivo",
+  ledgerEditorFileUnavailable: "Este arquivo não está mais no livro-razão.",
+  ledgerEditorBackToFiles: "Voltar para arquivos",
   ledgerEditorUnsavedTitle: "Alterações não salvas",
   ledgerEditorUnsavedMessage: "Descartar suas alterações?",
   ledgerEditorDiscardChanges: "Descartar",

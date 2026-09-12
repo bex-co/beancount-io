@@ -42,6 +42,7 @@ import {
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { AccountEntryRow } from "@/screens/account-detail-screen/components/account-entry-row";
 import { DateSectionHeader } from "@/screens/transactions-screen/date-section-header";
+import { selectAccountDetailTarget } from "@/screens/account-detail-screen/select-account-detail-target";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -65,6 +66,13 @@ const getStyles = (theme: ColorTheme) =>
     stateText: {
       fontSize: fontSizes.md,
       color: theme.black60,
+      textAlign: "center",
+    },
+    backLink: {
+      marginTop: 16,
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
+      color: theme.primary,
       textAlign: "center",
     },
     footer: {
@@ -337,13 +345,62 @@ const AccountDetailScreenImpl = ({
   );
 };
 
+/**
+ * The route entry is unusable: no account, or one belonging to a ledger that is
+ * no longer selected. Rendering this instead of querying is what keeps a revived
+ * back-stack entry from pairing the old ledger's account with the new ledger's
+ * id (see `select-account-detail-target`).
+ */
+const AccountDetailUnavailable = (): JSX.Element => {
+  const { t } = useTranslations();
+  const styles = useThemeStyle(getStyles);
+  const router = useRouter();
+
+  return (
+    <SafeAreaView edges={["bottom"]} style={styles.container}>
+      <Stack.Screen options={{ title: t("accounts") }} />
+      <View style={styles.stateContainer}>
+        <Text style={styles.stateText}>{t("accountDetailUnavailable")}</Text>
+        <Text
+          style={styles.backLink}
+          accessibilityRole="button"
+          onPress={() => router.back()}
+        >
+          {t("back")}
+        </Text>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const AccountDetailRoute = ({
+  account,
+  ledger,
+}: {
+  account?: string | string[];
+  ledger?: string | string[];
+}): JSX.Element => {
+  const ledgerId = useLedgerGuard();
+  const target = selectAccountDetailTarget({
+    account,
+    ledger,
+    selectedLedgerId: ledgerId,
+  });
+
+  if (target.status !== "ready") {
+    return <AccountDetailUnavailable />;
+  }
+  return <AccountDetailScreenImpl account={target.account} />;
+};
+
 export const AccountDetailScreen = (): JSX.Element => {
-  const params = useLocalSearchParams<{ account?: string }>();
-  const account = typeof params.account === "string" ? params.account : "";
+  // `ledger` binds the entry to the ledger it was opened for; see
+  // `select-account-detail-target` for why the ambient selection is not enough.
+  const params = useLocalSearchParams<{ account?: string; ledger?: string }>();
 
   return (
     <LedgerGuard>
-      <AccountDetailScreenImpl account={account} />
+      <AccountDetailRoute account={params.account} ledger={params.ledger} />
     </LedgerGuard>
   );
 };

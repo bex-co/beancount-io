@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
+import { useReactiveVar } from "@apollo/client";
 import { Ionicons } from "@expo/vector-icons";
 import { getFormatDate, parseFormatDate } from "@/common/format-util";
 import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
@@ -32,8 +33,12 @@ import {
   TransactionFilters,
   TransactionStatus,
 } from "@/screens/transactions-screen/filters/types";
-import { isDateRangeValid } from "@/screens/transactions-screen/filters/select-filter-query";
+import {
+  isDateRangeValid,
+  selectFiltersForLedger,
+} from "@/screens/transactions-screen/filters/select-filter-query";
 import { transactionFiltersVar } from "@/screens/transactions-screen/filters/var";
+import { ledgerVar } from "@/common/vars";
 
 type PickerTarget = "start" | "end";
 
@@ -174,8 +179,13 @@ export const TransactionFiltersScreen = (): JSX.Element => {
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
 
-  const [draft, setDraft] = useState<TransactionFilters>(
-    transactionFiltersVar(),
+  // The sheet is not inside a LedgerGuard, so read the selection directly. The
+  // id is needed both to seed the draft (filters from another ledger are not
+  // this ledger's) and to stamp the applied filters with their owner.
+  const ledgerId = useReactiveVar(ledgerVar);
+
+  const [draft, setDraft] = useState<TransactionFilters>(() =>
+    selectFiltersForLedger(transactionFiltersVar(), ledgerVar()),
   );
   const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null);
 
@@ -223,7 +233,7 @@ export const TransactionFiltersScreen = (): JSX.Element => {
 
   const apply = () => {
     if (!isRangeValid) return;
-    transactionFiltersVar(draft);
+    transactionFiltersVar({ ledgerId, filters: draft });
     router.back();
   };
 

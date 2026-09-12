@@ -339,9 +339,14 @@ const TransactionDetailImpl = ({
         router.back();
         return;
       }
-      router.push({ pathname: "/account-detail", params: { account } });
+      // `ledger` binds the pushed entry to this ledger, so a later ledger
+      // switch cannot revive it under a different one.
+      router.push({
+        pathname: "/account-detail",
+        params: { account, ledger: ledgerId },
+      });
     },
-    [router, originAccount],
+    [router, originAccount, ledgerId],
   );
 
   // A generated entry (flag `P`, `S`, …) is synthesized by a report or plugin,

@@ -283,7 +283,7 @@ export const es: typeof en = {
   openAccountEmptyComponent:
     "Los componentes del nombre no pueden estar vacíos.",
   openAccountUppercaseComponent:
-    "Cada componente del nombre debe empezar por mayúscula.",
+    "Cada componente del nombre debe empezar por mayúscula o número.",
   openAccountInvalidCharacters:
     "Usa solo letras, números y guiones en los nombres de cuenta.",
   closeAccount: "Cerrar cuenta",
@@ -291,6 +291,8 @@ export const es: typeof en = {
   loadingMore: "Cargando más...",
   noMoreEntries: "No hay más entradas",
   noEntries: "Sin entradas",
+  accountDetailUnavailable:
+    "Esta cuenta no está disponible en el libro seleccionado.",
   journalLoadError: "Error al cargar el diario: ",
   accountsPlural: "cuentas",
   // entry context (transactions screen)
@@ -442,6 +444,8 @@ export const es: typeof en = {
   ledgerEditorSaveSuccess: "Archivo guardado",
   ledgerEditorSaveFailed: "Error al guardar",
   ledgerEditorLoadFailed: "Error al cargar el archivo",
+  ledgerEditorFileUnavailable: "Este archivo ya no está en el libro.",
+  ledgerEditorBackToFiles: "Volver a archivos",
   ledgerEditorUnsavedTitle: "Cambios sin guardar",
   ledgerEditorUnsavedMessage: "¿Descartar tus cambios?",
   ledgerEditorDiscardChanges: "Descartar",

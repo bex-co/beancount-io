@@ -44,6 +44,93 @@ describe("open account name", () => {
       ok: true,
     });
   });
+
+  // Note 165: the validator applied ASCII-only rules to every component, so two
+  // shapes the Beancount grammar accepts were rejected — a digit-led
+  // subcomponent and a non-ASCII uppercase initial (`/^[A-Z]/` has no `u` flag).
+  it("accepts a digit-led subcomponent", () => {
+    for (const name of [
+      "Assets:US:401k",
+      "Liabilities:2026-Loan",
+      "Expenses:Travel:2026",
+    ]) {
+      expect(validateAccountName(name)).toEqual({ ok: true });
+    }
+  });
+
+  it("accepts Unicode uppercase initials and bodies in subcomponents", () => {
+    for (const name of [
+      "Assets:Épargne",
+      "Expenses:Café",
+      "Assets:Банк:Счёт",
+      "Assets:Ärzte",
+      // A Unicode body after an ASCII initial, too.
+      "Expenses:Food:Crème",
+    ]) {
+      expect(validateAccountName(name)).toEqual({ ok: true });
+    }
+  });
+
+  it("accepts a caseless-script initial, which the ledger grammar allows", () => {
+    // Han, Hiragana, Arabic and Hebrew letters are `\p{Lo}`: they have no
+    // uppercase form, so an "uppercase or digit" rule would reject them even
+    // though the Beancount lexer (which keys off non-ASCII bytes, not case)
+    // accepts them. A caseless letter is admitted instead.
+    for (const name of [
+      "Expenses:日本",
+      "Expenses:日本:交通",
+      "Expenses:العربية",
+      "Expenses:עברית",
+      "Expenses:ひらがな",
+    ]) {
+      expect(validateAccountName(name)).toEqual({ ok: true });
+    }
+    // The same characters are fine once they are not the initial, too.
+    expect(validateAccountName("Expenses:Japan日本")).toEqual({ ok: true });
+  });
+
+  it("still rejects a lowercase-led name in a cased script", () => {
+    // The caseless allowance must not become a loophole for scripts that do
+    // distinguish case.
+    for (const name of [
+      "Expenses:food",
+      "Expenses:épargne",
+      "Expenses:ελληνικά",
+      "Expenses:русский",
+    ]) {
+      expect(validateAccountName(name)).toEqual({
+        ok: false,
+        reason: "componentMustStartUppercase",
+      });
+    }
+  });
+
+  it("still rejects lowercase-led, underscored and spaced subcomponents", () => {
+    const invalid: Array<[string, AccountNameValidationReason]> = [
+      ["Assets:bank", "componentMustStartUppercase"],
+      ["Assets:épargne", "componentMustStartUppercase"],
+      ["Assets:Bank_Checking", "invalidCharacters"],
+      ["Assets:Bank Checking", "invalidCharacters"],
+      ["Assets:Café Noir", "invalidCharacters"],
+      ["Assets:Bank:visa", "componentMustStartUppercase"],
+    ];
+    for (const [name, reason] of invalid) {
+      expect(validateAccountName(name)).toEqual({ ok: false, reason });
+    }
+  });
+
+  it("keeps the root strictly ASCII and canonical", () => {
+    // The five roots are fixed names, so the relaxed subcomponent rules must not
+    // let a Unicode or digit-led root through.
+    expect(validateAccountName("Équity:Opening")).toEqual({
+      ok: false,
+      reason: "invalidRoot",
+    });
+    expect(validateAccountName("401k:Savings")).toEqual({
+      ok: false,
+      reason: "invalidRoot",
+    });
+  });
 });
 
 describe("splitPrefillAccountName", () => {

@@ -45,3 +45,24 @@ export type TransactionFilters = {
 
 /** The unfiltered state — what a fresh install and Reset both mean. */
 export const NO_FILTERS: TransactionFilters = { statuses: [], range: "all" };
+
+/**
+ * Filters plus the ledger they belong to.
+ *
+ * `account` names a ledger's own account, so a filter applied in one ledger must
+ * never reach another's journal query. Pairing the filters with their owner lets
+ * every reader decide that at read time — see `selectFiltersForLedger` — which
+ * also covers a ledger switch that happens while the transactions tab is
+ * unmounted.
+ */
+export type ScopedTransactionFilters = {
+  /** The ledger the filters were applied to; `null` when nothing is applied. */
+  ledgerId: string | null;
+  filters: TransactionFilters;
+};
+
+/** No filters, owned by no ledger — the initial and Reset state. */
+export const NO_SCOPED_FILTERS: ScopedTransactionFilters = {
+  ledgerId: null,
+  filters: NO_FILTERS,
+};
