@@ -1,0 +1,12 @@
+# Optional Git-over-SSH overlay. Use only after following README.md so the
+# backend proxy presents Gitea's existing host key.
+
+services:
+  backend-v2:
+    ports:
+      - "${SSH_PORT:-2222}:${SSH_PORT:-2222}"
+    environment:
+      GITEA_SSH_PORT: ${SSH_PORT:-2222}
+      SSH_PROXY_ENABLED: "true"
+      SSH_PROXY_PORT: ${SSH_PORT:-2222}
+      SSH_PROXY_HOST_KEY: ${SSH_PROXY_HOST_KEY:?Set SSH_PROXY_HOST_KEY in .env before enabling SSH}

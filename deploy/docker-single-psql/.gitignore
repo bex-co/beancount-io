@@ -1,0 +1,6 @@
+# Deployment secrets and local overrides.
+.env
+docker-compose.override.yml
+
+# Scratch files, including redirected SSH host keys.
+tmp/

@@ -1,0 +1,25 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+	# Universal / App Links vouchers must be reachable on the dashboard host —
+	# Apple and Google fetch them from the link's origin, not the API domain.
+	handle /.well-known/* {
+		reverse_proxy backend-v2:4104
+	}
+	handle {
+		reverse_proxy dashboard:3000
+	}
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy backend-v2:4104
+}
+
+{$GIT_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy gitea:3000
+}
