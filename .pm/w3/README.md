@@ -56,8 +56,6 @@ producer is an upstream `@rustledger/wasm` defect with no released fix (re-check
 2026-09-11, newest published version is still 0.24.0).
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [109](./109.md) — Mobile Home and journal round nonzero crypto rewards to zero
-- [112](./112.md) — Mobile merchant detail fails for punctuated payee names
 - [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
 - [115](./115.md) — Mobile carries an account filter into a different ledger and hides its journal
 - [117](./117.md) — Download ZIP fails without user feedback when archive discovery rejects
@@ -75,7 +73,6 @@ producer is an upstream `@rustledger/wasm` defect with no released fix (re-check
 - [135](./135.md) — Editing a multiline import description joins its lines
 - [136](./136.md) — Import Select All hides partially selected state
 - [137](./137.md) — Transaction Share link closes its menu without opening the iOS share sheet
-- [140](./140.md) — Stop offering broken links for generated mobile transactions
 - [141](./141.md) — Import rejects a valid calendar date in a different browser timezone
 - [142](./142.md) — Import preview hides existing field errors until an unrelated edit
 - [143](./143.md) — Chart contact leaves the ledger drawer unresponsive
@@ -111,4 +108,3 @@ producer is an upstream `@rustledger/wasm` defect with no released fix (re-check
 - [182](./182.md) — Let the filter Apply button fit enlarged text
 - [183](./183.md) — Keep enlarged report category names distinguishable
 - [184](./184.md) — Keep confirmation dialog actions above the keyboard
-- [185](./185.md) — Mobile accepts a reversed custom date range and breaks Transactions
