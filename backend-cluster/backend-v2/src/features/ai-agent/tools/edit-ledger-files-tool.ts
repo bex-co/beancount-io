@@ -113,7 +113,13 @@ type EditLedgerFilesResult = {
  */
 function projectContents(
   fileCache: Map<string, { content: string; sha: string }>,
-  files: { operation: string; path: string; content?: string; old_string?: string; new_string?: string }[],
+  files: {
+    operation: string;
+    path: string;
+    content?: string;
+    old_string?: string;
+    new_string?: string;
+  }[],
 ): Map<string, string | null> {
   const projected = new Map<string, string | null>();
   for (const file of files) {
@@ -190,7 +196,7 @@ export async function executeEditLedgerFiles(
           operations.push({
             operation: "create",
             path: f.path,
-            content: Buffer.from(f.content).toString("base64"),
+            content: f.content,
           });
           continue;
         }
@@ -202,7 +208,7 @@ export async function executeEditLedgerFiles(
           operations.push({
             operation: "update",
             path: f.path,
-            content: Buffer.from(f.content).toString("base64"),
+            content: f.content,
             sha: cached.sha,
           });
           continue;
@@ -228,9 +234,7 @@ export async function executeEditLedgerFiles(
         operations.push({
           operation: "update",
           path: f.path,
-          content: Buffer.from(
-            cached.content.replace(f.old_string, f.new_string),
-          ).toString("base64"),
+          content: cached.content.replace(f.old_string, f.new_string),
           sha: cached.sha,
         });
       }
@@ -258,11 +262,7 @@ export async function executeEditLedgerFiles(
         const projected = projectContents(fileCache, normalizedFiles);
         const diff = [...projected].map(([path, after]) => ({
           path,
-          diff: unifiedDiff(
-            path,
-            fileCache.get(path)?.content ?? null,
-            after,
-          ),
+          diff: unifiedDiff(path, fileCache.get(path)?.content ?? null, after),
         }));
         const before = await readBeanCheckErrors(services, identity, ledgerId);
         const projectedErrors = toBeanCheckErrors(
@@ -336,7 +336,11 @@ export function createEditLedgerFilesTool(ctx: ToolContext) {
     needsApproval: true,
     execute: async ({ description, files }) =>
       executeEditLedgerFiles(
-        { services: ctx.services, identity: ctx.identity, ledgerId: ctx.ledgerId },
+        {
+          services: ctx.services,
+          identity: ctx.identity,
+          ledgerId: ctx.ledgerId,
+        },
         {
           description,
           files,

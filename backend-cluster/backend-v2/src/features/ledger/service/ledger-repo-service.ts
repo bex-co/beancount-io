@@ -62,6 +62,8 @@ export interface ILedgerRepoService {
 
   /**
    * Commit a batch of file create/update/delete operations atomically.
+   * `content` is plain UTF-8 text, the same as `getFilesContent` returns;
+   * the base64 the ledger service wants is this service's business.
    * `dryRun` runs the same authorization and path validation, then stops
    * before the repository commit — so a preview refuses exactly what the
    * write would.
@@ -245,7 +247,25 @@ export class LedgerRepoService
 
     await unwrapFavaResponse(
       favaApiClient.ledgers.changeLedgerFiles(ledgerOwner, ledgerName, {
-        files: operations,
+        // Base64 is the ledger service's wire encoding (it forwards straight to
+        // Gitea), not this service's contract. Encoding here rather than at
+        // each caller is what makes `content` mean the same thing in both
+        // directions: `getFilesContent` decodes, `checkProjectedFiles` encodes,
+        // and now so does this — so a caller that reads a file, edits the text,
+        // and writes it back never has to know. It was the one caller that
+        // *didn't* know that broke: REST `PUT …/files/{path}` forwarded the
+        // request body verbatim and Gitea refused it as illegal base64, while
+        // the MCP edit tool encoded first and worked (w2/011).
+        files: operations.map((operation) =>
+          operation.content === null || operation.content === undefined
+            ? operation
+            : {
+                ...operation,
+                content: Buffer.from(operation.content, "utf8").toString(
+                  "base64",
+                ),
+              },
+        ),
         message,
       }),
       "commit file operations",

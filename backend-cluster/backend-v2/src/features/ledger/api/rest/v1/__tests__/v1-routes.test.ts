@@ -360,6 +360,22 @@ describe("v1 files", () => {
     });
   });
 
+  it("hands the service the caller's UTF-8 text, not an encoding of it (w2/011)", async () => {
+    // The bug this pins: the handler forwarded `body.content` verbatim while
+    // the service passed it straight to the ledger service, which hands it to
+    // Gitea as base64 — so every REST file write failed with "illegal base64
+    // data" while the MCP edit tool, which encoded first, worked. The encoding
+    // is the service's business; the handler's job is to pass the text along.
+    server.setIdentity(writeToken);
+    const text = '2026-06-01 * "Caf\u00e9" "au lait"\n';
+    await call("PUT", `${LEDGER}/files/main.bean`, { content: text });
+    expect(services.ledgerRepo.changeFiles).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operations: [expect.objectContaining({ content: text })],
+      }),
+    );
+  });
+
   it("deletes a file", async () => {
     server.setIdentity(writeToken);
     const { status } = await call("DELETE", `${LEDGER}/files/old.bean`, {});

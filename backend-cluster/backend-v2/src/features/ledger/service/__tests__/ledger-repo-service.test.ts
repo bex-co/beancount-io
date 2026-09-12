@@ -44,17 +44,19 @@ describe("LedgerRepoService", () => {
       ledgerRepoId: 1,
       ownerUserId: USER_ID,
     });
-    service = new LedgerRepoService(
-      mockFavaClientFactory as any,
-      {} as any,
-    );
+    service = new LedgerRepoService(mockFavaClientFactory as any, {} as any);
   });
 
   describe("getLatestCommit", () => {
     it("returns null when there are no commits", async () => {
-      mockRepoGetAllCommits.mockResolvedValue({ data: { success: true, data: [] } });
+      mockRepoGetAllCommits.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
 
-      const result = await service.getLatestCommit({ ledgerId: LEDGER_ID, identity: IDENTITY });
+      const result = await service.getLatestCommit({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+      });
 
       expect(result).toBeNull();
     });
@@ -67,21 +69,40 @@ describe("LedgerRepoService", () => {
             {
               sha: "abc123",
               commit: { message: "feat: add balance sheet" },
-              author: { login: "alice", full_name: "Alice Smith", email: "alice@example.com" },
-              committer: { login: "alice", full_name: "Alice Smith", email: "alice@example.com" },
+              author: {
+                login: "alice",
+                full_name: "Alice Smith",
+                email: "alice@example.com",
+              },
+              committer: {
+                login: "alice",
+                full_name: "Alice Smith",
+                email: "alice@example.com",
+              },
               created: "2024-01-15T10:00:00Z",
             },
           ],
         },
       });
 
-      const result = await service.getLatestCommit({ ledgerId: LEDGER_ID, identity: IDENTITY });
+      const result = await service.getLatestCommit({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+      });
 
       expect(result).toEqual({
         sha: "abc123",
         message: "feat: add balance sheet",
-        author: { login: "alice", fullName: "Alice Smith", email: "alice@example.com" },
-        committer: { login: "alice", fullName: "Alice Smith", email: "alice@example.com" },
+        author: {
+          login: "alice",
+          fullName: "Alice Smith",
+          email: "alice@example.com",
+        },
+        committer: {
+          login: "alice",
+          fullName: "Alice Smith",
+          email: "alice@example.com",
+        },
         created: "2024-01-15T10:00:00Z",
       });
     });
@@ -102,7 +123,10 @@ describe("LedgerRepoService", () => {
         },
       });
 
-      const result = await service.getLatestCommit({ ledgerId: LEDGER_ID, identity: IDENTITY });
+      const result = await service.getLatestCommit({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+      });
 
       expect(result).toEqual({
         sha: "def456",
@@ -114,9 +138,14 @@ describe("LedgerRepoService", () => {
     });
 
     it("defaults branchName to main and passes it as sha", async () => {
-      mockRepoGetAllCommits.mockResolvedValue({ data: { success: true, data: [] } });
+      mockRepoGetAllCommits.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
 
-      await service.getLatestCommit({ ledgerId: LEDGER_ID, identity: IDENTITY });
+      await service.getLatestCommit({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+      });
 
       expect(mockRepoGetAllCommits).toHaveBeenCalledWith(
         "testowner",
@@ -126,7 +155,9 @@ describe("LedgerRepoService", () => {
     });
 
     it("passes custom branchName as sha", async () => {
-      mockRepoGetAllCommits.mockResolvedValue({ data: { success: true, data: [] } });
+      mockRepoGetAllCommits.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
 
       await service.getLatestCommit({
         ledgerId: LEDGER_ID,
@@ -142,7 +173,9 @@ describe("LedgerRepoService", () => {
     });
 
     it("propagates the identity's userId to the fava client factory", async () => {
-      mockRepoGetAllCommits.mockResolvedValue({ data: { success: true, data: [] } });
+      mockRepoGetAllCommits.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
 
       await service.getLatestCommit({
         ledgerId: LEDGER_ID,
@@ -158,7 +191,9 @@ describe("LedgerRepoService", () => {
 
   describe("listDirContent", () => {
     it("authorizes as read", async () => {
-      mockGetLedgerDirContent.mockResolvedValue({ data: { success: true, data: [] } });
+      mockGetLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
       await service.listDirContent({ ledgerId: LEDGER_ID, identity: IDENTITY });
       expect(authorizeLedger).toHaveBeenCalledWith(
         IDENTITY,
@@ -193,7 +228,9 @@ describe("LedgerRepoService", () => {
     });
 
     it("passes dirPath through to the fava call", async () => {
-      mockGetLedgerDirContent.mockResolvedValue({ data: { success: true, data: [] } });
+      mockGetLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
       await service.listDirContent({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
@@ -207,8 +244,13 @@ describe("LedgerRepoService", () => {
     });
 
     it("allows an anonymous (undefined) identity through to authorizeLedger", async () => {
-      mockGetLedgerDirContent.mockResolvedValue({ data: { success: true, data: [] } });
-      await service.listDirContent({ ledgerId: LEDGER_ID, identity: undefined });
+      mockGetLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      await service.listDirContent({
+        ledgerId: LEDGER_ID,
+        identity: undefined,
+      });
       expect(authorizeLedger).toHaveBeenCalledWith(
         undefined,
         LEDGER_ID,
@@ -231,7 +273,9 @@ describe("LedgerRepoService", () => {
             {
               path: "main.bean",
               sha: "sha1",
-              content: Buffer.from("2024-01-01 open Assets:Cash").toString("base64"),
+              content: Buffer.from("2024-01-01 open Assets:Cash").toString(
+                "base64",
+              ),
               encoding: "base64",
             },
           ],
@@ -251,7 +295,11 @@ describe("LedgerRepoService", () => {
         expect.anything(),
       );
       expect(result).toEqual([
-        { path: "main.bean", sha: "sha1", content: "2024-01-01 open Assets:Cash" },
+        {
+          path: "main.bean",
+          sha: "sha1",
+          content: "2024-01-01 open Assets:Cash",
+        },
       ]);
     });
 
@@ -259,7 +307,14 @@ describe("LedgerRepoService", () => {
       mockGetLedgerFilesContent.mockResolvedValue({
         data: {
           success: true,
-          data: [{ path: "a.bean", sha: "sha2", content: "plain text", encoding: null }],
+          data: [
+            {
+              path: "a.bean",
+              sha: "sha2",
+              content: "plain text",
+              encoding: null,
+            },
+          ],
         },
       });
 
@@ -273,7 +328,9 @@ describe("LedgerRepoService", () => {
     });
 
     it("de-duplicates requested paths before calling fava", async () => {
-      mockGetLedgerFilesContent.mockResolvedValue({ data: { success: true, data: [] } });
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
       await service.getFilesContent({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
@@ -293,7 +350,9 @@ describe("LedgerRepoService", () => {
       await service.changeFiles({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        operations: [{ operation: "create", path: "new.bean", content: "Zm9v" }],
+        operations: [
+          { operation: "create", path: "new.bean", content: "Zm9v" },
+        ],
         message: "add file",
       });
       expect(authorizeLedger).toHaveBeenCalledWith(
@@ -305,7 +364,9 @@ describe("LedgerRepoService", () => {
     });
 
     it("denies the commit when authorizeLedger rejects, without calling fava", async () => {
-      (authorizeLedger as jest.Mock).mockRejectedValueOnce(new Error("forbidden"));
+      (authorizeLedger as jest.Mock).mockRejectedValueOnce(
+        new Error("forbidden"),
+      );
       await expect(
         service.changeFiles({
           ledgerId: LEDGER_ID,
@@ -321,7 +382,9 @@ describe("LedgerRepoService", () => {
       await service.changeFiles({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        operations: [{ operation: "create", path: "new.bean", content: "Zm9v" }],
+        operations: [
+          { operation: "create", path: "new.bean", content: "Zm9v" },
+        ],
         message: "add file",
         dryRun: true,
       });
@@ -349,21 +412,103 @@ describe("LedgerRepoService", () => {
       expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
     });
 
-    it("forwards operations and message to the fava call verbatim", async () => {
+    it("base64-encodes content for the ledger service and forwards the rest verbatim", async () => {
       mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
-      const operations = [
-        { operation: "update" as const, path: "main.bean", content: "Zm9v", sha: "sha1" },
-      ];
       await service.changeFiles({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        operations,
-        message: "AI edit: reconcile",
+        operations: [
+          {
+            operation: "update" as const,
+            path: "main.bean",
+            content: '2026-06-01 * "Caf\u00e9" "\u2014 caf\u00e9 au lait"\n',
+            sha: "sha1",
+          },
+        ],
+        message: "reconcile",
       });
-      expect(mockChangeLedgerFiles).toHaveBeenCalledWith("testowner", "testledger", {
-        files: operations,
-        message: "AI edit: reconcile",
+      expect(mockChangeLedgerFiles).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        {
+          files: [
+            {
+              operation: "update",
+              path: "main.bean",
+              content: Buffer.from(
+                '2026-06-01 * "Caf\u00e9" "\u2014 caf\u00e9 au lait"\n',
+                "utf8",
+              ).toString("base64"),
+              sha: "sha1",
+            },
+          ],
+          message: "reconcile",
+        },
+      );
+    });
+
+    it("leaves a delete alone — it carries no content to encode", async () => {
+      mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
+      await service.changeFiles({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        operations: [{ operation: "delete", path: "gone.bean", sha: "sha1" }],
+        message: "delete file",
       });
+      expect(mockChangeLedgerFiles).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        {
+          files: [{ operation: "delete", path: "gone.bean", sha: "sha1" }],
+          message: "delete file",
+        },
+      );
+    });
+
+    it("round-trips text a caller read back through a write (w2/011)", async () => {
+      // The regression: REST `PUT …/files/{path}` forwarded the request body
+      // verbatim and Gitea refused it as illegal base64, while the MCP edit
+      // tool encoded first and worked. Reading, editing and writing back is
+      // the flow both surfaces perform, so it is the one asserted.
+      mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
+      const text = 'option "title" "My \u00c6ther Ledger"\n';
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            {
+              path: "main.bean",
+              content: Buffer.from(text, "utf8").toString("base64"),
+              encoding: "base64",
+              sha: "sha1",
+            },
+          ],
+        },
+      });
+      const [file] = await service.getFilesContent({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        paths: ["main.bean"],
+      });
+      expect(file.content).toBe(text);
+
+      await service.changeFiles({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        operations: [
+          {
+            operation: "update" as const,
+            path: "main.bean",
+            content: file.content,
+            sha: file.sha,
+          },
+        ],
+        message: "retitle",
+      });
+      const sent = mockChangeLedgerFiles.mock.calls.at(-1)![2];
+      expect(
+        Buffer.from(sent.files[0].content, "base64").toString("utf8"),
+      ).toBe(text);
     });
   });
 });

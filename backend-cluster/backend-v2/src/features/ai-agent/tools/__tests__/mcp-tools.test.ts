@@ -23,10 +23,16 @@ const LEDGER_ID = "alice/personal";
 describe("executeBqlQuery", () => {
   it("returns the shell service's text on success", async () => {
     const ledgerShell = {
-      queryShellText: jest.fn().mockResolvedValue({ text: "Assets:Cash  100 USD" }),
+      queryShellText: jest
+        .fn()
+        .mockResolvedValue({ text: "Assets:Cash  100 USD" }),
     };
     const result = await executeBqlQuery(
-      { services: { ledgerShell } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerShell } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       { query: "BALANCES" },
     );
     expect(result).toEqual({ ok: true, result: "Assets:Cash  100 USD" });
@@ -42,7 +48,11 @@ describe("executeBqlQuery", () => {
       queryShellText: jest.fn().mockRejectedValue(new Error("forbidden")),
     };
     const result = await executeBqlQuery(
-      { services: { ledgerShell } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerShell } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       { query: "BALANCES" },
     );
     expect(result.ok).toBe(false);
@@ -58,7 +68,11 @@ describe("executeListLedgerFiles", () => {
       ]),
     };
     const result = await executeListLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       {},
     );
     expect(result).toEqual({
@@ -73,7 +87,11 @@ describe("executeListLedgerFiles", () => {
   it("passes dir_path through to the service", async () => {
     const ledgerRepo = { listDirContent: jest.fn().mockResolvedValue([]) };
     await executeListLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       { dir_path: "subdir" },
     );
     expect(ledgerRepo.listDirContent).toHaveBeenCalledWith({
@@ -86,7 +104,11 @@ describe("executeListLedgerFiles", () => {
   it("treats a shell-style dot as the repository root", async () => {
     const ledgerRepo = { listDirContent: jest.fn().mockResolvedValue([]) };
     await executeListLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       { dir_path: "." },
     );
     expect(ledgerRepo.listDirContent).toHaveBeenCalledWith({
@@ -109,7 +131,11 @@ describe("executeReadLedgerFiles", () => {
   it("returns the full file when no line range is given", async () => {
     const ledgerRepo = serviceReturning("line1\nline2\nline3");
     const result = await executeReadLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       { files: [{ path: "main.bean" }] },
     );
     expect(result).toEqual({
@@ -129,7 +155,11 @@ describe("executeReadLedgerFiles", () => {
   it("slices to the requested 1-based, inclusive line range", async () => {
     const ledgerRepo = serviceReturning("line1\nline2\nline3\nline4");
     const result = await executeReadLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       { files: [{ path: "main.bean", start_line: 2, end_line: 3 }] },
     );
     expect(result.ok).toBe(true);
@@ -146,7 +176,11 @@ describe("executeReadLedgerFiles", () => {
   it("fails the whole call when a requested path is missing from the response", async () => {
     const ledgerRepo = { getFilesContent: jest.fn().mockResolvedValue([]) };
     const result = await executeReadLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       { files: [{ path: "missing.bean" }] },
     );
     expect(result.ok).toBe(false);
@@ -156,7 +190,9 @@ describe("executeReadLedgerFiles", () => {
     const ledgerRepo = serviceReturning("x");
     await executeReadLedgerFiles(
       {
-        services: { ledgerRepo: { getFilesContent: ledgerRepo.getFilesContent } } as any,
+        services: {
+          ledgerRepo: { getFilesContent: ledgerRepo.getFilesContent },
+        } as any,
         identity: IDENTITY,
         ledgerId: LEDGER_ID,
       },
@@ -172,7 +208,11 @@ describe("executeReadLedgerFiles", () => {
   it("canonicalizes a shell-style relative path before reading", async () => {
     const ledgerRepo = serviceReturning("content");
     const result = await executeReadLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       { files: [{ path: "./main.bean" }] },
     );
     expect(ledgerRepo.getFilesContent).toHaveBeenCalledWith({
@@ -222,7 +262,7 @@ describe("executeEditLedgerFiles", () => {
         {
           operation: "create",
           path: "new.bean",
-          content: Buffer.from("hello").toString("base64"),
+          content: "hello",
         },
       ],
       message: "add new file",
@@ -299,15 +339,26 @@ describe("executeEditLedgerFiles", () => {
     const ledgerRepo = {
       getFilesContent: jest
         .fn()
-        .mockResolvedValue([{ path: "main.bean", content: "abc", sha: "sha1" }]),
+        .mockResolvedValue([
+          { path: "main.bean", content: "abc", sha: "sha1" },
+        ]),
       changeFiles: jest.fn(),
     };
     const result = await executeEditLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       {
         description: "edit",
         files: [
-          { operation: "update", path: "main.bean", old_string: "zzz", new_string: "y" },
+          {
+            operation: "update",
+            path: "main.bean",
+            old_string: "zzz",
+            new_string: "y",
+          },
         ],
         dry_run: false,
       },
@@ -320,15 +371,26 @@ describe("executeEditLedgerFiles", () => {
     const ledgerRepo = {
       getFilesContent: jest
         .fn()
-        .mockResolvedValue([{ path: "main.bean", content: "aXaXa", sha: "sha1" }]),
+        .mockResolvedValue([
+          { path: "main.bean", content: "aXaXa", sha: "sha1" },
+        ]),
       changeFiles: jest.fn(),
     };
     const result = await executeEditLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       {
         description: "edit",
         files: [
-          { operation: "update", path: "main.bean", old_string: "X", new_string: "Y" },
+          {
+            operation: "update",
+            path: "main.bean",
+            old_string: "X",
+            new_string: "Y",
+          },
         ],
         dry_run: false,
       },
@@ -341,7 +403,9 @@ describe("executeEditLedgerFiles", () => {
     const ledgerRepo = {
       getFilesContent: jest
         .fn()
-        .mockResolvedValue([{ path: "main.bean", content: "abc", sha: "sha1" }]),
+        .mockResolvedValue([
+          { path: "main.bean", content: "abc", sha: "sha1" },
+        ]),
       changeFiles: jest.fn().mockResolvedValue(undefined),
       checkProjectedFiles: jest.fn().mockResolvedValue([]),
     };
@@ -355,7 +419,12 @@ describe("executeEditLedgerFiles", () => {
       {
         description: "edit",
         files: [
-          { operation: "update", path: "main.bean", old_string: "b", new_string: "B" },
+          {
+            operation: "update",
+            path: "main.bean",
+            old_string: "b",
+            new_string: "B",
+          },
         ],
         dry_run: true,
       },
@@ -397,7 +466,9 @@ describe("executeEditLedgerFiles", () => {
     const ledgerRepo = {
       getFilesContent: jest
         .fn()
-        .mockResolvedValue([{ path: "main.bean", content: "abc", sha: "sha1" }]),
+        .mockResolvedValue([
+          { path: "main.bean", content: "abc", sha: "sha1" },
+        ]),
       changeFiles: jest.fn().mockResolvedValue(undefined),
       checkProjectedFiles: jest.fn().mockResolvedValue([
         {
@@ -416,7 +487,12 @@ describe("executeEditLedgerFiles", () => {
       {
         description: "edit",
         files: [
-          { operation: "update", path: "main.bean", old_string: "b", new_string: "B" },
+          {
+            operation: "update",
+            path: "main.bean",
+            old_string: "b",
+            new_string: "B",
+          },
         ],
         dry_run: true,
       },
@@ -508,7 +584,11 @@ describe("executeEditLedgerFiles", () => {
       changeFiles: jest.fn().mockRejectedValue(new Error("forbidden")),
     };
     const result = await executeEditLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       {
         description: "add file",
         files: [{ operation: "create", path: "new.bean", content: "x" }],
@@ -525,11 +605,17 @@ describe("executeEditLedgerFiles", () => {
     const ledgerRepo = {
       getFilesContent: jest
         .fn()
-        .mockResolvedValue([{ path: "old.bean", content: "x", sha: "sha-to-delete" }]),
+        .mockResolvedValue([
+          { path: "old.bean", content: "x", sha: "sha-to-delete" },
+        ]),
       changeFiles: jest.fn().mockResolvedValue(undefined),
     };
     await executeEditLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       {
         description: "remove file",
         files: [{ operation: "delete", path: "old.bean" }],
@@ -538,7 +624,9 @@ describe("executeEditLedgerFiles", () => {
     );
     expect(ledgerRepo.changeFiles).toHaveBeenCalledWith(
       expect.objectContaining({
-        operations: [{ operation: "delete", path: "old.bean", sha: "sha-to-delete" }],
+        operations: [
+          { operation: "delete", path: "old.bean", sha: "sha-to-delete" },
+        ],
       }),
     );
   });
@@ -547,11 +635,17 @@ describe("executeEditLedgerFiles", () => {
     const ledgerRepo = {
       getFilesContent: jest
         .fn()
-        .mockResolvedValue([{ path: "main.bean", content: "abc", sha: "sha1" }]),
+        .mockResolvedValue([
+          { path: "main.bean", content: "abc", sha: "sha1" },
+        ]),
       changeFiles: jest.fn().mockResolvedValue(undefined),
     };
     await executeEditLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       {
         description: "edit",
         files: [
