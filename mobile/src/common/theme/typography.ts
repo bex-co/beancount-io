@@ -93,6 +93,17 @@ export const amountStyle: TextStyle = {
  */
 export const amountMaxFontSizeMultiplier = 1.4;
 
+/**
+ * `maxFontSizeMultiplier` for nav-header text actions (Done/Save/Cancel/Reset).
+ *
+ * The native navigation bar is a fixed-height chrome the app does not lay out,
+ * so an uncapped action label pushes the title aside and clips against the bar
+ * edge. Capped at the same step as amounts — the header is the app's most
+ * space-constrained row, and the action words are short, so the cap costs little
+ * legibility. Form-body prose is deliberately *not* capped; it has room to grow.
+ */
+export const headerActionMaxFontSizeMultiplier = amountMaxFontSizeMultiplier;
+
 /** Nav-header text action (Done/Save buttons rendered via headerRight). */
 export const headerActionStyle = (theme: ColorTheme): TextStyle => ({
   fontSize: fontSizes.lg,

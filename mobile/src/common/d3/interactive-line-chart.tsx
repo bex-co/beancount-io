@@ -76,6 +76,13 @@ type InteractiveLineChartProps = {
    * a generic "not enough data" line.
    */
   placeholder?: string;
+  /**
+   * Measured height of the value/change header above the plot. The header's
+   * height is text-driven (the headline amount wraps at larger Dynamic Type
+   * sizes) while the plot below it is fixed, so a card that has to bound the
+   * whole chart — Home's pager — needs this to size its pages.
+   */
+  onHeaderLayout?: (height: number) => void;
 };
 
 const CHART_HEIGHT = 190;
@@ -389,6 +396,7 @@ function InteractiveLineChart({
   currency,
   height = CHART_HEIGHT,
   placeholder,
+  onHeaderLayout,
 }: InteractiveLineChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -628,7 +636,14 @@ function InteractiveLineChart({
     // plot can't be claimed by the ledger drawer's edge gesture.
     <GestureDetector gesture={swipeOwner}>
       <View>
-        <View style={styles.header}>
+        <View
+          style={styles.header}
+          onLayout={
+            onHeaderLayout
+              ? (event) => onHeaderLayout(event.nativeEvent.layout.height)
+              : undefined
+          }
+        >
           {label !== undefined && <Text style={styles.label}>{label}</Text>}
           <ScrubHeader
             labels={labels}

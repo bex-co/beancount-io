@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SectionList,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import {
   fontSizes,
@@ -39,8 +40,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LedgerGuard, useLedgerGuard } from "@/components";
 import {
   SearchBar,
-  SEARCH_BAR_HEIGHT,
   SEARCH_BAR_RADIUS,
+  searchFieldHeight,
 } from "@/components/search-bar";
 import {
   TimeRangePills,
@@ -145,7 +146,6 @@ const getStyles = (theme: ColorTheme) =>
       marginHorizontal: gutter,
       marginTop: space.md,
       marginBottom: space.xs,
-      height: SEARCH_BAR_HEIGHT,
       borderRadius: SEARCH_BAR_RADIUS,
     },
     chipRowSkeleton: {
@@ -221,6 +221,7 @@ function AccountPickerScreenComponent(): JSX.Element {
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
+  const { fontScale } = useWindowDimensions();
   const {
     canWrite,
     loading: accessLoading,
@@ -355,7 +356,10 @@ function AccountPickerScreenComponent(): JSX.Element {
   if (loading && accounts.length === 0) {
     return (
       <View style={styles.container}>
-        <LoadingTile style={styles.searchSkeleton} />
+        <LoadingTile
+          style={styles.searchSkeleton}
+          height={searchFieldHeight(fontScale)}
+        />
         <View style={styles.chipRowSkeleton}>
           <LoadingTile style={styles.chipTile} />
           <LoadingTile style={styles.chipTile} />

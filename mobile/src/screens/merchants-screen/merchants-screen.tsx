@@ -5,7 +5,9 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useReactiveVar } from "@apollo/client";
 import { useRouter } from "expo-router";
@@ -23,7 +25,9 @@ import { ColorTheme } from "@/types/theme-props";
 import { useQueryShellQuery } from "@/generated-graphql/graphql";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
-import { SearchBar, SEARCH_BAR_HEIGHT } from "@/components/search-bar";
+import { SearchBar, searchFieldHeight } from "@/components/search-bar";
+import { useKeyboardHeight } from "@/components/keyboard-accessory-bar/use-keyboard-height";
+import { getKeyboardOverlap } from "@/components/keyboard-accessory-bar/utils";
 import {
   merchantRecurringOverridesVar,
   overrideFor,
@@ -59,9 +63,9 @@ const getStyles = (theme: ColorTheme) =>
     searchBar: {
       flex: 1,
     },
+    // Square box sized per-render from `searchFieldHeight(fontScale)` so it
+    // stays the same height as the field it sits beside at every text size.
     sortButton: {
-      width: SEARCH_BAR_HEIGHT,
-      height: SEARCH_BAR_HEIGHT,
       borderRadius: 10,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.controlBorder,
@@ -139,6 +143,14 @@ function MerchantsDirectory() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<MerchantSort>("count");
+  const { fontScale } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  // The "no results" message is centered in a full-height container, so with the
+  // keyboard up it lands behind it. Shortening the container by the overlap
+  // re-centers the message in what the user can actually see.
+  const keyboardHeight = useKeyboardHeight();
+  const keyboardOverlap = getKeyboardOverlap(keyboardHeight, insets.bottom);
+  const searchBoxHeight = searchFieldHeight(fontScale);
   const overrides = useReactiveVar(merchantRecurringOverridesVar);
 
   const {
@@ -272,7 +284,12 @@ function MerchantsDirectory() {
     }
     if (showNoResults) {
       return (
-        <View style={styles.emptyContainer}>
+        <View
+          style={[
+            styles.emptyContainer,
+            keyboardOverlap > 0 && { marginBottom: keyboardOverlap },
+          ]}
+        >
           <View style={styles.emptyIcon}>
             <Ionicons name="search-outline" size={40} color={theme.black60} />
           </View>
@@ -319,7 +336,10 @@ function MerchantsDirectory() {
               />
               <TouchableOpacity
                 testID="merchants-sort"
-                style={styles.sortButton}
+                style={[
+                  styles.sortButton,
+                  { width: searchBoxHeight, height: searchBoxHeight },
+                ]}
                 onPress={onToggleSort}
                 accessibilityRole="button"
                 accessibilityLabel={sortLabel}

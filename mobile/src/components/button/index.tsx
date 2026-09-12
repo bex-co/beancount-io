@@ -27,7 +27,12 @@ type ButtonProps = {
 const getButtonStyles = (theme: ColorTheme) => {
   return StyleSheet.create({
     buttonBase: {
-      height: 44,
+      // A minimum, not a fixed height: at the default text size the 16pt label's
+      // line box plus this padding is well under 44, so the button is still
+      // exactly 44 tall — but an enlarged label grows the button instead of
+      // being clipped by it.
+      minHeight: 44,
+      paddingVertical: 10,
       borderRadius: 8,
       // flex: 1,
       alignItems: "center",
@@ -43,6 +48,11 @@ const getButtonStyles = (theme: ColorTheme) => {
     buttonPrimaryText: {
       color: theme.white,
       fontSize: 16,
+      // Lets an enlarged label wrap inside the button (which grows to fit)
+      // instead of overflowing past its edges. No effect at the default size,
+      // where the label is narrower than the button either way.
+      flexShrink: 1,
+      textAlign: "center",
     },
     buttonOutline: {
       backgroundColor: theme.white,
@@ -55,6 +65,8 @@ const getButtonStyles = (theme: ColorTheme) => {
     buttonOutlineText: {
       color: theme.primary,
       fontSize: 16,
+      flexShrink: 1,
+      textAlign: "center",
     },
     buttonLoading: {
       marginEnd: 8,

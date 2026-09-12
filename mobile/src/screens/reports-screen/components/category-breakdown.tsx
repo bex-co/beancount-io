@@ -1,5 +1,11 @@
 import { Fragment, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
@@ -7,6 +13,7 @@ import {
   fontSizes,
   fontWeights,
   gutter,
+  prefersStackedLayout,
   rowMinHeight,
   rowPaddingVertical,
   sectionHeaderPaddingVertical,
@@ -67,6 +74,39 @@ const getStyles = (theme: ColorTheme) =>
     },
     chevron: {
       marginStart: space.xs,
+    },
+    // Accessibility-text-size variant of both row kinds: the name gets the whole
+    // row width and wraps, and the amount moves onto its own line beneath it.
+    // `rowMinHeight` is already a minimum, so the taller row is safe. Several
+    // distinct categories share a prefix (compressed single-child chains are
+    // named `${path}:${node.name}`), so truncating the name is what made rows
+    // indistinguishable — wrapping keeps them apart.
+    stackedColumn: {
+      flex: 1,
+      marginEnd: space.md,
+    },
+    stackedName: {
+      textAlign: LEADING_TEXT_ALIGN,
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
+      color: theme.text01,
+    },
+    stackedValue: {
+      marginTop: 2,
+      textAlign: LEADING_TEXT_ALIGN,
+      fontSize: fontSizes.md,
+      color: theme.text01,
+    },
+    stackedChildName: {
+      textAlign: LEADING_TEXT_ALIGN,
+      fontSize: fontSizes.md,
+      color: theme.black80,
+    },
+    stackedChildValue: {
+      marginTop: 2,
+      textAlign: LEADING_TEXT_ALIGN,
+      fontSize: fontSizes.md,
+      color: theme.black80,
     },
     barLine: {
       flexDirection: "row",
@@ -154,6 +194,8 @@ export function CategoryBreakdown({
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
 
   const toggle = (account: string, currentlyExpanded: boolean) => {
@@ -178,7 +220,15 @@ export function CategoryBreakdown({
 
     const amountText = formatMoneyWithCurrency(node.value, currency);
 
-    const rowContent = (
+    const rowContent = stacked ? (
+      <>
+        {chevron}
+        <View style={styles.stackedColumn}>
+          <Text style={styles.stackedChildName}>{node.name}</Text>
+          <AmountText style={styles.stackedChildValue}>{amountText}</AmountText>
+        </View>
+      </>
+    ) : (
       <>
         {chevron}
         <Text style={styles.childName} numberOfLines={1}>
@@ -223,7 +273,26 @@ export function CategoryBreakdown({
 
     const amountText = formatMoneyWithCurrency(node.value, currency);
 
-    const line1 = (
+    const topChevron = hasChildren && (
+      <Ionicons
+        style={styles.chevron}
+        name={isExpanded ? "chevron-down" : directionalIcon("chevron-forward")}
+        size={14}
+        color={theme.black60}
+      />
+    );
+
+    const line1 = stacked ? (
+      <View style={styles.topLine}>
+        <View style={styles.stackedColumn}>
+          <Text style={styles.stackedName}>{node.name}</Text>
+          <AmountText mono="medium" style={styles.stackedValue}>
+            {amountText}
+          </AmountText>
+        </View>
+        {topChevron}
+      </View>
+    ) : (
       <View style={styles.topLine}>
         <Text style={styles.topName} numberOfLines={1}>
           {node.name}
@@ -231,16 +300,7 @@ export function CategoryBreakdown({
         <AmountText mono="medium" style={styles.topValue}>
           {amountText}
         </AmountText>
-        {hasChildren && (
-          <Ionicons
-            style={styles.chevron}
-            name={
-              isExpanded ? "chevron-down" : directionalIcon("chevron-forward")
-            }
-            size={14}
-            color={theme.black60}
-          />
-        )}
+        {topChevron}
       </View>
     );
 

@@ -3,6 +3,7 @@ import {
   selectedIndexForValue,
   wheelIndexAtOffset,
   wheelOffsetForValue,
+  wheelTextMaxFontSizeMultiplier,
 } from "../wheel-position";
 
 const THEMES = [
@@ -54,5 +55,43 @@ describe("picker wheel position", () => {
     const staleOffset = wheelOffsetForValue(THEMES, "system");
     expect(wheelIndexAtOffset(staleOffset, languages.length)).toBe(1);
     expect(wheelOffsetForValue(languages, "en")).toBe(0);
+  });
+});
+
+/** React Native lays a text line out at roughly 1.2x its font size. */
+const LINE_HEIGHT_RATIO = 1.2;
+/** The wheel's two label sizes (unselected, selected). */
+const WHEEL_FONT_SIZES = [18, 20];
+
+describe("wheelTextMaxFontSizeMultiplier", () => {
+  it("keeps the label's line box inside the fixed row height", () => {
+    // ITEM_HEIGHT is the single source of truth for snapping (spacers, the
+    // selection indicator and snapToInterval all read it), so a label that
+    // outgrows the row cannot be fixed by making the row taller.
+    for (const fontSize of WHEEL_FONT_SIZES) {
+      const capped =
+        fontSize * wheelTextMaxFontSizeMultiplier(fontSize) * LINE_HEIGHT_RATIO;
+      expect(capped <= ITEM_HEIGHT).toBeTruthy();
+    }
+  });
+
+  it("still lets labels grow well past their designed size", () => {
+    // A cap is an accommodation, not a freeze: anything at or below 1 would
+    // pin the wheel to the default text size.
+    for (const fontSize of WHEEL_FONT_SIZES) {
+      expect(wheelTextMaxFontSizeMultiplier(fontSize) > 1.5).toBeTruthy();
+    }
+  });
+
+  it("caps the larger selected label more tightly than the smaller one", () => {
+    const [unselected, selected] = WHEEL_FONT_SIZES;
+    expect(
+      wheelTextMaxFontSizeMultiplier(selected!) <
+        wheelTextMaxFontSizeMultiplier(unselected!),
+    ).toBeTruthy();
+  });
+
+  it("never returns a multiplier below 1, which would shrink the label", () => {
+    expect(wheelTextMaxFontSizeMultiplier(ITEM_HEIGHT * 10)).toBe(1);
   });
 });

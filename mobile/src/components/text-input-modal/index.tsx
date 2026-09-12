@@ -7,6 +7,9 @@ import {
   Pressable,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import Animated, {
   useSharedValue,
@@ -26,11 +29,25 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
       padding: 16,
     },
+    // The input autofocuses, so the keyboard is always up when this dialog is
+    // open and the action row below the field used to sit behind it. The avoider
+    // carries the card's width so the card itself is unchanged, and the body
+    // scrolls inside a bounded card so enlarged text still reaches the actions.
+    avoider: {
+      width: "100%",
+      maxWidth: 400,
+      maxHeight: "100%",
+    },
     modalContainer: {
       backgroundColor: theme.white,
       borderRadius: 16,
       width: "100%",
       maxWidth: 400,
+      maxHeight: "100%",
+    },
+    body: {
+      flexGrow: 0,
+      flexShrink: 1,
     },
     header: {
       paddingHorizontal: 20,
@@ -183,52 +200,59 @@ export const TextInputModal: React.FC<TextInputModalProps> = ({
           style={StyleSheet.absoluteFill}
           onPress={onCancel}
         ></Pressable>
-        <Animated.View style={[styles.modalContainer, modalAnimatedStyle]}>
-          <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
-            {message && <Text style={styles.message}>{message}</Text>}
-          </View>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder={placeholder}
-              placeholderTextColor={theme.controlPlaceholder}
-              autoFocus
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={onCancel}
-              activeOpacity={0.6}
-            >
-              <Text style={styles.cancelButton}>{cancelButtonText}</Text>
-            </TouchableOpacity>
-            <View style={styles.buttonDivider} />
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleConfirm}
-              activeOpacity={0.6}
-              disabled={isConfirmDisabled}
-            >
-              <Text
-                style={
-                  isConfirmDisabled
-                    ? styles.confirmButtonDisabled
-                    : destructive
-                      ? styles.confirmButtonDestructive
-                      : styles.confirmButton
-                }
+        <KeyboardAvoidingView
+          style={styles.avoider}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <Animated.View style={[styles.modalContainer, modalAnimatedStyle]}>
+            <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
+              <View style={styles.header}>
+                <Text style={styles.title}>{title}</Text>
+                {message && <Text style={styles.message}>{message}</Text>}
+              </View>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={inputText}
+                  onChangeText={setInputText}
+                  placeholder={placeholder}
+                  placeholderTextColor={theme.controlPlaceholder}
+                  autoFocus
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+            </ScrollView>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={onCancel}
+                activeOpacity={0.6}
               >
-                {confirmButtonText}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
+                <Text style={styles.cancelButton}>{cancelButtonText}</Text>
+              </TouchableOpacity>
+              <View style={styles.buttonDivider} />
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleConfirm}
+                activeOpacity={0.6}
+                disabled={isConfirmDisabled}
+              >
+                <Text
+                  style={
+                    isConfirmDisabled
+                      ? styles.confirmButtonDisabled
+                      : destructive
+                        ? styles.confirmButtonDestructive
+                        : styles.confirmButton
+                  }
+                >
+                  {confirmButtonText}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </KeyboardAvoidingView>
       </Animated.View>
     </Modal>
   );

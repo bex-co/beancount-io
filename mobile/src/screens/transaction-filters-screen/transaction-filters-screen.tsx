@@ -14,7 +14,12 @@ import { getFormatDate, parseFormatDate } from "@/common/format-util";
 import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  headerActionMaxFontSizeMultiplier,
+  useTheme,
+} from "@/common/theme";
 import { Button, DatePickerModal } from "@/components";
 import { ListItem } from "@/screens/multi-postings-transaction/list-item";
 import { ColorTheme } from "@/types/theme-props";
@@ -115,6 +120,11 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.primary,
     },
     footer: {
+      // Never squeezed by the growing Apply button above the safe area: the
+      // footer keeps whatever height its button needs and the ScrollView body
+      // above it gives up the space instead (RN's default flexShrink is 0;
+      // stated here because that is the behaviour this layout depends on).
+      flexShrink: 0,
       paddingHorizontal: 16,
       paddingTop: 12,
       paddingBottom: 8,
@@ -239,12 +249,24 @@ export const TransactionFiltersScreen = (): JSX.Element => {
           headerTitle: t("filters"),
           headerLeft: () => (
             <Pressable onPress={() => router.back()} hitSlop={10}>
-              <Text style={styles.headerAction}>{t("cancel")}</Text>
+              <Text
+                style={styles.headerAction}
+                numberOfLines={1}
+                maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
+              >
+                {t("cancel")}
+              </Text>
             </Pressable>
           ),
           headerRight: () => (
             <Pressable onPress={() => setDraft(NO_FILTERS)} hitSlop={10}>
-              <Text style={styles.headerAction}>{t("reset")}</Text>
+              <Text
+                style={styles.headerAction}
+                numberOfLines={1}
+                maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
+              >
+                {t("reset")}
+              </Text>
             </Pressable>
           ),
         }}

@@ -10,6 +10,7 @@ import {
 import {
   fontSizes,
   fontWeights,
+  headerActionMaxFontSizeMultiplier,
   headerActionStyle,
   useTheme,
 } from "@/common/theme";
@@ -175,7 +176,13 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
               accessibilityRole="button"
               accessibilityLabel={i18n.t("save")}
             >
-              <Text style={styles.doneButton}>{i18n.t("save")}</Text>
+              <Text
+                style={styles.doneButton}
+                numberOfLines={1}
+                maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
+              >
+                {i18n.t("save")}
+              </Text>
             </Pressable>
           ),
         }}

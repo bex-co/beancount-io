@@ -17,7 +17,12 @@ import Animated, {
   useAnimatedScrollHandler,
   useAnimatedRef,
 } from "react-native-reanimated";
-import { durations, headerActionStyle, useTheme } from "@/common/theme";
+import {
+  durations,
+  headerActionMaxFontSizeMultiplier,
+  headerActionStyle,
+  useTheme,
+} from "@/common/theme";
 import { easeStandard } from "@/common/theme/motion-easing";
 import { ColorTheme } from "@/types/theme-props";
 
@@ -26,9 +31,12 @@ import {
   ITEM_HEIGHT,
   wheelIndexAtOffset,
   wheelOffsetForValue,
+  wheelTextMaxFontSizeMultiplier,
 } from "./wheel-position";
 
 const VISIBLE_ITEMS = 5;
+const WHEEL_ITEM_FONT_SIZE = 18;
+const WHEEL_SELECTED_FONT_SIZE = 20;
 const WHEEL_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 
 type PickerItem = {
@@ -72,12 +80,23 @@ const getStyles = (theme: ColorTheme) =>
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.black40,
     },
+    // Cancel and Done keep their natural width; the title takes what is left.
+    // At the default text size this is pixel-identical to the previous
+    // space-between row — equal gaps put the title's center exactly midway
+    // between the two actions, which is where centering inside `flex: 1` puts
+    // it too — but an enlarged title now shrinks instead of pushing Done out of
+    // the sheet.
+    headerAction: {
+      flexShrink: 0,
+    },
     cancelButton: {
       color: theme.black80,
       fontSize: 16,
     },
     doneButton: headerActionStyle(theme),
     title: {
+      flex: 1,
+      textAlign: "center",
       fontSize: 18,
       fontWeight: "600",
       color: theme.text01,
@@ -99,11 +118,11 @@ const getStyles = (theme: ColorTheme) =>
       gap: 8,
     },
     wheelItemText: {
-      fontSize: 18,
+      fontSize: WHEEL_ITEM_FONT_SIZE,
       color: theme.text01,
     },
     selectedItemText: {
-      fontSize: 20,
+      fontSize: WHEEL_SELECTED_FONT_SIZE,
       fontWeight: "600",
       color: theme.primary,
     },
@@ -255,6 +274,12 @@ export const Picker: React.FC<PickerProps> = ({
               styles.wheelItemText,
               isSelected && styles.selectedItemText,
             ]}
+            // Row height is the single constant ITEM_HEIGHT (spacers, selection
+            // indicator and snapToInterval all read it), so the label is capped
+            // to what that row can hold rather than the row made variable.
+            maxFontSizeMultiplier={wheelTextMaxFontSizeMultiplier(
+              isSelected ? WHEEL_SELECTED_FONT_SIZE : WHEEL_ITEM_FONT_SIZE,
+            )}
           >
             {item.label}
           </Text>
@@ -282,12 +307,34 @@ export const Picker: React.FC<PickerProps> = ({
         <Pressable style={styles.mask} onPress={handleCancel}></Pressable>
         <Animated.View style={[styles.modalContainer, animatedStyle]}>
           <View style={styles.header}>
-            <TouchableOpacity testID="picker-cancel" onPress={handleCancel}>
-              <Text style={styles.cancelButton}>{cancelButtonText}</Text>
+            <TouchableOpacity
+              testID="picker-cancel"
+              onPress={handleCancel}
+              style={styles.headerAction}
+            >
+              <Text
+                style={styles.cancelButton}
+                numberOfLines={1}
+                maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
+              >
+                {cancelButtonText}
+              </Text>
             </TouchableOpacity>
-            <Text style={styles.title}>{title}</Text>
-            <TouchableOpacity testID="picker-confirm" onPress={handleDone}>
-              <Text style={styles.doneButton}>{confirmButtonText}</Text>
+            <Text style={styles.title} numberOfLines={1}>
+              {title}
+            </Text>
+            <TouchableOpacity
+              testID="picker-confirm"
+              onPress={handleDone}
+              style={styles.headerAction}
+            >
+              <Text
+                style={styles.doneButton}
+                numberOfLines={1}
+                maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
+              >
+                {confirmButtonText}
+              </Text>
             </TouchableOpacity>
           </View>
 

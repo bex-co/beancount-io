@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,10 +18,13 @@ import {
   filterBalanceSeriesByRange,
   seriesToChartArray,
 } from "@/common/series-util";
+import { chartPageHeight } from "./chart-page-height";
 
 const CHART_HEIGHT = 170;
 // PagerView needs a bounded height, and every page is the same shape: the
-// chart's header (value + change) plus the plot.
+// chart's header (value + change) plus the plot. This is the floor and the
+// pre-measurement default — the header is text-driven, so the live height comes
+// from `chartPageHeight` once a page reports its header's layout.
 const PAGE_HEIGHT = 240;
 /** Height the range pills add below the pager — the skeleton covers it too. */
 const PILLS_HEIGHT = 40;
@@ -86,6 +89,16 @@ export function AccountChartsCard({
   const theme = useTheme().colorTheme;
   const router = useRouter();
   const [range, setRange] = useState<TimeRange>("6M");
+  // Tallest header any page has reported. Max, not last: the three pages carry
+  // different amounts and only one is measured at a time, so the pager has to be
+  // tall enough for whichever is showing.
+  const [headerHeight, setHeaderHeight] = useState<number | null>(null);
+  const handleHeaderLayout = useCallback((height: number) => {
+    setHeaderHeight((previous) =>
+      previous === null || height > previous ? height : previous,
+    );
+  }, []);
+  const pageHeight = chartPageHeight(headerHeight, CHART_HEIGHT, PAGE_HEIGHT);
 
   // One door for all three pages: pinned to the tab row (not a lone header
   // above it), so it means the same thing whichever curve is showing. There
@@ -157,6 +170,7 @@ export function AccountChartsCard({
         numbers={chart.numbers}
         currency={currency}
         height={CHART_HEIGHT}
+        onHeaderLayout={handleHeaderLayout}
       />
     );
   });
@@ -168,7 +182,7 @@ export function AccountChartsCard({
         <SegmentedPages
           tabs={charts.map(({ key }) => t(key))}
           pages={pages}
-          height={PAGE_HEIGHT}
+          height={pageHeight}
           trailing={seeAll}
         />
         {/* Outside the pager: one row of pills driving whichever curve is

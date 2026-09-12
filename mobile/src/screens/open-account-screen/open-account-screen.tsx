@@ -23,6 +23,7 @@ import {
   fontSizes,
   fontWeights,
   gutter,
+  headerActionMaxFontSizeMultiplier,
   headerActionStyle,
   space,
   useTheme,
@@ -300,6 +301,8 @@ export function OpenAccountScreenComponent(): JSX.Element {
                   styles.doneButton,
                   !canSubmit && styles.doneButtonDisabled,
                 ]}
+                numberOfLines={1}
+                maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
               >
                 {loading ? t("openAccountSaving") : t("done")}
               </Text>

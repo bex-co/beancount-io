@@ -4,9 +4,11 @@
 import {
   JETBRAINS_MONO_MEDIUM,
   JETBRAINS_MONO_REGULAR,
+  amountMaxFontSizeMultiplier,
   amountStyle,
   fontSizes,
   fontWeights,
+  headerActionMaxFontSizeMultiplier,
   monoMinFontSize,
   resolveMonoFontFamily,
 } from "../common/theme/typography";
@@ -49,6 +51,23 @@ describe("typography tokens", () => {
       for (let i = 1; i < steps.length; i += 1) {
         expect(steps[i] > steps[i - 1]).toBeTruthy();
       }
+    });
+  });
+
+  describe("Dynamic Type caps", () => {
+    it("caps nav-header actions, which the app does not lay out", () => {
+      // The native navigation bar is fixed-height chrome: an uncapped Done/Save
+      // label pushes the title aside and clips against the bar edge.
+      expect(headerActionMaxFontSizeMultiplier > 1).toBeTruthy();
+      expect(headerActionMaxFontSizeMultiplier <= 1.5).toBeTruthy();
+    });
+
+    it("caps header actions no tighter than amounts", () => {
+      // Amounts are the app's tightest row text; a header action is short and
+      // can afford at least as much growth.
+      expect(
+        headerActionMaxFontSizeMultiplier >= amountMaxFontSizeMultiplier,
+      ).toBeTruthy();
     });
   });
 

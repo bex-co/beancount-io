@@ -18,8 +18,13 @@ export {
   amountStyle,
   fontSizes,
   fontWeights,
+  headerActionMaxFontSizeMultiplier,
   headerActionStyle,
 } from "./typography";
+
+// Dynamic Type layout policy. Import-free like ./typography, so the re-export
+// keeps component imports on the one theme barrel.
+export { prefersStackedLayout } from "./dynamic-type";
 
 export { withAlpha } from "./color-utils";
 

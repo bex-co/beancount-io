@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
 import {
   gutter,
   rowMinHeight,
@@ -8,7 +8,7 @@ import {
 import { useThemeStyle } from "@/common/hooks";
 import { FadeOutView } from "@/components/crossfade";
 import { LoadingTile } from "@/components/loading-tile";
-import { SEARCH_BAR_HEIGHT, SEARCH_BAR_RADIUS } from "@/components/search-bar";
+import { SEARCH_BAR_RADIUS, searchFieldHeight } from "@/components/search-bar";
 import { ColorTheme } from "@/types/theme-props";
 
 const getStyles = (theme: ColorTheme) =>
@@ -18,11 +18,12 @@ const getStyles = (theme: ColorTheme) =>
       // wrong color on the first frame in dark mode.
       backgroundColor: theme.white,
     },
+    // Height is applied per-render from `searchFieldHeight(fontScale)` so the
+    // placeholder is the same box as the real field at every text size.
     searchSkeleton: {
       marginHorizontal: gutter,
       marginTop: space.md,
       marginBottom: space.sm,
-      height: SEARCH_BAR_HEIGHT,
       borderRadius: SEARCH_BAR_RADIUS,
     },
     row: {
@@ -76,10 +77,14 @@ const ROW_WIDTHS = [
 
 export function MerchantsListSkeleton() {
   const styles = useThemeStyle(getStyles);
+  const { fontScale } = useWindowDimensions();
 
   return (
     <FadeOutView style={styles.container}>
-      <LoadingTile style={styles.searchSkeleton} />
+      <LoadingTile
+        style={styles.searchSkeleton}
+        height={searchFieldHeight(fontScale)}
+      />
       {ROW_WIDTHS.map((width, index) => (
         <View key={`${width}-${index}`} style={styles.row}>
           <LoadingTile style={styles.iconTile} />

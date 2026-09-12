@@ -19,6 +19,7 @@ import {
   amountStyle,
   fontSizes,
   fontWeights,
+  headerActionMaxFontSizeMultiplier,
   headerActionStyle,
   useTheme,
 } from "@/common/theme";
@@ -490,6 +491,8 @@ const MultiPostingsTransactionScreenComponent = () => {
                   styles.doneButton,
                   !canSave && styles.doneButtonDisabled,
                 ]}
+                numberOfLines={1}
+                maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
               >
                 {t("done")}
               </Text>

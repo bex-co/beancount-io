@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import {
+  Platform,
   StyleSheet,
   TextInput,
   View,
+  useWindowDimensions,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
@@ -10,14 +12,21 @@ import { Ionicons } from "@expo/vector-icons";
 import { fontSizes, space, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { ColorTheme } from "@/types/theme-props";
+import {
+  SEARCH_BAR_RADIUS,
+  SEARCH_FIELD_PADDING_VERTICAL,
+  searchFieldHeight,
+} from "./metrics";
 
 /**
- * The field's outer box, exported so a loading skeleton can mirror it exactly
- * rather than restating the numbers — the account picker renders one, and a
- * copied `36` here would silently shift the layout when data lands.
+ * The field's outer box, re-exported so a loading skeleton or a neighbouring
+ * control can mirror it exactly rather than restating the numbers — three
+ * screens do, and a copied `36` would silently break the row's alignment the
+ * moment the field's height changes. `searchFieldHeight` is the height at a
+ * given Dynamic Type scale; the raw `SEARCH_BAR_HEIGHT` constant stays in
+ * `./metrics` so nothing can pin a box to the default text size by accident.
  */
-export const SEARCH_BAR_HEIGHT = 36;
-export const SEARCH_BAR_RADIUS = 10;
+export { SEARCH_BAR_RADIUS, searchFieldHeight } from "./metrics";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -28,7 +37,11 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
       gap: space.sm,
       paddingHorizontal: space.md,
-      height: SEARCH_BAR_HEIGHT,
+      // Height comes from the caller-independent `searchFieldHeight` as a
+      // *minimum*: at the default text size the 16pt input plus this padding is
+      // far under 36, so the box is still exactly 36 tall, while enlarged typed
+      // text grows the field instead of being clipped by it.
+      paddingVertical: SEARCH_FIELD_PADDING_VERTICAL,
       borderRadius: SEARCH_BAR_RADIUS,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.controlBorder,
@@ -38,8 +51,12 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       fontSize: fontSizes.lg,
       color: theme.black90,
-      // RN gives a bare TextInput its own vertical padding on Android, which
-      // pushes the text off-centre inside a fixed-height field.
+    },
+    // RN gives a bare TextInput its own vertical padding on Android, which
+    // pushes the text off-centre inside the field. Scoped to Android: on iOS
+    // zeroing the padding also clamps the line box, which clips descenders of
+    // enlarged text.
+    inputAndroid: {
       padding: 0,
     },
   });
@@ -86,9 +103,12 @@ export function SearchBar({
 }: SearchBarProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
+  const { fontScale } = useWindowDimensions();
 
   return (
-    <View style={[styles.field, style]}>
+    <View
+      style={[styles.field, { minHeight: searchFieldHeight(fontScale) }, style]}
+    >
       <Ionicons
         name="search-outline"
         size={16}
@@ -96,7 +116,7 @@ export function SearchBar({
       />
       <TextInput
         testID={testID}
-        style={styles.input}
+        style={[styles.input, Platform.OS === "android" && styles.inputAndroid]}
         placeholder={placeholder}
         placeholderTextColor={theme.controlPlaceholder}
         value={value}

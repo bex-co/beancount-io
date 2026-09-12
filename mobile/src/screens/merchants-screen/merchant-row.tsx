@@ -1,8 +1,15 @@
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  useWindowDimensions,
+} from "react-native";
 import {
   fontSizes,
   fontWeights,
   gutter,
+  prefersStackedLayout,
   rowMinHeight,
   rowPaddingVertical,
   space,
@@ -33,6 +40,33 @@ const getStyles = (theme: ColorTheme) =>
     middle: {
       flex: 1,
       marginEnd: space.sm,
+    },
+    // Accessibility-text-size variant: the trailing date/amount block moves
+    // under the icon+name column instead of competing with it for width. The
+    // recurring amount is a plain Text (not AmountText), so it has no 1.4x cap
+    // of its own and used to render as `$1,8…`.
+    rowStacked: {
+      flexDirection: "column",
+      alignItems: "stretch",
+    },
+    stackedMain: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    trailingStacked: {
+      alignItems: "flex-start",
+      maxWidth: "100%",
+      marginTop: 2,
+    },
+    dateStacked: {
+      marginTop: 2,
+      textAlign: LEADING_TEXT_ALIGN,
+    },
+    amountStacked: {
+      textAlign: LEADING_TEXT_ALIGN,
+    },
+    metaStacked: {
+      textAlign: LEADING_TEXT_ALIGN,
     },
     nameRow: {
       flexDirection: "row",
@@ -129,6 +163,8 @@ function primaryTypical(
 export function MerchantRow({ item, onPress }: MerchantRowProps) {
   const styles = useThemeStyle(getStyles);
   const { t, locale } = useTranslations();
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
   const { merchant, resolved, inRecurringSection } = item;
   const showBadge = resolved.isRecurring && !inRecurringSection;
   const detection = resolved.detection;
@@ -169,18 +205,12 @@ export function MerchantRow({ item, onPress }: MerchantRowProps) {
     }
   }
 
-  return (
-    <TouchableOpacity
-      style={styles.row}
-      testID="merchant-row"
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={merchant.payee}
-    >
+  const leading = (
+    <>
       <AccountTypeIcon postings={[]} payee={merchant.payee} />
       <View style={styles.middle}>
         <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text style={styles.name} numberOfLines={stacked ? undefined : 1}>
             {merchant.payee}
           </Text>
           {showBadge ? (
@@ -195,27 +225,51 @@ export function MerchantRow({ item, onPress }: MerchantRowProps) {
           {subtitle}
         </Text>
       </View>
-      {inRecurringSection ? (
-        <View style={styles.trailing}>
-          {trailingAmount ? (
-            <Text style={styles.amount} numberOfLines={1}>
-              {trailingAmount}
-            </Text>
-          ) : null}
-          {trailingMeta ? (
-            <Text
-              style={[styles.meta, trailingOverdue && styles.overdueMeta]}
-              numberOfLines={1}
-            >
-              {trailingMeta}
-            </Text>
-          ) : null}
-        </View>
-      ) : lastDate ? (
-        <Text style={styles.date} numberOfLines={1}>
-          {lastDate}
+    </>
+  );
+
+  const trailing = inRecurringSection ? (
+    <View style={[styles.trailing, stacked && styles.trailingStacked]}>
+      {trailingAmount ? (
+        <Text
+          style={[styles.amount, stacked && styles.amountStacked]}
+          numberOfLines={stacked ? undefined : 1}
+        >
+          {trailingAmount}
         </Text>
       ) : null}
+      {trailingMeta ? (
+        <Text
+          style={[
+            styles.meta,
+            trailingOverdue && styles.overdueMeta,
+            stacked && styles.metaStacked,
+          ]}
+          numberOfLines={1}
+        >
+          {trailingMeta}
+        </Text>
+      ) : null}
+    </View>
+  ) : lastDate ? (
+    <Text
+      style={[styles.date, stacked && styles.dateStacked]}
+      numberOfLines={1}
+    >
+      {lastDate}
+    </Text>
+  ) : null;
+
+  return (
+    <TouchableOpacity
+      style={[styles.row, stacked && styles.rowStacked]}
+      testID="merchant-row"
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={merchant.payee}
+    >
+      {stacked ? <View style={styles.stackedMain}>{leading}</View> : leading}
+      {trailing}
     </TouchableOpacity>
   );
 }
