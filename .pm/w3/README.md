@@ -59,7 +59,6 @@ producer is an upstream `@rustledger/wasm` defect with no released fix (re-check
 - [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
 - [115](./115.md) — Mobile carries an account filter into a different ledger and hides its journal
 - [117](./117.md) — Download ZIP fails without user feedback when archive discovery rejects
-- [118](./118.md) — Smart Import accepts reordered CSV headers but swaps monetary values
 - [119](./119.md) — m17 follow-up: initial virtual diff selection is consumed before the list is ready
 - [120](./120.md) — Accounts loses search and type selection on browser Back
 - [122](./122.md) — Mobile Back revives an account route under a different ledger
@@ -70,11 +69,7 @@ producer is an upstream `@rustledger/wasm` defect with no released fix (re-check
 - [130](./130.md) — Mobile Reports recent entries use a different month from the chart
 - [131](./131.md) — Journal loses the current page after an account drill-down
 - [132](./132.md) — Current plan summary ignores the selected app language
-- [135](./135.md) — Editing a multiline import description joins its lines
-- [136](./136.md) — Import Select All hides partially selected state
 - [137](./137.md) — Transaction Share link closes its menu without opening the iOS share sheet
-- [141](./141.md) — Import rejects a valid calendar date in a different browser timezone
-- [142](./142.md) — Import preview hides existing field errors until an unrelated edit
 - [143](./143.md) — Chart contact leaves the ledger drawer unresponsive
 - [146](./146.md) — Generated padding rows open an unusable Entry Context dialog
 - [149](./149.md) — Name the native posting amount fields and expose their signed values
