@@ -375,6 +375,83 @@ async function checkScopeRefusal(o: Options): Promise<CheckResult> {
   return v.pass(`refused with isError: true and code ${error.code}`);
 }
 
+/**
+ * 11 — the discovery manifest names the endpoint that actually serves MCP
+ * (w2/m29:t002).
+ *
+ * `.well-known/mcp.json` is what a client reads before it has a credential,
+ * so a wrong `endpoint` there is a newcomer's first and only impression. It
+ * used to be derived from the dashboard URL while `auth` came from the
+ * issuer — correct only when both are the same host, which on a split
+ * self-host they are not.
+ */
+async function checkManifest(o: Options): Promise<CheckResult> {
+  const v = verdict(
+    "11 manifest-origin",
+    "The MCP manifest's endpoint and auth URLs reach this deployment",
+  );
+  const res = await probe(`${o.baseUrl}/.well-known/mcp.json`, {
+    method: "GET",
+  });
+  if (!res.ok) return v.fail(res.error);
+  if (res.status !== 200) {
+    return v.fail(
+      `GET /.well-known/mcp.json returned ${res.status}. Clients discover this server here`,
+    );
+  }
+  let manifest: {
+    endpoint?: string;
+    auth?: { authorizationUrl?: string; tokenUrl?: string };
+    openapi?: string;
+  };
+  try {
+    manifest = JSON.parse(res.body);
+  } catch {
+    return v.fail(`the manifest is not JSON: ${res.body.slice(0, 120)}`);
+  }
+  if (!manifest.endpoint) return v.fail("the manifest names no endpoint");
+
+  // The endpoint must be the address that actually reaches MCP. An
+  // unauthenticated POST there is a 401 carrying the discovery pointer;
+  // anything else means it is pointing somewhere that is not this server.
+  const probed = await probe(manifest.endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json, text/event-stream",
+    },
+    body: INITIALIZE,
+  });
+  if (!probed.ok) {
+    return v.fail(
+      `the advertised endpoint ${manifest.endpoint} is unreachable: ${probed.error}`,
+    );
+  }
+  if (probed.status !== 401 || !probed.headers.get("www-authenticate")) {
+    return v.fail(
+      `the advertised endpoint ${manifest.endpoint} answered ${probed.status} without a WWW-Authenticate challenge — it does not reach the MCP handler`,
+    );
+  }
+
+  for (const [label, url] of [
+    ["auth.authorizationUrl", manifest.auth?.authorizationUrl],
+    ["auth.tokenUrl", manifest.auth?.tokenUrl],
+    ["openapi", manifest.openapi],
+  ] as const) {
+    if (!url) return v.fail(`the manifest names no ${label}`);
+    const reached = await probe(url, { method: "GET" });
+    if (!reached.ok) return v.fail(`${label} (${url}) is unreachable`);
+    if (reached.status >= 500) {
+      return v.fail(`${label} (${url}) returned ${reached.status}`);
+    }
+  }
+
+  const bytes = Buffer.byteLength(res.body, "utf8");
+  return v.pass(
+    `endpoint ${manifest.endpoint} reaches MCP; auth and openapi resolve; ${bytes} bytes`,
+  );
+}
+
 /** 10 — a result reads as text and parses as data (w2/m28:t001). */
 async function checkResultShape(o: Options): Promise<CheckResult> {
   const v = verdict(
@@ -643,6 +720,7 @@ export const CHECKS = [
   checkOptionalUserId,
   checkDiscoveryWorkload,
   checkResultShape,
+  checkManifest,
 ] as const;
 
 export type { CheckResult, Options, Outcome };
@@ -653,7 +731,7 @@ async function main(): Promise<void> {
 
   const results: CheckResult[] = [];
   // Sequential on purpose: several checks re-probe the endpoint, and a readable
-  // transcript beats saving a few seconds on a ten-request run.
+  // transcript beats saving a few seconds on an eleven-request run.
   for (const check of CHECKS) {
     const result = await check(options);
     results.push(result);
@@ -678,7 +756,7 @@ async function main(): Promise<void> {
 }
 
 // Only when invoked as a command — importing this module (from a test, or to
-// reuse one check) must not fire ten HTTP probes and call process.exit.
+// reuse one check) must not fire eleven HTTP probes and call process.exit.
 if (require.main === module) {
   void main();
 }

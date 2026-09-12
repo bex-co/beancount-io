@@ -47,6 +47,14 @@ const enMessages = {
     "For your security, Beancount.io will not show this token again. Store it in a secret manager.",
   "userSettings.personalAccessToken": "Personal access token",
   "userSettings.apiKeyDone": "Done",
+  "userSettings.apiKeyUseThisKey": "Use this token",
+  "userSettings.apiKeyUseThisKeyDescription":
+    "Paste one of these into your MCP client. The token is already filled in.",
+  "userSettings.apiKeyUseAKeyDescription":
+    "Paste one of these into your MCP client, replacing the placeholder with one of your tokens.",
+  "userSettings.apiKeyMcpGuide": "MCP guide",
+  "userSettings.apiKeyCursorHint": "Add to ~/.cursor/mcp.json",
+  "userSettings.apiKeyClaudeDesktopHint": "Add to claude_desktop_config.json",
   "userSettings.apiKeyNameRequired": "Enter a token name.",
   "userSettings.apiKeyNameTooLong":
     "Token names must be 100 characters or fewer.",
@@ -125,6 +133,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "За сигурност Beancount.io няма да го покаже отново. Запазете го в мениджър на тайни.",
     "userSettings.personalAccessToken": "Личен токен за достъп",
     "userSettings.apiKeyDone": "Готово",
+    "userSettings.apiKeyUseThisKey": "Използвайте този токен",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "Поставете едно от тези в своя MCP клиент. Токенът вече е попълнен.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "Поставете едно от тези в своя MCP клиент, като замените контейнера с един от вашите токени.",
+    "userSettings.apiKeyMcpGuide": "Ръководство за MCP",
+    "userSettings.apiKeyCursorHint": "Добавете в ~/.cursor/mcp.json",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "Добавете в claude_desktop_config.json",
     "userSettings.apiKeyNameRequired": "Въведете име на токена.",
     "userSettings.apiKeyNameTooLong": "Името може да е до 100 знака.",
     "userSettings.apiKeyScopeRequired": "Изберете поне едно разрешение.",
@@ -196,6 +213,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Per seguretat, Beancount.io no el tornarà a mostrar. Desa'l en un gestor de secrets.",
     "userSettings.personalAccessToken": "Token d'accés personal",
     "userSettings.apiKeyDone": "Fet",
+    "userSettings.apiKeyUseThisKey": "Fes servir aquest testimoni",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "Enganxa un d'aquests al teu client MCP. El testimoni ja hi és.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "Enganxa un d'aquests al teu client MCP i substitueix el text de mostra per un dels teus testimonis.",
+    "userSettings.apiKeyMcpGuide": "Guia MCP",
+    "userSettings.apiKeyCursorHint": "Afegeix-ho a ~/.cursor/mcp.json",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "Afegeix-ho a claude_desktop_config.json",
     "userSettings.apiKeyNameRequired": "Introdueix un nom per al token.",
     "userSettings.apiKeyNameTooLong":
       "El nom ha de tenir 100 caràcters o menys.",
@@ -270,6 +296,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Aus Sicherheitsgründen zeigt Beancount.io dieses Token nicht erneut. Speichere es in einem Secret Manager.",
     "userSettings.personalAccessToken": "Persönliches Zugriffstoken",
     "userSettings.apiKeyDone": "Fertig",
+    "userSettings.apiKeyUseThisKey": "Dieses Token verwenden",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "Fügen Sie eines davon in Ihren MCP-Client ein. Das Token ist bereits eingetragen.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "Fügen Sie eines davon in Ihren MCP-Client ein und ersetzen Sie den Platzhalter durch eines Ihrer Tokens.",
+    "userSettings.apiKeyMcpGuide": "MCP-Anleitung",
+    "userSettings.apiKeyCursorHint": "In ~/.cursor/mcp.json eintragen",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "In claude_desktop_config.json eintragen",
     "userSettings.apiKeyNameRequired": "Gib einen Tokennamen ein.",
     "userSettings.apiKeyNameTooLong":
       "Tokennamen dürfen höchstens 100 Zeichen lang sein.",
@@ -345,6 +380,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Por seguridad, Beancount.io no volverá a mostrarlo. Guárdalo en un gestor de secretos.",
     "userSettings.personalAccessToken": "Token de acceso personal",
     "userSettings.apiKeyDone": "Listo",
+    "userSettings.apiKeyUseThisKey": "Usa este token",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "Pega uno de estos en tu cliente MCP. El token ya está incluido.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "Pega uno de estos en tu cliente MCP y sustituye el marcador por uno de tus tokens.",
+    "userSettings.apiKeyMcpGuide": "Guía de MCP",
+    "userSettings.apiKeyCursorHint": "Añádelo a ~/.cursor/mcp.json",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "Añádelo a claude_desktop_config.json",
     "userSettings.apiKeyNameRequired": "Introduce un nombre para el token.",
     "userSettings.apiKeyNameTooLong":
       "El nombre debe tener 100 caracteres o menos.",
@@ -418,6 +462,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Pour votre sécurité, Beancount.io ne l’affichera plus. Enregistrez-le dans un gestionnaire de secrets.",
     "userSettings.personalAccessToken": "Jeton d’accès personnel",
     "userSettings.apiKeyDone": "Terminé",
+    "userSettings.apiKeyUseThisKey": "Utiliser ce jeton",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "Collez l'un de ces éléments dans votre client MCP. Le jeton y figure déjà.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "Collez l'un de ces éléments dans votre client MCP en remplaçant l'espace réservé par l'un de vos jetons.",
+    "userSettings.apiKeyMcpGuide": "Guide MCP",
+    "userSettings.apiKeyCursorHint": "À ajouter dans ~/.cursor/mcp.json",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "À ajouter dans claude_desktop_config.json",
     "userSettings.apiKeyNameRequired": "Saisissez un nom de jeton.",
     "userSettings.apiKeyNameTooLong":
       "Le nom doit contenir au maximum 100 caractères.",
@@ -488,6 +541,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "برای امنیت، Beancount.io این توکن را دوباره نمایش نمی‌دهد. آن را در مدیر اسرار ذخیره کنید.",
     "userSettings.personalAccessToken": "توکن دسترسی شخصی",
     "userSettings.apiKeyDone": "انجام شد",
+    "userSettings.apiKeyUseThisKey": "از این توکن استفاده کنید",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "یکی از این‌ها را در کلاینت MCP خود بچسبانید. توکن از پیش وارد شده است.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "یکی از این‌ها را در کلاینت MCP خود بچسبانید و جای‌نگهدار را با یکی از توکن‌های خود جایگزین کنید.",
+    "userSettings.apiKeyMcpGuide": "راهنمای MCP",
+    "userSettings.apiKeyCursorHint": "به ~/.cursor/mcp.json اضافه کنید",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "به claude_desktop_config.json اضافه کنید",
     "userSettings.apiKeyNameRequired": "نام توکن را وارد کنید.",
     "userSettings.apiKeyNameTooLong": "نام توکن باید حداکثر ۱۰۰ نویسه باشد.",
     "userSettings.apiKeyScopeRequired": "حداقل یک مجوز انتخاب کنید.",
@@ -559,6 +621,14 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "安全のため、Beancount.io で再表示することはできません。シークレット管理ツールに保存してください。",
     "userSettings.personalAccessToken": "個人アクセストークン",
     "userSettings.apiKeyDone": "完了",
+    "userSettings.apiKeyUseThisKey": "このトークンを使う",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "いずれかを MCP クライアントに貼り付けてください。トークンは入力済みです。",
+    "userSettings.apiKeyUseAKeyDescription":
+      "いずれかを MCP クライアントに貼り付け、プレースホルダーをご自身のトークンに置き換えてください。",
+    "userSettings.apiKeyMcpGuide": "MCP ガイド",
+    "userSettings.apiKeyCursorHint": "~/.cursor/mcp.json に追加",
+    "userSettings.apiKeyClaudeDesktopHint": "claude_desktop_config.json に追加",
     "userSettings.apiKeyNameRequired": "トークン名を入力してください。",
     "userSettings.apiKeyNameTooLong":
       "トークン名は 100 文字以内にしてください。",
@@ -631,6 +701,14 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "보안을 위해 Beancount.io에서 다시 표시하지 않습니다. 비밀 관리 도구에 저장하세요.",
     "userSettings.personalAccessToken": "개인 액세스 토큰",
     "userSettings.apiKeyDone": "완료",
+    "userSettings.apiKeyUseThisKey": "이 토큰 사용하기",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "아래 중 하나를 MCP 클라이언트에 붙여넣으세요. 토큰은 이미 입력되어 있습니다.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "아래 중 하나를 MCP 클라이언트에 붙여넣고 자리 표시자를 보유한 토큰으로 바꾸세요.",
+    "userSettings.apiKeyMcpGuide": "MCP 가이드",
+    "userSettings.apiKeyCursorHint": "~/.cursor/mcp.json에 추가",
+    "userSettings.apiKeyClaudeDesktopHint": "claude_desktop_config.json에 추가",
     "userSettings.apiKeyNameRequired": "토큰 이름을 입력하세요.",
     "userSettings.apiKeyNameTooLong": "토큰 이름은 100자 이하여야 합니다.",
     "userSettings.apiKeyScopeRequired": "권한을 하나 이상 선택하세요.",
@@ -703,6 +781,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Voor je veiligheid toont Beancount.io dit token niet opnieuw. Bewaar het in een geheimenbeheerder.",
     "userSettings.personalAccessToken": "Persoonlijk toegangstoken",
     "userSettings.apiKeyDone": "Klaar",
+    "userSettings.apiKeyUseThisKey": "Gebruik dit token",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "Plak een van deze in je MCP-client. Het token is al ingevuld.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "Plak een van deze in je MCP-client en vervang de tijdelijke tekst door een van je tokens.",
+    "userSettings.apiKeyMcpGuide": "MCP-handleiding",
+    "userSettings.apiKeyCursorHint": "Toevoegen aan ~/.cursor/mcp.json",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "Toevoegen aan claude_desktop_config.json",
     "userSettings.apiKeyNameRequired": "Voer een tokennaam in.",
     "userSettings.apiKeyNameTooLong":
       "Tokennamen mogen maximaal 100 tekens bevatten.",
@@ -777,6 +864,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Para sua segurança, o Beancount.io não o mostrará novamente. Guarde-o em um gerenciador de segredos.",
     "userSettings.personalAccessToken": "Token de acesso pessoal",
     "userSettings.apiKeyDone": "Concluído",
+    "userSettings.apiKeyUseThisKey": "Usar este token",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "Cole um destes no seu cliente MCP. O token já está preenchido.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "Cole um destes no seu cliente MCP e substitua o espaço reservado por um dos seus tokens.",
+    "userSettings.apiKeyMcpGuide": "Guia do MCP",
+    "userSettings.apiKeyCursorHint": "Adicione em ~/.cursor/mcp.json",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "Adicione em claude_desktop_config.json",
     "userSettings.apiKeyNameRequired": "Digite um nome para o token.",
     "userSettings.apiKeyNameTooLong":
       "O nome deve ter no máximo 100 caracteres.",
@@ -849,6 +945,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Для безопасности Beancount.io не покажет токен повторно. Сохраните его в менеджере секретов.",
     "userSettings.personalAccessToken": "Персональный токен доступа",
     "userSettings.apiKeyDone": "Готово",
+    "userSettings.apiKeyUseThisKey": "Использовать этот токен",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "Вставьте одно из этих значений в свой MCP-клиент. Токен уже подставлен.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "Вставьте одно из этих значений в свой MCP-клиент, заменив заполнитель одним из своих токенов.",
+    "userSettings.apiKeyMcpGuide": "Руководство по MCP",
+    "userSettings.apiKeyCursorHint": "Добавьте в ~/.cursor/mcp.json",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "Добавьте в claude_desktop_config.json",
     "userSettings.apiKeyNameRequired": "Введите название токена.",
     "userSettings.apiKeyNameTooLong":
       "Название должно содержать не более 100 символов.",
@@ -922,6 +1027,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Z bezpečnostných dôvodov ho Beancount.io už nezobrazí. Uložte ho v správcovi tajomstiev.",
     "userSettings.personalAccessToken": "Osobný prístupový token",
     "userSettings.apiKeyDone": "Hotovo",
+    "userSettings.apiKeyUseThisKey": "Použiť tento token",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "Vložte jeden z nich do svojho MCP klienta. Token je už doplnený.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "Vložte jeden z nich do svojho MCP klienta a zástupný text nahraďte niektorým zo svojich tokenov.",
+    "userSettings.apiKeyMcpGuide": "Príručka MCP",
+    "userSettings.apiKeyCursorHint": "Pridajte do ~/.cursor/mcp.json",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "Pridajte do claude_desktop_config.json",
     "userSettings.apiKeyNameRequired": "Zadajte názov tokenu.",
     "userSettings.apiKeyNameTooLong": "Názov môže mať najviac 100 znakov.",
     "userSettings.apiKeyScopeRequired": "Vyberte aspoň jedno oprávnenie.",
@@ -992,6 +1106,15 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "З міркувань безпеки Beancount.io більше не покаже цей токен. Збережіть його в менеджері секретів.",
     "userSettings.personalAccessToken": "Персональний токен доступу",
     "userSettings.apiKeyDone": "Готово",
+    "userSettings.apiKeyUseThisKey": "Використати цей токен",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "Вставте одне з цих значень у свій MCP-клієнт. Токен уже підставлено.",
+    "userSettings.apiKeyUseAKeyDescription":
+      "Вставте одне з цих значень у свій MCP-клієнт, замінивши заповнювач одним зі своїх токенів.",
+    "userSettings.apiKeyMcpGuide": "Посібник MCP",
+    "userSettings.apiKeyCursorHint": "Додайте до ~/.cursor/mcp.json",
+    "userSettings.apiKeyClaudeDesktopHint":
+      "Додайте до claude_desktop_config.json",
     "userSettings.apiKeyNameRequired": "Введіть назву токена.",
     "userSettings.apiKeyNameTooLong":
       "Назва має містити не більше 100 символів.",
@@ -1059,6 +1182,14 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "为确保安全，Beancount.io 不会再次显示此令牌。请将其保存在密钥管理器中。",
     "userSettings.personalAccessToken": "个人访问令牌",
     "userSettings.apiKeyDone": "完成",
+    "userSettings.apiKeyUseThisKey": "使用此令牌",
+    "userSettings.apiKeyUseThisKeyDescription":
+      "将其中之一粘贴到你的 MCP 客户端，令牌已经填好。",
+    "userSettings.apiKeyUseAKeyDescription":
+      "将其中之一粘贴到你的 MCP 客户端，并把占位符替换为你的某个令牌。",
+    "userSettings.apiKeyMcpGuide": "MCP 指南",
+    "userSettings.apiKeyCursorHint": "添加到 ~/.cursor/mcp.json",
+    "userSettings.apiKeyClaudeDesktopHint": "添加到 claude_desktop_config.json",
     "userSettings.apiKeyNameRequired": "请输入令牌名称。",
     "userSettings.apiKeyNameTooLong": "令牌名称不得超过 100 个字符。",
     "userSettings.apiKeyScopeRequired": "请至少选择一项权限。",

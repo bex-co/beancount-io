@@ -7,8 +7,13 @@ import { API_SCOPES } from "@/server/api/identity";
 import { setWellKnownRoutes } from "../well-known-route";
 
 const config = {
-  dashboard: { url: "https://beancount.io" },
-  oauth: { issuer: "https://beancount.io" },
+  // Deliberately different origins. This pins `mcpManifest`'s own contract —
+  // client URLs follow the issuer, human links follow the dashboard. Note the
+  // config module only produces this shape outside production, where
+  // `oauthIssuer` is `SERVER_URL`; in production it forces the two equal, so
+  // this fixture exercises the function, not a production state (w2/015).
+  dashboard: { url: "https://app.example.test" },
+  oauth: { issuer: "https://api.example.test" },
   appLinks: {
     appleTeamId: "PTLM7BZQMM",
     androidSha256Fingerprints: [
@@ -64,23 +69,21 @@ describe("well-known routes", () => {
     const response = await fetch(`${origin}/.well-known/mcp.json`);
     const body = (await response.json()) as {
       endpoint: string;
-      tools: Array<{ name: string }>;
+      tools: string[];
       auth: { authorizationUrl: string; tokenUrl: string; scopes: string[] };
     };
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toMatch(/^application\/json/);
-    expect(body.endpoint).toBe("https://beancount.io/api-gateway/mcp");
+    expect(body.endpoint).toBe("https://api.example.test/api-gateway/mcp");
     expect(body.auth.authorizationUrl).toBe(
-      "https://beancount.io/api-gateway/oauth/auth",
+      "https://api.example.test/api-gateway/oauth/auth",
     );
     expect(body.auth.tokenUrl).toBe(
-      "https://beancount.io/api-gateway/oauth/token",
+      "https://api.example.test/api-gateway/oauth/token",
     );
     expect(body.auth.scopes).toEqual(API_SCOPES);
-    expect(body.tools.map(({ name }) => name)).toEqual(
-      MCP_TOOLS.map(({ name }) => name),
-    );
+    expect(body.tools).toEqual(MCP_TOOLS.map(({ name }) => name));
   });
 
   it("declares the resource surface too, not only tools", async () => {
@@ -100,11 +103,10 @@ describe("well-known routes", () => {
     });
   });
 
-  it("advertises query parameters and structured tool results", async () => {
+  it("advertises resource query parameters in their URI templates", async () => {
     const response = await fetch(`${origin}/.well-known/mcp.json`);
     const body = (await response.json()) as {
       resources: Array<{ name: string; uriTemplate: string }>;
-      tools: Array<{ name: string; inputSchema: object; outputSchema: object }>;
     };
     const archive = body.resources.find(({ name }) => name === "ledgerArchive");
     expect(archive?.uriTemplate).toBe(
@@ -116,14 +118,61 @@ describe("well-known routes", () => {
     expect(asset?.uriTemplate).toBe(
       "beancount://assets/download-url{?ledgerRepoId,filename}",
     );
-    const structuredBql = body.tools.find(
-      ({ name }) => name === "runBqlQueryStructured",
+  });
+
+  /**
+   * w2/m29:t002. `endpoint` and `openapi` came from the dashboard URL while
+   * `auth` came from the issuer, so a deployment whose dashboard and API are
+   * different hosts advertised an MCP address that serves HTML.
+   */
+  it("derives every machine-reachable URL from the API origin", async () => {
+    const response = await fetch(`${origin}/.well-known/mcp.json`);
+    const body = (await response.json()) as {
+      endpoint: string;
+      openapi: string;
+      auth: { authorizationUrl: string; tokenUrl: string };
+      links: { dashboard: string; apiKeys: string };
+    };
+
+    expect(body.endpoint).toBe("https://api.example.test/api-gateway/mcp");
+    expect(body.openapi).toBe(
+      "https://api.example.test/api-gateway/v1/openapi.json",
     );
-    expect(structuredBql?.inputSchema).toMatchObject({
-      type: "object",
-      properties: { ledger: { type: "string" }, query: { type: "string" } },
-    });
-    expect(structuredBql?.outputSchema).toHaveProperty("properties");
+    expect(body.auth.authorizationUrl).toBe(
+      "https://api.example.test/api-gateway/oauth/auth",
+    );
+    expect(body.auth.tokenUrl).toBe(
+      "https://api.example.test/api-gateway/oauth/token",
+    );
+    // The dashboard origin survives only where a person, not a client, goes.
+    expect(body.links.dashboard).toBe("https://app.example.test");
+    expect(body.links.apiKeys).toBe(
+      "https://app.example.test/settings/api-keys",
+    );
+  });
+
+  /**
+   * The manifest is a directory entry, not a contract. Full input and output
+   * schemas made this ~20 KB on an anonymous cached GET; `tools/list`
+   * publishes them authoritatively.
+   */
+  it("stays small by naming tools rather than publishing their schemas", async () => {
+    const response = await fetch(`${origin}/.well-known/mcp.json`);
+    const text = await response.text();
+    expect(Buffer.byteLength(text, "utf8")).toBeLessThan(8 * 1024);
+
+    const body = JSON.parse(text) as {
+      tools: string[];
+      resources: Array<Record<string, unknown>>;
+    };
+    // Tools are names; resources are names and the URI grammar a client needs
+    // to build a read. Descriptions and schemas live in `tools/list`.
+    expect(body.tools.length).toBeGreaterThan(0);
+    expect(body.tools.every((tool) => typeof tool === "string")).toBe(true);
+    expect(body.tools).toContain("runBqlQuery");
+    for (const resource of body.resources) {
+      expect(Object.keys(resource).sort()).toEqual(["name", "uriTemplate"]);
+    }
   });
 
   it("serves the Apple app-site association as JSON", async () => {

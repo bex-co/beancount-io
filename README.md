@@ -159,19 +159,17 @@ Start with the [first-month tutorial](./cli/docs/TUTORIAL.md), then use the [CLI
 
 ### Coding agent (MCP)
 
-Point an MCP client at a deployment to query and edit a ledger from an agent:
+Mint a key at `/settings/api-keys`, then point an MCP client at your
+deployment — the mint dialog shows this with the key already in it:
 
-```json
-{
-  "mcpServers": {
-    "beancount": {
-      "type": "http",
-      "url": "https://your-deployment/api-gateway/mcp",
-      "headers": { "Authorization": "Bearer bcio_your_ledger_scoped_key" }
-    }
-  }
-}
+```bash
+claude mcp add --transport http beancount https://your-deployment/api-gateway/mcp \
+  --header "Authorization: Bearer bcio_your_ledger_scoped_key"
 ```
+
+Or `bea cloud mcp config --client claude-code --key bcio_...` from the CLI. The
+[five-minute quickstart](./backend-cluster/backend-v2/docs/mcp.md) covers
+Cursor and Claude Desktop and the first prompt to try.
 
 Twenty-six tools — BQL queries, file listing, reads, edits, entry and receipt
 insertion, appending directives as plain Beancount text, statement parsing,

@@ -12,6 +12,7 @@ import typer
 
 from cli import context, output
 from cli.commands.cloud.ledger.app import ledger_app
+from cli.commands.cloud.mcp import mcp_app
 
 cloud_app = typer.Typer(
     help="Hosted ledgers and AI proxy; see 'cloud login'.",
@@ -19,6 +20,7 @@ cloud_app = typer.Typer(
     rich_markup_mode=None,
 )
 cloud_app.add_typer(ledger_app, name="ledger")
+cloud_app.add_typer(mcp_app, name="mcp")
 
 
 @cloud_app.command("login")

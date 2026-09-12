@@ -12,6 +12,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { ApiKeysDocument } from "@/graphql/definitions";
 import { ApiKeyCard } from "./api-key-card";
 import { ApiKeyCreateDialog } from "./api-key-create-dialog";
+import { McpSetup } from "./mcp-setup";
 
 export default function ApiKeysSettingsPage() {
   const { t } = useTranslations();
@@ -41,6 +42,15 @@ export default function ApiKeysSettingsPage() {
             </Button>
           </ApiKeyCreateDialog>
         </div>
+
+        {/* The setup a returning user comes back for: the key itself is
+            unrecoverable, but the endpoint and client configuration are not,
+            and they were previously visible only in the mint dialog. */}
+        <Card>
+          <CardContent className="pt-6">
+            <McpSetup />
+          </CardContent>
+        </Card>
 
         {loading && !data ? (
           <Card>

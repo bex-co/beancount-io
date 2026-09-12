@@ -6,5 +6,9 @@ exports[`no untranslated user-facing strings > does not introduce new untranslat
   "features/bql/lib/bql-completion-snippets.ts | UI config | select * from balances",
   "features/bql/lib/bql-completion-snippets.ts | UI config | select * from entries",
   "features/bql/lib/bql-completion-snippets.ts | UI config | select * from transactions",
+  "features/user-settings/pages/api-keys/mcp-setup.tsx | JSX text | Claude Code",
+  "features/user-settings/pages/api-keys/mcp-setup.tsx | JSX text | Claude Desktop",
+  "features/user-settings/pages/api-keys/mcp-setup.tsx | JSX text | Cursor",
+  "features/user-settings/pages/api-keys/mcp-setup.tsx | JSX text | curl",
 ]
 `;

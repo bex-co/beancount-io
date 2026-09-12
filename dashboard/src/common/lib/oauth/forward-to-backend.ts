@@ -1,14 +1,8 @@
 import { serverConfig } from "@/config/config.server";
+import { apiOriginFrom } from "@/common/lib/api-origin";
 
 export function backendBaseFromApiUrl(apiUrl: string): string {
-  const url = new URL(apiUrl);
-  const marker = "/api-gateway";
-  const markerIndex = url.pathname.lastIndexOf(marker);
-  if (markerIndex === -1) {
-    throw new Error("OAuth backend URL must contain /api-gateway");
-  }
-  const publicPrefix = url.pathname.slice(0, markerIndex).replace(/\/$/, "");
-  return `${url.origin}${publicPrefix}`;
+  return apiOriginFrom(apiUrl);
 }
 
 /**

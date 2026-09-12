@@ -6,8 +6,64 @@ banks. It runs inside `backend-v2` at **`/api-gateway/mcp`**. The agent connects
 a Beancount.io deployment; this endpoint does not open a local `.bean` file on
 the agent's machine.
 
+## Connect in five minutes
+
+1. **Mint a key.** Sign in and open `/settings/api-keys` → *New token*. Select
+   `ledger.read` and `ledger.write`, and set **Ledger restriction** to
+   `owner/name` so the key can only reach that one ledger. Minting needs a paid
+   plan. The dialog shows the setup for your client with the key already in it
+   — copy that and skip to step 3.
+
+2. **Or let the CLI print it**, if you already use `bea`:
+
+   ```bash
+   bea cloud mcp config --client claude-code --key bcio_...
+   ```
+
+   `--write` merges it into `.mcp.json` after showing you the diff. Cursor and
+   Claude Desktop are `--client cursor` and `--client claude-desktop`.
+
+3. **Point your client at it.** For Claude Code:
+
+   ```bash
+   claude mcp add --transport http beancount https://books.example.com/api-gateway/mcp \
+     --header "Authorization: Bearer bcio_..."
+   ```
+
+   For Cursor (`~/.cursor/mcp.json`) or Claude Desktop
+   (`claude_desktop_config.json`):
+
+   ```json
+   {
+     "mcpServers": {
+       "beancount": {
+         "type": "http",
+         "url": "https://books.example.com/api-gateway/mcp",
+         "headers": { "Authorization": "Bearer bcio_..." }
+       }
+     }
+   }
+   ```
+
+4. **Try it.** Ask your agent:
+
+   > What did I spend on groceries last month, and does my ledger have any errors?
+
+   It should reach for `runBqlQuery` and `checkLedger`. If it asks which ledger
+   you mean, your key is unpinned — pass `ledger: "owner/name"` per call, or
+   mint a pinned one.
+
+5. **Know what your key can do.** A pinned key reaches exactly one ledger and
+   cannot widen past it. Scopes are ceilings, not grants: every call is
+   re-authorized against your current access, so a permission revoked mid-session
+   is refused on the next call.
+
+Your deployment's own address is in `/.well-known/mcp.json` — `endpoint` is the
+URL to use. Everything below is the full model: permissions, the tool and
+resource catalog, the result and failure contract, and deployment diagnostics.
+
 This guide describes the implementation in this repository, reviewed on
-2026-09-07. It covers 24 tools and 66 resource templates. Use `tools/list` and
+2026-09-12. It covers 26 tools and 64 resource templates. Use `tools/list` and
 `resources/templates/list` to discover what your deployment actually serves;
 this document is not a production availability check.
 
