@@ -1,0 +1,9 @@
+The ledger drawer is rebuilt. Your books stay grouped under the account that owns them in a stable order, the current book is marked where it sits, and Browse ledgers, Merchants, and Settings stay within reach at any scroll position. With ten or more books, a search field filters by book or account name.
+
+Edit a transaction directly in its Beancount source, with syntax highlighting and a quick-action bar, and land back on the updated transaction after saving. The file browser now opens and edits ordinary text files too, you can create a Starter or Sample ledger from the app, and shared ledger links open in the app instead of the browser.
+
+VoiceOver and TalkBack now read charts, budget rows, report categories, the account tree, form fields, and the receipt camera. Larger text sizes no longer clip buttons, search fields, headers, or pickers, and the keyboard no longer covers dialogs or empty-state messages.
+
+Fixed: searching merchants with punctuation such as “Lowe’s” or “Mr. Marcel”; crypto and fund quantities rounded to two decimals; running balances losing their minus sign; Net Profit plotted upside down; merchant counts inflated by split transactions; and pickers saving the first option instead of the one shown.
+
+Also fixed: switching books left the transaction list empty; read-only books showed editing controls; a reversed custom date range returned a parse error instead of an inline message; account names like 401k and Épargne were rejected; and receipt capture asked for full photo library access.
