@@ -68,7 +68,8 @@ export function TransactionConfigForm({
             .array(
               z.object({
                 rowIndex: z.number(),
-                date: z.date(),
+                // Canonical YYYY-MM-DD, carried through from the parser.
+                date: z.string(),
                 payee: z.string(),
                 description: z.string(),
                 amount: z.number(),
@@ -119,7 +120,7 @@ export function TransactionConfigForm({
         const amountResult = parseAmount(row.amountInput);
         return {
           rowIndex: index,
-          date: dateResult.date!,
+          date: dateResult.isoDate!,
           payee: row.payee,
           description: row.description,
           amount: amountResult.amount!,

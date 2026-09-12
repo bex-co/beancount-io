@@ -3,8 +3,9 @@
  * Supports click-to-edit pattern with keyboard navigation
  */
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import { Input } from "@/common/components/ui/input";
+import { Textarea } from "@/common/components/ui/textarea";
 import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { cn } from "@/common/lib/utils/utils";
@@ -16,6 +17,13 @@ interface EditableCellProps {
   error?: string;
   placeholder?: string;
   type?: "text" | "number" | "date";
+  /**
+   * Edit in a textarea instead of a single-line input. Required for any field
+   * that may hold embedded newlines (quoted multiline CSV descriptions): a
+   * native single-line input silently strips them from the DOM value, so
+   * opening such a cell would flatten the parsed text.
+   */
+  multiline?: boolean;
   className?: string;
   disabled?: boolean;
 }
@@ -27,6 +35,7 @@ export function EditableCell({
   error,
   placeholder,
   type = "text",
+  multiline = false,
   className,
   disabled = false,
 }: EditableCellProps) {
@@ -34,7 +43,9 @@ export function EditableCell({
   const [isEditing, setIsEditing] = useState(false);
   const [localValue, setLocalValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const hintId = useId();
   const finishingRef = useRef(false);
   const restoreFocusRef = useRef(false);
 
@@ -43,13 +54,14 @@ export function EditableCell({
     setLocalValue(value);
   }, [value]);
 
-  // Focus input when entering edit mode
+  // Focus the editor when entering edit mode
   useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+    const editor = multiline ? textareaRef.current : inputRef.current;
+    if (isEditing && editor) {
+      editor.focus();
+      editor.select();
     }
-  }, [isEditing]);
+  }, [isEditing, multiline]);
 
   // Restore focus to the display control after Enter/Escape exits edit mode.
   useEffect(() => {
@@ -101,8 +113,15 @@ export function EditableCell({
     setIsEditing(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     if (e.key === "Enter") {
+      // Multiline cells keep a way to type a line break: Shift+Enter or
+      // Cmd/Ctrl+Enter falls through to the textarea's default insertion.
+      if (multiline && (e.shiftKey || e.metaKey || e.ctrlKey)) {
+        return;
+      }
       e.preventDefault();
       commitAndClose(true);
     } else if (e.key === "Escape") {
@@ -111,7 +130,9 @@ export function EditableCell({
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setLocalValue(e.target.value);
   };
 
@@ -121,21 +142,45 @@ export function EditableCell({
   if (isEditing) {
     return (
       <div className="w-full">
-        <Input
-          ref={inputRef}
-          type={type}
-          value={localValue}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          className={cn(
-            "h-8 px-2 py-1",
-            error && "border-destructive focus-visible:ring-destructive",
-            className,
-          )}
-          disabled={disabled}
-        />
+        {multiline ? (
+          <Textarea
+            ref={textareaRef}
+            value={localValue}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            rows={2}
+            aria-describedby={hintId}
+            className={cn(
+              "min-h-16 px-2 py-1 text-sm",
+              error && "border-destructive focus-visible:ring-destructive",
+              className,
+            )}
+            disabled={disabled}
+          />
+        ) : (
+          <Input
+            ref={inputRef}
+            type={type}
+            value={localValue}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className={cn(
+              "h-8 px-2 py-1",
+              error && "border-destructive focus-visible:ring-destructive",
+              className,
+            )}
+            disabled={disabled}
+          />
+        )}
+        {multiline && (
+          <p id={hintId} className="text-xs text-muted-foreground mt-1">
+            {t("importer.preview.multilineHint")}
+          </p>
+        )}
         {error && (
           <p
             className={cn(
@@ -177,6 +222,8 @@ export function EditableCell({
         <span
           className={cn(
             "text-sm",
+            // Keep parsed line breaks visible instead of collapsing them.
+            multiline && "whitespace-pre-wrap break-words text-left",
             !value && "text-muted-foreground",
             className,
           )}

@@ -205,6 +205,11 @@ const skImporter: Record<string, TranslationEntry> = {
     message: "Kliknite na úpravu",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter uloží. Shift+Enter pridá riadok.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "Akcie",
     description: "Table header for actions column",

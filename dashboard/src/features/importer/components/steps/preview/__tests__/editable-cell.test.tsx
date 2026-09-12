@@ -114,6 +114,132 @@ describe("EditableCell keyboard behavior", () => {
     ).toBeDisabled();
   });
 
+  it("opens multiline cells in a textarea and round-trips embedded newlines", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <EditableCell
+        value={"First line\nSecond line"}
+        onChange={onChange}
+        placeholder="Description"
+        multiline
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Edit Description. Current value: First line\nSecond line",
+      }),
+    );
+
+    // jsdom does not reproduce the native single-line newline stripping, so
+    // assert the element type plus the value that survives the round trip.
+    const editor = screen.getByRole("textbox");
+    expect(editor.tagName).toBe("TEXTAREA");
+    expect(editor).toHaveValue("First line\nSecond line");
+
+    await user.keyboard("{Enter}");
+    expect(onChange).toHaveBeenCalledWith("First line\nSecond line");
+  });
+
+  it("inserts a newline on Shift+Enter and commits on plain Enter", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <EditableCell
+        value="First line"
+        onChange={onChange}
+        placeholder="Description"
+        multiline
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Edit Description. Current value: First line",
+      }),
+    );
+    const editor = screen.getByDisplayValue("First line");
+    await user.click(editor);
+    await user.keyboard("{End}{Shift>}{Enter}{/Shift}Second line");
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(editor).toHaveValue("First line\nSecond line");
+
+    await user.keyboard("{Enter}");
+    expect(onChange).toHaveBeenCalledWith("First line\nSecond line");
+  });
+
+  it("inserts a newline on Cmd/Ctrl+Enter without committing", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <EditableCell
+        value="First line"
+        onChange={onChange}
+        placeholder="Description"
+        multiline
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Edit Description. Current value: First line",
+      }),
+    );
+    const editor = screen.getByDisplayValue("First line");
+    await user.click(editor);
+    await user.keyboard("{End}{Control>}{Enter}{/Control}");
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
+  });
+
+  it("cancels a multiline edit on Escape and restores focus", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <EditableCell
+        value={"First line\nSecond line"}
+        onChange={onChange}
+        placeholder="Description"
+        multiline
+      />,
+    );
+
+    const button = screen.getByRole("button", {
+      name: "Edit Description. Current value: First line\nSecond line",
+    });
+    await user.click(button);
+    await user.keyboard("edited{Escape}");
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", {
+        name: "Edit Description. Current value: First line\nSecond line",
+      }),
+    ).toHaveFocus();
+  });
+
+  it("uses a single-line input when multiline is not requested", async () => {
+    const user = userEvent.setup();
+    render(
+      <EditableCell
+        value="QA Coffee"
+        onChange={vi.fn()}
+        placeholder="Payee name"
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Edit Payee name. Current value: QA Coffee",
+      }),
+    );
+
+    expect(screen.getByDisplayValue("QA Coffee").tagName).toBe("INPUT");
+  });
+
   it("opens date and amount cells with Enter", () => {
     const onChange = vi.fn();
     render(

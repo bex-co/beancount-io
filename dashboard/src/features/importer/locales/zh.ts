@@ -200,6 +200,11 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "点击编辑",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "按 Enter 保存，按 Shift+Enter 换行。",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "操作",
     description: "Table header for actions column",

@@ -32,10 +32,18 @@ upload → preview → configure → importing → finish
 ## Key Utils
 
 - **`file-format-detector.ts`** — Detect CSV/OFX/QIF formats
-- **`csv-validator.ts`** — Validate parsed CSV data
+- **`csv-validator.ts`** — Validate parsed CSV data; `detectHeaderRow` reports
+  the recognized column order so reordered exports map by name, and a
+  recognized-but-unmappable header fails the whole file instead of guessing
+- **`format-import-date.ts`** — Locale display for canonical `YYYY-MM-DD` dates
 - **`row-edit-schema.ts`** — Zod validation for editable rows
 - **`is-premium-required.ts`** — Tier gating for import limits
 
+- Dates stay the canonical `YYYY-MM-DD` string from upload through preview,
+  configure, and submit. `parseDate` validates Gregorian arithmetic instead of
+  round-tripping a civil `Date`, so zones that skip a local day (Pacific/Apia,
+  2011-12-30) cannot reject a valid ledger date; display builds the instant with
+  `Date.UTC` and reads it back with `timeZone: "UTC"`.
 - Keep original amount tokens and revalidate every field after an edit so
   unrelated payee changes cannot clear date/amount errors. Configuration only
   accepts rows that still pass `parseDate` / `parseAmount`; it never invents

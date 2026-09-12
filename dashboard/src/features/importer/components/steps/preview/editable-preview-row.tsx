@@ -3,6 +3,7 @@
  * Integrates React Hook Form with EditableCell components
  */
 
+import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Trash2 } from "lucide-react";
@@ -49,6 +50,13 @@ export function EditablePreviewRow({
     setValue,
     trigger,
   } = form;
+
+  // Validate once per row identity so a row that arrived from the parser with
+  // errors shows the same diagnostics as an edited one. `trigger()` only fills
+  // formState.errors — it does not move focus — so mounting stays quiet.
+  useEffect(() => {
+    void trigger();
+  }, [row.id, trigger]);
 
   const hasErrors = Object.keys(errors).length > 0;
   const validationMessage = (message?: string) =>
@@ -140,6 +148,9 @@ export function EditablePreviewRow({
                 onBlur={field.onBlur}
                 error={validationMessage(errors.description?.message)}
                 placeholder={t("importer.preview.descriptionPlaceholder")}
+                // Quoted CSV descriptions may contain newlines; a single-line
+                // input would strip them on edit.
+                multiline
               />
             )}
           />

@@ -7,7 +7,6 @@ import type {
   LedgerPostingInput,
 } from "@/graphql/definitions";
 import type { ImportTransaction, ImportResult } from "../types";
-import { formatImportDate } from "../utils/csv-validator";
 
 export type UseImportSubmitReturn = {
   submitImport: (transactions: ImportTransaction[]) => Promise<void>;
@@ -52,7 +51,9 @@ export function useImportSubmit(ledgerId: string): UseImportSubmitReturn {
             ];
 
             return {
-              date: formatImportDate(txn.date),
+              // Already the canonical YYYY-MM-DD the CSV named: no Date
+              // instant exists on this path, so no zone can shift the day.
+              date: txn.date,
               flag: "*",
               payee: txn.payee,
               narration: txn.description,

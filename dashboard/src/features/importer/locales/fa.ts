@@ -208,6 +208,11 @@ const faImporter: Record<string, TranslationEntry> = {
     message: "برای ویرایش کلیک کنید",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter ذخیره می‌کند. Shift+Enter یک خط اضافه می‌کند.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "اقدامات",
     description: "Table header for actions column",

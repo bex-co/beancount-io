@@ -29,7 +29,7 @@ const makeTransaction = (
   overrides: Partial<ImportTransaction> = {},
 ): ImportTransaction => ({
   rowIndex: 0,
-  date: new Date("2024-01-15"),
+  date: "2024-01-15",
   payee: "Starbucks",
   description: "Morning coffee",
   amount: 5.5,
@@ -78,7 +78,7 @@ describe("useImportSubmit", () => {
   // Transaction transformation
   // -------------------------------------------------------------------------
   describe("transaction transformation", () => {
-    it("should format the date as yyyy-MM-dd", async () => {
+    it("should submit the canonical calendar day unchanged", async () => {
       mockMutate.mockResolvedValueOnce({
         data: {
           bulkEntries: {
@@ -92,10 +92,7 @@ describe("useImportSubmit", () => {
       });
 
       const { result } = renderHook(() => useImportSubmit(ledgerId));
-      // Local calendar Date (what parseDate now builds) — not UTC-midnight
-      // from `new Date("YYYY-MM-DD")`, which toISOString would mishandle east
-      // of Greenwich.
-      const txn = makeTransaction({ date: new Date(2024, 5, 15) });
+      const txn = makeTransaction({ date: "2024-06-15" });
 
       const submitPromise = result.current.submitImport([txn]);
       await submitPromise;
@@ -103,6 +100,43 @@ describe("useImportSubmit", () => {
       const [[callArg]] = mockMutate.mock.calls;
       expect(callArg.variables.entries[0].transaction.date).toBe("2024-06-15");
     });
+
+    it.each(["Pacific/Apia", "America/Los_Angeles", "Asia/Shanghai", "UTC"])(
+      "keeps the calendar day in %s",
+      async (timeZone) => {
+        const originalTZ = process.env.TZ;
+        process.env.TZ = timeZone;
+        try {
+          mockMutate.mockResolvedValueOnce({
+            data: {
+              bulkEntries: {
+                success: true,
+                successCount: 2,
+                failureCount: 0,
+                message: null,
+                errors: [],
+              },
+            },
+          });
+
+          const { result } = renderHook(() => useImportSubmit(ledgerId));
+          await result.current.submitImport([
+            makeTransaction({ rowIndex: 0, date: "2011-12-30" }),
+            makeTransaction({ rowIndex: 1, date: "2024-06-15" }),
+          ]);
+
+          const [[callArg]] = mockMutate.mock.calls;
+          expect(
+            callArg.variables.entries.map(
+              (entry: { transaction: { date: string } }) =>
+                entry.transaction.date,
+            ),
+          ).toEqual(["2011-12-30", "2024-06-15"]);
+        } finally {
+          process.env.TZ = originalTZ;
+        }
+      },
+    );
 
     it("should set flag to '*'", async () => {
       mockMutate.mockResolvedValueOnce({

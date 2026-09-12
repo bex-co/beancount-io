@@ -207,6 +207,11 @@ const ruImporter: Record<string, TranslationEntry> = {
     message: "Нажмите для редактирования",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter сохраняет. Shift+Enter добавляет строку.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "Действия",
     description: "Table header for actions column",

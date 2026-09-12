@@ -203,6 +203,11 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "클릭하여 편집",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter로 저장하고 Shift+Enter로 줄을 추가합니다.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "작업",
     description: "Table header for actions column",

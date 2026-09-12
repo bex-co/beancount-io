@@ -1,11 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterAll, beforeAll } from "vitest";
 import {
   isValidDateFormat,
   parseDate,
-  formatImportDate,
   parseAmount,
   isValidRowFormat,
-  isHeaderRow,
+  detectHeaderRow,
   validateDescription,
   validatePayee,
   buildParsedRow,
@@ -47,10 +46,10 @@ describe("csv-validator", () => {
   });
 
   describe("parseDate", () => {
-    it("should return valid: true and a Date for a correct date string", () => {
+    it("should return valid: true and the canonical day for a correct date string", () => {
       const result = parseDate("2024-06-15");
       expect(result.valid).toBe(true);
-      expect(result.date).toBeInstanceOf(Date);
+      expect(result.isoDate).toBe("2024-06-15");
       expect(result.error).toBeUndefined();
     });
 
@@ -74,37 +73,87 @@ describe("csv-validator", () => {
     it("should reject Feb 29 outside a leap year (no silent roll to Mar 1)", () => {
       const result = parseDate("2023-02-29");
       expect(result.valid).toBe(false);
-      expect(result.date).toBeUndefined();
+      expect(result.isoDate).toBeUndefined();
       expect(result.error).toBe("Invalid date value");
+    });
+
+    it("should accept Feb 29 in a century leap year and reject it in a non-leap century", () => {
+      expect(parseDate("2000-02-29").valid).toBe(true);
+      expect(parseDate("1900-02-29").valid).toBe(false);
     });
 
     it("should reject impossible calendar days like Apr 31", () => {
       const result = parseDate("2024-04-31");
       expect(result.valid).toBe(false);
-      expect(result.date).toBeUndefined();
+      expect(result.isoDate).toBeUndefined();
       expect(result.error).toBe("Invalid date value");
     });
 
-    it("should keep the local calendar day equal to the YYYY-MM-DD string", () => {
-      const result = parseDate("2024-06-15");
-      expect(result.valid).toBe(true);
-      expect(result.date?.getFullYear()).toBe(2024);
-      expect(result.date?.getMonth()).toBe(5);
-      expect(result.date?.getDate()).toBe(15);
+    it("should reject a zero month, a month past December, and day zero", () => {
+      expect(parseDate("2024-00-10").error).toBe("Invalid date value");
+      expect(parseDate("2024-13-10").error).toBe("Invalid date value");
+      expect(parseDate("2024-01-00").error).toBe("Invalid date value");
+    });
+
+    it("should accept the last day of every month", () => {
+      const lastDays = [
+        "2024-01-31",
+        "2024-02-29",
+        "2024-03-31",
+        "2024-04-30",
+        "2024-05-31",
+        "2024-06-30",
+        "2024-07-31",
+        "2024-08-31",
+        "2024-09-30",
+        "2024-10-31",
+        "2024-11-30",
+        "2024-12-31",
+      ];
+      for (const day of lastDays) {
+        expect(parseDate(day).valid, day).toBe(true);
+      }
     });
   });
 
-  describe("formatImportDate", () => {
-    it("formats by local calendar day, not UTC ISO", () => {
-      // Local midnight June 15 — toISOString() is the previous UTC day east
-      // of Greenwich; local getters must still yield 2024-06-15.
-      expect(formatImportDate(new Date(2024, 5, 15))).toBe("2024-06-15");
+  // Pacific/Apia jumped the dateline at the end of 2011: the civil day
+  // 2011-12-30 never existed locally, and local midnight 1900-01-01 does not
+  // exist either. A Date round-trip rejected those valid ledger dates.
+  describe("parseDate in a zone with skipped civil days", () => {
+    const originalTZ = process.env.TZ;
+
+    beforeAll(() => {
+      process.env.TZ = "Pacific/Apia";
     });
 
-    it("round-trips through parseDate", () => {
-      const parsed = parseDate("2024-06-15");
-      expect(parsed.valid).toBe(true);
-      expect(formatImportDate(parsed.date!)).toBe("2024-06-15");
+    afterAll(() => {
+      process.env.TZ = originalTZ;
+    });
+
+    it("accepts a calendar day the browser zone skipped", () => {
+      // Guard: the environment really does skip this local day.
+      expect(new Date(2011, 11, 30).getDate()).not.toBe(30);
+
+      const result = parseDate("2011-12-30");
+      expect(result.valid).toBe(true);
+      expect(result.isoDate).toBe("2011-12-30");
+      expect(result.error).toBeUndefined();
+    });
+
+    it("still rejects impossible calendar days", () => {
+      expect(parseDate("2011-02-30").valid).toBe(false);
+      expect(parseDate("2011-12-32").valid).toBe(false);
+    });
+
+    it("builds an error-free row for a skipped civil day", () => {
+      const row = buildParsedRow({
+        date: "2011-12-30",
+        payee: "QA Apia",
+        description: "Dateline jump",
+        amountInput: "-1.00",
+      });
+      expect(row.errors).toBeUndefined();
+      expect(row.date).toBe("2011-12-30");
     });
   });
 
@@ -231,39 +280,156 @@ describe("csv-validator", () => {
     });
   });
 
-  describe("isHeaderRow", () => {
-    it("should detect header row with 'date' and 'payee'", () => {
-      expect(isHeaderRow(["Date", "Payee", "Description", "Amount"])).toBe(
+  describe("detectHeaderRow", () => {
+    it("should detect the canonical header and report its order as supported", () => {
+      const detection = detectHeaderRow([
+        "Date",
+        "Payee",
+        "Description",
+        "Amount",
+      ]);
+      expect(detection.isHeader).toBe(true);
+      expect(detection.supported).toBe(true);
+      expect(detection.fields).toEqual([
+        "date",
+        "payee",
+        "description",
+        "amount",
+      ]);
+    });
+
+    it("should report the recognized order for a reordered header", () => {
+      const detection = detectHeaderRow([
+        "Date",
+        "Payee",
+        "Amount",
+        "Description",
+      ]);
+      expect(detection.isHeader).toBe(true);
+      expect(detection.supported).toBe(true);
+      expect(detection.fields).toEqual([
+        "date",
+        "payee",
+        "amount",
+        "description",
+      ]);
+    });
+
+    it("should treat narration as the description column", () => {
+      const detection = detectHeaderRow([
+        "Amount",
+        "Narration",
+        "Payee",
+        "Date",
+      ]);
+      expect(detection.supported).toBe(true);
+      expect(detection.fields).toEqual([
+        "amount",
+        "description",
+        "payee",
+        "date",
+      ]);
+    });
+
+    it("should detect header row with 'date' and 'description'", () => {
+      const detection = detectHeaderRow(["date", "description", "amount"]);
+      expect(detection.isHeader).toBe(true);
+      // Missing payee — recognized but not mappable.
+      expect(detection.supported).toBe(false);
+    });
+
+    it("should detect header row with 'date' and 'narration'", () => {
+      expect(detectHeaderRow(["date", "narration", "amount"]).isHeader).toBe(
         true,
       );
     });
 
-    it("should detect header row with 'date' and 'description'", () => {
-      expect(isHeaderRow(["date", "description", "amount"])).toBe(true);
+    it("should be case-insensitive and tolerate padding", () => {
+      const detection = detectHeaderRow([
+        " DATE ",
+        "PAYEE",
+        "Description",
+        "amount",
+      ]);
+      expect(detection.isHeader).toBe(true);
+      expect(detection.supported).toBe(true);
     });
 
-    it("should detect header row with 'date' and 'amount'", () => {
-      expect(isHeaderRow(["date", "narration", "amount"])).toBe(true);
+    it("should infer a single unknown column when exactly one field is unfilled", () => {
+      const detection = detectHeaderRow(["Date", "Payee", "Memo", "Amount"]);
+      expect(detection.supported).toBe(true);
+      expect(detection.fields).toEqual([
+        "date",
+        "payee",
+        "description",
+        "amount",
+      ]);
     });
 
-    it("should be case-insensitive", () => {
-      expect(isHeaderRow(["DATE", "PAYEE", "AMOUNT"])).toBe(true);
+    it("should not infer when two columns are unknown", () => {
+      const detection = detectHeaderRow(["Date", "Who", "Memo", "Amount"]);
+      expect(detection.isHeader).toBe(true);
+      expect(detection.supported).toBe(false);
     });
 
-    it("should return false for a data row", () => {
+    it("should never infer an unknown column as the amount or the date", () => {
       expect(
-        isHeaderRow(["2024-01-15", "Coffee Shop", "Morning coffee", "5.00"]),
+        detectHeaderRow(["Date", "Payee", "Description", "Total"]).supported,
+      ).toBe(false);
+      expect(
+        detectHeaderRow(["Booked", "Payee", "Description", "Amount"]).supported,
       ).toBe(false);
     });
 
-    it("should return false when only 'date' is present without payee/description/amount", () => {
-      expect(isHeaderRow(["date", "time", "location"])).toBe(false);
+    it("should not mark a duplicated column as supported", () => {
+      const detection = detectHeaderRow([
+        "Date",
+        "Description",
+        "Narration",
+        "Amount",
+      ]);
+      expect(detection.isHeader).toBe(true);
+      expect(detection.supported).toBe(false);
     });
 
-    it("should return false when header tokens appear inside data fields", () => {
+    it("should not mark an extra unknown column as supported", () => {
+      const detection = detectHeaderRow([
+        "Date",
+        "Payee",
+        "Description",
+        "Amount",
+        "Balance",
+      ]);
+      expect(detection.isHeader).toBe(true);
+      expect(detection.supported).toBe(false);
+    });
+
+    it("should return isHeader false for a data row", () => {
       expect(
-        isHeaderRow(["2025-12-01", "QA Date Shop", "Prepaid amount", "-4.50"]),
+        detectHeaderRow(["2024-01-15", "Coffee Shop", "Morning coffee", "5.00"])
+          .isHeader,
       ).toBe(false);
+    });
+
+    it("should return isHeader false when only 'date' is present without a companion", () => {
+      expect(detectHeaderRow(["date", "time", "location"]).isHeader).toBe(
+        false,
+      );
+    });
+
+    it("should return isHeader false when header tokens appear inside data fields", () => {
+      expect(
+        detectHeaderRow([
+          "2025-12-01",
+          "QA Date Shop",
+          "Prepaid amount",
+          "-4.50",
+        ]).isHeader,
+      ).toBe(false);
+    });
+
+    it("should return isHeader false for an empty record", () => {
+      expect(detectHeaderRow([]).isHeader).toBe(false);
     });
   });
 

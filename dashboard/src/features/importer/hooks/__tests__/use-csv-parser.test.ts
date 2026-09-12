@@ -104,6 +104,122 @@ describe("useCSVParser", () => {
       expect(parsed.rows[1].payee).toBe("QA Grocery");
     });
 
+    it("maps values by header name when the columns are reordered", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        "Date,Payee,Amount,Description",
+        "2025-12-01,QA Coffee,-4.50,Morning coffee",
+        "2025-12-02,QA Grocery,-45.67,Weekly shop",
+      ].join("\n");
+
+      const parsed = result.current.parseCSV(csv);
+
+      expect(parsed.rows).toHaveLength(2);
+      expect(parsed.errorCount).toBe(0);
+      expect(parsed.rows[0]).toMatchObject({
+        date: "2025-12-01",
+        payee: "QA Coffee",
+        description: "Morning coffee",
+        amountInput: "-4.50",
+        amount: -4.5,
+      });
+      expect(parsed.rows[1].description).toBe("Weekly shop");
+      expect(parsed.rows[1].amount).toBe(-45.67);
+      // The bug: the description column was reported as the amount.
+      expect(parsed.rows.map((row) => row.amount)).not.toContain(0);
+      expect(parsed.rows.map((row) => row.amountInput)).not.toContain(
+        "Morning coffee",
+      );
+      expect(parsed.rows.map((row) => row.description)).not.toContain("-4.50");
+    });
+
+    it("maps a fully shuffled header, including narration as description", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        "Amount,Narration,Payee,Date",
+        "-4.50,Morning coffee,QA Coffee,2025-12-01",
+      ].join("\n");
+
+      const parsed = result.current.parseCSV(csv);
+
+      expect(parsed.validCount).toBe(1);
+      expect(parsed.rows[0]).toMatchObject({
+        date: "2025-12-01",
+        payee: "QA Coffee",
+        description: "Morning coffee",
+        amount: -4.5,
+      });
+    });
+
+    it("keeps a single unknown column working, in whatever position it sits", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        "Date,Payee,Memo,Amount",
+        "2025-12-01,QA Coffee,Morning coffee,-4.50",
+        "2025-12-02,QA Grocery,Weekly shop,-45.67",
+      ].join("\n");
+
+      const parsed = result.current.parseCSV(csv);
+
+      expect(parsed.validCount).toBe(2);
+      expect(parsed.rows[0].description).toBe("Morning coffee");
+      expect(parsed.rows[0].amount).toBe(-4.5);
+
+      const reordered = result.current.parseCSV(
+        [
+          "Date,Memo,Payee,Amount",
+          "2025-12-01,Morning coffee,QA Coffee,-4.50",
+        ].join("\n"),
+      );
+      expect(reordered.validCount).toBe(1);
+      expect(reordered.rows[0]).toMatchObject({
+        payee: "QA Coffee",
+        description: "Morning coffee",
+        amount: -4.5,
+      });
+    });
+
+    it("rejects a recognized-but-unmappable header instead of guessing positions", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        "Date,Memo,Notes,Amount",
+        "2025-12-01,QA Coffee,Morning coffee,-4.50",
+      ].join("\n");
+
+      const parsed = result.current.parseCSV(csv);
+
+      expect(parsed.validCount).toBe(0);
+      expect(parsed.errorCount).toBe(1);
+      expect(parsed.rows).toHaveLength(1);
+      expect(parsed.rows[0].errors![0]).toMatch(/Unsupported CSV columns/);
+    });
+
+    it("never guesses which unknown column holds the amount", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const parsed = result.current.parseCSV(
+        [
+          "Date,Payee,Description,Total",
+          "2025-12-01,QA Coffee,Morning coffee,-4.50",
+        ].join("\n"),
+      );
+
+      expect(parsed.validCount).toBe(0);
+      expect(parsed.rows[0].errors![0]).toMatch(/Unsupported CSV columns/);
+    });
+
+    it("rejects an extra column alongside a full canonical header", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const parsed = result.current.parseCSV(
+        [
+          "Date,Payee,Description,Amount,Balance",
+          "2025-12-01,QA Coffee,Morning coffee,-4.50,100.00",
+        ].join("\n"),
+      );
+
+      expect(parsed.validCount).toBe(0);
+      expect(parsed.rows[0].errors![0]).toMatch(/Unsupported CSV columns/);
+    });
+
     it("should parse multiple valid rows correctly", () => {
       const { result } = renderHook(() => useCSVParser());
       const csv = [

@@ -210,6 +210,11 @@ const frImporter: Record<string, TranslationEntry> = {
     message: "Cliquer pour modifier",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Entrée enregistre. Maj+Entrée ajoute une ligne.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "Actions",
     description: "Table header for actions column",

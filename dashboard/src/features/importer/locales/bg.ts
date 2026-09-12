@@ -209,6 +209,11 @@ const bgImporter: Record<string, TranslationEntry> = {
     message: "Кликнете за редактиране",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter запазва. Shift+Enter добавя нов ред.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "Действия",
     description: "Table header for actions column",

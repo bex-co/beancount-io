@@ -209,6 +209,11 @@ const caImporter: Record<string, TranslationEntry> = {
     message: "Feu clic per editar",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter desa. Shift+Enter afegeix una línia.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "Accions",
     description: "Table header for actions column",

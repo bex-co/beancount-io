@@ -29,7 +29,8 @@ export type ParsedRow = {
 
 export type ImportTransaction = {
   rowIndex: number;
-  date: Date;
+  /** Canonical ledger calendar day (`YYYY-MM-DD`); never a zone-bound instant. */
+  date: string;
   payee: string;
   description: string;
   /**

@@ -207,6 +207,11 @@ const ptImporter: Record<string, TranslationEntry> = {
     message: "Clique para editar",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter salva. Shift+Enter adiciona uma linha.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "Ações",
     description: "Table header for actions column",

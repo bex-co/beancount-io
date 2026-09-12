@@ -206,6 +206,11 @@ const ukImporter: Record<string, TranslationEntry> = {
     message: "Натисніть для редагування",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter зберігає. Shift+Enter додає рядок.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "Дії",
     description: "Table header for actions column",

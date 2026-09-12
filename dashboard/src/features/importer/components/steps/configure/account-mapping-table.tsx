@@ -37,13 +37,15 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { AccountCombobox } from "@/common/components/ledger-comboboxes";
 import { toast } from "sonner";
 import { formatImportReviewAmount } from "../../../utils/format-import-review-amount";
+import { formatImportDateForDisplay } from "../../../utils/format-import-date";
 
 interface TransactionFormData {
   sourceAccount: string;
   defaultCurrency: string;
   transactions: {
     rowIndex: number;
-    date: Date;
+    /** Canonical `YYYY-MM-DD` calendar day. */
+    date: string;
     payee: string;
     description: string;
     amount: number;
@@ -223,11 +225,18 @@ export function AccountMappingTable({
             <TableRow>
               <TableHead className="w-12.5">
                 <Checkbox
-                  checked={allVisibleSelected}
+                  // Radix renders aria-checked="mixed" for "indeterminate", so
+                  // a partial selection is announced instead of only dimmed.
+                  checked={
+                    allVisibleSelected
+                      ? true
+                      : someVisibleSelected
+                        ? "indeterminate"
+                        : false
+                  }
                   onCheckedChange={handleToggleAll}
                   disabled={filteredCount === 0}
                   aria-label={t("importer.accountMapping.selectAll")}
-                  className={cn(someVisibleSelected && "opacity-50")}
                 />
               </TableHead>
               <TableHead className="w-15">
@@ -310,7 +319,7 @@ export function AccountMappingTable({
                       {txn.rowIndex + 1}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {txn.date ? new Date(txn.date).toLocaleDateString() : ""}
+                      {txn.date ? formatImportDateForDisplay(txn.date) : ""}
                     </TableCell>
                     <TableCell className="text-sm">{txn.payee || ""}</TableCell>
                     <TableCell className="text-sm">

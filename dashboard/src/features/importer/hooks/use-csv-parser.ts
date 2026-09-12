@@ -3,10 +3,14 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import type { ParsedRow, CSVParseResult } from "../types";
 import {
   isValidRowFormat,
-  isHeaderRow,
+  detectHeaderRow,
   buildParsedRow,
   createParsedRowId,
+  type ImportColumnField,
 } from "../utils/csv-validator";
+
+const UNSUPPORTED_LAYOUT_ERROR =
+  "Unsupported CSV columns. Expected exactly Date, Payee, Description (or Narration), and Amount — in any order.";
 
 type ParseRecordsResult =
   | { ok: true; records: string[][] }
@@ -96,6 +100,54 @@ export function parseCSVRecords(content: string): ParseRecordsResult {
   return { ok: true, records };
 }
 
+/** A whole-file failure: one diagnostic row, nothing importable. */
+function fileLevelFailure(error: string): CSVParseResult {
+  return {
+    rows: [
+      {
+        id: createParsedRowId(),
+        date: "",
+        payee: "",
+        description: "",
+        amount: 0,
+        amountInput: "",
+        errors: [error],
+      },
+    ],
+    validCount: 0,
+    errorCount: 1,
+    hasErrors: true,
+  };
+}
+
+/**
+ * Read a 4-column data record into import fields.
+ *
+ * With a header, values are taken by the column name the file declared, so a
+ * `Date,Payee,Amount,Description` export keeps its amount in `amount` instead
+ * of silently swapping in the description. Headerless files keep the documented
+ * canonical order.
+ */
+function readRecordFields(
+  columns: string[],
+  fields: (ImportColumnField | null)[] | null,
+): { date: string; payee: string; description: string; amountInput: string } {
+  if (!fields) {
+    const [date = "", payee = "", description = "", amountInput = ""] = columns;
+    return { date, payee, description, amountInput };
+  }
+
+  const valueOf = (field: ImportColumnField) =>
+    columns[fields.indexOf(field)] ?? "";
+
+  return {
+    date: valueOf("date"),
+    payee: valueOf("payee"),
+    description: valueOf("description"),
+    amountInput: valueOf("amount"),
+  };
+}
+
 /**
  * Hook for parsing CSV files
  */
@@ -111,22 +163,7 @@ export function useCSVParser() {
     const parsed = parseCSVRecords(content);
 
     if (!parsed.ok) {
-      return {
-        rows: [
-          {
-            id: createParsedRowId(),
-            date: "",
-            payee: "",
-            description: "",
-            amount: 0,
-            amountInput: "",
-            errors: [parsed.error],
-          },
-        ],
-        validCount: 0,
-        errorCount: 1,
-        hasErrors: true,
-      };
+      return fileLevelFailure(parsed.error);
     }
 
     const { records } = parsed;
@@ -139,7 +176,15 @@ export function useCSVParser() {
       };
     }
 
-    const hasHeader = isHeaderRow(records[0]);
+    const header = detectHeaderRow(records[0]);
+    // A header we recognize but cannot map must fail loudly: guessing a
+    // position would emit plausible-but-wrong amounts.
+    if (header.isHeader && !header.supported) {
+      return fileLevelFailure(UNSUPPORTED_LAYOUT_ERROR);
+    }
+
+    const hasHeader = header.isHeader;
+    const columnFields = hasHeader ? header.fields : null;
     const dataRecords = hasHeader ? records.slice(1) : records;
 
     const rows: ParsedRow[] = dataRecords.map((columns, idx) => {
@@ -150,24 +195,19 @@ export function useCSVParser() {
         errors.push(
           `Row ${rowNum}: Expected 4 columns (Date, Payee, Description, Amount), got ${columns.length}`,
         );
+        const fields = readRecordFields(columns, columnFields);
         return {
           id: createParsedRowId(),
-          date: columns[0] || "",
-          payee: columns[1] || "",
-          description: columns[2] || "",
+          date: fields.date || "",
+          payee: fields.payee || "",
+          description: fields.description || "",
           amount: 0,
-          amountInput: columns[3] || "",
+          amountInput: fields.amountInput || "",
           errors,
         };
       }
 
-      const [dateStr, payee, description, amountStr] = columns;
-      return buildParsedRow({
-        date: dateStr,
-        payee,
-        description,
-        amountInput: amountStr,
-      });
+      return buildParsedRow(readRecordFields(columns, columnFields));
     });
 
     const errorCount = rows.filter(

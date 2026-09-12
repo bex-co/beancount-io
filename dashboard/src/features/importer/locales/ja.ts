@@ -205,6 +205,11 @@ const jaImporter: Record<string, TranslationEntry> = {
     message: "クリックして編集",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter で保存、Shift+Enter で改行します。",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "操作",
     description: "Table header for actions column",

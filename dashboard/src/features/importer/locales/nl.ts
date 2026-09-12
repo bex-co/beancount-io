@@ -208,6 +208,11 @@ const nlImporter: Record<string, TranslationEntry> = {
     message: "Klik om te bewerken",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter slaat op. Shift+Enter voegt een regel toe.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "Acties",
     description: "Table header for actions column",

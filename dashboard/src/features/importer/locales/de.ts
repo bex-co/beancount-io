@@ -209,6 +209,11 @@ const deImporter: Record<string, TranslationEntry> = {
     message: "Zum Bearbeiten klicken",
     description: "Placeholder text for editable cells",
   },
+  "importer.preview.multilineHint": {
+    message: "Enter speichert. Shift+Enter fügt eine Zeile hinzu.",
+    description:
+      "Hint under a multiline editable cell explaining the commit shortcut",
+  },
   "importer.preview.actions": {
     message: "Aktionen",
     description: "Table header for actions column",
