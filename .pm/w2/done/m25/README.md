@@ -1,6 +1,6 @@
 # w2 · m25 — `bea` distribution: PyPI, Homebrew tap, update notice, `bea upgrade`
 
-**Worker:** worker2 **Goal:** a newcomer installs `bea` with one command on either channel (`brew install bex-co/tap/bea` or `uv tool install beancount-io`), learns about new releases without scripts ever being interrupted, and updates with `bea upgrade` **Status:** in progress — every task except closeout is done; t009 waits on the first real release
+**Worker:** worker2 **Goal:** a newcomer installs `bea` with one command on either channel (`brew install bex-co/tap/bea` or `uv tool install beancount-io`), learns about new releases without scripts ever being interrupted, and updates with `bea upgrade` **Status:** done
 
 ## Tasks (in order)
 
@@ -14,50 +14,35 @@
 | t006 | Adoption surface — install channels discoverable and working as written — **DONE** | 30m | t005       |
 | t007 | Simplify — **DONE** | 20m | t006       |
 | t008 | Test coverage — notifier rules, channel detection, formula rendering, tag validation — **DONE** | 45m | t006       |
-| t009 | Closeout                                                                               | 15m | t008       |
+| t009 | Closeout — **DONE** | 15m | t008       |
 
 ## Definition of done
 
 Pushing a `cli-vX.Y.Z` tag whose version matches `cli/pyproject.toml` runs `make check-all`, builds the sdist and wheel with a hashed `requirements.lock` inside the sdist, publishes to PyPI through trusted publishing, creates a GitHub Release, renders `Formula/bea.rb`, and pushes it to `bex-co/homebrew-tap` (skipping cleanly when the deploy-key secret is absent). On clean machines, `brew install bex-co/tap/bea` and `uv tool install beancount-io` both end with a working `bea --version`. The update notice appears only in a terminal, never under `--json`, `--no-input`, `CI`, or `BEA_NO_UPDATE_NOTIFIER=1`, at most once a day, and is silent on any failure. `bea upgrade` runs the owning package manager's upgrade command, `--check` only reports, and the CLI never rewrites its own installed files. `cli/README.md` install and update sections run as written.
 
-## Remaining before closeout
+## Released
 
-The code, workflow, formula renderer, docs and tests are all written and green.
-What is left is not code — it is three actions that only a maintainer with the accounts
-can take, and the verification they unlock:
-
-1. Register the PyPI trusted publisher (and the TestPyPI one, for the rehearsal
-   run) for project `beancount-io`, owner `bex-co`, repository `beancount-io`,
-   workflow `release-cli.yml`, environment `production`. See
-   `cli/README.md` → *Releasing (maintainers)*.
-2. Add the `BEA_TAP_PUSH_KEY` repository secret — a write deploy key for
-   `bex-co/homebrew-tap`. Until it exists the formula step skips cleanly and the
-   PyPI channel ships on its own.
-3. Rehearse with `workflow_dispatch` (`test`), then push `cli-v0.1.0`.
-
-Then t009 (closeout) can run, once the two published commands have been run
-once as written.
-
-### What was verified without them
-
-Both channels were exercised end to end against the real release artifacts, on
-machines that had never seen this package. The only thing not covered is the
-`url` line of the formula and the `beancount-io` name on PyPI, because neither
-exists until the first release; every other line ran.
+`bea 0.1.0` shipped on 2026-09-10 through the `cli-v0.1.0` tag. The
+`Release (cli)` workflow run succeeded after two `workflow_dispatch` rehearsals
+against TestPyPI, and both channels were then verified against the published
+artifacts:
 
 | Check | Result |
 | --- | --- |
-| `uv tool install <sdist>` on a clean Linux container | `bea --version`, `bea check`, `bea --json list transaction` all work |
-| `brew install` through a real tap on macOS 26 / arm64 | exits 0, `brew test bea` passes, `brew linkage` clean |
-| The same on Linuxbrew (container) | exits 0, `brew test bea` passes, `bea check` and `bea --json report` work |
-| Channel detection on those real installs | `uv-tool` → `uv tool upgrade beancount-io`; `homebrew` → `brew upgrade bea`, on both macOS and Linuxbrew |
-| PyPI page | `twine check` passes on both artifacts; metadata carries Homepage + Repository |
-| PyPI unreachable / project absent | `bea upgrade --check` reports `Latest release: unknown` and exits 0 |
-| `CI=true bea --version` | no hint |
-| Notice rules on a real pty | appears once, reuses the cache, silent piped and under `CI` / `BEA_NO_UPDATE_NOTIFIER` |
+| `Release (cli)` on `cli-v0.1.0` | success — sdist + wheel to PyPI via trusted publishing, GitHub Release `bea 0.1.0`, `Formula/bea.rb` pushed to the tap |
+| PyPI project `beancount-io` | `0.1.0`, both `beancount_io-0.1.0.tar.gz` and the wheel; metadata carries Homepage + Repository |
+| `brew install bex-co/tap/bea` on macOS 26 / arm64 | exits 0, `bea --version` → `bea 0.1.0`, `brew test bea` passes, `brew linkage` clean |
+| `uv tool install beancount-io` from PyPI | exits 0, `bea --version` → `bea 0.1.0` |
+| Channel detection on both published installs | `homebrew` → `brew upgrade bea`; `uv-tool` → `uv tool upgrade beancount-io`; `--check` only reports, exits 0 |
+| Notice suppression | silent under `--json`, piped stdout, `CI=true`, and `BEA_NO_UPDATE_NOTIFIER=1` |
+| `cli/README.md` install section | both commands run exactly as written |
 
-Two defects were found and fixed this way, neither of which any unit test would
-have caught:
+### Earlier pre-release verification
+
+Before the tag, both channels were exercised against locally built artifacts on
+machines that had never seen the package (clean Linux container for uv,
+macOS 26 / arm64 and Linuxbrew through a real tap for Homebrew). Two defects
+were found that way, neither of which any unit test would have caught:
 
 1. **`brew install` exited 1.** Homebrew rewrites the dylib ID of every Mach-O
    file in the keg before `post_install` runs. pydantic-core ships a prebuilt
