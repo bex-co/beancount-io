@@ -1,6 +1,7 @@
 import {
   countActiveFilters,
   formatTimeFilter,
+  isDateRangeValid,
   resolveDateRange,
   toFilterQuery,
 } from "../select-filter-query";
@@ -65,6 +66,121 @@ describe("resolveDateRange", () => {
   it("returns null when a custom range is missing an end", () => {
     const halfFilled = filters({ range: "custom", startDate: "2025-01-01" });
     expect(resolveDateRange(halfFilled, TODAY)).toBe(null);
+  });
+
+  it("returns null when a custom range is missing a start", () => {
+    const halfFilled = filters({ range: "custom", endDate: "2025-03-31" });
+    expect(resolveDateRange(halfFilled, TODAY)).toBe(null);
+  });
+
+  it("accepts a single-day custom range", () => {
+    const sameDay = filters({
+      range: "custom",
+      startDate: "2026-09-10",
+      endDate: "2026-09-10",
+    });
+    expect(resolveDateRange(sameDay, TODAY)).toEqual({
+      start: "2026-09-10",
+      end: "2026-09-10",
+    });
+  });
+
+  it("never serializes a reversed custom range", () => {
+    // The backend answers `Failed to parse date: 2026-10-10 - 2026-09-10` and
+    // replaces the journal with an error, so nothing may reach it.
+    const reversed = filters({
+      range: "custom",
+      startDate: "2026-10-10",
+      endDate: "2026-09-10",
+    });
+    expect(resolveDateRange(reversed, TODAY)).toBe(null);
+  });
+
+  it("does not swap the ends of a reversed range", () => {
+    const reversed = filters({
+      range: "custom",
+      startDate: "2026-10-10",
+      endDate: "2026-09-10",
+    });
+    expect(toFilterQuery(reversed, TODAY).time).toBe(undefined);
+  });
+});
+
+describe("isDateRangeValid", () => {
+  it("accepts an increasing custom range", () => {
+    expect(
+      isDateRangeValid(
+        filters({
+          range: "custom",
+          startDate: "2026-09-10",
+          endDate: "2026-10-10",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("accepts a same-day custom range", () => {
+    expect(
+      isDateRangeValid(
+        filters({
+          range: "custom",
+          startDate: "2026-09-10",
+          endDate: "2026-09-10",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects a reversed custom range", () => {
+    expect(
+      isDateRangeValid(
+        filters({
+          range: "custom",
+          startDate: "2026-10-10",
+          endDate: "2026-09-10",
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("rejects a reversal of one day, and of one year", () => {
+    expect(
+      isDateRangeValid(
+        filters({
+          range: "custom",
+          startDate: "2026-09-11",
+          endDate: "2026-09-10",
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      isDateRangeValid(
+        filters({
+          range: "custom",
+          startDate: "2027-01-01",
+          endDate: "2026-12-31",
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("treats a half-filled custom range as valid — it just filters nothing", () => {
+    expect(
+      isDateRangeValid(filters({ range: "custom", startDate: "2026-09-10" })),
+    ).toBe(true);
+    expect(
+      isDateRangeValid(filters({ range: "custom", endDate: "2026-09-10" })),
+    ).toBe(true);
+  });
+
+  it("accepts every computed range, whatever stale custom dates remain", () => {
+    for (const range of ["all", "1M", "3M", "YTD"] as const) {
+      expect(
+        isDateRangeValid(
+          filters({ range, startDate: "2026-10-10", endDate: "2026-09-10" }),
+        ),
+      ).toBe(true);
+    }
   });
 });
 

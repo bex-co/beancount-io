@@ -24,6 +24,24 @@ const monthsBack = (today: Date, months: number): Date => {
 };
 
 /**
+ * Whether the filter's custom window is serializable.
+ *
+ * A reversed pair (`2026-10-10 - 2026-09-10`) is rejected by the backend's date
+ * parser, which replaces the whole journal with an error, so the filter sheet
+ * gates Apply on this. Dates are compared as `YYYY-MM-DD` strings, where
+ * lexical order is calendar order, and the comparison is inclusive so a
+ * single-day window stays valid. A half-filled range is not *invalid* — it
+ * simply filters nothing (see `resolveDateRange`) — and every non-custom range
+ * is computed here, so those all pass.
+ */
+export const isDateRangeValid = (filters: TransactionFilters): boolean => {
+  if (filters.range !== "custom" || !filters.startDate || !filters.endDate) {
+    return true;
+  }
+  return filters.startDate <= filters.endDate;
+};
+
+/**
  * The window a filter asks for, resolved against `today`.
  *
  * @param filters - Current filter state
@@ -45,7 +63,10 @@ export const resolveDateRange = (
       return { start: `${today.getFullYear()}-01-01`, end };
     case "custom":
       // A half-filled custom range filters nothing — both ends are required.
-      return filters.startDate && filters.endDate
+      // A reversed one is never serialized: the backend cannot parse it, and
+      // silently swapping the ends would query a window the user never asked
+      // for. The sheet blocks Apply, so this is the backstop.
+      return filters.startDate && filters.endDate && isDateRangeValid(filters)
         ? { start: filters.startDate, end: filters.endDate }
         : null;
     case "all":

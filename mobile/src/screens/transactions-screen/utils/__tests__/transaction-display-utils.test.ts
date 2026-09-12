@@ -1,4 +1,5 @@
 import {
+  amountScale,
   formatAmount,
   selectTransactionAmount,
   groupToSections,
@@ -80,6 +81,37 @@ describe("formatAmount", () => {
   it("formats non-USD currencies with amount then currency code", () => {
     expect(formatAmount(100, "EUR")).toBe("100.00 EUR");
     expect(formatAmount(50.5, "GBP")).toBe("50.50 GBP");
+  });
+
+  it("keeps the recorded scale so small crypto amounts survive", () => {
+    expect(formatAmount(0.004, "ETH", 3)).toBe("0.004 ETH");
+    expect(formatAmount(0.005, "STETH", 3)).toBe("0.005 STETH");
+    expect(formatAmount(0.00000001, "BTC", 8)).toBe("0.00000001 BTC");
+  });
+
+  it("floors at two digits, so a coarser source still pads", () => {
+    expect(formatAmount(1234.5, "USD", 1)).toBe("$1,234.50");
+    expect(formatAmount(7000, "USD", 0)).toBe("$7,000.00");
+  });
+
+  it("clamps an absurd scale instead of throwing on Intl's 20-digit cap", () => {
+    expect(formatAmount(1.5, "XYZ", 99)).toBe("1.50 XYZ");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// amountScale
+// ---------------------------------------------------------------------------
+
+describe("amountScale", () => {
+  it("counts the recorded fraction digits", () => {
+    expect(amountScale("0.004")).toBe(3);
+    expect(amountScale("-0.00500")).toBe(5);
+    expect(amountScale("12.34")).toBe(2);
+  });
+
+  it("reports zero for an integer string", () => {
+    expect(amountScale("7000")).toBe(0);
   });
 });
 
@@ -213,6 +245,79 @@ describe("selectTransactionAmount", () => {
       postings: [makePosting("Assets:Checking", "not-a-number")],
     });
     expect(selectTransactionAmount(tx)).toBe(null);
+  });
+
+  it("keeps a sub-cent crypto reward visible instead of rounding to zero", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Crypto:ETH", "0.004", "ETH"),
+        makePosting("Income:Crypto:Rewards", "-0.004", "ETH"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "0.004 ETH",
+      value: 0.004,
+      currency: "ETH",
+    });
+  });
+
+  it("does not round a staking reward up to a cent either", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Crypto:Lido", "0.005", "STETH"),
+        makePosting("Income:Crypto:Staking", "-0.005", "STETH"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)?.text).toBe("0.005 STETH");
+  });
+
+  it("still shows USD at cent precision", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Expenses:Food", "12.3"),
+        makePosting("Assets:Checking", "-12.3"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)?.text).toBe("$12.30");
+  });
+
+  it("prints an unsigned magnitude for a negative crypto outflow", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Expenses:Fees", "0.0012", "ETH"),
+        makePosting("Assets:Crypto:ETH", "-0.0012", "ETH"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "0.0012 ETH",
+      value: -0.0012,
+      currency: "ETH",
+    });
+  });
+
+  it("shows an exact zero as zero, padded to two digits", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Crypto:ETH", "0.000", "ETH"),
+        makePosting("Assets:Crypto:Cold", "0.000", "ETH"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "0.00 ETH",
+      value: 0,
+      currency: "ETH",
+    });
+  });
+
+  it("aggregates same-currency legs at the finest recorded scale", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Crypto:ETH", "1.00", "ETH"),
+        makePosting("Assets:Crypto:Cold", "0.004", "ETH"),
+        makePosting("Income:Crypto", "-1.004", "ETH"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)?.text).toBe("1.004 ETH");
   });
 
   it("does not special-case pending transactions", () => {

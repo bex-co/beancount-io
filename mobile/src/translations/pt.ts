@@ -256,6 +256,8 @@ export const pt: typeof en = {
   filters: "Filtros",
   filterStatus: "Status",
   filterDateRange: "Período",
+  filterDateRangeInvalid:
+    "A data final deve ser igual ou posterior à data inicial.",
   filterAccount: "Conta",
   allAccounts: "Todas as contas",
   rangeCustom: "Personalizado",

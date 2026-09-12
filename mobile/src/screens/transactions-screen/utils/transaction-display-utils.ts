@@ -12,10 +12,43 @@ export type JournalSection = {
   data: JournalDirectiveType[];
 };
 
-export const formatAmount = (value: number, currency: string): string => {
+/** Display floor: money always reads with cents, so 1.5 shows as 1.50. */
+const MIN_FRACTION_DIGITS = 2;
+/** `Intl.NumberFormat` rejects anything above this. */
+const MAX_FRACTION_DIGITS = 20;
+
+/**
+ * Fraction digits recorded in a posting's amount string, e.g. `"0.004"` → 3.
+ *
+ * The API returns amounts as decimal strings, which is the only place a
+ * commodity's real scale survives: `parseFloat` keeps the value but loses the
+ * intent, and formatting at a flat two digits then rounded 0.004 ETH to 0.00.
+ */
+export const amountScale = (number: string): number => {
+  const dot = number.indexOf(".");
+  if (dot < 0) return 0;
+  return number.length - dot - 1;
+};
+
+/**
+ * Unsigned magnitude for display.
+ *
+ * @param scale - Fraction digits the source recorded (see `amountScale`). Acts
+ *   as the maximum, so a crypto reward of 0.004 ETH survives instead of
+ *   rounding to 0.00.
+ */
+export const formatAmount = (
+  value: number,
+  currency: string,
+  scale = MIN_FRACTION_DIGITS,
+): string => {
+  const maximumFractionDigits = Math.min(
+    MAX_FRACTION_DIGITS,
+    Math.max(MIN_FRACTION_DIGITS, scale),
+  );
   const formatted = Math.abs(value).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: MIN_FRACTION_DIGITS,
+    maximumFractionDigits,
   });
   return currency === "USD" ? `$${formatted}` : `${formatted} ${currency}`;
 };
@@ -62,12 +95,21 @@ export const selectTransactionAmount = (
   );
 
   if (cashPostings.length > 0) {
-    const byCurrency = new Map<string, number>();
+    // A sum is only as coarse as its finest leg, so a bucket carries the
+    // widest scale any of its postings recorded.
+    const byCurrency = new Map<string, { value: number; scale: number }>();
     for (const p of cashPostings) {
       const value = parseFloat(p.units.number);
       if (!Number.isFinite(value)) continue;
       const currency = p.units.currency;
-      byCurrency.set(currency, (byCurrency.get(currency) ?? 0) + value);
+      const bucket = byCurrency.get(currency);
+      const scale = amountScale(p.units.number);
+      if (bucket) {
+        bucket.value += value;
+        bucket.scale = Math.max(bucket.scale, scale);
+      } else {
+        byCurrency.set(currency, { value, scale });
+      }
     }
 
     const buckets = Array.from(byCurrency.entries());
@@ -82,11 +124,11 @@ export const selectTransactionAmount = (
         );
         const candidates = money.length > 0 ? money : buckets;
         picked = candidates.reduce((best, bucket) =>
-          Math.abs(bucket[1]) > Math.abs(best[1]) ? bucket : best,
+          Math.abs(bucket[1].value) > Math.abs(best[1].value) ? bucket : best,
         );
       }
-      const [currency, value] = picked;
-      return { text: formatAmount(value, currency), value, currency };
+      const [currency, { value, scale }] = picked;
+      return { text: formatAmount(value, currency, scale), value, currency };
     }
   }
 
@@ -104,7 +146,11 @@ export const selectTransactionAmount = (
 
   const value = parseFloat(max.units.number);
   const currency = max.units.currency;
-  return { text: formatAmount(value, currency), value, currency };
+  return {
+    text: formatAmount(value, currency, amountScale(max.units.number)),
+    value,
+    currency,
+  };
 };
 
 /**

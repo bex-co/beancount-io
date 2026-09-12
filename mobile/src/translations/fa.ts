@@ -250,6 +250,7 @@ export const fa: typeof en = {
   filters: "فیلترها",
   filterStatus: "وضعیت",
   filterDateRange: "بازهٔ زمانی",
+  filterDateRangeInvalid: "تاریخ پایان باید برابر یا پس از تاریخ شروع باشد.",
   filterAccount: "حساب",
   allAccounts: "همهٔ حساب‌ها",
   rangeCustom: "دلخواه",

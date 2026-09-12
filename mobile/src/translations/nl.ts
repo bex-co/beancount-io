@@ -252,6 +252,7 @@ export const nl: typeof en = {
   filters: "Filters",
   filterStatus: "Status",
   filterDateRange: "Periode",
+  filterDateRangeInvalid: "De einddatum moet op of na de startdatum liggen.",
   filterAccount: "Account",
   allAccounts: "Alle accounts",
   rangeCustom: "Aangepast",

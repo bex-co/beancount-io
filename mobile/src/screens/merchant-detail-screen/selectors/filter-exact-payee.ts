@@ -10,16 +10,6 @@ export interface PayeeBearing {
   payee?: string | null;
 }
 
-/**
- * Free-text needle for `getLedgerJournal`. The server 500s when the filter
- * contains `.` (validated 2026-08-20: `"MiniMax Group Inc."` fails,
- * `"MiniMax Group Inc"` works). Periods are replaced with spaces; exact
- * matching is still done by `filterExactPayee`.
- */
-export function journalSearchFilter(payee: string): string {
-  return payee.replace(/\./g, " ").replace(/\s+/g, " ").trim();
-}
-
 /** Keep only entries whose payee equals `payee` exactly (after trim). */
 export function filterExactPayee<T extends PayeeBearing>(
   entries: readonly T[],

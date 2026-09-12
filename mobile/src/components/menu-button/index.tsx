@@ -12,7 +12,7 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { ColorTheme } from "@/types/theme-props";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
-type MenuButtonItem = {
+export type MenuButtonItem = {
   label: string;
   /** Trailing glyph, drawn at the row's right edge. */
   icon?: ReactNode;

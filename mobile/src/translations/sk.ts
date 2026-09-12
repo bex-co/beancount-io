@@ -252,6 +252,8 @@ export const sk: typeof en = {
   filters: "Filtre",
   filterStatus: "Stav",
   filterDateRange: "Obdobie",
+  filterDateRangeInvalid:
+    "Koncový dátum musí byť rovnaký alebo neskorší ako začiatočný dátum.",
   filterAccount: "Účet",
   allAccounts: "Všetky účty",
   rangeCustom: "Vlastné",

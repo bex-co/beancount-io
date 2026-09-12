@@ -1,15 +1,4 @@
-import {
-  filterExactPayee,
-  journalSearchFilter,
-} from "../screens/merchant-detail-screen/selectors/filter-exact-payee";
-
-describe("journalSearchFilter", () => {
-  it("strips periods that 500 the journal free-text filter", () => {
-    expect(journalSearchFilter("MiniMax Group Inc.")).toBe("MiniMax Group Inc");
-    expect(journalSearchFilter("A.B.C.")).toBe("A B C");
-    expect(journalSearchFilter("  Uber  ")).toBe("Uber");
-  });
-});
+import { filterExactPayee } from "../screens/merchant-detail-screen/selectors/filter-exact-payee";
 
 describe("filterExactPayee", () => {
   const entries = [
@@ -30,6 +19,26 @@ describe("filterExactPayee", () => {
       "Uber",
       " Uber ",
     ]);
+  });
+
+  it("matches punctuated payees literally, without normalizing periods", () => {
+    const punctuated = [
+      { payee: "Ethereum 2.0", id: 1 },
+      { payee: "Ethereum 2 0", id: 2 },
+      { payee: "Lowe's", id: 3 },
+      { payee: "Lowes", id: 4 },
+      { payee: "MiniMax Group Inc.", id: 5 },
+      { payee: "MiniMax Group Inc", id: 6 },
+    ];
+    expect(
+      filterExactPayee(punctuated, "Ethereum 2.0").map((e) => e.id),
+    ).toEqual([1]);
+    expect(filterExactPayee(punctuated, "Lowe's").map((e) => e.id)).toEqual([
+      3,
+    ]);
+    expect(
+      filterExactPayee(punctuated, "MiniMax Group Inc.").map((e) => e.id),
+    ).toEqual([5]);
   });
 
   it("is case-sensitive and rejects empty targets", () => {

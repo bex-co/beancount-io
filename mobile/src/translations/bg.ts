@@ -254,6 +254,8 @@ export const bg: typeof en = {
   filters: "Филтри",
   filterStatus: "Състояние",
   filterDateRange: "Период",
+  filterDateRangeInvalid:
+    "Крайната дата трябва да е на или след началната дата.",
   filterAccount: "Сметка",
   allAccounts: "Всички сметки",
   rangeCustom: "По избор",

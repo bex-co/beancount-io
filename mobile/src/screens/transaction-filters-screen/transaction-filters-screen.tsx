@@ -27,6 +27,7 @@ import {
   TransactionFilters,
   TransactionStatus,
 } from "@/screens/transactions-screen/filters/types";
+import { isDateRangeValid } from "@/screens/transactions-screen/filters/select-filter-query";
 import { transactionFiltersVar } from "@/screens/transactions-screen/filters/var";
 
 type PickerTarget = "start" | "end";
@@ -92,6 +93,12 @@ const getStyles = (theme: ColorTheme) =>
     // The chip row sits directly above the custom rows and needs breathing room.
     rowsUnderChips: {
       marginTop: 12,
+    },
+    rangeError: {
+      paddingHorizontal: 16,
+      marginTop: 8,
+      fontSize: fontSizes.sm,
+      color: theme.error,
     },
     accountRow: {
       flexDirection: "row",
@@ -198,7 +205,14 @@ export const TransactionFiltersScreen = (): JSX.Element => {
     });
   };
 
+  // A reversed custom window cannot be serialized, so Apply stays blocked
+  // rather than writing a draft the journal would fail on. The draft keeps both
+  // dates as typed — nothing is swapped or dropped — and Cancel still leaves
+  // the last applied filter in place.
+  const isRangeValid = isDateRangeValid(draft);
+
   const apply = () => {
+    if (!isRangeValid) return;
     transactionFiltersVar(draft);
     router.back();
   };
@@ -278,6 +292,11 @@ export const TransactionFiltersScreen = (): JSX.Element => {
               />
             </View>
           )}
+          {draft.range === "custom" && !isRangeValid ? (
+            <Text style={styles.rangeError} testID="filter-range-error">
+              {t("filterDateRangeInvalid")}
+            </Text>
+          ) : null}
         </View>
 
         <View style={styles.section}>
@@ -308,7 +327,9 @@ export const TransactionFiltersScreen = (): JSX.Element => {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button onPress={apply}>{t("apply")}</Button>
+        <Button onPress={apply} disabled={!isRangeValid}>
+          {t("apply")}
+        </Button>
       </View>
 
       <DatePickerModal

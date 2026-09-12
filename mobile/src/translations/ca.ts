@@ -255,6 +255,8 @@ export const ca: typeof en = {
   filters: "Filtres",
   filterStatus: "Estat",
   filterDateRange: "Període",
+  filterDateRangeInvalid:
+    "La data final ha de ser igual o posterior a la data inicial.",
   filterAccount: "Compte",
   allAccounts: "Tots els comptes",
   rangeCustom: "Personalitzat",

@@ -247,6 +247,7 @@ export const en = {
   filters: "Filters",
   filterStatus: "Status",
   filterDateRange: "Date range",
+  filterDateRangeInvalid: "End date must be on or after the start date.",
   filterAccount: "Account",
   allAccounts: "All accounts",
   rangeCustom: "Custom",

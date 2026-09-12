@@ -253,6 +253,7 @@ export const uk: typeof en = {
   filters: "Фільтри",
   filterStatus: "Статус",
   filterDateRange: "Період",
+  filterDateRangeInvalid: "Кінцева дата має бути не раніше за початкову дату.",
   filterAccount: "Рахунок",
   allAccounts: "Усі рахунки",
   rangeCustom: "Власний період",

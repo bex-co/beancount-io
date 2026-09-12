@@ -110,3 +110,36 @@ export function selectPostingRows(
 export function selectTransactionTitle(txn: JournalTransaction): string {
   return txn.payee || txn.narration || "";
 }
+
+/** An overflow-menu action on the transaction detail screen. */
+export type TransactionMenuAction =
+  "shareLink" | "copyLink" | "deleteTransaction";
+
+/**
+ * Which overflow-menu actions a transaction offers, in display order.
+ *
+ * A generated entry (see `hasEditableSource`) has no source directive, so an
+ * entry permalink opens "No entry context data available" rather than the
+ * transaction — offering Share/Copy there hands the user a broken link. Write
+ * actions keep their own gate (`shouldShowTransactionWriteActions`), which
+ * needs a loaded `sha256sum` and so is already false for a generated entry.
+ *
+ * @returns The actions to show; an empty list means render no menu button at
+ *   all, since an ellipsis that opens nothing is worse than no ellipsis.
+ */
+export function selectTransactionMenuActions({
+  isGenerated,
+  showWriteActions,
+}: {
+  isGenerated: boolean;
+  showWriteActions: boolean;
+}): TransactionMenuAction[] {
+  const actions: TransactionMenuAction[] = [];
+  if (!isGenerated) {
+    actions.push("shareLink", "copyLink");
+  }
+  if (showWriteActions) {
+    actions.push("deleteTransaction");
+  }
+  return actions;
+}

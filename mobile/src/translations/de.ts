@@ -258,6 +258,8 @@ export const de: typeof en = {
   filters: "Filter",
   filterStatus: "Status",
   filterDateRange: "Zeitraum",
+  filterDateRangeInvalid:
+    "Das Enddatum muss am oder nach dem Startdatum liegen.",
   filterAccount: "Konto",
   allAccounts: "Alle Konten",
   rangeCustom: "Benutzerdefiniert",

@@ -235,6 +235,7 @@ export const zh: typeof en = {
   filters: "筛选",
   filterStatus: "状态",
   filterDateRange: "日期范围",
+  filterDateRangeInvalid: "结束日期必须不早于开始日期。",
   filterAccount: "账户",
   allAccounts: "全部账户",
   rangeCustom: "自定义",

@@ -254,6 +254,7 @@ export const ru: typeof en = {
   filters: "Фильтры",
   filterStatus: "Статус",
   filterDateRange: "Период",
+  filterDateRangeInvalid: "Конечная дата должна быть не раньше начальной даты.",
   filterAccount: "Счёт",
   allAccounts: "Все счета",
   rangeCustom: "Свой период",

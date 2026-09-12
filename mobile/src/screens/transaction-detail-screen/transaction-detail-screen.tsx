@@ -24,7 +24,7 @@ import {
 import { AmountText } from "@/components/amount-text";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { LoadingTile } from "@/components/loading-tile";
-import { MenuButton } from "@/components/menu-button";
+import { MenuButton, type MenuButtonItem } from "@/components/menu-button";
 import { useThemeStyle, useToast } from "@/common/hooks";
 import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -47,7 +47,9 @@ import {
   hasEditableSource,
   selectHeroAmount,
   selectPostingRows,
+  selectTransactionMenuActions,
   selectTransactionTitle,
+  type TransactionMenuAction,
 } from "./selectors/select-transaction-detail";
 import { shouldShowTransactionWriteActions } from "./selectors/select-transaction-write-actions";
 import { PostingRow } from "./components/posting-row";
@@ -342,8 +344,13 @@ const TransactionDetailImpl = ({
     [router, originAccount],
   );
 
+  // A generated entry (flag `P`, `S`, …) is synthesized by a report or plugin,
+  // so it has no entry context to link to: the permalink would land on "No
+  // entry context data available".
+  const isGenerated = entry !== null && !hasEditableSource(entry);
+
   const entryLinkUrl =
-    entryHash && (selectedLedgerId || ledgerId)
+    entryHash && !isGenerated && (selectedLedgerId || ledgerId)
       ? buildLedgerUrl(
           {
             kind: "entry",
@@ -406,87 +413,74 @@ const TransactionDetailImpl = ({
     amount: Number.parseFloat(posting.units.number),
   }));
   const hasMetadata = Boolean(entry.tags?.length || entry.links?.length);
-  const entryHasEditableSource = canWrite && hasEditableSource(entry);
+  const entryHasEditableSource = canWrite && !isGenerated;
   const showWriteActions = shouldShowTransactionWriteActions(
     canWrite,
     sha256sum,
   );
+  const menuActions = selectTransactionMenuActions({
+    isGenerated,
+    showWriteActions,
+  });
+  const menuItemFor: Record<TransactionMenuAction, MenuButtonItem> = {
+    shareLink: {
+      label: t("shareLink"),
+      icon: <Ionicons name="share-outline" size={22} color={theme.black} />,
+      onPress: handleShareLink,
+    },
+    copyLink: {
+      label: t("copyLink"),
+      icon: <Ionicons name="link-outline" size={22} color={theme.black} />,
+      onPress: handleCopyLink,
+    },
+    deleteTransaction: {
+      label: t("deleteTransaction"),
+      icon: <Ionicons name="trash-outline" size={22} color={theme.error} />,
+      onPress: handleDelete,
+    },
+  };
+  const menuItems = menuActions.map((action) => menuItemFor[action]);
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
       <Stack.Screen
         options={{
           title: t("transaction"),
-          headerRight: entryHash
-            ? () => (
-                <View style={styles.headerActions}>
-                  {showWriteActions ? (
-                    <Pressable
-                      style={styles.headerIconButton}
-                      onPress={handleEdit}
-                      disabled={deleting}
-                      accessibilityRole="button"
-                      accessibilityLabel={t("editTransaction")}
-                    >
-                      <Ionicons
-                        name="pencil-outline"
-                        size={22}
-                        color={theme.primary}
-                      />
-                    </Pressable>
-                  ) : null}
-                  <MenuButton
-                    accessibilityLabel={t("details")}
-                    icon={
-                      <Ionicons
-                        name="ellipsis-horizontal"
-                        size={22}
-                        color={theme.black}
-                      />
-                    }
-                    items={[
-                      {
-                        label: t("shareLink"),
-                        icon: (
+          headerRight:
+            entryHash && (showWriteActions || menuItems.length > 0)
+              ? () => (
+                  <View style={styles.headerActions}>
+                    {showWriteActions ? (
+                      <Pressable
+                        style={styles.headerIconButton}
+                        onPress={handleEdit}
+                        disabled={deleting}
+                        accessibilityRole="button"
+                        accessibilityLabel={t("editTransaction")}
+                      >
+                        <Ionicons
+                          name="pencil-outline"
+                          size={22}
+                          color={theme.primary}
+                        />
+                      </Pressable>
+                    ) : null}
+                    {menuItems.length > 0 ? (
+                      <MenuButton
+                        accessibilityLabel={t("details")}
+                        icon={
                           <Ionicons
-                            name="share-outline"
+                            name="ellipsis-horizontal"
                             size={22}
                             color={theme.black}
                           />
-                        ),
-                        onPress: handleShareLink,
-                      },
-                      {
-                        label: t("copyLink"),
-                        icon: (
-                          <Ionicons
-                            name="link-outline"
-                            size={22}
-                            color={theme.black}
-                          />
-                        ),
-                        onPress: handleCopyLink,
-                      },
-                      ...(showWriteActions
-                        ? [
-                            {
-                              label: t("deleteTransaction"),
-                              icon: (
-                                <Ionicons
-                                  name="trash-outline"
-                                  size={22}
-                                  color={theme.error}
-                                />
-                              ),
-                              onPress: handleDelete,
-                            },
-                          ]
-                        : []),
-                    ]}
-                  />
-                </View>
-              )
-            : undefined,
+                        }
+                        items={menuItems}
+                      />
+                    ) : null}
+                  </View>
+                )
+              : undefined,
         }}
       />
       <ScrollView

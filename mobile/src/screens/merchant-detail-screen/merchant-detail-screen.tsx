@@ -50,10 +50,8 @@ import {
   groupToSections,
 } from "@/screens/transactions-screen/utils/transaction-display-utils";
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
-import {
-  filterExactPayee,
-  journalSearchFilter,
-} from "./selectors/filter-exact-payee";
+import { toPlainSearchFilter } from "@/screens/transactions-screen/utils/plain-search-filter";
+import { filterExactPayee } from "./selectors/filter-exact-payee";
 import {
   buildMerchantCurrencyTotalsBql,
   buildMerchantMetaBql,
@@ -271,7 +269,10 @@ function MerchantDetailBody({ payee }: { payee: string }) {
     skip: !ledgerId,
   });
 
-  const journalFilter = useMemo(() => journalSearchFilter(payee), [payee]);
+  // Quoted-and-escaped STRING literal: a bare needle makes the advanced-filter
+  // lexer reject an apostrophe ("Lowe's") or a period ("Ethereum 2.0"), which
+  // failed the journal while the BQL-driven header still loaded.
+  const journalFilter = useMemo(() => toPlainSearchFilter(payee), [payee]);
 
   const {
     data: journalData,

@@ -2,6 +2,7 @@ import {
   hasEditableSource,
   selectHeroAmount,
   selectPostingRows,
+  selectTransactionMenuActions,
   selectTransactionTitle,
 } from "../select-transaction-detail";
 import { DirectiveType } from "../../../transactions-screen/types";
@@ -193,5 +194,52 @@ describe("hasEditableSource", () => {
     for (const flag of ["P", "S", "T", "C", "U", "R", "M"]) {
       expect(hasEditableSource(txn([], { flag }))).toBe(false);
     }
+  });
+});
+
+describe("selectTransactionMenuActions", () => {
+  // The screen derives `isGenerated` as `!hasEditableSource(entry)`, so the
+  // predicate above is what feeds this.
+  const actionsFor = (entry: JournalTransaction, showWriteActions: boolean) =>
+    selectTransactionMenuActions({
+      isGenerated: !hasEditableSource(entry),
+      showWriteActions,
+    });
+
+  it("offers link actions for an editable entry", () => {
+    expect(actionsFor(txn([], { flag: "*" }), false)).toEqual([
+      "shareLink",
+      "copyLink",
+    ]);
+  });
+
+  it("adds delete for an editable entry with write access", () => {
+    expect(actionsFor(txn([], { flag: "*" }), true)).toEqual([
+      "shareLink",
+      "copyLink",
+      "deleteTransaction",
+    ]);
+  });
+
+  it("offers nothing for a generated entry: its permalink has no context", () => {
+    for (const flag of ["P", "S", "T", "C", "U", "R", "M"]) {
+      expect(actionsFor(txn([], { flag }), false)).toEqual([]);
+    }
+  });
+
+  it("never restores the broken links just because write access exists", () => {
+    // `showWriteActions` is already false for a generated entry (no sha256sum),
+    // but delete must be the only thing it could ever add.
+    expect(actionsFor(txn([], { flag: "P" }), true)).toEqual([
+      "deleteTransaction",
+    ]);
+  });
+
+  it("keeps link actions for a pending entry, which is ordinary source", () => {
+    expect(actionsFor(txn([], { flag: "!" }), true)).toEqual([
+      "shareLink",
+      "copyLink",
+      "deleteTransaction",
+    ]);
   });
 });
