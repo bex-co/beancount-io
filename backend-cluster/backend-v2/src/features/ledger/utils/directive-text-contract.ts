@@ -1,5 +1,8 @@
 import { UnbalancedTransactionError, ValidationError } from "@/shared/errors";
-import type { BeanCheckError } from "@/features/ledger/utils/bean-check-errors";
+import {
+  UNBALANCED_ERROR_CODE,
+  type BeanCheckError,
+} from "@/features/ledger/utils/bean-check-errors";
 
 /**
  * What appending Beancount text asks for and answers with.
@@ -72,8 +75,14 @@ export function unbalancedOrValidationError(
       error.source ? `${error.message} (${error.source})` : error.message,
     )
     .join("; ");
+  // The engine's code, not its prose (w2/013). Errors that predate the code
+  // travelling through — or an engine build that reports none — fall back to
+  // the wording, so a deployment mid-rollout degrades to the old behaviour
+  // rather than misclassifying.
   const unbalanced = newErrors.some((error) =>
-    /does not balance|residual/i.test(error.message),
+    error.code
+      ? error.code === UNBALANCED_ERROR_CODE
+      : /does not balance|residual/i.test(error.message),
   );
   if (unbalanced) {
     // bean-check states the residual in its own message; carrying it through
@@ -87,5 +96,6 @@ export function unbalancedOrValidationError(
   return new ValidationError(
     "text",
     `appending it would introduce ${newErrors.length} new bean-check error${newErrors.length === 1 ? "" : "s"}: ${detail}`,
+    "The text is valid Beancount but breaks the ledger — the message names each new error. Fix the directives, or pass `allowInvalid: true` to record them anyway.",
   );
 }

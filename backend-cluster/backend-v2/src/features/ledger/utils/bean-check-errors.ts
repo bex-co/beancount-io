@@ -13,7 +13,19 @@ export interface BeanCheckError {
   readonly message: string;
   /** `file:line` of the offending directive, when the loader reports one. */
   readonly source?: string;
+  /**
+   * The engine's stable error code, when it reported one (w2/013).
+   *
+   * Classification reads this. The message is prose the engine is free to
+   * reword, and a caller that branched on its wording — as this one did, with
+   * `/does not balance|residual/i` — would silently downgrade an unbalanced
+   * transaction to a generic validation failure the day it changed.
+   */
+  readonly code?: string;
 }
+
+/** A transaction whose postings do not sum to zero, per the ledger engine. */
+export const UNBALANCED_ERROR_CODE = "E3001";
 
 /** bean-check's verdict around a write. */
 export interface WriteValidation {
@@ -27,6 +39,7 @@ export function toBeanCheckErrors(
   errors: readonly {
     message: string;
     source?: { filename: string; lineno: number } | null;
+    code?: string | null;
   }[],
 ): BeanCheckError[] {
   return (errors ?? []).map((error) => ({
@@ -34,6 +47,7 @@ export function toBeanCheckErrors(
     ...(error.source
       ? { source: `${error.source.filename}:${error.source.lineno}` }
       : {}),
+    ...(error.code ? { code: error.code } : {}),
   }));
 }
 

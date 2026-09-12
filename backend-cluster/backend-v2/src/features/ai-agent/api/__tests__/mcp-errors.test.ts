@@ -1,3 +1,4 @@
+import { resolveMcpLedger } from "../mcp-context";
 import {
   envelopeFromThrown,
   splitToolFailure,
@@ -50,23 +51,51 @@ describe("envelopeFromThrown", () => {
   });
 
   it("names the next call for the refusals the audit actually hit", () => {
-    expect(
-      envelopeFromThrown(
-        new BadUserInputError("Select a ledger using ledger: owner/name"),
-      ).hint,
-    ).toMatch(/listLedgers/);
-    expect(
-      envelopeFromThrown(
-        new ForbiddenError(
-          "The selected ledger is outside this credential's ledger restriction",
-        ),
-      ).hint,
-    ).toMatch(/pinned to one ledger/);
+    // Thrown for real rather than reconstructed: the hint is the throw site's
+    // to declare (w2/013), so a test that built its own error would prove
+    // nothing about what `resolveMcpLedger` actually refuses with.
+    const unpinned = { identity: { userId: "u" } } as never;
+    expect(() => resolveMcpLedger(unpinned)).toThrow();
+    try {
+      resolveMcpLedger(unpinned);
+    } catch (error) {
+      expect(envelopeFromThrown(error).hint).toMatch(/listLedgers/);
+    }
+
+    const pinned = {
+      identity: { userId: "u", ledgerScope: "alice/main" },
+    } as never;
+    try {
+      resolveMcpLedger(pinned, "mallory/secret");
+    } catch (error) {
+      expect(envelopeFromThrown(error).hint).toMatch(/pinned to one ledger/);
+    }
+  });
+
+  it("falls back to the category hint when the throw site named none", () => {
+    // No prose matching left: a refusal that says nothing specific gets its
+    // category's advice, and a reworded message cannot change which.
     expect(
       envelopeFromThrown(
         new ConflictError("Entry", "it has changed since it was loaded"),
       ).hint,
     ).toMatch(/getEntryContext/);
+    expect(
+      envelopeFromThrown(
+        new ConflictError("Entry", "totally different wording"),
+      ).hint,
+    ).toMatch(/getEntryContext/);
+  });
+
+  it("does not let the word 'scope' in a message hijack the hint", () => {
+    // The deleted /scope/i pattern matched any message containing
+    // "ledgerScope", handing a not-found or conflict the credential-scope
+    // advice. Category now decides.
+    expect(
+      envelopeFromThrown(
+        new BadUserInputError("ledgerScope must be owner/name"),
+      ).hint,
+    ).toMatch(/tools\/list publishes each tool's input schema|`tools\/list`/);
   });
 
   it("carries retryAfter for a rate-limit refusal", () => {
@@ -197,7 +226,9 @@ describe("renderErrorText", () => {
         hint: "back off",
         retryAfter: 12,
       }),
-    ).toBe("RATE_LIMITED: Rate limit exceeded\nHint: back off\nRetry after: 12s");
+    ).toBe(
+      "RATE_LIMITED: Rate limit exceeded\nHint: back off\nRetry after: 12s",
+    );
   });
 
   it("omits the retry line when there is nothing to retry after", () => {

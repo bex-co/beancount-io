@@ -40,7 +40,8 @@ const b64 = (text: string) => Buffer.from(text, "utf8").toString("base64");
 
 describe("checkProjectedErrors", () => {
   it("overlays updated contents onto the repo file map", async () => {
-    const extra = "2026-09-01 *\n  Expenses:Food 1.00 USD\n  Assets:Cash -1.00 USD\n";
+    const extra =
+      "2026-09-01 *\n  Expenses:Food 1.00 USD\n  Assets:Cash -1.00 USD\n";
     await service().checkProjectedErrors({
       ledgerId: "alice/main",
       userId: "user-1",
@@ -72,11 +73,15 @@ describe("checkProjectedErrors", () => {
     });
   });
 
-  it("returns the mapped errors", async () => {
+  it("returns the mapped errors, code and engine hint included", async () => {
+    // The code is what a consumer classifies on (w2/013) — dropping it here
+    // is what forced backend-v2 to regex "does not balance" out of the prose.
     parseMock.mockResolvedValue({
       errors: [
         {
-          message: "Transaction does not balance",
+          message: "Transaction does not balance: residual 1.50 USD",
+          code: "E3001",
+          hint: "add the missing posting",
           file: "main.bean",
           line: 5,
         },
@@ -89,10 +94,25 @@ describe("checkProjectedErrors", () => {
     });
     expect(errors).toEqual([
       {
-        message: "Transaction does not balance",
+        message: "Transaction does not balance: residual 1.50 USD",
+        code: "E3001",
+        hint: "add the missing posting",
         source: { filename: "main.bean", lineno: 5 },
       },
     ]);
+  });
+
+  it("reports a null code for an error the engine did not code", async () => {
+    parseMock.mockResolvedValue({
+      errors: [{ message: "something else", file: "main.bean", line: 1 }],
+    });
+    const [error] = await service().checkProjectedErrors({
+      ledgerId: "alice/main",
+      userId: "user-1",
+      overlays: [{ path: "main.bean", content: b64(MAIN) }],
+    });
+    expect(error.code).toBeNull();
+    expect(error.hint).toBeNull();
   });
 
   it("refuses unsafe paths and oversized projections", async () => {

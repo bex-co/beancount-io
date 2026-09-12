@@ -2266,7 +2266,7 @@
           "reports"
         ],
         "summary": "Get Ledger Source Files",
-        "description": "List the repo-relative Beancount source files that make up this ledger.\n\nThis is `main.bean` plus every file it transitively `include`s \u2014 i.e. exactly the\nfiles an entry may be written to and still be picked up by the ledger.",
+        "description": "List the repo-relative Beancount source files that make up this ledger.\n\nThis is `main.bean` plus every file it transitively `include`s — i.e. exactly the\nfiles an entry may be written to and still be picked up by the ledger.",
         "operationId": "getLedgerSourceFiles",
         "security": [
           {
@@ -6858,7 +6858,7 @@
           "webhook"
         ],
         "summary": "Check the free-tier directive limit before accepting a git push",
-        "description": "Called synchronously by the Gitea pre-receive custom hook (custom-hooks/pre-receive.d/enforce-directive-limit.sh) with both the pushed (new) and pre-push (old) trees as gzipped tarballs \u2014 the hook archives both locally itself, since it already has unauthenticated access to both revisions' git objects and this avoids needing ledger-service to clone (which would require Gitea credentials for private repos) or rely on its ledger cache (which is cleared after every push and would otherwise almost always be cold for a pure git-push workflow). old_archive is omitted for a brand-new branch, treated as 0 pre-existing directives. This endpoint is fail-open: it always returns HTTP 200 with allow=true unless the push definitively grows an already-over-limit free-tier ledger's directive count.",
+        "description": "Called synchronously by the Gitea pre-receive custom hook (custom-hooks/pre-receive.d/enforce-directive-limit.sh) with both the pushed (new) and pre-push (old) trees as gzipped tarballs — the hook archives both locally itself, since it already has unauthenticated access to both revisions' git objects and this avoids needing ledger-service to clone (which would require Gitea credentials for private repos) or rely on its ledger cache (which is cleared after every push and would otherwise almost always be cold for a pure git-push workflow). old_archive is omitted for a brand-new branch, treated as 0 pre-existing directives. This endpoint is fail-open: it always returns HTTP 200 with allow=true unless the push definitively grows an already-over-limit free-tier ledger's directive count.",
         "operationId": "webhookGiteaPreReceiveCheck",
         "requestBody": {
           "content": {
@@ -7723,6 +7723,30 @@
           "message": {
             "type": "string",
             "title": "Message"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code",
+            "description": "Stable engine error code, e.g. E3001 for a transaction that does not balance. Classify on this, not on the message."
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint",
+            "description": "The engine's own remediation hint for this error, when it has one."
           }
         },
         "type": "object",
@@ -9461,7 +9485,7 @@
           "error"
         ],
         "title": "ErrorResponse",
-        "description": "\u7edf\u4e00\u9519\u8bef\u54cd\u5e94\u683c\u5f0f"
+        "description": "统一错误响应格式"
       },
       "Event": {
         "properties": {

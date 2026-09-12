@@ -30,6 +30,12 @@ export function toAttributesPublic(
 /**
  * Map rustledger `BeancountError[]` → the fava `BeancountErrorPublic[]` DTO,
  * carrying source location (`file`/`line`) when the error has one.
+ *
+ * `code` travels with the message because a consumer that has to tell an
+ * unbalanced transaction from any other validation failure would otherwise
+ * regex the prose, and a reworded engine message would silently change how
+ * the error is classified (w2/013). The engine's own `hint` rides along for
+ * the same reason.
  */
 export function toBeancountErrorsPublic(
   errors: BeancountError[],
@@ -40,6 +46,8 @@ export function toBeancountErrorsPublic(
       error.file && error.line !== null && error.line !== undefined
         ? { filename: error.file, lineno: error.line }
         : null,
+    code: error.code ?? null,
+    hint: error.hint ?? null,
   }));
 }
 

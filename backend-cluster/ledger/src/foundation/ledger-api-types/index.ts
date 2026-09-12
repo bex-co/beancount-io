@@ -331,6 +331,13 @@ export interface BeancountErrorPublic {
   source?: BeancountErrorSourcePublic | null;
   /** Message */
   message: string;
+  /**
+   * Stable engine error code, e.g. `E3001` for a transaction that does not
+   * balance. Classify on this, not on the message (w2/013).
+   */
+  code?: string | null;
+  /** The engine's own remediation hint for this error, when it has one. */
+  hint?: string | null;
 }
 
 /**

@@ -98,11 +98,17 @@ export function resolveMcpLedger(
 ): string {
   const ledger = requested ?? context.identity.ledgerScope;
   if (!ledger || !/^[^/\s?#%]+\/[^/\s?#%]+$/.test(ledger)) {
-    throw new BadUserInputError("Select a ledger using ledger: owner/name");
+    throw new BadUserInputError(
+      "Select a ledger using ledger: owner/name",
+      "ledger",
+      'Call `listLedgers`, then pass `ledger: "owner/name"` on this call. A credential pinned to one ledger may omit it.',
+    );
   }
   if (context.identity.ledgerScope && ledger !== context.identity.ledgerScope) {
     throw new ForbiddenError(
       "The selected ledger is outside this credential's ledger restriction",
+      "ledger",
+      "This credential is pinned to one ledger and cannot reach another. Omit `ledger`, or use a credential without a pin.",
     );
   }
   return ledger;

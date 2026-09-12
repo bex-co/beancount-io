@@ -28,6 +28,12 @@ export abstract class DomainError extends Error {
   constructor(
     public readonly category: ErrorCategory,
     message: string,
+    /**
+     * Error context clients branch on. A `hint` key here is the canonical
+     * place to say what to do next: transports read it verbatim (the MCP
+     * envelope does), so the throw site — which knows why it refused — names
+     * the remedy instead of a transport guessing from the prose (w2/013).
+     */
     public readonly metadata?: Record<string, unknown>,
     public readonly httpStatusHint?: number,
   ) {
@@ -63,12 +69,11 @@ export class UnauthenticatedError extends DomainError {
  * throw new ForbiddenError("Only ledger owner can delete", "ledger");
  */
 export class ForbiddenError extends DomainError {
-  constructor(message = "Access denied", resource?: string) {
-    super(
-      ErrorCategory.FORBIDDEN,
-      message,
-      resource ? { resource } : undefined,
-    );
+  constructor(message = "Access denied", resource?: string, hint?: string) {
+    super(ErrorCategory.FORBIDDEN, message, {
+      ...(resource !== undefined && { resource }),
+      ...(hint !== undefined && { hint }),
+    });
   }
 }
 
@@ -82,11 +87,15 @@ export class ForbiddenError extends DomainError {
  * throw new NotFoundError("Ledger", "abc123");
  */
 export class NotFoundError extends DomainError {
-  constructor(resource: string, id?: string) {
+  constructor(resource: string, id?: string, hint?: string) {
     const message = id
       ? `${resource} with ID '${id}' not found`
       : `${resource} not found`;
-    super(ErrorCategory.NOT_FOUND, message, { resource, id });
+    super(ErrorCategory.NOT_FOUND, message, {
+      resource,
+      id,
+      ...(hint !== undefined && { hint }),
+    });
   }
 }
 
@@ -100,8 +109,11 @@ export class NotFoundError extends DomainError {
  * throw new BadUserInputError("Name cannot be empty", "name");
  */
 export class BadUserInputError extends DomainError {
-  constructor(message: string, field?: string) {
-    super(ErrorCategory.BAD_USER_INPUT, message, field ? { field } : undefined);
+  constructor(message: string, field?: string, hint?: string) {
+    super(ErrorCategory.BAD_USER_INPUT, message, {
+      ...(field !== undefined && { field }),
+      ...(hint !== undefined && { hint }),
+    });
   }
 }
 
@@ -114,13 +126,14 @@ export class BadUserInputError extends DomainError {
  * throw new ValidationError("email", "Must be a valid email address");
  */
 export class ValidationError extends DomainError {
-  constructor(field: string, reason: string) {
+  constructor(field: string, reason: string, hint?: string) {
     super(
       ErrorCategory.VALIDATION_FAILED,
       `Validation failed for ${field}: ${reason}`,
       {
         field,
         reason,
+        ...(hint !== undefined && { hint }),
       },
     );
   }
@@ -255,11 +268,11 @@ export class ResourceLimitReachedError extends DomainError {
  * throw new OperationNotAllowedError("delete", "Cannot delete default ledger");
  */
 export class OperationNotAllowedError extends DomainError {
-  constructor(operation: string, reason: string) {
+  constructor(operation: string, reason: string, hint?: string) {
     super(
       ErrorCategory.OPERATION_NOT_ALLOWED,
       `Operation '${operation}' not allowed: ${reason}`,
-      { operation, reason },
+      { operation, reason, ...(hint !== undefined && { hint }) },
     );
   }
 }

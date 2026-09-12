@@ -43,6 +43,7 @@ import { type McpRequestContext, resolveMcpLedger } from "./mcp-context";
 import { parseLedgerId } from "@/shared/str";
 import { VOCABULARY_READS } from "@/features/ledger/api/rest/v1/vocabulary-handler";
 import { ANALYSIS_READS } from "@/features/ledger/api/rest/v1/analysis-handler";
+import { NotFoundError } from "@/shared/errors";
 
 /**
  * The MCP surface's resource fragment (ADR 0008 D2).
@@ -416,23 +417,21 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       );
     },
   },
-  ...SOCIAL_READS.map(
-    (read): McpResourceDescriptor => ({
-      name: read.name,
-      title: read.path,
-      description:
-        "Public social discovery. page defaults to 1 and limit to 20; total is the page size. Upstream failure returns an empty page.",
-      uriTemplate: `beancount://social/${read.path}`,
-      queryNames: Object.keys(socialListQuery.shape),
-      mimeType: "application/json",
-      read: async (context, variables) => {
-        const { username, page, limit } = socialListQuery.parse(variables);
-        return JSON.stringify(
-          await context.socialService[read.method](username, page, limit),
-        );
-      },
-    }),
-  ),
+  ...SOCIAL_READS.map((read): McpResourceDescriptor => ({
+    name: read.name,
+    title: read.path,
+    description:
+      "Public social discovery. page defaults to 1 and limit to 20; total is the page size. Upstream failure returns an empty page.",
+    uriTemplate: `beancount://social/${read.path}`,
+    queryNames: Object.keys(socialListQuery.shape),
+    mimeType: "application/json",
+    read: async (context, variables) => {
+      const { username, page, limit } = socialListQuery.parse(variables);
+      return JSON.stringify(
+        await context.socialService[read.method](username, page, limit),
+      );
+    },
+  })),
   {
     name: "userProfile",
     title: "Your profile",
@@ -620,55 +619,51 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
         }),
       ),
   },
-  ...COMMIT_READS.map(
-    (read): McpResourceDescriptor => ({
-      name: read.name,
-      title: read.summary,
-      description: read.summary,
-      mimeType: "application/json",
-      uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}`,
-      queryNames: Object.keys(read.query.shape),
-      read: async (context, variables) => {
-        const { owner: _owner, name: _name, ...query } = variables;
-        return JSON.stringify(
-          await read.fetch(
-            {
-              commits: context.commitsService,
-              ledgerRepo: context.services.ledgerRepo,
-            },
-            {
-              identity: context.identity,
-              ledgerId: resolveLedgerId(context, variables),
-              query: read.query.parse(query),
-            },
-          ),
-        );
-      },
-    }),
-  ),
-  ...JOURNAL_READS.map(
-    (read): McpResourceDescriptor => ({
-      name: read.name,
-      title: read.summary,
-      description: `${read.summary}. Subtype filters are JSON-encoded string arrays.`,
-      mimeType: "application/json",
-      uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}`,
-      // The one journal read enumerated in `resources/list` (w2/m27:t004):
-      // clients that enumerate concrete resources need the source-file list
-      // without first knowing it exists.
-      ...(read.segment === "source-files" ? { listSegment: read.segment } : {}),
-      queryNames: Object.keys(read.query.shape),
-      read: async (context, variables) => {
-        const { owner: _owner, name: _name, ...query } = variables;
-        const result = await read.fetch(context.services, {
-          identity: context.identity,
-          ledgerId: resolveLedgerId(context, variables),
-          query: read.query.parse(query),
-        });
-        return JSON.stringify(result);
-      },
-    }),
-  ),
+  ...COMMIT_READS.map((read): McpResourceDescriptor => ({
+    name: read.name,
+    title: read.summary,
+    description: read.summary,
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}`,
+    queryNames: Object.keys(read.query.shape),
+    read: async (context, variables) => {
+      const { owner: _owner, name: _name, ...query } = variables;
+      return JSON.stringify(
+        await read.fetch(
+          {
+            commits: context.commitsService,
+            ledgerRepo: context.services.ledgerRepo,
+          },
+          {
+            identity: context.identity,
+            ledgerId: resolveLedgerId(context, variables),
+            query: read.query.parse(query),
+          },
+        ),
+      );
+    },
+  })),
+  ...JOURNAL_READS.map((read): McpResourceDescriptor => ({
+    name: read.name,
+    title: read.summary,
+    description: `${read.summary}. Subtype filters are JSON-encoded string arrays.`,
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}`,
+    // The one journal read enumerated in `resources/list` (w2/m27:t004):
+    // clients that enumerate concrete resources need the source-file list
+    // without first knowing it exists.
+    ...(read.segment === "source-files" ? { listSegment: read.segment } : {}),
+    queryNames: Object.keys(read.query.shape),
+    read: async (context, variables) => {
+      const { owner: _owner, name: _name, ...query } = variables;
+      const result = await read.fetch(context.services, {
+        identity: context.identity,
+        ledgerId: resolveLedgerId(context, variables),
+        query: read.query.parse(query),
+      });
+      return JSON.stringify(result);
+    },
+  })),
   ...(["income-statement", "balance-sheet"] as const).map(
     (statement): McpResourceDescriptor => ({
       name:
@@ -724,24 +719,22 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       );
     },
   },
-  ...CATALOG_READS.map(
-    (read): McpResourceDescriptor => ({
-      name: read.name,
-      title: read.summary,
-      description: read.summary,
-      mimeType: "application/json",
-      uriTemplate: `${RESOURCE_SCHEME}://catalog/ledgers${read.segment ? `/${read.segment}` : ""}`,
-      queryNames: Object.keys(read.query.shape),
-      read: async (context, variables) =>
-        JSON.stringify(
-          await read.fetch(
-            context.ledgerWorkflow,
-            context.identity,
-            read.query.parse(variables),
-          ),
+  ...CATALOG_READS.map((read): McpResourceDescriptor => ({
+    name: read.name,
+    title: read.summary,
+    description: read.summary,
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://catalog/ledgers${read.segment ? `/${read.segment}` : ""}`,
+    queryNames: Object.keys(read.query.shape),
+    read: async (context, variables) =>
+      JSON.stringify(
+        await read.fetch(
+          context.ledgerWorkflow,
+          context.identity,
+          read.query.parse(variables),
         ),
-    }),
-  ),
+      ),
+  })),
   {
     name: "ledgerMetadata",
     title: "Ledger Metadata",
@@ -781,7 +774,12 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
         identity: toolCtx.identity,
         paths: [path],
       });
-      if (!file) throw new Error(`No such file in ${ledgerId}: ${path}`);
+      if (!file)
+        throw new NotFoundError(
+          `File in ${ledgerId}`,
+          path,
+          "List what exists first: `listLedgerFiles`, or the `beancount://{owner}/{name}/source-files` resource.",
+        );
       return file.content;
     },
   },

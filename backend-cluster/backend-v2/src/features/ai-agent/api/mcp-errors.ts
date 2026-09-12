@@ -98,52 +98,6 @@ const CATEGORY_HINTS: Record<ErrorCategory, string> = {
 };
 
 /**
- * Hints for the messages the audit actually produced, keyed by a fragment of
- * the message.
- *
- * These beat the category hint because they can name the exact next call. The
- * list is deliberately short — every entry is a refusal an agent hit in a real
- * session, not a hypothetical one.
- */
-const MESSAGE_HINTS: readonly (readonly [RegExp, string])[] = [
-  [
-    /Select a ledger using ledger/i,
-    "Call `listLedgers`, then pass `ledger: \"owner/name\"` on this call. A credential pinned to one ledger may omit it.",
-  ],
-  [
-    /outside this credential's ledger restriction/i,
-    "This credential is pinned to one ledger and cannot reach another. Omit `ledger`, or use a credential without a pin.",
-  ],
-  [
-    /changed since it was loaded/i,
-    "Call `getEntryContext` for the entry, take its current `sha256sum` and `entryHash`, and resend.",
-  ],
-  [
-    /No such file in/i,
-    "List what exists first: `listLedgerFiles`, or the `beancount://{owner}/{name}/source-files` resource.",
-  ],
-  [
-    /still `?include`?d/i,
-    "Pass `updateIncludes: true` so the rename rewrites the `include` lines in the same commit.",
-  ],
-  [
-    /new bean-check error/i,
-    "The text is valid Beancount but breaks the ledger — the message names each new error. Fix the directives, or pass `allowInvalid: true` to record them anyway.",
-  ],
-  [
-    /scope/i,
-    "The credential's scopes do not cover this operation. Mint a key with the scope it needs, or use your OAuth credential.",
-  ],
-];
-
-function hintFor(category: ErrorCategory, message: string): string {
-  for (const [pattern, hint] of MESSAGE_HINTS) {
-    if (pattern.test(message)) return hint;
-  }
-  return CATEGORY_HINTS[category];
-}
-
-/**
  * Zod's prose, reduced to the field that is wrong.
  *
  * The SDK hands a validation failure over as the whole issue array
@@ -173,12 +127,13 @@ function compactZodMessage(message: string): string | undefined {
 export function envelopeFromThrown(error: unknown): McpErrorEnvelope {
   if (error instanceof DomainError) {
     const metadata = error.metadata as
-      | { hint?: unknown; retryAfter?: unknown }
-      | undefined;
+      { hint?: unknown; retryAfter?: unknown } | undefined;
+    // The throw site's own hint wins; the category fallback is what a
+    // refusal that has nothing more specific to say still carries (w2/013).
     const hint =
       typeof metadata?.hint === "string"
         ? metadata.hint
-        : hintFor(error.category, error.message);
+        : CATEGORY_HINTS[error.category];
     return {
       code: error.category,
       message: error.message,
@@ -198,7 +153,7 @@ export function envelopeFromThrown(error: unknown): McpErrorEnvelope {
     };
   }
   const category = categoryForMessage(raw);
-  return { code: category, message: raw, hint: hintFor(category, raw) };
+  return { code: category, message: raw, hint: CATEGORY_HINTS[category] };
 }
 
 /**
@@ -256,7 +211,8 @@ export function splitToolFailure(result: Record<string, unknown>): {
       hint:
         typeof errorHint === "string"
           ? errorHint
-          : hintFor(code as ErrorCategory, message),
+          : (CATEGORY_HINTS[code as ErrorCategory] ??
+            CATEGORY_HINTS[ErrorCategory.INTERNAL_SERVER_ERROR]),
       ...(typeof retryAfter === "number" && { retryAfter }),
     },
     rest,

@@ -789,6 +789,8 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         `${input.oldPath} is still included by ${names}; pass updateIncludes: true to rewrite ${
           includingFiles.length === 1 ? "it" : "them"
         } in the same commit`,
+        "updateIncludes",
+        "Pass `updateIncludes: true` so the rename rewrites the `include` lines in the same commit.",
       );
     }
 
