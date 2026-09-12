@@ -34,7 +34,7 @@ def _frontend_python(binary: Path) -> Path | None:
     return sibling if sibling.exists() else None
 
 
-def smoke(binary: Path, directory: Path) -> None:
+def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None, installed: bool = False) -> None:
     directory = directory.resolve()
     env = dict(
         os.environ,
@@ -410,7 +410,7 @@ def smoke(binary: Path, directory: Path) -> None:
     ask_err = ask.stderr
     assert "optional AI" in ask_err or "BEA_TOKEN" in ask_err or "Not logged in" in ask_err or "cloud login" in ask_err
     # Frontend isolation + license materials on the installed interpreter.
-    frontend_python = _frontend_python(binary)
+    frontend_python = frontend_python or _frontend_python(binary)
     if frontend_python is not None:
         probe = subprocess.run(
             [
@@ -436,11 +436,8 @@ def smoke(binary: Path, directory: Path) -> None:
         assert probe.returncode == 0, (probe.stdout, probe.stderr)
         # Customer artifacts must not ship the engine stack in the frontend venv.
         # Dev/checkouts keep Beancount in the same interpreter for the test suite.
-        if "site-packages" in str(frontend_python.resolve()) or "venv" in str(frontend_python.resolve()):
-            loaded = {name for name in probe.stdout.strip().split(",") if name}
-            # Only enforce import rejection when none of the engine packages are present.
-            if not loaded:
-                assert probe.stdout.strip() == ""
+        if installed:
+            assert probe.stdout.strip() == "", f"Engine modules in frontend: {probe.stdout}"
     # Engine env: Homebrew (BEA_ENGINE_DIR) or PyPI first-use under XDG_DATA_HOME.
     engine_dir = env.get("BEA_ENGINE_DIR")
     if engine_dir:
@@ -454,12 +451,11 @@ def smoke(binary: Path, directory: Path) -> None:
     if engine_root is not None and engine_root.is_dir():
         assert any(engine_root.glob("bin/bean-check")) or any(engine_root.glob("Scripts/bean-check.exe"))
         notices = list(engine_root.glob("lib/python*/site-packages/bea_engine/NOTICE.fava"))
+        notices += list(engine_root.glob("Lib/site-packages/bea_engine/NOTICE.fava"))
         assert notices, f"engine NOTICE.fava missing under {engine_root}"
         assert "Fava" in notices[0].read_text(encoding="utf-8")
         # Base profile must not include optional ecosystem packages (m20 / ADR012).
-        engine_python = next(engine_root.glob("bin/python"), None) or next(
-            engine_root.glob("Scripts/python.exe"), None
-        )
+        engine_python = next(engine_root.glob("bin/python"), None) or next(engine_root.glob("Scripts/python.exe"), None)
         assert engine_python is not None, f"engine python missing under {engine_root}"
         absent = subprocess.run(
             [
@@ -578,9 +574,7 @@ def smoke(binary: Path, directory: Path) -> None:
         )
         price_env = dict(env)
         inherited = price_env.get("PYTHONPATH", "")
-        price_env["PYTHONPATH"] = (
-            f"{directory}{os.pathsep}{inherited}" if inherited else str(directory)
-        )
+        price_env["PYTHONPATH"] = f"{directory}{os.pathsep}{inherited}" if inherited else str(directory)
         quoted = subprocess.run(
             [
                 str(binary),
@@ -620,9 +614,7 @@ def smoke(binary: Path, directory: Path) -> None:
         assert offline_features["beanprice"]["present"] is True
         commands += 1
         # Frontend isolation must still hold after optional enablement.
-        if frontend_python is not None and (
-            "site-packages" in str(frontend_python.resolve()) or "venv" in str(frontend_python.resolve())
-        ):
+        if frontend_python is not None and installed:
             post = subprocess.run(
                 [
                     str(frontend_python),
@@ -646,4 +638,4 @@ def smoke(binary: Path, directory: Path) -> None:
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="bea-smoke-") as work:
-        smoke(Path(sys.argv[1]).resolve(), Path(work))
+        smoke(Path(sys.argv[1]).resolve(), Path(work), installed="--installed" in sys.argv[2:])

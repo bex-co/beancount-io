@@ -42,9 +42,7 @@ jobs:
         run: make check-all
 
       - name: Build installation artifacts
-        run: |
-          make release-lock
-          uv build --out-dir dist
+        run: make release-artifacts
       - uses: actions/upload-artifact@v4
         with:
           name: cli-install

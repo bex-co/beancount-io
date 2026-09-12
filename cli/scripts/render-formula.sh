@@ -42,7 +42,7 @@ class Bea < Formula
   url "${source_url}"
   version "${version}"
   sha256 "${sha256}"
-  license "MIT"
+  license all_of: ["MIT", "GPL-2.0-only"]
 
   depends_on "python@3.12"
   # Not \`=> :build\`: post_install needs uv too, and a build-only dependency is
@@ -51,7 +51,8 @@ class Bea < Formula
 
   def install
     project = libexec/"project"
-    project.install "pyproject.toml", "README.md", "requirements.lock", "engine-requirements.lock", "src", "engine"
+    project.install "pyproject.toml", "README.md", "LICENSE", "NOTICE.fava", "requirements.lock", "engine-requirements.lock", "engine-optional-beangulp.lock", "engine-optional-beanprice.lock", "src", "engine"
+    (project/"scripts").install "scripts/build_hook.py"
 
     uv = Formula["uv"].opt_bin/"uv"
     system uv, "venv", "--python", Formula["python@3.12"].opt_bin/"python3.12", libexec/"venv"
@@ -97,7 +98,7 @@ class Bea < Formula
 
   test do
     assert_match "bea #{version}", shell_output("#{bin}/bea --version")
-    system libexec/"venv/bin/python", pkgshare/"smoke-installed.py", bin/"bea"
+    system libexec/"venv/bin/python", pkgshare/"smoke-installed.py", bin/"bea", "--installed"
   end
 end
 EOF

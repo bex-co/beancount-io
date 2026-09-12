@@ -450,3 +450,22 @@ class TestFrontendPackaging:
         assert force["src/bea_engine"] == "engine/src/bea_engine"
         assert force["src/fava"] == "engine/src/fava"
         assert "engine/pyproject.toml" in only
+
+
+@pytest.mark.parametrize("platform", ["linux", "darwin", "win32"])
+def test_managed_engine_layout_and_native_executable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, platform: str
+) -> None:
+    monkeypatch.setattr(sys, "platform", platform)
+    root = tmp_path / "engine"
+    python = paths.venv_python(root)
+    python.parent.mkdir(parents=True)
+    python.touch()
+    site = root / ("Lib/site-packages" if platform == "win32" else "lib/python3.12/site-packages")
+    (site / "bea_engine").mkdir(parents=True)
+    command = python.parent / ("bean-check.exe" if platform == "win32" else "bean-check")
+    command.touch()
+    monkeypatch.setenv("BEA_ENGINE_DIR", str(root))
+    monkeypatch.delenv("BEA_ENGINE_PYTHON", raising=False)
+    assert paths.is_provisioned(root)
+    assert launch.native_command("bean-check") == command

@@ -686,3 +686,16 @@ class TestVersion:
         result = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, check=True)
 
         assert result.stdout.strip() == "", f"startup imported: {result.stdout.strip()}"
+
+
+def test_query_reads_bql_from_stdin() -> None:
+    result = runner.invoke(app, ["--file", str(VALID), "query"], input="SELECT account LIMIT 1;\n")
+    assert result.exit_code == 0, result.output
+    assert "Assets:" in result.stdout
+
+
+def test_query_native_source_without_a_local_ledger(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["query", "--source", "beancount:" + str(VALID), "SELECT account LIMIT 1"])
+    assert result.exit_code == 0, result.output
+    assert "Assets:" in result.stdout

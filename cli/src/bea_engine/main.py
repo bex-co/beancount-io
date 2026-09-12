@@ -412,6 +412,8 @@ def import_entries(
 @app.command()
 def shell(
     file: Annotated[Path, typer.Option("--file", "-f", help="Root ledger file to query.")],
+    format: Annotated[str, typer.Option("--format", help="Query output format.")] = "text",
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Query output file.")] = None,
     numberify: Annotated[
         bool, typer.Option("--numberify", "-m", help="Split amounts into per-currency columns.")
     ] = False,
@@ -436,7 +438,7 @@ def shell(
         # for someone running the helper directly.
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(exc.exit_code) from None
-    bql.interactive(ledger, numberify=numberify, show_errors=not no_errors)
+    bql.interactive(ledger, format=format, output=output, numberify=numberify, show_errors=not no_errors)
 
 
 @app.command("version")

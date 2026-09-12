@@ -60,11 +60,9 @@ class TestOptionalManifest:
     def test_release_packaging_ships_optional_locks(self) -> None:
         frontend = tomllib.loads((CLI_ROOT / "pyproject.toml").read_text())
         sdist = frontend["tool"]["hatch"]["build"]["targets"]["sdist"]["only-include"]
-        force = frontend["tool"]["hatch"]["build"]["targets"]["wheel"]["force-include"]
         assert "engine-optional-beangulp.lock" in sdist
         assert "engine-optional-beanprice.lock" in sdist
-        assert force["engine-optional-beangulp.lock"] == "cli/engine-optional-beangulp.lock"
-        assert force["engine-optional-beanprice.lock"] == "cli/engine-optional-beanprice.lock"
+        # Actual wheel lock contents are checked in TestDistribution.
 
 
 class TestEnableFeature:

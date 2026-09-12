@@ -7,12 +7,28 @@ it in `make check-all`, so a broken tag gate or formula cannot reach a tag.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
 
 CLI_ROOT = Path(__file__).resolve().parent.parent
+
+
+def test_clean_checkout_installs_but_cannot_ship_without_release_locks(tmp_path: Path) -> None:
+    """CI must bootstrap before exports exist; customer wheels must require them."""
+    for name in ("pyproject.toml", "uv.lock", "README.md", "LICENSE", "NOTICE.fava"):
+        shutil.copy2(CLI_ROOT / name, tmp_path / name)
+    for name in ("src", "scripts"):
+        shutil.copytree(CLI_ROOT / name, tmp_path / name, ignore=shutil.ignore_patterns("__pycache__"))
+    installed = subprocess.run(
+        ["uv", "sync", "--frozen", "--all-groups"], cwd=tmp_path, capture_output=True, text=True, timeout=120
+    )
+    assert installed.returncode == 0, installed.stdout + installed.stderr
+    built = subprocess.run(["uv", "build", "--wheel"], cwd=tmp_path, capture_output=True, text=True, timeout=120)
+    assert built.returncode != 0
+    assert "Missing release lock engine-requirements.lock" in built.stderr
 
 
 def test_the_release_script_suite_passes() -> None:
@@ -78,7 +94,7 @@ def test_the_default_install_still_imports_no_http_client() -> None:
 
 
 def test_customer_smoke_runs_against_the_installed_cli() -> None:
-    binary = Path(sys.executable).parent / "bea"
+    binary = Path(sys.executable).parent / ("bea.exe" if sys.platform == "win32" else "bea")
     result = subprocess.run(
         [sys.executable, str(CLI_ROOT / "scripts/smoke-installed.py"), str(binary)],
         capture_output=True,

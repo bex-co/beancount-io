@@ -17,7 +17,7 @@ from __future__ import annotations
 # version in `engine/pyproject.toml` and `engine/manifest.json` because a
 # checkout has no distribution metadata to read; `tests/test_engine_helper.py`
 # fails if the three ever disagree.
-FALLBACK_VERSION = "0.1.0"
+FALLBACK_VERSION = "0.2.0"
 
 
 def version() -> str:

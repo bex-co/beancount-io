@@ -109,6 +109,8 @@ def is_provisioned(root: Path) -> bool:
     python = venv_python(root)
     if not python.exists():
         return False
+    if sys.platform == "win32":
+        return (root / "Lib" / "site-packages" / "bea_engine").is_dir()
     return any(path.is_dir() for path in root.glob("lib/python*/site-packages/bea_engine"))
 
 

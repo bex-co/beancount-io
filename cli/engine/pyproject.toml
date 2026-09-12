@@ -13,7 +13,7 @@
 # the frontend side (ADR014 t022).
 [project]
 name = "beancount-io-engine"
-version = "0.1.0"
+version = "0.2.0"
 description = "Beancount.io engine helper — the ledger operations that load Beancount"
 license = { text = "GPL-2.0-only" }
 requires-python = ">=3.12"
@@ -72,7 +72,7 @@ packages = ["src/bea_engine", "src/fava"]
 # Named explicitly rather than `src/`: the same tree holds the frontend, and an
 # engine artifact must not ship `src/cli`.
 [tool.hatch.build.targets.sdist]
-include = ["src/bea_engine/", "src/fava/", "pyproject.toml"]
+include = ["src/bea_engine/", "src/fava/", "pyproject.toml", "LICENSE"]
 exclude = ["**/__pycache__", "**/*.py[co]"]
 
 [tool.hatch.build.targets.sdist.force-include]

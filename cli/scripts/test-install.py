@@ -4,28 +4,11 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 from runpy import run_path
-
-
-def _prepare_engine_find_links(scripts: Path, scratch: Path) -> Path:
-    """Build the sibling engine wheel so first-use provisioning can resolve it.
-
-    Released installs fetch `beancount-io-engine` from the index (published next
-    to `beancount-io`). Local/CI rehearsals have the engine project in-tree but
-    not on PyPI, so point uv at a disposable find-links directory instead.
-    """
-    index = scratch / "engine-index"
-    index.mkdir(parents=True, exist_ok=True)
-    engine = scripts.parent / "engine"
-    subprocess.run(
-        ["uv", "build", "--wheel", "--out-dir", str(index)],
-        cwd=engine,
-        check=True,
-    )
-    return index
 
 
 def main() -> None:
@@ -41,7 +24,14 @@ def main() -> None:
     scratch.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="install-", dir=scratch) as work:
         root = Path(work).resolve()
-        engine_index = _prepare_engine_find_links(scripts, root)
+        # Rehearse the exact companion release artifact, never rebuild the checkout.
+        engine_index = root / "engine-index"
+        engine_index.mkdir()
+        suffix = ".whl" if artifact.suffix == ".whl" else ".tar.gz"
+        candidates = list(artifact.parent.glob(f"beancount_io_engine-*{suffix}"))
+        if len(candidates) != 1:
+            raise RuntimeError(f"Expected one companion engine {suffix} beside {artifact}")
+        shutil.copy2(candidates[0], engine_index)
         env = {
             **os.environ,
             "UV_TOOL_DIR": str(root / "tools"),
@@ -67,7 +57,7 @@ def main() -> None:
             binary = bindir / ("bea.exe" if os.name == "nt" else "bea")
         ledger = root / "books"
         ledger.mkdir()
-        run_path(str(scripts / "smoke-installed.py"))["smoke"](binary, ledger)
+        run_path(str(scripts / "smoke-installed.py"))["smoke"](binary, ledger, frontend_python=python, installed=True)
         if args.ask:
             # Load the extra without making a hosted model request.
             subprocess.run(

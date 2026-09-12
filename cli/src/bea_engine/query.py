@@ -120,7 +120,9 @@ def _gate(errors: list[str], allow_errors: bool) -> list[str]:
     return errors
 
 
-def interactive(file: Path, *, format: str = "text", numberify: bool = False, show_errors: bool = True) -> None:
+def interactive(
+    file: Path, *, format: str = "text", output: Path | None = None, numberify: bool = False, show_errors: bool = True
+) -> None:
     """Upstream's interactive shell, on this process's terminal.
 
     `bea` runs this command with the streams inherited, so stdin really is the
@@ -130,8 +132,15 @@ def interactive(file: Path, *, format: str = "text", numberify: bool = False, sh
     import warnings
 
     warnings.filterwarnings("always")
-    shell = build_shell(file, sys.stdout, interactive=True, format=format, numberify=numberify, show_errors=show_errors)
-    shell.cmdloop()
+    destination = output.open("w") if output is not None else sys.stdout
+    try:
+        shell = build_shell(
+            file, destination, interactive=True, format=format, numberify=numberify, show_errors=show_errors
+        )
+        shell.cmdloop()
+    finally:
+        if output is not None:
+            destination.close()
 
 
 def build_shell(
