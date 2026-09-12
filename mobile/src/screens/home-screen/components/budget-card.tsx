@@ -11,7 +11,10 @@ import { FadeInView } from "@/components/crossfade";
 import { BudgetMeter } from "@/screens/budget-screen/components/budget-meter";
 import { useBudgetGroups } from "@/screens/budget-screen/hooks/use-budget-groups";
 import { useBudgetPanel } from "@/screens/home-screen/hooks/use-budget-panel";
-import type { BudgetPanelRow } from "@/screens/home-screen/selectors/select-budget-panel";
+import {
+  budgetPanelRowAccessibilityValue,
+  type BudgetPanelRow,
+} from "@/screens/home-screen/selectors/select-budget-panel";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
@@ -89,6 +92,10 @@ export function BudgetCard({
       onPress={openBudget}
       accessibilityRole="button"
       accessibilityLabel={row.account}
+      // The label collapses this subtree, so the amounts and the meter would
+      // otherwise reach assistive tech not at all. `accessibilityValue.text` is
+      // spoken after the label and repeats nothing from it.
+      accessibilityValue={{ text: budgetPanelRowAccessibilityValue(row, t) }}
     >
       <View style={styles.rowHeader}>
         <Text style={styles.account} numberOfLines={1}>

@@ -490,6 +490,12 @@ function MerchantDetailBody({ payee }: { payee: string }) {
         </View>
         <Switch
           testID="merchant-recurring-toggle"
+          // The title and helper live in a sibling View, which carries no
+          // accessibility relationship to the control — without these the
+          // switch announces as an unnamed toggle. Switch already reports its
+          // own checked state, so the label is the visible title only.
+          accessibilityLabel={toggleTitle}
+          accessibilityHint={t("merchantsRecurringToggleHelper")}
           value={resolved.isRecurring}
           onValueChange={onToggleRecurring}
           trackColor={{ false: theme.black20, true: theme.primary }}

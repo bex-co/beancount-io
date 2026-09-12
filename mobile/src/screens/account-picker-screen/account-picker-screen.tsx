@@ -15,6 +15,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { groupAccountsByRoot } from "@/common/ledger-meta-utils";
 import { splitAccountLeaf } from "@/common/account-util";
@@ -22,6 +23,7 @@ import {
   ALL_ROOTS,
   findAccountLocation,
   isSearchQuery,
+  showCreateAccountRow,
   visibleAccountSections,
   type PickerSection,
 } from "./picker-sections";
@@ -219,6 +221,11 @@ function AccountPickerScreenComponent(): JSX.Element {
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
+  const {
+    canWrite,
+    loading: accessLoading,
+    error: accessError,
+  } = useLedgerAccess();
 
   // Home/Accounts/Reports have usually already fetched this, so render from
   // cache and refresh behind the list instead of skeletoning on every open.
@@ -319,11 +326,21 @@ function AccountPickerScreenComponent(): JSX.Element {
   );
 
   // The create row renders exactly when the empty state does while a query is
-  // active (a no-match search yields zero sections — see `picker-sections`).
+  // active (a no-match search yields zero sections — see `picker-sections`),
+  // and only for a collaborator who may actually create the account.
   const trimmedQuery = query.trim();
-  const showCreateRow = isSearching && visibleSections.length === 0;
+  const showCreateRow = showCreateAccountRow(query, visibleSections.length, {
+    canWrite,
+    loading: accessLoading,
+    error: accessError,
+  });
 
   const onCreate = useCallback(() => {
+    if (!canWrite) {
+      // Belt and braces: the row is the only caller, but a read-only session
+      // must never be pushed at the open-account screen's write guard.
+      return;
+    }
     pushOpenAccount(router, {
       prefill: trimmedQuery,
       // Destination pickers are choosing where money went, so suggest the
@@ -333,7 +350,7 @@ function AccountPickerScreenComponent(): JSX.Element {
         confirmSelection(account, Date.now());
       },
     });
-  }, [trimmedQuery, type, router, confirmSelection]);
+  }, [canWrite, trimmedQuery, type, router, confirmSelection]);
 
   if (loading && accounts.length === 0) {
     return (

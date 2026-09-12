@@ -381,6 +381,8 @@ export const de: typeof en = {
   receiptTakePhoto: "Foto aufnehmen",
   receiptChooseLibrary: "Aus Mediathek wählen",
   receiptFlash: "Blitz",
+  receiptFlashOff: "Aus",
+  receiptFlashOn: "Ein",
   receiptRetake: "Neu",
   receiptUpload: "Hochladen",
   receiptOpenSettings: "Einstellungen öffnen",
@@ -474,6 +476,8 @@ export const de: typeof en = {
     "Lege für ein beliebiges Konto ein Ziel fest, um es zu verfolgen.",
   budgetEmptyStateCta: "Erstes Budget hinzufügen",
   budgetPanelEmpty: "Für ein Konto ein Ziel festlegen",
+  budgetPanelRowValue:
+    "{{actual}} von {{budget}}, {{percent}}% genutzt, {{status}}",
   budgetLoadFailed: "Budgets konnten nicht geladen werden",
   budgetIntervalDaily: "Täglich",
   budgetIntervalWeekly: "Wöchentlich",

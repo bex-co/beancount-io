@@ -13,7 +13,9 @@ import {
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { AmountText } from "@/components";
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useDeleteBudgetEntry } from "@/screens/budget-screen/hooks/use-delete-budget-entry";
+import { selectBudgetEntryActions } from "@/screens/budget-screen/selectors/select-budget-write-actions";
 import { intervalLabelKey } from "@/screens/budget-screen/selectors/budget-labels";
 import {
   selectHistoryRows,
@@ -99,6 +101,11 @@ export function BudgetHistoryRows({
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { deleteBudgetEntry, deleting } = useDeleteBudgetEntry(ledgerId);
+  const { canWrite } = useLedgerAccess();
+  const { showDelete, deleteDisabled } = selectBudgetEntryActions(
+    canWrite,
+    deleting,
+  );
 
   const rows = selectHistoryRows(group);
 
@@ -163,19 +170,21 @@ export function BudgetHistoryRows({
               {t(intervalLabelKey(row.interval))}
             </Text>
             <AmountText style={styles.amount}>{row.amount}</AmountText>
-            <TouchableOpacity
-              style={styles.deleteButton}
-              disabled={deleting}
-              onPress={() => confirmDelete(row)}
-              accessibilityRole="button"
-              accessibilityLabel={t("budgetDelete")}
-            >
-              <Ionicons
-                name="trash-outline"
-                size={18}
-                color={deleting ? theme.black60 : theme.error}
-              />
-            </TouchableOpacity>
+            {showDelete && (
+              <TouchableOpacity
+                style={styles.deleteButton}
+                disabled={deleteDisabled}
+                onPress={() => confirmDelete(row)}
+                accessibilityRole="button"
+                accessibilityLabel={t("budgetDelete")}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={18}
+                  color={deleteDisabled ? theme.black60 : theme.error}
+                />
+              </TouchableOpacity>
+            )}
           </View>
         ))}
 

@@ -377,6 +377,8 @@ export const ca: typeof en = {
   receiptTakePhoto: "Fes una foto",
   receiptChooseLibrary: "Tria de la galeria",
   receiptFlash: "Flaix",
+  receiptFlashOff: "Desactivat",
+  receiptFlashOn: "Activat",
   receiptRetake: "Repeteix",
   receiptUpload: "Puja",
   receiptOpenSettings: "Obre la Configuració",
@@ -468,6 +470,8 @@ export const ca: typeof en = {
     "Defineix un objectiu per a qualsevol compte per començar-ne el seguiment.",
   budgetEmptyStateCta: "Afegeix el teu primer pressupost",
   budgetPanelEmpty: "Defineix un objectiu per a un compte",
+  budgetPanelRowValue:
+    "{{actual}} de {{budget}}, {{percent}}% utilitzat, {{status}}",
   budgetLoadFailed: "No s'han pogut carregar els pressupostos",
   budgetIntervalDaily: "Diari",
   budgetIntervalWeekly: "Setmanal",

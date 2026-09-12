@@ -371,6 +371,8 @@ export const fa: typeof en = {
   receiptTakePhoto: "گرفتن عکس",
   receiptChooseLibrary: "انتخاب از گالری",
   receiptFlash: "فلاش",
+  receiptFlashOff: "خاموش",
+  receiptFlashOn: "روشن",
   receiptRetake: "عکس دوباره",
   receiptUpload: "بارگذاری",
   receiptOpenSettings: "باز کردن تنظیمات",
@@ -461,6 +463,8 @@ export const fa: typeof en = {
     "برای هر حسابی یک هدف تعیین کنید تا پیگیری آغاز شود.",
   budgetEmptyStateCta: "افزودن اولین بودجه",
   budgetPanelEmpty: "برای یک حساب هدف تعیین کنید",
+  budgetPanelRowValue:
+    "{{actual}} از {{budget}}، {{percent}}% مصرف‌شده، {{status}}",
   budgetLoadFailed: "بارگذاری بودجه‌ها ناموفق بود",
   budgetIntervalDaily: "روزانه",
   budgetIntervalWeekly: "هفتگی",

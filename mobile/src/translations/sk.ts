@@ -374,6 +374,8 @@ export const sk: typeof en = {
   receiptTakePhoto: "Odfotiť",
   receiptChooseLibrary: "Vybrať z knižnice",
   receiptFlash: "Blesk",
+  receiptFlashOff: "Vypnutý",
+  receiptFlashOn: "Zapnutý",
   receiptRetake: "Znova",
   receiptUpload: "Nahrať",
   receiptOpenSettings: "Otvoriť nastavenia",
@@ -465,6 +467,8 @@ export const sk: typeof en = {
     "Nastavte cieľ pre ľubovoľný účet a začnite sledovať.",
   budgetEmptyStateCta: "Pridať prvý rozpočet",
   budgetPanelEmpty: "Nastavte cieľ pre účet",
+  budgetPanelRowValue:
+    "{{actual}} z {{budget}}, využité {{percent}}%, {{status}}",
   budgetLoadFailed: "Načítanie rozpočtov zlyhalo",
   budgetIntervalDaily: "Denne",
   budgetIntervalWeekly: "Týždenne",

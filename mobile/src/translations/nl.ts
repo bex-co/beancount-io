@@ -374,6 +374,8 @@ export const nl: typeof en = {
   receiptTakePhoto: "Foto maken",
   receiptChooseLibrary: "Kies uit bibliotheek",
   receiptFlash: "Flits",
+  receiptFlashOff: "Uit",
+  receiptFlashOn: "Aan",
   receiptRetake: "Opnieuw",
   receiptUpload: "Uploaden",
   receiptOpenSettings: "Instellingen openen",
@@ -465,6 +467,8 @@ export const nl: typeof en = {
     "Stel voor een willekeurige rekening een doel in om te gaan volgen.",
   budgetEmptyStateCta: "Je eerste budget toevoegen",
   budgetPanelEmpty: "Stel een doel in voor een rekening",
+  budgetPanelRowValue:
+    "{{actual}} van {{budget}}, {{percent}}% gebruikt, {{status}}",
   budgetLoadFailed: "Budgetten konden niet worden geladen",
   budgetIntervalDaily: "Dagelijks",
   budgetIntervalWeekly: "Wekelijks",

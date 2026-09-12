@@ -178,6 +178,7 @@ export const CameraView = ({
       <View style={[styles.topBar, { top: insets.top + 12 }]}>
         <Pressable
           testID="receipt-close"
+          accessibilityRole="button"
           accessibilityLabel={t("receiptCancel")}
           style={({ pressed }) => [
             styles.control,
@@ -192,6 +193,7 @@ export const CameraView = ({
         <View style={styles.topBarRight}>
           <Pressable
             testID="receipt-pick-library"
+            accessibilityRole="button"
             accessibilityLabel={t("receiptChooseLibrary")}
             style={({ pressed }) => [
               styles.control,
@@ -204,7 +206,15 @@ export const CameraView = ({
           </Pressable>
           <Pressable
             testID="receipt-toggle-flash"
+            // A switch, not a button: the icon is the only thing that says
+            // whether flash is armed, so the state has to be announced. The
+            // value text carries the same off/on wording a native switch reads.
+            accessibilityRole="switch"
             accessibilityLabel={t("receiptFlash")}
+            accessibilityState={{ checked: flash === "on" }}
+            accessibilityValue={{
+              text: flash === "on" ? t("receiptFlashOn") : t("receiptFlashOff"),
+            }}
             style={({ pressed }) => [
               styles.control,
               pressed && styles.controlPressed,
@@ -224,6 +234,7 @@ export const CameraView = ({
       <View style={[styles.shutterWrap, { bottom: insets.bottom + 36 }]}>
         <Pressable
           testID="receipt-shutter"
+          accessibilityRole="button"
           accessibilityLabel={t("receiptTakePhoto")}
           style={({ pressed }) => [
             styles.shutter,

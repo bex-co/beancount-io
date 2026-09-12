@@ -4,6 +4,7 @@
  * alphabetically — the ones worth knowing about before you spend again.
  */
 import { dropRoot } from "../../../common/account-util";
+import { formatMoneyWithCurrency } from "../../../common/number-utils";
 import {
   budgetDirection,
   calculateBudgetForInterval,
@@ -75,4 +76,30 @@ export function selectBudgetPanelRows(
         a.account.localeCompare(b.account),
     )
     .slice(0, limit);
+}
+
+/**
+ * What a panel row announces beyond its account name.
+ *
+ * The row is one button wrapping the amounts and the meter, so an
+ * `accessibilityLabel` on it collapses the subtree and hides every number a
+ * sighted user reads. The label stays the account; this goes in
+ * `accessibilityValue.text`, which VoiceOver speaks after the label — so it
+ * repeats neither the account nor anything the label already says.
+ *
+ * Pure and string-only: the same `formatMoneyWithCurrency` the row renders, so
+ * the spoken amounts cannot drift from the visible ones.
+ */
+export function budgetPanelRowAccessibilityValue(
+  row: BudgetPanelRow,
+  t: (key: string, options?: Record<string, string | number>) => string,
+): string {
+  return t("budgetPanelRowValue", {
+    actual: formatMoneyWithCurrency(row.actual, row.currency),
+    budget: formatMoneyWithCurrency(row.budget, row.currency),
+    // Whole percent: a spoken "73.4166 percent" is noise, and the meter it
+    // describes is a bar, not a readout.
+    percent: Math.round(row.progressPercent),
+    status: t(row.favorable ? "budgetBelowTarget" : "budgetAboveTarget"),
+  });
 }

@@ -7,6 +7,7 @@ import {
   type GetLedgerEntryContextQueryVariables,
 } from "@/generated-graphql/graphql";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { type BudgetMutationResult } from "@/screens/budget-screen/hooks/use-budget-groups";
 
 /**
@@ -17,11 +18,19 @@ import { type BudgetMutationResult } from "@/screens/budget-screen/hooks/use-bud
  */
 export function useDeleteBudgetEntry(ledgerId: string) {
   const client = useApolloClient();
+  const { canWrite } = useLedgerAccess();
   const [deleteSlice] = useDeleteLedgerEntrySourceSliceMutation();
   const [deleting, setDeleting] = useState(false);
 
   const deleteBudgetEntry = useCallback(
     async (entryHash: string): Promise<BudgetMutationResult> => {
+      // Unresolved permissions read as read-only: `canWrite` is false until
+      // this ledger's permissions come back, so a reader (or a session that
+      // has not answered yet) never reaches the entry-context query or the
+      // slice mutation.
+      if (!canWrite) {
+        return { ok: false, message: null };
+      }
       setDeleting(true);
       try {
         const { data: context } = await client.query<
@@ -56,7 +65,7 @@ export function useDeleteBudgetEntry(ledgerId: string) {
         setDeleting(false);
       }
     },
-    [client, deleteSlice, ledgerId],
+    [canWrite, client, deleteSlice, ledgerId],
   );
 
   return { deleteBudgetEntry, deleting };

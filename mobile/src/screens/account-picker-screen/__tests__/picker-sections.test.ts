@@ -3,6 +3,7 @@ import {
   ALL_ROOTS,
   findAccountLocation,
   RECENT_LIMIT,
+  showCreateAccountRow,
   visibleAccountSections,
 } from "../picker-sections";
 import type { AccountUsage } from "../../../common/account-frecency";
@@ -269,5 +270,45 @@ describe("findAccountLocation", () => {
 
   test("should return null for empty sections", () => {
     expect(findAccountLocation([], "Assets:Cash")).toBe(null);
+  });
+});
+
+describe("showCreateAccountRow", () => {
+  const writer = { canWrite: true, loading: false };
+  const reader = { canWrite: false, loading: false };
+
+  test("should offer creation to a writer whose search matched nothing", () => {
+    expect(showCreateAccountRow("Coffee", 0, writer)).toBe(true);
+  });
+
+  test("should not offer creation while browsing, even to a writer", () => {
+    expect(showCreateAccountRow("", 0, writer)).toBe(false);
+    expect(showCreateAccountRow("   ", 0, writer)).toBe(false);
+  });
+
+  test("should not offer creation when the search matched accounts", () => {
+    expect(showCreateAccountRow("Coffee", 1, writer)).toBe(false);
+  });
+
+  test("should never offer creation to a read-only collaborator", () => {
+    expect(showCreateAccountRow("Coffee", 0, reader)).toBe(false);
+  });
+
+  test("should treat unresolved permissions as read-only", () => {
+    // `useLedgerAccess` reports canWrite false until the ledger's permissions
+    // have been read back, so the row cannot flash enabled during the load.
+    expect(
+      showCreateAccountRow("Coffee", 0, { canWrite: false, loading: true }),
+    ).toBe(false);
+  });
+
+  test("should treat a failed permission query as read-only", () => {
+    expect(
+      showCreateAccountRow("Coffee", 0, {
+        canWrite: true,
+        loading: false,
+        error: new Error("offline"),
+      }),
+    ).toBe(false);
   });
 });

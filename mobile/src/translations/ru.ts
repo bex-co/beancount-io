@@ -376,6 +376,8 @@ export const ru: typeof en = {
   receiptTakePhoto: "Сделать фото",
   receiptChooseLibrary: "Выбрать из галереи",
   receiptFlash: "Вспышка",
+  receiptFlashOff: "Выключена",
+  receiptFlashOn: "Включена",
   receiptRetake: "Переснять",
   receiptUpload: "Загрузить",
   receiptOpenSettings: "Открыть настройки",
@@ -466,6 +468,8 @@ export const ru: typeof en = {
     "Задайте цель для любого счёта, чтобы начать отслеживание.",
   budgetEmptyStateCta: "Добавить первый бюджет",
   budgetPanelEmpty: "Задайте цель для счёта",
+  budgetPanelRowValue:
+    "{{actual}} из {{budget}}, использовано {{percent}}%, {{status}}",
   budgetLoadFailed: "Не удалось загрузить бюджеты",
   budgetIntervalDaily: "Ежедневно",
   budgetIntervalWeekly: "Еженедельно",

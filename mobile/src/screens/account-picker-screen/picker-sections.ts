@@ -102,6 +102,38 @@ export function visibleAccountSections(
     : visible.map((s) => ({ ...s, title: "" }));
 }
 
+/** What the picker knows about the caller's write access to this ledger. */
+export interface LedgerWriteAccess {
+  /** True only once the ledger's permissions resolved and allow writing. */
+  canWrite: boolean;
+  /** The permission query is still in flight. */
+  loading?: boolean;
+  /** The permission query failed. */
+  error?: unknown;
+}
+
+/**
+ * Whether the create-account row belongs in the empty state. It renders exactly
+ * when a query matched nothing (no sections at all — see
+ * `visibleAccountSections`) *and* the caller may write to this ledger:
+ * offering Create to a read-only collaborator only walks them into the open
+ * account screen's write guard.
+ *
+ * Anything unresolved counts as read-only, so the row never flashes enabled
+ * before permissions land: `canWrite` is false until the ledger's own
+ * permissions have been read back (and on error), and this re-checks both.
+ */
+export function showCreateAccountRow(
+  query: string,
+  visibleSectionCount: number,
+  access: LedgerWriteAccess,
+): boolean {
+  if (!access.canWrite || access.error) {
+    return false;
+  }
+  return isSearchQuery(query) && visibleSectionCount === 0;
+}
+
 /** Where an account sits in rendered sections, for scrolling it into view. */
 export function findAccountLocation(
   sections: AccountSection[],

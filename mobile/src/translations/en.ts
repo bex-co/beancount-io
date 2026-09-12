@@ -372,6 +372,8 @@ export const en = {
   receiptTakePhoto: "Take a Photo",
   receiptChooseLibrary: "Choose from Library",
   receiptFlash: "Flash",
+  receiptFlashOff: "Off",
+  receiptFlashOn: "On",
   receiptRetake: "Retake",
   receiptUpload: "Upload",
   receiptOpenSettings: "Open Settings",
@@ -463,6 +465,8 @@ export const en = {
     "Set a spending target for any account to start tracking against it.",
   budgetEmptyStateCta: "Add your first budget",
   budgetPanelEmpty: "Set a spending target for any account",
+  budgetPanelRowValue:
+    "{{actual}} of {{budget}}, {{percent}}% used, {{status}}",
   budgetLoadFailed: "Failed to load budgets",
   budgetIntervalDaily: "Daily",
   budgetIntervalWeekly: "Weekly",

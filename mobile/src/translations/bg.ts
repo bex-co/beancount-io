@@ -377,6 +377,8 @@ export const bg: typeof en = {
   receiptTakePhoto: "Направи снимка",
   receiptChooseLibrary: "Избери от галерията",
   receiptFlash: "Светкавица",
+  receiptFlashOff: "Изключена",
+  receiptFlashOn: "Включена",
   receiptRetake: "Отново",
   receiptUpload: "Качи",
   receiptOpenSettings: "Отвори настройките",
@@ -468,6 +470,8 @@ export const bg: typeof en = {
     "Задайте цел за която и да е сметка, за да започнете проследяване.",
   budgetEmptyStateCta: "Добавете първия си бюджет",
   budgetPanelEmpty: "Задайте цел за сметка",
+  budgetPanelRowValue:
+    "{{actual}} от {{budget}}, използвани {{percent}}%, {{status}}",
   budgetLoadFailed: "Неуспешно зареждане на бюджетите",
   budgetIntervalDaily: "Дневно",
   budgetIntervalWeekly: "Седмично",

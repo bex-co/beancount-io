@@ -1,5 +1,8 @@
-import { selectBudgetPanelRows } from "../select-budget-panel";
-import type { BudgetPanelInput } from "../select-budget-panel";
+import {
+  budgetPanelRowAccessibilityValue,
+  selectBudgetPanelRows,
+} from "../select-budget-panel";
+import type { BudgetPanelInput, BudgetPanelRow } from "../select-budget-panel";
 import type { BudgetGroup } from "../../../budget-screen/selectors/budget-selectors";
 
 function group(
@@ -158,5 +161,75 @@ describe("selectBudgetPanelRows", () => {
 
     expect(rows[0].budget).toBe(70);
     expect(rows[0].progressPercent).toBeCloseTo(50, 5);
+  });
+});
+
+describe("budgetPanelRowAccessibilityValue", () => {
+  // Stands in for i18n: echoes the key plus its interpolations so a dropped
+  // value is visible, which a real English string would hide behind prose.
+  const t = (key: string, options?: Record<string, string | number>) =>
+    options
+      ? `${key}(${Object.entries(options)
+          .map(([name, value]) => `${name}=${value}`)
+          .join("|")})`
+      : key;
+
+  const row = (overrides: Partial<BudgetPanelRow> = {}): BudgetPanelRow => ({
+    account: "Expenses:Food",
+    shortAccount: "Food",
+    currency: "USD",
+    budget: 500,
+    actual: 400,
+    progressPercent: 80,
+    favorable: true,
+    ...overrides,
+  });
+
+  it("announces the same amounts the row renders", () => {
+    const text = budgetPanelRowAccessibilityValue(row(), t);
+
+    expect(text.indexOf("actual=$400.00") > -1).toBe(true);
+    expect(text.indexOf("budget=$500.00") > -1).toBe(true);
+  });
+
+  it("rounds the meter's progress to a whole percent", () => {
+    const text = budgetPanelRowAccessibilityValue(
+      row({ progressPercent: 73.4166 }),
+      t,
+    );
+
+    expect(text.indexOf("percent=73") > -1).toBe(true);
+  });
+
+  it("names the status a favorable budget shows", () => {
+    const text = budgetPanelRowAccessibilityValue(row(), t);
+
+    expect(text.indexOf("status=budgetBelowTarget") > -1).toBe(true);
+  });
+
+  it("names the status an overspent budget shows", () => {
+    const text = budgetPanelRowAccessibilityValue(
+      row({ actual: 620, progressPercent: 124, favorable: false }),
+      t,
+    );
+
+    expect(text.indexOf("status=budgetAboveTarget") > -1).toBe(true);
+  });
+
+  it("annotates a commodity with no symbol rather than speaking a bare number", () => {
+    const text = budgetPanelRowAccessibilityValue(
+      row({ currency: "MUSD", actual: 10, budget: 20 }),
+      t,
+    );
+
+    expect(text.indexOf("actual=10.00 MUSD") > -1).toBe(true);
+  });
+
+  it("builds its whole text through one localized key", () => {
+    expect(
+      budgetPanelRowAccessibilityValue(row(), t).startsWith(
+        "budgetPanelRowValue(",
+      ),
+    ).toBe(true);
   });
 });

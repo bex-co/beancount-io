@@ -375,6 +375,8 @@ export const uk: typeof en = {
   receiptTakePhoto: "Зробити фото",
   receiptChooseLibrary: "Обрати з галереї",
   receiptFlash: "Спалах",
+  receiptFlashOff: "Вимкнено",
+  receiptFlashOn: "Увімкнено",
   receiptRetake: "Перезняти",
   receiptUpload: "Завантажити",
   receiptOpenSettings: "Відкрити налаштування",
@@ -464,6 +466,8 @@ export const uk: typeof en = {
     "Задайте ціль для будь-якого рахунку, щоб почати відстеження.",
   budgetEmptyStateCta: "Додати перший бюджет",
   budgetPanelEmpty: "Задайте ціль для рахунку",
+  budgetPanelRowValue:
+    "{{actual}} з {{budget}}, використано {{percent}}%, {{status}}",
   budgetLoadFailed: "Не вдалося завантажити бюджети",
   budgetIntervalDaily: "Щодня",
   budgetIntervalWeekly: "Щотижня",
