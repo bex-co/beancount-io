@@ -55,6 +55,8 @@ def query(
     ctx = context.current()
     if output_format not in FORMATS:
         raise UsageError(f"Unknown query format '{output_format}'. Choose one of: {', '.join(FORMATS)}.")
+    if output_file == "-":
+        output_file = None
 
     rendering = ["--format", output_format]
     if output_file is not None:

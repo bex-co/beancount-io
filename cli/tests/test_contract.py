@@ -694,6 +694,14 @@ def test_query_reads_bql_from_stdin() -> None:
     assert "Assets:" in result.stdout
 
 
+def test_query_output_dash_means_stdout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["--file", str(VALID), "query", "SELECT account LIMIT 1", "-o", "-"])
+    assert result.exit_code == 0, result.output
+    assert "Assets:" in result.stdout
+    assert not (tmp_path / "-").exists()
+
+
 def test_query_native_source_without_a_local_ledger(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     result = runner.invoke(app, ["query", "--source", "beancount:" + str(VALID), "SELECT account LIMIT 1"])
