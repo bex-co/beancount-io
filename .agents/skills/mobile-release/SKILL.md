@@ -7,7 +7,7 @@ description: Summarize mobile changes since the previous release, bump the Beanc
 
 Usage: `$mobile-release [optional release context]` (Claude Code: `/mobile-release`).
 
-Carry a release through preparation, verification, shipping, and both stores. A release request authorizes the necessary store writes, build/submission jobs, and push to main; preserve narrower requests such as “prepare only.” Creating this skill does not invoke it. Do not ask again for authorization already given. Review concrete plans before recording approvals; never bypass the repository's release gates.
+Carry a release through preparation, verification, shipping, and both stores. A release request authorizes the necessary store writes, build/submission jobs, and push to main. Naming individual steps — bump the version, write the release notes, cut the build — still requests the whole release: `yarn bump` exists only to cut one, and the release workflow is gated on a bumped-but-untagged version, so a bump that is not shipped strands the release half-done. Narrow the scope only on an explicit stop signal such as “prepare only”, “do not publish yet”, or “just the notes”; without one, carry through to both stores rather than stopping to confirm. Creating this skill does not invoke it. Do not ask again for authorization already given. Review concrete plans before recording approvals; never bypass the repository's release gates.
 
 ## Establish release state
 
@@ -90,4 +90,4 @@ Finish all automatable steps. If store review is pending, report it explicitly w
 
 ## Report
 
-Return the version and baseline, a short change summary, shipped SHA and workflow link, checks performed, and separate iOS/Android statuses with build/submission links. Distinguish build queued, uploaded, submitted for review, approved, and live. Claim both stores released only when both production states have been verified.
+Return the version and baseline, a short change summary, shipped SHA and workflow link, checks performed, and separate iOS/Android statuses with build/submission links. Distinguish build queued, uploaded, submitted for review, approved, and live. Claim both stores released only when both production states have been verified. Report an unfinished run as unfinished, leading with where it stopped and the next required step; never present preparation — a bump, localized notes, or green checks — as a release.

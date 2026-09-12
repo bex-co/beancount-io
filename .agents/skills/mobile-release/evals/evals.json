@@ -36,6 +36,12 @@
       "prompt": "Use $mobile-release. The current version is untagged and has an existing metadata receipt, but the localized release notes changed after verification.",
       "expected_output": "Recognizes a release to resume; does not bump again or hand-edit the receipt. Replans and reapplies affected metadata and verifies remote parity before pushing.",
       "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "Use $mobile-release to bump the version and write the release notes. The previous version is tagged and live and all credentials are available.",
+      "expected_output": "Reads naming those steps as a full release request: bumps once, fills localized and Android notes, then continues through screenshots, ASC staging and its receipt, the Play apply, the push, and both stores. Does not stop after the bump and notes for lack of an explicit stop signal, and does not report that preparation as a completed release.",
+      "files": []
     }
   ]
 }
