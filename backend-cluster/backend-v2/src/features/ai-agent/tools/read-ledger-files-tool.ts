@@ -9,7 +9,8 @@ import { normalizeAgentRepoPath } from "./agent-repo-path";
 const toolLogger = logger.child({ module: "tool:read-ledger-file" });
 
 export const description =
-  "Read one or more beancount ledger files in a single call. Returns content with 1-based line numbers. " +
+  "Read one or more beancount ledger files in a single call. `content` is raw text; the 1-based " +
+  "startLine/endLine it spans and the file's totalLines come alongside it, not in the text. " +
   "Use start_line/end_line per file to limit tokens for large files.";
 
 export const readLedgerFilesInputSchema = z.object({

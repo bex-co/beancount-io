@@ -65,7 +65,7 @@ export const editLedgerFilesInputSchema = z.object({
   description: z
     .string()
     .describe(
-      "One sentence describing what these changes do. Shown to user for approval.",
+      "One sentence describing what these changes do. Shown to the user for approval and used verbatim as the commit message.",
     ),
   files: z.array(fileOpSchema).min(1),
   dry_run: z
@@ -249,7 +249,7 @@ export async function executeEditLedgerFiles(
           ledgerId,
           identity,
           operations,
-          message: `AI edit: ${description}`,
+          message: description,
           dryRun: true,
         });
         // Build the post-change contents in memory — the same transformation
@@ -302,7 +302,7 @@ export async function executeEditLedgerFiles(
             ledgerId,
             identity,
             operations,
-            message: `AI edit: ${description}`,
+            message: description,
           }),
       );
 

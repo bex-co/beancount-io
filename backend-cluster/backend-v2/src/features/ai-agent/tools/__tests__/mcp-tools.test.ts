@@ -225,7 +225,7 @@ describe("executeEditLedgerFiles", () => {
           content: Buffer.from("hello").toString("base64"),
         },
       ],
-      message: "AI edit: add new file",
+      message: "add new file",
     });
     expect(result).toEqual({
       ok: true,

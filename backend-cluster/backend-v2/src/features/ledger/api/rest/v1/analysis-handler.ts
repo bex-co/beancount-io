@@ -239,8 +239,11 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
   },
   {
     segment: "payee-transactions",
-    summary: "Get a payee's transactions",
-    description: "The transaction recorded against one payee.",
+    summary: "Get a payee's most recent transaction",
+    description:
+      "The single most recent transaction recorded against this payee, or null if there is none. " +
+      "This is Fava's autocomplete lookup — a template for the next entry, not a history. " +
+      "For every transaction by a payee, query the journal or BQL instead.",
     query: z.object({
       payee: z.string().openapi({ description: "The payee to look up" }),
     }),
@@ -254,8 +257,10 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
   },
   {
     segment: "narration-transactions",
-    summary: "Get a narration's transactions",
-    description: "The transaction recorded against one narration string.",
+    summary: "Get a narration's most recent transaction",
+    description:
+      "The single most recent transaction recorded against this narration string, or null if " +
+      "there is none. Fava's autocomplete lookup, like payee-transactions.",
     query: z.object({
       narration: z
         .string()
@@ -271,9 +276,12 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
   },
   {
     segment: "payee-accounts",
-    summary: "List the accounts a payee posts to",
+    summary: "Rank every account by this payee's history",
     description:
-      "Which accounts this payee has historically been booked against — what an agent should reach for when categorising a new one.",
+      "Every account in the ledger, re-sorted by how recently and often this payee was booked " +
+      "against it (exponential decay). Accounts the payee never touched are still present, at " +
+      "the back — the leading entries are the suggestion, not the whole list. Reach for the " +
+      "first few when categorising a new transaction for this payee.",
     query: z.object({
       payee: z.string().openapi({ description: "The payee to look up" }),
     }),

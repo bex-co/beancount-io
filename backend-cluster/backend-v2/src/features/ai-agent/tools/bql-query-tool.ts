@@ -10,7 +10,9 @@ const toolLogger = logger.child({ module: "tool:bql-query" });
 export const description =
   "Execute a BQL (Beancount Query Language) query against the user's ledger and return results. " +
   "BQL: SELECT cols [WHERE expr] [GROUP BY] [ORDER BY] [LIMIT n] | JOURNAL | BALANCES. " +
-  "Columns: date, flag, payee, narration, account, number, currency, cost, change, balance, position.";
+  "Columns: date, year, month, flag, payee, narration, account, number, currency, cost, change, " +
+  "balance, position, tags, links, meta. " +
+  "Rows are postings, not transactions: LIMIT 5 can return 3 transactions.";
 
 export const bqlQueryInputSchema = z.object({
   query: z.string().describe("The BQL query to execute"),

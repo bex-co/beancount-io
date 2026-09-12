@@ -8,10 +8,7 @@ import { successResponse } from "@/server/envelope";
 import { checkDirectiveLimitForFileChanges } from "@/core/directive-limit";
 import { entryInputToText } from "@/foundation/rustledger";
 import type { LedgerEntryInput } from "@/foundation/ledger-api-types/ledger-entry-input";
-import {
-  BadUserInputError,
-  UnbalancedTransactionError,
-} from "@/shared/errors";
+import { BadUserInputError, UnbalancedTransactionError } from "@/shared/errors";
 import {
   checkTransactionBalance,
   scanInferredToleranceDefault,
@@ -20,6 +17,7 @@ import {
 import { NotFoundDetailError } from "@/server/py-errors";
 import type { ContentsResponse } from "@/features/gitea/client/gitea-api";
 import { assertSafeRepoPath, toSafeRepoUrlPath } from "@/shared/safe-repo-path";
+import { addEntriesCommitMessage } from "@/features/ledger/utils/commit-message";
 
 /**
  * Wire shape (Python `EntryAddBulkEntriesRequest`): a discriminated union of
@@ -69,7 +67,10 @@ export function setEntriesHandler(router: Router): void {
 
       // Fetch every target file first: the balance check below needs the
       // ledger's `inferred_tolerance_default`, which lives in file content.
-      const currentContents = new Map<string, { current: string; sha: string }>();
+      const currentContents = new Map<
+        string,
+        { current: string; sha: string }
+      >();
       for (const [idx, row] of rows.entries()) {
         const target = row.filename || defaultFilename;
         assertSafeRepoPath(target, `entries[${idx}].filename`);
@@ -110,7 +111,8 @@ export function setEntriesHandler(router: Router): void {
         );
         rows.forEach((row, idx) => {
           if (row.type !== "transaction") return;
-          const postings = (row.item as { postings?: unknown } | null)?.postings;
+          const postings = (row.item as { postings?: unknown } | null)
+            ?.postings;
           if (!Array.isArray(postings)) return;
           const check = checkTransactionBalance(
             postings as BalancePosting[],
@@ -176,7 +178,7 @@ export function setEntriesHandler(router: Router): void {
             content: u.content,
             sha: u.sha,
           })),
-          message: `Add ${rows.length} entries`,
+          message: addEntriesCommitMessage(rows.length),
         });
       }
       ctx.body = successResponse(null);
