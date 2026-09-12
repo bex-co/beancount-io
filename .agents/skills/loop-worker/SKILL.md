@@ -7,7 +7,7 @@ description: Autonomously work a `.pm` workstream to completion — pick the nex
 
 Usage: `/loop-worker <wN>`
 
-`/loop-worker <wN>` — repeatedly pick the next **pending** milestone in workstream `<wN>`, implement it fully, `/ship` it, and continue to the next, until the workstream has no pending milestones left (or a milestone genuinely blocks). This is a long-running autonomous loop over the `.pm` board; it composes `/pm` (the only writer to `.pm/`), your own implementation work, and `/ship`. It is sequential, not interval-based — for a timed poll use `/loop`.
+`/loop-worker <wN>` — repeatedly pick the next **actionable pending** milestone in workstream `<wN>`, implement it fully, `/ship` it, and continue until no pending milestones remain or all remaining work is blocked. Automatically skip blocked milestones and their dependents to work on later independent milestones, without waiting for user input. This is a long-running autonomous loop over the `.pm` board; it composes `/pm` (the only writer to `.pm/`), your own implementation work, and `/ship`. It is sequential, not interval-based — for a timed poll use `/loop`.
 
 Parse the target workstream from `$ARGUMENTS` (e.g. `w1`). If `$ARGUMENTS` is empty, **STOP** and ask which workstream to drain — never guess.
 
@@ -24,11 +24,11 @@ Repeat until the exit condition below:
 
 ### 1. Pick the next pending milestone
 
-Read `.pm/<wN>/README.md`. In the `## Milestones` list, pending milestones are the unchecked ones (`- [ ] **mN**`). Pick the **lowest-numbered** pending milestone that still has a live directory (`.pm/<wN>/mN/`, not under `.pm/<wN>/done/`). Cross-check by listing `.pm/<wN>/m*/` and `.pm/<wN>/done/` — the checkbox and the on-disk state must agree; if they disagree, trust the task files, flag the drift, and repair it through `/pm` before continuing.
+Read `.pm/<wN>/README.md`. In the `## Milestones` list, pending milestones are the unchecked ones (`- [ ] **mN**`). Pick the **lowest-numbered actionable** pending milestone that still has a live directory (`.pm/<wN>/mN/`, not under `.pm/<wN>/done/`). Inspect milestone READMEs and open task dependencies to establish which milestones can proceed: honor both explicit `depends_on` links and prerequisites stated in scope or acceptance criteria, including transitive dependencies. Numbering alone does not imply a dependency. Exclude unresolved blocked milestones and milestones requiring their unfinished work; scan all later pending milestones before deciding none can proceed. Cross-check by listing `.pm/<wN>/m*/` and `.pm/<wN>/done/` — the checkbox and the on-disk state must agree; if they disagree, trust the task files, flag the drift, and repair it through `/pm` before continuing.
 
 Loose inbox notes (`.pm/<wN>/NNN.md`) are **not** work items for this loop — they are ideas or sub-hour units that nobody has committed to. Leave them alone and list them in the final summary.
 
-If there are **no** pending milestones, go to **Exit**.
+If there are **no** pending milestones, or none are actionable, go to **Exit**.
 
 Announce which milestone you picked and give a one-line plan before doing work.
 
@@ -59,7 +59,7 @@ Do the actual engineering, task by task, following the `depends_on` order (the n
 
 ### 4. Ship it
 
-Invoke **`/ship`** ([`.agents/skills/ship/SKILL.md`](../ship/SKILL.md)) for this milestone's changes — code and the `.pm/` moves together. Because you made the changes this session, `/ship` runs session-aware: it stages exactly what you touched and writes the commit message from your knowledge. `/ship` ends at a successful push — it has no test gate of its own and does not watch CI, so the checks in step 3 are the only gate; run them before invoking it. **Do not proceed to the next milestone until `/ship` reports the shipped HEAD.**
+Invoke **`/ship`** ([`.agents/skills/ship/SKILL.md`](../ship/SKILL.md)) for this milestone's changes — code and the `.pm/` moves together. Because you made the changes this session, `/ship` runs session-aware: it stages exactly what you touched and writes the commit message from your knowledge. `/ship` ends at a successful push — it has no test gate of its own and does not watch CI, so the checks in step 3 are the only gate; run them before invoking it. **Proceed after `/ship` reports the shipped HEAD, or after isolating a blocked milestone under the handling below.**
 
 If `/ship` surfaces a failure it cannot fix (rebase conflict it can't resolve, rejected push), treat it as a **block** (see below).
 
@@ -67,12 +67,21 @@ If `/ship` surfaces a failure it cannot fix (rebase conflict it can't resolve, r
 
 Loop back to step 1 to pick the next pending milestone.
 
+## Handling a blocked milestone
+
+A block is something you cannot resolve autonomously: a user-only scope decision, a `DO_NOT_DO.md` conflict, missing external credentials/access, unobservable acceptance criteria, unresolved failing checks, or a ship failure.
+
+- Report the milestone, exact blocker, and what would unblock it in a progress update; **do not stop or wait for input** while independent work remains. Keep a run-local record of blocked milestones and the dependency chains that defer other milestones. Leave unfinished tasks and milestones open; use `/pm` for any board changes.
+- Preserve partial code and board changes together in an isolated worktree or a named stash before switching milestones. Do not discard work, ship half-work, or let a later ship include blocked changes or unpushed commits. Continue from the shipped baseline. Treat a shared failure (such as unavailable push access) as blocking every milestone that needs it; isolation does not resolve that failure.
+- Return to step 1 and pick the lowest-numbered independent actionable milestone. For example, if `m2` is blocked and `m3` depends on `m2`, but `m4` is independent, skip `m2` and `m3` and work on `m4` automatically.
+- Revisit deferred milestones when new evidence changes their blocker or prerequisites, including after another milestone ships or the user supplies missing input. Do not repeatedly retry an unchanged blocker. Stop only when no remaining milestone can proceed; report each blocker, its dependents, and where partial work was preserved.
+
 ## Exit
 
 Stop the loop and give a final summary when any of these holds:
 
 - **Done:** no pending milestones remain in `<wN>`. Report which milestones you shipped this run (with their HEAD SHAs) and any open inbox notes left in the workstream.
-- **Blocked:** a milestone needs a decision only the user can make (ambiguous scope, a `DO_NOT_DO.md` conflict, an external credential/access you lack, a definition of done that cannot be observed from this repo, or a ship failure you can't resolve). Stop **before** shipping half-work — report the exact blocker and what you'd need to proceed. Do not skip a blocked milestone to grab a later one unless the user says so.
+- **Blocked:** pending milestones remain, but every one is blocked or depends directly or transitively on unresolved blocked work. Report milestones shipped this run (with HEAD SHAs), each blocker and what is needed to proceed, deferred dependents, preserved partial work, and open inbox notes. A single blocked milestone is not an exit condition while later independent work can proceed.
 - **Budget/interrupt:** the user interrupts, or you've been running long enough that a checkpoint is warranted — report progress (shipped, in-flight, remaining) so the run can be resumed cleanly.
 
 ## Guardrails
