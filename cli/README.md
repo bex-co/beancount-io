@@ -27,6 +27,20 @@ brew install bex-co/tap/bea      # macOS and Linuxbrew — dual venv at install 
 uv tool install beancount-io     # anywhere with uv and Python 3.12+ — engine on first use
 ```
 
+Optional Beangulp and Beanprice stay out of that base install. Enable them
+explicitly into the managed engine when you need ingest helpers or quote
+fetching:
+
+```bash norun
+# Needs network once; Beangulp also needs system libmagic.
+bea engine enable beangulp    # then: bea ingest identify|extract|archive …
+bea engine enable beanprice   # then: bea price …  (not bea add price)
+```
+
+`bea import --csv` and `bea add price` work without those features. Ledger-skill
+updates that still mention a separate Beancount install are tracked in milestone
+m21.
+
 | Channel | When the engine appears | After that |
 | --- | --- | --- |
 | Homebrew | During `brew install` (frontend + engine venvs in the keg) | Local commands work offline |
@@ -73,6 +87,8 @@ for your first month end to end, follow the
 | `bea init [DIRECTORY]` | Create a local ledger with common accounts |
 | `bea add TYPE` | Append one of eleven directive types |
 | `bea import SOURCE` | Preview or apply a bank CSV (`--csv`) or importer (`--config`) |
+| `bea ingest OP` | Beangulp identify/extract/archive (needs `bea engine enable beangulp`) |
+| `bea price` | Fetch quotes via bean-price (needs `bea engine enable beanprice`; not `bea add price`) |
 | `bea list TYPE` | Inspect directives and filter transactions |
 | `bea check` | Validate the complete ledger |
 | `bea format [PATH…]` | Format to stdout (safe default); `--in-place` / `-i` rewrites, `-o` writes elsewhere |
@@ -84,6 +100,7 @@ for your first month end to end, follow the
 | `bea balance [ACCOUNT…]` | Trial-balance subtrees for matching accounts |
 | `bea ask [QUESTION]` | Ask about a local ledger through the hosted AI service |
 | `bea cloud …` | Sign in and manage hosted ledgers |
+| `bea engine status\|enable` | Inspect or enable optional engine features (Beangulp / Beanprice) |
 | `bea upgrade [--check]` | Check for an update or invoke the owning package manager |
 
 Global options come **before the command**; `--file` selects the root ledger:
@@ -143,8 +160,8 @@ not hand-edit generated API clients, command stubs, `docs/REFERENCE.md`, or
 lockfiles; keep scratch files under `tmp/`.
 See the [package guide](https://github.com/bex-co/beancount-io/blob/main/cli/CLAUDE.md)
 for architecture boundaries and contribution rules.
-Optional Beangulp/Beanprice adapters and ledger-skill onboarding updates are
-tracked separately (milestones m20 / m21) and are not part of the base install.
+Optional Beangulp/Beanprice are enabled with `bea engine enable` (see Usage);
+ledger-skill onboarding updates remain milestone m21.
 
 ## Releases
 

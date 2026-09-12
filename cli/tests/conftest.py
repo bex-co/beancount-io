@@ -1,5 +1,7 @@
 import asyncio
 import json
+import subprocess
+import sys
 import threading
 import time
 from collections.abc import Iterator
@@ -10,6 +12,62 @@ from pathlib import Path
 import pytest
 
 from cli import context
+
+# ---------------------------------------------------------------------------
+# Optional Beangulp / Beanprice integration (session venv)
+# ---------------------------------------------------------------------------
+
+CLI_ROOT = Path(__file__).resolve().parents[1]
+
+
+@pytest.fixture(scope="session")
+def optional_engine_python(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """A Python with beancount + beangulp + beanprice, for BEA_ENGINE_PYTHON."""
+    root = tmp_path_factory.mktemp("optional-engine")
+    venv = root / "venv"
+    subprocess.run(
+        ["uv", "venv", "--python", "3.12", str(venv)],
+        check=True,
+        cwd=CLI_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    python = venv / ("Scripts" if sys.platform == "win32" else "bin") / "python"
+    install = subprocess.run(
+        [
+            "uv",
+            "pip",
+            "install",
+            "--python",
+            str(python),
+            "beancount==3.2.3",
+            "beangulp==0.2.0",
+            "beanprice==2.1.0",
+        ],
+        check=False,
+        cwd=CLI_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if install.returncode != 0:
+        pytest.skip(f"Could not install optional engine packages: {install.stderr[-500:]}")
+    probe = subprocess.run(
+        [str(python), "-c", "import beangulp, beanprice, beancount"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if probe.returncode != 0:
+        pytest.skip(f"Optional packages not importable: {probe.stderr[-500:]}")
+    return python
+
+
+@pytest.fixture
+def use_optional_engine(monkeypatch: pytest.MonkeyPatch, optional_engine_python: Path) -> Path:
+    """Point this test's bea at the session optional engine."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", str(optional_engine_python))
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
+    return optional_engine_python
 
 
 @pytest.fixture(autouse=True)

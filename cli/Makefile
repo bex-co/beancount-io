@@ -1,6 +1,6 @@
 # Beancount.io CLI - Development Makefile
 
-.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all release-check release-lock release-artifacts spec-check spec-sync docs docs-check
+.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all release-check release-lock engine-release-lock engine-optional-locks release-artifacts spec-check spec-sync docs docs-check
 
 # Default target
 help:
@@ -21,7 +21,8 @@ help:
 	@echo "  make spec-check       - Fail if openapi/v1.json drifted from backend-cluster/idl's canonical spec"
 	@echo "  make spec-sync        - Refresh openapi/v1.json from the canonical spec"
 	@echo "  make release-check    - Validate the release tag against pyproject.toml"
-	@echo "  make release-lock     - Export the hash-pinned requirements.lock for a release"
+	@echo "  make release-lock     - Export hash-pinned frontend + engine (+ optional) locks"
+	@echo "  make engine-optional-locks - Export hash-pinned Beangulp/Beanprice engine feature locks"
 	@echo "  make release-artifacts - Build frontend + engine wheels/sdists into dist/"
 	@echo "  make docs             - Regenerate docs/REFERENCE.md from the command tree"
 	@echo "  make docs-check       - Fail if docs/REFERENCE.md drifted from the command tree"
@@ -92,6 +93,14 @@ release-lock:
 # resolves Beancount at install time once the frontend deps drop it.
 engine-release-lock:
 	cd engine && uv export --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o ../engine-requirements.lock
+	$(MAKE) engine-optional-locks
+
+# Hash-pinned optional engine features (Beangulp / Beanprice). Generated from
+# `engine/` extras so `bea engine enable` can `--require-hashes` without putting
+# those packages on the frontend or the base engine profile.
+engine-optional-locks:
+	cd engine && uv export --extra beangulp --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o ../engine-optional-beangulp.lock
+	cd engine && uv export --extra beanprice --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o ../engine-optional-beanprice.lock
 
 # Build frontend + engine artifacts into dist/ (release CI publishes both).
 # The engine wheel is what a PyPI-installed frontend provisions by name;

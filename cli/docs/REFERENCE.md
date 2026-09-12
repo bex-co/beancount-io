@@ -134,6 +134,14 @@ Usage: bea query [OPTIONS] [query_string]
 | `--output, -o` | str |  | Write the result to this file instead of stdout |
 | `--numberify, -m` | flag |  | Split amounts into one column per currency |
 
+### `bea price`
+
+Fetch prices via bean-price (requires 'bea engine enable beanprice').
+
+```text
+Usage: bea price [OPTIONS]
+```
+
 ### `bea ask`
 
 Ask about a local ledger via hosted AI.
@@ -166,6 +174,42 @@ Render a hierarchical column as an ASCII tree (delegates to treeify).
 ```text
 Usage: bea treeify [OPTIONS]
 ```
+
+### `bea ingest identify`
+
+Identify which importer matches each document (Beangulp identify).
+
+```text
+Usage: bea ingest identify [OPTIONS]
+```
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger or cwd) |
+
+### `bea ingest extract`
+
+Extract raw entries from documents (Beangulp extract; not bea import --apply).
+
+```text
+Usage: bea ingest extract [OPTIONS]
+```
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger or cwd) |
+
+### `bea ingest archive`
+
+File documents into the archive hierarchy (Beangulp archive).
+
+```text
+Usage: bea ingest archive [OPTIONS]
+```
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger or cwd) |
 
 ### `bea add transaction`
 
@@ -721,6 +765,26 @@ Usage: bea upgrade [OPTIONS]
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
 | `--check` | flag |  | Report what would be run, and run nothing |
+
+### `bea engine status`
+
+Show whether the engine is provisioned and which optional features are enabled.
+
+```text
+Usage: bea engine status [OPTIONS]
+```
+
+### `bea engine enable`
+
+Install a reviewed optional package into the managed engine (not the frontend).
+
+```text
+Usage: bea engine enable [OPTIONS] {feature}
+```
+
+| Argument | Type | Required | Help |
+| --- | --- | --- | --- |
+| `feature` | str | yes | Optional engine feature to provision: beangulp or beanprice |
 
 ## Cloud commands (beancount.io — need 'bea cloud login' or BEA_TOKEN)
 

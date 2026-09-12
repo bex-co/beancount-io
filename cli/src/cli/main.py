@@ -15,11 +15,14 @@ from cli.commands.ask import ask
 from cli.commands.check import check
 from cli.commands.cloud.app import cloud_app
 from cli.commands.doctor import doctor_app
+from cli.commands.engine import engine_app
 from cli.commands.example import example
 from cli.commands.format import format_beans
 from cli.commands.import_ import import_entries
+from cli.commands.ingest import ingest_app
 from cli.commands.init import init
 from cli.commands.list import list_app
+from cli.commands.price import price
 from cli.commands.query import query
 from cli.commands.report import balance, report_app
 from cli.commands.treeify import treeify
@@ -197,7 +200,8 @@ def main(
 
 # `ask` is local despite its hosted model calls — the task-verb rule in
 # cli/CLAUDE.md keeps every verb over .bean files out of `cloud`. `upgrade`
-# is about the tool itself (PyPI/Homebrew), so it is neither local nor cloud.
+# and `engine` are about the tool itself (PyPI/Homebrew / managed engine), so
+# they are neither local nor cloud.
 _LOCAL_PANEL = "Local ledger commands (work on .bean files)"
 _CLOUD_PANEL = "Cloud commands (beancount.io — need 'bea cloud login' or BEA_TOKEN)"
 _SELF_PANEL = "CLI maintenance"
@@ -207,8 +211,10 @@ app.command("check", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX)(
 app.command("balance", rich_help_panel=_LOCAL_PANEL)(balance)
 app.command("init", rich_help_panel=_LOCAL_PANEL)(init)
 app.command("import", rich_help_panel=_LOCAL_PANEL)(import_entries)
+app.add_typer(ingest_app, name="ingest", rich_help_panel=_LOCAL_PANEL)
 app.command("format", rich_help_panel=_LOCAL_PANEL)(format_beans)
 app.command("query", rich_help_panel=_LOCAL_PANEL)(query)
+app.command("price", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX)(price)
 app.command("ask", rich_help_panel=_LOCAL_PANEL)(ask)
 app.command("example", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX)(example)
 app.command("treeify", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX)(treeify)
@@ -221,6 +227,7 @@ app.add_typer(doctor_app, name="doctor", rich_help_panel=_LOCAL_PANEL)
 app.add_typer(cloud_app, name="cloud", rich_help_panel=_CLOUD_PANEL)
 
 app.command("upgrade", rich_help_panel=_SELF_PANEL)(upgrade)
+app.add_typer(engine_app, name="engine", rich_help_panel=_SELF_PANEL)
 
 if __name__ == "__main__":
     app()

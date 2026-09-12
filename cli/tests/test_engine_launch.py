@@ -315,7 +315,8 @@ class TestFrontendIsolation:
             "from typer.testing import CliRunner\n"
             "from cli.main import app\n"
             f"result = CliRunner().invoke(app, {list(argv)!r})\n"
-            "engine = [m for m in ('beancount', 'beanquery', 'fava', 'bea_engine') if m in sys.modules]\n"
+            "engine = [m for m in ('beancount', 'beanquery', 'fava', 'bea_engine', 'beangulp', 'beanprice') "
+            "if m in sys.modules]\n"
             "print(json.dumps({'exit_code': result.exit_code, 'loaded': engine, 'output': result.output}))\n"
         )
         completed = subprocess.run(
@@ -397,10 +398,15 @@ class TestFrontendIsolation:
         )
         self.assert_isolated(answered, exit_code=0)
 
+    def test_ingest_and_price_never_load_optional_packages_in_the_frontend(self) -> None:
+        self.assert_isolated(self.probe("ingest", "--help"), exit_code=0)
+        self.assert_isolated(self.probe("price", "--help"), exit_code=0)
+
     def test_the_engine_client_modules_import_no_accounting_code(self) -> None:
         probe = (
             "import sys, cli.engine.launch, cli.engine.paths, cli.engine.provision, cli.commands.check;"
-            "print(','.join(m for m in ('beancount', 'beanquery', 'fava', 'bea_engine') if m in sys.modules))"
+            "mods=('beancount','beanquery','fava','bea_engine','beangulp','beanprice');"
+            "print(','.join(m for m in mods if m in sys.modules))"
         )
         completed = subprocess.run(
             [sys.executable, "-c", probe],
@@ -420,7 +426,7 @@ class TestFrontendPackaging:
         project = tomllib.loads((CLI_ROOT / "pyproject.toml").read_text())
         required = " ".join(project["project"]["dependencies"])
 
-        for name in ("beancount", "beanquery", "ply", "pyexcel", "python-dateutil"):
+        for name in ("beancount", "beanquery", "ply", "pyexcel", "python-dateutil", "beangulp", "beanprice"):
             assert name not in required, f"{name} must stay off the customer frontend graph"
         assert "openai" not in required
 

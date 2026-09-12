@@ -1,6 +1,6 @@
 # ADR 014: One bea installation with independent Beancount commands
 
-- Status: Accepted — m19 base verified in local installed-artifact rehearsals (t008); optional ecosystem (**m20**) and ledger-skills onboarding (**m21**) remain pending; publishing `beancount-io-engine` beside the frontend on PyPI is a release gate, not claimed by this ADR alone
+- Status: Accepted — m19 base verified in local installed-artifact rehearsals (t008); optional Beangulp/Beanprice enablement verified in m20/t004 installed wheel+sdist smoke; ledger-skills onboarding (**m21**) remains pending; publishing `beancount-io-engine` beside the frontend on PyPI is a release gate, not claimed by this ADR alone
 - Date: 2026-09-11
 - Decision owners: CLI (`cli/`)
 - Related: [ADR012 — optional Beangulp dependency](./ADR012-cli-beangulp-not-a-hard-dependency.md)
@@ -74,7 +74,7 @@ Audited against the ADR014 baseline (`beancount-io` 0.1.0 layout, Beancount 3.2.
 | Beancount 3.2.3 + scripts (`bean-check`, `bean-format`, `bean-doctor`, `bean-example`, `treeify`) | Native child processes | `GPL-2.0-only` (upstream) | Hash-pinned engine provision (Homebrew install-time; PyPI first use) | Upstream license metadata as shipped by the packages we pin | t015/t016; notices t023 |
 | Beanquery 0.2.0 (`bean-query`) | Native query child process | GPLv2 (upstream LICENSE) | Same engine env | Upstream license metadata | t015/t005 |
 | Engine transitive deps (including `regex`, `click`, …) | Support Beancount/Beanquery inside the engine process | As declared by each upstream package | Pulled with the pinned engine lockfile | Not separately reviewed for inter-package compatibility | Policy: out of scope (t013) |
-| Optional Beangulp / Beanprice | Ecosystem adapters | Assess separately (ADR012); not in m19 baseline | Optional engine extras (m20) | Own review when enabled | **m20** (explicitly pending) |
+| Optional Beangulp / Beanprice | Ecosystem adapters | Beangulp 0.2.0 and Beanprice 2.1.0 declare `GPL-2.0` (PyPI classifiers); transitive deps audited as MIT/BSD/Apache/0BSD — see [Optional ecosystem licenses](#optional-ecosystem-licenses-m20) | Optional engine feature via `bea engine enable` (m20); never in frontend or base engine | Upstream license metadata as shipped by the packages we pin; same source-delivery route as other GPL engine components | **m20** |
 
 **Child programs** (all engine-side; frontend launches argv arrays only): `bean-check`, `bean-format`, `bean-query`, `bean-doctor` (and its eleven operations), `bean-example`, `treeify`, plus the helper’s documented business-level commands for directive read/write, balances/reports, and init/import accounting ops.
 
@@ -88,7 +88,7 @@ Audited against the ADR014 baseline (`beancount-io` 0.1.0 layout, Beancount 3.2.
 | Engine env is separate and hash-pinned | Manifest + provisioner logs; offline reuse | t015, t016, t017 | Verified offline reuse in t008 installed smoke; Homebrew clean-env still CI-gated |
 | Frontend MIT + Fava MIT notice retained where we ship those materials | Artifact listing / `NOTICE.fava` in engine materials | t023, t008 | Verified in packaging tests; t008 smoke asserts engine `NOTICE.fava` after provision |
 | AI SDKs stay frontend-only | Engine lockfile excludes them | t022 | Done for engine pyproject; lock verification continues in release |
-| Optional ecosystem packages reviewed separately | m20 milestone | m20 | Explicitly out of m19 |
+| Optional ecosystem packages reviewed separately | m20 milestone | m20 | Direct package licenses recorded (t001); adapters (t002/t003); installed base+optional smoke (t004 — `cli/tmp/m20-t004-installed-artifact-evidence.md`). |
 | Transitive engine-dep license compatibility (e.g. Beancount+regex) | — | **Out of scope** (t013 policy) | Closed / waived |
 
 ### Closed policy item (w1/m19/t013)
@@ -98,15 +98,28 @@ Audited against the ADR014 baseline (`beancount-io` 0.1.0 layout, Beancount 3.2.
 ### Remaining open conditions
 
 1. Combined-work assessment for frontend↔engine communication remains factual (ordinary CLI vs tightly coupled). Owner: release review after t023/t008 evidence; not certified by this matrix alone.
-2. Optional Beangulp/Beanprice license and distribution review is deferred to **m20** (pending).
+2. Optional Beangulp/Beanprice adapters and installed verification are in **m20** (t001–t004). See [Optional ecosystem licenses](#optional-ecosystem-licenses-m20) and `cli/tmp/m20-t004-installed-artifact-evidence.md`. Adoption docs and closeout remain t005–t008.
 3. Customer-facing ledger skills still instruct `pip install beancount` as a no-`bea` fallback; aligning them with one-install bea is **m21** (pending) — do not treat skills as updated by m19 adoption docs alone.
 4. Production PyPI first-use requires publishing `beancount-io-engine` next to `beancount-io` (built in `make release-artifacts`; not claimed published by local t008 rehearsal). Homebrew clean-env install remains CI-gated when a host already has `brew` `bea`.
+
+### Optional ecosystem licenses (m20)
+
+Reviewed 2026-09-12 against PyPI metadata for the pins in `cli/src/cli/engine/manifest.json`. Enabling a feature installs into the **managed engine** only (`bea engine enable beangulp|beanprice`); the frontend `beancount-io` graph stays free of these packages (ADR012).
+
+| Package (pin) | Declared license | Notable transitive licenses (declared) | Source / notices | Notes |
+| --- | --- | --- | --- | --- |
+| Beangulp 0.2.0 | `GPL-2.0` (classifier; same family as Beancount) | beautifulsoup4 MIT; chardet 0BSD; click BSD-3-Clause; lxml BSD-3-Clause; python-magic MIT | Upstream package metadata; GPL source via PyPI/sdist as for other engine GPL components | Needs system **libmagic** (`python-magic`). Not required for `bea import --csv`. |
+| Beanprice 2.1.0 | `GPL-2.0` (classifier) | requests Apache-2.0; curl_cffi MIT; diskcache Apache-2.0; python-dateutil Apache/BSD dual | Same | Quote fetch only; `bea add price` records a supplied quote without this feature. |
+
+**Product policy:** do **not** silently expand the m19 Beancount+regex waiver to invent new combined-work certifications for optional transitive graphs. Direct optional packages are GPL-2.0 like Beancount; their transitive declared licenses above are permissive. Inter-package license compatibility among upstream optional transitive dependencies remains out of scope under the same policy as t013 for the base engine — record declared licenses here, keep frontend isolation, and ship hash-pinned locks (`engine-optional-beangulp.lock`, `engine-optional-beanprice.lock`) generated by `make engine-optional-locks`.
+
+Sources: [Beangulp][upstream-ingest]; [Beanprice][upstream-prices]; PyPI project metadata fetched 2026-09-12.
 
 Sources for the matrix pins: installed package metadata in the `cli/` uv environment on 2026-09-11; [Beancount COPYING][beancount-license]; `cli/NOTICE.fava`; `cli/pyproject.toml`; `cli/scripts/render-formula.sh`.
 
 ## Native command comparison
 
-Coverage below is the **post-migration** state verified by package tests and t008 installed smoke (PyPI wheel/sdist). Optional ecosystem rows remain pending (**m20**).
+Coverage below is the **post-migration** state verified by package tests and t008 installed smoke (PyPI wheel/sdist). Optional ecosystem rows are implemented in m20; installed enablement verified in t004.
 
 | Upstream command | bea command | Coverage | Notes |
 | --- | --- | --- | --- |
@@ -119,18 +132,20 @@ Coverage below is the **post-migration** state verified by package tests and t00
 
 Sources: [check](../../cli/src/cli/commands/check.py), [format](../../cli/src/cli/commands/format.py), [query](../../cli/src/cli/commands/query.py), [doctor](../../cli/src/cli/commands/doctor.py), [example](../../cli/src/cli/commands/example.py), [treeify](../../cli/src/cli/commands/treeify.py), [upstream core commands][upstream-scripts], and [upstream query CLI][upstream-query].
 
-### Optional ecosystem commands (**m20** — pending)
+### Optional ecosystem commands (**m20**)
 
-`ingest.py` denotes the user's Beangulp ingest script. These packages were inspected in source but were not installed or exercised as part of m19.
+`ingest.py` denotes the user's Beangulp ingest script. Enable packages with
+`bea engine enable beangulp` / `bea engine enable beanprice` (t001). Command
+adapters launch identify/extract/archive and `bean-price` (t002/t003).
 
-| Upstream command | Current bea counterpart | Remaining work (m20) |
+| Upstream command | Current bea counterpart | Status (m20) |
 | --- | --- | --- |
-| `python ingest.py identify` | Importer selection within `bea import` | Optional adapter for standalone batch identification. |
-| `python ingest.py extract` | `bea import --config CONFIG` | Optional adapter for raw batch extraction and upstream lifecycle hooks; retain bea's preview/apply workflow. |
-| `python ingest.py archive` | None | Optional adapter for upstream document archival. |
-| `bean-price` | None; `bea add price` records a supplied quote | Optional adapter for current/historical quote fetching and provider options. |
+| `python ingest.py identify` | `bea ingest identify --config ingest.py` (engine child; needs `bea engine enable beangulp`) | Done (t002; t004 installed) |
+| `python ingest.py extract` | `bea ingest extract --config ingest.py` (raw Beangulp extract; `bea import` keeps preview/apply) | Done (t002) |
+| `python ingest.py archive` | `bea ingest archive --config ingest.py` | Done (t002) |
+| `bean-price` | `bea price` (engine `bean-price`; `bea add price` still records a supplied quote) | Done (t003; t004 installed) |
 
-Sources: [bea import](../../cli/src/cli/commands/import_.py), [Beangulp][upstream-ingest], and [Beanprice][upstream-prices].
+Sources: [bea import](../../cli/src/cli/commands/import_.py), [bea ingest](../../cli/src/cli/commands/ingest.py), [bea price](../../cli/src/cli/commands/price.py), [Beangulp][upstream-ingest], and [Beanprice][upstream-prices].
 
 ## Checklist
 
@@ -143,12 +158,12 @@ Sources: [bea import](../../cli/src/cli/commands/import_.py), [Beangulp][upstrea
 - [x] Compare wrappers against the recorded upstream versions via installed smoke and package tests (t008 `scripts/smoke-installed.py`: native + existing commands, PATH isolation, offline reuse). Rerun when upstream pins change.
 - [x] Record product policy: no transitive engine-dep license gate (Beancount+regex out of scope); verify frontend/engine notices we ship (`NOTICE.fava`, package licenses) in release artifacts (t013).
 - [x] Run CLI checks and clean installed-artifact smoke tests for both channels without preinstalled Beancount. Verify frontend isolation and offline engine reuse; rerun affected comparisons when upstream versions change. (t008: PyPI wheel+sdist local rehearsal green; Homebrew formula suite green; clean `brew` install blocked on this host by an existing tap install — see `cli/tmp/t008-installed-artifact-evidence.md`.)
-- [ ] Separately add and verify optional Beangulp and Beanprice adapters for full ecosystem coverage. (**m20** — pending)
+- [x] Separately add and verify optional Beangulp and Beanprice adapters for full ecosystem coverage. (**m20** — t001–t004: provisioning, adapters, installed wheel+sdist smoke with `bea engine enable` + ingest/price; Homebrew clean-env still blocked on hosts with existing `brew` `bea`, same as m19; evidence `cli/tmp/m20-t004-installed-artifact-evidence.md`)
 - [ ] Align ledger skills with one-install bea (stop redundant Beancount installs for agents that already have `bea`). (**m21** — pending)
 
 Native parity covers the six commands in the native comparison table. The installation and process-boundary requirements also cover existing local bea features. Optional integrations and skills onboarding have their own milestones.
 
-**Helper package landed (t014, with the t015/t002 foundation).** The engine distribution exists: `beancount-io-engine` (`cli/engine/pyproject.toml`) packages the independently invocable `bea-engine` helper (`cli/src/bea_engine/`) together with the vendored Fava subset and Fava's notice, and declares Beancount and Beanquery without any AI SDK. Its command protocol — argv and ledger paths in, one JSON envelope on stdout, `cli.errors` exit codes — is documented in [`cli/src/bea_engine/README.md`](../../cli/src/bea_engine/README.md). The frontend reaches it through `cli/src/cli/engine/`: `paths` resolves a versioned environment under `$XDG_DATA_HOME/bea/engine/<version>`, `provision` installs the pinned combination in `cli/src/cli/engine/manifest.json` atomically on first use (Homebrew installs the engine venv at formula time via `BEA_ENGINE_DIR`), and `launch` runs it as a child process with an argv array. Frontend isolation (t023) removes Beancount/Beanquery/Fava/`bea_engine` from the customer `beancount-io` wheel and runtime dependency graph; `cli/tests/test_engine_launch.py` proves customer command paths load none of those modules in the frontend process. t008 recorded installed-artifact smoke for PyPI wheel and sdist (hash-pinned first-use provision, native+existing commands, PATH isolation, offline reuse, engine `NOTICE.fava`); evidence: `cli/tmp/t008-installed-artifact-evidence.md`. Remaining checklist items: **m20** (optional ecosystem) and **m21** (skills).
+**Helper package landed (t014, with the t015/t002 foundation).** The engine distribution exists: `beancount-io-engine` (`cli/engine/pyproject.toml`) packages the independently invocable `bea-engine` helper (`cli/src/bea_engine/`) together with the vendored Fava subset and Fava's notice, and declares Beancount and Beanquery without any AI SDK. Its command protocol — argv and ledger paths in, one JSON envelope on stdout, `cli.errors` exit codes — is documented in [`cli/src/bea_engine/README.md`](../../cli/src/bea_engine/README.md). The frontend reaches it through `cli/src/cli/engine/`: `paths` resolves a versioned environment under `$XDG_DATA_HOME/bea/engine/<version>`, `provision` installs the pinned combination in `cli/src/cli/engine/manifest.json` atomically on first use (Homebrew installs the engine venv at formula time via `BEA_ENGINE_DIR`), and `launch` runs it as a child process with an argv array. Frontend isolation (t023) removes Beancount/Beanquery/Fava/`bea_engine` from the customer `beancount-io` wheel and runtime dependency graph; `cli/tests/test_engine_launch.py` proves customer command paths load none of those modules in the frontend process. t008 recorded installed-artifact smoke for PyPI wheel and sdist (hash-pinned first-use provision, native+existing commands, PATH isolation, offline reuse, engine `NOTICE.fava`); evidence: `cli/tmp/t008-installed-artifact-evidence.md`. Optional Beangulp/Beanprice enablement verified in m20/t004 (`cli/tmp/m20-t004-installed-artifact-evidence.md`). Remaining checklist item: **m21** (skills).
 
 ## Individual command inventory
 

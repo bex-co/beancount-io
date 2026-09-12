@@ -48,6 +48,9 @@ def smoke(binary: Path, directory: Path) -> None:
     if "BEA_ENGINE_DIR" not in env:
         env["XDG_DATA_HOME"] = str(directory / "xdg-data")
     env.pop("BEA_FILE", None)
+    # Customer smokes must not inherit a developer's engine override (optional
+    # packages would look "already present" and skip the missing-feature gate).
+    env.pop("BEA_ENGINE_PYTHON", None)
     # Conflicting global bean-* tools on PATH must never answer (ADR014).
     fake_bin = directory / "fake-path-bin"
     fake_bin.mkdir()
@@ -416,11 +419,13 @@ def smoke(binary: Path, directory: Path) -> None:
                 "import importlib.metadata as m, importlib.util as u, sys\n"
                 "reqs = m.requires('beancount-io') or []\n"
                 "runtime = [r for r in reqs if 'extra ==' not in r]\n"
-                "forbidden = [name for name in ('beancount', 'beanquery', 'fava', 'bea_engine')\n"
+                "forbidden = [name for name in "
+                "('beancount', 'beanquery', 'fava', 'bea_engine', 'beangulp', 'beanprice')\n"
                 "             if any(r.split()[0].split('>=')[0].split('==')[0] == name for r in runtime)]\n"
                 "assert not forbidden, forbidden\n"
                 "engine_specs = {name: u.find_spec(name) is not None\n"
-                "                for name in ('beancount', 'beanquery', 'fava', 'bea_engine')}\n"
+                "                for name in "
+                "('beancount', 'beanquery', 'fava', 'bea_engine', 'beangulp', 'beanprice')}\n"
                 "print(','.join(k for k, v in engine_specs.items() if v))\n",
             ],
             capture_output=True,
@@ -451,6 +456,30 @@ def smoke(binary: Path, directory: Path) -> None:
         notices = list(engine_root.glob("lib/python*/site-packages/bea_engine/NOTICE.fava"))
         assert notices, f"engine NOTICE.fava missing under {engine_root}"
         assert "Fava" in notices[0].read_text(encoding="utf-8")
+        # Base profile must not include optional ecosystem packages (m20 / ADR012).
+        engine_python = next(engine_root.glob("bin/python"), None) or next(
+            engine_root.glob("Scripts/python.exe"), None
+        )
+        assert engine_python is not None, f"engine python missing under {engine_root}"
+        absent = subprocess.run(
+            [
+                str(engine_python),
+                "-c",
+                "import importlib.util as u\n"
+                "found = [n for n in ('beangulp', 'beanprice') if u.find_spec(n) is not None]\n"
+                "print(','.join(found))\n"
+                "raise SystemExit(1 if found else 0)\n",
+            ],
+            capture_output=True,
+            text=True,
+            env=env,
+            timeout=60,
+        )
+        assert absent.returncode == 0, (
+            "base engine must not include optional packages",
+            absent.stdout,
+            absent.stderr,
+        )
         # Offline reuse: a second check must not need the network or uv downloads.
         offline_env = dict(env, UV_OFFLINE="1", http_proxy="http://127.0.0.1:9", HTTPS_PROXY="http://127.0.0.1:9")
         offline = subprocess.run(
@@ -463,6 +492,153 @@ def smoke(binary: Path, directory: Path) -> None:
         )
         assert offline.returncode == 0, (offline.stdout, offline.stderr)
         commands += 1
+    # Optional features (m20): missing-feature guidance always; enable when a
+    # managed engine exists (installed PyPI/Homebrew path). Checkout smokes that
+    # never provision skip enablement — unit tests cover adapters there.
+    status = run("engine", "status")
+    features = status["data"]["features"]
+    assert features["beangulp"]["enabled"] is False
+    assert features["beanprice"]["enabled"] is False
+    ingest_script = directory / "ingest.py"
+    ingest_script.write_text(
+        "from beangulp import Ingest\n"
+        "from beangulp.importer import Importer\n"
+        "from pathlib import Path\n"
+        "from datetime import date\n"
+        "\n"
+        "class Csv(Importer):\n"
+        "    @property\n"
+        "    def name(self):\n"
+        "        return 'smoke.Csv'\n"
+        "    def identify(self, filepath):\n"
+        "        return filepath.endswith('.csv')\n"
+        "    def date(self, filepath):\n"
+        "        return date(1970, 1, 1)\n"
+        "    def account(self, filepath):\n"
+        "        return 'Assets:Smoke'\n"
+        "    def filename(self, filepath):\n"
+        "        return Path(filepath).name\n"
+        "    def extract(self, filepath, existing):\n"
+        "        return []\n"
+        "    def deduplicate(self, entries, existing):\n"
+        "        return entries\n"
+        "\n"
+        "if __name__ == '__main__':\n"
+        "    Ingest([Csv()])()\n"
+    )
+    missing_ingest = run(
+        "ingest",
+        "identify",
+        "--config",
+        str(ingest_script),
+        str(directory),
+        exit_code=2,
+        json_output=False,
+    )
+    assert "bea engine enable beangulp" in missing_ingest
+    missing_price = run("price", "--no-cache", "-e", "yahoo/AAPL", exit_code=2, json_output=False)
+    assert "bea engine enable beanprice" in missing_price
+    if engine_root is not None and engine_root.is_dir():
+        # One bea-level choice per feature; reuse offline afterward where data permits.
+        run("engine", "enable", "beangulp", timeout=300)
+        run("engine", "enable", "beanprice", timeout=300)
+        enabled = run("engine", "status")["data"]["features"]
+        assert enabled["beangulp"]["enabled"] is True and enabled["beangulp"]["present"] is True
+        assert enabled["beanprice"]["enabled"] is True and enabled["beanprice"]["present"] is True
+        downloads = directory / "downloads"
+        downloads.mkdir(exist_ok=True)
+        (downloads / "bank.csv").write_text("Date,Amount\n")
+        (downloads / "other.txt").write_text("")
+        identified = run(
+            "ingest",
+            "identify",
+            "--config",
+            str(ingest_script),
+            str(downloads),
+            json_output=False,
+            timeout=120,
+        )
+        assert "bank.csv" in identified and "smoke.Csv" in identified
+        # Deterministic quote provider — no live market access.
+        provider = directory / "bea_smoke_price"
+        provider.mkdir()
+        (provider / "__init__.py").write_text("")
+        (provider / "source.py").write_text(
+            "import datetime\n"
+            "from decimal import Decimal\n"
+            "from dateutil import tz\n"
+            "from beanprice.source import SourcePrice\n"
+            "\n"
+            "class Source:\n"
+            "    def get_latest_price(self, ticker):\n"
+            "        return SourcePrice(Decimal('42.00'), "
+            "datetime.datetime(2024, 1, 2, 16, 0, 0, tzinfo=tz.tzutc()), 'USD')\n"
+            "    def get_historical_price(self, ticker, time):\n"
+            "        return self.get_latest_price(ticker)\n"
+        )
+        price_env = dict(env)
+        inherited = price_env.get("PYTHONPATH", "")
+        price_env["PYTHONPATH"] = (
+            f"{directory}{os.pathsep}{inherited}" if inherited else str(directory)
+        )
+        quoted = subprocess.run(
+            [
+                str(binary),
+                "--no-input",
+                "price",
+                "--no-cache",
+                "-e",
+                "USD:bea_smoke_price.source/HOOL",
+            ],
+            cwd=directory,
+            env=price_env,
+            text=True,
+            capture_output=True,
+            timeout=120,
+        )
+        commands += 1
+        assert quoted.returncode == 0, (quoted.stdout, quoted.stderr)
+        assert "price HOOL" in quoted.stdout and "42.00" in quoted.stdout
+        # Enabled features remain available offline (packages already installed).
+        offline_env = dict(
+            env,
+            UV_OFFLINE="1",
+            http_proxy="http://127.0.0.1:9",
+            HTTPS_PROXY="http://127.0.0.1:9",
+        )
+        offline_status = subprocess.run(
+            [str(binary), "--json", "--no-input", "engine", "status"],
+            cwd=directory,
+            env=offline_env,
+            text=True,
+            capture_output=True,
+            timeout=60,
+        )
+        assert offline_status.returncode == 0, (offline_status.stdout, offline_status.stderr)
+        offline_features = json.loads(offline_status.stdout)["data"]["features"]
+        assert offline_features["beangulp"]["present"] is True
+        assert offline_features["beanprice"]["present"] is True
+        commands += 1
+        # Frontend isolation must still hold after optional enablement.
+        if frontend_python is not None and (
+            "site-packages" in str(frontend_python.resolve()) or "venv" in str(frontend_python.resolve())
+        ):
+            post = subprocess.run(
+                [
+                    str(frontend_python),
+                    "-c",
+                    "import importlib.util as u\n"
+                    "found = [n for n in ('beangulp', 'beanprice', 'beancount', 'beanquery', 'fava', 'bea_engine') "
+                    "if u.find_spec(n) is not None]\n"
+                    "print(','.join(found))\n",
+                ],
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=60,
+            )
+            assert post.returncode == 0, (post.stdout, post.stderr)
+            assert post.stdout.strip() == "", post.stdout
     run("unknown-command", exit_code=2)
     run("--file", exit_code=2)
     print(f"Installed CLI smoke passed: {commands + 1} commands ({version.stdout.strip()}).")

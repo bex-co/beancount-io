@@ -5,8 +5,10 @@ Three shapes, because the boundary carries three kinds of traffic:
 - `run_native` and `run_engine_argv` hand the caller's streams to the child and
   pass its exit status back untouched. Upstream keeps owning its stdout, its
   stderr and its status, an interactive program still sees the terminal, and a
-  pipe still streams. `bea check`, `bea doctor`, `bea example` and `bea treeify`
-  are this shape.
+  pipe still streams. `bea check`, `bea doctor`, `bea example`, `bea treeify`,
+  and optional `bea price` (`bean-price`) are this shape.
+- `run_optional_script` runs a user script (Beangulp ingest) with the engine
+  interpreter after `require_feature`, still as a child process.
 - `capture_native` keeps the child's output instead, for the few places where
   the frontend has to read the answer before it can act on it — `bea check
   --json` parses `bean-check --json`, and `bea format --check` compares the
@@ -37,6 +39,8 @@ Resolving the engine, in order:
 developer's `bea format` runs the `bean-format` beside the interpreter they are
 working with and a customer's runs the provisioned one. Neither consults
 `PATH`: a globally installed Beancount of some other version must never answer.
+Optional features (`beangulp`, `beanprice`) must be enabled first; see
+`require_feature` / `run_optional_native` / `run_optional_script`.
 """
 
 from __future__ import annotations
@@ -51,7 +55,7 @@ from typing import Any
 
 from cli import output
 from cli.engine import paths, provision
-from cli.errors import BY_CATEGORY, BeaError
+from cli.errors import BY_CATEGORY, BeaError, UsageError
 
 
 def run_engine_argv(argv: Sequence[str]) -> int:
@@ -60,15 +64,76 @@ def run_engine_argv(argv: Sequence[str]) -> int:
     return _spawn([*command, *argv], env)
 
 
-def run_native(name: str, args: Sequence[str]) -> int:
+def run_native(name: str, args: Sequence[str], *, env: dict[str, str] | None = None) -> int:
     """Run an upstream executable from the engine environment, streams inherited.
 
     `name` is the program as upstream installs it — `bean-check`, `bean-format`,
-    `bean-query`, `bean-doctor`, `bean-example`, `treeify`. The child gets this
-    process's stdin, stdout and stderr, so the shell it was started from sees
-    upstream's own output and status; an interactive program keeps its terminal.
+    `bean-query`, `bean-doctor`, `bean-example`, `treeify`, `bean-price`. The child
+    gets this process's stdin, stdout and stderr, so the shell it was started from
+    sees upstream's own output and status; an interactive program keeps its terminal.
+
+    `env` replaces the child's environment when set; otherwise the process inherits
+    (or, for checkout helpers, gets the checkout `PYTHONPATH` via other entry points).
     """
-    return _spawn([str(native_command(name)), *args], None)
+    return _spawn([str(native_command(name)), *args], env)
+
+
+def require_feature(name: str) -> None:
+    """Refuse optional-feature commands until the matching engine feature is available."""
+    known = provision.optional_features()
+    if name not in known:
+        choices = ", ".join(sorted(known)) or "(none)"
+        raise UsageError(f"Unknown engine feature '{name}'. Choose one of: {choices}.")
+    if provision.feature_available(name):
+        return
+    override = paths.python_override()
+    if override is not None:
+        raise UsageError(
+            f"Engine feature '{name}' is not available in {paths.PYTHON_ENV}={override}. "
+            f"Install it into that environment, or unset {paths.PYTHON_ENV} and run "
+            f"'bea engine enable {name}'."
+        )
+    raise UsageError(f"Engine feature '{name}' is not enabled. Run: bea engine enable {name}")
+
+
+def run_optional_native(
+    feature: str,
+    name: str,
+    args: Sequence[str],
+    *,
+    env: dict[str, str] | None = None,
+) -> int:
+    """Require an optional feature, then run its upstream executable."""
+    require_feature(feature)
+    return run_native(name, args, env=env)
+
+
+def run_optional_script(feature: str, script: Path, args: Sequence[str]) -> int:
+    """Require an optional feature, then run a user script with the engine interpreter.
+
+    Beangulp's lifecycle lives in the user's ingest script (`Ingest(...)()`): we
+    only choose the interpreter and forward `identify` / `extract` / `archive`
+    plus the rest of the argv. The frontend never imports Beangulp.
+    """
+    require_feature(feature)
+    if not script.is_file():
+        raise UsageError(f"Ingest script not found: {script}")
+    python = engine_python()
+    env = _checkout_env()
+    return _spawn([str(python), str(script), *args], env)
+
+
+def engine_python() -> Path:
+    """The interpreter that will run engine programs for this process."""
+    override = paths.python_override()
+    if override is not None:
+        return override
+    root = paths.engine_root()
+    if paths.is_provisioned(root):
+        return paths.venv_python(root)
+    if paths.checkout_source_root() is not None:
+        return Path(sys.executable)
+    return provision.ensure_engine()
 
 
 def capture_native(name: str, args: Sequence[str]) -> subprocess.CompletedProcess[str]:
@@ -186,19 +251,7 @@ def helper_command() -> tuple[list[str], dict[str, str] | None]:
     whether or not the environment's `bin/` is on `PATH`, and it is the only
     form a checkout can offer.
     """
-    override = paths.python_override()
-    if override is not None:
-        return _module_command(override), _checkout_env()
-
-    root = paths.engine_root()
-    if paths.is_provisioned(root):
-        return _module_command(paths.venv_python(root)), _checkout_env()
-
-    source_root = paths.checkout_source_root()
-    if source_root is not None:
-        return _module_command(Path(sys.executable)), _checkout_env(source_root)
-
-    return _module_command(provision.ensure_engine()), None
+    return _module_command(engine_python()), _checkout_env()
 
 
 def _module_command(python: Path) -> list[str]:

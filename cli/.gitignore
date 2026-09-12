@@ -1,8 +1,10 @@
 __pycache__
 
-# Build artifacts. `requirements.lock` and `engine-requirements.lock` are
-# generated per release by `make release-lock` / `make engine-release-lock`
-# and travel inside the sdist, never in git.
+# Build artifacts. `requirements.lock`, `engine-requirements.lock`, and the
+# optional engine feature locks are generated per release by `make release-lock`
+# / `make engine-release-lock` and travel inside the sdist, never in git.
 dist/
 requirements.lock
 engine-requirements.lock
+engine-optional-beangulp.lock
+engine-optional-beanprice.lock

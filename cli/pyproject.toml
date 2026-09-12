@@ -43,6 +43,8 @@ packages = ["src/cli"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "engine-requirements.lock" = "cli/engine-requirements.lock"
+"engine-optional-beangulp.lock" = "cli/engine-optional-beangulp.lock"
+"engine-optional-beanprice.lock" = "cli/engine-optional-beanprice.lock"
 
 # The sdist is what the Homebrew formula builds from, so it must carry
 # `requirements.lock` — the hash-pinned export of this release's resolution,
@@ -73,6 +75,8 @@ only-include = [
     "uv.lock",
     "requirements.lock",
     "engine-requirements.lock",
+    "engine-optional-beangulp.lock",
+    "engine-optional-beanprice.lock",
 ]
 exclude = ["**/__pycache__", "**/*.py[co]"]
 

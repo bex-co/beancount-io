@@ -40,6 +40,8 @@ def test_the_sdist_carries_the_hashed_lock() -> None:
 
     assert "requirements.lock" in only
     assert "engine-requirements.lock" in only
+    assert "engine-optional-beangulp.lock" in only
+    assert "engine-optional-beanprice.lock" in only
     assert "engine/pyproject.toml" in only
     assert "src" in only
     assert force["src/bea_engine"] == "engine/src/bea_engine"

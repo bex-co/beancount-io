@@ -76,7 +76,7 @@ PLANS = {
     # Example gallery: every fence starts from the same seeded ledger, except
     # the init fence, which creates it. The check fence ends on the bare
     # `bea query`, which needs a terminal and exits 2 without one.
-    "USAGE.md": DocPlan(mode="isolated", setup=USAGE_SETUP, setup_skip=frozenset({2}), expect={3: (2, [])}),
+    "USAGE.md": DocPlan(mode="isolated", setup=USAGE_SETUP, setup_skip=frozenset({3}), expect={4: (2, [])}),
     # Narratives share one directory; the examples/ copy serves the --config,
     # --rules, and CSV paths the walkthroughs reference.
     "IMPORTING.md": DocPlan(setup=["mkdir -p docs", "cp -r _EXAMPLES_ docs/examples"]),

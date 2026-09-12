@@ -8,6 +8,8 @@ The Beancount.io CLI installs one command: `bea`. New here? Start with the
 bea init [DIRECTORY] --currency USD
 bea import EXPORT [--config importers.py] [--into FILE] [--apply]
 bea import EXPORT.csv --csv date=Date,amount=Amount,payee=Payee --account Assets:Checking [--rules rules.toml]
+bea ingest identify|extract|archive --config ingest.py [PATH…]   # needs beangulp
+bea price [bean-price options…]                                  # needs beanprice
 bea check | format | query "<BQL>"
 bea list <type> | bea add <type>          # eleven directive types; add transactions --from PATH
 bea report balance-sheet | income-statement | trial-balance | overview
@@ -20,6 +22,8 @@ bea cloud ledger list | create [--clone] | show | clone | delete
 
 # CLI maintenance
 bea upgrade [--check]
+bea engine status
+bea engine enable beangulp|beanprice
 ```
 
 Everything outside `bea cloud` works on local files (`ask` is the one exception: its model calls run through the hosted AI proxy). Everything under `bea cloud` needs a session from `bea cloud login` or `BEA_TOKEN`.
@@ -41,9 +45,28 @@ retry a local command such as `bea check` — do not `pip install beancount`.
 A broken managed environment is discarded and rebuilt on the next successful
 provision; global `bean-check` decoys on `PATH` are ignored.
 
-Optional Beangulp ingest adapters and Beanprice quote fetching are **not** in
-the base install (tracked as milestone m20). Ledger-skill instructions that
-still suggest installing Beancount separately are pending alignment (m21).
+### Optional engine features (Beangulp / Beanprice)
+
+Beangulp and Beanprice are **not** in the base engine or the frontend. Enable
+them explicitly into the managed engine:
+
+```bash norun
+# Needs network once to download Beangulp/Beanprice into the managed engine;
+# Beangulp also needs the system libmagic library.
+bea engine status
+bea engine enable beangulp    # ingest helpers; needs system libmagic
+bea engine enable beanprice   # bean-price quote fetching
+bea ingest identify|extract|archive --config ingest.py [PATH…]
+bea price --no-cache -e USD:yahoo/AAPL   # fetch quotes (not bea add price)
+```
+
+Each enable installs a reviewed, hash-pinned lock (`engine-optional-*.lock` in
+release artifacts) into the engine venv only. `bea import --csv` continues to
+work without Beangulp. `bea add price` still records a supplied quote without
+Beanprice. Licenses are recorded in
+[ADR014](../../docs/adrs/ADR014-cli-beancount-parity.md#optional-ecosystem-licenses-m20).
+Ledger-skill instructions that still suggest installing Beancount separately
+are pending alignment (m21).
 
 ## Global options
 

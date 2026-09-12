@@ -1,19 +1,19 @@
 # w1 · m20 — Optional accounting tools in the independent engine
 
-**Worker:** worker1 **Goal:** users explicitly enable Beangulp and Beanprice through bea while preserving the isolated frontend, small base installation, and reviewed licensing basis **Status:** todo
+**Worker:** worker1 **Goal:** users explicitly enable Beangulp and Beanprice through bea while preserving the isolated frontend, small base installation, and reviewed licensing basis **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Provision reviewed optional features in the engine environment | 60m | w1/m19/t012 |
-| t002 | Execute Beangulp identify extract and archive independently | 60m | t001 |
-| t003 | Execute Beanprice quote retrieval independently | 45m | t001 |
-| t004 | Verify base and optional engine installations | 60m | t002, t003 |
-| t005 | Adoption surface | 25m | t004 |
-| t006 | Simplify | 30m | t005 |
-| t007 | CI + test coverage | 45m | t005, t006 |
-| t008 | Closeout | 15m | t007 |
+| t001 | Provision reviewed optional features in the engine environment — **DONE** | 60m | w1/m19/t012 |
+| t002 | Execute Beangulp identify extract and archive independently — **DONE** | 60m | t001 |
+| t003 | Execute Beanprice quote retrieval independently — **DONE** | 45m | t001 |
+| t004 | Verify base and optional engine installations — **DONE** | 60m | t002, t003 |
+| t005 | Adoption surface — **DONE** | 25m | t004 |
+| t006 | Simplify — **DONE** | 30m | t005 |
+| t007 | CI + test coverage — **DONE** | 45m | t005, t006 |
+| t008 | Closeout — **DONE** | 15m | t007 |
 
 ## Definition of done
 

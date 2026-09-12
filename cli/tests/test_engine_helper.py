@@ -466,6 +466,8 @@ class TestDistribution:
             names = archive.namelist()
             assert any(name.startswith("cli/") for name in names)
             assert "cli/engine-requirements.lock" in names
+            assert "cli/engine-optional-beangulp.lock" in names
+            assert "cli/engine-optional-beanprice.lock" in names
             assert not any(name.startswith("bea_engine/") for name in names)
             assert not any(name.startswith("fava/") for name in names)
             # Metadata must not require beancount on the customer graph.

@@ -250,18 +250,29 @@ append operation and intentionally does not deduplicate.
 
 ## Python dependencies and metadata
 
-No extra dependency is needed for the interface itself. Configurations that
-import Beangulp or third-party importer packages need those packages in the
-same Python environment as `bea`. Use an isolated environment for those imports:
+No extra dependency is needed for the CSV mapper or the importer interface
+itself. Configurations that `import beangulp` (or other importer packages) need
+those packages in the **managed engine**, not the bea frontend:
 
 ```bash norun
-# Needs network for the isolated environment plus a bank OFX export.
-uv run --with beancount-io --with beangulp \
-  bea --file books/main.bean import bank.ofx --config importers.py
+# Needs network to provision Beangulp into the managed engine, system libmagic,
+# a Python importer, and a real OFX/QIF (or similar) bank export.
+bea engine enable beangulp
+# Beangulp needs the system libmagic library (python-magic).
+bea --file books/main.bean import bank.ofx --config importers.py
+# Standalone Beangulp lifecycle (not bea import --apply):
+bea ingest identify --config ingest.py downloads/
+bea ingest extract --config ingest.py downloads/ -o extracted.bean
+bea ingest archive --config ingest.py downloads/ -o documents/ --dry-run
 ```
 
-Add `--with YOUR_IMPORTER_PACKAGE` when needed. This is separate from the
-Homebrew-managed environment and does not alter its files.
+`bea engine status` shows whether each optional feature is enabled. This does
+not alter the Homebrew/PyPI frontend environment. Add third-party importer
+packages the same way you would for any engine-side dependency once Beangulp is
+enabled, or keep a separate project environment for custom importer development.
+For raw identify/extract/archive that preserve Beangulp hooks, dry-runs, and
+archive naming, use `bea ingest` with an ingest script that calls
+`beangulp.Ingest(...)()`. Preview/apply into the ledger remains `bea import`.
 
 Native transaction and posting metadata are retained, including booleans,
 decimal numbers, dates, and amounts. Custom directive boolean/date values also
