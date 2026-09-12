@@ -57,7 +57,7 @@ def fake_venv(root: Path) -> Path:
     """The parts of a provisioned environment that `paths.is_provisioned` looks for."""
     (root / "bin").mkdir(parents=True, exist_ok=True)
     (root / "bin" / "python").write_text("")
-    (root / "lib" / "python3.12" / "site-packages" / "bea_engine").mkdir(parents=True, exist_ok=True)
+    (root / "lib" / "python3.12" / "site-packages" / "beanquery").mkdir(parents=True, exist_ok=True)
     return root
 
 
@@ -153,11 +153,10 @@ class TestResolution:
         monkeypatch.setattr(paths, "_IMPORT_ROOT", Path("/nonexistent/site-packages"))
 
         assert paths.checkout_source_root() is None
-        assert paths.checkout_engine_project() is None
 
     def test_a_checkout_is_recognised_by_its_files(self) -> None:
         assert paths.checkout_source_root() == SOURCE_ROOT
-        assert paths.checkout_engine_project() == CLI_ROOT / "engine"
+        assert paths.helper_source_root() == SOURCE_ROOT
 
     def test_an_installed_bea_engine_is_not_mistaken_for_a_checkout(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
@@ -167,12 +166,11 @@ class TestResolution:
         Finding that package must not switch off provisioning: only a checkout
         has the engine project beside the sources.
         """
-        (tmp_path / "site-packages" / "bea_engine").mkdir(parents=True)
-        (tmp_path / "site-packages" / "bea_engine" / "main.py").write_text("")
+        (tmp_path / "site-packages" / "beanquery").mkdir(parents=True)
+        (tmp_path / "site-packages" / "beanquery" / "main.py").write_text("")
         monkeypatch.setattr(paths, "_IMPORT_ROOT", tmp_path / "site-packages")
 
         assert paths.checkout_source_root() is None
-        assert paths.checkout_engine_project() is None
 
 
 class TestPaths:
@@ -292,10 +290,9 @@ class TestProvision:
         requirements = provision._requirements()
         manifest = paths.manifest()
 
-        assert requirements[:-1] == manifest["requirements"]
+        assert requirements == manifest["requirements"]
         assert "beancount==" in " ".join(requirements)
-        # A checkout provisions the code in front of you, not a published release.
-        assert requirements[-1] == str(CLI_ROOT / "engine")
+        assert all("beancount-io" not in requirement for requirement in requirements)
 
     def test_a_missing_uv_explains_how_to_get_one(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.delenv(provision.UV_ENV, raising=False)
@@ -442,14 +439,10 @@ class TestFrontendPackaging:
         project = tomllib.loads((CLI_ROOT / "pyproject.toml").read_text())
         sdist = project["tool"]["hatch"]["build"]["targets"]["sdist"]
         only = sdist["only-include"]
-        force = sdist["force-include"]
 
         assert "NOTICE.fava" in only
-        assert "engine/NOTICE.fava" in only
+        assert "LICENSE.engine" in only
         assert "src" in only
-        assert force["src/bea_engine"] == "engine/src/bea_engine"
-        assert force["src/fava"] == "engine/src/fava"
-        assert "engine/pyproject.toml" in only
 
 
 @pytest.mark.parametrize("platform", ["linux", "darwin", "win32"])
@@ -462,7 +455,7 @@ def test_managed_engine_layout_and_native_executable(
     python.parent.mkdir(parents=True)
     python.touch()
     site = root / ("Lib/site-packages" if platform == "win32" else "lib/python3.12/site-packages")
-    (site / "bea_engine").mkdir(parents=True)
+    (site / "beanquery").mkdir(parents=True)
     command = python.parent / ("bean-check.exe" if platform == "win32" else "bean-check")
     command.touch()
     monkeypatch.setenv("BEA_ENGINE_DIR", str(root))

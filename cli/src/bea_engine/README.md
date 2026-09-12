@@ -3,25 +3,17 @@
 `bea-engine` is an independently invocable command-line program that performs
 the ledger operations which require Beancount. It is the Beancount side of the
 [ADR014](../../../docs/adrs/ADR014-cli-beancount-parity.md) process boundary:
-this package and the vendored Fava code ship in the `beancount-io-engine`
-distribution (`cli/engine/`), and they are the only place allowed to import
-`beancount`, `beanquery` or `fava`.
-
-The `bea` frontend calls it as a child process and never imports it. Nothing in
-this contract is private to `bea` — the commands take file paths and ordinary
-arguments and answer with documented JSON, so a script or an agent can call it
-directly.
+the helper and vendored Fava sources ship as internal resources in the single
+`beancount-io` distribution. The frontend adds their resource directory to
+`PYTHONPATH` only for a child process using the managed upstream environment.
+It never imports the helper in its own process.
 
 ## Running it
 
-```zsh
-bea-engine check --file main.bean       # installed in the engine environment
-python -m bea_engine check --file main.bean   # no PATH or console script needed
-```
-
-The frontend uses the second form. `bea` resolves the engine interpreter,
-provisions the environment on first use, and forwards the call; see
-`cli/src/cli/engine/`.
+Customers use `bea`. In a development checkout, the helper protocol can also
+be exercised directly with `PYTHONPATH=src uv run python -m bea_engine`.
+There is no separately installed `bea-engine` executable or helper distribution.
+The documented argv and JSON interface below remains the subprocess contract.
 
 ## I/O contract
 

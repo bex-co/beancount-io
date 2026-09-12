@@ -438,6 +438,21 @@ def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None,
         # Dev/checkouts keep Beancount in the same interpreter for the test suite.
         if installed:
             assert probe.stdout.strip() == "", f"Engine modules in frontend: {probe.stdout}"
+            materials = subprocess.run(
+                [
+                    str(frontend_python),
+                    "-c",
+                    "from importlib.resources import files; root = files('cli').joinpath('_runtime'); "
+                    "assert 'Fava' in root.joinpath('NOTICE.fava').read_text(); "
+                    "assert 'GNU GENERAL PUBLIC LICENSE' in root.joinpath('LICENSE.engine').read_text(); "
+                    "assert root.joinpath('bea_engine/main.py').is_file()",
+                ],
+                capture_output=True,
+                text=True,
+                env=env,
+                timeout=60,
+            )
+            assert materials.returncode == 0, (materials.stdout, materials.stderr)
     # Engine env: Homebrew (BEA_ENGINE_DIR) or PyPI first-use under XDG_DATA_HOME.
     engine_dir = env.get("BEA_ENGINE_DIR")
     if engine_dir:
@@ -450,10 +465,6 @@ def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None,
         engine_root = engines[0] if engines else None
     if engine_root is not None and engine_root.is_dir():
         assert any(engine_root.glob("bin/bean-check")) or any(engine_root.glob("Scripts/bean-check.exe"))
-        notices = list(engine_root.glob("lib/python*/site-packages/bea_engine/NOTICE.fava"))
-        notices += list(engine_root.glob("Lib/site-packages/bea_engine/NOTICE.fava"))
-        assert notices, f"engine NOTICE.fava missing under {engine_root}"
-        assert "Fava" in notices[0].read_text(encoding="utf-8")
         # Base profile must not include optional ecosystem packages (m20 / ADR012).
         engine_python = next(engine_root.glob("bin/python"), None) or next(engine_root.glob("Scripts/python.exe"), None)
         assert engine_python is not None, f"engine python missing under {engine_root}"
@@ -462,6 +473,9 @@ def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None,
                 str(engine_python),
                 "-c",
                 "import importlib.util as u\n"
+                "import importlib.metadata as m\n"
+                "assert not any(d.metadata['Name'].lower().replace('_', '-').startswith('beancount-io') "
+                "for d in m.distributions()), 'managed environment must contain upstream packages only'\n"
                 "found = [n for n in ('beangulp', 'beanprice') if u.find_spec(n) is not None]\n"
                 "print(','.join(found))\n"
                 "raise SystemExit(1 if found else 0)\n",

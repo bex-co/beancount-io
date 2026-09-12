@@ -4,7 +4,7 @@ Monorepo for [Beancount.io](https://beancount.io/) — double-entry bookkeeping 
 
 This file holds repo-wide rules. Per-package guidance lives next to the code:
 
-- `cli/CLAUDE.md` — Python CLI (`bea` frontend + `beancount-io-engine`)
+- `cli/CLAUDE.md` — Python CLI (`bea` with a bundled subprocess helper)
 - `dashboard/CLAUDE.md` — web client
 - `mobile/CLAUDE.md` — React Native app
 - `backend-cluster/backend-v2/CLAUDE.md` — API gateway and background services
@@ -56,7 +56,7 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
 
 ### Never hand-edit a lockfile
 
-- Tracked lockfiles are `dashboard/yarn.lock`, `mobile/yarn.lock`, `backend-cluster/ledger/yarn.lock`, and `cli/uv.lock`.
+- Tracked lockfiles are `dashboard/yarn.lock`, `mobile/yarn.lock`, `backend-cluster/ledger/yarn.lock`, and `cli/uv.lock`. The CLI also tracks generated `engine-requirements.lock` and `engine-optional-*.lock` runtime dependency snapshots.
 - Lockfiles are generated — manual edits cause dependency drift.
 - If deps need updating, run the owning package's package manager from inside that package. Ask the user before adding new dependencies.
 

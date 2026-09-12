@@ -2,7 +2,7 @@
 
 Beancount.io exists because of the plain-text accounting community. This page credits the projects we build on and records how we comply with each of their licenses.
 
-This repository is [MIT licensed](./LICENSE). That license covers only the code that lives here. Every upstream project below stays under its own license, and nothing here relicenses any of them.
+Our code is [MIT licensed](./LICENSE) except where otherwise stated. The CLI ledger helper is distributed under [GPL-2.0-only](./cli/LICENSE.engine); the single CLI distribution lists its component licenses. Every upstream project below stays under its own license, and nothing here relicenses any of them.
 
 ## The Beancount ecosystem
 
@@ -18,7 +18,7 @@ This repository is [MIT licensed](./LICENSE). That license covers only the code 
 
 Martin Blais's double-entry bookkeeping language and engine is the foundation of everything here — the file format, the parser, the booking rules, and the semantics every other package in this monorepo assumes.
 
-`cli/` declares `beancount>=3.2` as a dependency and calls its public API. No Beancount source is copied, vendored, or modified in this repository, and installers get the package from PyPI under the GPL-2.0 terms Beancount ships with.
+`bea` provisions pinned upstream Beancount into a managed environment; the bundled helper calls its public API in a child process. No Beancount source is copied, vendored, or modified in this repository, and installers get the package from PyPI under the GPL-2.0 terms Beancount ships with.
 
 ### Fava
 
@@ -37,7 +37,7 @@ The BQL query engine behind `bea query`, the CLI's reports, and `fava`'s stateme
 
 ### beangulp
 
-The importer framework for pulling bank and broker exports into a ledger. The [`beancount-import` and `beancount-importer-author` skills](./skills) generate and test importers that run against the beangulp you install yourself. The skills contain instructions and reference documentation about beangulp's API, not beangulp's code.
+The importer framework for pulling bank and broker exports into a ledger. The [`beancount-import` and `beancount-importer-author` skills](./skills) generate and test importers that run against Beangulp enabled through `bea engine enable beangulp`. The skills contain instructions and reference documentation about beangulp's API, not beangulp's code.
 
 ### rustledger
 
@@ -47,8 +47,8 @@ None of it is present in this repository or in the web and mobile clients, and t
 
 ## How the licenses fit together
 
-- **The MIT boundary is this repository.** Clients, CLI, library, and skills here are MIT. Upstream projects are not.
-- **GPL dependencies are consumed, not incorporated.** Beancount, beanquery, and beangulp are unmodified upstream packages that users install from PyPI under their own terms. Nothing in this repository is a modified version of them, and no GPL source is redistributed here.
+- **Licenses follow components.** Frontend code remains MIT; the bundled CLI ledger helper is distributed under GPL-2.0-only, and Fava retains its MIT notice.
+- **Upstream packages are downloaded separately.** Beancount, beanquery, and optional beangulp come from PyPI under their own terms. The CLI wheel bundles helper source and Fava source, with their license materials; its sdist also includes the build and installation scripts.
 - **The one derivative work is labelled.** The vendored `cli/src/fava` derives from MIT-licensed Fava and carries upstream's copyright and permission notice in `cli/NOTICE.fava` and the root `LICENSE`.
 - **rustledger stays out.** No rustledger code, and no `.wasm` artifact, is included in this repository or served to browsers.
 

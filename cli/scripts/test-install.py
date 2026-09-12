@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -24,23 +23,11 @@ def main() -> None:
     scratch.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="install-", dir=scratch) as work:
         root = Path(work).resolve()
-        # Rehearse the exact companion release artifact, never rebuild the checkout.
-        engine_index = root / "engine-index"
-        engine_index.mkdir()
-        suffix = ".whl" if artifact.suffix == ".whl" else ".tar.gz"
-        candidates = list(artifact.parent.glob(f"beancount_io_engine-*{suffix}"))
-        if len(candidates) != 1:
-            raise RuntimeError(f"Expected one companion engine {suffix} beside {artifact}")
-        shutil.copy2(candidates[0], engine_index)
         env = {
             **os.environ,
             "UV_TOOL_DIR": str(root / "tools"),
             "UV_TOOL_BIN_DIR": str(root / "bin"),
-            # First-use provisioning runs `uv pip install beancount-io-engine==…`.
-            "UV_FIND_LINKS": str(engine_index),
         }
-        # smoke-installed.py inherits os.environ; keep find-links visible there too.
-        os.environ["UV_FIND_LINKS"] = str(engine_index)
         env.pop("PYTHONPATH", None)
         spec = str(artifact) + ("[ask]" if args.ask else "")
         if args.installer == "uv":

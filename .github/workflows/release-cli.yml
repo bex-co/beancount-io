@@ -88,9 +88,7 @@ jobs:
 
       - name: Build release artifacts
         run: |
-          # Locks + frontend/engine wheels and sdists. PyPI first-use provisions
-          # `beancount-io-engine` by name; Homebrew builds the helper from the
-          # sdist's engine/ tree. `make release-artifacts` also exports the locks.
+          # Build only beancount-io: helper resources and upstream locks ship inside it.
           make release-artifacts
           ls -l dist
 

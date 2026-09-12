@@ -58,8 +58,8 @@ expect_contains "the install step requires hashes" '--require-hashes'
 expect_contains "the dependency install has its own post_install hook" 'def post_install'
 expect_contains "Homebrew provisions a separate engine venv" 'libexec/"engine"'
 expect_contains "bea wrapper sets BEA_ENGINE_DIR" 'BEA_ENGINE_DIR'
-expect_contains "sdist engine tree is installed for the helper build" 'project.install "pyproject.toml", "README.md", "LICENSE", "NOTICE.fava", "requirements.lock", "engine-requirements.lock", "engine-optional-beangulp.lock", "engine-optional-beanprice.lock", "src", "engine"'
-expect_contains "engine install uses the sdist engine project" 'libexec/"project/engine"'
+expect_contains "sdist engine tree is installed for the helper build" 'project.install "pyproject.toml", "README.md", "LICENSE", "NOTICE.fava", "requirements.lock", "engine-requirements.lock", "engine-optional-beangulp.lock", "engine-optional-beanprice.lock", "src", "LICENSE.engine"'
+expect_contains "helper resources ship with bea" '"LICENSE.engine"'
 
 # Homebrew rewrites the dylib ID of every Mach-O file in the keg *before* it
 # runs post_install, and it cannot lengthen the install name inside a prebuilt

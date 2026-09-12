@@ -28,7 +28,7 @@ SOURCE_ROOT = CLI_ROOT / "src"
 def fake_venv(root: Path) -> Path:
     (root / "bin").mkdir(parents=True, exist_ok=True)
     (root / "bin" / "python").write_text("")
-    (root / "lib" / "python3.12" / "site-packages" / "bea_engine").mkdir(parents=True, exist_ok=True)
+    (root / "lib" / "python3.12" / "site-packages" / "beanquery").mkdir(parents=True, exist_ok=True)
     return root
 
 
@@ -44,11 +44,10 @@ class TestOptionalManifest:
         assert optional["beanprice"]["license"] == "GPL-2.0-only"
 
     def test_engine_extras_are_declared_and_frontend_does_not_depend_on_them(self) -> None:
-        engine = tomllib.loads((CLI_ROOT / "engine" / "pyproject.toml").read_text())
         frontend = tomllib.loads((CLI_ROOT / "pyproject.toml").read_text())
-        extras = engine["project"]["optional-dependencies"]
-        assert "beangulp==0.2.0" in extras["beangulp"]
-        assert "beanprice==2.1.0" in extras["beanprice"]
+        extras = paths.manifest()["optional"]
+        assert "beangulp==0.2.0" in extras["beangulp"]["requirements"]
+        assert "beanprice==2.1.0" in extras["beanprice"]["requirements"]
         frontend_deps = " ".join(frontend["project"]["dependencies"])
         assert "beangulp" not in frontend_deps
         assert "beanprice" not in frontend_deps

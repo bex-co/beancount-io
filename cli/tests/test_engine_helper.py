@@ -357,8 +357,7 @@ class TestVersion:
     def test_the_frontend_manifest_engine_and_helper_agree_on_one_version(self) -> None:
         """Four places name this version and none of them can read the others.
 
-        The manifest ships with the frontend, `engine/pyproject.toml` builds the
-        distribution, and `bea_engine.FALLBACK_VERSION` answers in a checkout
+        The manifest ships with the frontend, and `bea_engine.FALLBACK_VERSION` answers in a checkout
         that has no installed metadata to read. Drift would mean provisioning an
         environment that reports a different version than the one requested.
         """
@@ -369,71 +368,19 @@ class TestVersion:
             sys.path.remove(str(SOURCE_ROOT))
 
         assert engine_version() == FALLBACK_VERSION
-        assert engine_version() == project_version(CLI_ROOT / "engine" / "pyproject.toml")
         assert engine_version() == project_version(CLI_ROOT / "pyproject.toml")
 
 
 class TestDistribution:
-    def test_the_engine_project_ships_fava_and_the_helper_but_not_the_frontend(self) -> None:
-        """The engine distribution is the one that holds Beancount-loading code."""
-        engine = tomllib.loads((CLI_ROOT / "engine" / "pyproject.toml").read_text())
-        packaged = engine["tool"]["hatch"]["build"]["targets"]["wheel"]["packages"]
+    def test_runtime_requirements_exclude_ai_sdks(self) -> None:
+        manifest = json.loads((SOURCE_ROOT / "cli/engine/manifest.json").read_text())
+        required = " ".join(manifest["requirements"])
+        assert "beancount" in required and "beanquery" in required
+        assert "openai" not in required and "pydantic-ai" not in required
+        assert "helper" not in manifest
 
-        assert packaged == ["src/bea_engine", "src/fava"]
-        assert "src/cli" not in packaged
-
-    def test_the_engine_declares_beancount_and_no_ai_sdk(self) -> None:
-        """ADR014 t022: ledger execution and AI SDKs stay on opposite sides."""
-        engine = tomllib.loads((CLI_ROOT / "engine" / "pyproject.toml").read_text())
-        required = " ".join(engine["project"]["dependencies"])
-
-        assert "beancount" in required
-        assert "beanquery" in required
-        assert "openai" not in required
-        assert "pydantic-ai" not in required
-
-    def test_the_engine_carries_favas_notice_verbatim(self) -> None:
-        """Its wheel ships Fava's code, so it ships Fava's notice (ADR014 licensing boundary)."""
-        assert (CLI_ROOT / "engine" / "NOTICE.fava").read_text() == (CLI_ROOT / "NOTICE.fava").read_text()
-
-    def test_built_engine_wheel_embeds_notice_fava(self, tmp_path: Path) -> None:
-        """t023: NOTICE.fava is inside the engine wheel customers receive."""
-        import zipfile
-
-        dist = tmp_path / "dist"
-        dist.mkdir()
-        completed = subprocess.run(
-            [sys.executable, "-m", "build", "--wheel", "--outdir", str(dist)],
-            cwd=CLI_ROOT / "engine",
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if completed.returncode != 0:
-            # `build` may be absent in the frontend env; hatchling is enough.
-            completed = subprocess.run(
-                ["uv", "build", "--wheel", "--out-dir", str(dist)],
-                cwd=CLI_ROOT / "engine",
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-        assert completed.returncode == 0, completed.stdout + completed.stderr
-        wheels = list(dist.glob("beancount_io_engine-*.whl"))
-        assert len(wheels) == 1, list(dist.iterdir())
-        with zipfile.ZipFile(wheels[0]) as archive:
-            names = archive.namelist()
-            assert any(name.endswith("bea_engine/NOTICE.fava") for name in names), names
-            assert any(name.startswith("bea_engine/") for name in names)
-            assert any(name.startswith("fava/") for name in names)
-            assert not any(name.startswith("cli/") for name in names)
-            license_name = next(name for name in names if name.endswith("/licenses/LICENSE"))
-            assert "GNU GENERAL PUBLIC LICENSE" in archive.read(license_name).decode()
-            notice = next(name for name in names if name.endswith("bea_engine/NOTICE.fava"))
-            assert archive.read(notice).decode() == (CLI_ROOT / "NOTICE.fava").read_text()
-
-    def test_built_frontend_wheel_excludes_engine_and_fava(self, tmp_path: Path) -> None:
-        """t023: customer frontend wheel must not embed bea_engine or fava.
+    def test_single_wheel_bundles_helper_resources_without_frontend_imports(self, tmp_path: Path) -> None:
+        """The single wheel carries helper sources as data, outside the default import path.
 
         Build the same way release CI does (`uv build` → sdist → wheel). A
         wheel-only build from the checkout can hide an sdist that lost `src/`.
@@ -459,8 +406,8 @@ class TestDistribution:
         with tarfile.open(sdists[0]) as archive:
             names = archive.getnames()
             assert any(name.endswith("/src/cli/main.py") for name in names), names[:20]
-            assert any("/engine/src/bea_engine/" in name for name in names)
-            assert any("/engine/src/fava/" in name for name in names)
+            assert any("/src/bea_engine/" in name for name in names)
+            assert any("/src/fava/" in name for name in names)
             assert not any("/tmp/" in name for name in names)
         wheels = list(dist.glob("beancount_io-*.whl"))
         assert len(wheels) == 1, list(dist.iterdir())
@@ -469,6 +416,10 @@ class TestDistribution:
             assert any(name.startswith("cli/") for name in names)
             license_name = next(name for name in names if name.endswith("/licenses/LICENSE"))
             assert "Permission is hereby granted" in archive.read(license_name).decode()
+            assert "cli/_runtime/bea_engine/main.py" in names
+            assert "cli/_runtime/fava/helpers.py" in names
+            assert archive.read("cli/_runtime/NOTICE.fava").decode() == (CLI_ROOT / "NOTICE.fava").read_text()
+            assert "GNU GENERAL PUBLIC LICENSE" in archive.read("cli/_runtime/LICENSE.engine").decode()
             assert "cli/engine-requirements.lock" in names
             assert "cli/engine-optional-beangulp.lock" in names
             assert "cli/engine-optional-beanprice.lock" in names

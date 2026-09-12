@@ -32,7 +32,7 @@ Resolving the engine, in order:
 3. A checkout's `cli/src`, run with this interpreter. Still a separate process,
    and the only concession to the transition: it lets a developer exercise the
    boundary without provisioning, and it is unavailable from an installed
-   wheel, which ships no `bea_engine` (`paths.checkout_source_root`).
+   wheel, whose helper resources are nested under `cli/_runtime`.
 4. Provisioning a new engine.
 
 `native_command` resolves upstream executables in that same order, so a
@@ -119,7 +119,7 @@ def run_optional_script(feature: str, script: Path, args: Sequence[str]) -> int:
     if not script.is_file():
         raise UsageError(f"Ingest script not found: {script}")
     python = engine_python()
-    env = _checkout_env()
+    env = _helper_env()
     return _spawn([str(python), str(script), *args], env)
 
 
@@ -252,21 +252,20 @@ def helper_command() -> tuple[list[str], dict[str, str] | None]:
     whether or not the environment's `bin/` is on `PATH`, and it is the only
     form a checkout can offer.
     """
-    return _module_command(engine_python()), _checkout_env()
+    return _module_command(engine_python()), _helper_env()
 
 
 def _module_command(python: Path) -> list[str]:
     return [str(python), "-m", "bea_engine"]
 
 
-def _checkout_env(source_root: Path | None = None) -> dict[str, str] | None:
-    """Put a checkout's `cli/src` first on `PYTHONPATH`, or leave the env alone.
+def _helper_env(source_root: Path | None = None) -> dict[str, str] | None:
+    """Expose bundled helper sources only to child interpreters.
 
-    Needed both for the no-venv transition path and when a provisioned
-    interpreter still has an older `bea_engine` installed: the child must load
-    the helper under edit, not whatever was last pip-installed into the venv.
+    Checkouts use src; installed releases use cli/_runtime. Neither adds the
+    frontend site-packages (or its AI SDKs) to the managed interpreter's path.
     """
-    root = source_root if source_root is not None else paths.checkout_source_root()
+    root = source_root if source_root is not None else paths.helper_source_root()
     if root is None:
         return None
     inherited = os.environ.get("PYTHONPATH", "")

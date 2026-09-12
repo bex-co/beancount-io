@@ -23,7 +23,7 @@ help:
 	@echo "  make release-check    - Validate the release tag against pyproject.toml"
 	@echo "  make release-lock     - Export hash-pinned frontend + engine (+ optional) locks"
 	@echo "  make engine-optional-locks - Export hash-pinned Beangulp/Beanprice engine feature locks"
-	@echo "  make release-artifacts - Build frontend + engine wheels/sdists into dist/"
+	@echo "  make release-artifacts - Build beancount-io wheel/sdist into dist/"
 	@echo "  make docs             - Regenerate docs/REFERENCE.md from the command tree"
 	@echo "  make docs-check       - Fail if docs/REFERENCE.md drifted from the command tree"
 	@echo "  make check-all        - Run lint + format-check + typecheck + test + spec-check + docs-check"
@@ -88,27 +88,16 @@ release-lock:
 	uv export --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o requirements.lock
 	$(MAKE) engine-release-lock
 
-# Hash-pinned engine graph for PyPI first-use provisioning and Homebrew's
-# install-time engine venv. Generated from `engine/` so the frontend never
-# resolves Beancount at install time once the frontend deps drop it.
+# Export the upstream runtime graphs from the manifest; no second Python project.
 engine-release-lock:
-	cd engine && uv export --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o ../engine-requirements.lock
-	$(MAKE) engine-optional-locks
+	uv run python scripts/export-runtime-locks.py
 
-# Hash-pinned optional engine features (Beangulp / Beanprice). Generated from
-# `engine/` extras so `bea engine enable` can `--require-hashes` without putting
-# those packages on the frontend or the base engine profile.
-engine-optional-locks:
-	cd engine && uv export --extra beangulp --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o ../engine-optional-beangulp.lock
-	cd engine && uv export --extra beanprice --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o ../engine-optional-beanprice.lock
+engine-optional-locks: engine-release-lock
 
-# Build frontend + engine artifacts into dist/ (release CI publishes both).
-# The engine wheel is what a PyPI-installed frontend provisions by name;
-# Homebrew builds the helper from the sdist's `engine/` tree instead.
+# Only beancount-io is built and published.
 release-artifacts: release-lock
 	rm -rf dist
 	mkdir -p dist
-	cd engine && uv build --out-dir ../dist
 	uv build --out-dir dist
 	rm -f dist/.gitignore
 	ls -l dist

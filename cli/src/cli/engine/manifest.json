@@ -5,23 +5,40 @@
   "comment": "The engine combination the frontend provisions, and ADR014's reviewed baseline. `engine_version` also names the managed environment's directory, so bumping it provisions a fresh venv instead of mutating the one in use. When `engine-requirements.lock` ships beside the frontend (release sdists / Homebrew), provisioning installs with --require-hashes. Optional Beangulp/Beanprice features are never in the base profile; `bea engine enable` installs them from the matching optional lock or version pin.",
   "requirements": [
     "beancount==3.2.3",
-    "beanquery==0.2.0"
+    "beanquery==0.2.0",
+    "typer>=0.12",
+    "pydantic>=2.0",
+    "python-dateutil>=2.9.0",
+    "ply>=3.11",
+    "pyexcel>=0.7.3",
+    "prompt-toolkit>=3.0",
+    "python-frontmatter>=1.1",
+    "attrs>=23"
   ],
-  "helper": "beancount-io-engine==0.2.0",
   "lockfile": "engine-requirements.lock",
   "optional": {
     "beangulp": {
-      "requirements": ["beangulp==0.2.0"],
+      "requirements": [
+        "beangulp==0.2.0"
+      ],
       "lockfile": "engine-optional-beangulp.lock",
-      "packages": ["beangulp"],
+      "packages": [
+        "beangulp"
+      ],
       "license": "GPL-2.0-only",
       "notes": "Needs the system libmagic library (python-magic). CSV import via --csv does not need this feature."
     },
     "beanprice": {
-      "requirements": ["beanprice==2.1.0"],
+      "requirements": [
+        "beanprice==2.1.0"
+      ],
       "lockfile": "engine-optional-beanprice.lock",
-      "packages": ["beanprice"],
-      "executables": ["bean-price"],
+      "packages": [
+        "beanprice"
+      ],
+      "executables": [
+        "bean-price"
+      ],
       "license": "GPL-2.0-only",
       "notes": "Quote fetching only; bea add price still records a supplied quote without this feature."
     }

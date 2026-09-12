@@ -23,8 +23,8 @@ rolled back automatically.
 
 ## Prepare and tag
 
-After choosing the release version, update the frontend and engine `pyproject.toml` versions,
-`src/cli/engine/manifest.json` (engine version and helper requirement), and
+After choosing the release version, update `pyproject.toml`,
+`src/cli/engine/manifest.json` (runtime version), and
 `src/bea_engine/__init__.py` (`FALLBACK_VERSION`). Regenerate locks with
 `uv lock` and `make release-lock`. From `cli/`, validate and test the installation:
 
@@ -55,8 +55,7 @@ git push origin "cli-v${release_version}"
 
 Configure these once outside the repository:
 
-- **PyPI trusted publishing:** register **both** projects `beancount-io` and
-  `beancount-io-engine` with owner
+- **PyPI trusted publishing:** register project `beancount-io` with owner
   `bex-co`, repository `beancount-io`, workflow `release-cli.yml`, and
   environment `production`. Configure TestPyPI likewise for rehearsals;
   publishing uses no stored PyPI API token.
@@ -75,8 +74,7 @@ Publishing page (the project need not exist yet):
 - PyPI: https://pypi.org/manage/account/publishing/
 - TestPyPI: https://test.pypi.org/manage/account/publishing/
 
-Create a publisher for **each** project name, `beancount-io` and
-`beancount-io-engine`, with owner `bex-co`, repository `beancount-io`,
+Use project name `beancount-io`, with owner `bex-co`, repository `beancount-io`,
 workflow filename `release-cli.yml`, and environment `production` on both.
 See [PyPI's pending-publisher guide](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/).
 A successful upload creates the project. A missing publisher fails the upload;
@@ -97,15 +95,17 @@ published release; publish fixes under a new version.
 
 ## 0.2.0 migration
 
-Install `bea` once; the matching GPL engine is provisioned separately and automatically.
+Install `bea` once. Its helper sources ship in the same package; upstream
+Beancount/Beanquery dependencies are provisioned automatically into a separate environment.
 `bea format FILE` now prints formatted text; use `--in-place` to rewrite the file.
 `bea query` accepts BQL on stdin, and `--source URI` exposes native Beanquery
 sources and streaming output. Use local `--file` mode for bea's JSON envelope,
 strict validation, exact filename handling and result precision fixes.
 
-Both distributions include their full license text. The engine includes the
-Fava copyright and MIT permission notice. Publish the engine sdist beside its
-wheel: it contains the helper and vendored Fava source and build configuration.
-The frontend sdist also contains the engine tree and release/install scripts.
-Upstream Beancount and Beanquery artifacts are downloaded directly from PyPI
-using the release locks; they are not embedded binaries in either bea wheel.
+Only `beancount-io` is built and uploaded. Its wheel and sdist include the MIT
+license, the bundled helper's GPL license (`LICENSE.engine`), and Fava's full
+MIT notice. The sdist contains all helper/Fava sources and build/install scripts.
+Upstream Beancount and Beanquery are downloaded directly from PyPI using the
+tracked, generated runtime locks; their binaries are not embedded in the wheel.
+The frontend code retains MIT licensing; bundled components retain their own
+licenses. The distribution metadata lists both license families.

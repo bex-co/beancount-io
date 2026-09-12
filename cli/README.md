@@ -150,8 +150,9 @@ make check-all
 ```
 
 Python 3.12+, Typer, and Pydantic for the `beancount-io` frontend. The frontend
-never loads Beancount, Beanquery, or Fava; those live in the separate
-`beancount-io-engine` package (retain `NOTICE.fava` attribution with Fava).
+never loads Beancount, Beanquery, or Fava. The single `beancount-io` wheel
+bundles helper/Fava sources as resources; a child process runs them with
+automatically managed upstream dependencies. Retain `NOTICE.fava` and `LICENSE.engine`.
 `src/cli/` holds command UX; `src/bea_engine/` and `src/fava/` are engine-side;
 `tests/` the pytest suite; `docs/` the guides above; `openapi/v1.json` the
 pinned contract for hosted commands. `make check-all` is the handoff gate:
@@ -171,6 +172,7 @@ holds the tagging procedure and one-time credentials setup.
 
 ## License
 
-[MIT](https://github.com/bex-co/beancount-io/blob/main/LICENSE) © Beancount.io.
+Frontend: [MIT](https://github.com/bex-co/beancount-io/blob/main/LICENSE) © Beancount.io.
+Bundled ledger helper: [GPL-2.0-only](LICENSE.engine); vendored Fava retains its [MIT notice](NOTICE.fava).
 Vendored Fava attribution is preserved in
 [NOTICE.fava](https://github.com/bex-co/beancount-io/blob/main/cli/NOTICE.fava).

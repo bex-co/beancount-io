@@ -5,10 +5,10 @@
 #
 # The formula installs two environments (ADR014):
 # - `libexec/venv` — the MIT frontend (`bea`) and its non-engine deps
-# - `libexec/engine` — the Beancount/Beanquery helper (`bea-engine`) and natives
+# - `libexec/engine` — the upstream Beancount/Beanquery dependencies and native programs
 #
 # Frontend deps come from `requirements.lock`. Engine deps come from
-# `engine-requirements.lock` plus the `engine/` project shipped in the sdist.
+# `engine-requirements.lock`. Helper sources are already inside the bea wheel.
 # Both locks are hash-pinned exports of the resolutions CI tested.
 set -euo pipefail
 
@@ -51,7 +51,7 @@ class Bea < Formula
 
   def install
     project = libexec/"project"
-    project.install "pyproject.toml", "README.md", "LICENSE", "NOTICE.fava", "requirements.lock", "engine-requirements.lock", "engine-optional-beangulp.lock", "engine-optional-beanprice.lock", "src", "engine"
+    project.install "pyproject.toml", "README.md", "LICENSE", "NOTICE.fava", "requirements.lock", "engine-requirements.lock", "engine-optional-beangulp.lock", "engine-optional-beanprice.lock", "src", "LICENSE.engine"
     (project/"scripts").install "scripts/build_hook.py"
 
     uv = Formula["uv"].opt_bin/"uv"
@@ -85,15 +85,11 @@ class Bea < Formula
            "--python", libexec/"venv/bin/python",
            "--require-hashes", "--only-binary", ":all:", "--requirement", libexec/"project/requirements.lock"
     # Separate engine environment (ADR014): relocatable so console-script
-    # shebangs survive any keg move; hash-pinned upstream packages; helper
-    # from the sdist's engine/ project with --no-deps.
+    # shebangs survive any keg move; only hash-pinned upstream packages go here.
     system uv, "venv", "--relocatable", "--python", Formula["python@3.12"].opt_bin/"python3.12", libexec/"engine"
     system uv, "pip", "install",
            "--python", libexec/"engine/bin/python",
            "--require-hashes", "--only-binary", ":all:", "--requirement", libexec/"project/engine-requirements.lock"
-    system uv, "pip", "install",
-           "--python", libexec/"engine/bin/python",
-           "--no-deps", libexec/"project/engine"
   end
 
   test do

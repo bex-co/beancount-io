@@ -18,3 +18,7 @@ class CustomBuildHook(BuildHookInterface):
             if not source.is_file():
                 raise FileNotFoundError(f"Missing release lock {name}; run 'make release-lock' before building.")
             build_data["force_include"][str(source)] = f"cli/{name}"
+        for package in ("bea_engine", "fava"):
+            build_data["force_include"][str(root / "src" / package)] = f"cli/_runtime/{package}"
+        build_data["force_include"][str(root / "NOTICE.fava")] = "cli/_runtime/NOTICE.fava"
+        build_data["force_include"][str(root / "LICENSE.engine")] = "cli/_runtime/LICENSE.engine"

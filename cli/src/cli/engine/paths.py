@@ -101,17 +101,15 @@ def bin_dir_for(python: Path) -> Path:
 def is_provisioned(root: Path) -> bool:
     """Whether `root` holds a usable engine.
 
-    The interpreter has to be there and `bea_engine` has to be importable by it;
-    a venv whose install died halfway has the first and not the second, and
-    treating that as ready would fail later with a confusing traceback instead
-    of provisioning again here.
+    The interpreter and upstream query package must be present. Helper sources
+    belong to the beancount-io installation, not this dependency environment.
     """
     python = venv_python(root)
     if not python.exists():
         return False
     if sys.platform == "win32":
-        return (root / "Lib" / "site-packages" / "bea_engine").is_dir()
-    return any(path.is_dir() for path in root.glob("lib/python*/site-packages/bea_engine"))
+        return (root / "Lib" / "site-packages" / "beanquery").is_dir()
+    return any(path.is_dir() for path in root.glob("lib/python*/site-packages/beanquery"))
 
 
 def checkout_source_root() -> Path | None:
@@ -123,27 +121,22 @@ def checkout_source_root() -> Path | None:
     `bea_engine`, so it answers the same way whether or not the frontend was
     installed editable.
 
-    The engine project alongside the sources is what tells a checkout from an
-    installed wheel: only a checkout has `cli/engine/pyproject.toml` next to
-    `cli/src/bea_engine`. The frontend wheel ships neither, so an installed
-    frontend always provisions its own engine environment.
+    Only a checkout has the source tree and the project pyproject.toml together.
+    Installed helper resources are nested under cli/_runtime instead.
     """
-    if (_IMPORT_ROOT / "bea_engine" / "main.py").is_file() and (
-        _IMPORT_ROOT.parent / "engine" / "pyproject.toml"
-    ).is_file():
+    if (_IMPORT_ROOT / "bea_engine" / "main.py").is_file() and (_IMPORT_ROOT.parent / "pyproject.toml").is_file():
         return _IMPORT_ROOT
     return None
 
 
-def checkout_engine_project() -> Path | None:
-    """The `cli/engine` project directory when running from a checkout, else None.
-
-    Provisioning installs this instead of the manifest's `helper` requirement
-    when it is present, so a checkout provisions the code in front of it rather
-    than a published release.
-    """
-    source_root = checkout_source_root()
-    if source_root is None:
-        return None
-    project = source_root.parent / "engine"
-    return project if (project / "pyproject.toml").is_file() else None
+def helper_source_root() -> Path:
+    """Sources shipped with this release, exposed only to the child interpreter."""
+    checkout = checkout_source_root()
+    if checkout is not None:
+        return checkout
+    bundled = Path(__file__).resolve().parents[1] / "_runtime"
+    if not (bundled / "bea_engine" / "main.py").is_file():
+        raise BeaError(
+            "The installed beancount-io package is missing its bundled ledger helper. Reinstall beancount-io."
+        )
+    return bundled

@@ -3,6 +3,5 @@
 Nothing here imports `beancount`, `beanquery` or `fava`, and nothing here ever
 will — that is the point of the package. It resolves an engine interpreter
 (`paths`), installs one on first use (`provision`), and runs engine programs as
-child processes (`launch`). The engine's own code lives in `bea_engine` and the
-`beancount-io-engine` distribution under `cli/engine/`.
+child processes (`launch`). The helper code is bundled as resources in the same beancount-io wheel.
 """

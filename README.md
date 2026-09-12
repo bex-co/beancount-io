@@ -229,7 +229,7 @@ If Beancount.io is the kind of open, programmable finance software you want to s
 
 ## Acknowledgements
 
-Beancount.io stands on [Beancount](https://github.com/beancount/beancount) and [Fava](https://github.com/beancount/fava) — the vendored `fava` package inside `cli/src/fava` ships in the `beancount-io-engine` distribution (not the customer frontend), and the rest of the plain-text accounting stack ([beanquery](https://github.com/beancount/beanquery), [beangulp](https://github.com/beancount/beangulp), [rustledger](https://github.com/rustledger/rustledger)) is used as unmodified upstream dependencies. Full credits and how we comply with each upstream license: [ACKNOWLEDGEMENTS.md](./ACKNOWLEDGEMENTS.md).
+Beancount.io stands on [Beancount](https://github.com/beancount/beancount) and [Fava](https://github.com/beancount/fava) — the vendored `fava` package inside `cli/src/fava` ships as bundled subprocess resources in the single `beancount-io` distribution, and the rest of the plain-text accounting stack ([beanquery](https://github.com/beancount/beanquery), [beangulp](https://github.com/beancount/beangulp), [rustledger](https://github.com/rustledger/rustledger)) is used as unmodified upstream dependencies. Full credits and how we comply with each upstream license: [ACKNOWLEDGEMENTS.md](./ACKNOWLEDGEMENTS.md).
 
 ## License
 
