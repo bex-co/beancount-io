@@ -57,16 +57,12 @@ producer is an upstream `@rustledger/wasm` defect with no released fix (re-check
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
 - [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
-- [120](./120.md) — Accounts loses search and type selection on browser Back
-- [131](./131.md) — Journal loses the current page after an account drill-down
 - [137](./137.md) — Transaction Share link closes its menu without opening the iOS share sheet
 - [143](./143.md) — Chart contact leaves the ledger drawer unresponsive
 - [152](./152.md) — Missing public profiles become internal server errors
 - [154](./154.md) — Reveal the selected account when the native picker opens
 - [156](./156.md) — Keep the last-posting automatic-balance toggle available when off
 - [157](./157.md) — Unsupported BQL integer results are reported as a temporary outage
-- [160](./160.md) — Holdings loses the selected grouping after an account drill-down
 - [162](./162.md) — Make native wheel selection emphasis follow the option Confirm will save
-- [164](./164.md) — Public ledger collection loses search, sorting and expansion on Back
 - [168](./168.md) — Open the receipt photo picker without requiring broad library access
 - [175](./175.md) — Keep zero-balance accounts inside their actual parent branches
