@@ -10,7 +10,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { assembleMcpRegistry } from "../composition-root";
 import { MCP_PROMPTS } from "@/features/ai-agent/api/mcp-prompts";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
-import { isMcpHandshakeRequest } from "../rate-limit";
+import { isMcpHandshakeRequest } from "@/features/ai-agent/api/mcp-rate-policy";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "../identity";

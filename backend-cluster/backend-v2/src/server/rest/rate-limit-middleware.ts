@@ -2,8 +2,7 @@ import Router, { RouterContext } from "@koa/router";
 import {
   consumeAnonymous,
   enforceRateLimit,
-  isMcpHandshakeRequest,
-  MCP_TRANSPORT_OP_ID,
+  rateLimitOpIdFor,
 } from "@/server/api/rate-limit";
 import { RateLimitedError } from "@/shared/errors";
 import { identityFromState } from "./identity-middleware";
@@ -28,16 +27,15 @@ export function restRateLimitMiddleware(): Router.Middleware {
     const opId = matchedOpId(ctx);
 
     if (identity && opId) {
-      // MCP's handshake is not the caller's work (w2/m28). `initialize`,
-      // its acknowledgement, the capability lists, and `ping` are what the
-      // protocol requires before a session can do anything, and a session
-      // that had already spent part of its budget connecting was the
-      // difference between "55 calls" and a 429 mid-conversation.
-      if (
-        !(opId === MCP_TRANSPORT_OP_ID && isMcpHandshakeRequest(ctx.request.body))
-      ) {
-        await enforceRateLimit({ opId, identity, ip: clientIp(ctx) });
-      }
+      // A mount may say which op this particular request spends — MCP's
+      // handshake moves to its own cheap bucket rather than the session's
+      // budget (w2/014). The policy can redirect the charge, never waive it,
+      // so every request still costs something here.
+      await enforceRateLimit({
+        opId: rateLimitOpIdFor(opId, ctx.request.body),
+        identity,
+        ip: clientIp(ctx),
+      });
     } else {
       const decision = await consumeAnonymous({
         path: ctx.path,

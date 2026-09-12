@@ -12,8 +12,11 @@ import {
   consume,
   consumeAnonymous,
   enforceRateLimit,
-  isMcpHandshakeRequest,
+  MCP_HANDSHAKE_OP_ID,
   MCP_TRANSPORT_OP_ID,
+  clearRouteRateLimitPolicies,
+  rateLimitOpIdFor,
+  setRouteRateLimitPolicy,
 } from "../rate-limit";
 import { RateLimitedError } from "@/shared/errors";
 import type { Identity } from "../identity";
@@ -59,9 +62,12 @@ describe("budgets", () => {
   it("prefers a per-op override to the class budget", () => {
     const opId = "GQL Mutation.generateTempAssetUploadUrl";
     expect(budgetFor(opId, classifyOp(opId))).toEqual(OP_BUDGETS[opId]);
-    expect(budgetFor("GQL Mutation.somethingElse", classifyOp("GQL Mutation.somethingElse"))).toEqual(
-      CLASS_BUDGETS.write,
-    );
+    expect(
+      budgetFor(
+        "GQL Mutation.somethingElse",
+        classifyOp("GQL Mutation.somethingElse"),
+      ),
+    ).toEqual(CLASS_BUDGETS.write);
   });
 
   it("preserves admin budgets for API-key list and revoke on every surface", () => {
@@ -76,9 +82,7 @@ describe("budgets", () => {
     for (const opId of operations) {
       const classification = classifyOp(opId);
       expect(classification.class).toBe("admin");
-      expect(budgetFor(opId, classification)).toEqual(
-        CLASS_BUDGETS.admin,
-      );
+      expect(budgetFor(opId, classification)).toEqual(CLASS_BUDGETS.admin);
     }
   });
 
@@ -99,9 +103,7 @@ describe("budgets", () => {
     ]) {
       const classification = classifyOp(opId);
       expect(classification.class).toBe("admin");
-      expect(budgetFor(opId, classification)).toEqual(
-        CLASS_BUDGETS.admin,
-      );
+      expect(budgetFor(opId, classification)).toEqual(CLASS_BUDGETS.admin);
     }
   });
 
@@ -154,9 +156,7 @@ describe("budgets", () => {
       "GQL Mutation.starLedger",
       "GQL Mutation.unstarLedger",
     ]) {
-      expect(budgetFor(opId, classifyOp(opId))).toEqual(
-        CLASS_BUDGETS.write,
-      );
+      expect(budgetFor(opId, classifyOp(opId))).toEqual(CLASS_BUDGETS.write);
     }
   });
 
@@ -173,9 +173,9 @@ describe("budgets", () => {
         max: 30,
       });
     }
-    expect(budgetFor("GQL Query.listLedgers", classifyOp("GQL Query.listLedgers"))).toEqual(
-      CLASS_BUDGETS.read,
-    );
+    expect(
+      budgetFor("GQL Query.listLedgers", classifyOp("GQL Query.listLedgers")),
+    ).toEqual(CLASS_BUDGETS.read);
   });
 
   it("keeps the anonymous intakes on separate budgets", () => {
@@ -201,6 +201,9 @@ describe("budgets", () => {
  * transport op was unclassified — so it fell to the write-class default and a
  * 55-call session of mostly reads hit 429 mid-conversation, throwing the SDK
  * client out of the session.
+ *
+ * The JSON-RPC half of this moved to the mount that speaks it (w2/014); what
+ * stays here is the budgets, which are this module's business.
  */
 describe("the MCP transport", () => {
   it("gets a read-class budget rather than the write-class default", () => {
@@ -210,45 +213,47 @@ describe("the MCP transport", () => {
     );
   });
 
-  it.each([
-    "initialize",
-    "notifications/initialized",
-    "tools/list",
-    "resources/templates/list",
-    "ping",
-  ])("treats %s as handshake traffic", (method) => {
-    expect(isMcpHandshakeRequest({ jsonrpc: "2.0", method, id: 1 })).toBe(true);
+  it("gives the handshake its own bucket — generous, but not free", () => {
+    // The exemption it replaces was total, so unlimited `{"method":"ping"}`
+    // posts cost a credential nothing at the one limiter that is meant to be
+    // unbypassable (w2/014).
+    const handshake = OP_BUDGETS[MCP_HANDSHAKE_OP_ID];
+    expect(handshake).toBeDefined();
+    expect(handshake.max).toBeGreaterThan(OP_BUDGETS[MCP_TRANSPORT_OP_ID].max);
+    expect(Number.isFinite(handshake.max)).toBe(true);
+  });
+});
+
+/**
+ * w2/014 — a mount decides which op its request spends; the limiter only
+ * looks the answer up.
+ */
+describe("route rate-limit policies", () => {
+  afterEach(() => clearRouteRateLimitPolicies());
+
+  it("charges a request under its own op when no mount registered one", () => {
+    expect(rateLimitOpIdFor("REST POST /whatever", { method: "ping" })).toBe(
+      "REST POST /whatever",
+    );
   });
 
-  it.each(["tools/call", "resources/read", "resources/list"])(
-    "charges %s, which is work rather than handshake",
-    (method) => {
-      expect(isMcpHandshakeRequest({ jsonrpc: "2.0", method, id: 1 })).toBe(
-        false,
-      );
-    },
-  );
-
-  it("exempts a batch only when every message in it is handshake", () => {
-    expect(
-      isMcpHandshakeRequest([
-        { method: "initialize" },
-        { method: "tools/list" },
-      ]),
-    ).toBe(true);
-    // A real call must not ride along inside a batch for free.
-    expect(
-      isMcpHandshakeRequest([
-        { method: "initialize" },
-        { method: "tools/call" },
-      ]),
-    ).toBe(false);
+  it("lets the mount redirect the charge to another op", () => {
+    setRouteRateLimitPolicy("REST POST /mount", (body) =>
+      (body as { method?: string })?.method === "ping"
+        ? "REST POST /mount#cheap"
+        : "REST POST /mount",
+    );
+    expect(rateLimitOpIdFor("REST POST /mount", { method: "ping" })).toBe(
+      "REST POST /mount#cheap",
+    );
+    expect(rateLimitOpIdFor("REST POST /mount", { method: "work" })).toBe(
+      "REST POST /mount",
+    );
   });
 
-  it("charges anything it cannot read as handshake", () => {
-    expect(isMcpHandshakeRequest(undefined)).toBe(false);
-    expect(isMcpHandshakeRequest([])).toBe(false);
-    expect(isMcpHandshakeRequest("not json-rpc")).toBe(false);
+  it("only applies a policy to the mount that registered it", () => {
+    setRouteRateLimitPolicy("REST POST /mount", () => "REST POST /free");
+    expect(rateLimitOpIdFor("REST POST /other", {})).toBe("REST POST /other");
   });
 });
 

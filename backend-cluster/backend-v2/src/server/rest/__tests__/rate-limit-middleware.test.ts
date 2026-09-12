@@ -5,7 +5,14 @@ jest.mock("@/foundation/redis/redis-counter", () => ({
 
 import type { RouterContext } from "@koa/router";
 import { restRateLimitMiddleware } from "../rate-limit-middleware";
-import { MCP_TRANSPORT_OP_ID, OP_BUDGETS } from "@/server/api/rate-limit";
+import {
+  MCP_HANDSHAKE_OP_ID,
+  MCP_TRANSPORT_OP_ID,
+  OP_BUDGETS,
+  clearRouteRateLimitPolicies,
+  setRouteRateLimitPolicy,
+} from "@/server/api/rate-limit";
+import { mcpRateLimitPolicy } from "@/features/ai-agent/api/mcp-rate-policy";
 import { RateLimitedError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 
@@ -37,17 +44,35 @@ function mcpContext(body: unknown): RouterContext {
 beforeEach(() => {
   counter.mockReset();
   counter.mockResolvedValue({ count: 1, resetInMs: 60_000 });
+  // Installed by mounting the route in production (w2/014); the middleware
+  // itself knows nothing about MCP.
+  setRouteRateLimitPolicy(MCP_TRANSPORT_OP_ID, mcpRateLimitPolicy);
 });
 
+afterEach(() => clearRouteRateLimitPolicies());
+
 describe("the MCP transport budget", () => {
-  it("does not charge a handshake message", async () => {
+  it("charges a handshake message to the handshake bucket, not the session's", async () => {
+    // Not free — a total exemption let unlimited `{"method":"ping"}` posts
+    // cost a credential nothing (w2/014) — but spent somewhere that cannot
+    // eat the session's allowance.
     const next = jest.fn(async () => {});
     await restRateLimitMiddleware()(
       mcpContext({ jsonrpc: "2.0", method: "initialize", id: 1 }),
       next,
     );
-    expect(counter).not.toHaveBeenCalled();
+    expect(counter).toHaveBeenCalledTimes(1);
+    expect(counter.mock.calls[0][0]).toContain(MCP_HANDSHAKE_OP_ID);
     expect(next).toHaveBeenCalled();
+  });
+
+  it("knows nothing about MCP without the mount's policy", async () => {
+    clearRouteRateLimitPolicies();
+    await restRateLimitMiddleware()(
+      mcpContext({ jsonrpc: "2.0", method: "initialize", id: 1 }),
+      async () => {},
+    );
+    expect(counter.mock.calls[0][0]).toContain(MCP_TRANSPORT_OP_ID);
   });
 
   it("charges a tool call", async () => {
@@ -69,10 +94,12 @@ describe("the MCP transport budget", () => {
 
     const middleware = restRateLimitMiddleware();
     // One handshake, then 200 reads — the shape of the session that 429'd.
+    // The handshake spends its own bucket, so it does not count here.
     await middleware(
       mcpContext({ jsonrpc: "2.0", method: "initialize", id: 0 }),
       async () => {},
     );
+    charged = 0;
     for (let call = 0; call < 200; call += 1) {
       await expect(
         middleware(

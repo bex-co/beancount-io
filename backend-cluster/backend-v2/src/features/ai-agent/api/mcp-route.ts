@@ -8,6 +8,9 @@ import type { AppConfig } from "@/config/config";
 import { OAUTH_CONFIG } from "@/features/oauth/data/config";
 import type { McpRequestContext } from "./mcp-context";
 import { resolveIdentity } from "@/server/api/identity";
+import { setRouteRateLimitPolicy } from "@/server/api/rate-limit";
+import { requestOpId } from "@/server/api/rest-op-id";
+import { mcpRateLimitPolicy } from "./mcp-rate-policy";
 
 const mcpLogger = logger.child({ module: "mcp-handler" });
 
@@ -149,6 +152,9 @@ async function handleMcpRequest(
   }
 }
 
+/** The one spelling of this endpoint's path; everything else derives from it. */
+export const MCP_ENDPOINT_PATH = "/api-gateway/mcp";
+
 export function setMcpRoute(
   router: Router,
   layers: AppLayers,
@@ -157,7 +163,16 @@ export function setMcpRoute(
 ): void {
   const handler: Router.Middleware = (ctx) =>
     handleMcpRequest(ctx, layers, config, buildMcpServer);
-  router.post("/api-gateway/mcp", handler);
-  router.get("/api-gateway/mcp", handler);
-  router.delete("/api-gateway/mcp", handler);
+  router.post(MCP_ENDPOINT_PATH, handler);
+  router.get(MCP_ENDPOINT_PATH, handler);
+  router.delete(MCP_ENDPOINT_PATH, handler);
+
+  // How this mount wants its POSTs charged (w2/014). Registered from the same
+  // path the route just mounted, and through the same `requestOpId` the
+  // limiter uses to identify it, so the two cannot drift — renaming the route
+  // moves the policy with it instead of silently re-charging the handshake.
+  setRouteRateLimitPolicy(
+    requestOpId(["POST"], MCP_ENDPOINT_PATH, "POST"),
+    mcpRateLimitPolicy,
+  );
 }

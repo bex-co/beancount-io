@@ -43,56 +43,54 @@ const ARCHIVE_VERBS = new Set([
 const ARCHIVE_DOWNLOAD_BUCKET = "REST archive-download";
 
 /**
- * The MCP endpoint's transport op id (w2/m28).
+ * The MCP endpoint's transport op id, and the op its handshake spends instead.
  *
- * Lives here rather than being spelled at each use so the budget below, the
- * handshake exemption, and the middleware that consults them cannot disagree
- * about which mount they mean.
+ * Budget keys, so they live here with the budgets — but a hand-copied route
+ * string is exactly what w2/014 called out, so `setMcpRoute` derives the op id
+ * from the path it actually mounts and `mcp-rate-policy.test.ts` fails if the
+ * two ever disagree.
  */
 export const MCP_TRANSPORT_OP_ID = "REST POST /api-gateway/mcp";
+export const MCP_HANDSHAKE_OP_ID = "REST POST /api-gateway/mcp#handshake";
 
 /**
- * JSON-RPC methods that are handshake traffic, not work.
+ * A mount's say in how its requests are charged (w2/014).
  *
- * A client must `initialize`, acknowledge, and list what is available before
- * it can call anything — that is protocol overhead the caller did not choose,
- * and charging a session's budget for it means a client that merely connects
- * has already spent part of its allowance. Everything these methods can lead
- * to is metered where it happens: `tools/call` and `resources/read` each
- * charge their own op. `resources/list` is deliberately absent — it enumerates
- * ledgers and source files, which is real work, and its list callbacks charge
- * the matching resource op.
+ * The limiter's job is "look up the op, charge the budget". Deciding that
+ * *this* POST is protocol ceremony rather than work needs to understand the
+ * body, and only the mount does — the limiter previously knew that one route
+ * string was MCP, that MCP bodies are JSON-RPC, and which methods are
+ * handshake. The next transport with a handshake would have added a second
+ * `if`, and renaming the route would have silently re-charged the handshake
+ * with no test failing.
+ *
+ * So a mount registers a policy against the same op id it mounts under, and
+ * returns the op whose budget this request should spend. Returning a different
+ * op is the only power on offer: a policy cannot exempt a request, because a
+ * total bypass at the one limiter meant to be unbypassable is how unlimited
+ * `{"method":"ping"}` posts came to cost a credential nothing.
  */
-const MCP_HANDSHAKE_METHODS: ReadonlySet<string> = new Set([
-  "initialize",
-  "notifications/initialized",
-  "tools/list",
-  "resources/templates/list",
-  // Prompt discovery is the same shape as `tools/list`: a static enumeration
-  // that reaches no service (w2/008). `prompts/get` is deliberately absent —
-  // it is the caller choosing to do something, even if the something it
-  // returns is text.
-  "prompts/list",
-  "ping",
-]);
+export type RouteRateLimitPolicy = (body: unknown) => string;
 
-/**
- * Whether this MCP request is handshake traffic only.
- *
- * A JSON-RPC batch is exempt only when *every* member is a handshake method,
- * so a real call cannot ride along inside one free of charge.
- */
-export function isMcpHandshakeRequest(body: unknown): boolean {
-  const messages = Array.isArray(body) ? body : [body];
-  if (messages.length === 0) return false;
-  return messages.every(
-    (message) =>
-      typeof message === "object" &&
-      message !== null &&
-      MCP_HANDSHAKE_METHODS.has(
-        (message as { method?: unknown }).method as string,
-      ),
-  );
+const ROUTE_POLICIES = new Map<string, RouteRateLimitPolicy>();
+
+/** Register a mount's charging policy. Registering twice replaces. */
+export function setRouteRateLimitPolicy(
+  opId: string,
+  policy: RouteRateLimitPolicy,
+): void {
+  ROUTE_POLICIES.set(opId, policy);
+}
+
+/** The op a request should be charged under — its own, unless a mount says otherwise. */
+export function rateLimitOpIdFor(opId: string, body: unknown): string {
+  const policy = ROUTE_POLICIES.get(opId);
+  return policy ? policy(body) : opId;
+}
+
+/** Test seam: forget every registered policy. */
+export function clearRouteRateLimitPolicies(): void {
+  ROUTE_POLICIES.clear();
 }
 
 /**
@@ -130,6 +128,11 @@ export const OP_BUDGETS: Record<string, Budget> = {
   // (w2/m28). The work each call actually performs is metered a level in, by
   // the per-tool and per-resource budgets `gateMcpCall` charges.
   [MCP_TRANSPORT_OP_ID]: { windowMs: MINUTE, max: 300 },
+  // Protocol ceremony a client must perform before it can do anything, so it
+  // is not the caller's work and should not eat the session's allowance
+  // (w2/m28). But it is not free either: a generous separate bucket still
+  // bounds a client that only ever posts `{"method":"ping"}` (w2/014).
+  [MCP_HANDSHAKE_OP_ID]: { windowMs: MINUTE, max: 1200 },
   "GQL Mutation.generateTempAssetUploadUrl": { windowMs: MINUTE, max: 10 },
   "GQL Query.getUserByExactMatch": { windowMs: MINUTE, max: 20 },
   // Minting a durable credential is rare by nature, and a flood of attempts is
