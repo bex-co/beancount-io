@@ -4,9 +4,9 @@
 
 ## Milestones
 
-Next: **m22** — published CLI QA fixes. Milestones m18–m21 remain completed history; m22 addresses the reproduced ADR014 follow-up gaps.
+Milestones m18–m22 are complete. m22 fixed the published CLI QA gaps with green cross-platform CI; no pending ADR014 follow-up milestones remain in this queue.
 
-- [ ] **m22** — [Fix published CLI exports, native help, and shell output reset](./m22/README.md) (7 tasks) ← published 0.2.0 QA, 2026-09-12; user routed to w1
+- [x] **m22** — [Fix published CLI exports, native help, and shell output reset](./done/m22/README.md) (7 tasks) ← published 0.2.0 QA, 2026-09-12; user routed to w1
 
 - [x] **m19** — [Independent Beancount engine and complete bea command parity](./done/m19/README.md) (23 tasks) ← ADR014 replan, 2026-09-11; license resolution, complete engine separation, and installed-artifact proof
 - [x] **m20** — [Optional accounting tools in the independent engine](./done/m20/README.md) (8 tasks) ← ADR014 replan, 2026-09-11; after m19; optional tools stay in the engine

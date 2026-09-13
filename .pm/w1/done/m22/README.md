@@ -1,6 +1,6 @@
 # w1 · m22 — Fix published CLI exports, native help, and shell output reset
 
-**Worker:** worker1 **Goal:** customers can export trustworthy query results and discover/use native commands through one beancount-io installation **Status:** todo (t001–t005 done; awaiting CI and closeout)
+**Worker:** worker1 **Goal:** customers can export trustworthy query results and discover/use native commands through one beancount-io installation **Status:** done
 
 ## Tasks (in order)
 
@@ -11,18 +11,18 @@
 | t003 | Repair interactive output reset inherited from Beanquery — **DONE** | 45m | — |
 | t004 | Verify adoption surfaces for query output and native help — **DONE** | 20m | t001, t002, t003 |
 | t005 | Simplify the CLI parity fixes — **DONE** | 20m | t004 |
-| t006 | Add regression coverage and verify CI plus installed artifacts | 50m | t004, t005 |
-| t007 | Close out the ADR014 QA fixes | 15m | t001, t002, t003, t004, t005, t006 |
+| t006 | Add regression coverage and verify CI plus installed artifacts — **DONE** | 50m | t004, t005 |
+| t007 | Close out the ADR014 QA fixes — **DONE** | 15m | t001, t002, t003, t004, t005, t006 |
 
 240 minutes total, including three independent implementation tasks and adoption, simplification, regression/CI and closeout work. Start with t001: silent stale exports have the highest impact.
 
 ## Definition of done
 
-- [ ] JSON query `-o FILE` writes the requested standard envelope instead of silently leaving a missing/stale file; numberification is honored; failures preserve existing output.
-- [ ] Native help exposes supported arguments/options for affected doctor operations, example, treeify, price and ingest while retaining useful bea-specific guidance.
-- [ ] Interactive redirect → query → reset → query succeeds without traceback or closed-stream errors; the inherited Beanquery failure is actually repaired.
-- [ ] Meaningful regressions, `make check-all`, affected CI and installed wheel/sdist checks pass; eleven doctor controls and the full-year daily report remain correct.
-- [ ] The frontend stays isolated; customers install only beancount-io. Original ledgers/user history remain untouched and docs match tested behavior.
+- [x] JSON query `-o FILE` writes the requested standard envelope instead of silently leaving a missing/stale file; numberification is honored; failures preserve existing output.
+- [x] Native help exposes supported arguments/options for affected doctor operations, example, treeify, price and ingest while retaining useful bea-specific guidance.
+- [x] Interactive redirect → query → reset → query succeeds without traceback or closed-stream errors; the inherited Beanquery failure is actually repaired.
+- [x] Meaningful regressions, `make check-all`, affected CI and installed wheel/sdist checks pass; eleven doctor controls and the full-year daily report remain correct.
+- [x] The frontend stays isolated; customers install only beancount-io. Original ledgers/user history remain untouched and docs match tested behavior.
 
 ## Source + Goal linkage
 
@@ -57,6 +57,14 @@ Searched open/done board entries for query output, numberify, native help and do
 
 The `.csv` suffix candidate is excluded: native Beanquery showed the same behavior. Daily report truncation is also excluded: the two-transaction control now returns 365 periods and 300 USD. Do not add independent engine packaging, redesign the shell, or claim live cloud/AI/quote-service coverage. An upstream fix may be integrated, or the broken handler minimally adapted inside the existing helper; opening an upstream issue alone does not close t003. No external message or new release is authorized by this board-only request.
 
-## Validation in progress
+## Local verification
 
-Local `make check-all` passed 648 tests plus lint/types/spec/docs gates. Installed wheel on Python 3.12 and pip-installed sdist on Python 3.14 each passed 80 smoke commands. A separate installed-wheel audit matched all eleven doctor stdout/exit-code controls and retained the 365-period/300-USD report, with the original ledger unchanged. All three simplify reviews completed. CI evidence will be added before t006/t007 close.
+Local `make check-all` passed 648 tests plus lint/types/spec/docs gates. Installed wheel on Python 3.12 and pip-installed sdist on Python 3.14 each passed 80 smoke commands. A separate installed-wheel audit matched all eleven doctor stdout/exit-code controls and retained the 365-period/300-USD report, with the original ledger unchanged. All three simplify reviews completed. CI and installed-artifact evidence are recorded below.
+
+## Final verification
+
+Implementation: b75b1b671bd225adef3f53cb2f77f61ac23422ab (`fix(cli): honor JSON exports and restore native CLI usability`). [CI (cli)](https://github.com/bex-co/beancount-io/actions/runs/34730363219) completed successfully: all 15 jobs, including wheel/sdist installs on Linux/macOS/Windows with Python 3.12/3.14 and Homebrew on Linux/macOS. [Secret scan](https://github.com/bex-co/beancount-io/actions/runs/34730363090) passed.
+
+Local full gate: 648 tests passed, plus lint, Vulture, formatting, mypy, spec and generated-documentation checks. Sixteen focused regression cases cover exports, ignored options, help, and a real PTY redirect/reset/requery/failure-recovery sequence. Wheel/Python 3.12 and sdist/pip/Python 3.14 each passed the expanded 80-command installed smoke. Separate installed-wheel checks matched all eleven doctor controls, preserved 365 daily report periods and 300 USD, and passed the full shell session plus .exit/EOF with no traceback. Original ledger hashes matched. Guidance compatibility validation passed; root package descriptions required no changes.
+
+QA artifacts remain local under cli/tmp/m22/: check-all.log, wheel.log, sdist.log, audit-results.json and results/pty-*.json. Upstream's current shell still contains the broken reset handler; a narrow engine-side override carries its removal condition. No new dependency or separate distribution was introduced. The milestone ships on main; these changes are not a new PyPI version.
