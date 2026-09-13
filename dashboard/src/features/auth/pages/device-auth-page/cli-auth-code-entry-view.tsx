@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Terminal } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
@@ -17,8 +17,30 @@ interface CliAuthCodeEntryViewProps {
   onSubmit: (userCode: string) => void;
 }
 
-/** A code we could have issued: eight characters, hyphen and case optional. */
-const USER_CODE_PATTERN = /^[A-Z0-9]{8}$/;
+/** A code we could have issued is eight characters; hyphen and case optional. */
+const USER_CODE_LENGTH = 8;
+
+/** A whole code inside pasted text, such as "Your code: cbtw-74v6". */
+const USER_CODE_IN_TEXT =
+  /(?:^|[^A-Z0-9])([A-Z0-9]{4})-?([A-Z0-9]{4})(?![A-Z0-9])/;
+
+function normalizeUserCode(value: string): string {
+  return value
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, USER_CODE_LENGTH);
+}
+
+function formatUserCode(code: string): string {
+  return code.length > 4 ? `${code.slice(0, 4)}-${code.slice(4)}` : code;
+}
+
+function isEditable(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable || target.matches("input, textarea, select"))
+  );
+}
 
 /**
  * The first half of the ceremony: the person types the code their own terminal
@@ -30,25 +52,99 @@ const USER_CODE_PATTERN = /^[A-Z0-9]{8}$/;
  */
 export function CliAuthCodeEntryView({ onSubmit }: CliAuthCodeEntryViewProps) {
   const { t } = useTranslations();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [userCode, setUserCode] = useState("");
   const [error, setError] = useState("");
 
+  // Every edit lands here, so a completed code continues on its own however it
+  // arrived: typed, pasted, or entered while the field was not focused.
+  const updateUserCode = (value: string) => {
+    const next = normalizeUserCode(value);
+    setUserCode(next);
+    setError("");
+    if (next.length === USER_CODE_LENGTH) {
+      onSubmit(formatUserCode(next));
+    }
+  };
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    const normalized = userCode.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-    if (!USER_CODE_PATTERN.test(normalized)) {
+    if (userCode.length !== USER_CODE_LENGTH) {
       setError(t("auth.cliAuthCodeInvalid"));
       return;
     }
 
-    setError("");
-    onSubmit(`${normalized.slice(0, 4)}-${normalized.slice(4)}`);
+    onSubmit(formatUserCode(userCode));
   };
+
+  // The page has one job, so keystrokes and pastes anywhere on it go to the
+  // code field, and a pasted whole code replaces whatever was typed so far.
+  const handleDocumentKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    if (
+      event.defaultPrevented ||
+      event.isComposing ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.altKey ||
+      isEditable(event.target)
+    ) {
+      return;
+    }
+
+    if (/^[a-z0-9]$/i.test(event.key)) {
+      event.preventDefault();
+      inputRef.current?.focus();
+      updateUserCode(userCode + event.key);
+    } else if (event.key === "Backspace") {
+      event.preventDefault();
+      inputRef.current?.focus();
+      updateUserCode(userCode.slice(0, -1));
+    }
+  });
+
+  const handleDocumentPaste = useEffectEvent((event: ClipboardEvent) => {
+    const input = inputRef.current;
+    if (
+      event.defaultPrevented ||
+      (event.target !== input && isEditable(event.target))
+    ) {
+      return;
+    }
+
+    const text = event.clipboardData?.getData("text") ?? "";
+    const wholeCode = USER_CODE_IN_TEXT.exec(text.toUpperCase());
+    if (wholeCode) {
+      event.preventDefault();
+      input?.focus();
+      updateUserCode(wholeCode[1] + wholeCode[2]);
+      return;
+    }
+
+    // A fragment pasted into the field goes in at the caret like any paste.
+    if (event.target === input) return;
+
+    const fragment = normalizeUserCode(text);
+    if (!fragment) return;
+
+    event.preventDefault();
+    input?.focus();
+    updateUserCode(userCode + fragment);
+  });
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleDocumentKeyDown);
+    document.addEventListener("paste", handleDocumentPaste);
+
+    return () => {
+      document.removeEventListener("keydown", handleDocumentKeyDown);
+      document.removeEventListener("paste", handleDocumentPaste);
+    };
+  }, []);
 
   return (
     <DeviceAuthCard error={error}>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
             <Terminal className="w-8 h-8 text-primary" />
@@ -67,15 +163,15 @@ export function CliAuthCodeEntryView({ onSubmit }: CliAuthCodeEntryViewProps) {
             {t("auth.cliAuthCodeLabel")}
           </Label>
           <Input
+            ref={inputRef}
             id="cli-auth-user-code"
-            value={userCode}
-            onChange={(event) => setUserCode(event.target.value)}
+            value={formatUserCode(userCode)}
+            onChange={(event) => updateUserCode(event.target.value)}
             placeholder="XXXX-XXXX"
             autoComplete="off"
             autoCapitalize="characters"
             autoFocus
             spellCheck={false}
-            maxLength={9}
             className="text-center text-lg tracking-[0.3em] font-mono uppercase"
           />
         </CardContent>
