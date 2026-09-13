@@ -29,6 +29,7 @@ from cli.commands.treeify import treeify
 from cli.commands.upgrade import current_channel, upgrade
 from cli.completion import install as install_completion_callback
 from cli.completion import show as show_completion_callback
+from cli.native_help import native_help
 
 
 class _GuardedGroup(TyperGroup):
@@ -207,17 +208,21 @@ _CLOUD_PANEL = "Cloud commands (beancount.io — need 'bea cloud login' or BEA_T
 _SELF_PANEL = "CLI maintenance"
 
 _CHECK_CTX = {"allow_extra_args": True, "ignore_unknown_options": True}
-app.command("check", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX)(check)
+app.command("check", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX, epilog=native_help("check"))(check)
 app.command("balance", rich_help_panel=_LOCAL_PANEL)(balance)
 app.command("init", rich_help_panel=_LOCAL_PANEL)(init)
 app.command("import", rich_help_panel=_LOCAL_PANEL)(import_entries)
 app.add_typer(ingest_app, name="ingest", rich_help_panel=_LOCAL_PANEL)
 app.command("format", rich_help_panel=_LOCAL_PANEL)(format_beans)
 app.command("query", rich_help_panel=_LOCAL_PANEL)(query)
-app.command("price", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX)(price)
+app.command("price", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX, epilog=native_help("price"))(price)
 app.command("ask", rich_help_panel=_LOCAL_PANEL)(ask)
-app.command("example", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX)(example)
-app.command("treeify", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX)(treeify)
+app.command("example", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX, epilog=native_help("example"))(
+    example
+)
+app.command("treeify", rich_help_panel=_LOCAL_PANEL, context_settings=_CHECK_CTX, epilog=native_help("treeify"))(
+    treeify
+)
 
 app.add_typer(add_app, name="add", rich_help_panel=_LOCAL_PANEL)
 app.add_typer(list_app, name="list", rich_help_panel=_LOCAL_PANEL)

@@ -16,6 +16,7 @@ result rendering and no `BQLShell` subclass here any more.
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -104,6 +105,7 @@ def query(
         output.emit(
             {"columns": data.get("columns", []), "rows": data.get("rows", [])},
             target=output.file_target(file),
+            destination=Path(output_file) if output_file is not None else None,
         )
         return
     text = str(data.get("text", ""))

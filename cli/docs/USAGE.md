@@ -231,6 +231,19 @@ it recognises and leaves the rest alone. Run `bea check` to validate.
 In `--json` mode the destination has to be explicit, because stdout carries the
 envelope and nothing else: pass `-i`, `-o FILE`, `--check` or `--dry-run`.
 
+`bea --json query "SELECT account, sum(position) GROUP BY account" -o result.json`
+writes the standard JSON envelope to the file with no duplicate stdout output.
+`-o -` keeps stdout; `--numberify` splits inventories into decimal currency columns
+in JSON as well as text. JSON exports replace the destination only after a successful
+query; a failed query or write preserves an existing export.
+
+Native forwarding commands include their pinned upstream usage/options in
+`--help`, even offline and before optional engine features are enabled. The
+native `FILENAME` in check help is supplied by global `bea --file`.
+
+In the interactive query shell, `.output FILE` redirects results and `.output`
+restores the original output stream. A failed redirection leaves that stream usable.
+
 Query tables preserve the precision of result values, including calculated
 amounts and commodity quantities. Interactive queries and the `ask` BQL tool
 use the same precision policy; cents are never discarded because most entries

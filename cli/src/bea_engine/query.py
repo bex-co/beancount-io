@@ -54,7 +54,9 @@ def connect(file: Path) -> Any:
     return beanquery.connect(LEDGER_DSN, **load(file))
 
 
-def rows_answer(file: Path, query_string: str, *, allow_errors: bool = False) -> dict[str, Any]:
+def rows_answer(
+    file: Path, query_string: str, *, allow_errors: bool = False, numberify: bool = False
+) -> dict[str, Any]:
     """Columns, rows and load errors for one query, as JSON the frontend renders.
 
     The rows are JSON-ready: amounts as strings, a lot keeping the acquisition
@@ -64,8 +66,13 @@ def rows_answer(file: Path, query_string: str, *, allow_errors: bool = False) ->
     errors = _gate([format_error(error) for error in conn.errors], allow_errors)
     cursor = _executed(conn, query_string, conn.execute, errors)
     rows = cursor.fetchall() if cursor.description is not None else []
+    description = cursor.description
+    if numberify and description is not None:
+        from beanquery.numberify import numberify_results
+
+        description, rows = numberify_results(description, rows, result_context(rows).build())
     return {
-        "columns": columns(cursor.description),
+        "columns": columns(description),
         "rows": [[protocol._jsonable(value) for value in row] for row in rows],
         "errors": errors,
     }
@@ -157,6 +164,18 @@ def build_shell(
     from beanquery.shell import FORMATS, BQLShell
 
     class PreciseShell(BQLShell):  # type: ignore[misc]  # beanquery does not ship type annotations
+        outfile: TextIO
+
+        def do_output(self, arg: str) -> None:
+            """Send output to FILE or restore the original output stream."""
+            # Beanquery 0.2.0 calls open(sys.stdout) on reset and closes the old
+            # stream before opening its replacement. Remove this override when
+            # upstream supports reset and failed redirection without losing output.
+            destination = open(arg, "w", encoding="utf-8") if arg else stream
+            if self.outfile is not stream:
+                self.outfile.close()
+            self.outfile = destination
+
         def do_reload(self, arg: Any = None) -> None:
             """Reload the Beancount input file."""
             # Upstream attaches by DSN and therefore inherits its urlparse()

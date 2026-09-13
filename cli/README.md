@@ -108,6 +108,8 @@ Global options come **before the command**; `--file` selects the root ledger:
 ```bash
 bea --file main.bean check
 bea --json list transaction --limit 100
+bea --json query "SELECT account, sum(position) GROUP BY account" -o balances.json
+bea doctor region --help
 ```
 
 Every flag, default, and help string is listed in the generated

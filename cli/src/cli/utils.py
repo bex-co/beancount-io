@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import os
 import re
+import tempfile
 from datetime import date as Date
+from pathlib import Path
 from typing import Any
 
 import typer
@@ -42,3 +45,23 @@ def parse_opt_date(date_str: str | None) -> Date | None:
     if date_str is None:
         return None
     return parse_date(date_str)
+
+
+def atomic_write(path: Path, content: str) -> None:
+    """Replace `path` with `content` without a half-written file."""
+    try:
+        mode = path.stat().st_mode
+    except FileNotFoundError:
+        mode = None
+    if mode is not None and not mode & 0o222:
+        raise PermissionError(f"Output file is read-only: {path}")
+    fd, name = tempfile.mkstemp(prefix=".bea-", suffix=".tmp", dir=path.parent)
+    candidate = Path(name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(candidate, path)
+    finally:
+        candidate.unlink(missing_ok=True)

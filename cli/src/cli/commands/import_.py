@@ -9,8 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
-import tempfile
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
@@ -20,6 +18,7 @@ import typer
 from cli import context, output
 from cli.config import config_dir
 from cli.errors import BeaError, UsageError
+from cli.utils import atomic_write
 
 
 class Duplicates(StrEnum):
@@ -88,25 +87,11 @@ def _inferred_mapping(source: Path, *, explicit: bool, notes: list[str]) -> str 
     return inferred.spec
 
 
-def _atomic_write(path: Path, content: str) -> None:
-    """Replace `path` with `content` without a half-written file."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, name = tempfile.mkstemp(prefix=".bea-", suffix=".tmp", dir=path.parent)
-    candidate = Path(name)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as stream:
-            stream.write(content)
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.replace(candidate, path)
-    finally:
-        candidate.unlink(missing_ok=True)
-
-
 def _remember_config(file: Path, config: Path) -> None:
     record = _config_record(file)
     try:
-        _atomic_write(record, json.dumps({"config": str(config)}))
+        record.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write(record, json.dumps({"config": str(config)}))
     except OSError as exc:
         output.note(f"Could not remember the importer path: {exc}. Pass --config on the next import.")
 
@@ -178,7 +163,8 @@ def _remember_csv(file: Path, source: Path, spec: dict[str, Any]) -> None:
             )
         ]
         payload = json.dumps({"sources": [*sources, {"headers": headers, **spec}]})
-        _atomic_write(record, payload)
+        record.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write(record, payload)
     except OSError as exc:
         output.note(f"Could not remember the column mapping: {exc}. Pass --csv on the next import.")
 

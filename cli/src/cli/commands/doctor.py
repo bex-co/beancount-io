@@ -5,6 +5,7 @@ from __future__ import annotations
 import typer
 
 from cli.engine import launch
+from cli.native_help import native_help
 
 doctor_app = typer.Typer(
     name="doctor",
@@ -37,7 +38,12 @@ def _forward(op: str, ctx: typer.Context) -> None:
 def _register(op: str) -> None:
     help_text = f"Run bean-doctor {op}."
 
-    @doctor_app.command(op, help=help_text, context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
+    @doctor_app.command(
+        op,
+        help=help_text,
+        epilog=native_help(f"doctor {op}"),
+        context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+    )
     def _cmd(ctx: typer.Context) -> None:
         _forward(op, ctx)
 
@@ -46,7 +52,11 @@ for _op in _OPS:
     _register(_op)
 
 
-@doctor_app.command("dump-lexer", context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
+@doctor_app.command(
+    "dump-lexer",
+    epilog=native_help("doctor dump-lexer"),
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
 def dump_lexer(ctx: typer.Context) -> None:
     """Alias for bean-doctor lex."""
     _forward("lex", ctx)

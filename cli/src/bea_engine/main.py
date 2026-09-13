@@ -80,7 +80,7 @@ def query(
 
         resolved = _ledger(file)
         if format == "json":
-            answer.data = bql.rows_answer(resolved, query_string, allow_errors=allow_errors)
+            answer.data = bql.rows_answer(resolved, query_string, allow_errors=allow_errors, numberify=numberify)
         else:
             answer.data = bql.text_answer(
                 resolved,

@@ -42,6 +42,13 @@ continue to use the bundled helper; optional AI dependencies stay frontend-only.
 - Product policy remains: do not separately audit upstream transitive dependency license combinations.
 - Verify native operations, existing bea features, offline reuse, optional enablement, and frontend isolation through installed wheel/sdist and Homebrew tests on supported platforms.
 
+## QA corrections after 0.2.0
+
+- JSON query output destinations receive the standard envelope atomically; numberification also applies to JSON.
+- Native pass-through help includes a generated copy of the pinned upstream interface, available without provisioning. Regenerate with `cli/scripts/gen_native_help.py --python <managed-engine-python>` after changing upstream pins and enabling both optional features.
+- The bundled query shell narrowly corrects Beanquery 0.2.0's output reset handler: `.output` restores the original stream and a failed redirection preserves it. Remove the override when upstream supplies equivalent behavior.
+- Installed wheel/sdist smokes cover these resources and behaviors; PTY regressions cover redirect/reset/requery. This retains one published distribution.
+
 ## Individual command inventory
 
 ### Doctor operations

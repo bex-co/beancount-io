@@ -30,6 +30,25 @@ Parse, check and realize a beancount ledger.
 Usage: bea check [OPTIONS]
 ```
 
+```text
+Native interface: FILENAME comes from bea --file; use global --json for bea's JSON envelope.
+
+Usage: bean-check [OPTIONS] FILENAME
+
+  Parse, check and realize a beancount ledger.
+
+  This also measures the time it takes to run all these steps.
+
+Options:
+  -v, --verbose          Print timings.
+  -C, --no-cache         Disable the cache.
+  --cache-filename PATH  Override the cache filename.
+  -a, --auto             Implicitly enable auto-plugins.
+  --json                 Output errors as JSON.
+  --version              Show the version and exit.
+  --help                 Show this message and exit.
+```
+
 ### `bea balance`
 
 Balances for matching accounts.
@@ -144,6 +163,68 @@ Fetch prices via bean-price (requires 'bea engine enable beanprice').
 Usage: bea price [OPTIONS]
 ```
 
+```text
+Native interface (arguments/options are forwarded by bea):
+
+usage: bean-price [-h] [-e] [-v] [-d DATE] [--update]
+                  [--update-rate {daily,weekday,weekly}]
+                  [--update-compress UPDATE_COMPRESS] [-i] [-u] [-c] [-a] [-s]
+                  [-w WORKERS] [-n] [--cache CACHE_FILENAME] [--no-cache]
+                  [--clear-cache]
+                  sources [sources ...]
+
+Fetch prices from the internet and output them as Beancount price directives.
+
+positional arguments:
+  sources               A list of filenames (or source "module/symbol", if -e
+                        is specified) from which to create a list of jobs.
+
+options:
+  -h, --help            show this help message and exit
+  -e, --expressions, --expression
+                        Interpret the arguments as "module/symbol" source
+                        strings.
+  -v, --verbose         Print out progress log. Specify twice for debugging
+                        info.
+  -d DATE, --date DATE  Specify the date for which to fetch the prices.
+  --update              Fetch prices from most recent price for each source up
+                        to present day or specified --date. See also --update-
+                        rate, --update-compress options.
+  --update-rate {daily,weekday,weekly}
+                        Specify how often dates are fetched. Options are
+                        daily, weekday, or weekly (fridays)
+  --update-compress UPDATE_COMPRESS
+                        Specify the number of inactive days to ignore. This
+                        option ignored if --inactive used.
+  -i, --inactive        Select all commodities from input files, not just the
+                        ones active on the date
+  -u, --undeclared      Include commodities viewed in the file even without a
+                        corresponding Commodity directive, from this default
+                        source. The currency name itself is used as the lookup
+                        symbol in this default source.
+  -c, --clobber         Do not skip prices which are already present in input
+                        files; fetch them anyway.
+  -a, --all             A shorthand for --inactive, --undeclared, --clobber.
+  -s, --swap-inverted   For inverted sources, swap currencies instead of
+                        inverting the rate. For example, if fetching the rate
+                        for CAD from 'USD:google/^CURRENCY:USDCAD' results in
+                        1.25, by default we would output "price CAD 0.8000
+                        USD". Using this option we would instead output "
+                        price USD 1.2500 CAD".
+  -w WORKERS, --workers WORKERS
+                        Specify the number of concurrent fetchers.
+  -n, --dry-run         Don't actually fetch the prices, just print the list
+                        of the ones to be fetched.
+
+cache:
+  --cache CACHE_FILENAME
+                        The base filename for the underlying price cache
+                        database. An extension may be added to the filename
+                        and more than one file may be created.
+  --no-cache            Disable the price cache.
+  --clear-cache         Clear the cache prior to startup.
+```
+
 ### `bea ask`
 
 Ask about a local ledger via hosted AI.
@@ -169,12 +250,75 @@ Generate an example Beancount history (delegates to bean-example).
 Usage: bea example [OPTIONS]
 ```
 
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-example [OPTIONS]
+
+  Generate a decently-sized example history, based on some rules.
+
+  This script is used to generate some meaningful input to Beancount, input
+  that looks as realistic as possible for a moderately complex mock
+  individual. This can also be used as an input generator for a stress test
+  for performance evaluation.
+
+Options:
+  --date-begin DATE      Beginning date.
+  --date-end DATE        End date.
+  --date-birth DATE      Fictional date of birth.
+  -s, --seed INTEGER     Random seed.
+  --no-reformat          Do not reformat the output.
+  -o, --output FILENAME  Output filename.
+  -v, --verbose BOOLEAN  Produce logging output.
+  --version              Show the version and exit.
+  --help                 Show this message and exit.
+```
+
 ### `bea treeify`
 
 Render a hierarchical column as an ASCII tree (delegates to treeify).
 
 ```text
 Usage: bea treeify [OPTIONS]
+```
+
+```text
+Native interface (arguments/options are forwarded by bea):
+
+usage: treeify [-h] [-o OUTPUT] [-r PATTERN] [-d DELIMITER] [-s SPLIT] [-F]
+               [-A] [--filler FILLER]
+               [input]
+
+Identify a column of text that contains hierarchical id and treeify that
+column. This script will inspect a text file and attempt to find a vertically
+left-aligned column of text that contains identifiers with multiple
+components, such as "Assets:US:Bank:Checking", and replace those by a tree-
+like structure rendered in ASCII, inserting new empty lines where necessary to
+create the tree. Note: If your paths have spaces in them, this will not work.
+Space is used as a delimiter to detect the end of a column. You can customize
+the delimiter with an option.
+
+positional arguments:
+  input                 Name of the file to process (default: stdin)
+
+options:
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        Name of the file to write (default: stdout)
+  -r PATTERN, --pattern PATTERN
+                        Pattern for repeatable components (default: "(Assets|L
+                        iabilities|Equity|Income|Expenses)(:[A-Z0-9][A-Za-z0-
+                        9-_']*)*")
+  -d DELIMITER, --delimiter DELIMITER
+                        Delimiter pattern to detect the end of a column text.
+                        If your pattens contain strings, you may want to set
+                        this to a longer string, like ' {2,}' (default: "[
+                        ]+")
+  -s SPLIT, --split SPLIT
+                        Pattern splitting into components (default: ":")
+  -F, --filenames       Use pattern and split suitable for filenames
+  -A, --loose-accounts  Use pattern and split suitable for loose account names
+  --filler FILLER       Filler string for new lines inserted for formatting
 ```
 
 ### `bea ingest identify`
@@ -189,6 +333,23 @@ Usage: bea ingest identify [OPTIONS]
 | --- | --- | --- | --- |
 | `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger or cwd) |
 
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: ingest.py identify [OPTIONS] [SRC]...
+
+  Identify files for import.
+
+  Walk the SRC list of files or directories and report each file identified by
+  one of the configured importers.  When verbose output is requested, also
+  print the account name associated to the document by the importer.
+
+Options:
+  -x, --failfast  Stop processing at the first error.
+  -v, --verbose   Show account information.
+  --help          Show this message and exit.
+```
+
 ### `bea ingest extract`
 
 Extract raw entries from documents (Beangulp extract; not bea import --apply).
@@ -201,6 +362,27 @@ Usage: bea ingest extract [OPTIONS]
 | --- | --- | --- | --- |
 | `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger or cwd) |
 
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: ingest.py extract [OPTIONS] [SRC]...
+
+  Extract transactions from documents.
+
+  Walk the SRC list of files or directories and extract the ledger entries
+  from each file identified by one of the configured importers.  The entries
+  are written to the specified output file or to the standard output in
+  Beancount ledger format in sections associated to the source document.
+
+Options:
+  -o, --output FILENAME  Output file.
+  -e, --existing PATH    Existing Beancount ledger for de-duplication.
+  -r, --reverse          Sort entries in reverse order.
+  -x, --failfast         Stop processing at the first error.
+  -q, --quiet            Suppress all output.
+  --help                 Show this message and exit.
+```
+
 ### `bea ingest archive`
 
 File documents into the archive hierarchy (Beangulp archive).
@@ -212,6 +394,34 @@ Usage: bea ingest archive [OPTIONS]
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
 | `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger or cwd) |
+
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: ingest.py archive [OPTIONS] [SRC]...
+
+  Archive documents.
+
+  Walk the SRC list of files or directories and move each file identified by
+  one of the configured importers in a directory hierarchy mirroring the
+  structure of the accounts associated to the documents and with a file name
+  composed by the document date and document name returned by the importer.
+
+  Documents are moved to their filing location only when no errors are
+  encountered processing all the input files.  Documents in the destination
+  directory are not overwritten, unless the --force option is used.  When the
+  directory hierarchy root is not specified with the --destination DIR
+  options, it is assumed to be directory in which the ingest script is
+  located.
+
+Options:
+  -o, --destination DIR  The destination documents tree root directory.
+  -f, --overwrite        Overwrite destination files with the same name.
+  -n, --dry-run          Just print where the files would be moved.
+  -x, --failfast         Stop processing at the first error.
+  -q, --quiet            Suppress all output.
+  --help                 Show this message and exit.
+```
 
 ### `bea add transaction`
 
@@ -666,12 +876,36 @@ Run bean-doctor lex.
 Usage: bea doctor lex [OPTIONS]
 ```
 
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor lex [OPTIONS] FILENAME
+
+  Dump the lexer output for a Beancount syntax file.
+
+Options:
+  --help  Show this message and exit.
+```
+
 ### `bea doctor parse`
 
 Run bean-doctor parse.
 
 ```text
 Usage: bea doctor parse [OPTIONS]
+```
+
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor parse [OPTIONS] FILENAME
+
+  Parse a ledger in debug mode.
+
+  Run the parser on ledger FILENAME with debug mode active.
+
+Options:
+  --help  Show this message and exit.
 ```
 
 ### `bea doctor roundtrip`
@@ -682,12 +916,47 @@ Run bean-doctor roundtrip.
 Usage: bea doctor roundtrip [OPTIONS]
 ```
 
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor roundtrip [OPTIONS] FILENAME
+
+  Round-trip test on arbitrary ledger.
+
+  Read transactions from ledger FILENAME, print them out, re-read them again
+  and compare them. Both sets of parsed entries should be equal.  Both printed
+  files are output to disk, so you can also run diff on them yourself
+  afterwards.
+
+Options:
+  --help  Show this message and exit.
+```
+
 ### `bea doctor directories`
 
 Run bean-doctor directories.
 
 ```text
 Usage: bea doctor directories [OPTIONS]
+```
+
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor directories [OPTIONS] FILENAME [DIRS]...
+
+  Validate a directory hierarchy against the ledger's account names.
+
+  Read a ledger's list of account names and check that all the capitalized
+  subdirectory names under the given roots match the account names.
+
+  Args:   filename: A string, the Beancount input filename.   args: The rest
+  of the arguments provided on the command-line, which in this     case will
+  be interpreted as the names of root directories to validate against     the
+  accounts in the given ledger.
+
+Options:
+  --help  Show this message and exit.
 ```
 
 ### `bea doctor list-options`
@@ -698,12 +967,34 @@ Run bean-doctor list-options.
 Usage: bea doctor list-options [OPTIONS]
 ```
 
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor list-options [OPTIONS]
+
+  List available options.
+
+Options:
+  --help  Show this message and exit.
+```
+
 ### `bea doctor print-options`
 
 Run bean-doctor print-options.
 
 ```text
 Usage: bea doctor print-options [OPTIONS]
+```
+
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor print-options [OPTIONS] FILENAME
+
+  List options parsed from a ledger.
+
+Options:
+  --help  Show this message and exit.
 ```
 
 ### `bea doctor context`
@@ -714,12 +1005,48 @@ Run bean-doctor context.
 Usage: bea doctor context [OPTIONS]
 ```
 
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor context [OPTIONS] FILENAME LOCATION
+
+  Describe transaction context.
+
+  The transaction is looked up in ledger FILENAME at LOCATION. The LOCATION
+  argument is either a line number or a filename:lineno tuple to indicate a
+  location in a ledger included from the main input file.
+
+Options:
+  --help  Show this message and exit.
+```
+
 ### `bea doctor linked`
 
 Run bean-doctor linked.
 
 ```text
 Usage: bea doctor linked [OPTIONS]
+```
+
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor linked [OPTIONS] FILENAME [LINK|TAG|LOCATION|REGION]
+
+  List related transactions.
+
+  List all transaction in ledger FILENAME linked to LINK or tagged with TAG,
+  or linked to the one at LOCATION, or linked to any transaction in REGION.
+
+  The LINK and TAG arguments must include the leading ^ or # characters. The
+  LOCATION argument is either a line number or a filename:lineno tuple to
+  indicate a location in a ledger file included from the main input file. The
+  REGION argument is either a start:end line numbers tuple or a
+  filename:start:end triplet to indicate a region in a ledger file included
+  from the main input file.
+
+Options:
+  --help  Show this message and exit.
 ```
 
 ### `bea doctor region`
@@ -730,12 +1057,42 @@ Run bean-doctor region.
 Usage: bea doctor region [OPTIONS]
 ```
 
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor region [OPTIONS] FILENAME REGION
+
+  Print out a list of transactions within REGION and compute balances.
+
+  The REGION argument is either a start:end line numbers tuple or a
+  filename:start:end triplet to indicate a region in a ledger file included
+  from the main input file.
+
+Options:
+  --conversion [value|cost]  Convert balances output to market value or cost.
+  --help                     Show this message and exit.
+```
+
 ### `bea doctor missing-open`
 
 Run bean-doctor missing-open.
 
 ```text
 Usage: bea doctor missing-open [OPTIONS]
+```
+
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor missing-open [OPTIONS] FILENAME
+
+  Print Open directives missing in FILENAME.
+
+  This can be useful during demos in order to quickly generate all the
+  required Open directives without having to type them manually.
+
+Options:
+  --help  Show this message and exit.
 ```
 
 ### `bea doctor display-context`
@@ -746,12 +1103,34 @@ Run bean-doctor display-context.
 Usage: bea doctor display-context [OPTIONS]
 ```
 
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor display-context [OPTIONS] FILENAME
+
+  Print the precision inferred from the parsed numbers in the input file.
+
+Options:
+  --help  Show this message and exit.
+```
+
 ### `bea doctor dump-lexer`
 
 Alias for bean-doctor lex.
 
 ```text
 Usage: bea doctor dump-lexer [OPTIONS]
+```
+
+```text
+Native interface (arguments/options are forwarded by bea):
+
+Usage: bean-doctor lex [OPTIONS] FILENAME
+
+  Dump the lexer output for a Beancount syntax file.
+
+Options:
+  --help  Show this message and exit.
 ```
 
 ## CLI maintenance

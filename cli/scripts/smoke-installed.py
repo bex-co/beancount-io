@@ -368,6 +368,27 @@ def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None,
     table = run(*valued_target, "list", "transaction", "--account", "checking", "--flag", "!", json_output=False)
     assert "MATCHING POSTING AMOUNTS" in table and "(no narration)" in table
     assert "#compdef" in run("--shell", "zsh", "--show-completion", json_output=False)
+    # Query export / help / output reset must survive wheel resource packaging.
+    exported = directory / "query-result.json"
+    exported.write_text("STALE")
+    raw = run(
+        "--json",
+        "--file",
+        str(file),
+        "query",
+        "SELECT account, sum(position) GROUP BY account",
+        "--numberify",
+        "-o",
+        str(exported),
+        json_output=False,
+    )
+    assert raw == "", raw
+    envelope = json.loads(exported.read_text())
+    assert envelope["data"]["rows"] and envelope["target"]["file"] == str(file)
+    assert all(column["type"] != "Inventory" for column in envelope["data"]["columns"])
+    run("--file", str(file), "query", ".output", json_output=False)
+    for command, expected in [("example", "--date-begin"), ("treeify", "--pattern"), ("price", "--no-cache")]:
+        assert expected in run(command, "--help", json_output=False)
     # Six native commands: doctor / example / treeify (check/format/query already above).
     options = run("doctor", "list-options", json_output=False)
     assert 'option "title"' in options and "DECOY" not in options

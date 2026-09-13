@@ -20,7 +20,7 @@ import typer
 from cli import context
 from cli.config import package_version
 from cli.errors import LedgerError, to_bea_error
-from cli.utils import single_line
+from cli.utils import atomic_write, single_line
 
 
 def _json_mode() -> bool:
@@ -127,8 +127,9 @@ def emit(
     truncated: bool = False,
     limit: int | None = None,
     page: int | None = None,
+    destination: Path | None = None,
 ) -> None:
-    """Print the documented JSON envelope on stdout."""
+    """Write the documented JSON envelope to stdout or a file."""
     envelope: dict[str, Any] = {
         "bea": package_version(),
         "target": target,
@@ -141,7 +142,11 @@ def emit(
         # Paged lists echo the page they served so a script can build the next
         # request from the payload alone.
         envelope["page"] = page
-    print(json.dumps(envelope))
+    serialized = json.dumps(envelope) + "\n"
+    if destination is None:
+        print(serialized, end="")
+    else:
+        atomic_write(destination, serialized)
 
 
 def jsonable(value: Any) -> Any:

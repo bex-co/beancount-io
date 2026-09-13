@@ -154,6 +154,8 @@ def render() -> str:
                     )
             if options:
                 lines += ["", *options_table(options)]
+            if leaf.epilog:
+                lines += ["", "```text", leaf.epilog.replace("\b\n", ""), "```"]
             lines += [""]
     while lines and not lines[-1]:
         lines.pop()
