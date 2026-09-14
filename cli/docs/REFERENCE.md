@@ -1149,7 +1149,7 @@ Usage: bea upgrade [OPTIONS]
 
 ### `bea engine status`
 
-Show whether the engine is provisioned and which optional features are enabled.
+Show which engine serves local commands, whether it is provisioned, and optional features.
 
 ```text
 Usage: bea engine status [OPTIONS]

@@ -12,7 +12,7 @@ from typing import Annotated
 import typer
 
 from cli import context, output
-from cli.engine import paths, provision
+from cli.engine import launch, paths, provision
 
 engine_app = typer.Typer(
     name="engine",
@@ -20,11 +20,22 @@ engine_app = typer.Typer(
     no_args_is_help=True,
 )
 
+_TIER_LABELS = {
+    "override": f"{paths.PYTHON_ENV} override",
+    "managed": "managed engine",
+    "checkout": "checkout",
+    "first-use": "not provisioned; provisions on first use",
+}
+
 
 @engine_app.command("status")
 def engine_status() -> None:
-    """Show whether the engine is provisioned and which optional features are enabled."""
-    status = provision.feature_status()
+    """Show which engine serves local commands, whether it is provisioned, and optional features."""
+    source = launch.resolve_engine()
+    status = {
+        **provision.feature_status(),
+        "serving": {"tier": source.tier, "location": str(source.location)},
+    }
     if context.current().json_output:
         output.emit(status)
         return
@@ -35,6 +46,7 @@ def engine_status() -> None:
     else:
         typer.echo(f"Engine {status['engine_version']} at {status['engine_root']}")
         typer.echo(f"Provisioned: {'yes' if status['provisioned'] else 'no'}")
+    typer.echo(f"Serving from: {_TIER_LABELS[source.tier]} ({source.location})")
 
     features = status.get("features") or {}
     if not features:

@@ -45,6 +45,13 @@ retry a local command such as `bea check` — do not `pip install beancount`.
 A broken managed environment is discarded and rebuilt on the next successful
 provision; global `bean-check` decoys on `PATH` are ignored.
 
+`bea engine status` names the engine that local commands would actually use:
+a `BEA_ENGINE_PYTHON` override, the provisioned managed engine, or a source
+checkout's `cli/src` (development only). When none of those exists it reports
+`not provisioned; provisions on first use`. `--json` carries the same answer as
+`serving.tier` (`override`, `managed`, `checkout`, or `first-use`) and
+`serving.location`.
+
 ### Optional engine features (Beangulp / Beanprice)
 
 Beangulp and Beanprice are **not** in the base engine or the frontend. Enable
@@ -835,6 +842,7 @@ select targets, endpoints, and state directories:
 | `BEA_TOKEN` | — | Hosted credential for unattended jobs; never written to disk |
 | `BEA_CONFIG_DIR` | `$XDG_CONFIG_HOME/bea`, else `~/.config/bea` | Per-user state: credentials, `ask` history, user skills |
 | `XDG_DATA_HOME` | `~/.local/share` | Root for the managed PyPI engine under `…/bea/engine/<version>` |
+| `XDG_CACHE_HOME` | `~/.cache` | Root for ledger write locks under `…/bea/locks` |
 | `BEA_API_URL` | `https://api.v3.beancount.io` | API base URL |
 | `BEA_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL, used by the device login flow |
 | `BEA_NO_UPDATE_NOTIFIER` | — | Truthy disables the update notice entirely |

@@ -35,6 +35,9 @@ Resolving the engine, in order:
    wheel, whose helper resources are nested under `cli/_runtime`.
 4. Provisioning a new engine.
 
+`resolve_engine` answers that order without provisioning, and `bea engine
+status` reports its answer, so what status names is what a command would run.
+
 `native_command` resolves upstream executables in that same order, so a
 developer's `bea format` runs the `bean-format` beside the interpreter they are
 working with and a customer's runs the provisioned one. Neither consults
@@ -50,8 +53,9 @@ import os
 import subprocess
 import sys
 from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from cli import output
 from cli.engine import paths, provision
@@ -123,16 +127,40 @@ def run_optional_script(feature: str, script: Path, args: Sequence[str]) -> int:
     return _spawn([str(python), str(script), *args], env)
 
 
-def engine_python() -> Path:
-    """The interpreter that will run engine programs for this process."""
+@dataclass(frozen=True)
+class EngineSource:
+    """The tier that answers engine programs for this process.
+
+    `location` is what a person would look at: the override interpreter, the
+    managed engine root, or the checkout's `cli/src`. `python` is None only for
+    `first-use`, where nothing is installed yet and the next engine command
+    provisions `location`.
+    """
+
+    tier: Literal["override", "managed", "checkout", "first-use"]
+    location: Path
+    python: Path | None
+
+
+def resolve_engine() -> EngineSource:
+    """Which tier the order in the module docstring picks, without provisioning anything."""
     override = paths.python_override()
     if override is not None:
-        return override
+        return EngineSource("override", override, override)
     root = paths.engine_root()
     if paths.is_provisioned(root):
-        return paths.venv_python(root)
-    if paths.checkout_source_root() is not None:
-        return Path(sys.executable)
+        return EngineSource("managed", root, paths.venv_python(root))
+    checkout = paths.checkout_source_root()
+    if checkout is not None:
+        return EngineSource("checkout", checkout, Path(sys.executable))
+    return EngineSource("first-use", root, None)
+
+
+def engine_python() -> Path:
+    """The interpreter that will run engine programs for this process."""
+    source = resolve_engine()
+    if source.python is not None:
+        return source.python
     return provision.ensure_engine()
 
 

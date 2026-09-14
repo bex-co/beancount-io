@@ -176,6 +176,61 @@ class TestEngineCommand:
         assert "beangulp" in enabled["enabled"]
 
 
+class TestEngineStatusReportsTheServingTier:
+    """`bea engine status` names the tier `launch.resolve_engine` picks, in text and in JSON."""
+
+    @staticmethod
+    def status(*global_options: str) -> str:
+        result = CliRunner().invoke(app, [*global_options, "engine", "status"])
+        assert result.exit_code == 0, result.output
+        return result.output
+
+    def serving(self) -> object:
+        return json.loads(self.status("--json"))["data"]["serving"]
+
+    def test_an_explicit_interpreter(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.setenv(paths.PYTHON_ENV, sys.executable)
+        monkeypatch.setenv(paths.DIR_ENV, str(fake_venv(tmp_path / "engine")))
+        monkeypatch.setattr(provision, "_packages_importable", lambda _python, _packages: False)
+
+        assert f"Serving from: {paths.PYTHON_ENV} override ({sys.executable})" in self.status()
+        assert self.serving() == {"tier": "override", "location": sys.executable}
+
+    def test_a_provisioned_managed_engine(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        root = fake_venv(tmp_path / "engine")
+        monkeypatch.setenv(paths.DIR_ENV, str(root))
+        monkeypatch.delenv(paths.PYTHON_ENV, raising=False)
+        monkeypatch.setattr(provision, "_feature_present", lambda _root, _name: False)
+
+        text = self.status()
+        assert "Provisioned: yes" in text
+        assert f"Serving from: managed engine ({root})" in text
+        assert self.serving() == {"tier": "managed", "location": str(root)}
+
+    def test_a_checkout_without_a_managed_engine(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.setenv(paths.DIR_ENV, str(tmp_path / "absent"))
+        monkeypatch.delenv(paths.PYTHON_ENV, raising=False)
+        monkeypatch.setattr(provision, "_packages_importable", lambda _python, _packages: False)
+
+        text = self.status()
+        assert "Provisioned: no" in text
+        assert f"Serving from: checkout ({SOURCE_ROOT})" in text
+        assert self.serving() == {"tier": "checkout", "location": str(SOURCE_ROOT)}
+
+    def test_nothing_installed_provisions_on_first_use(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        root = tmp_path / "absent"
+        monkeypatch.setenv(paths.DIR_ENV, str(root))
+        monkeypatch.delenv(paths.PYTHON_ENV, raising=False)
+        monkeypatch.setattr(paths, "_IMPORT_ROOT", tmp_path / "site-packages")
+        monkeypatch.setattr(provision, "provision", lambda _root: pytest.fail("status must not provision"))
+
+        text = self.status()
+        assert "Provisioned: no" in text
+        assert f"Serving from: not provisioned; provisions on first use ({root})" in text
+        assert self.serving() == {"tier": "first-use", "location": str(root)}
+        assert not root.exists()
+
+
 class TestFrontendNeverImportsOptional:
     def test_engine_status_does_not_load_optional_packages_in_the_frontend(self) -> None:
         script = (
