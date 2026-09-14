@@ -275,18 +275,29 @@ def test_importer_name_and_debug_errors_remain_actionable_json(book: Path) -> No
     unknown = runner.invoke(app, [*args, "--importer", "nope"])
     assert unknown.exit_code == 2
     assert "No importer named 'nope'; available: categorized-checking" in json.loads(unknown.stderr)["error"]["message"]
-    broken = book.parent / "broken.py"
-    broken.write_text('raise RuntimeError("boom at import time")\n')
-    args = [*args[:-1], str(broken)]
-    normal = runner.invoke(app, args)
-    assert normal.exit_code == 1
-    error = json.loads(normal.stderr)["error"]
-    assert "--debug" in error["message"] and "traceback" not in error
-    debug = runner.invoke(app, ["--debug", *args])
-    assert debug.exit_code == 1 and debug.stdout == ""
-    error = json.loads(debug.stderr)["error"]
-    assert str(broken) in error["traceback"]
-    assert "RuntimeError: boom at import time" in error["traceback"]
+
+    hint = "Pass --debug before the command for a traceback."
+    for body, exit_code, raised in [
+        ('raise RuntimeError("boom at import time")\n', 1, "RuntimeError: boom at import time"),
+        ("import bea_missing_importer_dependency\n", 2, "No module named 'bea_missing_importer_dependency'"),
+    ]:
+        broken = book.parent / "broken.py"
+        broken.write_text(body)
+        args = [*args[:-1], str(broken)]
+        normal = runner.invoke(app, args)
+        assert normal.exit_code == exit_code, normal.output
+        error = json.loads(normal.stderr)["error"]
+        assert error["message"].endswith(hint) and "traceback" not in error
+        # With --debug the traceback is already there, so the hint to go get one is noise.
+        debug = runner.invoke(app, ["--debug", *args])
+        assert debug.exit_code == exit_code and debug.stdout == ""
+        error = json.loads(debug.stderr)["error"]
+        assert "--debug" not in error["message"]
+        assert str(broken) in error["traceback"]
+        assert raised in error["traceback"]
+        human = runner.invoke(app, ["--debug", *args[1:]])
+        assert human.exit_code == exit_code
+        assert hint not in human.stderr and raised in human.stderr
 
 
 @pytest.fixture

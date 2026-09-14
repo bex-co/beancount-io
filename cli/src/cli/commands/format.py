@@ -69,7 +69,8 @@ def format_beans(
 
     target = _target(paths, files)
     if reporting:
-        _report(files, alignment, target, check=check, dry_run=dry_run)
+        remedy = _remedy(_named(paths, ctx.file), alignment)
+        _report(files, alignment, target, remedy, check=check, dry_run=dry_run)
         return
 
     if not files:
@@ -103,7 +104,9 @@ def format_beans(
     output.success(f"{len(changed)}/{len(files)} file(s) formatted.")
 
 
-def _report(files: list[Path], alignment: list[str], target: dict[str, str], *, check: bool, dry_run: bool) -> None:
+def _report(
+    files: list[Path], alignment: list[str], target: dict[str, str], remedy: str, *, check: bool, dry_run: bool
+) -> None:
     """Which files upstream would rewrite, without rewriting any of them."""
     ctx = context.current()
     changed = [str(f) for f in files if _would_change(f, alignment)]
@@ -112,10 +115,7 @@ def _report(files: list[Path], alignment: list[str], target: dict[str, str], *, 
     if check and changed:
         for name in changed:
             output.note(f"would format: {name}")
-        raise LedgerError(
-            f"{len(changed)} file(s) need formatting. Run bea format -i {shlex.quote(_root(files))} to apply.",
-            result=result,
-        )
+        raise LedgerError(f"{len(changed)} file(s) need formatting. Run {remedy} to apply.", result=result)
     if ctx.json_output:
         output.emit(result, target=target)
         return
@@ -128,6 +128,15 @@ def _report(files: list[Path], alignment: list[str], target: dict[str, str], *, 
         output.success(f"All {len(files)} file(s) are formatted.")
     else:
         output.success(f"Would format {len(changed)}/{len(files)} file(s) (dry run).")
+
+
+def _remedy(named: list[Path], alignment: list[str]) -> str:
+    """The command that clears a failing `--check`, ready to paste into a shell.
+
+    It repeats the gate's own paths and alignment options: rewriting a narrower
+    set of files, or at upstream's default widths, leaves the identical gate red.
+    """
+    return shlex.join(["bea", "format", "-i", *(str(path.expanduser().resolve()) for path in named), *alignment])
 
 
 def _would_change(file: Path, alignment: list[str]) -> bool:
@@ -155,6 +164,11 @@ def _text(file: Path) -> str:
     return file.read_text()
 
 
+def _named(paths: list[Path] | None, default: Path | None) -> list[Path]:
+    """The paths on the command line, or the global `--file` when none were given."""
+    return [path for path in (paths or []) if str(path)] or ([default] if default is not None else [])
+
+
 def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | None:
     """The files to format, or None for upstream's stdin filter.
 
@@ -163,7 +177,7 @@ def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | Non
     longer walks the working directory, because walking it and then writing to
     stdout would concatenate a whole tree into one stream.
     """
-    named = [path for path in (paths or []) if str(path)] or ([default] if default is not None else [])
+    named = _named(paths, default)
     if not named:
         return None
 
@@ -186,14 +200,22 @@ def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | Non
 
 
 def _alignment(prefix_width: int | None, num_width: int | None, currency_column: int | None) -> list[str]:
-    """Upstream's width options, forwarded as given."""
+    """Upstream's width options, forwarded as given once they are known to be usable.
+
+    These are `bea`'s own declared options, so `bea` rejects a negative value:
+    `bean-format` would turn it into a format specifier and die with a traceback.
+    """
     flags: list[str] = []
-    if prefix_width is not None:
-        flags += ["--prefix-width", str(prefix_width)]
-    if num_width is not None:
-        flags += ["--num-width", str(num_width)]
-    if currency_column is not None:
-        flags += ["--currency-column", str(currency_column)]
+    for flag, short, value in (
+        ("--prefix-width", "-w", prefix_width),
+        ("--num-width", "-W", num_width),
+        ("--currency-column", "-c", currency_column),
+    ):
+        if value is None:
+            continue
+        if value < 0:
+            raise UsageError(f"{flag} ({short}) must be nonnegative; got {value}.")
+        flags += [flag, str(value)]
     return flags
 
 
@@ -203,11 +225,6 @@ def _destination(output_file: Path | None) -> list[str]:
 
 def _result(files: list[Path], changed: list[str]) -> dict[str, object]:
     return {"scanned": len(files), "formatted": changed}
-
-
-def _root(files: list[Path]) -> str:
-    """A path that covers everything scanned, for the hint that says how to apply."""
-    return str(files[0]) if len(files) == 1 else str(files[0].parent)
 
 
 def _target(paths: list[Path] | None, files: list[Path]) -> dict[str, str]:

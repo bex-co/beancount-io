@@ -113,7 +113,7 @@ def answer(
             raise
         except Exception as exc:
             raise LedgerError(
-                f"Importer failed ({type(exc).__name__}): {exc}. Pass --debug before the command for a traceback.",
+                f"Importer failed ({type(exc).__name__}): {exc}.",
                 traceback=_traceback(exc),
             ) from exc
         if importer.rejected_categories:
@@ -140,12 +140,12 @@ def answer(
         except ImportError as exc:
             raise UsageError(
                 f"Importer dependency is unavailable: {exc}. Run bea in an environment containing your importer's "
-                "dependencies; see docs/IMPORTING.md. Pass --debug before the command for a traceback.",
+                "dependencies; see docs/IMPORTING.md.",
                 traceback=_traceback(exc),
             ) from exc
         except Exception as exc:
             raise LedgerError(
-                f"Importer failed ({type(exc).__name__}): {exc}. Pass --debug before the command for a traceback.",
+                f"Importer failed ({type(exc).__name__}): {exc}.",
                 traceback=_traceback(exc),
             ) from exc
         finally:

@@ -57,7 +57,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from cli import output
+from cli import context, output
 from cli.engine import paths, provision
 from cli.errors import BY_CATEGORY, BeaError, UsageError
 
@@ -236,16 +236,22 @@ def helper_json(args: Sequence[str], *, stdin: str | None = None) -> dict[str, A
         tolerated = [str(error) for error in failure.get("ledger_errors", [])]
         if tolerated:
             output.render_ledger_errors(tolerated, allow=True)
+        message = str(failure.get("message", "The engine reported a failure."))
+        trace = failure.get("traceback")
+        trace = trace if isinstance(trace, str) and trace else None
+        if trace is not None and not context.current().debug:
+            # The engine always sends the traceback and only `bea --debug` shows
+            # it, so the advice to ask for one belongs on this side of the
+            # boundary, where that flag is known.
+            message = f"{message} Pass --debug before the command for a traceback."
         error = BY_CATEGORY.get(category, BeaError)(
-            str(failure.get("message", "The engine reported a failure.")),
+            message,
             details=[str(detail) for detail in failure.get("details", [])],
         )
         result = failure.get("result")
         if isinstance(result, dict):
             error.result = result
-        trace = failure.get("traceback")
-        if isinstance(trace, str) and trace:
-            error.traceback = trace
+        error.traceback = trace
         raise error
 
     if completed.stderr.strip():

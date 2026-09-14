@@ -3,6 +3,7 @@
 import csv
 import datetime
 import json
+import shlex
 from decimal import Decimal
 from pathlib import Path
 
@@ -247,6 +248,65 @@ def test_format_check_detects_misalignment_and_in_place_fixes_it(book: Path) -> 
     assert invoke(book, "format", str(bad_account), "--check").exit_code == 0
     assert invoke(book, "format", str(bad_account), "--in-place").exit_code == 0
     assert bad_account.read_bytes() == before_bad
+
+
+def _remedy(message: str) -> list[str]:
+    """The argv of the command a failing `format --check` tells the reader to run."""
+    assert " Run " in message and message.endswith(" to apply."), message
+    argv = shlex.split(message.split(" Run ", 1)[1].removesuffix(" to apply."))
+    assert argv[:2] == ["bea", "format"], argv
+    return argv[1:]
+
+
+UNALIGNED = '2026-01-02 * "Food"\n  Assets:Checking -1.00 USD\n  Expenses:Food 1.00 USD\n'
+
+
+@pytest.mark.parametrize(
+    ("alignment", "nested"),
+    [
+        (["-w", "40"], False),
+        (["--num-width", "12"], False),
+        (["-c", "60"], False),
+        (["-w", "40", "-W", "12", "-c", "70"], False),
+        (["-c", "60"], True),
+    ],
+)
+def test_format_check_remedy_run_verbatim_clears_the_same_gate(
+    tmp_path: Path, alignment: list[str], nested: bool
+) -> None:
+    books = tmp_path / "my books"
+    (books / "a").mkdir(parents=True)
+    files = [books / "a" / "x.bean", books / "b.bean"] if nested else [books / "main.bean"]
+    for file in files:
+        file.write_text(UNALIGNED)
+    target = str(books if nested else files[0])
+    assert runner.invoke(app, ["format", "-i", target]).exit_code == 0
+    # The options really change the layout: the default-formatted files fail the gate.
+    gate = ["--json", "format", target, "--check", *alignment]
+    failed = runner.invoke(app, gate)
+    assert failed.exit_code == 1, failed.output
+    remedy = _remedy(json.loads(failed.stderr)["error"]["message"])
+
+    applied = runner.invoke(app, remedy)
+    assert applied.exit_code == 0, applied.output
+    passed = runner.invoke(app, gate)
+    assert passed.exit_code == 0, passed.output
+    assert json.loads(passed.stdout)["data"]["formatted"] == []
+
+
+@pytest.mark.parametrize("flag", ["-w", "--prefix-width", "-W", "--num-width", "-c", "--currency-column"])
+@pytest.mark.parametrize("mode", [[], ["--check"], ["--in-place"]])
+def test_format_rejects_negative_alignment_as_usage_error(book: Path, flag: str, mode: list[str]) -> None:
+    before = book.read_bytes()
+    result = runner.invoke(app, ["format", str(book), *mode, flag, "-5"])
+    assert result.exit_code == 2, result.output
+    assert "must be nonnegative" in result.stderr and "Traceback" not in result.output
+    assert book.read_bytes() == before
+    machine = runner.invoke(app, ["--json", "format", str(book), "--check", flag, "-5"])
+    error = json.loads(machine.stderr)["error"]
+    assert machine.exit_code == 2 and error["category"] == "usage"
+    assert "must be nonnegative" in error["message"]
+    assert runner.invoke(app, ["format", str(book), flag, "0"]).exit_code == 0
 
 
 def test_formatting_split_files_does_not_require_root_options_or_account_opens(book: Path) -> None:
