@@ -19,38 +19,85 @@ const hasControlCharacter = (value: string): boolean => {
   return false;
 };
 
+/** Percent-decoding layers a candidate path is checked through. */
+const MAX_DECODE_DEPTH = 4;
+
+/** The path portion of a URL reference: everything before `?` or `#`. */
+const pathOf = (value: string): string => value.split(/[?#]/, 1)[0];
+
+/**
+ * Decodes each well-formed `%XX` escape to its byte, leaving malformed ones
+ * alone, so a stray `%` can neither throw nor stop the checks below. Every
+ * character that can move a path off origin is ASCII, so byte-wise decoding
+ * sees them exactly as a decoding layer would.
+ */
+const decodePercentEscapes = (value: string): string =>
+  value.replace(/%([0-9a-f]{2})/gi, (_, hex: string) =>
+    String.fromCharCode(Number.parseInt(hex, 16)),
+  );
+
+/**
+ * The candidate's path as each further decoding layer would read it. The
+ * continuation is emitted still encoded, so "/%09/evil.example" passes a check
+ * of the value as received and becomes "/\t/evil.example" wherever it is
+ * decoded once more. Only the path decides where a relative reference goes, so
+ * an encoded newline inside a query string (a BQL deep link) is not an escape.
+ * `null` means the path is still decoding after MAX_DECODE_DEPTH layers.
+ */
+const decodedPathLayers = (next: string): string[] | null => {
+  const layers: string[] = [];
+  let path = pathOf(next);
+  for (let depth = 0; depth < MAX_DECODE_DEPTH; depth += 1) {
+    const decoded = decodePercentEscapes(path);
+    if (decoded === path) return layers;
+    path = pathOf(decoded);
+    layers.push(path);
+  }
+  return null;
+};
+
+/**
+ * True unless the candidate is a relative path that stays on the placeholder
+ * origin once the browser's own parsing resolves it.
+ */
+const leavesOrigin = (candidate: string): boolean => {
+  if (!candidate.startsWith("/") || hasControlCharacter(candidate)) return true;
+  if (candidate.startsWith("//") || candidate.startsWith("/\\")) return true;
+
+  let resolved: URL;
+  try {
+    resolved = new URL(candidate, RESOLUTION_BASE);
+  } catch {
+    return true;
+  }
+  return (
+    resolved.origin !== RESOLUTION_BASE ||
+    !resolved.pathname.startsWith("/") ||
+    resolved.pathname.startsWith("//")
+  );
+};
+
 /**
  * Guards against open redirects. Only same-origin relative paths survive:
  * absolute URLs ("https://evil.example"), protocol-relative paths
  * ("//evil.example"), backslash variants ("/\evil.example") and paths
- * obfuscated with control characters ("/\t/evil.example") are all rejected.
+ * obfuscated with control characters ("/\t/evil.example") are all rejected —
+ * raw or percent-encoded ("/%09/evil.example", "/%5cevil.example",
+ * "/%2509/evil.example"), since a later layer may decode the path again.
  *
  * The candidate is resolved against a fixed placeholder origin and accepted
- * only when it stays on that origin, so the browser's own parsing decides what
- * counts as relative rather than a list of string prefixes.
+ * only when it, and every decoding of its path, stays on that origin, so the
+ * browser's own parsing decides what counts as relative rather than a list of
+ * string prefixes. A hostile value is rejected, never repaired.
  */
 export const getSafeRedirectPath = (
   next: string | undefined,
 ): string | undefined => {
-  if (!next || !next.startsWith("/")) return undefined;
-  if (hasControlCharacter(next)) return undefined;
-  if (next.startsWith("//") || next.startsWith("/\\")) return undefined;
+  if (!next || leavesOrigin(next)) return undefined;
+  const layers = decodedPathLayers(next);
+  if (layers === null || layers.some(leavesOrigin)) return undefined;
 
-  let resolved: URL;
-  try {
-    resolved = new URL(next, RESOLUTION_BASE);
-  } catch {
-    return undefined;
-  }
-
-  if (resolved.origin !== RESOLUTION_BASE) return undefined;
-  if (
-    !resolved.pathname.startsWith("/") ||
-    resolved.pathname.startsWith("//")
-  ) {
-    return undefined;
-  }
-
+  const resolved = new URL(next, RESOLUTION_BASE);
   return `${resolved.pathname}${resolved.search}${resolved.hash}`;
 };
 

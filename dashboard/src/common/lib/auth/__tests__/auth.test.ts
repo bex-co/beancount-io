@@ -37,6 +37,42 @@ describe("getSafeRedirectPath", () => {
     expect(getSafeRedirectPath("/\u007F/evil.example")).toBeUndefined();
   });
 
+  it.each([
+    "/%09/evil.example",
+    "/%0d/evil.example",
+    "/%0a/evil.example",
+    "/%0A/evil.example",
+    "/%00/evil.example",
+    "/%5cevil.example",
+    "/%5Cevil.example",
+    "/%2f%2fevil.example",
+    "/%2509/evil.example",
+    "/%250A/evil.example",
+    "/ledger/..%2f%2fevil.example",
+  ])("rejects %s, which escapes once a layer decodes it", (next) => {
+    expect(getSafeRedirectPath(next)).toBeUndefined();
+  });
+
+  it("does not let a malformed escape later in the value end the checks", () => {
+    expect(getSafeRedirectPath("/%09/evil.example?q=100%")).toBeUndefined();
+    expect(getSafeRedirectPath("/%zz/%09/evil.example")).toBeUndefined();
+  });
+
+  it("rejects a path still decoding after the maximum depth", () => {
+    expect(getSafeRedirectPath("/ledger%2525252520x")).toBeUndefined();
+  });
+
+  it("keeps percent-encoded characters in legitimate destinations", () => {
+    for (const next of [
+      "/ledger/owner/My%20Ledger#top",
+      "/ledger/owner/books/query?q=SELECT%20account%0AFROM%20accounts",
+      "/ledger/owner/books/files?path=reports%2F2026.bean",
+      "/ledger/owner/books/files?path=100%",
+    ]) {
+      expect(getSafeRedirectPath(next)).toBe(next);
+    }
+  });
+
   it("never returns a path that resolves off-origin", () => {
     const candidates = [
       "/\t/evil.example/probe",
