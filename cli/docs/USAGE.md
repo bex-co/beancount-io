@@ -140,8 +140,8 @@ $ echo $?
 | 4 | `conflict` | Conflict, or a write whose outcome is unknown |
 
 A nonzero exit does not universally mean nothing changed:
-`add transactions --partial` can write accepted rows, recursive `format` can
-format valid files while skipping broken ones, and
+`add transactions --partial` can write accepted rows, `format --in-place` over
+several files can rewrite some before failing on one it cannot write, and
 `cloud ledger create --clone` can create a ledger before cloning fails. Read
 the operation result before retrying mutations.
 
@@ -214,7 +214,7 @@ bea format main.bean -o clean.bean # or to a file of your choosing
 bea format -i main.bean            # rewrite it
 bea format -i .                    # rewrite every .bean/.beancount file under a directory
 bea format . --dry-run             # write nothing; list the files that would change
-bea format . --check               # CI/pre-commit: exit 1 if any files need formatting
+bea format . --check               # CI/pre-commit alignment gate; pair with bea check for validity
 
 # Run a BQL query and print a table; omit the query for the interactive shell
 bea query "SELECT account, sum(position) GROUP BY account"
@@ -279,16 +279,20 @@ always exits 1 on errors — reporting them is its whole job, so it has no
 `--allow-errors` flag.
 The same validation gate runs before the interactive BQL shell opens. Missing
 format targets are usage errors. `format --dry-run` previews changes without
-writing and exits **0** even when formatting is needed. Use `format --check`
-for CI or a pre-commit hook: it leaves files untouched and exits **1** when
-formatting is needed, **0** when all scanned files are formatted.
+writing and exits **0** even when formatting is needed. `format --check` leaves
+files untouched and exits **1** when formatting is needed, **0** when all
+scanned files are formatted.
 
-Every formatting mode reports syntax errors with each file's path and line,
-skips that file, and exits **1**. A recursive run continues through the other
-files; normal mode still formats valid files. Included files can be formatted
-independently of their root ledger's account opens and options. In JSON mode,
-failures return the scan result in `error.result`, including `formatted` and
-`skipped` paths, `scanned`, `dry_run`, and `check`.
+`format --check` is an alignment gate, not a validity gate. Formatting is
+delegated to `bean-format`, a regex text transformation that never parses the
+ledger, so a file with a syntax error is realigned like any other: `--check`
+flags it only when its alignment would change, `--in-place` rewrites it and
+exits **0**, and no mode skips it or reports its syntax errors. For CI or a
+pre-commit hook, run `bea check` alongside `bea format --check` so an
+unparseable ledger fails too. Included files are formatted independently of
+their root ledger's account opens and options. In JSON mode, a failing
+`--check` returns the scan result in `error.result`: `scanned`, the
+`formatted` paths that would change, `check`, and `dry_run`.
 
 ## Listing directives
 
