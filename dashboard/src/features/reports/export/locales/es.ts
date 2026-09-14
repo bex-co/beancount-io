@@ -57,7 +57,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "No se pudo determinar un período de informe completo. Este informe sigue siendo un borrador interno.",
   inferredAsOfDateNotice:
-    "No se seleccionó una fecha de cierre explícita. Este estado usa la última fecha disponible en el informe: {asOfDate}.",
+    "No se seleccionó una fecha de cierre explícita. Este estado incluye toda la actividad del libro hasta el {asOfDate}.",
   asOfDateUnavailableNotice:
     "No se pudo determinar una fecha de cierre. Este estado sigue siendo un borrador interno.",
   subtotalRowsNotice:

@@ -56,7 +56,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "전체 보고 기간을 확인할 수 없습니다. 이 보고서는 내부 초안입니다.",
   inferredAsOfDateNotice:
-    "명시적인 기준일이 선택되지 않았습니다. 이 재무제표는 보고서에서 사용 가능한 가장 최근 날짜를 사용합니다: {asOfDate}.",
+    "명시적인 기준일이 선택되지 않았습니다. 이 재무제표에는 {asOfDate}까지의 모든 원장 활동이 포함됩니다.",
   asOfDateUnavailableNotice:
     "재무상태표 기준일을 확인할 수 없습니다. 이 재무제표는 내부 초안입니다.",
   subtotalRowsNotice:

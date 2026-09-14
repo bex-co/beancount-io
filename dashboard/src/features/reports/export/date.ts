@@ -9,3 +9,18 @@ export function formatStatementDate(value: string, locale: string): string {
     timeZone: "UTC",
   }).format(new Date(`${value}T00:00:00.000Z`));
 }
+
+/**
+ * The viewer's local calendar day (`YYYY-MM-DD`) of an ISO instant — the day a
+ * statement was generated as its reader sees it — or `null` when it does not
+ * parse.
+ */
+export function localCalendarDate(instant: string): string | null {
+  const value = new Date(instant);
+  if (Number.isNaN(value.getTime())) return null;
+  return [
+    value.getFullYear(),
+    String(value.getMonth() + 1).padStart(2, "0"),
+    String(value.getDate()).padStart(2, "0"),
+  ].join("-");
+}

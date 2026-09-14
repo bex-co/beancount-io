@@ -38,7 +38,7 @@ const messages: Record<string, string> = {
   "reports.export.inferredPeriodNotice":
     "This report covers ledger activity from {startDate} through {endDate}. The dates were derived from the available report data.",
   "reports.export.inferredAsOfDateNotice":
-    "No explicit as-of date was selected. This statement uses the latest date available in the report: {asOfDate}.",
+    "No explicit as-of date was selected. This statement includes all ledger activity through {asOfDate}.",
   "reports.export.ledgerUnits": "Ledger units shown",
   "reports.export.lineItem": "Line item",
   "reports.export.multiUnitScheduleNotice":
@@ -500,7 +500,7 @@ describe("statement Markdown", () => {
     const markdown = statementToMarkdown(document, { locale: "en-US", t });
 
     expect(markdown).toContain(
-      "No explicit as-of date was selected. This statement uses the latest date available in the report: December 31, 2025.",
+      "No explicit as-of date was selected. This statement includes all ledger activity through December 31, 2025.",
     );
     expect(markdown).not.toContain(
       "A complete reporting period could not be determined",

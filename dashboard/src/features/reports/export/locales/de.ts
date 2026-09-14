@@ -57,7 +57,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "Ein vollständiger Berichtszeitraum konnte nicht bestimmt werden. Dieser Bericht bleibt ein interner Entwurf.",
   inferredAsOfDateNotice:
-    "Es wurde kein ausdrücklicher Stichtag gewählt. Dieser Abschluss verwendet das letzte im Bericht verfügbare Datum: {asOfDate}.",
+    "Es wurde kein ausdrücklicher Stichtag gewählt. Dieser Abschluss umfasst alle Buchungen bis einschließlich {asOfDate}.",
   asOfDateUnavailableNotice:
     "Ein Bilanzstichtag konnte nicht bestimmt werden. Dieser Abschluss bleibt ein interner Entwurf.",
   subtotalRowsNotice:

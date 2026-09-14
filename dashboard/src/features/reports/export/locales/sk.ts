@@ -57,7 +57,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "Úplné vykazované obdobie nebolo možné určiť. Tento výkaz zostáva interným návrhom.",
   inferredAsOfDateNotice:
-    "Nebol zvolený výslovný dátum výkazu. Používa sa posledný dostupný dátum v reporte: {asOfDate}.",
+    "Nebol zvolený výslovný dátum výkazu. Výkaz zahŕňa všetky účtovné pohyby do {asOfDate} vrátane.",
   asOfDateUnavailableNotice:
     "Dátum súvahy nebolo možné určiť. Tento výkaz zostáva interným návrhom.",
   subtotalRowsNotice:

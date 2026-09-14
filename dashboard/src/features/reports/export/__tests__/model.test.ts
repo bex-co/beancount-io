@@ -131,6 +131,29 @@ describe("statement export model", () => {
     ]);
   });
 
+  it("dates an unfiltered export on its generation day, not the trailing chart bucket", () => {
+    const asOfFor = (interval: "monthly" | "yearly", lastBucket: string) =>
+      buildBalanceSheetDocument({
+        ...baseContext,
+        interval,
+        filters: { time: "", account: "", filter: "" },
+        reportDates: [lastBucket],
+        generatedAt: "2026-09-13T12:00:00.000Z",
+        title: "Balance Sheet",
+        assets: node("Assets", { USD: "100" }),
+        liabilities: node("Liabilities", { USD: "-40" }),
+        equity: node("Equity", { USD: "-60" }),
+        labels: {
+          assets: "Assets",
+          liabilities: "Liabilities",
+          equity: "Equity",
+        },
+      }).context.reportingPeriod.asOfDate;
+
+    expect(asOfFor("monthly", "2026-09-30")).toBe("2026-09-13");
+    expect(asOfFor("yearly", "2026-12-31")).toBe("2026-09-13");
+  });
+
   it("builds the balance-sheet sections with statement display signs", () => {
     const document = buildBalanceSheetDocument({
       ...baseContext,

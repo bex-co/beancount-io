@@ -32,7 +32,6 @@ Milestones m18–m22 are complete. m22 fixed the published CLI QA gaps with gree
 
 ## Inbox
 
-- [022](./022.md) — Exported statements are dated in the future, and the date moves with the chart interval (dashboard QA, 2026-09-13)
 - [023](./023.md) — Add Budget offers every account type while its own help text says expense or income only (dashboard QA, 2026-09-13)
 - [024](./024.md) — Auth next guard still accepts percent-encoded control characters; the w3/170 fix covers only the raw form (dashboard QA, 2026-09-13)
 - [025](./025.md) — Accounts renders "not computed" and "exactly zero" both as `—`, which also unlocks Close on 45 accounts (dashboard QA, 2026-09-13)

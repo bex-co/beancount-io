@@ -56,7 +56,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "No s’ha pogut determinar un període d’informe complet. Aquest informe continua sent un esborrany intern.",
   inferredAsOfDateNotice:
-    "No s’ha seleccionat una data de tancament explícita. Aquest estat utilitza l’última data disponible a l’informe: {asOfDate}.",
+    "No s’ha seleccionat una data de tancament explícita. Aquest estat inclou tota l’activitat del llibre fins al {asOfDate}.",
   asOfDateUnavailableNotice:
     "No s’ha pogut determinar una data de tancament. Aquest estat continua sent un esborrany intern.",
   subtotalRowsNotice:

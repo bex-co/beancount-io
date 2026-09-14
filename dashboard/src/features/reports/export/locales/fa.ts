@@ -56,7 +56,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "دوره کامل گزارش قابل تعیین نبود. این گزارش همچنان پیش‌نویس داخلی است.",
   inferredAsOfDateNotice:
-    "تاریخ مشخصی برای صورت انتخاب نشده است. این صورت از آخرین تاریخ موجود در گزارش استفاده می‌کند: {asOfDate}.",
+    "تاریخ مشخصی برای صورت انتخاب نشده است. این صورت همه فعالیت‌های دفتر تا {asOfDate} را در بر می‌گیرد.",
   asOfDateUnavailableNotice:
     "تاریخ صورت وضعیت مالی قابل تعیین نبود. این صورت همچنان پیش‌نویس داخلی است.",
   subtotalRowsNotice:

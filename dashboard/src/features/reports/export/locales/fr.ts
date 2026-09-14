@@ -57,7 +57,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "Une période de reporting complète n’a pas pu être déterminée. Ce rapport reste un brouillon interne.",
   inferredAsOfDateNotice:
-    "Aucune date de clôture explicite n’a été sélectionnée. Cet état utilise la dernière date disponible dans le rapport : {asOfDate}.",
+    "Aucune date de clôture explicite n’a été sélectionnée. Cet état inclut toute l’activité du grand livre jusqu’au {asOfDate}.",
   asOfDateUnavailableNotice:
     "Aucune date de clôture n’a pu être déterminée. Cet état reste un projet interne.",
   subtotalRowsNotice:

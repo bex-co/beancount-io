@@ -55,7 +55,7 @@ export default createExportLocale({
     "本报表涵盖 {startDate} 至 {endDate} 的账本活动；日期由现有报表数据推导得出。",
   periodNotExplicitNotice: "无法确定完整的报告期间；本报表仍属于内部草稿。",
   inferredAsOfDateNotice:
-    "未明确选择截止日期；本报表采用现有报表数据中的最晚日期：{asOfDate}。",
+    "未明确选择截止日期；本报表包含截至{asOfDate}的全部账本活动。",
   asOfDateUnavailableNotice:
     "无法确定资产负债表截止日期；本报表仍属于内部草稿。",
   subtotalRowsNotice: "粗体行为小计或合计，不应与其下属明细行重复相加。",

@@ -56,7 +56,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "完全な報告期間を特定できませんでした。この報告書は社内用の草案です。",
   inferredAsOfDateNotice:
-    "明示的な基準日が選択されていません。この計算書では報告書で利用可能な最新日を使用します：{asOfDate}。",
+    "明示的な基準日が選択されていません。この計算書には{asOfDate}までのすべての帳簿取引が含まれます。",
   asOfDateUnavailableNotice:
     "貸借対照表の基準日を特定できませんでした。この計算書は社内用の草案です。",
   subtotalRowsNotice:

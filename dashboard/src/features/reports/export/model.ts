@@ -2,6 +2,7 @@ import type { ChartInterval, ConversionOption } from "@/common/types/chart";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 import type { CashFlowStatement } from "../cash-flow/lib/model";
+import { localCalendarDate } from "./date";
 import {
   resolveReportingPeriod,
   type FiscalYearEnd,
@@ -265,6 +266,7 @@ function buildContext(
   kind: StatementKind,
   input: StatementContextInput,
 ): StatementExportContext {
+  const generatedAt = input.generatedAt ?? new Date().toISOString();
   return {
     reportingEntity: input.reportingEntity,
     reportingEntitySource: input.reportingEntitySource,
@@ -278,9 +280,10 @@ function buildContext(
       timeFilter: input.filters.time,
       reportDates: input.reportDates,
       fiscalYearEnd: input.fiscalYearEnd,
+      generatedOn: localCalendarDate(generatedAt),
       interval: input.interval,
     }),
-    generatedAt: input.generatedAt ?? new Date().toISOString(),
+    generatedAt,
   };
 }
 

@@ -278,7 +278,7 @@ export function createExportLocale(messages: ExportLocaleMessages) {
     "reports.export.inferredAsOfDateNotice": {
       message: messages.inferredAsOfDateNotice,
       description:
-        "Notice that the balance sheet date was derived from available data",
+        "Notice that no as-of date was selected and naming the date the balance sheet includes activity through",
     },
     "reports.export.asOfDateUnavailableNotice": {
       message: messages.asOfDateUnavailableNotice,

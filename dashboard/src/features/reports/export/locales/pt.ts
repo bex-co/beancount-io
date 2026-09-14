@@ -57,7 +57,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "Não foi possível determinar um período de relato completo. Este relatório continua a ser um rascunho interno.",
   inferredAsOfDateNotice:
-    "Não foi selecionada uma data de referência explícita. Esta demonstração usa a última data disponível no relatório: {asOfDate}.",
+    "Não foi selecionada uma data de referência explícita. Esta demonstração inclui toda a atividade do livro até {asOfDate}.",
   asOfDateUnavailableNotice:
     "Não foi possível determinar uma data de referência. Esta demonstração permanece um rascunho interno.",
   subtotalRowsNotice:

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { ChartInterval } from "@/common/types/chart";
 import {
   parseConcreteTimeFilter,
   resolveReportingPeriod,
@@ -27,21 +28,83 @@ describe("statement reporting period", () => {
     });
   });
 
-  it("uses returned data only as a truthful through-date fallback", () => {
+  it("runs an unfiltered period statement through its generation day", () => {
     expect(
       resolveReportingPeriod({
         kind: "profit_and_loss",
         timeFilter: "",
         reportDates: ["2025-12-31", "2026-06-30"],
+        generatedOn: "2026-09-13",
         interval: "monthly",
       }),
     ).toEqual({
       startDate: "2025-12-01",
-      endDate: "2026-06-30",
+      endDate: "2026-09-13",
       asOfDate: null,
       isExplicit: false,
       selection: "",
     });
+  });
+
+  // The last unfiltered bucket ends with the period holding the newest entry
+  // (2026-09-01 for an active ledger, 2017-05-15 for a dormant one), so it can
+  // fall after the generation day and differs per chart interval.
+  it.each<[string, ChartInterval, string]>([
+    ["active", "weekly", "2026-09-06"],
+    ["active", "monthly", "2026-09-30"],
+    ["active", "quarterly", "2026-09-30"],
+    ["active", "yearly", "2026-12-31"],
+    ["dormant", "monthly", "2017-05-31"],
+    ["dormant", "yearly", "2017-12-31"],
+  ])(
+    "dates an unfiltered balance sheet of an %s ledger independently of the %s chart interval",
+    (_ledger, interval, lastBucket) => {
+      expect(
+        resolveReportingPeriod({
+          kind: "balance_sheet",
+          timeFilter: "",
+          reportDates: [lastBucket],
+          generatedOn: "2026-09-13",
+          interval,
+        }).asOfDate,
+      ).toBe("2026-09-13");
+    },
+  );
+
+  it("still covers future-dated entries the report data proves exist", () => {
+    expect(
+      resolveReportingPeriod({
+        kind: "balance_sheet",
+        timeFilter: "",
+        reportDates: ["2026-09-30", "2026-10-31"],
+        generatedOn: "2026-09-13",
+        interval: "monthly",
+      }).asOfDate,
+    ).toBe("2026-10-31");
+  });
+
+  it("keeps an explicit time selection's end date", () => {
+    expect(
+      resolveReportingPeriod({
+        kind: "balance_sheet",
+        timeFilter: "2026-Q2",
+        reportDates: ["2026-06-30"],
+        generatedOn: "2026-09-13",
+        interval: "monthly",
+      }),
+    ).toMatchObject({ asOfDate: "2026-06-30", isExplicit: true });
+  });
+
+  it("leaves the date unresolved when the report returned no dates", () => {
+    expect(
+      resolveReportingPeriod({
+        kind: "balance_sheet",
+        timeFilter: "",
+        reportDates: [],
+        generatedOn: "2026-09-13",
+        interval: "monthly",
+      }),
+    ).toMatchObject({ asOfDate: null, isExplicit: false });
   });
 
   it("does not infer a start when the server interval limit may truncate it", () => {
@@ -59,11 +122,12 @@ describe("statement reporting period", () => {
         kind: "profit_and_loss",
         timeFilter: "",
         reportDates,
+        generatedOn: "2026-09-13",
         interval: "monthly",
       }),
     ).toMatchObject({
       startDate: null,
-      endDate: reportDates.at(-1),
+      endDate: "2026-09-13",
       isExplicit: false,
     });
   });

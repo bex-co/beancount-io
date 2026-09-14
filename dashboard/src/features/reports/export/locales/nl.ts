@@ -57,7 +57,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "Een volledige rapportperiode kon niet worden vastgesteld. Dit rapport blijft een intern concept.",
   inferredAsOfDateNotice:
-    "Er is geen expliciete balansdatum geselecteerd. Deze staat gebruikt de laatste beschikbare datum in het rapport: {asOfDate}.",
+    "Er is geen expliciete balansdatum geselecteerd. Deze staat omvat alle grootboekactiviteit tot en met {asOfDate}.",
   asOfDateUnavailableNotice:
     "Een balansdatum kon niet worden vastgesteld. Deze staat blijft een intern concept.",
   subtotalRowsNotice:

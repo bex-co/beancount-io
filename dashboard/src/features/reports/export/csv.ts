@@ -1,4 +1,5 @@
 import { downloadCSV, rowsToCSV } from "@/common/lib/export/csv";
+import { localCalendarDate } from "./date";
 import type { StatementExportDocument } from "./model";
 
 export const STATEMENT_CSV_HEADERS = [
@@ -104,14 +105,9 @@ export function buildStatementFilename(
   );
   const conversion =
     sanitizeFilenamePart(document.context.conversion) || "units";
-  const generatedAt = new Date(document.context.generatedAt);
-  const date = Number.isNaN(generatedAt.getTime())
-    ? document.context.generatedAt.slice(0, 10) || "date-unavailable"
-    : [
-        generatedAt.getFullYear(),
-        String(generatedAt.getMonth() + 1).padStart(2, "0"),
-        String(generatedAt.getDate()).padStart(2, "0"),
-      ].join("-");
+  const date =
+    localCalendarDate(document.context.generatedAt) ??
+    (document.context.generatedAt.slice(0, 10) || "date-unavailable");
   return `${entity}-${document.kind}-${time}-${conversion}-${date}.${extension}`;
 }
 

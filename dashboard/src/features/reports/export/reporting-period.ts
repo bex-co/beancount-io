@@ -200,16 +200,39 @@ function intervalStart(
   return reportDate;
 }
 
+/**
+ * The date a statement without an explicit time selection runs through.
+ *
+ * Report dates are chart buckets: unfiltered, the last one ends with the
+ * period holding the newest entry, so it can fall after the day the statement
+ * is generated and it moves whenever the chart interval changes. An unfiltered
+ * statement already includes every entry, so date it on its generation day —
+ * unless its last bucket starts after that day, which proves the ledger holds
+ * future-dated entries the date must still cover.
+ */
+function implicitThroughDate(
+  latestDate: string | null,
+  generatedOn: string | null,
+  interval: ChartInterval | undefined,
+): string | null {
+  if (latestDate === null || generatedOn === null) return latestDate;
+  const latestBucketStart = intervalStart(latestDate, interval) ?? latestDate;
+  return latestBucketStart > generatedOn ? latestDate : generatedOn;
+}
+
 export function resolveReportingPeriod({
   kind,
   timeFilter,
   reportDates,
+  generatedOn,
   fiscalYearEnd,
   interval,
 }: {
   kind: StatementKind;
   timeFilter: string;
   reportDates: readonly string[];
+  /** Local calendar day (`YYYY-MM-DD`) the statement is generated on. */
+  generatedOn: string | null;
   fiscalYearEnd?: FiscalYearEnd;
   interval?: ChartInterval;
 }): StatementReportingPeriod {
@@ -220,13 +243,17 @@ export function resolveReportingPeriod({
   );
   const validDates = validReportDates(reportDates);
   const earliestDate = validDates.at(0) ?? null;
-  const latestDate = validDates.at(-1) ?? null;
+  const throughDate = implicitThroughDate(
+    validDates.at(-1) ?? null,
+    generatedOn,
+    interval,
+  );
 
   if (kind === "balance_sheet") {
     return {
       startDate: null,
       endDate: null,
-      asOfDate: explicit?.endDate ?? latestDate,
+      asOfDate: explicit?.endDate ?? throughDate,
       isExplicit: explicit !== null,
       selection,
     };
@@ -241,7 +268,7 @@ export function resolveReportingPeriod({
 
   return {
     startDate: explicit?.startDate ?? inferredStartDate,
-    endDate: explicit?.endDate ?? latestDate,
+    endDate: explicit?.endDate ?? throughDate,
     asOfDate: null,
     isExplicit: explicit !== null,
     selection,

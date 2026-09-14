@@ -57,7 +57,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "Повний звітний період визначити не вдалося. Цей звіт залишається внутрішньою чернеткою.",
   inferredAsOfDateNotice:
-    "Явну звітну дату не вибрано. Використовується остання доступна дата звіту: {asOfDate}.",
+    "Явну звітну дату не вибрано. Звіт охоплює всі операції книги до {asOfDate} включно.",
   asOfDateUnavailableNotice:
     "Не вдалося визначити дату балансу. Цей звіт залишається внутрішньою чернеткою.",
   subtotalRowsNotice:

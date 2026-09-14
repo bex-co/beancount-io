@@ -57,7 +57,7 @@ export default createExportLocale({
   periodNotExplicitNotice:
     "A complete reporting period could not be determined. This statement remains an internal draft.",
   inferredAsOfDateNotice:
-    "No explicit as-of date was selected. This statement uses the latest date available in the report: {asOfDate}.",
+    "No explicit as-of date was selected. This statement includes all ledger activity through {asOfDate}.",
   asOfDateUnavailableNotice:
     "An as-of date could not be determined. This statement remains an internal draft.",
   subtotalRowsNotice:
