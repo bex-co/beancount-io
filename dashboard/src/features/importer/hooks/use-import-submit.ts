@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useMutation } from "@apollo/client/react";
 import { BulkEntriesDocument, LedgerEntryType } from "@/graphql/definitions";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
+import { negateDecimalNumber } from "@/common/lib/beancount/decimal-number";
 import type {
   LedgerTransactionInput,
   LedgerPostingInput,
@@ -37,14 +38,14 @@ export function useImportSubmit(ledgerId: string): UseImportSubmitReturn {
               {
                 account: txn.sourceAccount,
                 units: {
-                  number: txn.amount.toString(),
+                  number: txn.amount,
                   currency: txn.currency,
                 },
               },
               {
                 account: txn.targetAccount,
                 units: {
-                  number: (-txn.amount).toString(),
+                  number: negateDecimalNumber(txn.amount),
                   currency: txn.currency,
                 },
               },

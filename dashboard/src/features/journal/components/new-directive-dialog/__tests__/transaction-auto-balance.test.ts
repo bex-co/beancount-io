@@ -3,7 +3,6 @@ import {
   applyAutoBalanceToPostings,
   computeAutoBalance,
   findUnresolvedEligibleAmount,
-  formatInferredAmount,
 } from "../transaction-auto-balance";
 
 describe("computeAutoBalance", () => {
@@ -19,7 +18,7 @@ describe("computeAutoBalance", () => {
     );
 
     expect(result.incomplete).toBe(false);
-    expect(result.balances.get(2)?.amount).toBe(-10);
+    expect(result.balances.get(2)?.amount).toBe("-10");
     expect(result.balances.has(0)).toBe(false);
   });
 
@@ -47,7 +46,7 @@ describe("computeAutoBalance", () => {
       "MUSD",
     );
     expect(sameCurrency.incomplete).toBe(false);
-    expect(sameCurrency.balances.get(2)?.amount).toBe(-6);
+    expect(sameCurrency.balances.get(2)?.amount).toBe("-6");
 
     const zeros = computeAutoBalance(
       [
@@ -57,8 +56,7 @@ describe("computeAutoBalance", () => {
       ],
       "MUSD",
     );
-    expect(zeros.balances.get(2)?.amount).toBe(-0);
-    expect(formatInferredAmount(zeros.balances.get(2)!.amount)).toBe("0");
+    expect(zeros.balances.get(2)?.amount).toBe("0");
 
     const multi = computeAutoBalance(
       [
@@ -70,14 +68,34 @@ describe("computeAutoBalance", () => {
       "MUSD",
     );
     expect(multi.incomplete).toBe(false);
-    expect(multi.balances.get(1)?.amount).toBe(-10);
-    expect(multi.balances.get(3)?.amount).toBe(-5);
+    expect(multi.balances.get(1)?.amount).toBe("-10");
+    expect(multi.balances.get(3)?.amount).toBe("-5");
+  });
+
+  it.each<[string[], string]>([
+    [["0.1", "0.2"], "-0.3"],
+    [["-0.12345", "0.00005"], "0.12340"],
+    [["0.00000001"], "-0.00000001"],
+    [["12345678901234567890"], "-12345678901234567890"],
+    [["10.25"], "-10.25"],
+  ])("infers the exact decimal residual of %j as %j", (filled, expected) => {
+    const postings = [
+      ...filled.map((amount, index) => ({
+        account: `Expenses:Item${index}`,
+        amount,
+        currency: "BTC",
+      })),
+      { account: "Assets:Wallet", amount: "", currency: "BTC" },
+    ];
+    const result = computeAutoBalance(postings, "BTC");
+
+    expect(result.balances.get(filled.length)?.amount).toBe(expected);
   });
 });
 
 describe("applyAutoBalanceToPostings", () => {
   it("fills only eligible empty amounts and keeps precise fractional text", () => {
-    const balances = new Map([[1, { amount: -0.0001, currency: "MUSD" }]]);
+    const balances = new Map([[1, { amount: "-0.0001", currency: "MUSD" }]]);
     const next = applyAutoBalanceToPostings(
       [
         { account: "Expenses:A", amount: "0.0001", currency: "MUSD" },
@@ -101,12 +119,13 @@ describe("applyAutoBalanceToPostings", () => {
       ]),
     ).toBe(1);
   });
-});
 
-describe("formatInferredAmount", () => {
-  it("preserves fractional precision instead of rounding to two decimals", () => {
-    expect(formatInferredAmount(-0.0001)).toBe("-0.0001");
-    expect(formatInferredAmount(-0.12345)).toBe("-0.12345");
-    expect(formatInferredAmount(-10.25)).toBe("-10.25");
+  it("treats a value that is not a decimal number as unresolved", () => {
+    expect(
+      findUnresolvedEligibleAmount([
+        { account: "A", amount: "12abc", currency: "MUSD" },
+        { account: "B", amount: "-12", currency: "MUSD" },
+      ]),
+    ).toBe(0);
   });
 });

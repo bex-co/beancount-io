@@ -26,6 +26,7 @@ import {
   CurrencyCombobox,
 } from "@/common/components/ledger-comboboxes";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { isPositiveDecimalNumber } from "@/common/lib/beancount/decimal-number";
 import type {
   ParsedReceipt,
   ReviewFormData,
@@ -71,7 +72,7 @@ export function ReceiptReviewForm({
         amount: z
           .string()
           .refine(
-            (v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0,
+            (v) => isPositiveDecimalNumber(v),
             t("receipt.review.amountPositive"),
           ),
         currency: z.string().min(1, t("receipt.review.currencyRequired")),

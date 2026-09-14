@@ -32,7 +32,7 @@ const makeTransaction = (
   date: "2024-01-15",
   payee: "Starbucks",
   description: "Morning coffee",
-  amount: 5.5,
+  amount: "5.5",
   sourceAccount: "Assets:Checking",
   targetAccount: "Expenses:Coffee",
   currency: "USD",
@@ -178,28 +178,28 @@ describe("useImportSubmit", () => {
         makeTransaction({
           rowIndex: 0,
           payee: "QA Sign Expense",
-          amount: -4.5,
+          amount: "-4.5",
           sourceAccount: "Assets:Bank:Checking",
           targetAccount: "Expenses:Crypto:Fees:Trading",
         }),
         makeTransaction({
           rowIndex: 1,
           payee: "QA Sign Income",
-          amount: 2500,
+          amount: "2500",
           sourceAccount: "Assets:Bank:Checking",
           targetAccount: "Income:Crypto:CapitalGains:LongTerm",
         }),
         makeTransaction({
           rowIndex: 2,
           payee: "QA Refund",
-          amount: 12.3,
+          amount: "12.3",
           sourceAccount: "Assets:Bank:Checking",
           targetAccount: "Expenses:Coffee",
         }),
         makeTransaction({
           rowIndex: 3,
           payee: "QA Transfer Out",
-          amount: -100,
+          amount: "-100",
           sourceAccount: "Assets:Bank:Checking",
           targetAccount: "Assets:Bank:Savings",
         }),
@@ -260,6 +260,37 @@ describe("useImportSubmit", () => {
             units: { number: "100", currency: "USD" },
           },
         ],
+      ]);
+    });
+
+    it("submits high-precision and large amounts exactly, negating them as text", async () => {
+      mockMutate.mockResolvedValueOnce({
+        data: {
+          bulkEntries: {
+            success: true,
+            successCount: 2,
+            failureCount: 0,
+            message: null,
+            errors: [],
+          },
+        },
+      });
+
+      const { result } = renderHook(() => useImportSubmit(ledgerId));
+      await result.current.submitImport([
+        makeTransaction({ rowIndex: 0, amount: "0.00000001" }),
+        makeTransaction({ rowIndex: 1, amount: "-12345678901234567890" }),
+      ]);
+
+      const [[callArg]] = mockMutate.mock.calls;
+      const numbers = callArg.variables.entries.map(
+        (entry: {
+          transaction: { postings: Array<{ units: { number: string } }> };
+        }) => entry.transaction.postings.map((posting) => posting.units.number),
+      );
+      expect(numbers).toEqual([
+        ["0.00000001", "-0.00000001"],
+        ["-12345678901234567890", "12345678901234567890"],
       ]);
     });
 

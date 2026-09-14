@@ -3,6 +3,10 @@ import { useMutation } from "@apollo/client/react";
 import { format } from "date-fns";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
+import {
+  negateDecimalNumber,
+  parseDecimalNumber,
+} from "@/common/lib/beancount/decimal-number";
 import { useTempAssetUpload } from "@/features/importer/hooks/use-temp-asset-upload";
 import {
   ParseReceiptDocument,
@@ -38,6 +42,18 @@ type WorkflowState =
   | { step: "submitting"; objectKey: string; parsed: ParsedReceipt }
   | { step: "success"; formData: ReviewFormData }
   | { step: "error"; message: string };
+
+/**
+ * The expense and payment posting amounts for a reviewed receipt: the typed
+ * decimal as entered and its exact negation. Nothing is rounded to two places;
+ * the currency is user-selected and a commodity may carry more precision.
+ */
+export function receiptPostingAmounts(
+  typed: string,
+): [expense: string, payment: string] {
+  const amount = parseDecimalNumber(typed) ?? typed.trim();
+  return [amount, negateDecimalNumber(amount)];
+}
 
 export function useReceiptWorkflow(ledgerId: string) {
   const [state, setState] = useState<WorkflowState>({ step: "idle" });
@@ -88,6 +104,9 @@ export function useReceiptWorkflow(ledgerId: string) {
       if (state.step !== "review") return;
       const { objectKey, parsed } = state;
 
+      const [expenseAmount, paymentAmount] = receiptPostingAmounts(
+        formData.amount,
+      );
       setState({ step: "submitting", objectKey, parsed });
       try {
         const result = await insertReceiptTransaction({
@@ -101,12 +120,12 @@ export function useReceiptWorkflow(ledgerId: string) {
               postings: [
                 {
                   account: formData.expenseAccount,
-                  amountNumber: parseFloat(formData.amount).toFixed(2),
+                  amountNumber: expenseAmount,
                   amountCurrency: formData.currency,
                 },
                 {
                   account: formData.paymentAccount,
-                  amountNumber: (-parseFloat(formData.amount)).toFixed(2),
+                  amountNumber: paymentAmount,
                   amountCurrency: formData.currency,
                 },
               ],

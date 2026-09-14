@@ -26,6 +26,7 @@ import {
 } from "@/common/components/ledger-comboboxes";
 import { AccountMappingTable } from "./account-mapping-table";
 import { useAICategorization } from "../../../hooks/use-ai-categorization";
+import { parseDecimalNumber } from "@/common/lib/beancount/decimal-number";
 import type { ParsedRow, ImportTransaction } from "../../../types";
 import { parseDate, parseAmount } from "../../../utils/csv-validator";
 import { useLedger } from "@/common/hooks/use-ledger";
@@ -73,6 +74,7 @@ export function TransactionConfigForm({
                 payee: z.string(),
                 description: z.string(),
                 amount: z.number(),
+                amountInput: z.string(),
                 targetAccount: z.string(),
                 selected: z.boolean(),
               }),
@@ -124,6 +126,7 @@ export function TransactionConfigForm({
           payee: row.payee,
           description: row.description,
           amount: amountResult.amount!,
+          amountInput: row.amountInput,
           targetAccount: "",
           selected: true, // All transactions selected by default
         };
@@ -167,7 +170,7 @@ export function TransactionConfigForm({
         date: txn.date,
         payee: txn.payee,
         description: txn.description,
-        amount: txn.amount,
+        amount: parseDecimalNumber(txn.amountInput) ?? txn.amountInput.trim(),
         sourceAccount: data.sourceAccount,
         targetAccount: txn.targetAccount,
         currency: data.defaultCurrency,

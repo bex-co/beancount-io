@@ -47,9 +47,9 @@ import {
   applyAutoBalanceToPostings,
   computeAutoBalance,
   findUnresolvedEligibleAmount,
-  formatInferredAmount,
   isEligiblePosting,
 } from "./transaction-auto-balance";
+import { parseDecimalNumber } from "@/common/lib/beancount/decimal-number";
 
 interface TransactionFormProps {
   ledgerId: string;
@@ -89,9 +89,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
         amount: z
           .string()
           .refine(
-            (val) =>
-              val === "" ||
-              (!isNaN(parseFloat(val)) && isFinite(parseFloat(val))),
+            (val) => val === "" || parseDecimalNumber(val) !== null,
             t("journal.amountMustBeNumber"),
           ),
         currency: z.string().trim(),
@@ -215,7 +213,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
         .map((posting) => ({
           account: posting.account,
           units: {
-            number: Number.parseFloat(posting.amount).toString(),
+            number: parseDecimalNumber(posting.amount) ?? posting.amount,
             currency: posting.currency,
           },
         }));
@@ -464,7 +462,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
                                 step="any"
                                 placeholder={
                                   autoBalance
-                                    ? formatInferredAmount(autoBalance.amount)
+                                    ? autoBalance.amount
                                     : t("journal.amountPlaceholder")
                                 }
                                 className={

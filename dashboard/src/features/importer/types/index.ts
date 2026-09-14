@@ -36,8 +36,10 @@ export type ImportTransaction = {
   /**
    * Signed bank-account movement for `sourceAccount` (negative = expense out of
    * the bank, positive = income/refund into the bank). Target gets the negation.
+   * A plain decimal string normalized from the CSV token, never a double, so
+   * `0.00000001` and 20-digit amounts reach the ledger as written.
    */
-  amount: number;
+  amount: string;
   sourceAccount: string;
   targetAccount: string;
   currency: string;

@@ -49,6 +49,8 @@ interface TransactionFormData {
     payee: string;
     description: string;
     amount: number;
+    /** Original CSV amount token; the submitted amount is built from it. */
+    amountInput: string;
     targetAccount: string;
     selected: boolean;
   }[];
