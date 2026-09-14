@@ -208,6 +208,8 @@ def build_shell(
         def on_Select(self, statement: Any) -> Any:  # noqa: N802 - beanquery dispatch name
             cursor = self.context.execute(statement)
             description, rows = cursor.description, cursor.fetchall()
+            if self.settings.format == "beancount":
+                _require_entries(description, rows)
             if not rows:
                 protocol.note("(no rows)")
             dcontext = result_context(rows)
@@ -218,6 +220,25 @@ def build_shell(
                 return renderer(description, rows, out, dcontext=dcontext, **self.settings.todict())
 
     return PreciseShell(LEDGER_DSN, stream, interactive, True, format, numberify, show_errors)
+
+
+def _require_entries(description: Any, rows: Any) -> None:
+    """Refuse a column result under the beancount format before upstream's renderer sees it.
+
+    Upstream's renderer unpacks every row as a single directive, so a column
+    `SELECT` fails inside it with 'too many values to unpack' or a missing
+    `meta` attribute. `PRINT` and `SELECT entry` answer one directive per row
+    and still go to upstream unchanged; the ledger is fine either way, so this
+    is a usage failure rather than a validation one.
+    """
+    from beancount.core.data import ALL_DIRECTIVES
+
+    if len(description or ()) == 1 and all(len(row) == 1 and isinstance(row[0], ALL_DIRECTIVES) for row in rows):
+        return
+    raise protocol.UsageError(
+        "--format beancount prints directives, so the query must return entries; "
+        "use PRINT, or --format text or csv for a column result."
+    )
 
 
 def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) -> Any:

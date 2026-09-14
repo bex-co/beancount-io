@@ -359,6 +359,38 @@ def test_a_query_error_is_reported_as_json_when_json_was_asked_for(book: Path) -
     assert "syntax error" in error["message"]
 
 
+@pytest.mark.parametrize("query", ["SELECT date, account", "SELECT date"])
+def test_beancount_format_on_a_column_result_explains_itself(book: Path, query: str) -> None:
+    """Upstream's beancount renderer unpacks rows as entries; a column SELECT is the user's mistake."""
+    with book.open("a") as stream:
+        stream.write('2026-01-02 * "Groceries"\n  Expenses:Groceries 30 USD\n  Assets:Checking\n')
+    result = runner.invoke(app, ["-f", str(book), "query", query, "--format", "beancount"])
+    assert result.exit_code == 2, result.output
+    assert "--format beancount prints directives, so the query must return entries" in result.stderr
+    assert "PRINT" in result.stderr
+    assert "unpack" not in result.output and "attribute" not in result.output
+
+
+def test_beancount_format_still_prints_entry_results(book: Path) -> None:
+    with book.open("a") as stream:
+        stream.write('2026-01-02 * "Groceries"\n  Expenses:Groceries 30 USD\n  Assets:Checking\n')
+    for query in ("PRINT", "SELECT entry"):
+        result = runner.invoke(app, ["-f", str(book), "query", query, "--format", "beancount"])
+        assert result.exit_code == 0, result.output
+        assert '2026-01-02 * "Groceries"' in result.stdout
+    table = runner.invoke(app, ["-f", str(book), "query", "SELECT date, account"])
+    assert table.exit_code == 0, table.output
+    assert "Expenses:Groceries" in table.stdout
+
+
+def test_beancount_format_on_a_broken_ledger_is_still_a_ledger_error(book: Path) -> None:
+    with book.open("a") as stream:
+        stream.write('2026-01-02 * "Unbalanced"\n  Expenses:Groceries 30 USD\n  Assets:Checking -20 USD\n')
+    result = runner.invoke(app, ["--strict", "-f", str(book), "query", "PRINT", "--format", "beancount"])
+    assert result.exit_code == 1, result.output
+    assert "prints directives" not in result.output
+
+
 @pytest.mark.parametrize("suffix", ["#target.bean", "?target.bean"])
 def test_query_loads_the_exact_file_when_its_name_has_url_characters(
     tmp_path: Path, suffix: str, monkeypatch: pytest.MonkeyPatch

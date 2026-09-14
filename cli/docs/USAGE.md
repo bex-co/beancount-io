@@ -249,6 +249,11 @@ writes the standard JSON envelope to the file with no duplicate stdout output.
 in JSON as well as text. JSON exports replace the destination only after a successful
 query; a failed query or write preserves an existing export.
 
+`--format beancount` prints directives, so the query has to return entries:
+`bea query PRINT -f beancount` (or `SELECT entry`) renders them through upstream's
+printer. A column result such as `SELECT date, account` is a usage error (exit 2)
+that points you at `PRINT` or at `--format text`/`csv`.
+
 Native forwarding commands include their pinned upstream usage/options in
 `--help`, even offline and before optional engine features are enabled. The
 native `FILENAME` in check help is supplied by global `bea --file`.
