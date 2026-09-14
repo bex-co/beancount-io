@@ -450,7 +450,9 @@ def _transactions(
                 text = writer.format_transaction(directive)
                 write.validate_append(file, [*texts, text], allow_errors=allow_errors, into=into)
             except protocol.LedgerError as err:
-                rejected.append(f"row {index}: {'; '.join(err.details) or str(err)}")
+                # Human labels count from 1, like the schema rejections above;
+                # `rejected_rows` stays a zero-based index for scripts.
+                rejected.append(f"Row {index + 1}: {'; '.join(err.details) or str(err)}")
                 rejected_rows.append(index)
             else:
                 accepted.append((index, directive))

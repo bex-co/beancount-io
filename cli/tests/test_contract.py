@@ -7,6 +7,7 @@ they are tested through the real command tree rather than against the helpers.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -225,6 +226,43 @@ class TestBulkAdd:
         assert result.exit_code == 1
         assert "Good row" in ledger.read_text()
         assert "Bad row" not in ledger.read_text()
+
+    def test_partial_rejections_name_each_row_once_from_one(self, tmp_path: Path) -> None:
+        # Row 1 fails the schema and row 2 fails accounting: two code paths that
+        # must agree on numbering, or an operator repairs the wrong entry.
+        rows = [
+            {
+                "date": "2024-03-01",
+                "narration": "Schema bad",
+                "postings": [
+                    {"account": "Expenses:Food", "units": {"number": "1", "currency": "USD"}, "amount": "1 USD"},
+                    {"account": "Assets:Cash"},
+                ],
+            },
+            {
+                "date": "2024-03-02",
+                "narration": "Unbalanced",
+                "postings": [
+                    {"account": "Expenses:Food", "units": {"number": "1", "currency": "USD"}},
+                    {"account": "Assets:Cash", "units": {"number": "5", "currency": "USD"}},
+                ],
+            },
+            self.ONE_GOOD_ONE_BAD[0],
+        ]
+        ledger, rows_file = self._ledger_and_rows(tmp_path, rows)
+
+        result = runner.invoke(
+            app, ["--file", str(ledger), "--json", "add", "transactions", "--from", str(rows_file), "--partial"]
+        )
+
+        assert result.exit_code == 1
+        error = error_object(result)
+        labels = [m.group(1) for d in error["details"] if (m := re.match(r"Row (\d+)\b", d))]
+        assert labels == ["1", "2"]
+        assert not any(d.startswith("row ") for d in error["details"])
+        assert "does not balance" in next(d for d in error["details"] if d.startswith("Row 2:"))
+        # The machine-readable indexes stay zero-based, as documented.
+        assert error["result"] == {"written": 1, "written_rows": [2], "rejected_rows": [0, 1]}
 
     def test_a_clean_file_writes_every_row_and_succeeds(self, tmp_path: Path) -> None:
         ledger, rows = self._ledger_and_rows(tmp_path, self.ONE_GOOD_ONE_BAD[:1])
