@@ -33,4 +33,3 @@ Milestones m18–m22 are complete. m22 fixed the published CLI QA gaps with gree
 ## Inbox
 
 - [028](./028.md) — Three write paths round user-entered amounts through IEEE-754, producing invalid or silently wrong ledger numbers (dashboard QA, 2026-09-13)
-- [030](./030.md) — The Markdown statement export silently drops zero-amount accounts that CSV and print both keep (dashboard QA, 2026-09-13)

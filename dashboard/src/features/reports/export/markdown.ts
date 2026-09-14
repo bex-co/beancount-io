@@ -86,11 +86,14 @@ function rowLines(
 ): string[] {
   const account = escapeMarkdown(displayLabel);
   const emphasize = row.rowKind !== "account";
-  return row.amounts.map((amount) => {
-    const unit = escapeMarkdown(amount.unit);
-    const value = escapeMarkdown(
-      formatStatementAmount(amount.displayAmount, locale),
-    );
+  // An account with no amounts keeps one row, as in the CSV and print
+  // renderers, so all three exports list the same accounts.
+  const amounts = row.amounts.length > 0 ? row.amounts : [null];
+  return amounts.map((amount) => {
+    const unit = amount ? escapeMarkdown(amount.unit) : "—";
+    const value = amount
+      ? escapeMarkdown(formatStatementAmount(amount.displayAmount, locale))
+      : "—";
     return emphasize
       ? `| **${account}** | **${unit}** | **${value}** |`
       : `| ${account} | ${unit} | ${value} |`;

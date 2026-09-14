@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { statementToCSV } from "../csv";
 import type { StatementExportDocument } from "../model";
 import {
   exportStatementMarkdown,
@@ -326,6 +327,60 @@ function balanceSheetFixture(): StatementExportDocument {
     ],
   };
 }
+
+describe("statement Markdown row set", () => {
+  it("keeps accounts without amounts, listing the same accounts as the CSV", () => {
+    const document = balanceSheetFixture();
+    document.sections[0].rows.push({
+      accountPath: "Assets:US:Federal",
+      label: "Federal",
+      depth: 1,
+      rowKind: "subtotal",
+      amounts: [],
+    });
+    document.sections[1].rows.push({
+      accountPath: "Liabilities:AccountsPayable",
+      label: "AccountsPayable",
+      depth: 1,
+      rowKind: "account",
+      amounts: [],
+    });
+
+    const markdown = statementToMarkdown(document, { locale: "en-US", t });
+    const csv = statementToCSV(document);
+
+    expect(markdown).toContain("| **Assets:US:Federal** | **—** | **—** |");
+    expect(markdown).toContain("| Liabilities:AccountsPayable | — | — |");
+    const markdownAccounts = new Set(
+      markdown
+        .split("\n")
+        .filter((line) => line.startsWith("| "))
+        .map((line) => line.split(" | ")[0].slice(2).replaceAll("**", "")),
+    );
+    for (const row of document.sections.flatMap((section) => section.rows)) {
+      if (row.rowKind === "total") continue;
+      expect(csv).toContain(row.accountPath);
+      expect(markdownAccounts).toContain(row.accountPath);
+    }
+  });
+
+  it("keeps a supporting section whose rows all lack amounts", () => {
+    const document = fixture();
+    const expenses = document.sections.find(
+      (section) => section.key === "expenses",
+    )!;
+    expenses.rows.forEach((row) => {
+      row.amounts = [];
+    });
+
+    const markdown = statementToMarkdown(document, { locale: "en-US", t });
+
+    expect(markdown).toContain(`### ${expenses.label}`);
+    for (const row of expenses.rows.filter((r) => r.rowKind === "account")) {
+      expect(markdown).toContain(`| ${row.accountPath} | — | — |`);
+    }
+  });
+});
 
 describe("statement Markdown", () => {
   it("formats exact decimals consistently without losing extra precision", () => {
