@@ -25,8 +25,12 @@ skills/
         SKILL.md
         references/           Statement-format + matching guidance loaded on demand
         evals/                Statement+ledger fixtures per mismatch class
+  docs/                       Customer installation guide and first-query walkthrough
+  scripts/                    CI checks, beancount-skills.py (install/verify/uninstall), their tests
   tmp/                        Scratch space — gitignored, safe for experiments
 ```
+
+Customers install the suite by linking each `beancount-*` directory from a sparse Git checkout into their agent's skill directory with `scripts/beancount-skills.py` ([docs/installation.md](docs/installation.md)). The helper is stdlib-only, owns exactly the directories under `.claude/skills/beancount-*`, and must never install development skills. When skill text starts depending on a new supporting file or sibling, keep the reference in the forms its `verify` resolves: `references/<name>.md` or a bare lowercase `<name>.md`, with the owning sibling named on the same line.
 
 Most stateful `beancount-*` skills have `references/` and `evals/`; small skills may be self-contained. Mutating ledger workflows share the applicable trust rails: propose-then-confirm before writes, categorization restricted to existing accounts, the `import-id` convention from `.claude/skills/beancount-import/references/dedup.md` for externally sourced entries — and a shared tool preference: **one `bea` install** for writes, checks, and JSON reads. Do not tell customers to `pip install beancount` / `beanquery`, and do not configure private engine paths. If the managed engine fails while `bea` is installed, repair/retry provisioning — do not silently fall back to a global `bean-*` tool. Without `bea`, developer bean-* tools or installing `bea` are the explicit fallbacks. Optional Beangulp/Beanprice use `bea engine enable beangulp|beanprice`, then `bea ingest` / `bea price`. Fava browser setup is a separate uv/Fava runtime, not a prerequisite for `bea` operations.
 
@@ -77,6 +81,8 @@ Before opening a skills PR, run the structural suite locally:
 # from repo root (cli provides bea + the upstream oracle)
 cd cli && uv sync --all-groups && cd ..
 python3 skills/scripts/ci-check.py
+python3 skills/scripts/test_ci_check.py
+python3 skills/scripts/test_beancount_skills.py   # installer lifecycle + first-query walkthrough
 python3 scripts/check-agent-guidance.py
 ```
 
@@ -96,3 +102,4 @@ Use the `skill-creator` skill (`/skill-creator`) for the build → eval → revi
 2. Be explicit in `description` about both when to trigger AND when to skip — Claude tends to undertrigger, but false positives are equally bad.
 3. Build a few realistic test prompts in `evals/evals.json`, run them with and without the skill (via `skill-creator` workflow), iterate.
 4. Update this CLAUDE.md's Skills table and the customer catalog in README.md.
+5. `install` links the new directory automatically. Update the expected inventory in `scripts/test_beancount_skills.py`, plus the suite count in `docs/installation.md`, `README.md`, and the root `README.md`.

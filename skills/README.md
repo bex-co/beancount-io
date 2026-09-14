@@ -15,6 +15,18 @@ Install **`bea`** once ([Homebrew](https://github.com/bex-co/homebrew-tap) or `u
 | [beancount-close](.claude/skills/beancount-close/SKILL.md) | Reconcile and close an accounting period. |
 | [beancount-options](.claude/skills/beancount-options/SKILL.md) | Record options trades and lifecycle events. |
 
-Keep each skill's directory intact when installing it into your agent's skill directory: its references, scripts, and fixtures belong with `SKILL.md`. Install the full `beancount-*` suite for workflows that compose other skills, such as migration and month-end close.
+## Install
+
+Install the whole suite, not individual skills: migration and month-end close depend on sibling workflows, and each skill's `references/` and fixtures belong with its `SKILL.md`. One Git checkout serves Claude Code (`~/.claude/skills`) and Codex (`~/.agents/skills`):
+
+```sh
+SKILLS_SRC="${XDG_DATA_HOME:-$HOME/.local/share}/beancount-io"
+git clone --depth 1 --filter=blob:none --sparse https://github.com/bex-co/beancount-io.git "$SKILLS_SRC"
+git -C "$SKILLS_SRC" sparse-checkout set skills
+python3 "$SKILLS_SRC/skills/scripts/beancount-skills.py" install ~/.claude/skills ~/.agents/skills
+```
+
+- [Installation guide](docs/installation.md): workspace-only installs, discovery checks, `verify`, updates, local edits and name conflicts, and removal.
+- [First query](docs/first-query.md): ask a synthetic ledger a question through `beancount-ask` and check the known answer. No account needed.
 
 Repository contributors use a separate set of [development skills](../.agents/CLAUDE.md) in [`.agents/skills/`](../.agents/skills). Development conventions for this customer-facing package live in [CLAUDE.md](CLAUDE.md).

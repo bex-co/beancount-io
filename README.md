@@ -160,6 +160,10 @@ uv run bea --help
 
 Start with the [first-month tutorial](./cli/docs/TUTORIAL.md), then use the [CLI reference](./cli/docs/USAGE.md) for the command tree, the `--file`/`--json`/`--no-input` automation contract, exit codes, validation, formatting, queries, reports, authentication, and ledger management. Every flag is listed in the generated [command reference](./cli/docs/REFERENCE.md).
 
+### Coding agent skills (local ledger)
+
+Give Claude Code or Codex the eight `beancount-*` ledger workflows. [Install the skills](./skills/docs/installation.md) with a sparse Git clone and one `install` command, then ask a sample ledger a first question with the [first-query walkthrough](./skills/docs/first-query.md).
+
 ### Coding agent (MCP)
 
 Point an MCP client at a deployment to query and edit a ledger from an agent:

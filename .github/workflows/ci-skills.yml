@@ -42,5 +42,7 @@ jobs:
         run: python3 skills/scripts/ci-check.py
       - name: Run ci-check unit tests
         run: python3 skills/scripts/test_ci_check.py
+      - name: Run customer-suite installer and first-query tests
+        run: python3 skills/scripts/test_beancount_skills.py
       - name: Run development QA helper tests
         run: node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs
