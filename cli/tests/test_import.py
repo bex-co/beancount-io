@@ -57,6 +57,25 @@ def test_preview_apply_and_repeat_are_safe(book: Path) -> None:
     assert transaction.meta["bank_id"] == "bank-001"
 
 
+def test_apply_summary_counts_entries_in_the_right_number(book: Path) -> None:
+    single = book.parent / "single.csv"
+    single.write_text(HEADER + ROW)
+    applied = runner.invoke(app, ["--file", str(book), "import", str(single), "--config", str(CONFIG), "--apply"])
+    assert applied.exit_code == 0, applied.output
+    assert f"Wrote 1 entry to {book}." in applied.output
+    assert "1 entries" not in applied.output
+
+    double = book.parent / "double.csv"
+    double.write_text(
+        HEADER
+        + "2026-08-03,Grocer,Food,-12.00,USD,Expenses:Dining,bank-002\n"
+        + "2026-08-04,Grocer,Food,-7.50,USD,Expenses:Dining,bank-003\n"
+    )
+    applied = runner.invoke(app, ["--file", str(book), "import", str(double), "--config", str(CONFIG), "--apply"])
+    assert applied.exit_code == 0, applied.output
+    assert f"Wrote 2 entries to {book}." in applied.output
+
+
 def test_reused_bank_id_with_changed_amount_is_a_conflict(book: Path) -> None:
     source = book.parent / "bank.csv"
     source.write_text(HEADER + ROW)

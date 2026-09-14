@@ -400,6 +400,8 @@ def import_entries(
         if preview.get("importer_output"):
             output.note(preview["importer_output"])
         if apply:
-            output.success(f"Wrote {preview['written']} entries to {preview['into']}.")
+            written = preview["written"]
+            noun = "entry" if written == 1 else "entries"
+            output.success(f"Wrote {written} {noun} to {preview['into']}.")
         else:
             typer.echo("Preview only. Review the entries, then repeat with --apply to write.")

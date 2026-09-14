@@ -103,7 +103,12 @@ Passing a directory also exits **2** with a hint to select its root ledger file.
 Hosted commands name ledgers as `owner/name`; local files are never implicitly
 uploaded. `init` creates its target from its own argument or global `--file`
 and ignores `BEA_FILE`; `format` uses its own positional path and likewise
-ignores both.
+ignores both. The delegated commands `doctor`, `example`, and `treeify` forward
+their own arguments to upstream unchanged, so they ignore all three sources:
+pass the ledger as upstream's positional argument, as in
+`bea doctor lex main.bean`. `bea --file main.bean doctor lex` and
+`BEA_FILE=main.bean bea doctor lex` exit **2** with upstream's
+`Missing argument 'FILENAME'`.
 
 ### Non-interactive behavior
 

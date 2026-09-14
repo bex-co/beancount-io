@@ -9,7 +9,10 @@ from cli.native_help import native_help
 
 doctor_app = typer.Typer(
     name="doctor",
-    help="Beancount diagnostics (delegates to bean-doctor).",
+    help=(
+        "Beancount diagnostics (delegates to bean-doctor). Operations take the ledger file as a "
+        "positional argument; --file, BEA_FILE, and ./main.bean do not apply."
+    ),
     no_args_is_help=True,
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
