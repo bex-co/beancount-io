@@ -333,7 +333,7 @@ export class UnbalancedTransactionError extends DomainError {
  * @example
  * throw new ConfigurationError(
  *   "Object storage is not configured on this deployment",
- *   "Set TEMP_ASSETS_AWS_S3_BUCKET, TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID, and TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY (see .env.tmpl)",
+ *   "Set TEMP_ASSETS_AWS_S3_BUCKET, TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID, and TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY (see .env.example)",
  * );
  */
 export class ConfigurationError extends DomainError {

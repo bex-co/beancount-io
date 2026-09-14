@@ -299,7 +299,7 @@ describe("AssetStorageService", () => {
       },
     );
 
-    it("names the .env.tmpl variables that provide the configuration", async () => {
+    it("names the .env.example variables that provide the configuration", async () => {
       const error = await unconfigured
         .generateDownloadUrl("assets/a")
         .catch((e: unknown) => e);
@@ -307,7 +307,7 @@ describe("AssetStorageService", () => {
       const hint = (error as ConfigurationError).metadata?.hint;
       expect(hint).toContain("TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID");
       expect(hint).toContain("TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY");
-      expect(hint).toContain(".env.tmpl");
+      expect(hint).toContain(".env.example");
     });
   });
 });

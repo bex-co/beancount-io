@@ -43,11 +43,11 @@ describe("envelopeFromThrown", () => {
     const envelope = envelopeFromThrown(
       new ConfigurationError(
         "Object storage is not configured",
-        "Set TEMP_ASSETS_AWS_S3_BUCKET (see .env.tmpl)",
+        "Set TEMP_ASSETS_AWS_S3_BUCKET (see .env.example)",
       ),
     );
     expect(envelope.code).toBe("CONFIGURATION_ERROR");
-    expect(envelope.hint).toBe("Set TEMP_ASSETS_AWS_S3_BUCKET (see .env.tmpl)");
+    expect(envelope.hint).toBe("Set TEMP_ASSETS_AWS_S3_BUCKET (see .env.example)");
   });
 
   it("names the next call for the refusals the audit actually hit", () => {
