@@ -152,6 +152,39 @@ describe("LedgerSwitcher", () => {
     );
   });
 
+  it("marks only the ledger in use as current, including after filtering", async () => {
+    const user = userEvent.setup();
+    render(
+      <SidebarProvider>
+        <LedgerSwitcher
+          currentLedgerId="open_ledger/ledger-2"
+          currentLedgerName="ledger-2"
+          currentLedgerFullName="open_ledger/ledger-2"
+        />
+      </SidebarProvider>,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Select a ledger" }));
+    await screen.findByRole("listbox");
+    const currentRows = () =>
+      screen
+        .getAllByRole("option")
+        .filter((option) => option.getAttribute("aria-current") === "true")
+        .map((option) => option.getAttribute("data-value"));
+
+    // cmdk highlights the first row (the owner) with aria-selected; that is
+    // not the current ledger.
+    expect(currentRows()).toEqual(["open_ledger/ledger-2 ledger-2"]);
+
+    await user.type(
+      screen.getByRole("combobox", { name: /search ledgers/i }),
+      "ledger-2",
+    );
+    await waitFor(() => {
+      expect(currentRows()).toEqual(["open_ledger/ledger-2 ledger-2"]);
+    });
+  });
+
   it("closes the narrow sidebar drawer after selecting another ledger", async () => {
     const user = userEvent.setup();
     Object.defineProperty(window, "matchMedia", {

@@ -282,6 +282,13 @@ function LedgerAuthenticatedSwitcher({
                               value={`${ledger.fullName} ${ledger.name}`}
                               onSelect={() => handleSelectLedger(ledger.id)}
                               className="pl-6"
+                              // `aria-selected` is cmdk's keyboard highlight;
+                              // the ledger in use is marked separately.
+                              aria-current={
+                                currentLedgerId === ledger.id
+                                  ? "true"
+                                  : undefined
+                              }
                             >
                               <Check
                                 className={cn(

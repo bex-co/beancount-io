@@ -55,6 +55,7 @@ export function LanguageSelector() {
                 "w-full justify-start font-normal",
                 i18n.language === code && "bg-accent",
               )}
+              aria-current={i18n.language === code ? "true" : undefined}
               onClick={() => handleLanguageChange(code as SupportedLanguage)}
             >
               <Check

@@ -52,6 +52,25 @@ describe("LanguageSelector", () => {
     }
   });
 
+  it("marks the language in use as current and moves the marker on change", async () => {
+    await import("@/i18n/locales/fr");
+    await setup();
+    const row = (name: string) =>
+      screen.getByRole("button", { name, exact: true });
+
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(row("English")).toHaveAttribute("aria-current", "true");
+    expect(row("Français")).not.toHaveAttribute("aria-current");
+
+    await userEvent.click(row("Français"));
+    await waitFor(() =>
+      expect(screen.getByRole("combobox")).toHaveTextContent("Français"),
+    );
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(row("Français")).toHaveAttribute("aria-current", "true");
+    expect(row("English")).not.toHaveAttribute("aria-current");
+  });
+
   it("loads a selected locale before updating and persisting the selection", async () => {
     // Transform the real module before the interaction; the instance still
     // has only English resources until the selection loads it.
