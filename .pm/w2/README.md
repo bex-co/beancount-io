@@ -35,6 +35,11 @@
 - [x] **m28** — MCP results and failures an agent can act on (9 tasks) ← from MCP field audit 2026-09-08 (JSON-wrapped tables, four error dialects, 429 mid-session); user routed to w2 — sequenced after m27
 - [ ] **m30** — AI reliability hardening: ADR 0011 follow-ups (10 tasks) ← from the 2026-09-07 receipt-parse outage diagnosis + ADR 0011 tier-3 discussion; user routed to w2 as one milestone 2026-09-09
 
+## Cross-queue promotions and follow-ups
+
+- [008](./done/008.md) — MCP prompts from the ledger skills: implemented on 2026-09-12. [w5/m5](../w5/m5/README.md) retains the approved proposal's remaining real-client verification and repairs for demonstrated workflow gaps; the completed implementation remains archived here.
+- [009](./009.md) — Agent eval harness: core scope promoted to [w5/m4](../w5/m4/README.md) on 2026-09-12. Only the larger Plaid sandbox journey remains open here as a deferred follow-up.
+
 ## Centralized-authz migration contract for m14–m20
 
 The pending domain milestones inherit the implementation boundary proven by m13:
