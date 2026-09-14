@@ -1,8 +1,14 @@
 # w5 · m4 — Make real MCP agent journeys reproducible
 
-**Worker:** worker1 **Goal:** contributors can run the audited onboarding journeys through real MCP clients and compare answer correctness, ledger effects, and effort **Status:** todo
+**Worker:** worker1 **Goal:** contributors can run the audited onboarding journeys through real MCP clients and compare answer correctness, ledger effects, and effort **Status:** blocked — see [Blocked](#blocked)
 
 **Estimate:** 4h implementation; 6h including standing closing tasks (9 tasks).
+
+## Blocked
+
+**Blocked 2026-09-14 by `/loop-worker w5` triage; no implementation started.** The definition of done requires live Claude Code and Codex runs against a real local MCP endpoint built from this repository's current revision. The only local stack found on the worker machine is a `deploy/docker-mac` Compose project owned by other checkouts, and this checkout's local stack has pre-initialized data without its environment file, so neither can serve as a trustworthy, isolated baseline without a user decision.
+
+**Unblock with a user decision:** run the baseline on an isolated stack built from this checkout (alternate ports and fresh synthetic data), or on an existing local stack; and approve the repeated billed client runs (three journeys × two clients × repeated attempts). When unblocked, move this directory back to `.pm/w5/m4/`; its workstream checkbox stays unchecked until closeout.
 
 ## Tasks (in order)
 
@@ -29,7 +35,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** Approved `/pm-brainstorm for w5` proposal and [w2/009](../../w2/009.md), the MCP field audit of 2026-09-08; routed to available w5 capacity by `$pm for w5 for them all` on 2026-09-12.
+- **Source:** Approved `/pm-brainstorm for w5` proposal and [w2/009](../../../w2/009.md), the MCP field audit of 2026-09-08; routed to available w5 capacity by `$pm for w5 for them all` on 2026-09-12.
 - **Goal linkage:** **A1 — Agent-native accounting** and **A2 — Frictionless onboarding**: contributors can reproduce failures experienced by coding agents during ordinary ledger onboarding and assess whether a change improves completion.
 - **Expected outcome:** One documented command produces per-journey correctness and file-effect results plus calls, latency, and available usage data. The fresh baseline becomes the comparison point for m5 and future MCP inventory changes.
 - **Why now:** w2/m27 and m28 have shipped discovery and result-envelope changes, and w2/008 has now shipped the four playbooks. Capture the current external-client baseline before m5 makes follow-up repairs and verifies prompt journeys. w5 can own this work while w2 completes its existing milestones.

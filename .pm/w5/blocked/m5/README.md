@@ -1,8 +1,12 @@
 # w5 · m5 — Verify and complete shipped MCP accounting prompts
 
-**Worker:** worker1 **Goal:** hosted-ledger users can select four evidence-backed accounting playbooks through MCP and complete them using existing authorized operations **Status:** todo
+**Worker:** worker1 **Goal:** hosted-ledger users can select four evidence-backed accounting playbooks through MCP and complete them using existing authorized operations **Status:** blocked — see [Blocked](#blocked)
 
 **Estimate:** 4h30m (approximately 5h) implementation; 6h30m including standing closing tasks (9 tasks).
+
+## Blocked
+
+**Blocked 2026-09-14 by dependency.** `w5/m5/t001` depends on `w5/m4/t009`, and [w5/m4](../m4/README.md) is blocked awaiting a user decision on the benchmark stack and billed runs. When m4 closes, move this directory back to `.pm/w5/m5/`.
 
 ## Tasks (in order)
 
@@ -29,7 +33,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** Approved `/pm-brainstorm for w5` proposal and [completed w2/008](../../w2/done/008.md), from the MCP field audit of 2026-09-08; routed to w5 on 2026-09-12. During the 2026-09-13 shipping rebase, commit `adfcf587` was found to have already shipped all four prompt bodies and registration. This milestone retains the approved client-level acceptance work and repairs only demonstrated gaps.
+- **Source:** Approved `/pm-brainstorm for w5` proposal and [completed w2/008](../../../w2/done/008.md), from the MCP field audit of 2026-09-08; routed to w5 on 2026-09-12. During the 2026-09-13 shipping rebase, commit `adfcf587` was found to have already shipped all four prompt bodies and registration. This milestone retains the approved client-level acceptance work and repairs only demonstrated gaps.
 - **Goal linkage:** **A1 — Agent-native accounting** and **A2 — Frictionless onboarding**: hosted-ledger users with an MCP connection can invoke a complete accounting workflow without installing local ledger skills or constructing a tool sequence.
 - **Expected outcome:** The four shipped prompts have demonstrated usable invocation paths, correct workflow results, and expected ledger effects in both clients. Measure completion, unnecessary calls, and invocation results through m4; keep any discovered failure visible until repaired.
 - **Why now:** Registration and protocol tests already shipped, while real-client execution evidence for the full workflows remains to be captured. Sequence after w5/m4 closes so each follow-up repair has a current baseline and state-based acceptance evidence.
