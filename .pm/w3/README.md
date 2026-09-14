@@ -44,9 +44,21 @@
 
 - [ ] **m33** — Preserve import configuration across Back (6 tasks) ← continuous dashboard QA,2026-09-11
 
-- [ ] **m35** — Keep report results and exports tied to their completed request (7 tasks) ← promoted129 and pending-conversion QA
+- [ ] **m35** — Keep report results and exports tied to their completed request (8 tasks) ← promoted129 and pending-conversion QA; extended 2026-09-12 with the ledger-switch case (t008)
 
 - [ ] **m36** — Reject lossy CSV amount conversions before import (6 tasks) ← residual m19 validation boundary, dashboard QA2026-09-11
+
+- [ ] **m37** — Render BQL inventory results as amounts, not raw JSON (7 tasks) ← continuous dashboard QA, 2026-09-12
+
+- [ ] **m38** — Give Accounts and Budget the head metadata every other ledger route has (6 tasks) ← continuous dashboard QA, 2026-09-12
+
+- [ ] **m39** — Make the primary sidebar a navigation landmark and let keyboard users skip it (6 tasks) ← continuous dashboard QA, 2026-09-12
+
+- [ ] **m40** — Make the account journal's "Units" column mean units (6 tasks) ← continuous dashboard QA, 2026-09-12
+
+- [ ] **m41** — Confirm before deleting a transaction (6 tasks) ← continuous dashboard QA, 2026-09-12
+
+- [ ] **m42** — Accept dates in the user's own date order (6 tasks) ← continuous dashboard QA, 2026-09-12
 
 ## Inbox
 
@@ -71,3 +83,21 @@ The four that remain are deliberately not "next up":
 - [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
 - [152](./152.md) — Missing public profiles become internal server errors
 - [157](./157.md) — Unsupported BQL integer results are reported as a temporary outage
+
+Added since that pass:
+
+- [186](./186.md) — Overview Recent activity dates omit the year, so old entries read as this week (dashboard QA, 2026-09-12)
+- [187](./187.md) — Holdings shows unrealized profit % to 29 significant digits (dashboard QA, 2026-09-12)
+- [188](./188.md) — The merchant Recurring switch announces the opposite of its own state (native QA, 2026-09-12)
+- [189](./189.md) — The account journal rounds a posting the transactions list shows in full (native QA, 2026-09-12)
+- [190](./190.md) — Import Configure dates follow the browser, not the app language, and change format mid-wizard (dashboard QA, 2026-09-12) — re-filed 2026-09-12 after a concurrent write clobbered it
+- [191](./191.md) — The horizontal-swipe marker throws on every touch it is supposed to end (native QA, 2026-09-12)
+- [192](./192.md) — Trial Balance never states whether it balances (dashboard QA, 2026-09-12)
+- [193](./193.md) — One number, three labels: Statistics calls the same count both "Postings" and "Entry count" (dashboard QA, 2026-09-12)
+- [194](./194.md) — Single-entry writes commit "Add 1 entries" into permanent git history (dashboard QA, 2026-09-12; owner backend-cluster/ledger)
+- [195](./195.md) — An Ask deep link sends its question to the AI on arrival, and again after login (dashboard QA, 2026-09-12)
+- [196](./196.md) — Create File offers Save for names the server will refuse, including your main ledger's (dashboard QA, 2026-09-12)
+- [197](./197.md) — The file editor warns about unsaved changes when there are none (dashboard QA, 2026-09-12)
+- [198](./198.md) — Unknown dashboard sub-routes answer 200 with a "Page Not Found" body (dashboard QA, 2026-09-12)
+
+- [ ] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13

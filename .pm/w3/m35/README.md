@@ -31,12 +31,17 @@ Keep each completed result paired with the conversion/interval/filter inputs tha
 | t001 | Show pending feedback for report route reads | 35m | — |
 | t002 | Keep report data paired with its completed input snapshot | 45m | t001 |
 | t003 | Guard exports and print content while replacement data is pending | 35m | t002 |
-| t004 | Adoption surface — explain usable pending report behavior | 15m | t003 |
+| t008 | Stop a ledger switch from showing the previous ledger's data | 40m | t001 |
+| t004 | Adoption surface — explain usable pending report behavior | 15m | t003, t008 |
 | t005 | Simplify the pending-report changes | 20m | t004 |
 | t006 | Test delayed reads, downloads and recovery | 45m | t004, t005 |
 | t007 | Close out the pending-report milestone | 15m | t006 |
 
-Implementation totals115minutes; all seven tasks total210minutes, so the expanded work exceeds the sub-hour inbox limit.
+Implementation totals155minutes; all eight tasks total250minutes, so the expanded work exceeds the sub-hour inbox limit.
+
+### Added 2026-09-12 — the same gap without an injected delay
+
+Continuous dashboard QA reproduced this milestone's router-pending phase on a **ledger switch**, at natural production latency with no request held. Selecting a different ledger from the sidebar moves the URL in ~60 ms while the previous ledger's description, result count and transaction rows stay rendered for **864 ms** (private `example` → public `minimax`) and **615 ms** (the reverse), with no pending indication. Because the retained content belongs to a different ledger rather than a different period, the page asserts the destination ledger while showing the source ledger's data — including a private ledger's rows under a public ledger's URL. [t008](./t008.md) carries the reproduction, timings and acceptance criteria; evidence in `dashboard/tmp/qa-20260912/ledger-switch-stale.json`.
 
 ## Definition of done
 
@@ -45,6 +50,7 @@ Implementation totals115minutes; all seven tasks total210minutes, so the expande
 - [ ] Pending export actions cannot produce a misleading document. Browser-print content outside the menu remains coherent too.
 - [ ] After successful Units completion, actual CSV Assets rows match the eight-unit API map above at both widths.
 - [ ] Cached results, rapid input changes and errors preserve request/result identity without stale completion overwrites or permanent busy state.
+- [ ] Switching ledgers never presents the previous ledger's description, result count or rows as settled content for the destination URL, in either direction, with no injected delay — while `m15`'s ledger-switch filter reset still behaves as shipped.
 - [ ] Meaningful async/export tests and dashboard format/lint/test/build checks pass before closeout.
 
 ## Source + Goal linkage
