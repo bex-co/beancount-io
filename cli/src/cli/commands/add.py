@@ -21,7 +21,7 @@ from typing import Annotated, Any
 import typer
 
 from cli import context, output
-from cli.errors import LedgerError, UsageError
+from cli.errors import UsageError
 from cli.utils import parse_date
 
 add_app = typer.Typer(
@@ -422,6 +422,30 @@ def _parse_custom_value(raw: str) -> dict[str, Any]:
     raise typer.BadParameter(f"Invalid value kind or value {raw!r}. Use: text, number, amount, account, bool, date")
 
 
+def _load_transactions_json(from_file: Path) -> Any:
+    """Read and parse `--from`; unreadable input is a usage error, phrased like `--file`'s."""
+    if str(from_file) == "-":
+        text = sys.stdin.read()
+    else:
+        try:
+            text = from_file.read_text()
+        except FileNotFoundError as exc:
+            raise UsageError(
+                f"No transactions file at '{from_file}' (from --from). "
+                "Name a JSON file with --from PATH, or pass --from - to read stdin."
+            ) from exc
+        except IsADirectoryError as exc:
+            raise UsageError(
+                f"Transactions path '{from_file}' (from --from) is a directory; expected a JSON file."
+            ) from exc
+        except OSError as exc:
+            raise UsageError(f"Cannot read transactions file '{from_file}' (from --from): {exc.strerror}.") from exc
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise UsageError(f"Invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}.") from exc
+
+
 @add_app.command("transactions")
 def add_transactions(
     from_file: Annotated[Path, typer.Option("--from", help="JSON file with a list of transactions; - reads stdin")],
@@ -445,12 +469,9 @@ def add_transactions(
     A posting can instead use "units":{"number":"30","currency":"USD"}.
     Pass --from - to read the array from stdin.
     """
-    try:
-        raw = json.loads(sys.stdin.read() if str(from_file) == "-" else from_file.read_text())
-    except json.JSONDecodeError as exc:
-        raise UsageError(f"Invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}.") from exc
+    raw = _load_transactions_json(from_file)
     if not isinstance(raw, list):
-        raise LedgerError("JSON file must contain an array of transactions.")
+        raise UsageError("JSON file must contain an array of transactions.")
 
     file, data = _write("transactions", {"rows": raw, "partial": partial}, allow_errors=allow_errors, into=into)
     target = data.pop("target")

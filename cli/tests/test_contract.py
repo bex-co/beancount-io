@@ -264,6 +264,54 @@ class TestBulkAdd:
         # The machine-readable indexes stay zero-based, as documented.
         assert error["result"] == {"written": 1, "written_rows": [2], "rejected_rows": [0, 1]}
 
+    def test_from_a_missing_path_is_a_phrased_usage_error(self, tmp_path: Path) -> None:
+        ledger, _ = self._ledger_and_rows(tmp_path, [])
+        before = ledger.read_bytes()
+        missing = tmp_path / "nope.json"
+
+        result = runner.invoke(app, ["--file", str(ledger), "add", "transactions", "--from", str(missing)])
+
+        assert result.exit_code == 2
+        assert "[Errno" not in result.stderr
+        assert f"No transactions file at '{missing}'" in result.stderr
+        assert ledger.read_bytes() == before
+
+    def test_from_a_directory_is_a_phrased_usage_error(self, tmp_path: Path) -> None:
+        ledger, _ = self._ledger_and_rows(tmp_path, [])
+        before = ledger.read_bytes()
+
+        result = runner.invoke(app, ["--file", str(ledger), "add", "transactions", "--from", str(tmp_path)])
+
+        assert result.exit_code == 2
+        assert "[Errno" not in result.stderr
+        assert "is a directory; expected a JSON file" in result.stderr
+        assert ledger.read_bytes() == before
+
+    @pytest.mark.parametrize("via_stdin", [False, True], ids=["file", "stdin"])
+    def test_json_that_is_not_an_array_is_a_usage_error(self, tmp_path: Path, via_stdin: bool) -> None:
+        payload = json.dumps({"date": "2024-03-09"})
+        ledger, rows = self._ledger_and_rows(tmp_path, [])
+        rows.write_text(payload)
+        before = ledger.read_bytes()
+        source = "-" if via_stdin else str(rows)
+
+        result = runner.invoke(
+            app, ["--file", str(ledger), "add", "transactions", "--from", source], input=payload if via_stdin else None
+        )
+
+        assert result.exit_code == 2
+        assert "[Errno" not in result.stderr
+        assert "must contain an array of transactions" in result.stderr
+        assert ledger.read_bytes() == before
+
+    def test_malformed_json_on_stdin_stays_a_usage_error(self, tmp_path: Path) -> None:
+        ledger, _ = self._ledger_and_rows(tmp_path, [])
+
+        result = runner.invoke(app, ["--file", str(ledger), "add", "transactions", "--from", "-"], input="{not json")
+
+        assert result.exit_code == 2
+        assert "Invalid JSON at line 1" in result.stderr
+
     def test_a_clean_file_writes_every_row_and_succeeds(self, tmp_path: Path) -> None:
         ledger, rows = self._ledger_and_rows(tmp_path, self.ONE_GOOD_ONE_BAD[:1])
 
