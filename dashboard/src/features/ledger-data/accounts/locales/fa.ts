@@ -48,6 +48,11 @@ const faAccounts: Record<string, TranslationEntry> = {
     message: "موجودی",
     description: "Table column header for account balance",
   },
+  "page.accounts.balanceNotComputed": {
+    message: "محاسبه نشده",
+    description:
+      "Balance cell for an account whose balance the server does not compute (income, expense, and equity accounts); distinct from a zero balance",
+  },
   "page.accounts.close": {
     message: "بستن",
     description: "Button text to close an account",

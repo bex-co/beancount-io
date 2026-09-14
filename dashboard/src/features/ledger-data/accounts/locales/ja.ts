@@ -48,6 +48,11 @@ const jaAccounts: Record<string, TranslationEntry> = {
     message: "残高",
     description: "Table column header for account balance",
   },
+  "page.accounts.balanceNotComputed": {
+    message: "未計算",
+    description:
+      "Balance cell for an account whose balance the server does not compute (income, expense, and equity accounts); distinct from a zero balance",
+  },
   "page.accounts.close": {
     message: "閉じる",
     description: "Button text to close an account",

@@ -48,6 +48,11 @@ const caAccounts: Record<string, TranslationEntry> = {
     message: "Balanç",
     description: "Table column header for account balance",
   },
+  "page.accounts.balanceNotComputed": {
+    message: "No calculat",
+    description:
+      "Balance cell for an account whose balance the server does not compute (income, expense, and equity accounts); distinct from a zero balance",
+  },
   "page.accounts.close": {
     message: "Tancar",
     description: "Button text to close an account",

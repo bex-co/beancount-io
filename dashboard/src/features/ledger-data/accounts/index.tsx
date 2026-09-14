@@ -58,8 +58,13 @@ function getAccountType(account: string, accountTypes: string[]): string {
   );
 }
 
+/**
+ * True only for a computed balance with no nonzero units. The API returns
+ * `null` for accounts whose balance it does not compute (everything outside the
+ * asset and liability roots), which is "unknown", never "emptied".
+ */
 function isBalanceEmpty(balance?: Record<string, unknown> | null): boolean {
-  if (!balance || Object.keys(balance).length === 0) return true;
+  if (balance == null) return false;
   return Object.values(balance).every((v) => Number(v) === 0);
 }
 
@@ -94,7 +99,15 @@ function BalanceCell({
 }: {
   balance?: Record<string, unknown> | null;
 }) {
-  if (!balance || Object.keys(balance).length === 0) {
+  const { t } = useTranslations();
+  if (balance == null) {
+    return (
+      <span className="whitespace-nowrap text-xs text-muted-foreground">
+        {t("page.accounts.balanceNotComputed")}
+      </span>
+    );
+  }
+  if (Object.keys(balance).length === 0) {
     return <span className="text-muted-foreground">-</span>;
   }
   return (

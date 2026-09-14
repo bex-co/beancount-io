@@ -48,6 +48,11 @@ const enAccounts: Record<string, TranslationEntry> = {
     message: "Balance",
     description: "Table column header for account balance",
   },
+  "page.accounts.balanceNotComputed": {
+    message: "Not computed",
+    description:
+      "Balance cell for an account whose balance the server does not compute (income, expense, and equity accounts); distinct from a zero balance",
+  },
   "page.accounts.close": {
     message: "Close",
     description: "Button text to close an account",

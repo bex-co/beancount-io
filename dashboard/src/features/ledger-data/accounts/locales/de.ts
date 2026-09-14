@@ -48,6 +48,11 @@ const deAccounts: Record<string, TranslationEntry> = {
     message: "Saldo",
     description: "Table column header for account balance",
   },
+  "page.accounts.balanceNotComputed": {
+    message: "Nicht berechnet",
+    description:
+      "Balance cell for an account whose balance the server does not compute (income, expense, and equity accounts); distinct from a zero balance",
+  },
   "page.accounts.close": {
     message: "Schließen",
     description: "Button text to close an account",

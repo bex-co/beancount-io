@@ -48,6 +48,11 @@ const ptAccounts: Record<string, TranslationEntry> = {
     message: "Saldo",
     description: "Table column header for account balance",
   },
+  "page.accounts.balanceNotComputed": {
+    message: "Não calculado",
+    description:
+      "Balance cell for an account whose balance the server does not compute (income, expense, and equity accounts); distinct from a zero balance",
+  },
   "page.accounts.close": {
     message: "Fechar",
     description: "Button text to close an account",

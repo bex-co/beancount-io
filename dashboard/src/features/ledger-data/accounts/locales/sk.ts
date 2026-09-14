@@ -48,6 +48,11 @@ const skAccounts: Record<string, TranslationEntry> = {
     message: "Zostatok",
     description: "Table column header for account balance",
   },
+  "page.accounts.balanceNotComputed": {
+    message: "Nevypočítané",
+    description:
+      "Balance cell for an account whose balance the server does not compute (income, expense, and equity accounts); distinct from a zero balance",
+  },
   "page.accounts.close": {
     message: "Zavrieť",
     description: "Button text to close an account",
