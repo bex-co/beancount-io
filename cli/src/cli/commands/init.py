@@ -89,6 +89,7 @@ def init(
         file = directory if directory.suffix in {".bean", ".beancount"} else directory / "main.bean"
     if file.exists() or file.is_symlink():
         raise ConflictError(f"Already exists: {file}. Choose a new path; init never overwrites a ledger.")
+    prompted = currency is None
     if currency is None:
         if ctx.no_input:
             raise UsageError("Choose an operating currency with --currency USD (or EUR, etc.).")
@@ -100,6 +101,10 @@ def init(
             f"Operating currency {currency!r} is a valid Beancount symbol but is not three uppercase letters. "
             "Check for a typo (for example, USD). Custom and crypto symbols are supported."
         )
+        if prompted:
+            # Beside the answer it is about, before the next question, so a
+            # typo can be caught before the ledger exists.
+            output.note(warnings[-1])
     if date is None and not ctx.no_input:
         day = typer.prompt(
             "Earliest date you will record (opening balances must be as of this date)",
@@ -134,8 +139,9 @@ def init(
     if ctx.json_output:
         output.emit(data, target=output.file_target(file))
     else:
-        for warning in warnings:
-            output.note(warning)
+        if not prompted:
+            for warning in warnings:
+                output.note(warning)
         accounts = data.get("accounts") or list(_ACCOUNTS)
         output.success(f"Created {file} with {len(accounts)} accounts in {currency}.")
         try:

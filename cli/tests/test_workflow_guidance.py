@@ -3,12 +3,15 @@
 import json
 import shlex
 from pathlib import Path
+from typing import Any
 
 import pytest
+import typer
 from beancount import loader
 from beancount.core.data import Balance, Document
 from typer.testing import CliRunner
 
+from cli import output
 from cli.main import app
 
 runner = CliRunner()
@@ -191,6 +194,50 @@ def test_init_warns_about_unusual_symbols_without_rejecting_valid_books(
     assert result.stderr == ""
     entries, errors, options = loader.load_file(tmp_path / "main.bean")
     assert entries and not errors and options["operating_currency"] == [currency.upper()]
+
+
+UNUSUAL_CURRENCY = "Operating currency 'USDD' is a valid Beancount symbol but is not three uppercase letters."
+
+
+def test_interactive_init_warns_about_an_unusual_currency_before_the_next_question(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # CliRunner buffers stderr apart from the prompts on stdout, so its mixed
+    # output cannot show ordering; record the prompt and note calls instead.
+    events: list[str] = []
+    prompt, note = typer.prompt, output.note
+
+    def recording_prompt(text: str, **kwargs: Any) -> Any:
+        events.append(f"prompt: {text}")
+        return prompt(text, **kwargs)
+
+    def recording_note(message: str) -> None:
+        events.append(f"note: {message}")
+        note(message)
+
+    monkeypatch.setattr("cli.context._stdin_is_a_terminal", lambda: True)
+    monkeypatch.setattr("typer.prompt", recording_prompt)
+    monkeypatch.setattr("cli.output.note", recording_note)
+    result = runner.invoke(app, ["init", str(tmp_path / "books")], input="US D\nusdd\n2026-01-01\n0\n")
+    assert result.exit_code == 0, result.output
+    assert "Invalid operating currency: 'US D'" in result.output
+    assert result.stderr.count(UNUSUAL_CURRENCY) == 1
+    assert [event.split(" ", 2)[:2] for event in events[:3]] == [
+        ["prompt:", "Operating"],
+        ["note:", "Operating"],
+        ["prompt:", "Earliest"],
+    ]
+    assert UNUSUAL_CURRENCY in events[1]
+    _, errors, options = loader.load_file(tmp_path / "books/main.bean")
+    assert not errors and options["operating_currency"] == ["USDD"]
+
+
+def test_unattended_init_still_warns_about_an_unusual_currency_once(tmp_path: Path) -> None:
+    args = ["init", str(tmp_path), "--currency", "USDD", "--date", "2026-01-01"]
+    result = runner.invoke(app, ["--no-input", *args])
+    assert result.exit_code == 0, result.output
+    assert result.stderr.count(UNUSUAL_CURRENCY) == 1
+    assert "Created " in result.stdout
 
 
 @pytest.mark.parametrize("purchase_date", ["2026-08-30", "2026-08-31"])
