@@ -69,7 +69,7 @@ const zhBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "为费用或收入账户设置带日期的目标。每张卡片会将实际活动与该期间生效的目标进行比较。",
+      "为账户设置带日期的目标，例如某个费用或收入类别。每张卡片会将实际活动与该期间生效的目标进行比较。",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

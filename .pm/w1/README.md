@@ -32,7 +32,6 @@ Milestones m18–m22 are complete. m22 fixed the published CLI QA gaps with gree
 
 ## Inbox
 
-- [023](./023.md) — Add Budget offers every account type while its own help text says expense or income only (dashboard QA, 2026-09-13)
 - [027](./027.md) — Selection lists mark the current choice with icon opacity alone, so no open list row is programmatically current (dashboard QA, 2026-09-13)
 - [028](./028.md) — Three write paths round user-entered amounts through IEEE-754, producing invalid or silently wrong ledger numbers (dashboard QA, 2026-09-13)
 - [029](./029.md) — Subscription usage counts still follow the browser locale; the w3/132 helper reached two of its three siblings (dashboard QA, 2026-09-13)

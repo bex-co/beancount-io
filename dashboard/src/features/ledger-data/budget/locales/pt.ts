@@ -69,7 +69,7 @@ const ptBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Defina metas de gastos por conta com diretivas de orçamento. Cada cartão compara seus gastos reais com o orçamento ativo para essa conta e intervalo.",
+      "Defina metas com data para uma conta, como uma categoria de despesas ou receitas. Cada cartão compara a atividade real com a meta vigente nesse período.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

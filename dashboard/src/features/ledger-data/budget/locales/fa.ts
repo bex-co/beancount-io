@@ -69,7 +69,7 @@ const faBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "برای حساب‌های هزینه یا درآمد، اهداف تاریخ‌دار تعیین کنید. هر کارت فعالیت واقعی را با هدف فعال آن دوره مقایسه می‌کند.",
+      "برای یک حساب، مانند یک دسته هزینه یا درآمد، اهداف تاریخ‌دار تعیین کنید. هر کارت فعالیت واقعی را با هدف فعال آن دوره مقایسه می‌کند.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

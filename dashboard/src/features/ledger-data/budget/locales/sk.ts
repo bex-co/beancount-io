@@ -69,7 +69,7 @@ const skBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Nastavte si ciele výdavkov pre jednotlivé účty pomocou rozpočtových direktív. Každá karta porovnáva vaše skutočné výdavky s aktívnym rozpočtom pre daný účet a interval.",
+      "Nastavte datované ciele pre účet, napríklad kategóriu výdavkov alebo príjmov. Každá karta porovnáva skutočnú aktivitu s cieľom platným v danom období.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

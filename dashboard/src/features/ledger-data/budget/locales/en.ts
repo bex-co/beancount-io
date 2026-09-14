@@ -10,7 +10,7 @@ const enBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Set dated targets for expense or income accounts. Each card compares actual activity with the target that was active for that period.",
+      "Set dated targets for an account, such as an expense or income category. Each card compares actual activity with the target that was active for that period.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetAddBudget": {

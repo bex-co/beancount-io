@@ -69,7 +69,7 @@ const nlBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Stel uitgavendoelen per account in met budgetrichtlijnen. Elke kaart vergelijkt je werkelijke uitgaven met het actieve budget voor dat account en interval.",
+      "Stel gedateerde doelen in voor een rekening, zoals een uitgaven- of inkomstencategorie. Elke kaart vergelijkt de werkelijke activiteit met het doel dat in die periode gold.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

@@ -69,7 +69,7 @@ const caBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Establiu objectius de despesa per compte amb directives de pressupost. Cada targeta compara la vostra despesa real amb el pressupost actiu per a aquest compte i interval.",
+      "Establiu objectius datats per a un compte, com ara una categoria de despeses o ingressos. Cada targeta compara l’activitat real amb l’objectiu vigent en aquell període.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

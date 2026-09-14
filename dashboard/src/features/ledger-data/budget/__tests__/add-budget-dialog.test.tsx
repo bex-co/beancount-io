@@ -97,6 +97,30 @@ describe("AddBudgetDialog", () => {
     ).toBeInTheDocument();
   });
 
+  it("describes expense and income accounts as examples, since any account can be picked", () => {
+    render(<AddBudgetDialog {...defaultProps} />);
+    expect(
+      screen.getByText(/for an account, such as an expense or income category/),
+    ).toBeInTheDocument();
+  });
+
+  it("lists intervals from shortest to longest, like the page's interval filter", async () => {
+    const user = userEvent.setup();
+    render(<AddBudgetDialog {...defaultProps} />);
+
+    screen.getByRole("combobox").focus();
+    await user.keyboard("{Enter}");
+
+    const options = await screen.findAllByRole("option");
+    expect(options.map((option) => option.textContent)).toEqual([
+      "Daily",
+      "Weekly",
+      "Monthly",
+      "Quarterly",
+      "Yearly",
+    ]);
+  });
+
   it("does not render dialog content when open=false", () => {
     render(<AddBudgetDialog {...defaultProps} open={false} />);
     expect(screen.queryByText("Add Budget")).not.toBeInTheDocument();

@@ -275,11 +275,15 @@ export function AddBudgetDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(BudgetInterval).map((interval) => (
-                        <SelectItem key={interval} value={interval}>
-                          {intervalLabels[interval]}
-                        </SelectItem>
-                      ))}
+                      {/* Shortest to longest, as in the page's interval
+                          filter; the generated enum is alphabetical. */}
+                      {(Object.keys(intervalLabels) as BudgetInterval[]).map(
+                        (interval) => (
+                          <SelectItem key={interval} value={interval}>
+                            {intervalLabels[interval]}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

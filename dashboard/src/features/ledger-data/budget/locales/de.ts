@@ -69,7 +69,7 @@ const deBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Legen Sie datierte Ziele für Ausgaben- oder Einnahmenkonten fest. Jede Karte vergleicht die tatsächliche Aktivität mit dem für den Zeitraum gültigen Ziel.",
+      "Legen Sie datierte Ziele für ein Konto fest, etwa eine Ausgaben- oder Einnahmenkategorie. Jede Karte vergleicht die tatsächliche Aktivität mit dem für den Zeitraum gültigen Ziel.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

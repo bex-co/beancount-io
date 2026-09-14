@@ -69,7 +69,7 @@ const ruBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Установите целевые расходы для каждого счета с помощью директив бюджета. Каждая карточка сравнивает фактические расходы с активным бюджетом для этого счета и интервала.",
+      "Задайте датированные цели для счёта, например категории расходов или доходов. Каждая карточка сравнивает фактическую активность с целью, действовавшей в этот период.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

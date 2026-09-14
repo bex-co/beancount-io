@@ -69,7 +69,7 @@ const koBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "비용 또는 수익 계정에 날짜별 목표를 설정하세요. 각 카드는 실제 활동을 해당 기간에 적용된 목표와 비교합니다.",
+      "비용이나 수익 항목 같은 계정에 날짜별 목표를 설정하세요. 각 카드는 실제 활동을 해당 기간에 적용된 목표와 비교합니다.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

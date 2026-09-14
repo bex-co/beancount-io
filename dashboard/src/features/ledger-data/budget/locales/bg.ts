@@ -69,7 +69,7 @@ const bgBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Задайте цели за разходи по сметки с бюджетни директиви. Всяка карта сравнява реалните ви разходи с активния бюджет за тази сметка и интервал.",
+      "Задайте датирани цели за сметка, например категория разходи или приходи. Всяка карта сравнява реалната дейност с целта, валидна за съответния период.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

@@ -69,7 +69,7 @@ const jaBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "費用または収益口座に日付付きの目標を設定します。各カードは実績をその期間に有効な目標と比較します。",
+      "口座に日付付きの目標を設定します（費用や収益のカテゴリなど）。各カードは実績をその期間に有効な目標と比較します。",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

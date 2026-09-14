@@ -69,7 +69,7 @@ const frBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Définissez des objectifs de dépenses par compte avec des directives de budget. Chaque carte compare vos dépenses réelles au budget actif pour ce compte et cet intervalle.",
+      "Définissez des objectifs datés pour un compte, par exemple une catégorie de dépenses ou de revenus. Chaque carte compare l’activité réelle à l’objectif en vigueur sur la période.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

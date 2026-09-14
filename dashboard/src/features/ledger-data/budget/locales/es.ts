@@ -69,7 +69,7 @@ const esBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Establece objetivos de gasto por cuenta con directivas de presupuesto. Cada tarjeta compara tu gasto real con el presupuesto activo para esa cuenta e intervalo.",
+      "Establece objetivos con fecha para una cuenta, como una categoría de gastos o ingresos. Cada tarjeta compara la actividad real con el objetivo vigente en ese periodo.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {

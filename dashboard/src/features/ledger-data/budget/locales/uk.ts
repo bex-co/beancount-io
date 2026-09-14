@@ -69,7 +69,7 @@ const ukBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetDescription": {
     message:
-      "Встановіть цілі витрат для кожного рахунку за допомогою бюджетних директив. Кожна картка порівнює ваші фактичні витрати з активним бюджетом для цього рахунку та інтервалу.",
+      "Встановіть датовані цілі для рахунку, наприклад категорії витрат або доходів. Кожна картка порівнює фактичну активність із ціллю, чинною в цей період.",
     description: "Page description for the budget feature",
   },
   "page.budget.budgetEmptyStateCta": {
