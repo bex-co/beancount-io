@@ -80,6 +80,37 @@ def test_precision_matches_json_in_cli_interactive_query_and_ask(book: Path, mon
     assert "82.35 USD" in tool(SimpleNamespace(deps=BqlDeps(file=book)), query)
 
 
+@pytest.mark.parametrize("output_format", ["text", "csv"])
+@pytest.mark.parametrize("prefix", ["/* qa */\n", "/* qa */ "])
+def test_query_opening_with_a_comment_renders_the_rows_json_returns(
+    book: Path, prefix: str, output_format: str
+) -> None:
+    with book.open("a") as stream:
+        stream.write('2026-01-01 * "Fee"\n  Assets:Checking -1 USD\n  Expenses:Fees 1 USD\n')
+        stream.write('2026-01-02 * "Food"\n  Assets:Checking -5 USD\n  Expenses:Groceries 5 USD\n')
+    query = "SELECT DISTINCT account WHERE account ~ 'Expenses' ORDER BY account"
+    plain = runner.invoke(app, ["-f", str(book), "query", "--format", output_format, query])
+    commented = runner.invoke(app, ["-f", str(book), "query", "--format", output_format, prefix + query])
+
+    assert commented.exit_code == 0, commented.output
+    assert "Expenses:Fees" in commented.stdout
+    assert commented.stdout == plain.stdout
+    assert json.loads(run(book, "query", prefix + query).stdout)["data"]["rows"] == [
+        ["Expenses:Fees"],
+        ["Expenses:Groceries"],
+    ]
+
+
+def test_query_rejects_what_the_parser_rejects_in_every_mode(book: Path) -> None:
+    query = "; qa\nSELECT account FROM accounts"
+    rendered = runner.invoke(app, ["-f", str(book), "query", query])
+    structured = run(book, "query", query)
+
+    assert rendered.exit_code == structured.exit_code == 2
+    assert "syntax error" in rendered.output
+    assert "syntax error" in structured.output
+
+
 def test_derived_currency_amount_retains_more_digits_than_inputs(book: Path) -> None:
     with book.open("a") as stream:
         stream.write("""2020-01-01 open Assets:Crypto BTC

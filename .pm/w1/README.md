@@ -36,7 +36,6 @@ Milestones m18–m22 are complete. m22 fixed the published CLI QA gaps with gree
 - [023](./023.md) — Add Budget offers every account type while its own help text says expense or income only (dashboard QA, 2026-09-13)
 - [024](./024.md) — Auth next guard still accepts percent-encoded control characters; the w3/170 fix covers only the raw form (dashboard QA, 2026-09-13)
 - [025](./025.md) — Accounts renders "not computed" and "exactly zero" both as `—`, which also unlocks Close on 45 accounts (dashboard QA, 2026-09-13)
-- [026](./026.md) — `bea query` prints nothing and exits 0 when the query starts with a comment; only `--json` returns the rows (CLI QA, 2026-09-13)
 - [027](./027.md) — Selection lists mark the current choice with icon opacity alone, so no open list row is programmatically current (dashboard QA, 2026-09-13)
 - [028](./028.md) — Three write paths round user-entered amounts through IEEE-754, producing invalid or silently wrong ledger numbers (dashboard QA, 2026-09-13)
 - [029](./029.md) — Subscription usage counts still follow the browser locale; the w3/132 helper reached two of its three siblings (dashboard QA, 2026-09-13)

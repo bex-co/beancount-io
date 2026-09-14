@@ -190,6 +190,13 @@ def build_shell(
                 printer.print_errors(self.context.errors, file=sys.stderr)  # type: ignore[no-untyped-call]
 
         def onecmd(self, line: str) -> Any:
+            # A query that opens with a comment (`/* … */`, `;`) has no leading
+            # identifier, so `cmd.Cmd.parseline` finds no command and upstream
+            # returns without running it: empty output, exit 0. Hand any such
+            # non-blank line to the parser, which runs it or reports why not.
+            command_name, _, parsed = self.parseline(line)
+            if parsed and not command_name:
+                return self.execute(parsed)
             # Keep familiar shell commands as quiet aliases for beanquery's
             # dot commands. SQL and genuine query warnings are unchanged.
             stripped = line.lstrip()
