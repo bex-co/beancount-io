@@ -154,7 +154,9 @@ services:
       SSH_PROXY_ENABLED: ${SSH_PROXY_ENABLED:-false}
       SSH_PROXY_PORT: ${SSH_PORT:-2222}
       SSH_PROXY_HOST_KEY: ${SSH_PROXY_HOST_KEY:-}
-      BLOCKEDEN_ACCESS_KEY: ${BLOCKEDEN_ACCESS_KEY:-local-dev-placeholder}
+      # Every LLM var is optional (ADR 0011). An empty BLOCKEDEN_ACCESS_KEY
+      # makes the `bea ask` proxy fail clearly; a placeholder would not.
+      BLOCKEDEN_ACCESS_KEY: ${BLOCKEDEN_ACCESS_KEY:-}
       CLAUDE_CODE_SANDBOX_URL: ${CLAUDE_CODE_SANDBOX_URL:-}
       CLAUDE_CODE_AGENT_URL: ${CLAUDE_CODE_AGENT_URL:-}
       ASK_AI_MODE: ${ASK_AI_MODE:-bql}
@@ -164,7 +166,8 @@ services:
       # To use a custom endpoint, export a non-empty value before Compose runs.
       ANTHROPIC_BASE_URL:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_FALLBACK_MODEL: ${LLM_FALLBACK_MODEL:-}
       TEMP_ASSETS_AWS_S3_REGION: ${TEMP_ASSETS_AWS_S3_REGION:-us-east-1}
       TEMP_ASSETS_AWS_S3_BUCKET: ${TEMP_ASSETS_AWS_S3_BUCKET:-}
       TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID: ${TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID:-}

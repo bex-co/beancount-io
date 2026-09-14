@@ -150,10 +150,10 @@ services:
       # Git-over-SSH proxy is intentionally off in this target; use docker-mac
       # if you need it.
       SSH_PROXY_ENABLED: "false"
-      # LLM access. REQUIRED to boot: the LLM client is constructed at startup
-      # and throws "LLM is not configured" on an empty key. The placeholder
-      # only gets the server up.
-      BLOCKEDEN_ACCESS_KEY: ${BLOCKEDEN_ACCESS_KEY:-local-dev-placeholder}
+      # LLM access (ADR 0011). Every LLM var is optional: the server boots with
+      # none set. BLOCKEDEN_ACCESS_KEY only meters the `bea ask` model proxy;
+      # left empty, that proxy fails clearly with "not configured".
+      BLOCKEDEN_ACCESS_KEY: ${BLOCKEDEN_ACCESS_KEY:-}
       # Ask-AI sandbox control plane = agent-box under `wrangler dev` on the
       # host. The harness forwards ANTHROPIC_* below into the sandbox container
       # where Claude Code runs (credentialEnv/forwardEnv in sandbox-agent-workflow).
@@ -173,7 +173,9 @@ services:
       # and "" crashes the server ("baseURL must be a non-empty string").
       ANTHROPIC_BASE_URL:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      # In-process model overrides (ADR 0011); empty keeps the code defaults.
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_FALLBACK_MODEL: ${LLM_FALLBACK_MODEL:-}
       # Asset storage (S3). A region is REQUIRED even when the rest is unset:
       # the S3 client is constructed at startup and throws "Region is missing"
       # without one. Uploads only work once bucket + credentials are set.

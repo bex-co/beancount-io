@@ -1,6 +1,6 @@
 # w2 · m30 — AI reliability hardening (ADR 0011 follow-ups)
 
-**Worker:** worker2 **Goal:** every ADR 0011 follow-up closed — the AI ingestion path cannot crash the process, the vendor fallback genuinely works, models are config not code, failures surface with their real cause on every client, and a dead credential is detected before a user finds it **Status:** in progress (t001–t005, t007–t009 done; t006 blocked on an operator ANTHROPIC_API_KEY; t010 pending t006)
+**Worker:** worker2 **Goal:** every ADR 0011 follow-up closed — the AI ingestion path cannot crash the process, the vendor fallback genuinely works, models are config not code, failures surface with their real cause on every client, and a dead credential is detected before a user finds it **Status:** in progress (t001–t005, t007–t009, t011 done; t006 blocked on an operator ANTHROPIC_API_KEY; t010 pending t006)
 
 ## Tasks (in order)
 
@@ -12,10 +12,11 @@
 | t004 | Mobile receipt errors: classify by code, split messages, Sentry        | 60m | — — **DONE** |
 | t005 | Path B synthetic LLM probe (startup + scheduled)                       | 30m | — — **DONE** |
 | t006 | Haiku downgrade evaluation for extraction workloads                    | 45m | t003 — **BLOCKED (needs ANTHROPIC_API_KEY)** |
+| t011 | Deploy targets honor the m30 AI config (added by triage 2026-09-14)    | 30m | t003, t007 — **DONE** |
 | t007 | Adoption surface: env-var docs + mobile strings + agent-facing checks  | 30m | t001, t004, t005 — **DONE** |
 | t008 | Simplify: run /simplify over the changed code                          | 30m | t007 — **DONE** |
 | t009 | Test coverage: meaningful tests for shipped behavior                   | 45m | t007 — **DONE** |
-| t010 | Closeout                                                               | 15m | t009, t006 |
+| t010 | Closeout                                                               | 15m | t009, t006, t011 |
 
 ## Definition of done
 

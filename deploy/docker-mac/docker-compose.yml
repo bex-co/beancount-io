@@ -127,10 +127,10 @@ services:
       SSH_PROXY_ENABLED: ${SSH_PROXY_ENABLED:-false}
       SSH_PROXY_PORT: 42607
       SSH_PROXY_HOST_KEY: ${SSH_PROXY_HOST_KEY:-}
-      # LLM access. REQUIRED to boot: the LLM client is constructed at startup
-      # and throws "LLM is not configured" on an empty key. The placeholder
-      # only gets the server up — set a real key to use the AI features.
-      BLOCKEDEN_ACCESS_KEY: ${BLOCKEDEN_ACCESS_KEY:-local-dev-placeholder}
+      # LLM access (ADR 0011). Every LLM var is optional: the server boots with
+      # none set. BLOCKEDEN_ACCESS_KEY only meters the `bea ask` model proxy;
+      # left empty, that proxy fails clearly with "not configured".
+      BLOCKEDEN_ACCESS_KEY: ${BLOCKEDEN_ACCESS_KEY:-}
       # No default on purpose: point this at your own Claude Code sandbox
       # deployment if you use the sandboxed ask-agent mode.
       CLAUDE_CODE_SANDBOX_URL: ${CLAUDE_CODE_SANDBOX_URL:-}
@@ -140,7 +140,9 @@ services:
       # and "" crashes the server ("baseURL must be a non-empty string").
       ANTHROPIC_BASE_URL:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      # In-process model overrides (ADR 0011); empty keeps the code defaults.
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_FALLBACK_MODEL: ${LLM_FALLBACK_MODEL:-}
       # Asset storage (S3). A region is REQUIRED even when the rest is unset:
       # the S3 client is constructed at startup and throws "Region is missing"
       # without one. Uploads only work once bucket + credentials are set.
