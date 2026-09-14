@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { SubscriptionSection } from "../subscription-section";
+import { UsageOverview } from "../subscription-usage-overview";
 import type { GetSubscriptionStatusQuery } from "@/graphql/definitions";
 import {
   MOCK_TIER_QUOTAS,
@@ -158,6 +159,7 @@ vi.mock("@/common/components/ui/dialog", () => ({
 vi.mock("@/common/components/ui/separator", () => ({
   Separator: () => <hr data-testid="separator" />,
 }));
+const mockAppLanguage = vi.hoisted(() => ({ current: "en" }));
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
     t: (key: string, params?: Record<string, string>) => {
@@ -171,7 +173,7 @@ vi.mock("@/common/hooks/use-translations", () => ({
       return key;
     },
     // The app-locale number formatter reads `i18n.language`.
-    i18n: { language: "en" },
+    i18n: { language: mockAppLanguage.current },
   }),
 }));
 vi.mock("../stripe-config", () => ({
@@ -283,6 +285,59 @@ describe("Usage Overview", () => {
     // Unlimited ledgers row shows "unlimited" text
     const unlimitedTexts = screen.getAllByText("userSettings.unlimited");
     expect(unlimitedTexts.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("Usage Overview - app language", () => {
+  afterEach(() => {
+    mockAppLanguage.current = "en";
+  });
+
+  // Exposes the count parameters, which the shared mock `t` drops.
+  const t = (key: string, params?: Record<string, string>) =>
+    params ? `${key} ${params.used}/${params.max ?? "∞"}` : key;
+  const limits = {
+    ledgersUsed: 1,
+    ledgersMax: 3,
+    collaboratorsPerLedgerMax: 3,
+  };
+
+  it.each([
+    ["en", "1,234,567", "10,000,000"],
+    ["de", "1.234.567", "10.000.000"],
+  ])(
+    "formats AI usage counts in the %s app language, not the browser locale",
+    (language, used, max) => {
+      mockAppLanguage.current = language;
+      render(
+        <UsageOverview
+          limits={limits}
+          aiCfoTokensUsed={1234567}
+          aiCfoTokensMax={10000000}
+          t={t}
+        />,
+      );
+
+      expect(
+        screen.getByText(`userSettings.aiCfoUsageCount ${used}/${max}`),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it("formats unlimited AI usage in the app language", () => {
+    mockAppLanguage.current = "de";
+    render(
+      <UsageOverview
+        limits={limits}
+        aiCfoTokensUsed={1234567}
+        aiCfoTokensMax={-1}
+        t={t}
+      />,
+    );
+
+    expect(
+      screen.getByText("userSettings.aiCfoUsageUnlimited 1.234.567/∞"),
+    ).toBeInTheDocument();
   });
 });
 

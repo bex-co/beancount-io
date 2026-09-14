@@ -1,5 +1,6 @@
 import { Bot, BookOpen } from "lucide-react";
 import { type UserLimits } from "@/common/hooks/use-user-limits";
+import { useQuotaNumberFormat } from "./use-quota-number-format";
 
 export function UsageOverview({
   limits,
@@ -12,6 +13,8 @@ export function UsageOverview({
   aiCfoTokensMax: number;
   t: (key: string, params?: Record<string, string>) => string;
 }) {
+  // App-locale counts; `toLocaleString()` would follow the browser locale.
+  const formatCount = useQuotaNumberFormat();
   const { ledgersUsed, ledgersMax } = limits;
   const isAiUnlimited = aiCfoTokensMax === -1;
   const isLedgersUnlimited = ledgersMax === -1;
@@ -44,11 +47,11 @@ export function UsageOverview({
           <span className="text-muted-foreground">
             {isAiUnlimited
               ? t("userSettings.aiCfoUsageUnlimited", {
-                  used: aiCfoTokensUsed.toLocaleString(),
+                  used: formatCount(aiCfoTokensUsed),
                 })
               : t("userSettings.aiCfoUsageCount", {
-                  used: aiCfoTokensUsed.toLocaleString(),
-                  max: aiCfoTokensMax.toLocaleString(),
+                  used: formatCount(aiCfoTokensUsed),
+                  max: formatCount(aiCfoTokensMax),
                 })}
           </span>
         </div>
