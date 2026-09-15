@@ -12,6 +12,7 @@ import {
   GlobWorkBudget,
   globToRegExp,
   isGlob,
+  isUrlIncludeTarget,
   resolveIncludeTarget,
 } from "./file-map-loader";
 
@@ -480,6 +481,7 @@ function includeTraversalOrder(files: FileMap, entryPoint: string): string[] {
     visited.add(file);
     order.push(file);
     for (const target of extractIncludeTargets(files[file])) {
+      if (isUrlIncludeTarget(target)) continue;
       const resolved = resolveIncludeTarget(file, target);
       if (isGlob(resolved)) {
         const pattern = globToRegExp(resolved);

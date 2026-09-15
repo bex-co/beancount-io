@@ -1,11 +1,14 @@
 import { NotFoundError, ResourceLimitReachedError } from "@/shared/errors";
 import {
   collectSourceFiles,
+  extractIncludeDeclarations,
   fetchBeanFileMap,
   GITEA_FILE_FETCH_CONCURRENCY,
   globToRegExp,
+  isUrlIncludeTarget,
   loadLedgerFileMap,
   requireEntryPoint,
+  resolveIncludeTarget,
   MAX_INCLUDE_GLOB_WORK,
   MAX_LEDGER_FILE_MAP_FILES,
   MAX_LEDGER_SOURCE_FILE_BYTES,
@@ -637,5 +640,63 @@ describe("loadLedgerFileMap", () => {
     );
     expect(getTree).toHaveBeenCalledTimes(100);
     expect(repoGetContents).not.toHaveBeenCalled();
+  });
+});
+
+describe("include targets", () => {
+  it("recognizes a URL target by its scheme", () => {
+    expect(isUrlIncludeTarget("https://beancount.io/prices/BTCUSD")).toBe(true);
+    expect(isUrlIncludeTarget("S3://bucket/prices.bean")).toBe(true);
+    expect(isUrlIncludeTarget("accounts/opens.bean")).toBe(false);
+    expect(isUrlIncludeTarget("accounts//opens.bean")).toBe(false);
+    expect(isUrlIncludeTarget("/abs/opens.bean")).toBe(false);
+  });
+
+  it("still collapses an incidental `//` in a repository path", () => {
+    expect(resolveIncludeTarget("main.bean", "accounts//opens.bean")).toBe(
+      "accounts/opens.bean",
+    );
+    expect(
+      resolveIncludeTarget("books/main.bean", "..//shared//opens.bean"),
+    ).toBe("shared/opens.bean");
+  });
+
+  it("reports each include with its line", () => {
+    expect(
+      extractIncludeDeclarations(
+        'option "title" "T"\ninclude "a.bean"\n\n  include "https://x.example/b"\n',
+      ),
+    ).toEqual([
+      { target: "a.bean", line: 2 },
+      { target: "https://x.example/b", line: 4 },
+    ]);
+  });
+
+  it("never resolves a URL include against repository paths", () => {
+    const files = {
+      "main.bean":
+        'include "https://prices.example/p.bean"\ninclude "https://prices.example/a?.bean"\n',
+      "https:/prices.example/p.bean": "2024-01-01 open Assets:P USD\n",
+      "https:/prices.example/ab.bean": "2024-01-01 open Assets:A USD\n",
+    };
+    expect(collectSourceFiles(files, "main.bean")).toEqual(["main.bean"]);
+  });
+
+  it("does not fetch a repository blob for a URL include", async () => {
+    const { client, repoGetContents } = mockClient(
+      [
+        { path: "main.bean", type: "blob" },
+        { path: "https:/prices.example/p.txt", type: "blob" },
+      ],
+      {
+        "main.bean": 'include "https://prices.example/p.txt"\n',
+        "https:/prices.example/p.txt": "2024-01-01 open Assets:P USD\n",
+      },
+    );
+
+    const result = await loadLedgerFileMap(client, "alice", "book");
+
+    expect(Object.keys(result.files)).toEqual(["main.bean"]);
+    expect(repoGetContents).toHaveBeenCalledTimes(1);
   });
 });

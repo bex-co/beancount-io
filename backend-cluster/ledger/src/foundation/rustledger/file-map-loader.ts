@@ -58,6 +58,26 @@ export function extractIncludeTargets(content: string): string[] {
   return [...content.matchAll(INCLUDE_RE)].map((match) => match[1]);
 }
 
+/** Every `include "…"` target declared in one file's text, with its 1-based line. */
+export function extractIncludeDeclarations(
+  content: string,
+): Array<{ target: string; line: number }> {
+  return [...content.matchAll(INCLUDE_RE)].map((match) => ({
+    target: match[1],
+    line: content.slice(0, match.index).split("\n").length,
+  }));
+}
+
+/**
+ * Whether an include target is a URL (`include "https://…"`). Includes name
+ * files in the ledger repository and nothing fetches a remote target, so a URL
+ * never goes through path resolution: that would collapse its `//` and look up
+ * a repository path the user never wrote.
+ */
+export function isUrlIncludeTarget(target: string): boolean {
+  return /^[a-z][a-z0-9+.-]*:\/\//iu.test(target);
+}
+
 /**
  * Resolve an `include` target the way beancount does — relative to the directory
  * of the file that declares it — into a normalized, repo-relative path. That
@@ -536,6 +556,7 @@ export async function fetchBeanFileMap(
         const includeKey = `${path}\0${target}`;
         if (processedIncludes.has(includeKey)) continue;
         processedIncludes.add(includeKey);
+        if (isUrlIncludeTarget(target)) continue;
         const resolved = resolveIncludeTarget(path, target);
         if (isGlob(resolved)) {
           const pattern = globToRegExp(resolved);
@@ -612,6 +633,7 @@ export function collectSourceFiles(
     visited.add(path);
 
     for (const target of extractIncludeTargets(files[path] ?? "")) {
+      if (isUrlIncludeTarget(target)) continue;
       const resolved = resolveIncludeTarget(path, target);
       if (isGlob(resolved)) {
         const pattern = globToRegExp(resolved);

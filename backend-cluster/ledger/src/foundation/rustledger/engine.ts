@@ -29,6 +29,7 @@ import {
 } from "./plugins";
 import { reconcileDocumentErrors } from "./document-validation";
 import { isDocumentValidationError } from "./document-validation";
+import { reportUrlIncludes } from "./url-include-errors";
 import { OPTION_LINE_RE } from "./beancount-options";
 import { directiveToText } from "./journal-serialize";
 import {
@@ -569,6 +570,7 @@ async function parseLedgerFilesUncached(
   // existence checks always fail. Reconcile them against the real repo file
   // inventory (`repoPaths`), then recompute validity from the resulting errors.
   errors = reconcileDocumentErrors(errors, options.repoPaths);
+  errors = reportUrlIncludes(errors, files);
 
   directives = mergePaddingTransactions(directives, paddingTransactions);
 
