@@ -26,8 +26,8 @@ const faStatistics: Record<string, TranslationEntry> = {
     description: "Title for entries count by type section",
   },
   "page.statistics.entryCountPerAccount": {
-    message: "تعداد ثبت در هر حساب",
-    description: "Summary of entry count per account",
+    message: "تعداد سندها در هر حساب",
+    description: "Summary of postings count per account",
   },
   "page.statistics.entryType": {
     message: "نوع ثبت",

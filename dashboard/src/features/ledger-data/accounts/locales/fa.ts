@@ -90,8 +90,8 @@ const faAccounts: Record<string, TranslationEntry> = {
       "Description in delete account dialog when account is closed. {account} is replaced with the account name.",
   },
   "page.accounts.entries": {
-    message: "ورودی‌ها",
-    description: "Table column header for entry count",
+    message: "سندها",
+    description: "Table column header for posting count",
   },
   "page.accounts.loadingEntryContent": {
     message: "در حال بارگذاری محتوای ورودی...",

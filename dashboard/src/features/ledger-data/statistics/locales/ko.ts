@@ -26,8 +26,8 @@ const koStatistics: Record<string, TranslationEntry> = {
     description: "Title for entries count by type section",
   },
   "page.statistics.entryCountPerAccount": {
-    message: "계정별 항목 수",
-    description: "Summary of entry count per account",
+    message: "계정별 게시 수",
+    description: "Summary of postings count per account",
   },
   "page.statistics.entryType": {
     message: "항목 유형",

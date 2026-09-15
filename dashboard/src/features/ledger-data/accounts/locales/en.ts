@@ -90,8 +90,8 @@ const enAccounts: Record<string, TranslationEntry> = {
       "Description in delete account dialog when account is closed. {account} is replaced with the account name.",
   },
   "page.accounts.entries": {
-    message: "Entries",
-    description: "Table column header for entry count",
+    message: "Postings",
+    description: "Table column header for posting count",
   },
   "page.accounts.loadingEntryContent": {
     message: "Loading entry content...",

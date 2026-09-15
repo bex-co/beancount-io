@@ -1,3 +1,6 @@
+/** Derived ratio column — rounded for display; quantity columns stay verbatim. */
+export const UNREALIZED_PROFIT_PCT_COLUMN = "unrealized_profit_pct";
+
 export const csvObjectToString = (obj: object) => {
   return Object.entries(obj)
     .map(([key, value]) => {
@@ -24,17 +27,19 @@ export function tableToCSV(
   // Create CSV header row
   const headerRow = headers.map((header) => `"${header}"`).join(",");
 
-  // Create CSV data rows
+  // Create CSV data rows — percentage column matches on-screen rounding.
   const dataRows = rows.map((row) =>
     row
-      .map((cell) => {
+      .map((cell, cellIndex) => {
         // Handle null/undefined values
         if (cell === null || cell === undefined) {
           return '""';
         }
         // For objects, convert to string representation
         const value =
-          typeof cell === "object" ? csvObjectToString(cell) : String(cell);
+          typeof cell === "object"
+            ? csvObjectToString(cell)
+            : formatHoldingsCell(cell, headers[cellIndex]);
         // Escape quotes and wrap in quotes
         const escapedValue = value.replace(/"/g, '""');
         return `"${escapedValue}"`;
@@ -74,13 +79,55 @@ export function formatDecimalCell(value: unknown): string {
 }
 
 /**
+ * Round a derived percentage for display (two decimals). Exact zeros stay "0";
+ * null/empty stay empty; non-numeric text passes through unchanged.
+ */
+export function formatPercentageCell(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed === "") return "";
+    if (/^-?0(?:\.0+)?$/.test(trimmed)) return "0";
+    const parsed = Number(trimmed);
+    if (!Number.isFinite(parsed)) return trimmed;
+    if (parsed === 0) return "0";
+    return parsed.toFixed(2);
+  }
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return String(value);
+    if (value === 0) return "0";
+    return value.toFixed(2);
+  }
+
+  return String(value);
+}
+
+/**
+ * Formats a holdings cell. Quantity/cost/price/value stay lossless; only the
+ * unrealized_profit_pct ratio column is rounded for readable comparison.
+ */
+export function formatHoldingsCell(
+  value: unknown,
+  columnName?: string,
+): string {
+  if (columnName === UNREALIZED_PROFIT_PCT_COLUMN) {
+    return formatPercentageCell(value);
+  }
+  return formatDecimalCell(value);
+}
+
+/**
  * Formats a raw cell value from the holdings API response.
  * Intentionally diverges from common/lib/format/format-number.ts: that util
  * accepts a typed number + renderCommas flag; this one accepts unknown (API cells
  * can be strings, null, or booleans) and has no comma option.
  */
-export const formatNumber = (value: unknown): string =>
-  formatDecimalCell(value);
+export const formatNumber = (value: unknown, columnName?: string): string =>
+  formatHoldingsCell(value, columnName);
 
 /**
  * Determines if an unknown value is considered "empty"

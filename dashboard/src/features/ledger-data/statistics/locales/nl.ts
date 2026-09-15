@@ -27,7 +27,7 @@ const nlStatistics: Record<string, TranslationEntry> = {
   },
   "page.statistics.entryCountPerAccount": {
     message: "Aantal boekingen per rekening",
-    description: "Summary of entry count per account",
+    description: "Summary of postings count per account",
   },
   "page.statistics.entryType": {
     message: "Boekingstype",

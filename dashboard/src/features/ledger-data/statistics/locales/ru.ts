@@ -26,8 +26,8 @@ const ruStatistics: Record<string, TranslationEntry> = {
     description: "Title for entries count by type section",
   },
   "page.statistics.entryCountPerAccount": {
-    message: "Количество записей на счёт",
-    description: "Summary of entry count per account",
+    message: "Количество проводок на счёт",
+    description: "Summary of postings count per account",
   },
   "page.statistics.entryType": {
     message: "Тип записи",

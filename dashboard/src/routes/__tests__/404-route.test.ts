@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { isNotFound } from "@tanstack/react-router";
 import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
 import { createLocalization } from "@/i18n/init";
 const i18n = createLocalization().i18n;
@@ -8,6 +9,14 @@ vi.spyOn(i18n, "t");
 vi.mock("@/common/lib/seo/locale-map", () => ({
   getOgLocale: vi.fn(() => "en_US"),
 }));
+
+vi.mock("@/common/root-route/not-found-page", () => ({
+  default: () => null,
+}));
+
+import { Route as CatchAllRoute } from "../$";
+import { Route as SettingsCatchAllRoute } from "../settings.$";
+import { Route as LedgerCatchAllRoute } from "../ledger.$ledgerOwner.$ledgerName.$";
 
 describe("404 Route SEO Metadata", () => {
   beforeEach(() => {
@@ -57,5 +66,21 @@ describe("404 Route SEO Metadata", () => {
 
     expect(mockI18n).toHaveBeenCalledWith("seo.notFound.title");
     expect(mockI18n).toHaveBeenCalledWith("seo.notFound.description");
+  });
+});
+
+describe("unmatched route loaders", () => {
+  it.each([
+    ["root catch-all", CatchAllRoute],
+    ["settings catch-all", SettingsCatchAllRoute],
+    ["ledger catch-all", LedgerCatchAllRoute],
+  ] as const)("%s throws notFound so SSR can answer 404", (_label, route) => {
+    const loader = route.options.loader as unknown as () => never;
+    expect(() => loader()).toThrow();
+    try {
+      loader();
+    } catch (error) {
+      expect(isNotFound(error)).toBe(true);
+    }
   });
 });

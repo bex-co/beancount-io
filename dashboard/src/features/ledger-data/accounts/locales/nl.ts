@@ -90,8 +90,8 @@ const nlAccounts: Record<string, TranslationEntry> = {
       "Description in delete account dialog when account is closed. {account} is replaced with the account name.",
   },
   "page.accounts.entries": {
-    message: "Invoer",
-    description: "Table column header for entry count",
+    message: "Boekingen",
+    description: "Table column header for posting count",
   },
   "page.accounts.loadingEntryContent": {
     message: "Inhoudsitem laden...",

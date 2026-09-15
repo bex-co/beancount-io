@@ -132,7 +132,7 @@ describe("PostingsPerAccount", () => {
     expect(screen.getAllByText("1")).toHaveLength(2);
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(
-      screen.getByText(/Entry count per account \(3 Accounts\)/),
+      screen.getByText(/Postings count per account \(3 Accounts\)/),
     ).toBeInTheDocument();
   });
 
@@ -234,7 +234,7 @@ describe("PostingsPerAccount", () => {
       render(<PostingsPerAccount ledgerId="test-id" />);
 
       const description = screen.getByText(
-        /Entry count per account \(1 Accounts\)/,
+        /Postings count per account \(1 Accounts\)/,
       );
       expect(description.tagName).toBe("P");
       expect(description.className).toContain("text-sm");

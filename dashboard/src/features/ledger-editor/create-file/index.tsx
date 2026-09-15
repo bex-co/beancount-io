@@ -74,7 +74,7 @@ const CreateFilePage = () => {
       }
       return hasDraft;
     },
-    enableBeforeUnload: true,
+    enableBeforeUnload: () => hasDraft,
     withResolver: true,
   });
 

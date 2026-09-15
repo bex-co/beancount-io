@@ -33,14 +33,20 @@ const EntryContextDialog = lazy(async () => {
 /**
  * `language` is required: with an undefined locale `Intl.DateTimeFormat` falls
  * back to the browser's preference instead of the selected app language.
+ * Same-year entries stay compact (month + day); other years include the year
+ * so a 2017 row cannot be read as this week's activity.
  */
 function formatActivityDate(date: string, language: string): string {
   const parsed = new Date(`${date}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) return date;
-  return new Intl.DateTimeFormat(language, {
+  const options: Intl.DateTimeFormatOptions = {
     month: "short",
     day: "numeric",
-  }).format(parsed);
+  };
+  if (parsed.getFullYear() !== new Date().getFullYear()) {
+    options.year = "numeric";
+  }
+  return new Intl.DateTimeFormat(language, options).format(parsed);
 }
 
 function getTitle(transaction: JournalTransaction, fallback: string): string {

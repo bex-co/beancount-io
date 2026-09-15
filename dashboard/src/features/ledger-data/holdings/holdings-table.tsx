@@ -171,7 +171,7 @@ export const DatasetTable = React.memo(
                           const cellValue =
                             typeof cell === "object" && cell !== null
                               ? renderObject(cell)
-                              : formatNumber(cell ?? "");
+                              : formatNumber(cell ?? "", headerName);
 
                           return (
                             <TableCell

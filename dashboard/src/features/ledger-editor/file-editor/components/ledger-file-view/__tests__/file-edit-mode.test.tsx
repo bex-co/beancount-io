@@ -6,10 +6,19 @@ const blockerState = vi.hoisted(() => ({
   status: "idle" as "idle" | "blocked",
   reset: vi.fn(),
   proceed: vi.fn(),
+  shouldBlockFn: null as null | (() => boolean),
+  enableBeforeUnload: null as null | boolean | (() => boolean),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
-  useBlocker: () => blockerState,
+  useBlocker: (opts: {
+    shouldBlockFn: () => boolean;
+    enableBeforeUnload?: boolean | (() => boolean);
+  }) => {
+    blockerState.shouldBlockFn = opts.shouldBlockFn;
+    blockerState.enableBeforeUnload = opts.enableBeforeUnload ?? null;
+    return blockerState;
+  },
 }));
 
 vi.mock("@/common/hooks/use-translations", () => ({
@@ -36,6 +45,48 @@ describe("EditModeToolbar draft guard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     blockerState.status = "idle";
+    blockerState.shouldBlockFn = null;
+    blockerState.enableBeforeUnload = null;
+  });
+
+  it("arms beforeunload only while the draft differs from the saved content", () => {
+    const { rerender } = render(
+      <EditModeToolbar
+        editorRef={editorRef}
+        editedContent="saved body"
+        plainContent="saved body"
+        onSave={onSave}
+        onCancel={onCancel}
+        onDiscard={onDiscard}
+        isSaving={false}
+      />,
+    );
+
+    expect(blockerState.shouldBlockFn?.()).toBe(false);
+    expect(
+      typeof blockerState.enableBeforeUnload === "function"
+        ? blockerState.enableBeforeUnload()
+        : blockerState.enableBeforeUnload,
+    ).toBe(false);
+
+    rerender(
+      <EditModeToolbar
+        editorRef={editorRef}
+        editedContent="draft body"
+        plainContent="saved body"
+        onSave={onSave}
+        onCancel={onCancel}
+        onDiscard={onDiscard}
+        isSaving={false}
+      />,
+    );
+
+    expect(blockerState.shouldBlockFn?.()).toBe(true);
+    expect(
+      typeof blockerState.enableBeforeUnload === "function"
+        ? blockerState.enableBeforeUnload()
+        : blockerState.enableBeforeUnload,
+    ).toBe(true);
   });
 
   it("keeps Edit, Save and Cancel named while saving", () => {

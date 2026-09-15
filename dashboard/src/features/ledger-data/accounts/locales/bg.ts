@@ -90,8 +90,8 @@ const bgAccounts: Record<string, TranslationEntry> = {
       "Description in delete account dialog when account is closed. {account} is replaced with the account name.",
   },
   "page.accounts.entries": {
-    message: "Записи",
-    description: "Table column header for entry count",
+    message: "Проводки",
+    description: "Table column header for posting count",
   },
   "page.accounts.loadingEntryContent": {
     message: "Зареждане на съдържанието на записа...",

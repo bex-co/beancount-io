@@ -26,8 +26,8 @@ const skStatistics: Record<string, TranslationEntry> = {
     description: "Title for entries count by type section",
   },
   "page.statistics.entryCountPerAccount": {
-    message: "Počet záznamov na účet",
-    description: "Summary of entry count per account",
+    message: "Počet zápisov na účet",
+    description: "Summary of postings count per account",
   },
   "page.statistics.entryType": {
     message: "Typ záznamu",

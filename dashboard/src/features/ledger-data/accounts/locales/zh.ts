@@ -88,8 +88,8 @@ const zhAccounts: Record<string, TranslationEntry> = {
       "Description in delete account dialog when account is closed. {account} is replaced with the account name.",
   },
   "page.accounts.entries": {
-    message: "条目",
-    description: "Table column header for entry count",
+    message: "过账",
+    description: "Table column header for posting count",
   },
   "page.accounts.loadingEntryContent": {
     message: "加载条目内容中...",

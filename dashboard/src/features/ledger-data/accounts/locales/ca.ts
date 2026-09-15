@@ -91,8 +91,8 @@ const caAccounts: Record<string, TranslationEntry> = {
       "Description in delete account dialog when account is closed. {account} is replaced with the account name.",
   },
   "page.accounts.entries": {
-    message: "Entrades",
-    description: "Table column header for entry count",
+    message: "Registres",
+    description: "Table column header for posting count",
   },
   "page.accounts.loadingEntryContent": {
     message: "Loading entry content...",

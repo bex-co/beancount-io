@@ -88,8 +88,8 @@ const koAccounts: Record<string, TranslationEntry> = {
       "Description in delete account dialog when account is closed. {account} is replaced with the account name.",
   },
   "page.accounts.entries": {
-    message: "항목",
-    description: "Table column header for entry count",
+    message: "게시",
+    description: "Table column header for posting count",
   },
   "page.accounts.loadingEntryContent": {
     message: "항목 내용 불러오는 중...",

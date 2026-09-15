@@ -69,7 +69,7 @@ export function EditModeToolbar({
   // Block all navigation (route changes, query params, browser back/refresh) with unsaved changes
   const blocker = useBlocker({
     shouldBlockFn: () => hasUnsavedChanges,
-    enableBeforeUnload: true,
+    enableBeforeUnload: () => hasUnsavedChanges,
     withResolver: true,
   });
 

@@ -2,11 +2,13 @@ import { describe, it, expect } from "vitest";
 import {
   tableToCSV,
   formatNumber,
+  formatPercentageCell,
   csvObjectToString,
   isEmpty,
   defaultRowsFilter,
   holdingsRowsFilter,
   unitsFirstRowsFilter,
+  UNREALIZED_PROFIT_PCT_COLUMN,
 } from "../utils";
 
 describe("Holdings Utils", () => {
@@ -61,6 +63,32 @@ describe("Holdings Utils", () => {
     it("should handle objects by converting to string", () => {
       expect(formatNumber({})).toBe("[object Object]");
       expect(formatNumber([])).toBe("");
+    });
+
+    it("rounds only unrealized_profit_pct and leaves quantity columns verbatim", () => {
+      const raw = "14.423220316680556164744067720";
+      expect(formatNumber(raw, UNREALIZED_PROFIT_PCT_COLUMN)).toBe("14.42");
+      expect(formatNumber(raw, "units")).toBe(raw);
+      expect(formatNumber(raw)).toBe(raw);
+      expect(
+        formatNumber(
+          "-32.643270809923070274008125160",
+          UNREALIZED_PROFIT_PCT_COLUMN,
+        ),
+      ).toBe("-32.64");
+    });
+  });
+
+  describe("formatPercentageCell", () => {
+    it("rounds to two decimals and keeps a genuine zero", () => {
+      expect(formatPercentageCell("49.144717659636505005345514630")).toBe(
+        "49.14",
+      );
+      expect(formatPercentageCell("0")).toBe("0");
+      expect(formatPercentageCell("0.0000")).toBe("0");
+      expect(formatPercentageCell(0)).toBe("0");
+      expect(formatPercentageCell(null)).toBe("");
+      expect(formatPercentageCell(undefined)).toBe("");
     });
   });
 
@@ -235,6 +263,20 @@ describe("Holdings Utils", () => {
       expect(result).toContain("200 EUR");
       expect(result).toContain("300.12 GBP");
       expect(result).toContain("0.004 ETH");
+    });
+
+    it("rounds unrealized_profit_pct in CSV while keeping units verbatim", () => {
+      const headers = ["units", UNREALIZED_PROFIT_PCT_COLUMN];
+      const rows = [
+        ["0.004", "14.423220316680556164744067720"],
+        [{ ETH: "0.004" }, "0"],
+      ];
+      const result = tableToCSV(headers, rows);
+
+      expect(result).toContain('"0.004","14.42"');
+      expect(result).toContain("0.004 ETH");
+      expect(result).toContain('"0"');
+      expect(result).not.toContain("14.423220316680556164744067720");
     });
 
     it("should handle mixed types in cells", () => {

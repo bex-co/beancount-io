@@ -26,8 +26,8 @@ const esStatistics: Record<string, TranslationEntry> = {
     description: "Title for entries count by type section",
   },
   "page.statistics.entryCountPerAccount": {
-    message: "Conteo de entradas por cuenta",
-    description: "Summary of entry count per account",
+    message: "Conteo de asientos por cuenta",
+    description: "Summary of postings count per account",
   },
   "page.statistics.entryType": {
     message: "Tipo de Entrada",

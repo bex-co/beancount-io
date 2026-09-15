@@ -26,8 +26,8 @@ const ukStatistics: Record<string, TranslationEntry> = {
     description: "Title for entries count by type section",
   },
   "page.statistics.entryCountPerAccount": {
-    message: "Кількість записів на рахунок",
-    description: "Summary of entry count per account",
+    message: "Кількість проводок на рахунок",
+    description: "Summary of postings count per account",
   },
   "page.statistics.entryType": {
     message: "Тип запису",

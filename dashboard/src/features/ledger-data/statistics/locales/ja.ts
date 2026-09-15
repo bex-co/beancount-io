@@ -26,8 +26,8 @@ const jaStatistics: Record<string, TranslationEntry> = {
     description: "Title for entries count by type section",
   },
   "page.statistics.entryCountPerAccount": {
-    message: "口座ごとのエントリ数",
-    description: "Summary of entry count per account",
+    message: "口座ごとのポスティング数",
+    description: "Summary of postings count per account",
   },
   "page.statistics.entryType": {
     message: "エントリタイプ",

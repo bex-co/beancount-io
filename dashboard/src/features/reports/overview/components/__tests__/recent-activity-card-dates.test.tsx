@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RecentActivityCard } from "../recent-activity-card";
 
 const transaction = {
@@ -65,7 +65,17 @@ const props = {
 };
 
 describe("RecentActivityCard dates", () => {
-  it("formats transaction dates in the active language", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-12T12:00:00"));
+    transaction.date = "2026-02-03";
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("formats same-year transaction dates compactly in the active language", () => {
     language = "en";
     const { unmount } = render(<RecentActivityCard {...props} />);
     // The date is rendered twice (desktop column and mobile line).
@@ -75,5 +85,12 @@ describe("RecentActivityCard dates", () => {
     language = "fr";
     render(<RecentActivityCard {...props} />);
     expect(screen.getAllByText("3 févr.")).toHaveLength(2);
+  });
+
+  it("includes the year when the activity is not in the current calendar year", () => {
+    language = "en";
+    transaction.date = "2017-09-08";
+    render(<RecentActivityCard {...props} />);
+    expect(screen.getAllByText("Sep 8, 2017")).toHaveLength(2);
   });
 });

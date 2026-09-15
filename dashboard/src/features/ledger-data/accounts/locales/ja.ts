@@ -89,8 +89,8 @@ const jaAccounts: Record<string, TranslationEntry> = {
       "Description in delete account dialog when account is closed. {account} is replaced with the account name.",
   },
   "page.accounts.entries": {
-    message: "エントリ",
-    description: "Table column header for entry count",
+    message: "ポスティング",
+    description: "Table column header for posting count",
   },
   "page.accounts.loadingEntryContent": {
     message: "エントリコンテンツを読み込み中...",

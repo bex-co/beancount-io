@@ -6,6 +6,7 @@ const blockerState = vi.hoisted(() => ({
   reset: vi.fn(),
   proceed: vi.fn(),
   shouldBlockFn: null as null | (() => boolean),
+  enableBeforeUnload: null as null | boolean | (() => boolean),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -15,8 +16,12 @@ vi.mock("@tanstack/react-router", () => ({
     _splat: "",
   }),
   useNavigate: () => vi.fn(),
-  useBlocker: (opts: { shouldBlockFn: () => boolean }) => {
+  useBlocker: (opts: {
+    shouldBlockFn: () => boolean;
+    enableBeforeUnload?: boolean | (() => boolean);
+  }) => {
     blockerState.shouldBlockFn = opts.shouldBlockFn;
+    blockerState.enableBeforeUnload = opts.enableBeforeUnload ?? null;
     return blockerState;
   },
 }));
@@ -82,11 +87,17 @@ describe("CreateFilePage draft guard", () => {
     vi.clearAllMocks();
     blockerState.status = "idle";
     blockerState.shouldBlockFn = null;
+    blockerState.enableBeforeUnload = null;
   });
 
   it("treats empty filename and content as clean", () => {
     render(<CreateFilePage />);
     expect(blockerState.shouldBlockFn?.()).toBe(false);
+    expect(
+      typeof blockerState.enableBeforeUnload === "function"
+        ? blockerState.enableBeforeUnload()
+        : blockerState.enableBeforeUnload,
+    ).toBe(false);
   });
 
   it("blocks when the filename draft is non-empty", () => {
@@ -95,6 +106,11 @@ describe("CreateFilePage draft guard", () => {
       target: { value: "notes.bean" },
     });
     expect(blockerState.shouldBlockFn?.()).toBe(true);
+    expect(
+      typeof blockerState.enableBeforeUnload === "function"
+        ? blockerState.enableBeforeUnload()
+        : blockerState.enableBeforeUnload,
+    ).toBe(true);
   });
 
   it("blocks when the editor draft is non-empty", () => {
@@ -103,6 +119,24 @@ describe("CreateFilePage draft guard", () => {
       target: { value: "2024-01-01 open Assets:Cash" },
     });
     expect(blockerState.shouldBlockFn?.()).toBe(true);
+    expect(
+      typeof blockerState.enableBeforeUnload === "function"
+        ? blockerState.enableBeforeUnload()
+        : blockerState.enableBeforeUnload,
+    ).toBe(true);
+  });
+
+  it("disarms beforeunload when a typed draft is cleared back to empty", () => {
+    render(<CreateFilePage />);
+    const filename = screen.getByPlaceholderText("ledgerEditor.nameYourFile");
+    fireEvent.change(filename, { target: { value: "notes.bean" } });
+    fireEvent.change(filename, { target: { value: "" } });
+    expect(blockerState.shouldBlockFn?.()).toBe(false);
+    expect(
+      typeof blockerState.enableBeforeUnload === "function"
+        ? blockerState.enableBeforeUnload()
+        : blockerState.enableBeforeUnload,
+    ).toBe(false);
   });
 
   it("keeps the draft when Stay is chosen from the leave dialog", () => {

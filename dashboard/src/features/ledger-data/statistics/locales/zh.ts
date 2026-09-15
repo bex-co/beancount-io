@@ -26,8 +26,8 @@ const zhStatistics: Record<string, TranslationEntry> = {
     description: "Title for entries count by type section",
   },
   "page.statistics.entryCountPerAccount": {
-    message: "每个账户的条目数",
-    description: "Summary of entry count per account",
+    message: "每个账户的过账数",
+    description: "Summary of postings count per account",
   },
   "page.statistics.entryType": {
     message: "条目类型",

@@ -270,6 +270,41 @@ describe("DatasetTable", () => {
       expect(screen.getByText("500.25")).toBeInTheDocument();
       expect(screen.getByText("EUR")).toBeInTheDocument();
     });
+
+    it("rounds unrealized_profit_pct while keeping units verbatim", () => {
+      vi.mocked(useQuery).mockReturnValue({
+        data: {
+          queryShell: {
+            resultType: "table",
+            table: {
+              types: [
+                { name: "account" },
+                { name: "units" },
+                { name: "unrealized_profit_pct" },
+              ],
+              rows: [
+                [
+                  "Assets:US:ETrade:GLD",
+                  "0.004",
+                  "14.423220316680556164744067720",
+                ],
+              ],
+            },
+            text: null,
+          },
+        },
+        loading: false,
+        error: undefined,
+      });
+
+      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+
+      expect(screen.getByText("0.004")).toBeInTheDocument();
+      expect(screen.getByText("14.42")).toBeInTheDocument();
+      expect(
+        screen.queryByText("14.423220316680556164744067720"),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe("account row activation", () => {

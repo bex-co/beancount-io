@@ -90,8 +90,8 @@ const skAccounts: Record<string, TranslationEntry> = {
       "Description in delete account dialog when account is closed. {account} is replaced with the account name.",
   },
   "page.accounts.entries": {
-    message: "Záznamy",
-    description: "Table column header for entry count",
+    message: "Zápisy",
+    description: "Table column header for posting count",
   },
   "page.accounts.loadingEntryContent": {
     message: "Načítavam obsah záznamu...",
