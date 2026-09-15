@@ -142,13 +142,16 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
     name: "postings",
   });
 
-  // Auto-focus payee field on mount
+  // Auto-focus payee field on mount. Scope to the payee wrapper — the Status
+  // select is also role=combobox and sits earlier in the DOM, so a document-
+  // wide querySelector steals focus from whoever is typing.
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Find and focus the payee input (combobox trigger)
-      const payeeInput =
-        document.querySelector<HTMLButtonElement>('[role="combobox"]');
-      payeeInput?.focus();
+      document
+        .querySelector<HTMLElement>(
+          "[data-transaction-payee] [role='combobox'], [data-transaction-payee] input",
+        )
+        ?.focus();
     }, 150);
     return () => clearTimeout(timer);
   }, []);
@@ -381,7 +384,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
             control={form.control}
             name="payee"
             render={({ field }) => (
-              <FormItem className="flex-1">
+              <FormItem className="flex-1" data-transaction-payee>
                 <FormControl>
                   <PayeesCombobox
                     ledgerId={ledgerId}

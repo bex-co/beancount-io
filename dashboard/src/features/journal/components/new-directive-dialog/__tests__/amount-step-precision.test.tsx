@@ -117,10 +117,17 @@ describe("directive amount precision", () => {
     const accounts = screen.getAllByRole("textbox", { name: "Account" });
     const amounts = screen.getAllByRole("spinbutton");
 
-    await user.type(accounts[0]!, "Expenses:CostOfRevenue");
-    await user.type(amounts[0]!, "0.001");
-    await user.type(accounts[1]!, "Assets:Current:Cash");
-    await user.type(amounts[1]!, "-0.001");
+    // Set accounts/amounts via change events so the mount payee-focus timer
+    // cannot steal characters from user-event typing under CI load.
+    fireEvent.change(accounts[0]!, {
+      target: { value: "Expenses:CostOfRevenue" },
+    });
+    fireEvent.change(amounts[0]!, { target: { value: "0.001" } });
+    fireEvent.change(accounts[1]!, {
+      target: { value: "Assets:Current:Cash" },
+    });
+    fireEvent.change(amounts[1]!, { target: { value: "-0.001" } });
+    await user.click(amounts[1]!);
 
     expect(amounts[1]).toHaveFocus();
     expect((amounts[1] as HTMLInputElement).validity.stepMismatch).toBe(false);
