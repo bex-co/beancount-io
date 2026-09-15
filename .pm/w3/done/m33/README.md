@@ -1,17 +1,17 @@
 # w3 · m33 — Preserve import configuration across Back
 
-**Worker:** worker3 **Goal:** reviewing or repairing a CSV preview does not discard the configured accounts, currency or excluded rows **Status:** todo
+**Worker:** worker3 **Goal:** reviewing or repairing a CSV preview does not discard the configured accounts, currency or excluded rows **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Keep configuration draft in the active import workflow | 45m | — |
-| t002 | Reconcile preview edits using stable parsed-row identities | 35m | t001 |
-| t003 | Verify adoption of the configure and review journey | 20m | t001, t002 |
-| t004 | Simplify import draft ownership | 15m | t003 |
-| t005 | Test draft persistence and row reconciliation end to end | 40m | t003, t004 |
-| t006 | Close out import configuration preservation | 15m | t005 |
+| t001 | Keep configuration draft in the active import workflow | 45m | — | — **DONE**
+| t002 | Reconcile preview edits using stable parsed-row identities | 35m | t001 | — **DONE**
+| t003 | Verify adoption of the configure and review journey | 20m | t001, t002 | — **DONE**
+| t004 | Simplify import draft ownership | 15m | t003 | — **DONE**
+| t005 | Test draft persistence and row reconciliation end to end | 40m | t003, t004 | — **DONE**
+| t006 | Close out import configuration preservation | 15m | t005 | — **DONE**
 
 170 minutes total:80 minutes implementation plus adoption, simplification, meaningful regression coverage and closeout. Severity **minor**; owning package **dashboard**. A2: readers can finish an import review without repeating account mapping work.
 

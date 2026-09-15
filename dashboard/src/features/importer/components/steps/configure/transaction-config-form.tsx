@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,12 +28,19 @@ import { AccountMappingTable } from "./account-mapping-table";
 import { useAICategorization } from "../../../hooks/use-ai-categorization";
 import { parseDecimalNumber } from "@/common/lib/beancount/decimal-number";
 import type { ParsedRow, ImportTransaction } from "../../../types";
-import { parseDate, parseAmount } from "../../../utils/csv-validator";
+import {
+  buildImportConfigFormValues,
+  getValidImportRows,
+  toImportConfigDraft,
+  type ImportConfigDraft,
+} from "../../../lib/import-config-draft";
 import { useLedger } from "@/common/hooks/use-ledger";
 
 interface TransactionConfigFormProps {
   rows: ParsedRow[];
   ledgerId: string;
+  configDraft: ImportConfigDraft | null;
+  onConfigDraftChange: (draft: ImportConfigDraft) => void;
   onSubmit: (transactions: ImportTransaction[]) => void;
   onBack: () => void;
   isSubmitting: boolean;
@@ -42,19 +49,16 @@ interface TransactionConfigFormProps {
 export function TransactionConfigForm({
   rows,
   ledgerId,
+  configDraft,
+  onConfigDraftChange,
   onSubmit,
   onBack,
   isSubmitting,
 }: TransactionConfigFormProps) {
   const { t } = useTranslations();
   const { primaryCurrency } = useLedger();
-  // Only rows that still pass the shared parse contract enter configuration.
-  const validRows = rows.filter((row) => {
-    if (row.errors && row.errors.length > 0) return false;
-    return parseDate(row.date).valid && parseAmount(row.amountInput).valid;
-  });
+  const validRows = useMemo(() => getValidImportRows(rows), [rows]);
 
-  // Create Zod schema with conditional validation
   const formSchema = useMemo(
     () =>
       z
@@ -68,8 +72,8 @@ export function TransactionConfigForm({
           transactions: z
             .array(
               z.object({
+                id: z.string(),
                 rowIndex: z.number(),
-                // Canonical YYYY-MM-DD, carried through from the parser.
                 date: z.string(),
                 payee: z.string(),
                 description: z.string(),
@@ -83,7 +87,6 @@ export function TransactionConfigForm({
         })
         .refine(
           (data) => {
-            // Check that all selected transactions have a target account
             const selectedTransactions = data.transactions.filter(
               (txn) => txn.selected,
             );
@@ -96,57 +99,66 @@ export function TransactionConfigForm({
             path: ["transactions"],
           },
         )
-        .refine(
-          (data) => {
-            // Check that at least one transaction is selected
-            return data.transactions.some((txn) => txn.selected);
-          },
-          {
-            message: t("importer.configure.atLeastOneSelected"),
-            path: ["transactions"],
-          },
-        ),
+        .refine((data) => data.transactions.some((txn) => txn.selected), {
+          message: t("importer.configure.atLeastOneSelected"),
+          path: ["transactions"],
+        }),
     [t],
   );
 
   type FormData = z.infer<typeof formSchema>;
 
-  // Initialize form with default values
+  const defaultValues = useMemo(
+    () => buildImportConfigFormValues(rows, configDraft, primaryCurrency),
+    // Mount-time defaults only; remount after Back restores the latest draft.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      sourceAccount: "",
-      defaultCurrency: primaryCurrency,
-      transactions: validRows.map((row, index) => {
-        const dateResult = parseDate(row.date);
-        const amountResult = parseAmount(row.amountInput);
-        return {
-          rowIndex: index,
-          date: dateResult.isoDate!,
-          payee: row.payee,
-          description: row.description,
-          amount: amountResult.amount!,
-          amountInput: row.amountInput,
-          targetAccount: "",
-          selected: true, // All transactions selected by default
-        };
-      }),
-    },
+    defaultValues,
   });
 
-  // AI Categorization hook
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      if (!values.transactions) return;
+      onConfigDraftChange(
+        toImportConfigDraft({
+          sourceAccount: values.sourceAccount ?? "",
+          defaultCurrency: values.defaultCurrency ?? primaryCurrency,
+          transactions: (values.transactions ?? []).flatMap((txn) =>
+            txn?.id
+              ? [
+                  {
+                    id: txn.id,
+                    rowIndex: txn.rowIndex ?? 0,
+                    date: txn.date ?? "",
+                    payee: txn.payee ?? "",
+                    description: txn.description ?? "",
+                    amount: txn.amount ?? 0,
+                    amountInput: txn.amountInput ?? "",
+                    targetAccount: txn.targetAccount ?? "",
+                    selected: txn.selected ?? true,
+                  },
+                ]
+              : [],
+          ),
+        }),
+      );
+    });
+    return () => subscription.unsubscribe();
+  }, [form, onConfigDraftChange, primaryCurrency]);
+
   const { categorizeTransactions, loading: aiLoading } =
     useAICategorization(ledgerId);
 
   const handleAICategorize = async () => {
     const suggestions = await categorizeTransactions(validRows);
-
-    // Apply suggestions to form
     const currentTransactions = form.getValues("transactions");
     const updatedTransactions = currentTransactions.map((txn) => {
       const suggestion = suggestions.get(txn.rowIndex);
       if (suggestion && suggestion.confidence >= 0.5) {
-        // Only apply suggestions with >= 50% confidence
         return {
           ...txn,
           targetAccount: suggestion.targetAccount,
@@ -154,16 +166,13 @@ export function TransactionConfigForm({
       }
       return txn;
     });
-
     form.setValue("transactions", updatedTransactions);
   };
 
   const handleSubmit = (data: FormData) => {
-    // Only include selected transactions
     const selectedTransactions = data.transactions.filter(
       (txn) => txn.selected,
     );
-
     const transactions: ImportTransaction[] = selectedTransactions.map(
       (txn) => ({
         rowIndex: txn.rowIndex,
@@ -176,11 +185,9 @@ export function TransactionConfigForm({
         currency: data.defaultCurrency,
       }),
     );
-
     onSubmit(transactions);
   };
 
-  // Get selected count for submit button
   const selectedCount = form
     .watch("transactions")
     .filter((txn) => txn.selected).length;
@@ -196,7 +203,6 @@ export function TransactionConfigForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Global Settings */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -219,7 +225,6 @@ export function TransactionConfigForm({
                         )}
                       />
                     </FormControl>
-                    {/* <FormMessage /> */}
                     <p className="text-xs text-muted-foreground mt-1">
                       {t("importer.configure.sourceAccountHint")}
                     </p>
@@ -252,7 +257,6 @@ export function TransactionConfigForm({
               />
             </div>
 
-            {/* Account Mapping Table */}
             <div>
               <h3 className="text-sm font-medium mb-3">
                 {t("importer.configure.assignTargetAccounts")}
@@ -266,7 +270,6 @@ export function TransactionConfigForm({
               />
             </div>
 
-            {/* Action Buttons */}
             <div className="flex justify-between">
               <Button
                 type="button"

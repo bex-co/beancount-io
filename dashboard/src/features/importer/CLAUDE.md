@@ -12,7 +12,11 @@ upload → preview → configure → importing → finish
 
 ## State Management
 
-`hooks/use-import-workflow.ts` manages step transitions and parse results via `useState`.
+`hooks/use-import-workflow.ts` manages step transitions, parse results, and
+the active-file configuration draft via `useState`. The draft
+(`lib/import-config-draft.ts`) retains source account, currency, per-row
+target accounts and selection keyed by `ParsedRow.id` across Configure ↔
+Preview. It clears on a new upload or reset/finish — never via localStorage.
 
 ## Component Hierarchy
 
@@ -48,6 +52,12 @@ upload → preview → configure → importing → finish
   unrelated payee changes cannot clear date/amount errors. Configuration only
   accepts rows that still pass `parseDate` / `parseAmount`; it never invents
   today's date or a numeric zero for invalid input.
+- `parseAmount` rejects tokens whose `Number` conversion would change the exact
+  decimal value (unsafe integers, excess fraction digits, nonzero underflow).
+  Equivalent spellings (`1.2500`, `+2.5e1`, signed zero) stay valid. A recognized
+  CSV with that structured `unsupported-precision` failure stays in the client
+  preview for repair — multi-stage parsing must not fall through to LLM solely
+  because `validCount` is 0.
 
 ## Premium Gating
 

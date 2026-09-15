@@ -43,6 +43,7 @@ interface TransactionFormData {
   sourceAccount: string;
   defaultCurrency: string;
   transactions: {
+    id: string;
     rowIndex: number;
     /** Canonical `YYYY-MM-DD` calendar day. */
     date: string;
@@ -62,6 +63,8 @@ interface AccountMappingTableProps {
   onAICategorize?: () => Promise<void>;
   aiLoading?: boolean;
   transactionCount?: number;
+  /** Fired after a local draft edit so the wizard can persist configure state. */
+  onDraftChange?: () => void;
 }
 
 type AmountFilter = "all" | "positive" | "negative";
@@ -72,6 +75,7 @@ export function AccountMappingTable({
   onAICategorize,
   aiLoading = false,
   transactionCount = 0,
+  onDraftChange,
 }: AccountMappingTableProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -161,6 +165,7 @@ export function AccountMappingTable({
         shouldTouch: true,
       });
     });
+    onDraftChange?.();
   };
 
   // Toggle individual row via a scalar field update so the checkbox keeps focus.
@@ -171,6 +176,7 @@ export function AccountMappingTable({
         shouldDirty: true,
         shouldTouch: true,
       });
+      onDraftChange?.();
     }
   };
 

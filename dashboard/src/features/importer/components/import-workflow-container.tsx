@@ -69,6 +69,8 @@ export function ImportWorkflowContainer({
       <ConfigureStep
         parseResult={workflow.parseResult}
         ledgerId={ledgerId}
+        configDraft={workflow.configDraft}
+        onConfigDraftChange={workflow.setConfigDraft}
         onSubmit={handleSubmit}
         onBack={workflow.handleBack}
         isSubmitting={isSubmitting}

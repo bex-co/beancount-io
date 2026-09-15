@@ -243,4 +243,95 @@ describe("useImportWorkflow", () => {
       expect(result.current.currentStep).toBe("configure");
     });
   });
+
+  describe("config draft", () => {
+    it("starts with a null configuration draft", () => {
+      const { result } = renderHook(() => useImportWorkflow());
+      expect(result.current.configDraft).toBeNull();
+    });
+
+    it("retains the draft when returning from configure to preview", () => {
+      const { result } = renderHook(() => useImportWorkflow());
+
+      act(() => result.current.handleFileParsed(mockParseResult));
+      act(() => result.current.handleContinueToConfig());
+      act(() =>
+        result.current.setConfigDraft({
+          sourceAccount: "Assets:Bank:Business",
+          defaultCurrency: "EUR",
+          rows: {
+            "row-1": { targetAccount: "Expenses:Software", selected: false },
+          },
+        }),
+      );
+      act(() => result.current.handleBack());
+
+      expect(result.current.currentStep).toBe("preview");
+      expect(result.current.configDraft).toEqual({
+        sourceAccount: "Assets:Bank:Business",
+        defaultCurrency: "EUR",
+        rows: {
+          "row-1": { targetAccount: "Expenses:Software", selected: false },
+        },
+      });
+    });
+
+    it("clears the draft on a new file upload", () => {
+      const { result } = renderHook(() => useImportWorkflow());
+
+      act(() => result.current.handleFileParsed(mockParseResult));
+      act(() =>
+        result.current.setConfigDraft({
+          sourceAccount: "Assets:Bank",
+          defaultCurrency: "USD",
+          rows: {},
+        }),
+      );
+      act(() =>
+        result.current.handleFileParsed({
+          ...mockParseResult,
+          rows: [
+            {
+              id: "row-new",
+              date: "2026-01-01",
+              payee: "Other",
+              description: "New file",
+              amount: -1,
+              amountInput: "-1",
+            },
+          ],
+        }),
+      );
+
+      expect(result.current.configDraft).toBeNull();
+    });
+
+    it("clears the draft when resetting or leaving preview for upload", () => {
+      const { result } = renderHook(() => useImportWorkflow());
+
+      act(() => result.current.handleFileParsed(mockParseResult));
+      act(() => result.current.handleContinueToConfig());
+      act(() =>
+        result.current.setConfigDraft({
+          sourceAccount: "Assets:Bank",
+          defaultCurrency: "USD",
+          rows: {},
+        }),
+      );
+      act(() => result.current.resetToUpload());
+      expect(result.current.configDraft).toBeNull();
+
+      act(() => result.current.handleFileParsed(mockParseResult));
+      act(() =>
+        result.current.setConfigDraft({
+          sourceAccount: "Assets:Bank",
+          defaultCurrency: "USD",
+          rows: {},
+        }),
+      );
+      act(() => result.current.handleBack());
+      expect(result.current.currentStep).toBe("upload");
+      expect(result.current.configDraft).toBeNull();
+    });
+  });
 });

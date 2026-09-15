@@ -23,11 +23,13 @@ vi.mock("sonner", () => ({
 }));
 
 type Transaction = {
+  id: string;
   rowIndex: number;
   date: string;
   payee: string;
   description: string;
   amount: number;
+  amountInput: string;
   targetAccount: string;
   selected: boolean;
 };
@@ -40,20 +42,24 @@ type FormData = {
 
 const defaultTransactions: Transaction[] = [
   {
+    id: "row-a",
     rowIndex: 0,
     date: "2025-12-01",
     payee: "QA Coffee",
     description: "Regular purchase",
     amount: -4.5,
+    amountInput: "-4.5",
     targetAccount: "Expenses:Coffee",
     selected: true,
   },
   {
+    id: "row-b",
     rowIndex: 1,
     date: "2025-12-02",
     payee: "QA Grocery",
     description: "Regular purchase",
     amount: -45.67,
+    amountInput: "-45.67",
     targetAccount: "Expenses:Food",
     selected: true,
   },

@@ -42,7 +42,7 @@
 
 - [x] **m32** — Expose statement hierarchy tables to assistive technology (6 tasks) ← continuous dashboard QA,2026-09-11
 
-- [ ] **m33** — Preserve import configuration across Back (6 tasks) ← continuous dashboard QA,2026-09-11
+- [x] **m33** — Preserve import configuration across Back (6 tasks) ← continuous dashboard QA,2026-09-11
 
 - [ ] **m35** — Keep report results and exports tied to their completed request (8 tasks) ← promoted129 and pending-conversion QA; extended 2026-09-12 with the ledger-switch case (t008)
 
