@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import {
+  Redirect,
   Stack,
   useLocalSearchParams,
   useNavigation,
@@ -270,9 +271,15 @@ function ErrorBanner({
 export function LedgerFileEditorScreen(): JSX.Element {
   const ledgerId = useLedgerGuard();
   const { path, initialLine } = useLocalSearchParams<{
-    path: string;
+    path?: string;
     initialLine?: string;
   }>();
+
+  // Opened by URL without a file there is nothing to edit; the Files tab lists
+  // what can be opened.
+  if (!path) {
+    return <Redirect href="/(app)/(tabs)/ledger" />;
+  }
 
   return (
     <LedgerFileEditorSession
