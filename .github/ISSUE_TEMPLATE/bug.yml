@@ -1,0 +1,68 @@
+name: Bug report
+description: Something in Beancount.io behaves differently from what it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Search [open issues](https://github.com/bex-co/beancount-io/issues) first, and never paste credentials, tokens, or private ledger data — use a small synthetic ledger instead. Do not report security vulnerabilities in a public issue.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which part of the monorepo is affected?
+      options:
+        - dashboard (web app)
+        - mobile (iOS / Android app)
+        - cli (bea)
+        - skills (agent ledger skills)
+        - backend-cluster (API and ledger services)
+        - deploy (self-hosting)
+        - docs
+        - other / not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: "CLI: the output of `bea --version`. Mobile: the app version from Settings. Dashboard, backend, or deploy: the commit SHA, or \"hosted beancount.io\"."
+      placeholder: bea 0.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened
+      description: A clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: The smallest steps, commands, or synthetic ledger snippet that show the problem.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: What you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Error output, console logs, or screenshots. Remove anything private first.
+      render: shell
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, browser or device, and anything else that seems relevant.

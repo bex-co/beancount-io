@@ -1,0 +1,50 @@
+name: Agent skill request
+description: Ask for a ledger workflow a coding agent (Claude Code, Codex, …) should be able to run.
+labels: ["enhancement", "skills"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The customer ledger skills are listed in [`skills/CLAUDE.md`](https://github.com/bex-co/beancount-io/blob/HEAD/skills/CLAUDE.md). Check whether an existing skill already covers the workflow before asking for a new one.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Skills live in the `skills` package; pick another only if the request also needs a CLI or API change.
+      options:
+        - skills (agent ledger skills)
+        - cli (bea)
+        - backend-cluster (API and ledger services)
+        - other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Agent
+      description: Which coding agent do you use?
+      multiple: true
+      options:
+        - Claude Code
+        - Codex
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: "The output of `bea --version`, and the skills commit if you installed them from a checkout."
+  - type: textarea
+    id: description
+    attributes:
+      label: Workflow
+      description: The bookkeeping task you want the agent to handle, from start to the result you expect.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: A synthetic ledger snippet, a statement format, or the prompt you would give the agent.
+      render: text

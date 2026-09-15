@@ -1,0 +1,35 @@
+name: CI (community files)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/pull_request_template.md"
+      - "CONTRIBUTING.md"
+      - "SECURITY.md"
+      - "CODE_OF_CONDUCT.md"
+      - "scripts/check-github-community.py"
+      - ".github/workflows/ci-community-files.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/ISSUE_TEMPLATE/**"
+      - ".github/pull_request_template.md"
+      - "CONTRIBUTING.md"
+      - "SECURITY.md"
+      - "CODE_OF_CONDUCT.md"
+      - "scripts/check-github-community.py"
+      - ".github/workflows/ci-community-files.yml"
+
+concurrency:
+  group: community-files-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: issue forms and links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/check-github-community.py

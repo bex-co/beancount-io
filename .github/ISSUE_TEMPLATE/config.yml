@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask the community on Telegram
+    url: https://t.me/beancount
+    about: Questions about using Beancount or Beancount.io get a faster answer in the chat than in an issue.
+  - name: Contributing guide
+    url: https://github.com/bex-co/beancount-io/blob/HEAD/CONTRIBUTING.md
+    about: How the monorepo is organized, the checks each package runs, and how to open a pull request.

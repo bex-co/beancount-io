@@ -1,0 +1,48 @@
+name: Feature request
+description: Suggest something Beancount.io should do that it does not do today.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem before the solution — it helps maintainers find the smallest change that solves it. The public roadmap lives in the [`.pm` board](https://github.com/bex-co/beancount-io/tree/HEAD/.pm); check it for related work.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Where would this change live?
+      options:
+        - dashboard (web app)
+        - mobile (iOS / Android app)
+        - cli (bea)
+        - skills (agent ledger skills)
+        - backend-cluster (API and ledger services)
+        - deploy (self-hosting)
+        - docs
+        - other / not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: "The version you use today, if relevant: `bea --version`, the mobile app version from Settings, or \"hosted beancount.io\"."
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what gets in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What you would like to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and workarounds
+      description: Anything you tried or considered, including upstream Beancount or Fava features.

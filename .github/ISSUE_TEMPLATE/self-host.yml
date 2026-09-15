@@ -1,0 +1,53 @@
+name: Self-hosting help
+description: Trouble running the full Beancount.io stack yourself.
+labels: ["question", "self-host"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A deployment is either fully self-hosted or fully managed: a self-hosted dashboard pointed at the managed API is not supported. The deployment targets are described in [`deploy/`](https://github.com/bex-co/beancount-io/tree/HEAD/deploy). Never paste `.env` values, tokens, or passwords.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which part of the stack is failing?
+      options:
+        - deploy (self-hosting)
+        - backend-cluster (API and ledger services)
+        - dashboard (web app)
+        - mobile (iOS / Android app)
+        - other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: target
+    attributes:
+      label: Deployment target
+      options:
+        - deploy/docker-mac (Docker Compose, local)
+        - deploy/docker (single host)
+        - deploy/dev-sandbox
+        - deploy/bex
+        - other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit
+      description: The commit SHA of the checkout you deployed.
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant container or service logs, with secrets removed.
+      render: shell
