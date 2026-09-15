@@ -437,9 +437,8 @@ function MerchantDetailBody({ payee }: { payee: string }) {
   const listError = journalError;
 
   const cadenceKey = cadenceLabelKey(resolved.cadence);
-  const toggleTitle = resolved.isRecurring
-    ? t("merchantsMarkNotRecurring")
-    : t("merchantsMarkRecurring");
+  // Label the setting, not the flip action — Switch already announces on/off.
+  const toggleTitle = t("merchantsRecurringToggle");
 
   const listHeader = (
     <View style={styles.header} testID="merchant-stats-header">

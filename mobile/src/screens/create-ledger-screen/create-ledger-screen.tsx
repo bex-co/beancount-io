@@ -26,6 +26,7 @@ import {
   fontSizes,
   fontWeights,
   gutter,
+  headerActionMaxFontSizeMultiplier,
   headerActionStyle,
   space,
   useTheme,
@@ -251,6 +252,7 @@ export function CreateLedgerScreen(): JSX.Element {
                     styles.doneButton,
                     busy ? styles.doneButtonDisabled : null,
                   ]}
+                  maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
                 >
                   {t("createLedgerSubmit")}
                 </Text>

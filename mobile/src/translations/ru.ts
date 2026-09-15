@@ -70,8 +70,7 @@ export const ru: typeof en = {
   merchantsCadenceIrregular: "Нерегулярно",
   merchantsNextExpected: "Следующий {{date}}",
   merchantsOverdue: "Просрочено",
-  merchantsMarkRecurring: "Отметить как регулярный",
-  merchantsMarkNotRecurring: "Убрать регулярность",
+  merchantsRecurringToggle: "Регулярный",
   merchantsRecurringToggleHelper:
     "Закрепить этого контрагента в «Регулярные». Ручной выбор важнее автоопределения и хранится на этом устройстве.",
   merchantDetailDateRange: "{{first}} – {{last}}",

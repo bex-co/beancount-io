@@ -31,6 +31,7 @@ import { selectTransactionAmount } from "../utils/transaction-display-utils";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { formatEntryRowAmount } from "./format-entry-row-amount";
 import { entryRowSecondaryText } from "./entry-row-secondary";
+import { entryRowAccessibilityLabel } from "./entry-row-accessibility-label";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -170,7 +171,9 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
 
   const leading = (
     <>
-      <AccountTypeIcon postings={getEntryPostings(entry)} payee={brandText} />
+      <View accessible={false} importantForAccessibility="no-hide-descendants">
+        <AccountTypeIcon postings={getEntryPostings(entry)} payee={brandText} />
+      </View>
 
       <View style={styles.middle}>
         <View style={styles.nameColumn}>
@@ -230,6 +233,12 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
         style={[styles.row, stacked && styles.rowStacked]}
         onPress={onPress}
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={entryRowAccessibilityLabel({
+          name,
+          amountStr,
+          isPending,
+        })}
       >
         {content}
       </TouchableOpacity>

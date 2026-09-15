@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import {
   endManualGesture,
   failManualGesture,
@@ -38,5 +40,22 @@ describe("manual gesture release", () => {
     endManualGesture(manager);
     failManualGesture(manager);
     expect(calls).toEqual(["end", "fail"]);
+  });
+
+  it("marks both terminators as worklets for UI-runtime gesture callbacks", () => {
+    // Gesture-handler touch callbacks run on the UI runtime. Without the
+    // worklet directive these imports are remote functions and throw
+    // "Tried to synchronously call a Remote Function" (w3/191).
+    const source = fs.readFileSync(
+      path.join(__dirname, "..", "common", "manual-gesture-release.ts"),
+      "utf8",
+    );
+    expect(source.includes('"worklet"')).toBe(true);
+    expect(
+      /export function endManualGesture[\s\S]*?"worklet"/.test(source),
+    ).toBe(true);
+    expect(
+      /export function failManualGesture[\s\S]*?"worklet"/.test(source),
+    ).toBe(true);
   });
 });

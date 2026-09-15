@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Share,
   Platform,
+  ScrollView,
 } from "react-native";
 import { Button } from "@/components";
 import * as Clipboard from "expo-clipboard";
@@ -27,7 +28,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     body: {
       margin: contentPadding,
-      flex: 1,
+      flexGrow: 1,
       alignItems: "center",
     },
     title: {
@@ -42,7 +43,7 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black80,
     },
     shareLinkContainer: {
-      height: 48,
+      minHeight: 48,
       width: ScreenWidth - 2 * contentPadding,
       borderColor: theme.black40,
       borderRadius: 8,
@@ -58,7 +59,7 @@ const getStyles = (theme: ColorTheme) =>
       textAlign: LEADING_TEXT_ALIGN,
     },
     copyBtn: {
-      height: 48,
+      minHeight: 48,
       paddingHorizontal: contentPadding,
       justifyContent: "center",
       alignItems: "center",
@@ -87,7 +88,10 @@ export const ReferralScreen = () => {
   const styles = useThemeStyle(getStyles);
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.body}>
+      <ScrollView
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled"
+      >
         <CommonMargin />
         <CommonMargin />
         <ReferralGiftIcon />
@@ -116,7 +120,7 @@ export const ReferralScreen = () => {
             <Text style={styles.copy}>{t("copy")}</Text>
           </TouchableOpacity>
         </View>
-        <View style={{ flex: 1 }}></View>
+        <CommonMargin />
         <CommonMargin />
         <Button
           style={styles.shareBtn}
@@ -147,7 +151,7 @@ export const ReferralScreen = () => {
           <Text style={styles.share}>{t("share")}</Text>
         </Button>
         <CommonMargin />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

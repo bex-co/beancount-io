@@ -69,8 +69,7 @@ export const fa: typeof en = {
   merchantsCadenceIrregular: "نامنظم",
   merchantsNextExpected: "بعدی {{date}}",
   merchantsOverdue: "سررسید گذشته",
-  merchantsMarkRecurring: "علامت‌گذاری به‌عنوان دوره‌ای",
-  merchantsMarkNotRecurring: "حذف علامت دوره‌ای",
+  merchantsRecurringToggle: "دوره‌ای",
   merchantsRecurringToggleHelper:
     "این فروشنده را در بخش دوره‌ای ثابت کنید. انتخاب دستی بر تشخیص خودکار اولویت دارد و فقط روی این دستگاه می‌ماند.",
   merchantDetailDateRange: "{{first}} – {{last}}",

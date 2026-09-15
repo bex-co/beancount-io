@@ -11,7 +11,12 @@ import {
   useRouter,
 } from "expo-router";
 import { useApolloClient } from "@apollo/client";
-import { fontSizes, headerActionStyle, useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  headerActionMaxFontSizeMultiplier,
+  headerActionStyle,
+  useTheme,
+} from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -420,7 +425,12 @@ export const EditTransactionScreen = (): JSX.Element => {
               accessibilityRole="button"
               accessibilityLabel={t("cancel")}
             >
-              <Text style={styles.cancelButton}>{t("cancel")}</Text>
+              <Text
+                style={styles.cancelButton}
+                maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
+              >
+                {t("cancel")}
+              </Text>
             </Pressable>
           ),
           headerRight: canWrite
@@ -440,6 +450,7 @@ export const EditTransactionScreen = (): JSX.Element => {
                         ? styles.saveButtonDisabled
                         : styles.saveButton
                     }
+                    maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
                   >
                     {t("save")}
                   </Text>

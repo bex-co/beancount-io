@@ -123,7 +123,12 @@ export const Button = (props: ButtonProps) => {
       onPressOut={handlePressOut}
       disabled={props.disabled || props.loading}
       testID={props.testID}
+      accessibilityRole="button"
       accessibilityLabel={props.accessibilityLabel}
+      accessibilityState={{
+        disabled: Boolean(props.disabled || props.loading),
+        busy: Boolean(props.loading),
+      }}
       pointerEvents={
         props.onPress && !props.disabled && !props.loading ? "auto" : "none"
       }

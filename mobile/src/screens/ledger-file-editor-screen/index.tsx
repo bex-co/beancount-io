@@ -23,7 +23,11 @@ import {
 } from "react-native-safe-area-context";
 import { useApolloClient } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
-import { fonts, useTheme } from "@/common/theme";
+import {
+  fonts,
+  headerActionMaxFontSizeMultiplier,
+  useTheme,
+} from "@/common/theme";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { haptics } from "@/common/haptics";
 import { useThemeStyle } from "@/common/hooks";
@@ -582,6 +586,7 @@ function LedgerFileEditorSession({
               styles.saveBtnText,
               !hasUnsavedChanges && styles.saveBtnTextDisabled,
             ]}
+            maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
           >
             {t("ledgerEditorSave")}
           </Text>
@@ -662,10 +667,8 @@ function LedgerFileEditorSession({
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
-                  if (router.canGoBack()) {
-                    router.back();
-                    return;
-                  }
+                  // Always land on Files for this labeled recovery action —
+                  // history existence does not mean the prior screen is Files.
                   router.replace("/(app)/(tabs)/ledger");
                 }}
               >

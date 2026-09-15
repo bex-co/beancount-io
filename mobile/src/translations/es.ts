@@ -69,8 +69,7 @@ export const es: typeof en = {
   merchantsCadenceIrregular: "Irregular",
   merchantsNextExpected: "Próximo {{date}}",
   merchantsOverdue: "Vencido",
-  merchantsMarkRecurring: "Marcar como recurrente",
-  merchantsMarkNotRecurring: "Dejar de marcar como recurrente",
+  merchantsRecurringToggle: "Recurrente",
   merchantsRecurringToggleHelper:
     "Fija este comercio en Recurrente. La elección manual prevalece sobre la detección y se guarda en este dispositivo.",
   merchantDetailDateRange: "{{first}} – {{last}}",

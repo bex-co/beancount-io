@@ -63,10 +63,11 @@ export const en = {
   merchantsCadenceIrregular: "Irregular",
   merchantsNextExpected: "Next {{date}}",
   merchantsOverdue: "Overdue",
-  merchantsMarkRecurring: "Mark as recurring",
-  merchantsMarkNotRecurring: "Mark as not recurring",
+  // Setting name for the Switch (not an action label) so VoiceOver hears
+  // "Recurring, on/off" instead of the contradictory "Mark as not recurring, on".
+  merchantsRecurringToggle: "Recurring",
   merchantsRecurringToggleHelper:
-    "Pin this merchant in Recurring. Manual choices beat automatic detection and stay on this device.",
+    "Whether this merchant is treated as recurring. Manual choices beat automatic detection and stay on this device.",
   merchantDetailDateRange: "{{first}} – {{last}}",
   merchantDetailLoadError: "Failed to load merchant: ",
   merchantDetailRetry: "Try again",

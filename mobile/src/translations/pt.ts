@@ -70,8 +70,7 @@ export const pt: typeof en = {
   merchantsCadenceIrregular: "Irregular",
   merchantsNextExpected: "Próximo {{date}}",
   merchantsOverdue: "Atrasado",
-  merchantsMarkRecurring: "Marcar como recorrente",
-  merchantsMarkNotRecurring: "Remover recorrência",
+  merchantsRecurringToggle: "Recorrente",
   merchantsRecurringToggleHelper:
     "Fixe este comerciante em Recorrente. A escolha manual prevalece sobre a detecção e fica neste dispositivo.",
   merchantDetailDateRange: "{{first}} – {{last}}",

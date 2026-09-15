@@ -69,8 +69,7 @@ export const uk: typeof en = {
   merchantsCadenceIrregular: "Нерегулярно",
   merchantsNextExpected: "Наступний {{date}}",
   merchantsOverdue: "Прострочено",
-  merchantsMarkRecurring: "Позначити як регулярний",
-  merchantsMarkNotRecurring: "Прибрати регулярність",
+  merchantsRecurringToggle: "Регулярний",
   merchantsRecurringToggleHelper:
     "Закріпити цього контрагента в «Регулярні». Ручний вибір важливіший за автовизначення й зберігається на цьому пристрої.",
   merchantDetailDateRange: "{{first}} – {{last}}",

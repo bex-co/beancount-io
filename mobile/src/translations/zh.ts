@@ -63,8 +63,7 @@ export const zh: typeof en = {
   merchantsCadenceIrregular: "不定期",
   merchantsNextExpected: "下次 {{date}}",
   merchantsOverdue: "已逾期",
-  merchantsMarkRecurring: "标记为定期",
-  merchantsMarkNotRecurring: "取消定期标记",
+  merchantsRecurringToggle: "定期",
   merchantsRecurringToggleHelper:
     "将此商户固定在「定期」分组。手动选择优先于自动检测，且只保存在本设备。",
   merchantDetailDateRange: "{{first}} – {{last}}",

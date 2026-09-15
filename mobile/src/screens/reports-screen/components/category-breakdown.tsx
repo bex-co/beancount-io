@@ -21,7 +21,7 @@ import {
   useTheme,
 } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { formatMoneyWithCurrency } from "@/common/number-utils";
+import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
 import { AmountText } from "@/components/amount-text";
 import { DashboardCard } from "@/components/dashboard-card";
 import { LoadingTile } from "@/components/loading-tile";
@@ -218,7 +218,11 @@ export function CategoryBreakdown({
       <View style={styles.leaf} />
     );
 
-    const amountText = formatMoneyWithCurrency(node.value, currency);
+    const amountText = formatSignedMoneyWithCurrency(
+      node.value,
+      currency,
+      false,
+    );
 
     const rowContent = stacked ? (
       <>
@@ -277,7 +281,11 @@ export function CategoryBreakdown({
     const pct =
       total > 0 ? Math.max(0, Math.min(100, (node.value / total) * 100)) : 0;
 
-    const amountText = formatMoneyWithCurrency(node.value, currency);
+    const amountText = formatSignedMoneyWithCurrency(
+      node.value,
+      currency,
+      false,
+    );
 
     const topChevron = hasChildren && (
       <Ionicons
@@ -359,7 +367,7 @@ export function CategoryBreakdown({
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
         <AmountText style={styles.headline}>
-          {formatMoneyWithCurrency(total, currency)}
+          {formatSignedMoneyWithCurrency(total, currency, false)}
         </AmountText>
       </View>
       {items.length === 0 ? (

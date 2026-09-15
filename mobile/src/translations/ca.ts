@@ -70,8 +70,7 @@ export const ca: typeof en = {
   merchantsCadenceIrregular: "Irregular",
   merchantsNextExpected: "Proper {{date}}",
   merchantsOverdue: "Vençut",
-  merchantsMarkRecurring: "Marca com a recurrent",
-  merchantsMarkNotRecurring: "Deixa de marcar com a recurrent",
+  merchantsRecurringToggle: "Recurrent",
   merchantsRecurringToggleHelper:
     "Fixa aquest comerç a Recurrent. L’elecció manual preval sobre la detecció i es guarda en aquest dispositiu.",
   merchantDetailDateRange: "{{first}} – {{last}}",

@@ -140,6 +140,7 @@ function FormRow({
       disabled={!onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityValue={{ text: value }}
     >
       <Text style={styles.label}>{label}</Text>
       <Text

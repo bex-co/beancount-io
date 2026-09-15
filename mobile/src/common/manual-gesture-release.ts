@@ -21,10 +21,12 @@ export type ManualGestureManager = {
 
 /** The touch ended normally — release ownership so the drawer can arbitrate again. */
 export function endManualGesture(manager: ManualGestureManager): void {
+  "worklet";
   manager.end();
 }
 
 /** The touch was cancelled — the marker never activated, so it fails rather than ends. */
 export function failManualGesture(manager: ManualGestureManager): void {
+  "worklet";
   manager.fail();
 }

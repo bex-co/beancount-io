@@ -261,10 +261,14 @@ export const Picker: React.FC<PickerProps> = ({
     opacity: overlayOpacity.value,
   }));
 
+  // Capture only a primitive count in the worklet — `items` may hold React
+  // elements (e.g. Open Account root icons) that worklets cannot serialize.
+  const itemCount = items.length;
+
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
-      const index = wheelIndexAtOffset(event.contentOffset.y, items.length);
+      const index = wheelIndexAtOffset(event.contentOffset.y, itemCount);
       if (index !== reportedIndex.value) {
         reportedIndex.value = index;
         runOnJS(setPendingIndex)(index);
@@ -273,9 +277,9 @@ export const Picker: React.FC<PickerProps> = ({
   });
 
   const handleDone = useCallback(() => {
-    onSelect(items[wheelIndexAtOffset(scrollY.value, items.length)]);
+    onSelect(items[wheelIndexAtOffset(scrollY.value, itemCount)]);
     hideModal();
-  }, [scrollY, items, onSelect, hideModal]);
+  }, [scrollY, items, itemCount, onSelect, hideModal]);
 
   const handleCancel = useCallback(() => {
     hideModal();

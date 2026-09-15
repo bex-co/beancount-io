@@ -70,8 +70,7 @@ export const de: typeof en = {
   merchantsCadenceIrregular: "Unregelmäßig",
   merchantsNextExpected: "Nächste {{date}}",
   merchantsOverdue: "Überfällig",
-  merchantsMarkRecurring: "Als wiederkehrend markieren",
-  merchantsMarkNotRecurring: "Wiederkehrend entfernen",
+  merchantsRecurringToggle: "Wiederkehrend",
   merchantsRecurringToggleHelper:
     "Diesen Händler unter Wiederkehrend anheften. Manuelle Wahl schlägt die Erkennung und bleibt auf diesem Gerät.",
   merchantDetailDateRange: "{{first}} – {{last}}",

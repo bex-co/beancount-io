@@ -69,8 +69,7 @@ export const bg: typeof en = {
   merchantsCadenceIrregular: "Неравномерно",
   merchantsNextExpected: "Следващо {{date}}",
   merchantsOverdue: "Просрочено",
-  merchantsMarkRecurring: "Маркирай като повтарящ се",
-  merchantsMarkNotRecurring: "Премахни повтарящ се",
+  merchantsRecurringToggle: "Повтарящ се",
   merchantsRecurringToggleHelper:
     "Закачи този търговец в Повтарящи се. Ръчният избор надделява над откриването и остава на това устройство.",
   merchantDetailDateRange: "{{first}} – {{last}}",

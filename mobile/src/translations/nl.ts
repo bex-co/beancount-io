@@ -69,8 +69,7 @@ export const nl: typeof en = {
   merchantsCadenceIrregular: "Onregelmatig",
   merchantsNextExpected: "Volgende {{date}}",
   merchantsOverdue: "Achterstallig",
-  merchantsMarkRecurring: "Markeren als terugkerend",
-  merchantsMarkNotRecurring: "Niet langer terugkerend",
+  merchantsRecurringToggle: "Terugkerend",
   merchantsRecurringToggleHelper:
     "Zet deze handelaar vast onder Terugkerend. Handmatige keuze wint van detectie en blijft op dit apparaat.",
   merchantDetailDateRange: "{{first}} – {{last}}",

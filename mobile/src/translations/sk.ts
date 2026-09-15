@@ -69,8 +69,7 @@ export const sk: typeof en = {
   merchantsCadenceIrregular: "Nepravidelne",
   merchantsNextExpected: "Ďalšie {{date}}",
   merchantsOverdue: "Po splatnosti",
-  merchantsMarkRecurring: "Označiť ako opakujúce sa",
-  merchantsMarkNotRecurring: "Zrušiť opakujúce sa",
+  merchantsRecurringToggle: "Opakujúce sa",
   merchantsRecurringToggleHelper:
     "Pripnite tohto obchodníka do Opakujúce sa. Manuálna voľba má prednosť pred detekciou a ostáva na tomto zariadení.",
   merchantDetailDateRange: "{{first}} – {{last}}",

@@ -148,7 +148,8 @@ ledger name. Open the current book's **⋯** menu for **Share link**, **Copy lin
 and **Open in browser**. The menu identifies the book and its visibility; sharing a
 private book's URL does not grant access. These actions use the canonical https URL
 for the current ledger. On a transaction, the same sharing actions share an
-`…/entry/<hash>` URL that opens that entry in the app.
+`…/entry/<hash>` URL that opens that entry in the app and in the browser
+dashboard (same path; private books still require an authorized session).
 
 After AASA is deployed, the https form is the user-facing check:
 

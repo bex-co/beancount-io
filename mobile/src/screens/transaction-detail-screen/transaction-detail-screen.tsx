@@ -500,9 +500,7 @@ const TransactionDetailImpl = ({
           <View style={styles.heroIcon}>
             <AccountTypeIcon postings={iconPostings} />
           </View>
-          <Text style={styles.heroTitle} numberOfLines={2}>
-            {title}
-          </Text>
+          <Text style={styles.heroTitle}>{title}</Text>
           <AmountText
             {...HERO_AMOUNT_FIT}
             style={[
