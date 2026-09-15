@@ -29,6 +29,27 @@ describe("brand-matcher", () => {
       expect(matchBrand("nbp energy corp")).toBe(null);
     });
 
+    it("does not give a longer name the logo of a common-word brand", () => {
+      expect(matchBrand("Delta Dental")).toBe(null);
+      expect(matchBrand("United Healthcare")).toBe(null);
+      expect(matchBrand("Target Date 2040 Fund")).toBe(null);
+      expect(matchBrand("United Way")).toBe(null);
+      expect(matchBrand("Apple Farm Market")).toBe(null);
+      expect(matchBrand("Chase the Dream Cafe")).toBe(null);
+      expect(matchBrand("The Gap Between")).toBe(null);
+    });
+
+    it("still matches a common-word brand standing alone in a charge", () => {
+      expect(matchBrand("Target")).toBe("target.com");
+      expect(matchBrand("TARGET 00012345")).toBe("target.com");
+      expect(matchBrand("CHASE #4821")).toBe("chase.com");
+      expect(matchBrand("TST* SUBWAY 12345")).toBe("subway.com");
+      expect(matchBrand("APPLE.COM/BILL")).toBe("apple.com");
+      expect(resolveBrandDomain(undefined, ["Expenses:Shopping:Target"])).toBe(
+        "target.com",
+      );
+    });
+
     it("returns null for unrecognised or empty input", () => {
       expect(matchBrand("Bob's Hardware Store")).toBe(null);
       expect(matchBrand("")).toBe(null);

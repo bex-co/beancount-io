@@ -96,6 +96,7 @@ const BRAND_MAP: Record<string, string> = {
 
   // Tech
   apple: "apple.com",
+  "apple.com": "apple.com",
   google: "google.com",
   microsoft: "microsoft.com",
 
@@ -174,10 +175,45 @@ const BRAND_MAP: Record<string, string> = {
 const SORTED_KEYS = Object.keys(BRAND_MAP).sort((a, b) => b.length - a.length);
 
 /**
+ * Keys that are also ordinary words or shared names. A word boundary cannot
+ * tell "Delta Dental", "United Way" or "Target Date 2040 Fund" from the brand,
+ * so these match only a payee that is the brand alone once card-processor
+ * noise is stripped ("TARGET 00012345"), never a word inside a longer name.
+ */
+const COMMON_WORD_KEYS = new Set([
+  "apple",
+  "chase",
+  "delta",
+  "gap",
+  "seamless",
+  "shell",
+  "slack",
+  "southwest",
+  "sprouts",
+  "subway",
+  "target",
+  "united",
+  "zoom",
+]);
+
+/** Drop what card processors add around a merchant name. */
+function stripTransactionNoise(lowered: string): string {
+  return lowered
+    .replace(/^(?:sq|tst|sp|pp)\s*\*\s*/u, "") // "SQ *", "TST*" prefixes
+    .split(/[*#]/u)[0] // "#1234" store numbers, "*AB12345" references
+    .split(/\s+/u)
+    .filter((word) => !/\d/u.test(word)) // store and terminal numbers
+    .join(" ")
+    .replace(/[\s.,;:!-]+$/u, "");
+}
+
+/**
  * Match a free-text string to a brand domain for logo display.
  *
  * Matching is case-insensitive and looks for the brand key at word boundaries,
  * so "Starbucks #1234" matches "starbucks" but "targeted" does not match "target".
+ * A key that is also an ordinary word matches only on its own (see
+ * `COMMON_WORD_KEYS`), so "Delta Dental" does not get Delta Air Lines' logo.
  * Matching runs entirely on-device; no payee text leaves the device.
  *
  * @returns The brand's domain string (e.g. "starbucks.com") or null if unrecognised.
@@ -186,10 +222,13 @@ export function matchBrand(text: string): string | null {
   if (!text) return null;
   const normalized = text.toLowerCase().trim();
 
-  // Exact match is cheapest — try first.
+  // Exact match is cheapest — try first, then without processor noise.
   if (BRAND_MAP[normalized]) return BRAND_MAP[normalized];
+  const stripped = stripTransactionNoise(normalized);
+  if (BRAND_MAP[stripped]) return BRAND_MAP[stripped];
 
   for (const key of SORTED_KEYS) {
+    if (COMMON_WORD_KEYS.has(key)) continue;
     const idx = normalized.indexOf(key);
     if (idx === -1) continue;
 
