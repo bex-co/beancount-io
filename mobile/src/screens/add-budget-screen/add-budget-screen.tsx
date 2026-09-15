@@ -168,7 +168,11 @@ function AddBudgetScreenImpl(): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const ledgerId = useLedgerGuard();
   const { userId } = useSession();
-  const { currencies, loading: metaLoading } = useLedgerMeta(userId, ledgerId);
+  const {
+    data: ledgerMeta,
+    currencies,
+    loading: metaLoading,
+  } = useLedgerMeta(userId, ledgerId);
   const { saveBudget, loading } = useSaveBudget(ledgerId);
 
   const params = useLocalSearchParams<{
@@ -227,6 +231,7 @@ function AddBudgetScreenImpl(): JSX.Element {
       number: amount,
       currency,
       date,
+      incomeRoot: ledgerMeta?.options.name_income,
     });
 
     if (result.ok) {
