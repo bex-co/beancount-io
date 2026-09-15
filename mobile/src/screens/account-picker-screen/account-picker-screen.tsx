@@ -60,6 +60,7 @@ import { FadeInView } from "@/components/crossfade";
 import { accountUsageVar, recordAccountUsage } from "@/common/vars";
 import { usageFor, type RankingContext } from "@/common/account-frecency";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
+import { capitalizeAccountPrefill } from "./create-account-prefill";
 
 const SKELETON_ROW_WIDTHS = [200, 160, 220, 140, 180, 210, 150, 190];
 
@@ -439,7 +440,7 @@ function AccountPickerScreenComponent(): JSX.Element {
       return;
     }
     pushOpenAccount(router, {
-      prefill: trimmedQuery,
+      prefill: capitalizeAccountPrefill(trimmedQuery),
       // Destination pickers are choosing where money went, so suggest the
       // Expenses root for a rootless query; source pickers suggest Assets.
       prefillRoot: accountOrderFor(type) === "to" ? "Expenses" : "Assets",
