@@ -86,17 +86,12 @@ The four that remain are deliberately not "next up":
 
 Added since that pass:
 
-- [186](./186.md) — Overview Recent activity dates omit the year, so old entries read as this week (dashboard QA, 2026-09-12)
-- [187](./187.md) — Holdings shows unrealized profit % to 29 significant digits (dashboard QA, 2026-09-12)
 - [188](./188.md) — The merchant Recurring switch announces the opposite of its own state (native QA, 2026-09-12)
 - [189](./189.md) — The account journal rounds a posting the transactions list shows in full (native QA, 2026-09-12)
 - [190](./190.md) — Import Configure dates follow the browser, not the app language, and change format mid-wizard (dashboard QA, 2026-09-12) — re-filed 2026-09-12 after a concurrent write clobbered it
 - [191](./191.md) — The horizontal-swipe marker throws on every touch it is supposed to end (native QA, 2026-09-12)
 - [192](./192.md) — Trial Balance never states whether it balances (dashboard QA, 2026-09-12)
-- [193](./193.md) — One number, three labels: Statistics calls the same count both "Postings" and "Entry count" (dashboard QA, 2026-09-12)
 - [195](./195.md) — An Ask deep link sends its question to the AI on arrival, and again after login (dashboard QA, 2026-09-12)
 - [196](./196.md) — Create File offers Save for names the server will refuse, including your main ledger's (dashboard QA, 2026-09-12)
-- [197](./197.md) — The file editor warns about unsaved changes when there are none (dashboard QA, 2026-09-12)
-- [198](./198.md) — Unknown dashboard sub-routes answer 200 with a "Page Not Found" body (dashboard QA, 2026-09-12)
 
 - [ ] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13
