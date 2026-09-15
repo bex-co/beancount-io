@@ -34,7 +34,9 @@ type AllowlistEntry = {
   reason: string;
 };
 
-const OPEN_TAG = /<(TouchableOpacity|Pressable)\b/g;
+// The app's own Button renders PressableScale, which `Pressable\b` does not
+// match (no word boundary between "e" and "S"), so each is named explicitly.
+const OPEN_TAG = /<(TouchableOpacity|Pressable(?:Scale)?|Button)\b/g;
 
 /** Find the end of a JSX opening tag, ignoring `>` inside braces/parens/strings. */
 function findOpeningTagEnd(source: string, start: number): number {
@@ -131,7 +133,22 @@ describe("accessibility labels on icon-only pressables (w4/m7)", () => {
     expect(relPaths.some((rel) => rel.startsWith("components/"))).toBe(true);
   });
 
-  it("icon-only TouchableOpacity/Pressable carry accessibilityLabel", () => {
+  // The component names are the other place this scan can narrow silently.
+  it("recognises every pressable primitive the app uses as a control", () => {
+    const tags =
+      "<TouchableOpacity <Pressable <PressableScale <Button <ButtonGroup";
+    const found = [...tags.matchAll(new RegExp(OPEN_TAG.source, "g"))].map(
+      (match) => match[1],
+    );
+    expect(found).toEqual([
+      "TouchableOpacity",
+      "Pressable",
+      "PressableScale",
+      "Button",
+    ]);
+  });
+
+  it("icon-only pressables carry accessibilityLabel", () => {
     const violations: string[] = [];
 
     for (const { base, dir: rootDir } of SCAN_ROOTS) {
