@@ -4,7 +4,10 @@ import RNDateTimePickerModal, {
   CustomCancelButtonPropTypes,
   ReactNativeModalDateTimePickerProps,
 } from "react-native-modal-datetime-picker";
+import { useReactiveVar } from "@apollo/client";
 import { useTheme } from "@/common/theme";
+import { localeVar } from "@/common/vars";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 /**
  * The library renders the cancel button as its own separate card and paints it
@@ -40,10 +43,13 @@ const ThemedCancelButton: React.FC<CustomCancelButtonPropTypes> = ({
  *
  * Wraps `react-native-modal-datetime-picker` so every caller gets a consistent,
  * on-theme picker:
- * - `locale="en_US"` pins the spinner columns to Month → Day → Year. Without a
- *   locale the native iOS picker follows the device region and can flip to
- *   Day → Month → Year. (Stored dates are ISO `YYYY-MM-DD`, so this is purely
- *   the wheel column order.)
+ * - `locale` is the app's own language, so the month names match the translated
+ *   screen around the picker. `UIDatePicker` takes month names and column order
+ *   from the same locale, so the order follows the language too (Day → Month →
+ *   Year in German); pinning one pins the other. Stored dates are ISO
+ *   `YYYY-MM-DD` either way.
+ * - The confirm and cancel labels are the app's translated strings; the
+ *   library's own defaults are English.
  * - Dark mode is driven by our own theme (`themeVar`) rather than the OS
  *   appearance, so the picker never mismatches an in-app theme override.
  * - The picker card and cancel button use the elevated-surface token, so the
@@ -56,9 +62,13 @@ export const DatePickerModal: React.FC<ReactNativeModalDateTimePickerProps> = (
   props,
 ) => {
   const { colorTheme, name } = useTheme();
+  const locale = useReactiveVar(localeVar);
+  const { t } = useTranslations();
   return (
     <RNDateTimePickerModal
-      locale="en_US"
+      locale={locale || undefined}
+      confirmTextIOS={t("confirm")}
+      cancelTextIOS={t("cancel")}
       isDarkModeEnabled={name === "dark"}
       buttonTextColorIOS={colorTheme.primary}
       pickerContainerStyleIOS={{ backgroundColor: colorTheme.controlFill }}
