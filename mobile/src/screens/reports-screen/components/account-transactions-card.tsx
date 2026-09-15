@@ -106,7 +106,7 @@ export function AccountTransactionsCard({
   );
 
   return (
-    <DashboardCard title={t(titleKey)} bleed>
+    <DashboardCard title={t(titleKey)} bleed testID="account-transactions-card">
       {loading && entries.length === 0 ? (
         <LoadingTile height={160} mx={16} />
       ) : (

@@ -66,6 +66,8 @@ export type DashboardCardProps = {
    */
   bleed?: boolean;
   style?: ViewStyle;
+  /** Identifier on the card's root view, for automation lookups. */
+  testID?: string;
   children: ReactNode;
 };
 
@@ -80,6 +82,7 @@ export function DashboardCard({
   right,
   bleed = false,
   style,
+  testID,
   children,
 }: DashboardCardProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
@@ -88,7 +91,7 @@ export function DashboardCard({
   const hasHeader = Boolean(title || onSeeAll || right);
 
   return (
-    <View style={[styles.card, style]}>
+    <View style={[styles.card, style]} testID={testID}>
       {hasHeader && (
         <View style={styles.header}>
           {title ? (

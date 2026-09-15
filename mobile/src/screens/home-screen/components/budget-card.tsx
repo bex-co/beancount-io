@@ -88,6 +88,7 @@ export function BudgetCard({
   const renderRow = (row: BudgetPanelRow, index: number) => (
     <TouchableOpacity
       key={`${row.account}::${row.currency}`}
+      testID={`budget-row-${row.account}-${row.currency}`}
       style={[styles.row, index === rows.length - 1 && styles.rowLast]}
       onPress={openBudget}
       accessibilityRole="button"

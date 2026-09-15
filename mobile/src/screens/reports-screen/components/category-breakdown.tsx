@@ -242,6 +242,7 @@ export function CategoryBreakdown({
       <Fragment key={node.account}>
         {hasChildren ? (
           <TouchableOpacity
+            testID={`category-row-${node.account}`}
             style={[styles.childRow, { paddingStart }]}
             onPress={() => toggle(node.account, isExpanded)}
             accessibilityRole="button"
@@ -254,7 +255,12 @@ export function CategoryBreakdown({
             {rowContent}
           </TouchableOpacity>
         ) : (
-          <View style={[styles.childRow, { paddingStart }]}>{rowContent}</View>
+          <View
+            testID={`category-row-${node.account}`}
+            style={[styles.childRow, { paddingStart }]}
+          >
+            {rowContent}
+          </View>
         )}
         {hasChildren &&
           isExpanded &&
@@ -322,6 +328,7 @@ export function CategoryBreakdown({
       <Fragment key={node.account}>
         {hasChildren ? (
           <TouchableOpacity
+            testID={`category-row-${node.account}`}
             style={styles.topRow}
             onPress={() => toggle(node.account, isExpanded)}
             accessibilityRole="button"
@@ -335,7 +342,7 @@ export function CategoryBreakdown({
             {line2}
           </TouchableOpacity>
         ) : (
-          <View style={styles.topRow}>
+          <View testID={`category-row-${node.account}`} style={styles.topRow}>
             {line1}
             {line2}
           </View>

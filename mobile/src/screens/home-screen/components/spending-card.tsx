@@ -86,7 +86,12 @@ export function SpendingCard({
   const { thisMonth, lastMonth } = selectSpendingCompare(entries, currency);
 
   return (
-    <DashboardCard title={t("spending")} onSeeAll={openReports} bleed>
+    <DashboardCard
+      title={t("spending")}
+      onSeeAll={openReports}
+      bleed
+      testID="spending-card"
+    >
       <Text style={styles.subtitle}>{t("spendingSubtitle")}</Text>
       {loading && entries.length === 0 ? (
         <LoadingTile height={BAR_CHART_HEIGHT} mx={16} />
