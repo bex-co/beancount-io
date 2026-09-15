@@ -22,6 +22,7 @@ import {
 import { getEntryPostings } from "../utils/entry-utils";
 import { selectTransactionAmount } from "../utils/transaction-display-utils";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+import { formatEntryRowAmount } from "./format-entry-row-amount";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -105,7 +106,11 @@ const getDisplayInfo = (
     return { name, amountStr: "", isPositive: null };
   }
 
-  return { name, amountStr: amount.text, isPositive: amount.value > 0 };
+  return {
+    name,
+    amountStr: formatEntryRowAmount(amount.text, amount.value),
+    isPositive: amount.value > 0,
+  };
 };
 
 interface EntryRowProps {
@@ -148,7 +153,7 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
             isPositive ? styles.amountPositive : styles.amountNeutral,
           ]}
         >
-          {isPositive ? `+${amountStr}` : amountStr}
+          {amountStr}
         </AmountText>
       ) : (
         <AmountText
