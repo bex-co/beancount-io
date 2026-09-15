@@ -138,6 +138,17 @@ const deSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message:
+      "Öffnen Sie einen geteilten Eintrag in {ledgerName}. Zeigt den autorisierten Quellenkontext.",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "Eintrag - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerDocuments.description": {
     message:
       "Dokumentanhänge und Belege für {ledgerName}. Organisieren Sie unterstützende Dateien für Ihre Transaktionen.",

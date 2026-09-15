@@ -368,6 +368,17 @@ const enSeo: Record<string, TranslationEntry> = {
     message: "Commit {shortSha} - {ledgerName}",
     description: "Commit detail page title with short hash and ledger name",
   },
+
+  "seo.ledgerEntry.description": {
+    message:
+      "Open a shared ledger entry in {ledgerName}. View authorized source context for the linked transaction.",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "Entry - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
   "seo.ledgerPullRequest.description": {
     message:
       "Review pull request changes for {ledgerName}. Approve or reject proposed modifications to your ledger.",

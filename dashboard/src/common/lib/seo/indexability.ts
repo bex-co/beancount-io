@@ -10,8 +10,8 @@
  * - Public ledger read/social surfaces under `/ledger/$owner/$name/**`:
  *   overview, journal, account, accounts, budget, balance sheet, income
  *   statement, trial balance, holdings, commodities, documents, events,
- *   statistics, commits / commit detail, pull requests, and the base ask /
- *   agent page
+ *   statistics, commits / commit detail, entry detail (generic metadata only —
+ *   never entry source/narration), pull requests, and the base ask / agent page
  * - GitHub-style read-only file (`blob`) pages with stable canonical URLs
  * - Acquisition auth: login, sign-up, and forgot password
  *
@@ -122,4 +122,20 @@ export function getLedgerCommitCanonicalUrl({
   commitSha: string;
 }): string {
   return `${PRODUCTION_ORIGIN}/ledger/${encodeURIComponent(ledgerOwner)}/${encodeURIComponent(ledgerName)}/commit/${encodeURIComponent(commitSha)}`;
+}
+
+/**
+ * Canonical URL for a ledger entry destination shared by native Share/Copy.
+ * Metadata for this route must stay generic — never interpolate entry source.
+ */
+export function getLedgerEntryCanonicalUrl({
+  ledgerOwner,
+  ledgerName,
+  entryHash,
+}: {
+  ledgerOwner: string;
+  ledgerName: string;
+  entryHash: string;
+}): string {
+  return `${PRODUCTION_ORIGIN}/ledger/${encodeURIComponent(ledgerOwner)}/${encodeURIComponent(ledgerName)}/entry/${encodeURIComponent(entryHash)}`;
 }

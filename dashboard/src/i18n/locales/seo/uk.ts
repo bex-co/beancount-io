@@ -138,6 +138,17 @@ const ukSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message:
+      "Відкрийте спільний запис у {ledgerName}. Показує авторизований вихідний контекст.",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "Запис - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerDocuments.description": {
     message:
       "Вкладення документів та квитанції для {ledgerName}. Організуйте підтверджуючі файли для своїх транзакцій.",

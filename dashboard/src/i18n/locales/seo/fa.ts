@@ -137,6 +137,17 @@ const faSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message:
+      "یک سند اشتراکی را در {ledgerName} باز کنید. بافت منبع مجاز را ببینید.",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "سند - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerDocuments.description": {
     message:
       "پیوست‌های اسناد و رسیدها برای {ledgerName}. فایل‌های پشتیبان را برای تراکنش‌های خود سازماندهی کنید.",

@@ -131,6 +131,16 @@ const zhSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message: "在 {ledgerName} 中打开共享分录。显示已授权的源上下文。",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "分录 - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerDocuments.description": {
     message: "{ledgerName}的文档附件和收据。整理交易的支持文件。",
     description: "Documents page meta description",

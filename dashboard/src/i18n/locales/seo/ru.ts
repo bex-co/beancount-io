@@ -138,6 +138,17 @@ const ruSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message:
+      "Откройте общую запись в {ledgerName}. Показывает авторизованный исходный контекст.",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "Запись - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerDocuments.description": {
     message:
       "Вложения документов и квитанции для {ledgerName}. Организуйте подтверждающие файлы для ваших транзакций.",

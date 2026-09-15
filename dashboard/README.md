@@ -33,6 +33,19 @@ account linking, and an AI assistant.
 
 Part of the [`beancount-io`](https://github.com/bex-co/beancount-io) monorepo.
 
+## Shared entry links
+
+Native **Share link** / **Copy link** on a transaction produce a canonical URL:
+
+`https://beancount.io/ledger/<owner>/<ledger>/entry/<hash>`
+
+Opening that URL in a browser loads the same authorized entry source context
+(location + source slice). Public ledgers work anonymously; private ledgers still
+require sign-in with pull access. Missing, denied, and network failures stay
+distinct. Page metadata describes the destination generically and never embeds
+private entry contents. Readers stay read-only; writers keep the same edit/delete
+controls as Journal → Entry Context.
+
 ## Prerequisites
 
 - Node.js ≥ 22

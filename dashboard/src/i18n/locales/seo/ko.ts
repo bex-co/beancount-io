@@ -365,6 +365,17 @@ const koSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message:
+      "{ledgerName}의 공유 항목을 엽니다. 권한이 있는 소스 컨텍스트를 표시합니다.",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "항목 - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerPullRequest.description": {
     message:
       "{ledgerName}의 풀 리퀘스트 변경 사항을 검토합니다. 장부에 대한 제안된 수정 사항을 승인하거나 거절할 수 있습니다.",

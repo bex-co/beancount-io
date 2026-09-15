@@ -138,6 +138,17 @@ const esSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message:
+      "Abre un asiento compartido en {ledgerName}. Muestra el contexto de origen autorizado.",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "Asiento - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerDocuments.description": {
     message:
       "Adjuntos de documentos y recibos de {ledgerName}. Organice archivos de respaldo para sus transacciones.",

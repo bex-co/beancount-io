@@ -367,6 +367,17 @@ const jaSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message:
+      "{ledgerName} の共有エントリを開きます。許可されたソースコンテキストを表示します。",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "エントリ - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerPullRequest.description": {
     message:
       "{ledgerName}のプルリクエストの変更をレビューします。台帳への変更提案を承認または却下できます。",

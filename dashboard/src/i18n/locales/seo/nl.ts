@@ -138,6 +138,17 @@ const nlSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message:
+      "Open een gedeelde boeking in {ledgerName}. Toont de geautoriseerde broncontext.",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "Boeking - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerDocuments.description": {
     message:
       "Documentbijlagen en bonnen voor {ledgerName}. Organiseer ondersteunende bestanden voor uw transacties.",

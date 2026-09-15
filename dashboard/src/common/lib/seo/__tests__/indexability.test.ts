@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getLedgerAgentCanonicalUrl,
   getLedgerCommitCanonicalUrl,
+  getLedgerEntryCanonicalUrl,
   getLedgerFileCanonicalUrl,
   getSelfCanonicalUrl,
 } from "../indexability";
@@ -67,6 +68,32 @@ describe("getLedgerCommitCanonicalUrl", () => {
       "https://beancount.io/ledger/open_ledger/example/commits",
     );
     expect(commitUrl).toContain("/commit/");
+  });
+});
+
+describe("getLedgerEntryCanonicalUrl", () => {
+  it("matches the native Share/Copy entry URL shape", () => {
+    expect(
+      getLedgerEntryCanonicalUrl({
+        ledgerOwner: "open_ledger",
+        ledgerName: "real-estate-example",
+        entryHash: "2f4431f658f3553e73512ea3ebc1a2d4",
+      }),
+    ).toBe(
+      "https://beancount.io/ledger/open_ledger/real-estate-example/entry/2f4431f658f3553e73512ea3ebc1a2d4",
+    );
+  });
+
+  it("encodes owner, ledger, and hash without double-encoding", () => {
+    expect(
+      getLedgerEntryCanonicalUrl({
+        ledgerOwner: "alice bob",
+        ledgerName: "my/ledger",
+        entryHash: "dead beef",
+      }),
+    ).toBe(
+      "https://beancount.io/ledger/alice%20bob/my%2Fledger/entry/dead%20beef",
+    );
   });
 });
 

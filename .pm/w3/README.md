@@ -94,4 +94,4 @@ Added since that pass:
 - [195](./195.md) — An Ask deep link sends its question to the AI on arrival, and again after login (dashboard QA, 2026-09-12)
 - [196](./196.md) — Create File offers Save for names the server will refuse, including your main ledger's (dashboard QA, 2026-09-12)
 
-- [ ] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13
+- [x] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13

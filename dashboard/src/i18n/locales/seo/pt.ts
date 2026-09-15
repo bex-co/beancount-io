@@ -138,6 +138,17 @@ const ptSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message:
+      "Abra um lançamento compartilhado em {ledgerName}. Mostra o contexto de origem autorizado.",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "Lançamento - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerDocuments.description": {
     message:
       "Anexos de documentos e recibos de {ledgerName}. Organize arquivos de suporte para suas transações.",

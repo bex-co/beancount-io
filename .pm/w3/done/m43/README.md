@@ -1,17 +1,17 @@
 # w3 · m43 — Open shared native transaction links in a browser
 
-**Worker:** worker3 **Goal:** a recipient can open the entry URL copied by mobile in a browser and see the same authorized transaction. **Status:** todo
+**Worker:** worker3 **Goal:** a recipient can open the entry URL copied by mobile in a browser and see the same authorized transaction. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Add the canonical entry destination to the dashboard | 45m | — |
-| t002 | Preserve ledger authorization and honest entry failure states | 25m | t001 |
-| t003 | Verify the shared-link adoption surface | 15m | t002 |
-| t004 | Simplify the entry destination change | 10m | t003 |
-| t005 | Cover direct entry URLs and native/browser controls | 25m | t003 |
-| t006 | Close out verified entry-link support | 10m | t004, t005 |
+| t001 | Add the canonical entry destination to the dashboard | 45m | — | — **DONE**
+| t002 | Preserve ledger authorization and honest entry failure states | 25m | t001 | — **DONE**
+| t003 | Verify the shared-link adoption surface | 15m | t002 | — **DONE**
+| t004 | Simplify the entry destination change | 10m | t003 | — **DONE**
+| t005 | Cover direct entry URLs and native/browser controls | 25m | t003 | — **DONE**
+| t006 | Close out verified entry-link support | 10m | t004, t005 | — **DONE**
 
 ## Definition of done
 

@@ -138,6 +138,17 @@ const caSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
+  "seo.ledgerEntry.description": {
+    message:
+      "Obre un assentament compartit a {ledgerName}. Mostra el context de font autoritzat.",
+    description:
+      "Entry page meta description — generic; never include entry source",
+  },
+  "seo.ledgerEntry.title": {
+    message: "Assentament - {ledgerName}",
+    description: "Entry page title with ledger name only",
+  },
+
   "seo.ledgerDocuments.description": {
     message:
       "Adjuncions de documents i rebuts de {ledgerName}. Organitzeu fitxers de suport per a les vostres transaccions.",
