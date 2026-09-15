@@ -38,8 +38,16 @@ export const editableRowSchema = z.object({
   amount: z
     .string()
     .min(1, "importer.validation.amountRequired")
-    .refine((val: string) => parseAmount(val).valid, {
-      message: "importer.validation.amountInvalid",
+    .superRefine((val: string, ctx) => {
+      const result = parseAmount(val);
+      if (result.valid) return;
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          result.reason === "unsupported-precision"
+            ? "importer.validation.amountUnsupportedPrecision"
+            : "importer.validation.amountInvalid",
+      });
     }),
 });
 
@@ -61,4 +69,5 @@ export type ImporterValidationKey =
   | "importer.validation.payeeRequired"
   | "importer.validation.descriptionRequired"
   | "importer.validation.amountRequired"
-  | "importer.validation.amountInvalid";
+  | "importer.validation.amountInvalid"
+  | "importer.validation.amountUnsupportedPrecision";

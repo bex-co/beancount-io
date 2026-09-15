@@ -526,6 +526,12 @@ const faImporter: Record<string, TranslationEntry> = {
     message: "مبلغ باید یک عدد معتبر باشد",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "این مبلغ را نمی\u200cتوان دقیقاً وارد کرد — آن را کوتاه کنید تا همه ارقام حفظ شوند",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default faImporter;

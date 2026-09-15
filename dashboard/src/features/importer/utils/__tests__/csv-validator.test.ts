@@ -226,6 +226,43 @@ describe("csv-validator", () => {
       expect(parseAmount(".5")).toEqual({ valid: true, amount: 0.5 });
       expect(parseAmount("+2.5e1")).toEqual({ valid: true, amount: 25 });
     });
+
+    it("rejects tokens whose Number conversion changes the exact decimal value", () => {
+      for (const token of [
+        "0.123456789012345678",
+        "9007199254740993",
+        "1e-324",
+      ]) {
+        const result = parseAmount(token);
+        expect(result.valid, token).toBe(false);
+        expect(result.reason, token).toBe("unsupported-precision");
+        expect(result.error, token).toBe("Amount has unsupported precision");
+      }
+    });
+
+    it("keeps equivalent spellings and ordinary fractions valid", () => {
+      for (const [token, amount] of [
+        ["1.25", 1.25],
+        ["0", 0],
+        ["1.2500", 1.25],
+        ["+2.5e1", 25],
+        ["-0.0", -0],
+        ["0.004", 0.004],
+        ["1e-8", 1e-8],
+        ["0.1", 0.1],
+      ] as const) {
+        const result = parseAmount(token);
+        expect(result.valid, token).toBe(true);
+        expect(result.amount, token).toBe(amount);
+        expect(result.reason, token).toBeUndefined();
+      }
+    });
+
+    it("still rejects grouping, junk, and overflow", () => {
+      expect(parseAmount("-1,234.56").reason).toBe("invalid");
+      expect(parseAmount("12oops").reason).toBe("invalid");
+      expect(parseAmount("1e309").reason).toBe("invalid");
+    });
   });
 
   describe("buildParsedRow", () => {
@@ -255,6 +292,18 @@ describe("csv-validator", () => {
       expect(row.errors).toBeUndefined();
       expect(row.amount).toBe(-3.75);
       expect(row.amountInput).toBe("-3.75");
+    });
+
+    it("keeps unsupported-precision tokens editable with a structured reason", () => {
+      const row = buildParsedRow({
+        date: "2026-09-01",
+        payee: "QA Fraction",
+        description: "Precision boundary",
+        amountInput: "0.123456789012345678",
+      });
+      expect(row.amountInput).toBe("0.123456789012345678");
+      expect(row.amountFailureReason).toBe("unsupported-precision");
+      expect(row.errors).toEqual(["Amount has unsupported precision"]);
     });
   });
 

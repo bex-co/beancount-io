@@ -550,6 +550,57 @@ describe("useCSVParser", () => {
     });
   });
 
+  describe("parseCSV – amount precision boundaries", () => {
+    const FIXTURE = [
+      "Date,Payee,Description,Amount",
+      "2026-09-01,QA Fraction,Precision boundary,0.123456789012345678",
+      "2026-09-02,QA Integer,Safe integer boundary,9007199254740993",
+      "2026-09-03,QA Underflow,Nonzero exponent boundary,1e-324",
+      "2026-09-04,QA Control,Ordinary decimal,1.25",
+    ].join("\n");
+
+    it("keeps original tokens, rejects three lossy amounts, and accepts 1.25", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const parsed = result.current.parseCSV(FIXTURE);
+
+      expect(parsed.rows).toHaveLength(4);
+      expect(parsed.validCount).toBe(1);
+      expect(parsed.errorCount).toBe(3);
+      expect(parsed.blockLlmFallback).toBe("unsupported-precision");
+
+      expect(parsed.rows.map((row) => row.amountInput)).toEqual([
+        "0.123456789012345678",
+        "9007199254740993",
+        "1e-324",
+        "1.25",
+      ]);
+      expect(
+        parsed.rows.slice(0, 3).map((row) => row.amountFailureReason),
+      ).toEqual([
+        "unsupported-precision",
+        "unsupported-precision",
+        "unsupported-precision",
+      ]);
+      expect(parsed.rows[3].errors).toBeUndefined();
+      expect(parsed.rows[3].amount).toBe(1.25);
+    });
+
+    it("blocks LLM fallback for an all-unsupported recognized CSV", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        "Date,Payee,Description,Amount",
+        "2026-09-01,QA Fraction,Precision boundary,0.123456789012345678",
+        "2026-09-02,QA Integer,Safe integer boundary,9007199254740993",
+      ].join("\n");
+      const parsed = result.current.parseCSV(csv);
+
+      expect(parsed.validCount).toBe(0);
+      expect(parsed.blockLlmFallback).toBe("unsupported-precision");
+      expect(parsed.rows).toHaveLength(2);
+      expect(parsed.rows[0].amountInput).toBe("0.123456789012345678");
+    });
+  });
+
   describe("parseCSV – row numbering in error messages", () => {
     it("should use row 1 numbering when there is no header", () => {
       const { result } = renderHook(() => useCSVParser());

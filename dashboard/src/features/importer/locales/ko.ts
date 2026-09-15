@@ -521,6 +521,12 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "금액은 유효한 숫자여야 합니다.",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "이 금액은 정확히 가져올 수 없습니다. 모든 자릿수가 유지되도록 짧게 줄이세요",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default koImporter;

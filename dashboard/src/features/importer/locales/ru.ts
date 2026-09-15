@@ -526,6 +526,12 @@ const ruImporter: Record<string, TranslationEntry> = {
     message: "Сумма должна быть действительным числом.",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "Эту сумму нельзя импортировать точно — сократите её, чтобы сохранить все цифры",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default ruImporter;

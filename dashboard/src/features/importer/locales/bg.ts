@@ -528,6 +528,12 @@ const bgImporter: Record<string, TranslationEntry> = {
     message: "Сумата трябва да е валидно число",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "Тази сума не може да бъде импортирана точно — съкратете я, за да се запазят всички цифри",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default bgImporter;

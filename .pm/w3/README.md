@@ -46,7 +46,7 @@
 
 - [ ] **m35** — Keep report results and exports tied to their completed request (8 tasks) ← promoted129 and pending-conversion QA; extended 2026-09-12 with the ledger-switch case (t008)
 
-- [ ] **m36** — Reject lossy CSV amount conversions before import (6 tasks) ← residual m19 validation boundary, dashboard QA2026-09-11
+- [x] **m36** — Reject lossy CSV amount conversions before import (6 tasks) ← residual m19 validation boundary, dashboard QA2026-09-11
 
 - [x] **m37** — Render BQL inventory results as amounts, not raw JSON (7 tasks) ← continuous dashboard QA, 2026-09-12
 

@@ -527,6 +527,12 @@ const nlImporter: Record<string, TranslationEntry> = {
     message: "Bedrag moet een geldig getal zijn",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "Dit bedrag kan niet exact worden geïmporteerd — verkort het zodat elk cijfer behouden blijft",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default nlImporter;

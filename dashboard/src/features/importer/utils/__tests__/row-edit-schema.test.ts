@@ -153,6 +153,19 @@ describe("row-edit-schema", () => {
         });
         expect(result.success).toBe(true);
       });
+
+      it("rejects unsupported precision with a dedicated validation key", () => {
+        const result = editableRowSchema.safeParse({
+          ...validRow,
+          amount: "0.123456789012345678",
+        });
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.issues[0]?.message).toBe(
+            "importer.validation.amountUnsupportedPrecision",
+          );
+        }
+      });
     });
   });
 

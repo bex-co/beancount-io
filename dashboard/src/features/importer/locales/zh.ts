@@ -516,6 +516,11 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "金额必须是有效数字",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message: "此金额无法精确导入 — 请缩短位数以保留每一位数字",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default zhImporter;

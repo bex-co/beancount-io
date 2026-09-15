@@ -527,6 +527,12 @@ const esImporter: Record<string, TranslationEntry> = {
     message: "El monto debe ser un número válido",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "Esta cantidad no se puede importar exactamente: acórtela para conservar todos los dígitos",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default esImporter;

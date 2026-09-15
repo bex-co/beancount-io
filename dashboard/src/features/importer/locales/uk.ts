@@ -525,6 +525,12 @@ const ukImporter: Record<string, TranslationEntry> = {
     message: "Сума має бути дійсним числом",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "Цю суму неможливо імпортувати точно — скоротіть її, щоб зберегти всі цифри",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default ukImporter;

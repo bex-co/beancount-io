@@ -523,6 +523,12 @@ const jaImporter: Record<string, TranslationEntry> = {
     message: "金額は有効な数値でなければなりません",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "この金額は正確にインポートできません。すべての桁が保たれるよう短くしてください",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default jaImporter;

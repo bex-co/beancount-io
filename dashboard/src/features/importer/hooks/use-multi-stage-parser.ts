@@ -32,13 +32,15 @@ export function useMultiStageParser() {
         try {
           const result = await csvParser.parseFile(file);
 
-          // Check if parsing was successful (has valid rows)
-          if (result.validCount > 0) {
+          // Keep recognized CSV rows for repair when any amount failed the
+          // representability guard — even if validCount is 0. Falling through
+          // would let LLM JSON re-stringify already-rounded Numbers.
+          if (result.validCount > 0 || result.blockLlmFallback) {
             setStage("complete");
             return result;
           }
 
-          // If no valid rows, fall through to server-side parsing
+          // If no valid rows and no structured block, fall through to LLM
           console.warn(
             "Client-side CSV parsing found no valid rows, trying LLM...",
           );

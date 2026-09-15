@@ -530,6 +530,12 @@ const frImporter: Record<string, TranslationEntry> = {
     message: "Le montant doit être un nombre valide",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "Ce montant ne peut pas être importé exactement — raccourcissez-le pour conserver chaque chiffre",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default frImporter;

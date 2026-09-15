@@ -47,7 +47,7 @@ const enImporter: Record<string, TranslationEntry> = {
   },
   "importer.upload.csvFormatHint": {
     message:
-      "Use columns for Date (YYYY-MM-DD), Payee, Description, and Amount. Negative values represent expenses.",
+      "Use columns for Date (YYYY-MM-DD), Payee, Description, and Amount. Negative values represent expenses. Amounts must import exactly — values that would lose digits are flagged so you can shorten them before continuing.",
     description: "Instructions for CSV file format",
   },
   "importer.upload.aiProcessingHint": {
@@ -523,6 +523,12 @@ const enImporter: Record<string, TranslationEntry> = {
   "importer.validation.amountInvalid": {
     message: "Amount must be a valid number",
     description: "Validation error for an invalid import amount",
+  },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "This amount cannot be imported exactly — shorten it so every digit is kept",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
   },
 };
 

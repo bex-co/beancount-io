@@ -214,12 +214,18 @@ export function useCSVParser() {
       (row) => row.errors && row.errors.length > 0,
     ).length;
     const validCount = rows.length - errorCount;
+    const hasUnsupportedPrecision = rows.some(
+      (row) => row.amountFailureReason === "unsupported-precision",
+    );
 
     return {
       rows,
       validCount,
       errorCount,
       hasErrors: errorCount > 0,
+      blockLlmFallback: hasUnsupportedPrecision
+        ? "unsupported-precision"
+        : undefined,
     };
   }, []);
 

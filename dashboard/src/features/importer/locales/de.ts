@@ -528,6 +528,12 @@ const deImporter: Record<string, TranslationEntry> = {
     message: "Betrag muss eine gültige Zahl sein",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "Dieser Betrag kann nicht exakt importiert werden — kürzen Sie ihn, damit jede Ziffer erhalten bleibt",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default deImporter;

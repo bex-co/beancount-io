@@ -55,34 +55,106 @@ export function parseDate(dateStr: string): {
   return { valid: true, isoDate: dateStr };
 }
 
+/** Why `parseAmount` rejected a token — structured, not an English substring. */
+export type AmountParseFailureReason =
+  | "empty"
+  | "invalid"
+  | "unsupported-precision";
+
+export type AmountParseResult = {
+  valid: boolean;
+  amount?: number;
+  error?: string;
+  reason?: AmountParseFailureReason;
+};
+
+/**
+ * Canonical exact-decimal key for value equality: significand×10^power with
+ * no leading/trailing zeros (signed zero → `"0"`). Equivalent spellings such
+ * as `1.2500`, `+2.5e1`, and `-0.0` collapse to the same key.
+ */
+function exactDecimalValueKey(text: string): string | null {
+  const match = /^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(
+    text.trim(),
+  );
+  if (!match) return null;
+  const [, signChar, whole = "", fraction = "", expText] = match;
+  if (whole === "" && fraction === "") return null;
+
+  const exp = expText === undefined ? 0 : Number(expText);
+  if (!Number.isFinite(exp)) return null;
+
+  let digits = whole + fraction;
+  let power = exp - fraction.length;
+  digits = digits.replace(/^0+/, "");
+  if (digits === "") return "0";
+
+  while (digits.endsWith("0")) {
+    digits = digits.slice(0, -1);
+    power += 1;
+  }
+
+  const sign = signChar === "-" ? "-" : "";
+  return `${sign}${digits}e${power}`;
+}
+
+function decimalsHaveSameValue(a: string, b: string): boolean {
+  const left = exactDecimalValueKey(a);
+  const right = exactDecimalValueKey(b);
+  return left !== null && right !== null && left === right;
+}
+
 /**
  * Validate and parse amount.
  *
  * Accepts only a complete signed decimal token (optional fraction/exponent).
  * Rejects grouping commas and trailing junk that `parseFloat` would silently
  * strip (`"-1,234.56"` → -1, `"12oops"` → 12).
+ *
+ * Also rejects tokens whose `Number` conversion changes the exact decimal
+ * value (unsafe integers, excess fraction digits, nonzero underflow to 0).
+ * Equivalent spellings (`1.2500`, `+2.5e1`, signed zero) remain valid.
  */
-export function parseAmount(amountStr: string): {
-  valid: boolean;
-  amount?: number;
-  error?: string;
-} {
+export function parseAmount(amountStr: string): AmountParseResult {
   const trimmed = amountStr.trim();
 
   if (trimmed === "") {
-    return { valid: false, error: "Amount cannot be empty" };
+    return {
+      valid: false,
+      error: "Amount cannot be empty",
+      reason: "empty",
+    };
   }
 
   // Whole-token grammar: optional sign, digits with optional fraction, or
   // leading-dot fraction; optional scientific exponent. No commas/grouping.
   if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(trimmed)) {
-    return { valid: false, error: "Amount must be a valid number" };
+    return {
+      valid: false,
+      error: "Amount must be a valid number",
+      reason: "invalid",
+    };
   }
 
   const amount = Number(trimmed);
 
-  if (isNaN(amount) || !isFinite(amount)) {
-    return { valid: false, error: "Amount must be a valid number" };
+  if (Number.isNaN(amount) || !Number.isFinite(amount)) {
+    return {
+      valid: false,
+      error: "Amount must be a valid number",
+      reason: "invalid",
+    };
+  }
+
+  // Compare the original decimal value with Number's serialized decimal text.
+  // Do not compare two Numbers (both already rounded) or use binary epsilon.
+  const serialized = String(amount);
+  if (!decimalsHaveSameValue(trimmed, serialized)) {
+    return {
+      valid: false,
+      error: "Amount has unsupported precision",
+      reason: "unsupported-precision",
+    };
   }
 
   return { valid: true, amount };
@@ -132,6 +204,7 @@ export function buildParsedRow(fields: {
     description: fields.description,
     amountInput: fields.amountInput,
     amount: amountResult.valid ? amountResult.amount! : 0,
+    amountFailureReason: amountResult.valid ? undefined : amountResult.reason,
     errors: errors.length > 0 ? errors : undefined,
   };
 }

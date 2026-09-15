@@ -24,6 +24,11 @@ export type ParsedRow = {
   amount: number;
   /** Raw amount token kept for editing and distinguishing invalid input from 0. */
   amountInput: string;
+  /**
+   * Structured amount rejection from `parseAmount` — used to block LLM
+   * fallback without matching English error strings.
+   */
+  amountFailureReason?: "empty" | "invalid" | "unsupported-precision";
   errors?: string[];
 };
 
@@ -65,6 +70,11 @@ export type CSVParseResult = {
   validCount: number;
   errorCount: number;
   hasErrors: boolean;
+  /**
+   * When set, multi-stage parsing must keep these rows for repair and must
+   * not fall through to LLM — even if `validCount` is 0.
+   */
+  blockLlmFallback?: "unsupported-precision";
 };
 
 export type BulkImportError = {

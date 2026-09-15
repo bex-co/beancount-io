@@ -523,6 +523,12 @@ const skImporter: Record<string, TranslationEntry> = {
     message: "Čiastka musí byť platné číslo",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "Túto sumu nemožno importovať presne — skráťte ju, aby sa zachovali všetky číslice",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default skImporter;

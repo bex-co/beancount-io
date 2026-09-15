@@ -528,6 +528,12 @@ const caImporter: Record<string, TranslationEntry> = {
     message: "L'import ha de ser un número vàlid",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "Aquesta quantitat no es pot importar exactament: escurceu-la perquè es conservin tots els dígits",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default caImporter;

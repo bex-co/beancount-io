@@ -1,6 +1,6 @@
 # w3 · m36 — Reject lossy CSV amount conversions before import
 
-**Worker:** worker3 **Goal:** accepted CSV amounts retain their exact serialized decimal value **Status:** todo
+**Worker:** worker3 **Goal:** accepted CSV amounts retain their exact serialized decimal value **Status:** done
 
 Severity: **major**. Package: dashboard. Residual boundary of completed [m19](../done/m19/README.md), whose t001 requires each accepted amount to represent its whole input token. Do not count a new historical group or reopen its working full-token/field-validity repairs. Related [142](../142.md) separately owns initial field-error presentation.
 
@@ -8,12 +8,12 @@ Severity: **major**. Package: dashboard. Residual boundary of completed [m19](..
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Reject amount conversions that change the exact decimal value | 45m | — |
-| t002 | Keep rejected precision inputs out of automatic parser fallback | 30m | t001 |
-| t003 | Verify the import validation adoption surface | 15m | t002 |
-| t004 | Simplify the precision validation changes | 15m | t003 |
-| t005 | Test exact values and parser-stage boundaries | 45m | t003 |
-| t006 | Close and archive the precision guard milestone | 10m | t004, t005 |
+| t001 | Reject amount conversions that change the exact decimal value | 45m | — | — **DONE**
+| t002 | Keep rejected precision inputs out of automatic parser fallback | 30m | t001 | — **DONE**
+| t003 | Verify the import validation adoption surface | 15m | t002 | — **DONE**
+| t004 | Simplify the precision validation changes | 15m | t003 | — **DONE**
+| t005 | Test exact values and parser-stage boundaries | 45m | t003 | — **DONE**
+| t006 | Close and archive the precision guard milestone | 10m | t004, t005 | — **DONE**
 
 Implementation totals75minutes; all six tasks total160minutes. Parser-stage handling makes this more than a sub-hour validator edit.
 

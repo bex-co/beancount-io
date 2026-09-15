@@ -526,6 +526,12 @@ const ptImporter: Record<string, TranslationEntry> = {
     message: "O valor deve ser um número válido",
     description: "Validation error for an invalid import amount",
   },
+  "importer.validation.amountUnsupportedPrecision": {
+    message:
+      "Este valor não pode ser importado exatamente — encurte-o para manter todos os dígitos",
+    description:
+      "Validation error when Number conversion would change the exact decimal value",
+  },
 };
 
 export default ptImporter;
