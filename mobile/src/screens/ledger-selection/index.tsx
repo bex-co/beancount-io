@@ -26,6 +26,7 @@ import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { LoadingTile } from "@/components/loading-tile";
 import { useDiscovery } from "./use-discovery";
 import { filterLedgers, type DiscoveryTab } from "./discovery-store";
+import { ledgerRowDescription } from "./ledger-row-description";
 
 const tabs = ["yours", "starred", "explore"] as const;
 const widths = [180, 140, 220, 160, 200];
@@ -265,9 +266,11 @@ export function LedgerSelectionScreen() {
               <Text numberOfLines={1} style={styles.title}>
                 {item.fullName}
               </Text>
-              <Text numberOfLines={1} style={styles.muted}>
-                {item.description ?? ""}
-              </Text>
+              {ledgerRowDescription(item.description) ? (
+                <Text numberOfLines={1} style={styles.muted}>
+                  {item.description}
+                </Text>
+              ) : null}
               <Text style={styles.muted}>
                 {t(item.private ? "discoveryPrivate" : "discoveryPublic")}
                 {item.id === selected ? ` · ${t("discoveryCurrent")}` : ""}
