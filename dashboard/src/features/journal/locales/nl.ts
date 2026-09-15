@@ -344,6 +344,24 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Invoer succesvol opgeslagen",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "Boeking verwijderen",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "De boeking op {location} verwijderen? Deze wordt uit het grootboek verwijderd en kan niet ongedaan worden gemaakt in de app.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "Boeking verwijderen",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "Annuleren",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "Invoer succesvol verwijderd",
     description: "Toast shown after deleting an entry",

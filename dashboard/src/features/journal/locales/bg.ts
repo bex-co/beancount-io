@@ -344,6 +344,24 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Записът е запазен успешно",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "Изтриване на записа",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "Да се изтрие ли записът в {location}? Той ще бъде премахнат от счетоводната книга и не може да бъде отменен от приложението.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "Изтриване на записа",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "Отказ",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "Записът е изтрит успешно",
     description: "Toast shown after deleting an entry",

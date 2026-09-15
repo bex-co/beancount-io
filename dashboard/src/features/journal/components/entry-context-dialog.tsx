@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
@@ -6,6 +6,15 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/common/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/common/components/ui/alert-dialog";
 import { Button } from "@/common/components/ui/button";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
@@ -44,6 +53,7 @@ import {
 import { useIsMobile } from "@/common/hooks/use-mobile";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { readEntrySourceLocation } from "@/features/journal/lib/entry-source-location";
 
 interface EntryContextDialogProps {
@@ -174,6 +184,8 @@ function EntryContextMain({
   const [isContextOpen, setIsContextOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
   const isDark = useIsDarkTheme();
   const isMobile = useIsMobile();
   const location = readEntrySourceLocation(data?.entry);
@@ -207,19 +219,28 @@ function EntryContextMain({
     }
   };
 
-  const handleDelete = async () => {
+  const handleConfirmDelete = async () => {
     if (!canWrite || !entry?.entry_hash || !data?.sha256sum || isDeleting) {
       return;
     }
     setIsDeleting(true);
     try {
       await onDelete(entry.entry_hash, data.sha256sum);
+      setConfirmDeleteOpen(false);
     } catch {
-      // Error handling is done in the parent handler
+      // Error handling is done in the parent handler; the confirmation stays
+      // open so the user can retry or cancel.
     } finally {
       setIsDeleting(false);
     }
   };
+
+  // Names the entry in the confirmation. The source location is shown in the
+  // dialog for every directive type; fall back to the entry date, then the
+  // entry hash, when no navigable location exists.
+  const deleteTargetLabel = location
+    ? `${location.filename}:${location.lineno}`
+    : (entry?.date ?? entry?.entry_hash ?? "");
 
   // Helper function to format balances for display
   const formatBalances = (balances: Record<string, unknown>) => {
@@ -373,15 +394,12 @@ function EntryContextMain({
       {canWrite ? (
         <div className="flex gap-2 justify-end">
           <Button
+            ref={deleteButtonRef}
             variant="destructive"
-            onClick={handleDelete}
+            onClick={() => setConfirmDeleteOpen(true)}
             disabled={isDeleting || isSaving}
           >
-            {isDeleting ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4 mr-2" />
-            )}
+            <Trash2 className="h-4 w-4 mr-2" />
             {t("common.delete")}
           </Button>
           <Button
@@ -397,6 +415,49 @@ function EntryContextMain({
           </Button>
         </div>
       ) : null}
+
+      <AlertDialog
+        open={confirmDeleteOpen}
+        onOpenChange={(nextOpen) => {
+          // A deletion in flight cannot be cancelled; every other dismissal
+          // (Cancel, Escape, overlay click) is a no-op that leaves the entry
+          // and the Entry Context dialog untouched.
+          if (!nextOpen && isDeleting) return;
+          setConfirmDeleteOpen(nextOpen);
+        }}
+      >
+        <AlertDialogContent
+          onCloseAutoFocus={(event) => {
+            restoreFocusOnDialogClose(event, deleteButtonRef.current);
+          }}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("journal.entryDeleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("journal.entryDeleteDescription", {
+                location: deleteTargetLabel,
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              {t("journal.entryDeleteCancel")}
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              {t("journal.entryDeleteConfirm")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

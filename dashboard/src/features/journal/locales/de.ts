@@ -344,6 +344,24 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "Eintrag erfolgreich gespeichert",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "Eintrag löschen",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "Den Eintrag in {location} löschen? Dies entfernt ihn aus dem Ledger und kann in der App nicht rückgängig gemacht werden.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "Eintrag löschen",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "Abbrechen",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "Eintrag erfolgreich gelöscht",
     description: "Toast shown after deleting an entry",

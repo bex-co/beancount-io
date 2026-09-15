@@ -344,6 +344,24 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Záznam bol úspešne uložený",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "Odstrániť záznam",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "Odstrániť záznam v {location}? Záznam sa odstráni z účtovnej knihy a v aplikácii sa nedá vrátiť späť.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "Odstrániť záznam",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "Zrušiť",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "Záznam bol úspešne odstránený",
     description: "Toast shown after deleting an entry",

@@ -344,6 +344,24 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Entrée enregistrée avec succès",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "Supprimer l'écriture",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "Supprimer l'écriture située à {location} ? Elle sera retirée du registre et cette action ne peut pas être annulée depuis l'application.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "Supprimer l'écriture",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "Annuler",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "Entrée supprimée avec succès",
     description: "Toast shown after deleting an entry",

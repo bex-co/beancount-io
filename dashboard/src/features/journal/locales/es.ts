@@ -344,6 +344,24 @@ const esJournal: Record<string, TranslationEntry> = {
     message: "Entrada guardada exitosamente",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "Eliminar el asiento",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "¿Eliminar el asiento en {location}? Se quitará del libro y no se puede deshacer desde la aplicación.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "Eliminar el asiento",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "Cancelar",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "Entrada eliminada exitosamente",
     description: "Toast shown after deleting an entry",

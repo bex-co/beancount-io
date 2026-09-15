@@ -344,6 +344,24 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "Entrada salva com sucesso",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "Excluir lançamento",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "Excluir o lançamento em {location}? Ele será removido do livro-razão e não pode ser desfeito no aplicativo.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "Excluir lançamento",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "Cancelar",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "Entrada excluída com sucesso",
     description: "Toast shown after deleting an entry",

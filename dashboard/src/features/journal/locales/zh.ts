@@ -342,6 +342,24 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "条目保存成功",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "删除条目",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "要删除位于 {location} 的条目吗？该条目将从账本中移除，且无法在应用内撤销。",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "删除条目",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "取消",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "条目删除成功",
     description: "Toast shown after deleting an entry",

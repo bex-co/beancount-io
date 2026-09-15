@@ -339,6 +339,24 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "항목이 성공적으로 저장되었습니다.",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "항목 삭제",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "{location}의 항목을 삭제하시겠습니까? 원장에서 제거되며 앱에서는 실행 취소할 수 없습니다.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "항목 삭제",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "취소",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "항목이 성공적으로 삭제되었습니다.",
     description: "Toast shown after deleting an entry",

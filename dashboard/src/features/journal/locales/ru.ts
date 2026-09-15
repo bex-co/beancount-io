@@ -344,6 +344,24 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Запись успешно сохранена",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "Удалить запись",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "Удалить запись в {location}? Она будет удалена из книги, и это действие нельзя отменить в приложении.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "Удалить запись",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "Отмена",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "Запись успешно удалена",
     description: "Toast shown after deleting an entry",

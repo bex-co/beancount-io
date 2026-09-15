@@ -344,6 +344,24 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Запис успішно збережено",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "Видалити запис",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "Видалити запис у {location}? Його буде вилучено з книги, і цю дію не можна скасувати в застосунку.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "Видалити запис",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "Скасувати",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "Запис успішно видалено",
     description: "Toast shown after deleting an entry",

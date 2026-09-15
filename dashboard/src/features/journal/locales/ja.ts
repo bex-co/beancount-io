@@ -341,6 +341,24 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "エントリは正常に保存されました",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "エントリを削除",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "{location} のエントリを削除しますか？台帳から削除され、アプリからは元に戻せません。",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "エントリを削除",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "キャンセル",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "エントリは正常に削除されました",
     description: "Toast shown after deleting an entry",

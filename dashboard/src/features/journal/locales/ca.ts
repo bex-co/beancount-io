@@ -344,6 +344,24 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "L'entrada s'ha desat correctament",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "Suprimeix l'assentament",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "Vols suprimir l'assentament de {location}? S'eliminarà del llibre i no es pot desfer des de l'aplicació.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "Suprimeix l'assentament",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "Cancel·la",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "L'entrada s'ha suprimit correctament",
     description: "Toast shown after deleting an entry",

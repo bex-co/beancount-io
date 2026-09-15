@@ -344,6 +344,24 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "ورودی با موفقیت ذخیره شد",
     description: "Toast shown after saving an entry",
   },
+  "journal.entryDeleteTitle": {
+    message: "حذف ورودی",
+    description: "Dialog title for the entry deletion confirmation",
+  },
+  "journal.entryDeleteDescription": {
+    message:
+      "ورودی موجود در {location} حذف شود؟ این ورودی از دفتر حذف می‌شود و نمی‌توان آن را از داخل برنامه بازگرداند.",
+    description:
+      "Confirmation message for deleting a journal entry. {location} is replaced with the entry's source location.",
+  },
+  "journal.entryDeleteConfirm": {
+    message: "حذف ورودی",
+    description: "Confirm button label in the entry deletion confirmation",
+  },
+  "journal.entryDeleteCancel": {
+    message: "لغو",
+    description: "Cancel button label in the entry deletion confirmation",
+  },
   "journal.entryDeletedSuccess": {
     message: "ورودی با موفقیت حذف شد",
     description: "Toast shown after deleting an entry",
