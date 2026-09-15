@@ -75,7 +75,13 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
             index === balances.length - 1 && styles.balanceRowLast,
           ]}
         >
-          <Text style={styles.balanceAccount}>{balance.account}</Text>
+          <Text
+            style={styles.balanceAccount}
+            numberOfLines={1}
+            ellipsizeMode="middle"
+          >
+            {balance.account}
+          </Text>
           <AmountText mono="regular" style={styles.balanceAmount}>
             {balance.amount}
           </AmountText>
