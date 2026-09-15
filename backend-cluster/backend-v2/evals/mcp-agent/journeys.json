@@ -1,0 +1,120 @@
+{
+  "description": "The three onboarding journeys from the 2026-09-08 MCP field audit, pinned to the synthetic fixture. A journey with expectedWrite authorizes exactly that transaction; every other journey is read-only. Every expected value is derived from fixtures/main.bean and re-derived independently by scripts/__tests__/mcp-agent-eval.test.ts; change both together.",
+  "fixture": "fixtures/main.bean",
+  "ledgerFile": "main.bean",
+  "journeys": [
+    {
+      "id": "cash-food-purchase",
+      "title": "Cash balance, August food spending, then one authorized cash purchase",
+      "prompt": "My Beancount ledger is {ledger} on the beancount MCP server. What is my Assets:Cash balance before any change, and how much did I spend on food (all Expenses:Food accounts together) in August 2026? Then record exactly one purchase: on 2026-08-31 I paid 4.50 USD in cash at BLUE BOTTLE for coffee, booked to Expenses:Food:Coffee. You are authorized to make that single write and nothing else. Reply with the cash balance, the August food total, and whether the purchase was recorded.",
+      "facts": [
+        {
+          "id": "cash-balance",
+          "description": "Assets:Cash balance before the purchase",
+          "numbers": ["49.75"]
+        },
+        {
+          "id": "august-food",
+          "description": "August 2026 spending across Expenses:Food",
+          "numbers": ["235.60"]
+        }
+      ],
+      "expectedWrite": {
+        "date": "2026-08-31",
+        "postings": [
+          {
+            "account": "Assets:Cash",
+            "amount": "-4.50",
+            "currency": "USD"
+          },
+          {
+            "account": "Expenses:Food:Coffee",
+            "amount": "4.50",
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    {
+      "id": "report-networth-stale-validity",
+      "title": "August spending report, net worth, stale accounts, and validity",
+      "prompt": "My Beancount ledger is {ledger} on the beancount MCP server. Do not change the ledger. For August 2026, give me a spending report: total expenses and the amount for each expense account. What is my net worth (all assets plus liabilities)? Which accounts had no postings at all in the 90 days before 2026-08-31? Does the ledger balance, or does it have validation errors?",
+      "facts": [
+        {
+          "id": "august-expenses-total",
+          "description": "Total August 2026 expenses",
+          "numbers": ["2095.60"]
+        },
+        {
+          "id": "august-expenses-by-account",
+          "description": "August 2026 amount per expense account",
+          "numbers": ["1800.00", "180.85", "60.00", "48.00", "6.75"]
+        },
+        {
+          "id": "net-worth",
+          "description": "Net worth across assets and liabilities",
+          "numbers": ["17108.51"]
+        },
+        {
+          "id": "stale-accounts",
+          "description": "Accounts without postings in the 90 days before 2026-08-31",
+          "terms": ["Savings", "Streaming"]
+        },
+        {
+          "id": "validity",
+          "description": "The ledger has no validation errors",
+          "anyTerms": [
+            "no error",
+            "no validation error",
+            "0 error",
+            "zero error",
+            "without error",
+            "is valid",
+            "balances",
+            "passes"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "discovery-recent-payees",
+      "title": "Ledger discovery, five most recent transactions, and payees",
+      "prompt": "Do not change any ledger. Which Beancount ledgers can I access on the beancount MCP server? In the ledger you find, list the five most recent transactions with their date, payee, and amount, and then list every payee that appears in the ledger.",
+      "facts": [
+        {
+          "id": "ledger-discovered",
+          "description": "The accessible ledger is named",
+          "terms": ["mcp-agent-eval"]
+        },
+        {
+          "id": "recent-transactions",
+          "description": "The five most recent transactions",
+          "terms": [
+            "FARMERS MARKET",
+            "CITY BUS",
+            "WHOLE FOODS",
+            "SUSHI PLACE",
+            "BLUE BOTTLE"
+          ],
+          "numbers": ["23.50", "60.00", "62.10", "48.00", "6.75"]
+        },
+        {
+          "id": "payees",
+          "description": "Every payee in the ledger",
+          "terms": [
+            "ACME CORP",
+            "BLUE BOTTLE",
+            "CITY BUS",
+            "FARMERS MARKET",
+            "LANDLORD LLC",
+            "NETFLIX",
+            "SUSHI PLACE",
+            "TRADER JOES",
+            "VISA",
+            "WHOLE FOODS"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -38,7 +38,7 @@
 ## Cross-queue promotions and follow-ups
 
 - [008](./done/008.md) — MCP prompts from the ledger skills: implemented on 2026-09-12. [w5/m5](../w5/blocked/m5/README.md) retains the approved proposal's remaining real-client verification and repairs for demonstrated workflow gaps; the completed implementation remains archived here.
-- [009](./009.md) — Agent eval harness: core scope promoted to [w5/m4](../w5/blocked/m4/README.md) on 2026-09-12. Only the larger Plaid sandbox journey remains open here as a deferred follow-up.
+- [009](./009.md) — Agent eval harness: core scope promoted to [w5/m4](../w5/done/m4/README.md) on 2026-09-12. Only the larger Plaid sandbox journey remains open here as a deferred follow-up.
 
 ## Centralized-authz migration contract for m14–m20
 

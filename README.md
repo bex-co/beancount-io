@@ -196,7 +196,9 @@ end after a one-time browser link, with `dry_run` on everything that writes.
 Every call re-authorizes, so access revoked mid-session is refused on the next
 one. A credential can be pinned to one ledger or select `ledger: "owner/name"`
 per call. `yarn mcp:conformance <base-url>`
-tells you whether a deployment is connectable. See
+tells you whether a deployment is connectable, and `yarn mcp:agent-eval` runs
+real Claude Code and Codex sessions through onboarding tasks and scores their
+answers and ledger changes ([MCP agent journeys](./backend-cluster/backend-v2/docs/mcp-agent-eval.md)). See
 [connecting an MCP client](./backend-cluster/backend-v2/README.md#connecting-an-mcp-client)
 for the walkthrough and
 [ADR 0007](./docs/adrs/ADR007-backend-v2-mcp-surface.md) for the

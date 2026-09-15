@@ -6,7 +6,7 @@
 
 ## Blocked
 
-**Blocked 2026-09-14 by dependency.** `w5/m5/t001` depends on `w5/m4/t009`, and [w5/m4](../m4/README.md) is blocked awaiting a user decision on the benchmark stack and billed runs. When m4 closes, move this directory back to `.pm/w5/m5/`.
+**Blocked 2026-09-14 by dependency.** `w5/m5/t001` depends on `w5/m4/t009`, and [w5/m4](../../done/m4/README.md) closed on 2026-09-15 with a hosted-endpoint baseline, so this dependency is resolved. When m4 closes, move this directory back to `.pm/w5/m5/`.
 
 ## Tasks (in order)
 

@@ -361,6 +361,7 @@ The server will be available at the port specified in your configuration (defaul
 - `yarn lint`: Run ESLint to check and fix code style issues
 - `yarn kill`: Kill the node server occupying port 4104
 - `yarn mcp:conformance <base-url>`: Check whether a deployment's MCP endpoint is connectable (see [Connecting an MCP client](#connecting-an-mcp-client))
+- `yarn mcp:agent-eval`: Run the onboarding journeys through real Claude Code and Codex sessions against the hosted MCP endpoint and score answers and ledger effects (billed, opt-in; see [MCP agent journeys](./docs/mcp-agent-eval.md))
 - `yarn backfill-empty-locale`: Run script to backfill empty locale data
 - `yarn backfill-user-activated`: Run script to backfill user activation status
 
@@ -407,6 +408,11 @@ templates, the result envelope and its failure codes, writing directives as
 Beancount text, file-edit previews, bank imports, protocol examples, and
 deployment diagnostics. It also documents the limits of the conformance check
 and current client-facing differences from REST.
+
+To see how real coding agents cope with the surface, [MCP agent journeys](./docs/mcp-agent-eval.md)
+runs three onboarding tasks through Claude Code and Codex, checks the answers
+and the ledger afterwards, and records calls, turns, time, and cost. Run it
+before and after changing tools, resources, prompts, or server instructions.
 
 For the design decisions, see
 [ADR 0007](../../docs/adrs/ADR007-backend-v2-mcp-surface.md) (transport contract)

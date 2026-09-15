@@ -135,6 +135,8 @@ Code generation:
 
 Prompt and agent-routing evals live entirely under `evals/`. Use the focused `yarn eval:*` scripts while iterating and `yarn eval` for all modules. These suites make real, billed model calls unless their provider explicitly stubs the tool context, so they are manual and not part of CI.
 
+`yarn mcp:agent-eval` is the external-client counterpart: real Claude Code and Codex sessions run the `evals/mcp-agent/` journeys against the hosted MCP endpoint with a QA account's dedicated `mcp-agent-eval` ledger, and the harness scores answers and read-back ledger state (`docs/mcp-agent-eval.md`). It is billed and opt-in; its scorers and process limits are unit-tested in `scripts/__tests__/mcp-agent-eval.test.ts`. Never provision a separate stack for it, and keep credentials in the environment — never in files the repository tracks. When a fixture value changes, update `journeys.json` and the independent oracle test together.
+
 ## API surfaces
 
 - GraphQL: `src/server/graphql/`; resolver list and DI are in `resolver-registry.ts`.

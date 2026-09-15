@@ -719,6 +719,11 @@ credential restricted to `ledger.read`: the probe attempts a real create-file
 operation and does not set `dry_run`. Do not supply a write/admin credential to
 that flag.
 
+Conformance says whether a client can connect. To see whether real coding agents
+complete ordinary ledger tasks through the surface — correct answers, the right
+ledger changes, and the calls, time, and cost it took — run the
+[MCP agent journeys](./mcp-agent-eval.md) with Claude Code and Codex.
+
 ## Implementation references
 
 | Source                                                                                                                                 | Responsibility                                                                                             |

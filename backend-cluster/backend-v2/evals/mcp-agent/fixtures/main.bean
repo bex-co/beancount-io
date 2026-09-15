@@ -1,0 +1,87 @@
+; Synthetic ledger for the MCP agent journeys. Every name and amount is invented.
+; Expected facts live in ../journeys.json and are checked against this file by
+; the eval's unit tests; change both together.
+
+option "title" "MCP agent eval ledger"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Bank:Savings USD
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Liabilities:CreditCard:Visa USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Expenses:Food:Groceries USD
+2026-01-01 open Expenses:Food:Restaurants USD
+2026-01-01 open Expenses:Food:Coffee USD
+2026-01-01 open Expenses:Housing:Rent USD
+2026-01-01 open Expenses:Transport USD
+2026-01-01 open Expenses:Entertainment:Streaming USD
+2026-01-01 open Equity:Opening-Balances USD
+
+2026-01-01 * "Opening balances"
+  Assets:Bank:Checking      3000.00 USD
+  Assets:Bank:Savings      10000.00 USD
+  Assets:Cash                200.00 USD
+  Equity:Opening-Balances
+
+2026-02-10 * "NETFLIX" "Streaming subscription"
+  Assets:Bank:Checking       -15.49 USD
+  Expenses:Entertainment:Streaming  15.49 USD
+
+2026-03-15 * "Transfer to savings"
+  Assets:Bank:Checking      -500.00 USD
+  Assets:Bank:Savings        500.00 USD
+
+2026-07-01 * "ACME CORP" "Salary"
+  Assets:Bank:Checking      4000.00 USD
+  Income:Salary            -4000.00 USD
+
+2026-07-03 * "LANDLORD LLC" "Rent"
+  Assets:Bank:Checking     -1800.00 USD
+  Expenses:Housing:Rent     1800.00 USD
+
+2026-07-10 * "TRADER JOES" "Groceries"
+  Liabilities:CreditCard:Visa  -120.40 USD
+  Expenses:Food:Groceries       120.40 USD
+
+2026-07-18 * "CITY BUS" "Transit pass"
+  Assets:Cash                -60.00 USD
+  Expenses:Transport          60.00 USD
+
+2026-07-25 * "VISA" "Card payment"
+  Assets:Bank:Checking       -120.40 USD
+  Liabilities:CreditCard:Visa  120.40 USD
+
+2026-08-01 * "ACME CORP" "Salary"
+  Assets:Bank:Checking      4000.00 USD
+  Income:Salary            -4000.00 USD
+
+2026-08-03 * "LANDLORD LLC" "Rent"
+  Assets:Bank:Checking     -1800.00 USD
+  Expenses:Housing:Rent     1800.00 USD
+
+2026-08-06 * "TRADER JOES" "Groceries"
+  Liabilities:CreditCard:Visa   -95.25 USD
+  Expenses:Food:Groceries        95.25 USD
+
+2026-08-12 * "BLUE BOTTLE" "Coffee"
+  Assets:Cash                 -6.75 USD
+  Expenses:Food:Coffee         6.75 USD
+
+2026-08-15 * "SUSHI PLACE" "Dinner"
+  Liabilities:CreditCard:Visa   -48.00 USD
+  Expenses:Food:Restaurants      48.00 USD
+
+2026-08-20 * "WHOLE FOODS" "Groceries"
+  Assets:Bank:Checking        -62.10 USD
+  Expenses:Food:Groceries      62.10 USD
+
+2026-08-22 * "CITY BUS" "Transit pass"
+  Assets:Cash                -60.00 USD
+  Expenses:Transport          60.00 USD
+
+2026-08-28 * "FARMERS MARKET" "Produce"
+  Assets:Cash                -23.50 USD
+  Expenses:Food:Groceries      23.50 USD
+
+2026-08-29 balance Assets:Cash  49.75 USD
