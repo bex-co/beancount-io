@@ -43,6 +43,7 @@ import {
 import { LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
 import { ChartErrorBoundary } from "./chart-chrome";
 import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
+import { changePercent } from "./change-percent";
 
 // Created once at module scope: building these inside the component would give
 // React a new component type on every render and remount the node each time.
@@ -356,10 +357,13 @@ function ScrubHeader({
 
   const baseline = numbers[0] ?? 0;
   const change = shownValue - baseline;
-  const changePct = baseline !== 0 ? (change / Math.abs(baseline)) * 100 : 0;
-  const changeText = `${formatSignedMoneyWithCurrency(change, currency, true)} (${
-    change >= 0 ? "+" : ""
-  }${changePct.toFixed(2)}%)`;
+  // The amount always reads; the percentage only when it means something.
+  const changePct = changePercent(baseline, shownValue);
+  const changeAmount = formatSignedMoneyWithCurrency(change, currency, true);
+  const changeText =
+    changePct === null
+      ? changeAmount
+      : `${changeAmount} (${change >= 0 ? "+" : ""}${changePct.toFixed(2)}%)`;
 
   // The heading stays put while scrubbing: where it is the card's only title,
   // swapping it for a month would leave the card unlabeled mid-gesture. The
