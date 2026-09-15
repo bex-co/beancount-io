@@ -165,100 +165,107 @@ export function AgentMessageList({
           >
             {message.role === "user" && <SentFileParts parts={message.parts} />}
 
-            {buildMessageDisplayBlocks(message.parts).map((block) => {
-              if (block.type === "text") {
-                return (
-                  <div key={block.key}>
-                    <MarkdownRenderer
-                      content={block.text}
-                      className="agent-message-markdown"
-                    />
-                    {isLoading &&
-                      index === messages.length - 1 &&
-                      message.role === "assistant" && (
+            {buildMessageDisplayBlocks(message.parts).map(
+              (block, blockIndex, blocks) => {
+                if (block.type === "text") {
+                  // Only the trailing text block of the streaming message still
+                  // has text arriving, so it alone gets the caret.
+                  const isStreamingTail =
+                    isLoading &&
+                    index === messages.length - 1 &&
+                    message.role === "assistant" &&
+                    blockIndex === blocks.length - 1;
+                  return (
+                    <div key={block.key}>
+                      <MarkdownRenderer
+                        content={block.text}
+                        className="agent-message-markdown"
+                      />
+                      {isStreamingTail && (
                         <span className="inline-block w-2 h-4 ml-1 bg-current animate-pulse" />
                       )}
-                  </div>
-                );
-              }
+                    </div>
+                  );
+                }
 
-              if (block.type === "activity") {
-                return (
-                  <ToolActivityGroup key={block.key} parts={block.parts} />
-                );
-              }
+                if (block.type === "activity") {
+                  return (
+                    <ToolActivityGroup key={block.key} parts={block.parts} />
+                  );
+                }
 
-              if (block.type === "dynamic-activity") {
+                if (block.type === "dynamic-activity") {
+                  return (
+                    <DynamicToolActivityGroup
+                      key={block.key}
+                      parts={block.parts}
+                    />
+                  );
+                }
+
+                if (block.type === "dynamic-edit") {
+                  return (
+                    <DynamicToolApproval
+                      key={block.key}
+                      part={block.part}
+                      onApprove={(id) =>
+                        void addToolApprovalResponse({ id, approved: true })
+                      }
+                      onDeny={(id) =>
+                        void addToolApprovalResponse({ id, approved: false })
+                      }
+                    />
+                  );
+                }
+
+                if (block.type === "edit") {
+                  return (
+                    <FileEditApproval
+                      key={block.key}
+                      part={
+                        block.part as Extract<
+                          AgentToolPart,
+                          { type: "tool-editLedgerFiles" }
+                        >
+                      }
+                      onApprove={(id) =>
+                        void addToolApprovalResponse({ id, approved: true })
+                      }
+                      onDeny={(id) =>
+                        void addToolApprovalResponse({ id, approved: false })
+                      }
+                    />
+                  );
+                }
+
+                if (block.type === "receipt-insert") {
+                  return (
+                    <ReceiptInsertApproval
+                      key={block.key}
+                      part={
+                        block.part as Extract<
+                          AgentToolPart,
+                          { type: "tool-insertReceiptTransaction" }
+                        >
+                      }
+                      onApprove={(id) =>
+                        void addToolApprovalResponse({ id, approved: true })
+                      }
+                      onDeny={(id) =>
+                        void addToolApprovalResponse({ id, approved: false })
+                      }
+                    />
+                  );
+                }
+
                 return (
-                  <DynamicToolActivityGroup
-                    key={block.key}
-                    parts={block.parts}
+                  <UnknownBlock
+                    key={(block as MessageDisplayBlock).key}
+                    block={block}
                   />
                 );
-              }
-
-              if (block.type === "dynamic-edit") {
-                return (
-                  <DynamicToolApproval
-                    key={block.key}
-                    part={block.part}
-                    onApprove={(id) =>
-                      void addToolApprovalResponse({ id, approved: true })
-                    }
-                    onDeny={(id) =>
-                      void addToolApprovalResponse({ id, approved: false })
-                    }
-                  />
-                );
-              }
-
-              if (block.type === "edit") {
-                return (
-                  <FileEditApproval
-                    key={block.key}
-                    part={
-                      block.part as Extract<
-                        AgentToolPart,
-                        { type: "tool-editLedgerFiles" }
-                      >
-                    }
-                    onApprove={(id) =>
-                      void addToolApprovalResponse({ id, approved: true })
-                    }
-                    onDeny={(id) =>
-                      void addToolApprovalResponse({ id, approved: false })
-                    }
-                  />
-                );
-              }
-
-              if (block.type === "receipt-insert") {
-                return (
-                  <ReceiptInsertApproval
-                    key={block.key}
-                    part={
-                      block.part as Extract<
-                        AgentToolPart,
-                        { type: "tool-insertReceiptTransaction" }
-                      >
-                    }
-                    onApprove={(id) =>
-                      void addToolApprovalResponse({ id, approved: true })
-                    }
-                    onDeny={(id) =>
-                      void addToolApprovalResponse({ id, approved: false })
-                    }
-                  />
-                );
-              }
-
-              return (
-                <UnknownBlock
-                  key={(block as MessageDisplayBlock).key}
-                  block={block}
-                />
-              );
-            })}
+              },
+            )}
 
             {message.role === "assistant" &&
               durations?.[message.id] != null && (
