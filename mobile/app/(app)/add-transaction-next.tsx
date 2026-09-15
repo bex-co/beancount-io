@@ -3,6 +3,13 @@ import { AddTransactionNextScreen } from "@/screens/add-transaction-screen/add-t
 import { Redirect, Stack, useLocalSearchParams } from "expo-router";
 import { i18n } from "@/translations";
 
+/**
+ * Parked with the keypad flow, off every UI path.
+ *
+ * Its only inbound navigation is the keypad on `/add-transaction-legacy`,
+ * which is itself parked, so no screen a user can reach opens it. The live
+ * entry flow is `/add-transaction`.
+ */
 export default function AddTransactionNext() {
   // The keypad always passes the amount it confirmed. Opened by URL without one
   // there is nothing to confirm, so go to the live flow instead of crashing on

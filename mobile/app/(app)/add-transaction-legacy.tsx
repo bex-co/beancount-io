@@ -7,7 +7,8 @@ import { i18n } from "@/translations";
  * Parked keypad flow, kept registered but off every UI path.
  *
  * Superseded by `/add-transaction`, which now renders the multi-posting
- * screen. Reachable only via `beancount://add-transaction-legacy`.
+ * screen. Reachable only via `beancount://add-transaction-legacy`. Its keypad
+ * continues to `/add-transaction-next`, which is parked with it.
  */
 export default function AddTransactionLegacy() {
   return (
