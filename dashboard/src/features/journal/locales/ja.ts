@@ -180,6 +180,22 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "ジャーナルのエクスポートに失敗しました",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "フラグ",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "F",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "勘定ジャーナル",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "ジャーナル",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "ジャーナル",
     description: "Navigation label for journal/transaction history page",
@@ -406,6 +422,20 @@ const jaJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "摘要",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "仕訳帳に戻る",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "エントリ",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "{ledgerName} のエントリのソースコンテキスト。",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 

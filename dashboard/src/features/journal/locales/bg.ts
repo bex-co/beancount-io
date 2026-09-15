@@ -183,6 +183,22 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Неуспешен експорт на журнал",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "Флаг",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "Ф",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "Дневник на сметка",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "Журнал",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "Журнал",
     description: "Navigation label for journal/transaction history page",
@@ -409,6 +425,20 @@ const bgJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "Описание",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "Назад към журнала",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "Запис",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "Изходен контекст за запис в {ledgerName}.",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 

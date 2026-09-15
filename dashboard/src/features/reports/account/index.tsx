@@ -264,6 +264,8 @@ export function AccountJournalTable({
           showMetadata={showMetadata}
           showPostings={showPostings}
           isAccountJournal
+          accountName={accountName}
+          withChildren={withChildren}
           ledgerOwner={ledgerOwner}
           ledgerName={ledgerName}
           onEntryClick={(entry) => {

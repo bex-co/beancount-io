@@ -183,6 +183,22 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Échec de l'exportation du journal",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "Indicateur",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "F",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "Journal du compte",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "Journal",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "Journal",
     description: "Navigation label for journal/transaction history page",
@@ -409,6 +425,20 @@ const frJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "Libellé",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "Retour au journal",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "Écriture",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "Contexte source d'une écriture dans {ledgerName}.",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 

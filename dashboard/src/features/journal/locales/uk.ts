@@ -183,6 +183,22 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Не вдалося експортувати журнал",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "Прапорець",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "F",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "Журнал рахунку",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "Журнал",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "Журнал",
     description: "Navigation label for journal/transaction history page",
@@ -409,6 +425,20 @@ const ukJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "Опис",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "Назад до журналу",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "Запис",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "Вихідний контекст запису в {ledgerName}.",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 

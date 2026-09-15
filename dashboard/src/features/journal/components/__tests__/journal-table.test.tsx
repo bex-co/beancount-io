@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { JournalTable } from "@/features/journal/components/journal-table";
 import type { JournalTableItem } from "@/features/journal/components/journal-table";
@@ -395,7 +401,7 @@ describe("JournalTable", () => {
   });
 
   describe("Integration with table rendering", () => {
-    it("should activate a focusable entry row with click, Enter, and Space", async () => {
+    it("should activate an entry via row click and a keyboard-focusable date control", async () => {
       const user = userEvent.setup();
       const transaction = createMockTransaction(2);
       const data = createTableData([transaction]);
@@ -409,14 +415,13 @@ describe("JournalTable", () => {
         />,
       );
 
-      const entryRow = screen
-        .getByText("Test Payee")
-        .closest('[role="button"]');
-      expect(entryRow).toHaveAttribute("tabindex", "0");
-
+      const entryRow = screen.getByText("Test Payee").closest("tr");
+      expect(entryRow).toBeTruthy();
       await user.click(entryRow as HTMLElement);
-      entryRow?.focus();
-      expect(entryRow).toHaveFocus();
+
+      const dateControl = screen.getByRole("button", { name: "2024-01-01" });
+      dateControl.focus();
+      expect(dateControl).toHaveFocus();
       await user.keyboard("{Enter}");
       await user.keyboard(" ");
 
@@ -468,11 +473,21 @@ describe("JournalTable", () => {
         />,
       );
 
-      // Check that table renders with all columns
-      expect(screen.getByText("Date")).toBeInTheDocument();
-      expect(screen.getByText("F")).toBeInTheDocument();
-      expect(screen.getByText("Payee/Narration")).toBeInTheDocument();
-      expect(screen.getAllByText("Postings")).toHaveLength(2);
+      expect(
+        screen.getByRole("table", { name: "Journal" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("columnheader", { name: "Date" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("columnheader", { name: "Flag" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("columnheader", { name: "Payee/Narration" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getAllByRole("columnheader", { name: "Postings" }),
+      ).toHaveLength(2);
 
       expect(screen.getByText("Test Payee")).toBeInTheDocument();
       expect(screen.getByText("Test transaction")).toBeInTheDocument();
@@ -588,6 +603,233 @@ describe("JournalTable", () => {
 
       const postingsContainers = container.querySelectorAll(".postings");
       expect(postingsContainers).toHaveLength(1);
+    });
+  });
+
+  describe("column-to-header alignment", () => {
+    function cellForHeader(row: HTMLElement, headerName: string): HTMLElement {
+      const headers = screen.getAllByRole("columnheader");
+      const headerIndex = headers.findIndex(
+        (header) =>
+          header.textContent?.replace(/\s+/g, " ").trim() === headerName ||
+          header.getAttribute("aria-label") === headerName,
+      );
+      expect(headerIndex).toBeGreaterThanOrEqual(0);
+      const cells = within(row).getAllByRole("cell");
+      // Detail rows are separate; the primary data row has one cell per header.
+      expect(cells.length).toBeGreaterThan(headerIndex);
+      return cells[headerIndex] as HTMLElement;
+    }
+
+    it("binds each account-journal value to its column header", () => {
+      const transaction: JournalTransaction = {
+        entry_hash: "gld-buy",
+        directive_type: "Transaction",
+        date: "2017-08-27",
+        flag: "*",
+        payee: null,
+        narration: "Buy shares of GLD",
+        postings: [
+          {
+            account: "Assets:US:ETrade:GLD",
+            units: { number: "10", currency: "GLD" },
+            cost: null,
+            price: null,
+            flag: null,
+            meta: {},
+          },
+          {
+            account: "Assets:US:ETrade:Cash",
+            units: { number: "-2433.36", currency: "USD" },
+            cost: null,
+            price: null,
+            flag: null,
+            meta: {},
+          },
+          {
+            account: "Income:US:ETrade:PnL",
+            units: { number: "0", currency: "USD" },
+            cost: null,
+            price: null,
+            flag: null,
+            meta: {},
+          },
+        ],
+        tags: [],
+        links: [],
+        meta: {},
+      };
+
+      render(
+        <JournalTable
+          data={[
+            {
+              directive: transaction,
+              change: { USD: "2433.36" },
+              balance: { USD: "4559.80" },
+            },
+          ]}
+          showMetadata={false}
+          showPostings={false}
+          isAccountJournal
+          accountName="Assets:US:ETrade:GLD"
+          onEntryClick={mockOnEntryClick}
+        />,
+      );
+
+      const table = screen.getByRole("table", { name: "Account journal" });
+      expect(
+        within(table).getByRole("columnheader", { name: "Units" }),
+      ).toBeInTheDocument();
+      expect(
+        within(table).getByRole("columnheader", { name: "Change" }),
+      ).toBeInTheDocument();
+      expect(
+        within(table).getByRole("columnheader", { name: "Balance" }),
+      ).toBeInTheDocument();
+      expect(
+        within(table).getByRole("columnheader", { name: "Flag" }),
+      ).toBeInTheDocument();
+
+      const row = screen.getByText("Buy shares of GLD").closest("tr");
+      expect(row).toBeTruthy();
+
+      expect(cellForHeader(row as HTMLElement, "Date")).toHaveTextContent(
+        "2017-08-27",
+      );
+      expect(cellForHeader(row as HTMLElement, "Flag")).toHaveTextContent("*");
+      expect(
+        cellForHeader(row as HTMLElement, "Payee/Narration"),
+      ).toHaveTextContent("Buy shares of GLD");
+      // Units must be the GLD quantity, not the posting-count toggle (3).
+      expect(cellForHeader(row as HTMLElement, "Units")).toHaveTextContent(
+        "10 GLD",
+      );
+      expect(
+        within(cellForHeader(row as HTMLElement, "Units")).queryByRole(
+          "button",
+          { name: "Toggle postings" },
+        ),
+      ).not.toBeInTheDocument();
+      expect(cellForHeader(row as HTMLElement, "Change")).toHaveTextContent(
+        "2433.36 USD",
+      );
+      expect(cellForHeader(row as HTMLElement, "Balance")).toHaveTextContent(
+        "4559.80 USD",
+      );
+
+      const postingsHeaders = within(table).getAllByRole("columnheader", {
+        name: "Postings",
+      });
+      expect(postingsHeaders).toHaveLength(2);
+      const desktopPostingsCell = cellForHeader(row as HTMLElement, "Postings");
+      expect(
+        within(desktopPostingsCell).getAllByRole("button", {
+          name: "Toggle postings",
+        }).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("leaves account-journal value columns empty for non-transaction rows", () => {
+      render(
+        <JournalTable
+          data={[
+            {
+              directive: {
+                directive_type: "Balance",
+                date: "2017-01-01",
+                account: "Assets:US:ETrade:GLD",
+                amount: { number: "10", currency: "GLD" },
+                diff_amount: null,
+                meta: {},
+              },
+              change: {},
+              balance: { GLD: "10" },
+            },
+          ]}
+          showMetadata={false}
+          showPostings={false}
+          isAccountJournal
+          accountName="Assets:US:ETrade:GLD"
+          onEntryClick={mockOnEntryClick}
+        />,
+      );
+
+      const row = within(screen.getByRole("table", { name: "Account journal" }))
+        .getAllByRole("row")
+        .find((candidate) => candidate.textContent?.includes("2017-01-01"));
+      expect(row).toBeTruthy();
+      expect(cellForHeader(row as HTMLElement, "Units")).toHaveTextContent("");
+      expect(cellForHeader(row as HTMLElement, "Change")).toHaveTextContent("");
+      expect(cellForHeader(row as HTMLElement, "Balance")).toHaveTextContent(
+        "",
+      );
+      expect(
+        screen.queryByRole("button", { name: "Toggle postings" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("binds each plain-journal value to its four column headers", () => {
+      const transaction = createMockTransaction(4);
+      transaction.narration = "Plain journal row";
+
+      render(
+        <JournalTable
+          data={[{ directive: transaction }]}
+          showMetadata={false}
+          showPostings={false}
+          onEntryClick={mockOnEntryClick}
+        />,
+      );
+
+      const table = screen.getByRole("table", { name: "Journal" });
+      expect(
+        within(table).queryByRole("columnheader", { name: "Units" }),
+      ).not.toBeInTheDocument();
+      expect(
+        within(table).getAllByRole("columnheader", { name: "Postings" }),
+      ).toHaveLength(2);
+
+      const row = screen.getByText("Plain journal row").closest("tr");
+      expect(row).toBeTruthy();
+      expect(cellForHeader(row as HTMLElement, "Date")).toHaveTextContent(
+        "2024-01-01",
+      );
+      expect(cellForHeader(row as HTMLElement, "Flag")).toHaveTextContent("*");
+      expect(
+        cellForHeader(row as HTMLElement, "Payee/Narration"),
+      ).toHaveTextContent("Test Payee");
+      expect(
+        within(cellForHeader(row as HTMLElement, "Postings")).getAllByRole(
+          "button",
+          { name: "Toggle postings" },
+        )[0],
+      ).toHaveTextContent("4");
+    });
+
+    it("exposes desktop and mobile postings columns with matching cells", () => {
+      const transaction = createMockTransaction(2);
+
+      render(
+        <JournalTable
+          data={[{ directive: transaction }]}
+          showMetadata={false}
+          showPostings={false}
+          onEntryClick={mockOnEntryClick}
+        />,
+      );
+
+      const headers = screen.getAllByRole("columnheader", { name: "Postings" });
+      expect(headers[0]?.className).toMatch(/hidden/);
+      expect(headers[0]?.className).toMatch(/sm:table-cell/);
+      expect(headers[1]?.className).toMatch(/sm:hidden/);
+
+      const row = screen.getByText("Test Payee").closest("tr");
+      const cells = within(row as HTMLElement).getAllByRole("cell");
+      // Date, Flag, Description, desktop Postings, mobile Postings
+      expect(cells).toHaveLength(5);
+      expect(cells[3]?.className).toMatch(/sm:table-cell/);
+      expect(cells[4]?.className).toMatch(/sm:hidden/);
     });
   });
 });

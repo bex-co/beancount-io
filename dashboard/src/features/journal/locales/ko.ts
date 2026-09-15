@@ -179,6 +179,22 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "저널 내보내기에 실패했습니다",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "플래그",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "F",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "계정 저널",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "저널",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "저널",
     description: "Navigation label for journal/transaction history page",
@@ -404,6 +420,20 @@ const koJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "내역",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "분개장으로 돌아가기",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "항목",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "{ledgerName}의 항목 소스 컨텍스트.",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 

@@ -183,6 +183,22 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Export denníka zlyhal",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "Príznak",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "F",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "Denník účtu",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "Denník",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "Denník",
     description: "Navigation label for journal/transaction history page",
@@ -409,6 +425,20 @@ const skJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "Popis",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "Späť do denníka",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "Záznam",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "Zdrojový kontext záznamu v {ledgerName}.",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 

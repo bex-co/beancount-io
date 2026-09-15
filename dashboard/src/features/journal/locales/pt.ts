@@ -183,6 +183,22 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "Falha ao exportar diário",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "Indicador",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "F",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "Diário da conta",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "Diário",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "Diário",
     description: "Navigation label for journal/transaction history page",
@@ -409,6 +425,20 @@ const ptJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "Descrição",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "Voltar ao diário",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "Lançamento",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "Contexto de origem de um lançamento em {ledgerName}.",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 

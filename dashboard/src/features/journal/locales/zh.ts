@@ -182,6 +182,22 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "导出日记账失败",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "标记",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "F",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "账户流水",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "流水",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "流水",
     description: "Navigation label for journal/transaction history page",
@@ -407,6 +423,20 @@ const zhJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "摘要",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "返回日记账",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "分录",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "{ledgerName} 中分录的源上下文。",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 

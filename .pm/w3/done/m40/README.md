@@ -1,6 +1,6 @@
 # w3 · m40 — Make the account journal's "Units" column mean units
 
-**Worker:** worker3 **Goal:** every column in the account journal shows what its header says, and its values stay attached to their headers **Status:** todo
+**Worker:** worker3 **Goal:** every column in the account journal shows what its header says, and its values stay attached to their headers **Status:** done
 
 Severity: **major** (mislabelled financial data on the account detail page). Package: dashboard. The column headed **Units** renders the entry's *posting count*. The account's actual unit amounts are never shown anywhere on the page.
 
@@ -8,12 +8,12 @@ Severity: **major** (mislabelled financial data on the account detail page). Pac
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Decide and implement what the fourth account-journal column shows | 45m | — |
-| t002 | Expose the journal list as a table with real column headers | 45m | t001 |
-| t003 | Verify the account journal adoption surface | 15m | t002 |
-| t004 | Simplify the journal table column wiring | 15m | t003 |
-| t005 | Test column-to-header alignment on both journal consumers | 45m | t003 |
-| t006 | Close and archive the account journal column milestone | 10m | t004, t005 |
+| t001 | Decide and implement what the fourth account-journal column shows | 45m | — | — **DONE**
+| t002 | Expose the journal list as a table with real column headers | 45m | t001 | — **DONE**
+| t003 | Verify the account journal adoption surface | 15m | t002 | — **DONE**
+| t004 | Simplify the journal table column wiring | 15m | t003 | — **DONE**
+| t005 | Test column-to-header alignment on both journal consumers | 45m | t003 | — **DONE**
+| t006 | Close and archive the account journal column milestone | 10m | t004, t005 | — **DONE**
 
 Implementation totals 90 minutes; all six tasks total 175 minutes. Two consumers of one shared table, a data-source decision, and table semantics put this well past a sub-hour edit.
 

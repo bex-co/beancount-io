@@ -183,6 +183,22 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "صدور روزنامه ناموفق بود",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "پرچم",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "F",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "روزنامه حساب",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "روزنامه",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "روزنامه",
     description: "Navigation label for journal/transaction history page",
@@ -409,6 +425,20 @@ const faJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "شرح",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "بازگشت به دفتر روزنامه",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "سند",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "بافت منبع یک سند در {ledgerName}.",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 

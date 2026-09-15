@@ -183,6 +183,22 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Error en exportar el diari",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "Indicador",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "F",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "Diari del compte",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "Diari",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "Diari",
     description: "Navigation label for journal/transaction history page",
@@ -409,6 +425,20 @@ const caJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "Descripció",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "Torna al diari",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "Assentament",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "Context de font d'un assentament a {ledgerName}.",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 

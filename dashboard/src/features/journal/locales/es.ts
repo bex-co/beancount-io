@@ -183,6 +183,22 @@ const esJournal: Record<string, TranslationEntry> = {
     message: "Error al exportar el diario",
     description: "Error message when journal export fails",
   },
+  "journal.flag": {
+    message: "Marca",
+    description: "Accessible name for the journal flag column",
+  },
+  "journal.flagAbbrev": {
+    message: "F",
+    description: "Short label shown in the journal flag column header",
+  },
+  "journal.accountJournalTable": {
+    message: "Diario de cuenta",
+    description: "Accessible name for the account journal table",
+  },
+  "journal.journalTable": {
+    message: "Diario",
+    description: "Accessible name for the ledger journal table",
+  },
   "journal.journal": {
     message: "Diario",
     description: "Navigation label for journal/transaction history page",
@@ -409,6 +425,20 @@ const esJournal: Record<string, TranslationEntry> = {
   "journal.narration": {
     message: "Descripción",
     description: "Label for narration field",
+  },
+
+  "journal.backToJournal": {
+    message: "Volver al diario",
+    description: "Link from the entry page back to the ledger journal",
+  },
+  "journal.entryPageTitle": {
+    message: "Asiento",
+    description: "Entry page heading for a shared ledger entry URL",
+  },
+  "journal.entryPageDescription": {
+    message: "Contexto de origen de un asiento en {ledgerName}.",
+    description:
+      "Entry page description; {ledgerName} is the ledger display name",
   },
 };
 
