@@ -1,10 +1,17 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { useThemeStyle } from "@/common/hooks";
 import {
   fontSizes,
   fontWeights,
   gutter,
+  prefersStackedLayout,
   rowMinHeight,
   rowPaddingVertical,
   space,
@@ -36,6 +43,17 @@ const getStyles = (theme: ColorTheme) =>
       // DashboardCard (theme.black10) in the home/reports cards and on the
       // screen (theme.white) in the transactions and journal lists. Hardcoding theme.white
       // made rows punch a page-colored hole through the cards in both themes.
+    },
+    // Accessibility text sizes (see `prefersStackedLayout`): the amount moves
+    // under the icon and name instead of taking the width the name needs, so a
+    // payee beside a 19-character amount is no longer cut to "Q2…".
+    rowStacked: {
+      flexDirection: "column",
+      alignItems: "stretch",
+    },
+    stackedMain: {
+      flexDirection: "row",
+      alignItems: "center",
     },
     middle: {
       flex: 1,
@@ -70,6 +88,12 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       marginStart: space.sm,
       flexShrink: 0,
+    },
+    amountStacked: {
+      marginStart: 0,
+      marginTop: 2,
+      alignSelf: "flex-start",
+      textAlign: LEADING_TEXT_ALIGN,
     },
     amountPositive: {
       color: theme.success,
@@ -121,6 +145,8 @@ interface EntryRowProps {
 export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
 
   const { name, amountStr, isPositive } = getDisplayInfo(entry);
   const isPending = isJournalTransaction(entry) && entry.flag === "!";
@@ -130,12 +156,12 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
     ? entry.payee || entry.narration || undefined
     : undefined;
 
-  const content = (
+  const leading = (
     <>
       <AccountTypeIcon postings={getEntryPostings(entry)} payee={brandText} />
 
       <View style={styles.middle}>
-        <Text style={styles.name} numberOfLines={1}>
+        <Text style={styles.name} numberOfLines={stacked ? undefined : 1}>
           {name}
         </Text>
         {isPending && (
@@ -144,12 +170,18 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
           </View>
         )}
       </View>
+    </>
+  );
 
+  const content = (
+    <>
+      {stacked ? <View style={styles.stackedMain}>{leading}</View> : leading}
       {amountStr ? (
         <AmountText
           mono="medium"
           style={[
             styles.amount,
+            stacked && styles.amountStacked,
             isPositive ? styles.amountPositive : styles.amountNeutral,
           ]}
         >
@@ -158,7 +190,11 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
       ) : (
         <AmountText
           mono="medium"
-          style={[styles.amount, { color: theme.black60 }]}
+          style={[
+            styles.amount,
+            stacked && styles.amountStacked,
+            { color: theme.black60 },
+          ]}
         >
           {entry.directive_type}
         </AmountText>
@@ -169,7 +205,7 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
   if (onPress) {
     return (
       <TouchableOpacity
-        style={styles.row}
+        style={[styles.row, stacked && styles.rowStacked]}
         onPress={onPress}
         activeOpacity={0.7}
       >
@@ -178,5 +214,7 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
     );
   }
 
-  return <View style={styles.row}>{content}</View>;
+  return (
+    <View style={[styles.row, stacked && styles.rowStacked]}>{content}</View>
+  );
 };

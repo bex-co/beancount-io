@@ -1,4 +1,5 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
+import { prefersStackedLayout } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { FadeOutView } from "@/components/crossfade";
 import { LoadingTile } from "@/components/loading-tile";
@@ -28,6 +29,16 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 16,
       paddingVertical: 12,
     },
+    // Same restack as EntryRow at accessibility text sizes, so the list does
+    // not jump when the rows replace the skeleton.
+    rowStacked: {
+      flexDirection: "column",
+      alignItems: "stretch",
+    },
+    stackedMain: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
     iconTile: {
       width: 40,
       height: 40,
@@ -42,6 +53,10 @@ const getStyles = (theme: ColorTheme) =>
       width: 68,
       marginStart: 8,
     },
+    amountTileStacked: {
+      marginStart: 0,
+      marginTop: 6,
+    },
   });
 
 // Varied widths so the skeleton reads as content rather than stripes.
@@ -50,6 +65,8 @@ const ROWS_PER_SECTION = 3;
 
 export const TransactionsListSkeleton = () => {
   const styles = useThemeStyle(getStyles);
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
 
   return (
     // Fades out over the rows that replace it: the list renders those cells
@@ -62,12 +79,19 @@ export const TransactionsListSkeleton = () => {
               <LoadingTile style={styles.sectionHeaderTile} />
             </View>
           )}
-          <View style={styles.row}>
-            <LoadingTile style={styles.iconTile} />
-            <View style={styles.nameWrap}>
-              <LoadingTile height={16} style={{ width }} />
+          <View style={[styles.row, stacked && styles.rowStacked]}>
+            <View style={stacked ? styles.stackedMain : styles.row}>
+              <LoadingTile style={styles.iconTile} />
+              <View style={styles.nameWrap}>
+                <LoadingTile height={16} style={{ width }} />
+              </View>
             </View>
-            <LoadingTile style={styles.amountTile} />
+            <LoadingTile
+              style={StyleSheet.flatten([
+                styles.amountTile,
+                stacked && styles.amountTileStacked,
+              ])}
+            />
           </View>
         </View>
       ))}
