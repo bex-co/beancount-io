@@ -1,6 +1,12 @@
 # w4 · m9 — `bea price fetch`: keep commodity and currency prices current through upstream bean-price
 
-**Worker:** worker1 **Goal:** a ledger that declares price sources on its `commodity` directives gets today's quotes appended as deduplicated `price` directives with one `bea` verb, the ledger skills use that verb for period-end valuation and freshness, and no price-fetching code of our own is written — upstream `beanprice` does the fetching **Status:** todo
+**Worker:** worker1 **Goal:** a ledger that declares price sources on its `commodity` directives gets today's quotes appended as deduplicated `price` directives with one `bea` verb, the ledger skills use that verb for period-end valuation and freshness, and no price-fetching code of our own is written — upstream `beanprice` does the fetching **Status:** blocked — see [Blocked](#blocked)
+
+## Blocked
+
+**Blocked 2026-09-14 by `/loop-worker w4` triage; no implementation started.** m9 was approved on 2026-09-11 around an optional `price` extra and new `bea price fetch` / `bea price sources` subcommands. The next day, w1/m20 (`cc5ce3f9`) shipped a different design under [ADR014](../../../../docs/adrs/ADR014-cli-beancount-parity.md). Beanprice is enabled into the managed engine with `bea engine enable beanprice`, and `bea price` is a direct passthrough to upstream `bean-price` — ADR014's parity table maps `bean-price` to `bea price`. That replaces t001's install mechanism and leaves no room for `fetch`/`sources` subcommands without changing the passthrough contract. What m9 would still add on top needs a redesign against that passthrough, which is a product decision. That is: appending fetched quotes to the ledger with same-day dedup, a per-commodity JSON result, a sources report, the close and ask skill steps, and the docs.
+
+**Unblock with a user decision:** either re-scope m9 onto `bea price` as it now ships (for example, appending deduplicated quotes plus the skills and docs work around the passthrough), or drop it as superseded by w1/m20. When re-scoped, rewrite the tasks and move this directory back to `.pm/w4/m9/`; the workstream checkbox stays unchecked until closeout.
 
 ## Tasks (in order)
 
