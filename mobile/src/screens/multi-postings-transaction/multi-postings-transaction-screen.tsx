@@ -58,6 +58,9 @@ import {
   buildEntryInput,
   createInitialPostings,
   createPrefilledPostings,
+  formatExactAmount,
+  hasNonZeroAmount,
+  isRemainderBalanced,
   lastPostingAutoToggle,
   makePosting,
   postingAmountAccessibility,
@@ -256,7 +259,7 @@ const PostingRow = ({
   const absValue = isNegative
     ? posting.amountInput.slice(1)
     : posting.amountInput;
-  const hasAmount = posting.amountCents !== 0;
+  const hasAmount = hasNonZeroAmount(posting);
   const amountColor = !hasAmount
     ? theme.black60
     : isNegative
@@ -474,7 +477,7 @@ const MultiPostingsTransactionScreenComponent = () => {
   ]);
 
   const rem = remainder(postings);
-  const isBalanced = rem === 0;
+  const isBalanced = isRemainderBalanced(rem);
   const validationError = validatePostings(postings);
   const canSave = validationError === null;
   const hasUnsavedChanges = isTransactionDraftDirty(initialDraft, {
@@ -513,6 +516,8 @@ const MultiPostingsTransactionScreenComponent = () => {
         msg = t("multiPostingsMissingAccount");
       else if (validationError === "zeroAmount")
         msg = t("multiPostingsZeroAmount");
+      else if (validationError === "invalidAmount")
+        msg = t("multiPostingsInvalidBalance");
       toast.showToast({ message: msg, type: "error" });
       AccessibilityInfo.announceForAccessibility(msg);
       return;
@@ -553,8 +558,12 @@ const MultiPostingsTransactionScreenComponent = () => {
     });
   };
 
-  const formatRemainder = (cents: number) =>
-    formatSignedMoneyWithCurrency(cents / 100, currency, true);
+  const formatRemainder = (exact: string) =>
+    formatSignedMoneyWithCurrency(
+      Number(formatExactAmount(exact)),
+      currency,
+      true,
+    );
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>

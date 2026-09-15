@@ -2,8 +2,11 @@ import {
   addPosting,
   buildEntryInput,
   createPrefilledPostings,
+  formatExactAmount,
+  isRemainderBalanced,
   lastPostingAutoToggle,
   makePosting,
+  parseExactAmount,
   postingAmountAccessibility,
   removePosting,
   remainder,
@@ -14,43 +17,107 @@ import {
 } from "../postings-utils";
 import { en } from "../../../translations/en";
 
-// helpers to build test postings without touching the ID counter
 function posting(
   account: string,
   amountInput: string,
-  amountCents: number,
+  amount: string | null,
   isAuto = false,
 ) {
-  return makePosting({ account, amountInput, amountCents, isAuto });
+  return makePosting({ account, amountInput, amount, isAuto });
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// parseExactAmount
+// ──────────────────────────────────────────────────────────────────────────────
+
+test("parseExactAmount keeps three-decimal values exact", () => {
+  expect(parseExactAmount("1.005")).toBe("1.005");
+  expect(parseExactAmount("-1.005")).toBe("-1.005");
+});
+
+test("parseExactAmount normalizes a single comma decimal separator", () => {
+  expect(parseExactAmount("1,25")).toBe("1.25");
+  expect(parseExactAmount("-1,25")).toBe("-1.25");
+});
+
+test("parseExactAmount rejects incomplete or prefix-only junk", () => {
+  expect(parseExactAmount("1.")).toBe(null);
+  expect(parseExactAmount("1,25,00")).toBe(null);
+  expect(parseExactAmount("abc")).toBe(null);
+  expect(parseExactAmount("1.00USD")).toBe(null);
+  expect(parseExactAmount("")).toBe(null);
+});
 
 // ──────────────────────────────────────────────────────────────────────────────
 // remainder
 // ──────────────────────────────────────────────────────────────────────────────
 
-test("remainder sums integer cents exactly", () => {
+test("remainder sums exact decimals without float drift", () => {
   const postings = [
-    posting("Assets:Checking", "-10.10", -1010),
-    posting("Expenses:Food", "10.10", 1010),
+    posting("Assets:Checking", "-10.10", "-10.10"),
+    posting("Expenses:Food", "10.10", "10.10"),
   ];
-  expect(remainder(postings)).toBe(0);
+  expect(remainder(postings)).toBe("0.00");
+  expect(isRemainderBalanced(remainder(postings))).toBe(true);
 });
 
 test("remainder handles classic 0.10 + 0.20 without float drift", () => {
   const postings = [
-    posting("Assets:Bank", "-0.30", -30),
-    posting("Expenses:Coffee", "0.10", 10),
-    posting("Expenses:Snack", "0.20", 20, true),
+    posting("Assets:Bank", "-0.30", "-0.30"),
+    posting("Expenses:Coffee", "0.10", "0.10"),
+    posting("Expenses:Snack", "0.20", "0.20", true),
   ];
-  expect(remainder(postings)).toBe(0);
+  expect(isRemainderBalanced(remainder(postings))).toBe(true);
 });
 
 test("remainder returns non-zero for unbalanced postings", () => {
   const postings = [
-    posting("Assets:Bank", "-100.00", -10000),
-    posting("Expenses:Food", "60.00", 6000),
+    posting("Assets:Bank", "-100.00", "-100.00"),
+    posting("Expenses:Food", "60.00", "60.00"),
   ];
-  expect(remainder(postings)).toBe(-4000);
+  expect(remainder(postings)).toBe("-40.00");
+});
+
+test("1.005 auto-balances to exact -1.005 with zero remainder", () => {
+  const postings = [
+    posting("Assets:Cash", "0.00", "0.00", false),
+    posting("Expenses:Cost", "0.00", "0.00", true),
+  ];
+  const updated = updatePostingAmount(postings, 0, "1.005");
+  expect(updated[0].amount).toBe("1.005");
+  expect(updated[1].amount).toBe("-1.005");
+  expect(updated[1].amountInput).toBe("-1.005");
+  expect(isRemainderBalanced(remainder(updated))).toBe(true);
+  expect(validatePostings(updated)).toBe(null);
+  const entry = buildEntryInput(updated, {
+    date: "2026-09-11",
+    payee: "",
+    narration: "",
+    currency: "MUSD",
+  });
+  expect(entry.postings[0].amount).toBe("1.005 MUSD");
+  expect(entry.postings[1].amount).toBe("-1.005 MUSD");
+});
+
+test("comma decimal 1,25 normalizes and balances exactly", () => {
+  const postings = [
+    posting("Assets:Cash", "0.00", "0.00", false),
+    posting("Expenses:Cost", "0.00", "0.00", true),
+  ];
+  const updated = updatePostingAmount(postings, 0, "1,25");
+  expect(updated[0].amount).toBe("1.25");
+  expect(updated[1].amount).toBe("-1.25");
+  expect(validatePostings(updated)).toBe(null);
+});
+
+test("invalid comma junk never silently validates as a prefix", () => {
+  const postings = [
+    posting("Assets:Cash", "0.00", "0.00", false),
+    posting("Expenses:Cost", "0.00", "0.00", true),
+  ];
+  const updated = updatePostingAmount(postings, 0, "1,25,00");
+  expect(updated[0].amount).toBe(null);
+  expect(validatePostings(updated)).toBe("invalidAmount");
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -59,44 +126,43 @@ test("remainder returns non-zero for unbalanced postings", () => {
 
 test("editing a non-last posting auto-fills the last posting when isAuto=true", () => {
   const postings = [
-    posting("Assets:Bank", "0.00", 0, false),
-    posting("Expenses:Food", "0.00", 0, true),
+    posting("Assets:Bank", "0.00", "0.00", false),
+    posting("Expenses:Food", "0.00", "0.00", true),
   ];
   const updated = updatePostingAmount(postings, 0, "-50.00");
   const last = updated[1];
-  expect(last.amountCents).toBe(5000);
+  expect(last.amount).toBe("50.00");
   expect(last.amountInput).toBe("50.00");
   expect(last.isAuto).toBe(true);
 });
 
 test("editing the last posting manually disables auto tracking", () => {
   const postings = [
-    posting("Assets:Bank", "-100.00", -10000, false),
-    posting("Expenses:Food", "100.00", 10000, true),
+    posting("Assets:Bank", "-100.00", "-100.00", false),
+    posting("Expenses:Food", "100.00", "100.00", true),
   ];
   const updated = updatePostingAmount(postings, 1, "60.00");
   expect(updated[1].isAuto).toBe(false);
-  expect(updated[1].amountCents).toBe(6000);
+  expect(updated[1].amount).toBe("60.00");
 });
 
 test("changing a non-last posting does not affect a manual last posting", () => {
   const postings = [
-    posting("Assets:Bank", "-80.00", -8000, false),
-    posting("Expenses:Food", "60.00", 6000, false), // manually set
+    posting("Assets:Bank", "-80.00", "-80.00", false),
+    posting("Expenses:Food", "60.00", "60.00", false),
   ];
   const updated = updatePostingAmount(postings, 0, "-90.00");
-  // last posting stays at 6000 — it's manual
-  expect(updated[1].amountCents).toBe(6000);
+  expect(updated[1].amount).toBe("60.00");
   expect(updated[1].isAuto).toBe(false);
 });
 
 test("auto-fill sign correctness: positive sum of others → negative auto", () => {
   const postings = [
-    posting("Income:Salary", "3000.00", 300000, false),
-    posting("Assets:Bank", "0.00", 0, true),
+    posting("Income:Salary", "3000.00", "3000.00", false),
+    posting("Assets:Bank", "0.00", "0.00", true),
   ];
   const updated = updatePostingAmount(postings, 0, "3000.00");
-  expect(updated[1].amountCents).toBe(-300000);
+  expect(updated[1].amount).toBe("-3000.00");
   expect(updated[1].amountInput).toBe("-3000.00");
 });
 
@@ -106,24 +172,16 @@ test("auto-fill sign correctness: positive sum of others → negative auto", () 
 
 test("toggleLastPostingAuto flips isAuto on last posting and recomputes", () => {
   let postings = [
-    posting("Assets:Bank", "-50.00", -5000, false),
-    posting("Expenses:Food", "70.00", 7000, false), // manual, not balanced
+    posting("Assets:Bank", "-50.00", "-50.00", false),
+    posting("Expenses:Food", "70.00", "70.00", false),
   ];
-  // enable auto on last
   postings = toggleLastPostingAuto(postings);
   expect(postings[1].isAuto).toBe(true);
-  expect(postings[1].amountCents).toBe(5000);
+  expect(postings[1].amount).toBe("50.00");
   expect(postings[1].amountInput).toBe("50.00");
 });
 
-// ──────────────────────────────────────────────────────────────────────────────
-// lastPostingAutoToggle (which rows show the switch, and when it reads as on)
-// ──────────────────────────────────────────────────────────────────────────────
-
 test("the final row keeps its auto switch after it is turned off", () => {
-  // The regression: the control was mounted only while `isAuto` was true, so
-  // turning it off (or editing the last amount, which clears the flag) removed
-  // the only way to turn it back on.
   expect(lastPostingAutoToggle({ isLast: true, isAuto: true })).toEqual({
     rendered: true,
     selected: true,
@@ -135,7 +193,6 @@ test("the final row keeps its auto switch after it is turned off", () => {
 });
 
 test("earlier rows never show the auto switch", () => {
-  // Only the last posting can absorb the remainder, so only it can be auto.
   expect(lastPostingAutoToggle({ isLast: false, isAuto: false })).toEqual({
     rendered: false,
     selected: false,
@@ -147,10 +204,9 @@ test("earlier rows never show the auto switch", () => {
 });
 
 test("the switch the rendered row offers round-trips through both directions", () => {
-  // What the UI predicate now makes reachable, end to end: off, then on again.
   let postings = [
-    posting("Assets:Bank", "-50.00", -5000, false),
-    posting("Expenses:Food", "50.00", 5000, true),
+    posting("Assets:Bank", "-50.00", "-50.00", false),
+    posting("Expenses:Food", "50.00", "50.00", true),
   ];
   expect(
     lastPostingAutoToggle({ isLast: true, isAuto: postings[1].isAuto })
@@ -162,7 +218,6 @@ test("the switch the rendered row offers round-trips through both directions", (
     isLast: true,
     isAuto: postings[1].isAuto,
   });
-  // Still rendered while off — that is the whole fix.
   expect(off).toEqual({ rendered: true, selected: false });
 
   postings = updatePostingAmount(postings, 0, "-80.00");
@@ -181,8 +236,8 @@ test("the switch the rendered row offers round-trips through both directions", (
 
 test("addPosting appends an auto posting and clears isAuto on previous last", () => {
   const postings = [
-    posting("Assets:Bank", "-100.00", -10000, false),
-    posting("Expenses:Food", "100.00", 10000, true),
+    posting("Assets:Bank", "-100.00", "-100.00", false),
+    posting("Expenses:Food", "100.00", "100.00", true),
   ];
   const updated = addPosting(postings);
   expect(updated.length).toBe(3);
@@ -191,42 +246,48 @@ test("addPosting appends an auto posting and clears isAuto on previous last", ()
 });
 
 test("addPosting auto-fills new last posting immediately", () => {
-  // Postings sum to 0 before add, so new posting auto-fills to 0
   const postings = [
-    posting("Assets:Bank", "-100.00", -10000, false),
-    posting("Expenses:Food", "100.00", 10000, false),
+    posting("Assets:Bank", "-100.00", "-100.00", false),
+    posting("Expenses:Food", "100.00", "100.00", false),
   ];
   const updated = addPosting(postings);
-  expect(updated[2].amountCents).toBe(0);
+  expect(isZeroAmount(updated[2].amount)).toBe(true);
 });
 
+function isZeroAmount(amount: string | null): boolean {
+  return amount === null || amount === "0" || /^0\.0+$/.test(amount);
+}
+
 test("removePosting refuses to go below two postings", () => {
-  const postings = [posting("A", "-10.00", -1000), posting("B", "10.00", 1000)];
+  const postings = [
+    posting("A", "-10.00", "-10.00"),
+    posting("B", "10.00", "10.00"),
+  ];
   const updated = removePosting(postings, 0);
   expect(updated.length).toBe(2);
 });
 
 test("removePosting removes a middle posting and keeps auto-fill correct", () => {
   const postings = [
-    posting("Assets:Bank", "-100.00", -10000, false),
-    posting("Expenses:Food", "40.00", 4000, false),
-    posting("Expenses:Transport", "60.00", 6000, true),
+    posting("Assets:Bank", "-100.00", "-100.00", false),
+    posting("Expenses:Food", "40.00", "40.00", false),
+    posting("Expenses:Transport", "60.00", "60.00", true),
   ];
-  const updated = removePosting(postings, 1); // remove middle
+  const updated = removePosting(postings, 1);
   expect(updated.length).toBe(2);
-  expect(updated[1].amountCents).toBe(10000);
+  expect(updated[1].amount).toBe("100.00");
 });
 
 test("removing last posting makes new last auto and recomputes", () => {
   const postings = [
-    posting("Assets:Bank", "-100.00", -10000, false),
-    posting("Expenses:Food", "40.00", 4000, false),
-    posting("Expenses:Transport", "60.00", 6000, false),
+    posting("Assets:Bank", "-100.00", "-100.00", false),
+    posting("Expenses:Food", "40.00", "40.00", false),
+    posting("Expenses:Transport", "60.00", "60.00", false),
   ];
-  const updated = removePosting(postings, 2); // remove last
+  const updated = removePosting(postings, 2);
   expect(updated.length).toBe(2);
   expect(updated[1].isAuto).toBe(true);
-  expect(updated[1].amountCents).toBe(10000);
+  expect(updated[1].amount).toBe("100.00");
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -235,32 +296,32 @@ test("removing last posting makes new last auto and recomputes", () => {
 
 test("validatePostings returns null for valid balanced postings", () => {
   const postings = [
-    posting("Assets:Bank", "-100.00", -10000),
-    posting("Expenses:Food", "100.00", 10000),
+    posting("Assets:Bank", "-100.00", "-100.00"),
+    posting("Expenses:Food", "100.00", "100.00"),
   ];
   expect(validatePostings(postings)).toBe(null);
 });
 
 test("validatePostings returns missingAccount when any posting has no account", () => {
   const postings = [
-    posting("", "-50.00", -5000),
-    posting("Expenses:Food", "50.00", 5000),
+    posting("", "-50.00", "-50.00"),
+    posting("Expenses:Food", "50.00", "50.00"),
   ];
   expect(validatePostings(postings)).toBe("missingAccount");
 });
 
-test("validatePostings returns zeroAmount when any posting has zero cents", () => {
+test("validatePostings returns zeroAmount when any posting has zero", () => {
   const postings = [
-    posting("Assets:Bank", "0.00", 0),
-    posting("Expenses:Food", "0.00", 0),
+    posting("Assets:Bank", "0.00", "0.00"),
+    posting("Expenses:Food", "0.00", "0.00"),
   ];
   expect(validatePostings(postings)).toBe("zeroAmount");
 });
 
 test("validatePostings returns unbalanced when postings do not sum to zero", () => {
   const postings = [
-    posting("Assets:Bank", "-100.00", -10000),
-    posting("Expenses:Food", "50.00", 5000),
+    posting("Assets:Bank", "-100.00", "-100.00"),
+    posting("Expenses:Food", "50.00", "50.00"),
   ];
   expect(validatePostings(postings)).toBe("unbalanced");
 });
@@ -271,9 +332,9 @@ test("validatePostings returns unbalanced when postings do not sum to zero", () 
 
 test("buildEntryInput builds N postings with correct amount strings", () => {
   const postings = [
-    posting("Assets:Bank", "-100.00", -10000),
-    posting("Expenses:Food", "60.00", 6000),
-    posting("Expenses:Transport", "40.00", 4000),
+    posting("Assets:Bank", "-100.00", "-100.00"),
+    posting("Expenses:Food", "60.00", "60.00"),
+    posting("Expenses:Transport", "40.00", "40.00"),
   ];
   const entry = buildEntryInput(postings, {
     date: "2026-07-09",
@@ -304,9 +365,9 @@ test("buildEntryInput builds N postings with correct amount strings", () => {
 
 test("buildEntryInput postings sum to zero (balanced)", () => {
   const postings = [
-    posting("Assets:Bank", "-100.00", -10000),
-    posting("Expenses:Food", "60.00", 6000),
-    posting("Expenses:Transport", "40.00", 4000),
+    posting("Assets:Bank", "-100.00", "-100.00"),
+    posting("Expenses:Food", "60.00", "60.00"),
+    posting("Expenses:Transport", "40.00", "40.00"),
   ];
   const entry = buildEntryInput(postings, {
     date: "2026-07-09",
@@ -314,15 +375,15 @@ test("buildEntryInput postings sum to zero (balanced)", () => {
     narration: "",
     currency: "USD",
   });
-  const total = entry.postings.reduce((s, p) => {
-    const v = parseFloat(p.amount.split(" ")[0]);
-    return s + Math.round(v * 100);
-  }, 0);
-  expect(total).toBe(0);
+  const reconstructed = entry.postings.map((p) => {
+    const amount = parseExactAmount(p.amount.split(" ")[0]);
+    return posting(p.account, p.amount.split(" ")[0], amount);
+  });
+  expect(isRemainderBalanced(remainder(reconstructed))).toBe(true);
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
-// createPrefilledPostings — seeds a scanned receipt into the form
+// createPrefilledPostings
 // ──────────────────────────────────────────────────────────────────────────────
 
 test("createPrefilledPostings opens balanced with the payment leg negative", () => {
@@ -333,10 +394,10 @@ test("createPrefilledPostings opens balanced with the payment leg negative", () 
   );
   expect(postings.length).toBe(2);
   expect(postings[0].account).toBe("Assets:Checking");
-  expect(postings[0].amountCents).toBe(-2735);
+  expect(postings[0].amount).toBe("-27.35");
   expect(postings[1].account).toBe("Expenses:Groceries");
-  expect(postings[1].amountCents).toBe(2735);
-  expect(remainder(postings)).toBe(0);
+  expect(postings[1].amount).toBe("27.35");
+  expect(isRemainderBalanced(remainder(postings))).toBe(true);
   expect(validatePostings(postings)).toBe(null);
 });
 
@@ -349,13 +410,12 @@ test("createPrefilledPostings leaves the expense leg auto so later edits refill 
   expect(postings[0].isAuto).toBe(false);
   expect(postings[1].isAuto).toBe(true);
 
-  // Changing the payment leg re-derives the expense leg.
   const edited = updatePostingAmount(postings, 0, "-42.50");
-  expect(edited[1].amountCents).toBe(4250);
-  expect(remainder(edited)).toBe(0);
+  expect(edited[1].amount).toBe("42.50");
+  expect(isRemainderBalanced(remainder(edited))).toBe(true);
 });
 
-test("createPrefilledPostings formats whole and fractional totals to cents", () => {
+test("createPrefilledPostings formats whole and fractional totals", () => {
   expect(
     createPrefilledPostings("Assets:A", "Expenses:B", "5")[0].amountInput,
   ).toBe("-5.00");
@@ -366,25 +426,28 @@ test("createPrefilledPostings formats whole and fractional totals to cents", () 
 
 test("createPrefilledPostings tolerates an unparseable amount", () => {
   const postings = createPrefilledPostings("Assets:A", "Expenses:B", "");
-  expect(postings[0].amountCents).toBe(0);
-  expect(postings[1].amountCents).toBe(0);
-  // Still invalid to save — the user has to type a total.
+  expect(isZeroAmount(postings[0].amount)).toBe(true);
+  expect(isZeroAmount(postings[1].amount)).toBe(true);
   expect(validatePostings(postings)).toBe("zeroAmount");
 });
 
 test("updatePostingAccount sets account without touching amounts", () => {
   const postings = [
-    posting("Assets:Old", "-50.00", -5000),
-    posting("Expenses:Old", "50.00", 5000),
+    posting("Assets:Old", "-50.00", "-50.00"),
+    posting("Expenses:Old", "50.00", "50.00"),
   ];
   const updated = updatePostingAccount(postings, 0, "Assets:New");
   expect(updated[0].account).toBe("Assets:New");
-  expect(updated[0].amountCents).toBe(-5000);
+  expect(updated[0].amount).toBe("-50.00");
   expect(updated[1].account).toBe("Expenses:Old");
 });
 
-// Interpolates the real English copy, so these assertions break if a key is
-// renamed or loses a token — not just if the helper's wiring changes.
+test("formatExactAmount preserves three-decimal precision", () => {
+  expect(formatExactAmount("1.005")).toBe("1.005");
+  expect(formatExactAmount("-1.005")).toBe("-1.005");
+  expect(formatExactAmount("1.2")).toBe("1.20");
+});
+
 const t = (key: string, params?: Record<string, unknown>) =>
   String((en as unknown as Record<string, string>)[key]).replace(
     /{{(\w+)}}/g,

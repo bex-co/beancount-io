@@ -1,28 +1,116 @@
 let _postingIdCounter = 0;
 const nextId = () => `posting-${++_postingIdCounter}`;
 
+/**
+ * Exact decimal posting amounts.
+ *
+ * `amountInput` is the raw editable field. `amount` is the validated exact
+ * decimal (or null while the field is empty/incomplete/invalid). Arithmetic,
+ * remainder, auto-balance and serialization use only `amount` — never
+ * parseFloat / cents quantization.
+ */
 export type Posting = {
   id: string;
   account: string;
   amountInput: string;
-  amountCents: number;
+  /** Exact decimal string like "1.005", or null if not yet a valid number. */
+  amount: string | null;
   isAuto: boolean;
 };
 
-export type ValidationError = "unbalanced" | "missingAccount" | "zeroAmount";
+export type ValidationError =
+  "unbalanced" | "missingAccount" | "zeroAmount" | "invalidAmount";
 
-function parseCents(input: string): number {
+type Scaled = { coeff: bigint; scale: number };
+
+/**
+ * Parse a complete decimal amount. Accepts optional leading `-`, a single
+ * `.` decimal separator, or a single `,` as a decimal separator (`1,25` →
+ * `1.25`). Rejects grouping commas, partial forms (`1.`, `-`), and any
+ * other junk — never silently takes a numeric prefix the way parseFloat does.
+ */
+export function parseExactAmount(input: string): string | null {
   const trimmed = input.trim();
-  if (!trimmed) return 0;
-  const n = parseFloat(trimmed);
-  if (isNaN(n)) return 0;
-  return Math.round(n * 100);
+  if (!trimmed) return null;
+
+  let normalized = trimmed;
+  if (/^-?\d+,\d+$/.test(normalized)) {
+    normalized = normalized.replace(",", ".");
+  } else if (normalized.includes(",")) {
+    return null;
+  }
+
+  if (!/^-?\d+(\.\d+)?$/.test(normalized)) return null;
+
+  const neg = normalized.startsWith("-");
+  const body = neg ? normalized.slice(1) : normalized;
+  const [wholeRaw, frac = ""] = body.split(".");
+  const whole = wholeRaw.replace(/^0+(?=\d)/, "") || "0";
+  const value = `${neg ? "-" : ""}${whole}${frac.length ? `.${frac}` : ""}`;
+  if (value === "-0" || /^-0\.0+$/.test(value)) {
+    return frac.length ? `0.${frac}` : "0";
+  }
+  return value;
 }
 
-function centsToInput(cents: number): string {
-  const abs = Math.abs(cents);
-  const sign = cents < 0 ? "-" : "";
-  return `${sign}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, "0")}`;
+function toScaled(amount: string): Scaled {
+  const neg = amount.startsWith("-");
+  const body = neg ? amount.slice(1) : amount;
+  const [whole, frac = ""] = body.split(".");
+  return {
+    coeff: BigInt(`${neg ? "-" : ""}${whole}${frac}` || "0"),
+    scale: frac.length,
+  };
+}
+
+function fromScaled(coeff: bigint, scale: number): string {
+  if (coeff === 0n) {
+    return scale > 0 ? `0.${"0".repeat(scale)}` : "0";
+  }
+  const neg = coeff < 0n;
+  let digits = (neg ? -coeff : coeff).toString();
+  if (scale === 0) return `${neg ? "-" : ""}${digits}`;
+  while (digits.length <= scale) digits = `0${digits}`;
+  const split = digits.length - scale;
+  return `${neg ? "-" : ""}${digits.slice(0, split)}.${digits.slice(split)}`;
+}
+
+function addExact(a: string, b: string): string {
+  const A = toScaled(a);
+  const B = toScaled(b);
+  const scale = Math.max(A.scale, B.scale);
+  const ca = A.coeff * 10n ** BigInt(scale - A.scale);
+  const cb = B.coeff * 10n ** BigInt(scale - B.scale);
+  return fromScaled(ca + cb, scale);
+}
+
+function negateExact(a: string): string {
+  if (a === "0" || /^0\.0+$/.test(a)) return a;
+  return a.startsWith("-") ? a.slice(1) : `-${a}`;
+}
+
+function isZeroExact(a: string | null): boolean {
+  if (a === null) return true;
+  return a === "0" || /^0\.0+$/.test(a) || /^-0(\.0+)?$/.test(a);
+}
+
+/** Format an exact amount for the amount field / auto-fill display. */
+export function formatExactAmount(amount: string): string {
+  if (isZeroExact(amount)) {
+    const scale = amount.includes(".") ? amount.split(".")[1].length : 2;
+    return scale > 0 ? `0.${"0".repeat(scale)}` : "0.00";
+  }
+  // Prefer at least two fractional digits for ordinary two-decimal ledgers,
+  // but never truncate a longer exact value (1.005 stays 1.005).
+  const neg = amount.startsWith("-");
+  const body = neg ? amount.slice(1) : amount;
+  const [whole, frac = ""] = body.split(".");
+  const padded = frac.length >= 2 ? frac : frac.padEnd(2, "0");
+  return `${neg ? "-" : ""}${whole}.${padded}`;
+}
+
+function amountOrZero(amount: string | null): string {
+  return amount === null || isZeroExact(amount) ? "0" : amount;
 }
 
 function applyAutoFill(postings: Posting[]): Posting[] {
@@ -30,25 +118,34 @@ function applyAutoFill(postings: Posting[]): Posting[] {
   if (lastIdx < 1) return postings;
   const last = postings[lastIdx];
   if (!last.isAuto) return postings;
-  const sumOfOthers = postings
-    .slice(0, lastIdx)
-    .reduce((s, p) => s + p.amountCents, 0);
-  const autoCents = sumOfOthers !== 0 ? -sumOfOthers : 0;
+
+  let sumOfOthers = "0";
+  for (const p of postings.slice(0, lastIdx)) {
+    sumOfOthers = addExact(sumOfOthers, amountOrZero(p.amount));
+  }
+  const autoAmount = isZeroExact(sumOfOthers)
+    ? "0.00"
+    : formatExactAmount(negateExact(sumOfOthers));
+  const parsed = parseExactAmount(autoAmount);
+
   return postings.map((p, i) =>
-    i === lastIdx
-      ? { ...p, amountCents: autoCents, amountInput: centsToInput(autoCents) }
-      : p,
+    i === lastIdx ? { ...p, amount: parsed, amountInput: autoAmount } : p,
   );
 }
 
 export function makePosting(partial?: Partial<Posting>): Posting {
+  const amountInput = partial?.amountInput ?? "0.00";
+  const amount =
+    partial && "amount" in partial
+      ? (partial.amount ?? null)
+      : parseExactAmount(amountInput);
   return {
     id: nextId(),
-    account: "",
-    amountInput: "0.00",
-    amountCents: 0,
-    isAuto: false,
-    ...partial,
+    account: partial?.account ?? "",
+    amountInput,
+    amount,
+    isAuto: partial?.isAuto ?? false,
+    ...(partial?.id ? { id: partial.id } : {}),
   };
 }
 
@@ -77,15 +174,17 @@ export function createPrefilledPostings(
   targetAccount: string,
   amountInput: string,
 ): Posting[] {
-  // Guard the negation: -0 is a valid JS number and would otherwise leak into
-  // posting state for an unparseable total.
-  const cents = parseCents(amountInput);
-  const paid = cents === 0 ? 0 : -cents;
+  const parsed = parseExactAmount(amountInput);
+  const paidAmount =
+    parsed === null || isZeroExact(parsed)
+      ? parseExactAmount("0.00")
+      : parseExactAmount(formatExactAmount(negateExact(parsed)));
+  const paidInput = formatExactAmount(paidAmount ?? "0");
   return applyAutoFill([
     makePosting({
       account: sourceAccount,
-      amountCents: paid,
-      amountInput: centsToInput(paid),
+      amount: paidAmount,
+      amountInput: paidInput,
       isAuto: false,
     }),
     makePosting({ account: targetAccount, isAuto: true }),
@@ -150,8 +249,12 @@ export function lastPostingAutoToggle({
   return { rendered: isLast, selected: isLast && isAuto };
 }
 
-export function remainder(postings: Posting[]): number {
-  return postings.reduce((s, p) => s + p.amountCents, 0);
+/** Sum of exact posting amounts; "0" when balanced. */
+export function remainder(postings: Posting[]): string {
+  return postings.reduce(
+    (sum, p) => addExact(sum, amountOrZero(p.amount)),
+    "0",
+  );
 }
 
 export function updatePostingAccount(
@@ -167,14 +270,14 @@ export function updatePostingAmount(
   index: number,
   input: string,
 ): Posting[] {
-  const cents = parseCents(input);
+  const amount = parseExactAmount(input);
   const isLast = index === postings.length - 1;
   const updated = postings.map((p, i) =>
     i === index
       ? {
           ...p,
           amountInput: input,
-          amountCents: cents,
+          amount,
           isAuto: isLast ? false : p.isAuto,
         }
       : p,
@@ -212,9 +315,11 @@ export function removePosting(postings: Posting[], index: number): Posting[] {
 export function validatePostings(postings: Posting[]): ValidationError | null {
   for (const posting of postings) {
     if (!posting.account) return "missingAccount";
-    if (posting.amountCents === 0) return "zeroAmount";
+    const trimmed = posting.amountInput.trim();
+    if (trimmed && posting.amount === null) return "invalidAmount";
+    if (isZeroExact(posting.amount)) return "zeroAmount";
   }
-  if (remainder(postings) !== 0) return "unbalanced";
+  if (!isZeroExact(remainder(postings))) return "unbalanced";
   return null;
 }
 
@@ -236,7 +341,15 @@ export function buildEntryInput(
     meta: {},
     postings: postings.map((posting) => ({
       account: posting.account,
-      amount: `${centsToInput(posting.amountCents)} ${opts.currency}`,
+      amount: `${formatExactAmount(posting.amount ?? "0")} ${opts.currency}`,
     })),
   };
+}
+
+export function hasNonZeroAmount(posting: Posting): boolean {
+  return !isZeroExact(posting.amount);
+}
+
+export function isRemainderBalanced(rem: string): boolean {
+  return isZeroExact(rem);
 }

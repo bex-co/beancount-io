@@ -1,6 +1,6 @@
 # w3/m34 — Preserve decimal amounts in native multi-posting drafts
 
-**Worker:** worker3 **Goal:** entered decimal amounts, balancing and serialized postings agree **Status:** todo
+**Worker:** worker3 **Goal:** entered decimal amounts, balancing and serialized postings agree **Status:** done
 
 **Severity:** major. **Estimated effort:** 175m across six tasks. Mobile only; no new dependency or API change assumed.
 
@@ -8,12 +8,12 @@
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Preserve exact decimal values in posting arithmetic and serialization | 50m | — |
-| t002 | Connect exact amounts to draft controls and validation | 45m | t001 |
-| t003 | Adoption surface | 15m | t002 |
-| t004 | Simplify | 15m | t003 |
-| t005 | Test coverage | 40m | t003, t004 |
-| t006 | Closeout | 10m | t005 |
+| t001 | Preserve exact decimal values in posting arithmetic and serialization | 50m | — | — **DONE**
+| t002 | Connect exact amounts to draft controls and validation | 45m | t001 | — **DONE**
+| t003 | Adoption surface | 15m | t002 | — **DONE**
+| t004 | Simplify | 15m | t003 | — **DONE**
+| t005 | Test coverage | 40m | t003, t004 | — **DONE**
+| t006 | Closeout | 10m | t005 | — **DONE**
 
 ## Reproduced finding
 
