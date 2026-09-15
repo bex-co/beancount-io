@@ -65,3 +65,24 @@ export function wheelIndexAtOffset(offset: number, itemCount: number): number {
   const index = Math.round(offset / ITEM_HEIGHT);
   return Math.max(0, Math.min(index, itemCount - 1));
 }
+
+/**
+ * The wheel offset that centers the item at `index`, clamped to `items`. A tap
+ * on an option scrolls here, through the arithmetic `wheelIndexAtOffset` reads
+ * back, so a tapped selection and a dragged one land on the same offset.
+ */
+export function wheelOffsetForIndex(index: number, itemCount: number): number {
+  return Math.max(0, Math.min(index, itemCount - 1)) * ITEM_HEIGHT;
+}
+
+/**
+ * Accessibility props for one wheel option. Selection used to be carried only
+ * by font size and colour, so no option announced itself as the current one.
+ */
+export function pickerOptionAccessibility(label: string, selected: boolean) {
+  return {
+    accessibilityRole: "button" as const,
+    accessibilityLabel: label,
+    accessibilityState: { selected },
+  };
+}

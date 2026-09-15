@@ -89,7 +89,7 @@ The component automatically adapts to your app's theme using the `useTheme` hook
 - **Animation**: Uses react-native-reanimated2 for smooth 60fps animations
 - **ScrollView**: Native ScrollView with snap-to-interval for precise item selection
 - **Performance**: Optimized with useCallback and useMemo for smooth scrolling
-- **Accessibility**: Proper touch targets and keyboard navigation support
+- **Accessibility**: each option is a button that announces whether it is selected, and tapping one moves the wheel to it (Confirm still saves; Cancel still discards). There is no hardware-keyboard navigation.
 - **Safe Area**: Accounts for home indicator on iOS devices
 
 ## Customization

@@ -33,6 +33,8 @@ import {
   wheelIndexAtOffset,
   wheelOffsetForValue,
   wheelTextMaxFontSizeMultiplier,
+  pickerOptionAccessibility,
+  wheelOffsetForIndex,
 } from "./wheel-position";
 
 const VISIBLE_ITEMS = 5;
@@ -279,14 +281,30 @@ export const Picker: React.FC<PickerProps> = ({
     hideModal();
   }, [hideModal]);
 
+  // A tap moves the wheel exactly as a drag does, so Confirm still reads the one
+  // offset (`scrollY`) and a tap alone never saves or dismisses. Not animated: an
+  // in-flight scroll would let Confirm read an offset between two options.
+  const selectIndex = useCallback(
+    (index: number) => {
+      const offset = wheelOffsetForIndex(index, items.length);
+      scrollY.value = offset;
+      reportedIndex.value = index;
+      setPendingIndex(index);
+      scrollViewRef.current?.scrollTo({ y: offset, animated: false });
+    },
+    [items.length, scrollY, reportedIndex, scrollViewRef],
+  );
+
   const renderItem = useCallback(
     (item: PickerItem, index: number) => {
       const isSelected = index === pendingIndex;
       return (
-        <View
+        <Pressable
           key={item.value}
           testID={`picker-item-${item.value || "empty"}`}
           style={styles.wheelItem}
+          onPress={() => selectIndex(index)}
+          {...pickerOptionAccessibility(item.label, isSelected)}
         >
           {item.icon}
           <Text
@@ -303,7 +321,7 @@ export const Picker: React.FC<PickerProps> = ({
           >
             {item.label}
           </Text>
-        </View>
+        </Pressable>
       );
     },
     [
@@ -311,6 +329,7 @@ export const Picker: React.FC<PickerProps> = ({
       styles.selectedItemText,
       styles.wheelItem,
       pendingIndex,
+      selectIndex,
     ],
   );
 
