@@ -45,6 +45,7 @@ import {
   type MerchantSection,
 } from "./selectors/merchant-sections";
 import { usePayeeRecurrence } from "./use-payee-recurrence";
+import { merchantsSortButtonLabelKey } from "./sort-button-label";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -229,10 +230,9 @@ function MerchantsDirectory() {
   const searchPlaceholder = t("merchantsSearchPlaceholder", {
     count: merchants.length,
   });
-  const sortLabel =
-    sort === "count"
-      ? t("merchantsSortByCount")
-      : t("merchantsSortAlphabetical");
+  // The button is named for what tapping it does — the other order. The icon
+  // shows the order already applied, so the two deliberately differ.
+  const sortLabel = t(merchantsSortButtonLabelKey(sort));
 
   const renderItem = useCallback(
     ({ item }: { item: MerchantListItem }) => (
