@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { List } from "lucide-react";
 import { HierarchyList } from "@/features/reports/balance-sheet/hierarchy-list";
 import type {
@@ -39,6 +39,7 @@ export function HierarchyListCard({
   collapsePatterns,
   summaryRows,
 }: HierarchyListCardProps) {
+  const titleId = useId();
   // Stable identity: HierarchyList resets its expansion state whenever `data`
   // changes, so only rebuild when the input actually does.
   const nodes = useMemo(
@@ -53,8 +54,11 @@ export function HierarchyListCard({
   return (
     <div className="space-y-2">
       <div>
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <List className="h-5 w-5" />
+        <h3
+          id={titleId}
+          className="text-lg font-semibold flex items-center gap-2"
+        >
+          <List className="h-5 w-5" aria-hidden="true" />
           {title}
         </h3>
         <p className="text-sm text-muted-foreground mt-1">{description}</p>
@@ -65,6 +69,7 @@ export function HierarchyListCard({
           primaryCurrency={primaryCurrency}
           collapsePatterns={collapsePatterns}
           summaryRows={rows}
+          ariaLabelledBy={titleId}
         />
       </div>
     </div>

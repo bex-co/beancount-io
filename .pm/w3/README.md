@@ -40,7 +40,7 @@
 
 - [x] **m31** — Complete the Entry Context keyboard journey (6 tasks) ← continuous dashboard QA,2026-09-11
 
-- [ ] **m32** — Expose statement hierarchy tables to assistive technology (6 tasks) ← continuous dashboard QA,2026-09-11
+- [x] **m32** — Expose statement hierarchy tables to assistive technology (6 tasks) ← continuous dashboard QA,2026-09-11
 
 - [ ] **m33** — Preserve import configuration across Back (6 tasks) ← continuous dashboard QA,2026-09-11
 

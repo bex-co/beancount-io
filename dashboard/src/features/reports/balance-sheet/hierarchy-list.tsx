@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { SerializableTreeNode } from "@/graphql/definitions";
@@ -20,6 +20,10 @@ interface HierarchyListProps {
   primaryCurrency?: string;
   collapsePatterns?: string[];
   summaryRows?: HierarchySummaryRow[];
+  /** Accessible name when no heading id is available. */
+  ariaLabel?: string;
+  /** Prefer associating the table with an existing localized heading. */
+  ariaLabelledBy?: string;
 }
 
 interface TreeNodeProps {
@@ -35,13 +39,13 @@ interface TreeNodeProps {
 /** Stable empty forest so a null/undefined `data` doesn't churn effect deps. */
 const NO_NODES: HierarchyListNode[] = [];
 
-/** Row shell shared by the header, tree rows, and summary rows. */
-const ROW_CLASS =
-  "grid grid-cols-12 gap-3 items-center py-2 px-3 border-b border-border";
-const ACCOUNT_CELL_CLASS = "col-span-6 flex items-center gap-2 min-w-0";
+const ROW_CLASS = "border-b border-border hover:bg-muted/50";
+const CELL_PAD = "py-2 px-3 align-middle";
 const indentStyle = (level: number) => ({ paddingLeft: `${level * 20 + 8}px` });
 /** Keeps rows without an expander aligned with rows that have one. */
-const ExpanderSpacer = () => <div className="w-6" />;
+const ExpanderSpacer = () => (
+  <div className="w-6 shrink-0" aria-hidden="true" />
+);
 
 /** Missing or zero amounts ("", "0", "0.00", …) read as a dash. */
 function isZeroAmount(value: unknown): boolean {
@@ -50,7 +54,7 @@ function isZeroAmount(value: unknown): boolean {
 }
 
 const Dash = () => (
-  <div className="text-sm text-muted-foreground font-mono">-</div>
+  <span className="text-sm text-muted-foreground font-mono">-</span>
 );
 
 function PrimaryCurrencyColumn({
@@ -67,9 +71,9 @@ function PrimaryCurrencyColumn({
   if (isZeroAmount(raw)) return <Dash />;
   const value = Number(raw);
   return (
-    <div className="text-sm font-mono tabular-nums whitespace-nowrap [overflow-wrap:normal]">
+    <span className="text-sm font-mono tabular-nums whitespace-nowrap [overflow-wrap:normal]">
       {formatNum(inverted ? -value : value)}
-    </div>
+    </span>
   );
 }
 
@@ -125,8 +129,8 @@ function OtherBalancesColumn({
   );
 }
 
-/** The two amount columns shared by tree rows and summary rows. */
-function AmountColumns({
+/** The two amount cells shared by tree rows and summary rows. */
+function AmountCells({
   balanceData,
   primaryCurrency = "USD",
   inverted,
@@ -134,29 +138,30 @@ function AmountColumns({
   balanceData: Record<string, unknown>;
   primaryCurrency?: string;
   inverted?: boolean;
-}) {
+}): ReactNode {
   return (
     <>
-      <div className="col-span-3 text-right">
+      <td className={cn(CELL_PAD, "w-[25%] text-right")}>
         <PrimaryCurrencyColumn
           balanceData={balanceData}
           primaryCurrency={primaryCurrency}
           inverted={inverted}
         />
-      </div>
-      <div className="col-span-3 text-right">
+      </td>
+      <td className={cn(CELL_PAD, "w-[25%] text-right")}>
         <OtherBalancesColumn
           balanceData={balanceData}
           primaryCurrency={primaryCurrency}
           inverted={inverted}
         />
-      </div>
+      </td>
     </>
   );
 }
 
 /**
- * Individual tree node component with collapsible functionality
+ * Individual tree node: one table row plus recursively rendered children as
+ * sibling rows (tables cannot nest rows).
  */
 function TreeNode({
   node,
@@ -181,70 +186,74 @@ function TreeNode({
       : node.account;
 
   return (
-    <div className="w-full">
-      <div
-        className={cn(ROW_CLASS, "hover:bg-muted/50 cursor-pointer")}
+    <>
+      <tr
+        className={cn(ROW_CLASS, hasChildren && "cursor-pointer")}
         onClick={hasChildren ? () => onToggle(node.account) : undefined}
       >
-        {/* Account Column */}
-        <div className={ACCOUNT_CELL_CLASS} style={indentStyle(level)}>
-          {hasChildren ? (
-            <button
-              type="button"
-              className="shrink-0 p-1 hover:bg-muted rounded"
-              aria-expanded={isExpanded}
-              aria-label={t("common.toggleAccountChildren", {
-                account: node.account,
-              })}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggle(node.account);
-              }}
-            >
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              )}
-            </button>
-          ) : (
-            <ExpanderSpacer />
-          )}
-
-          <div className="flex-1 min-w-0 flex flex-row items-center">
-            <Link
-              to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
-              params={{
-                ledgerOwner,
-                ledgerName,
-                accountName: node.account,
-              }}
-              className="font-mono font-medium text-sm text-primary truncate inline-block hover:text-primary/80"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {label}
-            </Link>
-            {node.roleSource === "declared" ? (
-              <span
-                className="ml-2 shrink-0 text-xs text-muted-foreground"
-                title={t("page.cashFlow.declaredRoleTooltip")}
+        <th
+          scope="row"
+          className={cn(CELL_PAD, "w-1/2 font-normal text-left")}
+          style={indentStyle(level)}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            {hasChildren ? (
+              <button
+                type="button"
+                className="shrink-0 p-1 hover:bg-muted rounded"
+                aria-expanded={isExpanded}
+                aria-label={t("common.toggleAccountChildren", {
+                  account: node.account,
+                })}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggle(node.account);
+                }}
               >
-                {t("page.cashFlow.declaredRoleBadge")}
-              </span>
-            ) : null}
-          </div>
-        </div>
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                )}
+              </button>
+            ) : (
+              <ExpanderSpacer />
+            )}
 
-        <AmountColumns
+            <div className="flex-1 min-w-0 flex flex-row items-center">
+              <Link
+                to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+                params={{
+                  ledgerOwner,
+                  ledgerName,
+                  accountName: node.account,
+                }}
+                className="font-mono font-medium text-sm text-primary truncate inline-block hover:text-primary/80"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {label}
+              </Link>
+              {node.roleSource === "declared" ? (
+                <span
+                  className="ml-2 shrink-0 text-xs text-muted-foreground"
+                  title={t("page.cashFlow.declaredRoleTooltip")}
+                >
+                  {t("page.cashFlow.declaredRoleBadge")}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </th>
+
+        <AmountCells
           balanceData={balanceData}
           primaryCurrency={primaryCurrency}
           inverted={node.inverted}
         />
-      </div>
+      </tr>
 
-      {hasChildren && isExpanded && (
-        <div className="bg-muted/30">
-          {node.children.map((child) => (
+      {hasChildren && isExpanded
+        ? node.children.map((child) => (
             <TreeNode
               key={(child as HierarchyListNode).account}
               node={{
@@ -257,10 +266,9 @@ function TreeNode({
               onToggle={onToggle}
               primaryCurrency={primaryCurrency}
             />
-          ))}
-        </div>
-      )}
-    </div>
+          ))
+        : null}
+    </>
   );
 }
 
@@ -276,19 +284,25 @@ function SummaryRow({
   primaryCurrency?: string;
 }) {
   return (
-    <div className={cn(ROW_CLASS, row.bold && "font-semibold")}>
-      <div className={ACCOUNT_CELL_CLASS} style={indentStyle(0)}>
-        <ExpanderSpacer />
-        {/* Prose label: wrap rather than truncate (account names truncate) */}
-        <span className="text-sm break-words">{row.label}</span>
-      </div>
+    <tr className={cn(ROW_CLASS, row.bold && "font-semibold")}>
+      <th
+        scope="row"
+        className={cn(CELL_PAD, "w-1/2 font-inherit text-left")}
+        style={indentStyle(0)}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <ExpanderSpacer />
+          {/* Prose label: wrap rather than truncate (account names truncate) */}
+          <span className="text-sm break-words">{row.label}</span>
+        </div>
+      </th>
 
-      <AmountColumns
+      <AmountCells
         balanceData={row.balance}
         primaryCurrency={primaryCurrency}
         inverted={row.inverted}
       />
-    </div>
+    </tr>
   );
 }
 
@@ -345,7 +359,7 @@ function getInitialExpandedNodes(
 
 /**
  * Hierarchy List Component
- * Displays hierarchical data as a collapsible list with parent-child relationships
+ * Displays hierarchical data as a collapsible native table
  */
 export function HierarchyList({
   data: dataProp,
@@ -353,6 +367,8 @@ export function HierarchyList({
   primaryCurrency = "USD",
   collapsePatterns = [],
   summaryRows = [],
+  ariaLabel,
+  ariaLabelledBy,
 }: HierarchyListProps) {
   const { t } = useTranslations();
   const data = dataProp ?? NO_NODES;
@@ -389,6 +405,9 @@ export function HierarchyList({
     );
   }
 
+  const tableLabel =
+    ariaLabel ?? (ariaLabelledBy ? undefined : t("common.accountColumn"));
+
   return (
     <>
       <style
@@ -424,40 +443,49 @@ export function HierarchyList({
           Keep amount columns wide enough that signed decimals stay one line;
           narrow viewports scroll horizontally instead of wrapping digits.
         */}
-        <div className="min-w-[40rem]">
-          {/* Table Header */}
-          <div
-            className={cn(
-              ROW_CLASS,
-              "bg-muted font-semibold text-sm text-muted-foreground",
-            )}
-          >
-            <div className="col-span-6">{t("common.accountColumn")}</div>
-            <div className="col-span-3 text-right">{primaryCurrency}</div>
-            <div className="col-span-3 text-right">
-              {t("common.otherColumn")}
-            </div>
-          </div>
+        <table
+          className="w-full min-w-[40rem] border-collapse"
+          aria-label={tableLabel}
+          aria-labelledby={ariaLabelledBy}
+        >
+          <thead>
+            <tr
+              className={cn(
+                "border-b border-border bg-muted font-semibold text-sm text-muted-foreground",
+              )}
+            >
+              <th scope="col" className={cn(CELL_PAD, "w-1/2 text-left")}>
+                {t("common.accountColumn")}
+              </th>
+              <th scope="col" className={cn(CELL_PAD, "w-[25%] text-right")}>
+                {primaryCurrency}
+              </th>
+              <th scope="col" className={cn(CELL_PAD, "w-[25%] text-right")}>
+                {t("common.otherColumn")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((node) => (
+              <TreeNode
+                key={node.account}
+                node={node}
+                level={0}
+                expandedNodes={expandedNodes}
+                onToggle={handleToggle}
+                primaryCurrency={primaryCurrency}
+              />
+            ))}
 
-          {data.map((node) => (
-            <TreeNode
-              key={node.account}
-              node={node}
-              level={0}
-              expandedNodes={expandedNodes}
-              onToggle={handleToggle}
-              primaryCurrency={primaryCurrency}
-            />
-          ))}
-
-          {summaryRows.map((row, index) => (
-            <SummaryRow
-              key={index}
-              row={row}
-              primaryCurrency={primaryCurrency}
-            />
-          ))}
-        </div>
+            {summaryRows.map((row, index) => (
+              <SummaryRow
+                key={index}
+                row={row}
+                primaryCurrency={primaryCurrency}
+              />
+            ))}
+          </tbody>
+        </table>
       </div>
     </>
   );

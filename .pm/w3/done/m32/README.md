@@ -1,17 +1,17 @@
 # w3 · m32 — Expose statement hierarchy tables to assistive technology
 
-**Worker:** worker3 **Goal:** readers can identify each statement table and its account/amount relationships while retaining the existing disclosure and navigation controls **Status:** todo
+**Worker:** worker3 **Goal:** readers can identify each statement table and its account/amount relationships while retaining the existing disclosure and navigation controls **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Expose hierarchy rows and amounts as a native table | 50m | — |
-| t002 | Label report tables and preserve responsive integration | 35m | t001 |
-| t003 | Verify the accessible statement journey | 20m | t001, t002 |
-| t004 | Simplify the hierarchy table implementation | 15m | t003 |
-| t005 | Test rendered table structure and report regressions | 40m | t003, t004 |
-| t006 | Close out hierarchy table accessibility | 15m | t005 |
+| t001 | Expose hierarchy rows and amounts as a native table | 50m | — | — **DONE**
+| t002 | Label report tables and preserve responsive integration | 35m | t001 | — **DONE**
+| t003 | Verify the accessible statement journey | 20m | t001, t002 | — **DONE**
+| t004 | Simplify the hierarchy table implementation | 15m | t003 | — **DONE**
+| t005 | Test rendered table structure and report regressions | 40m | t003, t004 | — **DONE**
+| t006 | Close out hierarchy table accessibility | 15m | t005 | — **DONE**
 
 175 minutes total:85 minutes implementation plus adoption, simplification, meaningful regression coverage and closeout. Severity **minor**, owning package **dashboard**; A2 accessible financial review.
 

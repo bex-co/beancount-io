@@ -265,8 +265,11 @@ export function TrialBalanceContent({
       <div>
         <div className="space-y-2">
           <div>
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <List className="h-5 w-5" />
+            <h3
+              id="trial-balance-hierarchy-heading"
+              className="text-lg font-semibold flex items-center gap-2"
+            >
+              <List className="h-5 w-5" aria-hidden="true" />
               {t("page.trialBalance.overviewTitle")}
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
@@ -277,6 +280,7 @@ export function TrialBalanceContent({
             data={hierarchyData}
             primaryCurrency={primaryCurrency}
             collapsePatterns={collapsePatterns}
+            ariaLabelledBy="trial-balance-hierarchy-heading"
           />
         </div>
       </div>

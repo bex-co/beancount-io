@@ -601,4 +601,113 @@ describe("HierarchyList", () => {
       expect(screen.getByText("common.accountColumn")).toBeInTheDocument();
     });
   });
+
+  describe("native table semantics", () => {
+    it("exposes a named table with column headers and row headers", () => {
+      const data = [
+        createNode({
+          account: "Assets",
+          balanceChildren: { USD: 1000 },
+          children: [
+            toChild(
+              createNode({
+                account: "Assets:Bank",
+                balanceChildren: { USD: 500 },
+              }),
+            ),
+          ],
+        }),
+      ];
+
+      render(
+        <HierarchyList
+          data={data}
+          ariaLabel="Trial Balance overview"
+          summaryRows={[{ label: "Total", balance: { USD: 1000 }, bold: true }]}
+        />,
+      );
+
+      const table = screen.getByRole("table", {
+        name: "Trial Balance overview",
+      });
+      expect(table).toBeInTheDocument();
+      expect(
+        screen.getByRole("columnheader", { name: "common.accountColumn" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("columnheader", { name: "USD" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("columnheader", { name: "common.otherColumn" }),
+      ).toBeInTheDocument();
+
+      const rows = screen.getAllByRole("row");
+      // header + Assets + Bank + Total
+      expect(rows).toHaveLength(4);
+      expect(
+        screen.getByRole("rowheader", { name: /Assets/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("rowheader", { name: /Bank/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("rowheader", { name: "Total" }),
+      ).toBeInTheDocument();
+    });
+
+    it("removes collapsed descendants from the accessibility tree", () => {
+      const data = [
+        createNode({
+          account: "Assets",
+          balanceChildren: { USD: 1000 },
+          children: [
+            toChild(
+              createNode({
+                account: "Assets:Bank",
+                balanceChildren: { USD: 500 },
+              }),
+            ),
+          ],
+        }),
+      ];
+
+      render(<HierarchyList data={data} ariaLabel="Statement" />);
+
+      expect(screen.getAllByRole("row")).toHaveLength(3);
+      fireEvent.click(
+        screen.getByRole("button", { name: "common.toggleAccountChildren" }),
+      );
+      expect(screen.getAllByRole("row")).toHaveLength(2);
+      expect(
+        screen.queryByRole("rowheader", { name: /Bank/ }),
+      ).not.toBeInTheDocument();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "common.toggleAccountChildren" }),
+      );
+      expect(screen.getAllByRole("row")).toHaveLength(3);
+      expect(
+        screen.getByRole("rowheader", { name: /Bank/ }),
+      ).toBeInTheDocument();
+    });
+
+    it("associates the table with an existing heading via aria-labelledby", () => {
+      render(
+        <>
+          <h3 id="bs-assets">Assets</h3>
+          <HierarchyList
+            data={[
+              createNode({
+                account: "Assets:Cash",
+                balanceChildren: { USD: 10 },
+              }),
+            ]}
+            ariaLabelledBy="bs-assets"
+          />
+        </>,
+      );
+
+      expect(screen.getByRole("table", { name: "Assets" })).toBeInTheDocument();
+    });
+  });
 });
