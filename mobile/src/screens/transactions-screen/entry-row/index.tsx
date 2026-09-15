@@ -30,6 +30,7 @@ import { getEntryPostings } from "../utils/entry-utils";
 import { selectTransactionAmount } from "../utils/transaction-display-utils";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { formatEntryRowAmount } from "./format-entry-row-amount";
+import { entryRowSecondaryText } from "./entry-row-secondary";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -66,6 +67,14 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.medium,
       color: theme.black90,
       flexShrink: 1,
+      textAlign: LEADING_TEXT_ALIGN,
+    },
+    nameColumn: {
+      flexShrink: 1,
+    },
+    secondary: {
+      fontSize: fontSizes.sm,
+      color: theme.black60,
       textAlign: LEADING_TEXT_ALIGN,
     },
     badge: {
@@ -149,6 +158,9 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
   const stacked = prefersStackedLayout(fontScale);
 
   const { name, amountStr, isPositive } = getDisplayInfo(entry);
+  const secondary = isJournalTransaction(entry)
+    ? entryRowSecondaryText(entry)
+    : null;
   const isPending = isJournalTransaction(entry) && entry.flag === "!";
   // Brand text for the logo: payee/narration only (not the directive_type
   // fallback), so non-transactions match on their account instead.
@@ -161,9 +173,19 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
       <AccountTypeIcon postings={getEntryPostings(entry)} payee={brandText} />
 
       <View style={styles.middle}>
-        <Text style={styles.name} numberOfLines={stacked ? undefined : 1}>
-          {name}
-        </Text>
+        <View style={styles.nameColumn}>
+          <Text style={styles.name} numberOfLines={stacked ? undefined : 1}>
+            {name}
+          </Text>
+          {secondary ? (
+            <Text
+              style={styles.secondary}
+              numberOfLines={stacked ? undefined : 1}
+            >
+              {secondary}
+            </Text>
+          ) : null}
+        </View>
         {isPending && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>P</Text>

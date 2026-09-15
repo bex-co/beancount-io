@@ -48,6 +48,11 @@ const getStyles = (theme: ColorTheme) =>
     nameWrap: {
       flex: 1,
     },
+    // Rows with a narration carry a second line; alternate rows mirror one.
+    secondaryTile: {
+      width: "40%",
+      marginTop: 4,
+    },
     amountTile: {
       height: 14,
       width: 68,
@@ -84,6 +89,9 @@ export const TransactionsListSkeleton = () => {
               <LoadingTile style={styles.iconTile} />
               <View style={styles.nameWrap}>
                 <LoadingTile height={16} style={{ width }} />
+                {index % 2 === 0 && (
+                  <LoadingTile height={12} style={styles.secondaryTile} />
+                )}
               </View>
             </View>
             <LoadingTile
