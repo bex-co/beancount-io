@@ -52,8 +52,12 @@ const ACCOUNT_PATTERN = new RegExp(
 const CURRENCY_PATTERN = /^[\p{Lu}][\p{Lu}\p{Nd}.'_-]{1,23}(?![\p{Ll}])/u;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}(?!\d)/;
+// A metadata key spelled like a directive (`note: "x"`) also matches, because
+// `\b` holds before the colon. Telling the two apart needs to know whether the
+// word starts a line or sits in an indented body, which these per-token rules
+// do not track; the miscolouring is cosmetic and deliberately left.
 const DIRECTIVE_PATTERN =
-  /^(txn|balance|open|close|pad|note|price|document|custom|option|include|plugin|pushmeta|popmeta|event|query|commodity)\b/;
+  /^(txn|balance|open|close|pad|note|price|document|custom|option|include|plugin|pushtag|poptag|pushmeta|popmeta|event|query|commodity)\b/;
 const FLAG_PATTERN = /^[*!]/;
 const TAG_PATTERN = /^#[\p{L}\p{N}_/-]+/u;
 const LINK_PATTERN = /^\^[\p{L}\p{N}_/-]+/u;

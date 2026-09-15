@@ -126,6 +126,8 @@ test("dates, flags, and directives", () => {
   expectToken("2026-01-15 txn", "number");
   expectToken("txn", "keyword");
   expectToken("open Assets:Cash", "keyword");
+  expectToken("pushtag #travel", "keyword");
+  expectToken("poptag #travel", "keyword");
   expectToken("*", "atom");
   expectToken('! "pending"', "atom");
 });
