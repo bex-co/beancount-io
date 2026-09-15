@@ -1,7 +1,19 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
-import { fonts, fontSizes, fontWeights, useTheme } from "@/common/theme";
+import {
+  fonts,
+  fontSizes,
+  fontWeights,
+  prefersStackedLayout,
+  useTheme,
+} from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { PostingDisplayRow } from "../selectors/select-transaction-detail";
@@ -17,6 +29,14 @@ const getStyles = (theme: ColorTheme) =>
       gap: 12,
       backgroundColor: theme.controlFill,
     },
+    // Accessibility text sizes (see `prefersStackedLayout`): the account keeps
+    // the row's full width and the amount moves to its own line, instead of an
+    // unshrinkable amount leaving the account four characters ("E…ax").
+    rowStacked: {
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: 6,
+    },
     rowDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.black10,
@@ -24,6 +44,10 @@ const getStyles = (theme: ColorTheme) =>
     accountColumn: {
       flex: 1,
       minWidth: 0,
+    },
+    // In a column, `flex: 1` would size the account column from zero height.
+    accountColumnStacked: {
+      flex: 0,
     },
     direction: {
       fontSize: fontSizes.xs,
@@ -44,6 +68,12 @@ const getStyles = (theme: ColorTheme) =>
       flexShrink: 0,
       color: theme.text01,
     },
+    stackedAmountLine: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+    },
   });
 
 type PostingRowProps = {
@@ -61,31 +91,59 @@ export function PostingRow({
 }: PostingRowProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
+
+  const amount = (
+    <AmountText mono="medium" style={styles.amount}>
+      {posting.amount}
+    </AmountText>
+  );
+  const chevron = (
+    <Ionicons
+      name={directionalIcon("chevron-forward")}
+      size={16}
+      color={theme.black60}
+    />
+  );
 
   return (
     <TouchableOpacity
-      style={[styles.row, showDivider && styles.rowDivider]}
+      style={[
+        styles.row,
+        stacked && styles.rowStacked,
+        showDivider && styles.rowDivider,
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={`${directionLabel ? `${directionLabel}: ` : ""}${posting.account}, ${posting.amount}`}
     >
-      <View style={styles.accountColumn}>
+      <View
+        style={[styles.accountColumn, stacked && styles.accountColumnStacked]}
+      >
         {directionLabel ? (
-          <Text style={styles.direction}>{directionLabel}</Text>
+          // One line at every size: a short uppercase label must never break
+          // inside the word ("FRO" / "M").
+          <Text style={styles.direction} numberOfLines={1}>
+            {directionLabel}
+          </Text>
         ) : null}
         <Text style={styles.account} numberOfLines={1} ellipsizeMode="middle">
           {posting.account}
         </Text>
       </View>
-      <AmountText mono="medium" style={styles.amount}>
-        {posting.amount}
-      </AmountText>
-      <Ionicons
-        name={directionalIcon("chevron-forward")}
-        size={16}
-        color={theme.black60}
-      />
+      {stacked ? (
+        <View style={styles.stackedAmountLine}>
+          {amount}
+          {chevron}
+        </View>
+      ) : (
+        <>
+          {amount}
+          {chevron}
+        </>
+      )}
     </TouchableOpacity>
   );
 }
