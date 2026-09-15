@@ -199,11 +199,9 @@ export function LedgerSelectionScreen() {
             accessibilityRole="tab"
             accessibilityState={{ selected: tab === value }}
             style={[styles.tab, tab === value && styles.selected]}
-            onPress={() => {
-              setTab(value);
-              setQuery("");
-              setDebounced("");
-            }}
+            // The query carries across tabs: moving to Explore is how a search
+            // that found nothing in your own ledgers is widened.
+            onPress={() => setTab(value)}
           >
             <Text style={styles.text}>{t(`discoveryTab_${value}`)}</Text>
           </Pressable>
