@@ -67,7 +67,7 @@ was re-verified against current code first: none had gone stale, so none was
 deleted — 74 were fixed and shipped (each closed note in [`done/`](./done)
 names the commit that fixed it), and the rest are accounted for below.
 
-[129](./129.md) is not listed: it was promoted into [m35](./m35/README.md),
+[129](./129.md) is not listed: it was promoted into [m35](./done/m35/README.md),
 which links it as its reproduction record.
 
 The four that remain are deliberately not "next up":
