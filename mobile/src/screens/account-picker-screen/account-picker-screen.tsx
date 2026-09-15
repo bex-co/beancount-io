@@ -118,12 +118,26 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black,
       textAlign: LEADING_TEXT_ALIGN,
     },
+    accountName: {
+      flex: 1,
+      flexDirection: "row",
+    },
     // The parent path is context; the leaf is what identifies the account, so
     // it carries weight as well as colour — hierarchy shouldn't be colour-only.
+    // It keeps its width too: on a narrow row the parent path gives way,
+    // ellipsized at its head so the segment next to the leaf survives.
     parentPath: {
+      flexShrink: 1,
+      fontSize: fontSizes.xl,
+      lineHeight: 24,
       color: theme.black80,
     },
     leaf: {
+      flexShrink: 0,
+      maxWidth: "100%",
+      fontSize: fontSizes.xl,
+      lineHeight: 24,
+      color: theme.black,
       fontWeight: fontWeights.medium,
     },
     listContent: {
@@ -204,10 +218,14 @@ const AccountRow = memo(function AccountRow({
       accessibilityRole="button"
       accessibilityState={{ selected }}
     >
-      <Text style={styles.listItemText} numberOfLines={1}>
-        <Text style={styles.parentPath}>{parent}</Text>
-        <Text style={styles.leaf}>{leaf}</Text>
-      </Text>
+      <View style={styles.accountName}>
+        <Text style={styles.parentPath} numberOfLines={1} ellipsizeMode="head">
+          {parent}
+        </Text>
+        <Text style={styles.leaf} numberOfLines={1}>
+          {leaf}
+        </Text>
+      </View>
       <Ionicons
         name={selected ? "checkmark" : directionalIcon("chevron-forward")}
         size={24}

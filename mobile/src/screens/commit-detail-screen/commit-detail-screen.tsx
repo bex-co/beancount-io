@@ -238,7 +238,11 @@ function CommitDetailScreenImpl(): JSX.Element {
                         accessibilityLabel={`${f.filename}, +${f.additions} −${f.deletions}`}
                       >
                         <View style={styles.fileRow}>
-                          <Text style={styles.fileName} numberOfLines={1}>
+                          <Text
+                            style={styles.fileName}
+                            numberOfLines={1}
+                            ellipsizeMode="middle"
+                          >
                             {f.filename}
                           </Text>
                           <Text style={styles.fileStats}>
