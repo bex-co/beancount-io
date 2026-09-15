@@ -143,6 +143,25 @@ export function filterBalanceSeriesByRange(
 }
 
 /**
+ * The balance when a range's window opened, which a balance card measures its
+ * change from. Monthly points are closing balances, so the window's first
+ * plotted point already includes that month's activity; the opening balance is
+ * the point before the window. Before a series' first point it is zero: these
+ * series start at the ledger's first data, so a dormant-then-funded account
+ * changes by its whole balance. A one-month window borrows that same earlier
+ * point to draw its line (`filterBalanceSeriesByRange`), so the two agree.
+ */
+export function balanceSeriesBaseline(
+  series: SeriesPoint[],
+  range: TimeRange,
+  currentYear?: number,
+): number {
+  const windowed = filterSeriesByRange(series, range, currentYear);
+  const startIndex = series.length - windowed.length;
+  return startIndex > 0 ? series[startIndex - 1].value : 0;
+}
+
+/**
  * Convert a series to the `{ labels, numbers }` shape the charts consume,
  * with month labels ("MM"). Returns a single zero "no data" entry when empty.
  */

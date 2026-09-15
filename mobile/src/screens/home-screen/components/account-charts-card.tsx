@@ -15,6 +15,7 @@ import {
   SeriesPoint,
   TimeRange,
   TIME_RANGES,
+  balanceSeriesBaseline,
   filterBalanceSeriesByRange,
   seriesToChartArray,
 } from "@/common/series-util";
@@ -168,6 +169,7 @@ export function AccountChartsCard({
         key={key}
         labels={chart.labels}
         numbers={chart.numbers}
+        baseline={balanceSeriesBaseline(series, range)}
         currency={currency}
         height={CHART_HEIGHT}
         onHeaderLayout={handleHeaderLayout}

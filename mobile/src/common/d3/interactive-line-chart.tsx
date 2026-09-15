@@ -67,6 +67,13 @@ type InteractiveLineChartProps = {
   labels: string[];
   numbers: number[];
   /**
+   * The balance when the charted window opened, which the change row and the
+   * trend colour measure from. Defaults to the first plotted point; balance
+   * cards pass the real opening balance, because a monthly point already
+   * includes its month.
+   */
+  baseline?: number;
+  /**
    * Currency code (e.g. "USD", "MUSD"). The headline and change use its symbol
    * when one is known, otherwise the code is appended after the amount.
    */
@@ -299,6 +306,7 @@ const getStyles = (theme: ColorTheme) =>
 type ScrubHeaderProps = {
   labels: string[];
   numbers: number[];
+  baseline?: number;
   currency: string;
   /** Trend color for the change row, resolved by the chart so the line and the figure can never disagree. */
   color: string;
@@ -326,6 +334,7 @@ type ScrubHeaderProps = {
 function ScrubHeader({
   labels,
   numbers,
+  baseline: windowBaseline,
   currency,
   color,
   scrub,
@@ -355,7 +364,7 @@ function ScrubHeader({
     [currency],
   );
 
-  const baseline = numbers[0] ?? 0;
+  const baseline = windowBaseline ?? numbers[0] ?? 0;
   const change = shownValue - baseline;
   // The amount always reads; the percentage only when it means something.
   const changePct = changePercent(baseline, shownValue);
@@ -399,6 +408,7 @@ function InteractiveLineChart({
   label,
   labels,
   numbers,
+  baseline: windowBaseline,
   currency,
   height = CHART_HEIGHT,
   placeholder,
@@ -533,7 +543,7 @@ function InteractiveLineChart({
     };
   });
 
-  const baseline = numbers[0] ?? 0;
+  const baseline = windowBaseline ?? numbers[0] ?? 0;
 
   // Whether the shown point is up on the period start — `null` while no finger
   // is down, so the resting direction is used.
@@ -654,6 +664,7 @@ function InteractiveLineChart({
           <ScrubHeader
             labels={labels}
             numbers={numbers}
+            baseline={windowBaseline}
             currency={currency}
             color={lineColor}
             scrub={scrub}

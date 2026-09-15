@@ -2,6 +2,7 @@ import {
   pointsToMonthlySeries,
   filterSeriesByRange,
   filterBalanceSeriesByRange,
+  balanceSeriesBaseline,
   rangeStartMonth,
   alignMonthlySeries,
   DateBalancePoint,
@@ -116,6 +117,45 @@ describe("filterBalanceSeriesByRange", () => {
   it("returns an empty array for an empty series", () => {
     expect(filterBalanceSeriesByRange([], "1M")).toEqual([]);
     expect(filterBalanceSeriesByRange([], "ALL")).toEqual([]);
+  });
+});
+
+describe("balanceSeriesBaseline", () => {
+  // An account dormant until August, overdrawn, then funded in September.
+  const dormantThenFunded: SeriesPoint[] = [
+    { date: "2026-08-31", value: -1512.42 },
+    { date: "2026-09-30", value: 5317.06 },
+  ];
+
+  it("starts from zero when the window opens before the first point", () => {
+    expect(balanceSeriesBaseline(dormantThenFunded, "6M", 2026)).toBe(0);
+    expect(balanceSeriesBaseline(dormantThenFunded, "ALL", 2026)).toBe(0);
+    expect(balanceSeriesBaseline(dormantThenFunded, "YTD", 2026)).toBe(0);
+  });
+
+  it("starts from the closing balance of the month before the window", () => {
+    const monthly: SeriesPoint[] = [
+      { date: "2025-04-30", value: 100 },
+      { date: "2025-05-31", value: 200 },
+      { date: "2025-06-30", value: 300 },
+      { date: "2025-07-31", value: 400 },
+    ];
+    expect(balanceSeriesBaseline(monthly, "3M", 2025)).toBe(100);
+    // The same point a one-month window borrows to draw its line.
+    expect(balanceSeriesBaseline(monthly, "1M", 2025)).toBe(300);
+    expect(filterBalanceSeriesByRange(monthly, "1M", 2025)[0].value).toBe(300);
+  });
+
+  it("holds a stale series' YTD at its last balance, a change of zero", () => {
+    const stale: SeriesPoint[] = [
+      { date: "2017-08-31", value: 5884.67 },
+      { date: "2017-09-30", value: 2754.06 },
+    ];
+    expect(balanceSeriesBaseline(stale, "YTD", 2026)).toBe(2754.06);
+  });
+
+  it("is zero for an empty series", () => {
+    expect(balanceSeriesBaseline([], "6M", 2026)).toBe(0);
   });
 });
 
