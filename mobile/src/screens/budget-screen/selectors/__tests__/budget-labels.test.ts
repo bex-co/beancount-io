@@ -58,7 +58,7 @@ describe("budgetChartSummary", () => {
           actuals: [400, 600, 1200],
           budgets: [500, 500, 500],
           favorables: [true, false, false],
-          currencySymbol: "$",
+          currency: "USD",
         },
         t,
       ),
@@ -75,12 +75,29 @@ describe("budgetChartSummary", () => {
           actuals: [400],
           budgets: [500],
           favorables: [true],
-          currencySymbol: "$",
+          currency: "USD",
         },
         t,
       ),
     ).toBe(
       "Budget versus actual for JAN. Actual $400 of $500 budgeted across 1 periods, 0 over target.",
+    );
+  });
+
+  it("labels a currency without a symbol by its code", () => {
+    expect(
+      budgetChartSummary(
+        {
+          labels: ["JAN"],
+          actuals: [400],
+          budgets: [500],
+          favorables: [true],
+          currency: "MUSD",
+        },
+        t,
+      ),
+    ).toBe(
+      "Budget versus actual for JAN. Actual 400 MUSD of 500 MUSD budgeted across 1 periods, 0 over target.",
     );
   });
 
@@ -92,7 +109,7 @@ describe("budgetChartSummary", () => {
         budgets: [100, 100],
         // `undefined` is "no budget to judge against", not "over target".
         favorables: [undefined as unknown as boolean, false],
-        currencySymbol: "€",
+        currency: "EUR",
       },
       t,
     );
@@ -107,7 +124,7 @@ describe("budgetChartSummary", () => {
           actuals: [],
           budgets: [],
           favorables: [],
-          currencySymbol: "$",
+          currency: "USD",
         },
         t,
       ),

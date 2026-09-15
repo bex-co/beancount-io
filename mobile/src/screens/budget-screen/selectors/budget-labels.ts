@@ -4,7 +4,7 @@
  * unit-testable.
  */
 import { getFormatDate } from "../../../common/format-util";
-import { shortNumber } from "../../../common/number-utils";
+import { formatShortMoneyWithCurrency } from "../../../common/number-utils";
 import { formatTimeFilter } from "../../transactions-screen/filters/select-filter-query";
 import type { VarianceStatus } from "./budget-selectors";
 
@@ -140,15 +140,18 @@ export function budgetChartSummary(
     actuals: number[];
     budgets: number[];
     favorables: boolean[];
-    currencySymbol: string;
+    currency: string;
   },
   t: (key: string, params?: Record<string, unknown>) => string,
 ): string | undefined {
-  const { labels, actuals, budgets, favorables, currencySymbol } = series;
+  const { labels, actuals, budgets, favorables, currency } = series;
   if (labels.length === 0) return undefined;
 
   const money = (values: number[]) =>
-    `${currencySymbol}${shortNumber(values.reduce((sum, value) => sum + value, 0))}`;
+    formatShortMoneyWithCurrency(
+      values.reduce((sum, value) => sum + value, 0),
+      currency,
+    );
   const span =
     labels.length === 1
       ? labels[0]

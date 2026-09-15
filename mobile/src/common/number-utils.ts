@@ -124,3 +124,19 @@ export const formatSignedMoneyWithCurrency = (
   const { sign, amount } = signedAmount(value, includePlus);
   return annotateCurrency(sign, amount, currency);
 };
+
+/**
+ * `shortNumber` with its currency, for chart axes and chart summaries. Same
+ * rules as the long form: the sign always leads, and a currency with no symbol
+ * is labelled by its code, so a tick reads "-$50" or "400 MUSD", never "$-50"
+ * or a bare "400".
+ */
+export const formatShortMoneyWithCurrency = (
+  value: number,
+  currency: string,
+): string =>
+  annotateCurrency(
+    value < 0 ? "-" : "",
+    shortNumber(Math.abs(value)),
+    currency,
+  );

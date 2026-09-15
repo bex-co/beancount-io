@@ -20,7 +20,6 @@ import {
   BudgetBarChartD3,
   LEGEND_HEIGHT,
 } from "@/common/d3/budget-bar-chart-d3";
-import { getCurrencySymbol } from "@/common/currency-util";
 import { useBudgetActuals } from "@/screens/budget-screen/hooks/use-budget-actuals";
 import {
   budgetDirection,
@@ -179,7 +178,7 @@ export function BudgetGroupCard({
     actuals: series.map((point) => point.actual),
     budgets: series.map((point) => point.budget),
     favorables,
-    currencySymbol: getCurrencySymbol(currency),
+    currency,
   };
 
   const formatAmount = (value: number) =>

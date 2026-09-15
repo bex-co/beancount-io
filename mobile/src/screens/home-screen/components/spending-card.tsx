@@ -39,7 +39,6 @@ const getStyles = (theme: ColorTheme) =>
 type SpendingCardProps = {
   ledgerId?: string;
   currency: string;
-  currencySymbol: string;
   refreshSignal?: number;
 };
 
@@ -51,7 +50,6 @@ type SpendingCardProps = {
 export function SpendingCard({
   ledgerId,
   currency,
-  currencySymbol,
   refreshSignal = 0,
 }: SpendingCardProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
@@ -106,7 +104,7 @@ export function SpendingCard({
       ) : (
         <FadeInView>
           <BarChartD3
-            currencySymbol={currencySymbol}
+            currency={currency}
             labels={SPENDING_LABELS}
             numbers={[lastMonth, thisMonth]}
           />

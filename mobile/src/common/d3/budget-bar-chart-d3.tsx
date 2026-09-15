@@ -32,7 +32,7 @@ type BudgetBarChartProps = {
    * rule, and the selectors already own that decision.
    */
   favorables: boolean[];
-  currencySymbol: string;
+  currency: string;
   /**
    * Screen-reader summary of the series — `ScrollableAxisChart` wraps the plot in
    * `accessible`, so without this the chart announces only its axis and legend.
@@ -62,7 +62,7 @@ function BudgetBarChart({
   actuals,
   budgets,
   favorables,
-  currencySymbol,
+  currency,
   accessibilityLabel,
   height = 200,
 }: BudgetBarChartProps): JSX.Element {
@@ -116,7 +116,7 @@ function BudgetBarChart({
       plotWidth={plotWidth}
       yTicks={yScale.ticks(5)}
       yScale={yScale}
-      currencySymbol={currencySymbol}
+      currency={currency}
       accessibilityLabel={accessibilityLabel}
       legend={
         <>

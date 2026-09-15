@@ -4,7 +4,7 @@ import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Line, Text as SvgText } from "react-native-svg";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
-import { shortNumber } from "@/common/number-utils";
+import { formatShortMoneyWithCurrency } from "@/common/number-utils";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import {
   AXIS_FONT_SIZE,
@@ -22,7 +22,8 @@ type ScrollableAxisChartProps = {
   yTicks: number[];
   /** Value → y pixel; the same scale the plot children drew with. */
   yScale: (value: number) => number;
-  currencySymbol: string;
+  /** Currency code; ticks show its symbol, or the code when it has none. */
+  currency: string;
   /** Screen-reader text alternative for the chart series. */
   accessibilityLabel?: string;
   /** `LegendItem`s for the row under the plot. */
@@ -47,7 +48,7 @@ export function ScrollableAxisChart({
   plotWidth,
   yTicks,
   yScale,
-  currencySymbol,
+  currency,
   accessibilityLabel,
   legend,
   children,
@@ -75,7 +76,7 @@ export function ScrollableAxisChart({
                 fill={theme.text01}
                 textAnchor="end"
               >
-                {`${currencySymbol}${shortNumber(tick)}`}
+                {formatShortMoneyWithCurrency(tick, currency)}
               </SvgText>
             ))}
           </Svg>

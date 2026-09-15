@@ -4,7 +4,7 @@ import { scaleBand, scaleLinear } from "d3-scale";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { shortNumber } from "@/common/number-utils";
+import { formatShortMoneyWithCurrency } from "@/common/number-utils";
 import { AnimatedBar } from "./animated-bar";
 import { useEntranceProgress } from "./use-entrance-progress";
 import { restingBarRect } from "./bar-geometry";
@@ -13,7 +13,8 @@ import { ChartErrorBoundary } from "./chart-chrome";
 type BarChartProps = {
   labels: string[];
   numbers: number[];
-  currencySymbol: string;
+  /** Currency code; ticks show its symbol, or the code when it has none. */
+  currency: string;
 };
 
 /**
@@ -23,11 +24,7 @@ type BarChartProps = {
  */
 export const BAR_CHART_HEIGHT = 220;
 
-function BarChart({
-  labels,
-  numbers,
-  currencySymbol,
-}: BarChartProps): JSX.Element {
+function BarChart({ labels, numbers, currency }: BarChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
 
@@ -86,7 +83,7 @@ function BarChart({
               fill={theme.text01}
               textAnchor="end"
             >
-              {`${currencySymbol}${shortNumber(tick)}`}
+              {formatShortMoneyWithCurrency(tick, currency)}
             </SvgText>
           </G>
         ))}

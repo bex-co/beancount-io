@@ -4,7 +4,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
-import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
+import { getPrimaryCurrency } from "@/common/currency-util";
 import { gutter } from "@/common/theme";
 import { LedgerDrawerHeader } from "@/components/ledger-drawer/ledger-drawer-header";
 import { StaleDataBanner } from "@/components/stale-data-banner";
@@ -66,7 +66,6 @@ const ReportsScreenImpl = (): JSX.Element => {
     error: ledgerMetaError,
   } = useLedgerMeta(userId, ledgerId);
   const currency = getPrimaryCurrency(currencies);
-  const currencySymbol = getCurrencySymbol(currency);
 
   const {
     data: incomeData,
@@ -167,7 +166,7 @@ const ReportsScreenImpl = (): JSX.Element => {
           ) : (
             <FadeInView>
               <IncomeExpenseBarChartD3
-                currencySymbol={currencySymbol}
+                currency={currency}
                 months={chart.months}
                 income={chart.income}
                 expense={chart.expense}

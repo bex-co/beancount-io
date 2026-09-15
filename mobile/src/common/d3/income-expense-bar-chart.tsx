@@ -2,7 +2,7 @@ import { Circle, G, Path, Text as SvgText } from "react-native-svg";
 import { scaleBand, scaleLinear } from "d3-scale";
 import { curveMonotoneX, line as d3Line } from "d3-shape";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
-import { shortNumber } from "@/common/number-utils";
+import { formatShortMoneyWithCurrency } from "@/common/number-utils";
 import { useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { AnimatedBar } from "./animated-bar";
@@ -37,7 +37,7 @@ type IncomeExpenseBarChartProps = {
   expense: number[];
   /** Signed net profit, aligned 1:1 with `months`. */
   net: number[];
-  currencySymbol: string;
+  currency: string;
   height?: number;
 };
 
@@ -60,7 +60,7 @@ function IncomeExpenseBarChart({
   income,
   expense,
   net,
-  currencySymbol,
+  currency,
   height = DEFAULT_CHART_HEIGHT,
 }: IncomeExpenseBarChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
@@ -152,18 +152,21 @@ function IncomeExpenseBarChart({
       plotWidth={plotWidth}
       yTicks={yScale.ticks(5)}
       yScale={yScale}
-      currencySymbol={currencySymbol}
+      currency={currency}
       accessibilityLabel={t("incomeExpenseChartSummary", {
         count: months.length,
-        income: `${currencySymbol}${shortNumber(
+        income: formatShortMoneyWithCurrency(
           income.reduce((sum, v) => sum + v, 0),
-        )}`,
-        expense: `${currencySymbol}${shortNumber(
+          currency,
+        ),
+        expense: formatShortMoneyWithCurrency(
           expense.reduce((sum, v) => sum + v, 0),
-        )}`,
-        net: `${currencySymbol}${shortNumber(
+          currency,
+        ),
+        net: formatShortMoneyWithCurrency(
           net.reduce((sum, v) => sum + v, 0),
-        )}`,
+          currency,
+        ),
       })}
       legend={
         <>

@@ -4,6 +4,7 @@ import {
   formatSignedMoney,
   formatMoneyWithCurrency,
   formatSignedMoneyWithCurrency,
+  formatShortMoneyWithCurrency,
 } from "../number-utils";
 
 describe("shortNumber", () => {
@@ -189,5 +190,22 @@ describe("formatMoneyWithCurrency", () => {
     // Balances/totals render unsigned; a negative value drops its sign.
     expect(formatMoneyWithCurrency(-544069, "USD")).toBe("$544,069.00");
     expect(formatMoneyWithCurrency(-544069, "MUSD")).toBe("544,069.00 MUSD");
+  });
+});
+
+describe("formatShortMoneyWithCurrency", () => {
+  it("puts the sign before a known currency symbol", () => {
+    expect(formatShortMoneyWithCurrency(-50, "USD")).toBe("-$50");
+    expect(formatShortMoneyWithCurrency(50, "USD")).toBe("$50");
+  });
+
+  it("labels a currency without a symbol by its code", () => {
+    expect(formatShortMoneyWithCurrency(400, "MUSD")).toBe("400 MUSD");
+    expect(formatShortMoneyWithCurrency(-200, "MUSD")).toBe("-200 MUSD");
+  });
+
+  it("formats zero and suffixed magnitudes", () => {
+    expect(formatShortMoneyWithCurrency(0, "USD")).toBe("$0");
+    expect(formatShortMoneyWithCurrency(1500000, "USD")).toBe("$1.5M");
   });
 });
