@@ -459,6 +459,7 @@ export const bg: typeof en = {
   ledgerEditorReload: "Презареди",
   ledgerEditorKeepEditing: "Продължи редактирането",
   keyboardAccessoryInsert: "Вмъкване на {{symbol}}",
+  keyboardAccessoryDismiss: "Скриване на клавиатурата",
   ledgerEditorErrorCount: {
     one: "Грешка: {{count}}",
     other: "Грешки: {{count}}",

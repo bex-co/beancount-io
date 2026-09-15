@@ -456,6 +456,7 @@ export const nl: typeof en = {
   ledgerEditorReload: "Herladen",
   ledgerEditorKeepEditing: "Doorgaan met bewerken",
   keyboardAccessoryInsert: "{{symbol}} invoegen",
+  keyboardAccessoryDismiss: "Toetsenbord verbergen",
   ledgerEditorErrorCount: {
     one: "{{count}} fout",
     other: "{{count}} fouten",

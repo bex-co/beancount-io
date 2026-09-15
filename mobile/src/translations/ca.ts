@@ -461,6 +461,7 @@ export const ca: typeof en = {
   ledgerEditorReload: "Torna a carregar",
   ledgerEditorKeepEditing: "Continua editant",
   keyboardAccessoryInsert: "Insereix {{symbol}}",
+  keyboardAccessoryDismiss: "Amaga el teclat",
   ledgerEditorErrorCount: {
     one: "{{count}} error",
     other: "{{count}} errors",

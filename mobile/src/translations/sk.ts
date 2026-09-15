@@ -456,6 +456,7 @@ export const sk: typeof en = {
   ledgerEditorReload: "Načítať znova",
   ledgerEditorKeepEditing: "Pokračovať v úpravách",
   keyboardAccessoryInsert: "Vložiť {{symbol}}",
+  keyboardAccessoryDismiss: "Skryť klávesnicu",
   ledgerEditorErrorCount: {
     one: "Chyba: {{count}}",
     other: "Chýb: {{count}}",

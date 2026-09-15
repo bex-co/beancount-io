@@ -457,6 +457,7 @@ export const ru: typeof en = {
   ledgerEditorReload: "Перезагрузить",
   ledgerEditorKeepEditing: "Продолжить правку",
   keyboardAccessoryInsert: "Вставить {{symbol}}",
+  keyboardAccessoryDismiss: "Скрыть клавиатуру",
   ledgerEditorErrorCount: {
     one: "Ошибка: {{count}}",
     other: "Ошибок: {{count}}",

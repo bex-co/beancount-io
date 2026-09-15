@@ -452,6 +452,7 @@ export const fa: typeof en = {
   ledgerEditorReload: "بارگذاری دوباره",
   ledgerEditorKeepEditing: "ادامهٔ ویرایش",
   keyboardAccessoryInsert: "درج {{symbol}}",
+  keyboardAccessoryDismiss: "پنهان کردن صفحه‌کلید",
   ledgerEditorErrorCount: {
     one: "{{count}} خطا",
     other: "{{count}} خطا",

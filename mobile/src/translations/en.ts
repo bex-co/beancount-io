@@ -453,6 +453,7 @@ export const en = {
   ledgerEditorReload: "Reload",
   ledgerEditorKeepEditing: "Keep Editing",
   keyboardAccessoryInsert: "Insert {{symbol}}",
+  keyboardAccessoryDismiss: "Hide keyboard",
   ledgerEditorErrorCount: {
     one: "{{count}} error",
     other: "{{count}} errors",

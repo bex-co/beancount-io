@@ -658,7 +658,9 @@ function LedgerFileEditorSession({
               keyboardInset={editorKeyboardInset}
               insertSpec={insertSpec}
               jumpToLine={jumpToLine}
-              dom={{ style: { flex: 1 } }}
+              // WKWebView adds its own form-navigation bar (∧ ∨ ✓) under the
+              // app's insert bar; this editor is a single field, so it is noise.
+              dom={{ style: { flex: 1 }, hideKeyboardAccessoryView: true }}
             />
           </FadeInView>
         ) : null}
@@ -668,6 +670,7 @@ function LedgerFileEditorSession({
             <KeyboardAccessoryBar
               onInsert={handleInsert}
               operatingCurrencies={operatingCurrencies}
+              onDismiss={() => editorRef.current?.blur()}
             />
           </View>
         )}

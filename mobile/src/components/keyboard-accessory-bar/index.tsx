@@ -5,10 +5,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { fonts } from "@/common/theme";
+import { fonts, useTheme } from "@/common/theme";
 import { getFormatDate } from "@/common/format-util";
 import { buildKeyboardShortcutButtons } from "./utils";
 
@@ -25,7 +26,7 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
     },
     scroll: {
-      flexGrow: 0,
+      flex: 1,
     },
     scrollContent: {
       paddingHorizontal: 8,
@@ -48,6 +49,14 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black,
       letterSpacing: 0,
     },
+    dismissBtn: {
+      height: KEYBOARD_ACCESSORY_BAR_HEIGHT,
+      paddingHorizontal: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      borderLeftWidth: StyleSheet.hairlineWidth,
+      borderLeftColor: theme.black40,
+    },
     dateText: {
       fontFamily: fonts.mono,
       fontSize: 11,
@@ -58,13 +67,20 @@ const getStyles = (theme: ColorTheme) =>
 type KeyboardAccessoryBarProps = {
   onInsert: (text: string, cursorOffset?: number) => void;
   operatingCurrencies?: string[];
+  /**
+   * Hides the keyboard. The code editor suppresses WKWebView's own accessory
+   * bar, whose ✓ was the other way to dismiss it.
+   */
+  onDismiss?: () => void;
 };
 
 export function KeyboardAccessoryBar({
   onInsert,
   operatingCurrencies = [],
+  onDismiss,
 }: KeyboardAccessoryBarProps) {
   const styles = useThemeStyle(getStyles);
+  const theme = useTheme().colorTheme;
   const { t } = useTranslations();
   const today = getFormatDate(new Date());
   const buttons = buildKeyboardShortcutButtons(today, operatingCurrencies);
@@ -95,6 +111,17 @@ export function KeyboardAccessoryBar({
           </TouchableOpacity>
         ))}
       </ScrollView>
+      {onDismiss ? (
+        <TouchableOpacity
+          style={styles.dismissBtn}
+          onPress={onDismiss}
+          activeOpacity={0.6}
+          accessibilityRole="button"
+          accessibilityLabel={t("keyboardAccessoryDismiss")}
+        >
+          <Ionicons name="chevron-down" size={20} color={theme.black} />
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }

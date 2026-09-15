@@ -428,6 +428,7 @@ export const zh: typeof en = {
   ledgerEditorReload: "重新加载",
   ledgerEditorKeepEditing: "继续编辑",
   keyboardAccessoryInsert: "插入 {{symbol}}",
+  keyboardAccessoryDismiss: "隐藏键盘",
   ledgerEditorErrorCount: {
     one: "{{count}} 个错误",
     other: "{{count}} 个错误",

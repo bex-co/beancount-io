@@ -460,6 +460,7 @@ export const es: typeof en = {
   ledgerEditorReload: "Recargar",
   ledgerEditorKeepEditing: "Seguir editando",
   keyboardAccessoryInsert: "Insertar {{symbol}}",
+  keyboardAccessoryDismiss: "Ocultar teclado",
   ledgerEditorErrorCount: {
     one: "{{count}} error",
     other: "{{count}} errores",

@@ -53,6 +53,8 @@ export type EditorDocumentSpec = {
 
 export interface CodeEditorRef extends DOMImperativeFactory {
   requestSave: () => void;
+  /** Blur the editor, which hides the software keyboard. */
+  blur: () => void;
 }
 
 export type CodeEditorProps = {
@@ -295,6 +297,9 @@ export default function CodeEditor({
     () => ({
       requestSave() {
         requestSaveRef.current();
+      },
+      blur() {
+        viewRef.current?.contentDOM.blur();
       },
     }),
     [],
