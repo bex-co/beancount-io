@@ -23,6 +23,7 @@ import {
 } from "@/common/lib/fava-options";
 import { IncomeStatementContent } from "./income-statement-content";
 import { useReportConversion } from "@/features/reports/components/use-report-conversion";
+import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 
 /**
  * Income Statement page component
@@ -52,7 +53,6 @@ export default function LedgerIncomeStatementPage() {
 
   const {
     data,
-    previousData,
     loading: isLoading,
     error,
   } = useQuery(GetLedgerIncomeStatementDocument, {
@@ -67,13 +67,14 @@ export default function LedgerIncomeStatementPage() {
     fetchPolicy: "cache-first",
   });
 
-  const incomeStatementData =
-    data?.getLedgerIncomeStatement || previousData?.getLedgerIncomeStatement;
+  const settled = selectSettledReportData(
+    isLoading,
+    data?.getLedgerIncomeStatement,
+  );
 
   const closedAccountNames = useMemo(
-    () =>
-      new Set(data?.getLedgerAccounts ?? previousData?.getLedgerAccounts ?? []),
-    [data?.getLedgerAccounts, previousData?.getLedgerAccounts],
+    () => new Set(data?.getLedgerAccounts ?? []),
+    [data?.getLedgerAccounts],
   );
 
   const invertIncomeLiabilitiesEquity =
@@ -82,7 +83,7 @@ export default function LedgerIncomeStatementPage() {
   const showZeroTransactions = getShowAccountsWithZeroTransactions(ledgerData);
   const collapsePatterns = getCollapsePatterns(ledgerData);
 
-  if (isLoading && !incomeStatementData) {
+  if (settled.pending) {
     return <ReportLoadingState />;
   }
 
@@ -90,6 +91,7 @@ export default function LedgerIncomeStatementPage() {
     return <ReportErrorState error={error} />;
   }
 
+  const incomeStatementData = settled.data;
   if (!incomeStatementData) {
     return (
       <ReportEmptyState
@@ -124,6 +126,7 @@ export default function LedgerIncomeStatementPage() {
       collapsePatterns={collapsePatterns}
       filters={ledgerFilters.searchParams}
       fiscalYearEnd={ledgerData.favaOptions.fiscalYearEnd}
+      exportReady
     />
   );
 }

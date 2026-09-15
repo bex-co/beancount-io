@@ -2,12 +2,14 @@ import {
   useParams,
   useNavigate,
   useLocation,
+  useRouterState,
   Outlet,
 } from "@tanstack/react-router";
 import { SidebarProvider } from "@/common/components/ui/sidebar.tsx";
 import { ErrorBoundary } from "@/common/components/error-boundary";
 import { SkipToContentLink } from "@/common/components/skip-to-content";
 import { MAIN_CONTENT_ID } from "@/common/lib/main-content";
+import { ReportLoadingState } from "@/common/components/state-components";
 import { LedgerLayoutError } from "./ledger-layout-error";
 import { LedgerLayoutLoading } from "./ledger-layout-loading";
 import { useQuery } from "@apollo/client/react";
@@ -33,6 +35,9 @@ export function LedgerLayout() {
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const navigate = useNavigate();
   const location = useLocation();
+  // Router pending covers filter/time loader holds and ledger switches so the
+  // previous page body is never shown as settled for the destination URL.
+  const isRoutePending = useRouterState({ select: (s) => s.isLoading });
 
   const { data, error, refetch, loading } = useQuery(GetLedgerDocument, {
     variables: {
@@ -90,6 +95,7 @@ export function LedgerLayout() {
             <main
               id={MAIN_CONTENT_ID}
               tabIndex={-1}
+              aria-busy={isRoutePending || undefined}
               className="flex flex-1 flex-col min-w-0 w-full outline-none"
             >
               {!isReactNative() && (
@@ -104,10 +110,15 @@ export function LedgerLayout() {
                 )}
               >
                 <div className="max-w-full flex-1 flex flex-col min-h-0">
-                  {/* Keyed by pathname so a caught error clears on navigation */}
-                  <ErrorBoundary key={location.pathname}>
-                    <Outlet />
-                  </ErrorBoundary>
+                  {isRoutePending ? (
+                    <ReportLoadingState />
+                  ) : (
+                    // Key by ledger so a switch never keeps the previous
+                    // ledger's mounted page body under the new URL.
+                    <ErrorBoundary key={ledgerId}>
+                      <Outlet />
+                    </ErrorBoundary>
+                  )}
                 </div>
               </div>
             </main>

@@ -45,8 +45,15 @@ function trackSafely(action: () => void) {
 
 export function StatementExportMenu({
   document,
+  ready = true,
 }: {
   document: StatementExportDocument;
+  /**
+   * False while a replacement report read is in flight. Disables export
+   * actions and omits the print portal so Ctrl/Cmd+P cannot mix new basis
+   * metadata with retained balances.
+   */
+  ready?: boolean;
 }) {
   const { t, i18n } = useTranslations();
   const actionInProgress = useRef(false);
@@ -55,6 +62,7 @@ export function StatementExportMenu({
   // never a stale financial snapshot.
   const [printGeneratedAt, setPrintGeneratedAt] = useState<string | null>(null);
   const hasData = hasStatementExportData(document);
+  const canExport = ready && hasData;
 
   const printDocument = useMemo(() => {
     if (!printGeneratedAt) {
@@ -72,18 +80,19 @@ export function StatementExportMenu({
   // Browser print (outside the Export menu) should still stamp "generated at"
   // without freezing period/filter/values from an earlier mount.
   useEffect(() => {
+    if (!ready) return;
     const onBeforePrint = () => {
       setPrintGeneratedAt(new Date().toISOString());
     };
     window.addEventListener("beforeprint", onBeforePrint);
     return () => window.removeEventListener("beforeprint", onBeforePrint);
-  }, []);
+  }, [ready]);
 
   const runAction = async (
     format: ReportExportFormat,
     action: (currentDocument: StatementExportDocument) => void | Promise<void>,
   ) => {
-    if (actionInProgress.current) return;
+    if (!canExport || actionInProgress.current) return;
 
     actionInProgress.current = true;
     setIsBusy(true);
@@ -161,7 +170,7 @@ export function StatementExportMenu({
           <Button
             variant="outline"
             size="sm"
-            disabled={isBusy || !hasData}
+            disabled={isBusy || !canExport}
             aria-label={t("reports.export.action")}
           >
             <FileOutput />
@@ -171,21 +180,21 @@ export function StatementExportMenu({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            disabled={isBusy || !hasData}
+            disabled={isBusy || !canExport}
             onSelect={() => void handleCSV()}
           >
             <FileSpreadsheet />
             {t("reports.export.csv")}
           </DropdownMenuItem>
           <DropdownMenuItem
-            disabled={isBusy || !hasData}
+            disabled={isBusy || !canExport}
             onSelect={() => void handleMarkdown()}
           >
             <FileText />
             {t("reports.export.markdown")}
           </DropdownMenuItem>
           <DropdownMenuItem
-            disabled={isBusy || !hasData}
+            disabled={isBusy || !canExport}
             onSelect={() => void handlePrint()}
           >
             <Printer />
@@ -193,7 +202,7 @@ export function StatementExportMenu({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <PrintableStatement document={printDocument} />
+      {ready ? <PrintableStatement document={printDocument} /> : null}
     </>
   );
 }

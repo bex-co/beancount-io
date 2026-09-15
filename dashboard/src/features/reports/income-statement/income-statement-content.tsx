@@ -54,6 +54,7 @@ interface IncomeStatementContentProps {
   onTimeIntervalChange: (value: ChartInterval) => void;
   filters: LedgerSearchParams;
   fiscalYearEnd: FiscalYearEnd;
+  exportReady?: boolean;
 }
 
 export function IncomeStatementContent({
@@ -76,6 +77,7 @@ export function IncomeStatementContent({
   onTimeIntervalChange,
   filters,
   fiscalYearEnd,
+  exportReady = true,
 }: IncomeStatementContentProps) {
   const { t } = useTranslations();
   const [selectedTab, setSelectedTab] = useState<string>("netProfit");
@@ -189,7 +191,10 @@ export function IncomeStatementContent({
         />
         <ClientOnly>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            <StatementExportMenu document={exportDocument} />
+            <StatementExportMenu
+              document={exportDocument}
+              ready={exportReady}
+            />
             <ChartsToggleButton
               chartsVisible={chartsVisible}
               onToggle={toggleChartsVisible}

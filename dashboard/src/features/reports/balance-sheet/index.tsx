@@ -22,6 +22,7 @@ import {
 } from "@/common/lib/fava-options";
 import { BalanceSheetContent } from "./balance-sheet-content";
 import { useReportConversion } from "@/features/reports/components/use-report-conversion";
+import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 
 /**
  * Balance Sheet page component
@@ -51,7 +52,6 @@ export default function LedgerBalanceSheetPage() {
 
   const {
     data,
-    previousData,
     loading: isLoading,
     error,
   } = useQuery(GetLedgerBalanceSheetDocument, {
@@ -66,16 +66,17 @@ export default function LedgerBalanceSheetPage() {
     fetchPolicy: "cache-first",
   });
 
-  const balanceSheetData =
-    data?.getLedgerBalanceSheet || previousData?.getLedgerBalanceSheet;
-
-  const closedAccountNames = useMemo(
-    () =>
-      new Set(data?.getLedgerAccounts ?? previousData?.getLedgerAccounts ?? []),
-    [data?.getLedgerAccounts, previousData?.getLedgerAccounts],
+  const settled = selectSettledReportData(
+    isLoading,
+    data?.getLedgerBalanceSheet,
   );
 
-  if (isLoading && !balanceSheetData) {
+  const closedAccountNames = useMemo(
+    () => new Set(data?.getLedgerAccounts ?? []),
+    [data?.getLedgerAccounts],
+  );
+
+  if (settled.pending) {
     return <ReportLoadingState />;
   }
 
@@ -83,6 +84,7 @@ export default function LedgerBalanceSheetPage() {
     return <ReportErrorState error={error} />;
   }
 
+  const balanceSheetData = settled.data;
   if (!balanceSheetData) {
     return <ReportEmptyState message={t("page.balanceSheet.noData")} />;
   }
@@ -114,6 +116,7 @@ export default function LedgerBalanceSheetPage() {
       collapsePatterns={getCollapsePatterns(ledgerData)}
       filters={ledgerFilters.searchParams}
       fiscalYearEnd={ledgerData.favaOptions.fiscalYearEnd}
+      exportReady
     />
   );
 }

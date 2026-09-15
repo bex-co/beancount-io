@@ -99,6 +99,22 @@ describe("StatementExportMenu", () => {
     expect(success).toHaveBeenCalledOnce();
   });
 
+  it("disables export and omits the print portal while ready is false", async () => {
+    const user = userEvent.setup();
+    render(<StatementExportMenu document={document} ready={false} />);
+
+    const trigger = screen.getByRole("button", {
+      name: "reports.export.action",
+    });
+    expect(trigger).toBeDisabled();
+    expect(
+      globalThis.document.body.querySelector(".statement-print-root"),
+    ).not.toBeInTheDocument();
+
+    await user.click(trigger);
+    expect(exportStatementCSV).not.toHaveBeenCalled();
+  });
+
   it("opens the format menu from the keyboard", async () => {
     const user = userEvent.setup();
     render(<StatementExportMenu document={document} />);

@@ -86,13 +86,18 @@ and exports stay aligned with the period net change.
 ## Hierarchy List Tables
 
 `balance-sheet/hierarchy-list.tsx` (wrapped by `hierarchy-list-card.tsx`) is
-the shared tree table for every statement page. Every tree row is a real
-ledger account whose label links to the account page — never put synthetic
-title or total nodes into the tree. Aggregates go through the `summaryRows`
-prop: plain unlinked rows below the detail rows (root total below detail rows,
-as in the exports). The cash-flow page builds its real-account forests in
-`cash-flow/lib/statement-tree.ts` and labels its summary rows with the shared
-`cashFlowSummaryLabelKey` keys from `export/presentation.ts`.
+the shared tree table for every statement page. It renders a native
+`<table>` with Account / primary-currency / Other column headers, account
+row headers (`scope="row"`), and amount cells — so assistive technology can
+navigate by row and column. Each card/Trial Balance heading labels its table
+via `aria-labelledby`. Every tree row is a real ledger account whose label
+links to the account page — never put synthetic title or total nodes into the
+tree. Aggregates go through the `summaryRows` prop: plain unlinked rows below
+the detail rows (root total below detail rows, as in the exports). Collapsed
+descendants leave the accessibility tree entirely. The cash-flow page builds
+its real-account forests in `cash-flow/lib/statement-tree.ts` and labels its
+summary rows with the shared `cashFlowSummaryLabelKey` keys from
+`export/presentation.ts`.
 
 ## Shared report components
 
@@ -136,6 +141,12 @@ never be pre-empted by provisional output.
 ## Route Loaders
 
 Report directories with `loader.ts` use TanStack Router loaders for SSR-safe data fetching. Keep query/filter resolution in those loaders and rendering in report content/components.
+
+While a route loader or Apollo report read is in flight, do not present retained
+`previousData` under newly selected conversion/interval/filter metadata. The
+ledger layout shows an accessible pending state for router transitions (including
+ledger switches), and statement pages use `selectSettledReportData` so export and
+print only see a coherent completed result.
 
 Shared ledger filters (`account`, `filter`, `time`) are validated on the ledger parent route and retained across same-ledger navigation (sidebar, Related Pages) via `retainSearchParams`. Report loaders read them from `loaderDeps` so SSR and client requests match the destination URL. Filter edits use replace navigation; Clear all removes only those three keys. Ledger switches clear them unless the destination URL supplies new values. Journal action/directive, BQL `q`, and file-edit params are not propagated to unrelated pages.
 

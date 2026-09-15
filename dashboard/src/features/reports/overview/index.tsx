@@ -89,12 +89,19 @@ export default function LedgerOverviewPage() {
 
   const { accountMeta, pending: accountMetaPending } = useAccountMeta(ledgerId);
 
-  if (isLoading && !data?.getLedgerOverview) {
+  // Do not keep a prior period's overview cards while a replacement read is in
+  // flight — the URL/filters already name the new scope.
+  if (isLoading) {
     return (
       <div className="space-y-6 md:space-y-8">
         <Card>
           <CardContent>
-            <div className="flex items-center justify-center py-14">
+            <div
+              className="flex items-center justify-center py-14"
+              role="status"
+              aria-live="polite"
+              aria-busy="true"
+            >
               <div className="text-center space-y-3">
                 <div className="mx-auto h-8 w-8 rounded-full border-b-2 border-primary animate-spin" />
                 <p className="text-sm text-muted-foreground">

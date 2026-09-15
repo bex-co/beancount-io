@@ -60,6 +60,7 @@ interface CashFlowContentProps {
   filters: LedgerSearchParams;
   fiscalYearEnd: FiscalYearEnd;
   collapsePatterns: string[];
+  exportReady?: boolean;
 }
 
 /** Every currency's exact-decimal amount, primary currency first. */
@@ -102,6 +103,7 @@ export function CashFlowContent({
   filters,
   fiscalYearEnd,
   collapsePatterns,
+  exportReady = true,
 }: CashFlowContentProps) {
   const { t } = useTranslations();
   const activityTitles: Record<CashFlowActivity, string> = {
@@ -192,7 +194,10 @@ export function CashFlowContent({
         />
         <ClientOnly>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            <StatementExportMenu document={exportDocument} />
+            <StatementExportMenu
+              document={exportDocument}
+              ready={exportReady}
+            />
             <ChartsToggleButton
               chartsVisible={chartsVisible}
               onToggle={toggleChartsVisible}

@@ -28,7 +28,29 @@ vi.mock("../balance-sheet-content", () => ({
   BalanceSheetContent: () => <div>balance-sheet-content</div>,
 }));
 
+vi.mock("@/features/reports/components/use-report-conversion", () => ({
+  useReportConversion: () => ["at_cost", vi.fn()],
+}));
+
 describe("LedgerBalanceSheetPage", () => {
+  it("shows pending state while loading even when previousData exists", () => {
+    vi.mocked(useQuery).mockReturnValue({
+      data: undefined,
+      previousData: {
+        getLedgerBalanceSheet: {
+          assetsHierarchyData: {},
+        },
+      },
+      loading: true,
+      error: undefined,
+    } as never);
+
+    render(<LedgerBalanceSheetPage />);
+
+    expect(screen.queryByText("balance-sheet-content")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
+  });
+
   it("shows the actionable message for an invalid-input error", () => {
     vi.mocked(useQuery).mockReturnValue({
       data: undefined,

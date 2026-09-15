@@ -1,6 +1,6 @@
 # w3/m35 — Keep report results and exports tied to their completed request
 
-**Worker:** worker3 **Goal:** prevent pending report reads from mislabeling retained financial data or exporting it under an unfinished selection **Status:** todo
+**Worker:** worker3 **Goal:** prevent pending report reads from mislabeling retained financial data or exporting it under an unfinished selection **Status:** done
 
 ## Reproduced problem
 
@@ -28,14 +28,14 @@ Keep each completed result paired with the conversion/interval/filter inputs tha
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Show pending feedback for report route reads | 35m | — |
-| t002 | Keep report data paired with its completed input snapshot | 45m | t001 |
-| t003 | Guard exports and print content while replacement data is pending | 35m | t002 |
-| t008 | Stop a ledger switch from showing the previous ledger's data | 40m | t001 |
-| t004 | Adoption surface — explain usable pending report behavior | 15m | t003, t008 |
-| t005 | Simplify the pending-report changes | 20m | t004 |
-| t006 | Test delayed reads, downloads and recovery | 45m | t004, t005 |
-| t007 | Close out the pending-report milestone | 15m | t006 |
+| t001 | Show pending feedback for report route reads | 35m | — | — **DONE**
+| t002 | Keep report data paired with its completed input snapshot | 45m | t001 | — **DONE**
+| t003 | Guard exports and print content while replacement data is pending | 35m | t002 | — **DONE**
+| t008 | Stop a ledger switch from showing the previous ledger's data | 40m | t001 | — **DONE**
+| t004 | Adoption surface — explain usable pending report behavior | 15m | t003, t008 | — **DONE**
+| t005 | Simplify the pending-report changes | 20m | t004 | — **DONE**
+| t006 | Test delayed reads, downloads and recovery | 45m | t004, t005 | — **DONE**
+| t007 | Close out the pending-report milestone | 15m | t006 | — **DONE**
 
 Implementation totals155minutes; all eight tasks total250minutes, so the expanded work exceeds the sub-hour inbox limit.
 

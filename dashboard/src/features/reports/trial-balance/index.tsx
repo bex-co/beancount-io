@@ -20,6 +20,7 @@ import {
 } from "@/common/lib/fava-options";
 import { TrialBalanceContent } from "./trial-balance-content";
 import { useReportConversion } from "@/features/reports/components/use-report-conversion";
+import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 
 /**
  * Trial Balance page component
@@ -45,7 +46,6 @@ export default function TrialBalancePage() {
 
   const {
     data,
-    previousData,
     loading: isLoading,
     error,
   } = useQuery(GetLedgerTrialBalanceDocument, {
@@ -59,13 +59,14 @@ export default function TrialBalancePage() {
     fetchPolicy: "cache-first",
   });
 
-  const trialBalanceData =
-    data?.getLedgerTrialBalance || previousData?.getLedgerTrialBalance;
+  const settled = selectSettledReportData(
+    isLoading,
+    data?.getLedgerTrialBalance,
+  );
 
   const closedAccountNames = useMemo(
-    () =>
-      new Set(data?.getLedgerAccounts ?? previousData?.getLedgerAccounts ?? []),
-    [data?.getLedgerAccounts, previousData?.getLedgerAccounts],
+    () => new Set(data?.getLedgerAccounts ?? []),
+    [data?.getLedgerAccounts],
   );
 
   const invertIncomeLiabilitiesEquity =
@@ -74,7 +75,7 @@ export default function TrialBalancePage() {
   const showZeroTransactions = getShowAccountsWithZeroTransactions(ledgerData);
   const collapsePatterns = getCollapsePatterns(ledgerData);
 
-  if (isLoading && !trialBalanceData) {
+  if (settled.pending) {
     return <ReportLoadingState />;
   }
 
@@ -82,6 +83,7 @@ export default function TrialBalancePage() {
     return <ReportErrorState error={error} />;
   }
 
+  const trialBalanceData = settled.data;
   if (!trialBalanceData) {
     return <ReportEmptyState message={t("page.trialBalance.noData")} />;
   }

@@ -51,6 +51,8 @@ interface BalanceSheetContentProps {
   collapsePatterns: string[];
   filters: LedgerSearchParams;
   fiscalYearEnd: FiscalYearEnd;
+  /** False while replacement report data is pending (export/print gated). */
+  exportReady?: boolean;
 }
 
 export function BalanceSheetContent({
@@ -73,6 +75,7 @@ export function BalanceSheetContent({
   collapsePatterns,
   filters,
   fiscalYearEnd,
+  exportReady = true,
 }: BalanceSheetContentProps) {
   const { t } = useTranslations();
   const [selectedTab, setSelectedTab] = useState<string>("netWorth");
@@ -172,7 +175,10 @@ export function BalanceSheetContent({
         />
         <ClientOnly>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            <StatementExportMenu document={exportDocument} />
+            <StatementExportMenu
+              document={exportDocument}
+              ready={exportReady}
+            />
             <ChartsToggleButton
               chartsVisible={chartsVisible}
               onToggle={toggleChartsVisible}

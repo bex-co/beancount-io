@@ -30,6 +30,7 @@ import { mergeIntervalAccountChanges } from "./lib/merge-intervals";
 import { joinCashAccountStatus } from "./lib/cash-account-status";
 import { CashFlowContent } from "./cash-flow-content";
 import { useReportConversion } from "@/features/reports/components/use-report-conversion";
+import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 
 /**
  * Cash Flow page component
@@ -60,7 +61,6 @@ export default function LedgerCashFlowPage() {
 
   const {
     data,
-    previousData,
     loading: isLoading,
     error,
   } = useQuery(GetLedgerCashFlowDocument, {
@@ -75,7 +75,9 @@ export default function LedgerCashFlowPage() {
     fetchPolicy: "cache-first",
   });
 
-  const cashFlowData = data || previousData;
+  const settled = selectSettledReportData(isLoading, data);
+
+  const cashFlowData = settled.pending ? undefined : settled.data;
 
   const accountMeta = useMemo(
     () => toAccountMetaMap(cashFlowData?.getLedgerAccountDirectives ?? []),
@@ -121,7 +123,7 @@ export default function LedgerCashFlowPage() {
     [closingCashAccounts, cashFlowData, statement],
   );
 
-  if (isLoading && !statement) {
+  if (settled.pending) {
     return <ReportLoadingState />;
   }
 
@@ -164,6 +166,7 @@ export default function LedgerCashFlowPage() {
       filters={ledgerFilters.searchParams}
       fiscalYearEnd={ledgerData.favaOptions.fiscalYearEnd}
       collapsePatterns={getCollapsePatterns(ledgerData)}
+      exportReady
     />
   );
 }
