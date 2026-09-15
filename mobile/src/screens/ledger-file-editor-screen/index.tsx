@@ -60,7 +60,8 @@ import {
   markRevisionsSaved,
   resetRevisionTracker,
 } from "@/components/code-editor/revision-tracker";
-import { isConflictError, filterFileErrors } from "./utils";
+import { isConflictError } from "@/common/ledger-conflict";
+import { filterFileErrors } from "./utils";
 import { selectLedgerFileEditorState } from "./select-editor-state";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 

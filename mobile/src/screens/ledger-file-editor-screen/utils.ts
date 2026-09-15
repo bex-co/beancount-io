@@ -1,8 +1,3 @@
-export function isConflictError(message: string): boolean {
-  const m = message.toLowerCase();
-  return m.includes("sha") || m.includes("conflict") || m.includes("409");
-}
-
 type FileError = {
   message: string;
   lineno?: number | null;

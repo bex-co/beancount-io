@@ -6,10 +6,8 @@ import {
   pushPathStack,
   popPathStack,
 } from "../screens/ledger-file-browser-screen/utils";
-import {
-  isConflictError,
-  filterFileErrors,
-} from "../screens/ledger-file-editor-screen/utils";
+import { filterFileErrors } from "../screens/ledger-file-editor-screen/utils";
+import { isConflictError } from "../common/ledger-conflict";
 import { getKeyboardOverlap } from "../components/keyboard-accessory-bar/utils";
 import {
   decodeLedgerFileContent,

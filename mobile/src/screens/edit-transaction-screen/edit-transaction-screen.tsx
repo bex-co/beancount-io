@@ -44,6 +44,7 @@ import {
   resetRevisionTracker,
 } from "@/components/code-editor/revision-tracker";
 import { applySavedIdentity, resolveSaveExit } from "./save-exit";
+import { selectSaveFailure } from "./save-failure";
 
 const SKELETON_WIDTHS = [220, 160, 280, 120, 200, 260, 140];
 
@@ -124,6 +125,7 @@ export const EditTransactionScreen = (): JSX.Element => {
     data,
     loading: contextLoading,
     error: contextError,
+    refetch: refetchContext,
   } = useGetLedgerEntryContextQuery({
     variables: { entryHash: entryHash ?? "", ledgerId: ledgerId ?? "" },
     skip: !entryHash || !ledgerId,
@@ -167,6 +169,25 @@ export const EditTransactionScreen = (): JSX.Element => {
     setHasUnsavedChanges(false);
     setInitialized(true);
   }, [data, initialized]);
+
+  // After a stale-checksum rejection the draft can never be saved as it is:
+  // re-read the entry (under its current identity) and reseed the editor, the
+  // same reset the effect above performs on first load.
+  const handleReload = useCallback(async () => {
+    const result = await refetchContext({
+      entryHash: entryHashRef.current,
+      ledgerId: ledgerId ?? "",
+    });
+    const context = result.data?.getLedgerEntryContext;
+    if (!context) return;
+    const epoch = documentEpochRef.current + 1;
+    documentEpochRef.current = epoch;
+    resetRevisionTracker(revisionTrackerRef.current);
+    shaRef.current = context.sha256sum;
+    setDocumentSpec({ value: context.slice, epoch });
+    setHasUnsavedChanges(false);
+    setSaveError(null);
+  }, [ledgerId, refetchContext]);
 
   // ── Save ────────────────────────────────────────────────────────────────────
 
@@ -256,12 +277,26 @@ export const EditTransactionScreen = (): JSX.Element => {
         });
 
         if (!outcome.ok) {
-          // The toast says "couldn't save"; the inline message says why.
-          setSaveError(
+          const failure = selectSaveFailure(
             outcome.error instanceof Error
               ? outcome.error.message
               : outcome.message,
           );
+          if (failure.kind === "conflict") {
+            // A draft is never discarded without asking: reload is a choice.
+            setSaveError(t("editConflict"));
+            Alert.alert("", t("editConflict"), [
+              { text: t("ledgerEditorKeepEditing"), style: "cancel" },
+              {
+                text: t("ledgerEditorReload"),
+                style: "destructive",
+                onPress: () => void handleReload(),
+              },
+            ]);
+          } else {
+            // The toast says "couldn't save"; the inline message says why.
+            setSaveError(failure.message);
+          }
           return false;
         }
 
@@ -302,6 +337,7 @@ export const EditTransactionScreen = (): JSX.Element => {
       }
     },
     [
+      handleReload,
       canWrite,
       client,
       confirmWrite,
