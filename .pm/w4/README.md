@@ -15,6 +15,8 @@
 - [ ] **m8** — [Localized Google Play listing from the canonical metadata](./blocked/m8/README.md) (8 tasks) — **blocked:** needs a Play Console check that the applied listing is public. ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - [ ] **m9** — [`bea price fetch`: keep commodity and currency prices current through upstream bean-price](./blocked/m9/README.md) (9 tasks) — **blocked:** needs a decision to re-scope onto the shipped `bea price` passthrough or drop. ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11 (issue 176)
 - [ ] **m10** — [GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues](./blocked/m10/README.md) (9 tasks) — **blocked:** forms, PR template, and CI check shipped; needs the security reporting channel and approval for labels, good first issues, and the issue 176 reply. ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11
+- [ ] **m11** — [Mobile says what a converted balance means: units for commodities, labelled cost basis, disclosed omissions](./m11/README.md) (9 tasks) ← promoted w4/016 with w4/027 folded in; user approved `/pm-brainstorm for w4` item 2 and its display rule, 2026-09-15
+- [ ] **m12** — [Make mobile's `lint:deadcode` see unused GraphQL documents and test-only modules](./m12/README.md) (7 tasks) ← promoted w4/025; user approved `/pm-brainstorm for w4` item 4 and its allowlist recommendation, 2026-09-15
 
 ## Dropped
 
