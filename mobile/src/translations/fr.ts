@@ -60,7 +60,6 @@ export const fr: typeof en = {
   merchantsLoadError: "Échec du chargement des commerçants : ",
   merchantsSortByCount: "Trier par nombre de transactions",
   merchantsSortAlphabetical: "Trier par ordre alphabétique",
-  mine: "Moi",
   merchantsRecurringSection: "Récurrent",
   merchantsRecurringBadge: "Récurrent",
   merchantsCadenceWeekly: "Hebdomadaire",
@@ -82,7 +81,6 @@ export const fr: typeof en = {
   merchantDetailEmptyMessage:
     "Aucune transaction ne correspond exactement à ce commerçant.",
   merchantDetailLoadingMore: "Chargement…",
-  setting: "Réglage",
   // mine
   reviewApp: "Vous aimez ? Laissez un avis :)",
   helpCenter: "Centre d'aide",
@@ -102,10 +100,6 @@ export const fr: typeof en = {
   logoutAlertCancel: "Annuler",
   logoutAlertConfirm: "Se déconnecter",
   logout: "Déconnexion",
-  loggingOut: "Déconnexion en cours",
-  loggingOutMessage:
-    "Veuillez patienter pendant que nous vous déconnectons en toute sécurité...",
-  loggingOutProgress: "Déconnexion...",
   // Offline / stale cache
   staleDataNotice: "Chiffres en cache — ils peuvent être obsolètes",
   // delete account alert
@@ -115,7 +109,6 @@ export const fr: typeof en = {
   deleteAccountAlertConfirm: "Supprimer le compte",
   deleteAccount: "Supprimer le compte",
   deleteAccountDescription: "Supprimer définitivement votre compte et données",
-  ledgerDescription: "Sélectionner ou changer de grand livre",
   ledgers: "Grands livres",
   deleteAccountConfirmTitle: "Confirmer la suppression du compte",
   deleteAccountConfirmMessage:
@@ -129,7 +122,6 @@ export const fr: typeof en = {
   appSettings: "Paramètres de l'application",
   accountSettings: "Compte",
   supportSettings: "Support",
-  login: "Se connecter / S'inscrire",
   signIn: "Se connecter",
   signUp: "S'inscrire",
   serverSettings: "Serveur",
@@ -186,13 +178,11 @@ export const fr: typeof en = {
   saveFailed: "Échec de l'enregistrement",
   amountEmptyError: "Veuillez saisir le montant",
   accountEmptyError: "Choisissez le compte de départ et le compte d'arrivée",
-  netAssets: "Actif net",
   accounts: "Comptes",
   // Column headers for the Accounts tab's balance table. Separate from the
   // journal's `balance` key, which names the beancount directive.
   account: "Compte",
   accountBalance: "Solde",
-  monthlyNetIncome: "Revenu net mensuel",
   liabilities: "Passifs",
   equity: "Capitaux propres",
   noDataCharts: "Ajoutez rapidement pour afficher les graphiques",
@@ -207,16 +197,10 @@ export const fr: typeof en = {
   date: "Date",
   save: "Enregistrer",
   pleaseInput: "Veuillez saisir...",
-  monthlyNetWorth: "Valeur nette mensuelle",
-  subscribe: "Rapport par e-mail",
   off: "Désactivé",
   weekly: "Hebdomadaire",
   monthly: "Mensuel",
-  updating: "mise à jour...",
-  updateSuccess: "Abonnement mis à jour",
-  updateFailed: "Échec de la mise à jour",
   inviteFriends: "Inviter des amis",
-  invite: "Inviter",
   inviteSummary:
     "Partagez cet outil professionnel de gestion financière et aidez les autres à bâtir leur avenir financier.",
   referral: "Parrainage",
@@ -229,10 +213,7 @@ export const fr: typeof en = {
   recommend:
     "Je souhaite partager cet outil professionnel de gestion financière qui m'a aidé à organiser efficacement mes finances.",
   shareError: "Échec du partage",
-  thanksShare: "Merci pour le partage !",
   loading: "chargement...",
-  noContactPermission: "Autorisation de contacts manquante.",
-  inputKeyword: "Veuillez saisir un mot-clé",
   "01": "JANV",
   "02": "FÉV",
   "03": "MARS",
@@ -295,7 +276,6 @@ export const fr: typeof en = {
     "Chaque élément du nom doit commencer par une majuscule ou un chiffre.",
   openAccountInvalidCharacters:
     "N'utilisez que des lettres, des chiffres et des traits d'union dans les noms de compte.",
-  closeAccount: "Fermer un compte",
   transaction: "Transaction",
   loadingMore: "Chargement en cours...",
   noMoreEntries: "Aucune autre entrée",
@@ -303,12 +283,9 @@ export const fr: typeof en = {
   accountDetailUnavailable:
     "Ce compte n'est pas disponible dans le grand livre sélectionné.",
   journalLoadError: "Échec du chargement du journal : ",
-  accountsPlural: "comptes",
   // entry context (transactions screen)
-  journalLoadingEntryContext: "Chargement du contexte de l'entrée...",
   journalError: "Erreur",
   journalNoData: "Aucune donnée de contexte d'entrée disponible",
-  journalLocation: "Emplacement",
   journalEntryContext: "Contexte de l'entrée",
   journalBalancesBefore: "Soldes avant l'entrée",
   journalBalancesAfter: "Soldes après l'entrée",
@@ -325,22 +302,12 @@ export const fr: typeof en = {
   cleared: "Pointée",
   pending: "En attente",
   other: "Autres",
-  discovered: "Trouvés",
-  linked: "Liés",
   budget: "Budget",
   metadata: "Métadonnées",
   postings: "Écritures",
   details: "Détails",
   tags: "Étiquettes",
   links: "Liens",
-  clearedTransactions: "Transactions pointées",
-  pendingTransactions: "Transactions en attente",
-  otherTransactions: "Autres transactions",
-  discoveredDocuments: "Documents trouvés",
-  linkedDocuments: "Documents liés",
-  budgetEntries: "Lignes de budget",
-  toggleMetadata: "Afficher ou masquer les métadonnées",
-  togglePostings: "Afficher ou masquer les écritures",
   // reports tab
   reports: "Rapports",
   netProfit: "Résultat net",
@@ -572,7 +539,6 @@ export const fr: typeof en = {
   createLedgerEmptyDiscover: "Découvrir",
   ledgerGuardTitle: "Aucun grand livre sélectionné",
   ledgerGuardMessage: "Créez un grand livre ou découvrez-en un pour continuer.",
-  ledgerGuardSelect: "Sélectionner un grand livre",
   removePosting: "Supprimer l'écriture",
   toggleAmountSign: "Inverser le signe du montant",
   incomeExpenseChartSummary:

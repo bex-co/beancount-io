@@ -59,7 +59,6 @@ export const fa: typeof en = {
   merchantsLoadError: "بارگذاری پذیرندگان ناموفق بود: ",
   merchantsSortByCount: "مرتب‌سازی بر اساس تعداد تراکنش",
   merchantsSortAlphabetical: "مرتب‌سازی الفبایی",
-  mine: "من",
   merchantsRecurringSection: "دوره‌ای",
   merchantsRecurringBadge: "دوره‌ای",
   merchantsCadenceWeekly: "هفتگی",
@@ -80,7 +79,6 @@ export const fa: typeof en = {
   merchantDetailEmptyTitle: "بدون تراکنش",
   merchantDetailEmptyMessage: "هیچ تراکنشی دقیقاً با این فروشنده مطابقت ندارد.",
   merchantDetailLoadingMore: "در حال بارگذاری بیشتر…",
-  setting: "تنظیم",
   // mine
   reviewApp: "دوستش دارید؟ نظر بدهید :)",
   helpCenter: "مرکز کمک",
@@ -100,9 +98,6 @@ export const fa: typeof en = {
   logoutAlertCancel: "لغو",
   logoutAlertConfirm: "خروج",
   logout: "خروج",
-  loggingOut: "در حال خروج",
-  loggingOutMessage: "لطفاً صبر کنید، در حال خروج امن شما هستیم...",
-  loggingOutProgress: "در حال خروج...",
   // Offline / stale cache
   staleDataNotice:
     "اعداد ذخیره‌شده نمایش داده می‌شوند — ممکن است به‌روز نباشند",
@@ -113,7 +108,6 @@ export const fa: typeof en = {
   deleteAccountAlertConfirm: "حذف حساب",
   deleteAccount: "حذف حساب",
   deleteAccountDescription: "حذف دائمی حساب و داده‌ها",
-  ledgerDescription: "انتخاب یا تغییر بین دفترهای کل",
   ledgers: "دفترهای کل",
   deleteAccountConfirmTitle: "تأیید حذف حساب",
   deleteAccountConfirmMessage:
@@ -127,7 +121,6 @@ export const fa: typeof en = {
   appSettings: "تنظیمات برنامه",
   accountSettings: "حساب",
   supportSettings: "پشتیبانی",
-  login: "ورود / ثبت نام",
   signIn: "ورود",
   signUp: "ثبت نام",
   serverSettings: "سرور",
@@ -182,13 +175,11 @@ export const fa: typeof en = {
   saveFailed: "ذخیره ناموفق",
   amountEmptyError: "لطفاً مبلغ را وارد کنید",
   accountEmptyError: "حساب مبدأ و مقصد را انتخاب کنید",
-  netAssets: "دارایی‌های خالص",
   accounts: "حساب‌ها",
   // Column headers for the Accounts tab's balance table. Separate from the
   // journal's `balance` key, which names the beancount directive.
   account: "حساب",
   accountBalance: "مانده",
-  monthlyNetIncome: "درآمد خالص ماهانه",
   liabilities: "بدهی‌ها",
   equity: "حقوق صاحبان سهام",
   noDataCharts: "برای نمایش نمودارها سریع اضافه کنید",
@@ -203,16 +194,10 @@ export const fa: typeof en = {
   date: "تاریخ",
   save: "ذخیره",
   pleaseInput: "لطفاً وارد کنید...",
-  monthlyNetWorth: "ارزش خالص ماهانه",
-  subscribe: "گزارش ایمیل",
   off: "خاموش",
   weekly: "هفتگی",
   monthly: "ماهانه",
-  updating: "به‌روزرسانی...",
-  updateSuccess: "اشتراک با موفقیت به‌روزرسانی شد",
-  updateFailed: "به‌روزرسانی اشتراک ناموفق",
   inviteFriends: "دعوت دوستان",
-  invite: "دعوت",
   inviteSummary:
     "این ابزار حرفه‌ای مدیریت مالی را به اشتراک بگذارید و به دیگران کمک کنید تا آینده مالی خود را بسازند.",
   referral: "معرفی",
@@ -225,10 +210,7 @@ export const fa: typeof en = {
   recommend:
     "می‌خواهم این ابزار حرفه‌ای مدیریت مالی را که به من در سازماندهی مؤثر امور مالی‌ام کمک کرده است، به اشتراک بگذارم.",
   shareError: "اشتراک‌گذاری ناموفق",
-  thanksShare: "از اشتراک‌گذاری متشکریم!!",
   loading: "در حال بارگذاری...",
-  noContactPermission: "مجوز دسترسی به مخاطبین وجود ندارد.",
-  inputKeyword: "لطفاً کلمه کلیدی وارد کنید",
   "01": "ژان",
   "02": "فور",
   "03": "مار",
@@ -288,19 +270,15 @@ export const fa: typeof en = {
     "هر بخش نام حساب باید با حرف بزرگ یا رقم آغاز شود.",
   openAccountInvalidCharacters:
     "در نام حساب‌ها فقط از حروف، ارقام و خط تیره استفاده کنید.",
-  closeAccount: "بستن حساب",
   transaction: "تراکنش",
   loadingMore: "در حال بارگذاری بیشتر...",
   noMoreEntries: "رکورد دیگری نیست",
   noEntries: "بدون رکورد",
   accountDetailUnavailable: "این حساب در دفتر کل انتخاب‌شده موجود نیست.",
   journalLoadError: "بارگذاری روزنامه ناموفق بود: ",
-  accountsPlural: "حساب",
   // entry context (transactions screen)
-  journalLoadingEntryContext: "در حال بارگذاری زمینه ورودی...", // TODO: needs native speaker review
   journalError: "خطا", // TODO: needs native speaker review
   journalNoData: "داده‌های زمینه ورودی در دسترس نیست", // TODO: needs native speaker review
-  journalLocation: "موقعیت", // TODO: needs native speaker review
   journalEntryContext: "زمینه ورودی", // TODO: needs native speaker review
   journalBalancesBefore: "موجودی قبل از ورودی", // TODO: needs native speaker review
   journalBalancesAfter: "موجودی بعد از ورودی", // TODO: needs native speaker review
@@ -317,22 +295,12 @@ export const fa: typeof en = {
   cleared: "تأییدشده",
   pending: "در انتظار",
   other: "سایر",
-  discovered: "یافت‌شده",
-  linked: "پیوندخورده",
   budget: "بودجه",
   metadata: "فراداده",
   postings: "ثبت‌ها",
   details: "جزئیات",
   tags: "برچسب‌ها",
   links: "پیوندها",
-  clearedTransactions: "تراکنش‌های تأییدشده",
-  pendingTransactions: "تراکنش‌های در انتظار",
-  otherTransactions: "سایر تراکنش‌ها",
-  discoveredDocuments: "اسناد یافت‌شده",
-  linkedDocuments: "اسناد پیوندخورده",
-  budgetEntries: "رکوردهای بودجه",
-  toggleMetadata: "نمایش یا پنهان‌سازی فراداده",
-  togglePostings: "نمایش یا پنهان‌سازی ثبت‌ها",
   // reports tab
   reports: "گزارش‌ها",
   netProfit: "سود خالص",
@@ -558,7 +526,6 @@ export const fa: typeof en = {
   createLedgerEmptyDiscover: "کشف",
   ledgerGuardTitle: "دفترکلی انتخاب نشده",
   ledgerGuardMessage: "برای ادامه یک دفترکل بسازید یا کشف کنید.",
-  ledgerGuardSelect: "انتخاب دفترکل",
   removePosting: "حذف ثبت",
   toggleAmountSign: "تغییر علامت مبلغ",
   incomeExpenseChartSummary:

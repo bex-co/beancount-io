@@ -166,7 +166,6 @@ export const SAME_AS_ENGLISH: Record<
         "accountPickerRecent",
         "accounts",
         "account",
-        "accountsPlural",
         "filters",
         "filterStatus",
         "filterAccount",

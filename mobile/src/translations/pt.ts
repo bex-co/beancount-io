@@ -60,7 +60,6 @@ export const pt: typeof en = {
   merchantsLoadError: "Falha ao carregar comerciantes: ",
   merchantsSortByCount: "Ordenar por número de transações",
   merchantsSortAlphabetical: "Ordenar alfabeticamente",
-  mine: "Meu",
   merchantsRecurringSection: "Recorrente",
   merchantsRecurringBadge: "Recorrente",
   merchantsCadenceWeekly: "Semanal",
@@ -82,7 +81,6 @@ export const pt: typeof en = {
   merchantDetailEmptyMessage:
     "Nenhuma transação corresponde exatamente a este comerciante.",
   merchantDetailLoadingMore: "A carregar mais…",
-  setting: "Configuração",
   // mine
   reviewApp: "Gostou? Deixe uma avaliação :)",
   helpCenter: "Central de ajuda",
@@ -102,10 +100,6 @@ export const pt: typeof en = {
   logoutAlertCancel: "Cancelar",
   logoutAlertConfirm: "Sair",
   logout: "Sair",
-  loggingOut: "Saindo",
-  loggingOutMessage:
-    "Por favor, aguarde enquanto fazemos logout com segurança...",
-  loggingOutProgress: "Saindo...",
   // Offline / stale cache
   staleDataNotice: "Mostrando números em cache — podem estar desatualizados",
   // delete account alert
@@ -115,7 +109,6 @@ export const pt: typeof en = {
   deleteAccountAlertConfirm: "Excluir conta",
   deleteAccount: "Excluir conta",
   deleteAccountDescription: "Remover permanentemente a conta e os dados",
-  ledgerDescription: "Selecionar ou alternar entre seus livros-razão",
   ledgers: "Livros-razão",
   deleteAccountConfirmTitle: "Confirmar exclusão da conta",
   deleteAccountConfirmMessage:
@@ -129,7 +122,6 @@ export const pt: typeof en = {
   appSettings: "Configurações do aplicativo",
   accountSettings: "Conta",
   supportSettings: "Suporte",
-  login: "Entrar / Registrar",
   signIn: "Entrar",
   signUp: "Registrar",
   serverSettings: "Servidor",
@@ -188,13 +180,11 @@ export const pt: typeof en = {
   saveFailed: "Falha ao salvar",
   amountEmptyError: "Por favor, insira o valor",
   accountEmptyError: "Escolha a conta de origem e a de destino",
-  netAssets: "Ativos líquidos",
   accounts: "Contas",
   // Column headers for the Accounts tab's balance table. Separate from the
   // journal's `balance` key, which names the beancount directive.
   account: "Conta",
   accountBalance: "Saldo",
-  monthlyNetIncome: "Renda líquida mensal",
   liabilities: "Passivos",
   equity: "Patrimônio líquido",
   noDataCharts: "Adicionar rápido para mostrar gráficos",
@@ -209,16 +199,10 @@ export const pt: typeof en = {
   date: "Data",
   save: "Salvar",
   pleaseInput: "Por favor, insira...",
-  monthlyNetWorth: "Patrimônio líquido mensal",
-  subscribe: "Relatório por e-mail",
   off: "Desligado",
   weekly: "Semanal",
   monthly: "Mensal",
-  updating: "atualizando...",
-  updateSuccess: "Assinatura atualizada com sucesso",
-  updateFailed: "Falha ao atualizar assinatura",
   inviteFriends: "Convidar amigos",
-  invite: "Convidar",
   inviteSummary:
     "Compartilhe esta ferramenta profissional de gestão financeira e ajude outros a construir seu futuro financeiro.",
   referral: "Indicação",
@@ -231,10 +215,7 @@ export const pt: typeof en = {
   recommend:
     "Gostaria de compartilhar esta ferramenta profissional de gestão financeira que me ajudou a organizar minhas finanças de forma eficaz.",
   shareError: "Falha ao compartilhar",
-  thanksShare: "Obrigado por compartilhar!!",
   loading: "carregando...",
-  noContactPermission: "Permissão de contatos em falta.",
-  inputKeyword: "Por favor, insira uma palavra-chave",
   "01": "JAN",
   "02": "FEV",
   "03": "MAR",
@@ -297,7 +278,6 @@ export const pt: typeof en = {
     "Cada parte do nome da conta precisa começar com letra maiúscula ou número.",
   openAccountInvalidCharacters:
     "Use apenas letras, números e hifens nos nomes de conta.",
-  closeAccount: "Fechar conta",
   transaction: "Transação",
   loadingMore: "Carregando mais...",
   noMoreEntries: "Não há mais entradas",
@@ -305,12 +285,9 @@ export const pt: typeof en = {
   accountDetailUnavailable:
     "Esta conta não está disponível no livro-razão selecionado.",
   journalLoadError: "Falha ao carregar o diário: ",
-  accountsPlural: "contas",
   // entry context (transactions screen)
-  journalLoadingEntryContext: "Carregando contexto da entrada...",
   journalError: "Erro",
   journalNoData: "Nenhum dado de contexto de entrada disponível",
-  journalLocation: "Localização",
   journalEntryContext: "Contexto da entrada",
   journalBalancesBefore: "Saldos antes da entrada",
   journalBalancesAfter: "Saldos depois da entrada",
@@ -327,22 +304,12 @@ export const pt: typeof en = {
   cleared: "Conciliada",
   pending: "Pendente",
   other: "Outras",
-  discovered: "Encontrados",
-  linked: "Vinculados",
   budget: "Orçamento",
   metadata: "Metadados",
   postings: "Lançamentos",
   details: "Detalhes",
   tags: "Tags",
   links: "Links",
-  clearedTransactions: "Transações conciliadas",
-  pendingTransactions: "Transações pendentes",
-  otherTransactions: "Outras transações",
-  discoveredDocuments: "Documentos encontrados",
-  linkedDocuments: "Documentos vinculados",
-  budgetEntries: "Registros de orçamento",
-  toggleMetadata: "Mostrar ou ocultar metadados",
-  togglePostings: "Mostrar ou ocultar lançamentos",
   // reports tab
   reports: "Relatórios",
   netProfit: "Lucro líquido",
@@ -571,7 +538,6 @@ export const pt: typeof en = {
   createLedgerEmptyDiscover: "Descobrir",
   ledgerGuardTitle: "Nenhum livro selecionado",
   ledgerGuardMessage: "Crie um livro ou descubra um para continuar.",
-  ledgerGuardSelect: "Selecionar livro",
   removePosting: "Remover lançamento",
   toggleAmountSign: "Alternar sinal do valor",
   incomeExpenseChartSummary:

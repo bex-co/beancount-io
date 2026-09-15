@@ -258,8 +258,7 @@ describe("translations", () => {
       expect(en.loading).toBe("loading...");
     });
 
-    it("has email subscription keys", () => {
-      expect(en.subscribe).toBe("Email Report");
+    it("has cadence keys", () => {
       expect(en.off).toBe("Off");
       expect(en.weekly).toBe("Weekly");
       expect(en.monthly).toBe("Monthly");
@@ -267,7 +266,6 @@ describe("translations", () => {
 
     it("has referral keys", () => {
       expect(en.inviteFriends).toBe("Invite Friends");
-      expect(en.invite).toBe("Invite");
       expect(en.referral).toBe("Referral");
       expect(en.copy).toBe("Copy");
       expect(en.copied).toBe("Copied");
@@ -284,7 +282,6 @@ describe("translations", () => {
       expect(en.search).toBe("Search");
       expect(en.unknown).toBe("Unknown");
       expect(en.openAccount).toBe("Open Account");
-      expect(en.closeAccount).toBe("Close Account");
       expect(en.transaction).toBe("Transaction");
     });
   });

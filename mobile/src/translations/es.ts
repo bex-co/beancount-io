@@ -59,7 +59,6 @@ export const es: typeof en = {
   merchantsLoadError: "Error al cargar comerciantes: ",
   merchantsSortByCount: "Ordenar por número de transacciones",
   merchantsSortAlphabetical: "Ordenar alfabéticamente",
-  mine: "Mío",
   merchantsRecurringSection: "Recurrente",
   merchantsRecurringBadge: "Recurrente",
   merchantsCadenceWeekly: "Semanal",
@@ -81,7 +80,6 @@ export const es: typeof en = {
   merchantDetailEmptyMessage:
     "Ninguna transacción coincide exactamente con este comercio.",
   merchantDetailLoadingMore: "Cargando más…",
-  setting: "Ajustes",
   // mine
   reviewApp: "¿Te gusta? Deja una reseña :)",
   helpCenter: "Centro de ayuda",
@@ -101,10 +99,6 @@ export const es: typeof en = {
   logoutAlertCancel: "Cancelar",
   logoutAlertConfirm: "Cerrar sesión",
   logout: "Cerrar sesión",
-  loggingOut: "Cerrando sesión",
-  loggingOutMessage:
-    "Por favor espera mientras cerramos tu sesión de forma segura...",
-  loggingOutProgress: "Cerrando sesión...",
   // Offline / stale cache
   staleDataNotice: "Mostrando cifras en caché — pueden no estar actualizadas",
   // delete account alert
@@ -114,7 +108,6 @@ export const es: typeof en = {
   deleteAccountAlertConfirm: "Eliminar cuenta",
   deleteAccount: "Eliminar cuenta",
   deleteAccountDescription: "Eliminar permanentemente tu cuenta y datos",
-  ledgerDescription: "Selecciona o cambia entre tus libros",
   ledgers: "Libros",
   deleteAccountConfirmTitle: "Confirmar eliminación de cuenta",
   deleteAccountConfirmMessage:
@@ -128,7 +121,6 @@ export const es: typeof en = {
   appSettings: "Configuración de la aplicación",
   accountSettings: "Cuenta",
   supportSettings: "Soporte",
-  login: "Iniciar sesión / Registrarse",
   signIn: "Iniciar sesión",
   signUp: "Registrarse",
   serverSettings: "Servidor",
@@ -186,13 +178,11 @@ export const es: typeof en = {
   saveFailed: "Error al guardar",
   amountEmptyError: "Por favor ingrese el monto",
   accountEmptyError: "Elige la cuenta de origen y la de destino",
-  netAssets: "Activos netos",
   accounts: "Cuentas",
   // Column headers for the Accounts tab's balance table. Separate from the
   // journal's `balance` key, which names the beancount directive.
   account: "Cuenta",
   accountBalance: "Saldo",
-  monthlyNetIncome: "Ingresos netos mensuales",
   liabilities: "Pasivos",
   equity: "Patrimonio",
   noDataCharts: "Agregue datos rápidamente para mostrar gráficos",
@@ -207,16 +197,10 @@ export const es: typeof en = {
   date: "Fecha",
   save: "Guardar",
   pleaseInput: "Por favor ingrese...",
-  monthlyNetWorth: "Patrimonio neto mensual",
-  subscribe: "Informe por correo",
   off: "Apagado",
   weekly: "Semanal",
   monthly: "Mensual",
-  updating: "actualizando...",
-  updateSuccess: "Suscripción actualizada con éxito",
-  updateFailed: "Error al actualizar la suscripción",
   inviteFriends: "Invitar amigos",
-  invite: "Invitar",
   inviteSummary:
     "Comparte esta herramienta profesional de gestión financiera y ayuda a otros a construir su futuro financiero.",
   referral: "Referencia",
@@ -229,10 +213,7 @@ export const es: typeof en = {
   recommend:
     "Me gustaría compartir esta herramienta profesional de gestión financiera que me ha ayudado a organizar mis finanzas de manera efectiva.",
   shareError: "Error al compartir",
-  thanksShare: "¡Gracias por compartir!",
   loading: "cargando...",
-  noContactPermission: "Falta permiso de contactos.",
-  inputKeyword: "Ingrese una palabra clave",
   "01": "ENE",
   "02": "FEB",
   "03": "MAR",
@@ -295,7 +276,6 @@ export const es: typeof en = {
     "Cada componente del nombre debe empezar por mayúscula o número.",
   openAccountInvalidCharacters:
     "Usa solo letras, números y guiones en los nombres de cuenta.",
-  closeAccount: "Cerrar cuenta",
   transaction: "Transacción",
   loadingMore: "Cargando más...",
   noMoreEntries: "No hay más entradas",
@@ -303,12 +283,9 @@ export const es: typeof en = {
   accountDetailUnavailable:
     "Esta cuenta no está disponible en el libro seleccionado.",
   journalLoadError: "Error al cargar el diario: ",
-  accountsPlural: "cuentas",
   // entry context (transactions screen)
-  journalLoadingEntryContext: "Cargando contexto de entrada...",
   journalError: "Error",
   journalNoData: "No hay datos de contexto de entrada disponibles",
-  journalLocation: "Ubicación",
   journalEntryContext: "Contexto de entrada",
   journalBalancesBefore: "Saldos antes de la entrada",
   journalBalancesAfter: "Saldos después de la entrada",
@@ -325,22 +302,12 @@ export const es: typeof en = {
   cleared: "Conciliada",
   pending: "Pendiente",
   other: "Otras",
-  discovered: "Encontrados",
-  linked: "Vinculados",
   budget: "Presupuesto",
   metadata: "Metadatos",
   postings: "Apuntes",
   details: "Detalles",
   tags: "Etiquetas",
   links: "Enlaces",
-  clearedTransactions: "Transacciones conciliadas",
-  pendingTransactions: "Transacciones pendientes",
-  otherTransactions: "Otras transacciones",
-  discoveredDocuments: "Documentos encontrados",
-  linkedDocuments: "Documentos vinculados",
-  budgetEntries: "Entradas de presupuesto",
-  toggleMetadata: "Mostrar u ocultar metadatos",
-  togglePostings: "Mostrar u ocultar apuntes",
   // reports tab
   reports: "Informes",
   netProfit: "Beneficio neto",
@@ -569,7 +536,6 @@ export const es: typeof en = {
   createLedgerEmptyDiscover: "Descubrir",
   ledgerGuardTitle: "Ningún libro seleccionado",
   ledgerGuardMessage: "Crea un libro o descubre uno para continuar.",
-  ledgerGuardSelect: "Seleccionar libro",
   removePosting: "Eliminar asiento",
   toggleAmountSign: "Cambiar el signo del importe",
   incomeExpenseChartSummary:
