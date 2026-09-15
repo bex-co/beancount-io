@@ -7,9 +7,9 @@ import {
 } from "../number-utils";
 
 describe("shortNumber", () => {
-  it("formats values below one thousand with a fixed decimal", () => {
-    expect(shortNumber(0)).toBe("0.0");
-    expect(shortNumber(12)).toBe("12.0");
+  it("formats values below one thousand, dropping the decimal when whole", () => {
+    expect(shortNumber(0)).toBe("0");
+    expect(shortNumber(12)).toBe("12");
     expect(shortNumber(999.4)).toBe("999.4");
   });
 
@@ -22,14 +22,14 @@ describe("shortNumber", () => {
   });
 
   it("preserves the negative sign for negative values", () => {
-    expect(shortNumber(-50)).toBe("-50.0");
+    expect(shortNumber(-50)).toBe("-50");
     expect(shortNumber(-2100)).toBe("-2.1K");
     expect(shortNumber(-3500000)).toBe("-3.5M");
   });
 
   it("handles numeric strings", () => {
     expect(shortNumber("1250")).toBe("1.3K");
-    expect(shortNumber("999" as const)).toBe("999.0");
+    expect(shortNumber("999" as const)).toBe("999");
   });
 
   it("returns the original value when parsing fails", () => {
@@ -37,8 +37,8 @@ describe("shortNumber", () => {
   });
 
   it("handles zero correctly", () => {
-    expect(shortNumber(0)).toBe("0.0");
-    expect(shortNumber("0")).toBe("0.0");
+    expect(shortNumber(0)).toBe("0");
+    expect(shortNumber("0")).toBe("0");
   });
 
   it("handles decimal values", () => {
@@ -79,9 +79,24 @@ describe("shortNumber", () => {
   });
 
   it("handles boundary values", () => {
-    expect(shortNumber(999)).toBe("999.0");
-    expect(shortNumber(999999)).toBe("1000.0K");
-    expect(shortNumber(999999999)).toBe("1000.0M");
+    expect(shortNumber(999)).toBe("999");
+    expect(shortNumber(999999)).toBe("1.0M");
+    expect(shortNumber(999999999)).toBe("1.0B");
+  });
+
+  it("promotes a value whose rounding reaches the next suffix", () => {
+    expect(shortNumber(999.94)).toBe("999.9");
+    expect(shortNumber(999.96)).toBe("1.0K");
+    expect(shortNumber(999949)).toBe("999.9K");
+    expect(shortNumber(999950)).toBe("1.0M");
+    expect(shortNumber(-999999)).toBe("-1.0M");
+    expect(shortNumber(999999999999)).toBe("1.0T");
+  });
+
+  it("keeps the largest suffix when there is nothing to promote to", () => {
+    expect(shortNumber(999e15)).toBe("999Q");
+    expect(shortNumber(1e18)).toBe("1000Q");
+    expect(shortNumber(1234.5e15)).toBe("1234.5Q");
   });
 });
 

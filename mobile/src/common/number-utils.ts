@@ -1,5 +1,14 @@
 import { getCurrencySymbol } from "./currency-util";
 
+const SHORT_NUMBER_SUFFIXES = [
+  { value: 1, symbol: "" },
+  { value: 1e3, symbol: "K" },
+  { value: 1e6, symbol: "M" },
+  { value: 1e9, symbol: "B" },
+  { value: 1e12, symbol: "T" },
+  { value: 1e15, symbol: "Q" },
+];
+
 export const shortNumber = (number: number | string): string => {
   // Convert string to number if needed
   const num = typeof number === "string" ? parseFloat(number) : number;
@@ -9,36 +18,29 @@ export const shortNumber = (number: number | string): string => {
     return number.toString();
   }
 
-  // Handle negative numbers
-  const isNegative = num < 0;
+  const sign = num < 0 ? "-" : "";
   const absNum = Math.abs(num);
 
-  if (absNum < 1000) {
-    return num.toFixed(1);
+  // The largest suffix the magnitude reaches, promoted when one-decimal
+  // rounding would show 1000 of it (999,999 is "1.0M", not "1000.0K"). The
+  // largest suffix has nothing to promote to.
+  const last = SHORT_NUMBER_SUFFIXES.length - 1;
+  let tier = last;
+  while (tier > 0 && absNum < SHORT_NUMBER_SUFFIXES[tier].value) tier--;
+  if (
+    tier < last &&
+    Number((absNum / SHORT_NUMBER_SUFFIXES[tier].value).toFixed(1)) >= 1000
+  ) {
+    tier++;
   }
 
-  const suffixes = [
-    { value: 1e3, symbol: "K" },
-    { value: 1e6, symbol: "M" },
-    { value: 1e9, symbol: "B" },
-    { value: 1e12, symbol: "T" },
-    { value: 1e15, symbol: "Q" },
-  ];
-
-  for (let i = suffixes.length - 1; i >= 0; i--) {
-    const { value, symbol } = suffixes[i];
-    if (absNum >= value) {
-      const shortNum = absNum / value;
-      // If the result is a whole number, don't show decimal
-      if (shortNum === Math.floor(shortNum)) {
-        return (isNegative ? "-" : "") + shortNum.toString() + symbol;
-      }
-      // Otherwise show one decimal place
-      return (isNegative ? "-" : "") + shortNum.toFixed(1) + symbol;
-    }
-  }
-
-  return num.toFixed(1);
+  const { value, symbol } = SHORT_NUMBER_SUFFIXES[tier];
+  const shortNum = absNum / value;
+  // Whole values drop the decimal at every magnitude: "0", "50", "1K".
+  const digits = Number.isInteger(shortNum)
+    ? shortNum.toString()
+    : shortNum.toFixed(1);
+  return sign + digits + symbol;
 };
 
 /**

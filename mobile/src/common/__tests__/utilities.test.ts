@@ -54,9 +54,9 @@ describe("utility modules", () => {
   });
 
   describe("number-utils", () => {
-    it("keeps a single decimal place for numbers below one thousand", () => {
+    it("drops the decimal for whole numbers below one thousand", () => {
       const { shortNumber } = require("../number-utils");
-      expect(shortNumber(12)).toBe("12.0");
+      expect(shortNumber(12)).toBe("12");
       expect(shortNumber("18.5")).toBe("18.5");
     });
 

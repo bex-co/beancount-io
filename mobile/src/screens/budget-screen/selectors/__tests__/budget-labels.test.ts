@@ -75,7 +75,7 @@ describe("budgetChartSummary", () => {
         t,
       ),
     ).toBe(
-      "Budget versus actual for JAN. Actual $400.0 of $500.0 budgeted across 1 periods, 0 over target.",
+      "Budget versus actual for JAN. Actual $400 of $500 budgeted across 1 periods, 0 over target.",
     );
   });
 
