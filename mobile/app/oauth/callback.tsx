@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { completeOAuthAuthorization } from "@/common/oauth/authorization-completion";
 import { OAuthAuthorizationError } from "@/common/oauth/authorization-result";
@@ -8,6 +8,7 @@ import { callbackUrlFromParams } from "@/common/oauth/callback-url";
 import { currentOAuthRedirectUri } from "@/common/oauth/native-redirect";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
+import { useSignedInOnArrival } from "@/common/hooks/use-signed-in-on-arrival";
 import type { ColorTheme } from "@/types/theme-props";
 import { Button } from "@/components/button";
 
@@ -45,6 +46,7 @@ export default function OAuthCallbackRoute(): JSX.Element {
   const [failed, setFailed] = useState(false);
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
+  const signedIn = useSignedInOnArrival();
 
   useEffect(() => {
     if (!callbackUrl || startedFor.current === callbackUrl) return;
@@ -60,14 +62,24 @@ export default function OAuthCallbackRoute(): JSX.Element {
     });
   }, [callbackUrl]);
 
+  // Opened without an authorization response (a bare URL) there is nothing to
+  // complete. Never show a sign-in that is not happening: a signed-in arrival
+  // goes back into the app, anyone else gets the failure card and its way out.
+  if (!callbackUrl && signedIn) {
+    return <Redirect href="/(app)/(tabs)" />;
+  }
+  const showFailure = failed || !callbackUrl;
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.card}>
         <Text style={styles.title}>
-          {failed ? t("journalError") : t("signIn")}
+          {showFailure ? t("journalError") : t("signIn")}
         </Text>
-        {!failed ? <Text style={styles.message}>{t("loading")}</Text> : null}
-        {failed ? (
+        {!showFailure ? (
+          <Text style={styles.message}>{t("loading")}</Text>
+        ) : null}
+        {showFailure ? (
           <Button
             type="primary"
             onPress={() => router.replace("/auth/welcome")}
