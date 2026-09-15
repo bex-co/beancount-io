@@ -10,9 +10,11 @@ What remains needs a signed-in app. t005 checks the rule on screen, and the work
 
 **Unblock:** put `QA_EMAIL` and `QA_PASSWORD` in the gitignored `mobile/.env`, or sign the development build in. Then move this directory back to `.pm/w4/m11/` and continue from t005, then t006, t007, t008, and t009. The workstream checkbox stays unchecked until closeout.
 
+The evidence notes [w4/016](../016.md) and [w4/027](../027.md), and the follow-up idea [w4/068](../068.md), moved into `blocked/` beside this milestone.
+
 ## Display rule
 
-Decided 2026-09-15, when the user approved `/pm-brainstorm for w4` item 2. It resolves the open question that blocked [w4/016](../../016.md) and [w4/027](../../027.md). Every task applies it to the Accounts tree, the account detail header, journal rows, the running balance, and Home's Net Worth together, so the screens keep agreeing.
+Decided 2026-09-15, when the user approved `/pm-brainstorm for w4` item 2. It resolves the open question that blocked [w4/016](../016.md) and [w4/027](../027.md). Every task applies it to the Accounts tree, the account detail header, journal rows, the running balance, and Home's Net Worth together, so the screens keep agreeing.
 
 1. **Totals stay at cost.** `BALANCE_CONVERSION` stays `"at_cost"`. Operating-currency totals do not change, and the Accounts tree and Home keep agreeing to the cent.
 2. **Converted totals state their basis.** Home's Net Worth and the Accounts totals carry an "at cost" label.
@@ -20,7 +22,7 @@ Decided 2026-09-15, when the user approved `/pm-brainstorm for w4` item 2. It re
 4. **A non-empty account never reads as zero.** A commodity with no cost currency (`-8 VACHR`) shows its units and stays distinguishable from a genuinely empty account.
 5. **Totals disclose what they leave out.** A parent, a root, or Net Worth whose holdings include commodities it cannot express in the operating currency names them, reusing the merchant header's one-line-per-currency shape (`merchant-detail-screen.tsx`, `totalsByCurrency`).
 
-Not part of this rule: a cost / market value / units toggle ([w4/068](../../068.md)); converting the Transactions list, which keeps its recorded scale (`w3/done/109`); any change to the ledger itself.
+Not part of this rule: a cost / market value / units toggle ([w4/068](../068.md)); converting the Transactions list, which keeps its recorded scale (`w3/done/109`); any change to the ledger itself.
 
 ## Tasks (in order)
 
@@ -47,7 +49,7 @@ Not part of this rule: a cost / market value / units toggle ([w4/068](../../068.
 
 ## Source + Goal linkage
 
-- **Source:** promoted from [w4/016](../../016.md) (native QA, 2026-09-13, major) with [w4/027](../../027.md) folded in (the valuation-basis decision). Both were blocked on a display decision, which the user made by approving `/pm-brainstorm for w4` item 2 on 2026-09-15. The two notes stay in the open tree as evidence until closeout, following the `w3/038` precedent.
+- **Source:** promoted from [w4/016](../016.md) (native QA, 2026-09-13, major) with [w4/027](../027.md) folded in (the valuation-basis decision). Both were blocked on a display decision, which the user made by approving `/pm-brainstorm for w4` item 2 on 2026-09-15. The two notes stay in the open tree as evidence until closeout, following the `w3/038` precedent.
 - **Goal linkage:** **A2 — Frictionless onboarding:** a newcomer's first look at their balances and net worth is truthful, instead of a number 10% below their brokerage with no explanation, or a real holding shown as `$0.00`. **A3 — Community & distribution:** the public example ledgers, including `open_ledger/crypto-example`, are the app's showcase, and today they misrepresent what they hold.
 - **Expected outcome:** a mobile user holding investments, crypto, or non-money commodities can read every account and total without cross-checking BQL. Each figure says whether it is units or cost, and nothing non-empty reads as zero.
 - **Why now:** showing a real balance as `$0.00` and silently dropping it from Net Worth is a correctness defect, not polish. Triage already traced the cause to the client's own `BALANCE_CONVERSION = "at_cost"` request, so the change is mobile-only, and the display decision was the only blocker. The merchant header already renders one line per currency, so the shape exists in the app.
@@ -55,7 +57,7 @@ Not part of this rule: a cost / market value / units toggle ([w4/068](../../068.
 
 ## Evidence
 
-Reproductions, BQL results, and the screenshot index live in [w4/016](../../016.md) and [w4/027](../../027.md). In short, from the Beancount example ledger at HEAD `038faeeb`:
+Reproductions, BQL results, and the screenshot index live in [w4/016](../016.md) and [w4/027](../027.md). In short, from the Beancount example ledger at HEAD `038faeeb`:
 
 - `RGAGX` holds `597.748 RGAGX` and is shown only as `$49,049.67`, which is exactly `sum(cost(position))`.
 - `Hoogle:Vacation` holds `-8 VACHR` and is shown as `$0.00`, the same as the genuinely empty `Federal:PreTax401k`.
