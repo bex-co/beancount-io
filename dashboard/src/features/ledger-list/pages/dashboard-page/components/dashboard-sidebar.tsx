@@ -32,6 +32,7 @@ import {
   SidebarMenuSkeleton,
   SidebarRail,
 } from "@/common/components/ui/sidebar.tsx";
+import { SidebarNavigation } from "@/common/components/sidebar-navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -401,61 +402,67 @@ export function DashboardSidebar() {
   return (
     <>
       <Sidebar>
-        <SidebarHeader className="h-16 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-row items-center p-2">
-          {/* Logo + "Dashboard" text (clickable) */}
-          <button
-            onClick={() => navigate({ to: "/ledger" })}
-            aria-label={t("page.dashboard.goToDashboard")}
-            className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
-              <img src="/lgasset/logo.png" alt="" className="h-8 w-8 rounded" />
-            </div>
-            <span className="font-semibold truncate">
-              {t("page.dashboard.dashboard")}
-            </span>
-          </button>
-        </SidebarHeader>
-
-        <SidebarContent>
-          {/* Create Ledger Section */}
-          <SidebarGroup className="pb-0">
-            <SidebarGroupContent>
-              <div className="px-2">
-                <Button
-                  onClick={() => setIsCreateDialogOpen(true)}
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start"
-                  data-testid="create-ledger-btn"
-                >
-                  <Plus className="h-4 w-4" />
-                  {t("page.dashboard.createLedger")}
-                </Button>
-              </div>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>
-              {t("page.dashboard.yourLedgers")}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              {isLoading && (
-                <SidebarLedgerSkeleton count={ledgers.length || 3} />
-              )}
-              {error && <SidebarLedgerError onRetry={() => refetch()} />}
-              {!isLoading && !error && (
-                <LedgerListData
-                  ledgers={ledgers}
-                  onView={handleViewLedger}
-                  onEdit={handleEditLedger}
-                  onDelete={handleSetDeletingLedger}
-                  onCreateLedger={() => setIsCreateDialogOpen(true)}
+        <SidebarNavigation label={t("common.dashboardNavigation")}>
+          <SidebarHeader className="h-16 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-row items-center p-2">
+            {/* Logo + "Dashboard" text (clickable) */}
+            <button
+              onClick={() => navigate({ to: "/ledger" })}
+              aria-label={t("page.dashboard.goToDashboard")}
+              className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+                <img
+                  src="/lgasset/logo.png"
+                  alt=""
+                  className="h-8 w-8 rounded"
                 />
-              )}
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
+              </div>
+              <span className="font-semibold truncate">
+                {t("page.dashboard.dashboard")}
+              </span>
+            </button>
+          </SidebarHeader>
+
+          <SidebarContent>
+            {/* Create Ledger Section */}
+            <SidebarGroup className="pb-0">
+              <SidebarGroupContent>
+                <div className="px-2">
+                  <Button
+                    onClick={() => setIsCreateDialogOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    data-testid="create-ledger-btn"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t("page.dashboard.createLedger")}
+                  </Button>
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>
+                {t("page.dashboard.yourLedgers")}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                {isLoading && (
+                  <SidebarLedgerSkeleton count={ledgers.length || 3} />
+                )}
+                {error && <SidebarLedgerError onRetry={() => refetch()} />}
+                {!isLoading && !error && (
+                  <LedgerListData
+                    ledgers={ledgers}
+                    onView={handleViewLedger}
+                    onEdit={handleEditLedger}
+                    onDelete={handleSetDeletingLedger}
+                    onCreateLedger={() => setIsCreateDialogOpen(true)}
+                  />
+                )}
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+        </SidebarNavigation>
         <SidebarRail />
       </Sidebar>
 

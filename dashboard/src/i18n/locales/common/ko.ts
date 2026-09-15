@@ -160,6 +160,10 @@ const koCommon: Record<string, TranslationEntry> = {
       "제공된 URL 매개변수가 유효하지 않습니다. 링크를 확인하고 다시 시도해 주세요.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "원장",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "장부 설정",
     description:
@@ -254,6 +258,11 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "보기 선택",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "대시보드",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "{pattern} 또는 {iso} 형식으로 날짜 입력",
     description:
@@ -274,6 +283,11 @@ const koCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "모바일 사이드바를 표시합니다.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "본문으로 건너뛰기",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "별표",

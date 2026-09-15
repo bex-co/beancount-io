@@ -160,6 +160,10 @@ const nlCommon: Record<string, TranslationEntry> = {
       "De opgegeven URL-parameters zijn niet geldig. Controleer de link en probeer het opnieuw.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "Grootboek",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "Grootboekinstellingen",
     description:
@@ -255,6 +259,11 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Selecteer een weergave",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "Dashboard",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "Voer een datum in als {pattern} of {iso}",
     description:
@@ -275,6 +284,11 @@ const nlCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "Toont de mobiele zijbalk.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "Ga naar hoofdinhoud",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "Sterren",

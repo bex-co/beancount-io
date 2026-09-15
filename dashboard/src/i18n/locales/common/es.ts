@@ -160,6 +160,10 @@ const esCommon: Record<string, TranslationEntry> = {
       "Los parámetros de URL proporcionados no son válidos. Por favor, verifique el enlace e inténtelo de nuevo.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "Libro",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "Configuración del libro",
     description:
@@ -254,6 +258,11 @@ const esCommon: Record<string, TranslationEntry> = {
     message: "Seleccionar una vista",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "Panel",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "Introduce una fecha con el formato {pattern} o {iso}",
     description:
@@ -274,6 +283,11 @@ const esCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "Muestra la barra lateral móvil.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "Saltar al contenido principal",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "Estrellas",

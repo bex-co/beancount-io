@@ -160,6 +160,10 @@ const faCommon: Record<string, TranslationEntry> = {
       "پارامترهای URL ارائه شده معتبر نیستند. لطفاً لینک را بررسی کرده و دوباره تلاش کنید.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "دفترکل",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "تنظیمات دفتر",
     description:
@@ -255,6 +259,11 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "انتخاب نما",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "داشبورد",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "تاریخ را به قالب {pattern} یا {iso} وارد کنید",
     description:
@@ -275,6 +284,11 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "نوار کناری موبایل را نمایش می‌دهد.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "پرش به محتوای اصلی",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "ستاره‌ها",

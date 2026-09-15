@@ -160,6 +160,10 @@ const skCommon: Record<string, TranslationEntry> = {
       "Poskytnuté parametre URL nie sú platné. Skontrolujte odkaz a skúste to znova.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "Účtovná kniha",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "Nastavenia knihy",
     description:
@@ -255,6 +259,11 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Vyberte zobrazenie",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "Dashboard",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "Zadajte dátum vo formáte {pattern} alebo {iso}",
     description:
@@ -275,6 +284,11 @@ const skCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "Zobrazuje mobilný postranný panel.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "Preskočiť na hlavný obsah",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "Hviezdy",

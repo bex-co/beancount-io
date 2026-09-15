@@ -160,6 +160,10 @@ const frCommon: Record<string, TranslationEntry> = {
       "Les paramètres d'URL fournis ne sont pas valides. Veuillez vérifier le lien et réessayer.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "Grand livre",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "Paramètres du livre",
     description:
@@ -254,6 +258,11 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Sélectionner une vue",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "Tableau de bord",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "Saisissez une date au format {pattern} ou {iso}",
     description:
@@ -274,6 +283,11 @@ const frCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "Affiche la barre latérale mobile.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "Aller au contenu principal",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "Étoiles",

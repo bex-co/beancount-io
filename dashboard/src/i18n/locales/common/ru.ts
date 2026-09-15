@@ -160,6 +160,10 @@ const ruCommon: Record<string, TranslationEntry> = {
       "Предоставленные параметры URL недействительны. Пожалуйста, проверьте ссылку и попробуйте снова.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "Журнал",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "Настройки книги",
     description:
@@ -254,6 +258,11 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Выберите вид",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "Панель",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "Введите дату в формате {pattern} или {iso}",
     description:
@@ -274,6 +283,11 @@ const ruCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "Отображает мобильную боковую панель.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "Перейти к основному содержимому",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "Звёзды",

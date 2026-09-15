@@ -52,7 +52,7 @@
 
 - [x] **m38** — Give Accounts and Budget the head metadata every other ledger route has (6 tasks) ← continuous dashboard QA, 2026-09-12
 
-- [ ] **m39** — Make the primary sidebar a navigation landmark and let keyboard users skip it (6 tasks) ← continuous dashboard QA, 2026-09-12
+- [x] **m39** — Make the primary sidebar a navigation landmark and let keyboard users skip it (6 tasks) ← continuous dashboard QA, 2026-09-12
 
 - [ ] **m40** — Make the account journal's "Units" column mean units (6 tasks) ← continuous dashboard QA, 2026-09-12
 

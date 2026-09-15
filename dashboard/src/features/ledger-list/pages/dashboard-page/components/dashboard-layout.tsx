@@ -4,6 +4,8 @@ import {
   useSidebar,
 } from "@/common/components/ui/sidebar.tsx";
 import { Authenticated } from "@/common/components/authenticated";
+import { SkipToContentLink } from "@/common/components/skip-to-content";
+import { MAIN_CONTENT_ID } from "@/common/lib/main-content";
 import { UserNav } from "@/common/components/user-nav.tsx";
 import { DashboardSidebar } from "./dashboard-sidebar";
 
@@ -38,8 +40,13 @@ export function DashboardLayout({ children }: { children?: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="flex h-(--visual-viewport-height,100vh) w-full">
+        <SkipToContentLink />
         <DashboardSidebar />
-        <main className="flex flex-1 flex-col min-w-0 w-full">
+        <main
+          id={MAIN_CONTENT_ID}
+          tabIndex={-1}
+          className="flex flex-1 flex-col min-w-0 w-full outline-none"
+        >
           <DashboardHeader />
           {children}
         </main>

@@ -260,4 +260,14 @@ describe("LedgerSidebar", () => {
     expect(screen.getByRole("link", { name: "Errors" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Events" })).toBeInTheDocument();
   });
+
+  it("exposes a labelled Ledger navigation landmark", () => {
+    render(
+      <LedgerSidebar ledgerId="alice/book" currentPath="/ledger/alice/book" />,
+    );
+
+    expect(
+      screen.getByRole("navigation", { name: "Ledger" }),
+    ).toBeInTheDocument();
+  });
 });

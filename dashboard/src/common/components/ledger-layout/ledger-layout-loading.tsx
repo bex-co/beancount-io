@@ -12,35 +12,42 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/common/components/ui/sidebar.tsx";
+import { SkipToContentLink } from "@/common/components/skip-to-content";
+import { MAIN_CONTENT_ID } from "@/common/lib/main-content";
+import { SidebarNavigation } from "@/common/components/sidebar-navigation";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 /**
  * Loading skeleton for ledger sidebar
  */
 function LedgerSidebarSkeleton() {
+  const { t } = useTranslations();
   return (
     <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center gap-2 px-2">
-          <Skeleton className="h-8 w-8" />
-          <Skeleton className="h-4 w-32" />
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {Array.from({ length: 10 }).map((_, index) => (
-                <SidebarMenuItem key={index}>
-                  <div className="flex items-center gap-2 px-2 py-2">
-                    <Skeleton className="h-4 w-4" />
-                    <Skeleton className="h-4 flex-1" />
-                  </div>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+      <SidebarNavigation label={t("common.ledgerNavigation")}>
+        <SidebarHeader>
+          <div className="flex items-center gap-2 px-2">
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <SidebarMenuItem key={index}>
+                    <div className="flex items-center gap-2 px-2 py-2">
+                      <Skeleton className="h-4 w-4" />
+                      <Skeleton className="h-4 flex-1" />
+                    </div>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </SidebarNavigation>
     </Sidebar>
   );
 }
@@ -78,8 +85,13 @@ export function LedgerLayoutLoading() {
   return (
     <SidebarProvider>
       <div className="flex h-[var(--visual-viewport-height,100vh)] w-full">
+        <SkipToContentLink />
         <LedgerSidebarSkeleton />
-        <SidebarInset>
+        <SidebarInset
+          id={MAIN_CONTENT_ID}
+          tabIndex={-1}
+          className="outline-none"
+        >
           <div className="flex flex-1 flex-col">
             <LoadingHeader />
             <div className="flex-1 p-6">

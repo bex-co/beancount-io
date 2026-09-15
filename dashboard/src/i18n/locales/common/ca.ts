@@ -160,6 +160,10 @@ const caCommon: Record<string, TranslationEntry> = {
       "Els paràmetres d'URL proporcionats no són vàlids. Si us plau, comproveu l'enllaç i torneu-ho a provar.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "Llibre",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "Configuració del llibre",
     description:
@@ -255,6 +259,11 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "Seleccionar una vista",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "Tauler",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "Introdueix una data amb el format {pattern} o {iso}",
     description:
@@ -275,6 +284,11 @@ const caCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "Mostra la barra lateral mòbil.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "Vés al contingut principal",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "Estrelles",

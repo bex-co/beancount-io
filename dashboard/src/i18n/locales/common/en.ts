@@ -160,6 +160,10 @@ const enCommon: Record<string, TranslationEntry> = {
       "The URL parameters provided are not valid. Please check the link and try again.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "Ledger",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "Ledger Settings",
     description:
@@ -255,6 +259,11 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Select a view",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "Dashboard",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "Enter a date as {pattern} or {iso}",
     description:
@@ -275,6 +284,11 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "Displays the mobile sidebar.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "Skip to main content",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "Stars",

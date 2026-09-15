@@ -160,6 +160,10 @@ const jaCommon: Record<string, TranslationEntry> = {
       "指定されたURLパラメーターは有効ではありません。リンクを確認してもう一度お試しください。",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "帳簿",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "台帳設定",
     description:
@@ -254,6 +258,11 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "ビューを選択",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "ダッシュボード",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "{pattern} または {iso} の形式で日付を入力",
     description:
@@ -274,6 +283,11 @@ const jaCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "モバイルサイドバーを表示します。",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "メインコンテンツへスキップ",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "スター",

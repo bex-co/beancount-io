@@ -160,6 +160,10 @@ const ukCommon: Record<string, TranslationEntry> = {
       "Надані параметри URL недійсні. Будь ласка, перевірте посилання та спробуйте ще раз.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "Журнал",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "Налаштування книги",
     description:
@@ -255,6 +259,11 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Виберіть вигляд",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "Панель",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "Введіть дату у форматі {pattern} або {iso}",
     description:
@@ -275,6 +284,11 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "Відображає мобільну бічну панель.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "Перейти до основного вмісту",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "Зірки",

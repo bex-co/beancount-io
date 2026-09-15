@@ -160,6 +160,10 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Предоставените URL параметри не са валидни. Моля, проверете връзката и опитайте отново.",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "Леджър",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "Настройки на книга",
     description:
@@ -255,6 +259,11 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Изберете изглед",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "Табло",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "Въведете дата като {pattern} или {iso}",
     description:
@@ -275,6 +284,11 @@ const bgCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "Показва мобилната странична лента.",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "Към основното съдържание",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "Звезди",

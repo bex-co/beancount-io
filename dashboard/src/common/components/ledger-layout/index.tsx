@@ -6,6 +6,8 @@ import {
 } from "@tanstack/react-router";
 import { SidebarProvider } from "@/common/components/ui/sidebar.tsx";
 import { ErrorBoundary } from "@/common/components/error-boundary";
+import { SkipToContentLink } from "@/common/components/skip-to-content";
+import { MAIN_CONTENT_ID } from "@/common/lib/main-content";
 import { LedgerLayoutError } from "./ledger-layout-error";
 import { LedgerLayoutLoading } from "./ledger-layout-loading";
 import { useQuery } from "@apollo/client/react";
@@ -80,11 +82,16 @@ export function LedgerLayout() {
         <LedgerLayoutBackgroundQueries ledgerId={ledgerId} />
         <SidebarProvider>
           <div className="flex h-(--visual-viewport-height,100vh) w-full">
+            <SkipToContentLink />
             <LedgerSidebar
               ledgerId={ledgerId}
               currentPath={location.pathname}
             />
-            <main className="flex flex-1 flex-col min-w-0 w-full">
+            <main
+              id={MAIN_CONTENT_ID}
+              tabIndex={-1}
+              className="flex flex-1 flex-col min-w-0 w-full outline-none"
+            >
               {!isReactNative() && (
                 <LayoutHeader ledgerId={ledgerId} isCompact={isMobile} />
               )}

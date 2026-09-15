@@ -158,6 +158,10 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "提供的 URL 参数无效。请检查链接并重试。",
     description: "Description for validation error page",
   },
+  "common.ledgerNavigation": {
+    message: "账本",
+    description: "Accessible name for the ledger sidebar navigation landmark",
+  },
   "common.ledgerSettings": {
     message: "账本设置",
     description:
@@ -251,6 +255,11 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "选择视图",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dashboardNavigation": {
+    message: "仪表板",
+    description:
+      "Accessible name for the dashboard sidebar navigation landmark",
+  },
   "common.dateInputFormat": {
     message: "按 {pattern} 或 {iso} 格式输入日期",
     description:
@@ -271,6 +280,11 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.sidebarDescription": {
     message: "显示移动侧边栏。",
     description: "Description of mobile sidebar for screen readers",
+  },
+  "common.skipToContent": {
+    message: "跳到主要内容",
+    description:
+      "Skip link that moves keyboard focus past the primary sidebar into the main content region",
   },
   "common.stars": {
     message: "星标",

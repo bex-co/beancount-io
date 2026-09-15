@@ -668,4 +668,17 @@ describe("DashboardSidebar", () => {
       });
     });
   });
+
+  it("exposes a labelled Dashboard navigation landmark", () => {
+    setLedgerQueryResult({
+      data: { listLedgers: [adminLedger] },
+      loading: false,
+    });
+
+    renderSidebar();
+
+    expect(
+      screen.getByRole("navigation", { name: "Dashboard" }),
+    ).toBeInTheDocument();
+  });
 });

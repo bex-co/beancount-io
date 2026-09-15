@@ -35,6 +35,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/common/components/ui/sidebar.tsx";
+import { SidebarNavigation } from "@/common/components/sidebar-navigation";
 import { decodeLedgerId } from "@/common/lib/utils/encode.ts";
 import { getUpcomingEventsDays } from "@/common/lib/fava-options";
 import { useLedger } from "@/common/hooks/use-ledger.ts";
@@ -418,54 +419,56 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="h-16 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-row items-center p-2">
-        <LedgerSwitcher
-          currentLedgerId={ledgerId}
-          currentLedgerName={ledgerName}
-        />
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {primaryMenuItems.map(renderMenuItem)}
-              {menuGroups.slice(0, 2).map(renderMenuGroup)}
-              {renderMenuItem({
-                id: "files",
-                label: t("ledgerEditor.files"),
-                icon: Folder,
-                path: `${ledgerPath}/files/tree/main`,
-              })}
-              {menuGroups.slice(2).map(renderMenuGroup)}
-              {visibleStatusMenuItems.length === 1
-                ? renderMenuItem(visibleStatusMenuItems[0])
-                : null}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          {renderMenuItem({
-            id: "agent",
-            label: t("aiAgent.title"),
-            icon: MessageSquare,
-            path: `${ledgerPath}/agent`,
-          })}
-          {renderMenuItem({
-            id: "settings",
-            label: t("common.ledgerSettings"),
-            icon: Settings,
-            path: `${ledgerPath}/settings`,
-          })}
-        </SidebarMenu>
-        {/* Usage card can't shrink to the icon rail; hide it when collapsed. */}
-        <div className="group-data-[collapsible=icon]:hidden">
-          <LedgerOwnerPermission>
-            <DirectiveUsageIndicator ledgerId={ledgerId} />
-          </LedgerOwnerPermission>
-        </div>
-      </SidebarFooter>
+      <SidebarNavigation label={t("common.ledgerNavigation")}>
+        <SidebarHeader className="h-16 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-row items-center p-2">
+          <LedgerSwitcher
+            currentLedgerId={ledgerId}
+            currentLedgerName={ledgerName}
+          />
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {primaryMenuItems.map(renderMenuItem)}
+                {menuGroups.slice(0, 2).map(renderMenuGroup)}
+                {renderMenuItem({
+                  id: "files",
+                  label: t("ledgerEditor.files"),
+                  icon: Folder,
+                  path: `${ledgerPath}/files/tree/main`,
+                })}
+                {menuGroups.slice(2).map(renderMenuGroup)}
+                {visibleStatusMenuItems.length === 1
+                  ? renderMenuItem(visibleStatusMenuItems[0])
+                  : null}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
+            {renderMenuItem({
+              id: "agent",
+              label: t("aiAgent.title"),
+              icon: MessageSquare,
+              path: `${ledgerPath}/agent`,
+            })}
+            {renderMenuItem({
+              id: "settings",
+              label: t("common.ledgerSettings"),
+              icon: Settings,
+              path: `${ledgerPath}/settings`,
+            })}
+          </SidebarMenu>
+          {/* Usage card can't shrink to the icon rail; hide it when collapsed. */}
+          <div className="group-data-[collapsible=icon]:hidden">
+            <LedgerOwnerPermission>
+              <DirectiveUsageIndicator ledgerId={ledgerId} />
+            </LedgerOwnerPermission>
+          </div>
+        </SidebarFooter>
+      </SidebarNavigation>
       <SidebarRail />
     </Sidebar>
   );

@@ -129,3 +129,10 @@ For Search Console evidence, run `yarn search-console-report --markdown --days 2
 - Keep server-only configuration and calls out of browser bundles. Use the established `*.server.ts`/server-function boundaries.
 - Reuse common responsive and accessibility primitives before adding another abstraction.
 - Charts use ECharts 6; keep report-specific transformation close to its feature and test transformations independently from rendering.
+
+## Shell accessibility
+
+The ledger shell (`src/common/components/ledger-layout/`) and the `/ledger` dashboard shell (`src/features/ledger-list/pages/dashboard-page/components/dashboard-layout.tsx`) share the same accessibility structure:
+
+- Each primary sidebar composes `SidebarNavigation` (a labelled `<nav>` landmark). Do **not** put the landmark inside the shared `sidebar.tsx` primitive — only navigation regions should expose one.
+- Both shells render `SkipToContentLink` as the first focusable element and give `<main id="main-content" tabIndex={-1}>` so keyboard users can skip past the sidebar. Reuse `src/common/components/skip-to-content.tsx` and `src/common/lib/main-content.ts` for any future sidebar shell.
