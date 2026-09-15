@@ -538,6 +538,8 @@ export const ru: typeof en = {
     "Доходы и расходы за {{count}} мес. Доходы {{income}}, расходы {{expense}}, чистыми {{net}}.",
   cashFlowChartSummary:
     "Денежный поток от доходов к расходам. Доходы {{income}}, расходы {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Денежный поток от доходов к расходам. Доходы {{income}}, расходы {{expenses}}, сбережения {{savings}}.",
   ledgerNavigateUp: "На уровень выше",
   openLedgerDrawer: "Открыть меню",
   back: "Назад",

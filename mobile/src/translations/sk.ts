@@ -540,6 +540,8 @@ export const sk: typeof en = {
     "Príjmy a výdavky za {{count}} mesiacov. Príjmy {{income}}, výdavky {{expense}}, čisté {{net}}.",
   cashFlowChartSummary:
     "Peňažný tok z príjmov do výdavkov. Príjmy {{income}}, výdavky {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Peňažný tok z príjmov do výdavkov. Príjmy {{income}}, výdavky {{expenses}}, úspory {{savings}}.",
   ledgerNavigateUp: "O úroveň vyššie",
   openLedgerDrawer: "Otvoriť menu",
   back: "Späť",

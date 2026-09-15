@@ -545,6 +545,8 @@ export const ca: typeof en = {
     "Ingressos i despeses durant {{count}} mesos. Ingressos {{income}}, despeses {{expense}}, net {{net}}.",
   cashFlowChartSummary:
     "Flux de caixa d'ingressos a despeses. Ingressos {{income}}, despeses {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Flux de caixa d'ingressos a despeses. Ingressos {{income}}, despeses {{expenses}}, estalvis {{savings}}.",
   ledgerNavigateUp: "Puja una carpeta",
   openLedgerDrawer: "Obre el menú",
   back: "Enrere",

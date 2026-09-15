@@ -4,15 +4,18 @@ import {
   OTHER_EXPENSES_ACCOUNT,
   OTHER_INCOME_ACCOUNT,
   SAVINGS_ID,
+  cashFlowChartSummary,
   categorizeAccount,
   extractAccountAtDepth,
   isExcludedAccount,
   pickNumericAmount,
   sankeyColorForRole,
   sankeyRoleForId,
+  sankeySavings,
   transformToSankeyData,
   truncateSankeyLabel,
 } from "../sankey-data";
+import { en } from "../../../../translations/en";
 
 function node(
   account: string,
@@ -269,5 +272,59 @@ describe("transformToSankeyData", () => {
     });
     expect(result.nodes.some((n) => n.id.startsWith("Equity:"))).toBe(false);
     expect(result.totalIncome).toBe(10999);
+  });
+});
+
+describe("cashFlowChartSummary", () => {
+  // Interpolates the real English copy, so a renamed key or dropped token fails.
+  const t = (key: string, params?: Record<string, unknown>) =>
+    String((en as unknown as Record<string, string>)[key]).replace(
+      /{{(\w+)}}/g,
+      (_match, name: string) => String(params?.[name]),
+    );
+  const flow = (incomeValue: number, expenseValue: number) =>
+    transformToSankeyData({
+      income: [node("Income:Salary", incomeValue)],
+      expenses: [node("Expenses:Rent", expenseValue)],
+      otherLabel: "Other",
+      cashFlowLabel: "Cash flow",
+      savingsLabel: "Savings",
+    });
+
+  it("formats the totals with the currency and names savings when drawn", () => {
+    expect(sankeySavings(flow(5000, 3000))).toBe(2000);
+    expect(cashFlowChartSummary(flow(5000, 3000), "USD", t)).toBe(
+      "Cash flow from income to expenses. Income $5K, expenses $3K, savings $2K.",
+    );
+  });
+
+  it("leaves savings out when the chart draws no Savings band", () => {
+    expect(sankeySavings(flow(3000, 5000))).toBe(null);
+    expect(cashFlowChartSummary(flow(3000, 5000), "USD", t)).toBe(
+      "Cash flow from income to expenses. Income $3K, expenses $5K.",
+    );
+  });
+
+  it("labels a currency without a symbol by its code", () => {
+    expect(cashFlowChartSummary(flow(5000, 3000), "MUSD", t)).toBe(
+      "Cash flow from income to expenses. Income 5K MUSD, expenses 3K MUSD, savings 2K MUSD.",
+    );
+  });
+
+  it("is what the chart announces, with the Reports currency passed in", () => {
+    const fs = require("fs") as typeof import("fs");
+    const path = require("path") as typeof import("path");
+    const read = (...parts: string[]) =>
+      fs.readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8");
+    expect(
+      read("components", "cash-flow-sankey.tsx").includes(
+        "accessibilityLabel={cashFlowChartSummary(data, currency, t)}",
+      ),
+    ).toBe(true);
+    expect(
+      read("reports-screen.tsx")
+        .replace(/\s+/gu, "")
+        .includes("expenses={expense.tree}currency={currency}"),
+    ).toBe(true);
   });
 });

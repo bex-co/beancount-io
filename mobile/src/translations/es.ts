@@ -542,6 +542,8 @@ export const es: typeof en = {
     "Ingresos y gastos durante {{count}} meses. Ingresos {{income}}, gastos {{expense}}, neto {{net}}.",
   cashFlowChartSummary:
     "Flujo de caja de ingresos a gastos. Ingresos {{income}}, gastos {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Flujo de caja de ingresos a gastos. Ingresos {{income}}, gastos {{expenses}}, ahorros {{savings}}.",
   ledgerNavigateUp: "Subir una carpeta",
   openLedgerDrawer: "Abrir menú",
   back: "Atrás",

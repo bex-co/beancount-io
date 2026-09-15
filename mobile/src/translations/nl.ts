@@ -541,6 +541,8 @@ export const nl: typeof en = {
     "Inkomsten en uitgaven over {{count}} maanden. Inkomsten {{income}}, uitgaven {{expense}}, netto {{net}}.",
   cashFlowChartSummary:
     "Kasstroom van inkomsten naar uitgaven. Inkomsten {{income}}, uitgaven {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Kasstroom van inkomsten naar uitgaven. Inkomsten {{income}}, uitgaven {{expenses}}, spaargeld {{savings}}.",
   ledgerNavigateUp: "Eén map omhoog",
   openLedgerDrawer: "Menu openen",
   back: "Terug",

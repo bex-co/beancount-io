@@ -1,6 +1,7 @@
 import type { AccountNode } from "../../../components/account-list/select-account-list";
 import { leafName } from "../../../common/account-util";
 import { topNWithOther } from "./select-breakdown-rows";
+import { formatShortMoneyWithCurrency } from "../../../common/number-utils";
 
 /** Depth of account path the Sankey draws — matches the web transformer. */
 const SANKEY_DEPTH = 2;
@@ -358,4 +359,36 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
   }
 
   return { nodes, links, totalIncome, totalExpenses };
+}
+
+/** The savings the chart draws (its link into the Savings node), or null when it draws none. */
+export function sankeySavings(data: SankeyData): number | null {
+  const link = data.links.find((candidate) => candidate.target === SAVINGS_ID);
+  return link ? link.value : null;
+}
+
+/**
+ * The chart's screen-reader summary. The Sankey draws no values, so this is the
+ * only way assistive technology learns any magnitude from it: money is
+ * formatted like the income/expense chart beside it (with the ledger's
+ * currency), and savings is named whenever the chart draws a Savings band.
+ */
+export function cashFlowChartSummary(
+  data: SankeyData,
+  currency: string,
+  t: (key: string, params?: Record<string, unknown>) => string,
+): string {
+  const money = (value: number) =>
+    formatShortMoneyWithCurrency(value, currency);
+  const totals = {
+    income: money(data.totalIncome),
+    expenses: money(data.totalExpenses),
+  };
+  const savings = sankeySavings(data);
+  return savings === null
+    ? t("cashFlowChartSummary", totals)
+    : t("cashFlowChartSummaryWithSavings", {
+        ...totals,
+        savings: money(savings),
+      });
 }

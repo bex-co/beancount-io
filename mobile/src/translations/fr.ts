@@ -545,6 +545,8 @@ export const fr: typeof en = {
     "Revenus et dépenses sur {{count}} mois. Revenus {{income}}, dépenses {{expense}}, net {{net}}.",
   cashFlowChartSummary:
     "Flux de trésorerie des revenus vers les dépenses. Revenus {{income}}, dépenses {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Flux de trésorerie des revenus vers les dépenses. Revenus {{income}}, dépenses {{expenses}}, épargne {{savings}}.",
   ledgerNavigateUp: "Remonter d'un dossier",
   openLedgerDrawer: "Ouvrir le menu",
   back: "Retour",

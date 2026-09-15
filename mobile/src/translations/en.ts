@@ -308,6 +308,8 @@ export const en = {
     "Income and expenses over {{count}} months. Income {{income}}, expenses {{expense}}, net {{net}}.",
   cashFlowChartSummary:
     "Cash flow from income to expenses. Income {{income}}, expenses {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Cash flow from income to expenses. Income {{income}}, expenses {{expenses}}, savings {{savings}}.",
   savings: "Savings",
   // feed
   latestUpdates: "Latest Updates",

@@ -532,6 +532,8 @@ export const fa: typeof en = {
     "درآمد و هزینه در {{count}} ماه. درآمد {{income}}، هزینه {{expense}}، خالص {{net}}.",
   cashFlowChartSummary:
     "جریان نقدی از درآمد به هزینه. درآمد {{income}}، هزینه {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "جریان نقدی از درآمد به هزینه. درآمد {{income}}، هزینه {{expenses}}، پس‌انداز {{savings}}.",
   ledgerNavigateUp: "رفتن به پوشه بالاتر",
   openLedgerDrawer: "باز کردن منو",
   back: "بازگشت",

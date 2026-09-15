@@ -544,6 +544,8 @@ export const pt: typeof en = {
     "Receitas e despesas em {{count}} meses. Receitas {{income}}, despesas {{expense}}, líquido {{net}}.",
   cashFlowChartSummary:
     "Fluxo de caixa de receitas para despesas. Receitas {{income}}, despesas {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Fluxo de caixa de receitas para despesas. Receitas {{income}}, despesas {{expenses}}, poupança {{savings}}.",
   ledgerNavigateUp: "Subir uma pasta",
   openLedgerDrawer: "Abrir menu",
   back: "Voltar",

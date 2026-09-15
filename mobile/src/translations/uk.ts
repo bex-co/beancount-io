@@ -536,6 +536,8 @@ export const uk: typeof en = {
     "Доходи й витрати за {{count}} міс. Доходи {{income}}, витрати {{expense}}, чистими {{net}}.",
   cashFlowChartSummary:
     "Грошовий потік від доходів до витрат. Доходи {{income}}, витрати {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Грошовий потік від доходів до витрат. Доходи {{income}}, витрати {{expenses}}, заощадження {{savings}}.",
   ledgerNavigateUp: "На рівень вище",
   openLedgerDrawer: "Відкрити меню",
   back: "Назад",

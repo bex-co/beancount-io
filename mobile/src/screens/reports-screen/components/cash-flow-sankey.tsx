@@ -27,6 +27,7 @@ import {
   transformToSankeyData,
   truncateSankeyLabel,
   sankeyColorForRole,
+  cashFlowChartSummary,
 } from "../selectors/sankey-data";
 
 /** Plot height; the skeleton is this plus the legend so the card does not jump. */
@@ -125,6 +126,8 @@ function sankeyRibbonPath(link: LayoutLink): string | null {
 type CashFlowSankeyProps = {
   income: AccountNode[];
   expenses: AccountNode[];
+  /** Ledger currency code, for the screen-reader summary's amounts. */
+  currency: string;
 };
 
 const getStyles = (theme: ColorTheme) =>
@@ -222,6 +225,7 @@ function AnimatedNodeRect({
 function CashFlowSankeyPlot({
   income,
   expenses,
+  currency,
 }: CashFlowSankeyProps): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -277,18 +281,13 @@ function CashFlowSankeyPlot({
   }
 
   const nodeColor = (node: LayoutNode) => sankeyColorForRole(node.role, theme);
-  const incomeTotal = income.reduce((sum, node) => sum + node.value, 0);
-  const expenseTotal = expenses.reduce((sum, node) => sum + node.value, 0);
 
   return (
     <View
       style={styles.plot}
       onLayout={onLayout}
       accessible
-      accessibilityLabel={t("cashFlowChartSummary", {
-        income: String(Math.round(incomeTotal)),
-        expenses: String(Math.round(expenseTotal)),
-      })}
+      accessibilityLabel={cashFlowChartSummary(data, currency, t)}
     >
       <Svg width={width} height={SANKEY_HEIGHT}>
         {graph?.links.map((link, index) => {

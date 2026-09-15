@@ -181,7 +181,11 @@ const ReportsScreenImpl = (): JSX.Element => {
             <CashFlowSankeySkeleton />
           ) : (
             <FadeInView>
-              <CashFlowSankey income={income.tree} expenses={expense.tree} />
+              <CashFlowSankey
+                income={income.tree}
+                expenses={expense.tree}
+                currency={currency}
+              />
             </FadeInView>
           )}
         </DashboardCard>

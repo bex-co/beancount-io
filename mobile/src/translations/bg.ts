@@ -541,6 +541,8 @@ export const bg: typeof en = {
     "Приходи и разходи за {{count}} месеца. Приходи {{income}}, разходи {{expense}}, нето {{net}}.",
   cashFlowChartSummary:
     "Паричен поток от приходи към разходи. Приходи {{income}}, разходи {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Паричен поток от приходи към разходи. Приходи {{income}}, разходи {{expenses}}, спестявания {{savings}}.",
   ledgerNavigateUp: "Нагоре една папка",
   openLedgerDrawer: "Отвори менюто",
   back: "Назад",

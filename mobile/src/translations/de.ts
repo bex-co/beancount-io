@@ -551,6 +551,8 @@ export const de: typeof en = {
     "Einnahmen und Ausgaben über {{count}} Monate. Einnahmen {{income}}, Ausgaben {{expense}}, Netto {{net}}.",
   cashFlowChartSummary:
     "Cashflow von Einnahmen zu Ausgaben. Einnahmen {{income}}, Ausgaben {{expenses}}.",
+  cashFlowChartSummaryWithSavings:
+    "Cashflow von Einnahmen zu Ausgaben. Einnahmen {{income}}, Ausgaben {{expenses}}, Ersparnisse {{savings}}.",
   ledgerNavigateUp: "Eine Ebene nach oben",
   openLedgerDrawer: "Menü öffnen",
   back: "Zurück",
