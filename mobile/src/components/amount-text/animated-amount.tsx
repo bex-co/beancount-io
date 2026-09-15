@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { StyleProp, TextStyle } from "react-native";
+import { StyleProp, TextProps, TextStyle } from "react-native";
 import {
   useAnimatedReaction,
   useSharedValue,
@@ -31,7 +31,10 @@ type AnimatedAmountProps = {
    */
   animate?: boolean;
   style?: StyleProp<TextStyle>;
-};
+} & Pick<
+  TextProps,
+  "numberOfLines" | "adjustsFontSizeToFit" | "minimumFontScale"
+>;
 
 /**
  * A money figure that counts to its value instead of appearing at it.
@@ -64,6 +67,7 @@ export function AnimatedAmount({
   format,
   animate = true,
   style,
+  ...fit
 }: AnimatedAmountProps) {
   // Starts at zero so the first paint counts up from nothing; later changes
   // count from wherever the previous value left off.
@@ -125,7 +129,7 @@ export function AnimatedAmount({
   );
 
   return (
-    <AmountText style={style}>
+    <AmountText style={style} {...fit}>
       {format(selectAnimatedAmountValue({ value, shown, animate, settled }))}
     </AmountText>
   );

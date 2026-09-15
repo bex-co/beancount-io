@@ -42,6 +42,7 @@ import {
 } from "./scrub";
 import { LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
 import { ChartErrorBoundary } from "./chart-chrome";
+import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
 
 // Created once at module scope: building these inside the component would give
 // React a new component type on every render and remount the node each time.
@@ -378,6 +379,7 @@ function ScrubHeader({
         // the exact point under the touch, and a tween there reads as lag.
         animate={!scrubbing}
         style={styles.headline}
+        {...HERO_AMOUNT_FIT}
       />
       <View style={styles.changeRow}>
         <AmountText style={[styles.change, { color }]}>{changeText}</AmountText>

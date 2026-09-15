@@ -60,6 +60,7 @@ import {
 } from "@/common/app-links/ledger-url-actions";
 import { getServerUrl } from "@/common/vars/server-url";
 import { ledgerVar } from "@/common/vars";
+import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -101,6 +102,9 @@ const getStyles = (theme: ColorTheme) =>
       marginTop: 10,
       fontSize: fontSizes.heroSm,
       fontWeight: fontWeights.medium,
+      // AmountText aligns to the leading edge; the hero is centred, and a
+      // shrunk amount would otherwise sit against one side.
+      textAlign: "center",
     },
     heroSubtitle: {
       marginTop: 6,
@@ -500,6 +504,7 @@ const TransactionDetailImpl = ({
             {title}
           </Text>
           <AmountText
+            {...HERO_AMOUNT_FIT}
             style={[
               styles.heroAmount,
               {
