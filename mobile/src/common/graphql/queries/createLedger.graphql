@@ -17,10 +17,7 @@ mutation CreateLedger(
     private
     empty
     size
-    httpUrl
-    sshUrl
     createdAt
-    updatedAt
     permissions {
       admin
       pull

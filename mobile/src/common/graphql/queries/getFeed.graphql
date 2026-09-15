@@ -7,7 +7,6 @@ query GetFeed($offset: Float, $limit: Float, $locale: String) {
       link
       publishedAt
       author
-      authorAvatar
       source
     }
     hasMore

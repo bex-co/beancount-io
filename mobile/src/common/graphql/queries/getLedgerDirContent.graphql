@@ -6,6 +6,5 @@ query getLedgerDirContent($ledgerId: String!, $dirPath: String) {
     size
     sha
     lastCommitSha
-    lastAuthorDate
   }
 }

@@ -16,13 +16,5 @@ query AccountReport(
       date
       balance
     }
-    intervalTotalsData {
-      date
-      balance
-    }
-    accountBalanceData {
-      date
-      balance
-    }
   }
 }

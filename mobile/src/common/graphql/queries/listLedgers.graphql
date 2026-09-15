@@ -3,13 +3,10 @@ query ListLedgers($limit: Float, $page: Float) {
     id
     name
     fullName
-    httpUrl
-    sshUrl
     private
     empty
     size
     createdAt
-    updatedAt
     description
     permissions {
       admin

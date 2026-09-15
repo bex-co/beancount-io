@@ -6,7 +6,7 @@ const ACCOUNT_REPORT_FETCH_POLICY = "cache-and-network" as const;
 
 /**
  * Report for a single account: `linechartData` is its balance history over
- * time, `intervalTotalsData` the per-interval change. `time` scopes the range,
+ * time, the only series the app reads. `time` scopes the range,
  * `interval` the bucketing (monthly by default). Holdings are valued per
  * {@link BALANCE_CONVERSION}, matching the journal below the chart — which
  * already defaulted to it, so the two used to disagree.

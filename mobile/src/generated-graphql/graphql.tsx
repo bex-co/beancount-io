@@ -25,7 +25,7 @@ export type AccountReportQueryVariables = Exact<{
 }>;
 
 
-export type AccountReportQuery = { getLedgerAccountReport: { linechartData: Array<{ date: string, balance: Record<string, number | string> }>, intervalTotalsData: Array<{ date: string, balance: Record<string, number | string> }>, accountBalanceData: Array<{ date: string, balance: Record<string, number | string> }> } };
+export type AccountReportQuery = { getLedgerAccountReport: { linechartData: Array<{ date: string, balance: Record<string, number | string> }> } };
 
 export type AddEntriesMutationVariables = Exact<{
   entriesInput: Array<Types.EntryInput> | Types.EntryInput;
@@ -68,7 +68,7 @@ export type CreateLedgerMutationVariables = Exact<{
 }>;
 
 
-export type CreateLedgerMutation = { createLedger: { id: string, name: string, fullName: string, description: string | null, private: boolean, empty: boolean, size: number, httpUrl: string, sshUrl: string, createdAt: string, updatedAt: string, permissions: { admin: boolean, pull: boolean, push: boolean } | null } };
+export type CreateLedgerMutation = { createLedger: { id: string, name: string, fullName: string, description: string | null, private: boolean, empty: boolean, size: number, createdAt: string, permissions: { admin: boolean, pull: boolean, push: boolean } | null } };
 
 export type CreateLedgerFileMutationVariables = Exact<{
   ledgerId: string;
@@ -139,14 +139,14 @@ export type GetFeedQueryVariables = Exact<{
 }>;
 
 
-export type GetFeedQuery = { getFeed: { hasMore: boolean, items: Array<{ id: string, title: string, summary: string | null, link: string, publishedAt: unknown, author: string | null, authorAvatar: string | null, source: Types.FeedSource }> } };
+export type GetFeedQuery = { getFeed: { hasMore: boolean, items: Array<{ id: string, title: string, summary: string | null, link: string, publishedAt: unknown, author: string | null, source: Types.FeedSource }> } };
 
 export type GetLedgerQueryVariables = Exact<{
   ledgerId: string;
 }>;
 
 
-export type GetLedgerQuery = { getLedger: { id: string, name: string, fullName: string, httpUrl: string, sshUrl: string, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, permissions: { admin: boolean, pull: boolean, push: boolean } | null, options: { nameAssets: string, nameEquity: string, nameExpenses: string, nameIncome: string, nameLiabilities: string, operatingCurrency: Array<string> } } };
+export type GetLedgerQuery = { getLedger: { id: string, name: string, fullName: string, private: boolean, empty: boolean, size: number, createdAt: string, description: string | null, permissions: { admin: boolean, pull: boolean, push: boolean } | null } };
 
 export type GetLedgerDirContentQueryVariables = Exact<{
   ledgerId: string;
@@ -154,7 +154,7 @@ export type GetLedgerDirContentQueryVariables = Exact<{
 }>;
 
 
-export type GetLedgerDirContentQuery = { getLedgerDirContent: Array<{ name: string, path: string, type: string, size: number, sha: string, lastCommitSha: string | null, lastAuthorDate: string | null }> };
+export type GetLedgerDirContentQuery = { getLedgerDirContent: Array<{ name: string, path: string, type: string, size: number, sha: string, lastCommitSha: string | null }> };
 
 export type GetLedgerEntryContextQueryVariables = Exact<{
   entryHash: string;
@@ -185,7 +185,7 @@ export type GetLedgerJournalQueryVariables = Exact<{
 }>;
 
 
-export type GetLedgerJournalQuery = { getLedgerJournal: { total: number, data: Array<Record<string, number | string>>, is_empty: boolean } };
+export type GetLedgerJournalQuery = { getLedgerJournal: { total: number, data: Array<Record<string, number | string>> } };
 
 export type GetLedgerNarrationsQueryVariables = Exact<{
   ledgerId: string;
@@ -331,7 +331,7 @@ export type ListLedgersQueryVariables = Exact<{
 }>;
 
 
-export type ListLedgersQuery = { listLedgers: Array<{ id: string, name: string, fullName: string, httpUrl: string, sshUrl: string, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, permissions: { admin: boolean, pull: boolean, push: boolean } | null }> };
+export type ListLedgersQuery = { listLedgers: Array<{ id: string, name: string, fullName: string, private: boolean, empty: boolean, size: number, createdAt: string, description: string | null, permissions: { admin: boolean, pull: boolean, push: boolean } | null }> };
 
 export type LogoutMutationVariables = Exact<{ [key: string]: never; }>;
 
@@ -352,7 +352,7 @@ export type QueryShellQueryVariables = Exact<{
 }>;
 
 
-export type QueryShellQuery = { queryShell: { resultType: string, table: { rows: Array<Array<unknown>>, types: Array<{ name: string, dtype: string }> } | null } | null };
+export type QueryShellQuery = { queryShell: { table: { rows: Array<Array<unknown>>, types: Array<{ name: string, dtype: string }> } | null } | null };
 
 export type SubscriptionStatusQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -477,14 +477,6 @@ export const AccountReportDocument = gql`
     conversion: $conversion
   ) {
     linechartData {
-      date
-      balance
-    }
-    intervalTotalsData {
-      date
-      balance
-    }
-    accountBalanceData {
       date
       balance
     }
@@ -721,10 +713,7 @@ export const CreateLedgerDocument = gql`
     private
     empty
     size
-    httpUrl
-    sshUrl
     createdAt
-    updatedAt
     permissions {
       admin
       pull
@@ -1093,7 +1082,6 @@ export const GetFeedDocument = gql`
       link
       publishedAt
       author
-      authorAvatar
       source
     }
     hasMore
@@ -1144,26 +1132,15 @@ export const GetLedgerDocument = gql`
     id
     name
     fullName
-    httpUrl
-    sshUrl
     private
     empty
     size
     createdAt
-    updatedAt
     description
     permissions {
       admin
       pull
       push
-    }
-    options {
-      nameAssets
-      nameEquity
-      nameExpenses
-      nameIncome
-      nameLiabilities
-      operatingCurrency
     }
   }
 }
@@ -1213,7 +1190,6 @@ export const GetLedgerDirContentDocument = gql`
     size
     sha
     lastCommitSha
-    lastAuthorDate
   }
 }
     `;
@@ -1402,7 +1378,6 @@ export const GetLedgerJournalDocument = gql`
   getLedgerJournal(ledgerId: $ledgerId, query: $query) {
     total
     data
-    is_empty
   }
 }
     `;
@@ -2216,13 +2191,10 @@ export const ListLedgersDocument = gql`
     id
     name
     fullName
-    httpUrl
-    sshUrl
     private
     empty
     size
     createdAt
-    updatedAt
     description
     permissions {
       admin
@@ -2343,7 +2315,6 @@ export type ParseReceiptMutationOptions = Apollo.BaseMutationOptions<ParseReceip
 export const QueryShellDocument = gql`
     query QueryShell($ledgerId: String!, $query: String!) {
   queryShell(ledgerId: $ledgerId, query: $query) {
-    resultType
     table {
       rows
       types {
