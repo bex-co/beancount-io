@@ -2,10 +2,7 @@ import {
   formatErrorLocation,
   formatShortSha,
 } from "../screens/notifications-screen/formatting";
-import {
-  classifyDiffLine,
-  parseDiff,
-} from "../screens/commit-detail-screen/diff-utils";
+import { parseDiff } from "../screens/commit-detail-screen/diff-utils";
 
 // ── formatErrorLocation ──────────────────────────────────────────────────────
 
@@ -79,56 +76,65 @@ test("formatShortSha: returns first 7 chars of sha when shortSha is undefined", 
     throw new Error(`expected "abcdef1", got ${result}`);
 });
 
-// ── classifyDiffLine ─────────────────────────────────────────────────────────
-
-test("classifyDiffLine: + line is added", () => {
-  const result = classifyDiffLine("+added line");
-  if (result.type !== "added")
-    throw new Error(`expected "added", got ${result.type}`);
-  if (result.content !== "+added line")
-    throw new Error(`wrong content: ${result.content}`);
-});
-
-test("classifyDiffLine: - line is removed", () => {
-  const result = classifyDiffLine("-removed line");
-  if (result.type !== "removed")
-    throw new Error(`expected "removed", got ${result.type}`);
-});
-
-test("classifyDiffLine: context line is context", () => {
-  const result = classifyDiffLine(" unchanged line");
-  if (result.type !== "context")
-    throw new Error(`expected "context", got ${result.type}`);
-});
-
-test("classifyDiffLine: +++ header line is context (not added)", () => {
-  const result = classifyDiffLine("+++ b/main.beancount");
-  if (result.type !== "context")
-    throw new Error(`expected "context" for +++ line, got ${result.type}`);
-});
-
-test("classifyDiffLine: --- header line is context (not removed)", () => {
-  const result = classifyDiffLine("--- a/main.beancount");
-  if (result.type !== "context")
-    throw new Error(`expected "context" for --- line, got ${result.type}`);
-});
-
-test("classifyDiffLine: @@ hunk header is context", () => {
-  const result = classifyDiffLine("@@ -1,4 +1,5 @@");
-  if (result.type !== "context")
-    throw new Error(`expected "context" for @@ line, got ${result.type}`);
-});
-
 // ── parseDiff ────────────────────────────────────────────────────────────────
 
-test("parseDiff: splits diff into lines and classifies each", () => {
-  const diff = "+added\n-removed\n context";
-  const lines = parseDiff(diff);
-  if (lines.length !== 3)
-    throw new Error(`expected 3 lines, got ${lines.length}`);
-  if (lines[0].type !== "added") throw new Error(`line 0 should be added`);
-  if (lines[1].type !== "removed") throw new Error(`line 1 should be removed`);
-  if (lines[2].type !== "context") throw new Error(`line 2 should be context`);
+const diffTypes = (diff: string) =>
+  parseDiff(diff)
+    .map((line) => line.type)
+    .join(" ");
+
+const NOTES_HEADER = [
+  "diff --git a/NOTES.md b/NOTES.md",
+  "index 1111111..2222222 100644",
+  "--- a/NOTES.md",
+  "+++ b/NOTES.md",
+].join("\n");
+
+function expectDiffTypes(diff: string, want: string) {
+  const got = diffTypes(diff);
+  if (got !== want) throw new Error(`expected "${want}", got "${got}"`);
+}
+
+test("parseDiff: file headers and @@ are context; hunk + and - are added and removed", () => {
+  expectDiffTypes(
+    `${NOTES_HEADER}\n@@ -1,2 +1,2 @@\n+added line\n-removed line\n unchanged line`,
+    "context context context context context added removed context",
+  );
+});
+
+test("parseDiff: a deleted --- line is removed, not a file header", () => {
+  expectDiffTypes(
+    `${NOTES_HEADER}\n@@ -1,3 +1,2 @@\n title\n----\n body`,
+    "context context context context context context removed context",
+  );
+});
+
+test("parseDiff: an added ++ line is added, not a file header", () => {
+  expectDiffTypes(
+    `${NOTES_HEADER}\n@@ -1 +1,2 @@\n title\n+++note`,
+    "context context context context context context added",
+  );
+});
+
+test("parseDiff: the next file's headers stay context after a hunk", () => {
+  const diff = [
+    "diff --git a/a.bean b/a.bean",
+    "--- a/a.bean",
+    "+++ b/a.bean",
+    "@@ -1 +1 @@",
+    "-old",
+    "+new",
+    "\\ No newline at end of file",
+    "diff --git a/b.bean b/b.bean",
+    "--- a/b.bean",
+    "+++ b/b.bean",
+    "@@ -0,0 +1 @@",
+    "+added",
+  ].join("\n");
+  expectDiffTypes(
+    diff,
+    "context context context context removed added context context context context context added",
+  );
 });
 
 test("parseDiff: empty diff yields one context line", () => {
