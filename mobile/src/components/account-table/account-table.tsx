@@ -261,7 +261,9 @@ const AccountTableRow = memo(function AccountTableRow({
           style={[
             styles.barTrack,
             // Under the label, not the chevron: one more step past the indent.
-            { left: GUTTER + (row.depth + 1) * INDENT_STEP },
+            // `start`, not `left`: the label moves to the right in RTL, and
+            // with doLeftAndRightSwapInRTL off (rtl.ts) `left` stays physical.
+            { start: GUTTER + (row.depth + 1) * INDENT_STEP },
           ]}
         >
           <View style={[styles.bar, { width: `${row.share * 100}%` }]} />
