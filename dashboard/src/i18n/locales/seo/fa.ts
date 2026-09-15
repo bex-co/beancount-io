@@ -64,6 +64,24 @@ const faSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "همه حساب‌های {ledgerName}. فهرست حساب‌ها را ببینید و دفتر روزنامه هر حساب را باز کنید.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "حساب‌ها - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "اهداف بودجه و هزینه‌های {ledgerName}. بودجه را با مقادیر واقعی بر اساس حساب و دوره مقایسه کنید.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "بودجه - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "با استفاده از هوش مصنوعی در مورد داده‌های مالی {ledgerName} سوال بپرسید. تراکنش‌ها را تحلیل کنید، موجودی حساب‌ها را بررسی کنید، روندها را درک کنید و بینش‌های حسابداری فوری دریافت کنید.",

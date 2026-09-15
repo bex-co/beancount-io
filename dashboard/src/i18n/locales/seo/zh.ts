@@ -62,6 +62,23 @@ const zhSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "{ledgerName} 中的所有账户。浏览会计科目表并打开任一账户的日记账。",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "账户 - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message: "{ledgerName} 的预算目标与支出。按账户和期间比较预算与实际。",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "预算 - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "使用AI询问关于{ledgerName}的财务数据。分析交易、查看账户余额、了解趋势并获得即时会计洞察。",

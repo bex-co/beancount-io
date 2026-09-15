@@ -50,7 +50,7 @@
 
 - [ ] **m37** — Render BQL inventory results as amounts, not raw JSON (7 tasks) ← continuous dashboard QA, 2026-09-12
 
-- [ ] **m38** — Give Accounts and Budget the head metadata every other ledger route has (6 tasks) ← continuous dashboard QA, 2026-09-12
+- [x] **m38** — Give Accounts and Budget the head metadata every other ledger route has (6 tasks) ← continuous dashboard QA, 2026-09-12
 
 - [ ] **m39** — Make the primary sidebar a navigation landmark and let keyboard users skip it (6 tasks) ← continuous dashboard QA, 2026-09-12
 
@@ -94,7 +94,6 @@ Added since that pass:
 - [191](./191.md) — The horizontal-swipe marker throws on every touch it is supposed to end (native QA, 2026-09-12)
 - [192](./192.md) — Trial Balance never states whether it balances (dashboard QA, 2026-09-12)
 - [193](./193.md) — One number, three labels: Statistics calls the same count both "Postings" and "Entry count" (dashboard QA, 2026-09-12)
-- [194](./194.md) — Single-entry writes commit "Add 1 entries" into permanent git history (dashboard QA, 2026-09-12; owner backend-cluster/ledger)
 - [195](./195.md) — An Ask deep link sends its question to the AI on arrival, and again after login (dashboard QA, 2026-09-12)
 - [196](./196.md) — Create File offers Save for names the server will refuse, including your main ledger's (dashboard QA, 2026-09-12)
 - [197](./197.md) — The file editor warns about unsaved changes when there are none (dashboard QA, 2026-09-12)

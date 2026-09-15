@@ -65,6 +65,24 @@ const skSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "Všetky účty v {ledgerName}. Prezrite si účtovnú osnovu a otvorte denník ľubovoľného účtu.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "Účty - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "Rozpočtové ciele a výdavky pre {ledgerName}. Porovnajte rozpočty so skutočnosťou podľa účtu a obdobia.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "Rozpočet - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "Pýtajte sa otázky o finančných údajoch {ledgerName} pomocou AI. Analyzujte transakcie, preskúmajte zostatky účtov, pochopte trendy a získajte okamžité účtovné poznatky.",

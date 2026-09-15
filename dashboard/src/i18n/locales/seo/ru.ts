@@ -65,6 +65,24 @@ const ruSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "Все счета в {ledgerName}. Просмотрите план счетов и откройте журнал любого счёта.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "Счета - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "Бюджетные цели и расходы для {ledgerName}. Сравните бюджеты с фактическими значениями по счёту и периоду.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "Бюджет - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "Задавайте вопросы о финансовых данных {ledgerName} с помощью ИИ. Анализируйте транзакции, изучайте остатки на счетах, понимайте тенденции и получайте мгновенные бухгалтерские инсайты.",

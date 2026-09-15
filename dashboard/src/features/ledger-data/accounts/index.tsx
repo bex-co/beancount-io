@@ -38,6 +38,7 @@ import { DeleteAccountDialog } from "./delete-account-dialog";
 import { QueryView } from "@/common/components/query-view";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { LedgerWritePermission } from "@/common/components/ledger-permission/write";
+import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { cn } from "@/common/lib/utils/utils";
 import { AccountPrefixNavigation } from "./account-prefix-navigation";
 import { getClickableRowProps } from "@/common/components/clickable-row";
@@ -387,6 +388,7 @@ export default function LedgerAccountsPage() {
 
   return (
     <div className="space-y-6">
+      <LedgerPageSEO seoKey="ledgerAccounts" />
       <div className="flex items-start justify-between gap-4">
         <PageHeader
           title={t("page.accounts.accounts")}

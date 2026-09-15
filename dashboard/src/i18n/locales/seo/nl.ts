@@ -65,6 +65,24 @@ const nlSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "Alle rekeningen in {ledgerName}. Blader door het rekeningschema en open het journaal van elke rekening.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "Rekeningen - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "Budgetdoelen en uitgaven voor {ledgerName}. Vergelijk budgetten met werkelijke bedragen per rekening en periode.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "Budget - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "Stel vragen over de financiële gegevens van {ledgerName} met AI. Analyseer transacties, verken rekeningsaldi, begrijp trends en krijg directe boekhoudkundige inzichten.",

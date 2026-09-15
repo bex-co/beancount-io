@@ -65,6 +65,24 @@ const frSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "Tous les comptes de {ledgerName}. Parcourez le plan comptable et ouvrez le journal de n'importe quel compte.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "Comptes - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "Objectifs budgétaires et dépenses pour {ledgerName}. Comparez les budgets aux réalisations par compte et période.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "Budget - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "Posez des questions sur les données financières de {ledgerName} en utilisant l'IA. Analysez les transactions, explorez les soldes des comptes, comprenez les tendances et obtenez des informations comptables instantanées.",

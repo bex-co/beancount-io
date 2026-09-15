@@ -24,6 +24,7 @@ import type { ConversionOption } from "@/common/types/chart";
 import type { BudgetEntry, BudgetGroup } from "./types";
 import { groupBudgetEntries } from "./budget-utils";
 import { LedgerWritePermission } from "@/common/components/ledger-permission/write";
+import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 
 function getLast12MonthsRange(): string {
   const end = new Date();
@@ -205,6 +206,7 @@ export default function LedgerBudgetPage() {
 
   return (
     <div className="space-y-6">
+      <LedgerPageSEO seoKey="ledgerBudget" />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
           className="flex min-w-0 flex-col"

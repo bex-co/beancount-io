@@ -65,6 +65,24 @@ const deSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "Alle Konten in {ledgerName}. Durchsuchen Sie den Kontenplan und öffnen Sie das Journal eines Kontos.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "Konten - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "Budgetziele und Ausgaben für {ledgerName}. Vergleichen Sie Budgets mit Ist-Werten nach Konto und Zeitraum.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "Budget - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "Stellen Sie Fragen zu den Finanzdaten von {ledgerName} mit KI. Analysieren Sie Transaktionen, erkunden Sie Kontosalden, verstehen Sie Trends und erhalten Sie sofortige Buchhaltungseinblicke.",

@@ -55,6 +55,24 @@ const jaSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "{ledgerName}のすべての勘定科目。勘定科目表を閲覧し、各科目の仕訳帳を開けます。",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "勘定科目 - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "{ledgerName}の予算目標と支出。科目と期間ごとに予算と実績を比較できます。",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "予算 - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "AIを使用して{ledgerName}の財務データについて質問します。取引の分析、口座残高の確認、トレンドの把握、会計インサイトの即時取得が可能です。",

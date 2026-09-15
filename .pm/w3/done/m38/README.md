@@ -1,6 +1,6 @@
 # w3 · m38 — Give Accounts and Budget the head metadata every other ledger route has
 
-**Worker:** worker3 **Goal:** every ledger route names itself in the tab, in history, to a screen reader, and to a crawler **Status:** todo
+**Worker:** worker3 **Goal:** every ledger route names itself in the tab, in history, to a screen reader, and to a crawler **Status:** done
 
 Severity: **minor** (breadth, not data). Package: dashboard. Two of the twenty-one ledger routes emit **no head block at all** — no title, no description, no `og:title`, no canonical. On a public ledger they are indexable pages whose only title is the site name.
 
@@ -8,12 +8,12 @@ Severity: **minor** (breadth, not data). Package: dashboard. Two of the twenty-o
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Add Accounts and Budget SEO strings to all 15 locales | 45m | — |
-| t002 | Wire the head metadata into both route files | 20m | t001 |
-| t003 | Verify the ledger-route metadata adoption surface | 15m | t002 |
-| t004 | Simplify the route head wiring | 10m | t003 |
-| t005 | Test that every ledger route emits head metadata | 40m | t003 |
-| t006 | Close and archive the route metadata milestone | 10m | t004, t005 |
+| t001 | Add Accounts and Budget SEO strings to all 15 locales | 45m | — | — **DONE**
+| t002 | Wire the head metadata into both route files | 20m | t001 | — **DONE**
+| t003 | Verify the ledger-route metadata adoption surface | 15m | t002 | — **DONE**
+| t004 | Simplify the route head wiring | 10m | t003 | — **DONE**
+| t005 | Test that every ledger route emits head metadata | 40m | t003 | — **DONE**
+| t006 | Close and archive the route metadata milestone | 10m | t004, t005 | — **DONE**
 
 Implementation totals 65 minutes; all six tasks total 140 minutes. Thirty locale entries across fifteen files plus a route-coverage regression test put this past a sub-hour edit.
 
@@ -65,3 +65,7 @@ Unverified: the remaining locales' copy quality, social-card rendering, actual c
 - **Goal linkage:** **A3 — Community & distribution**: two publicly reachable ledger pages currently offer a crawler nothing but the site name, and offer a reader nothing but "Beancount.io" in the tab, in history, and in a screen reader's page announcement.
 - **Expected outcome:** every ledger route is identifiable in a tab strip, a history list, a bookmark, a screen reader and a search result — and a route-coverage test keeps it that way as routes are added.
 - **Why now:** the helper, the pattern and the locale infrastructure all already exist; this is the cheapest remaining gap in a surface w2/m8 already invested in. Adoption surface is included because these are user- and crawler-facing pages.
+
+## Robots decision
+
+Accounts and Budget are **indexable** (default `createHeadMeta` / `LedgerPageSEO` without `noIndex`), matching w2/m8 ordinary public ledger reads. Budget was added to the indexability comment alongside accounts.

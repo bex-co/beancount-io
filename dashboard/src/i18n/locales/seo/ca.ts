@@ -65,6 +65,24 @@ const caSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "Tots els comptes de {ledgerName}. Exploreu el pla de comptes i obriu el diari de qualsevol compte.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "Comptes - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "Objectius de pressupost i despesa de {ledgerName}. Compareu pressupostos amb valors reals per compte i període.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "Pressupost - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "Fes preguntes sobre les dades financeres de {ledgerName} utilitzant IA. Analitza transaccions, explora saldos de comptes, comprèn tendències i obtén informació comptable instantània.",

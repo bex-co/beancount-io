@@ -65,6 +65,24 @@ const bgSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "Всички сметки в {ledgerName}. Разгледайте сметкоплана и отворете дневника на всяка сметка.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "Сметки - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "Бюджетни цели и разходи за {ledgerName}. Сравнете бюджети с действителни стойности по сметка и период.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "Бюджет - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "Задавайте въпроси за финансовите данни на {ledgerName} с помощта на ИИ. Анализирайте транзакции, разглеждайте салда по сметки, разбирайте тенденции и получавайте мигновени счетоводни прозрения.",

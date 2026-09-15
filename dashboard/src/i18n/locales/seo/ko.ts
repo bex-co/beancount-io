@@ -54,6 +54,24 @@ const koSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "{ledgerName}의 모든 계정. 계정과목을 살펴보고 각 계정의 분개장을 엽니다.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "계정 - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "{ledgerName}의 예산 목표와 지출. 계정과 기간별로 예산과 실제를 비교합니다.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "예산 - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "AI를 사용하여 {ledgerName}의 재무 데이터에 대해 질문합니다. 거래 분석, 계좌 잔액 탐색, 트렌드 이해, 즉각적인 회계 인사이트를 얻을 수 있습니다.",

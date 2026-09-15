@@ -56,6 +56,24 @@ const enSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "All accounts in {ledgerName}. Browse the chart of accounts and open any account's journal.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "Accounts - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "Budget targets and spending for {ledgerName}. Compare budgets to actuals by account and period.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "Budget - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "Ask questions about {ledgerName} financial data using AI. Analyze transactions, explore account balances, understand trends, and get instant accounting insights.",

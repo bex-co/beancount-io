@@ -65,6 +65,24 @@ const ukSeo: Record<string, TranslationEntry> = {
     message: "{accountName} - {ledgerName}",
     description: "Account detail page title with account and ledger name",
   },
+  "seo.ledgerAccounts.description": {
+    message:
+      "Усі рахунки в {ledgerName}. Перегляньте план рахунків і відкрийте журнал будь-якого рахунку.",
+    description: "Accounts list page meta description",
+  },
+  "seo.ledgerAccounts.title": {
+    message: "Рахунки - {ledgerName}",
+    description: "Accounts list page title with ledger name",
+  },
+  "seo.ledgerBudget.description": {
+    message:
+      "Бюджетні цілі та витрати для {ledgerName}. Порівняйте бюджети з фактичними значеннями за рахунком і періодом.",
+    description: "Budget page meta description",
+  },
+  "seo.ledgerBudget.title": {
+    message: "Бюджет - {ledgerName}",
+    description: "Budget page title with ledger name",
+  },
   "seo.ledgerAsk.description": {
     message:
       "Задавайте питання про фінансові дані {ledgerName} за допомогою ШІ. Аналізуйте транзакції, досліджуйте залишки на рахунках, розумійте тенденції та отримуйте миттєві бухгалтерські інсайти.",

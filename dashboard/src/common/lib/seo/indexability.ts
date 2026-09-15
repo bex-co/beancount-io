@@ -8,9 +8,10 @@
  * Indexable (default — do not pass noIndex):
  * - `/ledger/$username` (public user profile)
  * - Public ledger read/social surfaces under `/ledger/$owner/$name/**`:
- *   overview, journal, account, accounts, balance sheet, income statement,
- *   trial balance, holdings, commodities, documents, events, statistics,
- *   commits / commit detail, pull requests, and the base ask / agent page
+ *   overview, journal, account, accounts, budget, balance sheet, income
+ *   statement, trial balance, holdings, commodities, documents, events,
+ *   statistics, commits / commit detail, pull requests, and the base ask /
+ *   agent page
  * - GitHub-style read-only file (`blob`) pages with stable canonical URLs
  * - Acquisition auth: login, sign-up, and forgot password
  *
