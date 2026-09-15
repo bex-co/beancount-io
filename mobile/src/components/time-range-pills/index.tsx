@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   LayoutChangeEvent,
   ScrollView,
@@ -170,9 +170,9 @@ export function TimeRangePills<T extends PillKey>({
   const width = useSharedValue(0);
   const y = useSharedValue(0);
   const height = useSharedValue(0);
-  // Hidden until measured — otherwise a zero-width pill flashes at the origin
-  // on first mount.
-  const opacity = useSharedValue(0);
+  // The white active label is legible only over the fill, so it waits for the
+  // indicator's first placement instead of following `value` on its own.
+  const [indicatorPlaced, setIndicatorPlaced] = useState(false);
 
   const moveTo = useCallback(
     (key: T, animate: boolean) => {
@@ -183,7 +183,7 @@ export function TimeRangePills<T extends PillKey>({
       // Vertical metrics never differ between pills, so they are set outright.
       y.value = layout.y;
       height.value = layout.height;
-      opacity.value = 1;
+      setIndicatorPlaced(true);
 
       if (!animate) {
         x.value = layout.x;
@@ -195,7 +195,7 @@ export function TimeRangePills<T extends PillKey>({
       x.value = withTiming(layout.x, config);
       width.value = withTiming(layout.width, config);
     },
-    [x, y, width, height, opacity],
+    [x, y, width, height],
   );
 
   // Covers a selection driven from outside (a parent resetting the range), and
@@ -240,7 +240,9 @@ export function TimeRangePills<T extends PillKey>({
   };
 
   const indicatorStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
+    // Hidden until measured, so no zero-width pill flashes at the origin; shown
+    // whenever it has a size, so no flag can leave a placed fill invisible.
+    opacity: width.value > 0 ? 1 : 0,
     width: width.value,
     height: height.value,
     top: y.value,
@@ -277,7 +279,12 @@ export function TimeRangePills<T extends PillKey>({
             accessibilityState={{ selected: active }}
             accessibilityLabel={option.label}
           >
-            <Text style={[styles.label, active && styles.labelActive]}>
+            <Text
+              style={[
+                styles.label,
+                active && indicatorPlaced && styles.labelActive,
+              ]}
+            >
               {option.label}
             </Text>
           </TouchableOpacity>
