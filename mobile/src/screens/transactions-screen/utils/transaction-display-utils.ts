@@ -97,7 +97,10 @@ export const selectTransactionAmount = (
   if (cashPostings.length > 0) {
     // A sum is only as coarse as its finest leg, so a bucket carries the
     // widest scale any of its postings recorded.
-    const byCurrency = new Map<string, { value: number; scale: number }>();
+    const byCurrency = new Map<
+      string,
+      { value: number; scale: number; legs: number; largestLeg: number }
+    >();
     for (const p of cashPostings) {
       const value = parseFloat(p.units.number);
       if (!Number.isFinite(value)) continue;
@@ -107,8 +110,15 @@ export const selectTransactionAmount = (
       if (bucket) {
         bucket.value += value;
         bucket.scale = Math.max(bucket.scale, scale);
+        bucket.legs += 1;
+        bucket.largestLeg = Math.max(bucket.largestLeg, Math.abs(value));
       } else {
-        byCurrency.set(currency, { value, scale });
+        byCurrency.set(currency, {
+          value,
+          scale,
+          legs: 1,
+          largestLeg: Math.abs(value),
+        });
       }
     }
 
@@ -127,7 +137,19 @@ export const selectTransactionAmount = (
           Math.abs(bucket[1].value) > Math.abs(best[1].value) ? bucket : best,
         );
       }
-      const [currency, { value, scale }] = picked;
+      const [currency, { value, scale, legs, largestLeg }] = picked;
+      // A transfer between two cash or liability accounts nets to zero in its
+      // currency, yet the row still has to say how much moved. Its size is the
+      // largest leg; a transfer has no in/out direction at the transaction
+      // level, so the value stays zero and the amount renders unsigned.
+      const netsToZero = Math.abs(value) < 0.5 * 10 ** -scale;
+      if (netsToZero && legs > 1 && largestLeg > 0) {
+        return {
+          text: formatAmount(largestLeg, currency, scale),
+          value: 0,
+          currency,
+        };
+      }
       return { text: formatAmount(value, currency, scale), value, currency };
     }
   }

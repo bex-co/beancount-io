@@ -173,6 +173,58 @@ describe("selectTransactionAmount", () => {
     expect(selectTransactionAmount(tx)?.value).toBe(200);
   });
 
+  it("shows how much moved in a transfer between a liability and a bank account", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Bank:Checking", "6931.48"),
+        makePosting("Liabilities:US:Chase:Slate", "-6931.48"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "$6,931.48",
+      value: 0,
+      currency: "USD",
+    });
+  });
+
+  it("shows how much moved in a transfer between two bank accounts", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Checking", "-250.00"),
+        makePosting("Assets:Savings", "250.00"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "$250.00",
+      value: 0,
+      currency: "USD",
+    });
+  });
+
+  it("keeps a transfer's recorded precision", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Exchange", "-0.00012345", "BTC"),
+        makePosting("Assets:Wallet", "0.00012345", "BTC"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)?.text).toBe("0.00012345 BTC");
+  });
+
+  it("still reports a genuinely zero single cash posting as zero", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Checking", "0.00"),
+        makePosting("Income:Adjustment", "0.00"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "$0.00",
+      value: 0,
+      currency: "USD",
+    });
+  });
+
   it("never adds across currencies: a fund buy reports the cash leg", () => {
     // Assets:…:RGAGX +355.63 RGAGX {8.93 USD} / Assets:…:Cash -3177.39 USD.
     // Summing both legs would yield -2821.76 of no currency at all.
