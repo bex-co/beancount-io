@@ -75,6 +75,22 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       backgroundColor: theme.white,
     },
+    // Quiet, non-blocking: a read-only file is still worth reading.
+    readOnlyBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: theme.black10,
+    },
+    readOnlyText: {
+      flex: 1,
+      fontSize: 13,
+      lineHeight: 18,
+      color: theme.black60,
+      textAlign: LEADING_TEXT_ALIGN,
+    },
     editorWrapper: {
       flex: 1,
       position: "relative",
@@ -595,6 +611,19 @@ function LedgerFileEditorSession({
           },
         }}
       />
+
+      {/* The Save button's absence is otherwise the only sign. Yields to the
+          error banner so the two never stack. */}
+      {!canWrite && fileErrors.length === 0 && editorState === "content" ? (
+        <View style={styles.readOnlyBanner} testID="ledger-editor-read-only">
+          <Ionicons
+            name="lock-closed-outline"
+            size={16}
+            color={theme.black60}
+          />
+          <Text style={styles.readOnlyText}>{t("ledgerReadOnly")}</Text>
+        </View>
+      ) : null}
 
       {fileErrors.length > 0 && (
         <ErrorBanner
