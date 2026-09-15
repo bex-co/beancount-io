@@ -14,6 +14,8 @@ import { LedgerGuard } from "@/components/ledger-guard";
 import { parseDiff, DiffLine } from "./diff-utils";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { formatCommitAuthorLine } from "@/screens/notifications-screen/formatting";
+import { CardLoadFailure } from "@/components/card-load-failure";
+import { selectCardLoadState } from "@/common/apollo/card-load-state";
 
 const SKELETON_WIDTHS = [200, 160, 240, 180, 120, 220, 150, 190];
 
@@ -162,7 +164,7 @@ function CommitDetailScreenImpl(): JSX.Element {
   const { sha } = useLocalSearchParams<{ sha: string }>();
 
   const ledgerId = useReactiveVar(ledgerVar) ?? "";
-  const { data, loading } = useGetCommitDetailsQuery({
+  const { data, loading, error, refetch } = useGetCommitDetailsQuery({
     variables: { ledgerId, sha: sha ?? "" },
     skip: !ledgerId || !sha,
     fetchPolicy: "cache-and-network",
@@ -180,7 +182,12 @@ function CommitDetailScreenImpl(): JSX.Element {
           <SkeletonRows />
         ) : !commit ? (
           <FadeInView>
-            <Text style={styles.emptyText}>{t("commitDetailNoDiff")}</Text>
+            {selectCardLoadState({ loading, hasData: false, error }) ===
+            "failed" ? (
+              <CardLoadFailure onRetry={() => void refetch()} />
+            ) : (
+              <Text style={styles.emptyText}>{t("commitDetailNoDiff")}</Text>
+            )}
           </FadeInView>
         ) : (
           <FadeInView fill>

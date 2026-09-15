@@ -18,6 +18,8 @@ import {
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { TimeRange } from "@/common/series-util";
 import { selectAccountTransactions } from "../selectors/select-account-transactions";
+import { CardLoadFailure } from "@/components/card-load-failure";
+import { selectCardLoadState } from "@/common/apollo/card-load-state";
 
 // Pull enough recent transactions to cover the selected range client-side.
 // Matches the interim approach in spending-card.tsx (no account-filter query).
@@ -74,7 +76,7 @@ export function AccountTransactionsCard({
   const { t } = useTranslations();
   const router = useRouter();
 
-  const { data, loading, refetch } = useGetLedgerJournalQuery({
+  const { data, loading, error, refetch } = useGetLedgerJournalQuery({
     variables: {
       ledgerId,
       query: {
@@ -107,7 +109,13 @@ export function AccountTransactionsCard({
 
   return (
     <DashboardCard title={t(titleKey)} bleed testID="account-transactions-card">
-      {loading && entries.length === 0 ? (
+      {selectCardLoadState({
+        loading: loading,
+        hasData: data !== undefined,
+        error: error,
+      }) === "failed" ? (
+        <CardLoadFailure onRetry={() => void refetch()} />
+      ) : loading && entries.length === 0 ? (
         <LoadingTile height={160} mx={16} />
       ) : (
         <FadeInView>

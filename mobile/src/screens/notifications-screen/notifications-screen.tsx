@@ -29,6 +29,8 @@ import {
   LedgerError,
 } from "./formatting";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
+import { CardLoadFailure } from "@/components/card-load-failure";
+import { selectCardLoadState } from "@/common/apollo/card-load-state";
 
 const SKELETON_WIDTHS = [180, 220, 160, 200, 140, 190];
 
@@ -207,6 +209,7 @@ function NotificationsScreenImpl(): JSX.Element {
   const {
     data: commitsData,
     loading: commitsLoading,
+    error: commitsError,
     refetch: refetchCommits,
   } = useListCommitsQuery({
     variables: { ledgerId, branch: "main", page: 1, limit: 30 },
@@ -287,7 +290,13 @@ function NotificationsScreenImpl(): JSX.Element {
             <SkeletonRows />
           ) : (
             <FadeInView>
-              {commits.length === 0 ? (
+              {selectCardLoadState({
+                loading: commitsLoading,
+                hasData: commitsData !== undefined,
+                error: commitsError,
+              }) === "failed" ? (
+                <CardLoadFailure onRetry={() => void refetchCommits()} />
+              ) : commits.length === 0 ? (
                 <View style={styles.emptyRow}>
                   <Text style={styles.emptyText}>
                     {t("notificationsNoChanges")}

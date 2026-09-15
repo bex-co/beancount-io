@@ -15,6 +15,8 @@ import {
   JournalDirectiveType,
 } from "@/screens/transactions-screen/types";
 import { selectSpendingCompare } from "@/screens/home-screen/selectors/select-spending-compare";
+import { CardLoadFailure } from "@/components/card-load-failure";
+import { selectCardLoadState } from "@/common/apollo/card-load-state";
 
 // Pull enough recent transactions to cover this + last month client-side.
 // TODO: replace with a proper expenses-only monthly series once the backend
@@ -62,7 +64,7 @@ export function SpendingCard({
     router.navigate({ pathname: "/reports" });
   };
 
-  const { data, loading, refetch } = useGetLedgerJournalQuery({
+  const { data, loading, error, refetch } = useGetLedgerJournalQuery({
     variables: {
       ledgerId: ledgerId!,
       query: {
@@ -93,7 +95,13 @@ export function SpendingCard({
       testID="spending-card"
     >
       <Text style={styles.subtitle}>{t("spendingSubtitle")}</Text>
-      {loading && entries.length === 0 ? (
+      {selectCardLoadState({
+        loading: loading,
+        hasData: data !== undefined,
+        error: error,
+      }) === "failed" ? (
+        <CardLoadFailure onRetry={() => void refetch()} />
+      ) : loading && entries.length === 0 ? (
         <LoadingTile height={BAR_CHART_HEIGHT} mx={16} />
       ) : (
         <FadeInView>

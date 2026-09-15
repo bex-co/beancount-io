@@ -10,6 +10,8 @@ import { DashboardCard } from "@/components/dashboard-card";
 import { useGetFeedQuery } from "@/generated-graphql/graphql";
 import { FeedSource } from "@/generated-graphql/types";
 import { formatFeedDate } from "@/common/date-format";
+import { CardLoadFailure } from "@/components/card-load-failure";
+import { selectCardLoadState } from "@/common/apollo/card-load-state";
 
 const FEED_LIMIT = 5;
 
@@ -83,7 +85,7 @@ type FeedCardProps = {
 export function FeedCard({ refreshSignal = 0 }: FeedCardProps): JSX.Element {
   const { t } = useTranslations();
 
-  const { data, loading, refetch } = useGetFeedQuery({
+  const { data, loading, error, refetch } = useGetFeedQuery({
     variables: { offset: 0, limit: FEED_LIMIT, locale: "en" },
     fetchPolicy: "cache-and-network",
   });
@@ -98,7 +100,13 @@ export function FeedCard({ refreshSignal = 0 }: FeedCardProps): JSX.Element {
 
   return (
     <DashboardCard title={t("latestUpdates")} bleed>
-      {loading && items.length === 0 ? (
+      {selectCardLoadState({
+        loading: loading,
+        hasData: data !== undefined,
+        error: error,
+      }) === "failed" ? (
+        <CardLoadFailure onRetry={() => void refetch()} />
+      ) : loading && items.length === 0 ? (
         <>
           <LoadingTile
             height={18}

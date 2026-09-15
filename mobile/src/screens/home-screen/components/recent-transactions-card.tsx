@@ -16,6 +16,8 @@ import {
   isJournalTransaction,
 } from "@/screens/transactions-screen/types";
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
+import { CardLoadFailure } from "@/components/card-load-failure";
+import { selectCardLoadState } from "@/common/apollo/card-load-state";
 
 const RECENT_LIMIT = 5;
 
@@ -41,7 +43,7 @@ export function RecentTransactionsCard({
   const { t } = useTranslations();
   const router = useRouter();
 
-  const { data, loading, refetch } = useGetLedgerJournalQuery({
+  const { data, loading, error, refetch } = useGetLedgerJournalQuery({
     variables: {
       ledgerId: ledgerId!,
       query: {
@@ -69,7 +71,13 @@ export function RecentTransactionsCard({
 
   return (
     <DashboardCard title={t("recentTransactions")} onSeeAll={onSeeAll} bleed>
-      {loading && entries.length === 0 ? (
+      {selectCardLoadState({
+        loading: loading,
+        hasData: data !== undefined,
+        error: error,
+      }) === "failed" ? (
+        <CardLoadFailure onRetry={() => void refetch()} />
+      ) : loading && entries.length === 0 ? (
         <LoadingTile height={160} mx={16} />
       ) : (
         <FadeInView>
