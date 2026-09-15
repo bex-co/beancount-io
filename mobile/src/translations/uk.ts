@@ -121,6 +121,9 @@ export const uk: typeof en = {
     'Для підтвердження введіть "sudo delete my account" нижче:',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "Введіть фразу тут",
+  deleteAccountSuccess: "Обліковий запис видалено",
+  deleteAccountFailed: "Не вдалося видалити обліковий запис. Спробуйте ще раз.",
+  deleteAccountInProgress: "Видалення облікового запису…",
   // settings sections
   appSettings: "Налаштування додатку",
   accountSettings: "Обліковий запис",

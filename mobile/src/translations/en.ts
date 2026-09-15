@@ -114,6 +114,9 @@ export const en = {
     'To confirm, please type "sudo delete my account" below:',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "Type the phrase here",
+  deleteAccountSuccess: "Account deleted",
+  deleteAccountFailed: "Couldn't delete your account. Please try again.",
+  deleteAccountInProgress: "Deleting account…",
   // settings sections
   appSettings: "App Settings",
   accountSettings: "Account",

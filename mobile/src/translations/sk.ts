@@ -121,6 +121,9 @@ export const sk: typeof en = {
     'Pre potvrdenie zadajte "sudo delete my account" nižšie:',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "Zadajte frázu tu",
+  deleteAccountSuccess: "Účet bol vymazaný",
+  deleteAccountFailed: "Účet sa nepodarilo vymazať. Skúste to znova.",
+  deleteAccountInProgress: "Vymazáva sa účet…",
   // settings sections
   appSettings: "Nastavenia aplikácie",
   accountSettings: "Účet",

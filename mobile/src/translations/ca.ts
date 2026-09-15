@@ -122,6 +122,9 @@ export const ca: typeof en = {
     'Per confirmar, si us plau escriu "sudo delete my account" a continuació:',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "Escriu la frase aquí",
+  deleteAccountSuccess: "Compte eliminat",
+  deleteAccountFailed: "No s'ha pogut eliminar el compte. Torna-ho a provar.",
+  deleteAccountInProgress: "S'està eliminant el compte…",
   // settings sections
   appSettings: "Configuració de l'aplicació",
   accountSettings: "Compte",

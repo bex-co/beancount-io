@@ -121,6 +121,9 @@ export const es: typeof en = {
     'Para confirmar, escribe "sudo delete my account" a continuación:',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "Escribe la frase aquí",
+  deleteAccountSuccess: "Cuenta eliminada",
+  deleteAccountFailed: "No se pudo eliminar la cuenta. Inténtalo de nuevo.",
+  deleteAccountInProgress: "Eliminando la cuenta…",
   // settings sections
   appSettings: "Configuración de la aplicación",
   accountSettings: "Cuenta",

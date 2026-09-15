@@ -120,6 +120,10 @@ export const nl: typeof en = {
     'Om te bevestigen, typ "sudo delete my account" hieronder:',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "Typ de zin hier",
+  deleteAccountSuccess: "Account verwijderd",
+  deleteAccountFailed:
+    "Het account kon niet worden verwijderd. Probeer het opnieuw.",
+  deleteAccountInProgress: "Account wordt verwijderd…",
   // settings sections
   appSettings: "App-instellingen",
   accountSettings: "Account",

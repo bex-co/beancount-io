@@ -122,6 +122,9 @@ export const fr: typeof en = {
     'Pour confirmer, veuillez saisir "sudo delete my account" ci-dessous :',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "Saisissez la phrase ici",
+  deleteAccountSuccess: "Compte supprimé",
+  deleteAccountFailed: "Impossible de supprimer le compte. Veuillez réessayer.",
+  deleteAccountInProgress: "Suppression du compte…",
   // settings sections
   appSettings: "Paramètres de l'application",
   accountSettings: "Compte",

@@ -9,6 +9,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useDeleteAccountMutation } from "@/generated-graphql/graphql";
 import { useSession } from "@/common/hooks/use-session";
 import { actionLogout } from "./logout";
+import { runAccountDeletion } from "./delete-account";
 import { flushLocale, localeVar, themeVar } from "@/common/vars";
 import { applyLayoutDirection, layoutDirectionChanges } from "@/common/rtl";
 import { reloadApp } from "@/common/reload-app";
@@ -80,28 +81,19 @@ export const MainContent = () => {
   };
 
   const handleDeleteAccount = async () => {
-    try {
-      const result = await deleteAccountMutation();
-      if (result.data?.deleteAccount) {
-        toast.showToast({
-          message: "Account deleted successfully",
-          type: "success",
-        });
-        await actionLogout(session);
-        router.replace("/auth/welcome");
-      } else {
-        toast.showToast({
-          message: "Failed to delete account",
-          type: "error",
-        });
-      }
-    } catch (error) {
-      console.error("Delete account error:", error);
-      toast.showToast({
-        message: "Failed to delete account",
-        type: "error",
-      });
+    const outcome = await runAccountDeletion({
+      deleteAccount: async () =>
+        Boolean((await deleteAccountMutation()).data?.deleteAccount),
+      signOut: () => actionLogout(session),
+    });
+    if (outcome === "deleted") {
+      toast.showToast({ message: t("deleteAccountSuccess"), type: "success" });
+      router.replace("/auth/welcome");
+      return;
     }
+    // Native chrome rather than a toast: a failed deletion must be reported,
+    // and it cannot depend on the toast layer for its only message.
+    Alert.alert("", t("deleteAccountFailed"));
   };
 
   const handleDeleteAccountConfirm = (inputText: string) => {
@@ -161,7 +153,11 @@ export const MainContent = () => {
           <ListItemHorizontal
             icon={<Ionicons name="trash" size={22} color={theme.black80} />}
             title={t("deleteAccount")}
-            description={t("deleteAccountDescription")}
+            description={
+              deleteAccountLoading
+                ? t("deleteAccountInProgress")
+                : t("deleteAccountDescription")
+            }
             onPress={() => {
               if (deleteAccountLoading) return;
               Alert.alert(

@@ -120,6 +120,9 @@ export const fa: typeof en = {
     'برای تأیید، لطفاً "sudo delete my account" را در زیر بنویسید:',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "عبارت را اینجا بنویسید",
+  deleteAccountSuccess: "حساب حذف شد",
+  deleteAccountFailed: "حذف حساب انجام نشد. دوباره تلاش کنید.",
+  deleteAccountInProgress: "در حال حذف حساب…",
   // settings sections
   appSettings: "تنظیمات برنامه",
   accountSettings: "حساب",

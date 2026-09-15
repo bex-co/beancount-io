@@ -122,6 +122,9 @@ export const ru: typeof en = {
     'Для подтверждения введите "sudo delete my account" ниже:',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "Введите фразу здесь",
+  deleteAccountSuccess: "Аккаунт удалён",
+  deleteAccountFailed: "Не удалось удалить аккаунт. Попробуйте ещё раз.",
+  deleteAccountInProgress: "Удаление аккаунта…",
   // settings sections
   appSettings: "Настройки приложения",
   accountSettings: "Аккаунт",

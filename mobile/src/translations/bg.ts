@@ -120,6 +120,9 @@ export const bg: typeof en = {
     'За да потвърдите, моля въведете "sudo delete my account" по-долу:',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "Въведете фразата тук",
+  deleteAccountSuccess: "Акаунтът е изтрит",
+  deleteAccountFailed: "Акаунтът не беше изтрит. Опитайте отново.",
+  deleteAccountInProgress: "Изтриване на акаунта…",
   // settings sections
   appSettings: "Настройки на приложението",
   accountSettings: "Акаунт",

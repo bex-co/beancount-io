@@ -112,6 +112,9 @@ export const zh: typeof en = {
   deleteAccountConfirmMessage: '请在下方输入 "sudo delete my account" 以确认：',
   deleteAccountConfirmPhrase: "sudo delete my account",
   deleteAccountConfirmPlaceholder: "在此输入短语",
+  deleteAccountSuccess: "账号已删除",
+  deleteAccountFailed: "无法删除账号，请重试。",
+  deleteAccountInProgress: "正在删除账号…",
   // settings sections
   appSettings: "应用设置",
   accountSettings: "账户",
