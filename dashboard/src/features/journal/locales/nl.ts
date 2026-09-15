@@ -287,10 +287,6 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Selecteer rekening...",
     description: "Placeholder for account selection combobox",
   },
-  "journal.selectBalanceDate": {
-    message: "Selecteer saldodatum",
-    description: "Placeholder for balance date picker",
-  },
   "journal.selectCurrency": {
     message: "Selecteer valuta...",
     description: "Placeholder for currency selection combobox",
@@ -298,10 +294,6 @@ const nlJournal: Record<string, TranslationEntry> = {
   "journal.selectNarration": {
     message: "Selecteer omschrijving...",
     description: "Placeholder for narration selection combobox",
-  },
-  "journal.selectNoteDate": {
-    message: "Selecteer notitiedatum",
-    description: "Placeholder for note date picker",
   },
   "journal.selectPayee": {
     message: "Selecteer begunstigde...",

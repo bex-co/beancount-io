@@ -254,6 +254,11 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "ビューを選択",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "{pattern} または {iso} の形式で日付を入力",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "日付を選択",
     description: "Screen reader label for date picker button",

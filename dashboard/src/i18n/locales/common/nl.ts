@@ -255,6 +255,11 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Selecteer een weergave",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "Voer een datum in als {pattern} of {iso}",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "Selecteer datum",
     description: "Screen reader label for date picker button",

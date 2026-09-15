@@ -255,6 +255,11 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Vyberte zobrazenie",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "Zadajte dátum vo formáte {pattern} alebo {iso}",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "Vyberte dátum",
     description: "Screen reader label for date picker button",

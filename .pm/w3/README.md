@@ -58,7 +58,7 @@
 
 - [x] **m41** — Confirm before deleting a transaction (6 tasks) ← continuous dashboard QA, 2026-09-12
 
-- [ ] **m42** — Accept dates in the user's own date order (6 tasks) ← continuous dashboard QA, 2026-09-12
+- [x] **m42** — Accept dates in the user's own date order (6 tasks) ← continuous dashboard QA, 2026-09-12
 
 ## Inbox
 

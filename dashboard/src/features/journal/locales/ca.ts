@@ -287,10 +287,6 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Preu",
     description: "Placeholder for account selection combobox",
   },
-  "journal.selectBalanceDate": {
-    message: "Seleccionar compte...",
-    description: "Placeholder for balance date picker",
-  },
   "journal.selectCurrency": {
     message: "Seleccionar data de balanç",
     description: "Placeholder for currency selection combobox",
@@ -298,10 +294,6 @@ const caJournal: Record<string, TranslationEntry> = {
   "journal.selectNarration": {
     message: "Seleccionar moneda...",
     description: "Placeholder for narration selection combobox",
-  },
-  "journal.selectNoteDate": {
-    message: "Seleccionar descripció...",
-    description: "Placeholder for note date picker",
   },
   "journal.selectPayee": {
     message: "Seleccionar data de la nota",

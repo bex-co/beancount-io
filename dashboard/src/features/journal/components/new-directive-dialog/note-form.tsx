@@ -125,7 +125,6 @@ export function NoteForm({ ledgerId, onSuccess }: NoteFormProps) {
                     id="date"
                     value={field.value}
                     onChange={(newDate) => field.onChange(newDate)}
-                    placeholder={t("journal.selectNoteDate")}
                     required
                   />
                 </FormControl>

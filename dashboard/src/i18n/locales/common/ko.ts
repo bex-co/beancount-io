@@ -254,6 +254,11 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "보기 선택",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "{pattern} 또는 {iso} 형식으로 날짜 입력",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "날짜 선택",
     description: "Screen reader label for date picker button",

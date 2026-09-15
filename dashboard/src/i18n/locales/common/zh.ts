@@ -251,6 +251,11 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "选择视图",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "按 {pattern} 或 {iso} 格式输入日期",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "选择日期",
     description: "Screen reader label for date picker button",

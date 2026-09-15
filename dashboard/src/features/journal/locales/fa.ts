@@ -287,10 +287,6 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "انتخاب حساب...",
     description: "Placeholder for account selection combobox",
   },
-  "journal.selectBalanceDate": {
-    message: "انتخاب تاریخ مانده",
-    description: "Placeholder for balance date picker",
-  },
   "journal.selectCurrency": {
     message: "انتخاب ارز...",
     description: "Placeholder for currency selection combobox",
@@ -298,10 +294,6 @@ const faJournal: Record<string, TranslationEntry> = {
   "journal.selectNarration": {
     message: "انتخاب شرح...",
     description: "Placeholder for narration selection combobox",
-  },
-  "journal.selectNoteDate": {
-    message: "انتخاب تاریخ یادداشت",
-    description: "Placeholder for note date picker",
   },
   "journal.selectPayee": {
     message: "انتخاب دریافت‌کننده...",

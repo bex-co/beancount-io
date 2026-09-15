@@ -151,7 +151,6 @@ export function BalanceForm({ ledgerId, onSuccess }: BalanceFormProps) {
                     id="date"
                     value={field.value}
                     onChange={(newDate) => field.onChange(newDate)}
-                    placeholder={t("journal.selectBalanceDate")}
                     required
                   />
                 </FormControl>

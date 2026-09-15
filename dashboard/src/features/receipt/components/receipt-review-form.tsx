@@ -159,7 +159,6 @@ export function ReceiptReviewForm({
                             id="receipt-date"
                             value={field.value}
                             onChange={(d) => field.onChange(d)}
-                            placeholder="MM/DD/YYYY"
                           />
                         </FormControl>
                         <FormMessage />

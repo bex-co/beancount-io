@@ -286,10 +286,6 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "选择账户...",
     description: "Placeholder for account selection combobox",
   },
-  "journal.selectBalanceDate": {
-    message: "选择余额日期",
-    description: "Placeholder for balance date picker",
-  },
   "journal.selectCurrency": {
     message: "选择货币...",
     description: "Placeholder for currency selection combobox",
@@ -297,10 +293,6 @@ const zhJournal: Record<string, TranslationEntry> = {
   "journal.selectNarration": {
     message: "选择描述...",
     description: "Placeholder for narration selection combobox",
-  },
-  "journal.selectNoteDate": {
-    message: "选择备注日期",
-    description: "Placeholder for note date picker",
   },
   "journal.selectPayee": {
     message: "选择收款人...",

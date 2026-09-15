@@ -254,6 +254,11 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Sélectionner une vue",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "Saisissez une date au format {pattern} ou {iso}",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "Sélectionner une date",
     description: "Screen reader label for date picker button",

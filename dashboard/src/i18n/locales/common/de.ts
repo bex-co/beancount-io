@@ -255,6 +255,11 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Ansicht wählen",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "Datum als {pattern} oder {iso} eingeben",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "Datum auswählen",
     description: "Screen reader label for date picker button",

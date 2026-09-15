@@ -255,6 +255,11 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "انتخاب نما",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "تاریخ را به قالب {pattern} یا {iso} وارد کنید",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "انتخاب تاریخ",
     description: "Screen reader label for date picker button",

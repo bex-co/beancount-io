@@ -287,10 +287,6 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Выберите счёт...",
     description: "Placeholder for account selection combobox",
   },
-  "journal.selectBalanceDate": {
-    message: "Выберите дату баланса",
-    description: "Placeholder for balance date picker",
-  },
   "journal.selectCurrency": {
     message: "Выберите валюту...",
     description: "Placeholder for currency selection combobox",
@@ -298,10 +294,6 @@ const ruJournal: Record<string, TranslationEntry> = {
   "journal.selectNarration": {
     message: "Выберите описание...",
     description: "Placeholder for narration selection combobox",
-  },
-  "journal.selectNoteDate": {
-    message: "Выберите дату заметки",
-    description: "Placeholder for note date picker",
   },
   "journal.selectPayee": {
     message: "Выберите получателя платежа...",

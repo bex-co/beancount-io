@@ -284,10 +284,6 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "勘定科目を選択...",
     description: "Placeholder for account selection combobox",
   },
-  "journal.selectBalanceDate": {
-    message: "残高日付を選択",
-    description: "Placeholder for balance date picker",
-  },
   "journal.selectCurrency": {
     message: "通貨を選択...",
     description: "Placeholder for currency selection combobox",
@@ -295,10 +291,6 @@ const jaJournal: Record<string, TranslationEntry> = {
   "journal.selectNarration": {
     message: "説明を選択...",
     description: "Placeholder for narration selection combobox",
-  },
-  "journal.selectNoteDate": {
-    message: "メモ日付を選択",
-    description: "Placeholder for note date picker",
   },
   "journal.selectPayee": {
     message: "支払先を選択...",

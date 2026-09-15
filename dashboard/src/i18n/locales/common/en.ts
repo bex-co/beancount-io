@@ -255,6 +255,11 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Select a view",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "Enter a date as {pattern} or {iso}",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "Select date",
     description: "Screen reader label for date picker button",

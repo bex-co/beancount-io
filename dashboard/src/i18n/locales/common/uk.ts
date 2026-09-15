@@ -255,6 +255,11 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Виберіть вигляд",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "Введіть дату у форматі {pattern} або {iso}",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "Виберіть дату",
     description: "Screen reader label for date picker button",

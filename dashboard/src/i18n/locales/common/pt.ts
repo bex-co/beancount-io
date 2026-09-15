@@ -255,6 +255,11 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Selecionar uma visualização",
     description: "Placeholder for responsive tab trigger",
   },
+  "common.dateInputFormat": {
+    message: "Informe uma data como {pattern} ou {iso}",
+    description:
+      "Tooltip on date inputs naming the accepted formats. {pattern} is the active language's date order and {iso} is the ISO fallback.",
+  },
   "common.selectDate": {
     message: "Selecionar data",
     description: "Screen reader label for date picker button",

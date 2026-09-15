@@ -283,10 +283,6 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "계정 선택...",
     description: "Placeholder for account selection combobox",
   },
-  "journal.selectBalanceDate": {
-    message: "잔액 날짜 선택",
-    description: "Placeholder for balance date picker",
-  },
   "journal.selectCurrency": {
     message: "통화 선택...",
     description: "Placeholder for currency selection combobox",
@@ -294,10 +290,6 @@ const koJournal: Record<string, TranslationEntry> = {
   "journal.selectNarration": {
     message: "서술 선택...",
     description: "Placeholder for narration selection combobox",
-  },
-  "journal.selectNoteDate": {
-    message: "메모 날짜 선택",
-    description: "Placeholder for note date picker",
   },
   "journal.selectPayee": {
     message: "수취인 선택...",

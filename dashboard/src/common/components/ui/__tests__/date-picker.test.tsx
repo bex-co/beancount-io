@@ -1,13 +1,23 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { format } from "date-fns";
+import { enUS } from "react-day-picker/locale/en-US";
+import { fr } from "react-day-picker/locale/fr";
+import type { Locale } from "react-day-picker";
 import { DatePicker } from "../date-picker";
 
-vi.mock("@/common/hooks/use-date-locale", async () => {
-  const { enUS } = await import("react-day-picker/locale/en-US");
-  return { useDateLocale: () => enUS };
+const mocks = vi.hoisted(() => ({
+  dateLocale: null as unknown as Locale,
+}));
+
+vi.mock("@/common/hooks/use-date-locale", () => {
+  return { useDateLocale: () => mocks.dateLocale };
+});
+
+beforeEach(() => {
+  mocks.dateLocale = enUS;
 });
 
 function ControlledDatePicker({
@@ -153,5 +163,78 @@ describe("DatePicker calendar year range", () => {
     expect(format(onValue.mock.calls.at(-1)![0] as Date, "yyyy-MM-dd")).toBe(
       "2027-01-15",
     );
+  });
+});
+
+describe("DatePicker locale ordering", () => {
+  it("shows the month-first hint and ISO fallback under English", () => {
+    render(<ControlledDatePicker onValue={vi.fn()} />);
+
+    const input = screen.getByRole("textbox");
+    expect(input).toHaveAttribute("placeholder", "MM/DD/YYYY");
+    expect(input).toHaveAttribute(
+      "title",
+      "Enter a date as MM/DD/YYYY or YYYY-MM-DD",
+    );
+  });
+
+  it("shows the day-first hint and reads day-first input under French", async () => {
+    mocks.dateLocale = fr;
+    const user = userEvent.setup();
+    const onValue = vi.fn();
+    render(<ControlledDatePicker onValue={onValue} />);
+
+    const input = screen.getByRole("textbox");
+    expect(input).toHaveAttribute("placeholder", "DD/MM/YYYY");
+    expect(input).toHaveAttribute(
+      "title",
+      "Enter a date as DD/MM/YYYY or YYYY-MM-DD",
+    );
+
+    await user.clear(input);
+    await user.type(input, "15/06/2025");
+    expect(format(onValue.mock.calls.at(-1)![0] as Date, "yyyy-MM-dd")).toBe(
+      "2025-06-15",
+    );
+  });
+
+  it("re-renders the same date on language change without republishing (m22)", () => {
+    const onValue = vi.fn();
+    const { rerender } = render(
+      <ControlledDatePicker
+        initial={new Date(2025, 5, 15)}
+        onValue={onValue}
+      />,
+    );
+    expect(screen.getByRole("textbox")).toHaveValue("06/15/2025");
+
+    mocks.dateLocale = fr;
+    rerender(
+      <ControlledDatePicker
+        initial={new Date(2025, 5, 15)}
+        onValue={onValue}
+      />,
+    );
+
+    // Same selected Date in French clothes; the stored date is untouched.
+    expect(screen.getByRole("textbox")).toHaveValue("15/06/2025");
+    expect(onValue).not.toHaveBeenCalled();
+  });
+
+  it("leaves a mid-edit draft untouched when the language changes (m22)", async () => {
+    const user = userEvent.setup();
+    const onValue = vi.fn();
+    const { rerender } = render(<ControlledDatePicker onValue={onValue} />);
+
+    const input = screen.getByRole("textbox");
+    await user.clear(input);
+    await user.type(input, "06/1");
+    const callsBeforeSwitch = onValue.mock.calls.length;
+
+    mocks.dateLocale = fr;
+    rerender(<ControlledDatePicker onValue={onValue} />);
+
+    expect(screen.getByRole("textbox")).toHaveValue("06/1");
+    expect(onValue.mock.calls.length).toBe(callsBeforeSwitch);
   });
 });

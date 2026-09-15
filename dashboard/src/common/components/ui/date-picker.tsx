@@ -14,26 +14,20 @@ import {
   PopoverTrigger,
 } from "@/common/components/ui/popover";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useDateLocale } from "@/common/hooks/use-date-locale";
 import {
-  DISPLAY_PATTERN,
+  ISO_PATTERN,
+  getDisplayPattern,
+  getPatternHint,
   parseStrictCalendarDate,
   rollingCalendarBounds,
 } from "./date-picker-utils";
 
-function formatDate(date: Date | undefined, short = false) {
+function formatDate(date: Date | undefined, pattern: string) {
   if (!date || !isValid(date)) {
     return "";
   }
-
-  if (short) {
-    return format(date, DISPLAY_PATTERN);
-  }
-
-  return date.toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  return format(date, pattern);
 }
 
 interface DatePickerProps {
@@ -41,7 +35,6 @@ interface DatePickerProps {
   label?: string;
   value: Date | undefined;
   onChange: (date: Date | undefined) => void;
-  placeholder?: string;
   required?: boolean;
   className?: string;
 }
@@ -55,32 +48,42 @@ export function DatePicker({
   label,
   value,
   onChange,
-  placeholder,
   required = false,
   className = "",
 }: DatePickerProps) {
   const { t } = useTranslations();
-  const defaultPlaceholder = placeholder || t("common.selectDate");
+  // Same resolved locale as the calendar popup: one source for both halves
+  // of this control, never the browser locale.
+  const displayPattern = getDisplayPattern(useDateLocale());
+  // The hint is derived from the pattern actually parsed, so the two cannot
+  // drift apart; the tooltip additionally names the ISO fallback.
+  const hint = getPatternHint(displayPattern);
+  const isoHint = getPatternHint(ISO_PATTERN);
   const [open, setOpen] = React.useState(false);
   const [month, setMonth] = React.useState<Date | undefined>(value);
-  const [inputValue, setInputValue] = React.useState(formatDate(value, true));
+  const [inputValue, setInputValue] = React.useState(
+    formatDate(value, displayPattern),
+  );
   // Keep the typed draft while the parent echoes an invalid/empty value.
   const [isEditing, setIsEditing] = React.useState(false);
 
   React.useEffect(() => {
     if (isEditing) return;
-    setInputValue(formatDate(value, true));
+    // A language change re-renders the same selected Date in the new
+    // pattern; the stored date is never reinterpreted (m22), and a
+    // mid-edit draft is left untouched until blur or commit.
+    setInputValue(formatDate(value, displayPattern));
     if (value && isValid(value)) {
       setMonth(value);
     }
-  }, [value, isEditing]);
+  }, [value, displayPattern, isEditing]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;
     setIsEditing(true);
     setInputValue(next);
 
-    const parsed = parseStrictCalendarDate(next);
+    const parsed = parseStrictCalendarDate(next, displayPattern);
     onChange(parsed);
     if (parsed) {
       setMonth(parsed);
@@ -90,7 +93,7 @@ export function DatePicker({
   const commitDate = (date: Date | undefined) => {
     setIsEditing(false);
     onChange(date);
-    setInputValue(formatDate(date, true));
+    setInputValue(formatDate(date, displayPattern));
     if (date) {
       setMonth(date);
     }
@@ -123,13 +126,14 @@ export function DatePicker({
         <Input
           id={id}
           value={inputValue}
-          placeholder={defaultPlaceholder}
+          placeholder={hint}
+          title={t("common.dateInputFormat", { pattern: hint, iso: isoHint })}
           className="bg-background pr-10"
           onChange={handleInputChange}
           onBlur={() => {
             setIsEditing(false);
             if (value && isValid(value)) {
-              setInputValue(formatDate(value, true));
+              setInputValue(formatDate(value, displayPattern));
             }
           }}
           onKeyDown={(e) => {
@@ -140,7 +144,8 @@ export function DatePicker({
           }}
           required={required}
           aria-invalid={
-            inputValue.trim().length > 0 && !parseStrictCalendarDate(inputValue)
+            inputValue.trim().length > 0 &&
+            !parseStrictCalendarDate(inputValue, displayPattern)
               ? true
               : undefined
           }

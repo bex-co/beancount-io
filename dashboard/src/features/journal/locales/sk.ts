@@ -287,10 +287,6 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Vyberte účet...",
     description: "Placeholder for account selection combobox",
   },
-  "journal.selectBalanceDate": {
-    message: "Vyberte dátum zostatku",
-    description: "Placeholder for balance date picker",
-  },
   "journal.selectCurrency": {
     message: "Vyberte menu...",
     description: "Placeholder for currency selection combobox",
@@ -298,10 +294,6 @@ const skJournal: Record<string, TranslationEntry> = {
   "journal.selectNarration": {
     message: "Vyberte popis...",
     description: "Placeholder for narration selection combobox",
-  },
-  "journal.selectNoteDate": {
-    message: "Vyberte dátum poznámky",
-    description: "Placeholder for note date picker",
   },
   "journal.selectPayee": {
     message: "Vyberte príjemcu...",

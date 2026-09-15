@@ -1,6 +1,6 @@
 # w3 · m42 — Accept dates in the user's own date order
 
-**Worker:** worker3 **Goal:** a date typed in the app's selected language means what the user meant it to mean **Status:** todo
+**Worker:** worker3 **Goal:** a date typed in the app's selected language means what the user meant it to mean **Status:** done
 
 Severity: **major**. Package: dashboard. Every date text input in the app displays and parses **US month-first order only**, in all 15 languages. A French user typing `12/09/2026` for 9 December gets a silently accepted 12 September — both orderings are valid calendar dates, so nothing warns them, and the wrong date is committed to the ledger.
 
@@ -8,12 +8,12 @@ Severity: **major**. Package: dashboard. Every date text input in the app displa
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Derive the date display and parse patterns from the active language | 55m | — |
-| t002 | Localize the format hint at every date input | 30m | t001 |
-| t003 | Verify the date-entry adoption surface | 15m | t002 |
-| t004 | Simplify the date pattern wiring | 15m | t003 |
-| t005 | Test typed dates across locales and orderings | 55m | t003 |
-| t006 | Close and archive the date-order milestone | 10m | t004, t005 |
+| t001 | Derive the date display and parse patterns from the active language — **DONE** | 55m | — |
+| t002 | Localize the format hint at every date input — **DONE** | 30m | t001 |
+| t003 | Verify the date-entry adoption surface — **DONE** | 15m | t002 |
+| t004 | Simplify the date pattern wiring — **DONE** | 15m | t003 |
+| t005 | Test typed dates across locales and orderings — **DONE** | 55m | t003 |
+| t006 | Close and archive the date-order milestone — **DONE** | 10m | t004, t005 |
 
 Implementation totals 85 minutes; all six tasks total 180 minutes. A shared parser with many callers, per-locale patterns, and a delicate ambiguity boundary put this well past a sub-hour edit.
 

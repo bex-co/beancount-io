@@ -329,7 +329,6 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
                     id="date"
                     value={field.value}
                     onChange={(newDate) => field.onChange(newDate)}
-                    placeholder="MM/DD/YYYY"
                     required
                   />
                 </FormControl>
