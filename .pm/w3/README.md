@@ -86,12 +86,9 @@ The four that remain are deliberately not "next up":
 
 Added since that pass:
 
-- [188](./188.md) — The merchant Recurring switch announces the opposite of its own state (native QA, 2026-09-12)
 - [189](./189.md) — The account journal rounds a posting the transactions list shows in full (native QA, 2026-09-12)
 - [190](./190.md) — Import Configure dates follow the browser, not the app language, and change format mid-wizard (dashboard QA, 2026-09-12) — re-filed 2026-09-12 after a concurrent write clobbered it
-- [191](./191.md) — The horizontal-swipe marker throws on every touch it is supposed to end (native QA, 2026-09-12)
 - [192](./192.md) — Trial Balance never states whether it balances (dashboard QA, 2026-09-12)
 - [195](./195.md) — An Ask deep link sends its question to the AI on arrival, and again after login (dashboard QA, 2026-09-12)
-- [196](./196.md) — Create File offers Save for names the server will refuse, including your main ledger's (dashboard QA, 2026-09-12)
 
 - [x] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13
