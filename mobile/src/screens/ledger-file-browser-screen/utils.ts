@@ -40,6 +40,22 @@ export function sortEntries<T extends Entry>(entries: T[]): T[] {
   });
 }
 
+/** A directory stack together with the ledger it was built in. */
+export type LedgerPathStack = { ledgerId: string; stack: string[] };
+
+/**
+ * The stack to browse with. One from another ledger starts over at the root:
+ * the Files tab stays mounted across a ledger switch, and a folder remembered
+ * from the previous ledger would list as empty and aim Create file at a path
+ * the new ledger never had.
+ */
+export function pathStackForLedger(
+  state: LedgerPathStack,
+  ledgerId: string,
+): string[] {
+  return state.ledgerId === ledgerId ? state.stack : [""];
+}
+
 export function pushPathStack(stack: string[], path: string): string[] {
   return [...stack, path];
 }

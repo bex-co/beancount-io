@@ -45,6 +45,8 @@ import {
   popPathStack,
   pushPathStack,
   sortEntries,
+  pathStackForLedger,
+  type LedgerPathStack,
 } from "./utils";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
@@ -298,8 +300,18 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const toast = useToast();
   const client = useApolloClient();
 
-  // Internal directory navigation stack (root = "")
-  const [pathStack, setPathStack] = useState<string[]>([""]);
+  // Internal directory navigation stack (root = ""), scoped to its ledger so a
+  // ledger switch starts at the new ledger's root, never in the old folder.
+  const [pathState, setPathState] = useState<LedgerPathStack>(() => ({
+    ledgerId,
+    stack: [""],
+  }));
+  const pathStack = pathStackForLedger(pathState, ledgerId);
+  const updatePathStack = (next: (stack: string[]) => string[]) =>
+    setPathState((prev) => ({
+      ledgerId,
+      stack: next(pathStackForLedger(prev, ledgerId)),
+    }));
   const currentPath = pathStack[pathStack.length - 1];
   const inSubDir = pathStack.length > 1;
 
@@ -483,7 +495,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
 
   const handleEntryPress = (entry: DirEntry) => {
     if (entry.type === "dir") {
-      setPathStack((prev) => pushPathStack(prev, entry.path));
+      updatePathStack((stack) => pushPathStack(stack, entry.path));
     } else if (isEditableTextFile(entry.name)) {
       router.push({
         pathname: "/(app)/ledger-file-editor",
@@ -493,7 +505,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   };
 
   const handleBack = () => {
-    setPathStack((prev) => popPathStack(prev));
+    updatePathStack(popPathStack);
   };
 
   const breadcrumbLabel = inSubDir ? currentPath : "";
