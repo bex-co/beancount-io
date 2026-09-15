@@ -1,6 +1,14 @@
 # w4 · m8 — Localized Google Play listing from the canonical metadata
 
-**Worker:** worker1 **Goal:** the Google Play listing is generated from the same canonical metadata as the App Store listing and is live in all 13 shipped languages, including the Bulgarian and Persian listings Apple cannot offer **Status:** in progress (t001–t004 done; Play Console review state and public-listing sampling pending)
+**Worker:** worker1 **Goal:** the Google Play listing is generated from the same canonical metadata as the App Store listing and is live in all 13 shipped languages, including the Bulgarian and Persian listings Apple cannot offer **Status:** blocked — see [Blocked](#blocked) (t001–t007 done; closeout waits on the public listing)
+
+## Blocked
+
+**Blocked 2026-09-14 by `/loop-worker w4` triage; every implementation task is complete.** The reviewed Play edit was applied and verified at the API level on 2026-09-10: all 16 locales' text and image checksums match plan `b4921f16…5cf5636f`. The public listing does not show it. On 2026-09-14 the public store page for `io.beancount.android` still carries the previous title ("Beancount") and the previous English description, and none of the generated en-US, `bg`, or `fa` copy appears. Whether the change is in Google Play review, held by managed publishing, or rejected is visible only in Play Console, which this worker cannot access.
+
+**Unblock with a user check in Play Console:** confirm the store-listing change's review and publishing state (publish it if managed publishing is holding it), then sample the public listing in `bg` and `fa`. When the localized listing is public, move this directory back to `.pm/w4/m8/` and run `/pm done w4/m8/t008`. The workstream checkbox stays unchecked until then.
+
+Board repair in the same move: t004–t007 already recorded `status: done` but still sat in the open tree; they now live under `done/` with their rows marked.
 
 ## Tasks (in order)
 
@@ -9,10 +17,10 @@
 | t001 | Pull the current Google Play listing baseline — **DONE** | 35m | — |
 | t002 | Generate Play listing copy from the canonical metadata — **DONE** | 45m | t001 |
 | t003 | Derive Play screenshots and the feature graphic — **DONE** | 50m | — |
-| t004 | Plan and apply steps for the Play listing, with docs | 50m | t002, t003 |
-| t005 | Adoption surface | 25m | t004 |
-| t006 | Simplify | 25m | t005 |
-| t007 | Test coverage | 45m | t005 |
+| t004 | Plan and apply steps for the Play listing, with docs — **DONE** | 50m | t002, t003 |
+| t005 | Adoption surface — **DONE** | 25m | t004 |
+| t006 | Simplify — **DONE** | 25m | t005 |
+| t007 | Test coverage — **DONE** | 45m | t005 |
 | t008 | Closeout | 15m | t006, t007 |
 
 ## Definition of done
