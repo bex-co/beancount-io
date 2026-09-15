@@ -18,6 +18,21 @@
       "userInterfaceStyle": "automatic",
       "associatedDomains": ["applinks:beancount.io"],
       "infoPlist": {
+        "CFBundleLocalizations": [
+          "en",
+          "zh",
+          "bg",
+          "ca",
+          "de",
+          "es",
+          "fa",
+          "fr",
+          "nl",
+          "pt",
+          "ru",
+          "sk",
+          "uk"
+        ],
         "NSCalendarsUsageDescription": false,
         "NSCameraUsageDescription": "Beancount uses the camera to scan receipts.",
         "NSContactsUsageDescription": false,
