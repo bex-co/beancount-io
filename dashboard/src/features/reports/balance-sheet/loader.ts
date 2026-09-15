@@ -2,6 +2,7 @@ import type { RouteLoader } from "@/common/types/route-loader";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
 import { GetLedgerBalanceSheetDocument } from "@/graphql/definitions";
 import { balanceSheetQueryDefaults } from "./constants";
+import { storedReportConversion } from "@/features/reports/components/use-report-conversion";
 
 export const balanceSheetLoader: RouteLoader<
   "/ledger/$ledgerOwner/$ledgerName/balance-sheet",
@@ -18,7 +19,7 @@ export const balanceSheetLoader: RouteLoader<
         filter: deps.filter,
         time: deps.time,
         interval: balanceSheetQueryDefaults.interval,
-        conversion: balanceSheetQueryDefaults.conversion,
+        conversion: storedReportConversion(ledgerId),
       },
     }),
   ]);

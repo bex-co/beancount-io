@@ -6,7 +6,7 @@ import {
   GetLedgerCashFlowDocument,
   type SerializableTreeNode,
 } from "@/graphql/definitions";
-import type { ChartInterval, ConversionOption } from "@/common/types/chart";
+import type { ChartInterval } from "@/common/types/chart";
 import { cashFlowQueryDefaults } from "./constants";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
@@ -29,6 +29,7 @@ import {
 import { mergeIntervalAccountChanges } from "./lib/merge-intervals";
 import { joinCashAccountStatus } from "./lib/cash-account-status";
 import { CashFlowContent } from "./cash-flow-content";
+import { useReportConversion } from "@/features/reports/components/use-report-conversion";
 
 /**
  * Cash Flow page component
@@ -52,8 +53,9 @@ export default function LedgerCashFlowPage() {
   const [timeInterval, setTimeInterval] = useState<ChartInterval>(
     cashFlowQueryDefaults.interval,
   );
-  const [conversion, setConversion] = useState<ConversionOption>(
-    cashFlowQueryDefaults.conversion,
+  const [conversion, setConversion] = useReportConversion(
+    ledgerId,
+    primaryCurrency,
   );
 
   const {

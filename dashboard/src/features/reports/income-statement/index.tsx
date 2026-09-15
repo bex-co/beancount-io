@@ -3,7 +3,7 @@ import { TrendingUp } from "lucide-react";
 import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerIncomeStatementDocument } from "@/graphql/definitions";
-import type { ChartInterval, ConversionOption } from "@/common/types/chart";
+import type { ChartInterval } from "@/common/types/chart";
 import { incomeStatementQueryDefaults } from "./constants";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
@@ -22,6 +22,7 @@ import {
   getShowClosedAccounts,
 } from "@/common/lib/fava-options";
 import { IncomeStatementContent } from "./income-statement-content";
+import { useReportConversion } from "@/features/reports/components/use-report-conversion";
 
 /**
  * Income Statement page component
@@ -44,8 +45,9 @@ export default function LedgerIncomeStatementPage() {
   const [timeInterval, setTimeInterval] = useState<ChartInterval>(
     incomeStatementQueryDefaults.interval,
   );
-  const [conversion, setConversion] = useState<ConversionOption>(
-    incomeStatementQueryDefaults.conversion,
+  const [conversion, setConversion] = useReportConversion(
+    ledgerId,
+    primaryCurrency,
   );
 
   const {

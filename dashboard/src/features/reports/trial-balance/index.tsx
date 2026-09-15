@@ -1,18 +1,16 @@
 import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerTrialBalanceDocument } from "@/graphql/definitions";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { createLedgerId } from "@/common/lib/utils/encode";
-import type { ConversionOption } from "@/common/types/chart";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
   ReportLoadingState,
   ReportErrorState,
   ReportEmptyState,
 } from "@/common/components/state-components";
-import { trialBalanceQueryDefaults } from "./constants";
 import {
   getShowAccountsWithZeroBalance,
   getShowAccountsWithZeroTransactions,
@@ -21,6 +19,7 @@ import {
   getShowClosedAccounts,
 } from "@/common/lib/fava-options";
 import { TrialBalanceContent } from "./trial-balance-content";
+import { useReportConversion } from "@/features/reports/components/use-report-conversion";
 
 /**
  * Trial Balance page component
@@ -39,8 +38,9 @@ export default function TrialBalancePage() {
     ledgerName: ledgerDisplayName,
     ledgerData,
   } = useLedger();
-  const [conversion, setConversion] = useState<ConversionOption>(
-    trialBalanceQueryDefaults.conversion,
+  const [conversion, setConversion] = useReportConversion(
+    ledgerId,
+    primaryCurrency,
   );
 
   const {

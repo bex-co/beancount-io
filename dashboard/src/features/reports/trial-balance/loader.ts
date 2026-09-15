@@ -1,7 +1,7 @@
 import type { RouteLoader } from "@/common/types/route-loader";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
 import { GetLedgerTrialBalanceDocument } from "@/graphql/definitions";
-import { trialBalanceQueryDefaults } from "./constants";
+import { storedReportConversion } from "@/features/reports/components/use-report-conversion";
 
 export const trialBalanceLoader: RouteLoader<
   "/ledger/$ledgerOwner/$ledgerName/trial-balance",
@@ -17,7 +17,7 @@ export const trialBalanceLoader: RouteLoader<
         account: deps.account,
         filter: deps.filter,
         time: deps.time,
-        conversion: trialBalanceQueryDefaults.conversion,
+        conversion: storedReportConversion(ledgerId),
       },
     }),
   ]);

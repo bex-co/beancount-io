@@ -2,6 +2,7 @@ import type { RouteLoader } from "@/common/types/route-loader";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
 import { GetLedgerIncomeStatementDocument } from "@/graphql/definitions";
 import { incomeStatementQueryDefaults } from "./constants";
+import { storedReportConversion } from "@/features/reports/components/use-report-conversion";
 
 export const incomeStatementLoader: RouteLoader<
   "/ledger/$ledgerOwner/$ledgerName/income-statement",
@@ -18,7 +19,7 @@ export const incomeStatementLoader: RouteLoader<
         filter: deps.filter,
         time: deps.time,
         interval: incomeStatementQueryDefaults.interval,
-        conversion: incomeStatementQueryDefaults.conversion,
+        conversion: storedReportConversion(ledgerId),
       },
     }),
   ]);

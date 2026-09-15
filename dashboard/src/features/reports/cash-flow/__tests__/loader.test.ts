@@ -3,6 +3,13 @@ import type { RouterContext } from "@/common/types/router-context";
 import { GetLedgerCashFlowDocument } from "@/graphql/definitions";
 import { cashFlowLoader } from "../loader";
 
+const { cookies } = vi.hoisted(() => ({ cookies: new Map<string, string>() }));
+vi.mock("@/common/hooks/use-cookie-storage-state/cookie", () => ({
+  getCookie: (key: string) => cookies.get(key),
+  setCookie: vi.fn(),
+  removeCookie: vi.fn(),
+}));
+
 type QueryOptions = { query: unknown; variables?: Record<string, unknown> };
 
 function loaderInput(query: (options: QueryOptions) => Promise<unknown>) {
@@ -34,6 +41,21 @@ describe("cashFlowLoader", () => {
         interval: "monthly",
         conversion: "at_cost",
       },
+    });
+  });
+
+  it("prefetches the ledger's stored report conversion", async () => {
+    cookies.set("beancount.reportConversion.open_ledger%2Fexample", "units");
+    const query = vi.fn(() => Promise.resolve({ data: {} }));
+
+    try {
+      await cashFlowLoader(loaderInput(query));
+    } finally {
+      cookies.clear();
+    }
+
+    expect(query.mock.calls[0][0]).toMatchObject({
+      variables: { conversion: "units" },
     });
   });
 

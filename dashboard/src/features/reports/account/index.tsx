@@ -51,6 +51,7 @@ import { getAccountJournalWithChildren } from "@/common/lib/fava-options";
 
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { isAccountReportEmpty } from "./lib/account-report-empty";
+import { useReportConversion } from "@/features/reports/components/use-report-conversion";
 
 /**
  * Account Journal Table component
@@ -312,11 +313,13 @@ export default function AccountPage() {
       value: "changesOverTime",
     },
   ];
+  const { primaryCurrency, ledgerName: ledgerDisplayName } = useLedger();
   const [timeInterval, setTimeInterval] = useState<ChartInterval>(
     accountQueryDefaults.interval,
   );
-  const [conversion, setConversion] = useState<ConversionOption>(
-    accountQueryDefaults.conversion,
+  const [conversion, setConversion] = useReportConversion(
+    ledgerId,
+    primaryCurrency,
   );
 
   const {
@@ -336,8 +339,6 @@ export default function AccountPage() {
     },
     fetchPolicy: "cache-first",
   });
-
-  const { primaryCurrency, ledgerName: ledgerDisplayName } = useLedger();
 
   const accountReportData =
     data?.getLedgerAccountReport || previousData?.getLedgerAccountReport;
