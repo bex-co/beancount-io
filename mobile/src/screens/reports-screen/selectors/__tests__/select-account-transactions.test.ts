@@ -114,17 +114,39 @@ describe("selectAccountTransactions", () => {
     ).toEqual(["jul", "jun", "may"]);
   });
 
-  it("YTD anchors to January of the anchor month's year", () => {
+  it("YTD anchors to January of the current year", () => {
     const entries = [
       txn("2025-12-31", [{ account: "Income:Salary", number: "1" }], "prev"),
       txn("2026-01-05", [{ account: "Income:Salary", number: "2" }], "jan"),
       txn("2026-07-20", [{ account: "Income:Salary", number: "3" }], "jul"),
     ];
     expect(
-      selectAccountTransactions(entries, "Income", "YTD", "2026-07").map(
-        (e) => e.entry_hash,
-      ),
+      selectAccountTransactions(
+        entries,
+        "Income",
+        "YTD",
+        "2026-07",
+        undefined,
+        2026,
+      ).map((e) => e.entry_hash),
     ).toEqual(["jul", "jan"]);
+  });
+
+  it("YTD lists nothing for a ledger whose statement ended in an earlier year", () => {
+    const entries = [
+      txn("2017-01-05", [{ account: "Income:Salary", number: "2" }], "jan"),
+      txn("2017-09-07", [{ account: "Income:Salary", number: "3" }], "sep"),
+    ];
+    expect(
+      selectAccountTransactions(
+        entries,
+        "Income",
+        "YTD",
+        "2017-09",
+        undefined,
+        2026,
+      ),
+    ).toEqual([]);
   });
 
   it("ALL ignores the window and returns every matching transaction", () => {

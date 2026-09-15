@@ -64,7 +64,8 @@ export function pointsToMonthlySeries(
 
 /**
  * Inclusive lower-bound "YYYY-MM" for a time range, anchored to a reference
- * month (typically the latest data point). "YTD" → January of that year;
+ * month (typically the latest data point). "YTD" → January of the current year,
+ * even when the reference month is older;
  * "1M/3M/6M/1Y" → the reference month and the N-1 before it (plain month math,
  * stepping the year back on underflow). "ALL" returns "" (no lower bound).
  *
@@ -73,14 +74,17 @@ export function pointsToMonthlySeries(
 export function rangeStartMonth(
   range: TimeRange,
   referenceYearMonth: string,
+  currentYear: number = new Date().getFullYear(),
 ): string {
   if (range === "ALL") {
     return "";
   }
-  const [year, month] = referenceYearMonth.split("-").map(Number);
+  // "Year to date" names the calendar year, so it cannot follow a stale
+  // ledger's latest point back into a past year the way a rolling range can.
   if (range === "YTD") {
-    return `${year}-01`;
+    return `${currentYear}-01`;
   }
+  const [year, month] = referenceYearMonth.split("-").map(Number);
   const monthsBack = RANGE_MONTHS[range];
   let y = year;
   let m = month - (monthsBack - 1);
@@ -94,11 +98,14 @@ export function rangeStartMonth(
 /**
  * Filter a monthly series to a time range. The window is anchored to the
  * **latest data point** (not "today") so a stale ledger still shows history
- * instead of an empty chart. "ALL" returns the whole series.
+ * instead of an empty chart. "ALL" returns the whole series. "YTD" is the
+ * exception: it is the current calendar year, so a series that ended in an
+ * earlier year has no year-to-date points.
  */
 export function filterSeriesByRange(
   series: SeriesPoint[],
   range: TimeRange,
+  currentYear?: number,
 ): SeriesPoint[] {
   if (range === "ALL" || series.length === 0) {
     return series;
@@ -106,6 +113,7 @@ export function filterSeriesByRange(
   const cutoffKey = rangeStartMonth(
     range,
     series[series.length - 1].date.slice(0, 7),
+    currentYear,
   );
   return series.filter((point) => point.date.slice(0, 7) >= cutoffKey);
 }
@@ -125,8 +133,9 @@ export function filterSeriesByRange(
 export function filterBalanceSeriesByRange(
   series: SeriesPoint[],
   range: TimeRange,
+  currentYear?: number,
 ): SeriesPoint[] {
-  const windowed = filterSeriesByRange(series, range);
+  const windowed = filterSeriesByRange(series, range, currentYear);
   const startIndex = series.length - windowed.length;
   return windowed.length < 2 && startIndex > 0
     ? series.slice(startIndex - 1)

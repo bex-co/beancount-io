@@ -40,6 +40,8 @@ function involvesAccount(
  * stale ledger still surfaces history instead of an empty list. Anchoring to the
  * latest *matching* entry instead would put the list on a different month than
  * the chart whenever the newest statement month's only activity is a transfer.
+ * "YTD" is the current calendar year (`currentYear`, from the clock unless
+ * given), so a stale ledger lists nothing for it.
  * "ALL" skips the window; a null anchor (statement not resolved yet) yields an
  * empty list rather than a list windowed on the wrong month.
  *
@@ -53,6 +55,7 @@ export function selectAccountTransactions(
   timeRange: TimeRange,
   anchorMonth: string | null,
   limit: number = ACCOUNT_TRANSACTIONS_LIMIT,
+  currentYear?: number,
 ): JournalTransaction[] {
   const matching = entries
     .filter((entry) => involvesAccount(entry, accountPrefix))
@@ -65,7 +68,7 @@ export function selectAccountTransactions(
     return [];
   }
 
-  const cutoffKey = rangeStartMonth(timeRange, anchorMonth);
+  const cutoffKey = rangeStartMonth(timeRange, anchorMonth, currentYear);
   return matching
     .filter((entry) => entry.date.slice(0, 7) >= cutoffKey)
     .slice(0, limit);

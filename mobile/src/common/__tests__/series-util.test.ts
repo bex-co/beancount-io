@@ -2,6 +2,7 @@ import {
   pointsToMonthlySeries,
   filterSeriesByRange,
   filterBalanceSeriesByRange,
+  rangeStartMonth,
   alignMonthlySeries,
   DateBalancePoint,
   SeriesPoint,
@@ -115,6 +116,45 @@ describe("filterBalanceSeriesByRange", () => {
   it("returns an empty array for an empty series", () => {
     expect(filterBalanceSeriesByRange([], "1M")).toEqual([]);
     expect(filterBalanceSeriesByRange([], "ALL")).toEqual([]);
+  });
+});
+
+describe("rangeStartMonth", () => {
+  it("anchors YTD to the current year, even when the latest point is older", () => {
+    expect(rangeStartMonth("YTD", "2017-09", 2026)).toBe("2026-01");
+    expect(rangeStartMonth("YTD", "2026-07", 2026)).toBe("2026-01");
+  });
+
+  it("keeps the rolling ranges anchored to the reference month", () => {
+    expect(rangeStartMonth("6M", "2017-09", 2026)).toBe("2017-04");
+    expect(rangeStartMonth("1Y", "2017-09", 2026)).toBe("2016-10");
+    expect(rangeStartMonth("ALL", "2017-09", 2026)).toBe("");
+  });
+});
+
+describe("YTD over a series that ended in an earlier year", () => {
+  const stale: SeriesPoint[] = [
+    { date: "2017-08-31", value: 5884.67 },
+    { date: "2017-09-30", value: 2754.06 },
+  ];
+
+  it("charts no year-to-date flow", () => {
+    expect(filterSeriesByRange(stale, "YTD", 2026)).toEqual([]);
+  });
+
+  it("holds the balance flat at its last point, so the change is zero", () => {
+    expect(filterBalanceSeriesByRange(stale, "YTD", 2026)).toEqual([
+      { date: "2017-09-30", value: 2754.06 },
+    ]);
+  });
+
+  it("leaves a current-year series' YTD unchanged", () => {
+    const current: SeriesPoint[] = [
+      { date: "2025-12-31", value: 10 },
+      { date: "2026-01-31", value: 20 },
+      { date: "2026-02-28", value: 30 },
+    ];
+    expect(filterSeriesByRange(current, "YTD", 2026)).toEqual(current.slice(1));
   });
 });
 
