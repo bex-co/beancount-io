@@ -1,152 +1,59 @@
-// Test the useTranslations hook logic
-// Due to test runner limitations with React hooks and path aliases,
-// we test the underlying logic rather than the hook directly
+/**
+ * Tests the real `useTranslations`. This file used to re-declare the logic inline and
+ * assert against its own copy, so it could not fail; the module's native and
+ * `@/` dependencies are now replaced with stand-ins the runner can load.
+ */
+import {
+  freshRequire,
+  interceptModules,
+} from "../../__tests__/fixtures/intercept-modules";
 
-describe("useTranslations hook logic", () => {
-  describe("t function behavior", () => {
-    it("returns translated string for valid key", () => {
-      // Simulate the t function behavior
-      const translations: Record<string, string> = {
-        home: "Home",
-        settings: "Settings",
-      };
-      const t = (key: string) => translations[key] || key;
+type VarsMock = typeof import("../../__tests__/fixtures/mock-vars");
+type TranslationsMock =
+  typeof import("../../__tests__/fixtures/mock-translations");
+type Subject = typeof import("../use-translations");
 
-      expect(t("home")).toBe("Home");
-      expect(t("settings")).toBe("Settings");
-    });
+const VARS = require.resolve("../../__tests__/fixtures/mock-vars");
+const TRANSLATIONS =
+  require.resolve("../../__tests__/fixtures/mock-translations");
+const SUBJECT = require.resolve("../use-translations");
+let restore: () => void;
+let vars: VarsMock;
+let translations: TranslationsMock;
+let useTranslations: Subject["useTranslations"];
 
-    it("returns key when translation is missing", () => {
-      const translations: Record<string, string> = {
-        home: "Home",
-      };
-      const t = (key: string) => translations[key] || key;
+beforeAll(() => {
+  restore = interceptModules({
+    "@apollo/client":
+      require.resolve("../../__tests__/fixtures/mock-apollo-client"),
+    "@/common/vars": VARS,
+    "@/translations": TRANSLATIONS,
+  });
+  vars = require(VARS) as VarsMock;
+  translations = require(TRANSLATIONS) as TranslationsMock;
+  ({ useTranslations } = freshRequire<Subject>(SUBJECT));
+});
 
-      expect(t("missing_key")).toBe("missing_key");
-    });
+afterAll(() => {
+  restore();
+  delete require.cache[SUBJECT];
+});
 
-    it("supports params in translations", () => {
-      // Simulate t function with params
-      const t = (key: string, params?: Record<string, unknown>) => {
-        if (key === "welcome" && params?.name) {
-          return `Welcome, ${params.name}!`;
-        }
-        return key;
-      };
-
-      expect(t("welcome", { name: "John" })).toBe("Welcome, John!");
-    });
+describe("useTranslations", () => {
+  it("translates through i18n, passing interpolation params along", () => {
+    vars.localeVar("en");
+    translations.i18n.locale = "en";
+    const { t, locale } = useTranslations();
+    expect(locale).toBe("en");
+    expect(t("save", { count: 2 })).toBe('save|en|{"count":2}');
   });
 
-  describe("locale synchronization", () => {
-    it("maintains locale value", () => {
-      // Simulate locale state
-      let i18nLocale = "en";
-      let currentLocale = "en";
-
-      // Simulate sync check from hook
-      const syncLocale = () => {
-        if (i18nLocale !== currentLocale) {
-          i18nLocale = currentLocale;
-        }
-      };
-
-      currentLocale = "fr";
-      syncLocale();
-      expect(i18nLocale).toBe("fr");
-    });
-
-    it("returns current locale", () => {
-      const useTranslationsLogic = (locale: string) => {
-        return {
-          t: (key: string) => key,
-          locale,
-        };
-      };
-
-      const result = useTranslationsLogic("de");
-      expect(result.locale).toBe("de");
-    });
-  });
-
-  describe("hook return value structure", () => {
-    it("returns object with t function and locale", () => {
-      const mockHookReturn = {
-        t: (key: string) => key,
-        locale: "en",
-      };
-
-      expect(typeof mockHookReturn.t).toBe("function");
-      expect(typeof mockHookReturn.locale).toBe("string");
-    });
-
-    it("t function accepts string key", () => {
-      const mockT = (key: string, _params?: Record<string, unknown>) => key;
-
-      expect(mockT("test")).toBe("test");
-      expect(mockT("another.key")).toBe("another.key");
-    });
-
-    it("t function accepts params object", () => {
-      type TranslateParams = Record<string, unknown>;
-      const mockT = (_key: string, params?: TranslateParams) => {
-        return params ? JSON.stringify(params) : "";
-      };
-
-      const result = mockT("test", { count: 5 });
-      expect(result).toBe('{"count":5}');
-    });
-  });
-
-  describe("supported locales", () => {
-    const supportedLocales = [
-      "en",
-      "zh",
-      "bg",
-      "ca",
-      "de",
-      "es",
-      "fa",
-      "fr",
-      "nl",
-      "pt",
-      "ru",
-      "sk",
-      "uk",
-    ];
-
-    it("has 13 supported locales", () => {
-      expect(supportedLocales.length).toBe(13);
-    });
-
-    it("includes English", () => {
-      expect(supportedLocales.includes("en")).toBe(true);
-    });
-
-    it("includes Chinese", () => {
-      expect(supportedLocales.includes("zh")).toBe(true);
-    });
-
-    it("includes all European languages", () => {
-      const european = [
-        "bg",
-        "ca",
-        "de",
-        "es",
-        "fr",
-        "nl",
-        "pt",
-        "ru",
-        "sk",
-        "uk",
-      ];
-      european.forEach((lang) => {
-        expect(supportedLocales.includes(lang)).toBe(true);
-      });
-    });
-
-    it("includes Persian", () => {
-      expect(supportedLocales.includes("fa")).toBe(true);
-    });
+  it("brings i18n to the reactive locale before translating", () => {
+    vars.localeVar("de");
+    translations.i18n.locale = "en";
+    const { t, locale } = useTranslations();
+    expect(locale).toBe("de");
+    expect(translations.i18n.locale).toBe("de");
+    expect(t("save")).toBe("save|de|null");
   });
 });

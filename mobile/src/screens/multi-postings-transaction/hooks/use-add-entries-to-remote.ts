@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useApolloClient } from "@apollo/client";
 import { useAddEntriesMutation } from "@/generated-graphql/graphql";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
+import { addEntriesSucceeded } from "./add-entries-result";
 
 /**
  * Writes new directives to the ledger and invalidates everything derived from
@@ -23,7 +24,7 @@ export const useAddEntriesToRemote = () => {
       const result = await mutate(options);
       // Only on a real write. `addEntries` reports rejection in the payload,
       // not by throwing.
-      if (result.data?.addEntries?.success) {
+      if (addEntriesSucceeded(result)) {
         void invalidateLedgerData(client, "entries");
       }
       return result;

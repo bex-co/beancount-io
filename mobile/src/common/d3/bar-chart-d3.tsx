@@ -7,6 +7,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { formatShortMoneyWithCurrency } from "@/common/number-utils";
 import { AnimatedBar } from "./animated-bar";
 import { useEntranceProgress } from "./use-entrance-progress";
+import { barChartValueDomain } from "./bar-chart-domain";
 import { restingBarRect } from "./bar-geometry";
 import { ChartErrorBoundary } from "./chart-chrome";
 
@@ -44,11 +45,8 @@ function BarChart({ labels, numbers, currency }: BarChartProps): JSX.Element {
     .range([leftPadding, chartWidth])
     .padding(0.2);
 
-  const maxValue = Math.max(...numbers, 1);
-  const minValue = Math.min(...numbers, 0);
-
   const yScale = scaleLinear()
-    .domain([minValue, maxValue])
+    .domain(barChartValueDomain(numbers))
     .range([chartHeight - bottomPadding, topPadding])
     .nice();
 

@@ -15,14 +15,13 @@ const getMessageId = () => {
   return messageId.toString();
 };
 
-type ToastType = "success" | "error" | "text" | "loading";
-
-interface ToastMessage {
-  id: string;
-  message: string;
-  type: ToastType;
-  duration?: number;
-}
+import {
+  toastDuration,
+  withToast,
+  withoutToast,
+  type ToastMessage,
+  type ToastType,
+} from "./toast-queue";
 
 interface ToastContextType {
   showToast: (message: Omit<ToastMessage, "id">) => () => void;
@@ -76,16 +75,16 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<ToastMessage[]>([]);
 
   const removeToast = useCallback((id: string) => {
-    setMessages((prev) => prev.filter((msg) => msg.id !== id));
+    setMessages((prev) => withoutToast(prev, id));
   }, []);
 
   const showToast = useCallback(
     (message: Omit<ToastMessage, "id">) => {
       const id = getMessageId();
-      setMessages((prev) => [...prev, { id, ...message }]);
+      setMessages((prev) => withToast(prev, { id, ...message }));
       setTimeout(() => {
         removeToast(id);
-      }, message.duration || 2000);
+      }, toastDuration(message));
       return () => removeToast(id);
     },
     [removeToast],
