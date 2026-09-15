@@ -156,9 +156,10 @@ function buildExtensions(
     highlightActiveLineGutter(),
     drawSelection(),
     indentUnit.of("  "),
-    languageCompartment.of(
-      beancount ? beancountStreamLanguage : EditorView.lineWrapping,
-    ),
+    // Wrapping is not a language concern: a phone-width editor wraps every
+    // file, and only Beancount files add the language mode.
+    EditorView.lineWrapping,
+    languageCompartment.of(beancount ? beancountStreamLanguage : []),
     themeCompartment.of(buildThemeExtensions(editorTheme)),
     // Disable autocorrect / autocapitalize on the contenteditable
     EditorView.contentAttributes.of({
@@ -383,7 +384,7 @@ export default function CodeEditor({
     appliedLanguageRef.current = beancount;
     viewRef.current?.dispatch({
       effects: languageCompartmentRef.current.reconfigure(
-        beancount ? beancountStreamLanguage : EditorView.lineWrapping,
+        beancount ? beancountStreamLanguage : [],
       ),
     });
   }, [beancount]);
