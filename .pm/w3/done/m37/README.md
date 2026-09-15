@@ -1,6 +1,6 @@
 # w3 · m37 — Render BQL inventory results as amounts, not raw JSON
 
-**Worker:** worker3 **Goal:** a BQL result column of ledger positions reads as amounts on screen and in its CSV export **Status:** todo
+**Worker:** worker3 **Goal:** a BQL result column of ledger positions reads as amounts on screen and in its CSV export **Status:** done
 
 Severity: **major**. Package: dashboard. The Query page is the ledger's general-purpose analysis surface; its most common aggregate (`sum(position)`) is currently unreadable. A working control for the identical payload already exists inside the same package (Holdings), so this is a wiring and placement problem, not a new formatting design.
 
@@ -8,13 +8,13 @@ Severity: **major**. Package: dashboard. The Query page is the ledger's general-
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Move the inventory cell formatter into shared common code | 30m | — |
-| t002 | Render BQL result inventory cells as amounts | 30m | t001 |
-| t003 | Export BQL inventory cells as amounts in CSV | 30m | t001 |
-| t004 | Verify the query-result adoption surface | 15m | t002, t003 |
-| t005 | Simplify the shared cell-formatting changes | 15m | t004 |
-| t006 | Test inventory cells across renderer, export and edge shapes | 45m | t004 |
-| t007 | Close and archive the BQL inventory rendering milestone | 10m | t005, t006 |
+| t001 | Move the inventory cell formatter into shared common code | 30m | — | — **DONE**
+| t002 | Render BQL result inventory cells as amounts | 30m | t001 | — **DONE**
+| t003 | Export BQL inventory cells as amounts in CSV | 30m | t001 | — **DONE**
+| t004 | Verify the query-result adoption surface | 15m | t002, t003 | — **DONE**
+| t005 | Simplify the shared cell-formatting changes | 15m | t004 | — **DONE**
+| t006 | Test inventory cells across renderer, export and edge shapes | 45m | t004 | — **DONE**
+| t007 | Close and archive the BQL inventory rendering milestone | 10m | t005, t006 | — **DONE**
 
 Implementation totals 90 minutes; all seven tasks total 175 minutes. Two consumers plus a cross-feature move of the formatter make this more than a sub-hour edit.
 

@@ -3,6 +3,22 @@ import {
   downloadCSV as downloadSecureCSV,
   rowsToCSV,
 } from "@/common/lib/export/csv";
+import { formatInventoryLikeCell } from "@/common/lib/format/inventory-cell";
+
+/**
+ * Format one query cell for CSV: inventory/amount maps become amount strings;
+ * other values keep the generic writer's serialization.
+ */
+function formatExportCell(
+  cell: unknown,
+  dtype: string | null | undefined,
+): unknown {
+  const inventoryText = formatInventoryLikeCell(cell, dtype);
+  if (inventoryText !== null) {
+    return inventoryText;
+  }
+  return cell;
+}
 
 /**
  * Convert query result table to CSV format.
@@ -14,7 +30,11 @@ export function tableToCSV(result: QueryResultTable): string {
     return "";
   }
 
-  return rowsToCSV([types.map((type) => type.name), ...rows]);
+  const formattedRows = rows.map((row) =>
+    row.map((cell, index) => formatExportCell(cell, types[index]?.dtype)),
+  );
+
+  return rowsToCSV([types.map((type) => type.name), ...formattedRows]);
 }
 
 /**

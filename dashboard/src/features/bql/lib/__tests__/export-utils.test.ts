@@ -82,6 +82,44 @@ describe("export-utils", () => {
       expect(csv).toContain('"{""key"":""value"",""number"":42}"');
     });
 
+    it("exports Inventory and Amount cells as amounts", () => {
+      const result: QueryResultTable = {
+        types: [
+          { name: "account", dtype: "str" },
+          { name: "total", dtype: "Inventory" },
+          { name: "book_value", dtype: "Amount" },
+        ],
+        rows: [
+          ["Assets:US:BofA:Checking", { USD: "-3623.17" }, { USD: "3490.52" }],
+          ["Assets:US:ETrade:GLD", {}, { USD: "0" }],
+          ["Assets:US:ETrade:ITOT", { ITOT: "9" }, { USD: "1" }],
+        ],
+      } as any;
+
+      const csv = tableToCSV(result);
+
+      expect(csv).toBe(
+        [
+          "account,total,book_value",
+          // Leading `-` is neutralized for spreadsheet formula safety.
+          "Assets:US:BofA:Checking,'-3623.17 USD,3490.52 USD",
+          "Assets:US:ETrade:GLD,,0 USD",
+          "Assets:US:ETrade:ITOT,9 ITOT,1 USD",
+        ].join("\n"),
+      );
+    });
+
+    it("keeps multi-unit inventory inside one quoted CSV field", () => {
+      const result: QueryResultTable = {
+        types: [{ name: "total", dtype: "Inventory" }],
+        rows: [[{ USD: "100", EUR: "50" }]],
+      } as any;
+
+      const csv = tableToCSV(result);
+
+      expect(csv).toBe('total\n"100 USD\r\n50 EUR"');
+    });
+
     it("should handle empty result", () => {
       const result: QueryResultTable = {
         types: [],

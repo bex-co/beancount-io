@@ -419,7 +419,89 @@ describe("QueryResultCard", () => {
     expect(screen.getByTestId("virtual-list").style.overflowX).toBe("hidden");
   });
 
-  it("should render object cells as JSON", () => {
+  it("renders Inventory cells as amounts and empty {} as blank", () => {
+    const tableResult: QueryShellQuery["queryShell"] = {
+      resultType: "table",
+      table: {
+        types: [
+          { name: "account", dtype: "str" },
+          { name: "total", dtype: "Inventory" },
+        ],
+        rows: [
+          ["Assets:US:BofA:Checking", { USD: "-3623.17" }],
+          ["Assets:US:ETrade:Cash", { USD: "469.61" }],
+          ["Assets:US:ETrade:GLD", {}],
+          ["Assets:US:ETrade:ITOT", { ITOT: "9" }],
+        ],
+      },
+      text: null,
+    } as any;
+
+    render(
+      <QueryResultCard
+        {...defaultProps}
+        result={tableResult}
+        isInitiallyOpen={true}
+      />,
+    );
+
+    expect(screen.getByText("-3623.17 USD")).toBeInTheDocument();
+    expect(screen.getByText("469.61 USD")).toBeInTheDocument();
+    expect(screen.getByText("9 ITOT")).toBeInTheDocument();
+    expect(screen.queryByText("{}")).not.toBeInTheDocument();
+    expect(screen.queryByText('{"USD":"-3623.17"}')).not.toBeInTheDocument();
+  });
+
+  it("renders Amount dtype cells as amounts", () => {
+    const tableResult: QueryShellQuery["queryShell"] = {
+      resultType: "table",
+      table: {
+        types: [
+          { name: "account", dtype: "str" },
+          { name: "book_value", dtype: "Amount" },
+          { name: "qty", dtype: "Amount" },
+        ],
+        rows: [
+          ["Assets:US:ETrade:GLD", { USD: "3490.52" }, { USD: "3490.52" }],
+        ],
+      },
+      text: null,
+    } as any;
+
+    render(
+      <QueryResultCard
+        {...defaultProps}
+        result={tableResult}
+        isInitiallyOpen={true}
+      />,
+    );
+
+    expect(screen.getAllByText("3490.52 USD")).toHaveLength(2);
+  });
+
+  it("renders multi-currency inventory cells with every unit", () => {
+    const tableResult: QueryShellQuery["queryShell"] = {
+      resultType: "table",
+      table: {
+        types: [{ name: "total", dtype: "Inventory" }],
+        rows: [[{ USD: "100.00", EUR: "50.00" }]],
+      },
+      text: null,
+    } as any;
+
+    render(
+      <QueryResultCard
+        {...defaultProps}
+        result={tableResult}
+        isInitiallyOpen={true}
+      />,
+    );
+
+    expect(screen.getByText("100.00 USD")).toBeInTheDocument();
+    expect(screen.getByText("50.00 EUR")).toBeInTheDocument();
+  });
+
+  it("keeps unrecognized object cells as JSON (not inventory-shaped Position)", () => {
     const tableResult: QueryShellQuery["queryShell"] = {
       resultType: "table",
       table: {
@@ -440,6 +522,31 @@ describe("QueryResultCard", () => {
     expect(
       screen.getByText('{"number":100,"currency":"USD"}'),
     ).toBeInTheDocument();
+  });
+
+  it("leaves Position display strings and Decimal scalars unchanged", () => {
+    const tableResult: QueryShellQuery["queryShell"] = {
+      resultType: "table",
+      table: {
+        types: [
+          { name: "units", dtype: "Position" },
+          { name: "number", dtype: "Decimal" },
+        ],
+        rows: [["3490.52 USD", "3490.52"]],
+      },
+      text: null,
+    } as any;
+
+    render(
+      <QueryResultCard
+        {...defaultProps}
+        result={tableResult}
+        isInitiallyOpen={true}
+      />,
+    );
+
+    expect(screen.getByText("3490.52 USD")).toBeInTheDocument();
+    expect(screen.getByText("3490.52")).toBeInTheDocument();
   });
 
   it("should render null cells as empty strings", () => {

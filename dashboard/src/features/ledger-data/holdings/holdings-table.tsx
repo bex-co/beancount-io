@@ -15,6 +15,7 @@ import { Download } from "lucide-react";
 import { downloadCSV } from "@/common/lib/utils/csv-export";
 import React from "react";
 import { tableToCSV, formatNumber } from "./utils";
+import { formatInventoryEntries } from "@/common/lib/format/inventory-cell";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/common/lib/utils/utils";
 import { decodeLedgerId } from "@/common/lib/utils/encode";
@@ -29,13 +30,11 @@ interface DatasetTableProps {
 }
 
 const renderObject = (obj: object) => {
-  return Object.entries(obj).map(([key, value]) => {
-    // Check if value is a valid number with more than two decimal places
-    const displayValue = formatNumber(value);
+  return formatInventoryEntries(obj).map(({ currency, amount }) => {
     return (
-      <div key={key} className="text-sm leading-relaxed">
-        <span>{displayValue}</span>
-        <span className="text-muted-foreground ml-1">{key}</span>
+      <div key={currency} className="text-sm leading-relaxed">
+        <span>{amount}</span>
+        <span className="text-muted-foreground ml-1">{currency}</span>
       </div>
     );
   });

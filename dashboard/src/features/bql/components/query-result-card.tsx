@@ -1,9 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { Button } from "@/common/components/ui/button";
 import { ChevronRight, Trash2 } from "lucide-react";
 import { List } from "react-window";
 import { cn } from "@/common/lib/utils/utils";
+import {
+  formatInventoryEntries,
+  formatInventoryLikeCell,
+} from "@/common/lib/format/inventory-cell";
 import { parseQueryChart } from "../lib/chart-utils";
 import { QueryResultChart } from "./query-result-chart";
 import { QueryResultExport } from "./query-result-export";
@@ -23,6 +27,43 @@ interface QueryResultCardProps {
   isInitiallyOpen?: boolean;
   onExecute: (query: string) => void;
   onDelete: (query: string) => void;
+}
+
+function renderQueryCell(
+  cell: unknown,
+  dtype: string | null | undefined,
+): ReactNode {
+  const inventoryText = formatInventoryLikeCell(cell, dtype);
+  if (inventoryText !== null) {
+    if (
+      inventoryText === "" ||
+      cell === null ||
+      typeof cell !== "object" ||
+      Array.isArray(cell)
+    ) {
+      return inventoryText;
+    }
+    const entries = formatInventoryEntries(cell);
+    if (entries.length <= 1) {
+      return inventoryText.replace(/\r\n/g, ", ");
+    }
+    return (
+      <span className="inline-flex flex-col leading-tight">
+        {entries.map(({ currency, amount }) => (
+          <span key={currency}>
+            {amount} {currency}
+          </span>
+        ))}
+      </span>
+    );
+  }
+
+  if (typeof cell === "object" && cell !== null) {
+    // Unrecognized object shapes stay readable without crashing.
+    return JSON.stringify(cell);
+  }
+
+  return String(cell ?? "");
 }
 
 export function QueryResultCard({
@@ -56,6 +97,7 @@ export function QueryResultCard({
 
     const { table } = result;
     const headers = table.types?.map((type) => type.name) || [];
+    const dtypes = table.types?.map((type) => type.dtype) || [];
     const rows = table.rows || [];
 
     if (rows.length === 0) {
@@ -100,17 +142,22 @@ export function QueryResultCard({
                 </div>
               ))}
             </div>
-            <List<{ rows: typeof rows }>
+            <List<{ rows: typeof rows; dtypes: string[] }>
               role="rowgroup"
               rowCount={rows.length}
               rowHeight={ROW_HEIGHT}
-              rowProps={{ rows }}
+              rowProps={{ rows, dtypes }}
               style={{
                 height: Math.min(rows.length * ROW_HEIGHT, CONTAINER_HEIGHT),
                 width: "100%",
                 overflowX: "hidden",
               }}
-              rowComponent={({ index, style, rows: bodyRows }) => {
+              rowComponent={({
+                index,
+                style,
+                rows: bodyRows,
+                dtypes: bodyDtypes,
+              }) => {
                 const row = bodyRows[index];
                 return (
                   <div
@@ -125,9 +172,7 @@ export function QueryResultCard({
                         role="cell"
                         className={`${columnMinWidthClass} px-2 sm:px-3 py-1.5 sm:py-2 text-sm truncate`}
                       >
-                        {typeof cell === "object" && cell !== null
-                          ? JSON.stringify(cell)
-                          : String(cell ?? "")}
+                        {renderQueryCell(cell, bodyDtypes[cellIndex])}
                       </div>
                     ))}
                   </div>

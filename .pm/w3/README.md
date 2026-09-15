@@ -48,7 +48,7 @@
 
 - [ ] **m36** — Reject lossy CSV amount conversions before import (6 tasks) ← residual m19 validation boundary, dashboard QA2026-09-11
 
-- [ ] **m37** — Render BQL inventory results as amounts, not raw JSON (7 tasks) ← continuous dashboard QA, 2026-09-12
+- [x] **m37** — Render BQL inventory results as amounts, not raw JSON (7 tasks) ← continuous dashboard QA, 2026-09-12
 
 - [x] **m38** — Give Accounts and Budget the head metadata every other ledger route has (6 tasks) ← continuous dashboard QA, 2026-09-12
 
