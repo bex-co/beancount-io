@@ -10,7 +10,7 @@ type LedgerError = {
 
 export const useLedgerErrors = () => {
   const ledgerId = useReactiveVar(ledgerVar);
-  const { data, loading } = useGetLedgerErrorsQuery({
+  const { data, error, loading, refetch } = useGetLedgerErrorsQuery({
     variables: { ledgerId: ledgerId ?? "" },
     skip: !ledgerId,
     fetchPolicy: "cache-and-network",
@@ -22,5 +22,9 @@ export const useLedgerErrors = () => {
     errors,
     count: errors.length,
     loading,
+    /** Whether a result has arrived: an empty `errors` cannot tell "none" from "not yet". */
+    loaded: data !== undefined,
+    error,
+    refetch,
   };
 };

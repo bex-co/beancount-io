@@ -14,6 +14,7 @@ import { fonts, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
+import { selectSectionsPending } from "./section-state";
 import { useReactiveVar } from "@apollo/client";
 import { ledgerVar } from "@/common/vars";
 import { useListCommitsQuery } from "@/generated-graphql/graphql";
@@ -197,8 +198,9 @@ function NotificationsScreenImpl(): JSX.Element {
 
   const {
     errors,
-    loading: errorsLoading,
+    loaded: errorsLoaded,
     count: errorCount,
+    refetch: refetchErrors,
   } = useLedgerErrors();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -213,12 +215,17 @@ function NotificationsScreenImpl(): JSX.Element {
   });
 
   const commits = commitsData?.listCommits ?? [];
-  const isFirstLoad = (errorsLoading || commitsLoading) && !commitsData;
+  const { errorsPending, commitsPending } = selectSectionsPending({
+    errorsLoaded,
+    commitsLoading,
+    commitsLoaded: commitsData !== undefined,
+  });
 
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await refetchCommits();
+      // Both halves: an error fixed outside the app clears on a pull too.
+      await Promise.all([refetchCommits(), refetchErrors()]);
     } finally {
       setRefreshing(false);
     }
@@ -245,7 +252,7 @@ function NotificationsScreenImpl(): JSX.Element {
           </Text>
           <View style={styles.divider} />
 
-          {isFirstLoad ? (
+          {errorsPending ? (
             <SkeletonRows />
           ) : (
             <FadeInView>
@@ -276,7 +283,7 @@ function NotificationsScreenImpl(): JSX.Element {
           </Text>
           <View style={styles.divider} />
 
-          {isFirstLoad ? (
+          {commitsPending ? (
             <SkeletonRows />
           ) : (
             <FadeInView>
