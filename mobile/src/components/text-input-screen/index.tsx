@@ -159,8 +159,10 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
 
   const showSkeleton = !!suggestionsLoading && matches.length === 0;
 
+  // Trimmed: a trailing space (iOS adds one after a completion) would save a
+  // payee that looks identical on screen and is a different string in the file.
   const commit = (selected: string) => {
-    onSave?.(selected);
+    onSave?.(selected.trim());
     router.back();
   };
 
@@ -198,6 +200,11 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
           autoFocus
           onChangeText={setValue}
           multiline={multiline}
+          // Payees and narrations are written into the ledger verbatim, and are
+          // often brands or import strings: autocorrect and auto-capitalization
+          // would rewrite exactly the text this field exists to record.
+          autoCorrect={false}
+          autoCapitalize="none"
         />
       </View>
       {(matches.length > 0 || showSkeleton) && (
