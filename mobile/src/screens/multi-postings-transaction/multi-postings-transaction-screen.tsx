@@ -1,5 +1,6 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   AccessibilityInfo,
   Pressable,
   ScrollView,
@@ -9,7 +10,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+  useRouter,
+} from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Swipeable } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
@@ -62,6 +68,7 @@ import {
   updatePostingAmount,
   validatePostings,
 } from "./postings-utils";
+import { isTransactionDraftDirty, TransactionDraft } from "./draft-dirty";
 
 const SIGN_TOGGLE_SIZE = 28;
 const POSTING_ROW_PADDING_V = 14;
@@ -413,7 +420,7 @@ const MultiPostingsTransactionScreenComponent = () => {
 
   const currency = currencies.length > 0 ? currencies[0] : "USD";
 
-  const [postings, setPostings] = useState<Posting[]>([
+  const [postings, setPostings] = useState<Posting[]>(() => [
     makePosting({ isAuto: false }),
     makePosting({ isAuto: true }),
   ]);
@@ -423,6 +430,16 @@ const MultiPostingsTransactionScreenComponent = () => {
   const [date, setDate] = useState(prefillDate || getFormatDate(new Date()));
   const [payee, setPayee] = useState(prefillPayee ?? "");
   const [narration, setNarration] = useState(prefillNarration ?? "");
+  // How the form opened, for the discard guard. Seeding replaces the postings
+  // once accounts load, so the snapshot's postings follow it (below).
+  const [initialDraft, setInitialDraft] = useState<TransactionDraft>(() => ({
+    date,
+    payee,
+    narration,
+    postings,
+  }));
+  const savedOutRef = useRef(false);
+  const navigation = useNavigation();
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
   useEffect(() => {
@@ -435,15 +452,15 @@ const MultiPostingsTransactionScreenComponent = () => {
             : assets[0];
       // The parser may return no account at all; fall back to the same defaults
       // a blank transaction would get rather than showing empty account rows.
-      setPostings(
-        prefillAmount
-          ? createPrefilledPostings(
-              prefillSourceAccount || assets[0],
-              prefillTargetAccount || secondAccount,
-              prefillAmount,
-            )
-          : createInitialPostings(assets[0], secondAccount),
-      );
+      const seededPostings = prefillAmount
+        ? createPrefilledPostings(
+            prefillSourceAccount || assets[0],
+            prefillTargetAccount || secondAccount,
+            prefillAmount,
+          )
+        : createInitialPostings(assets[0], secondAccount);
+      setPostings(seededPostings);
+      setInitialDraft((draft) => ({ ...draft, postings: seededPostings }));
       setSeeded(true);
     }
   }, [
@@ -460,6 +477,34 @@ const MultiPostingsTransactionScreenComponent = () => {
   const isBalanced = rem === 0;
   const validationError = validatePostings(postings);
   const canSave = validationError === null;
+  const hasUnsavedChanges = isTransactionDraftDirty(initialDraft, {
+    date,
+    payee,
+    narration,
+    postings,
+  });
+
+  // Back on a dirty draft asks first, like the file and transaction editors.
+  // A successful Done leaves the screen itself and is not a discard.
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+      if (savedOutRef.current || !hasUnsavedChanges) return;
+      e.preventDefault();
+      Alert.alert(
+        t("ledgerEditorUnsavedTitle"),
+        t("ledgerEditorUnsavedMessage"),
+        [
+          { text: t("cancel"), style: "cancel" },
+          {
+            text: t("ledgerEditorDiscardChanges"),
+            style: "destructive",
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ],
+      );
+    });
+    return unsubscribe;
+  }, [navigation, hasUnsavedChanges, t]);
 
   const handleSave = async () => {
     if (!canSave) {
@@ -480,7 +525,7 @@ const MultiPostingsTransactionScreenComponent = () => {
       currency,
     });
 
-    await confirmWrite({
+    const outcome = await confirmWrite({
       perform: () => mutate({ variables: { entriesInput: [entry], ledgerId } }),
       // The mutation reports rejection in its payload. The hook's `error` field
       // is a render behind at this point, so a server-rejected split used to
@@ -490,7 +535,13 @@ const MultiPostingsTransactionScreenComponent = () => {
       successMessage: t("saveSuccess"),
       failureMessage: t("saveFailed"),
       afterSuccess: runAddTransactionCallback,
+      goBackOnSuccess: false,
     });
+    if (outcome.ok) {
+      // Mark the draft saved before leaving, so the discard guard stays quiet.
+      savedOutRef.current = true;
+      router.back();
+    }
   };
 
   const pickAccountForPosting = (index: number) => {
