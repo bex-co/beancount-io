@@ -315,11 +315,13 @@ export function calculateBudgetForInterval(
   intervalEnd: string,
   chartInterval: string,
   history: BudgetHistoryEntry[],
+  asOf?: string,
 ): number {
   return budgetForInterval(
     intervalEnd,
     chartInterval,
     prepareBudgetHistory(history),
+    asOf,
   );
 }
 
@@ -328,19 +330,30 @@ export function budgetForInterval(
   intervalEnd: string,
   chartInterval: string,
   ordered: PreparedBudgetHistory,
+  asOf?: string,
 ): number {
   const start = intervalStartISO(intervalEnd, chartInterval);
+  // A budget is compared with actuals, which cannot run past today: a period
+  // still in progress is budgeted only up to `asOf`, and one not yet begun has
+  // no budget. Otherwise a window without an end (all time) set a full month's
+  // target against a partial month's spending.
+  const end = asOf !== undefined && asOf < intervalEnd ? asOf : intervalEnd;
+  if (end < start) {
+    return 0;
+  }
 
   // The common case by far: a single directive, already in effect at the start
-  // of the period, whose cadence is the one being charted. Every day then
+  // of a *whole* period, whose cadence is the one being charted. Every day then
   // contributes value/days and the walk below sums back to exactly `value` —
   // so skip it. Without this a yearly budget walks 365 days per chart point,
-  // and the server returns up to 100 points.
+  // and the server returns up to 100 points. A partial period (a window ending
+  // mid-month) must take the walk, or it would read the whole period's target.
   const only = ordered.length === 1 ? ordered[0] : null;
   if (
     only &&
     only.date <= start &&
-    normalizeInterval(only.interval) === normalizeInterval(chartInterval)
+    normalizeInterval(only.interval) === normalizeInterval(chartInterval) &&
+    end === addDaysISO(nextIntervalStartISO(start, chartInterval), -1)
   ) {
     return only.value;
   }
@@ -352,7 +365,7 @@ export function budgetForInterval(
   let periodEnd = "";
   let periodDays = 1;
 
-  for (let day = start; day <= intervalEnd; day = addDaysISO(day, 1)) {
+  for (let day = start; day <= end; day = addDaysISO(day, 1)) {
     let changed = false;
     while (
       activeIndex + 1 < ordered.length &&

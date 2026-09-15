@@ -24,8 +24,13 @@ describe("timeSpanToFilter", () => {
     expect(timeSpanToFilter("all", "2026-08-09")).toBe(undefined);
   });
 
-  it("uses fava's relative-year variables", () => {
-    expect(timeSpanToFilter("this-year", "2026-08-09")).toBe("year");
+  it("ends year to date today, so no unstarted period is charted", () => {
+    expect(timeSpanToFilter("this-year", "2026-09-13")).toBe(
+      "2026-01-01 - 2026-09-13",
+    );
+  });
+
+  it("uses fava's relative-year variable for last year", () => {
     expect(timeSpanToFilter("last-year", "2026-08-09")).toBe("year-1");
   });
 

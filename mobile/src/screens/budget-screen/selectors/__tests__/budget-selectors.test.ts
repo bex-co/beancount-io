@@ -150,6 +150,43 @@ describe("calculateBudgetForInterval", () => {
     );
   });
 
+  it("prorates a partial final period, even for a single directive", () => {
+    // A window ending on the 10th charts January as ten days of 310/month.
+    const history = [historyEntry("2024-12-01", "monthly", "310 USD")];
+
+    expect(calculateBudgetForInterval("2025-01-10", "monthly", history)).toBe(
+      100,
+    );
+  });
+
+  it("budgets a period no further than asOf, the last day actuals can cover", () => {
+    const single = [historyEntry("2026-01-01", "monthly", "122 USD")];
+    const revised = [
+      historyEntry("2026-01-01", "monthly", "100 USD"),
+      historyEntry("2026-06-01", "monthly", "122 USD"),
+    ];
+
+    // September reported as a whole period, on the 13th: 13 × 122/30.
+    expect(
+      calculateBudgetForInterval("2026-09-30", "monthly", single, "2026-09-13"),
+    ).toBe(52.87);
+    expect(
+      calculateBudgetForInterval(
+        "2026-09-30",
+        "monthly",
+        revised,
+        "2026-09-13",
+      ),
+    ).toBe(52.87);
+    // Not begun yet: no budget. Already finished: the whole target.
+    expect(
+      calculateBudgetForInterval("2026-10-31", "monthly", single, "2026-09-13"),
+    ).toBe(0);
+    expect(
+      calculateBudgetForInterval("2026-08-31", "monthly", single, "2026-09-13"),
+    ).toBe(122);
+  });
+
   it("preserves negative income targets", () => {
     const history = [historyEntry("2025-01-01", "monthly", "-310 USD")];
 

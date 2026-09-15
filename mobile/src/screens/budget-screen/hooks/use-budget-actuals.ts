@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useGetLedgerIntervalTotalsQuery } from "@/generated-graphql/graphql";
 import { resolveCurrencyBalance } from "@/common/balance-util";
+import { getFormatDate } from "@/common/format-util";
 import {
   budgetForInterval,
   prepareBudgetHistory,
@@ -68,10 +69,14 @@ export function useBudgetActuals({
     // Prepared once per group: `budgetForInterval` runs per charted period, and
     // the `all` span can return a hundred of them.
     const history = prepareBudgetHistory(group.budgetHistory);
+    // Actuals stop at today, so the budget they are measured against does too.
+    const today = getFormatDate(new Date());
     return items.map((item) => ({
       date: item.date,
       actual: resolveCurrencyBalance(item.balance, currency) * direction,
-      budget: budgetForInterval(item.date, group.interval, history) * direction,
+      budget:
+        budgetForInterval(item.date, group.interval, history, today) *
+        direction,
     }));
   }, [data, currency, direction, group.interval, group.budgetHistory]);
 

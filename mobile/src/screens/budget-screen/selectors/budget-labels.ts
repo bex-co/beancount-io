@@ -90,8 +90,10 @@ export const TIME_SPAN_LABEL_KEYS: Record<BudgetTimeSpan, string> = {
 
 /**
  * Map a pill to fava's `time` filter syntax. `undefined` means no filter (all
- * time); `year` / `year-1` are fava's relative-year variables; the rolling
- * window is an explicit inclusive range.
+ * time); `year-1` is fava's relative-year variable. Year to date and the
+ * rolling window are explicit inclusive ranges ending today: fava's `year`
+ * is the whole calendar year, which charted unstarted months and made the
+ * card report a budget for a month that had not begun.
  */
 export function timeSpanToFilter(
   span: BudgetTimeSpan,
@@ -99,7 +101,10 @@ export function timeSpanToFilter(
 ): string | undefined {
   switch (span) {
     case "this-year":
-      return "year";
+      return formatTimeFilter({
+        start: `${today.slice(0, 4)}-01-01`,
+        end: today,
+      });
     case "last-year":
       return "year-1";
     case "last-12m": {
