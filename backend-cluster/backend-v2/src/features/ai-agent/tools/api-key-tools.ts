@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BadUserInputError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import { API_SCOPES } from "@/server/api/identity";
 import { toPublicApiKey } from "@/features/apikeys/service/api-key-service";
@@ -200,9 +201,14 @@ export async function executeManageApiKeys(
   });
 }
 
+/** A missing argument is the caller's to fix, never a server error to retry. */
 function required<T>(value: T | undefined, key: string, operation: string): T {
   if (value === undefined) {
-    throw new Error(`\`${key}\` is required for operation "${operation}"`);
+    throw new BadUserInputError(
+      `\`${key}\` is required for operation "${operation}"`,
+      key,
+      `Pass \`${key}\` with operation "${operation}"; \`tools/list\` publishes each tool's input schema.`,
+    );
   }
   return value;
 }

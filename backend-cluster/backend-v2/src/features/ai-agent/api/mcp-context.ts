@@ -16,19 +16,9 @@ import type { ToolContext } from "../tools/types";
 import type { Identity } from "@/server/api/identity";
 import { BadUserInputError, ForbiddenError } from "@/shared/errors";
 import { CLASS_BUDGETS } from "@/server/api/rate-limit";
-import { z } from "zod";
+import { LEDGER_ID_PATTERN } from "./mcp-ledger-selection";
 
-/**
- * The one spelling of the optional per-call ledger selector, shared by every
- * ledger-targeted tool module so clients see the same documented contract on
- * each tool.
- */
-export const ledgerSelection = z
-  .string()
-  .optional()
-  .describe(
-    "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
-  );
+export { ledgerSelection } from "./mcp-ledger-selection";
 
 /** A credential may select a ledger per call or perform account-only work. */
 export type McpRequestContext = Omit<ToolContext, "ledgerId"> & {
@@ -97,7 +87,7 @@ export function resolveMcpLedger(
   requested?: string,
 ): string {
   const ledger = requested ?? context.identity.ledgerScope;
-  if (!ledger || !/^[^/\s?#%]+\/[^/\s?#%]+$/.test(ledger)) {
+  if (!ledger || !LEDGER_ID_PATTERN.test(ledger)) {
     throw new BadUserInputError(
       "Select a ledger using ledger: owner/name",
       "ledger",

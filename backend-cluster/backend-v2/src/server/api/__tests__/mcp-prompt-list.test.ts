@@ -1,4 +1,6 @@
 import "reflect-metadata";
+import { existsSync } from "node:fs";
+import path from "node:path";
 
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({
@@ -10,6 +12,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { assembleMcpRegistry } from "../composition-root";
 import { MCP_PROMPTS } from "@/features/ai-agent/api/mcp-prompts";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
+import { MCP_RESOURCES } from "@/features/ai-agent/api/mcp-resources";
 import { isMcpHandshakeRequest } from "@/features/ai-agent/api/mcp-rate-policy";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import type { AppConfig } from "@/config/config";
@@ -96,6 +99,8 @@ describe("MCP prompts", () => {
 
   it("names only tools and resources this server actually exposes", async () => {
     const toolNames = new Set(MCP_TOOLS.map((tool) => tool.name));
+    // `uriTemplate` is the path alone; query parameters are declared separately.
+    const templates = MCP_RESOURCES.map((resource) => resource.uriTemplate);
     for (const descriptor of MCP_PROMPTS) {
       const text = descriptor.build({}, pinned);
       // Backticked identifiers in camelCase are tool references; a playbook
@@ -103,9 +108,97 @@ describe("MCP prompts", () => {
       for (const [, cited] of text.matchAll(/`([a-z]+[A-Z][A-Za-z]+)`/g)) {
         expect(toolNames.has(cited)).toBe(true);
       }
-      for (const [, uri] of text.matchAll(/beancount:\/\/(\S+)/g)) {
-        expect(uri).toMatch(/^\{owner\}\/\{name\}\//);
+      // A cited resource must be a registered template, not merely shaped like
+      // one: `beancount://{owner}/{name}/bank/list` passed a prefix check while
+      // the server answered "Resource not found".
+      const cited = [...text.matchAll(/`beancount:\/\/([^`\s]+)`/g)].map(
+        ([, uri]) => `beancount://${uri}`,
+      );
+      expect(cited).toHaveLength(text.match(/beancount:\/\//g)?.length ?? 0);
+      for (const uri of cited) {
+        expect(templates).toContain(uri);
       }
+    }
+  });
+
+  it("points the import playbook at the bank resources it needs", () => {
+    const text = MCP_PROMPTS.find(
+      (descriptor) => descriptor.name === "categorize-imports",
+    )!.build({}, pinned);
+    expect(text).toContain("beancount://{owner}/{name}/banks");
+    expect(text).toContain(
+      "beancount://{owner}/{name}/bank-transactions/unsynced",
+    );
+    // Listing banks is an admin read; an ordinary ledger key must still have a
+    // path forward, and an empty staging area must end the playbook honestly.
+    expect(text).toContain(
+      "reading it requires a credential with `ledger.admin`",
+    );
+    expect(text).toContain("If staging is empty, say so");
+    // Falling back to an account the ledger lacks would contradict the
+    // never-invent-an-account rule the same playbook states.
+    expect(text).toMatch(
+      /Expenses:Uncategorized` only if the ledger already has/,
+    );
+  });
+
+  it("rejects a malformed month or ledger instead of folding it into the playbook", async () => {
+    await expect(
+      withClient(pinned, (client) =>
+        client.getPrompt({
+          name: "close-month",
+          arguments: { month: "banana" },
+        }),
+      ),
+    ).rejects.toThrow(/month must be YYYY-MM/);
+    await expect(
+      withClient(pinned, (client) =>
+        client.getPrompt({
+          name: "spending-report",
+          arguments: { ledger: "not a ledger" },
+        }),
+      ),
+    ).rejects.toThrow(/ledger must be owner\/name/);
+    // The same pattern every tool enforces: characters a URI would reinterpret.
+    await expect(
+      withClient(pinned, (client) =>
+        client.getPrompt({
+          name: "spending-report",
+          arguments: { ledger: "alice/personal?x" },
+        }),
+      ),
+    ).rejects.toThrow(/ledger must be owner\/name/);
+    const valid = await withClient(pinned, (client) =>
+      client.getPrompt({
+        name: "close-month",
+        arguments: { month: "2026-08" },
+      }),
+    );
+    expect(textOf(valid.messages[0].content)).toContain("2026-08");
+  });
+
+  it("makes the close report state whether the month is actually closed", () => {
+    const text = MCP_PROMPTS.find(
+      (descriptor) => descriptor.name === "close-month",
+    )!.build({}, pinned);
+    expect(text).toContain("`Close status: incomplete`");
+    expect(text).toMatch(/any unverified account is incomplete/);
+    expect(text).not.toMatch(
+      /If nothing remains to write, say the close is complete/,
+    );
+  });
+
+  it("names the customer skill each playbook rewrites, and that skill exists", () => {
+    const repoRoot = path.resolve(__dirname, "../../../../../..");
+    for (const descriptor of MCP_PROMPTS) {
+      const [, source] =
+        descriptor
+          .build({}, pinned)
+          .match(
+            /Playbook source: (skills\/\.claude\/skills\/[\w-]+\/SKILL\.md)/,
+          ) ?? [];
+      expect(source).toBeDefined();
+      expect(existsSync(path.join(repoRoot, source as string))).toBe(true);
     }
   });
 

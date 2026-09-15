@@ -8,6 +8,8 @@ export type ClientName = "claude" | "codex";
 export interface RunMetrics {
   /** The model the client says it used; null when the client does not say. */
   readonly reportedModel: string | null;
+  /** The session a follow-up turn resumes. */
+  readonly sessionId: string | null;
   readonly finalAnswer: string | null;
   readonly turns: number | null;
   readonly costUsd: number | null;
@@ -39,23 +41,31 @@ function events(lines: readonly string[]): Json[] {
 const num = (value: unknown) => (typeof value === "number" ? value : null);
 
 const sum = (values: readonly unknown[]) =>
-  values.some((v) => typeof v === "number") ? values.reduce<number>((total, v) => total + (num(v) ?? 0), 0) : null;
+  values.some((v) => typeof v === "number")
+    ? values.reduce<number>((total, v) => total + (num(v) ?? 0), 0)
+    : null;
 
 const isMcpTool = (content: Json) =>
-  content.type === "tool_use" && String(content.name).startsWith(`mcp__${MCP_SERVER_NAME}__`);
+  content.type === "tool_use" &&
+  String(content.name).startsWith(`mcp__${MCP_SERVER_NAME}__`);
 
 /** Number of MCP tool calls one output line starts, for the live call limit. */
 export function mcpCallsInLine(client: ClientName, line: string): number {
   const [event] = events([line]);
   if (!event) return 0;
   if (client === "claude") {
-    return event.type === "assistant" ? (event.message?.content ?? []).filter(isMcpTool).length : 0;
+    return event.type === "assistant"
+      ? (event.message?.content ?? []).filter(isMcpTool).length
+      : 0;
   }
-  return event.type === "item.started" && event.item?.type === "mcp_tool_call" ? 1 : 0;
+  return event.type === "item.started" && event.item?.type === "mcp_tool_call"
+    ? 1
+    : 0;
 }
 
 export function parseClaudeStream(lines: readonly string[]): RunMetrics {
   let reportedModel: string | null = null;
+  let sessionId: string | null = null;
   let connected: boolean | null = null;
   let result: Json | undefined;
   const mcpToolIds = new Set<string>();
@@ -65,7 +75,10 @@ export function parseClaudeStream(lines: readonly string[]): RunMetrics {
   for (const event of events(lines)) {
     if (event.type === "system" && event.subtype === "init") {
       reportedModel = event.model ?? null;
-      const server = (event.mcp_servers ?? []).find((s: Json) => s.name === MCP_SERVER_NAME);
+      sessionId = event.session_id ?? sessionId;
+      const server = (event.mcp_servers ?? []).find(
+        (s: Json) => s.name === MCP_SERVER_NAME,
+      );
       connected = server?.status === "connected";
     } else if (event.type === "assistant") {
       for (const c of event.message?.content ?? []) {
@@ -75,18 +88,28 @@ export function parseClaudeStream(lines: readonly string[]): RunMetrics {
       }
     } else if (event.type === "user") {
       for (const c of event.message?.content ?? []) {
-        if (c?.type === "tool_result" && mcpToolIds.has(c.tool_use_id) && c.is_error) mcpErrors++;
+        if (
+          c?.type === "tool_result" &&
+          mcpToolIds.has(c.tool_use_id) &&
+          c.is_error
+        )
+          mcpErrors++;
       }
     } else if (event.type === "result") {
       result = event;
+      sessionId = event.session_id ?? sessionId;
     }
   }
   return {
     reportedModel,
+    sessionId,
     finalAnswer: typeof result?.result === "string" ? result.result : lastText,
     turns: num(result?.num_turns),
     costUsd: num(result?.total_cost_usd),
-    inputTokens: sum([result?.usage?.input_tokens, result?.usage?.cache_creation_input_tokens]),
+    inputTokens: sum([
+      result?.usage?.input_tokens,
+      result?.usage?.cache_creation_input_tokens,
+    ]),
     outputTokens: num(result?.usage?.output_tokens),
     cachedInputTokens: num(result?.usage?.cache_read_input_tokens),
     mcpCalls: mcpToolIds.size,
@@ -101,8 +124,12 @@ export function parseClaudeStream(lines: readonly string[]): RunMetrics {
   };
 }
 
-export function parseCodexStream(lines: readonly string[], lastMessage: string | null): RunMetrics {
+export function parseCodexStream(
+  lines: readonly string[],
+  lastMessage: string | null,
+): RunMetrics {
   const usage: Json[] = [];
+  let sessionId: string | null = null;
   let mcpCalls = 0;
   let mcpErrors = 0;
   let otherToolCalls = 0;
@@ -110,7 +137,9 @@ export function parseCodexStream(lines: readonly string[], lastMessage: string |
   let failure: string | null = null;
   let completed = false;
   for (const event of events(lines)) {
-    if (event.type === "turn.completed") {
+    if (event.type === "thread.started") {
+      sessionId = event.thread_id ?? sessionId;
+    } else if (event.type === "turn.completed") {
       completed = true;
       if (event.usage) usage.push(event.usage);
     } else if (event.type === "turn.failed" || event.type === "error") {
@@ -118,16 +147,30 @@ export function parseCodexStream(lines: readonly string[], lastMessage: string |
     } else if (event.type === "item.completed") {
       const item = event.item ?? {};
       if (item.type === "agent_message") lastText = item.text ?? lastText;
-      else if (item.type === "mcp_tool_call" && item.server === MCP_SERVER_NAME) {
+      else if (
+        item.type === "mcp_tool_call" &&
+        item.server === MCP_SERVER_NAME
+      ) {
         mcpCalls++;
-        if (item.error || item.status === "failed" || item.result?.is_error || item.result?.isError) mcpErrors++;
-      } else if (/tool_call|command_execution|web_search|file_change/.test(String(item.type))) {
+        if (
+          item.error ||
+          item.status === "failed" ||
+          item.result?.is_error ||
+          item.result?.isError
+        )
+          mcpErrors++;
+      } else if (
+        /tool_call|command_execution|web_search|file_change/.test(
+          String(item.type),
+        )
+      ) {
         otherToolCalls++;
       }
     }
   }
   return {
     reportedModel: null,
+    sessionId,
     finalAnswer: lastMessage?.trim() || lastText,
     turns: null,
     costUsd: null,
@@ -139,5 +182,33 @@ export function parseCodexStream(lines: readonly string[], lastMessage: string |
     otherToolCalls,
     mcpServerConnected: null,
     clientError: failure ?? (completed ? null : "client completed no turn"),
+  };
+}
+
+/** One attempt's metrics across every user turn it took. */
+export function combineTurns(turns: readonly RunMetrics[]): RunMetrics {
+  const total = (pick: (m: RunMetrics) => number | null) =>
+    sum(turns.map(pick));
+  const count = (pick: (m: RunMetrics) => number) =>
+    turns.reduce((n, t) => n + pick(t), 0);
+  const answers = turns.flatMap((t) => (t.finalAnswer ? [t.finalAnswer] : []));
+  return {
+    reportedModel: turns.find((t) => t.reportedModel)?.reportedModel ?? null,
+    sessionId: turns.find((t) => t.sessionId)?.sessionId ?? null,
+    finalAnswer: answers.length ? answers.join("\n\n") : null,
+    turns: total((t) => t.turns),
+    costUsd: total((t) => t.costUsd),
+    inputTokens: total((t) => t.inputTokens),
+    outputTokens: total((t) => t.outputTokens),
+    cachedInputTokens: total((t) => t.cachedInputTokens),
+    mcpCalls: count((t) => t.mcpCalls),
+    mcpErrors: count((t) => t.mcpErrors),
+    otherToolCalls: count((t) => t.otherToolCalls),
+    mcpServerConnected: turns.some((t) => t.mcpServerConnected === false)
+      ? false
+      : (turns.find((t) => t.mcpServerConnected !== null)
+          ?.mcpServerConnected ?? null),
+    clientError:
+      [...turns].reverse().find((t) => t.clientError)?.clientError ?? null,
   };
 }

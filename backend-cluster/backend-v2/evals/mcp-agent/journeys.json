@@ -1,5 +1,5 @@
 {
-  "description": "The three onboarding journeys from the 2026-09-08 MCP field audit, pinned to the synthetic fixture. A journey with expectedWrite authorizes exactly that transaction; every other journey is read-only. Every expected value is derived from fixtures/main.bean and re-derived independently by scripts/__tests__/mcp-agent-eval.test.ts; change both together.",
+  "description": "Onboarding journeys from the 2026-09-08 MCP field audit (typed) and the four shipped MCP prompt playbooks (selected with invoke), pinned to the synthetic fixture. A journey with expectedWrite authorizes exactly that transaction and any listed directives; every other journey is read-only. confirmationTurn marks the follow-up that approves a write, and nothing may be written before it. Every expected value is derived from fixtures/main.bean and re-derived independently by scripts/__tests__/mcp-agent-eval.test.ts; change both together.",
   "fixture": "fixtures/main.bean",
   "ledgerFile": "main.bean",
   "journeys": [
@@ -112,6 +112,218 @@
             "TRADER JOES",
             "VISA",
             "WHOLE FOODS"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prompt-spending-report",
+      "title": "spending-report prompt: August 2026 spending with shown queries, after asking the question",
+      "invoke": {
+        "name": "spending-report",
+        "args": {
+          "period": "2026-08"
+        }
+      },
+      "facts": [
+        {
+          "id": "august-expenses-total",
+          "description": "Total August 2026 expenses",
+          "numbers": ["2095.60"]
+        },
+        {
+          "id": "august-expenses-by-account",
+          "description": "August 2026 amount per expense account",
+          "numbers": ["1800.00", "180.85", "60.00", "48.00", "6.75"]
+        },
+        {
+          "id": "query-shown",
+          "description": "The query behind the figures is shown",
+          "terms": ["SELECT"]
+        }
+      ],
+      "followUps": [
+        "What did I spend in total in August 2026, and how much in each expense account?"
+      ]
+    },
+    {
+      "id": "prompt-close-month-no-statements",
+      "title": "close-month prompt without statements: report unverified accounts, never claim a finished close",
+      "invoke": {
+        "name": "close-month",
+        "args": {
+          "month": "2026-08"
+        }
+      },
+      "facts": [
+        {
+          "id": "close-unverified",
+          "description": "Accounts without a statement are reported as unverified, or the close as incomplete",
+          "anyTerms": ["unverified", "incomplete"]
+        },
+        {
+          "id": "close-not-claimed",
+          "description": "The close is not claimed as finished",
+          "absentTerms": [
+            "closed successfully",
+            "close completed successfully",
+            "month is now closed",
+            "books are now closed",
+            "the close is complete",
+            "close status: complete"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prompt-reconcile-mismatch-unconfirmed",
+      "title": "reconcile-account prompt: classify date drift and an amount mismatch, write nothing unconfirmed",
+      "invoke": {
+        "name": "reconcile-account",
+        "args": {
+          "account": "Assets:Cash",
+          "period": "2026-08"
+        }
+      },
+      "followUps": [
+        "Here is my August 2026 statement for Assets:Cash as CSV. Opening balance 140.00 USD, ending balance 47.95 USD.\ndate,description,amount\n2026-08-12,BLUE BOTTLE,-6.75\n2026-08-23,CITY BUS,-60.00\n2026-08-28,FARMERS MARKET,-25.30"
+      ],
+      "facts": [
+        {
+          "id": "reconcile-mismatch-amounts",
+          "description": "The FARMERS MARKET amount mismatch is reported with both amounts",
+          "numbers": ["25.30", "23.50"]
+        },
+        {
+          "id": "reconcile-date-drift",
+          "description": "The CITY BUS date drift is identified",
+          "anyTerms": ["drift", "08-23"]
+        }
+      ]
+    },
+    {
+      "id": "prompt-reconcile-missing-confirmed",
+      "title": "reconcile-account prompt: propose the missing entry and assertion, write them only after confirmation",
+      "invoke": {
+        "name": "reconcile-account",
+        "args": {
+          "account": "Assets:Cash",
+          "period": "2026-08"
+        }
+      },
+      "followUps": [
+        "Here is my August 2026 statement for Assets:Cash as CSV. Opening balance 140.00 USD, ending balance 44.50 USD. If anything is missing from the ledger, book CORNER STORE to Expenses:Food:Groceries.\ndate,description,amount\n2026-08-12,BLUE BOTTLE,-6.75\n2026-08-22,CITY BUS,-60.00\n2026-08-28,FARMERS MARKET,-23.50\n2026-08-30,CORNER STORE,-5.25",
+        "Yes. Append exactly the transaction and the balance assertion you proposed, then verify the ledger."
+      ],
+      "confirmationTurn": 1,
+      "facts": [
+        {
+          "id": "reconcile-missing-entry",
+          "description": "The missing CORNER STORE entry and ending balance are reported",
+          "terms": ["CORNER STORE"],
+          "numbers": ["5.25", "44.50"]
+        }
+      ],
+      "expectedWrite": {
+        "date": "2026-08-30",
+        "postings": [
+          {
+            "account": "Assets:Cash",
+            "amount": "-5.25",
+            "currency": "USD"
+          },
+          {
+            "account": "Expenses:Food:Groceries",
+            "amount": "5.25",
+            "currency": "USD"
+          }
+        ],
+        "directives": ["^2026-(08-31|09-01) balance Assets:Cash 44\\.50 USD$"]
+      }
+    },
+    {
+      "id": "prompt-reconcile-balance-does-not-tie",
+      "title": "reconcile-account prompt: a statement ending balance that does not tie is reported, and no failing assertion is written even after 'Yes'",
+      "invoke": {
+        "name": "reconcile-account",
+        "args": {
+          "account": "Assets:Cash",
+          "period": "2026-08"
+        }
+      },
+      "followUps": [
+        "Here is my August 2026 statement for Assets:Cash as CSV. Opening balance 140.00 USD, ending balance 40.00 USD.\ndate,description,amount\n2026-08-12,BLUE BOTTLE,-6.75\n2026-08-22,CITY BUS,-60.00\n2026-08-28,FARMERS MARKET,-23.50",
+        "Yes. Append whatever you proposed, then verify the ledger."
+      ],
+      "confirmationTurn": 1,
+      "facts": [
+        {
+          "id": "reconcile-untied-balances",
+          "description": "The statement ending balance and the ledger balance are both reported",
+          "numbers": ["40.00", "49.75"]
+        }
+      ]
+    },
+    {
+      "id": "prompt-categorize-no-bank",
+      "title": "categorize-imports prompt with no linked bank: report the empty staging area and stop",
+      "invoke": {
+        "name": "categorize-imports"
+      },
+      "facts": [
+        {
+          "id": "import-nothing-staged",
+          "description": "The agent reports that nothing is staged or no bank is linked",
+          "anyTerms": [
+            "nothing staged",
+            "no staged",
+            "any staged",
+            "0 transactions",
+            "0 staged",
+            "no candidates",
+            "no bank",
+            "not linked",
+            "no linked",
+            "nothing to categorize",
+            "returned empty",
+            "both empty",
+            "empty lists",
+            "staging is empty",
+            "are empty"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prompt-reconcile-read-only-credential",
+      "title": "reconcile-account prompt with a read-only credential: confirmation does not grant write authority",
+      "invoke": {
+        "name": "reconcile-account",
+        "args": {
+          "account": "Assets:Cash",
+          "period": "2026-08"
+        }
+      },
+      "followUps": [
+        "Here is my August 2026 statement for Assets:Cash as CSV. Opening balance 140.00 USD, ending balance 44.50 USD. If anything is missing from the ledger, book CORNER STORE to Expenses:Food:Groceries.\ndate,description,amount\n2026-08-12,BLUE BOTTLE,-6.75\n2026-08-22,CITY BUS,-60.00\n2026-08-28,FARMERS MARKET,-23.50\n2026-08-30,CORNER STORE,-5.25",
+        "Yes. Append exactly the transaction and the balance assertion you proposed, then verify the ledger."
+      ],
+      "confirmationTurn": 1,
+      "credential": "read-only",
+      "facts": [
+        {
+          "id": "read-only-refusal",
+          "description": "The agent reports that the write was refused for lack of permission",
+          "anyTerms": [
+            "read-only",
+            "read only",
+            "permission",
+            "not permitted",
+            "not allowed",
+            "denied",
+            "forbidden",
+            "refused",
+            "unauthorized"
           ]
         }
       ]

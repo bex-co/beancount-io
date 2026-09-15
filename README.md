@@ -189,7 +189,10 @@ analysis reads (trial balance, account reports, …), its linked banks, category
 suggestions, and file contents. Statements answer with totals and the accounts
 behind them rather than a chart payload, every failure names a machine code and
 the next call to make, and the transport's budget is sized for a whole agent
-session. Every eligible
+session. Four **prompts** — spending report, month-end close, account
+reconciliation, and import categorization — hand an agent the ledger playbooks
+as workflows the user selects, such as `/mcp__beancount__close-month` in Claude
+Code. Every eligible
 GraphQL operation now has a REST and MCP twin over the same protected service
 call — the parity gap is held at zero by CI. Bank imports are drivable end to
 end after a one-time browser link, with `dry_run` on everything that writes.

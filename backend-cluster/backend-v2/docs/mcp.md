@@ -548,6 +548,45 @@ resource is a static stored document.
 See [`mcp-resources.ts`](../src/features/ai-agent/api/mcp-resources.ts) for the
 catalog and service calls.
 
+## Prompts
+
+Four prompts bring the `beancount-*` ledger playbooks to agents that cannot read
+`skills/`. A prompt is text the user selects. It does no ledger work itself: each
+call it tells the agent to make is authorized when that tool or resource runs,
+with the credential's scopes and ledger restriction.
+
+| Prompt | Arguments (all optional) | What it asks the agent to do |
+| --- | --- | --- |
+| `spending-report` | `period` (`2026-08`, `last quarter`), `question`, `ledger` | Answer spending questions without writing, showing the BQL behind every figure |
+| `close-month` | `month` (`YYYY-MM`), `ledger` | Walk a month-end close and report unverified accounts and unpinned assertions instead of claiming a finished close |
+| `reconcile-account` | `account`, `period`, `statement` (CSV or pasted text), `ledger` | Classify every difference against one statement, then append missing entries and a balance assertion after confirmation |
+| `categorize-imports` | `item_id`, `ledger` | Categorize staged bank transactions into existing accounts, flag duplicates, and submit after confirmation. Listing linked banks needs `ledger.admin`; otherwise pass `item_id` or work with what is already staged |
+
+`month` must be `YYYY-MM` and `ledger` must be `owner/name`; a malformed value is
+refused rather than folded into the playbook. A credential restricted to one
+ledger is told that ledger, and a `ledger` argument outside the restriction is
+named as refused.
+
+**Selecting a prompt does not approve its writes.** A playbook that writes shows
+the proposed entries and waits for an explicit yes, and a read-only credential
+stays read-only whatever the answer.
+
+### Using prompts from a client
+
+- **Claude Code** lists each prompt as a slash command, such as
+  `/mcp__beancount__spending-report 2026-08`. Arguments are positional in the
+  order shown above, so `reconcile-account` takes `account` before `period`.
+  Paste a multi-line statement in your next message rather than on the command
+  line.
+- **Codex** 0.154.0 documents MCP tools but not prompts. Retrieve the playbook
+  with `prompts/get` as shown in
+  [Inspect the protocol with curl](#inspect-the-protocol-with-curl), and send its
+  text as your first message.
+
+Clients with MCP prompt support offer the same four prompts in their own picker.
+The [MCP agent journeys](./mcp-agent-eval.md) run all four playbooks through both
+clients.
+
 ## Inspect the protocol with curl
 
 Set `BEANCOUNT_MCP_URL` to your full endpoint and `BEANCOUNT_MCP_TOKEN` to a
@@ -579,6 +618,14 @@ mcp_post '{"jsonrpc":"2.0","method":"notifications/initialized"}'
 mcp_post '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
 mcp_post '{"jsonrpc":"2.0","id":3,"method":"resources/templates/list"}'
 mcp_post '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"runBqlQuery","arguments":{"query":"BALANCES"}}}'
+```
+
+A client without a prompt picker retrieves a [prompt](#prompts)'s text and
+sends it as its first message. With `jq` installed:
+
+```bash
+mcp_post '{"jsonrpc":"2.0","id":6,"method":"prompts/get","params":{"name":"spending-report","arguments":{"period":"2026-08"}}}' \
+  | sed -n 's/^data: //p' | jq -r '.result.messages[0].content.text'
 ```
 
 For a credential pinned to `alice/books`, a resource read is:

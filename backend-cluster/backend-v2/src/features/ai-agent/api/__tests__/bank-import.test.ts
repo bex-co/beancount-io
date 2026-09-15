@@ -301,4 +301,25 @@ describe("bank import on MCP", () => {
     expect(JSON.stringify(result.content)).toContain("item_id");
     expect(services.plaidItem.unlinkItem).not.toHaveBeenCalled();
   });
+
+  // An agent that sync'd without `item_id` against the hosted server was told
+  // INTERNAL_SERVER_ERROR and "retry once" — a retry that could never succeed.
+  it.each([
+    ["manageBankConnection", { operation: "unlink" }],
+    ["manageBankImport", { operation: "sync", dry_run: true }],
+  ])(
+    "reports a missing item_id on %s as bad input the caller can fix",
+    async (name, args) => {
+      const result = await call(fakeServices(), name, args);
+      const failure = (
+        result.structuredContent as {
+          error?: { code?: string; hint?: string };
+        }
+      ).error;
+
+      expect(result.isError).toBe(true);
+      expect(failure?.code).toBe("BAD_USER_INPUT");
+      expect(failure?.hint).toContain("item_id");
+    },
+  );
 });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BadUserInputError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import type { ToolContext } from "./types";
 import {
@@ -130,10 +131,16 @@ type BankCtx = Pick<ToolContext, "services" | "identity" | "ledgerId">;
  *
  * Without this a missing `item_id` reaches the service as `undefined` and comes
  * back as "Item not found" — which sends a model looking for the wrong problem.
+ * A plain `Error` here surfaced as INTERNAL_SERVER_ERROR with "retry once", so
+ * it is a bad-input error: the caller can fix it and a retry cannot.
  */
 function required<T>(value: T | undefined, key: string, operation: string): T {
   if (value === undefined || value === null) {
-    throw new Error(`\`${key}\` is required for operation "${operation}"`);
+    throw new BadUserInputError(
+      `\`${key}\` is required for operation "${operation}"`,
+      key,
+      `Pass \`${key}\` with operation "${operation}"; \`tools/list\` publishes each tool's input schema.`,
+    );
   }
   return value;
 }
@@ -159,7 +166,11 @@ export async function executeBankImport(ctx: BankCtx, input: ImportInput) {
           );
         case "submit": {
           const [owner, name] = ledgerId.split("/");
-          const requested = required(input.transactions, "transactions", "submit");
+          const requested = required(
+            input.transactions,
+            "transactions",
+            "submit",
+          );
           const submit = () =>
             services.plaidSync.submitTransactionsToLedger(
               identity,
@@ -189,12 +200,7 @@ export async function executeBankImport(ctx: BankCtx, input: ImportInput) {
             };
           }
           const { written: submitted, validation } =
-            await withPostWriteValidation(
-              services,
-              identity,
-              ledgerId,
-              submit,
-            );
+            await withPostWriteValidation(services, identity, ledgerId, submit);
           return {
             ...submitted,
             summary: summarizeWrite(

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Identity } from "@/server/api/identity";
+import { LEDGER_ID_PATTERN, ledgerSelection } from "./mcp-ledger-selection";
 
 /**
  * The MCP `prompts` fragment (w2/008).
@@ -42,9 +43,25 @@ export interface McpPromptDescriptor {
 const optionalArg = (description: string) =>
   z.string().optional().describe(description);
 
-const ledgerArg = optionalArg(
-  "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
-);
+/**
+ * A malformed value would otherwise be folded into the playbook verbatim —
+ * "Close the books for banana." — and the agent would start working on it.
+ * Only arguments with a fixed shape are validated; `period` and `question`
+ * accept natural language ("last quarter") by design.
+ */
+const ledgerArg = z
+  .string()
+  .regex(LEDGER_ID_PATTERN, "ledger must be owner/name")
+  .optional()
+  .describe(ledgerSelection.description ?? "");
+
+const monthArg = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "month must be YYYY-MM")
+  .optional()
+  .describe(
+    "Period to close as YYYY-MM. Defaults to the last complete calendar month.",
+  );
 
 /**
  * How the playbook should talk about ledger selection for this caller.
@@ -80,6 +97,10 @@ const GROUND_RULES = [
   "- After any write, read `validation.newErrors` from the result or call `checkLedger`. A red ledger blocks the next phase.",
 ].join("\n");
 
+/** Where a playbook comes from, so its text can be checked against the local skill it rewrites. */
+const sourceLine = (skill: string) =>
+  `Playbook source: skills/.claude/skills/${skill}/SKILL.md in the beancount-io repository.`;
+
 const closeMonth = (
   args: Record<string, string | undefined>,
   identity: Identity,
@@ -88,6 +109,7 @@ const closeMonth = (
     `Close the books for ${args.month ?? "the last complete calendar month"}.`,
     "",
     ledgerLine(identity, args.ledger),
+    sourceLine("beancount-close"),
     "",
     GROUND_RULES,
     "",
@@ -119,8 +141,13 @@ const closeMonth = (
     "   no separate commit step: instead, confirm the close report with the user and make",
     "   the period's last write carry it. Pass the close report as the `description` on the",
     "   final `addLedgerEntries` or `editLedgerFiles` call so `git log` reads as a close",
-    "   history. If nothing remains to write, say the close is complete and leave the ledger",
-    "   untouched.",
+    "   history. Say the close is complete only when every active account is tied, every",
+    "   assertion is pinned, and the check is green; if nothing remains to write then, leave",
+    "   the ledger untouched.",
+    "",
+    "End with one line: `Close status: complete` when all of that holds, otherwise",
+    "`Close status: incomplete` followed by what is still unverified, unpinned, or red. A",
+    "month with any unverified account is incomplete, however clean the rest looks.",
     "",
     "Do not skip or hide anything: unverified accounts, unpinned assertions, recurring gaps,",
     "and carried flags all appear in the report with counts. Do not propose a write while the",
@@ -137,6 +164,7 @@ const reconcileAccount = (
     }.`,
     "",
     ledgerLine(identity, args.ledger),
+    sourceLine("beancount-reconcile"),
     args.statement
       ? ["", "Statement provided by the user:", "", args.statement].join("\n")
       : "",
@@ -192,15 +220,22 @@ const categorizeImports = (
     "the ledger.",
     "",
     ledgerLine(identity, args.ledger),
+    sourceLine("beancount-import"),
     args.item_id ? `Linked bank: ${args.item_id}.` : "",
     "",
     GROUND_RULES,
     "",
-    "1. Pull. Read `beancount://{owner}/{name}/bank/list` (or call `manageBankImport` with",
-    '   `operation: "sync"` and the bank\'s `item_id`) to bring new transactions into staging.',
-    "   `sync` accepts `dry_run` — use it first if you want to see what would arrive.",
-    "2. Stage. Read the unsynced transactions and the server's own suggestions from the bank",
-    "   resources. Nothing is in the ledger yet; everything here is a candidate.",
+    "1. Pull. Syncing needs the bank's `item_id`. `beancount://{owner}/{name}/banks` lists the",
+    "   linked banks with their ids, but reading it requires a credential with `ledger.admin`;",
+    "   without that scope, use an `item_id` the user gives you, or skip the sync and work with",
+    '   what is already staged. Call `manageBankImport` with `operation: "sync"` and the',
+    "   `item_id` to bring new transactions into staging. `sync` accepts `dry_run` — use it",
+    "   first if you want to see what would arrive. Linking a new bank happens in the browser.",
+    "2. Stage. Read `beancount://{owner}/{name}/bank-transactions/unsynced` for the staged",
+    "   transactions and `beancount://{owner}/{name}/bank-transactions/suggested-categories`",
+    "   for the server's own suggestions. Nothing is in the ledger yet; everything here is a",
+    "   candidate. If staging is empty, say so, name what would let you continue (a linked",
+    "   bank, its `item_id`, or a credential with `ledger.admin`), and stop without writing.",
     "3. Dedup. Before proposing anything, check each candidate against what the ledger already",
     "   holds: query postings to the source account at the same amount within three days with",
     "   a similar description. A hit is a *suspected duplicate* — show it in the review table",
@@ -209,8 +244,10 @@ const categorizeImports = (
     "4. Suggest. Categorize each candidate's counter-account from the ledger's own history.",
     "   The candidate set is exactly the accounts `getLedgerContext` returns — never invent an",
     "   account, however plausible. A confident prior for the payee is reused and cited as the",
-    "   reason; without one, use `Expenses:Uncategorized` and flag it for refinement. Every",
-    "   suggestion carries a confidence (high/medium/low) and a one-line reason.",
+    "   reason. Without one, use `Expenses:Uncategorized` only if the ledger already has that",
+    "   account; otherwise leave the counter-account unassigned and ask the user which open",
+    "   account to use. Every suggestion carries a confidence (high/medium/low) and a",
+    "   one-line reason.",
     "5. Confirm. Show the user the full review table — date, payee, amount, proposed account,",
     "   confidence, reason, and the duplicate flags — and ask. Never write before an explicit",
     "   yes. Let the user correct accounts in bulk before you write.",
@@ -236,6 +273,7 @@ const spendingReport = (
     }${args.question ? `, starting with: ${args.question}` : ""}.`,
     "",
     ledgerLine(identity, args.ledger),
+    sourceLine("beancount-ask"),
     "",
     "This playbook is strictly read-only. Do not write, edit, or format anything — not to fix",
     "an error you notice, not to add a missing `open`. If an answer would require a write, name",
@@ -276,9 +314,7 @@ export const MCP_PROMPTS: readonly McpPromptDescriptor[] = [
     description:
       "Month-end close ritual: reconcile active accounts, verify balance assertions, check recurring-entry completeness, sweep flagged entries, and report the period's P&L. Reports what it cannot verify instead of forcing a tie-out.",
     argsSchema: {
-      month: optionalArg(
-        "Period to close as YYYY-MM. Defaults to the last complete calendar month.",
-      ),
+      month: monthArg,
       ledger: ledgerArg,
     },
     build: closeMonth,

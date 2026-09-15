@@ -17,17 +17,40 @@ interface Fact {
   readonly terms?: readonly string[];
   /** At least one term must appear, case-insensitively. */
   readonly anyTerms?: readonly string[];
+  /** None of these may appear, case-insensitively: a claim the journey must not make. */
+  readonly absentTerms?: readonly string[];
 }
 
 interface ExpectedWrite {
   readonly date: string;
-  readonly postings: readonly { readonly account: string; readonly amount: string; readonly currency: string }[];
+  readonly postings: readonly {
+    readonly account: string;
+    readonly amount: string;
+    readonly currency: string;
+  }[];
+  /**
+   * Regular expressions for the non-transaction lines the write adds (such as a
+   * balance assertion), each matched against one whitespace-collapsed line.
+   */
+  readonly directives?: readonly string[];
 }
 
 export interface Journey {
   readonly id: string;
   readonly title: string;
-  readonly prompt: string;
+  /** What the user types; `{ledger}` becomes the eval ledger. Omitted when the journey selects a prompt. */
+  readonly prompt?: string;
+  /** Select this server prompt: natively where the client supports prompts, as retrieved text otherwise. */
+  readonly invoke?: {
+    readonly name: string;
+    readonly args?: Readonly<Record<string, string>>;
+  };
+  /** Further user turns in the same session, in order. */
+  readonly followUps?: readonly string[];
+  /** Index into `followUps` of the turn that approves a write; nothing may be written before it. */
+  readonly confirmationTurn?: number;
+  /** Run with the read-only credential instead of the read/write one. */
+  readonly credential?: "read-only";
   readonly facts: readonly Fact[];
   /** The one transaction the journey authorizes; a journey without it is read-only. */
   readonly expectedWrite?: ExpectedWrite;
@@ -53,9 +76,13 @@ export type Outcome = "pass" | "fail" | "incomplete" | "error";
 
 const NUMBER = /\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
 
-const cents = (raw: string): number => Math.round(Math.abs(Number(raw.replace(/[$,]/g, ""))) * 100);
+const cents = (raw: string): number =>
+  Math.round(Math.abs(Number(raw.replace(/[$,]/g, ""))) * 100);
 
-export function scoreAnswer(answer: string, facts: readonly Fact[]): Assertion[] {
+export function scoreAnswer(
+  answer: string,
+  facts: readonly Fact[],
+): Assertion[] {
   const seen = new Set((answer.match(NUMBER) ?? []).map(cents));
   const lower = answer.toLowerCase();
   const has = (term: string) => lower.includes(term.toLowerCase());
@@ -67,10 +94,17 @@ export function scoreAnswer(answer: string, facts: readonly Fact[]): Assertion[]
     if (fact.anyTerms?.length && !fact.anyTerms.some(has)) {
       missing.push(`one of: ${fact.anyTerms.join(" | ")}`);
     }
+    const unexpected = (fact.absentTerms ?? []).filter(has);
+    const problems = [
+      ...(missing.length ? [`missing ${missing.join(", ")}`] : []),
+      ...(unexpected.length ? [`unexpected ${unexpected.join(", ")}`] : []),
+    ];
     return {
       id: `answer:${fact.id}`,
-      ok: missing.length === 0,
-      detail: missing.length ? `${fact.description}: missing ${missing.join(", ")}` : fact.description,
+      ok: problems.length === 0,
+      detail: problems.length
+        ? `${fact.description}: ${problems.join("; ")}`
+        : fact.description,
     };
   });
 }
@@ -88,18 +122,31 @@ interface Transaction {
 }
 
 const TRANSACTION = /^(\d{4}-\d{2}-\d{2})\s+(?:\*|!|txn)(?:\s|$)/;
-const POSTING =
-  /^\s+[*!]?\s*([A-Z][A-Za-z0-9-]*(?::[A-Za-z0-9][A-Za-z0-9-]*)+)(?:\s+(-?[\d,]*\.?\d+)\s+([A-Z][A-Z0-9'._-]*))?/;
+const AMOUNT = String.raw`-?[\d,]*\.?\d+`;
+const CURRENCY = String.raw`[A-Z][A-Z0-9'._-]*`;
+const POSTING = new RegExp(
+  String.raw`^\s+[*!]?\s*([A-Z][A-Za-z0-9-]*(?::[A-Za-z0-9][A-Za-z0-9-]*)+)(?:\s+(${AMOUNT})\s+(${CURRENCY}))?`,
+);
+const TRAILING_AMOUNT = new RegExp(String.raw`(${AMOUNT})(\s+${CURRENCY})$`);
 
-const money = (raw: string) => (Math.round(Number(raw.replace(/,/g, "")) * 100) / 100).toFixed(2);
-const squash = (line: string) => line.trim().replace(/\s+/g, " ");
+const money = (raw: string) =>
+  (Math.round(Number(raw.replace(/,/g, "")) * 100) / 100).toFixed(2);
+/** One line with collapsed whitespace and a trailing amount written to the cent. */
+const squash = (line: string) =>
+  line
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(TRAILING_AMOUNT, (_, amount: string, currency: string) => `${money(amount)}${currency}`);
 
 /**
  * Just enough Beancount structure to compare two versions of one file:
  * transactions with their postings, and every other non-blank line. Balances
  * are never computed here — the expected figures come from the fixture oracle.
  */
-function parseLedger(text: string): { transactions: Transaction[]; directives: string[] } {
+function parseLedger(text: string): {
+  transactions: Transaction[];
+  directives: string[];
+} {
   const transactions: Transaction[] = [];
   const directives: string[] = [];
   let current: Transaction | undefined;
@@ -134,10 +181,19 @@ function parseLedger(text: string): { transactions: Transaction[]; directives: s
 }
 
 const transactionKey = (t: Transaction) =>
-  [t.header, ...t.postings.map((p) => `${p.account} ${p.amount ?? ""} ${p.currency ?? ""}`).sort()].join("\n");
+  [
+    t.header,
+    ...t.postings
+      .map((p) => `${p.account} ${p.amount ?? ""} ${p.currency ?? ""}`)
+      .sort(),
+  ].join("\n");
 
 /** Multiset difference: each match consumes one occurrence, so duplicates count. */
-function minus<T>(xs: readonly T[], ys: readonly T[], key: (x: T) => string): T[] {
+function minus<T>(
+  xs: readonly T[],
+  ys: readonly T[],
+  key: (x: T) => string,
+): T[] {
   const remaining = new Map<string, number>();
   for (const y of ys) remaining.set(key(y), (remaining.get(key(y)) ?? 0) + 1);
   return xs.filter((x) => {
@@ -160,7 +216,11 @@ function diffLedgers(before: string, after: string) {
 }
 
 function matchesWrite(t: Transaction, expected: ExpectedWrite): boolean {
-  if (t.date !== expected.date || t.postings.length !== expected.postings.length) return false;
+  if (
+    t.date !== expected.date ||
+    t.postings.length !== expected.postings.length
+  )
+    return false;
   let elided = 0;
   return expected.postings.every((want) => {
     const got = t.postings.find((p) => p.account === want.account);
@@ -182,17 +242,48 @@ export const normalizeText = (text: string) =>
     .trimEnd();
 
 /** The ledger is exactly the fixture: same text, no other files, and valid. */
-export const matchesFixture = (state: LedgerState, fixture: string, fixturePath: string) =>
+export const matchesFixture = (
+  state: LedgerState,
+  fixture: string,
+  fixturePath: string,
+) =>
   state.ok &&
   state.errorCount === 0 &&
   state.files.length === 1 &&
   state.files[0] === fixturePath &&
   normalizeText(state.content) === normalizeText(fixture);
 
-export function scoreState(journey: Journey, fixture: string, fixturePath: string, state: LedgerState): Assertion[] {
+/** Nothing may be written before the turn that approves the write. */
+export function confirmationAssertion(
+  fixture: string,
+  fixturePath: string,
+  state: LedgerState,
+): Assertion {
+  const ok = matchesFixture(state, fixture, fixturePath);
+  return {
+    id: "state:no-write-before-confirmation",
+    ok,
+    detail: ok
+      ? "nothing was written before the user confirmed"
+      : state.ok
+        ? "the ledger changed before the user confirmed"
+        : `ledger state before confirmation unavailable (${state.reason})`,
+  };
+}
+
+export function scoreState(
+  journey: Journey,
+  fixture: string,
+  fixturePath: string,
+  state: LedgerState,
+): Assertion[] {
   if (!state.ok) {
     return [
-      { id: "state:read", ok: false, detail: `ledger state unavailable (${state.reason}); not treated as unchanged` },
+      {
+        id: "state:read",
+        ok: false,
+        detail: `ledger state unavailable (${state.reason}); not treated as unchanged`,
+      },
     ];
   }
   const extraFiles = state.files.filter((f) => f !== fixturePath);
@@ -207,7 +298,11 @@ export function scoreState(journey: Journey, fixture: string, fixturePath: strin
           ? `only ${fixturePath}`
           : `${fixturePath} is missing`,
     },
-    { id: "state:valid", ok: state.errorCount === 0, detail: `${state.errorCount} validation error(s) after the run` },
+    {
+      id: "state:valid",
+      ok: state.errorCount === 0,
+      detail: `${state.errorCount} validation error(s) after the run`,
+    },
   ];
   const diff = diffLedgers(fixture, state.content);
   const expected = journey.expectedWrite;
@@ -224,14 +319,23 @@ export function scoreState(journey: Journey, fixture: string, fixturePath: strin
     return assertions;
   }
 
+  const unclaimed = [...diff.addedDirectives];
+  const missingDirectives = (expected.directives ?? []).filter((pattern) => {
+    const index = unclaimed.findIndex((line) => new RegExp(pattern).test(line));
+    if (index < 0) return true;
+    unclaimed.splice(index, 1);
+    return false;
+  });
   const preserved =
-    diff.removedTransactions.length === 0 && diff.removedDirectives.length === 0 && diff.addedDirectives.length === 0;
+    diff.removedTransactions.length === 0 &&
+    diff.removedDirectives.length === 0 &&
+    unclaimed.length === 0;
   assertions.push({
     id: "state:existing-entries",
     ok: preserved,
     detail: preserved
       ? "existing entries preserved"
-      : `unintended edits: -${diff.removedTransactions.length} transactions, +${diff.addedDirectives.length}/-${diff.removedDirectives.length} other lines`,
+      : `unintended edits: -${diff.removedTransactions.length} transactions, +${unclaimed.length}/-${diff.removedDirectives.length} other lines`,
   });
 
   const added = diff.addedTransactions;
@@ -248,6 +352,15 @@ export function scoreState(journey: Journey, fixture: string, fixturePath: strin
             ? "exactly one matching transaction added"
             : `the new transaction does not match: ${describeTransaction(added[0])}`,
   });
+  if (expected.directives?.length) {
+    assertions.push({
+      id: "state:authorized-directives",
+      ok: missingDirectives.length === 0,
+      detail: missingDirectives.length
+        ? `no added line matches ${missingDirectives.join(", ")}`
+        : "the expected directives were added",
+    });
+  }
   return assertions;
 }
 
@@ -255,17 +368,25 @@ export function scoreState(journey: Journey, fixture: string, fixturePath: strin
  * A run is incomplete when the client never produced a usable result, an error
  * when the harness could not read the ledger, and only then pass or fail.
  */
-export function classify(incompleteReason: string | null, assertions: readonly Assertion[]): Outcome {
+export function classify(
+  incompleteReason: string | null,
+  assertions: readonly Assertion[],
+): Outcome {
   if (incompleteReason) return "incomplete";
   if (assertions.some((a) => a.id === "state:read" && !a.ok)) return "error";
-  return assertions.length > 0 && assertions.every((a) => a.ok) ? "pass" : "fail";
+  return assertions.length > 0 && assertions.every((a) => a.ok)
+    ? "pass"
+    : "fail";
 }
 
 /**
  * The harness resets and rewrites its target, so it refuses any ledger that is
  * not a dedicated eval ledger or any credential that reaches more than it.
  */
-export function unsafeTargetReason(target: string, accessible: readonly string[]): string | null {
+export function unsafeTargetReason(
+  target: string,
+  accessible: readonly string[],
+): string | null {
   if (!/^[^/\s]+\/mcp-agent-eval(?:-[a-z0-9-]+)?$/.test(target)) {
     return `refusing to reset ${target}: the target must be a dedicated ledger named mcp-agent-eval[-suffix]`;
   }
@@ -275,10 +396,22 @@ export function unsafeTargetReason(target: string, accessible: readonly string[]
   return null;
 }
 
-export function redact(text: string, secrets: readonly string[], owner?: string): string {
+export function redact(
+  text: string,
+  secrets: readonly string[],
+  owner?: string,
+): string {
   let out = text.replace(/bcio_[A-Za-z0-9]{6,}/g, "bcio_<redacted>");
-  for (const secret of secrets) if (secret) out = out.split(secret).join("<redacted>");
+  for (const secret of secrets)
+    if (secret) out = out.split(secret).join("<redacted>");
   // The owner appears as a path segment, a JSON field, a URL part, and in prose.
-  if (owner) out = out.replace(new RegExp(`(?<![\\w-])${owner.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`, "g"), "<qa-owner>");
+  if (owner)
+    out = out.replace(
+      new RegExp(
+        `(?<![\\w-])${owner.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`,
+        "g",
+      ),
+      "<qa-owner>",
+    );
   return out;
 }
