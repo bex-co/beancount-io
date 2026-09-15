@@ -1,20 +1,30 @@
 # w4 · m10 — GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues
 
-**Worker:** worker1 **Goal:** a first-time reporter opens an issue through a form that captures the package, version, and reproduction the maintainers need, a first-time contributor finds a sized task and a PR template that names the checks to run, and the repository's community profile is complete **Status:** todo
+**Worker:** worker1 **Goal:** a first-time reporter opens an issue through a form that captures the package, version, and reproduction the maintainers need, a first-time contributor finds a sized task and a PR template that names the checks to run, and the repository's community profile is complete **Status:** blocked — see [Blocked](#blocked) (t002, t008 done; t001 shipped, labels pending)
 
 ## Tasks (in order)
 
 | id   | title                                                                                                                     | est | depends_on |
 | ---- | ------------------------------------------------------------------------------------------------------------------------- | --- | ---------- |
 | t001 | Issue forms: bug, feature, skill request, self-host help, each with a package picker and the checks to run                | 40m | —          |
-| t002 | PR template with the package checks table, one-package rule, and secret-scan reminder                                     | 20m | —          |
+| t002 | PR template with the package checks table, one-package rule, and secret-scan reminder — **DONE**                          | 20m | —          |
 | t003 | SECURITY.md with the reporting channel and gitleaks policy, CODE_OF_CONDUCT.md, both linked from CONTRIBUTING and README  | 30m | —          |
 | t004 | Seed good first issues from the board's open sub-hour QA notes and label issue 176 against the price and self-host work   | 45m | t001       |
 | t005 | Contributing guide: first-PR walkthrough per package, complete layout table, and where to ask                             | 30m | t003       |
 | t006 | Adoption surface                                                                                                          | 20m | t002, t004, t005 |
 | t007 | Simplify                                                                                                                  | 20m | t006       |
-| t008 | Test coverage                                                                                                             | 40m | t006       |
+| t008 | Test coverage — **DONE**                                                                                                  | 40m | t006       |
 | t009 | Closeout                                                                                                                  | 15m | t007, t008 |
+
+## Blocked
+
+**Blocked 2026-09-14 by `/loop-worker w4` after the in-repository work shipped.** `dbb1e763` added the four issue forms and chooser config (t001), the pull request template (t002), and the community-files validator with its path-filtered CI check (t008). All four forms render as issue-form previews on GitHub and `CI (community files)` passed. t008 was pulled ahead of its Adoption-surface dependency because the validator had to exist before the files it guards landed. Every remaining task needs a user decision or a user-approved change on GitHub:
+
+1. **Security reporting channel (t003, then t005, t006, t007, t009).** Enable GitHub private vulnerability reporting for the repository, or supply the maintainer contact `SECURITY.md` and `CODE_OF_CONDUCT.md` should name. The task forbids a placeholder address.
+2. **Labels (t001).** Approve creating the `skills` and `self-host` labels that two forms apply, then confirm in a signed-in session that "New issue" offers the four forms and no blank issue.
+3. **Public issues (t004).** Approve filing at least five `good first issue`s from board notes and posting the issue 176 reply. The reply's content also waits on the [w4/m9](../m9/README.md) re-scope-or-drop decision, because it was to cite m9 as the local-first price path.
+
+**Unblock:** when the answers arrive, move this directory back to `.pm/w4/m10/` and continue from t003 and t004. The workstream checkbox stays unchecked until closeout.
 
 ## Definition of done
 

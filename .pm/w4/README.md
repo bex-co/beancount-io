@@ -14,7 +14,7 @@
 - [x] **m7** — Screen-reader pass on the mobile core journeys (9 tasks) ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - [ ] **m8** — [Localized Google Play listing from the canonical metadata](./blocked/m8/README.md) (8 tasks) — **blocked:** needs a Play Console check that the applied listing is public. ← from `/pm-brainstorm for w4` 2026-09-08; user approved all four
 - [ ] **m9** — [`bea price fetch`: keep commodity and currency prices current through upstream bean-price](./blocked/m9/README.md) (9 tasks) — **blocked:** needs a decision to re-scope onto the shipped `bea price` passthrough or drop. ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11 (issue 176)
-- [ ] **m10** — GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues (9 tasks) ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11
+- [ ] **m10** — [GitHub contributor front door: issue and PR templates, security policy, code of conduct, seeded good first issues](./blocked/m10/README.md) (9 tasks) — **blocked:** forms, PR template, and CI check shipped; needs the security reporting channel and approval for labels, good first issues, and the issue 176 reply. ← from `/pm-brainstorm for w4` 2026-09-10; user handed items 1, 6, 7 to `/pm` 2026-09-11
 
 ## Dropped
 
