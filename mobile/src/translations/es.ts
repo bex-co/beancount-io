@@ -200,9 +200,6 @@ export const es: typeof en = {
   date: "Fecha",
   save: "Guardar",
   pleaseInput: "Por favor ingrese...",
-  off: "Apagado",
-  weekly: "Semanal",
-  monthly: "Mensual",
   inviteFriends: "Invitar amigos",
   inviteSummary:
     "Comparte esta herramienta profesional de gestión financiera y ayuda a otros a construir su futuro financiero.",

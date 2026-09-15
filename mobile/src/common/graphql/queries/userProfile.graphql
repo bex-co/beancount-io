@@ -1,6 +1,0 @@
-query UserProfile($userId: String!) {
-  userProfile(userId: $userId) {
-    email
-    emailReportStatus
-  }
-}

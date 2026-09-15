@@ -50,7 +50,7 @@ Run all from inside `mobile/`.
 | `yarn ios` / `yarn android`         | Build and run the native app in simulator/emulator          |
 | `yarn ios:device`                   | Build and install on a connected iOS device                 |
 | `yarn lint`                         | TypeScript + ESLint autofix + Knip dead-code detection      |
-| `yarn lint:deadcode`                | Detect unused files, exports, and exported types            |
+| `yarn lint:deadcode`                | Unused files/exports/types, test-only modules, GraphQL ops  |
 | `yarn lint:deadcode:fix`            | Remove detected dead code; review the resulting diff        |
 | `yarn typecheck`                    | `tsc --noEmit` only                                         |
 | `yarn test:unit`                    | Custom Jest-lite runner in `scripts/`                       |

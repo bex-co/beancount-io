@@ -204,9 +204,6 @@ export const de: typeof en = {
   date: "Datum",
   save: "Speichern",
   pleaseInput: "Bitte eingeben...",
-  off: "Aus",
-  weekly: "Wöchentlich",
-  monthly: "Monatlich",
   inviteFriends: "Freunde einladen",
   inviteSummary:
     "Teilen Sie dieses professionelle Finanzmanagement-Tool und helfen Sie anderen, ihre finanzielle Zukunft aufzubauen.",

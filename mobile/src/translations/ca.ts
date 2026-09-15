@@ -202,9 +202,6 @@ export const ca: typeof en = {
   date: "Data",
   save: "Guardar",
   pleaseInput: "Si us plau, introdueix...",
-  off: "Desactivat",
-  weekly: "Setmanal",
-  monthly: "Mensual",
   inviteFriends: "Convida amics",
   inviteSummary:
     "Comparteix aquesta eina professional de gestió financera i ajuda altres a construir el seu futur financer.",

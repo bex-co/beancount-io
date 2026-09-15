@@ -199,9 +199,6 @@ export const sk: typeof en = {
   date: "Dátum",
   save: "Uložiť",
   pleaseInput: "Prosím zadajte...",
-  off: "Vypnuté",
-  weekly: "Týždenne",
-  monthly: "Mesačne",
   inviteFriends: "Pozvať priateľov",
   inviteSummary:
     "Zdieľajte tento profesionálny nástroj na finančné riadenie a pomôžte ostatným vybudovať ich finančnú budúcnosť.",

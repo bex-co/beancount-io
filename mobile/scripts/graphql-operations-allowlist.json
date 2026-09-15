@@ -1,0 +1,5 @@
+{
+  "SubscriptionStatus": "Mobile billing is proposed in docs/adrs/ADR001-mobile-billing.md; it reads the subscription tier through this operation.",
+  "CreateSubscriptionSession": "Mobile billing is proposed in docs/adrs/ADR001-mobile-billing.md; it starts a purchase through this operation.",
+  "CancelSubscription": "Mobile billing is proposed in docs/adrs/ADR001-mobile-billing.md; it cancels a subscription through this operation."
+}

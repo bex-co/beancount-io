@@ -193,9 +193,6 @@ export const en = {
   date: "Date",
   save: "Save",
   pleaseInput: "Please input...",
-  off: "Off",
-  weekly: "Weekly",
-  monthly: "Monthly",
   inviteFriends: "Invite Friends",
   inviteSummary:
     "Share this professional financial management tool and help others build their financial future.",

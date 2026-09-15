@@ -258,12 +258,6 @@ describe("translations", () => {
       expect(en.loading).toBe("loading...");
     });
 
-    it("has cadence keys", () => {
-      expect(en.off).toBe("Off");
-      expect(en.weekly).toBe("Weekly");
-      expect(en.monthly).toBe("Monthly");
-    });
-
     it("has referral keys", () => {
       expect(en.inviteFriends).toBe("Invite Friends");
       expect(en.referral).toBe("Referral");

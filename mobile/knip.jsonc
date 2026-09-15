@@ -1,15 +1,21 @@
 {
   "$schema": "./node_modules/knip/schema-jsonc.json",
+  // A `!` marks a production entry. `knip --production` (part of
+  // `yarn lint:deadcode`) builds the project from those alone, so a module that
+  // only tests reach reads as an unused file.
   "entry": [
     // Expo Router loads route modules by filesystem convention.
-    "app/**/*.{ts,tsx}",
+    "app/**/*.{ts,tsx}!",
     // The package's lightweight test runner discovers tests by filename.
     "src/**/*.test.{ts,tsx}",
     // Release and metadata scripts are standalone package entry points.
-    "src/scripts/**/*.{ts,tsx}",
-    "scripts/**/*.{js,ts}",
-    "babel.config.js",
+    "src/scripts/**/*.{ts,tsx}!",
+    "scripts/**/*.{js,ts}!",
+    "babel.config.js!",
   ],
+  // Test helpers under `__tests__` are test code as well, so production mode
+  // leaves them out of the project too.
+  "project": ["**/*.{js,jsx,ts,tsx}!", "!**/__tests__/**!"],
   "ignoreIssues": {
     // GraphQL Code Generator owns this public generated API.
     "src/generated-graphql/**": ["exports", "types"],

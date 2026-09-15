@@ -202,9 +202,6 @@ export const pt: typeof en = {
   date: "Data",
   save: "Salvar",
   pleaseInput: "Por favor, insira...",
-  off: "Desligado",
-  weekly: "Semanal",
-  monthly: "Mensal",
   inviteFriends: "Convidar amigos",
   inviteSummary:
     "Compartilhe esta ferramenta profissional de gestão financeira e ajude outros a construir seu futuro financeiro.",

@@ -199,9 +199,6 @@ export const nl: typeof en = {
   date: "Datum",
   save: "Opslaan",
   pleaseInput: "Voer in...",
-  off: "Uit",
-  weekly: "Wekelijks",
-  monthly: "Maandelijks",
   inviteFriends: "Vrienden uitnodigen",
   inviteSummary:
     "Deel deze professionele tool voor financieel beheer en help anderen hun financiële toekomst op te bouwen.",

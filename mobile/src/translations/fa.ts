@@ -197,9 +197,6 @@ export const fa: typeof en = {
   date: "تاریخ",
   save: "ذخیره",
   pleaseInput: "لطفاً وارد کنید...",
-  off: "خاموش",
-  weekly: "هفتگی",
-  monthly: "ماهانه",
   inviteFriends: "دعوت دوستان",
   inviteSummary:
     "این ابزار حرفه‌ای مدیریت مالی را به اشتراک بگذارید و به دیگران کمک کنید تا آینده مالی خود را بسازند.",
