@@ -279,6 +279,7 @@ export const en = {
   openAccountInvalidRoot: "Choose a valid account type.",
   openAccountNameRequired: "Enter at least one account name component.",
   openAccountEmptyComponent: "Account components cannot be empty.",
+  openAccountNamePreview: "Will be created as {{account}}",
   openAccountUppercaseComponent:
     "Each account component must start with an uppercase letter or a number.",
   openAccountInvalidCharacters:

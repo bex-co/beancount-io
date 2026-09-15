@@ -283,6 +283,7 @@ export const fa: typeof en = {
   openAccountInvalidRoot: "یک نوع حساب معتبر انتخاب کنید.",
   openAccountNameRequired: "دست‌کم یک بخش از نام حساب را وارد کنید.",
   openAccountEmptyComponent: "بخش‌های نام حساب نمی‌توانند خالی باشند.",
+  openAccountNamePreview: "با نام {{account}} ایجاد می‌شود",
   openAccountUppercaseComponent:
     "هر بخش نام حساب باید با حرف بزرگ یا رقم آغاز شود.",
   openAccountInvalidCharacters:

@@ -286,6 +286,7 @@ export const uk: typeof en = {
   openAccountInvalidRoot: "Оберіть дійсний тип рахунку.",
   openAccountNameRequired: "Введіть хоча б одну частину назви рахунку.",
   openAccountEmptyComponent: "Частини назви рахунку не можуть бути порожніми.",
+  openAccountNamePreview: "Буде створено як {{account}}",
   openAccountUppercaseComponent:
     "Кожна частина назви рахунку має починатися з великої літери або цифри.",
   openAccountInvalidCharacters:

@@ -38,6 +38,7 @@ import type { ColorTheme } from "@/types/theme-props";
 import {
   ACCOUNT_ROOT_PREFIXES,
   composeAccountName,
+  typedSubPathIssue,
   splitPrefillAccountName,
   type AccountNameValidationReason,
   type AccountRootPrefix,
@@ -168,6 +169,13 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.text01,
       fontSize: fontSizes.lg,
     },
+    // The composed name, once it is valid: what will actually be written.
+    preview: {
+      marginTop: space.sm,
+      color: theme.black60,
+      fontSize: fontSizes.sm,
+      lineHeight: 20,
+    },
     error: {
       marginTop: space.sm,
       color: theme.error,
@@ -229,7 +237,10 @@ export function OpenAccountScreenComponent(): JSX.Element {
 
   const account = composeAccountName(rootPrefix, subPath);
   const validation = validateAccountName(account);
-  const canSubmit = validation.ok && !loading;
+  // The typed text, before composition tidies it: "Investments:" is a name
+  // still being typed, not a request for `Assets:Investments`.
+  const typedIssue = typedSubPathIssue(subPath);
+  const canSubmit = validation.ok && typedIssue === null && !loading;
   const rootKey = rootPrefix.toLowerCase() as AccountRoot;
   const rootIcon = getRootIcon(rootKey);
   const rootTone = rootIcon.tone(theme);
@@ -281,6 +292,12 @@ export function OpenAccountScreenComponent(): JSX.Element {
   const validationMessage =
     subPath.length > 0 && !validation.ok
       ? t(VALIDATION_KEYS[validation.reason])
+      : typedIssue === "emptyComponent"
+        ? t(VALIDATION_KEYS.emptyComponent)
+        : null;
+  const namePreview =
+    validation.ok && typedIssue === null
+      ? t("openAccountNamePreview", { account })
       : null;
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
@@ -364,6 +381,9 @@ export function OpenAccountScreenComponent(): JSX.Element {
               <Text style={styles.error} accessibilityLiveRegion="polite">
                 {validationMessage}
               </Text>
+            ) : null}
+            {namePreview ? (
+              <Text style={styles.preview}>{namePreview}</Text>
             ) : null}
           </View>
 

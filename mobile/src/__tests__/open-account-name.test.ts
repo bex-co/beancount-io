@@ -2,6 +2,7 @@ import {
   ACCOUNT_ROOT_PREFIXES,
   composeAccountName,
   splitPrefillAccountName,
+  typedSubPathIssue,
   type AccountNameValidationReason,
   validateAccountName,
 } from "../screens/open-account-screen/account-name";
@@ -245,5 +246,43 @@ describe("open account entry", () => {
 
     currencies.push("EUR");
     expect(entry.open?.currencies).toEqual(["USD"]);
+  });
+});
+
+describe("typedSubPathIssue", () => {
+  it("holds back a name that is still being typed", () => {
+    expect(typedSubPathIssue("Investments:")).toBe("incomplete");
+    expect(typedSubPathIssue("Bank:Checking: ")).toBe("incomplete");
+  });
+
+  it("names an empty component the composer would silently collapse", () => {
+    expect(typedSubPathIssue("Bank::Checking")).toBe("emptyComponent");
+    expect(typedSubPathIssue(":Bank")).toBe("emptyComponent");
+  });
+
+  it("accepts a complete name and leaves an empty field to the validator", () => {
+    expect(typedSubPathIssue("Investments:Brokerage")).toBe(null);
+    expect(typedSubPathIssue("Bank")).toBe(null);
+    expect(typedSubPathIssue("")).toBe(null);
+  });
+
+  it("gates the form's submit, and its Return key, on the typed text", () => {
+    const source = require("fs").readFileSync(
+      require("path").join(
+        __dirname,
+        "..",
+        "screens",
+        "open-account-screen",
+        "open-account-screen.tsx",
+      ),
+      "utf8",
+    );
+    expect(
+      source.includes("validation.ok && typedIssue === null && !loading"),
+    ).toBe(true);
+    expect(source.includes("onSubmitEditing={handleSubmit}")).toBe(true);
+    expect(source.includes('t("openAccountNamePreview", { account })')).toBe(
+      true,
+    );
   });
 });

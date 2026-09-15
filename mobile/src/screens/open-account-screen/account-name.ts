@@ -115,3 +115,22 @@ export function validateAccountName(
 
   return { ok: true };
 }
+
+/**
+ * Why the sub-path as typed cannot be submitted, before composition hides it.
+ * `composeAccountName` drops empty components, so "Investments:" and
+ * "Bank::Checking" compose into valid names the user did not type: a trailing
+ * separator is a name still being typed, and an empty component inside it is
+ * the mistake the form should name. Null when the typed text is complete (an
+ * empty field is left to `validateAccountName`).
+ */
+export function typedSubPathIssue(
+  subPath: string,
+): "incomplete" | "emptyComponent" | null {
+  const typed = subPath.trim();
+  if (typed.length === 0) return null;
+  const components = typed.split(":").map((component) => component.trim());
+  if (components[components.length - 1] === "") return "incomplete";
+  if (components.some((component) => component === "")) return "emptyComponent";
+  return null;
+}

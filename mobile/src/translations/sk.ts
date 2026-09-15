@@ -286,6 +286,7 @@ export const sk: typeof en = {
   openAccountInvalidRoot: "Vyberte platný typ účtu.",
   openAccountNameRequired: "Zadajte aspoň jednu časť názvu účtu.",
   openAccountEmptyComponent: "Časti názvu účtu nemôžu byť prázdne.",
+  openAccountNamePreview: "Vytvorí sa ako {{account}}",
   openAccountUppercaseComponent:
     "Každá časť názvu účtu musí začínať veľkým písmenom alebo číslicou.",
   openAccountInvalidCharacters:

@@ -267,6 +267,7 @@ export const zh: typeof en = {
   openAccountInvalidRoot: "请选择有效的账户类型。",
   openAccountNameRequired: "请至少输入一级账户名称。",
   openAccountEmptyComponent: "各级账户名称不能为空。",
+  openAccountNamePreview: "将创建为 {{account}}",
   openAccountUppercaseComponent: "每级账户名称都必须以大写字母或数字开头。",
   openAccountInvalidCharacters: "账户名称只能使用字母、数字和连字符。",
   closeAccount: "关户",

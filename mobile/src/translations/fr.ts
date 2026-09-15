@@ -290,6 +290,7 @@ export const fr: typeof en = {
   openAccountInvalidRoot: "Choisissez un type de compte valide.",
   openAccountNameRequired: "Saisissez au moins un élément du nom.",
   openAccountEmptyComponent: "Les éléments du nom ne peuvent pas être vides.",
+  openAccountNamePreview: "Sera créé sous le nom {{account}}",
   openAccountUppercaseComponent:
     "Chaque élément du nom doit commencer par une majuscule ou un chiffre.",
   openAccountInvalidCharacters:

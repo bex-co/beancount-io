@@ -294,6 +294,7 @@ export const de: typeof en = {
   openAccountInvalidRoot: "Wählen Sie einen gültigen Kontotyp.",
   openAccountNameRequired: "Geben Sie mindestens einen Namensbestandteil ein.",
   openAccountEmptyComponent: "Namensbestandteile dürfen nicht leer sein.",
+  openAccountNamePreview: "Wird als {{account}} erstellt",
   openAccountUppercaseComponent:
     "Jeder Namensbestandteil muss mit einem Großbuchstaben oder einer Ziffer beginnen.",
   openAccountInvalidCharacters:

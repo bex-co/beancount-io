@@ -290,6 +290,7 @@ export const ca: typeof en = {
   openAccountInvalidRoot: "Tria un tipus de compte vàlid.",
   openAccountNameRequired: "Escriu almenys un component del nom.",
   openAccountEmptyComponent: "Els components del nom no poden ser buits.",
+  openAccountNamePreview: "Es crearà com a {{account}}",
   openAccountUppercaseComponent:
     "Cada component del nom ha de començar amb majúscula o xifra.",
   openAccountInvalidCharacters:

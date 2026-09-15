@@ -286,6 +286,7 @@ export const nl: typeof en = {
   openAccountInvalidRoot: "Kies een geldig accounttype.",
   openAccountNameRequired: "Voer minstens één naamdeel in.",
   openAccountEmptyComponent: "Naamdelen mogen niet leeg zijn.",
+  openAccountNamePreview: "Wordt aangemaakt als {{account}}",
   openAccountUppercaseComponent:
     "Elk naamdeel moet met een hoofdletter of cijfer beginnen.",
   openAccountInvalidCharacters:

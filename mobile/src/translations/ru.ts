@@ -288,6 +288,7 @@ export const ru: typeof en = {
   openAccountInvalidRoot: "Выберите допустимый тип счёта.",
   openAccountNameRequired: "Введите хотя бы одну часть названия счёта.",
   openAccountEmptyComponent: "Части названия счёта не могут быть пустыми.",
+  openAccountNamePreview: "Будет создан как {{account}}",
   openAccountUppercaseComponent:
     "Каждая часть названия счёта должна начинаться с заглавной буквы или цифры.",
   openAccountInvalidCharacters:

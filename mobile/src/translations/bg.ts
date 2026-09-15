@@ -289,6 +289,7 @@ export const bg: typeof en = {
   openAccountNameRequired: "Въведете поне една част от името на сметката.",
   openAccountEmptyComponent:
     "Частите от името на сметката не може да са празни.",
+  openAccountNamePreview: "Ще бъде създадена като {{account}}",
   openAccountUppercaseComponent:
     "Всяка част от името на сметката трябва да започва с главна буква или цифра.",
   openAccountInvalidCharacters:

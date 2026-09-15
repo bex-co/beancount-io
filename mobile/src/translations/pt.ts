@@ -292,6 +292,7 @@ export const pt: typeof en = {
   openAccountNameRequired: "Digite pelo menos uma parte do nome da conta.",
   openAccountEmptyComponent:
     "As partes do nome da conta não podem ficar vazias.",
+  openAccountNamePreview: "Será criada como {{account}}",
   openAccountUppercaseComponent:
     "Cada parte do nome da conta precisa começar com letra maiúscula ou número.",
   openAccountInvalidCharacters:
