@@ -179,7 +179,10 @@ export const fa: typeof en = {
   // Column headers for the Accounts tab's balance table. Separate from the
   // journal's `balance` key, which names the beancount directive.
   account: "حساب",
-  accountBalance: "مانده",
+  balanceAtCost: "مانده به بهای تمام‌شده",
+  atCost: "{{amount}} به بهای تمام‌شده",
+  notInTotal: "در جمع لحاظ نشده: {{amounts}}",
+  valuedAtCost: "به بهای تمام‌شده",
   liabilities: "بدهی‌ها",
   equity: "حقوق صاحبان سهام",
   noDataCharts: "برای نمایش نمودارها سریع اضافه کنید",

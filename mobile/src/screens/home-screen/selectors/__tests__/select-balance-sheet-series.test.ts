@@ -1,6 +1,7 @@
 import {
   selectNetWorthSeries,
   selectAssetsSeries,
+  selectLatestNotInTotal,
   selectLiabilitiesSeries,
 } from "../select-balance-sheet-series";
 import { BalanceSheetQuery } from "@/generated-graphql/graphql";
@@ -103,5 +104,37 @@ describe("selectLiabilitiesSeries", () => {
     expect(selectLiabilitiesSeries("EUR", data)).toEqual([
       { date: "2025-01-31", value: -1200 },
     ]);
+  });
+});
+
+describe("selectLatestNotInTotal", () => {
+  it("names the holdings the latest point leaves out of its total", () => {
+    const netWorthData: Point[] = [
+      { date: "2017-08-31", balance: { USD: "100" } },
+      { date: "2017-09-30", balance: { USD: "106826.04944", VACHR: "-13" } },
+    ];
+    expect(selectLatestNotInTotal("USD", netWorthData)).toEqual([
+      { currency: "VACHR", number: -13, scale: 0 },
+    ]);
+    // The charted figure is still the at-cost total, unchanged.
+    const series = selectNetWorthSeries(
+      "USD",
+      createBalanceSheet({ netWorthData }),
+    );
+    expect(series[series.length - 1].value).toBe(106826.04944);
+  });
+
+  it("reads only the latest point, not an older omission", () => {
+    expect(
+      selectLatestNotInTotal("USD", [
+        { date: "2017-08-31", balance: { USD: "100", VACHR: "-8" } },
+        { date: "2017-09-30", balance: { USD: "120" } },
+      ]),
+    ).toEqual([]);
+  });
+
+  it("is empty without points", () => {
+    expect(selectLatestNotInTotal("USD", [])).toEqual([]);
+    expect(selectLatestNotInTotal("USD", undefined)).toEqual([]);
   });
 });

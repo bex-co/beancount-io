@@ -5,6 +5,7 @@ import {
   formatMoneyWithCurrency,
   formatSignedMoneyWithCurrency,
   formatShortMoneyWithCurrency,
+  formatUnits,
 } from "../number-utils";
 
 describe("shortNumber", () => {
@@ -207,5 +208,30 @@ describe("formatShortMoneyWithCurrency", () => {
   it("formats zero and suffixed magnitudes", () => {
     expect(formatShortMoneyWithCurrency(0, "USD")).toBe("$0");
     expect(formatShortMoneyWithCurrency(1500000, "USD")).toBe("$1.5M");
+  });
+});
+
+describe("formatUnits", () => {
+  it("keeps the recorded scale instead of rounding to cents", () => {
+    expect(formatUnits(597.748, "RGAGX", 3)).toBe("597.748 RGAGX");
+    expect(formatUnits(0.004, "ETH", 3)).toBe("0.004 ETH");
+  });
+
+  it("drops the decimal point for a whole-unit commodity", () => {
+    expect(formatUnits(-54500, "IRAUSD", 0)).toBe("-54,500 IRAUSD");
+  });
+
+  it("signs the amount and never gives a commodity a money symbol", () => {
+    expect(formatUnits(1.843, "RGAGX", 3, true)).toBe("+1.843 RGAGX");
+    expect(formatUnits(-5, "VACHR", 0, true)).toBe("-5 VACHR");
+    expect(formatUnits(2, "USD", 0)).toBe("2 USD");
+  });
+
+  it("rounds a float sum back to the recorded scale", () => {
+    expect(formatUnits(1.843 + 3.685, "RGAGX", 3)).toBe("5.528 RGAGX");
+  });
+
+  it("clamps a scale toFixed would reject", () => {
+    expect(formatUnits(1.5, "XYZ", 99)).toBe("1.50000000000000000000 XYZ");
   });
 });

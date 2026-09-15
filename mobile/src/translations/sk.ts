@@ -181,7 +181,10 @@ export const sk: typeof en = {
   // Column headers for the Accounts tab's balance table. Separate from the
   // journal's `balance` key, which names the beancount directive.
   account: "Účet",
-  accountBalance: "Zostatok",
+  balanceAtCost: "Zostatok v obstarávacej cene",
+  atCost: "{{amount}} v obstarávacej cene",
+  notInTotal: "Nie je v súčte: {{amounts}}",
+  valuedAtCost: "V obstarávacej cene",
   liabilities: "Záväzky",
   equity: "Vlastné imanie",
   noDataCharts: "Rýchlo pridajte pre zobrazenie grafov",

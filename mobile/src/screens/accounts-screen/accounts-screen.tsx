@@ -14,6 +14,7 @@ import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
 import { AccountTable } from "@/components/account-table";
 import { selectTrialBalanceCategories } from "@/components/account-list";
+import { selectTrialBalanceDisplays } from "@/components/account-list/select-trial-balance";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
@@ -88,11 +89,23 @@ const AccountsScreenImpl = (): JSX.Element => {
     refetch: accountsRefetch,
     error: accountsError,
   } = useTrialBalance(ledgerId);
+  // The same trial balance in units: what a commodity account holds, which the
+  // at-cost read has already converted away (see `selectBalanceDisplay`).
+  const {
+    data: unitsData,
+    loading: unitsLoading,
+    refetch: unitsRefetch,
+    error: unitsError,
+  } = useTrialBalance(ledgerId, undefined, "units");
 
   const categories = useMemo(
     () =>
       selectTrialBalanceCategories(currency, accountData, ledgerMeta?.accounts),
     [currency, accountData, ledgerMeta?.accounts],
+  );
+  const displays = useMemo(
+    () => selectTrialBalanceDisplays(currency, accountData, unitsData),
+    [currency, accountData, unitsData],
   );
 
   const handleOpenAccount = useCallback(() => {
@@ -103,15 +116,24 @@ const AccountsScreenImpl = (): JSX.Element => {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([ledgerMetaRefetch(), accountsRefetch()]);
+      await Promise.all([
+        ledgerMetaRefetch(),
+        accountsRefetch(),
+        unitsRefetch(),
+      ]);
     } finally {
       setRefreshing(false);
     }
   };
 
-  const accountsPending = accountsLoading && !accountData;
+  // Held until the units read lands too, so a commodity row does not first
+  // render as money and then switch. A failed units read still shows the table.
+  const accountsPending =
+    (accountsLoading && !accountData) ||
+    (unitsLoading && !unitsData && !unitsError);
   const showStale = isShowingStaleDataFromQueries([
     { data: accountData, error: accountsError },
+    { data: unitsData, error: unitsError },
     { data: ledgerMeta, error: ledgerMetaError },
   ]);
 
@@ -156,6 +178,7 @@ const AccountsScreenImpl = (): JSX.Element => {
           <AccountTable
             categories={categories}
             currency={currency}
+            displays={displays}
             refreshing={refreshing}
             onRefresh={onRefresh}
             onPressAccount={handlePressAccount}

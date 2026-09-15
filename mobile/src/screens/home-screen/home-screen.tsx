@@ -7,9 +7,11 @@ import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useBalanceSheet } from "@/screens/home-screen/hooks/use-balance-sheet";
 import {
   selectAssetsSeries,
+  selectLatestNotInTotal,
   selectLiabilitiesSeries,
   selectNetWorthSeries,
 } from "@/screens/home-screen/selectors/select-balance-sheet-series";
+import { notInTotalNotes } from "@/common/balance-display";
 import { AccountChartsCard } from "@/screens/home-screen/components/account-charts-card";
 import { RecentTransactionsCard } from "@/screens/home-screen/components/recent-transactions-card";
 import { SpendingCard } from "@/screens/home-screen/components/spending-card";
@@ -77,6 +79,21 @@ const HomeScreenImpl = (): JSX.Element => {
     () => selectLiabilitiesSeries(currency, balanceSheet),
     [currency, balanceSheet],
   );
+  // Every figure on the card is at cost. Each caption says so, and names any
+  // holding its total leaves out instead of letting net worth omit it silently.
+  const chartCaptions = useMemo(() => {
+    const sheet = balanceSheet?.getLedgerBalanceSheet;
+    const caption = (points: Parameters<typeof selectLatestNotInTotal>[1]) =>
+      [
+        t("valuedAtCost"),
+        ...notInTotalNotes(selectLatestNotInTotal(currency, points), t),
+      ].join(" · ");
+    return {
+      netWorth: caption(sheet?.netWorthData),
+      assets: caption(sheet?.assetsData),
+      liabilities: caption(sheet?.liabilitiesData),
+    };
+  }, [t, currency, balanceSheet]);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshSignal, setRefreshSignal] = useState(0);
   // Skeleton only on first load. Folding `refreshing` in here meant every
@@ -153,6 +170,7 @@ const HomeScreenImpl = (): JSX.Element => {
           netWorthSeries={netWorthSeries}
           assetsSeries={assetsSeries}
           liabilitiesSeries={liabilitiesSeries}
+          captions={chartCaptions}
           loading={isLoading}
           error={chartError}
         />

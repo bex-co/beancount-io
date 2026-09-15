@@ -21,6 +21,11 @@ import {
 } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
+import {
+  balanceNotes,
+  formatHolding,
+  type BalanceDisplay,
+} from "@/common/balance-display";
 import { AmountText } from "@/components/amount-text";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import {
@@ -137,6 +142,17 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       color: theme.black80,
     },
+    // The figure, then any note on what it is: its cost, or what a total leaves
+    // out. Capped so a long note wraps under the figure instead of squeezing the
+    // account name away.
+    amounts: {
+      alignItems: "flex-end",
+      maxWidth: "55%",
+    },
+    amountNote: {
+      fontSize: fontSizes.xs,
+      color: theme.black60,
+    },
     // Magnitude bar, aligned under the row's own label. Short and fixed-width by
     // design: given the full row to grow into, the widest sibling's bar spans the
     // screen and reads as a rule under the row rather than a measurement. Held
@@ -166,6 +182,8 @@ type AccountTableRowProps = {
   row: TableRow;
   label: string;
   currency: string;
+  /** How the row's balance reads; a plain money figure when absent. */
+  display?: BalanceDisplay;
   onToggle: (row: TableRow) => void;
   onPressAccount?: (account: string) => void;
 };
@@ -174,6 +192,7 @@ const AccountTableRow = memo(function AccountTableRow({
   row,
   label,
   currency,
+  display,
   onToggle,
   onPressAccount,
 }: AccountTableRowProps): JSX.Element {
@@ -196,8 +215,10 @@ const AccountTableRow = memo(function AccountTableRow({
   // categories as problems. Flag only a balance running *against* its category:
   // an overdrawn asset, a refunded expense, a credit-balance card. Same error red
   // the journal and posting rows use.
+  const units = display?.kind === "units" ? display.units : null;
+  const signed = units ? units.number : row.value;
   const againstType =
-    row.value !== 0 && Math.sign(row.value) !== CATEGORY_SIGN[row.category];
+    signed !== 0 && Math.sign(signed) !== CATEGORY_SIGN[row.category];
   const valueStyle = [
     isCategory
       ? styles.valueCategory
@@ -253,9 +274,20 @@ const AccountTableRow = memo(function AccountTableRow({
       <Text style={nameStyle} numberOfLines={1}>
         {label}
       </Text>
-      <AmountText mono={isCategory ? "medium" : "regular"} style={valueStyle}>
-        {formatSignedMoneyWithCurrency(row.value, currency)}
-      </AmountText>
+      <View style={styles.amounts}>
+        <AmountText mono={isCategory ? "medium" : "regular"} style={valueStyle}>
+          {units
+            ? formatHolding(units)
+            : formatSignedMoneyWithCurrency(row.value, currency)}
+        </AmountText>
+        {display
+          ? balanceNotes(display, currency, t).map((note) => (
+              <Text key={note} style={styles.amountNote}>
+                {note}
+              </Text>
+            ))
+          : null}
+      </View>
       {row.share > 0 && (
         <View
           style={[
@@ -320,6 +352,8 @@ const AccountTableRow = memo(function AccountTableRow({
 type AccountTableProps = {
   categories: AccountCategory[];
   currency: string;
+  /** Per-row balance reading, keyed like the rows (`selectTrialBalanceDisplays`). */
+  displays?: ReadonlyMap<string, BalanceDisplay>;
   refreshing: boolean;
   onRefresh: () => void;
   /** Tapping an account row drills into it; the chevron still toggles. */
@@ -337,6 +371,7 @@ type AccountTableProps = {
 export function AccountTable({
   categories,
   currency,
+  displays,
   refreshing,
   onRefresh,
   onPressAccount,
@@ -362,11 +397,12 @@ export function AccountTable({
         // rows already hold a display name built from the ledger.
         label={item.depth === 0 ? t(item.label) : item.label}
         currency={currency}
+        display={displays?.get(item.key)}
         onToggle={onToggle}
         onPressAccount={onPressAccount}
       />
     ),
-    [t, currency, onToggle, onPressAccount],
+    [t, currency, displays, onToggle, onPressAccount],
   );
 
   return (
@@ -381,7 +417,7 @@ export function AccountTable({
       ListHeaderComponent={
         <View style={styles.columnHeader}>
           <Text style={styles.columnLabel}>{t("account")}</Text>
-          <Text style={styles.columnLabelRight}>{t("accountBalance")}</Text>
+          <Text style={styles.columnLabelRight}>{t("balanceAtCost")}</Text>
         </View>
       }
       ListEmptyComponent={<Text style={styles.empty}>{t("noAccounts")}</Text>}

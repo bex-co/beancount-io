@@ -36,6 +36,8 @@ type BalanceChartCardProps = {
   label: string;
   /** Currency code (e.g. "USD", "MUSD") for the headline/change formatting. */
   currency: string;
+  /** Headline/change formatter for a figure in commodity units. */
+  formatValue?: (value: number, includePlus?: boolean) => string;
   /** Full monthly series (ascending); sliced client-side by the range pills. */
   series: SeriesPoint[];
   loading: boolean;
@@ -51,6 +53,7 @@ type BalanceChartCardProps = {
 export function BalanceChartCard({
   label,
   currency,
+  formatValue,
   series,
   loading,
   error,
@@ -84,6 +87,7 @@ export function BalanceChartCard({
           numbers={chart.numbers}
           baseline={balanceSeriesBaseline(series, range)}
           currency={currency}
+          formatValue={formatValue}
           height={CHART_HEIGHT}
         />
       </FadeInView>

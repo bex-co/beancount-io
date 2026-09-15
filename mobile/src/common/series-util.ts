@@ -38,12 +38,17 @@ const RANGE_MONTHS: Record<Exclude<TimeRange, "ALL" | "YTD">, number> = {
 /**
  * Convert a `{ date, balance }` series (net worth, an account's balance
  * history, …) into a monthly `SeriesPoint[]` in the active currency: one
- * (most recent) point per month, ascending by date. Uses the shared
- * currency-balance resolver (active currency, USD fallback, string coercion).
+ * (most recent) point per month, ascending by date. Reads each balance with the
+ * shared currency-balance resolver (active currency, USD fallback, string
+ * coercion) unless `read` says otherwise — a units series reads strictly.
  */
 export function pointsToMonthlySeries(
   currency: string,
   points: ReadonlyArray<DateBalancePoint | null | undefined> | null | undefined,
+  read: (
+    balance: DateBalancePoint["balance"],
+    currency: string,
+  ) => number = resolveCurrencyBalance,
 ): SeriesPoint[] {
   // Keep the most recent entry per month (input is chronological).
   const byMonth = new Map<string, SeriesPoint>();
@@ -53,13 +58,20 @@ export function pointsToMonthlySeries(
     }
     byMonth.set(point.date.slice(0, 7), {
       date: point.date,
-      value: resolveCurrencyBalance(point.balance, currency),
+      value: read(point.balance, currency),
     });
   }
 
   return Array.from(byMonth.values()).sort((a, b) =>
     a.date.localeCompare(b.date),
   );
+}
+
+/** The balance map of a series' latest point (series are chronological). */
+export function latestBalance(
+  points: ReadonlyArray<DateBalancePoint | null | undefined> | null | undefined,
+): DateBalancePoint["balance"] | undefined {
+  return points?.[points.length - 1]?.balance;
 }
 
 /**

@@ -5,7 +5,10 @@ import { AmountText } from "@/components/amount-text";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
+import {
+  formatSignedMoneyWithCurrency,
+  formatUnits,
+} from "@/common/number-utils";
 import { formatAccountJournalBalance } from "@/screens/account-detail-screen/utils/format-account-journal-balance";
 import {
   AccountJournalRow,
@@ -87,6 +90,14 @@ export function AccountEntryRow({
   const { t } = useTranslations();
 
   const isPending = row.flag === "!";
+  // A commodity account's rows read in its units, with what each change cost.
+  const { units } = row;
+  const changeText = units
+    ? formatUnits(row.change, units.currency, units.scale, true)
+    : formatSignedMoneyWithCurrency(row.change, currency, true);
+  const balanceText = units
+    ? formatUnits(row.balance, units.currency, units.scale)
+    : formatAccountJournalBalance(row.balance, currency);
   // Open / Balance / Pad / … rows read as plain transactions otherwise: the
   // title falls back to the directive's own account name.
   const typeLabelKey = directiveTypeLabelKey(row.directiveType);
@@ -122,10 +133,17 @@ export function AccountEntryRow({
           mono="medium"
           style={[styles.change, { color: changeColor }]}
         >
-          {formatSignedMoneyWithCurrency(row.change, currency, true)}
+          {changeText}
         </AmountText>
+        {units && units.cost !== null ? (
+          <AmountText style={styles.balance}>
+            {t("atCost", {
+              amount: formatSignedMoneyWithCurrency(units.cost, currency, true),
+            })}
+          </AmountText>
+        ) : null}
         <AmountText style={styles.balance}>
-          {t("balance")}: {formatAccountJournalBalance(row.balance, currency)}
+          {t("balance")}: {balanceText}
         </AmountText>
       </View>
     </>

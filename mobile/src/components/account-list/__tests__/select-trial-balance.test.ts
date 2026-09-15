@@ -1,4 +1,8 @@
-import { selectTrialBalanceCategories } from "../select-trial-balance";
+import {
+  selectTrialBalanceCategories,
+  selectTrialBalanceDisplays,
+} from "../select-trial-balance";
+import { selectAccountTreeFromRoot } from "../select-account-list";
 import { TrialBalanceQuery } from "@/generated-graphql/graphql";
 
 type Child = {
@@ -352,5 +356,119 @@ describe("selectTrialBalanceCategories", () => {
     expect(liabilities.value).toBe(-902.36);
     expect(liabilities.children.map((n) => n.name)).toEqual(["US:Chase:Slate"]);
     expect(liabilities.children[0].account).toBe("Liabilities:US:Chase:Slate");
+  });
+});
+
+// Two Assets accounts of the Beancount example ledger: a fund held at cost and
+// vacation hours, which have no cost.
+function exampleAssets(
+  rgagx: Record<string, string>,
+  vacation: Record<string, string>,
+  total: Record<string, string>,
+): TrialBalanceQuery {
+  return createTrialBalance({
+    assets: {
+      account: "Assets",
+      total,
+      children: [
+        { account: "Assets:Vanguard:RGAGX", balanceChildren: rgagx },
+        { account: "Assets:Hoogle:Vacation", balanceChildren: vacation },
+      ],
+    },
+  });
+}
+const exampleAtCost = exampleAssets(
+  { USD: "49049.66613" },
+  { VACHR: "-13" },
+  { USD: "49049.66613", VACHR: "-13" },
+);
+const exampleUnits = exampleAssets(
+  { RGAGX: "597.748" },
+  { VACHR: "-13" },
+  { RGAGX: "597.748", VACHR: "-13" },
+);
+
+describe("selectTrialBalanceDisplays", () => {
+  it("keys the category by its row key and accounts by their full name", () => {
+    const displays = selectTrialBalanceDisplays(
+      "USD",
+      exampleAtCost,
+      exampleUnits,
+    );
+    expect(displays.get("assets")).toEqual({
+      kind: "money",
+      value: 49049.66613,
+      notInTotal: [{ currency: "VACHR", number: -13, scale: 0 }],
+    });
+    expect(displays.get("Assets:Vanguard:RGAGX")).toEqual({
+      kind: "units",
+      units: { currency: "RGAGX", number: 597.748, scale: 3 },
+      cost: 49049.66613,
+    });
+    expect(displays.get("Assets:Hoogle:Vacation")).toEqual({
+      kind: "units",
+      units: { currency: "VACHR", number: -13, scale: 0 },
+      cost: null,
+    });
+  });
+
+  it("still reads an unconverted commodity in units before the units read lands", () => {
+    const displays = selectTrialBalanceDisplays("USD", exampleAtCost);
+    expect(displays.get("Assets:Hoogle:Vacation")?.kind).toBe("units");
+    expect(displays.get("Assets:Vanguard:RGAGX")?.kind).toBe("money");
+  });
+
+  it("is empty without the at-cost read", () => {
+    expect(
+      selectTrialBalanceDisplays("USD", undefined, exampleUnits).size,
+    ).toBe(0);
+  });
+});
+
+describe("selectTrialBalanceCategories with unconverted holdings", () => {
+  it("keeps a balance of only unconverted commodities without ledger metadata", () => {
+    // Zero in USD, but not empty: the zero-value filter must not drop it.
+    const [assets] = selectTrialBalanceCategories("USD", exampleAtCost);
+    expect(assets.children.map((node) => node.account)).toEqual([
+      "Assets:Vanguard:RGAGX",
+      "Assets:Hoogle:Vacation",
+    ]);
+    expect(assets.value).toBe(49049.66613);
+  });
+
+  it("does not fold a parent holding its own unconverted commodities into its child", () => {
+    const data = createTrialBalance({
+      assets: {
+        account: "Assets",
+        total: { USD: "505", VACHR: "-13" },
+        children: [
+          {
+            account: "Assets:Hoogle",
+            balanceChildren: { USD: "500", VACHR: "-13" },
+            children: [
+              {
+                account: "Assets:Hoogle:Checking",
+                balanceChildren: { USD: "500" },
+              },
+            ],
+          },
+          { account: "Assets:Cash", balanceChildren: { USD: "5" } },
+        ],
+      },
+    });
+    // The Accounts view keeps Hoogle's row, since the VACHR lives there alone.
+    const [assets] = selectTrialBalanceCategories("USD", data);
+    expect(assets.children.map((node) => node.name)).toEqual([
+      "Hoogle",
+      "Cash",
+    ]);
+    expect(assets.children[0].children.map((node) => node.name)).toEqual([
+      "Checking",
+    ]);
+    // A report view compares values only, and folds the chain as before.
+    const root = data.getLedgerTrialBalance.assetsHierarchyData;
+    expect(
+      selectAccountTreeFromRoot("USD", root).map((node) => node.name),
+    ).toEqual(["Hoogle:Checking", "Cash"]);
   });
 });

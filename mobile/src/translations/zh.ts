@@ -168,7 +168,10 @@ export const zh: typeof en = {
   // Column headers for the Accounts tab's balance table. Separate from the
   // journal's `balance` key, which names the beancount directive.
   account: "账户",
-  accountBalance: "余额",
+  balanceAtCost: "按成本计的余额",
+  atCost: "成本 {{amount}}",
+  notInTotal: "未计入合计：{{amounts}}",
+  valuedAtCost: "按成本计",
   liabilities: "负债",
   equity: "权益",
   noDataCharts: "添加数据以显示图例",

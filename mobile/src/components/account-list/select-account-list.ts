@@ -1,4 +1,5 @@
 import { resolveCurrencyBalance } from "../../common/balance-util";
+import { notInTotalOf, type Holding } from "../../common/balance-display";
 import { dropRoot, leafName } from "../../common/account-util";
 
 export type AccountNode = {
@@ -56,20 +57,35 @@ type RawChild = {
   children?: RawChild[] | null;
 };
 
+/**
+ * What counts as a node's balance when the tree decides what to keep and fold.
+ * By default only its operating-currency value does; with `wholeBalance` (see
+ * `ZeroBalanceOptions`) the holdings that value cannot express count too.
+ */
+type TreeRules = {
+  /** Spares a node the zero-value filter would otherwise drop. */
+  keep: (node: AccountNode) => boolean;
+  /** Whether `children` hold exactly what `parent` does, beyond the value. */
+  sameHoldings: (
+    children: readonly AccountNode[],
+    parent: AccountNode,
+  ) => boolean;
+};
+
 function toNode(
   raw: RawChild,
   currency: string,
   sign: 1 | -1,
   displayName: (account: string) => string,
-  keep: ReadonlySet<string>,
+  rules: TreeRules,
 ): AccountNode {
   return {
     account: raw.account,
     name: displayName(raw.account),
     value: sign * resolveCurrencyBalance(raw.balance_children, currency),
     children: (raw.children ?? [])
-      .map((child) => toNode(child, currency, sign, leafName, keep))
-      .filter((node) => node.value !== 0 || keep.has(node.account))
+      .map((child) => toNode(child, currency, sign, leafName, rules))
+      .filter((node) => node.value !== 0 || rules.keep(node))
       // By magnitude: a large negative belongs next to its large siblings, not
       // sunk to the bottom of the list.
       .sort((a, b) => Math.abs(b.value) - Math.abs(a.value)),
@@ -96,12 +112,13 @@ function sameAmount(a: number, b: number): boolean {
  * its own (`Assets:Bank` = 28,100 over a lone `Assets:Bank:Checking` = 18,100)
  * has 10,000 that exists nowhere else, so it keeps its row.
  */
-function compressChain(node: AccountNode): AccountNode {
+function compressChain(node: AccountNode, rules: TreeRules): AccountNode {
   let current = node;
   const segments = [node.name];
   while (
     current.children.length === 1 &&
-    sameAmount(current.children[0].value, current.value)
+    sameAmount(current.children[0].value, current.value) &&
+    rules.sameHoldings(current.children, current)
   ) {
     current = current.children[0];
     segments.push(current.name);
@@ -110,7 +127,7 @@ function compressChain(node: AccountNode): AccountNode {
     account: current.account,
     name: segments.join(":"),
     value: current.value,
-    children: current.children.map(compressChain),
+    children: current.children.map((child) => compressChain(child, rules)),
   };
 }
 
@@ -119,12 +136,14 @@ function compressChain(node: AccountNode): AccountNode {
  * broken out one level down, so its own row would only restate them. A node
  * holding postings of its own fails this and keeps its row.
  */
-function isPassThrough(node: AccountNode): boolean {
+function isPassThrough(node: AccountNode, rules: TreeRules): boolean {
   if (node.children.length === 0) {
     return false;
   }
   const childSum = node.children.reduce((sum, child) => sum + child.value, 0);
-  return sameAmount(childSum, node.value);
+  return (
+    sameAmount(childSum, node.value) && rules.sameHoldings(node.children, node)
+  );
 }
 
 /**
@@ -137,10 +156,13 @@ function isPassThrough(node: AccountNode): boolean {
  * (Liabilities:US:Chase:Slate) keeps that leaf as its row rather than emptying
  * the category.
  */
-function skipPassThroughLevels(rows: AccountNode[]): AccountNode[] {
+function skipPassThroughLevels(
+  rows: AccountNode[],
+  rules: TreeRules,
+): AccountNode[] {
   const prefix: string[] = [];
   let current = rows;
-  while (current.length === 1 && isPassThrough(current[0])) {
+  while (current.length === 1 && isPassThrough(current[0], rules)) {
     prefix.push(current[0].name);
     current = current[0].children;
   }
@@ -161,16 +183,61 @@ function buildTopLevel(
   topLevel: RawChild[],
   currency: string,
   sign: 1 | -1,
-  keep: ReadonlySet<string>,
+  rules: TreeRules,
 ): AccountNode[] {
   const rows = topLevel
-    .map((child) => toNode(child, currency, sign, dropRoot, keep))
-    .filter(
-      (accountNode) => accountNode.value !== 0 || keep.has(accountNode.account),
-    )
+    .map((child) => toNode(child, currency, sign, dropRoot, rules))
+    .filter((accountNode) => accountNode.value !== 0 || rules.keep(accountNode))
     .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
-    .map(compressChain);
-  return skipPassThroughLevels(rows);
+    .map((node) => compressChain(node, rules));
+  return skipPassThroughLevels(rows, rules);
+}
+
+/** Per-currency totals of the holdings several accounts' values leave out. */
+function holdingTotals(
+  accounts: readonly AccountNode[],
+  unconverted: ReadonlyMap<string, Holding[]>,
+): Map<string, number> {
+  const totals = new Map<string, number>();
+  for (const { account } of accounts) {
+    for (const holding of unconverted.get(account) ?? []) {
+      totals.set(
+        holding.currency,
+        (totals.get(holding.currency) ?? 0) + holding.number,
+      );
+    }
+  }
+  return totals;
+}
+
+/** The keep and fold rules a tree is built with (see `TreeRules`). */
+function treeRules(
+  raw: readonly RawChild[],
+  currency: string,
+  keep: ReadonlySet<string>,
+  wholeBalance = false,
+): TreeRules {
+  if (!wholeBalance) {
+    return { keep: (node) => keep.has(node.account), sameHoldings: () => true };
+  }
+  const unconverted = new Map(
+    rawNodes(raw).map((node) => [
+      node.account,
+      notInTotalOf(node.balance_children, currency),
+    ]),
+  );
+  return {
+    keep: (node) =>
+      keep.has(node.account) ||
+      (unconverted.get(node.account)?.length ?? 0) > 0,
+    sameHoldings: (children, parent) => {
+      const below = holdingTotals(children, unconverted);
+      const own = holdingTotals([parent], unconverted);
+      return [...new Set([...below.keys(), ...own.keys()])].every(
+        (key) => Math.abs((below.get(key) ?? 0) - (own.get(key) ?? 0)) < 1e-9,
+      );
+    },
+  };
 }
 
 /** One of the five root categories: its own total plus its account tree. */
@@ -215,17 +282,16 @@ function fromSerializable(node: SerializableChild): RawChild {
   };
 }
 
-/** Every account the raw hierarchy already carries, at any depth. */
-function rawAccounts(children: readonly RawChild[]): Set<string> {
-  const accounts = new Set<string>();
-  const visit = (nodes: readonly RawChild[]) => {
-    for (const node of nodes) {
-      accounts.add(node.account);
-      visit(node.children ?? []);
-    }
-  };
-  visit(children);
-  return accounts;
+/** Every node of the raw hierarchy, at any depth. */
+function rawNodes(
+  children: readonly RawChild[],
+  out: RawChild[] = [],
+): RawChild[] {
+  for (const node of children) {
+    out.push(node);
+    rawNodes(node.children ?? [], out);
+  }
+  return out;
 }
 
 /** Opt-in inclusion of accounts the hierarchy omits because they are zero. */
@@ -242,6 +308,13 @@ export type ZeroBalanceOptions = {
    * because a root node can come back without one.
    */
   rootAccount?: string;
+  /**
+   * Count the whole currency map as a node's balance (the Accounts view): a
+   * node holding only commodities the operating currency cannot express is
+   * not empty and is kept, and a chain folds only when those holdings match
+   * as well as the value. Report views leave it off.
+   */
+  wholeBalance?: boolean;
 };
 
 /**
@@ -264,7 +337,7 @@ function graftZeroAccounts(
     return { children: children as RawChild[], keep };
   }
 
-  const existing = rawAccounts(children);
+  const existing = new Set(rawNodes(children).map((node) => node.account));
   // Copied, never mutated in place: the raw nodes belong to the Apollo cache.
   const clone = (node: RawChild): RawChild => ({
     account: node.account,
@@ -340,5 +413,10 @@ export function selectAccountTreeFromRoot(
     (children ?? []).map(fromSerializable),
     zeroBalance,
   );
-  return buildTopLevel(raw, currency, sign, keep);
+  return buildTopLevel(
+    raw,
+    currency,
+    sign,
+    treeRules(raw, currency, keep, zeroBalance.wholeBalance),
+  );
 }

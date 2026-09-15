@@ -1,4 +1,5 @@
 import { formatLedgerDate } from "../../../common/date-format";
+import { amountScale } from "../../../common/number-utils";
 import {
   JournalDirectiveType,
   JournalPosting,
@@ -16,19 +17,6 @@ export type JournalSection = {
 const MIN_FRACTION_DIGITS = 2;
 /** `Intl.NumberFormat` rejects anything above this. */
 const MAX_FRACTION_DIGITS = 20;
-
-/**
- * Fraction digits recorded in a posting's amount string, e.g. `"0.004"` → 3.
- *
- * The API returns amounts as decimal strings, which is the only place a
- * commodity's real scale survives: `parseFloat` keeps the value but loses the
- * intent, and formatting at a flat two digits then rounded 0.004 ETH to 0.00.
- */
-export const amountScale = (number: string): number => {
-  const dot = number.indexOf(".");
-  if (dot < 0) return 0;
-  return number.length - dot - 1;
-};
 
 /**
  * Unsigned magnitude for display.

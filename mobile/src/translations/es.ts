@@ -182,7 +182,10 @@ export const es: typeof en = {
   // Column headers for the Accounts tab's balance table. Separate from the
   // journal's `balance` key, which names the beancount directive.
   account: "Cuenta",
-  accountBalance: "Saldo",
+  balanceAtCost: "Saldo al costo",
+  atCost: "{{amount}} al costo",
+  notInTotal: "No incluido en el total: {{amounts}}",
+  valuedAtCost: "Al costo",
   liabilities: "Pasivos",
   equity: "Patrimonio",
   noDataCharts: "Agregue datos rápidamente para mostrar gráficos",

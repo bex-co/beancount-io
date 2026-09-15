@@ -24,7 +24,14 @@ import {
   ACCOUNT_JOURNAL_PAGE_SIZE,
   useAccountJournal,
 } from "@/screens/accounts-screen/hooks/use-account-journal";
-import { selectAccountBalanceSeries } from "@/screens/account-detail-screen/selectors/select-account-balance-series";
+import { BALANCE_CONVERSION } from "@/common/balance-util";
+import { balanceNotes } from "@/common/balance-display";
+import { formatUnits } from "@/common/number-utils";
+import {
+  selectAccountBalanceDisplay,
+  selectAccountBalanceSeries,
+  selectAccountUnitsSeries,
+} from "@/screens/account-detail-screen/selectors/select-account-balance-series";
 import {
   AccountJournalItem,
   AccountJournalRow,
@@ -117,6 +124,26 @@ const AccountDetailScreenImpl = ({
     error: reportError,
     refetch: reportRefetch,
   } = useAccountReport(ledgerId, account);
+  // The same report in units says what the account holds, and that decides how
+  // every figure on this screen reads: one commodity reads in its units, with
+  // its cost; anything else stays money at cost (see `selectBalanceDisplay`).
+  const {
+    data: unitsReportData,
+    loading: unitsReportLoading,
+    error: unitsReportError,
+    refetch: unitsReportRefetch,
+  } = useAccountReport(ledgerId, account, undefined, undefined, "units");
+  // First loads only: a refetch keeps showing what is already there.
+  const reportPending = reportLoading && !reportData;
+  const unitsReportPending = unitsReportLoading && !unitsReportData;
+  const display = useMemo(
+    () => selectAccountBalanceDisplay(currency, reportData, unitsReportData),
+    [currency, reportData, unitsReportData],
+  );
+  const units = display.kind === "units" ? display.units : null;
+  const unitsCurrency = units?.currency;
+  const unitsScale = units?.scale;
+  const journalConversion = unitsCurrency ? "units" : BALANCE_CONVERSION;
 
   const {
     data: journalData,
@@ -125,12 +152,34 @@ const AccountDetailScreenImpl = ({
     refetch: journalRefetch,
     fetchMore,
     networkStatus,
-  } = useAccountJournal(ledgerId, account);
+  } = useAccountJournal(
+    ledgerId,
+    account,
+    { conversion: journalConversion },
+    // Held until the units report settles — it is what decides the conversion,
+    // so a read any earlier could arrive in one about to be replaced.
+    unitsReportPending,
+  );
 
   const balanceSeries = useMemo(
-    () => selectAccountBalanceSeries(currency, reportData),
-    [currency, reportData],
+    () =>
+      unitsCurrency
+        ? selectAccountUnitsSeries(unitsCurrency, unitsReportData)
+        : selectAccountBalanceSeries(currency, reportData),
+    [currency, reportData, unitsCurrency, unitsReportData],
   );
+  const formatChartValue = useMemo(
+    () =>
+      unitsCurrency === undefined
+        ? undefined
+        : (value: number, includePlus?: boolean) =>
+            formatUnits(value, unitsCurrency, unitsScale ?? 0, includePlus),
+    [unitsCurrency, unitsScale],
+  );
+  const chartLabel = [
+    t(units ? "balance" : "balanceAtCost"),
+    ...balanceNotes(display, currency, t),
+  ].join(" · ");
 
   const [lastJournalPage, setLastJournalPage] = useState<{
     incoming: number;
@@ -139,7 +188,7 @@ const AccountDetailScreenImpl = ({
 
   useEffect(() => {
     setLastJournalPage(null);
-  }, [account, ledgerId]);
+  }, [account, ledgerId, journalConversion]);
 
   const items = useMemo(
     () => journalData?.getLedgerAccountJournal.items ?? [],
@@ -147,8 +196,13 @@ const AccountDetailScreenImpl = ({
   );
   const total = journalData?.getLedgerAccountJournal.total ?? 0;
   const rows = useMemo(
-    () => selectAccountJournalRows(currency, items),
-    [currency, items],
+    () =>
+      selectAccountJournalRows(
+        currency,
+        items,
+        unitsCurrency ? { account, currency: unitsCurrency } : undefined,
+      ),
+    [currency, items, unitsCurrency, account],
   );
   const sections = useMemo(
     () => groupAccountJournalRowsToSections(rows, currency, locale),
@@ -171,7 +225,8 @@ const AccountDetailScreenImpl = ({
     lastJournalPage ?? undefined,
   );
   const isLoadingMore = networkStatus === NetworkStatus.fetchMore;
-  const isInitialLoading = journalLoading && items.length === 0;
+  const isInitialLoading =
+    (journalLoading || unitsReportPending) && items.length === 0;
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore || journalLoading || !ledgerId) {
@@ -186,6 +241,7 @@ const AccountDetailScreenImpl = ({
             limit: ACCOUNT_JOURNAL_PAGE_SIZE,
             offset: items.length,
             with_children: true,
+            conversion: journalConversion,
           },
         },
         updateQuery: (prev, { fetchMoreResult }) => {
@@ -220,6 +276,7 @@ const AccountDetailScreenImpl = ({
     ledgerId,
     account,
     items.length,
+    journalConversion,
     fetchMore,
   ]);
 
@@ -231,6 +288,7 @@ const AccountDetailScreenImpl = ({
       await Promise.all([
         ledgerMetaRefetch(),
         reportRefetch(),
+        unitsReportRefetch(),
         journalRefetch(),
       ]);
     } finally {
@@ -268,14 +326,15 @@ const AccountDetailScreenImpl = ({
       <>
         <View style={styles.chartContainer}>
           <BalanceChartCard
-            label={t("balance")}
-            currency={currency}
+            label={chartLabel}
+            currency={unitsCurrency ?? currency}
+            formatValue={formatChartValue}
             series={balanceSeries}
             // Skeleton only on first load: a pull-to-refresh keeps the chart
             // visible under the RefreshControl spinner rather than collapsing
             // it back to a tile.
-            loading={reportLoading && !reportData}
-            error={Boolean(reportError)}
+            loading={reportPending || unitsReportPending}
+            error={Boolean(unitsCurrency ? unitsReportError : reportError)}
           />
         </View>
         <Text style={styles.sectionTitle}>{t("transactions")}</Text>
@@ -283,11 +342,15 @@ const AccountDetailScreenImpl = ({
     ),
     [
       t,
+      chartLabel,
       currency,
+      unitsCurrency,
+      formatChartValue,
       balanceSeries,
-      reportLoading,
-      reportData,
+      reportPending,
+      unitsReportPending,
       reportError,
+      unitsReportError,
       styles.sectionTitle,
     ],
   );

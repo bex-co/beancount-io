@@ -78,6 +78,12 @@ type InteractiveLineChartProps = {
    * when one is known, otherwise the code is appended after the amount.
    */
   currency: string;
+  /**
+   * Formats the headline and the change in place of the currency's money
+   * formatter — for a figure in commodity units, which keeps its recorded scale
+   * rather than rounding to cents. `includePlus` is set for the change.
+   */
+  formatValue?: (value: number, includePlus?: boolean) => string;
   height?: number;
   /**
    * Shown in the middle of the plot when there aren't two points to draw a line
@@ -308,6 +314,7 @@ type ScrubHeaderProps = {
   numbers: number[];
   baseline?: number;
   currency: string;
+  formatValue?: (value: number, includePlus?: boolean) => string;
   /** Trend color for the change row, resolved by the chart so the line and the figure can never disagree. */
   color: string;
   scrub: SharedValue<number>;
@@ -336,6 +343,7 @@ function ScrubHeader({
   numbers,
   baseline: windowBaseline,
   currency,
+  formatValue,
   color,
   scrub,
 }: ScrubHeaderProps): JSX.Element {
@@ -359,16 +367,24 @@ function ScrubHeader({
 
   // Same formatter the resting frame uses, so the counting frames and the final
   // one differ only in the number.
+  // `formatValue` stands in for the money formatter on a figure in units.
+  const format = useCallback(
+    (value: number, includePlus?: boolean) =>
+      formatValue
+        ? formatValue(value, includePlus)
+        : formatSignedMoneyWithCurrency(value, currency, includePlus),
+    [currency, formatValue],
+  );
   const formatHeadline = useCallback(
-    (value: number) => formatSignedMoneyWithCurrency(value, currency),
-    [currency],
+    (value: number) => format(value),
+    [format],
   );
 
   const baseline = windowBaseline ?? numbers[0] ?? 0;
   const change = shownValue - baseline;
   // The amount always reads; the percentage only when it means something.
   const changePct = changePercent(baseline, shownValue);
-  const changeAmount = formatSignedMoneyWithCurrency(change, currency, true);
+  const changeAmount = format(change, true);
   const changeText =
     changePct === null
       ? changeAmount
@@ -410,6 +426,7 @@ function InteractiveLineChart({
   numbers,
   baseline: windowBaseline,
   currency,
+  formatValue,
   height = CHART_HEIGHT,
   placeholder,
   onHeaderLayout,
@@ -666,6 +683,7 @@ function InteractiveLineChart({
             numbers={numbers}
             baseline={windowBaseline}
             currency={currency}
+            formatValue={formatValue}
             color={lineColor}
             scrub={scrub}
           />

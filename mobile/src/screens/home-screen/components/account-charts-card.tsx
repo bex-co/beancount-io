@@ -21,12 +21,16 @@ import {
 } from "@/common/series-util";
 import { chartPageHeight } from "./chart-page-height";
 
+/** The card's three pages, each named by its tab's translation key. */
+type ChartKey = "netWorth" | "assets" | "liabilities";
+
 const CHART_HEIGHT = 170;
 // PagerView needs a bounded height, and every page is the same shape: the
-// chart's header (value + change) plus the plot. This is the floor and the
-// pre-measurement default — the header is text-driven, so the live height comes
-// from `chartPageHeight` once a page reports its header's layout.
-const PAGE_HEIGHT = 240;
+// chart's header (basis caption + value + change) plus the plot. This is the
+// floor and the pre-measurement default — the header is text-driven, so the
+// live height comes from `chartPageHeight` once a page reports its header's
+// layout.
+const PAGE_HEIGHT = 260;
 /** Height the range pills add below the pager — the skeleton covers it too. */
 const PILLS_HEIGHT = 40;
 /** Widths of the skeleton's tab pills — uneven, so it reads as labels. */
@@ -67,6 +71,11 @@ type AccountChartsCardProps = {
   netWorthSeries: SeriesPoint[];
   assetsSeries: SeriesPoint[];
   liabilitiesSeries: SeriesPoint[];
+  /**
+   * Caption above each page's figure: the basis it is valued at, and any
+   * holdings its total leaves out. Every figure on the card is at cost.
+   */
+  captions: Record<ChartKey, string>;
   loading: boolean;
   error: boolean;
 };
@@ -83,6 +92,7 @@ export function AccountChartsCard({
   netWorthSeries,
   assetsSeries,
   liabilitiesSeries,
+  captions,
   loading,
   error,
 }: AccountChartsCardProps): JSX.Element {
@@ -148,8 +158,9 @@ export function AccountChartsCard({
     );
   }
 
-  // Pages carry no title of their own — the tab above already names them.
-  const charts = [
+  // Pages carry no title of their own — the tab above already names them. The
+  // caption says instead what the figure is: its basis and any omissions.
+  const charts: { key: ChartKey; series: SeriesPoint[] }[] = [
     { key: "netWorth", series: netWorthSeries },
     { key: "assets", series: assetsSeries },
     { key: "liabilities", series: liabilitiesSeries },
@@ -167,6 +178,7 @@ export function AccountChartsCard({
     return (
       <InteractiveLineChartD3
         key={key}
+        label={captions[key]}
         labels={chart.labels}
         numbers={chart.numbers}
         baseline={balanceSeriesBaseline(series, range)}

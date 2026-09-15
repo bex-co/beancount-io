@@ -43,29 +43,65 @@ export const shortNumber = (number: number | string): string => {
   return sign + digits + symbol;
 };
 
+/** `Number.prototype.toFixed` rejects anything above this. */
+const MAX_FRACTION_DIGITS = 20;
+
 /**
- * Group the integer part of a number with thousands separators and keep two
- * decimals (e.g. 1234.5 → "1,234.50"). Always non-negative — the sign is the
- * caller's concern. Hermes-safe (no `toLocaleString` reliance).
+ * Fraction digits recorded in an amount string, e.g. `"0.004"` → 3.
+ *
+ * The API returns amounts as decimal strings, which is the only place a
+ * commodity's real scale survives: `parseFloat` keeps the value but loses the
+ * intent, and formatting at a flat two digits then rounded 0.004 ETH to 0.00.
  */
-export const groupThousands = (value: number): string => {
-  const safe = Number.isFinite(value) ? Math.abs(value) : 0;
-  const [intPart, decimals] = safe.toFixed(2).split(".");
-  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return `${grouped}.${decimals}`;
+export const amountScale = (number: string): number => {
+  const dot = number.indexOf(".");
+  if (dot < 0) return 0;
+  return number.length - dot - 1;
 };
 
-// Sign prefix + grouped absolute amount, shared by the money formatters. The
-// sign is always a prefix; only the currency's placement differs between them.
+/**
+ * Group the integer part of a number with thousands separators and keep
+ * `digits` decimals — two by default, for money (e.g. 1234.5 → "1,234.50"); a
+ * commodity passes its recorded scale. Always non-negative — the sign is the
+ * caller's concern. Hermes-safe (no `toLocaleString` reliance).
+ */
+export const groupThousands = (value: number, digits = 2): string => {
+  const safe = Number.isFinite(value) ? Math.abs(value) : 0;
+  const fixed = safe.toFixed(
+    Math.min(MAX_FRACTION_DIGITS, Math.max(0, digits)),
+  );
+  const [intPart, decimals] = fixed.split(".");
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return decimals === undefined ? grouped : `${grouped}.${decimals}`;
+};
+
+// Sign prefix + grouped absolute amount, shared by the money and units
+// formatters. The sign is always a prefix; only what labels the amount differs.
 const signedAmount = (
   value: number,
   includePlus: boolean,
+  digits = 2,
 ): { sign: string; amount: string } => {
   const normalized = Number.isFinite(value) ? value : 0;
   return {
     sign: normalized < 0 ? "-" : includePlus ? "+" : "",
-    amount: groupThousands(normalized),
+    amount: groupThousands(normalized, digits),
   };
+};
+
+/**
+ * A commodity amount at its recorded scale, labelled by its code:
+ * "597.748 RGAGX", "+5 VACHR". Unlike money, a commodity is never given a
+ * symbol, and its scale is never rounded to cents.
+ */
+export const formatUnits = (
+  value: number,
+  currency: string,
+  scale: number,
+  includePlus = false,
+): string => {
+  const { sign, amount } = signedAmount(value, includePlus, scale);
+  return `${sign}${amount} ${currency}`;
 };
 
 /**

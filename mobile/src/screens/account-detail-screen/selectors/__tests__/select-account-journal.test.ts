@@ -370,3 +370,92 @@ describe("directive types on account-journal rows (note 178)", () => {
     expect(directiveTypeLabelKey("Event")).toBe(null);
   });
 });
+
+describe("account-journal rows in a commodity's units", () => {
+  const RGAGX = "Assets:US:Vanguard:RGAGX";
+  // A purchase in the Beancount example ledger, read with `conversion: "units"`.
+  const purchase = (hash: string, units: string, balance: string) =>
+    item(
+      {
+        entry_hash: hash,
+        date: "2017-08-14",
+        postings: [
+          {
+            account: RGAGX,
+            units: { number: units, currency: "RGAGX" },
+            cost: { number: "81.40", currency: "USD" },
+          },
+          {
+            account: "Assets:US:Vanguard:Cash",
+            units: { number: "-150.02", currency: "USD" },
+          },
+        ],
+      },
+      { RGAGX: units },
+      { RGAGX: balance },
+    );
+  const purchases = [
+    purchase("a", "1.843", "597.748"),
+    purchase("b", "3.685", "595.905"),
+  ];
+  const near = (actual: number | null | undefined, expected: number) =>
+    Math.abs((actual ?? NaN) - expected) < 1e-9;
+
+  it("reads each change and running balance in the commodity, with its cost", () => {
+    const rows = selectAccountJournalRows("USD", purchases, {
+      account: RGAGX,
+      currency: "RGAGX",
+    });
+    expect(rows.map((r) => [r.change, r.balance])).toEqual([
+      [1.843, 597.748],
+      [3.685, 595.905],
+    ]);
+    expect(rows[0].units?.currency).toBe("RGAGX");
+    expect(rows[0].units?.scale).toBe(3);
+    // Only the posting to the account costs anything, not the cash leg.
+    expect(near(rows[0].units?.cost, 150.0202)).toBe(true);
+    expect(near(rows[1].units?.cost, 299.959)).toBe(true);
+  });
+
+  it("counts postings to sub-accounts, as the journal includes them", () => {
+    const [row] = selectAccountJournalRows("USD", [purchases[0]], {
+      account: "Assets:US:Vanguard",
+      currency: "RGAGX",
+    });
+    expect(near(row.units?.cost, 150.0202)).toBe(true);
+  });
+
+  it("gives no cost to a commodity whose postings carry none", () => {
+    const [row] = selectAccountJournalRows(
+      "USD",
+      [
+        item(
+          {
+            entry_hash: "v",
+            postings: [
+              {
+                account: "Assets:US:Hoogle:Vacation",
+                units: { number: "5", currency: "VACHR" },
+                cost: null,
+              },
+            ],
+          },
+          { VACHR: "5" },
+          { VACHR: "-13" },
+        ),
+      ],
+      { account: "Assets:US:Hoogle:Vacation", currency: "VACHR" },
+    );
+    expect([row.change, row.balance]).toEqual([5, -13]);
+    expect(row.units?.cost).toBe(null);
+  });
+
+  it("totals a day's changes in the commodity at its widest scale", () => {
+    const rows = selectAccountJournalRows("USD", purchases, {
+      account: RGAGX,
+      currency: "RGAGX",
+    });
+    const [section] = groupAccountJournalRowsToSections(rows, "USD");
+    expect(section.totalChange).toBe("+5.528 RGAGX");
+  });
+});

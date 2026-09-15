@@ -1,8 +1,23 @@
 import { BalanceSheetQuery } from "@/generated-graphql/graphql";
 import {
+  DateBalancePoint,
   SeriesPoint,
+  latestBalance,
   pointsToMonthlySeries,
 } from "../../../common/series-util";
+import { notInTotalOf, type Holding } from "../../../common/balance-display";
+
+/**
+ * Holdings the latest point of a series leaves out of its operating-currency
+ * total — commodities with no cost, which the at-cost total cannot express.
+ * Home names them rather than presenting a net worth that silently omits them.
+ */
+export function selectLatestNotInTotal(
+  currency: string,
+  points: ReadonlyArray<DateBalancePoint | null | undefined> | null | undefined,
+): Holding[] {
+  return notInTotalOf(latestBalance(points), currency);
+}
 
 /**
  * Monthly net-worth series in the active currency (one point per month,

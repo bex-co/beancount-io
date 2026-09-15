@@ -1,5 +1,5 @@
+import { amountScale } from "../../../../common/number-utils";
 import {
-  amountScale,
   formatAmount,
   selectTransactionAmount,
   groupToSections,

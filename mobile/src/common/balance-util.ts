@@ -18,6 +18,17 @@
 export const BALANCE_CONVERSION = "at_cost";
 
 /**
+ * The key a balance map's figure in `currency` is read from: the currency
+ * itself, or USD when the map has no entry for it.
+ */
+export function operatingKey(
+  balanceChildren: Record<string, number | string> | null | undefined,
+  currency: string,
+): string {
+  return balanceChildren && currency in balanceChildren ? currency : "USD";
+}
+
+/**
  * Resolve a single currency balance from a beancount `balance_children` /
  * `balance` map: prefer the active currency, fall back to USD, coerce string
  * amounts to numbers, and treat missing/invalid values as 0. Shared by the
@@ -30,10 +41,7 @@ export function resolveCurrencyBalance(
   if (!balanceChildren) {
     return 0;
   }
-  const value =
-    currency in balanceChildren
-      ? balanceChildren[currency]
-      : (balanceChildren.USD ?? 0);
+  const value = balanceChildren[operatingKey(balanceChildren, currency)] ?? 0;
   if (typeof value === "string") {
     const parsed = Number(value);
     return isNaN(parsed) ? 0 : parsed;
