@@ -1,6 +1,7 @@
 import {
   classifyCreateLedgerError,
   generateDefaultLedgerName,
+  ledgerSlugPreview,
   slugifyLedgerName,
 } from "../ledger-name";
 
@@ -9,6 +10,23 @@ describe("slugifyLedgerName", () => {
     expect(slugifyLedgerName("My Book!")).toBe("my-book");
     expect(slugifyLedgerName("  Hello__World  ")).toBe("hello__world");
     expect(slugifyLedgerName("---")).toBe("");
+  });
+});
+
+describe("ledgerSlugPreview", () => {
+  it("previews a name the slugifier changes", () => {
+    expect(ledgerSlugPreview("My Book!")).toBe("my-book");
+  });
+
+  it("shows nothing when the name needs no change", () => {
+    expect(ledgerSlugPreview("my-book")).toBe(null);
+    expect(ledgerSlugPreview("")).toBe(null);
+  });
+
+  it("shows nothing when the name slugifies away, instead of a dangling hint", () => {
+    expect(ledgerSlugPreview("!!!")).toBe(null);
+    expect(ledgerSlugPreview("---")).toBe(null);
+    expect(ledgerSlugPreview("@@@")).toBe(null);
   });
 });
 

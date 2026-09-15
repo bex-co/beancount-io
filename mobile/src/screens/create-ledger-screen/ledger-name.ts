@@ -12,6 +12,16 @@ export function slugifyLedgerName(text: string): string {
 }
 
 /**
+ * The slug to preview under the name field ("Will be created as …"), or null
+ * when there is nothing worth showing: the name needs no change, or it
+ * slugifies away entirely (the form's own validation reports that case).
+ */
+export function ledgerSlugPreview(name: string): string | null {
+  const slug = slugifyLedgerName(name);
+  return slug.length > 0 && slug !== name.trim().toLowerCase() ? slug : null;
+}
+
+/**
  * Default name that does not collide with existing ledger names:
  * `my-book`, then `my-book-1`, `my-book-2`, …
  */

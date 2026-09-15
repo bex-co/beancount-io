@@ -37,6 +37,7 @@ import {
   classifyCreateLedgerError,
   generateDefaultLedgerName,
   slugifyLedgerName,
+  ledgerSlugPreview,
 } from "./ledger-name";
 
 type FormValues = {
@@ -190,9 +191,7 @@ export function CreateLedgerScreen(): JSX.Element {
   }, [listData, existingNames.join("|")]);
 
   const nameValue = watch("name");
-  const slug = slugifyLedgerName(nameValue ?? "");
-  const showSlug =
-    Boolean(nameValue) && slug !== nameValue.trim().toLowerCase();
+  const slugPreview = ledgerSlugPreview(nameValue ?? "");
   const busy = loading || isSubmitting;
 
   const onSubmit = handleSubmit(async (values) => {
@@ -284,9 +283,9 @@ export function CreateLedgerScreen(): JSX.Element {
                 />
               )}
             />
-            {showSlug ? (
+            {slugPreview ? (
               <Text style={styles.hint}>
-                {t("createLedgerSlugPreview", { slug })}
+                {t("createLedgerSlugPreview", { slug: slugPreview })}
               </Text>
             ) : null}
           </View>
