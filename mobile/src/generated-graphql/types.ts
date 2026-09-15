@@ -36,10 +36,14 @@ export type AccountJournalEntry = {
 export type AccountJournalQueryInput = {
   account: Scalars['String']['input'];
   conversion?: InputMaybe<Scalars['String']['input']>;
+  customSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  directiveTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
   time?: InputMaybe<Scalars['String']['input']>;
+  transactionSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   with_children?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
@@ -115,6 +119,30 @@ export type ApiKeyType = {
   name: Scalars['String']['output'];
   revokedAt?: Maybe<Scalars['DateTimeISO']['output']>;
   scopes: Array<Scalars['String']['output']>;
+};
+
+export type AppendDirectiveTextResponse = {
+  __typename?: 'AppendDirectiveTextResponse';
+  /** Files whose directives were not in date order, so these were appended at the end */
+  appendedUnsorted: Array<Scalars['String']['output']>;
+  /** Directives parsed out of the text */
+  count: Scalars['Float']['output'];
+  /** Unified diff per touched file; populated on dry runs only */
+  diff: Array<DirectiveTextDiff>;
+  dryRun: Scalars['Boolean']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
+  message: Scalars['String']['output'];
+  newErrors: Array<DirectiveTextError>;
+  success: Scalars['Boolean']['output'];
+  wrote: Array<AppendedDirective>;
+};
+
+export type AppendedDirective = {
+  __typename?: 'AppendedDirective';
+  /** 1-based line the directive landed on */
+  line: Scalars['Float']['output'];
+  path: Scalars['String']['output'];
 };
 
 export type BalanceSheetData = {
@@ -305,9 +333,15 @@ export type CreateOneTimeTokenResponse = {
 export type CreatePrFromPatchInput = {
   baseBranch?: Scalars['String']['input'];
   changes: Array<FileChangeInput>;
-  description?: InputMaybe<Scalars['String']['input']>;
+  /** Commit message for the pull request branch's file changes; must not be empty */
+  clearCommitMessage: Scalars['String']['input'];
+  /** Must not be empty — describe what the pull request changes and why */
+  description: Scalars['String']['input'];
+  /** Skip the diff-less verification and open the pull request even when the branch does not differ from base */
+  fastForward?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerName: Scalars['String']['input'];
   ledgerOwner: Scalars['String']['input'];
+  /** Must not be empty */
   title: Scalars['String']['input'];
 };
 
@@ -357,7 +391,7 @@ export type DeleteMultiSourceSlicesInput = {
 
 export type DeleteMultiSourceSlicesResponse = {
   __typename?: 'DeleteMultiSourceSlicesResponse';
-  deletedHashes: Array<Scalars['String']['output']>;
+  deletedCount: Scalars['Int']['output'];
   message: Scalars['String']['output'];
 };
 
@@ -380,6 +414,18 @@ export type DeleteSourceSliceResponse = {
 export type DenyCliAuthSessionResponse = {
   __typename?: 'DenyCliAuthSessionResponse';
   success: Scalars['Boolean']['output'];
+};
+
+export type DirectiveTextDiff = {
+  __typename?: 'DirectiveTextDiff';
+  diff: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+};
+
+export type DirectiveTextError = {
+  __typename?: 'DirectiveTextError';
+  message: Scalars['String']['output'];
+  source?: Maybe<Scalars['String']['output']>;
 };
 
 export type Document = {
@@ -837,7 +883,8 @@ export type LedgerPostingInput = {
   account: Scalars['String']['input'];
   flag?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<LedgerAmountInput>;
-  units: LedgerAmountInput;
+  /** Posting amount; omit on at most one posting per transaction to elide it */
+  units?: InputMaybe<LedgerAmountInput>;
 };
 
 export type LedgerPriceInput = {
@@ -879,6 +926,8 @@ export type Mutation = {
   __typename?: 'Mutation';
   addEntries: AddEntryResponse;
   addOrUpdateLedgerCollaborator: AddCollaboratorResponse;
+  /** Append Beancount directive text to a ledger, routed by type and date and inserted in date order */
+  appendLedgerText: AppendDirectiveTextResponse;
   approvePullRequest: PullRequestResult;
   /** Add one or more entries to a specific ledger (atomic) */
   bulkEntries: AddLedgerEntryResponse;
@@ -1005,6 +1054,15 @@ export type MutationAddOrUpdateLedgerCollaboratorArgs = {
 };
 
 
+export type MutationAppendLedgerTextArgs = {
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  ledgerId: Scalars['String']['input'];
+  path?: InputMaybe<Scalars['String']['input']>;
+  text: Scalars['String']['input'];
+};
+
+
 export type MutationApprovePullRequestArgs = {
   ledgerName: Scalars['String']['input'];
   ledgerOwner: Scalars['String']['input'];
@@ -1013,6 +1071,7 @@ export type MutationApprovePullRequestArgs = {
 
 
 export type MutationBulkEntriesArgs = {
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
   entries: Array<AddEntryInput>;
   ledgerId: Scalars['String']['input'];
 };
@@ -1207,6 +1266,7 @@ export type MutationRenameLedgerFileArgs = {
   message?: InputMaybe<Scalars['String']['input']>;
   newPath: Scalars['String']['input'];
   oldPath: Scalars['String']['input'];
+  updateIncludes?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -1563,6 +1623,12 @@ export type PostingUnits = {
   number?: Maybe<Scalars['Float']['output']>;
 };
 
+export type PostingsPerAccount = {
+  __typename?: 'PostingsPerAccount';
+  account: Scalars['String']['output'];
+  count: Scalars['Float']['output'];
+};
+
 export type PricePoint = {
   __typename?: 'PricePoint';
   date: Scalars['String']['output'];
@@ -1603,6 +1669,10 @@ export type PullRequestDetails = {
 
 export type PullRequestResult = {
   __typename?: 'PullRequestResult';
+  /** The created PR's actual base ref, read back — never a default */
+  baseBranch?: Maybe<Scalars['String']['output']>;
+  /** The created PR's actual head ref, read back — never a default */
+  headBranch?: Maybe<Scalars['String']['output']>;
   message?: Maybe<Scalars['String']['output']>;
   prNumber?: Maybe<Scalars['Int']['output']>;
   prUrl?: Maybe<Scalars['String']['output']>;
@@ -1688,6 +1758,8 @@ export type Query = {
   getLedgerPayees: Array<Scalars['String']['output']>;
   /** Get plaintext journal in beancount format */
   getLedgerPlaintextJournal: PlaintextJournalResponse;
+  /** Count postings per account over the filtered Statistics report stream */
+  getLedgerPostingsPerAccount: Array<PostingsPerAccount>;
   /** Get the Beancount source files of a ledger (main.bean plus every file it includes) */
   getLedgerSourceFiles: Array<Scalars['String']['output']>;
   /** Get the tags of a specific ledger */
@@ -1761,7 +1833,7 @@ export type QueryAccountHierarchyArgs = {
 
 
 export type QueryFeatureFlagsArgs = {
-  userId: Scalars['String']['input'];
+  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -2006,6 +2078,14 @@ export type QueryGetLedgerPlaintextJournalArgs = {
 };
 
 
+export type QueryGetLedgerPostingsPerAccountArgs = {
+  account?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<Scalars['String']['input']>;
+  ledgerId: Scalars['String']['input'];
+  time?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryGetLedgerSourceFilesArgs = {
   ledgerId: Scalars['String']['input'];
 };
@@ -2127,7 +2207,7 @@ export type QueryJournalEntriesArgs = {
 
 export type QueryLedgerMetaArgs = {
   ledgerId?: InputMaybe<Scalars['String']['input']>;
-  userId: Scalars['String']['input'];
+  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -2277,6 +2357,7 @@ export type RenameLedgerFileResponse = {
   __typename?: 'RenameLedgerFileResponse';
   newPath: Scalars['String']['output'];
   oldPath: Scalars['String']['output'];
+  updatedIncludes: Array<Scalars['String']['output']>;
 };
 
 /** The email report status (deprecated) */
@@ -2458,6 +2539,8 @@ export type UpdateSourceSliceResponse = {
   __typename?: 'UpdateSourceSliceResponse';
   entryHash: Scalars['String']['output'];
   message: Scalars['String']['output'];
+  /** The entry's public ID after the commit — use it for the next edit, not entryHash. */
+  newEntryHash: Scalars['String']['output'];
   newSha256sum: Scalars['String']['output'];
 };
 

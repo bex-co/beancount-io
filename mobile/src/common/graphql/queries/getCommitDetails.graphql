@@ -3,6 +3,7 @@ query getCommitDetails($ledgerId: String!, $sha: String!) {
     message
     author {
       name
+      date
     }
     stats {
       additions

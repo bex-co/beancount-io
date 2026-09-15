@@ -13,6 +13,7 @@ import { FadeInView } from "@/components/crossfade";
 import { LedgerGuard } from "@/components/ledger-guard";
 import { parseDiff, DiffLine } from "./diff-utils";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+import { formatCommitAuthorLine } from "@/screens/notifications-screen/formatting";
 
 const SKELETON_WIDTHS = [200, 160, 240, 180, 120, 220, 150, 190];
 
@@ -156,7 +157,7 @@ function DiffLineView({ line }: { line: DiffLine }): JSX.Element {
 }
 
 function CommitDetailScreenImpl(): JSX.Element {
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
   const { sha } = useLocalSearchParams<{ sha: string }>();
 
@@ -188,7 +189,12 @@ function CommitDetailScreenImpl(): JSX.Element {
               <View style={styles.section}>
                 <Text style={styles.messageLine}>{commit.message}</Text>
                 <Text style={styles.metaLine}>
-                  {t("commitDetailAuthor")}: {commit.author.name}
+                  {t("commitDetailAuthor")}:{" "}
+                  {formatCommitAuthorLine(
+                    commit.author.name,
+                    commit.author.date,
+                    locale,
+                  )}
                 </Text>
               </View>
               <View style={styles.divider} />

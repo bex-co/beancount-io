@@ -130,7 +130,7 @@ export type GetCommitDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetCommitDetailsQuery = { getCommitDetails: { message: string, diff: string | null, author: { name: string }, stats: { additions: number, deletions: number, total: number }, files: Array<{ filename: string, additions: number, deletions: number }> } };
+export type GetCommitDetailsQuery = { getCommitDetails: { message: string, diff: string | null, author: { name: string, date: string }, stats: { additions: number, deletions: number, total: number }, files: Array<{ filename: string, additions: number, deletions: number }> } };
 
 export type GetFeedQueryVariables = Exact<{
   offset?: number | null | undefined;
@@ -323,7 +323,7 @@ export type ListCommitsQueryVariables = Exact<{
 }>;
 
 
-export type ListCommitsQuery = { listCommits: Array<{ sha: string, shortSha: string | null, message: string, author: { name: string } }> };
+export type ListCommitsQuery = { listCommits: Array<{ sha: string, shortSha: string | null, message: string, author: { name: string, date: string } }> };
 
 export type ListLedgersQueryVariables = Exact<{
   limit?: number | null | undefined;
@@ -1030,6 +1030,7 @@ export const GetCommitDetailsDocument = gql`
     message
     author {
       name
+      date
     }
     stats {
       additions
@@ -2165,6 +2166,7 @@ export const ListCommitsDocument = gql`
     message
     author {
       name
+      date
     }
   }
 }

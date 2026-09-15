@@ -24,10 +24,14 @@ type AccountJournalEntry {
 input AccountJournalQueryInput {
   account: String!
   conversion: String = "at_cost"
+  customSubtypes: [String!]
+  directiveTypes: [String!]
+  documentSubtypes: [String!]
   filter: String
   limit: Float = 20
   offset: Float = 0
   time: String
+  transactionSubtypes: [String!]
   with_children: Boolean = true
 }
 
@@ -95,6 +99,30 @@ type ApiKeyType {
   name: String!
   revokedAt: DateTimeISO
   scopes: [String!]!
+}
+
+type AppendDirectiveTextResponse {
+  """
+  Files whose directives were not in date order, so these were appended at the end
+  """
+  appendedUnsorted: [String!]!
+  """Directives parsed out of the text"""
+  count: Float!
+  """Unified diff per touched file; populated on dry runs only"""
+  diff: [DirectiveTextDiff!]!
+  dryRun: Boolean!
+  errorsAfter: Float!
+  errorsBefore: Float!
+  message: String!
+  newErrors: [DirectiveTextError!]!
+  success: Boolean!
+  wrote: [AppendedDirective!]!
+}
+
+type AppendedDirective {
+  """1-based line the directive landed on"""
+  line: Float!
+  path: String!
 }
 
 type BalanceSheetData {
@@ -272,9 +300,19 @@ type CreateOneTimeTokenResponse {
 input CreatePRFromPatchInput {
   baseBranch: String! = "main"
   changes: [FileChangeInput!]!
-  description: String
+  """
+  Commit message for the pull request branch's file changes; must not be empty
+  """
+  clearCommitMessage: String!
+  """Must not be empty — describe what the pull request changes and why"""
+  description: String!
+  """
+  Skip the diff-less verification and open the pull request even when the branch does not differ from base
+  """
+  fastForward: Boolean
   ledgerName: String!
   ledgerOwner: String!
+  """Must not be empty"""
   title: String!
 }
 
@@ -322,7 +360,7 @@ input DeleteMultiSourceSlicesInput {
 }
 
 type DeleteMultiSourceSlicesResponse {
-  deletedHashes: [String!]!
+  deletedCount: Int!
   message: String!
 }
 
@@ -342,6 +380,16 @@ type DeleteSourceSliceResponse {
 
 type DenyCliAuthSessionResponse {
   success: Boolean!
+}
+
+type DirectiveTextDiff {
+  diff: String!
+  path: String!
+}
+
+type DirectiveTextError {
+  message: String!
+  source: String
 }
 
 type Document {
@@ -774,7 +822,10 @@ input LedgerPostingInput {
   account: String!
   flag: String
   price: LedgerAmountInput
-  units: LedgerAmountInput!
+  """
+  Posting amount; omit on at most one posting per transaction to elide it
+  """
+  units: LedgerAmountInput
 }
 
 input LedgerPriceInput {
@@ -813,9 +864,36 @@ type MintedApiKeyType {
 type Mutation {
   addEntries(entriesInput: [EntryInput!]!, ledgerId: String): AddEntryResponse!
   addOrUpdateLedgerCollaborator(collaborator: String!, ledgerId: String!, permission: String): AddCollaboratorResponse!
+  """
+  Append Beancount directive text to a ledger, routed by type and date and inserted in date order
+  """
+  appendLedgerText(
+    """Commit even when the text introduces new bean-check errors"""
+    allowInvalid: Boolean
+    """
+    Run every check and return the diff and projected errors without committing
+    """
+    dryRun: Boolean
+    ledgerId: String!
+    """
+    Target file; omitted, each directive routes to the file the ledger's own options assign it
+    """
+    path: String
+    """
+    Beancount directive text, with a transaction's postings indented beneath it
+    """
+    text: String!
+  ): AppendDirectiveTextResponse!
   approvePullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
   """Add one or more entries to a specific ledger (atomic)"""
-  bulkEntries(entries: [AddEntryInput!]!, ledgerId: String!): AddLedgerEntryResponse!
+  bulkEntries(
+    """
+    Record unbalanced transactions deliberately instead of refusing them with UNBALANCED
+    """
+    allowInvalid: Boolean
+    entries: [AddEntryInput!]!
+    ledgerId: String!
+  ): AddLedgerEntryResponse!
   """
   Schedules your subscription to cancel. Requires a full signed-in session.
   """
@@ -927,7 +1005,7 @@ type Mutation {
   refreshToken: TokenAuthResponse!
   rejectPullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
   """Rename a file in a specific ledger"""
-  renameLedgerFile(ledgerId: String!, message: String, newPath: String!, oldPath: String!): RenameLedgerFileResponse!
+  renameLedgerFile(ledgerId: String!, message: String, newPath: String!, oldPath: String!, updateIncludes: Boolean): RenameLedgerFileResponse!
   """Reset user password using a token from the password reset email"""
   resetPassword(newPassword: String!, token: String!): ResetPasswordResponse!
   """Resumes your subscription. Requires a full signed-in session."""
@@ -1182,6 +1260,11 @@ type PostingUnits {
   number: Float
 }
 
+type PostingsPerAccount {
+  account: String!
+  count: Float!
+}
+
 type PricePoint {
   date: String!
   value: String!
@@ -1217,6 +1300,10 @@ type PullRequestDetails {
 }
 
 type PullRequestResult {
+  """The created PR's actual base ref, read back — never a default"""
+  baseBranch: String
+  """The created PR's actual head ref, read back — never a default"""
+  headBranch: String
   message: String
   prNumber: Int
   prUrl: String
@@ -1231,7 +1318,7 @@ type Query {
   allTierQuotas: [TierQuotaItem!]!
   """Your API keys"""
   apiKeys: [ApiKeyType!]!
-  featureFlags(userId: String!): JSONObject!
+  featureFlags(userId: String): JSONObject!
   """
   Generate a presigned download URL for a temporary asset uploaded by the current user. Foreign, malformed, and permanent keys are not exposed.
   """
@@ -1326,6 +1413,8 @@ type Query {
   getLedgerPayees(ledgerId: String!): [String!]!
   """Get plaintext journal in beancount format"""
   getLedgerPlaintextJournal(ledgerId: String!, query: PlaintextJournalQueryInput): PlaintextJournalResponse!
+  """Count postings per account over the filtered Statistics report stream"""
+  getLedgerPostingsPerAccount(account: String, filter: String, ledgerId: String!, time: String): [PostingsPerAccount!]!
   """
   Get the Beancount source files of a ledger (main.bean plus every file it includes)
   """
@@ -1413,7 +1502,7 @@ type Query {
     sortOrder: String
   ): JournalEntriesResponse!
   """Get a specific ledger"""
-  ledgerMeta(ledgerId: String, userId: String!): LedgerMetaResponse!
+  ledgerMeta(ledgerId: String, userId: String): LedgerMetaResponse!
   listCommits(branch: String! = "main", ledgerId: String!, limit: Int! = 30, page: Int! = 1): [CommitListItem!]!
   listLedgerCollaborators(ledgerId: String!, limit: Float, page: Float): [CollaboratorUser!]!
   """List all ledgers for the current user"""
@@ -1494,6 +1583,7 @@ input ReceiptPostingInput {
 type RenameLedgerFileResponse {
   newPath: String!
   oldPath: String!
+  updatedIncludes: [String!]!
 }
 
 """The email report status (deprecated)"""
@@ -1654,6 +1744,10 @@ input UpdateSourceSliceInput {
 type UpdateSourceSliceResponse {
   entryHash: String!
   message: String!
+  """
+  The entry's public ID after the commit — use it for the next edit, not entryHash.
+  """
+  newEntryHash: String!
   newSha256sum: String!
 }
 

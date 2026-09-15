@@ -21,7 +21,12 @@ import { LoadingTile } from "@/components/loading-tile";
 import { LedgerGuard } from "@/components/ledger-guard";
 import { FadeInView } from "@/components/crossfade";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
-import { formatErrorLocation, formatShortSha, LedgerError } from "./formatting";
+import {
+  formatErrorLocation,
+  formatCommitAuthorLine,
+  formatShortSha,
+  LedgerError,
+} from "./formatting";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 const SKELETON_WIDTHS = [180, 220, 160, 200, 140, 190];
@@ -184,7 +189,7 @@ function ErrorRow({ err }: { err: LedgerError }): JSX.Element {
 }
 
 function NotificationsScreenImpl(): JSX.Element {
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
 
@@ -301,7 +306,11 @@ function NotificationsScreenImpl(): JSX.Element {
                           {commit.message}
                         </Text>
                         <Text style={styles.changeMeta}>
-                          {commit.author.name}{" "}
+                          {formatCommitAuthorLine(
+                            commit.author.name,
+                            commit.author.date,
+                            locale,
+                          )}{" "}
                           <Text style={styles.changeSha}>
                             {formatShortSha(commit.sha, commit.shortSha)}
                           </Text>
