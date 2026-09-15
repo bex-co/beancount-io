@@ -85,6 +85,27 @@ describe("server URL utilities", () => {
     ).toEqual({ ok: false, code: "insecure" });
   });
 
+  it("allows every loopback spelling, IPv6 included, only when enabled", () => {
+    for (const url of [
+      "http://localhost:4104/",
+      "http://127.0.0.1:4104/",
+      "http://[::1]:4104/",
+    ]) {
+      expect(validateServerUrl(url, { allowInsecureLocalhost: true })).toEqual({
+        ok: true,
+        url,
+      });
+      expect(validateServerUrl(url, { allowInsecureLocalhost: false })).toEqual(
+        { ok: false, code: "insecure" },
+      );
+    }
+    expect(
+      validateServerUrl("http://[2001:db8::1]/", {
+        allowInsecureLocalhost: true,
+      }),
+    ).toEqual({ ok: false, code: "insecure" });
+  });
+
   it("probes health and the complete OAuth discovery contract", async () => {
     const originalFetch = global.fetch;
     const calls: Array<{ url: string; options?: RequestInit }> = [];

@@ -15,7 +15,9 @@ export function allowsInsecureLocalhost(): boolean {
 }
 
 function isLocalhost(hostname: string): boolean {
-  return localhostNames.has(hostname.toLowerCase());
+  // URL brackets an IPv6 literal in `hostname` (`[::1]`); the set holds names.
+  const host = hostname.toLowerCase().replace(/^\[(.+)\]$/u, "$1");
+  return localhostNames.has(host);
 }
 
 /** Validate a base URL while preserving a reverse-proxy path prefix. */
