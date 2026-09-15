@@ -17,7 +17,7 @@ Inspect branch, staged and unstaged changes, and remote state. Fetch origin and 
 
 Find the previous reachable mobile tag using `git describe --tags --match 'mobile-v*' --abbrev=0 HEAD`. Compare that tag to the candidate release using mobile-scoped `git log` and `git diff`; inspect release workflow changes too. If no tag exists, label this a first release and inspect available mobile history. Tags from other packages are not a baseline.
 
-Check GitHub release runs, EAS builds/submissions, App Store Connect versions, and Google Play tracks. A `mobile-v<version>` tag only proves build/submit kickoff: the workflow uses `--no-wait`. It does not prove either store is live. Report any difference between the tag baseline and the last live version; include still-unreleased changes in store notes when needed.
+Check GitHub release runs, EAS builds/submissions, App Store Connect versions, and Google Play tracks. A `mobile-v<version>` tag proves both EAS builds finished and their submissions completed, because the workflow waits for them; tags up to `mobile-v1.20260912.48` were cut with `--no-wait` and only prove kickoff. A tag does not prove either store is live. Report any difference between the tag baseline and the last live version; include still-unreleased changes in store notes when needed.
 
 If the current version is untagged or has incomplete jobs, determine whether it is an existing release to resume before bumping. Do not create another version merely to retry. Do not edit an Apple version already in review; report the pending review as the blocker to a new release.
 
@@ -77,7 +77,7 @@ API parity does not prove publication. Check the review/publishing state in Play
 
 Review the final diff and run the required secret scan before pushing. Use the repository's [ship skill](../ship/SKILL.md) for the reviewed release files, including notes and staging receipt. If rebasing changes release contents or bound inputs, update the notes, repeat affected checks and parity verification before the push.
 
-The main push triggers `Release (mobile)`: checks → receipt verification → production OTA → EAS builds for both platforms with auto-submit → tag/GitHub release. Use this workflow as the single build kickoff; do not also start duplicate local builds. Locate the run for the shipped SHA with `gh`, follow it, and capture the exact EAS build and submission IDs for both platforms. Poll long jobs in bounded waits while giving progress updates.
+The main push triggers `Release (mobile)`: checks → receipt verification → production OTA → EAS builds for both platforms with auto-submit, waiting for builds and submissions → tag/GitHub release. Use this workflow as the single build kickoff; do not also start duplicate local builds. Locate the run for the shipped SHA with `gh`, follow it, and capture the exact EAS build and submission IDs for both platforms. Poll long jobs in bounded waits while giving progress updates.
 
 Complete each store's remaining steps with available authenticated tools, checking current CLI help/documentation:
 

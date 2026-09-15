@@ -4,8 +4,9 @@ name: Release (mobile)
 # - A release is needed whenever mobile/package.json's version has no
 #   `mobile-v<version>` git tag yet — state-based, not diff-based, so a failed
 #   release retries automatically on the next push (or workflow_dispatch).
-# - The tag + GitHub Release are created only AFTER a successful build/submit
-#   kickoff, which is what makes the retry self-healing.
+# - The tag + GitHub Release are created only AFTER every store build finishes
+#   and its auto-submission completes, which is what makes the retry
+#   self-healing: a failed build or submission leaves the version untagged.
 # - Everything deploys only on a new version: the OTA update AND the native
 #   build+submit are both gated on the missing tag, so a push without a
 #   `yarn bump` verifies checks but ships nothing. runtimeVersion policy is
@@ -95,9 +96,11 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           # --auto-submit submits this exact build once it finishes (server-side),
-          # avoiding the `submit --latest` race with --no-wait.
+          # avoiding the `submit --latest` race. Waiting (no --no-wait) makes this
+          # step fail when any build errors or any submission does not finish,
+          # so a broken store release is never tagged.
           npx eas-cli@16 build --platform all --profile production \
-            --auto-submit --non-interactive --no-wait
+            --auto-submit --non-interactive
 
       - name: Tag and create GitHub release
         if: steps.state.outputs.needs_release == 'true'
