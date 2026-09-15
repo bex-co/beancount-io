@@ -136,3 +136,5 @@ The ledger shell (`src/common/components/ledger-layout/`) and the `/ledger` dash
 
 - Each primary sidebar composes `SidebarNavigation` (a labelled `<nav>` landmark). Do **not** put the landmark inside the shared `sidebar.tsx` primitive — only navigation regions should expose one.
 - Both shells render `SkipToContentLink` as the first focusable element and give `<main id="main-content" tabIndex={-1}>` so keyboard users can skip past the sidebar. Reuse `src/common/components/skip-to-content.tsx` and `src/common/lib/main-content.ts` for any future sidebar shell.
+
+Entry Context (`features/journal/components/entry-context-dialog.tsx`) restores focus to the originating journal/overview control on dismiss via `restoreFocusOnDialogClose`, with a caller fallback when the opener is removed after a successful edit. Source-file navigation skips that restore so focus is not pulled back to the list.

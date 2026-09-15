@@ -151,6 +151,10 @@ const nlJournal: Record<string, TranslationEntry> = {
     description:
       "Getoond wanneer de entry-context geen navigeerbaar bestand/regel heeft",
   },
+  "journal.openEntrySource": {
+    message: "Bron openen op {location}",
+    description: "Accessible name for the entry source location control",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Fout bij laden journaalposten",
     description: "Error message prefix for journal loading failures",

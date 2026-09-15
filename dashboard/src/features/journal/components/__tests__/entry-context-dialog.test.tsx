@@ -129,7 +129,8 @@ describe("EntryContextDialog", () => {
     };
   });
 
-  it("navigates to a resolved source location for writers", () => {
+  it("navigates to a resolved source location for writers via keyboard", async () => {
+    const user = userEvent.setup();
     render(
       <EntryContextDialog
         open
@@ -139,13 +140,62 @@ describe("EntryContextDialog", () => {
       />,
     );
 
-    fireEvent.click(screen.getByText("main.bean:42"));
+    const source = screen.getByRole("button", {
+      name: "journal.openEntrySource",
+    });
+    await user.click(source);
     expect(mocks.fileNavigate).toHaveBeenCalledWith(
       "open_ledger/example",
       "file",
       "main.bean",
       { lineNumber: 42, editMode: true },
     );
+  });
+
+  it("exposes balances as a named disclosure with Enter/Space", async () => {
+    mocks.contextData = {
+      entry: { meta: { filename: "transactions/invoicing.bean", lineno: 10 } },
+      slice: '2026-01-09 * "Northwind Traders" "January retainer"\n',
+      sha256sum: "abc123",
+      balances_before: {
+        "Income:Consulting": { number: "-6000", currency: "USD" },
+        "Assets:Receivable:Northwind": { number: "6000", currency: "USD" },
+      },
+      balances_after: {
+        "Income:Consulting": { number: "-12000", currency: "USD" },
+        "Assets:Receivable:Northwind": { number: "12000", currency: "USD" },
+      },
+    };
+    const user = userEvent.setup();
+    render(
+      <EntryContextDialog
+        open
+        onOpenChange={vi.fn()}
+        entry={entry}
+        ledgerId="open_ledger/example"
+      />,
+    );
+
+    const toggle = screen.getByRole("button", {
+      name: "journal.entryContext",
+    });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    const regionId = toggle.getAttribute("aria-controls");
+    expect(regionId).toBeTruthy();
+    expect(document.getElementById(regionId!)).toBeNull();
+
+    await user.keyboard("{Tab}"); // close button first in dialog
+    toggle.focus();
+    await user.keyboard("{Enter}");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(document.getElementById(regionId!)).toBeInTheDocument();
+    expect(screen.getAllByText("Income:Consulting").length).toBeGreaterThan(0);
+    expect(screen.getByText("-6000 USD")).toBeInTheDocument();
+    expect(screen.getByText("6000 USD")).toBeInTheDocument();
+
+    await user.keyboard(" ");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(document.getElementById(regionId!)).toBeNull();
   });
 
   it("shows an unavailable location instead of a clickable :0", () => {
@@ -189,13 +239,145 @@ describe("EntryContextDialog", () => {
     expect(screen.queryByText("common.delete")).not.toBeInTheDocument();
     expect(screen.queryByText("common.save")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByText("main.bean:42"));
+    fireEvent.click(
+      screen.getByRole("button", { name: "journal.openEntrySource" }),
+    );
     expect(mocks.fileNavigate).toHaveBeenCalledWith(
       "open_ledger/example",
       "file",
       "main.bean",
       { lineNumber: 42, editMode: false },
     );
+  });
+
+  it("returns focus to the originating control on Escape and Close", async () => {
+    const user = userEvent.setup();
+    const opener = document.createElement("button");
+    opener.textContent = "Open entry";
+    document.body.appendChild(opener);
+    const openerRef = { current: opener };
+    const fallback = document.createElement("div");
+    fallback.tabIndex = -1;
+    document.body.appendChild(fallback);
+    const fallbackRef = { current: fallback };
+    const onOpenChange = vi.fn();
+
+    const { rerender } = render(
+      <EntryContextDialog
+        open
+        onOpenChange={onOpenChange}
+        entry={entry}
+        ledgerId="open_ledger/example"
+        returnFocusRef={openerRef}
+        fallbackFocusRef={fallbackRef}
+      />,
+    );
+
+    await user.keyboard("{Escape}");
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+
+    rerender(
+      <EntryContextDialog
+        open={false}
+        onOpenChange={onOpenChange}
+        entry={entry}
+        ledgerId="open_ledger/example"
+        returnFocusRef={openerRef}
+        fallbackFocusRef={fallbackRef}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(opener).toHaveFocus();
+    });
+
+    opener.remove();
+    fallback.remove();
+  });
+
+  it("focuses the caller fallback when the opener is gone", async () => {
+    const user = userEvent.setup();
+    const opener = document.createElement("button");
+    opener.textContent = "Open entry";
+    document.body.appendChild(opener);
+    const openerRef = { current: opener };
+    const fallback = document.createElement("div");
+    fallback.tabIndex = -1;
+    document.body.appendChild(fallback);
+    const fallbackRef = { current: fallback };
+    const onOpenChange = vi.fn();
+
+    const { rerender } = render(
+      <EntryContextDialog
+        open
+        onOpenChange={onOpenChange}
+        entry={entry}
+        ledgerId="open_ledger/example"
+        returnFocusRef={openerRef}
+        fallbackFocusRef={fallbackRef}
+      />,
+    );
+
+    await user.keyboard("{Escape}");
+    opener.remove();
+    openerRef.current = null;
+
+    rerender(
+      <EntryContextDialog
+        open={false}
+        onOpenChange={onOpenChange}
+        entry={entry}
+        ledgerId="open_ledger/example"
+        returnFocusRef={openerRef}
+        fallbackFocusRef={fallbackRef}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(fallback).toHaveFocus();
+    });
+
+    fallback.remove();
+  });
+
+  it("does not restore opener focus after source navigation", async () => {
+    const user = userEvent.setup();
+    const opener = document.createElement("button");
+    opener.textContent = "Open entry";
+    document.body.appendChild(opener);
+    const openerRef = { current: opener };
+    const onOpenChange = vi.fn();
+
+    const { rerender } = render(
+      <EntryContextDialog
+        open
+        onOpenChange={onOpenChange}
+        entry={entry}
+        ledgerId="open_ledger/example"
+        returnFocusRef={openerRef}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "journal.openEntrySource" }),
+    );
+    expect(mocks.fileNavigate).toHaveBeenCalled();
+
+    rerender(
+      <EntryContextDialog
+        open={false}
+        onOpenChange={onOpenChange}
+        entry={entry}
+        ledgerId="open_ledger/example"
+        returnFocusRef={openerRef}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(opener).not.toHaveFocus();
+    });
+
+    opener.remove();
   });
 
   describe("generated padding entries", () => {

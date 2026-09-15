@@ -151,6 +151,10 @@ const caJournal: Record<string, TranslationEntry> = {
     description:
       "Es mostra quan el context de l'entrada no té fitxer/línia navegables",
   },
+  "journal.openEntrySource": {
+    message: "Obre l'origen a {location}",
+    description: "Accessible name for the entry source location control",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Error en carregar les entrades del diari",
     description: "Error message prefix for journal loading failures",

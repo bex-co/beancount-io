@@ -426,7 +426,10 @@ describe("JournalTable", () => {
       await user.keyboard(" ");
 
       expect(mockOnEntryClick).toHaveBeenCalledTimes(3);
-      expect(mockOnEntryClick).toHaveBeenLastCalledWith(transaction);
+      expect(mockOnEntryClick).toHaveBeenLastCalledWith(
+        transaction,
+        expect.any(HTMLElement),
+      );
 
       await user.click(getPostingToggles()[0]);
       expect(mockOnEntryClick).toHaveBeenCalledTimes(3);

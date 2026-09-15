@@ -151,6 +151,10 @@ const ptJournal: Record<string, TranslationEntry> = {
     description:
       "Mostrado quando o contexto da entrada não tem ficheiro/linha navegáveis",
   },
+  "journal.openEntrySource": {
+    message: "Abrir fonte em {location}",
+    description: "Accessible name for the entry source location control",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Erro ao carregar lançamentos do diário",
     description: "Error message prefix for journal loading failures",

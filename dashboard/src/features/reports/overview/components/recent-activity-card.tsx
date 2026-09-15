@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useRef, useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { ChevronRight, Plus, ReceiptText } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -97,6 +97,8 @@ export function RecentActivityCard({
   const [selectedEntry, setSelectedEntry] =
     useState<JournalDirectiveType | null>(null);
   const [isEntryOpen, setIsEntryOpen] = useState(false);
+  const entryOpenerRef = useRef<HTMLElement | null>(null);
+  const entryFallbackRef = useRef<HTMLElement | null>(null);
   const { data, loading, error, refetch } = useQuery(GetLedgerJournalDocument, {
     variables: {
       ledgerId,
@@ -138,8 +140,10 @@ export function RecentActivityCard({
   return (
     <>
       <section
+        ref={entryFallbackRef}
+        tabIndex={-1}
         aria-labelledby="overview-recent-activity-heading"
-        className="space-y-3"
+        className="space-y-3 outline-none"
       >
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -232,7 +236,8 @@ export function RecentActivityCard({
                       type="button"
                       key={transaction.entry_hash}
                       className="grid w-full cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none sm:grid-cols-[5rem_auto_minmax(0,1fr)_minmax(8rem,auto)_auto] sm:px-5"
-                      onClick={() => {
+                      onClick={(event) => {
+                        entryOpenerRef.current = event.currentTarget;
                         setSelectedEntry(transaction);
                         setIsEntryOpen(true);
                       }}
@@ -302,6 +307,8 @@ export function RecentActivityCard({
             onOpenChange={setIsEntryOpen}
             entry={selectedEntry}
             ledgerId={ledgerId}
+            returnFocusRef={entryOpenerRef}
+            fallbackFocusRef={entryFallbackRef}
             onSuccess={() => void refetch()}
           />
         )}

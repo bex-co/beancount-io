@@ -35,7 +35,10 @@ interface JournalTableProps {
   data: JournalTableItem[];
   showMetadata?: boolean;
   showPostings?: boolean;
-  onEntryClick?: (entryHash: JournalDirectiveType) => void;
+  onEntryClick?: (
+    entry: JournalDirectiveType,
+    opener: HTMLElement | null,
+  ) => void;
   isAccountJournal?: boolean;
   /** Required when `isAccountJournal` to derive the Units column from postings. */
   accountName?: string;
@@ -310,7 +313,10 @@ interface JournalTableRowProps {
   columns: JournalColumnDef[];
   showMetadata?: boolean;
   showPostings?: boolean;
-  onEntryClick?: (entryHash: JournalDirectiveType) => void;
+  onEntryClick?: (
+    entry: JournalDirectiveType,
+    opener: HTMLElement | null,
+  ) => void;
   isAccountJournal?: boolean;
   accountName?: string;
   withChildren?: boolean;
@@ -342,11 +348,14 @@ function JournalTableEntryRows({
     : undefined;
 
   const rowProps = onEntryClick
-    ? getClickableRowProps<HTMLTableRowElement>(() => onEntryClick(directive), {
-        className:
-          "group transition-colors hover:bg-muted/25 data-[state=selected]:bg-muted/25",
-        preserveTableSemantics: true,
-      })
+    ? getClickableRowProps<HTMLTableRowElement>(
+        (event) => onEntryClick(directive, event.currentTarget),
+        {
+          className:
+            "group transition-colors hover:bg-muted/25 data-[state=selected]:bg-muted/25",
+          preserveTableSemantics: true,
+        },
+      )
     : {
         className:
           "group transition-colors hover:bg-muted/25 data-[state=selected]:bg-muted/25",
@@ -389,7 +398,7 @@ function JournalTableEntryRows({
             )}
             onClick={(event) => {
               event.stopPropagation();
-              onEntryClick(directive);
+              onEntryClick(directive, event.currentTarget);
             }}
           >
             {formatDateISO(directive.date)}

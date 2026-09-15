@@ -1,17 +1,17 @@
 # w3 · m31 — Complete the Entry Context keyboard journey
 
-**Worker:** worker3 **Goal:** keyboard users can inspect balances, follow source locations and return to the originating transaction **Status:** todo
+**Worker:** worker3 **Goal:** keyboard users can inspect balances, follow source locations and return to the originating transaction **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Expose source and balances as native keyboard controls | 30m | — |
-| t002 | Restore Entry Context focus across its three callers | 45m | t001 |
-| t003 | Verify adoption of the keyboard entry journey | 20m | t001, t002 |
-| t004 | Simplify the entry keyboard and focus changes | 20m | t003 |
-| t005 | Test keyboard controls and caller focus with real dialogs | 40m | t003, t004 |
-| t006 | Close out the Entry Context keyboard repair | 15m | t005 |
+| t001 | Expose source and balances as native keyboard controls | 30m | — | — **DONE**
+| t002 | Restore Entry Context focus across its three callers | 45m | t001 | — **DONE**
+| t003 | Verify adoption of the keyboard entry journey | 20m | t001, t002 | — **DONE**
+| t004 | Simplify the entry keyboard and focus changes | 20m | t003 | — **DONE**
+| t005 | Test keyboard controls and caller focus with real dialogs | 40m | t003, t004 | — **DONE**
+| t006 | Close out the Entry Context keyboard repair | 15m | t005 | — **DONE**
 
 170 minutes total:75 minutes of implementation plus adoption, simplification,
 meaningful regression coverage and closeout.

@@ -24,6 +24,7 @@ import {
   useEffect,
   useState,
   useMemo,
+  useRef,
   type Dispatch,
   type SetStateAction,
 } from "react";
@@ -168,6 +169,8 @@ const JournalContent = () => {
     useState(false);
   const [selectedEntry, setSelectedEntry] =
     useState<JournalDirectiveType | null>(null);
+  const entryOpenerRef = useRef<HTMLElement | null>(null);
+  const entryFallbackRef = useRef<HTMLDivElement | null>(null);
 
   const { data, loading, error, refetch } = useQuery(GetLedgerJournalDocument, {
     variables: {
@@ -233,7 +236,11 @@ const JournalContent = () => {
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div
+        ref={entryFallbackRef}
+        tabIndex={-1}
+        className="overflow-hidden rounded-xl border bg-card shadow-sm outline-none"
+      >
         <div className="flex flex-col gap-3 border-b bg-muted/20 p-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0 flex-1">
             <JournalFilters
@@ -306,7 +313,8 @@ const JournalContent = () => {
               showPostings={showPostings}
               ledgerOwner={ledgerOwner}
               ledgerName={ledgerName}
-              onEntryClick={(directive) => {
+              onEntryClick={(directive, opener) => {
+                entryOpenerRef.current = opener;
                 setSelectedEntry(directive);
                 setIsEntryContextDialogOpen(true);
               }}
@@ -364,6 +372,8 @@ const JournalContent = () => {
         onOpenChange={setIsEntryContextDialogOpen}
         entry={selectedEntry}
         ledgerId={ledgerId}
+        returnFocusRef={entryOpenerRef}
+        fallbackFocusRef={entryFallbackRef}
         onSuccess={() => {
           void refetch();
         }}

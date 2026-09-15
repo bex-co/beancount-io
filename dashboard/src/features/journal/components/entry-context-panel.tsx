@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useId, useRef } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import {
   AlertDialog,
@@ -57,6 +57,11 @@ export interface EntryContextPanelProps {
   onSuccess?: () => void;
   /** After a successful delete, before `onSuccess` (page navigates away). */
   onDeleted?: () => void;
+  /**
+   * Fired immediately before navigating to the entry source file so the
+   * owning dialog can skip opener focus restoration.
+   */
+  onSourceNavigate?: () => void;
 }
 
 function EntryContextLoading() {
@@ -100,6 +105,7 @@ function EntryContextMain({
   canWrite: boolean;
 }) {
   const { t } = useTranslations();
+  const balancesRegionId = useId();
   const [sourceText, setSourceText] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
   const [originalSource, setOriginalSource] = useState("");
@@ -111,6 +117,9 @@ function EntryContextMain({
   const isDark = useIsDarkTheme();
   const isMobile = useIsMobile();
   const location = readEntrySourceLocation(data?.entry);
+  const locationLabel = location
+    ? `${location.filename}:${location.lineno}`
+    : null;
 
   useEffect(() => {
     if (data?.slice) {
@@ -180,13 +189,17 @@ function EntryContextMain({
         <span className="text-sm font-medium ">
           {t("journal.entryLocation")}
         </span>
-        {location ? (
-          <code
-            className="text-sm rounded underline cursor-pointer"
+        {location && locationLabel ? (
+          <button
+            type="button"
+            className="font-mono text-sm rounded underline cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={t("journal.openEntrySource", {
+              location: locationLabel,
+            })}
             onClick={() => onGoToFile?.(location.filename, location.lineno)}
           >
-            {location.filename}:{location.lineno}
-          </code>
+            <code className="pointer-events-none">{locationLabel}</code>
+          </button>
         ) : (
           <span className="text-sm text-muted-foreground">
             {t("journal.entryLocationUnavailable")}
@@ -195,23 +208,30 @@ function EntryContextMain({
       </div>
       {data?.balances_before && data?.balances_after ? (
         <div className="w-full rounded-md overflow-hidden">
-          <div
-            className="flex items-center justify-between p-2 bg-muted text-foreground cursor-pointer transition-colors"
+          <button
+            type="button"
+            className="flex w-full items-center justify-between p-2 bg-muted text-foreground cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+            aria-expanded={isContextOpen}
+            aria-controls={balancesRegionId}
             onClick={() => setIsContextOpen(!isContextOpen)}
           >
-            <div className="flex items-center gap-2">
+            <span className="flex items-center gap-2">
               <ChevronDown
                 className={cn(
                   "h-4 w-4 transition-transform",
                   isContextOpen ? "rotate-180" : "",
                 )}
+                aria-hidden="true"
               />
               <span className="font-semibold">{t("journal.entryContext")}</span>
-            </div>
-          </div>
+            </span>
+          </button>
 
-          {isContextOpen && (
-            <div className="border border-t-0 border-border rounded-b-md overflow-hidden">
+          {isContextOpen ? (
+            <div
+              id={balancesRegionId}
+              className="border border-t-0 border-border rounded-b-md overflow-hidden"
+            >
               {data?.balances_before && (
                 <div>
                   <div className="p-3 bg-muted/50 text-foreground font-medium text-sm">
@@ -266,7 +286,7 @@ function EntryContextMain({
                 </div>
               )}
             </div>
-          )}
+          ) : null}
         </div>
       ) : null}
 
@@ -382,6 +402,7 @@ export function EntryContextPanel({
   skip = false,
   onSuccess,
   onDeleted,
+  onSourceNavigate,
 }: EntryContextPanelProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -457,6 +478,7 @@ export function EntryContextPanel({
   };
 
   const handleGoToFile = (filename: string, lineNumber: number) => {
+    onSourceNavigate?.();
     fileNavigate(ledgerId, "file", filename, {
       lineNumber,
       editMode: canWrite,

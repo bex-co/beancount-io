@@ -44,7 +44,7 @@ function isFromInteractiveChild(
 }
 
 export function getClickableRowProps<T extends HTMLElement>(
-  onActivate: () => void,
+  onActivate: (event: MouseEvent<T> | KeyboardEvent<T>) => void,
   {
     className,
     role = "link",
@@ -56,7 +56,7 @@ export function getClickableRowProps<T extends HTMLElement>(
 > {
   const onClick: HTMLAttributes<T>["onClick"] = (event) => {
     if (!isFromInteractiveChild(event)) {
-      onActivate();
+      onActivate(event);
     }
   };
 
@@ -78,7 +78,7 @@ export function getClickableRowProps<T extends HTMLElement>(
         (event.key === "Enter" || event.key === " ")
       ) {
         event.preventDefault();
-        onActivate();
+        onActivate(event);
       }
     },
   };

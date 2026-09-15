@@ -165,11 +165,13 @@ describe("directive amount precision", () => {
 
       const accounts = screen.getAllByRole("textbox", { name: "Account" });
       const amounts = screen.getAllByRole("spinbutton");
-      await user.type(accounts[0]!, "Assets:Crypto");
+      // Prefer change events over user.type so the mount payee-focus timer
+      // cannot steal keystrokes under suite load (same pattern as 0.001 case).
+      fireEvent.change(accounts[0]!, { target: { value: "Assets:Crypto" } });
       // user-event 14 re-serializes number-input typing through a double;
       // deliver the raw string a browser keeps, so the form path is tested.
       fireEvent.change(amounts[0]!, { target: { value: typed } });
-      await user.type(accounts[1]!, "Equity:Opening");
+      fireEvent.change(accounts[1]!, { target: { value: "Equity:Opening" } });
       await user.click(amounts[1]!);
       await user.keyboard("{Enter}");
 

@@ -151,6 +151,10 @@ const bgJournal: Record<string, TranslationEntry> = {
     description:
       "Показано, когато контекстът на записа няма навигируем файл/ред",
   },
+  "journal.openEntrySource": {
+    message: "Отвори източника на {location}",
+    description: "Accessible name for the entry source location control",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Грешка при зареждане на записите в журнала",
     description: "Error message prefix for journal loading failures",

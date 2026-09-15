@@ -151,6 +151,10 @@ const skJournal: Record<string, TranslationEntry> = {
     description:
       "Zobrazí sa, keď kontext záznamu nemá navigovateľný súbor/riadok",
   },
+  "journal.openEntrySource": {
+    message: "Otvoriť zdroj na {location}",
+    description: "Accessible name for the entry source location control",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Chyba pri načítaní záznamov denníka",
     description: "Error message prefix for journal loading failures",

@@ -151,6 +151,10 @@ const faJournal: Record<string, TranslationEntry> = {
     description:
       "وقتی زمینه ورودی فایل/خط قابل پیمایش ندارد نمایش داده می\\u200cشود",
   },
+  "journal.openEntrySource": {
+    message: "باز کردن منبع در {location}",
+    description: "Accessible name for the entry source location control",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "خطا در بارگذاری ثبت‌های روزنامه",
     description: "Error message prefix for journal loading failures",

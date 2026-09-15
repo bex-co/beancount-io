@@ -151,6 +151,10 @@ const frJournal: Record<string, TranslationEntry> = {
     description:
       "Affiché lorsque le contexte de l'écriture n'a pas de fichier/ligne navigables",
   },
+  "journal.openEntrySource": {
+    message: "Ouvrir la source à {location}",
+    description: "Accessible name for the entry source location control",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Erreur lors du chargement des écritures de journal",
     description: "Error message prefix for journal loading failures",

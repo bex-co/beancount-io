@@ -151,6 +151,10 @@ const ruJournal: Record<string, TranslationEntry> = {
     description:
       "Показывается, когда у контекста записи нет файла/строки для перехода",
   },
+  "journal.openEntrySource": {
+    message: "Открыть источник в {location}",
+    description: "Accessible name for the entry source location control",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Ошибка загрузки записей журнала",
     description: "Error message prefix for journal loading failures",

@@ -1,3 +1,4 @@
+import { useRef, type RefObject } from "react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
   Dialog,
@@ -16,6 +17,7 @@ import type {
   JournalTransaction,
 } from "@/common/types/journal";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { EntryContextPanel } from "@/features/journal/components/entry-context-panel";
 
 interface EntryContextDialogProps {
@@ -24,6 +26,10 @@ interface EntryContextDialogProps {
   entry: JournalDirectiveType | null;
   ledgerId: string;
   onSuccess?: () => void;
+  /** Originating row/control that opened this dialog. */
+  returnFocusRef?: RefObject<HTMLElement | null>;
+  /** Used when the opener unmounts after a successful edit/delete. */
+  fallbackFocusRef?: RefObject<HTMLElement | null>;
 }
 
 /**
@@ -102,14 +108,31 @@ export function EntryContextDialog({
   entry,
   ledgerId,
   onSuccess,
+  returnFocusRef,
+  fallbackFocusRef,
 }: EntryContextDialogProps) {
   const { t } = useTranslations();
   const generatedEntry = isGeneratedEntry(entry) ? entry : null;
   const entryHash = entry?.entry_hash ?? "";
+  const skipFocusRestoreRef = useRef(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] md:min-w-[600px] md:max-w-2xl lg:min-w-[800px] lg:max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent
+        className="w-[95vw] sm:w-[90vw] md:min-w-[600px] md:max-w-2xl lg:min-w-[800px] lg:max-w-4xl max-h-[80vh] overflow-hidden flex flex-col"
+        onCloseAutoFocus={(event) => {
+          if (skipFocusRestoreRef.current) {
+            skipFocusRestoreRef.current = false;
+            event.preventDefault();
+            return;
+          }
+          restoreFocusOnDialogClose(
+            event,
+            returnFocusRef?.current,
+            fallbackFocusRef?.current,
+          );
+        }}
+      >
         <VisuallyHidden>
           <DialogTitle>{t("journal.entryContext")}</DialogTitle>
         </VisuallyHidden>
@@ -123,6 +146,9 @@ export function EntryContextDialog({
               ledgerId={ledgerId}
               entry={entry}
               skip={!open || !entryHash}
+              onSourceNavigate={() => {
+                skipFocusRestoreRef.current = true;
+              }}
               onSuccess={() => {
                 onOpenChange(false);
                 onSuccess?.();

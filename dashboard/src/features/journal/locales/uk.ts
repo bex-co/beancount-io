@@ -151,6 +151,10 @@ const ukJournal: Record<string, TranslationEntry> = {
     description:
       "Показується, коли в контексті запису немає файлу/рядка для переходу",
   },
+  "journal.openEntrySource": {
+    message: "Відкрити джерело в {location}",
+    description: "Accessible name for the entry source location control",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Помилка завантаження записів журналу",
     description: "Error message prefix for journal loading failures",

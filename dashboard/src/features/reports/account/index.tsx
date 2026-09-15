@@ -101,6 +101,8 @@ export function AccountJournalTable({
     useState(false);
   const [selectedEntry, setSelectedEntry] =
     useState<JournalDirectiveType | null>(null);
+  const entryOpenerRef = useRef<HTMLElement | null>(null);
+  const entryFallbackRef = useRef<HTMLDivElement | null>(null);
 
   const {
     data: journalData,
@@ -259,20 +261,23 @@ export function AccountJournalTable({
         />
       </CardContent>
       <CardContent>
-        <JournalTable
-          data={journalTableData}
-          showMetadata={showMetadata}
-          showPostings={showPostings}
-          isAccountJournal
-          accountName={accountName}
-          withChildren={withChildren}
-          ledgerOwner={ledgerOwner}
-          ledgerName={ledgerName}
-          onEntryClick={(entry) => {
-            setSelectedEntry(entry);
-            setIsEntryContextDialogOpen(true);
-          }}
-        />
+        <div ref={entryFallbackRef} tabIndex={-1} className="outline-none">
+          <JournalTable
+            data={journalTableData}
+            showMetadata={showMetadata}
+            showPostings={showPostings}
+            isAccountJournal
+            accountName={accountName}
+            withChildren={withChildren}
+            ledgerOwner={ledgerOwner}
+            ledgerName={ledgerName}
+            onEntryClick={(entry, opener) => {
+              entryOpenerRef.current = opener;
+              setSelectedEntry(entry);
+              setIsEntryContextDialogOpen(true);
+            }}
+          />
+        </div>
         <div className="relative flex justify-end">
           <JournalPagination
             total={total}
@@ -288,6 +293,8 @@ export function AccountJournalTable({
         onOpenChange={setIsEntryContextDialogOpen}
         entry={selectedEntry}
         ledgerId={ledgerId}
+        returnFocusRef={entryOpenerRef}
+        fallbackFocusRef={entryFallbackRef}
         onSuccess={() => {
           void refetchJournal();
         }}

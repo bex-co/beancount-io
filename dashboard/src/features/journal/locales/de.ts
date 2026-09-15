@@ -151,6 +151,10 @@ const deJournal: Record<string, TranslationEntry> = {
     description:
       "Anzeige, wenn der Eintragskontext keinen navigierbaren Dateinamen/Zeile hat",
   },
+  "journal.openEntrySource": {
+    message: "Quelle unter {location} öffnen",
+    description: "Accessible name for the entry source location control",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Fehler beim Laden der Journaleinträge",
     description: "Error message prefix for journal loading failures",
