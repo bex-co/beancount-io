@@ -1,6 +1,6 @@
 # w3 · m41 — Confirm before deleting a transaction
 
-**Worker:** worker3 **Goal:** destroying a ledger entry takes a deliberate confirmation, like every other destructive action in the product **Status:** todo
+**Worker:** worker3 **Goal:** destroying a ledger entry takes a deliberate confirmation, like every other destructive action in the product **Status:** done
 
 Severity: **major**. Package: dashboard. One click on **Delete** in the Entry Context dialog permanently removes a transaction from the ledger. There is no confirmation, no undo, and on an unmodified entry it is the only enabled action other than Close.
 
@@ -8,12 +8,12 @@ Severity: **major**. Package: dashboard. One click on **Delete** in the Entry Co
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Require a confirmation before deleting an entry | 45m | — |
-| t002 | Localize the confirmation copy in all 15 locales | 30m | t001 |
-| t003 | Verify the delete-confirmation adoption surface | 15m | t002 |
-| t004 | Simplify the confirmation wiring | 10m | t003 |
-| t005 | Test the confirmation across all three dialog callers | 45m | t003 |
-| t006 | Close and archive the delete-confirmation milestone | 10m | t004, t005 |
+| t001 | Require a confirmation before deleting an entry — **DONE** | 45m | — |
+| t002 | Localize the confirmation copy in all 15 locales — **DONE** | 30m | t001 |
+| t003 | Verify the delete-confirmation adoption surface — **DONE** | 15m | t002 |
+| t004 | Simplify the confirmation wiring — **DONE** | 10m | t003 |
+| t005 | Test the confirmation across all three dialog callers — **DONE** | 45m | t003 |
+| t006 | Close and archive the delete-confirmation milestone — **DONE** | 10m | t004, t005 |
 
 Implementation totals 75 minutes; all six tasks total 155 minutes. A shared dialog with three callers, copy in fifteen locales, and destructive-path tests put this past a sub-hour edit.
 
