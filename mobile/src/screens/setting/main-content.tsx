@@ -138,7 +138,7 @@ export const MainContent = () => {
         <ListItemHorizontal
           icon={<Ionicons name="star" size={22} color={theme.black80} />}
           title={t("reviewApp")}
-          content={Platform.OS === "ios" ? "Apple Store" : "Google Play"}
+          content={Platform.OS === "ios" ? "App Store" : "Google Play"}
           onPress={async () => {
             const storeUrl =
               Platform.OS === "ios"
