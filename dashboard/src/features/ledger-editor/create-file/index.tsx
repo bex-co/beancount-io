@@ -1,9 +1,9 @@
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
 import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, useBlocker } from "@tanstack/react-router";
-import { useMutation } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { getFileLanguage } from "@/features/ledger-editor/shared/lib/utils";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
+import { createFileNameIssue } from "./validate-create-file-name";
 
 /**
  * Create File Page Component - GitHub-style file creation interface
@@ -57,12 +58,35 @@ const CreateFilePage = () => {
   const allowNavigationRef = useRef(false);
 
   const [createFileMutation] = useMutation(CreateLedgerFileDocument);
+  const { data: dirData } = useQuery(GetLedgerDirContentDocument, {
+    variables: {
+      ledgerId,
+      dirPath: dirPath || null,
+    },
+    skip: !ledgerId,
+  });
+
+  const existingNames = useMemo(
+    () =>
+      (dirData?.getLedgerDirContent ?? [])
+        .map((entry) => entry.name)
+        .filter((name): name is string => Boolean(name)),
+    [dirData?.getLedgerDirContent],
+  );
 
   // Construct full file path
   const fullPath = dirPath ? `${dirPath}/${filename}` : filename;
 
-  // Save button should be disabled if filename or content is empty
-  const isSaveDisabled = !filename.trim() || isSaving;
+  const nameIssue = createFileNameIssue(filename, existingNames);
+  const filenameError =
+    nameIssue === "unsafe"
+      ? t("ledgerEditor.invalidFilePath")
+      : nameIssue === "exists"
+        ? t("ledgerEditor.fileAlreadyExists")
+        : null;
+
+  // Save button should be disabled if filename is empty/invalid or saving
+  const isSaveDisabled = nameIssue !== null || isSaving;
 
   const hasDraft = filename.trim() !== "" || content.trim() !== "";
 
@@ -148,25 +172,40 @@ const CreateFilePage = () => {
       <div className="border-b pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Left side: Directory path + filename input */}
-          <div className="flex-1 flex items-center gap-2 min-w-0">
-            <div className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">
-              <span>{ledgerName}</span>
-              {dirPath && (
-                <>
-                  <span>/</span>
-                  <span className="truncate">{dirPath}</span>
-                </>
-              )}
-              <span>/</span>
+          <div className="flex-1 flex flex-col gap-1 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-1 text-sm text-muted-foreground whitespace-nowrap">
+                <span>{ledgerName}</span>
+                {dirPath && (
+                  <>
+                    <span>/</span>
+                    <span className="truncate">{dirPath}</span>
+                  </>
+                )}
+                <span>/</span>
+              </div>
+              <Input
+                type="text"
+                placeholder={t("ledgerEditor.nameYourFile")}
+                value={filename}
+                onChange={(e) => setFilename(e.target.value)}
+                className="flex-1 min-w-0"
+                autoFocus
+                aria-invalid={Boolean(filenameError)}
+                aria-describedby={
+                  filenameError ? "create-file-name-error" : undefined
+                }
+              />
             </div>
-            <Input
-              type="text"
-              placeholder={t("ledgerEditor.nameYourFile")}
-              value={filename}
-              onChange={(e) => setFilename(e.target.value)}
-              className="flex-1 min-w-0"
-              autoFocus
-            />
+            {filenameError ? (
+              <p
+                id="create-file-name-error"
+                className="text-sm text-destructive"
+                role="alert"
+              >
+                {filenameError}
+              </p>
+            ) : null}
           </div>
 
           {/* Right side: Action buttons */}

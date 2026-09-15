@@ -28,6 +28,7 @@ vi.mock("@tanstack/react-router", () => ({
 
 vi.mock("@apollo/client/react", () => ({
   useMutation: () => [vi.fn()],
+  useQuery: () => ({ data: undefined }),
 }));
 
 vi.mock("@/common/hooks/use-translations", () => ({
