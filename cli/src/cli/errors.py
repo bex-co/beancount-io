@@ -67,6 +67,14 @@ class UsageError(BeaError):
     exit_code = EXIT_USAGE
 
 
+def refuse_json(command: str, *, hint: str) -> None:
+    """Raise UsageError when global ``--json`` was set for a text-only command."""
+    from cli import context
+
+    if context.current().json_output:
+        raise UsageError(f"bea {command} has no JSON output. {hint}")
+
+
 class AuthError(BeaError):
     """Not authenticated, or not permitted."""
 

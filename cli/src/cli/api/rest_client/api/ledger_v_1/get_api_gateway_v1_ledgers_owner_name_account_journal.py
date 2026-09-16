@@ -20,6 +20,7 @@ def _get_kwargs(
     account: str,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
+    filter_account: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
@@ -37,6 +38,8 @@ def _get_kwargs(
     params["filter"] = filter_
 
     params["time"] = time
+
+    params["filter_account"] = filter_account
 
     params["limit"] = limit
 
@@ -150,6 +153,7 @@ def sync_detailed(
     account: str,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
+    filter_account: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
@@ -172,6 +176,7 @@ def sync_detailed(
             range. It bounds transactions only — undated structural directives such as `open` and
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
+        filter_account (str | Unset):
         limit (int | Unset):
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
@@ -200,6 +205,7 @@ def sync_detailed(
         account=account,
         filter_=filter_,
         time=time,
+        filter_account=filter_account,
         limit=limit,
         offset=offset,
         with_children=with_children,
@@ -225,6 +231,7 @@ def sync(
     account: str,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
+    filter_account: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
@@ -247,6 +254,7 @@ def sync(
             range. It bounds transactions only — undated structural directives such as `open` and
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
+        filter_account (str | Unset):
         limit (int | Unset):
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
@@ -276,6 +284,7 @@ def sync(
         account=account,
         filter_=filter_,
         time=time,
+        filter_account=filter_account,
         limit=limit,
         offset=offset,
         with_children=with_children,
@@ -295,6 +304,7 @@ async def asyncio_detailed(
     account: str,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
+    filter_account: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
@@ -317,6 +327,7 @@ async def asyncio_detailed(
             range. It bounds transactions only — undated structural directives such as `open` and
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
+        filter_account (str | Unset):
         limit (int | Unset):
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
@@ -345,6 +356,7 @@ async def asyncio_detailed(
         account=account,
         filter_=filter_,
         time=time,
+        filter_account=filter_account,
         limit=limit,
         offset=offset,
         with_children=with_children,
@@ -368,6 +380,7 @@ async def asyncio(
     account: str,
     filter_: str | Unset = UNSET,
     time: str | Unset = UNSET,
+    filter_account: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
@@ -390,6 +403,7 @@ async def asyncio(
             range. It bounds transactions only — undated structural directives such as `open` and
             `close` carry the epoch date and appear in every window, so a single-day journal still
             lists them. Use directiveTypes to ask for transactions alone.
+        filter_account (str | Unset):
         limit (int | Unset):
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
@@ -420,6 +434,7 @@ async def asyncio(
             account=account,
             filter_=filter_,
             time=time,
+            filter_account=filter_account,
             limit=limit,
             offset=offset,
             with_children=with_children,

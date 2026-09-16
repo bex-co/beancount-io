@@ -850,11 +850,11 @@ $ bea --json cloud status | jq '{source: .data.source, tier: .data.tier}'
 
 Report JSON carries the same tree the text renderer walks — `account`, `balance`, `balance_children`, `has_txns`, `children` — not a rendering of it.
 
-Commands that cannot produce JSON keep their own shapes: `ask` rejects JSON
-mode, `cloud login` requires interaction, successful `cloud logout` and
-`cloud ledger clone` emit no JSON success object (use their exit status), and
-help, version, and completion output stay textual. `upgrade` can stream
-package-manager output to stderr even in JSON mode. The
+Commands that cannot produce JSON keep their own shapes: `ask`, `doctor`,
+`example`, and `treeify` reject JSON mode, `cloud login` requires interaction,
+successful `cloud logout` and `cloud ledger clone` emit no JSON success object
+(use their exit status), and help, version, and completion output stay textual.
+`upgrade` can stream package-manager output to stderr even in JSON mode. The
 [directive models](https://github.com/bex-co/beancount-io/blob/main/cli/src/cli/directives/models.py)
 define the exact object fields for directive listings and bulk input.
 

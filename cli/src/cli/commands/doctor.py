@@ -5,6 +5,7 @@ from __future__ import annotations
 import typer
 
 from cli.engine import launch
+from cli.errors import refuse_json
 from cli.native_help import native_help
 
 doctor_app = typer.Typer(
@@ -34,6 +35,10 @@ _OPS = (
 
 def _forward(op: str, ctx: typer.Context) -> None:
     """Pass remaining argv through to bean-doctor unchanged."""
+    refuse_json(
+        "doctor",
+        hint="Run without --json and pass the ledger path as a positional argument.",
+    )
     code = launch.run_native("bean-doctor", [op, *ctx.args])
     raise typer.Exit(code)
 
