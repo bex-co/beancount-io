@@ -317,10 +317,15 @@ def _transaction(
             posting_number = error.source.get("lineno", 0) - len(header_text.splitlines())
             location = f"--posting {posting_number}" if 0 < posting_number <= len(postings) else "Transaction options"
             details.append(f"{location}: {error.message}")
-        raise protocol.UsageError(
-            "Invalid transaction options; use postings such as 'Assets:Checking -30 USD'. Nothing was written.",
-            details=details,
-        )
+        if details and all(detail.startswith("Transaction options:") for detail in details):
+            message = (
+                "Invalid transaction header (--tag, --link, --flag, --payee, or --narration). Nothing was written."
+            )
+        else:
+            message = (
+                "Invalid transaction options; use postings such as 'Assets:Checking -30 USD'. Nothing was written."
+            )
+        raise protocol.UsageError(message, details=details)
     entry = entries[0]
     snapshot = None
     currencies: list[str] = []
