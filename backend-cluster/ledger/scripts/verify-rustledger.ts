@@ -832,6 +832,37 @@ async function main(): Promise<void> {
   );
   assert(badQuery.rows.length === 0, "invalid BQL returns no rows");
 
+  const bigIntQuery = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT 9007199254740993 AS value LIMIT 1",
+  );
+  assert(
+    bigIntQuery.errors.some((error) => error.severity === "error"),
+    "out-of-range integer query surfaces a severity-error entry in QueryResult.errors",
+  );
+  assert(
+    bigIntQuery.errors.some((error) =>
+      error.message.includes("can't be represented as a JavaScript number"),
+    ),
+    "out-of-range integer preserves rustledger's conversion diagnostic",
+  );
+  assert(bigIntQuery.rows.length === 0, "out-of-range integer returns no rows");
+
+  const decimalControl = await queryLedgerFilesResult(
+    FILES,
+    "main.beancount",
+    "SELECT 9007199254740993.0 AS value LIMIT 1",
+  );
+  assert(
+    decimalControl.errors.length === 0,
+    "the same numeric value as a decimal literal succeeds",
+  );
+  assert(
+    String(decimalControl.rows[0]?.[0]).includes("9007199254740993"),
+    "decimal literal preserves exact digits",
+  );
+
   // Parsed-snapshot cache: same content + same effective today → the SAME
   // frozen snapshot object (no re-parse); a different today → a distinct entry.
   const cacheFixture = {

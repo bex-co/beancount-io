@@ -39,6 +39,45 @@ import {
 } from "./source-slice";
 import { getRustledgerWorkerPool } from "./rustledger-worker-pool";
 
+const UNSUPPORTED_JS_INTEGER_MESSAGE =
+  "can't be represented as a JavaScript number";
+
+/** Rustledger rejects integer query cells outside JS safe-integer range. */
+export function isUnsupportedIntegerResultError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.message.includes(UNSUPPORTED_JS_INTEGER_MESSAGE)
+  );
+}
+
+function unsupportedIntegerResultQueryError(
+  causeMessage?: string,
+): QueryResult {
+  const maxSafe = Number.MAX_SAFE_INTEGER;
+  const minSafe = Number.MIN_SAFE_INTEGER;
+  const detail =
+    causeMessage ??
+    `Query result integer is outside the supported JavaScript safe-integer range (${minSafe} to ${maxSafe}); use a decimal literal (for example ${maxSafe}.0) to preserve exact digits.`;
+  return {
+    columns: [],
+    rows: [],
+    errors: [
+      {
+        message: detail,
+        code: null,
+        phase: "query",
+        hint: null,
+        file: null,
+        line: null,
+        column: null,
+        end_line: null,
+        end_column: null,
+        severity: "error",
+      },
+    ],
+  };
+}
+
 /**
  * A fully-materialized snapshot of a parsed ledger. Every field is plain JSON
  * copied out of the WASM ledger before its native memory is released, so the
@@ -697,7 +736,16 @@ export async function queryLedgerFilesResultInProcess(
           return { columns: [], rows: [], errors: parseErrors };
         }
       }
-      return ledger.query(query);
+      try {
+        return ledger.query(query);
+      } catch (error) {
+        if (isUnsupportedIntegerResultError(error)) {
+          return unsupportedIntegerResultQueryError(
+            error instanceof Error ? error.message : undefined,
+          );
+        }
+        throw error;
+      }
     },
   );
 }

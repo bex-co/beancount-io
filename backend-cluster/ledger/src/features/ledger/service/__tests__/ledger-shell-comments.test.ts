@@ -1,4 +1,5 @@
 import type { QueryResult } from "@rustledger/wasm";
+import { BadUserInputError } from "@/shared/errors";
 import { LedgerShellService } from "../ledger-shell-service";
 
 const queryLedgerFilesResult = jest.fn();
@@ -111,5 +112,33 @@ describe("LedgerShellService block-comment normalization", () => {
         query: "/* c */ SELEKT account",
       }),
     ).rejects.toThrow();
+  });
+
+  it("maps unsupported integer query results to BadUserInputError in both shell modes", async () => {
+    const integerLimitResult = {
+      columns: [],
+      rows: [],
+      errors: [
+        {
+          severity: "error",
+          message:
+            "can't be represented as a JavaScript number; use a decimal literal instead",
+        },
+      ],
+    } as unknown as QueryResult;
+    queryLedgerFilesResult.mockResolvedValue(integerLimitResult);
+    const service = makeService();
+    const params = {
+      ledgerId: "open_ledger/example",
+      userId: undefined as undefined,
+      query: "SELECT 9007199254740993 AS value LIMIT 1",
+    };
+
+    await expect(service.queryShell(params)).rejects.toBeInstanceOf(
+      BadUserInputError,
+    );
+    await expect(service.queryShellText(params)).rejects.toBeInstanceOf(
+      BadUserInputError,
+    );
   });
 });
