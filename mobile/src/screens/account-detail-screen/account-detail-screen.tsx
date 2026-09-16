@@ -50,12 +50,27 @@ import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-
 import { AccountEntryRow } from "@/screens/account-detail-screen/components/account-entry-row";
 import { DateSectionHeader } from "@/screens/transactions-screen/date-section-header";
 import { selectAccountDetailTarget } from "@/screens/account-detail-screen/select-account-detail-target";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+
+/** Leaf segment for the compact navigation title. */
+function accountLeafName(account: string): string {
+  const parts = account.split(":");
+  return parts[parts.length - 1] || account;
+}
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.white,
+    },
+    accountPath: {
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
+      color: theme.text01,
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     sectionTitle: {
       fontSize: fontSizes.xl,
@@ -324,6 +339,13 @@ const AccountDetailScreenImpl = ({
   const listHeader = useMemo(
     () => (
       <>
+        <Text
+          style={styles.accountPath}
+          accessibilityRole="header"
+          accessibilityLabel={account}
+        >
+          {account}
+        </Text>
         <View style={styles.chartContainer}>
           <BalanceChartCard
             label={chartLabel}
@@ -352,12 +374,14 @@ const AccountDetailScreenImpl = ({
       reportError,
       unitsReportError,
       styles.sectionTitle,
+      styles.accountPath,
+      account,
     ],
   );
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
-      <Stack.Screen options={{ title: account }} />
+      <Stack.Screen options={{ title: accountLeafName(account) }} />
       <SectionList
         sections={isInitialLoading || journalError ? [] : sections}
         renderItem={renderItem}

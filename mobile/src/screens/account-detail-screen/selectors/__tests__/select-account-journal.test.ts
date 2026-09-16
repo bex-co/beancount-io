@@ -131,8 +131,22 @@ describe("selectAccountJournalRows", () => {
         directiveType: undefined,
         change: -4.5,
         balance: 120.5,
+        moneyScale: 1,
       },
     ]);
+  });
+
+  it("carries recorded scale from decimal strings for operating-currency rows", () => {
+    const [row] = selectAccountJournalRows("MUSD", [
+      item(
+        { entry_hash: "m", date: "2026-06-29", payee: "Cash move" },
+        { MUSD: "423.284" },
+        { MUSD: "930.904" },
+      ),
+    ]);
+    expect(row.moneyScale).toBe(3);
+    expect(row.change).toBe(423.284);
+    expect(row.balance).toBe(930.904);
   });
 
   it("collects posting accounts and amounts for the row icon", () => {

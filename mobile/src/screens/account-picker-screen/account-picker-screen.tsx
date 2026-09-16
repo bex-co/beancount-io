@@ -324,6 +324,8 @@ function AccountPickerScreenComponent(): JSX.Element {
   const scrollRetry = useRef(initialScrollRetryState);
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Set synchronously by `onScrollToIndexFailed` during `scrollToLocation`. */
+  const scrollFailedSync = useRef(false);
 
   const stopScrollingToSelected = useCallback((settled: boolean) => {
     if (retryTimer.current) {
@@ -340,26 +342,62 @@ function AccountPickerScreenComponent(): JSX.Element {
     }
   }, []);
 
+  const scrollToSelectedRef = useRef<() => void>(() => {});
+
+  // Rows vary in height only with the OS font scale, so there is no reliable
+  // `getItemLayout` to give the list; recovery is a bounded re-issue instead.
+  const onScrollToIndexFailed = useCallback(
+    (info: { highestMeasuredFrameIndex: number }) => {
+      scrollFailedSync.current = true;
+      if (!scrollTarget.current) {
+        return;
+      }
+      if (settleTimer.current) {
+        clearTimeout(settleTimer.current);
+        settleTimer.current = null;
+      }
+      const { retry, state } = scrollRetryAfterFailure(
+        scrollRetry.current,
+        info,
+      );
+      scrollRetry.current = state;
+      if (!retry) {
+        stopScrollingToSelected(true);
+        return;
+      }
+      retryTimer.current = setTimeout(() => {
+        retryTimer.current = null;
+        scrollToSelectedRef.current();
+      }, SCROLL_RETRY_DELAY_MS);
+    },
+    [stopScrollingToSelected],
+  );
+
   const scrollToSelected = useCallback(() => {
     const location = scrollTarget.current;
-    if (!location) {
+    if (!location || !listRef.current) {
       return;
     }
-    listRef.current?.scrollToLocation({
+    scrollFailedSync.current = false;
+    if (settleTimer.current) {
+      clearTimeout(settleTimer.current);
+      settleTimer.current = null;
+    }
+    listRef.current.scrollToLocation({
       ...location,
       viewPosition: 0.5,
       animated: false,
     });
-    // No success callback exists, and `onScrollToIndexFailed` is raised during
-    // the attempt — so a quiet window means the row was reached.
-    if (settleTimer.current) {
-      clearTimeout(settleTimer.current);
+    if (scrollFailedSync.current || !scrollTarget.current) {
+      return;
     }
     settleTimer.current = setTimeout(() => {
       settleTimer.current = null;
       stopScrollingToSelected(true);
     }, SCROLL_SETTLE_MS);
   }, [stopScrollingToSelected]);
+
+  scrollToSelectedRef.current = scrollToSelected;
 
   // A new query or chip re-lays the list out, so a retry aimed at the old
   // layout must not fire into the new one. Declared before the effect that
@@ -386,35 +424,6 @@ function AccountPickerScreenComponent(): JSX.Element {
   useEffect(
     () => () => stopScrollingToSelected(false),
     [stopScrollingToSelected],
-  );
-
-  // Rows vary in height only with the OS font scale, so there is no reliable
-  // `getItemLayout` to give the list; recovery is a bounded re-issue instead.
-  const onScrollToIndexFailed = useCallback(
-    (info: { highestMeasuredFrameIndex: number }) => {
-      if (!scrollTarget.current) {
-        return;
-      }
-      if (settleTimer.current) {
-        clearTimeout(settleTimer.current);
-        settleTimer.current = null;
-      }
-      const { retry, state } = scrollRetryAfterFailure(
-        scrollRetry.current,
-        info,
-      );
-      scrollRetry.current = state;
-      if (!retry) {
-        // Out of budget: stop trying rather than redboxing or looping.
-        stopScrollingToSelected(true);
-        return;
-      }
-      retryTimer.current = setTimeout(() => {
-        retryTimer.current = null;
-        scrollToSelected();
-      }, SCROLL_RETRY_DELAY_MS);
-    },
-    [scrollToSelected, stopScrollingToSelected],
   );
 
   // The user taking over beats any pending correction of ours.

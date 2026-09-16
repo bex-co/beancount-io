@@ -73,6 +73,13 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
       gap: space.xs,
     },
+    nameColumn: {
+      flex: 1,
+      gap: space.xs,
+    },
+    badgeStacked: {
+      alignSelf: "flex-start",
+    },
     name: {
       flexShrink: 1,
       fontSize: fontSizes.lg,
@@ -209,18 +216,32 @@ export function MerchantRow({ item, onPress }: MerchantRowProps) {
     <>
       <AccountTypeIcon postings={[]} payee={merchant.payee} />
       <View style={styles.middle}>
-        <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={stacked ? undefined : 1}>
-            {merchant.payee}
-          </Text>
-          {showBadge ? (
-            <View style={styles.badge} testID="merchant-recurring-badge">
+        {showBadge && stacked ? (
+          <View style={styles.nameColumn}>
+            <Text style={styles.name}>{merchant.payee}</Text>
+            <View
+              style={[styles.badge, styles.badgeStacked]}
+              testID="merchant-recurring-badge"
+            >
               <Text style={styles.badgeText}>
                 {t("merchantsRecurringBadge")}
               </Text>
             </View>
-          ) : null}
-        </View>
+          </View>
+        ) : (
+          <View style={styles.nameRow}>
+            <Text style={styles.name} numberOfLines={stacked ? undefined : 1}>
+              {merchant.payee}
+            </Text>
+            {showBadge ? (
+              <View style={styles.badge} testID="merchant-recurring-badge">
+                <Text style={styles.badgeText}>
+                  {t("merchantsRecurringBadge")}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        )}
         <Text style={styles.subtitle} numberOfLines={1}>
           {subtitle}
         </Text>

@@ -6,6 +6,7 @@ import {
   FlatList,
   Pressable,
   TextInput,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -15,7 +16,7 @@ import {
   GetLedgerDocument,
   type GetLedgerQuery,
 } from "@/generated-graphql/graphql";
-import { useTheme } from "@/common/theme";
+import { prefersStackedLayout, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useToast } from "@/common/hooks/use-toast";
@@ -78,6 +79,15 @@ const getStyles = (theme: ColorTheme) =>
       borderBottomColor: theme.black10,
     },
     content: { flex: 1, paddingVertical: 16, gap: 4 },
+    titleBlock: {
+      gap: 2,
+    },
+    titleOwner: {
+      color: theme.black80,
+      fontSize: 13,
+      lineHeight: 18,
+      textAlign: LEADING_TEXT_ALIGN,
+    },
     title: {
       color: theme.text01,
       fontSize: 16,
@@ -96,11 +106,25 @@ const getStyles = (theme: ColorTheme) =>
     dim: { opacity: 0.4 },
   });
 
+/** Split `owner/ledger-name` so enlarged text can show the distinguishing tail. */
+function discoveryNameParts(fullName: string): { owner: string; name: string } {
+  const slash = fullName.indexOf("/");
+  if (slash < 0) {
+    return { owner: "", name: fullName };
+  }
+  return {
+    owner: fullName.slice(0, slash + 1),
+    name: fullName.slice(slash + 1),
+  };
+}
+
 export function LedgerSelectionScreen() {
   const router = useRouter();
   const client = useApolloClient();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
   const { t } = useTranslations();
   const toast = useToast();
   const selected = useReactiveVar(ledgerVar);
@@ -261,9 +285,25 @@ export function LedgerSelectionScreen() {
                 void open(item.id);
               }}
             >
-              <Text numberOfLines={1} style={styles.title}>
-                {item.fullName}
-              </Text>
+              {stacked ? (
+                <View style={styles.titleBlock}>
+                  {(() => {
+                    const { owner, name } = discoveryNameParts(item.fullName);
+                    return (
+                      <>
+                        {owner ? (
+                          <Text style={styles.titleOwner}>{owner}</Text>
+                        ) : null}
+                        <Text style={styles.title}>{name}</Text>
+                      </>
+                    );
+                  })()}
+                </View>
+              ) : (
+                <Text numberOfLines={1} style={styles.title}>
+                  {item.fullName}
+                </Text>
+              )}
               {ledgerRowDescription(item.description) ? (
                 <Text numberOfLines={1} style={styles.muted}>
                   {item.description}

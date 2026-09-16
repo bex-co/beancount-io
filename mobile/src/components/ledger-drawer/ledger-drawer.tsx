@@ -32,6 +32,7 @@ import {
   fontSizes,
   fontWeights,
   gutter,
+  prefersStackedLayout,
   space,
   useTheme,
 } from "@/common/theme";
@@ -365,7 +366,8 @@ export function LedgerDrawer({
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
   const toast = useToast();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
   const drawerWidth = Math.min(340, windowWidth * 0.85);
   // The drawer's travel as a *signed* distance. `progress` stays 0→1 in both
   // directions — `drawer-motion.ts` is deliberately direction-free — and every
@@ -662,7 +664,7 @@ export function LedgerDrawer({
           keyboardDismissMode="on-drag"
           contentContainerStyle={styles.ledgerListContent}
           alwaysBounceVertical
-          stickySectionHeadersEnabled
+          stickySectionHeadersEnabled={!stacked}
           sections={drawerSections}
           extraData={ledgerId}
           keyExtractor={(item) => item.fullName}
@@ -810,31 +812,59 @@ export function LedgerDrawer({
               </View>
             );
           }}
+          ListFooterComponent={
+            stacked ? (
+              <View style={styles.navSection}>
+                <DrawerMenuRow
+                  testID="drawer-discovery-row"
+                  icon="compass-outline"
+                  label={t("discoveryTitle")}
+                  onPress={handleBrowsePress}
+                />
+                {ledgerId ? (
+                  <DrawerMenuRow
+                    testID="drawer-merchants-row"
+                    icon="storefront-outline"
+                    label={t("merchants")}
+                    onPress={handleMerchantsPress}
+                  />
+                ) : null}
+                <DrawerMenuRow
+                  testID="drawer-settings-row"
+                  icon="settings-outline"
+                  label={t("settings")}
+                  onPress={handleSettingsPress}
+                />
+              </View>
+            ) : null
+          }
         />
 
-        {/* Pinned: a collection of any size scrolls above this, never over it. */}
-        <View style={styles.navSection}>
-          <DrawerMenuRow
-            testID="drawer-discovery-row"
-            icon="compass-outline"
-            label={t("discoveryTitle")}
-            onPress={handleBrowsePress}
-          />
-          {ledgerId ? (
+        {/* Pinned at default text sizes; enlarged text scrolls nav in the list footer. */}
+        {!stacked ? (
+          <View style={styles.navSection}>
             <DrawerMenuRow
-              testID="drawer-merchants-row"
-              icon="storefront-outline"
-              label={t("merchants")}
-              onPress={handleMerchantsPress}
+              testID="drawer-discovery-row"
+              icon="compass-outline"
+              label={t("discoveryTitle")}
+              onPress={handleBrowsePress}
             />
-          ) : null}
-          <DrawerMenuRow
-            testID="drawer-settings-row"
-            icon="settings-outline"
-            label={t("settings")}
-            onPress={handleSettingsPress}
-          />
-        </View>
+            {ledgerId ? (
+              <DrawerMenuRow
+                testID="drawer-merchants-row"
+                icon="storefront-outline"
+                label={t("merchants")}
+                onPress={handleMerchantsPress}
+              />
+            ) : null}
+            <DrawerMenuRow
+              testID="drawer-settings-row"
+              icon="settings-outline"
+              label={t("settings")}
+              onPress={handleSettingsPress}
+            />
+          </View>
+        ) : null}
       </View>
 
       <GestureDetector gesture={panGesture}>

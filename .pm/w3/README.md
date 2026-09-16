@@ -60,6 +60,11 @@
 
 - [x] **m42** — Accept dates in the user's own date order (6 tasks) ← continuous dashboard QA, 2026-09-12
 
+## Blocked milestones
+
+- **m1** / **m2** — code-complete; closeout blocked on in-app verification
+  against a ledger that has budget directives (see milestone Status lines).
+
 ## Inbox
 
 A full triage pass on 2026-09-11 took this list from 78 notes to 4. Every note
@@ -83,6 +88,5 @@ The four that remain are deliberately not "next up":
 
 Added since that pass:
 
-- [189](./189.md) — The account journal rounds a posting the transactions list shows in full (native QA, 2026-09-12)
 
 - [x] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13

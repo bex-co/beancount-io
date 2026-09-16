@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, TouchableHighlight } from "react-native";
 import RNDateTimePickerModal, {
   CustomCancelButtonPropTypes,
+  CustomConfirmButtonPropTypes,
   ReactNativeModalDateTimePickerProps,
 } from "react-native-modal-datetime-picker";
 import { useReactiveVar } from "@apollo/client";
@@ -9,13 +10,29 @@ import { useTheme } from "@/common/theme";
 import { localeVar } from "@/common/vars";
 import { useTranslations } from "@/common/hooks/use-translations";
 
+/** Shared action-card sizing: grows with Dynamic Type instead of clipping labels. */
+const actionButtonStyles = StyleSheet.create({
+  button: {
+    borderRadius: 13,
+    minHeight: 57,
+    justifyContent: "center",
+    paddingVertical: 10,
+  },
+  label: {
+    paddingHorizontal: 10,
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "600",
+  },
+});
+
 /**
  * The library renders the cancel button as its own separate card and paints it
  * with a hard-coded near-black background (#0E0E0E) in dark mode. On our
  * Charcoal page that card is indistinguishable from the backdrop, so it "blends
  * in". Repaint it with the elevated-surface token so it reads as a raised card,
  * matching the picker card above it. Layout metrics mirror the library defaults
- * so nothing shifts.
+ * so nothing shifts at the default text size.
  */
 const ThemedCancelButton: React.FC<CustomCancelButtonPropTypes> = ({
   onPress,
@@ -24,14 +41,46 @@ const ThemedCancelButton: React.FC<CustomCancelButtonPropTypes> = ({
   const { colorTheme } = useTheme();
   return (
     <TouchableHighlight
-      style={[styles.cancelButton, { backgroundColor: colorTheme.controlFill }]}
+      style={[
+        actionButtonStyles.button,
+        { backgroundColor: colorTheme.controlFill },
+      ]}
       underlayColor={colorTheme.controlSelected}
       onPress={onPress}
       accessible
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Text style={[styles.cancelLabel, { color: colorTheme.primary }]}>
+      <Text style={[actionButtonStyles.label, { color: colorTheme.primary }]}>
+        {label}
+      </Text>
+    </TouchableHighlight>
+  );
+};
+
+/** Confirm uses the same adaptive card as cancel — the library default is height 57. */
+const ThemedConfirmButton: React.FC<CustomConfirmButtonPropTypes> = ({
+  onPress,
+  label,
+}) => {
+  const { colorTheme } = useTheme();
+  return (
+    <TouchableHighlight
+      style={[
+        actionButtonStyles.button,
+        {
+          backgroundColor: colorTheme.controlFill,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: colorTheme.controlBorder,
+        },
+      ]}
+      underlayColor={colorTheme.controlSelected}
+      onPress={onPress}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <Text style={[actionButtonStyles.label, { color: colorTheme.primary }]}>
         {label}
       </Text>
     </TouchableHighlight>
@@ -73,21 +122,8 @@ export const DatePickerModal: React.FC<ReactNativeModalDateTimePickerProps> = (
       buttonTextColorIOS={colorTheme.primary}
       pickerContainerStyleIOS={{ backgroundColor: colorTheme.controlFill }}
       customCancelButtonIOS={ThemedCancelButton}
+      customConfirmButtonIOS={ThemedConfirmButton}
       {...props}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  cancelButton: {
-    borderRadius: 13,
-    height: 57,
-    justifyContent: "center",
-  },
-  cancelLabel: {
-    padding: 10,
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: "600",
-  },
-});

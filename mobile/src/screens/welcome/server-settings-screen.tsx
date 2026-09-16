@@ -9,7 +9,10 @@ import {
   View,
 } from "react-native";
 import { Stack, router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useReactiveVar } from "@apollo/client";
 import { useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
@@ -140,10 +143,16 @@ function connectionMessage(
   }
 }
 
+/** Native stack header content height — paired with top inset for KAV offset. */
+const STACK_HEADER_HEIGHT = 44;
+
 export function ServerSettingsScreen(): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = getStyles(theme);
   const { t } = useTranslations();
+  const insets = useSafeAreaInsets();
+  const keyboardVerticalOffset =
+    Platform.OS === "ios" ? insets.top + STACK_HEADER_HEIGHT : 0;
   const override = useReactiveVar(serverUrlOverrideVar);
   const activeUrl = override ?? defaultRuntimeServerUrl();
   const [url, setUrl] = useState(activeUrl);
@@ -211,6 +220,7 @@ export function ServerSettingsScreen(): JSX.Element {
       <KeyboardAvoidingView
         style={styles.screen}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={keyboardVerticalOffset}
       >
         <ScrollView
           contentContainerStyle={styles.content}

@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
@@ -13,6 +14,7 @@ import {
   fontSizes,
   fontWeights,
   gutter,
+  prefersStackedLayout,
   rowMinHeight,
   rowPaddingVertical,
   sectionHeaderPaddingVertical,
@@ -87,6 +89,41 @@ const getStyles = (theme: ColorTheme) =>
       minHeight: rowMinHeight,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.black20,
+    },
+    rowStacked: {
+      flexDirection: "column",
+      alignItems: "stretch",
+    },
+    rowMain: {
+      flexDirection: "row",
+      alignItems: "center",
+      width: "100%",
+    },
+    stackedColumn: {
+      flex: 1,
+      marginEnd: 12,
+    },
+    stackedName: {
+      textAlign: LEADING_TEXT_ALIGN,
+    },
+    stackedNameCategory: {
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
+      color: theme.text01,
+    },
+    stackedNameTop: {
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
+      color: theme.text01,
+    },
+    stackedNameChild: {
+      fontSize: fontSizes.md,
+      color: theme.black80,
+    },
+    stackedAmounts: {
+      marginTop: 2,
+      alignItems: "flex-start",
+      maxWidth: "100%",
     },
     categoryRow: {
       // Tints the five roots so the groups stay legible once collapsed.
@@ -184,6 +221,7 @@ type AccountTableRowProps = {
   currency: string;
   /** How the row's balance reads; a plain money figure when absent. */
   display?: BalanceDisplay;
+  stacked: boolean;
   onToggle: (row: TableRow) => void;
   onPressAccount?: (account: string) => void;
 };
@@ -193,6 +231,7 @@ const AccountTableRow = memo(function AccountTableRow({
   label,
   currency,
   display,
+  stacked,
   onToggle,
   onPressAccount,
 }: AccountTableRowProps): JSX.Element {
@@ -261,40 +300,73 @@ const AccountTableRow = memo(function AccountTableRow({
       chevronIcon
     );
 
-  const content = (
+  const amountBlock = (
+    <View style={[styles.amounts, stacked && styles.stackedAmounts]}>
+      <AmountText mono={isCategory ? "medium" : "regular"} style={valueStyle}>
+        {units
+          ? formatHolding(units)
+          : formatSignedMoneyWithCurrency(row.value, currency)}
+      </AmountText>
+      {display
+        ? balanceNotes(display, currency, t).map((note) => (
+            <Text key={note} style={styles.amountNote}>
+              {note}
+            </Text>
+          ))
+        : null}
+    </View>
+  );
+
+  const guides = Array.from({ length: row.depth }, (_, level) => (
+    <View key={level} style={styles.guide}>
+      <View style={styles.guideRule} />
+    </View>
+  ));
+
+  const content = stacked ? (
     <>
-      {/* One guide per level above this row; the row's own chevron slot supplies
-          the last step of indent. */}
-      {Array.from({ length: row.depth }, (_, level) => (
-        <View key={level} style={styles.guide}>
-          <View style={styles.guideRule} />
+      <View style={styles.rowMain}>
+        {guides}
+        {chevron}
+        <View style={styles.stackedColumn}>
+          <Text
+            style={[
+              styles.stackedName,
+              isCategory
+                ? styles.stackedNameCategory
+                : row.depth === 1
+                  ? styles.stackedNameTop
+                  : styles.stackedNameChild,
+            ]}
+          >
+            {label}
+          </Text>
+          {amountBlock}
         </View>
-      ))}
-      {chevron}
-      <Text style={nameStyle} numberOfLines={1}>
-        {label}
-      </Text>
-      <View style={styles.amounts}>
-        <AmountText mono={isCategory ? "medium" : "regular"} style={valueStyle}>
-          {units
-            ? formatHolding(units)
-            : formatSignedMoneyWithCurrency(row.value, currency)}
-        </AmountText>
-        {display
-          ? balanceNotes(display, currency, t).map((note) => (
-              <Text key={note} style={styles.amountNote}>
-                {note}
-              </Text>
-            ))
-          : null}
       </View>
       {row.share > 0 && (
         <View
           style={[
             styles.barTrack,
-            // Under the label, not the chevron: one more step past the indent.
-            // `start`, not `left`: the label moves to the right in RTL, and
-            // with doLeftAndRightSwapInRTL off (rtl.ts) `left` stays physical.
+            { start: GUTTER + (row.depth + 1) * INDENT_STEP },
+          ]}
+        >
+          <View style={[styles.bar, { width: `${row.share * 100}%` }]} />
+        </View>
+      )}
+    </>
+  ) : (
+    <>
+      {guides}
+      {chevron}
+      <Text style={nameStyle} numberOfLines={1}>
+        {label}
+      </Text>
+      {amountBlock}
+      {row.share > 0 && (
+        <View
+          style={[
+            styles.barTrack,
             { start: GUTTER + (row.depth + 1) * INDENT_STEP },
           ]}
         >
@@ -308,6 +380,7 @@ const AccountTableRow = memo(function AccountTableRow({
     styles.row,
     { paddingStart: GUTTER },
     isCategory && styles.categoryRow,
+    stacked && styles.rowStacked,
   ];
 
   if (navigates) {
@@ -378,6 +451,8 @@ export function AccountTable({
 }: AccountTableProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
 
   const rows = useMemo(
@@ -398,11 +473,12 @@ export function AccountTable({
         label={item.depth === 0 ? t(item.label) : item.label}
         currency={currency}
         display={displays?.get(item.key)}
+        stacked={stacked}
         onToggle={onToggle}
         onPressAccount={onPressAccount}
       />
     ),
-    [t, currency, displays, onToggle, onPressAccount],
+    [t, currency, displays, stacked, onToggle, onPressAccount],
   );
 
   return (

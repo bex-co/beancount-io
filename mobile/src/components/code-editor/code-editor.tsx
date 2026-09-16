@@ -461,6 +461,13 @@ export default function CodeEditor({
     if (!view) return;
     view.scrollDOM.style.paddingBottom =
       keyboardInset > 0 ? `${keyboardInset}px` : "";
+    const head = view.state.selection.main.head;
+    view.dispatch({
+      effects: EditorView.scrollIntoView(head, {
+        y: "nearest",
+        yMargin: keyboardInset > 0 ? keyboardInset + 8 : 0,
+      }),
+    });
   }, [keyboardInset]);
 
   return (

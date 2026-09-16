@@ -6,6 +6,8 @@ import {
   Pressable,
   ScrollView,
   Text,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import {
   fontSizes,
@@ -17,7 +19,10 @@ import {
 import { i18n } from "@/translations";
 import { ColorTheme } from "@/types/theme-props";
 import { router, Stack } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
@@ -25,6 +30,7 @@ import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const MAX_SUGGESTIONS = 30;
 const SKELETON_ROW_WIDTHS = [176, 128, 200, 144];
+const STACK_HEADER_HEIGHT = 44;
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -42,6 +48,13 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.text01,
       fontSize: fontSizes.xl,
       paddingVertical: 8,
+    },
+    inputMultiline: {
+      flex: 1,
+      textAlignVertical: "top",
+    },
+    multilineBody: {
+      flex: 1,
     },
     doneButton: headerActionStyle(theme),
     suggestionsScroll: {
@@ -132,6 +145,9 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
 }) => {
   const theme = useTheme().colorTheme;
   const styles = getStyles(theme);
+  const insets = useSafeAreaInsets();
+  const keyboardVerticalOffset =
+    Platform.OS === "ios" ? insets.top + STACK_HEADER_HEIGHT : 0;
   const [value, setValue] = useState<string>(initialValue);
 
   const query = value.trim().toLowerCase();
@@ -189,77 +205,100 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
           ),
         }}
       />
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={value}
-          placeholder={placeholder ?? i18n.t("pleaseInput")}
-          placeholderTextColor={theme.controlPlaceholder}
-          underlineColorAndroid="transparent"
-          clearButtonMode="while-editing"
-          autoFocus
-          onChangeText={setValue}
-          multiline={multiline}
-          // Payees and narrations are written into the ledger verbatim, and are
-          // often brands or import strings: autocorrect and auto-capitalization
-          // would rewrite exactly the text this field exists to record.
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-      </View>
-      {(matches.length > 0 || showSkeleton) && (
-        <ScrollView
-          style={styles.suggestionsScroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+      {multiline ? (
+        <KeyboardAvoidingView
+          style={styles.multilineBody}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={keyboardVerticalOffset}
         >
-          <Text style={styles.sectionTitle}>
-            {i18n.t("suggestions").toUpperCase()}
-          </Text>
-          <View style={styles.card}>
-            {showSkeleton &&
-              SKELETON_ROW_WIDTHS.map((width, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.suggestionRow,
-                    index > 0 && styles.suggestionRowDivider,
-                  ]}
-                >
-                  <LoadingTile style={styles.iconTile} />
-                  <LoadingTile
-                    style={StyleSheet.flatten([styles.textTile, { width }])}
-                  />
-                </View>
-              ))}
-            {!showSkeleton && (
-              <FadeInView>
-                {matches.map((suggestion, index) => (
-                  <Pressable
-                    key={suggestion}
-                    style={({ pressed }) => [
-                      styles.suggestionRow,
-                      index > 0 && styles.suggestionRowDivider,
-                      pressed && styles.suggestionRowPressed,
-                    ]}
-                    onPress={() => commit(suggestion)}
-                    accessibilityRole="button"
-                    accessibilityLabel={suggestion}
-                  >
-                    <Ionicons
-                      name="time-outline"
-                      size={16}
-                      color={theme.black60}
-                    />
-                    <Text style={styles.suggestionText} numberOfLines={1}>
-                      {suggestion}
-                    </Text>
-                  </Pressable>
-                ))}
-              </FadeInView>
-            )}
+          <View style={[styles.inputContainer, styles.multilineBody]}>
+            <TextInput
+              style={[styles.input, styles.inputMultiline]}
+              value={value}
+              placeholder={placeholder ?? i18n.t("pleaseInput")}
+              placeholderTextColor={theme.controlPlaceholder}
+              underlineColorAndroid="transparent"
+              clearButtonMode="while-editing"
+              autoFocus
+              onChangeText={setValue}
+              multiline
+              scrollEnabled
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
           </View>
-        </ScrollView>
+        </KeyboardAvoidingView>
+      ) : (
+        <>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              value={value}
+              placeholder={placeholder ?? i18n.t("pleaseInput")}
+              placeholderTextColor={theme.controlPlaceholder}
+              underlineColorAndroid="transparent"
+              clearButtonMode="while-editing"
+              autoFocus
+              onChangeText={setValue}
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+          </View>
+          {(matches.length > 0 || showSkeleton) && (
+            <ScrollView
+              style={styles.suggestionsScroll}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <Text style={styles.sectionTitle}>
+                {i18n.t("suggestions").toUpperCase()}
+              </Text>
+              <View style={styles.card}>
+                {showSkeleton &&
+                  SKELETON_ROW_WIDTHS.map((width, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.suggestionRow,
+                        index > 0 && styles.suggestionRowDivider,
+                      ]}
+                    >
+                      <LoadingTile style={styles.iconTile} />
+                      <LoadingTile
+                        style={StyleSheet.flatten([styles.textTile, { width }])}
+                      />
+                    </View>
+                  ))}
+                {!showSkeleton && (
+                  <FadeInView>
+                    {matches.map((suggestion, index) => (
+                      <Pressable
+                        key={suggestion}
+                        style={({ pressed }) => [
+                          styles.suggestionRow,
+                          index > 0 && styles.suggestionRowDivider,
+                          pressed && styles.suggestionRowPressed,
+                        ]}
+                        onPress={() => commit(suggestion)}
+                        accessibilityRole="button"
+                        accessibilityLabel={suggestion}
+                      >
+                        <Ionicons
+                          name="time-outline"
+                          size={16}
+                          color={theme.black60}
+                        />
+                        <Text style={styles.suggestionText} numberOfLines={1}>
+                          {suggestion}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </FadeInView>
+                )}
+              </View>
+            </ScrollView>
+          )}
+        </>
       )}
     </SafeAreaView>
   );

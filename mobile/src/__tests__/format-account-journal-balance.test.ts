@@ -1,4 +1,7 @@
-import { formatAccountJournalBalance } from "../screens/account-detail-screen/utils/format-account-journal-balance";
+import {
+  formatAccountJournalBalance,
+  formatAccountJournalChange,
+} from "../screens/account-detail-screen/utils/format-account-journal-balance";
 
 describe("formatAccountJournalBalance", () => {
   it("keeps the minus on a negative running balance", () => {
@@ -15,5 +18,19 @@ describe("formatAccountJournalBalance", () => {
 
   it("falls back to a currency code for unknown commodities", () => {
     expect(formatAccountJournalBalance(-12.5, "MUSD")).toBe("-12.50 MUSD");
+  });
+
+  it("preserves three-decimal recorded scale for journal balances", () => {
+    expect(formatAccountJournalBalance(930.904, "MUSD", 3)).toBe(
+      "930.904 MUSD",
+    );
+  });
+});
+
+describe("formatAccountJournalChange", () => {
+  it("prefixes a plus on gains at recorded scale", () => {
+    expect(formatAccountJournalChange(423.284, "MUSD", 3)).toBe(
+      "+423.284 MUSD",
+    );
   });
 });

@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -264,6 +265,7 @@ export function CreateLedgerScreen(): JSX.Element {
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
       >
         <View style={styles.card}>
           <View style={styles.row}>

@@ -9,7 +9,10 @@ import {
   formatSignedMoneyWithCurrency,
   formatUnits,
 } from "@/common/number-utils";
-import { formatAccountJournalBalance } from "@/screens/account-detail-screen/utils/format-account-journal-balance";
+import {
+  formatAccountJournalBalance,
+  formatAccountJournalChange,
+} from "@/screens/account-detail-screen/utils/format-account-journal-balance";
 import {
   AccountJournalRow,
   directiveTypeLabelKey,
@@ -94,10 +97,10 @@ export function AccountEntryRow({
   const { units } = row;
   const changeText = units
     ? formatUnits(row.change, units.currency, units.scale, true)
-    : formatSignedMoneyWithCurrency(row.change, currency, true);
+    : formatAccountJournalChange(row.change, currency, row.moneyScale ?? 2);
   const balanceText = units
     ? formatUnits(row.balance, units.currency, units.scale)
-    : formatAccountJournalBalance(row.balance, currency);
+    : formatAccountJournalBalance(row.balance, currency, row.moneyScale ?? 2);
   // Open / Balance / Pad / … rows read as plain transactions otherwise: the
   // title falls back to the directive's own account name.
   const typeLabelKey = directiveTypeLabelKey(row.directiveType);

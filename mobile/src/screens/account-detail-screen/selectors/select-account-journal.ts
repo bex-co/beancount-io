@@ -1,11 +1,9 @@
 import { AccountJournalQuery } from "@/generated-graphql/graphql";
 import { PostingLite } from "@/common/tx-category";
-import { resolveCurrencyBalance } from "../../../common/balance-util";
+import { operatingKey } from "../../../common/balance-util";
 import { amountIn } from "../../../common/balance-display";
-import {
-  formatMoneyWithCurrency,
-  formatUnits,
-} from "../../../common/number-utils";
+import { formatUnits } from "../../../common/number-utils";
+import { formatAccountJournalChange } from "../utils/format-account-journal-balance";
 import { formatLedgerDate } from "../../../common/date-format";
 
 /** One `{ entry, change, balance }` row from the account journal response. */
@@ -34,6 +32,8 @@ export type AccountJournalRow = {
   directiveType?: string;
   change: number;
   balance: number;
+  /** Recorded scale for operating-currency rows; drives journal amount formatting. */
+  moneyScale?: number;
   /**
    * Set when the account reads in its commodity's units (see
    * `selectBalanceDisplay`): `change` and `balance` are then amounts of
@@ -205,7 +205,11 @@ export function groupAccountJournalRowsToSections(
           Math.max(...data.map((r) => r.units?.scale ?? 0)),
           net > 0,
         )
-      : `${net > 0 ? "+" : net < 0 ? "-" : ""}${formatMoneyWithCurrency(net, currency)}`;
+      : formatAccountJournalChange(
+          net,
+          currency,
+          Math.max(...data.map((r) => r.moneyScale ?? 2)),
+        );
     return {
       isoDate,
       displayDate: formatLedgerDate(isoDate, locale),
@@ -268,10 +272,14 @@ export function selectAccountJournalRows(
       directiveType: asString(item.entry.directive_type) || undefined,
     };
     if (!units) {
+      const key = operatingKey(item.change, currency);
+      const change = amountIn(item.change, key);
+      const balance = amountIn(item.balance, key);
       return {
         ...row,
-        change: resolveCurrencyBalance(item.change, currency),
-        balance: resolveCurrencyBalance(item.balance, currency),
+        change: change.number,
+        balance: balance.number,
+        moneyScale: Math.max(change.scale, balance.scale),
       };
     }
     const change = amountIn(item.change, units.currency);

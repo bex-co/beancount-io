@@ -15,12 +15,14 @@ import { directionalIcon } from "@/common/rtl";
 export const DefaultHeaderLeftBack = ({
   tintColor,
   label,
+  onPress,
 }: {
   tintColor?: ColorValue;
   label?: string;
+  onPress?: () => void;
 }) => (
   <Pressable
-    onPress={router.back}
+    onPress={onPress ?? router.back}
     style={{ paddingHorizontal: 8, paddingVertical: 4 }}
     hitSlop={8}
     accessibilityRole="button"
@@ -38,6 +40,11 @@ export const DefaultHeaderLeftBack = ({
   </Pressable>
 );
 
+/** Cold deep links need a tabs anchor so Back has somewhere to land. */
+export const unstable_settings = {
+  anchor: "(tabs)",
+};
+
 export default function AppLayout() {
   const session = useReactiveVar(sessionVar);
   const theme = useTheme().colorTheme;
@@ -48,8 +55,15 @@ export default function AppLayout() {
 
   // Closure-bound so the renderer itself stays hook-free.
   const backLabel = t("back");
+  const onBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(app)/(tabs)");
+    }
+  };
   const headerLeft = (props: { tintColor?: ColorValue }) => (
-    <DefaultHeaderLeftBack {...props} label={backLabel} />
+    <DefaultHeaderLeftBack {...props} label={backLabel} onPress={onBack} />
   );
 
   return (
