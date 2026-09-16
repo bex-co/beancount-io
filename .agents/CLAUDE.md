@@ -13,7 +13,7 @@ Customer-facing `beancount-*` ledger skills belong in [`skills/.claude/skills/`]
 | `mermaid` | Draw and syntax-check architecture and dependency diagrams. |
 | `pm` | Maintain the public `.pm` board; canonical board conventions and the only workflow that writes board state (create, close, drop). |
 | `pm-brainstorm` | Propose roadmap milestones and tasks as text for `/pm` to materialize. |
-| `loop-worker` | Triage each pending milestone in a workstream — work on it, close it as already done, or drop it — then implement and ship the survivors one at a time. |
+| `loopx` | Drain a workstream item by item — triage every pending milestone, task, and inbox note, then work and ship it, close it as already done, block it with an unblock condition, or delete it as invalid. |
 | `ship` | Rebase, commit, and push the current `main` branch. |
 | `mobile-release` | Prepare and publish mobile store releases and localized listings. |
 | `qa-find-bugs-cli` | Exercise real `bea` commands against isolated synthetic ledgers. |
@@ -42,7 +42,7 @@ When adding a development skill, update this catalog and run the checks below. U
 The `routine-*` skills are autonomous maintenance passes over this monorepo (discover → prove → fix → verify → ship). Their shared contract lives canonically at `.agents/skills/routine-shared/contract.md` (not a skill — no `SKILL.md`); every routine reads it first. The invariants it defines:
 
 - **One finding per `/ship`, never batched**; the next finding waits for the shipped SHA.
-- **Never ship red**: the owning package's checks (the same table as `loop-worker`'s step 3) are the only gate — `/ship` has none. A package with no covering automated check (backend-v2, agent-box, deploy) means STOP, not ship.
+- **Never ship red**: the owning package's checks (the same table as `loopx`'s step 3) are the only gate — `/ship` has none. A package with no covering automated check (backend-v2, agent-box, deploy) means STOP, not ship.
 - **Proof over suspicion**: a detector hit or grep match is a candidate; each skill defines its proof (failing test, still-green sabotage, empty reference sweep).
 - **Budget**: 3 shipped findings per invocation, then a summary of shipped / skipped / nothing-found.
 - **Universal STOPs**: new dependencies, cross-package API-contract changes, `DO_NOT_DO.md` conflicts, unpinnable behavior changes, unexplained red checks.

@@ -34,7 +34,7 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 | `cli/`             | active | `beancount-io` — the `bea` command: directives, native check/format/query/doctor/example/treeify, BQL, reports, local-ledger ask (Python, Typer). Frontend never loads Beancount; managed engine via Homebrew install-time dual venv or PyPI first-use. Ships to PyPI and the `bex-co/homebrew-tap` Homebrew tap on `cli-v*` tags |
 | `backend-cluster/` | active | Backend services: `backend-v2` (GraphQL/REST/MCP API), `ledger` (rustledger-WASM ledger service), `idl` (OpenAPI specs + generated clients), `agent-box` (Cloudflare Worker sandbox control plane)         |
 | `skills/`          | active | Customer-facing `beancount-*` ledger skills: init, import, importer-author, reconcile, migrate, ask, close, options (see `skills/CLAUDE.md`) |
-| `.agents/skills/`  | active | Internal development skills: `routine-*` code maintenance, `qa-find-bugs-*`, mermaid, pm, pm-brainstorm, loop-worker, mobile-release, ship (see `.agents/CLAUDE.md`) |
+| `.agents/skills/`  | active | Internal development skills: `routine-*` code maintenance, `qa-find-bugs-*`, mermaid, pm, pm-brainstorm, loopx, mobile-release, ship (see `.agents/CLAUDE.md`) |
 | `deploy/`          | active | Deployment targets: `deploy/docker-mac/` (Docker Compose, full stack locally), `deploy/dev-sandbox/` (full stack + Ask-AI sandbox for development), `deploy/docker/` (single-host production), and `deploy/bex/` (bex PaaS, no persistent disks — Blueprint at root `bex.yaml`) |
 | `docs/`            | active | Documentation content; `docs/adrs/` centralizes every package's Architecture Decision Records (`ADR<NNN>-<package>-<slug>.md`)                                                                             |
 
@@ -44,7 +44,7 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
 
 ## Roadmap board (`.pm/`)
 
-`.pm/` is the public TPM board for growing adoption in the open-source and agentic-coding community (workstreams → milestones → tasks). Conventions live canonically in `.agents/skills/pm/SKILL.md`; `/pm` is the **only** skill that writes to `.pm/`, `/pm-brainstorm` proposes work as text, and `/loop-worker <wN>` drains a workstream milestone by milestone (triage → implement → `/pm done` → `/ship`, or `/pm drop` for work that should no longer be done). Read `.pm/DO_NOT_DO.md` before proposing roadmap work. The board is public — no secrets, no private-repo references.
+`.pm/` is the public TPM board for growing adoption in the open-source and agentic-coding community (workstreams → milestones → tasks). Conventions live canonically in `.agents/skills/pm/SKILL.md`; `/pm` is the **only** skill that writes to `.pm/`, `/pm-brainstorm` proposes work as text, and `/loopx <wN>` drains a workstream item by item — every pending milestone, task, and inbox note is triaged, then implemented and shipped, closed as already done (`/pm done`), parked with its unblock condition (`/pm block`), or deleted as invalid (`/pm drop`), one `/ship` per outcome. Read `.pm/DO_NOT_DO.md` before proposing roadmap work. The board is public — no secrets, no private-repo references.
 
 ## Repo-wide rules
 

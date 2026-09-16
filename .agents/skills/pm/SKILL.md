@@ -1,12 +1,12 @@
 ---
 name: pm
-description: Arrange the repository's public .pm adoption board — show status, create workstreams, capture inbox notes, promote notes into milestones, add tasks, mark work done, and drop work that should no longer be done. Use only when the user explicitly invokes $pm or asks to update, arrange, or check the .pm board. Do not use for proposing or brainstorming new work (that is pm-brainstorm) or for ordinary code edits.
+description: Arrange the repository's public .pm adoption board — show status, create workstreams, capture inbox notes, promote notes into milestones, add tasks, mark work done, park blocked work with its unblock condition, and drop work that should no longer be done. Use only when the user explicitly invokes $pm or asks to update, arrange, or check the .pm board. Do not use for proposing or brainstorming new work (that is pm-brainstorm) or for ordinary code edits.
 allowed-tools: Read, Write, Edit, Bash(ls:*), Bash(find:*), Bash(cat:*)
 ---
 
 # Task: Arrange the `.pm` board
 
-Usage: `/pm [status | new workstream <title> | add <wN> <idea> | promote <wN/NNN> | new milestone <wN> <title> | add-task <wN/mN> <title> | done <wN/mN/tNNN> | drop <wN/mN or wN/NNN> <reason>]`
+Usage: `/pm [status | new workstream <title> | add <wN> <idea> | promote <wN/NNN> | new milestone <wN> <title> | add-task <wN/mN> <title> | done <wN/mN/tNNN or wN/NNN> | block <target> <reason> | unblock <target> | drop <wN/mN, wN/mN/tNNN or wN/NNN> <reason>]`
 
 `/pm` is the **only** skill that writes to `.pm/`. It arranges milestones and tasks under the conventions below. `/pm-brainstorm` proposes; `/pm` materializes. This file (`.agents/skills/pm/SKILL.md`) is the **canonical** definition of the board conventions — mission, hierarchy, sizing rule, quality gate, standing closing tasks, templates. `/pm-brainstorm` reads it at runtime and must not restate or diverge from it. Parse the subcommand from `$ARGUMENTS` (default = `status`).
 
@@ -39,7 +39,8 @@ This board exists to grow **adoption of Beancount.io in the open-source and agen
 - **Keep status in sync** across all three places it lives: the workstream `README.md` milestone checkbox, the milestone `README.md` `**Status:**` line + the `— DONE` marker in the task table, and each task's `status:` frontmatter.
 - **Completed work must exit the open tree.** Moving completed work into `done/` is a mandatory exit condition, not optional cleanup. A mutating subcommand must not report success while an affected task with `status: done` remains at `wN/mN/tNNN.md`, or while an affected milestone with no open tasks remains at `wN/mN/`. Move completed tasks to `wN/mN/done/` and completed milestones to `wN/done/mN/`, then verify the old open paths no longer exist.
 - **Unwanted work leaves the tree with its reason on record.** A milestone or inbox note that should no longer be done is removed by `drop`, never by unchecking, editing in place, or leaving it to rot: its files go, the workstream `README.md` keeps a one-line tombstone under `## Dropped`, and its number is never reused. `done` is for finished work and `drop` is for unwanted work — a milestone whose definition of done already holds is closed with `done`, not dropped, and work already under `done/` is history and is never dropped.
-- **Numbering:** next free zero-padded 3-digit for inbox notes (`NNN`) and tasks (`tNNN`); next free `wN` / `mN`. Scan the tree first, including `## Dropped` tombstones; don't reuse a number.
+- **Blocked work waits in `blocked/` with its unblock condition.** Work that is still wanted but cannot proceed keeps its number, its files, and its pending checkbox, and moves aside: a milestone to `wN/blocked/mN/`, an inbox note to `wN/blocked/NNN.md`. A task cannot leave its milestone — its `id` must match its path — so a blocked task stays put with `status: blocked` and the milestone `README.md` carries the reason. Every blocked item states the exact blocker and an **Unblock:** condition, and names who can clear it when that is not this repository (a deploy, a credential, a store review, a decision only the user can make). "Blocked" with no written condition to clear it is not a status, it is an abandonment.
+- **Numbering:** next free zero-padded 3-digit for inbox notes (`NNN`) and tasks (`tNNN`); next free `wN` / `mN`. Scan the tree first, including `## Dropped` tombstones and everything under `done/` and `blocked/`; don't reuse a number.
 - Use `worker: worker1` unless the workstream README names another worker.
 - **Milestones must be meaningful.** Every milestone must include direct pillar linkage (A1/A2/A3), an observable expected adoption outcome, and why this work matters now (dependency/risk/sequence rationale).
 - **Every milestone ends with standing closing tasks**, appended after the implementation tasks whenever a milestone is materialized:
@@ -55,12 +56,13 @@ This board exists to grow **adoption of Beancount.io in the open-source and agen
 
 ### `status` (default)
 
-Read the tree (`find .pm -type f -name '*.md'`, skipping `done/`) and `.pm/DO_NOT_DO.md`. Print, per open workstream: its milestones with `**Status:**`, and the **next actionable task** per milestone — the first non-done task whose `depends_on` are all satisfied. Also list open inbox notes. Then run a lightweight validation pass and flag:
+Read the tree (`find .pm -type f -name '*.md'`, skipping `done/`) and `.pm/DO_NOT_DO.md`. Print, per open workstream: its milestones with `**Status:**`, and the **next actionable task** per milestone — the first non-done task whose `depends_on` are all satisfied. Also list open inbox notes, and everything under `blocked/` with the condition that would clear it. Then run a lightweight validation pass and flag:
 
 - items conflicting with `.pm/DO_NOT_DO.md`,
 - milestones missing `## Source + Goal linkage` or a pillar (A1/A2/A3),
 - milestones whose definition of done is vague/non-testable,
-- completed tasks or milestones that still sit in the open tree instead of their applicable `done/` directory.
+- completed tasks or milestones that still sit in the open tree instead of their applicable `done/` directory,
+- blocked items with no **Unblock:** condition on record, and blocked items whose condition now reads as met.
 
 Touch no files.
 
@@ -83,7 +85,7 @@ Apply the **sizing rule first.**
 
 Create the next `tNNN.md` from the task template and add its row to the milestone `README.md` table **before the standing closing tasks**, updating their `depends_on` to include it. Update the `(N tasks)` count in the workstream README.
 
-### `done <wN/mN/tNNN>`
+### `done <wN/mN/tNNN or wN/NNN>`
 
 1. Set the task's frontmatter `status: done`. If the task is being closed because its work already landed outside it (a triage close — the acceptance criteria hold on `main` through another milestone or commit, not through work done for this task), append a `## Closed by triage` section to the task with the evidence — commit SHA, paths, test names — so the public record shows why it closed without work.
 2. In the milestone `README.md`: mark the row `— **DONE**` and update the `**Status:**` line (e.g. `todo (t001 done)`).
@@ -91,11 +93,36 @@ Create the next `tNNN.md` from the task template and add its row to the mileston
 4. If no open tasks remain in the milestone, **move the whole milestone** to `wN/done/mN/` and check its box (`- [x]`) in the workstream `README.md`.
 5. **Verify the exit condition before returning:** the completed task exists only under `done/`; and, when no open tasks remain, the milestone exists only at `wN/done/mN/`, its `README.md` says `**Status:** done`, and the workstream checkbox is checked. Do not report success until these moves and status updates are complete.
 
+For an **inbox note** `wN/NNN.md` (including one under `blocked/`): append a `---` separator and one `**Resolved <YYYY-MM-DD>** — <what changed>, shipped in `<SHA>` (`<package>`)` paragraph, so the public record says what closed it; move the file to `wN/done/NNN.md`; remove its bullet from the workstream `README.md` if it is listed there. Verify the open path no longer exists before returning.
+
 Show the intended moves before mutating if the user passed `DRY_RUN=1`.
 
-### `drop <wN/mN or wN/NNN> <reason>`
+### `block <wN/mN, wN/mN/tNNN or wN/NNN> <reason>`
 
-Remove work that should no longer be done. Refuse without a reason, and refuse for anything already under `done/` — completed history is never rewritten. For a milestone whose definition of done already holds, use `done` on its tasks instead: `drop` records that the work is unwanted, not that it is finished.
+Park work that cannot proceed, with its blocker on record. Refuse without a reason. Blocking is not dropping: the work is still wanted, so nothing is deleted, no number is retired, and the workstream checkbox stays unchecked.
+
+1. Confirm the target is in the open tree and read it, so the record can name what is stuck.
+2. Write the block **into the item**: a `## Blocked` section for a milestone or task (a note gets a `**Blocked <YYYY-MM-DD>** — …` paragraph) stating what is blocked, the exact blocker, an **Unblock:** condition that would clear it, and who can clear it when that is not this repository — a deploy, a credential, a store review, a decision only the user can make. Record any partial work already shipped, so the next worker knows where the baseline is.
+3. Move it: a milestone to `wN/blocked/mN/`, an inbox note to `wN/blocked/NNN.md`. A **task does not move** — its `id` must match its path — so set its frontmatter `status: blocked` and put the reason in its milestone's `## Blocked` section. When every open task in a milestone is blocked, block the milestone itself.
+4. In the workstream `README.md`: keep the milestone's `- [ ]` line (blocked work is still pending), retarget its link to `./blocked/mN/README.md`, and append `— **blocked:** <one line>`.
+5. **Verify the exit condition before returning:** the item sits under `blocked/` (or the task reads `status: blocked`), the blocker and its **Unblock:** condition are written down, and every link that pointed at the old path still resolves.
+
+Show the intended moves before mutating if the user passed `DRY_RUN=1`.
+
+### `unblock <wN/mN, wN/mN/tNNN or wN/NNN>`
+
+The reverse, once the unblock condition is actually met — verify it against the repository first, and say what cleared it.
+
+1. Move the item back to `wN/mN/` or `wN/NNN.md`, or set the blocked task's `status:` back to `todo`.
+2. Replace the `## Blocked` section (or the note's blocked paragraph) with a one-line record of what cleared it and when. Keep the history; do not erase that it was blocked.
+3. Restore the workstream `README.md` link and drop the `— **blocked:** …` suffix.
+4. **Verify the exit condition before returning:** the `blocked/` path no longer exists, the item is live again, and its links resolve.
+
+### `drop <wN/mN, wN/mN/tNNN or wN/NNN> <reason>`
+
+Remove work that should no longer be done. Refuse without a reason, and refuse for anything already under `done/` — completed history is never rewritten. For a milestone whose definition of done already holds, use `done` on its tasks instead; for work that is still wanted but stuck, use `block`. `drop` records that the work is unwanted, not that it is finished or waiting.
+
+For a **task** `wN/mN/tNNN`: delete the task file, remove its row from the milestone `README.md` table, update the `depends_on` of every task that named it, correct the `(N tasks)` count in the workstream `README.md`, and add the tombstone line under a `## Dropped` section in the milestone `README.md` rather than the workstream one. Never drop a task to make a milestone look complete — if the work is still needed, the milestone is blocked, not done.
 
 1. Confirm the target exists in the open tree (`wN/mN/` or `wN/NNN.md`) and read it, so the tombstone can name what it was.
 2. Delete the milestone directory (including any `wN/mN/done/` tasks) or the inbox note file.
