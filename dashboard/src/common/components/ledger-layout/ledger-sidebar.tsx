@@ -254,7 +254,7 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
       hidden: errorCount === 0 && currentPath !== `${ledgerPath}/errors`,
       rightContent:
         errorCount > 0 ? (
-          <SidebarMenuBadge className="bg-destructive text-white">
+          <SidebarMenuBadge className="bg-destructive text-white peer-hover/menu-button:text-white peer-data-[active=true]/menu-button:text-white">
             {errorCount}
           </SidebarMenuBadge>
         ) : null,
