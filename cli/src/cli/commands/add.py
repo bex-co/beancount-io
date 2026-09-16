@@ -238,12 +238,16 @@ def add_balance(
     file, data = _write("balance", request, allow_errors=allow_errors, into=into)
     target = data.pop("target")
     warnings = data.pop("warnings", [])
+    written = int(data.get("written") or 0)
     if context.current().json_output:
         output.emit({**data, "warnings": warnings}, target={**output.file_target(file), "into": target})
     else:
         for warning in warnings:
             output.note(warning)
-        output.success(f"Added 1 pad and 1 balance to {target}.")
+        if written == 1:
+            output.success(f"Added 1 balance to {target}.")
+        else:
+            output.success(f"Added 1 pad and 1 balance to {target}.")
 
 
 @add_app.command("pad")

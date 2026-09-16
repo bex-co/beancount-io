@@ -162,18 +162,48 @@ def _balance(
     from beancount.core.amount import Amount as BcAmount
     from beancount.core.data import Balance, Pad
 
+    account = parse_account(_text(request, "account"))
     padded = _date(request, "pad_date")
     entries = [
-        Pad({}, padded, parse_account(_text(request, "account")), parse_account(str(pad_from))),
-        Balance({}, date, parse_account(_text(request, "account")), BcAmount(number, currency), tolerance, None),
+        Pad({}, padded, account, parse_account(str(pad_from))),
+        Balance({}, date, account, BcAmount(number, currency), tolerance, None),
     ]
-    warnings = write.append(file, [writer.format_entry(e) for e in entries], allow_errors=allow_errors, into=into)
+    try:
+        warnings = write.append(file, [writer.format_entry(e) for e in entries], allow_errors=allow_errors, into=into)
+    except protocol.LedgerError as exc:
+        # A zero residual makes Beancount reject the pad as unused. The atomic
+        # --pad-from path still wants the assertion; write that alone.
+        if allow_errors or not _unused_pad_only(exc):
+            raise
+        result = _appended(
+            file,
+            BalanceDirective(
+                date=date,
+                account=account,
+                amount=Amount(number=number, currency=currency),
+                tolerance=tolerance,
+            ),
+            allow_errors=allow_errors,
+            into=into,
+        )
+        warnings = list(result.get("warnings") or [])
+        warnings.append(
+            f"Book balance already matches {number} {currency}; omitted the pad from "
+            "--pad-from and wrote the assertion alone."
+        )
+        result["warnings"] = warnings
+        return result
     return {
         "written": 2,
         "directives": entries,
         "warnings": warnings,
         "target": str(write.destination(file, into)),
     }
+
+
+def _unused_pad_only(exc: protocol.LedgerError) -> bool:
+    details = list(exc.details or [])
+    return bool(details) and all("Unused Pad" in detail for detail in details)
 
 
 def _parse_balance_amount(text: str) -> tuple[Decimal, str, Decimal | None]:

@@ -391,10 +391,18 @@ def validate_candidate(
                 f"Relative document paths resolve from {source.parent}, the directory containing {source.name}."
             )
         if "Unused Pad" in message:
-            message += (
-                " Add both directives atomically with bea add balance --pad-from ACCOUNT"
-                " --date YYYY-MM-DD --amount 'NUMBER CURRENCY' --account ACCOUNT."
+            pad_entry = error.entry if isinstance(error.entry, Pad) else None
+            already_paired = pad_entry is not None and any(
+                isinstance(entry, Balance) and entry.account == pad_entry.account and entry.date > pad_entry.date
+                for entry in entries
             )
+            if already_paired:
+                message += " Book balance already matches the assertion; omit --pad-from and add the balance alone."
+            else:
+                message += (
+                    " Add both directives atomically with bea add balance --pad-from ACCOUNT"
+                    " --date YYYY-MM-DD --amount 'NUMBER CURRENCY' --account ACCOUNT."
+                )
         elif isinstance(error.entry, Balance) and "Balance failed" in error.message:
             if allow_errors:
                 hints.append(
