@@ -71,6 +71,7 @@ class SourceLocation(BaseModel):
 
 
 class TransactionDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     flag: str = "*"
     payee: str | None = None
@@ -83,17 +84,20 @@ class TransactionDirective(BaseModel):
 
 
 class OpenDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     account: str
     currencies: list[str] = Field(default_factory=list)
 
 
 class CloseDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     account: str
 
 
 class BalanceDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     account: str
     amount: Amount
@@ -101,35 +105,41 @@ class BalanceDirective(BaseModel):
 
 
 class PadDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     account: str
     source_account: str
 
 
 class NoteDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     account: str
     comment: str
 
 
 class EventDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     type: str
     description: str
 
 
 class PriceDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     currency: str
     amount: Amount
 
 
 class CommodityDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     currency: str
 
 
 class DocumentDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     account: str
     filename: str
@@ -180,6 +190,7 @@ CustomDirectiveValue = Annotated[
 
 
 class CustomDirective(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     date: datetime.date
     type: str
     values: list[CustomDirectiveValue] = Field(default_factory=list)
