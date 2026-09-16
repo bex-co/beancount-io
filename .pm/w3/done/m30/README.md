@@ -1,19 +1,19 @@
 # w3 · m30 — Apply shared account filters to account-journal reads
 
-**Worker:** worker3 **Goal:** the account journal describes the same selected report stream as its chart and incoming drill-down **Status:** todo
+**Worker:** worker3 **Goal:** the account journal describes the same selected report stream as its chart and incoming drill-down **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Apply a distinct report-account restriction before account-journal balances | 40m | — |
-| t002 | Publish the separate account-journal filter in the ledger IDL | 25m | t001 |
-| t003 | Expose the restriction through gateway GraphQL, REST and MCP | 40m | t002 |
-| t004 | Bind the account page journal to the shared Account filter | 35m | t003 |
-| t005 | Adoption surface — document target and report-account meanings | 20m | t004 |
-| t006 | Simplify the account-filter changes | 20m | t005 |
-| t007 | Test coverage — filtered account streams, adapters and browser transitions | 45m | t005, t006 |
-| t008 | Closeout — verify the filtered journey and archive the milestone | 15m | t007 |
+| t001 | Apply a distinct report-account restriction before account-journal balances | 40m | — | — **DONE**
+| t002 | Publish the separate account-journal filter in the ledger IDL | 25m | t001 | — **DONE**
+| t003 | Expose the restriction through gateway GraphQL, REST and MCP | 40m | t002 | — **DONE**
+| t004 | Bind the account page journal to the shared Account filter | 35m | t003 | — **DONE**
+| t005 | Adoption surface — document target and report-account meanings | 20m | t004 | — **DONE**
+| t006 | Simplify the account-filter changes | 20m | t005 | — **DONE**
+| t007 | Test coverage — filtered account streams, adapters and browser transitions | 45m | t005, t006 | — **DONE**
+| t008 | Closeout — verify the filtered journey and archive the milestone | 15m | t007 | — **DONE**
 
 Implementation spans 140 minutes across ledger, IDL, gateway and dashboard;
 total with closing work is 240 minutes. This is larger than an inbox fix.

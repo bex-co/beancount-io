@@ -150,6 +150,13 @@ print only see a coherent completed result.
 
 Shared ledger filters (`account`, `filter`, `time`) are validated on the ledger parent route and retained across same-ledger navigation (sidebar, Related Pages) via `retainSearchParams`. Report loaders read them from `loaderDeps` so SSR and client requests match the destination URL. Filter edits use replace navigation; Clear all removes only those three keys. Ledger switches clear them unless the destination URL supplies new values. Journal action/directive, BQL `q`, and file-edit params are not propagated to unrelated pages.
 
+On the account detail page, the chart already sends the shared `account` filter
+as GraphQL `account` alongside route `accountName`. The account journal must
+send that same shared filter as `query.filterAccount` (ledger HTTP
+`filter_account`) while keeping `query.account` as the route target. Do not
+overload the target field — without `filterAccount`, a Statistics drill-down
+that retains `?account=` shows an unfiltered journal beside a filtered chart.
+
 Await only the data the page cannot render without. Optional panels (README
 card, account metadata, sidebar counts) own their queries and render honest
 pending states; a loader may start them in the browser with

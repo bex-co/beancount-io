@@ -5758,6 +5758,11 @@ export class Api<
          * Account name to get journal for
          */
         account: string;
+        /**
+         * Filter Account
+         * Optional shared report-stream AccountFilter (distinct from the required target `account`).
+         */
+        filter_account?: string | null;
         /** Filter */
         filter?: string | null;
         /** Time */

@@ -128,6 +128,13 @@ class AccountJournalQueryInput {
   @Field(() => String)
   account: string;
 
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "Optional shared report-stream AccountFilter (URL ?account=). Distinct from the required target `account`.",
+  })
+  filterAccount?: string;
+
   @Field(() => String, { nullable: true })
   filter?: string;
 

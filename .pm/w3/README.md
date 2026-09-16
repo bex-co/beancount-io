@@ -36,7 +36,7 @@
 - [x] **m28** — Keep BQL values connected to their columns (6 tasks) ← promoted028 and repeated dashboard QA, 2026-09-08
 - [x] **m29** — Protect file drafts during navigation and cancellation (6 tasks) ← promoted041 and repeated dashboard QA, 2026-09-08
 
-- [ ] **m30** — Apply shared account filters to account-journal reads (8 tasks) ← continuous dashboard QA, 2026-09-11
+- [x] **m30** — Apply shared account filters to account-journal reads (8 tasks) ← continuous dashboard QA, 2026-09-11
 
 - [x] **m31** — Complete the Entry Context keyboard journey (6 tasks) ← continuous dashboard QA,2026-09-11
 

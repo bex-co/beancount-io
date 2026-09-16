@@ -798,6 +798,10 @@ type AccountJournalEntry {
 
 input AccountJournalQueryInput {
   account: String!
+  """
+  Optional shared report-stream AccountFilter (URL ?account=). Distinct from the required target `account`.
+  """
+  filterAccount: String
   filter: String
   time: String
   limit: Float = 20

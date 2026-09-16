@@ -6001,6 +6001,24 @@
             "description": "Account name to get journal for"
           },
           {
+            "name": "filter_account",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional shared report-stream AccountFilter (distinct from the required target `account`). Restricts which entries enter the journal stream before advanced filter, time clamp, and target running balances.",
+              "title": "Filter Account"
+            },
+            "description": "Optional shared report-stream AccountFilter (distinct from the required target `account`). Restricts which entries enter the journal stream before advanced filter, time clamp, and target running balances."
+          },
+          {
             "name": "filter",
             "in": "query",
             "required": false,

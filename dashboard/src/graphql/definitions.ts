@@ -49,6 +49,8 @@ export type AccountJournalQueryInput = {
   directiveTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
+  /** Shared report-stream AccountFilter (URL ?account=). */
+  filterAccount?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
   time?: InputMaybe<Scalars['String']['input']>;

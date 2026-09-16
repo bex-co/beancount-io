@@ -73,6 +73,8 @@ export type JournalQueryParams = {
 
 export type AccountJournalQueryParams = {
   account: string;
+  /** Shared report-stream AccountFilter; maps to ledger `filter_account`. */
+  filterAccount?: string;
   filter?: string;
   time?: string;
   directiveTypes?: DirectiveType[];
@@ -250,6 +252,7 @@ export class LedgerJournalService
     const data = await unwrapFavaResponse(
       favaApiClient.journal.getAccountJournal(ledgerOwner, ledgerName, {
         account: query.account,
+        filter_account: query.filterAccount || undefined,
         filter: query.filter || undefined,
         time: query.time || undefined,
         limit: query.limit ?? 20,

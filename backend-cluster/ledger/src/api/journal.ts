@@ -76,6 +76,7 @@ export function setJournalHandler(router: Router): void {
         userId: undefined,
         query: {
           account: strQuery(ctx.query.account) ?? "",
+          filter_account: strQuery(ctx.query.filter_account),
           filter: strQuery(ctx.query.filter),
           time: strQuery(ctx.query.time),
           offset: intQuery(ctx.query.offset),

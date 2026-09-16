@@ -294,7 +294,14 @@ export type JournalQueryParams = {
 };
 
 export type AccountJournalQueryParams = {
+  /** Journal target account (route /account/{name}). */
   account: string;
+  /**
+   * Optional shared report-stream AccountFilter (URL `?account=`). Applied
+   * before advanced filter, time clamp, and target running balances. Distinct
+   * from `account`, which selects the series the page is about.
+   */
+  filter_account?: string;
   filter?: string;
   time?: string;
   directiveTypes?: DirectiveType[];
@@ -487,18 +494,19 @@ export class LedgerJournalService implements ILedgerJournalService {
   }
 
   /**
-   * Apply the advanced filter, then — when `time` is set — CLAMP the stream
-   * (Fava's TimeFilter runs `summarize.clamp_opt`, synthesizing the
-   * opening-balance / retained-earnings / conversion entries) rather than
-   * plain-truncating. The account journal's running balance MUST start from the
-   * pre-window opening balance; a plain truncate would restart it from zero
-   * inside the window.
-   * Account selection stays in {@link accountJournalItems}, so the whole stream
-   * is clamped here. Maps a bad `time`/`filter` to a 400.
+   * Apply optional report-stream AccountFilter, then the advanced filter, then
+   * — when `time` is set — CLAMP the stream (Fava's TimeFilter runs
+   * `summarize.clamp_opt`, synthesizing the opening-balance / retained-earnings
+   * / conversion entries) rather than plain-truncating. The account journal's
+   * running balance MUST start from the pre-window opening balance; a plain
+   * truncate would restart it from zero inside the window.
+   * Target-account selection stays in {@link accountJournalItems}, so the whole
+   * stream is clamped here. Maps a bad `time`/`filter` to a 400.
    */
   private async clampForAccountJournal(
     directives: DirectiveJson[],
     opts: {
+      filter_account?: string;
       filter?: string;
       time?: string;
       fiscalYearEnd?: string;
@@ -507,6 +515,7 @@ export class LedgerJournalService implements ILedgerJournalService {
   ): Promise<DirectiveJson[]> {
     try {
       const filtered = await filterDirectivesAsync(directives, {
+        account: opts.filter_account,
         filter: opts.filter,
       });
       if (!opts.time) return filtered;
@@ -688,6 +697,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     // balance into the window; honors the ledger's fiscal-year-end + clamp
     // account names.
     const filtered = await this.clampForAccountJournal(snapshot.directives, {
+      filter_account: query.filter_account || undefined,
       filter: query.filter || undefined,
       time: query.time || undefined,
       fiscalYearEnd: snapshot.fiscalYearEnd,

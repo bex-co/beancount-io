@@ -117,6 +117,7 @@ export function AccountJournalTable({
       ledgerId,
       query: {
         account: accountName,
+        filterAccount: ledgerFilters.account || undefined,
         conversion: conversion,
         filter: ledgerFilters.filter,
         time: ledgerFilters.time,
@@ -150,6 +151,7 @@ export function AccountJournalTable({
       JSON.stringify({
         time: ledgerFilters.time,
         filter: ledgerFilters.filter,
+        account: ledgerFilters.account,
         directiveTypes: selectedDirectiveTypes,
         transactionSubtypes: selectedTransactionSubtypes,
         documentSubtypes: selectedDocumentSubtypes,
@@ -158,6 +160,7 @@ export function AccountJournalTable({
     [
       ledgerFilters.time,
       ledgerFilters.filter,
+      ledgerFilters.account,
       selectedDirectiveTypes,
       selectedTransactionSubtypes,
       selectedDocumentSubtypes,

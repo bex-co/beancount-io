@@ -91,6 +91,7 @@ describe("AccountJournalTable filter wiring", () => {
           ledgerId: "open_ledger/example",
           query: expect.objectContaining({
             account: "Income:US:Hoogle:Salary",
+            filterAccount: undefined,
             directiveTypes: [DirectiveType.TRANSACTION],
             transactionSubtypes: undefined,
             documentSubtypes: undefined,
@@ -112,6 +113,32 @@ describe("AccountJournalTable filter wiring", () => {
           query: expect.objectContaining({
             directiveTypes: [DirectiveType.TRANSACTION],
             transactionSubtypes: ["pending"],
+          }),
+        },
+      }),
+    );
+  });
+
+  it("forwards the shared Account filter as filterAccount", () => {
+    render(
+      <AccountJournalTable
+        ledgerId="open_ledger/crypto-example"
+        ledgerOwner="open_ledger"
+        ledgerName="crypto-example"
+        accountName="Assets:Crypto:Binance:BTC"
+        ledgerFilters={{ account: "Liabilities:Crypto:Binance:Margin" }}
+        conversion="at_cost"
+      />,
+    );
+
+    expect(mockUseQuery).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        variables: {
+          ledgerId: "open_ledger/crypto-example",
+          query: expect.objectContaining({
+            account: "Assets:Crypto:Binance:BTC",
+            filterAccount: "Liabilities:Crypto:Binance:Margin",
           }),
         },
       }),

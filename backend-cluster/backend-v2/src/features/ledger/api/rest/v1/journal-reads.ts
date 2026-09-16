@@ -89,6 +89,8 @@ const journalQuerySchema = filters.extend({
 });
 const accountJournalQuery = filters.extend({
   account: z.string(),
+  /** Shared report-stream AccountFilter; same wire name as the ledger service. */
+  filter_account: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(1000).optional(),
   offset: z.coerce.number().int().min(0).optional(),
   with_children: booleanQuery,
@@ -140,12 +142,20 @@ export const JOURNAL_READS = [
     name: "ledgerAccountJournal",
     summary: "Read account entries with changes and running balances",
     query: accountJournalQuery,
-    fetch: (services: Services, { ledgerId, identity, query }: ReadParams) =>
-      services.ledgerJournal.getAccountJournal({
+    fetch: (services: Services, { ledgerId, identity, query }: ReadParams) => {
+      const { filter_account, ...rest } = query as typeof query & {
+        filter_account?: string;
+      };
+      return services.ledgerJournal.getAccountJournal({
         ledgerId,
         identity,
-        query: { ...query, account: query.account ?? "" },
-      }),
+        query: {
+          ...rest,
+          account: query.account ?? "",
+          filterAccount: filter_account,
+        },
+      });
+    },
   },
   {
     segment: "source-files",
