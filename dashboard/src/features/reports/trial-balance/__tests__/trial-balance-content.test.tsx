@@ -20,8 +20,9 @@ vi.mock("../../balance-sheet/hierarchy-visualization-card", () => ({
     hierarchyTitle: string;
   }) => <div data-testid="active-chart">{hierarchyTitle}</div>,
 }));
+const hierarchyListMock = vi.fn(() => null);
 vi.mock("../../balance-sheet/hierarchy-list", () => ({
-  HierarchyList: () => null,
+  HierarchyList: (props: unknown) => hierarchyListMock(props),
 }));
 vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
@@ -69,12 +70,15 @@ vi.mock("@/common/components/conversion-select", () => ({
   ),
 }));
 
-function hierarchyNode(account: string) {
+function hierarchyNode(
+  account: string,
+  balance: Record<string, string> = { USD: "1.00" },
+) {
   return {
     __typename: "SerializableTreeNode" as const,
     account,
-    balance: { USD: "1.00" },
-    balanceChildren: { USD: "1.00" },
+    balance,
+    balanceChildren: balance,
     children: [],
     hasTxns: true,
     cost: null,
@@ -116,6 +120,50 @@ function renderContent(onConversionChange = vi.fn()) {
 }
 
 describe("TrialBalanceContent", () => {
+  it("passes a reconciliation summary row to the hierarchy table", () => {
+    hierarchyListMock.mockClear();
+    render(
+      <TrialBalanceContent
+        trialBalanceData={
+          {
+            assetsHierarchyData: hierarchyNode("Assets", { USD: "100" }),
+            expensesHierarchyData: hierarchyNode("Expenses", { USD: "100" }),
+            equityHierarchyData: hierarchyNode("Equity", { USD: "-50" }),
+            liabilitiesHierarchyData: hierarchyNode("Liabilities", {
+              USD: "-50",
+            }),
+            incomeHierarchyData: hierarchyNode("Income", { USD: "-100" }),
+          } as unknown as React.ComponentProps<
+            typeof TrialBalanceContent
+          >["trialBalanceData"]
+        }
+        primaryCurrency="USD"
+        ledgerDisplayName="Demo Books"
+        ledgerOwner="demo"
+        ledgerNameParam="books"
+        conversion="at_cost"
+        onConversionChange={vi.fn()}
+        invertIncomeLiabilitiesEquity={false}
+        showZeroBalance
+        showZeroTransactions
+        showClosedAccounts={false}
+        closedAccountNames={new Set<string>()}
+        collapsePatterns={[]}
+      />,
+    );
+
+    const props = hierarchyListMock.mock.calls.at(-1)?.[0] as {
+      summaryRows?: Array<{ label: string; balance: Record<string, string> }>;
+    };
+
+    expect(props.summaryRows).toHaveLength(1);
+    expect(props.summaryRows?.[0]).toMatchObject({
+      label: "Reconciliation Difference",
+      balance: { USD: "0" },
+      bold: true,
+    });
+  });
+
   it("shows the assets chart by default", () => {
     renderContent();
 

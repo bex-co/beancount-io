@@ -77,7 +77,7 @@ export function AccountMappingTable({
   transactionCount = 0,
   onDraftChange,
 }: AccountMappingTableProps) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
   const formatError = useErrorMessage();
   const { setValue } = useFormContext<TransactionFormData>();
   const { fields } = useFieldArray({
@@ -327,7 +327,9 @@ export function AccountMappingTable({
                       {txn.rowIndex + 1}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {txn.date ? formatImportDateForDisplay(txn.date) : ""}
+                      {txn.date
+                        ? formatImportDateForDisplay(txn.date, i18n.language)
+                        : ""}
                     </TableCell>
                     <TableCell className="text-sm">{txn.payee || ""}</TableCell>
                     <TableCell className="text-sm">

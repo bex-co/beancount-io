@@ -7,6 +7,7 @@ import { AccountMappingTable } from "../account-mapping-table";
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
     t: (key: string) => key,
+    i18n: { language: "en-US" },
   }),
 }));
 
@@ -268,4 +269,14 @@ describe("AccountMappingTable date display", () => {
       }
     },
   );
+
+  it("formats dates with the selected app language, not the browser default", () => {
+    render(
+      <Harness
+        transactions={[{ ...defaultTransactions[0], date: "2025-12-01" }]}
+      />,
+    );
+
+    expect(screen.getByText("12/1/2025")).toBeInTheDocument();
+  });
 });

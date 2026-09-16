@@ -75,9 +75,8 @@ The four that remain are deliberately not "next up":
 - [113](./113.md) — parked. Its producer is an upstream `@rustledger/wasm`
   defect with no released fix (re-checked 2026-09-11, newest published version
   is still 0.24.0), and vendoring the engine is forbidden here.
-- [003](./003.md), [152](./152.md), [157](./157.md) — held for a decision.
-  003 needs an idempotency contract across REST, GraphQL and MCP together (the
-  repo-wide parity rule), and 152/157 change backend error classification.
+- [003](./003.md) — held for a decision: needs an idempotency contract across
+  REST, GraphQL and MCP together (the repo-wide parity rule).
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
 - [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
@@ -87,8 +86,5 @@ The four that remain are deliberately not "next up":
 Added since that pass:
 
 - [189](./189.md) — The account journal rounds a posting the transactions list shows in full (native QA, 2026-09-12)
-- [190](./190.md) — Import Configure dates follow the browser, not the app language, and change format mid-wizard (dashboard QA, 2026-09-12) — re-filed 2026-09-12 after a concurrent write clobbered it
-- [192](./192.md) — Trial Balance never states whether it balances (dashboard QA, 2026-09-12)
-- [195](./195.md) — An Ask deep link sends its question to the AI on arrival, and again after login (dashboard QA, 2026-09-12)
 
 - [x] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13

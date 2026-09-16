@@ -12,6 +12,8 @@ import { cn } from "@/common/lib/utils/utils";
 
 interface EditableCellProps {
   value: string;
+  /** Optional read-only label; canonical `value` is still edited/submitted. */
+  displayValue?: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
   error?: string;
@@ -30,6 +32,7 @@ interface EditableCellProps {
 
 export function EditableCell({
   value,
+  displayValue,
   onChange,
   onBlur,
   error,
@@ -228,7 +231,8 @@ export function EditableCell({
             className,
           )}
         >
-          {value || placeholder || t("importer.preview.clickToEdit")}
+          {displayValue ??
+            (value || placeholder || t("importer.preview.clickToEdit"))}
         </span>
         {error && (
           <p

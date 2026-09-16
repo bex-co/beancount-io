@@ -7,6 +7,7 @@ import { buildParsedRow } from "../../../../utils/csv-validator";
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
     t: (key: string) => key,
+    i18n: { language: "en-US" },
   }),
 }));
 
@@ -105,6 +106,7 @@ describe("EditablePreviewRow initial diagnostics", () => {
     await waitFor(() => {
       expect(screen.getByText("QA Coffee")).toBeInTheDocument();
     });
+    expect(screen.getByText("12/1/2025")).toBeInTheDocument();
     expect(
       screen.queryByText("importer.validation.invalidDateFormat"),
     ).not.toBeInTheDocument();

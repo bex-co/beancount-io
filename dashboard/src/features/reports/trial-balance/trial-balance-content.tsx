@@ -21,6 +21,8 @@ import { useChartsVisibility } from "../components/use-charts-visibility";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { filterAccountHierarchy } from "../balance-sheet/utils";
+import type { HierarchySummaryRow } from "../balance-sheet/hierarchy-list-types";
+import { computeTrialBalanceReconciliation } from "./lib/trial-balance-summary";
 
 interface TrialBalanceContentProps {
   trialBalanceData: GetLedgerTrialBalanceQuery["getLedgerTrialBalance"];
@@ -139,6 +141,22 @@ export function TrialBalanceContent({
     showClosedAccounts,
     closedAccountNames,
   ]);
+
+  const trialBalanceSummaryRows = useMemo((): HierarchySummaryRow[] => {
+    const reconciliationDifference =
+      computeTrialBalanceReconciliation(hierarchyData);
+    if (Object.keys(reconciliationDifference).length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        label: t("reports.export.reconciliationDifference"),
+        balance: reconciliationDifference,
+        bold: true,
+      },
+    ];
+  }, [hierarchyData, t]);
 
   return (
     <div className="space-y-6">
@@ -280,6 +298,7 @@ export function TrialBalanceContent({
             data={hierarchyData}
             primaryCurrency={primaryCurrency}
             collapsePatterns={collapsePatterns}
+            summaryRows={trialBalanceSummaryRows}
             ariaLabelledBy="trial-balance-hierarchy-heading"
           />
         </div>

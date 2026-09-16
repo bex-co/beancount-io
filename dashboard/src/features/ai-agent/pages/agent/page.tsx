@@ -27,6 +27,7 @@ import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { getLedgerAgentCanonicalUrl } from "@/common/lib/seo/indexability";
 
 import { buildUnauthenticatedLoginHref } from "@/common/apollo/links/auth-error-link";
+import { buildAgentLoginNextUrl } from "./agent-login-next-url";
 import { useTempAssetUpload } from "@/features/importer/hooks/use-temp-asset-upload";
 import { useTempAssetDownloadUrl } from "./use-temp-asset-download-url";
 import {
@@ -72,10 +73,8 @@ export function AgentPageImpl({
   const isReadOnly = isAuthenticated && !canWrite;
   const { sessionId } = useAgentSession("ai-agent-session");
 
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(() => initialQuestion?.trim() ?? "");
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
-
-  const hasAutoSubmittedRef = useRef(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const isAutoScrollingRef = useRef(false);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
@@ -100,8 +99,12 @@ export function AgentPageImpl({
         fetch: async (url, options) => {
           const response = await fetch(url as string, options as RequestInit);
           if (response.status === 401) {
-            // Keep q/mode/lang so login return can auto-submit the same Ask.
-            const next = window.location.pathname + window.location.search;
+            // Keep mode/lang for the return URL, but drop q so login does not
+            // auto-send the deep-linked question.
+            const next = buildAgentLoginNextUrl(
+              window.location.pathname,
+              window.location.search,
+            );
             window.location.assign(buildUnauthenticatedLoginHref(next));
           }
           return response;
@@ -194,19 +197,6 @@ export function AgentPageImpl({
       }
     }
   }, [status, messages]);
-
-  useEffect(() => {
-    if (initialQuestion?.trim() && !hasAutoSubmittedRef.current) {
-      hasAutoSubmittedRef.current = true;
-      track("ai_agent_message_sent", {
-        has_attachment: false,
-        surface: "deep_link",
-      });
-      void sendMessage({ text: initialQuestion.trim() });
-    }
-    // Run only on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (shouldAutoScroll && messagesContainerRef.current) {

@@ -17,6 +17,7 @@ import {
   type ImporterValidationKey,
 } from "../../../utils/row-edit-schema";
 import { buildParsedRow } from "../../../utils/csv-validator";
+import { formatImportDateForDisplay } from "../../../utils/format-import-date";
 import type { ParsedRow } from "../../../types";
 
 interface EditablePreviewRowProps {
@@ -32,7 +33,7 @@ export function EditablePreviewRow({
   onChange,
   onDelete,
 }: EditablePreviewRowProps) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
   const form = useForm<EditableRowData>({
     resolver: zodResolver(editableRowSchema),
     defaultValues: {
@@ -100,6 +101,10 @@ export function EditablePreviewRow({
             render={({ field }) => (
               <EditableCell
                 value={field.value}
+                displayValue={formatImportDateForDisplay(
+                  field.value,
+                  i18n.language,
+                )}
                 onChange={(value) => {
                   field.onChange(value);
                   void handleFieldChange("date", value);
