@@ -1,6 +1,14 @@
 # w3 · m2 — Budget management: add, update, delete from mobile
 
-**Worker:** worker3 **Goal:** Full budget lifecycle from the phone — create a budget, post a dated update, delete a history entry — without opening the web dashboard. **Status:** in progress (t001–t008 done; t009 closeout blocked on verifying add/update/delete against a real ledger file)
+**Worker:** worker3 **Goal:** Full budget lifecycle from the phone — create a budget, post a dated update, delete a history entry — without opening the web dashboard. **Status:** blocked — see [Blocked](#blocked) (t001–t008 done; t009 blocked)
+
+## Blocked
+
+**Blocked 2026-09-15 by `/loop-worker w3`.** t001–t008 are done and mobile gates are green; only t009 Closeout remains. The definition of done requires an in-app add/update/delete round-trip against a real ledger file (plus visible failure paths). Sequenced after m1; both share the same verification session.
+
+**Unblock:** after m1's in-app check (or in the same session), exercise add → update → delete on a real ledger, confirm directives in the file, then `/pm unblock w3/m2` and close t009.
+
+When work can resume, move this directory back to `.pm/w3/m2/`.
 
 ## Tasks (in order)
 

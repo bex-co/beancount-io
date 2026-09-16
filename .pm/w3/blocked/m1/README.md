@@ -1,6 +1,14 @@
 # w3 · m1 — Budget read-only: Home panel + /budget page
 
-**Worker:** worker3 **Goal:** A mobile user with budget directives sees an at-a-glance Budget panel on Home and a dedicated /budget page with per-account budget-vs-actual visualization. **Status:** in progress (t001–t012 done; t013 closeout blocked on in-app verification against a ledger that has budget directives — code-complete and `yarn test` green, but the DoD requires seeing it run)
+**Worker:** worker3 **Goal:** A mobile user with budget directives sees an at-a-glance Budget panel on Home and a dedicated /budget page with per-account budget-vs-actual visualization. **Status:** blocked — see [Blocked](#blocked) (t001–t012 done; t013 blocked)
+
+## Blocked
+
+**Blocked 2026-09-15 by `/loop-worker w3`.** t001–t012 are done and mobile gates are green; only t013 Closeout remains. The definition of done requires in-app verification against a ledger that has `custom "budget"` directives (Home panel ranking/colours, /budget populated cards, time-span pills, empty CTA, skeletons, light and dark themes). That check needs a signed-in mobile session and a fixture ledger — it cannot be finished from the repository alone.
+
+**Unblock:** sign the mobile app into an account whose ledger has budget directives (local `deploy/docker-mac` or hosted QA), complete the verification checklist in t013, then `/pm unblock w3/m1` and close t013.
+
+When work can resume, move this directory back to `.pm/w3/m1/`.
 
 ## Tasks (in order)
 

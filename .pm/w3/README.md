@@ -6,8 +6,8 @@
 
 - [x] **m34** — Preserve decimal amounts in native multi-posting drafts (6 tasks) ← from native QA 2026-09-11
 
-- [ ] **m1** — Budget read-only: Home panel + /budget page (13 tasks) ← from budget-on-mobile PM spec 2026-08-09
-- [ ] **m2** — Budget management: add, update, delete from mobile (9 tasks) ← from budget-on-mobile PM spec 2026-08-09 — sequenced after m1
+- [ ] **m1** — [Budget read-only: Home panel + /budget page](./blocked/m1/README.md) (13 tasks) — **blocked:** needs in-app verification on a ledger with budget directives ← from budget-on-mobile PM spec 2026-08-09
+- [ ] **m2** — [Budget management: add, update, delete from mobile](./blocked/m2/README.md) (9 tasks) — **blocked:** needs in-app add/update/delete verification (after m1) ← from budget-on-mobile PM spec 2026-08-09 — sequenced after m1
 - [x] **m3** — Budget localization & analytics-driven iteration (7 tasks) ← from budget-on-mobile PM spec 2026-08-09 — sequenced after m2
 - [x] **m4** — Beancount MCP endpoint: make it connectable and keep it conformant (7 tasks) ← from `backend-cluster/backend-v2/docs/ADR0007-mcp-surface.md`
 - [x] **m5** — Surface parity groundwork: honest counts and the MCP resource layer (8 tasks) ← from `backend-cluster/backend-v2/docs/ADR0008-surface-parity.md`
@@ -23,7 +23,7 @@
 - [x] **m15** — Keep ledger filters consistent with navigation and history (7 tasks) ← repeated dashboard QA, 2026-09-08
 - [x] **m16** — Preserve parent-account postings in Cash Flow (6 tasks) ← repeated dashboard QA, 2026-09-08
 - [x] **m17** — Make commit file links reach deferred and virtualized diffs (6 tasks) ← repeated dashboard QA, 2026-09-08
-- [x] **m18** — Keep lot reductions from replacing current market prices (7 tasks) ← repeated dashboard QA, 2026-09-08 — **ABANDONED** 2026-09-10, blocked on an upstream engine fix that does not exist; carried forward as [113](./113.md)
+- [x] **m18** — Keep lot reductions from replacing current market prices (7 tasks) ← repeated dashboard QA, 2026-09-08 — **ABANDONED** 2026-09-10, blocked on an upstream engine fix that does not exist; carried forward as [113](./blocked/113.md)
 - [x] **m19** — Keep import values valid from parsing through configuration (8 tasks) ← promoted038 and repeated dashboard QA, 2026-09-08
 - [x] **m20** — Expose reporting filters on Cash Flow and narrow layouts (7 tasks) ← promoted004 and repeated dashboard QA, 2026-09-08
 - [x] **m21** — Continue profile social lists beyond the first page (7 tasks) ← repeated dashboard QA, 2026-09-08
@@ -60,20 +60,12 @@
 
 - [x] **m42** — Accept dates in the user's own date order (6 tasks) ← continuous dashboard QA, 2026-09-12
 
-## Blocked milestones
+## Blocked
 
-- **m1** / **m2** — code-complete; closeout blocked on in-app verification
-  against a ledger that has budget directives (see milestone Status lines).
+Blocked milestones and inbox notes live under [`blocked/`](./blocked/) with their reason and **Unblock:** condition; they keep their IDs and return to the open tree when work can resume.
+
+- [ ] **m1** / **m2** — see milestone lines above (in-app budget verification).
+- [003](./blocked/003.md) — Bulk entry writes are not retry-safe after a false timeout — **blocked:** needs an idempotency contract across REST, GraphQL and MCP.
+- [113](./blocked/113.md) — Lot reductions replace current market prices — **blocked:** upstream `@rustledger/wasm` (still 0.24.0); vendoring forbidden.
 
 - [x] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13
-
-## Inbox (blocked)
-
-Only decision/upstream holds remain open — everything implementable has been
-shipped into [`done/`](./done).
-
-- [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout.
-  Held for a decision: needs an idempotency contract across REST, GraphQL and
-  MCP together (repo-wide parity rule).
-- [113](./113.md) — Lot reductions replace current market prices. Parked on
-  upstream `@rustledger/wasm` (still 0.24.0); vendoring the engine is forbidden.
