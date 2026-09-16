@@ -32,6 +32,8 @@ beforeEach(() => {
     files: { "main.bean": MAIN },
     entryPoint: "main.bean",
     repoPaths: ["main.bean"],
+    managedPrices: [],
+    managedPricePaths: [],
   });
   parseMock.mockResolvedValue({ errors: [] });
 });
@@ -62,6 +64,8 @@ describe("checkProjectedErrors", () => {
       },
       entryPoint: "main.bean",
       repoPaths: ["main.bean", "extra.bean"],
+      managedPrices: [],
+      managedPricePaths: [],
     });
     await service().checkProjectedErrors({
       ledgerId: "alice/main",
@@ -134,5 +138,26 @@ describe("checkProjectedErrors", () => {
         })),
       }),
     ).rejects.toThrow(/at most 50/);
+  });
+
+  it("refuses to project onto a managed price feed's virtual file", async () => {
+    const virtual = "https:/beancount.io/prices/BTC-USD";
+    loadMock.mockResolvedValue({
+      files: { "main.bean": MAIN, [virtual]: "2026-09-15 price BTC 1 USD\n" },
+      entryPoint: "main.bean",
+      repoPaths: ["main.bean"],
+      managedPrices: [],
+      managedPricePaths: [virtual],
+    });
+    await expect(
+      service().checkProjectedErrors({
+        ledgerId: "alice/main",
+        userId: "user-1",
+        overlays: [{ path: virtual, content: b64("2026-09-15 price BTC 2 USD\n") }],
+      }),
+    ).rejects.toThrow(
+      `Operation 'edit managed price source' not allowed: ${virtual} is a managed price feed resolved from a URL include and is read-only`,
+    );
+    expect(parseMock).not.toHaveBeenCalled();
   });
 });

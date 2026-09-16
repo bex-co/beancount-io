@@ -913,7 +913,8 @@ function isCalendarDate(year: number, month: number, day: number): boolean {
   );
 }
 
-function isIsoDate(date: string): boolean {
+/** Whether `date` is a real `YYYY-MM-DD` calendar date (years 0001-9999). */
+export function isIsoDate(date: string): boolean {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   return (
     match !== null &&

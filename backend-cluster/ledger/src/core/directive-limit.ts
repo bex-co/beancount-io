@@ -61,9 +61,14 @@ export async function countDirectivesForRepo(
   repoName: string,
 ): Promise<DirectiveCount> {
   const commitClient = client as unknown as GiteaCommitClient;
+  // Committed files only: managed price feeds are virtual, not the customer's
+  // directives (ADR 015 section 9), so a feed can never push a ledger over its
+  // tier limit, and a count never triggers a feed fetch.
   const [sha, { files }] = await Promise.all([
     resolveHeadShaCoalesced(commitClient, owner, repoName),
-    loadCachedFileMapForRepo(commitClient, getCacheHelper(), owner, repoName),
+    loadCachedFileMapForRepo(commitClient, getCacheHelper(), owner, repoName, {
+      committedOnly: true,
+    }),
   ]);
   return { count: await countMap(files), sha: sha ?? null };
 }
@@ -119,6 +124,7 @@ export async function checkDirectiveLimitForFileChanges(
       getCacheHelper(),
       owner,
       repoName,
+      { committedOnly: true },
     );
     currentTotal = await countMap(files);
 

@@ -49,7 +49,9 @@ import {
 import {
   loadCachedFileMapForRepo,
   type GiteaCommitClient,
+  type LoadedLedgerWithManagedPrices,
 } from "@/foundation/clients/load-cached-ledger-file-map";
+import { assertNotManagedPricePath } from "@/foundation/managed-prices";
 import {
   commitLedgerFiles,
   type GiteaFileCommitClient,
@@ -393,7 +395,7 @@ export class LedgerJournalService implements ILedgerJournalService {
   private async loadFileMap(
     ledgerId: string,
     userId: string | undefined,
-  ): Promise<{ files: FileMap; entryPoint: string; repoPaths: string[] }> {
+  ): Promise<LoadedLedgerWithManagedPrices> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const client = await this.giteaClientFactory.getPublicApiClient(
       ledgerId,
@@ -407,15 +409,21 @@ export class LedgerJournalService implements ILedgerJournalService {
     );
   }
 
-  /** Locate an entry's source span, validating a caller-supplied sha256. */
+  /**
+   * Locate an entry's source span for a write, validating a caller-supplied
+   * sha256. Every writer goes through here, so a slice inside a managed price
+   * feed (a virtual, read-only file) is refused in one place.
+   */
   private async locateSlice(
     files: FileMap,
     entryPoint: string,
+    managedPricePaths: readonly string[],
     entryHash: string,
     sha256sum: string,
   ): Promise<EntrySlice> {
     const found = await findEntrySliceAsync(files, entryPoint, entryHash);
     if (!found) throw entryNotResolvableError(entryHash, files, entryPoint);
+    assertNotManagedPricePath(found.file, managedPricePaths);
     if (found.sha256 !== sha256sum) {
       throw new ConflictError(
         "Entry",
@@ -750,10 +758,8 @@ export class LedgerJournalService implements ILedgerJournalService {
     sha256sum: string;
   }): Promise<DeleteSliceResult> {
     const { ledgerId, userId, entryHash, sha256sum } = params;
-    const { files, entryPoint, repoPaths } = await this.loadFileMap(
-      ledgerId,
-      userId,
-    );
+    const { files, entryPoint, repoPaths, managedPricePaths } =
+      await this.loadFileMap(ledgerId, userId);
     const sourceEntryHash = await this.resolveSourceEntryId(
       files,
       entryPoint,
@@ -767,6 +773,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     const found = await this.locateSlice(
       files,
       entryPoint,
+      managedPricePaths,
       sourceEntryHash,
       sha256sum,
     );
@@ -797,10 +804,8 @@ export class LedgerJournalService implements ILedgerJournalService {
     entries: { entryHash: string; sha256sum: string }[];
   }): Promise<DeleteMultiSlicesResult> {
     const { ledgerId, userId, entries } = params;
-    const { files, entryPoint, repoPaths } = await this.loadFileMap(
-      ledgerId,
-      userId,
-    );
+    const { files, entryPoint, repoPaths, managedPricePaths } =
+      await this.loadFileMap(ledgerId, userId);
     const snapshot = await parseLedgerFiles(files, entryPoint, { repoPaths });
     const sourceIds = sourceEntryIds(snapshot.directives);
     const sourceHashes = entries.map(
@@ -815,6 +820,7 @@ export class LedgerJournalService implements ILedgerJournalService {
         await this.locateSlice(
           files,
           entryPoint,
+          managedPricePaths,
           sourceHashes[index],
           entry.sha256sum,
         ),
@@ -869,10 +875,8 @@ export class LedgerJournalService implements ILedgerJournalService {
     newContent: string;
   }): Promise<UpdateSliceResult> {
     const { ledgerId, userId, entryHash, sha256sum, newContent } = params;
-    const { files, entryPoint, repoPaths } = await this.loadFileMap(
-      ledgerId,
-      userId,
-    );
+    const { files, entryPoint, repoPaths, managedPricePaths } =
+      await this.loadFileMap(ledgerId, userId);
     const sourceEntryHash = await this.resolveSourceEntryId(
       files,
       entryPoint,
@@ -883,6 +887,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     const found = await this.locateSlice(
       files,
       entryPoint,
+      managedPricePaths,
       sourceEntryHash,
       sha256sum,
     );

@@ -58,14 +58,26 @@ export function extractIncludeTargets(content: string): string[] {
   return [...content.matchAll(INCLUDE_RE)].map((match) => match[1]);
 }
 
-/** Every `include "…"` target declared in one file's text, with its 1-based line. */
+/**
+ * Every `include "…"` target declared in one file's text, with its 1-based
+ * line. Lines are counted incrementally between matches, so a large file with
+ * many includes is scanned once rather than re-split per include.
+ */
 export function extractIncludeDeclarations(
   content: string,
 ): Array<{ target: string; line: number }> {
-  return [...content.matchAll(INCLUDE_RE)].map((match) => ({
-    target: match[1],
-    line: content.slice(0, match.index).split("\n").length,
-  }));
+  const declarations: Array<{ target: string; line: number }> = [];
+  let line = 1;
+  let scanned = 0;
+  for (const match of content.matchAll(INCLUDE_RE)) {
+    const index = match.index ?? 0;
+    for (let i = scanned; i < index; i += 1) {
+      if (content.charCodeAt(i) === 10) line += 1;
+    }
+    scanned = index;
+    declarations.push({ target: match[1], line });
+  }
+  return declarations;
 }
 
 /**

@@ -1,0 +1,537 @@
+; Include Live Price — BTC / USD
+; alias: BTCUSD
+; commodity: BTC
+; quote: USD
+; source_symbol: BTCUSD
+; source: binance.us
+; coverage-profile: tiered-v1
+;   older-than-1y: monthly (month-end UTC close)
+;   within-1y-before-30d: weekly (UTC week ending Sunday)
+;   last-30d: daily (UTC day close)
+;   latest: provisional reference spot
+; history-start: 2025-02-19
+; revision: btcusd-20260915T082924Z
+; observed-policy: latest price on or before valuation date; no interpolation
+
+2025-02-28 price BTC 84619.5700 USD
+  price-source: "binance.us"
+  price-kind: "monthly-close"
+  observed-at: "2025-02-28T23:59:59Z"
+  provisional: FALSE
+
+2025-03-31 price BTC 82468.2900 USD
+  price-source: "binance.us"
+  price-kind: "monthly-close"
+  observed-at: "2025-03-31T23:59:59Z"
+  provisional: FALSE
+
+2025-04-30 price BTC 94384.5900 USD
+  price-source: "binance.us"
+  price-kind: "monthly-close"
+  observed-at: "2025-04-30T23:59:59Z"
+  provisional: FALSE
+
+2025-05-31 price BTC 105000.0000 USD
+  price-source: "binance.us"
+  price-kind: "monthly-close"
+  observed-at: "2025-05-31T23:59:59Z"
+  provisional: FALSE
+
+2025-06-30 price BTC 107080.0000 USD
+  price-source: "binance.us"
+  price-kind: "monthly-close"
+  observed-at: "2025-06-30T23:59:59Z"
+  provisional: FALSE
+
+2025-07-31 price BTC 115750.0000 USD
+  price-source: "binance.us"
+  price-kind: "monthly-close"
+  observed-at: "2025-07-31T23:59:59Z"
+  provisional: FALSE
+
+2025-08-31 price BTC 108111.0100 USD
+  price-source: "binance.us"
+  price-kind: "monthly-close"
+  observed-at: "2025-08-31T23:59:59Z"
+  provisional: FALSE
+
+2025-09-14 price BTC 115240.3100 USD
+  price-source: "binance.us"
+  price-kind: "monthly-close"
+  observed-at: "2025-09-14T23:59:59Z"
+  provisional: FALSE
+
+2025-09-21 price BTC 115269.6200 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-09-21T23:59:59Z"
+  provisional: FALSE
+
+2025-09-28 price BTC 112118.8900 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-09-28T23:59:59Z"
+  provisional: FALSE
+
+2025-10-05 price BTC 123364.5200 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-10-05T23:59:59Z"
+  provisional: FALSE
+
+2025-10-12 price BTC 115456.3700 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-10-12T23:59:59Z"
+  provisional: FALSE
+
+2025-10-19 price BTC 109051.3600 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-10-19T23:59:59Z"
+  provisional: FALSE
+
+2025-10-26 price BTC 114560.7700 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-10-26T23:59:59Z"
+  provisional: FALSE
+
+2025-11-02 price BTC 110640.4200 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-11-02T23:59:59Z"
+  provisional: FALSE
+
+2025-11-09 price BTC 104884.3900 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-11-09T23:59:59Z"
+  provisional: FALSE
+
+2025-11-16 price BTC 94214.8900 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-11-16T23:59:59Z"
+  provisional: FALSE
+
+2025-11-23 price BTC 86915.0700 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-11-23T23:59:59Z"
+  provisional: FALSE
+
+2025-11-30 price BTC 90460.0800 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-11-30T23:59:59Z"
+  provisional: FALSE
+
+2025-12-07 price BTC 90460.0800 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-12-07T23:59:59Z"
+  provisional: FALSE
+
+2025-12-14 price BTC 88343.6300 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-12-14T23:59:59Z"
+  provisional: FALSE
+
+2025-12-21 price BTC 88621.7900 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-12-21T23:59:59Z"
+  provisional: FALSE
+
+2025-12-28 price BTC 87854.2100 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2025-12-28T23:59:59Z"
+  provisional: FALSE
+
+2026-01-04 price BTC 91119.3500 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-01-04T23:59:59Z"
+  provisional: FALSE
+
+2026-01-11 price BTC 90906.0200 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-01-11T23:59:59Z"
+  provisional: FALSE
+
+2026-01-18 price BTC 93619.6800 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-01-18T23:59:59Z"
+  provisional: FALSE
+
+2026-01-25 price BTC 86622.0500 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-01-25T23:59:59Z"
+  provisional: FALSE
+
+2026-02-01 price BTC 76985.0500 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-02-01T23:59:59Z"
+  provisional: FALSE
+
+2026-02-08 price BTC 70512.0000 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-02-08T23:59:59Z"
+  provisional: FALSE
+
+2026-02-15 price BTC 68704.9800 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-02-15T23:59:59Z"
+  provisional: FALSE
+
+2026-02-22 price BTC 67545.1000 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-02-22T23:59:59Z"
+  provisional: FALSE
+
+2026-03-01 price BTC 65767.5000 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-03-01T23:59:59Z"
+  provisional: FALSE
+
+2026-03-08 price BTC 65964.0100 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-03-08T23:59:59Z"
+  provisional: FALSE
+
+2026-03-15 price BTC 72815.5000 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-03-15T23:59:59Z"
+  provisional: FALSE
+
+2026-03-22 price BTC 67866.6900 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-03-22T23:59:59Z"
+  provisional: FALSE
+
+2026-03-29 price BTC 66033.4200 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-03-29T23:59:59Z"
+  provisional: FALSE
+
+2026-04-05 price BTC 69001.0000 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-04-05T23:59:59Z"
+  provisional: FALSE
+
+2026-04-12 price BTC 70744.2600 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-04-12T23:59:59Z"
+  provisional: FALSE
+
+2026-04-19 price BTC 73852.5000 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-04-19T23:59:59Z"
+  provisional: FALSE
+
+2026-04-26 price BTC 78652.7400 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-04-26T23:59:59Z"
+  provisional: FALSE
+
+2026-05-03 price BTC 78580.4500 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-05-03T23:59:59Z"
+  provisional: FALSE
+
+2026-05-10 price BTC 82132.6600 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-05-10T23:59:59Z"
+  provisional: FALSE
+
+2026-05-17 price BTC 77472.3900 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-05-17T23:59:59Z"
+  provisional: FALSE
+
+2026-05-24 price BTC 76984.7500 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-05-24T23:59:59Z"
+  provisional: FALSE
+
+2026-05-31 price BTC 73601.1000 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-05-31T23:59:59Z"
+  provisional: FALSE
+
+2026-06-07 price BTC 63295.5400 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-06-07T23:59:59Z"
+  provisional: FALSE
+
+2026-06-14 price BTC 65730.1700 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-06-14T23:59:59Z"
+  provisional: FALSE
+
+2026-06-21 price BTC 63267.2700 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-06-21T23:59:59Z"
+  provisional: FALSE
+
+2026-06-28 price BTC 59577.8400 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-06-28T23:59:59Z"
+  provisional: FALSE
+
+2026-07-05 price BTC 63562.5900 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-07-05T23:59:59Z"
+  provisional: FALSE
+
+2026-07-12 price BTC 63769.5600 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-07-12T23:59:59Z"
+  provisional: FALSE
+
+2026-07-19 price BTC 64669.2500 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-07-19T23:59:59Z"
+  provisional: FALSE
+
+2026-07-26 price BTC 65347.0700 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-07-26T23:59:59Z"
+  provisional: FALSE
+
+2026-08-02 price BTC 63446.8400 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-08-02T23:59:59Z"
+  provisional: FALSE
+
+2026-08-09 price BTC 64839.8300 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-08-09T23:59:59Z"
+  provisional: FALSE
+
+2026-08-15 price BTC 63024.6300 USD
+  price-source: "binance.us"
+  price-kind: "weekly-close"
+  observed-at: "2026-08-15T23:59:59Z"
+  provisional: FALSE
+
+2026-08-16 price BTC 62830.1000 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-16T23:59:59Z"
+  provisional: FALSE
+
+2026-08-17 price BTC 64504.6000 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-17T23:59:59Z"
+  provisional: FALSE
+
+2026-08-18 price BTC 64687.1500 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-18T23:59:59Z"
+  provisional: FALSE
+
+2026-08-19 price BTC 69291.6300 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-19T23:59:59Z"
+  provisional: FALSE
+
+2026-08-20 price BTC 73012.7200 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-20T23:59:59Z"
+  provisional: FALSE
+
+2026-08-21 price BTC 78323.9100 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-21T23:59:59Z"
+  provisional: FALSE
+
+2026-08-22 price BTC 77051.5500 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-22T23:59:59Z"
+  provisional: FALSE
+
+2026-08-23 price BTC 77712.4400 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-23T23:59:59Z"
+  provisional: FALSE
+
+2026-08-24 price BTC 78974.8000 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-24T23:59:59Z"
+  provisional: FALSE
+
+2026-08-25 price BTC 78500.0000 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-25T23:59:59Z"
+  provisional: FALSE
+
+2026-08-26 price BTC 79008.6000 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-26T23:59:59Z"
+  provisional: FALSE
+
+2026-08-27 price BTC 80275.5800 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-27T23:59:59Z"
+  provisional: FALSE
+
+2026-08-28 price BTC 77839.4100 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-28T23:59:59Z"
+  provisional: FALSE
+
+2026-08-29 price BTC 78244.1800 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-29T23:59:59Z"
+  provisional: FALSE
+
+2026-08-30 price BTC 77695.0100 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-30T23:59:59Z"
+  provisional: FALSE
+
+2026-08-31 price BTC 78553.1700 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-08-31T23:59:59Z"
+  provisional: FALSE
+
+2026-09-01 price BTC 77402.6500 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-01T23:59:59Z"
+  provisional: FALSE
+
+2026-09-02 price BTC 77269.7400 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-02T23:59:59Z"
+  provisional: FALSE
+
+2026-09-03 price BTC 81279.4700 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-03T23:59:59Z"
+  provisional: FALSE
+
+2026-09-04 price BTC 79674.8600 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-04T23:59:59Z"
+  provisional: FALSE
+
+2026-09-05 price BTC 79851.8600 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-05T23:59:59Z"
+  provisional: FALSE
+
+2026-09-06 price BTC 80335.0800 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-06T23:59:59Z"
+  provisional: FALSE
+
+2026-09-07 price BTC 79107.3700 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-07T23:59:59Z"
+  provisional: FALSE
+
+2026-09-08 price BTC 78426.8400 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-08T23:59:59Z"
+  provisional: FALSE
+
+2026-09-09 price BTC 78249.6600 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-09T23:59:59Z"
+  provisional: FALSE
+
+2026-09-10 price BTC 76598.8800 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-10T23:59:59Z"
+  provisional: FALSE
+
+2026-09-11 price BTC 77220.6800 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-11T23:59:59Z"
+  provisional: FALSE
+
+2026-09-12 price BTC 77284.2500 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-12T23:59:59Z"
+  provisional: FALSE
+
+2026-09-13 price BTC 76841.5400 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-13T23:59:59Z"
+  provisional: FALSE
+
+2026-09-14 price BTC 78154.1600 USD
+  price-source: "binance.us"
+  price-kind: "daily-close"
+  observed-at: "2026-09-14T23:59:59Z"
+  provisional: FALSE
+
+2026-09-15 price BTC 76841.8500 USD
+  price-source: "binance.us"
+  price-kind: "reference-spot"
+  observed-at: "2026-09-15T08:29:24Z"
+  provisional: TRUE
+

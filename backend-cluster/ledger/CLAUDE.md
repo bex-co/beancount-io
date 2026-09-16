@@ -45,7 +45,11 @@ files need no import rewrites (decision: keep `foundation/rustledger`, not
   `plugins/`
 - `src/foundation/ledger-api-types/` — wire DTOs + `ledger-entry-input.ts`
 - `src/foundation/clients/` — `load-cached-ledger-file-map.ts` (HEAD-SHA-keyed
-  FileMap cache) + client factories
+  FileMap cache, then the managed price overlay) + client factories
+- `src/foundation/managed-prices/` — managed price includes (ADR 015): URL
+  policy, bounded fetch + price-only validation, revision/head feed cache,
+  and the read-only virtual-file overlay with ledger-price precedence. Never
+  bake feed text into the SHA-keyed cache; virtual keys are never written.
 - `src/features/gitea/client/gitea-api.ts` — generated Gitea client (never
   hand-edit; factories must default `format: "json"`)
 - `src/features/ledger/service/` — request→engine orchestration (adapted donor

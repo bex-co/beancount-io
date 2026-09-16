@@ -63,6 +63,24 @@ See `.env.example`. All are optional with sensible defaults for the Docker
 Compose network; the only ones typically set explicitly are `WEBHOOK_TOKEN`
 and `BACKEND_V2_ADMIN_TOKEN`.
 
+### Managed price includes
+
+A ledger file may include a managed price feed:
+
+```beancount
+include "https://beancount.io/prices/BTC-USD"
+```
+
+The service fetches the feed, accepts only `price` directives with the
+allowlisted metadata, overlays them as a read-only virtual file after the
+committed files are loaded, and refreshes them on a five-minute schedule
+without creating a Git commit. A failed refresh keeps the last validated
+revision serving. Ledger-authored prices for the same date and pair win.
+`MANAGED_PRICE_ORIGINS` lists the origins the service may fetch from and
+allows only `https://beancount.io` unless set; set it to an empty string to
+disable the feature. The design is recorded in
+[ADR 015](../../docs/adrs/ADR015-ledger-managed-price-includes.md).
+
 ## Testing
 
 `yarn test` runs the unit suite. A separate parity harness under `parity/`

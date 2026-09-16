@@ -645,7 +645,7 @@ describe("loadLedgerFileMap", () => {
 
 describe("include targets", () => {
   it("recognizes a URL target by its scheme", () => {
-    expect(isUrlIncludeTarget("https://beancount.io/prices/BTCUSD")).toBe(true);
+    expect(isUrlIncludeTarget("https://beancount.io/prices/BTC-USD")).toBe(true);
     expect(isUrlIncludeTarget("S3://bucket/prices.bean")).toBe(true);
     expect(isUrlIncludeTarget("accounts/opens.bean")).toBe(false);
     expect(isUrlIncludeTarget("accounts//opens.bean")).toBe(false);

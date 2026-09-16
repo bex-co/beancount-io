@@ -122,6 +122,8 @@ beforeEach(() => {
     files,
     entryPoint: "main.bean",
     repoPaths: ["main.bean"],
+    managedPrices: [],
+    managedPricePaths: [],
   }));
   commitMock.mockImplementation(
     async (

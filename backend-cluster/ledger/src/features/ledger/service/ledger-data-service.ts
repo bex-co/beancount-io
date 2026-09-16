@@ -16,6 +16,11 @@ import type {
 } from "@/foundation/ledger-api-types";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import {
+  assertNotManagedPricePath,
+  managedPriceDirectiveMatcher,
+  type ManagedPriceSource,
+} from "@/foundation/managed-prices";
+import {
   accountBalanceSeries,
   accountOwnUnitBalances,
   accountsForPayee,
@@ -158,19 +163,24 @@ export class LedgerDataService implements ILedgerDataService {
     ledgerId: string,
     userId: string | undefined,
   ): Promise<
-    LedgerSnapshot & { reportAccounts: ReportAccounts; fiscalYearEnd: string }
+    LedgerSnapshot & {
+      reportAccounts: ReportAccounts;
+      fiscalYearEnd: string;
+      managedPrices: ManagedPriceSource[];
+    }
   > {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const client = await this.giteaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
     );
-    const { files, entryPoint, repoPaths } = await loadCachedFileMapForRepo(
-      client as GiteaCommitClient,
-      this.cacheHelper,
-      ledgerOwner,
-      ledgerName,
-    );
+    const { files, entryPoint, repoPaths, managedPrices } =
+      await loadCachedFileMapForRepo(
+        client as GiteaCommitClient,
+        this.cacheHelper,
+        ledgerOwner,
+        ledgerName,
+      );
     const snapshot = await parseLedgerFiles(files, entryPoint, { repoPaths });
     // The WASM does not surface `name_*` overrides; recover the real root names
     // so account-selection honors `option "name_assets" "Actif"` etc.
@@ -183,7 +193,7 @@ export class LedgerDataService implements ILedgerDataService {
     const fiscalYearEnd = formatFiscalYearEnd(
       parseFavaOptions(snapshot.directives).fiscal_year_end,
     );
-    return { ...snapshot, reportAccounts, fiscalYearEnd };
+    return { ...snapshot, reportAccounts, fiscalYearEnd, managedPrices };
   }
 
   private async loadAttributes(
@@ -387,12 +397,13 @@ export class LedgerDataService implements ILedgerDataService {
       ledgerId,
       userId,
     );
-    const { files, entryPoint, repoPaths } = await loadCachedFileMapForRepo(
-      client as GiteaCommitClient,
-      this.cacheHelper,
-      ledgerOwner,
-      ledgerName,
-    );
+    const { files, entryPoint, repoPaths, managedPricePaths } =
+      await loadCachedFileMapForRepo(
+        client as GiteaCommitClient,
+        this.cacheHelper,
+        ledgerOwner,
+        ledgerName,
+      );
     const projected: Record<string, string> = { ...files };
     let totalBytes = 0;
     overlays.forEach((overlay, index) => {
@@ -404,6 +415,7 @@ export class LedgerDataService implements ILedgerDataService {
         throw new BadUserInputError(`files[${index}] must name a path`);
       }
       assertSafeRepoPath(overlay.path, `files[${index}].path`);
+      assertNotManagedPricePath(overlay.path, managedPricePaths);
       if (overlay.content === null || overlay.content === undefined) {
         delete projected[overlay.path];
         return;
@@ -449,6 +461,7 @@ export class LedgerDataService implements ILedgerDataService {
       this.cacheHelper,
       ledgerOwner,
       ledgerName,
+      { committedOnly: true },
     );
     return sourceFiles;
   }
@@ -548,7 +561,17 @@ export class LedgerDataService implements ILedgerDataService {
         clamp: snapshot.reportAccounts.clamp,
       },
     );
-    return toEntriesCountPerTypePublic(entriesCountPerType(directives));
+    // Managed price feeds are not the customer's entries (ADR 015 section 9):
+    // the dashboard sums this report as the tier-usage counter, and a feed
+    // must never look like it consumed the ledger's directive allowance.
+    const isManagedPrice = managedPriceDirectiveMatcher(snapshot.managedPrices);
+    return toEntriesCountPerTypePublic(
+      entriesCountPerType(
+        isManagedPrice
+          ? directives.filter((directive) => !isManagedPrice(directive))
+          : directives,
+      ),
+    );
   }
 
   async getPostingsPerAccount(

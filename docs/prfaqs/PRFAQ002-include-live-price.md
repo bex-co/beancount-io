@@ -11,7 +11,7 @@ Research baseline: repository commit `a1c1bac8`, a local Beancount 3.2.3 compati
 **Recommendation:** Let customers maintain an asset's valuation prices with one line:
 
 ```beancount
-include "https://beancount.io/prices/BTCUSD"
+include "https://beancount.io/prices/BTC-USD"
 ```
 
 Start with BTC and ETH quoted in USD, then a curated catalog of U.S. stocks and ETFs quoted in USD, gated on market-data redistribution rights. Deliver recent crypto reference prices, explicitly delayed stock prices, and daily history through ordinary Beancount `price` directives. Make source identity, freshness, manual overrides, and portable snapshots part of the first customer release. “Live” means automatically refreshed valuation data with a visible observation time and delay.
@@ -26,7 +26,7 @@ This follows [PRFAQ001's investment starter](PRFAQ001-ledger-creation.md#a4-inve
 
 *Connect a supported asset once and get maintained prices in your own plain-text books.*
 
-Beancount.io today introduced Include Live Price for people tracking crypto, stocks, and ETFs. Customers can select an investment in the dashboard or add a single include to their ledger, such as `include "https://beancount.io/prices/BTCUSD"`. Beancount.io supplies the prices used to value that holding and keeps them updated when customers open or refresh their reports.
+Beancount.io today introduced Include Live Price for people tracking crypto, stocks, and ETFs. Customers can select an investment in the dashboard or add a single include to their ledger, such as `include "https://beancount.io/prices/BTC-USD"`. Beancount.io supplies the prices used to value that holding and keeps them updated when customers open or refresh their reports.
 
 Investors already record what they bought, what they paid, and what they still own. Maintaining another list of market prices adds repetitive work before they can answer a basic question: what are these holdings worth now? Include Live Price handles that maintenance, without requiring a separate quote script, scheduled job, or personal market-data API key for the supported catalog.
 
@@ -51,12 +51,12 @@ In an investment or commodity view, choose **Connect prices**, search for the as
 People editing files can add the line directly. Examples for the proposed initial catalog:
 
 ```beancount
-include "https://beancount.io/prices/BTCUSD"
+include "https://beancount.io/prices/BTC-USD"
 include "https://beancount.io/prices/ETHUSD"
 include "https://beancount.io/prices/AAPLUSD"
 ```
 
-Each line provides prices for one unit of the base commodity in the quote currency: `BTCUSD` means USD per BTC. It does not record a purchase or establish that the customer owns BTC. The dashboard suggests connections for holdings with missing prices; it never connects every discovered ticker automatically.
+Each line provides prices for one unit of the base commodity in the quote currency: `BTC-USD` means USD per BTC. It does not record a purchase or establish that the customer owns BTC. The dashboard suggests connections for holdings with missing prices; it never connects every discovered ticker automatically.
 
 One include covers that commodity across accounts in the ledger. A portfolio with several assets uses several includes; customers do not need one per wallet, broker, or acquisition lot.
 
@@ -94,7 +94,7 @@ Prices support indicative portfolio values. They do not establish executable pro
 
 ### 6. How do you prevent the wrong asset or currency from being used?
 
-Short URLs are curated aliases, not a parser that guesses how to split arbitrary strings. `BTCUSD` is permanently assigned to native Bitcoin quoted in actual USD. The catalog records a stable instrument ID, asset class, full name, listing or network where relevant, quote currency, and source methodology. Once published, an alias must never be reassigned to a different instrument.
+Short URLs are curated aliases, not a parser that guesses how to split arbitrary strings. `BTC-USD` is permanently assigned to native Bitcoin quoted in actual USD. The catalog records a stable instrument ID, asset class, full name, listing or network where relevant, quote currency, and source methodology. Once published, an alias must never be reassigned to a different instrument.
 
 Stocks are identified by listing and share class, not ticker alone. Crypto tokens need network and contract identity where relevant; wrapped, bridged, and staked assets are separate instruments. A USD stablecoin is a separate commodity with a measured price, including during a depeg. No stablecoin is assumed to equal one USD, and a BTC/USDT price must not be relabeled BTC/USD.
 
@@ -127,7 +127,7 @@ A date filter alone is insufficient: a provider can later correct an old observa
 Export creates a self-contained copy with local price files and relative includes, for example:
 
 ```beancount
-include "prices/BTCUSD.beancount"
+include "prices/BTC-USD.beancount"
 ```
 
 The export retains the exact effective prices and source metadata, excludes duplicate managed prices suppressed by local overrides, and can be checked without Beancount.io. It includes the available ledger file set and a manifest of any unrelated dependencies that prevent full portability. Ordinary local files remain editable and versionable.
@@ -148,9 +148,9 @@ This is a product and implementation study, not a deployed prototype. It include
 
 | Area | Verified baseline | Implication for this proposal |
 | --- | --- | --- |
-| Upstream loading | A local Beancount 3.2.3 probe of the exact BTCUSD include, with socket connections disabled, produced no entries and `File glob "https://beancount.io/prices/BTCUSD" does not match any files`. Upstream documents file-relative includes. [Include documentation](https://beancount.github.io/docs/beancount_language_syntax/#includes). | Serving a text endpoint alone cannot deliver the promised experience. Add managed resolution around existing loaders and an offline export path. |
-| Hosted source loading | The hosted loader builds a file map from the ledger's Gitea files and resolves include targets as repository paths. [File-map loader](../../backend-cluster/ledger/src/foundation/rustledger/file-map-loader.ts). | Resolve supported managed URLs into validated, read-only virtual files before the engine consumes the file map. Preserve source locations for customer files. |
-| Hosted caching | The repository file-map cache is keyed by Git commit SHA. [Cache implementation](../../backend-cluster/ledger/src/foundation/clients/load-cached-ledger-file-map.ts). | Keep this cache for committed files. Price-dependent results also need the resolved price revision set; otherwise unchanged books can keep showing old prices. |
+| Upstream loading | A local Beancount 3.2.3 probe of the exact BTC-USD include, with socket connections disabled, produced no entries and `File glob "https://beancount.io/prices/BTC-USD" does not match any files`. Upstream documents file-relative includes. [Include documentation](https://beancount.github.io/docs/beancount_language_syntax/#includes). | Serving a text endpoint alone cannot deliver the promised experience. Add managed resolution around existing loaders and an offline export path. |
+| Hosted source loading | The hosted loader builds a file map from the ledger's Gitea files and resolves include targets as repository paths. [File-map loader](../../backend-cluster/ledger/src/foundation/rustledger/file-map-loader.ts). | Resolve supported managed URLs into validated, read-only virtual files before the engine consumes the file map. Preserve source locations for customer files. Implemented in the ledger service on 2026-09-15; see [ADR 015](../adrs/ADR015-ledger-managed-price-includes.md). |
+| Hosted caching | The repository file-map cache is keyed by Git commit SHA. [Cache implementation](../../backend-cluster/ledger/src/foundation/clients/load-cached-ledger-file-map.ts). | Keep this cache for committed files. Price-dependent results also need the resolved price revision set; otherwise unchanged books can keep showing old prices. ADR 015 keeps that cache price-free and overlays feeds from a separate revision/head cache. |
 | Existing valuation | The hosted price map keeps the last rate per day, adds inverse rates, and looks up the latest rate on or before a requested date. Unconvertible holdings remain in their original units. [Price map](../../backend-cluster/ledger/src/foundation/rustledger/price-map.ts). | Define feed precedence before building the map, and add completeness and freshness without another valuation engine. |
 | Local CLI loading | Directive reads call upstream Beancount; report/check paths use vendored Fava loading. Write validation also loads the ledger. [Reader](../../cli/src/cli/directives/reader.py), [Fava loader](../../cli/src/fava/core/loader.py), [write validation](../../cli/src/cli/ledger_write.py). | Integrate a common package-local resolution policy across reads, reports, checks, imports, and write validation. A report-only implementation would leave connected books unusable in other commands. |
 | Existing alternative | Upstream `beanprice` fetches market prices and renders Beancount syntax, including an update workflow. [Project documentation](https://github.com/beancount/beanprice). | Reuse standard price directives and investigate compatible source integrations. Our additional product value is managed setup, refresh, quality status, and snapshots; existing local quote workflows remain useful. |
@@ -261,7 +261,7 @@ All amounts below are synthetic acceptance values. Implement executable fixtures
 
 | Scenario | Required result |
 | --- | --- |
-| One-line setup | The exact BTCUSD include loads in compatible `bea` and hosted books, supplies the expected `price` entries, and updates valuation without editing transaction files or adding Git commits on refresh. |
+| One-line setup | The exact BTC-USD include loads in compatible `bea` and hosted books, supplies the expected `price` entries, and updates valuation without editing transaction files or adding Git commits on refresh. |
 | Basic valuation | The 0.5 BTC example in FAQ 5 yields 46,000 USD then 47,000 USD; units, acquisition amount, cash, and realized gains are identical across refreshes. |
 | History and date boundary | An observation after the valuation date cannot value that date. A date before coverage stays unpriced. UTC midnight, exchange dates, daylight-saving changes, early closes, holidays, and an observation at the exact day boundary follow the published policy. |
 | Within-day refresh and caching | New same-day data replaces the provisional effective point. Unchanged ledger SHA plus a new price revision updates the valuation. Every panel of one report uses one revision set; unchanged price bytes can still become stale. |
@@ -279,6 +279,6 @@ All amounts below are synthetic acceptance values. Implement executable fixtures
 The proposal fixes the one-line interaction, accounting boundaries, explicit price identity and freshness, local override policy, snapshot requirement, and portable export. Before implementation, accountable owners must resolve:
 
 - Which providers permit the public feed, retained snapshots, and intended use at an acceptable cost; the resulting exact stock/ETF launch list and earliest history dates.
-- The final canonical instrument URL format, range/revision schema, commodity mapping syntax, and compatible CLI command/flag names. Preserve the simple BTCUSD alias throughout that design.
+- The final canonical instrument URL format, range/revision schema, commodity mapping syntax, and compatible CLI command/flag names. Preserve the simple BTC-USD alias throughout that design.
 - Concrete response, history, concurrency, refresh, and per-ledger limits supported by measured engine and infrastructure capacity; price-data quotas must be explained separately from customer-authored transaction limits.
 - The named operating owner, spending ceiling, cohort recruitment, and release schedule after qualification. Do not turn unvalidated targets into announced commitments.

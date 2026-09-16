@@ -223,6 +223,9 @@ services:
         sync: false
       - key: LOG_LEVEL
         value: info
+      # Managed price includes (ADR 015) allow only https://beancount.io by
+      # default; add MANAGED_PRICE_ORIGINS here only to widen, narrow, or
+      # disable ("") remote price feeds.
 
   # --------------------------------------------------------------- Key Value
   - name: beancount-cache

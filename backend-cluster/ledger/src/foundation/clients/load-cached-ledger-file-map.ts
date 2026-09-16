@@ -10,6 +10,12 @@ import {
   type LoadedLedger,
   type LoadLedgerOptions,
 } from "@/foundation/rustledger";
+import { config } from "@/config";
+import {
+  overlayManagedPrices,
+  type ManagedPriceFeedDeps,
+  type ManagedPriceSource,
+} from "@/foundation/managed-prices";
 import { CACHE_KEYS, TTL, type CacheHelper } from "@/shared/cache";
 import { logger } from "@/shared/logger";
 import { lock } from "@/shared/lock";
@@ -151,6 +157,56 @@ export function resolveHeadShaCoalesced(
   return resolution;
 }
 
+/** The committed files plus the managed price overlay (ADR 015 section 8). */
+export interface LoadedLedgerWithManagedPrices extends LoadedLedger {
+  /** Per-source status of every managed price include resolved for this load. */
+  managedPrices: ManagedPriceSource[];
+  /**
+   * Virtual file-map keys that hold managed price text. They are not
+   * repository files: never count, offer, edit, or commit them.
+   */
+  managedPricePaths: string[];
+}
+
+export interface CachedLoadOptions extends LoadLedgerOptions {
+  /**
+   * Return the committed files only, skipping the managed price overlay.
+   * Counting and write-limit callers want repository bytes and must never
+   * trigger a feed fetch; both managed fields come back empty.
+   */
+  committedOnly?: boolean;
+  /** Injection seams for the overlay (clock, fetch, config); tests only. */
+  managedPrices?: Partial<Omit<ManagedPriceFeedDeps, "cache">>;
+}
+
+/**
+ * Overlay managed price feeds (ADR 015) onto a loaded map. This runs AFTER
+ * the SHA-keyed value is retrieved, so the cached value stays a pure function
+ * of the commit and a price refresh never depends on a push.
+ */
+async function withManagedPrices(
+  loaded: LoadedLedger,
+  cacheHelper: CacheHelper,
+  options: CachedLoadOptions,
+): Promise<LoadedLedgerWithManagedPrices> {
+  if (options.committedOnly) {
+    return { ...loaded, managedPrices: [], managedPricePaths: [] };
+  }
+  const overrides = options.managedPrices;
+  const overlay = await overlayManagedPrices(loaded.files, loaded.sourceFiles, {
+    cache: cacheHelper,
+    config: overrides?.config ?? config.managedPrices,
+    now: overrides?.now,
+    fetchImpl: overrides?.fetchImpl,
+  });
+  return {
+    ...loaded,
+    files: overlay.files,
+    managedPrices: overlay.managedPrices,
+    managedPricePaths: overlay.managedPricePaths,
+  };
+}
+
 /**
  * Load a ledger repo's FileMap through the SHA-keyed Redis cache. On a cache
  * hit this serves the FileMap without any tree/contents round-trips (the single
@@ -170,8 +226,8 @@ export async function loadCachedFileMapForRepo(
   cacheHelper: CacheHelper,
   owner: string,
   repo: string,
-  options: LoadLedgerOptions = {},
-): Promise<LoadedLedger> {
+  options: CachedLoadOptions = {},
+): Promise<LoadedLedgerWithManagedPrices> {
   const entryPoint = options.entryPoint ?? DEFAULT_ENTRY_POINT;
 
   // A caller that already pinned a concrete ref has a content address; otherwise
@@ -190,7 +246,14 @@ export async function loadCachedFileMapForRepo(
       : await resolveHeadShaCoalesced(client, owner, repo);
 
   if (!sha) {
-    return loadLedgerFileMap(client, owner, repo, { ...options, entryPoint });
+    return withManagedPrices(
+      await loadLedgerFileMap(client, owner, repo, {
+        ref: options.ref,
+        entryPoint,
+      }),
+      cacheHelper,
+      options,
+    );
   }
 
   // Evict this repo's SUPERSEDED FileMap before caching the current one, so the
@@ -222,7 +285,11 @@ export async function loadCachedFileMapForRepo(
   );
   requireEntryPoint(files, owner, repo, entryPoint);
   const sourceFiles = collectSourceFiles(files, entryPoint);
-  return { files, entryPoint, sourceFiles, repoPaths };
+  return withManagedPrices(
+    { files, entryPoint, sourceFiles, repoPaths },
+    cacheHelper,
+    options,
+  );
 }
 
 /**

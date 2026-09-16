@@ -45,5 +45,19 @@ export const CACHE_KEYS = {
      */
     fileMapHeadSha: (owner: string, repo: string) =>
       `ledger:file_map_head_v2:${owner}:${repo}`,
+    /**
+     * One validated revision of a managed price feed (ADR 015 section 5): the
+     * exact bytes plus what validation learned about them. Immutable per
+     * `(url, revision)`; the head pointer below decides which one is current.
+     */
+    priceFeedBlob: (urlHash: string, revision: string) =>
+      `ledger:price_feed_blob_v1:${urlHash}:${revision}`,
+    /**
+     * The mutable pointer for a managed price feed: current revision, ETag,
+     * fetch time, the next refresh time, and the last failure. Refresh is
+     * decided by the `nextRefreshAt` INSIDE this value, never by the key's
+     * TTL, so an outage cannot make the last good revision unreachable.
+     */
+    priceFeedHead: (urlHash: string) => `ledger:price_feed_head_v1:${urlHash}`,
   },
 } as const;
