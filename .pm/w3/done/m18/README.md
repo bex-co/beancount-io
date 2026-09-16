@@ -8,7 +8,7 @@
 > (rc.18 published 2026-01-14) and npm-deprecated — not a corrected artifact.
 > With no supported price-policy interface and this repo's ban on vendoring
 > upstream bytes, no task here is actionable. The defect is real and unfixed;
-> it is carried forward as inbox note [w3/113](../113.md), which points back to
+> it is carried forward as inbox note [w3/113](../blocked/113.md), which points back to
 > this directory for the full evidence. Re-promote when upstream ships a
 > booking-aware implicit-price fix.
 
