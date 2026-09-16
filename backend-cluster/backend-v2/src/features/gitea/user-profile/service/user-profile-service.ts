@@ -14,7 +14,12 @@ import {
   RepositoryListResponse,
 } from "../api/user-profile-resolver.types";
 import { logger } from "@/shared/logger";
-import { ServiceUnavailableError } from "@/shared/errors";
+import {
+  DomainError,
+  InternalServerError,
+  NotFoundError,
+  ServiceUnavailableError,
+} from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
@@ -23,6 +28,11 @@ import {
 } from "@/server/api/authorization";
 
 const FOLLOW_TIMEOUT_MS = 2_000;
+
+/** Gitea `users/{username}` returns 404 when the account does not exist. */
+export function isMissingUserLookupError(error: unknown): boolean {
+  return error instanceof Response && error.status === 404;
+}
 
 export interface IUserProfileService {
   getUserProfile(
@@ -83,16 +93,21 @@ export class UserProfileService implements IUserProfileService {
         format: "json",
       });
     } catch (error) {
+      if (error instanceof DomainError) throw error;
+      if (isMissingUserLookupError(error)) {
+        throw new NotFoundError("User", username);
+      }
       logger.error("Error fetching user from Gitea", { username, error });
-      throw new Error(
-        `Failed to fetch user from Gitea: ${error instanceof Error ? error.message : "Unknown error"}`,
+      throw new InternalServerError(
+        "Failed to fetch user from Gitea",
+        error instanceof Error ? error : undefined,
       );
     }
 
     const user = userResponse.data;
 
     if (!user) {
-      throw new Error(`User '${username}' not found in Gitea`);
+      throw new NotFoundError("User", username);
     }
 
     // Check if current user is following (if authenticated)

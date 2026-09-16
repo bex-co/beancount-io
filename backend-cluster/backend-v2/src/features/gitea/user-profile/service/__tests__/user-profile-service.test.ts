@@ -1,5 +1,12 @@
 import "reflect-metadata";
-import { UserProfileService } from "../user-profile-service";
+import {
+  isMissingUserLookupError,
+  UserProfileService,
+} from "../user-profile-service";
+import {
+  InternalServerError,
+  NotFoundError,
+} from "@/shared/errors";
 import { IContext } from "@/server/graphql/context";
 import {
   AUTHORIZATION_ACTIONS,
@@ -13,6 +20,18 @@ import {
   createMockGiteaRepository,
   createMockGiteaActivity,
 } from "./test-fixtures";
+
+describe("isMissingUserLookupError", () => {
+  it("recognizes a Gitea 404 Response only", () => {
+    expect(
+      isMissingUserLookupError(new Response(null, { status: 404 })),
+    ).toBe(true);
+    expect(
+      isMissingUserLookupError(new Response(null, { status: 503 })),
+    ).toBe(false);
+    expect(isMissingUserLookupError(new Error("404"))).toBe(false);
+  });
+});
 
 describe("UserProfileService", () => {
   let service: UserProfileService;
@@ -133,26 +152,43 @@ describe("UserProfileService", () => {
       expect(result.isFollowing).toBe(false);
     });
 
-    it("should throw error when user not found", async () => {
+    it("maps a Gitea 404 Response to NotFoundError", async () => {
       mockGiteaClient.users.userGet.mockRejectedValue(
-        new Error("User not found"),
+        new Response(null, { status: 404, statusText: "Not Found" }),
       );
 
       await expect(
         service.getUserProfile("nonexistent", mockContext.userId),
-      ).rejects.toThrow("Failed to fetch user from Gitea");
+      ).rejects.toBeInstanceOf(NotFoundError);
     });
 
-    it("should throw error when user data is null", async () => {
+    it("maps an empty successful user lookup to NotFoundError", async () => {
       mockGiteaClient.users.userGet.mockResolvedValue({ data: null } as any);
-      mockGiteaClient.users.userListActivityFeeds.mockResolvedValue({
-        data: [],
-      });
-      mockGiteaClient.users.userListRepos.mockResolvedValue({ data: [] });
 
       await expect(
         service.getUserProfile("testuser", mockContext.userId),
-      ).rejects.toThrow("User 'testuser' not found in Gitea");
+      ).rejects.toBeInstanceOf(NotFoundError);
+    });
+
+    it("keeps genuine upstream outages as InternalServerError", async () => {
+      mockGiteaClient.users.userGet.mockRejectedValue(
+        new Response(null, {
+          status: 503,
+          statusText: "Service Unavailable",
+        }),
+      );
+
+      await expect(
+        service.getUserProfile("nonexistent", mockContext.userId),
+      ).rejects.toBeInstanceOf(InternalServerError);
+    });
+
+    it("keeps arbitrary thrown errors as InternalServerError", async () => {
+      mockGiteaClient.users.userGet.mockRejectedValue(new Error("network reset"));
+
+      await expect(
+        service.getUserProfile("nonexistent", mockContext.userId),
+      ).rejects.toBeInstanceOf(InternalServerError);
     });
 
     it("should fetch and transform activities", async () => {

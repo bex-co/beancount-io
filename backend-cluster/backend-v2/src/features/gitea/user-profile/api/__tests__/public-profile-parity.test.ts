@@ -5,6 +5,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { graphql } from "graphql";
 import { buildSchema } from "type-graphql";
+import { formatError } from "@/server/graphql/format-error";
 import { UserProfileResolver } from "../user-profile-resolver";
 import { UserProfileService } from "../../service/user-profile-service";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
@@ -44,7 +45,7 @@ let schemaPromise: ReturnType<typeof buildSchema>;
 
 async function fixture(
   caller: Identity | undefined,
-  failure?: "profile" | "activities",
+  failure?: "profile" | "activities" | "missing-user",
 ) {
   const privateReads = jest.fn();
   const activity = {
@@ -56,6 +57,9 @@ async function fixture(
   const publicClient = {
     users: {
       userGet: async (username: string) => {
+        if (failure === "missing-user") {
+          throw new Response(null, { status: 404, statusText: "Not Found" });
+        }
         if (failure === "profile") throw new Error("Profile unavailable");
         return {
           data: {
@@ -225,6 +229,29 @@ describe("public profile enrichment across adapters", () => {
       expect((await f.rest("ada")).status).toBe(500);
       expect((await f.gql("ada")).errors).toBeDefined();
       await expect(f.read("ada")).rejects.toThrow();
+      expect(f.privateReads).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+  it("maps a missing username to NOT_FOUND across REST, GraphQL, and MCP", async () => {
+    const f = await fixture(undefined, "missing-user");
+    const username = "qa-no-such-user";
+    try {
+      const response = await f.rest(username);
+      expect(response.status).toBe(404);
+      expect(await response.json()).toMatchObject({
+        ok: false,
+        error: { code: "NOT_FOUND" },
+      });
+      await expect(f.read(username)).rejects.toThrow();
+      const result = await f.gql(username);
+      expect(result.data).toBeNull();
+      const [graphqlError] = result.errors ?? [];
+      expect(graphqlError).toBeDefined();
+      expect(
+        formatError(graphqlError.toJSON(), graphqlError).extensions?.code,
+      ).toBe("NOT_FOUND");
       expect(f.privateReads).not.toHaveBeenCalled();
     } finally {
       await f.close();

@@ -80,7 +80,6 @@ The four that remain are deliberately not "next up":
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
 - [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
-- [152](./152.md) — Missing public profiles become internal server errors
 - [157](./157.md) — Unsupported BQL integer results are reported as a temporary outage
 
 Added since that pass:
