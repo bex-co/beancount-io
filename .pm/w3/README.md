@@ -65,28 +65,15 @@
 - **m1** / **m2** — code-complete; closeout blocked on in-app verification
   against a ledger that has budget directives (see milestone Status lines).
 
-## Inbox
-
-A full triage pass on 2026-09-11 took this list from 78 notes to 4. Every note
-was re-verified against current code first: none had gone stale, so none was
-deleted — 74 were fixed and shipped (each closed note in [`done/`](./done)
-names the commit that fixed it), and the rest are accounted for below.
-
-[129](./129.md) is not listed: it was promoted into [m35](./done/m35/README.md),
-which links it as its reproduction record.
-
-The four that remain are deliberately not "next up":
-
-- [113](./113.md) — parked. Its producer is an upstream `@rustledger/wasm`
-  defect with no released fix (re-checked 2026-09-11, newest published version
-  is still 0.24.0), and vendoring the engine is forbidden here.
-- [003](./003.md) — held for a decision: needs an idempotency contract across
-  REST, GraphQL and MCP together (the repo-wide parity rule).
-
-- [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [113](./113.md) — Lot reductions replace current market prices (blocked on upstream engine)
-
-Added since that pass:
-
-
 - [x] **m43** — Open shared native transaction links in a browser (6 tasks) ← native QA Sep13
+
+## Inbox (blocked)
+
+Only decision/upstream holds remain open — everything implementable has been
+shipped into [`done/`](./done).
+
+- [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout.
+  Held for a decision: needs an idempotency contract across REST, GraphQL and
+  MCP together (repo-wide parity rule).
+- [113](./113.md) — Lot reductions replace current market prices. Parked on
+  upstream `@rustledger/wasm` (still 0.24.0); vendoring the engine is forbidden.
