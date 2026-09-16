@@ -94,7 +94,29 @@ jobs:
         if: steps.state.outputs.needs_release == 'true'
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # Without an ASC API key, a non-interactive build cannot reach Apple, so
+          # it signs with whatever profile EAS has stored. That is how every iOS
+          # build of 1.20260912.48 failed: `associatedDomains` was added to
+          # app.json while the stored profile predated the capability. With the
+          # key, eas-cli regenerates the profile and syncs capabilities itself.
+          EXPO_ASC_API_KEY_P8: ${{ secrets.EXPO_ASC_API_KEY_P8 }}
+          EXPO_ASC_KEY_ID: ${{ secrets.EXPO_ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+          EXPO_APPLE_TEAM_ID: ${{ secrets.EXPO_APPLE_TEAM_ID }}
+          # Not a secret, and required or eas-cli prompts for it and then fails.
+          EXPO_APPLE_TEAM_TYPE: COMPANY_OR_ORGANIZATION
         run: |
+          # eas-cli reads the key from a file. Keep it in RUNNER_TEMP rather than
+          # the workspace so it is never part of the uploaded project archive,
+          # and delete it however the step ends.
+          if [ -n "$EXPO_ASC_API_KEY_P8" ]; then
+            KEY_FILE="$RUNNER_TEMP/asc-api-key.p8"
+            (umask 177 && printf '%s' "$EXPO_ASC_API_KEY_P8" > "$KEY_FILE")
+            trap 'rm -f "$KEY_FILE"' EXIT
+            export EXPO_ASC_API_KEY_PATH="$KEY_FILE"
+          else
+            echo "::warning::No ASC API key; an iOS profile that needs regenerating will fail this build."
+          fi
           # --auto-submit submits this exact build once it finishes (server-side),
           # avoiding the `submit --latest` race. Waiting (no --no-wait) makes this
           # step fail when any build errors or any submission does not finish,
