@@ -45,4 +45,4 @@ jobs:
       - name: Run customer-suite installer and first-query tests
         run: python3 skills/scripts/test_beancount_skills.py
       - name: Run development QA helper tests
-        run: node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs
+        run: node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs .agents/skills/qa-shared/scripts/qa-mcp.test.mjs

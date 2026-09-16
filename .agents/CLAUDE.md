@@ -19,6 +19,7 @@ Customer-facing `beancount-*` ledger skills belong in [`skills/.claude/skills/`]
 | `qa-find-bugs-cli` | Exercise real `bea` commands against isolated synthetic ledgers. |
 | `qa-find-bugs-dashboard` | Exercise dashboard journeys with Playwright and reproduce findings. |
 | `qa-find-bugs-mobile` | Exercise native mobile journeys with Expo MCP and reproduce findings. |
+| `qa-find-bugs-mcp` | Exercise the remote MCP endpoint with JSON-RPC and real clients, check the envelope against REST/GraphQL controls, and reproduce findings. |
 | `routine-logic-simplifier` | Simplify convoluted logic with behavior pinned by tests. |
 | `routine-logic-bugfixer` | Prove and fix bugs in tricky logic with regression tests. |
 | `routine-dup-unifier` | Merge equivalent duplicated implementations within a package. |
@@ -57,7 +58,7 @@ From the repository root, using the existing CLI environment for Beancount fixtu
 python3 scripts/check-agent-guidance.py
 python3 skills/scripts/ci-check.py
 python3 skills/scripts/test_ci_check.py
-node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs
+node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs .agents/skills/qa-shared/scripts/qa-mcp.test.mjs
 ```
 
 The skills CI workflow covers both skill trees. Instruction changes also require `.agents/AGENTS.md` to remain a relative symlink to its sibling `CLAUDE.md`.
