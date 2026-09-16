@@ -212,6 +212,7 @@ bea check
 bea format main.bean               # formatted text on stdout; the file is untouched
 bea format main.bean -o clean.bean # or to a file of your choosing
 bea format -i main.bean            # rewrite it
+cat main.bean | bea format         # or read stdin; 'bea format -' says so outright
 bea format -i .                    # rewrite every .bean/.beancount file under a directory
 bea format . --dry-run             # write nothing; list the files that would change
 bea format . --check               # CI/pre-commit alignment gate; pair with bea check for validity
@@ -240,8 +241,25 @@ out first. The same formatter is a text transformation and not a parse, so
 formatting no longer refuses a file with a syntax error: it aligns the amounts
 it recognises and leaves the rest alone. Run `bea check` to validate.
 
+With no paths at all it is a filter: it formats stdin and writes to stdout, so
+`cat main.bean | bea format` and `bea format < main.bean` work in a pipeline
+without a temporary file. An explicit `-` asks for the same thing by name, and
+cannot be combined with file paths.
+
 In `--json` mode the destination has to be explicit, because stdout carries the
 envelope and nothing else: pass `-i`, `-o FILE`, `--check` or `--dry-run`.
+`-o -` is refused there for the same reason — it names the stream the envelope
+already owns — while plain `bea format -o -` remains the text export.
+
+A successful `-o FILE` answers with the envelope, so a script can confirm what
+was written without re-reading the directory:
+
+```json
+{"scanned": 1, "output": "/home/alice/books/clean.bean"}
+```
+
+`scanned` counts the input files, and is `0` when the input was stdin, whose
+envelope names `{"stdin": "-"}` as its target.
 
 `bea --json query "SELECT account, sum(position) GROUP BY account" -o result.json`
 writes the standard JSON envelope to the file with no duplicate stdout output.

@@ -42,12 +42,12 @@ def environment(tmp_path: Path) -> dict[str, str]:
     return env
 
 
-def bea(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
+def bea(tmp_path: Path, *args: str, stdin: str = "") -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "-m", "cli.main", *args],
         env=environment(tmp_path),
         cwd=tmp_path,
-        input="",
+        input=stdin,
         capture_output=True,
         text=True,
         timeout=30,
@@ -207,3 +207,66 @@ def test_shell_redirect_reset_and_failed_redirect_keep_session_usable(ledger: Pa
             os.killpg(proc.pid, signal.SIGKILL)
             proc.wait()
         os.close(master)
+
+
+UNALIGNED = '2026-01-02 * "Food"\n Assets:Checking -1 USD\n Expenses:Food 1 USD\n'
+
+
+def test_format_reads_the_pipe_its_documentation_promises(tmp_path: Path) -> None:
+    """Bare `bea format` is upstream's stdin filter, by name or by default (w5/002)."""
+    bare = bea(tmp_path, "format", stdin=UNALIGNED)
+    assert bare.returncode == 0, bare.stderr
+    assert bare.stderr == "" and "Assets:Checking" in bare.stdout and "Expenses:Food" in bare.stdout
+    # It aligned the amounts rather than echoing the pipe back.
+    assert bare.stdout != UNALIGNED
+    # Alignment is a fixed point, so the filter's own output survives a second pass.
+    assert bea(tmp_path, "format", stdin=bare.stdout).stdout == bare.stdout
+
+    named = bea(tmp_path, "format", "-", stdin=UNALIGNED)
+    assert named.returncode == 0, named.stderr
+    assert named.stdout == bare.stdout
+
+    destination = tmp_path / "piped.bean"
+    to_file = bea(tmp_path, "format", "--output", str(destination), stdin=UNALIGNED)
+    assert to_file.returncode == 0, to_file.stderr
+    assert to_file.stdout == "" and destination.read_text() == bare.stdout
+
+    mixed = bea(tmp_path, "format", "-", "main.bean", stdin=UNALIGNED)
+    assert mixed.returncode == 2 and "not both" in mixed.stderr
+
+
+def test_json_format_reports_the_file_it_wrote(ledger: Path) -> None:
+    """A successful `--output` is a result, and JSON mode has to state it (w5/001)."""
+    destination = ledger.parent / "clean.bean"
+    written = bea(ledger.parent, "--json", "format", str(ledger), "--output", str(destination))
+    assert written.returncode == 0, written.stderr
+    envelope = json.loads(written.stdout)
+    assert envelope["target"] == {"file": str(ledger)}
+    assert envelope["data"] == {"scanned": 1, "output": str(destination)}
+    # The destination holds the formatted ledger; the source is left alone.
+    assert "Assets:Checking" in destination.read_text() and ledger.read_text() == LEDGER
+
+    piped = bea(ledger.parent, "--json", "format", "--output", str(destination), stdin=UNALIGNED)
+    assert piped.returncode == 0, piped.stderr
+    envelope = json.loads(piped.stdout)
+    assert envelope["target"] == {"stdin": "-"} and envelope["data"] == {"scanned": 0, "output": str(destination)}
+
+
+def test_json_format_refuses_a_destination_that_is_the_json_stream(ledger: Path) -> None:
+    """`--output -` and no destination at all both take the stream the envelope owns (w5/001)."""
+    for extra in (["--output", "-"], []):
+        result = bea(ledger.parent, "--json", "format", str(ledger), *extra)
+        assert result.returncode == 2, result.stdout
+        assert result.stdout == ""
+        error = json.loads(result.stderr)["error"]
+        assert error["category"] == "usage" and "--json" in error["message"]
+
+    # A pipe gets the same refusal as JSON, not the formatter's own plain text.
+    piped = bea(ledger.parent, "--json", "format", stdin=UNALIGNED)
+    assert piped.returncode == 2 and piped.stdout == ""
+    assert json.loads(piped.stderr)["error"]["category"] == "usage"
+
+    # Without --json, - stays the documented way to export the text.
+    text = bea(ledger.parent, "format", str(ledger), "--output", "-")
+    assert text.returncode == 0, text.stderr
+    assert "Assets:Checking" in text.stdout

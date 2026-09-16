@@ -122,7 +122,7 @@ Usage: bea format [OPTIONS] [paths]...
 
 | Argument | Type | Required | Help |
 | --- | --- | --- | --- |
-| `paths` | path | no | Ledger files, or directories to expand recursively (default: stdin) |
+| `paths` | path | no | Ledger files, directories to expand recursively, or - for stdin (default: stdin) |
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |

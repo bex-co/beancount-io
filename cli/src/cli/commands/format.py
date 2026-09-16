@@ -27,12 +27,13 @@ from cli.engine import launch
 from cli.errors import BeaError, LedgerError, UsageError
 
 SUFFIXES = {".bean", ".beancount"}
+STDIN = "-"
 
 
 def format_beans(
     paths: Annotated[
         list[Path] | None,
-        typer.Argument(help="Ledger files, or directories to expand recursively (default: stdin)"),
+        typer.Argument(help="Ledger files, directories to expand recursively, or - for stdin (default: stdin)"),
     ] = None,
     in_place: Annotated[
         bool, typer.Option("--in-place", "-i", help="Rewrite each file instead of writing stdout")
@@ -63,9 +64,17 @@ def format_beans(
     if files is None:
         if reporting or in_place:
             raise UsageError("Name the files to format: reading stdin has nothing to compare or rewrite.")
-        # No paths at all is upstream's stdin filter, and the one case where
-        # `bea` does not need to know what the files are.
-        raise typer.Exit(launch.run_native("bean-format", [*alignment, *_destination(output_file)]))
+        if ctx.json_output:
+            _require_json_destination(in_place, output_file)
+        # Upstream's stdin filter, and the one case where `bea` does not need to
+        # know what the files are. The `-` is what asks for it: `bean-format`
+        # takes filenames, and a call naming none is refused before it reads a
+        # byte of the pipe.
+        status = launch.run_native("bean-format", [*alignment, *_destination(output_file), STDIN])
+        if status == 0 and ctx.json_output and output_file is not None:
+            output.emit(_wrote(0, output_file), target={"stdin": STDIN})
+            return
+        raise typer.Exit(status)
 
     target = _target(paths, files)
     if reporting:
@@ -77,21 +86,24 @@ def format_beans(
         output.success("No .bean or .beancount files found.")
         return
 
-    if ctx.json_output and not in_place and output_file is None:
-        # stdout carries the envelope and nothing else, so machine mode needs a
-        # destination named outright rather than one guessed here.
-        raise UsageError(
-            "In --json mode, formatting needs an explicit destination: "
-            "pass --in-place to rewrite the files, --output FILE, or --check/--dry-run to report instead."
-        )
+    if ctx.json_output:
+        _require_json_destination(in_place, output_file)
 
     before = {file: _text(file) for file in files} if in_place else {}
     status = launch.run_native(
         "bean-format",
         [*alignment, *_destination(output_file), *(["--in-place"] if in_place else []), *(str(f) for f in files)],
     )
-    if status != 0 or not in_place:
+    if status != 0:
         raise typer.Exit(status)
+    if not in_place:
+        # The formatted text went to `--output FILE` or to stdout. Only the file
+        # is a result worth reporting, and only machine mode is waiting to hear
+        # it — a successful write that says nothing is indistinguishable from a
+        # command that did nothing.
+        if ctx.json_output and output_file is not None:
+            output.emit(_wrote(len(files), output_file), target=target)
+        return
 
     # Read back rather than assume: the report says which files changed, and a
     # file upstream left alone was already formatted.
@@ -175,9 +187,15 @@ def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | Non
     An explicit path wins; otherwise the global `--file` names the ledger. A
     bare `bea format` formats stdin, which is what `bean-format` does — it no
     longer walks the working directory, because walking it and then writing to
-    stdout would concatenate a whole tree into one stream.
+    stdout would concatenate a whole tree into one stream. An explicit `-` asks
+    for that same filter by name, as it does in every other shell tool; reading
+    it as a path would look for a file called `-` in the working directory.
     """
     named = _named(paths, default)
+    if any(str(path) == STDIN for path in named):
+        if len(named) > 1:
+            raise UsageError(f"Read either stdin ('{STDIN}') or named files, not both.")
+        return None
     if not named:
         return None
 
@@ -221,6 +239,31 @@ def _alignment(prefix_width: int | None, num_width: int | None, currency_column:
 
 def _destination(output_file: Path | None) -> list[str]:
     return ["--output", str(output_file)] if output_file is not None else []
+
+
+def _require_json_destination(in_place: bool, output_file: Path | None) -> None:
+    """Where the formatted ledger goes when stdout is already spoken for.
+
+    In `--json` mode stdout carries the envelope and nothing else, so the text
+    needs a destination named outright rather than one guessed here — including
+    when that destination is upstream's `-`, which means the very stream the
+    envelope owns.
+    """
+    if output_file is not None and str(output_file) == STDIN:
+        raise UsageError(
+            "In --json mode, --output - would mix formatted ledger text into the JSON on stdout. "
+            "Name a file with --output FILE, or drop --json to write the text to stdout."
+        )
+    if not in_place and output_file is None:
+        raise UsageError(
+            "In --json mode, formatting needs an explicit destination: "
+            "pass --in-place to rewrite the files, --output FILE, or --check/--dry-run to report instead."
+        )
+
+
+def _wrote(scanned: int, destination: Path) -> dict[str, object]:
+    """What a successful `--output FILE` did: how much it read, and what it wrote."""
+    return {"scanned": scanned, "output": str(destination.expanduser().resolve())}
 
 
 def _result(files: list[Path], changed: list[str]) -> dict[str, object]:
