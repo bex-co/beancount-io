@@ -208,6 +208,9 @@ Lowercase input such as `usd` is normalized to `USD`.
 # Parse, validate and realize the ledger
 bea check
 
+# Under --json, check emits bea's envelope and refuses bean-check-only
+# flags such as -v / --auto (drop --json to use those native options).
+
 # Format to stdout, or rewrite the files with --in-place / -i
 bea format main.bean               # formatted text on stdout; the file is untouched
 bea format main.bean -o clean.bean # or to a file of your choosing
