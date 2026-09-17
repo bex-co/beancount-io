@@ -30,6 +30,12 @@ SUFFIXES = {".bean", ".beancount"}
 STDIN = "-"
 
 
+def _require_output_file(path: Path) -> None:
+    """Refuse -o when the path is already a directory."""
+    if path.exists() and path.is_dir():
+        raise UsageError(f"--output must be a file path, not a directory ({path}).")
+
+
 def format_beans(
     paths: Annotated[
         list[Path] | None,
@@ -55,6 +61,8 @@ def format_beans(
 
     if in_place and output_file is not None:
         raise UsageError("Pass either --in-place or --output, not both — they name two different destinations.")
+    if output_file is not None:
+        _require_output_file(output_file)
     reporting = check or dry_run
     if reporting and (in_place or output_file is not None):
         mode = "--check" if check else "--dry-run"
