@@ -424,7 +424,10 @@ def _parse_metadata(items: list[str]) -> dict[str, Any]:
             )
         if key in metadata:
             raise protocol.UsageError(f"Metadata key {key!r} was supplied more than once; use one --meta per key.")
-        entries, errors, _ = parser.parse_string(f'2000-01-01 * ""\n  {key}: {raw}\n')
+        # Beancount booleans are TRUE/FALSE; accept the usual spellings so
+        # `--meta cleared:true` matches bulk JSON bool meta instead of quoting.
+        parsed_raw = raw.upper() if raw.lower() in {"true", "false"} else raw
+        entries, errors, _ = parser.parse_string(f'2000-01-01 * ""\n  {key}: {parsed_raw}\n')
         if not errors and len(entries) == 1 and isinstance(entries[0], Transaction) and key in entries[0].meta:
             metadata[key] = entries[0].meta[key]
         elif raw.startswith('"'):
