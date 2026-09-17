@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
+from decimal import Decimal
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
 from ..beans.abc import Open
 from ..beans.account import parent as account_parent
 from .conversion import cost_or_value, get_cost
-from .inventory import CounterInventory
+from .inventory import CounterInventory, SimpleCounterInventory
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -23,7 +24,36 @@ if TYPE_CHECKING:  # pragma: no cover
     from ..beans.prices import FavaPriceMap
     from ..beans.types import BeancountOptions
     from .conversion import Conversion
-    from .inventory import SimpleCounterInventory
+
+
+ZERO = Decimal()
+
+
+def _converted(
+    balance: CounterInventory,
+    conversion: str | Conversion,
+    prices: FavaPriceMap,
+    end: datetime.date | None,
+) -> SimpleCounterInventory:
+    """A balance under `conversion`, keeping a net of exactly zero visible.
+
+    An inventory drops a position the moment it nets to zero, which is right for
+    an inventory: holding nothing is holding nothing. But a parent whose children
+    cancel under the conversion — a long and a short lot at the same cost, two
+    funds whose cost bases offset — is not an account with no balance, and
+    rendering it the same as one (`—`, `{}`) reads as missing data next to the
+    children that produced it. Such a parent reports an explicit zero in every
+    currency the conversion produced.
+    """
+    converted = cost_or_value(balance, conversion, prices, end)
+    if converted or balance.is_empty():
+        return converted
+    currencies: set[str] = set()
+    for key, number in balance.items():
+        position = CounterInventory({key: number})
+        # SimpleCounterInventory refuses bare iteration; read through items().
+        currencies.update(currency for currency, _ in cost_or_value(position, conversion, prices, end).items())
+    return SimpleCounterInventory({currency: ZERO for currency in sorted(currencies)})
 
 
 @dataclass(frozen=True)
@@ -72,12 +102,15 @@ class TreeNode:
             end: A date to use for cost conversions.
             with_cost: Additionally convert to cost.
         """
-        children = [child.serialise(conversion, prices, end, with_cost=with_cost) for child in sorted(self.children, key=attrgetter("name"))]
+        children = [
+            child.serialise(conversion, prices, end, with_cost=with_cost)
+            for child in sorted(self.children, key=attrgetter("name"))
+        ]
         return (
             SerialisedTreeNode(
                 self.name,
-                cost_or_value(self.balance, conversion, prices, end),
-                cost_or_value(self.balance_children, conversion, prices, end),
+                _converted(self.balance, conversion, prices, end),
+                _converted(self.balance_children, conversion, prices, end),
                 children,
                 self.has_txns,
                 self.balance.reduce(get_cost),
@@ -86,8 +119,8 @@ class TreeNode:
             if with_cost
             else SerialisedTreeNode(
                 self.name,
-                cost_or_value(self.balance, conversion, prices, end),
-                cost_or_value(self.balance_children, conversion, prices, end),
+                _converted(self.balance, conversion, prices, end),
+                _converted(self.balance_children, conversion, prices, end),
                 children,
                 self.has_txns,
             )

@@ -706,6 +706,13 @@ Invalid intervals, dates, reversed ranges, and malformed account filters exit
 expression (`'Expenses:(Food|Rent)'`); it selects transactions involving
 matching accounts and retains all their postings.
 
+A parent whose children cancel under the conversion — a long and a short lot at
+the same cost, two funds whose cost bases offset — reports an explicit zero
+(`0.00 USD` / `{"USD": "0"}`) rather than the `—` / `{}` of an account with no
+balance. An inventory drops a position the moment it nets to zero, which would
+otherwise render a real cancelling rollup as missing data beside the children
+that produced it.
+
 Account trees retain Beancount signs: income, liabilities, and equity are
 normally negative. `net_profit` is `-(income + expenses)`, so a gain is positive
 and a loss negative. The income statement includes actual period rows with
