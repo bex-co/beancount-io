@@ -355,6 +355,9 @@ def import_entries(
     ] = None,
     csv_account: Annotated[str | None, typer.Option("--account", help="Source account for --csv rows.")] = None,
     date_format: Annotated[str | None, typer.Option("--date-format", help="strptime date format for --csv.")] = None,
+    delimiter: Annotated[
+        str | None, typer.Option("--delimiter", help="CSV field delimiter for --csv: ',', ';', or 'tab'.")
+    ] = None,
     rules_file: Annotated[
         Path | None, typer.Option("--rules", help="TOML categorization rules for --csv rows.")
     ] = None,
@@ -396,6 +399,7 @@ def import_entries(
             csv_mapping=csv_mapping,
             csv_account=csv_account,
             date_format=date_format,
+            delimiter=delimiter,
             rules_file=rules_file,
             default_account=default_account,
             config=config,

@@ -40,6 +40,7 @@ def answer(
     csv_mapping: str | None = None,
     csv_account: str | None = None,
     date_format: str | None = None,
+    delimiter: str | None = None,
     rules_file: Path | None = None,
     default_account: str | None = None,
     config: Path | None = None,
@@ -60,7 +61,7 @@ def answer(
     from beancount import loader
     from beancount.core.data import Transaction
 
-    from bea_engine.csv_mapper import CsvImporter, load_rules, parse_mapping
+    from bea_engine.csv_mapper import CsvImporter, load_rules, parse_delimiter, parse_mapping
 
     if duplicates not in {"review", "skip", "include"}:
         raise UsageError(f"--duplicates must be review, skip, or include; got {duplicates!r}.")
@@ -95,6 +96,7 @@ def answer(
         mapping = parse_mapping(csv_mapping)
         default_account = default_account or "Expenses:Uncategorized"
         resolved_date_format = date_format or "%Y-%m-%d"
+        resolved_delimiter = parse_delimiter(delimiter) if delimiter is not None else None
         operating = options.get("operating_currency") or []
         importer: Any = CsvImporter(
             account=csv_account,
@@ -103,6 +105,7 @@ def answer(
             rules=load_rules(Path(rules_file)) if rules_file is not None else None,
             default_account=default_account,
             currency=operating[0] if len(operating) == 1 else None,
+            delimiter=resolved_delimiter,
         )
         preview_config = csv_mapping
         try:

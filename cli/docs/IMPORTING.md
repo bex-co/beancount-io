@@ -76,7 +76,9 @@ Amounts default to bank sign (outflows negative); add `sign=ledger`
 when the export uses the opposite convention. The currency defaults to the
 ledger's single operating currency. `--account` names the source account and
 is required. The file may start with a BOM; header cells are stripped before
-matching. Unknown fields, missing columns, bad dates, and bad amounts fail
+matching. Field separators are detected from the header among comma,
+semicolon, and tab; pass `--delimiter ','`, `--delimiter ';'`, or
+`--delimiter tab` to force one. Unknown fields, missing columns, bad dates, and bad amounts fail
 with the row number and column name. A mapped column that appears more than
 once in the header, or a quote left open at the end of the file, fails before
 anything is written. Misuse exits **2**.

@@ -196,18 +196,64 @@ def _malformed(source: Path, line: int, exc: csv.Error) -> UsageError:
     )
 
 
+_CANDIDATE_DELIMITERS = (",", ";", "\t")
+
+
+def detect_delimiter(source: Path) -> str:
+    """Pick comma, semicolon, or tab from the first non-empty line.
+
+    Bank exports often use ``;`` (EU) or tabs. Prefer the separator that yields
+    the most fields on the header line so ``--csv auto`` and an explicit
+    ``--csv`` mapping see the same columns.
+    """
+    with open(source, encoding="utf-8-sig", newline="") as stream:
+        sample = ""
+        for line in stream:
+            if line.strip():
+                sample = line.rstrip("\r\n")
+                break
+    if not sample:
+        return ","
+    best = ","
+    best_count = 0
+    for delim in _CANDIDATE_DELIMITERS:
+        try:
+            row = next(csv.reader([sample], delimiter=delim, strict=True), [])
+        except csv.Error:
+            continue
+        count = len(row)
+        if count > best_count:
+            best, best_count = delim, count
+    return best
+
+
+def parse_delimiter(value: str) -> str:
+    """Normalize ``--delimiter`` to a single character (``,``, ``;``, or tab)."""
+    raw = value.strip()
+    folded = raw.casefold()
+    if folded in {",", "comma"}:
+        return ","
+    if folded in {";", "semicolon"}:
+        return ";"
+    if folded in {"tab", r"\t", "t"} or raw == "\t":
+        return "\t"
+    raise UsageError(f"Bad --delimiter {value!r}: use ',', ';', or 'tab'.")
+
+
 @contextmanager
-def open_records(source: Path) -> Iterator[tuple[list[str], Iterator[dict[str, str]]]]:
+def open_records(source: Path, *, delimiter: str | None = None) -> Iterator[tuple[list[str], Iterator[dict[str, str]]]]:
     """The stripped header row and one dict per data row, keyed by those names.
 
     This is the one reader every CSV path shares, so discovery, date inference,
     and extraction agree on what a column is called: names are stripped (and
     the BOM dropped) exactly as `IMPORTING.md` promises. Quoting is strict —
     a quote left open at end of file fails with its line instead of silently
-    folding every later row into one field.
+    folding every later row into one field. When ``delimiter`` is omitted the
+    first line chooses among comma, semicolon, and tab.
     """
+    delim = detect_delimiter(source) if delimiter is None else delimiter
     with open(source, encoding="utf-8-sig", newline="") as stream:
-        reader = csv.reader(stream, strict=True)
+        reader = csv.reader(stream, delimiter=delim, strict=True)
         try:
             first = next(reader, None)
         except csv.Error as exc:
@@ -224,7 +270,9 @@ def open_records(source: Path) -> Iterator[tuple[list[str], Iterator[dict[str, s
         yield headers, rows()
 
 
-def infer_date_format(source: Path, column: str, limit: int = 200) -> tuple[str | None, bool]:
+def infer_date_format(
+    source: Path, column: str, limit: int = 200, *, delimiter: str | None = None
+) -> tuple[str | None, bool]:
     """The one date format that parses this column, and whether others also did.
 
     Day-first and month-first columns are indistinguishable until a row carries
@@ -233,7 +281,7 @@ def infer_date_format(source: Path, column: str, limit: int = 200) -> tuple[str 
     """
     values: list[str] = []
     try:
-        with open_records(source) as (headers, rows):
+        with open_records(source, delimiter=delimiter) as (headers, rows):
             if column not in headers:
                 return None, False
             for row in rows:
@@ -266,10 +314,10 @@ def header_signature(headers: list[str] | None) -> str | None:
     return hashlib.sha256("\0".join(headers).encode("utf-8")).hexdigest()
 
 
-def read_header(source: Path) -> list[str] | None:
+def read_header(source: Path, *, delimiter: str | None = None) -> list[str] | None:
     """Read a CSV header row, or None when the file is not a readable CSV."""
     try:
-        with open_records(source) as (headers, _rows):
+        with open_records(source, delimiter=delimiter) as (headers, _rows):
             return headers or None
     except (OSError, UnicodeDecodeError, UsageError):
         return None
@@ -289,9 +337,11 @@ class CsvImporter:
         rules: list[CsvRule] | None = None,
         default_account: str = "Expenses:Uncategorized",
         currency: str | None = None,
+        delimiter: str | None = None,
     ) -> None:
         self._account = account
         self._mapping = mapping
+        self._delimiter = delimiter
         self._date_format = date_format
         self._rules = rules or []
         self._default_account = default_account
@@ -344,7 +394,7 @@ class CsvImporter:
         category_header = columns.get("category")
         rows: list[Any] = []
         source = Path(filepath)
-        with open_records(source) as (headers, records):
+        with open_records(source, delimiter=self._delimiter) as (headers, records):
             if category_header is None:
                 category_header = next((h for h in headers if h.casefold() == "category"), None)
             self._check_columns(source, headers, category_header)
