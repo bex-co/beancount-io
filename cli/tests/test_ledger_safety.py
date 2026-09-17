@@ -67,7 +67,10 @@ def test_allow_errors_is_explicit_and_never_permits_bad_syntax(book: Path) -> No
     assert book.read_bytes() == before
 
 
-@pytest.mark.parametrize("text", ['He said "hello"', r"C:\bank\receipts", "café 東京\nsecond line", ""])
+# An empty string is no longer valid input for these fields; its refusal is
+# covered by test_add_nonempty_strings.py. This test is about what survives
+# quoting and escaping.
+@pytest.mark.parametrize("text", ['He said "hello"', r"C:\bank\receipts", "café 東京\nsecond line"])
 def test_all_quoted_directives_round_trip(book: Path, text: str) -> None:
     commands = [
         ["note", "--account", "Assets:Cash", "--comment", text],
