@@ -436,9 +436,13 @@ def validate_candidate(
     if snapshot is None:
         entries, errors, options = loader.load_file(candidate)
         filenames = {candidate: file}
+        original_line_counts = {file.resolve(): len(file.read_bytes().splitlines())}
     else:
         with snapshot.staged(candidate, file) as (root, filenames):
             entries, errors, options = loader.load_file(root)
+        original_line_counts = {
+            path.resolve(): len(content.splitlines()) for path, content in snapshot.contents.items()
+        }
     accounts = [entry.account for entry in entries if isinstance(entry, Open)]
     records: list[_ErrorRecord] = []
     invalid_pad_accounts = False
@@ -447,6 +451,17 @@ def validate_candidate(
         message = format_error(error)
         for staged, original in filenames.items():
             message = message.replace(str(staged), str(original))
+        source = Path(error.source.get("filename", str(candidate)))
+        source = filenames.get(source, source)
+        lineno = error.source.get("lineno")
+        # Candidate validation invents line numbers past EOF when the append
+        # is rejected. Do not send agents to a line that will not exist.
+        if not allow_errors and isinstance(lineno, int) and lineno > original_line_counts.get(source.resolve(), lineno):
+            prefix = f"{source}:{lineno}: "
+            if message.startswith(prefix):
+                message = "Proposed append (not written): " + message[len(prefix) :]
+            else:
+                message = f"Proposed append (not written): {message}"
         if "unknown account '" in message:
             account = message.split("unknown account '", 1)[1].split("'", 1)[0]
             normalization = unknown_account_is_normalization(account, accounts)
@@ -480,8 +495,6 @@ def validate_candidate(
                     "For a currency exchange, use a price annotation with the actual exchange rate: "
                     "for example, '100 EUR @ 1.08 USD' balances against '-108 USD'."
                 )
-        source = Path(error.source.get("filename", str(candidate)))
-        source = filenames.get(source, source)
         if isinstance(error.entry, Document) and "File does not exist" in error.message:
             hints.append(
                 f"Relative document paths resolve from {source.parent}, the directory containing {source.name}."

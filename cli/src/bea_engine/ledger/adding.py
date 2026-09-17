@@ -336,7 +336,7 @@ def _transaction(
         if parts and len(parts[0]) == 1:
             parts = parts[1:]
         parse_account(parts[0] if parts else "")
-    header = TransactionDirective(
+    header = TransactionDirective.model_construct(
         date=_date(request),
         flag=str(request.get("flag") or "*"),
         payee=request.get("payee"),
