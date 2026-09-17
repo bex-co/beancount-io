@@ -83,6 +83,31 @@ def _balance_amount(balance: dict[str, Any]) -> str:
     return f"{number} ~ {tolerance} {currency}"
 
 
+def _cost(cost: dict[str, Any]) -> str:
+    """A cost basis in Beancount's own `{…}` spelling, lot date and label included."""
+    parts = [_amount(cost)]
+    if cost.get("date"):
+        parts.append(str(cost["date"]))
+    if cost.get("label"):
+        parts.append(f'"{cost["label"]}"')
+    return "{" + ", ".join(parts) + "}"
+
+
+def _posting_amount(posting: dict[str, Any]) -> str:
+    """Units, with the cost and price that tell one lot from another.
+
+    The same text `--details` renders, so the table and the Beancount source
+    agree. Booking normalises a `@@ total` into a per-unit `@`, so what shows
+    is what the ledger holds rather than what was typed.
+    """
+    text = _amount(posting["units"])
+    if posting.get("cost"):
+        text += f" {_cost(posting['cost'])}"
+    if posting.get("price"):
+        text += f" @ {_amount(posting['price'])}"
+    return text
+
+
 def _matching_postings(item: dict[str, Any], account: str) -> list[dict[str, Any]]:
     """The postings `--account` selected, in entry order.
 
@@ -301,7 +326,7 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
                     [
                         (
                             (f"{p['flag']} {p['account']}" if p.get("flag") else p["account"]),
-                            _amount(p["units"]),
+                            _posting_amount(p),
                         )
                         for p in _matching_postings(item, account)
                         if p["units"]

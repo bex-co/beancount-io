@@ -363,9 +363,13 @@ bea list transaction --flag '!' --details
 bea list transaction --search netflix --tag trip
 ```
 
-The transaction table shows signed amounts by account and currency. With
-`--account`, the amounts column is labeled `MATCHING POSTING AMOUNTS` and shows
-only those postings. Under `--json`, `postings` always stays the complete entry
+The transaction table shows signed amounts by account and currency, with the
+cost basis and price that tell one lot from another — `5 HOOL {50.00 USD,
+2024-02-01}`, `1 HOOL @ 60.00 USD` — spelled the way `--details` and the ledger
+spell them. Booking normalises a `@@` total into a per-unit `@`, so the table
+shows what the ledger holds rather than what was typed. With `--account`, the
+amounts column is labeled `MATCHING POSTING AMOUNTS` and shows only those
+postings. Under `--json`, `postings` always stays the complete entry
 — the counterparty legs are what make a transaction readable — and `--account`
 adds a `matching_postings` array holding exactly the postings the filter
 selected, in entry order; without `--account` the key is absent. `--details`
