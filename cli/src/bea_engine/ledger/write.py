@@ -493,10 +493,31 @@ def validate_candidate(
         if isinstance(error.entry, Transaction) and "does not balance" in error.message:
             residual = interpolate.compute_residual(error.entry.postings)  # type: ignore[no-untyped-call]
             if len(residual.currencies()) > 1:
-                hints.append(
-                    "For a currency exchange, use a price annotation with the actual exchange rate: "
-                    "for example, '100 EUR @ 1.08 USD' balances against '-108 USD'."
+                held_with_cost = {
+                    posting.units.currency
+                    for prior in entries
+                    if prior is not error.entry
+                    for posting in getattr(prior, "postings", []) or []
+                    if posting.cost is not None and posting.units is not None
+                }
+                reducing_held_lot = any(
+                    posting.units is not None
+                    and posting.units.currency in held_with_cost
+                    and posting.cost is None
+                    and posting.price is None
+                    for posting in error.entry.postings
                 )
+                if reducing_held_lot:
+                    hints.append(
+                        "For a commodity or stock reduction, attach a cost lot or a market price: "
+                        "for example, 'Assets:Broker -1 HOOL {100 USD}' or "
+                        "'Assets:Broker -1 HOOL @ 100 USD' against cash."
+                    )
+                else:
+                    hints.append(
+                        "For a currency exchange, use a price annotation with the actual exchange rate: "
+                        "for example, '100 EUR @ 1.08 USD' balances against '-108 USD'."
+                    )
         if isinstance(error.entry, Document) and "File does not exist" in error.message:
             hints.append(
                 f"Relative document paths resolve from {source.parent}, the directory containing {source.name}."
