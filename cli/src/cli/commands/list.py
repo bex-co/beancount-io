@@ -85,8 +85,8 @@ SPECS: dict[str, _Spec] = {
         filter="account",
     ),
     "open": _Spec(
-        headers=["DATE", "ACCOUNT", "CURRENCIES"],
-        row=lambda o: [o["date"], o["account"], ", ".join(o["currencies"])],
+        headers=["DATE", "ACCOUNT", "CURRENCIES", "BOOKING"],
+        row=lambda o: [o["date"], o["account"], ", ".join(o["currencies"]), o.get("booking") or ""],
         empty="No open directives found.",
         filter="account",
     ),

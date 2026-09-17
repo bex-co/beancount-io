@@ -256,11 +256,13 @@ def list_opens(
         if account and fold_account(account) not in fold_account(entry.account):
             continue
         currencies = list(entry.currencies) if entry.currencies else []
+        booking = None if entry.booking is None else getattr(entry.booking, "value", str(entry.booking))
         results.append(
             OpenDirective(
                 date=entry.date,
                 account=entry.account,
                 currencies=currencies,
+                booking=booking,
                 meta=metadata_to_json(entry.meta),
             )
         )

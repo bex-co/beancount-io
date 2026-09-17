@@ -127,6 +127,7 @@ class OpenDirective(BaseModel):
     date: LedgerDate
     account: str
     currencies: list[str] = Field(default_factory=list)
+    booking: str | None = None
     meta: dict[str, Any] = Field(default_factory=dict)
 
 
