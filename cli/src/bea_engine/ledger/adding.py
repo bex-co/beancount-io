@@ -402,6 +402,22 @@ def _transaction(
         normalized.append(posting._replace(units=units, meta={}))
     if elided > 1:
         raise protocol.UsageError("Only one posting may omit its amount; supply amounts for the other postings.")
+    if elided == 1:
+        from collections import defaultdict
+        from decimal import Decimal
+
+        totals: dict[str, Decimal] = defaultdict(lambda: Decimal(0))
+        for posting in normalized:
+            units = posting.units
+            if units is MISSING or units.number is MISSING:
+                continue
+            totals[str(units.currency)] += units.number
+        if totals and all(number == 0 for number in totals.values()):
+            raise protocol.UsageError(
+                "Refusing a zero-net transaction with an inferred balancing posting; "
+                "Beancount drops that leg from list/query. Supply an explicit amount "
+                "(for example 'Assets:Cash 0 USD') or use nonzero postings. Nothing was written."
+            )
     entry = entry._replace(postings=normalized, meta=write.metadata_for_write(entry.meta))
     rendered = writer.format_entry(entry)
     warnings = write.append(file, [rendered], allow_errors=allow_errors, into=into, snapshot=snapshot)
