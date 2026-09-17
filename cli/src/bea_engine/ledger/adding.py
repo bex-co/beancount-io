@@ -336,14 +336,24 @@ def _transaction(
         if parts and len(parts[0]) == 1:
             parts = parts[1:]
         parse_account(parts[0] if parts else "")
+    # model_construct skips Tag/Link BeforeValidators; strip sigils so the
+    # printer does not emit doubled `#` / `^` (see models._strip_sigil).
+    tags = [
+        value[1:] if isinstance(value, str) and value.startswith("#") else value
+        for value in (request.get("tags") or [])
+    ]
+    links = [
+        value[1:] if isinstance(value, str) and value.startswith("^") else value
+        for value in (request.get("links") or [])
+    ]
     header = TransactionDirective.model_construct(
         date=_date(request),
         flag=str(request.get("flag") or "*"),
         payee=request.get("payee"),
         narration=request.get("narration"),
         postings=[],
-        tags=list(request.get("tags") or []),
-        links=list(request.get("links") or []),
+        tags=tags,
+        links=links,
         meta=_parse_metadata([str(item) for item in request.get("meta") or []]),
     )
     header_text = writer.format_transaction(header)

@@ -436,7 +436,9 @@ def validate_candidate(
     if snapshot is None:
         entries, errors, options = loader.load_file(candidate)
         filenames = {candidate: file}
-        original_line_counts = {file.resolve(): len(file.read_bytes().splitlines())}
+        # `bea init` validates a candidate before the destination exists; treat
+        # a missing original as zero lines so creation still works.
+        original_line_counts = {file.resolve(): len(file.read_bytes().splitlines())} if file.exists() else {}
     else:
         with snapshot.staged(candidate, file) as (root, filenames):
             entries, errors, options = loader.load_file(root)
