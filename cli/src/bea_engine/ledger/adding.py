@@ -101,10 +101,14 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
         return NoteDirective(
             date=date,
             account=parse_account(_text(request, "account")),
-            comment=_text(request, "comment"),
+            comment=single_line(_text(request, "comment")),
         )
     if directive_type == "event":
-        return EventDirective(date=date, type=_text(request, "type"), description=_text(request, "description"))
+        return EventDirective(
+            date=date,
+            type=single_line(_text(request, "type")),
+            description=single_line(_text(request, "description")),
+        )
     if directive_type == "commodity":
         return CommodityDirective(date=date, currency=_text(request, "currency"))
     if directive_type == "document":
@@ -126,7 +130,9 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
         # custom value is checked here rather than where it was typed.
         if isinstance(value, dict) and value.get("kind") == "account":
             parse_account(str(value.get("value", "")))
-    return CustomDirective.model_validate({"date": date, "type": _text(request, "type"), "values": values})
+        if isinstance(value, dict) and value.get("kind") == "text" and isinstance(value.get("value"), str):
+            value["value"] = single_line(value["value"])
+    return CustomDirective.model_validate({"date": date, "type": single_line(_text(request, "type")), "values": values})
 
 
 def _appended(file: Path, directive: Any, *, allow_errors: bool, into: Path | None) -> dict[str, Any]:

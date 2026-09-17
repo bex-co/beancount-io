@@ -81,10 +81,11 @@ def _fixed_point_metadata(meta: dict[str, Any] | None) -> dict[str, Any]:
 
 
 def normalize_entry_strings(entry: Any) -> Any:
-    """Flatten untrusted transaction text and metadata without mutating the input.
+    """Flatten untrusted directive text and metadata without mutating the input.
 
-    Source filenames describe real paths, so they are left intact. Other
-    directives' text fields and document paths retain their native semantics.
+    Source filenames describe real paths, so they are left intact. Other string
+    fields that agents type (payee, narration, note comment, event description,
+    custom text) flatten CR/LF to spaces so every write stays one ledger line.
     """
 
     def metadata(meta: dict[str, Any] | None) -> dict[str, Any]:
@@ -99,6 +100,18 @@ def normalize_entry_strings(entry: Any) -> Any:
             payee=single_line(entry.payee) if entry.payee is not None else None,
             narration=single_line(entry.narration) if entry.narration is not None else None,
             postings=[posting._replace(meta=metadata(posting.meta)) for posting in entry.postings],
+        )
+    elif isinstance(entry, Note):
+        entry = entry._replace(comment=single_line(entry.comment))
+    elif isinstance(entry, Event):
+        entry = entry._replace(type=single_line(entry.type), description=single_line(entry.description))
+    elif isinstance(entry, Custom):
+        entry = entry._replace(
+            type=single_line(entry.type),
+            values=[
+                value._replace(value=single_line(value.value)) if isinstance(value.value, str) else value
+                for value in entry.values
+            ],
         )
     return entry
 
