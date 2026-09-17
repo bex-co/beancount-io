@@ -93,6 +93,12 @@ class RunContext:
                 candidate, source = DEFAULT_ENTRY_FILE, "the working directory"
 
         if not candidate.exists():
+            if source == "$BEA_FILE":
+                raise UsageError(
+                    f"No ledger file at '{candidate}' (from $BEA_FILE). "
+                    f"Unset or fix BEA_FILE, or pass --file PATH to override it. "
+                    f"Cwd discovery of main.bean/main.beancount is skipped while BEA_FILE is set."
+                )
             raise UsageError(
                 f"No ledger file at '{candidate}' (from {source}). "
                 f"Name one with --file PATH, set BEA_FILE, or run from a directory containing "
