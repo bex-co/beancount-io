@@ -442,6 +442,9 @@ const MultiPostingsTransactionScreenComponent = () => {
     postings,
   }));
   const savedOutRef = useRef(false);
+  // A committed save disables Done: a cold-link form that fails to leave must
+  // never invite a duplicate resubmit (w1/032).
+  const [saved, setSaved] = useState(false);
   const navigation = useNavigation();
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
@@ -479,7 +482,7 @@ const MultiPostingsTransactionScreenComponent = () => {
   const rem = remainder(postings);
   const isBalanced = isRemainderBalanced(rem);
   const validationError = validatePostings(postings);
-  const canSave = validationError === null;
+  const canSave = validationError === null && !saved;
   const hasUnsavedChanges = isTransactionDraftDirty(initialDraft, {
     date,
     payee,
@@ -510,6 +513,11 @@ const MultiPostingsTransactionScreenComponent = () => {
   }, [navigation, hasUnsavedChanges, t]);
 
   const handleSave = async () => {
+    // The write already committed; stay silent instead of toasting a
+    // validation message for a form that is no longer submittable.
+    if (savedOutRef.current) {
+      return;
+    }
     if (!canSave) {
       let msg = t("multiPostingsInvalidBalance");
       if (validationError === "missingAccount")
@@ -545,7 +553,14 @@ const MultiPostingsTransactionScreenComponent = () => {
     if (outcome.ok) {
       // Mark the draft saved before leaving, so the discard guard stays quiet.
       savedOutRef.current = true;
-      router.back();
+      setSaved(true);
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        // A cold deep link leaves no back stack: land on the owning tab
+        // instead of raising an unhandled GO_BACK (w1/032).
+        router.replace("/(app)/(tabs)/transactions");
+      }
     }
   };
 

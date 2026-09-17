@@ -227,6 +227,9 @@ export function OpenAccountScreenComponent(): JSX.Element {
   const [picker, setPicker] = useState<PickerKind>(null);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // A committed save disables submit: a cold-link form that fails to leave
+  // must never invite a duplicate resubmit (w1/032).
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!currencyInitialized && !metaLoading) {
@@ -240,7 +243,7 @@ export function OpenAccountScreenComponent(): JSX.Element {
   // The typed text, before composition tidies it: "Investments:" is a name
   // still being typed, not a request for `Assets:Investments`.
   const typedIssue = typedSubPathIssue(subPath);
-  const canSubmit = validation.ok && typedIssue === null && !loading;
+  const canSubmit = validation.ok && typedIssue === null && !loading && !saved;
   const rootKey = rootPrefix.toLowerCase() as AccountRoot;
   const rootIcon = getRootIcon(rootKey);
   const rootTone = rootIcon.tone(theme);
@@ -277,11 +280,20 @@ export function OpenAccountScreenComponent(): JSX.Element {
     });
 
     if (result.ok) {
+      setSaved(true);
       // Pop only this screen, then hand the account to whatever registered via
       // `pushOpenAccount` — the picker's callback delivers the pick and pops
       // its own frame, so no screen ever pops a frame it doesn't own. A plain
       // Accounts-tab open has nothing registered and this is just a back().
-      router.back();
+      // A cold deep link leaves no back stack: land on the owning tab
+      // instead of raising an unhandled GO_BACK (w1/032). Nothing can be
+      // registered for the created callback without a pushing picker, so the
+      // delivery below is a no-op on that path.
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace("/(app)/(tabs)/accounts");
+      }
       runAccountCreatedCallback(account);
       return;
     }

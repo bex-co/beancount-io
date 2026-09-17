@@ -197,6 +197,9 @@ function AddBudgetScreenImpl(): JSX.Element {
   const [picker, setPicker] = useState<PickerKind>(null);
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // A committed save disables submit: a cold-link form that fails to leave
+  // must never invite a duplicate resubmit (w1/032).
+  const [saved, setSaved] = useState(false);
 
   // Empty means "not chosen yet" — the picker only ever sets a non-empty value,
   // so the ledger's default fills in until then without an effect to sync it.
@@ -207,7 +210,8 @@ function AddBudgetScreenImpl(): JSX.Element {
     account.trim().length > 0 &&
     amount.trim().length > 0 &&
     currency.trim().length > 0 &&
-    !loading;
+    !loading &&
+    !saved;
 
   const pickAccount = () => {
     pushAccountPicker(router, {
@@ -237,7 +241,14 @@ function AddBudgetScreenImpl(): JSX.Element {
 
     if (result.ok) {
       haptics.success();
-      router.back();
+      setSaved(true);
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        // A cold deep link leaves no back stack: land on the owning screen
+        // instead of raising an unhandled GO_BACK (w1/032).
+        router.replace("/(app)/budget");
+      }
       return;
     }
 
