@@ -93,6 +93,11 @@ def format_beans(
         _format_in_place(files, alignment, target)
         return
 
+    if len(files) > 1:
+        raise UsageError(
+            "Formatting multiple files to stdout is unsupported; pass --in-place (-i), or format one file at a time."
+        )
+
     status = launch.run_native("bean-format", [*alignment, *_destination(output_file), *(str(f) for f in files)])
     if status != 0:
         raise typer.Exit(status)
