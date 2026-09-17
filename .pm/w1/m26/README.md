@@ -1,12 +1,12 @@
 # w1 · m26 — Ledgers survive Windows editors and Unicode
 
-**Worker:** worker1 **Goal:** a ledger written by a Windows editor or containing non-ASCII account names behaves exactly like an LF-only ASCII one: it loads, it appends cleanly, and equivalent Unicode spellings are one account **Status:** todo
+**Worker:** worker1 **Goal:** a ledger written by a Windows editor or containing non-ASCII account names behaves exactly like an LF-only ASCII one: it loads, it appends cleanly, and equivalent Unicode spellings are one account **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Load ledgers saved with a UTF-8 BOM | 30m | — |
+| t001 | Load ledgers saved with a UTF-8 BOM — **DONE** | 30m | — |
 | t002 | Match the file's line endings and repair a missing final newline | 45m | — |
 | t003 | Report undecodable inputs with the path and the byte offset | 30m | — |
 | t004 | Normalize account names and search to NFC | 60m | — |
