@@ -12,6 +12,7 @@ import shlex
 import stat
 import sys
 import tempfile
+import time
 import unicodedata
 from collections import Counter
 from collections.abc import Callable, Iterable, Iterator
@@ -142,6 +143,41 @@ class LedgerSnapshot:
                         content = content[:start] + replacement.encode() + content[end:]
                 paths[path].write_bytes(content)
             yield paths[self.root], {staged: original for original, staged in paths.items()}
+
+
+#: How long a staged candidate must have been sitting before another write
+#: treats it as abandoned. A write takes seconds, so an hour is far beyond any
+#: live one and this can only ever catch a file whose owner is gone.
+_ABANDONED_CANDIDATE_SECONDS = 3600
+
+
+def sweep_abandoned_candidates(directory: Path) -> None:
+    """Remove staging files an interrupted write could not remove itself.
+
+    `candidate_file` drops its own file in a `finally`, and the frontend passes
+    a termination signal on to the engine so that `finally` gets to run. Neither
+    helps against SIGKILL, which no handler can catch, nor against a signal that
+    lands in the moment between creating the file and entering the block that
+    guards it. Each abandoned file is a full copy of the ledger, so they are
+    worth clearing rather than leaving to accumulate beside a user's books.
+
+    Only files old enough that no live write could still own them are removed,
+    which is what makes this safe to do while another `bea` may be running in
+    the same directory. Sweeping is best effort: a file someone else removes
+    first, or one this user may not delete, must not fail the write that was
+    actually asked for.
+    """
+    cutoff = time.time() - _ABANDONED_CANDIDATE_SECONDS
+    try:
+        stale = list(directory.glob(".bea-*"))
+    except OSError:
+        return
+    for path in stale:
+        try:
+            if path.is_file() and path.stat().st_mtime < cutoff:
+                path.unlink(missing_ok=True)
+        except OSError:
+            continue
 
 
 @contextmanager
@@ -609,6 +645,7 @@ def append(
     with ExitStack() as stack:
         for path in sorted({file, target}):
             stack.enter_context(lock_file(path))
+        sweep_abandoned_candidates(target.parent)
         snapshot = snapshot or LedgerSnapshot.capture(file)
         snapshot.require_target(target)
         snapshot.verify()

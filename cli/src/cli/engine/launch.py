@@ -53,7 +53,8 @@ import os
 import signal
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -239,7 +240,7 @@ def helper_json(args: Sequence[str], *, stdin: str | None = None) -> dict[str, A
     request and then answers.
     """
     command, env = helper_command()
-    completed = subprocess.run([*command, *args], env=env, input=stdin, capture_output=True, text=True, check=False)
+    completed = _run_helper([*command, *args], env, stdin)
 
     envelope = _parse(completed, args)
     if not envelope.get("ok"):
@@ -270,6 +271,75 @@ def helper_json(args: Sequence[str], *, stdin: str | None = None) -> dict[str, A
     if completed.stderr.strip():
         output.note(completed.stderr.rstrip())
     return dict(envelope.get("data") or {})
+
+
+#: How long the helper gets to unwind once we pass a termination signal on. It
+#: only has to drop a staged candidate file, so this is deliberately generous.
+_CLEANUP_GRACE_SECONDS = 5.0
+
+
+def _run_helper(command: list[str], env: dict[str, str] | None, stdin: str | None) -> subprocess.CompletedProcess[str]:
+    """`subprocess.run`, except the child is told when the frontend is being stopped."""
+    with subprocess.Popen(
+        command,
+        env=env,
+        stdin=subprocess.PIPE if stdin is not None else None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    ) as child:
+        with _forwarding_teardown(child):
+            out, err = child.communicate(stdin)
+    return subprocess.CompletedProcess(command, child.returncode, out, err)
+
+
+@contextmanager
+def _forwarding_teardown(child: subprocess.Popen[str]) -> Iterator[None]:
+    """Pass a termination signal on to `child`, and let it unwind before we go.
+
+    The engine stages every write into a `.bea-*.tmp` candidate beside the
+    ledger and drops it in a `finally`. That cleanup only runs if the child is
+    told to stop. A terminal delivers Ctrl-C to the whole foreground process
+    group, so interactive use was always fine — but a supervisor, a container
+    stopping its main pid, `timeout` or `Popen.terminate()` signals the
+    frontend alone, and the orphaned child left a full-size copy of the ledger
+    beside the user's books on every attempt.
+
+    Handlers are installed only for the child's lifetime and restored after, so
+    nothing else in the process changes its interrupt behaviour. Once the child
+    is done we re-raise the signal with its default disposition, which keeps the
+    status the shell reports exactly what it was.
+    """
+    if not _FORWARDED_SIGNALS:
+        yield
+        return
+
+    def forward(number: int, _frame: Any) -> None:
+        child.send_signal(number)
+        try:
+            child.wait(timeout=_CLEANUP_GRACE_SECONDS)
+        except subprocess.TimeoutExpired:
+            child.kill()
+        signal.signal(number, signal.SIG_DFL)
+        os.kill(os.getpid(), number)
+
+    installed: list[tuple[int, Any]] = []
+    try:
+        for number in _FORWARDED_SIGNALS:
+            try:
+                installed.append((number, signal.signal(number, forward)))
+            except (OSError, ValueError):
+                # Not every signal can be handled on every platform, and
+                # `signal.signal` only works on the main thread. Forwarding is
+                # an improvement where it is available, never a requirement.
+                continue
+        yield
+    finally:
+        for number, previous in installed:
+            try:
+                signal.signal(number, previous)
+            except (OSError, ValueError):
+                pass
 
 
 def _parse(completed: subprocess.CompletedProcess[str], args: Sequence[str]) -> dict[str, Any]:
@@ -373,6 +443,10 @@ _QUIET_SIGNALS = _signals("SIGINT", "SIGPIPE")
 
 #: Signals that mean the child crashed, as opposed to being told to stop.
 _CRASH_SIGNALS = _signals("SIGSEGV", "SIGBUS", "SIGABRT", "SIGFPE", "SIGILL")
+
+#: Signals a supervisor, a container stop or `timeout` uses to end a command,
+#: and which the engine child has to hear about to clean up after itself.
+_FORWARDED_SIGNALS = _signals("SIGINT", "SIGTERM", "SIGHUP")
 
 
 def _died_on_signal(number: int, command: list[str]) -> int:

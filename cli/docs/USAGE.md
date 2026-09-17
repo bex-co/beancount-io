@@ -384,6 +384,13 @@ arithmetic such as `84/2 EUR` works. A literal zero divisor (`100/0`) is
 refused as a usage error before it reaches the engine, because Beancount
 evaluates amount arithmetic while parsing and a zero divisor crashes it.
 
+Every write is staged into a hidden `.bea-*.tmp` copy beside the ledger and
+moved into place only once it validates, so an interrupted write never leaves a
+half-written ledger. If the command is stopped, the staging copy goes with it:
+the engine is told to unwind, and a later write in the same directory clears any
+copy left by a kill that could not be caught, which is the only case a signal
+handler cannot cover.
+
 For split ledgers, keep `--file` pointed at the root and choose the included
 destination with `--into`. The destination must already exist and be included
 by the root. Its path is relative to the root ledger's directory:
