@@ -22,6 +22,10 @@ BQL (Beancount Query Language) is SQL-like but NOT standard SQL. Key rules:
 The default table is postings — one row per posting.
 Columns: date, account, number, currency, position, payee, narration, tags, flag.
 Use SELECT DISTINCT to deduplicate (e.g. one row per account or per transaction).
+tags and links hold a whole set per entry, so DISTINCT and GROUP BY cannot take
+them. Wrap them first: joinstr(tags) is a string and behaves like any other
+column, and 'grocery' IN tags tests one tag. Do not rely on the order of tags
+inside a joinstr result.
 
 Common examples:
   List all open accounts:
@@ -36,6 +40,10 @@ Common examples:
     SELECT date, payee, narration WHERE date >= 2024-01-01 AND date < 2025-01-01
   Distinct currencies used:
     SELECT DISTINCT currency
+  Distinct tag combinations:
+    SELECT DISTINCT joinstr(tags)
+  Entries carrying one tag:
+    SELECT date, narration WHERE 'grocery' IN tags
 
 Other functions: year(date), month(date), root(account), leaf(account), units(position), cost(position)
 FROM OPEN ON <date> / FROM CLOSE [ON <date>] / FROM CLEAR are temporal modifiers, not table names.

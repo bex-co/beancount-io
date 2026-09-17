@@ -330,6 +330,14 @@ Query tables preserve the precision of result values, including calculated
 amounts and commodity quantities. Interactive queries and the `ask` BQL tool
 use the same precision policy; cents are never discarded because most entries
 in the ledger happen to use whole amounts.
+`tags` and `links` hold a whole set per entry, so BQL cannot compare them:
+`SELECT DISTINCT tags` and `GROUP BY tags` are refused (exit **2**) with the
+recipes that work — `SELECT DISTINCT joinstr(tags)` for distinct combinations,
+`SELECT joinstr(tags), count(*) GROUP BY joinstr(tags)` for counts, and
+`WHERE 'grocery' IN tags` for one tag at a time. `joinstr` returns a string,
+which behaves like any other column; the order of the tags inside that string is
+not stable, so compare sets by membership rather than by the joined text.
+
 An empty result prints `(no rows)` on stderr. JSON mode keeps the usual
 envelope with an empty `rows` array and no human notice.
 

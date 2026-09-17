@@ -426,6 +426,54 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
         return run(statement)
     except BeanqueryError as exc:
         raise _usage_error(exc, query_string, conn, ledger_errors) from None
+    except SyntaxError as exc:
+        # Beanquery compiles a query to Python. `SELECT DISTINCT tags` makes it
+        # emit code it cannot parse, and the SyntaxError that escapes says only
+        # "cannot use starred expression here" — nothing about the query, or the
+        # column, or what would work instead.
+        columns = _set_columns(statement)
+        if not columns:
+            raise protocol.UsageError(
+                f"Beanquery could not compile this BQL query: {exc}.",
+                details=_SET_COLUMN_ADVICE,
+                ledger_errors=ledger_errors,
+            ) from None
+        named = ", ".join(columns)
+        raise protocol.UsageError(
+            f"BQL cannot use DISTINCT or GROUP BY on {named}: a set is not a value it can compare.",
+            details=_SET_COLUMN_ADVICE,
+            ledger_errors=ledger_errors,
+        ) from None
+
+
+_SET_COLUMNS = ("tags", "links")
+
+_SET_COLUMN_ADVICE = [
+    "`tags` and `links` hold a whole set per entry, so BQL cannot hash them.",
+    "Distinct combinations: SELECT DISTINCT joinstr(tags) — one string per row; the order inside it is not stable.",
+    "Counts per combination: SELECT joinstr(tags), count(*) GROUP BY joinstr(tags)",
+    "One tag at a time: SELECT date, narration WHERE 'grocery' IN tags",
+]
+
+
+def _set_columns(query_string: str) -> list[str]:
+    """The bare set-valued columns this query selects, which is what cannot be compared.
+
+    Only a bare column is a problem — `joinstr(tags)` is a string and behaves
+    like any other, which is why it is the recipe we point at.
+    """
+    try:
+        from beanquery.parser import parse
+
+        parsed = parse(query_string)
+    except Exception:  # noqa: BLE001 - the query already failed; advice is best effort
+        return []
+    found: list[str] = []
+    for target in getattr(parsed, "targets", None) or []:
+        name = getattr(getattr(target, "expression", None), "name", None)
+        if name in _SET_COLUMNS and name not in found:
+            found.append(name)
+    return found
 
 
 def _refuse_empty_window(query_string: str, ledger_errors: list[str]) -> None:
@@ -475,6 +523,8 @@ def _usage_error(exc: Exception, query_string: str, conn: Any, ledger_errors: li
         details.append(f"  {query_string}")
         details.append(f"  {' ' * position}^")
     details.extend(_column_suggestions(str(exc), conn))
+    if "non-hashable" in str(exc) and _set_columns(query_string):
+        details.extend(_SET_COLUMN_ADVICE)
     details.append("Run bea query with no argument for the interactive shell, where .tables lists what you can query.")
     return protocol.UsageError(f"Cannot run this BQL query: {exc}.", details=details, ledger_errors=ledger_errors)
 
