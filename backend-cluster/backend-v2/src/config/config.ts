@@ -46,7 +46,7 @@ interface DashboardConfig {
  * `/.well-known/assetlinks.json`. Unset when a self-host has no native build —
  * those routes then 404 rather than advertising someone else's app.
  */
-export interface AppLinksConfig {
+interface AppLinksConfig {
   /** Apple Developer Team ID (e.g. Beancount.io production: `PTLM7BZQMM`). */
   appleTeamId: string | null;
   /** Play App Signing SHA-256 fingerprints, comma-separated in env. */
