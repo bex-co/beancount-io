@@ -473,8 +473,9 @@ def _transactions(
 
     if rejected and not partial:
         raise protocol.LedgerError(
-            f"{len(rejected_rows)} of {len(rows)} row(s) are invalid; nothing was written. "
-            f"Fix them, or pass --partial to append the {len(valid)} valid row(s).",
+            f"{len(rejected_rows)} of {len(rows)} row(s) failed schema validation; nothing was written. "
+            f"Fix them, or pass --partial to try appending schema-valid rows "
+            f"(ledger validation may still reject some of the {len(valid)}).",
             details=rejected,
             result={"written": 0, "written_rows": [], "rejected_rows": rejected_rows},
         )
