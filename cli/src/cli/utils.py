@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import re
 import tempfile
+import unicodedata
 from datetime import date as Date
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,18 @@ from cli.errors import UsageError
 def single_line(text: str) -> str:
     """Keep text readable as one ledger field or table cell, preserving other whitespace."""
     return re.sub(r"[\r\n]+", " ", text)
+
+
+def fold_account(name: str) -> str:
+    """The key two account names must share to match in a filter.
+
+    The engine twin (`bea_engine.ledger.text.fold_account`) carries the full
+    reasoning; the short of it is that NFC and NFD spellings of one account
+    name render identically, so comparing them raw makes a filter miss an
+    account the user can see. Neither side may import the other, and a filter
+    applied here must agree with the one applied there.
+    """
+    return unicodedata.normalize("NFC", unicodedata.normalize("NFC", name).casefold())
 
 
 def owner_and_name(full_name: str) -> tuple[str, str]:

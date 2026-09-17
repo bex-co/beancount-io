@@ -22,7 +22,7 @@ import typer
 
 from cli import context, output
 from cli.errors import UsageError
-from cli.utils import parse_opt_date, single_line
+from cli.utils import fold_account, parse_opt_date, single_line
 
 list_app = typer.Typer(help="List directives from a local .bean file", no_args_is_help=True, rich_markup_mode=None)
 
@@ -250,7 +250,7 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
                 typer.echo(f"{item['source']['filename']}:{item['source']['lineno']}")
             typer.echo(rendered)
     elif name == "transaction":
-        account = (filters.get("account") or "").casefold()
+        account = fold_account(filters.get("account") or "")
         _transaction_table(
             ["DATE", "FLAG", "PAYEE", "NARRATION", "MATCHING POSTING AMOUNTS" if account else "POSTING AMOUNTS"],
             [
@@ -264,7 +264,7 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
                     [
                         (p["account"], _amount(p["units"]))
                         for p in item["postings"]
-                        if p["units"] and (not account or account in p["account"].casefold())
+                        if p["units"] and (not account or account in fold_account(p["account"]))
                     ],
                 )
                 for item in items

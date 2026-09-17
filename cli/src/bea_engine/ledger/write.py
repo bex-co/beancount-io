@@ -12,8 +12,9 @@ import shlex
 import stat
 import sys
 import tempfile
+import unicodedata
 from collections import Counter
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -351,6 +352,42 @@ def root_ledger_hints(file: Path) -> list[str]:
     ]
 
 
+def _normal_form(text: str) -> str:
+    """Name the normalization `text` is in, for a message that has to tell two apart."""
+    for form in ("NFC", "NFD"):
+        if unicodedata.is_normalized(form, text):
+            return form
+    return "a mixed form"
+
+
+def unknown_account_is_normalization(account: str, accounts: Iterable[str]) -> str | None:
+    """Explain an open account that differs from `account` only in normalization.
+
+    `difflib` compares code points, so the NFC and NFD spellings of one name
+    score far above its cutoff and come back as a close match — a suggestion
+    that renders exactly like the name it is suggested for, which tells the
+    reader nothing and sends them looking for a typo that is not there.
+
+    This is not a near miss at all: the account is already open, spelled with
+    different code points. Both the suggestion and the `bea add open` advice
+    are wrong for it — following the latter opens a second account that looks
+    identical to the first — so this replaces them rather than joining them.
+    The two forms are quoted as escapes because that is the only way to show a
+    difference the terminal renders away.
+    """
+    for candidate in accounts:
+        if candidate == account or unicodedata.normalize("NFC", candidate) != unicodedata.normalize("NFC", account):
+            continue
+        return (
+            f" The ledger already opens this account, spelled in a different Unicode normalization: it has "
+            f"{ascii(candidate)} ({_normal_form(candidate)}) where you wrote {ascii(account)} "
+            f"({_normal_form(account)}). Both render identically, so this is not a typo: copy the name from the "
+            f"ledger, or re-open the account in the form you type. Creating it with bea add open would add a "
+            f"second account indistinguishable from the first."
+        )
+    return None
+
+
 def validate_candidate(
     candidate: Path, file: Path, *, allow_errors: bool = False, snapshot: LedgerSnapshot | None = None
 ) -> list[str]:
@@ -376,10 +413,14 @@ def validate_candidate(
             message = message.replace(str(staged), str(original))
         if "unknown account '" in message:
             account = message.split("unknown account '", 1)[1].split("'", 1)[0]
-            matches = difflib.get_close_matches(account, accounts, n=3, cutoff=0.6)
-            if matches:
-                message += f" Did you mean {', '.join(matches)}?"
-            message += f" To create it, use bea add open --account {shlex.quote(account)} --date YYYY-MM-DD."
+            normalization = unknown_account_is_normalization(account, accounts)
+            if normalization is not None:
+                message += normalization
+            else:
+                matches = difflib.get_close_matches(account, accounts, n=3, cutoff=0.6)
+                if matches:
+                    message += f" Did you mean {', '.join(matches)}?"
+                message += f" To create it, use bea add open --account {shlex.quote(account)} --date YYYY-MM-DD."
             hints.extend(root_ledger_hints(file))
         if "inactive account '" in message:
             account = message.split("inactive account '", 1)[1].split("'", 1)[0]

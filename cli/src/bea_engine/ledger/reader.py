@@ -46,6 +46,7 @@ from bea_engine.ledger.models import (
     SourceLocation,
     TransactionDirective,
 )
+from bea_engine.ledger.text import fold_account
 
 
 def load_file(file_path: Path) -> tuple[list[Any], list[Any]]:
@@ -149,7 +150,7 @@ def list_transactions(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and not any(account.casefold() in p.account.casefold() for p in entry.postings):
+        if account and not any(fold_account(account) in fold_account(p.account) for p in entry.postings):
             continue
         if terms and not all(
             term in (entry.payee or "").casefold() or term in (entry.narration or "").casefold() for term in terms
@@ -178,7 +179,7 @@ def list_notes(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account.casefold() not in entry.account.casefold():
+        if account and fold_account(account) not in fold_account(entry.account):
             continue
         results.append(NoteDirective(date=entry.date, account=entry.account, comment=entry.comment))
         if len(results) >= limit:
@@ -220,7 +221,7 @@ def list_balances(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account.casefold() not in entry.account.casefold():
+        if account and fold_account(account) not in fold_account(entry.account):
             continue
         results.append(
             BalanceDirective(
@@ -245,7 +246,7 @@ def list_opens(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account.casefold() not in entry.account.casefold():
+        if account and fold_account(account) not in fold_account(entry.account):
             continue
         currencies = list(entry.currencies) if entry.currencies else []
         results.append(OpenDirective(date=entry.date, account=entry.account, currencies=currencies))
@@ -267,7 +268,7 @@ def list_closes(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account.casefold() not in entry.account.casefold():
+        if account and fold_account(account) not in fold_account(entry.account):
             continue
         results.append(CloseDirective(date=entry.date, account=entry.account))
         if len(results) >= limit:
@@ -327,7 +328,7 @@ def list_documents(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account.casefold() not in entry.account.casefold():
+        if account and fold_account(account) not in fold_account(entry.account):
             continue
         tags = sorted(entry.tags) if entry.tags else []
         links = sorted(entry.links) if entry.links else []
@@ -420,7 +421,7 @@ def list_pads(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account.casefold() not in entry.account.casefold():
+        if account and fold_account(account) not in fold_account(entry.account):
             continue
         results.append(PadDirective(date=entry.date, account=entry.account, source_account=entry.source_account))
         if len(results) >= limit:

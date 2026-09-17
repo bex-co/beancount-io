@@ -333,7 +333,7 @@ their root ledger's account opens and options. In JSON mode, a failing
 | `--link LINK` | Transactions: link with or without `^`; repeatable. |
 | `--from-date` | Only directives on or after this date (`YYYY-MM-DD`) |
 | `--to-date` | Only directives on or before this date (`YYYY-MM-DD`) |
-| `--account / -a` | Case-insensitive substring account filter (`transaction`, `note`, `balance`, `open`, `close`, `document`, `pad`) |
+| `--account / -a` | Case-insensitive substring account filter (`transaction`, `note`, `balance`, `open`, `close`, `document`, `pad`). Matching ignores Unicode normalization, so the NFC and NFD spellings of one account name find each other. |
 | `--currency / -c` | Exact symbol, case-insensitive (`price`, `commodity`); `eur` matches `EUR` |
 | `--allow-errors` | Return data even though the ledger has loader errors (they still print on stderr) |
 
@@ -363,7 +363,12 @@ accounts, invalid currencies, unavailable cost lots, and unbalanced transactions
 leave the original bytes unchanged. Account typos include suggested matches.
 Account syntax follows Beancount: colon-separated segments with an uppercase
 root; each subaccount starts with an uppercase letter or digit. Unicode
-letters and configured root names are supported. Amount strings use decimal notation
+letters and configured root names are supported. An account name written in a
+different Unicode normalization than the ledger uses — NFC where the ledger has
+NFD, which is what a name taken from a macOS file path looks like — is reported
+as such, quoting both spellings as escapes, rather than suggesting a name that
+renders identically to the one it rejected. Writes stay exact: `bea add` refuses
+rather than silently rewriting the name you typed. Amount strings use decimal notation
 (e.g. `1000`, not `1e3`) in command arguments and bulk JSON, including units,
 costs, and prices. Bulk notation errors follow the normal row-validation and
 `--partial` rules. JSON listings spell amounts in decimal notation so tiny values
@@ -618,8 +623,8 @@ bea balance Checking
 ```
 
 `bea balance [ACCOUNT…]` prunes the trial balance to the subtrees whose
-account names contain any argument (case-insensitive), keeping ancestors for
-structure. Closed accounts are excluded from filtered views. With no argument
+account names contain any argument (case-insensitive, and insensitive to
+Unicode normalization), keeping ancestors for structure. Closed accounts are excluded from filtered views. With no argument
 it prints the trial balance; `--conversion`, `--time`, and `--allow-errors`
 work as in reports.
 

@@ -1,8 +1,9 @@
-"""The two text primitives every ledger write needs before it touches a file."""
+"""The text primitives every ledger read or write needs before it touches a file."""
 
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from bea_engine import protocol
 
@@ -15,6 +16,26 @@ def single_line(text: str) -> str:
     of what gets written to the ledger, not part of how anything is displayed.
     """
     return re.sub(r"[\r\n]+", " ", text)
+
+
+def fold_account(name: str) -> str:
+    """The key two account names must share to match in a filter.
+
+    Account names reach bea in whichever Unicode normalization their source
+    produced — macOS filesystem paths hand out NFD, most editors write NFC —
+    and the two are canonically equivalent: the same text in different code
+    points, rendered identically. Compared raw, a filter silently misses the
+    account the user is looking straight at.
+
+    NFC rather than NFD because these keys are matched as substrings, and NFC
+    keeps an accented letter a single code point, so a substring boundary falls
+    where a reader sees one. Folding runs between the two normalizations
+    because folding can itself denormalize.
+
+    The frontend keeps its own copy (`cli.utils.fold_account`): neither side
+    may import the other, and both have to compare the same names.
+    """
+    return unicodedata.normalize("NFC", unicodedata.normalize("NFC", name).casefold())
 
 
 def parse_account(name: str) -> str:

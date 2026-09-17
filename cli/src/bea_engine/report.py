@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from bea_engine import protocol
+from bea_engine.ledger.text import fold_account
 from bea_engine.query import format_error
 
 KINDS = ("overview", "income-statement", "balance-sheet", "trial-balance")
@@ -72,7 +73,7 @@ def _balances(
     sections = {
         name: getattr(data, f"{name}_hierarchy") for name in ("assets", "liabilities", "equity", "income", "expenses")
     }
-    terms = [(term or "").casefold() for term in accounts]
+    terms = [fold_account(term or "") for term in accounts]
     if not terms:
         pruned = {name: tree for name, tree in sections.items()}
     else:
@@ -444,7 +445,7 @@ def _prune_tree(node: Any, terms: list[str], closed: set[str] | None = None) -> 
         if pruned is not None:
             kept.append(pruned)
     is_closed = bool(closed) and node.account in (closed or ())
-    matches = not is_closed and any(term in node.account.casefold() for term in terms)
+    matches = not is_closed and any(term in fold_account(node.account) for term in terms)
     if not (matches or kept):
         return None
     return dataclasses.replace(
