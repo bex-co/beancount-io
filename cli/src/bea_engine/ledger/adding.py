@@ -518,8 +518,30 @@ def _transactions(
         )
     except protocol.LedgerError as batch_error:
         if not partial:
-            batch_error.result = {"written": 0, "written_rows": [], "unwritten_rows": [index for index, _ in valid]}
-            raise
+            recoverable: list[int] = []
+            probe_texts: list[str] = []
+            for index, directive in valid:
+                try:
+                    text = writer.format_transaction(directive)
+                    write.validate_append(file, [*probe_texts, text], allow_errors=allow_errors, into=into)
+                except protocol.LedgerError:
+                    continue
+                else:
+                    recoverable.append(index)
+                    probe_texts.append(text)
+            message = str(batch_error)
+            if recoverable:
+                noun = "row" if len(recoverable) == 1 else "rows"
+                message = f"{message} Pass --partial to append the {len(recoverable)} valid {noun}."
+            raise protocol.LedgerError(
+                message,
+                details=list(batch_error.details),
+                result={
+                    "written": 0,
+                    "written_rows": [],
+                    "unwritten_rows": [index for index, _ in valid],
+                },
+            ) from batch_error
         accepted: list[tuple[int, Any]] = []
         texts: list[str] = []
         for index, directive in valid:
