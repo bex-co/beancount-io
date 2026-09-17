@@ -88,7 +88,7 @@ Global options come before the command.
 | `--debug` | Include exception tracebacks; JSON errors gain a `traceback` string. |
 | `--show-completion` / `--install-completion` | Print or install shell completion. |
 | `--shell NAME` | Select bash, zsh, fish, powershell or pwsh when generating completion. |
-| `--version` | Print the version and exit. Makes no network call. |
+| `--version` | Print the version and exit; under `--json`, as the envelope. Makes no network call. |
 | `-h / --help` | Show help. |
 
 ```bash
@@ -173,7 +173,11 @@ In `--json` mode a failure writes nothing to stdout and one object to stderr:
 }
 ```
 
-`request_id` is included when the backend supplied one.
+`request_id` is included when the backend supplied one. `result` carries
+the partial effects when the command wrote some of what it promised (the
+`formatted` paths for `format`, the `written` rows for `add transactions`);
+`ledger_warnings` carries loader errors a `--json` command tolerated before
+failing anyway; `--debug` adds the `traceback` string.
 
 Cloud commands map the server's HTTP status onto the same table, keeping the server's own message: `401`/`403` exit **3**, `400` exits **2**, `409` exits **4**, and everything else — including `404`, rate limiting, and server errors — exits **1**. A write whose outcome the CLI cannot know (a timeout mid-delete) exits **4** and says so rather than guessing.
 
@@ -345,6 +349,10 @@ an existing file unless `--force` is passed.
 printer. A column result such as `SELECT date, account` is a usage error (exit 2)
 that points you at `PRINT` or at `--format text`/`csv`.
 
+Under `--json`, `--format` is refused (exit 2): the envelope already selects
+JSON output, so `--json` and `--format` cannot be combined. Drop `--format`
+or drop `--json`.
+
 Native forwarding commands include their pinned upstream usage/options in
 `--help`, even offline and before optional engine features are enabled. The
 native `FILENAME` in check help is supplied by global `bea --file`.
@@ -446,6 +454,11 @@ bea list open --on-disk
 `open` names no currencies and therefore accepts any commodity — a fact about
 the account, not a cell the renderer failed to fill. JSON keeps the empty
 `currencies` list.
+
+An empty or whitespace-only filter value is refused (exit 2) naming the flag,
+in human and `--json` mode alike: it is almost always a template hole or an
+unset shell variable, and a substring test would silently match every row. Drop
+the flag to leave the results unfiltered.
 
 A plugin can add directives the ledger file never declares — `auto_accounts`
 opens, `implicit_prices` prices, `currency_accounts` opens, `close_tree`
@@ -786,7 +799,10 @@ Each report states its period, as-of date, account filter, and valuation.
 Invalid intervals, dates, reversed ranges, and malformed account filters exit
 **2**. `--account` takes a parent account (`Expenses:Food`) or a regular
 expression (`'Expenses:(Food|Rent)'`); it selects transactions involving
-matching accounts and retains all their postings.
+matching accounts and retains all their postings. As in `list`, an empty or
+whitespace-only `--account`, `--time`, or `--conversion` — or a blank `bea
+balance` argument — is refused (exit 2) naming the flag rather than silently
+falling back to the unfiltered default.
 
 A parent whose children cancel under the conversion — a long and a short lot at
 the same cost, two funds whose cost bases offset — reports an explicit zero
