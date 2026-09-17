@@ -437,7 +437,8 @@ def _load_transactions_json(from_file: Path) -> Any:
         text = sys.stdin.read()
     else:
         try:
-            text = from_file.read_text()
+            # utf-8-sig matches CSV import: editors that emit a BOM stay valid.
+            text = from_file.read_text(encoding="utf-8-sig")
         except FileNotFoundError as exc:
             raise UsageError(
                 f"No transactions file at '{from_file}' (from --from). "
@@ -449,6 +450,7 @@ def _load_transactions_json(from_file: Path) -> Any:
             ) from exc
         except OSError as exc:
             raise UsageError(f"Cannot read transactions file '{from_file}' (from --from): {exc.strerror}.") from exc
+    text = text.removeprefix("\ufeff")
     try:
         return json.loads(text)
     except json.JSONDecodeError as exc:
