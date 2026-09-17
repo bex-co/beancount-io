@@ -105,9 +105,13 @@ class RunContext:
                 f"main.bean or main.beancount. To start new books, run bea init books --currency USD."
             )
         if candidate.is_dir():
+            hint = next(
+                (candidate / name for name in DEFAULT_ENTRY_FILE_FALLBACKS if (candidate / name).is_file()),
+                candidate / DEFAULT_ENTRY_FILE_FALLBACKS[0],
+            )
             raise UsageError(
                 f"Ledger path '{candidate}' (from {source}) is a directory; expected a ledger file. "
-                f"Point --file to its root ledger, for example --file {shlex.quote(str(candidate / 'main.bean'))}."
+                f"Point --file to its root ledger, for example --file {shlex.quote(str(hint))}."
             )
         if not candidate.is_file():
             raise UsageError(f"Ledger path '{candidate}' (from {source}) is not a regular file.")
