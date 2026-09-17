@@ -8,7 +8,14 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from bea_engine import compat
+from bea_engine.ledger.text import decode_error_message as engine_decode_error_message
+from cli.commands.check import _closure_needs_compat
+from cli.commands.format import _raw, _strip_bom, _would_change
+from cli.errors import BeaError, LedgerError
 from cli.main import app
+from cli.utils import decode_error_message as cli_decode_error_message
+from cli.utils import has_bom
 
 runner = CliRunner()
 BOM = b"\xef\xbb\xbf"
@@ -137,3 +144,75 @@ def test_writes_never_introduce_a_mark(tmp_path: Path) -> None:
 
     assert result.exit_code == 0, result.output
     assert not file.read_bytes().startswith(BOM)
+
+
+def test_check_refuses_native_flags_on_a_marked_ledger(marked: Path) -> None:
+    result = runner.invoke(app, ["--file", str(marked), "check", "-v"])
+
+    assert result.exit_code == 2, result.output
+    assert "cannot pass bean-check options (-v)" in result.stderr
+    assert "bea format -i" in result.stderr
+
+
+def test_closure_probe_tolerates_an_unreadable_closure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def _unreachable(root: Path) -> list[Path]:
+        raise OSError("ledger tree is gone")
+
+    monkeypatch.setattr("cli.output.ledger_closure", _unreachable)
+
+    assert _closure_needs_compat(tmp_path / "main.bean") is None
+
+
+def test_closure_probe_skips_a_member_that_vanished(tmp_path: Path) -> None:
+    assert _closure_needs_compat(tmp_path / "missing.bean") is None
+    assert has_bom(tmp_path / "missing.bean") is False
+
+
+def test_strip_bom_ignores_a_missing_file(tmp_path: Path) -> None:
+    assert _strip_bom(tmp_path / "missing.bean") is None
+
+
+def test_strip_bom_keeps_an_unwritable_mark_for_upstream(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    file = tmp_path / "main.bean"
+    file.write_bytes(BOM + ENTRY.encode("utf-8"))
+
+    def _deny(self: Path, data: bytes) -> int:
+        raise OSError("read-only filesystem")
+
+    monkeypatch.setattr(Path, "write_bytes", _deny)
+
+    assert _strip_bom(file) is None
+    assert file.read_bytes().startswith(BOM)
+
+
+def test_raw_reports_an_unreadable_file(tmp_path: Path) -> None:
+    with pytest.raises(LedgerError, match="Could not read"):
+        _raw(tmp_path / "missing.bean")
+
+
+def test_would_change_falls_through_to_upstream_when_unreadable(tmp_path: Path) -> None:
+    with pytest.raises(BeaError, match="bean-format could not read"):
+        _would_change(tmp_path / "missing.bean", [])
+
+
+def test_decode_failures_report_path_offset_and_remedy(tmp_path: Path) -> None:
+    with pytest.raises(UnicodeDecodeError) as error:
+        b"\xff\xfe bad".decode("utf-8")
+    exc = error.value
+
+    engine = engine_decode_error_message(tmp_path / "main.bean", exc)
+    cli = cli_decode_error_message(tmp_path / "main.bean", exc)
+
+    assert engine == cli
+    assert "main.bean" in engine
+    assert "byte 0" in engine
+    assert "Re-save the file as UTF-8" in engine
+
+
+def test_compat_install_is_idempotent() -> None:
+    compat.install()
+    compat.install()
+
+    from beancount.parser import parser as beancount_parser
+
+    assert getattr(beancount_parser.parse_file, "__bea_bom_wrapped__", False) is True
