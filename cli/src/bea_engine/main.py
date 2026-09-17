@@ -122,6 +122,13 @@ def list_directives(
     currency: Annotated[
         str | None, typer.Option("--currency", "-c", help="Exact currency, case-insensitive; price and commodity.")
     ] = None,
+    kind: Annotated[
+        str | None,
+        typer.Option(
+            "--kind",
+            help="Exact event/custom type, case-insensitive (engine name; frontend exposes this as --type).",
+        ),
+    ] = None,
     flag: Annotated[str | None, typer.Option("--flag", help="Transaction flag, such as '!'.")] = None,
     search: Annotated[
         list[str] | None, typer.Option("--search", help="Text in a transaction's payee or narration; repeatable.")
@@ -162,6 +169,7 @@ def list_directives(
             to_date=_date("--to-date", to_date),
             account=account,
             currency=currency,
+            kind=kind,
             flag=flag,
             search=list(search) if search else None,
             tags=list(tag) if tag else None,

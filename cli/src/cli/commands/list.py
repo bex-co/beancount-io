@@ -33,6 +33,7 @@ AccountFilterOpt = Annotated[
     str | None, typer.Option("--account", "-a", help="Filter by account (case-insensitive substring)")
 ]
 CurrencyFilterOpt = Annotated[str | None, typer.Option("--currency", "-c", help="Exact currency (case-insensitive)")]
+TypeFilterOpt = Annotated[str | None, typer.Option("--type", "-t", help="Exact event/custom type (case-insensitive)")]
 AllowErrorsOpt = Annotated[
     bool,
     typer.Option(
@@ -48,7 +49,7 @@ class _Spec:
     headers: list[str]
     row: Callable[[dict[str, Any]], list[str]]
     empty: str
-    filter: str | None = None  # "account", "currency", or nothing but dates
+    filter: str | None = None  # "account", "currency", "type", or nothing but dates
 
 
 def _format_custom_values(custom: dict[str, Any]) -> str:
@@ -192,11 +193,13 @@ SPECS: dict[str, _Spec] = {
         headers=["DATE", "TYPE", "DESCRIPTION"],
         row=lambda e: [e["date"], e["type"], e["description"]],
         empty="No events found.",
+        filter="type",
     ),
     "custom": _Spec(
         headers=["DATE", "TYPE", "VALUES"],
         row=lambda c: [c["date"], c["type"], _format_custom_values(c)],
         empty="No custom directives found.",
+        filter="type",
     ),
 }
 
@@ -283,6 +286,7 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
     for option, value in (
         ("--account", filters.get("account")),
         ("--currency", filters.get("currency")),
+        ("--kind", filters.get("kind")),
         ("--flag", filters.get("flag")),
     ):
         if value is not None:
@@ -394,6 +398,27 @@ def _currency_command(name: str, spec: _Spec) -> Callable[..., None]:
     return command
 
 
+def _type_command(name: str, spec: _Spec) -> Callable[..., None]:
+    def command(
+        limit: LimitOpt = 50,
+        from_date: FromDateOpt = None,
+        to_date: ToDateOpt = None,
+        type: TypeFilterOpt = None,
+        allow_errors: AllowErrorsOpt = False,
+    ) -> None:
+        _run(
+            name,
+            spec,
+            limit,
+            allow_errors,
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
+            kind=type,
+        )
+
+    return command
+
+
 def _plain_command(name: str, spec: _Spec) -> Callable[..., None]:
     def command(
         limit: LimitOpt = 50,
@@ -413,9 +438,14 @@ def _plain_command(name: str, spec: _Spec) -> Callable[..., None]:
     return command
 
 
-# Three signatures rather than one: Typer reads the option list off the literal
+# Four signatures rather than one: Typer reads the option list off the literal
 # signature, so a single shared one would advertise --currency on `list event`.
-_COMMANDS = {"account": _account_command, "currency": _currency_command, None: _plain_command}
+_COMMANDS = {
+    "account": _account_command,
+    "currency": _currency_command,
+    "type": _type_command,
+    None: _plain_command,
+}
 
 for _name, _spec in SPECS.items():
     if _name == "transaction":

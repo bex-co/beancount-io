@@ -26,8 +26,8 @@ _LISTERS: dict[str, tuple[str, str | None]] = {
     "pad": ("list_pads", "account"),
     "price": ("list_prices", "currency"),
     "commodity": ("list_commodities", "currency"),
-    "event": ("list_events", None),
-    "custom": ("list_customs", None),
+    "event": ("list_events", "type"),
+    "custom": ("list_customs", "type"),
 }
 
 TYPES = tuple(_LISTERS)
@@ -42,6 +42,7 @@ def answer(
     to_date: datetime.date | None = None,
     account: str | None = None,
     currency: str | None = None,
+    kind: str | None = None,
     flag: str | None = None,
     search: list[str] | None = None,
     tags: list[str] | None = None,
@@ -72,6 +73,8 @@ def answer(
         filters["account"] = account
     elif supported_filter == "currency":
         filters["currency"] = currency
+    elif supported_filter == "type":
+        filters["type_filter"] = kind
     if directive_type == "transaction":
         filters |= {"flag": flag, "search": search, "tags": tags, "links": links, "newest": newest}
 

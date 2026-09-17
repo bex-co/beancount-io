@@ -323,13 +323,17 @@ def list_events(
     entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
+    type_filter: str | None = None,
     limit: int = 50,
 ) -> list[EventDirective]:
+    wanted = (type_filter or "").casefold()
     results = []
     for entry in entries:
         if not isinstance(entry, Event):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
+            continue
+        if wanted and wanted != (entry.type or "").casefold():
             continue
         results.append(
             EventDirective(
@@ -402,15 +406,19 @@ def list_customs(
     entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
+    type_filter: str | None = None,
     limit: int = 50,
 ) -> list[CustomDirective]:
     from beancount.core.amount import Amount as BcAmount
 
+    wanted = (type_filter or "").casefold()
     results = []
     for entry in entries:
         if not isinstance(entry, Custom):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
+            continue
+        if wanted and wanted != (entry.type or "").casefold():
             continue
         values: list[CustomDirectiveValue] = []
         for v in entry.values:

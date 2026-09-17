@@ -769,6 +769,7 @@ Usage: bea list event [OPTIONS]
 | `--limit, -l` | int range | 50 | Max results (positive) |
 | `--from-date` | str |  | Start date YYYY-MM-DD |
 | `--to-date` | str |  | End date YYYY-MM-DD |
+| `--type, -t` | str |  | Exact event/custom type (case-insensitive) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
 
 ### `bea list custom`
@@ -784,6 +785,7 @@ Usage: bea list custom [OPTIONS]
 | `--limit, -l` | int range | 50 | Max results (positive) |
 | `--from-date` | str |  | Start date YYYY-MM-DD |
 | `--to-date` | str |  | End date YYYY-MM-DD |
+| `--type, -t` | str |  | Exact event/custom type (case-insensitive) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
 
 ### `bea list transaction`
