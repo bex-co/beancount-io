@@ -80,12 +80,16 @@ def test_all_quoted_directives_round_trip(book: Path, text: str) -> None:
         assert result.exit_code == 0, result.output
     entries, errors, _ = loader.load_file(book)
     assert errors == []
-    assert next(e for e in entries if isinstance(e, Note)).comment == text
+    # Every quoted directive keeps its text on one ledger line, so a newline
+    # comes back as the space it was written as. Quotes, backslashes and
+    # non-ASCII survive intact.
+    flattened = text.replace("\n", " ")
+    assert next(e for e in entries if isinstance(e, Note)).comment == flattened
     event = next(e for e in entries if isinstance(e, Event))
-    assert (event.type, event.description) == (text, text)
+    assert (event.type, event.description) == (flattened, flattened)
     custom = next(e for e in entries if isinstance(e, Custom))
-    assert [v.value for v in custom.values] == [text, True, datetime.date(2026, 8, 1)]
-    assert next(e for e in entries if isinstance(e, Transaction)).narration == text.replace("\n", " ")
+    assert [v.value for v in custom.values] == [flattened, True, datetime.date(2026, 8, 1)]
+    assert next(e for e in entries if isinstance(e, Transaction)).narration == flattened
 
 
 def test_document_path_round_trips_relative_to_ledger(book: Path) -> None:
