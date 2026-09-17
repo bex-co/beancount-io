@@ -17,8 +17,12 @@ import {
 import Router from "@koa/router";
 import type http from "http";
 import type { GraphQLSchema } from "graphql";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  McpServer,
+  ResourceTemplate,
+} from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { UriTemplate } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
 import type {
   CallToolResult,
   ReadResourceResult,
@@ -27,6 +31,7 @@ import type { ZodTypeAny } from "zod";
 
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
+import { NotFoundError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import { runWithOperationId } from "@/shared/async-context";
 
@@ -63,9 +68,13 @@ import { setWellKnownRoutes } from "@/features/well-known/api/well-known-route";
 import { setMcpRoute, setupAiAgentRoutes } from "@/features/ai-agent/api";
 import { setGitProxyHandler } from "@/features/gitea/api/git-proxy-handler";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
-import { MCP_PROMPTS } from "@/features/ai-agent/api/mcp-prompts";
+import {
+  MCP_PROMPTS,
+  validatePromptArgs,
+} from "@/features/ai-agent/api/mcp-prompts";
 import {
   MCP_RESOURCES,
+  RESOURCE_SCHEME,
   listLedgerResources,
   resourceTemplateFor,
   type ListedMcpResource,
@@ -75,7 +84,7 @@ import { buildInstructions } from "@/features/ai-agent/api/mcp-context";
 import {
   envelopeFromThrown,
   splitToolFailure,
-  McpResourceFailure,
+  McpRequestFailure,
   renderErrorText,
   type McpErrorEnvelope,
 } from "@/features/ai-agent/api/mcp-errors";
@@ -503,6 +512,36 @@ export function assembleMcpRegistry(
     );
   }
 
+  // Registered last, so every template above wins: the SDK reads a resource
+  // through the first template whose URI matches, and answers an unmatched one
+  // itself — with `-32602` where a missing resource is `-32002`, no
+  // `data.code`, no hint, and a message the client prefixes a second time
+  // (w4/070). Claiming the miss is what makes it answerable in the envelope
+  // every other refusal on this surface uses. There is no `gateMcpCall`: this
+  // reaches no service and always refuses, and the transport limiter has
+  // already charged the request by the time it arrives.
+  server.registerResource(
+    UNKNOWN_RESOURCE,
+    new ResourceTemplate(new UriTemplate(`${RESOURCE_SCHEME}://{+rest}`), {
+      list: undefined,
+    }),
+    {
+      title: "Unknown Resource",
+      description: `Not a resource. Any \`${RESOURCE_SCHEME}://\` URI matching no template above reads as NOT_FOUND with the grammar to use; \`resources/templates/list\` is the inventory.`,
+      mimeType: "text/plain",
+    },
+    (uri): never =>
+      refuseMcpRequest(
+        new NotFoundError(
+          "Resource",
+          uri.href,
+          `No resource template matches that URI. Call \`resources/templates/list\` for the inventory; a ledger read is \`${RESOURCE_SCHEME}://{owner}/{name}/<segment>\`.`,
+        ),
+        "MCP resource read failed",
+        { resource: UNKNOWN_RESOURCE },
+      ),
+  );
+
   // Prompts are static playbook text (w2/008): user-initiated, selected
   // explicitly by name, and performing no domain work of their own. So there
   // is no `gateMcpCall` here and no op in the matrix — everything a playbook
@@ -517,21 +556,58 @@ export function assembleMcpRegistry(
         description: descriptor.description,
         argsSchema: descriptor.argsSchema,
       },
-      (args) => ({
-        messages: [
-          {
-            role: "user" as const,
-            content: {
-              type: "text" as const,
-              text: descriptor.build(args, toolCtx.identity),
-            },
-          },
-        ],
-      }),
+      (args) => {
+        try {
+          // The fixed-shape arguments are checked here rather than in the
+          // advertised `argsSchema`, so a malformed one is refused in this
+          // server's envelope instead of the SDK's prose (w4/070).
+          validatePromptArgs(args);
+          return {
+            messages: [
+              {
+                role: "user" as const,
+                content: {
+                  type: "text" as const,
+                  text: descriptor.build(args, toolCtx.identity),
+                },
+              },
+            ],
+          };
+        } catch (err) {
+          return refuseMcpRequest(err, "MCP prompt fetch failed", {
+            prompt: descriptor.name,
+          });
+        }
+      },
     );
   }
 
   return server;
+}
+
+/** The catch-all template's name, in `resources/templates/list` and the logs. */
+const UNKNOWN_RESOURCE = "unknownResource";
+
+/**
+ * Refuse a resource read or a prompt fetch in this server's one envelope.
+ *
+ * Neither primitive has an `isError` result to put a refusal in — the only
+ * channel is the JSON-RPC error — so the envelope travels as `data` beside the
+ * right code, and the message stays unprefixed so the client's own `McpError`
+ * adds exactly one prefix (w2/m28:t003).
+ */
+function refuseMcpRequest(
+  err: unknown,
+  logMessage: string,
+  meta: Record<string, unknown>,
+): never {
+  const envelope = envelopeFromThrown(err);
+  mcpLogger.error(logMessage, {
+    ...meta,
+    code: envelope.code,
+    error: envelope.message,
+  });
+  throw new McpRequestFailure(envelope);
 }
 
 /**
@@ -594,13 +670,9 @@ function makeMcpResourceHandler(
         // channel is the JSON-RPC error — so the envelope travels as `data`
         // beside the right code, and the message stays unprefixed so the
         // client's own `McpError` adds the one prefix (w2/m28:t003).
-        const envelope = envelopeFromThrown(err);
-        mcpLogger.error("MCP resource read failed", {
+        return refuseMcpRequest(err, "MCP resource read failed", {
           resource: descriptor.name,
-          code: envelope.code,
-          error: envelope.message,
         });
-        throw new McpResourceFailure(envelope);
       }
     });
   };

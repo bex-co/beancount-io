@@ -698,8 +698,14 @@ object schema here. See
 
 ### Failure codes
 
-The same codes reach resource reads, as the JSON-RPC error's `data`, with the
-message unprefixed so a client's SDK adds exactly one `MCP error <n>:` prefix.
+The same codes reach resource reads and prompt fetches, as the JSON-RPC error's
+`data`, with the message unprefixed so a client's SDK adds exactly one
+`MCP error <n>:` prefix. That covers the two mistakes a client makes before any
+handler runs: a `beancount://` URI matching no template answers `NOT_FOUND`
+(`-32002`) with a hint naming `resources/templates/list`, and a malformed
+`month` or `ledger` argument to a prompt answers `BAD_USER_INPUT` (`-32602`)
+naming the argument. A URI under another scheme is not this server's to answer
+and still returns the SDK's own refusal.
 
 | `error.code`             | JSON-RPC | What it means and what to do                                                                                |
 | ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------ |

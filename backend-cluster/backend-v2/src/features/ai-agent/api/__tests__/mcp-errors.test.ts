@@ -7,7 +7,7 @@ import {
   JSON_RPC_NOT_FOUND,
   JSON_RPC_SERVER_ERROR,
   jsonRpcCodeFor,
-  McpResourceFailure,
+  McpRequestFailure,
   renderErrorText,
 } from "../mcp-errors";
 import {
@@ -205,7 +205,7 @@ describe("JSON-RPC codes", () => {
    * `McpError`, whose constructor stamps the prefix on.
    */
   it("leaves a resource failure's message unprefixed", () => {
-    const failure = new McpResourceFailure({
+    const failure = new McpRequestFailure({
       code: "NOT_FOUND",
       message: "No such file in alice/main: nope.bean",
       hint: "list them first",

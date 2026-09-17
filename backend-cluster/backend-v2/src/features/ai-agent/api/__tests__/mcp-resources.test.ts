@@ -7,7 +7,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { MCP_TOOLS } from "../mcp-tools";
+import type { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { RESOURCE_SCHEME } from "../mcp-resources";
+import { JSON_RPC_NOT_FOUND } from "../mcp-errors";
 import { ForbiddenError } from "@/shared/errors";
 import type { AppConfig } from "@/config/config";
 import type { ToolContext } from "../../tools/types";
@@ -312,6 +314,56 @@ describe("resource path encoding", () => {
         client.readResource({ uri: "beancount://alice/main/files/%ZZ" }),
       ).rejects.toThrow(/encoding/);
       expect(getFilesContent).not.toHaveBeenCalled();
+    } finally {
+      await close();
+    }
+  });
+});
+
+/**
+ * w4/070. An unmatched `beancount://` URI was refused by the SDK before any
+ * handler of ours ran, so it arrived as `-32602` with no `data.code`, no hint,
+ * and `MCP error -32602:` stamped on twice — the exact dialect w2/m28:t003
+ * replaced everywhere it could reach.
+ */
+describe("an unmatched resource URI", () => {
+  const unmatched = [
+    `${RESOURCE_SCHEME}://alice/main/nosuch`,
+    // Shaped like a template but registered as none of them; this is the URI
+    // the prompt-list guard was written for.
+    `${RESOURCE_SCHEME}://alice/main/bank/list`,
+  ];
+
+  it.each(unmatched)("answers %s as a coded, hinted NOT_FOUND", async (uri) => {
+    const { client, close } = await connect(
+      ctx(contentOf("main.beancount", "")),
+    );
+    try {
+      const error = await client
+        .readResource({ uri })
+        .then(() => undefined)
+        .catch((caught: unknown) => caught as McpError);
+      expect(error?.code).toBe(JSON_RPC_NOT_FOUND);
+      expect(error?.data).toMatchObject({
+        code: "NOT_FOUND",
+        hint: expect.stringContaining("resources/templates/list"),
+      });
+      // Exactly one prefix: the client's own. A server that threw the SDK's
+      // `McpError` would have stamped the first.
+      expect(error?.message).toBe(
+        `MCP error ${JSON_RPC_NOT_FOUND}: Resource with ID '${uri}' not found`,
+      );
+    } finally {
+      await close();
+    }
+  });
+
+  it("does not shadow a template that does match", async () => {
+    const getFilesContent = contentOf("main.beancount", "contents");
+    const { client, close } = await connect(ctx(getFilesContent));
+    try {
+      const result = await client.readResource({ uri: FILE_URI });
+      expect(result.contents[0]).toMatchObject({ text: "contents" });
     } finally {
       await close();
     }

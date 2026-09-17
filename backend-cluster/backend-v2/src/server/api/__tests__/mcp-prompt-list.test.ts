@@ -8,11 +8,13 @@ jest.mock("@ai-sdk/harness-acp", () => ({
 }));
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { assembleMcpRegistry } from "../composition-root";
 import { MCP_PROMPTS } from "@/features/ai-agent/api/mcp-prompts";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import { MCP_RESOURCES } from "@/features/ai-agent/api/mcp-resources";
+import { JSON_RPC_INVALID_PARAMS } from "@/features/ai-agent/api/mcp-errors";
 import { isMcpHandshakeRequest } from "@/features/ai-agent/api/mcp-rate-policy";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import type { AppConfig } from "@/config/config";
@@ -142,32 +144,48 @@ describe("MCP prompts", () => {
     );
   });
 
-  it("rejects a malformed month or ledger instead of folding it into the playbook", async () => {
-    await expect(
-      withClient(pinned, (client) =>
-        client.getPrompt({
-          name: "close-month",
-          arguments: { month: "banana" },
-        }),
-      ),
-    ).rejects.toThrow(/month must be YYYY-MM/);
-    await expect(
-      withClient(pinned, (client) =>
-        client.getPrompt({
-          name: "spending-report",
-          arguments: { ledger: "not a ledger" },
-        }),
-      ),
-    ).rejects.toThrow(/ledger must be owner\/name/);
+  /**
+   * The refusals are asserted as an envelope rather than as prose (w4/070).
+   * They used to be the SDK's own: `argsSchema` carried the patterns, so the
+   * SDK refused before this server ran and the agent got `-32602` with no
+   * `data.code`, no hint, and `MCP error -32602:` stamped on twice.
+   */
+  it.each([
+    ["close-month", { month: "banana" }, "month must be YYYY-MM"],
+    [
+      "spending-report",
+      { ledger: "not a ledger" },
+      "ledger must be owner/name",
+    ],
     // The same pattern every tool enforces: characters a URI would reinterpret.
-    await expect(
-      withClient(pinned, (client) =>
-        client.getPrompt({
-          name: "spending-report",
-          arguments: { ledger: "alice/personal?x" },
-        }),
-      ),
-    ).rejects.toThrow(/ledger must be owner\/name/);
+    [
+      "spending-report",
+      { ledger: "alice/personal?x" },
+      "ledger must be owner/name",
+    ],
+  ])(
+    "refuses %s with %j instead of folding it into the playbook",
+    async (name, args, message) => {
+      const error = await withClient(pinned, (client) =>
+        client
+          .getPrompt({ name, arguments: args })
+          .then(() => undefined)
+          .catch((caught: unknown) => caught as McpError),
+      );
+      expect(error?.code).toBe(JSON_RPC_INVALID_PARAMS);
+      expect(error?.data).toMatchObject({
+        code: "BAD_USER_INPUT",
+        message,
+        hint: expect.any(String),
+      });
+      // Exactly one prefix, added by the client on receipt.
+      expect(error?.message).toBe(
+        `MCP error ${JSON_RPC_INVALID_PARAMS}: ${message}`,
+      );
+    },
+  );
+
+  it("still builds the playbook when the arguments are well formed", async () => {
     const valid = await withClient(pinned, (client) =>
       client.getPrompt({
         name: "close-month",

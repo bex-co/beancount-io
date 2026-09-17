@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BadUserInputError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import { LEDGER_ID_PATTERN, ledgerSelection } from "./mcp-ledger-selection";
 
@@ -43,25 +44,56 @@ export interface McpPromptDescriptor {
 const optionalArg = (description: string) =>
   z.string().optional().describe(description);
 
+const ledgerArg = optionalArg(ledgerSelection.description ?? "");
+
+const monthArg = optionalArg(
+  "Period to close as YYYY-MM. Defaults to the last complete calendar month.",
+);
+
 /**
+ * The arguments with a fixed shape, and what a malformed one has to say.
+ *
  * A malformed value would otherwise be folded into the playbook verbatim —
  * "Close the books for banana." — and the agent would start working on it.
- * Only arguments with a fixed shape are validated; `period` and `question`
- * accept natural language ("last quarter") by design.
+ * Only these are checked; `period` and `question` accept natural language
+ * ("last quarter") by design, and `account`, `statement` and `item_id` name
+ * things whose shape this server does not own.
+ *
+ * The check lives here rather than in `argsSchema` because the SDK refuses a
+ * declared constraint itself, and its refusal is an `McpError`: no
+ * `data.code`, no hint, and a message the client prefixes a second time
+ * (w4/070). `prompts/list` publishes an argument's name, description and
+ * requiredness and never its schema, so moving the check out of the advertised
+ * shape costs a client nothing and buys the one dialect every other refusal on
+ * this surface already speaks.
  */
-const ledgerArg = z
-  .string()
-  .regex(LEDGER_ID_PATTERN, "ledger must be owner/name")
-  .optional()
-  .describe(ledgerSelection.description ?? "");
+const FIXED_SHAPE_ARGS: Record<
+  string,
+  { readonly pattern: RegExp; readonly message: string; readonly hint: string }
+> = {
+  ledger: {
+    pattern: LEDGER_ID_PATTERN,
+    message: "ledger must be owner/name",
+    hint: "Pass `ledger` as `owner/name`; `listLedgers` returns the ones this credential can reach.",
+  },
+  month: {
+    pattern: /^\d{4}-(0[1-9]|1[0-2])$/,
+    message: "month must be YYYY-MM",
+    hint: "Pass `month` as YYYY-MM, e.g. `2026-08`, or omit it for the last complete calendar month.",
+  },
+};
 
-const monthArg = z
-  .string()
-  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "month must be YYYY-MM")
-  .optional()
-  .describe(
-    "Period to close as YYYY-MM. Defaults to the last complete calendar month.",
-  );
+/** Refuse a malformed fixed-shape argument before it reaches a playbook. */
+export function validatePromptArgs(
+  args: Record<string, string | undefined>,
+): void {
+  for (const [name, check] of Object.entries(FIXED_SHAPE_ARGS)) {
+    const value = args[name];
+    if (value !== undefined && !check.pattern.test(value)) {
+      throw new BadUserInputError(check.message, name, check.hint);
+    }
+  }
+}
 
 /**
  * How the playbook should talk about ledger selection for this caller.

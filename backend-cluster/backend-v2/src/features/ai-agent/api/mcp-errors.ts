@@ -127,7 +127,8 @@ function compactZodMessage(message: string): string | undefined {
 export function envelopeFromThrown(error: unknown): McpErrorEnvelope {
   if (error instanceof DomainError) {
     const metadata = error.metadata as
-      { hint?: unknown; retryAfter?: unknown } | undefined;
+      | { hint?: unknown; retryAfter?: unknown }
+      | undefined;
     // The throw site's own hint wins; the category fallback is what a
     // refusal that has nothing more specific to say still carries (w2/013).
     const hint =
@@ -220,22 +221,28 @@ export function splitToolFailure(result: Record<string, unknown>): {
 }
 
 /**
- * A resource failure, in the one form the SDK serializes without adding a
- * prefix of its own.
+ * A resource or prompt failure, in the one form the SDK serializes without
+ * adding a prefix of its own.
  *
  * The protocol layer reads `code`, `message`, and `data` straight off the
  * thrown value, so a plain `Error` carrying a numeric `code` produces the
  * JSON-RPC error we want. Throwing the SDK's `McpError` instead would stamp
  * `MCP error <code>:` onto the message here, and the client stamps it again on
  * receipt — which is precisely the double prefix the audit reported.
+ *
+ * Tools do not use this: a tool failure is an `isError` *result*, not a
+ * transport error. Resources and prompts have no result to put a refusal in,
+ * so the JSON-RPC error is their only channel — which is why an unmatched
+ * resource URI and a malformed prompt argument, both refused by the SDK
+ * before any handler of ours ran, spoke a dialect of their own until w4/070.
  */
-export class McpResourceFailure extends Error {
+export class McpRequestFailure extends Error {
   readonly code: number;
   readonly data: McpErrorEnvelope;
 
   constructor(envelope: McpErrorEnvelope) {
     super(envelope.message);
-    this.name = "McpResourceFailure";
+    this.name = "McpRequestFailure";
     this.code = jsonRpcCodeFor(envelope.code);
     this.data = envelope;
   }
