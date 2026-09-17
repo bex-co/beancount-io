@@ -1,13 +1,13 @@
 ---
 name: loopx
-description: Autonomously drain a `.pm` workstream item by item — triage every pending milestone, task, and inbox note, then implement and ship it, close it as already done, block it with an unblock condition, or delete it as invalid, until nothing actionable remains. Use when the user explicitly invokes $loopx or asks to loop, drain, or work through a whole workstream's backlog (e.g. `$loopx w1`). Sequential, not interval-based; do not use for a timed poll, a single task, or ordinary code edits.
+description: Autonomously drain a `.pm` workstream item by item — triage every pending milestone, task, and inbox note, then implement and ship it, close it as already done, block it with an unblock condition, or delete it as invalid, and keep going until nothing actionable remains (do not stop early to ask the user to resume). Use when the user explicitly invokes $loopx or asks to loop, drain, or work through a whole workstream's backlog (e.g. `$loopx w1`). Sequential, not interval-based; do not use for a timed poll, a single task, or ordinary code edits.
 ---
 
 # Task: Drain a `.pm` workstream item by item
 
 Usage: `/loopx <wN>`
 
-`/loopx <wN>` — repeatedly pick the next **actionable pending item** in workstream `<wN>`, **triage** it, act on the outcome, `/ship` it, and continue until nothing actionable remains. An item is a pending **milestone**, a pending **task** inside a live milestone, or an open **inbox note**. Every item ends in exactly one of four places: implemented and shipped, closed as already done, moved to `blocked/` with the condition that would clear it, or deleted as invalid. Blocked items and their dependents are skipped automatically, without waiting for user input. This is a long-running autonomous loop over the `.pm` board; it composes `/pm` (the only writer to `.pm/`), your own implementation work, and `/ship`. It is sequential, not interval-based — for a timed poll use `/loop`.
+`/loopx <wN>` — repeatedly pick the next **actionable pending item** in workstream `<wN>`, **triage** it, act on the outcome, `/ship` it, and continue until nothing actionable remains. An item is a pending **milestone**, a pending **task** inside a live milestone, or an open **inbox note**. Every item ends in exactly one of four places: implemented and shipped, closed as already done, moved to `blocked/` with the condition that would clear it, or deleted as invalid. Blocked items and their dependents are skipped automatically, without waiting for user input. This is a long-running autonomous loop over the `.pm` board; it composes `/pm` (the only writer to `.pm/`), your own implementation work, and `/ship`. It is sequential, not interval-based — for a timed poll use `/loop`. If you can name the next pick, keep looping — do not pause for a checkpoint or tell the user to re-run `/loopx`.
 
 A pending item is a claim that the work is still wanted and still undone. Boards go stale: work lands through another item or a direct commit, a decision or a `DO_NOT_DO.md` rule retires the idea, the surface it targets gets removed or renamed. Never start implementing on the strength of a checkbox alone — every item earns its implementation by passing triage first.
 
@@ -85,7 +85,7 @@ If `/ship` surfaces a failure it cannot fix (a rebase conflict it can't resolve,
 
 ### 5. Continue
 
-Loop back to step 1 to pick the next pending item.
+Loop back to step 1 to pick the next pending item. After every ship (or block isolation), **immediately** re-scan and pick again — do not end the turn, ask the user to resume, or wait for another `/loopx` invocation while step 1 would still find an actionable item. A short progress line between items is fine; stopping because the queue is long, the session is long, or you already shipped several items is not.
 
 ## Handling a block
 
@@ -99,14 +99,17 @@ A block is anything you cannot resolve autonomously. It can surface at triage or
 
 ## Exit
 
-Stop the loop and give a final summary when any of these holds:
+Stop the loop and give a final summary **only** when one of these holds:
 
 - **Done:** no pending items remain in `<wN>`. Report every item's outcome: shipped implementations with their HEAD SHAs, items closed as already done with the evidence, blocked items with their unblock conditions and owners, deleted items with their reasons (and any `DO_NOT_DO.md` rule you propose).
 - **Blocked:** pending items remain, but every one is blocked or depends directly or transitively on unresolved blocked work. Report items shipped this run (with HEAD SHAs), each blocker and what is needed to proceed, deferred dependents, and where partial work was preserved. A single blocked item is not an exit condition while later independent work can proceed.
-- **Budget/interrupt:** the user interrupts, or you've been running long enough that a checkpoint is warranted — report progress (triaged, shipped, in-flight, blocked, remaining) so the run can be resumed cleanly.
+- **Hard stop only:** the user explicitly interrupts, or the runtime forces a stop (session/tool limit, killed process, lost push access that blocks every remaining ship). In that case report progress (triaged, shipped, in-flight, blocked, **next actionable pick**) so a later `/loopx <wN>` can resume — but **never** choose this exit yourself while step 1 still has a known next item.
+
+**Not an exit:** "checkpoint", "budget", "long enough", "several items shipped already", or "resume with `/loopx <wN>` to pick up at NNN" while open inbox notes or actionable milestones remain. If you can name the next pick, you must pick it and continue.
 
 ## Guardrails
 
+- **Keep going when the next item is known.** Knowing that `226` (or any later note/milestone) is next is a reason to pick it now, not to stop and tell the user to re-invoke `/loopx`. Drain until Done, Blocked, or a hard stop above.
 - **Triage before code.** No item is implemented on the strength of its checkbox. Every pick gets an evidence-backed outcome — work on, close, block, or delete — announced before any code changes.
 - **Every item ends somewhere.** Shipped, `done/`, `blocked/`, or deleted. Leaving an item open and untouched because it looked hard is not an outcome; that is a block, and it needs a written unblock condition.
 - **One board outcome per ship.** Never batch two items into one commit; an implementation, a triage close, a block, and a deletion each land as their own shipped unit so history and rollback stay clean.
