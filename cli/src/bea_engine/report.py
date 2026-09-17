@@ -434,16 +434,17 @@ def _summary_series_json(series: Iterable[Any], conversion: str) -> list[dict[st
     A row that kept a commodity the report could not value reads `null` — the
     "Unavailable" the headline shows — rather than falling back to per-unit
     amounts and contradicting it on the same screen. Rows that did convert keep
-    their number, an empty row stays empty, and per-unit conversions are
-    unchanged.
+    their number, and a quiet row reads zero in the requested currency, the way
+    a quiet income-statement period does. A per-unit conversion names only the
+    commodities a row actually holds, so a quiet row there carries no amounts.
     """
-    rows: list[dict[str, Any]] = []
-    for point in series:
-        balance: Mapping[str, Decimal | None] = _balance_map(point.balance)
-        if balance:
-            balance = _summary(point.balance, conversion, incomplete=_unvalued(point.balance, conversion))
-        rows.append({"date": point.date, "balance": balance})
-    return rows
+    return [
+        {
+            "date": point.date,
+            "balance": _summary(point.balance, conversion, incomplete=_unvalued(point.balance, conversion)),
+        }
+        for point in series
+    ]
 
 
 def _negated(balance: Mapping[str, Decimal]) -> dict[str, Decimal | None]:

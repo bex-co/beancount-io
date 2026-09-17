@@ -718,6 +718,15 @@ total. Text shows the source amounts and says the total is unavailable.
 `--conversion units` shows quantities; `at_cost` shows acquisition costs and
 `at_value` uses market values with Fava's cost fallback when no price exists.
 
+The conversion decides how an interval row spells itself, and a quiet row keeps
+its place in the series either way. A currency conversion names that currency in
+every row, so a month with no activity reads `0.00 USD` / `{"USD": "0"}` and a
+month that could not be valued reads `Unavailable USD` / `{"USD": null}`. A
+per-unit conversion (`units`, `at_cost`, `at_value`) names only the commodities
+a row actually holds, so the same quiet month reads `—` / `{}` — absent amounts,
+not an absent period. Compare rows by date, not by the presence of a currency
+key.
+
 Text amounts are rounded to the display precision the ledger uses for each
 currency (half up, so `4.9050 USD` of converted dining reads `4.91 USD`);
 JSON keeps the full-precision decimal string (`"4.9050"`).
