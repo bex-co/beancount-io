@@ -1,9 +1,14 @@
-"""Account names that differ only in Unicode normalization (w5/009).
+"""Account names that differ only in Unicode normalization (w5/009, w1/m26/t004).
 
 macOS filesystem paths hand out NFD, most editors write NFC, and the two
 render identically. The ledger here opens `Expenses:Café` decomposed and every
 command is driven with the composed spelling, which is the shape a user hits
 when an account name travels through a file path.
+
+w5/009 refused to write across the spellings and named the normalization.
+w1/m26/t004 supersedes that refusal: the spellings resolve to one account, new
+directives are written NFC, and display shows the canonical spelling while the
+file keeps its bytes.
 """
 
 from __future__ import annotations
@@ -67,9 +72,8 @@ def test_ledger_written_in_nfd_is_valid(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
 
 
-def test_add_names_the_normalization_instead_of_suggesting_an_identical_name(tmp_path: Path) -> None:
+def test_add_merges_across_normalization_instead_of_refusing(tmp_path: Path) -> None:
     ledger = _ledger(tmp_path)
-    before = ledger.read_bytes()
 
     result = _bea(
         tmp_path,
@@ -86,21 +90,12 @@ def test_add_names_the_normalization_instead_of_suggesting_an_identical_name(tmp
         "Assets:Cash -2.00 USD",
     )
 
-    assert result.returncode != 0
-    message = result.stderr
-    assert "different Unicode normalization" in message
-    # Both spellings are quoted as escapes, because that is the only way to
-    # show a difference the terminal renders away. Built with ascii() rather
-    # than written out, so that normalizing this source file cannot quietly
-    # turn the expectation into the thing it is meant to catch.
-    assert f"{ascii(NFD)} (NFD)" in message
-    assert f"{ascii(NFC)} (NFC)" in message
-    # The two suggestions that read as identical text are exactly what this
-    # replaces: neither may come back.
-    assert "Did you mean" not in message
-    assert "bea add open --account" not in message
-    # The write is still refused, and the file is untouched.
-    assert ledger.read_bytes() == before
+    assert result.returncode == 0, result.stderr
+    # The appended lines are canonical NFC; the original NFD bytes stay
+    # untouched, and the merged ledger still checks green.
+    appended = ledger.read_text(encoding="utf-8").split("2026-02-01")[1]
+    assert unicodedata.is_normalized("NFC", appended)
+    assert _bea(tmp_path, "--file", str(ledger), "check").returncode == 0
 
 
 def test_add_still_suggests_a_real_typo(tmp_path: Path) -> None:
@@ -156,7 +151,9 @@ def test_list_transaction_filter_matches_across_normalization(tmp_path: Path) ->
 def test_list_open_filter_matches_across_normalization(tmp_path: Path) -> None:
     result = _bea(tmp_path, "--file", str(_ledger(tmp_path)), "list", "open", "--account", NFC)
     assert result.returncode == 0, result.stderr
-    assert NFD in result.stdout
+    # Display shows the canonical spelling the load resolved to, not the
+    # file's bytes; the filter matched across the spellings either way.
+    assert NFC in result.stdout
 
 
 def test_balance_filter_matches_across_normalization(tmp_path: Path) -> None:

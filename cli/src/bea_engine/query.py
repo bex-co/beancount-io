@@ -317,6 +317,11 @@ def build_shell(
             self.execute(query.query_string, default_close_date=query.date)
 
         def onecmd(self, line: str) -> Any:
+            import unicodedata
+
+            # Ledger text loads NFC-normalized, so interactive input is too; a
+            # pasted NFD literal would otherwise miss the identical NFC row.
+            line = unicodedata.normalize("NFC", line)
             # A query that opens with a comment (`/* … */`, `;`) has no leading
             # identifier, so `cmd.Cmd.parseline` finds no command and upstream
             # returns without running it: empty output, exit 0. Hand any such
@@ -437,9 +442,14 @@ def _csv_from_jsonable(value: Any) -> str:
 
 def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) -> Any:
     """Run a query, turning beanquery's terse complaint into one that names the problem."""
+    import unicodedata
+
     from beanquery import Error as BeanqueryError
 
-    statement = _quote_reserved_tables(query_string)
+    # Ledger text loads NFC-normalized, so the query must be too: a regex or
+    # comparison literal in another normalization would otherwise miss the
+    # identical string. Keywords and column names are ASCII and pass through.
+    statement = _quote_reserved_tables(unicodedata.normalize("NFC", query_string))
     _refuse_empty_window(statement, ledger_errors)
     try:
         return run(statement)

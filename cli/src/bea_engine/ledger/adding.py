@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import datetime
 import re
+import unicodedata
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
@@ -397,6 +398,9 @@ def _transaction(
             )
         raise protocol.UsageError(message, details=details)
     entry = entries[0]
+    # The ledger loads NFC-normalized; the parsed postings must match it before
+    # currency inference compares them against the opened accounts below.
+    entry = entry._replace(postings=[posting._replace(account=_nfc(posting.account)) for posting in entry.postings])
     snapshot = None
     currencies: list[str] = []
     allowed: dict[str, list[str] | None] = {}
@@ -485,6 +489,11 @@ def _refuse_missing_price(postings: list[str], number: int, posting: Any) -> Non
         need = f"the {total}price after {marker} needs a currency"
     example = f"'{posting.account} 10 HOOL {marker} 5.00 USD'"
     raise protocol.UsageError(f"--posting {number}: {need}: write {example}. Nothing was written.")
+
+
+def _nfc(text: str) -> str:
+    """One spelling for canonically equivalent input, matching the loaded ledger."""
+    return unicodedata.normalize("NFC", text)
 
 
 def _parse_metadata(items: list[str]) -> dict[str, Any]:

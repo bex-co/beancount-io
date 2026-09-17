@@ -264,10 +264,19 @@ def _trial_balance(filtered: Any, conversion: str, allow_errors: bool, ledger_er
 def _load(
     file: Path, account: str | None, time: str | None, conversion: str | None, allow_errors: bool
 ) -> tuple[Any, str, list[str]]:
+    import unicodedata
+
     from fava.core.filters import FilterError
     from fava.core.loader import load_file
     from fava.ledger import FavaLedger
 
+    # Ledger text loads NFC-normalized, so the match inputs are too; a pattern
+    # in another normalization would otherwise miss the identical account.
+    # Regex metacharacters are ASCII and pass through.
+    if account is not None:
+        account = unicodedata.normalize("NFC", account)
+    if conversion is not None:
+        conversion = unicodedata.normalize("NFC", conversion)
     entries, errors, options = load_file(str(file))
     ledger_errors = [format_error(error, ledger_file=file) for error in errors]
     if ledger_errors and not allow_errors:

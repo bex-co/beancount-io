@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import re
+import unicodedata
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
@@ -179,6 +180,17 @@ def _to_transaction(entry: Any) -> TransactionDirective:
     )
 
 
+def _nfc(text: str) -> str:
+    """One spelling for canonically equivalent text, so filters cannot miss it.
+
+    Ledger bytes already arrive NFC-normalized, but a filter typed in another
+    normalization — or a plugin-synthesized row — would otherwise compare
+    unequal to the identical string.
+    """
+
+    return unicodedata.normalize("NFC", text)
+
+
 def list_transactions(
     entries: list[Any],
     from_date: datetime.date | None = None,
@@ -191,9 +203,9 @@ def list_transactions(
     tags: list[str] | None = None,
     links: list[str] | None = None,
 ) -> list[TransactionDirective]:
-    terms = [(term or "").casefold() for term in search or []]
-    wanted_tags = {tag.lstrip("#") for tag in tags or []}
-    wanted_links = {link.lstrip("^") for link in links or []}
+    terms = [_nfc(term or "").casefold() for term in search or []]
+    wanted_tags = {_nfc(tag.lstrip("#")) for tag in tags or []}
+    wanted_links = {_nfc(link.lstrip("^")) for link in links or []}
     results = []
     for entry in reversed(entries) if newest else entries:
         if not isinstance(entry, Transaction):
@@ -205,12 +217,13 @@ def list_transactions(
         if account and not any(fold_account(account) in fold_account(p.account) for p in entry.postings):
             continue
         if terms and not all(
-            term in (entry.payee or "").casefold() or term in (entry.narration or "").casefold() for term in terms
+            term in _nfc(entry.payee or "").casefold() or term in _nfc(entry.narration or "").casefold()
+            for term in terms
         ):
             continue
-        if wanted_tags and not wanted_tags.issubset(entry.tags or ()):
+        if wanted_tags and not wanted_tags.issubset({_nfc(tag) for tag in entry.tags or ()}):
             continue
-        if wanted_links and not wanted_links.issubset(entry.links or ()):
+        if wanted_links and not wanted_links.issubset({_nfc(link) for link in entry.links or ()}):
             continue
         results.append(_to_transaction(entry))
         if len(results) >= limit:
@@ -260,7 +273,7 @@ def list_prices(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if currency and entry.currency.casefold() != currency.casefold():
+        if currency and _nfc(entry.currency).casefold() != _nfc(currency).casefold():
             continue
         results.append(
             PriceDirective(
@@ -372,7 +385,7 @@ def list_commodities(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if currency and entry.currency.casefold() != currency.casefold():
+        if currency and _nfc(entry.currency).casefold() != _nfc(currency).casefold():
             continue
         results.append(
             CommodityDirective(
@@ -394,14 +407,14 @@ def list_events(
     type_filter: str | None = None,
     limit: int = 50,
 ) -> list[EventDirective]:
-    wanted = (type_filter or "").casefold()
+    wanted = _nfc(type_filter or "").casefold()
     results = []
     for entry in entries:
         if not isinstance(entry, Event):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if wanted and wanted != (entry.type or "").casefold():
+        if wanted and wanted != _nfc(entry.type or "").casefold():
             continue
         results.append(
             EventDirective(
@@ -481,14 +494,14 @@ def list_customs(
 ) -> list[CustomDirective]:
     from beancount.core.amount import Amount as BcAmount
 
-    wanted = (type_filter or "").casefold()
+    wanted = _nfc(type_filter or "").casefold()
     results = []
     for entry in entries:
         if not isinstance(entry, Custom):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if wanted and wanted != (entry.type or "").casefold():
+        if wanted and wanted != _nfc(entry.type or "").casefold():
             continue
         values: list[CustomDirectiveValue] = []
         for v in entry.values:

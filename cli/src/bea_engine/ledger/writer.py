@@ -127,8 +127,42 @@ def _escape_cost_label(posting: Posting) -> Posting:
     return posting._replace(cost=cost._replace(label=escape_string(label)))
 
 
+def _nfc_entry_accounts(entry: Any) -> Any:
+    """The entry with every account name in NFC, so new directives are canonical.
+
+    Reads normalize to NFC before parsing, so a newly written NFD name would
+    compare unequal to the identical account until the next load; emitting NFC
+    keeps the file canonical from the first write. Untouched entries pass
+    through unchanged.
+    """
+    import unicodedata
+
+    if isinstance(entry, Transaction):
+        postings = [
+            posting._replace(account=unicodedata.normalize("NFC", posting.account)) for posting in entry.postings
+        ]
+        return entry._replace(postings=postings)
+    if isinstance(entry, Pad):
+        fields: dict[str, Any] = {"account": unicodedata.normalize("NFC", entry.account)}
+        if entry.source_account is not None:
+            fields["source_account"] = unicodedata.normalize("NFC", entry.source_account)
+        return entry._replace(**fields)
+    if isinstance(entry, (Open, Close, Balance, Note, Document)):
+        return entry._replace(account=unicodedata.normalize("NFC", entry.account))
+    if isinstance(entry, Custom):
+        values = []
+        for v in entry.values:
+            if v.dtype is beancount_account.TYPE and isinstance(v.value, str):
+                values.append(_ValueType(unicodedata.normalize("NFC", v.value), v.dtype))  # type: ignore[arg-type]
+            else:
+                values.append(v)
+        return entry._replace(values=values)
+    return entry
+
+
 def format_entry(entry: Any) -> str:
     """Fill upstream printer escaping gaps without changing the input entry."""
+    entry = _nfc_entry_accounts(entry)
     entry = normalize_entry_strings(entry)
     fields = {
         Note: ("comment",),

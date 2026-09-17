@@ -73,10 +73,13 @@ def parse_account(name: str) -> str:
     """Validate an account name the way the loader will, or explain the rules.
 
     Engine-side because only Beancount knows what a valid account is: the root
-    names are ledger options and the segment rules are its own.
+    names are ledger options and the segment rules are its own. The name is
+    NFC-normalized first, because the loader reads the ledger NFC-normalized
+    and `is_valid` rejects the identical NFD spelling outright.
     """
     from beancount.core.account import is_valid
 
+    name = unicodedata.normalize("NFC", name)
     if not is_valid(name):
         raise protocol.UsageError(
             f"Invalid account {name!r}. Account names use colon-separated segments, such as Assets:Checking. "
