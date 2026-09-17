@@ -30,6 +30,20 @@ Tag = Annotated[str, BeforeValidator(_strip_sigil("#"))]
 Link = Annotated[str, BeforeValidator(_strip_sigil("^"))]
 
 
+def _require_calendar_date(value: Any) -> Any:
+    """Reject numeric JSON dates before Pydantic's datetime coercion muddies them."""
+    if isinstance(value, datetime.datetime):
+        return value
+    if isinstance(value, datetime.date):
+        return value
+    if isinstance(value, bool) or isinstance(value, int | float):
+        raise ValueError("date must be a string in YYYY-MM-DD form, not a number.")
+    return value
+
+
+LedgerDate = Annotated[datetime.date, BeforeValidator(_require_calendar_date)]
+
+
 # Listings must remain valid bulk input even when Decimal internally chooses
 # exponent notation for a tiny number. Preserve all digits and trailing zeros.
 AmountNumber = Annotated[
@@ -83,7 +97,7 @@ class SourceLocation(BaseModel):
 
 class TransactionDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     flag: str = "*"
     payee: str | None = None
     narration: str | None = None
@@ -96,20 +110,20 @@ class TransactionDirective(BaseModel):
 
 class OpenDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     account: str
     currencies: list[str] = Field(default_factory=list)
 
 
 class CloseDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     account: str
 
 
 class BalanceDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     account: str
     amount: Amount
     tolerance: Decimal | None = None
@@ -117,41 +131,41 @@ class BalanceDirective(BaseModel):
 
 class PadDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     account: str
     source_account: str
 
 
 class NoteDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     account: str
     comment: str
 
 
 class EventDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     type: str
     description: str
 
 
 class PriceDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     currency: str
     amount: Amount
 
 
 class CommodityDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     currency: str
 
 
 class DocumentDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     account: str
     filename: str
     tags: list[Tag] = Field(default_factory=list)
@@ -202,6 +216,6 @@ CustomDirectiveValue = Annotated[
 
 class CustomDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    date: datetime.date
+    date: LedgerDate
     type: str
     values: list[CustomDirectiveValue] = Field(default_factory=list)
