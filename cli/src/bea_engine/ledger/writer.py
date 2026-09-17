@@ -293,7 +293,9 @@ def write_price(
 def write_commodity(
     file_path: Path, directive: CommodityDirective, *, allow_errors: bool = False, into: Path | None = None
 ) -> list[str]:
-    entry = Commodity(meta={}, date=directive.date, currency=directive.currency)
+    entry = Commodity(
+        meta=ledger_write.metadata_for_write(directive.meta), date=directive.date, currency=directive.currency
+    )
     return _append(file_path, format_entry(entry), allow_errors=allow_errors, into=into)
 
 

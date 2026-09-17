@@ -120,7 +120,11 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
             description=single_line(_text(request, "description")),
         )
     if directive_type == "commodity":
-        return CommodityDirective(date=date, currency=_text(request, "currency"))
+        return CommodityDirective(
+            date=date,
+            currency=_text(request, "currency"),
+            meta=_parse_metadata([str(item) for item in request.get("meta") or []]),
+        )
     if directive_type == "document":
         return DocumentDirective(
             date=date,
@@ -147,11 +151,19 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
 
 def _appended(file: Path, directive: Any, *, allow_errors: bool, into: Path | None) -> dict[str, Any]:
     """Append one model-shaped directive; which writer to call follows from its type."""
+    from bea_engine.ledger.reader import metadata_to_json
+
     name = type(directive).__name__.removesuffix("Directive").lower()
     warnings = getattr(writer, f"write_{name}")(file, directive, allow_errors=allow_errors, into=into)
+    written = directive.model_dump(mode="json")
+    # Metadata holds Beancount values, and a plain JSON dump would flatten a
+    # number or a date into text. Answer with the tagged shape the rest of the
+    # CLI reads and writes, so what comes back can be sent again unchanged.
+    if getattr(directive, "meta", None):
+        written["meta"] = metadata_to_json(directive.meta)
     return {
         "written": 1,
-        "directive": directive.model_dump(mode="json"),
+        "directive": written,
         "warnings": warnings,
         "target": str(write.destination(file, into)),
     }

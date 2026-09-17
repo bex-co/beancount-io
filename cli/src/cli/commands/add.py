@@ -362,11 +362,18 @@ def add_price(
 def add_commodity(
     date: DateOpt,
     currency: Annotated[str, typer.Option("--currency", "--commodity", "-c", help="Commodity symbol")],
+    meta: Annotated[
+        list[str] | None, typer.Option("--meta", help="'key:value' metadata; bare text or native typed values (repeat)")
+    ] = None,
     allow_errors: AllowErrorsOpt = False,
     into: IntoOpt = None,
 ) -> None:
-    """Append a commodity directive."""
-    request = {"date": parse_date(date).isoformat(), "currency": currency}
+    """Append a commodity directive.
+
+    `--meta` registers what a symbol is — 'name:Vanguard 500 Index',
+    'asset-class:equity' — beside the bare date and symbol.
+    """
+    request = {"date": parse_date(date).isoformat(), "currency": currency, "meta": list(meta or [])}
     file, data = _write("commodity", request, allow_errors=allow_errors, into=into)
     _appended("commodity", file, data)
 

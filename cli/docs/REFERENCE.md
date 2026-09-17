@@ -575,6 +575,7 @@ Usage: bea add commodity [OPTIONS]
 | --- | --- | --- | --- |
 | `--date` | str | required | Date in YYYY-MM-DD format |
 | `--currency, --commodity, -c` | str | required | Commodity symbol |
+| `--meta` | str (repeatable) |  | 'key:value' metadata; bare text or native typed values (repeat) |
 | `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
 | `--into` | path |  | Write to an included file, relative to the root ledger |
 

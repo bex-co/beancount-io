@@ -536,7 +536,7 @@ bea add balance --date 2026-01-02 --account Assets:Savings --amount "50 USD"
 bea add note --date 2026-04-30 --account Assets:Cash --comment "ATM withdrawal"
 bea add event --date 2026-04-30 --type location --description "New York"
 bea add price --date 2026-04-30 --currency BTC --amount "62000 USD"
-bea add commodity --date 2026-01-01 --currency VFINX
+bea add commodity --date 2026-01-01 --currency VFINX --meta 'name:Vanguard 500 Index'
 bea add document --date 2026-04-30 --account Assets:Cash --filename "receipts/april.pdf" --tag trip --link "^inv-001"
 ```
 
@@ -576,6 +576,12 @@ for bulk entry. Inner quotes force a string, e.g. `--meta 'code:"1234"'`;
 `--meta 'note:""'` writes an empty string. Repeat `--meta` for different keys;
 keys must be distinct and cannot use the reserved source fields `filename` or
 `lineno`.
+
+`add commodity` takes the same `--meta`, which is how a symbol becomes more than
+a date and a ticker — `--meta 'name:Vanguard 500 Index' --meta
+'asset-class:equity'`. The keys are written indented under the directive and come
+back in the add envelope in the same tagged form as transaction metadata, so a
+response can be sent again unchanged.
 
 `add price` skips an exact date/commodity/amount match anywhere in the root
 ledger's includes. It reports the existing location and exits **0** with
