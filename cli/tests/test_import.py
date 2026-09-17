@@ -1176,3 +1176,70 @@ class TestCsvBankAmountSpellings:
         )
         assert result.exit_code == 0, result.output
         assert self._posted(book) == "-5.25 USD"
+
+
+class TestCsvBlankRowsAndTies:
+    MAPPING = "date=Date,amount=Amount,narration=Description"
+
+    def test_blank_rows_skip_and_count_in_preview(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n\n   \n2026-08-03,Tea,-2.00\n")
+        result = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.stdout)["data"]
+        assert data["ready"] == 2
+        assert data["skipped_blank"] == 2
+
+    def test_blank_count_shows_in_human_summary(self, book: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n\n")
+        result = runner.invoke(
+            app, ["--file", str(book), "import", str(source), "--csv", self.MAPPING, "--account", "Assets:Checking"]
+        )
+        assert result.exit_code == 0, result.output
+        assert "1 ready" in result.stdout
+        assert "1 blank row skipped" in result.stdout
+
+    def test_row_with_content_but_no_date_still_fails(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n,Coffee,-5.25\n")
+        result = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
+        assert result.exit_code == 2
+        assert "cannot parse date" in result.stderr
+
+    @pytest.mark.parametrize("auto", [False, True])
+    def test_fatal_tie_shows_resolving_csv_line(self, book: Path, auto: bool) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Transaction Date,Description,Memo,Transaction Amount\n2026-08-02,A,B,-5.25\n")
+        result = runner.invoke(
+            app,
+            [
+                "--file",
+                str(book),
+                "import",
+                str(source),
+                "--account",
+                "Assets:Checking",
+                *(["--csv", "auto"] if auto else []),
+            ],
+        )
+        assert result.exit_code == 2
+        assert "narration (Description, Memo)" in result.stderr
+        assert "--csv date=Transaction Date,amount=Transaction Amount,narration=Description" in result.stderr
+
+    def test_original_description_alone_is_narration(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Original Description,Amount\n2026-08-02,POS CAFE XYZ,-5.25\n")
+        result = runner.invoke(
+            app, ["--file", str(book), "import", str(source), "--csv", "auto", "--account", "Assets:Checking"]
+        )
+        assert result.exit_code == 0, result.output
+        assert "narration=Original Description" in result.stderr
+        assert "POS CAFE XYZ" in result.stdout
+
+    def test_description_and_original_description_tie(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Original Description,Amount\n2026-08-02,A,B,-5.25\n")
+        result = run_csv(book, source, "--csv", "auto", "--account", "Assets:Checking")
+        assert result.exit_code == 2
+        assert "narration (Description, Original Description)" in result.stderr

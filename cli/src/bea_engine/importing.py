@@ -108,6 +108,7 @@ def answer(
     logs = io.StringIO()
     notes: list[str] = []
     csv_mode = csv_mapping is not None
+    skipped_blank = 0
     if csv_mode:
         if csv_account is None or csv_mapping is None:
             raise UsageError(
@@ -141,6 +142,7 @@ def answer(
                 f"Importer failed ({type(exc).__name__}): {exc}.",
                 traceback=_traceback(exc),
             ) from exc
+        skipped_blank = importer.skipped_blank_rows
         if importer.rejected_categories:
             examples = ", ".join(repr(name) for name in list(importer.rejected_categories)[:3])
             count = sum(importer.rejected_categories.values())
@@ -290,6 +292,7 @@ def answer(
         "written": 0,
         "duplicates": sum(row["status"] == "duplicate" for row in rows),
         "possible_duplicates": sum(row["status"] == "possible_duplicate" for row in rows),
+        "skipped_blank": skipped_blank,
         "validation_errors": validation_errors,
         "validation_warnings": validation_warnings,
         "importer_output": logs.getvalue(),

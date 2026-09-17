@@ -261,7 +261,16 @@ _HEADER_SYNONYMS: dict[str, tuple[str, ...]] = {
     "debit": ("debit", "withdrawal", "withdrawals", "money out", "paid out"),
     "credit": ("credit", "deposit", "deposits", "money in", "paid in"),
     "payee": ("payee", "merchant", "merchant name", "name", "counterparty"),
-    "narration": ("description", "memo", "details", "narration", "particulars", "transaction description"),
+    "narration": (
+        "description",
+        "memo",
+        "details",
+        "narration",
+        "particulars",
+        "transaction description",
+        "original description",
+        "orig description",
+    ),
     "currency": ("currency", "currency code", "ccy"),
     "id": ("transaction id", "transaction_id", "reference number", "fitid"),
     "category": ("category",),
@@ -291,37 +300,49 @@ class InferredMapping:
 
     spec: str | None
     ambiguities: list[str]
+    example: str
 
 
 def infer_mapping(headers: list[str] | None) -> InferredMapping | None:
     """Recognized columns and ambiguities, or None for an unrecognized header.
 
     A role two columns claim is dropped rather than guessed. An incomplete
-    mapping keeps its ambiguities but has no usable spec.
+    mapping keeps its ambiguities but has no usable spec. `example` always
+    shows a paste-ready line: tied roles filled with their first claimant in
+    header order, so the ambiguity note can show the `--csv` line that
+    resolves it.
     """
     if not headers:
         return None
     columns: dict[str, str] = {}
     ambiguities: list[str] = []
+    first_claimant: dict[str, str] = {}
     for role, synonyms in _HEADER_SYNONYMS.items():
         matches = [header for header in headers if header.strip().casefold() in synonyms]
         if len(matches) == 1:
             columns[role] = matches[0]
         elif matches:
             ambiguities.append(f"{role} ({', '.join(sorted(matches))})")
+            first_claimant[role] = matches[0]
     if not columns and not ambiguities:
         return None
+    example_columns = {**columns, **first_claimant}
+    if "amount" in example_columns:
+        example_columns.pop("debit", None)
+        example_columns.pop("credit", None)
+    example = ",".join(f"{role}={example_columns[role]}" for role in _HEADER_SYNONYMS if role in example_columns)
     if "amount" in columns:
         columns.pop("debit", None)
         columns.pop("credit", None)
     elif "debit" not in columns or "credit" not in columns:
-        return InferredMapping(spec=None, ambiguities=ambiguities)
+        return InferredMapping(spec=None, ambiguities=ambiguities, example=example)
     if "date" not in columns or ("payee" not in columns and "narration" not in columns):
-        return InferredMapping(spec=None, ambiguities=ambiguities)
+        return InferredMapping(spec=None, ambiguities=ambiguities, example=example)
     order = [role for role in _HEADER_SYNONYMS if role in columns]
     return InferredMapping(
         spec=",".join(f"{role}={columns[role]}" for role in order),
         ambiguities=ambiguities,
+        example=example,
     )
 
 
@@ -585,6 +606,7 @@ class CsvImporter:
         self._default_account = default_account
         self._currency = currency
         self._decimal_comma = False
+        self.skipped_blank_rows = 0
         # Category values that were not account names, for the caller to report once.
         self.rejected_categories: Counter[str] = Counter()
 
@@ -620,6 +642,13 @@ class CsvImporter:
     def _parse_decimal(self, line: int, column: str, value: str) -> Decimal:
         return _parse_amount_cell(line, column, value, decimal_comma=self._decimal_comma)
 
+    def _is_blank_row(self, row: dict[str, str], columns: dict[str, str], category_header: str | None) -> bool:
+        """Whether every mapped cell in the row is empty or whitespace."""
+        headers = set(columns.values())
+        if category_header is not None:
+            headers.add(category_header)
+        return all(not (row.get(header) or "").strip() for header in headers)
+
     def extract(self, filepath: str, existing: Any) -> list[Any]:
         from beancount.core.amount import Amount
         from beancount.core.data import Posting, Transaction, new_metadata
@@ -643,6 +672,9 @@ class CsvImporter:
             )
             for index, row in enumerate(materialized):
                 line = index + 2
+                if self._is_blank_row(row, columns, category_header):
+                    self.skipped_blank_rows += 1
+                    continue
                 date_column = columns["date"]
                 try:
                     day = datetime.strptime(self._cell(row, line, "date"), self._date_format).date()

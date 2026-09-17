@@ -87,9 +87,10 @@ def _inferred_mapping(
     headers = read_header(source, delimiter=delimiter, encoding=encoding)
     inferred = infer_mapping(headers)
     if inferred is not None and inferred.ambiguities:
+        # No trailing period: the example pastes back verbatim.
         notes.append(
             f"Several columns could be {', '.join(inferred.ambiguities)}; none was chosen. "
-            "Name the one you want with --csv."
+            f"For example: --csv {inferred.example}"
         )
     if inferred is None or inferred.spec is None:
         if inferred is None and not explicit:
@@ -480,10 +481,14 @@ def import_entries(
             preview["date_format"] = date_format
         output.emit(preview, target=output.file_target(file))
     else:
-        typer.echo(
+        summary = (
             f"{preview['importer']} → {preview['account']}: {preview['ready']} ready, "
             f"{preview['duplicates']} exact duplicates, {preview['possible_duplicates']} possible duplicates"
         )
+        if preview["skipped_blank"]:
+            noun = "row" if preview["skipped_blank"] == 1 else "rows"
+            summary += f", {preview['skipped_blank']} blank {noun} skipped"
+        typer.echo(summary)
         headers = ["ROW", "STATUS", "DATE", "PAYEE / NARRATION", "SOURCE AMOUNT"]
         if csv_mode:
             headers.append("RULE")
