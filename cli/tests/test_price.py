@@ -22,8 +22,16 @@ from typing import Any
 import pytest
 from typer.testing import CliRunner
 
+from bea_engine.managed_price_cache import (
+    PriceFeedBlob,
+    feed_dir,
+    freshness,
+    resolve_feed,
+    zero_next_refresh,
+)
 from bea_engine.managed_prices import (
     AllowedUrl,
+    FeedSummary,
     FetchedFeed,
     FetchFailed,
     InvalidFeed,
@@ -37,6 +45,7 @@ from bea_engine.managed_prices import (
     parse_managed_price_url,
     validate_managed_price_text,
 )
+from bea_engine.protocol import LedgerError
 from cli.main import app
 
 runner = CliRunner()
@@ -576,3 +585,271 @@ class TestFeedRevisionId:
     def test_unusable_etag_falls_back_to_body_hash(self) -> None:
         assert feed_revision_id('"""', "body") == feed_revision_id(None, "body")
         assert len(feed_revision_id(None, "body")) == 64
+
+
+# --------------------------------------------------------------------------- #
+# Feed cache: immutable revisions, mutable head, offline and strict (t002)
+# --------------------------------------------------------------------------- #
+
+
+def _feed_text(*observed: str, revision: str = "r1") -> str:
+    lines = [
+        "; alias: BTC-USD",
+        "; commodity: BTC",
+        "; quote: USD",
+        "; source: fixture",
+        f"; revision: {revision}",
+    ]
+    for index, stamp in enumerate(observed):
+        lines += [
+            f"2026-09-{10 + index:02d} price BTC {112000 + index} USD",
+            '  price-source: "fixture"',
+            f'  observed-at: "{stamp}"',
+        ]
+    return "\n".join(lines) + "\n"
+
+
+def _stamp(now: float) -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now))
+
+
+def _resolve(
+    feed_server: str,
+    root: Path,
+    *,
+    path: str = "/prices/BTC-USD",
+    alias: str = "BTC-USD",
+    **kwargs: Any,
+) -> Any:
+    return resolve_feed(f"{feed_server}{path}", alias, root=root, **kwargs)
+
+
+class TestFeedCache:
+    def test_first_fetch_writes_blob_and_head(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        resolved = _resolve(feed_server, tmp_path, now=now)
+
+        assert resolved.blob is not None
+        assert resolved.blob.text == FEED
+        assert resolved.blob.revision == "r1"
+        assert resolved.blob.fetched_at == now
+        assert resolved.head.revision == "r1"
+        assert resolved.head.next_refresh_at == now + 300
+        assert resolved.head.last_error is None
+        directory = feed_dir(f"{feed_server}/prices/BTC-USD", tmp_path)
+        assert (directory / "head.json").is_file()
+        assert (directory / "r1.beancount").read_text() == FEED
+        assert json.loads((directory / "head.json").read_text()) == {
+            "revision": "r1",
+            "next_refresh_at": now + 300,
+            "last_error": None,
+        }
+
+    def test_second_resolve_within_window_fetches_nothing(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        first = _resolve(feed_server, tmp_path, now=now)
+
+        second = _resolve(feed_server, tmp_path, now=now + 299)
+
+        assert second == first
+        assert _FeedHandler.hits == ["/prices/BTC-USD"]
+
+    def test_expired_window_revalidates_conditionally(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        first = _resolve(feed_server, tmp_path, now=now)
+
+        second = _resolve(feed_server, tmp_path, now=now + 301)
+
+        assert second.blob == first.blob
+        assert second.head.next_refresh_at == now + 301 + 300
+        assert second.head.last_error is None
+        assert _FeedHandler.hits == ["/prices/BTC-USD", "/prices/BTC-USD"]
+        assert _FeedHandler.seen_headers["/prices/BTC-USD"]["if-none-match"] == '"r1"'
+
+    def test_new_revision_replaces_and_removes_the_superseded_blob(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        _resolve(feed_server, tmp_path, now=now)
+        body = _feed_text(_stamp(now + 301), revision="r2").encode("utf-8")
+        _FeedHandler.routes["/prices/BTC-USD"] = {
+            "body": body,
+            "headers": {"Content-Type": "text/plain; charset=utf-8", "ETag": '"r2"'},
+            "etag": '"r2"',
+            "etag_match": True,
+        }
+
+        resolved = _resolve(feed_server, tmp_path, now=now + 301)
+
+        assert resolved.blob is not None
+        assert resolved.blob.revision == "r2"
+        assert resolved.blob.text == body.decode("utf-8")
+        assert resolved.head.revision == "r2"
+        directory = feed_dir(f"{feed_server}/prices/BTC-USD", tmp_path)
+        assert (directory / "r2.beancount").is_file()
+        assert not (directory / "r1.beancount").exists()
+        assert not (directory / "r1.json").exists()
+
+    def test_failed_refresh_serves_last_good_and_records_the_error(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        first = _resolve(feed_server, tmp_path, now=now)
+        del _FeedHandler.routes["/prices/BTC-USD"]
+
+        resolved = _resolve(feed_server, tmp_path, now=now + 301)
+
+        assert resolved.blob is not None
+        assert resolved.blob.text == first.blob.text
+        assert resolved.blob.revision == "r1"
+        assert resolved.head.revision == "r1"
+        assert resolved.head.last_error == "fetch failed (http): HTTP 404"
+        assert resolved.head.next_refresh_at == now + 301 + 60
+
+    def test_invalid_body_keeps_serving(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        first = _resolve(feed_server, tmp_path, now=now)
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": b"2026-09-10 open Assets:X\n"}
+
+        resolved = _resolve(feed_server, tmp_path, now=now + 301)
+
+        assert resolved.blob is not None
+        assert resolved.blob.text == first.blob.text
+        assert resolved.head.last_error is not None
+        assert "invalid feed at line 1" in resolved.head.last_error
+
+    def test_empty_cache_failure_records_error_without_blob(self, feed_server: str, tmp_path: Path) -> None:
+        resolved = _resolve(feed_server, tmp_path, path="/prices/NOPE", alias="NOPE")
+
+        assert resolved.blob is None
+        assert resolved.head.revision is None
+        assert resolved.head.last_error == "fetch failed (http): HTTP 404"
+
+    def test_offline_serves_cached_without_fetch(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        first = _resolve(feed_server, tmp_path, now=now)
+        _FeedHandler.hits.clear()
+
+        resolved = _resolve(feed_server, tmp_path, now=now + 3600, offline=True)
+
+        assert resolved.blob == first.blob
+        assert _FeedHandler.hits == []
+
+    def test_offline_uncached_resolves_to_nothing_without_writing(self, feed_server: str, tmp_path: Path) -> None:
+        resolved = _resolve(feed_server, tmp_path, offline=True)
+
+        assert resolved.blob is None
+        assert _FeedHandler.hits == []
+        assert not tmp_path.joinpath("bea").exists()
+
+    def test_strict_rejects_unavailable(self, feed_server: str, tmp_path: Path) -> None:
+        url = f"{feed_server}/prices/NOPE"
+
+        with pytest.raises(LedgerError, match="is unavailable in strict mode") as error:
+            resolve_feed(url, "NOPE", root=tmp_path, strict=True)
+
+        assert url in str(error.value)
+
+    def test_strict_rejects_stale(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        body = _feed_text(_stamp(now - 660)).encode("utf-8")
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": body}
+        url = f"{feed_server}/prices/BTC-USD"
+        seeded = resolve_feed(url, "BTC-USD", root=tmp_path, now=now)
+        assert seeded.blob is not None
+
+        with pytest.raises(LedgerError, match="is stale in strict mode") as error:
+            resolve_feed(url, "BTC-USD", root=tmp_path, now=now, strict=True)
+
+        assert url in str(error.value)
+
+    def test_strict_accepts_fresh(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        body = _feed_text(_stamp(now)).encode("utf-8")
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": body}
+
+        resolved = _resolve(feed_server, tmp_path, now=now, strict=True)
+
+        assert resolved.blob is not None
+
+    def test_corrupt_head_rebuilds_from_a_fetch(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        _resolve(feed_server, tmp_path, now=now)
+        directory = feed_dir(f"{feed_server}/prices/BTC-USD", tmp_path)
+        (directory / "head.json").write_text("not json{")
+        _FeedHandler.hits.clear()
+
+        resolved = _resolve(feed_server, tmp_path, now=now + 1)
+
+        assert resolved.blob is not None
+        assert resolved.blob.text == FEED
+        assert _FeedHandler.hits == ["/prices/BTC-USD"]
+
+    def test_missing_blob_refetches_inside_the_window(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        _resolve(feed_server, tmp_path, now=now)
+        directory = feed_dir(f"{feed_server}/prices/BTC-USD", tmp_path)
+        (directory / "r1.beancount").unlink()
+        _FeedHandler.hits.clear()
+
+        resolved = _resolve(feed_server, tmp_path, now=now + 1)
+
+        assert resolved.blob is not None
+        assert _FeedHandler.hits == ["/prices/BTC-USD"]
+
+    def test_manual_refresh_zeroes_the_window(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        url = f"{feed_server}/prices/BTC-USD"
+        _resolve(feed_server, tmp_path, now=now)
+
+        head = zero_next_refresh(url, tmp_path)
+
+        assert head.next_refresh_at == 0.0
+        assert head.revision == "r1"
+        _FeedHandler.hits.clear()
+        _resolve(feed_server, tmp_path, now=now + 1)
+        assert _FeedHandler.hits == ["/prices/BTC-USD"]
+
+
+class TestFreshness:
+    def _blob(self, observed: str | None, fetched_at: float) -> PriceFeedBlob:
+        validation = validate_managed_price_text(FEED)
+        assert isinstance(validation, ValidFeed)
+        feed = validation.feed
+        summary = FeedSummary(
+            alias=feed.alias,
+            commodity=feed.commodity,
+            quote=feed.quote,
+            source=feed.source,
+            revision=feed.revision,
+            latest_observed_at=observed,
+            prices=feed.prices,
+        )
+        return PriceFeedBlob(
+            url="https://beancount.io/prices/BTC-USD",
+            revision="r1",
+            etag='"r1"',
+            text=FEED,
+            fetched_at=fetched_at,
+            feed=summary,
+        )
+
+    def test_no_blob_is_unavailable(self) -> None:
+        assert freshness(None, time.time()) == "unavailable"
+
+    def test_recent_observation_is_recent(self) -> None:
+        now = time.time()
+
+        assert freshness(self._blob(_stamp(now - 60), now - 60), now) == "recent"
+
+    def test_old_observation_is_stale(self) -> None:
+        now = time.time()
+
+        assert freshness(self._blob(_stamp(now - 601), now - 601), now) == "stale"
+
+    def test_missing_observed_at_falls_back_to_fetch_time(self) -> None:
+        now = time.time()
+
+        assert freshness(self._blob(None, now - 60), now) == "recent"
+        assert freshness(self._blob(None, now - 601), now) == "stale"
+
+    def test_unparseable_observed_at_falls_back_to_fetch_time(self) -> None:
+        now = time.time()
+
+        assert freshness(self._blob("whenever", now - 60), now) == "recent"
