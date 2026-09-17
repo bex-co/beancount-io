@@ -49,10 +49,14 @@ def format_beans(
     ] = None,
     check: Annotated[bool, typer.Option("--check", help="Write nothing; exit 1 if any file needs formatting")] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run", help="Write nothing; report what would change")] = False,
-    prefix_width: Annotated[int | None, typer.Option("--prefix-width", "-w", help="Force fixed prefix width")] = None,
-    num_width: Annotated[int | None, typer.Option("--num-width", "-W", help="Force fixed numbers width")] = None,
+    prefix_width: Annotated[
+        int | None, typer.Option("--prefix-width", "-w", help="Force fixed prefix width (max 200)")
+    ] = None,
+    num_width: Annotated[
+        int | None, typer.Option("--num-width", "-W", help="Force fixed numbers width (max 200)")
+    ] = None,
     currency_column: Annotated[
-        int | None, typer.Option("--currency-column", "-c", help="Align currencies to this column")
+        int | None, typer.Option("--currency-column", "-c", help="Align currencies to this column (max 200)")
     ] = None,
 ) -> None:
     """Format ledger files to stdout; rewrite them with --in-place."""
@@ -297,11 +301,17 @@ def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | Non
     return sorted(files)
 
 
+# Upstream pads with spaces to these columns; unbounded values rewrite a ledger
+# into hundreds of KiB of whitespace (w3/331). 200 is well above useful layouts.
+_MAX_ALIGNMENT_WIDTH = 200
+
+
 def _alignment(prefix_width: int | None, num_width: int | None, currency_column: int | None) -> list[str]:
     """Upstream's width options, forwarded as given once they are known to be usable.
 
     These are `bea`'s own declared options, so `bea` rejects a negative value:
     `bean-format` would turn it into a format specifier and die with a traceback.
+    Values above `_MAX_ALIGNMENT_WIDTH` are refused so `-i` cannot bloat the file.
     """
     flags: list[str] = []
     for flag, short, value in (
@@ -313,6 +323,8 @@ def _alignment(prefix_width: int | None, num_width: int | None, currency_column:
             continue
         if value < 0:
             raise UsageError(f"{flag} ({short}) must be nonnegative; got {value}.")
+        if value > _MAX_ALIGNMENT_WIDTH:
+            raise UsageError(f"{flag} ({short}) must be at most {_MAX_ALIGNMENT_WIDTH}; got {value}.")
         flags += [flag, str(value)]
     return flags
 
