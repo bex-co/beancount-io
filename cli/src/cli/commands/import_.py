@@ -658,6 +658,8 @@ def import_entries(
         if preview["skipped_blank"]:
             noun = "row" if preview["skipped_blank"] == 1 else "rows"
             summary += f", {preview['skipped_blank']} blank {noun} skipped"
+        if preview["blocked"]:
+            summary += f", {preview['blocked']} blocked"
         typer.echo(summary)
         headers = ["ROW", "STATUS", "DATE", "PAYEE / NARRATION", "SOURCE AMOUNT", "ID"]
         if csv_mode:
@@ -688,6 +690,8 @@ def import_entries(
                         f"\nRow {row['row']}: {row['reason']}\nExisting entry at {match['filename']}:{match['lineno']}:"
                     )
                 typer.echo(match["entry"])
+            elif row["status"] == "blocked":
+                typer.echo(f"\nRow {row['row']}: {row['reason']}")
         typer.echo(preview["diff"])
         for error in preview["validation_errors"]:
             output.note(error)

@@ -79,7 +79,7 @@ def answer(
     is free of conflicts / unresolved possible duplicates / validation errors.
     """
     from beancount import loader
-    from beancount.core.data import Transaction
+    from beancount.core.data import Open, Transaction
 
     from bea_engine.csv_mapper import CsvImporter, load_rules, parse_delimiter, parse_encoding, parse_mapping
 
@@ -186,8 +186,16 @@ def answer(
     keys = _effective_id_keys(id_keys)
     identities: dict[tuple[str, str, str], Any] = {}
     fingerprints: dict[tuple[Any, ...], Any] = {}
+    open_currencies: dict[str, set[str] | None] = {}
     for entry in existing:
         entry = normalize_entry_strings(entry)
+        if isinstance(entry, Open):
+            if not entry.currencies:
+                open_currencies[entry.account] = None
+            else:
+                previous = open_currencies.get(entry.account, set())
+                if previous is not None:
+                    open_currencies[entry.account] = previous | set(entry.currencies)
         if isinstance(entry, Transaction) and any(p.account == account for p in entry.postings):
             for identity in _identities(entry, account, keys):
                 identities[identity] = entry
@@ -252,6 +260,10 @@ def answer(
                 status, reason = "duplicate", "Identical directive already exists."
             other_entries.add(text)
         include = status == "new" or (status == "possible_duplicate" and duplicates == "include")
+        if include and isinstance(entry, Transaction):
+            blocked_reason = _blocked_reason(entry, open_currencies)
+            if blocked_reason is not None:
+                status, reason, include = "blocked", blocked_reason, False
         if include:
             texts.append(text)
         row_dict: dict[str, Any] = {
@@ -279,7 +291,8 @@ def answer(
             row_dict["rule"] = rule
         rows.append(row_dict)
 
-    proposed = ledger_write.appended_content(original, texts)
+    shown = [row["entry"] for row in rows if row["include"] or row["status"] == "blocked"]
+    proposed = ledger_write.appended_content(original, shown)
     validation_errors: list[str] = []
     validation_warnings: list[str] = []
     try:
@@ -301,6 +314,7 @@ def answer(
         "written": 0,
         "duplicates": sum(row["status"] == "duplicate" for row in rows),
         "possible_duplicates": sum(row["status"] == "possible_duplicate" for row in rows),
+        "blocked": sum(row["status"] == "blocked" for row in rows),
         "skipped_blank": skipped_blank,
         "validation_errors": validation_errors,
         "validation_warnings": validation_warnings,
@@ -316,11 +330,14 @@ def answer(
         ),
     }
     if apply:
-        if conflicts or (preview["possible_duplicates"] and duplicates == "review"):
+        blocked = preview["blocked"]
+        if conflicts or (preview["possible_duplicates"] and duplicates == "review") or blocked:
             review = [
                 f"Row {row['row']} ({row['status']}): {row['reason']}"
                 for row in rows
-                if row["status"] == "conflict" or (row["status"] == "possible_duplicate" and duplicates == "review")
+                if row["status"] == "conflict"
+                or (row["status"] == "possible_duplicate" and duplicates == "review")
+                or row["status"] == "blocked"
             ]
             if conflicts and not (preview["possible_duplicates"] and duplicates == "review"):
                 guidance = (
@@ -332,10 +349,18 @@ def answer(
                     "Import needs review; nothing was written. Resolve ID conflicts (stable ID with different "
                     "ledger data) and choose --duplicates skip/include for possible duplicates."
                 )
-            else:
+            elif preview["possible_duplicates"] and duplicates == "review":
                 guidance = (
                     "Import needs review; nothing was written. Choose --duplicates skip/include "
                     "for possible duplicates."
+                )
+            else:
+                guidance = "Import needs review; nothing was written."
+            if blocked == 1:
+                guidance += " 1 row is blocked by an unopened account or a currency mismatch; resolve it first."
+            elif blocked:
+                guidance += (
+                    f" {blocked} rows are blocked by unopened accounts or currency mismatches; resolve them first."
                 )
             raise ConflictError(
                 guidance,
@@ -421,6 +446,33 @@ def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, st
     if meta.get("bea_import_id"):
         identities.append((account, "file", str(meta["bea_import_id"])))
     return identities
+
+
+def _blocked_reason(entry: Any, open_currencies: dict[str, set[str] | None]) -> str | None:
+    """Why a transaction cannot be written, or None when its accounts allow it.
+
+    Names each unopened account with the `bea add open` line that fixes it,
+    and each currency the account's open directive does not allow.
+    """
+    missing = sorted({posting.account for posting in entry.postings if posting.account not in open_currencies})
+    if missing:
+        remedies = []
+        for name in missing:
+            currency = next(p.units.currency for p in entry.postings if p.account == name)
+            remedies.append(f"bea add open --account {name} --date {entry.date.isoformat()} -c {currency}")
+        quoted = ", ".join(f"'{name}'" for name in missing)
+        noun = "Account" if len(missing) == 1 else "Accounts"
+        verb = "is" if len(missing) == 1 else "are"
+        return f"{noun} {quoted} {verb} not open. Run: {'; '.join(remedies)}."
+    for posting in entry.postings:
+        allowed = open_currencies.get(posting.account)
+        if allowed is not None and posting.units.currency not in allowed:
+            choices = ", ".join(sorted(allowed))
+            return (
+                f"Cannot post {posting.units.currency} to '{posting.account}' "
+                f"(open for {choices} only). Add {posting.units.currency} to its open directive."
+            )
+    return None
 
 
 def _native_import_id(meta: dict[str, Any], keys: list[str]) -> str | None:

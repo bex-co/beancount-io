@@ -49,7 +49,10 @@ def books(tmp_path: Path) -> Path:
         timeout=60,
     )
     assert result.returncode == 0, result.stderr
-    return tmp_path / "books" / "main.bean"
+    ledger = tmp_path / "books" / "main.bean"
+    with ledger.open("a") as handle:
+        handle.write("2024-01-01 open Assets:Bank:Checking USD\n")
+    return ledger
 
 
 def _bea(tmp_path: Path, ledger: Path, *args: str) -> subprocess.CompletedProcess[str]:

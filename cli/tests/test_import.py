@@ -244,9 +244,12 @@ def test_uncategorized_or_unbalanced_import_never_changes_the_ledger(book: Path)
     source.write_text(HEADER + ROW.replace("Expenses:Dining", "Expenses:Unknown"))
     before = book.read_bytes()
     preview = run(book, source)
-    assert json.loads(preview.stdout)["data"]["validation_errors"]
+    data = json.loads(preview.stdout)["data"]
+    assert data["ready"] == 0
+    assert data["rows"][0]["status"] == "blocked"
+    assert "Expenses:Unknown" in data["rows"][0]["reason"]
     result = run(book, source, "--apply")
-    assert result.exit_code == 1
+    assert result.exit_code == 4
     assert book.read_bytes() == before
 
 
@@ -687,7 +690,7 @@ def test_csv_rule_naming_an_unopened_account_guides_to_add_open(book: Path, isol
     rules = rules_file(book, '[[rule]]\nmatch = "cafe"\naccount = "Expenses:Popcorn"\n')
     before = book.read_bytes()
     result = csv_result(book, CSV_HEADER + CSV_ROW, "--rules", str(rules), "--apply")
-    assert result.exit_code == 1
+    assert result.exit_code == 4
     assert "bea add open --account Expenses:Popcorn" in result.stderr
     assert book.read_bytes() == before
 
@@ -1634,3 +1637,135 @@ class TestStickyRecall:
         assert result.exit_code == 0, result.output
         assert "sign=ledger" in result.stderr
         assert "-5.25 USD" in result.stdout
+
+
+class TestBlockedRows:
+    LEDGER = """option "operating_currency" "USD"
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Expenses:Food USD
+"""
+
+    def _ledger(self, tmp_path: Path) -> Path:
+        file = tmp_path / "main.bean"
+        file.write_text(self.LEDGER)
+        return file
+
+    def test_unopen_counter_account_blocks_row(self, tmp_path: Path, isolated_config: Path) -> None:
+        book = self._ledger(tmp_path)
+        source = tmp_path / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        result = run_csv(book, source, "--csv", TestStickyRecall.MAPPING, "--account", "Assets:Checking")
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.stdout)["data"]
+        assert data["ready"] == 0
+        assert data["blocked"] == 1
+        (row,) = data["rows"]
+        assert row["status"] == "blocked"
+        assert row["include"] is False
+        assert "Expenses:Uncategorized" in (row["reason"] or "")
+        assert "bea add open" in (row["reason"] or "")
+        assert "Expenses:Uncategorized" in data["diff"]
+
+    def test_apply_refuses_blocked_rows(self, tmp_path: Path, isolated_config: Path) -> None:
+        book = self._ledger(tmp_path)
+        source = tmp_path / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        before = book.read_bytes()
+        result = run_csv(book, source, "--csv", TestStickyRecall.MAPPING, "--account", "Assets:Checking", "--apply")
+        assert result.exit_code == 4
+        assert "Import needs review; nothing was written" in result.stderr
+        assert "Expenses:Uncategorized" in result.stderr
+        assert book.read_bytes() == before
+
+    def test_opening_account_unblocks(self, tmp_path: Path, isolated_config: Path) -> None:
+        book = self._ledger(tmp_path)
+        source = tmp_path / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        opened = runner.invoke(
+            app,
+            [
+                "--file",
+                str(book),
+                "add",
+                "open",
+                "--date",
+                "2026-01-01",
+                "--account",
+                "Expenses:Uncategorized",
+                "-c",
+                "USD",
+            ],
+        )
+        assert opened.exit_code == 0, opened.output
+        preview = run_csv(book, source, "--csv", TestStickyRecall.MAPPING, "--account", "Assets:Checking")
+        assert preview.exit_code == 0, preview.output
+        assert json.loads(preview.stdout)["data"]["ready"] == 1
+        applied = run_csv(book, source, "--csv", TestStickyRecall.MAPPING, "--account", "Assets:Checking", "--apply")
+        assert applied.exit_code == 0, applied.output
+        assert json.loads(applied.stdout)["data"]["written"] == 1
+
+    def test_unopen_rules_target_blocks(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = "Cafe"\naccount = "Expenses:Nope"\n')
+        result = csv_result(book, CSV_HEADER + CSV_ROW, "--rules", str(rules))
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.stdout)["data"]
+        assert data["blocked"] == 1
+        (row,) = data["rows"]
+        assert row["status"] == "blocked"
+        assert "Expenses:Nope" in (row["reason"] or "")
+        assert "bea add open" in (row["reason"] or "")
+
+    def test_currency_mismatch_blocks(self, book: Path, isolated_config: Path) -> None:
+        result = csv_result(
+            book,
+            "Date,Payee,Amount,Currency\n2026-08-02,Cafe,-5.25,EUR\n",
+            mapping="date=Date,amount=Amount,payee=Payee,currency=Currency",
+        )
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.stdout)["data"]
+        assert data["ready"] == 0
+        (row,) = data["rows"]
+        assert row["status"] == "blocked"
+        assert "EUR" in (row["reason"] or "")
+        assert "Assets:Checking" in (row["reason"] or "")
+
+    def test_ready_and_duplicate_rows_unaffected(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(
+            book,
+            '[[rule]]\nmatch = "Cafe"\naccount = "Expenses:Dining"\n'
+            '[[rule]]\nmatch = "Shop"\naccount = "Expenses:Nope"\n',
+        )
+        body = CSV_HEADER + "2026-08-02,Cafe,Coffee,-5.25\n2026-08-03,Shop,Tea,-2.00\n"
+        result = csv_result(book, body, "--rules", str(rules))
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.stdout)["data"]
+        assert [row["status"] for row in data["rows"]] == ["new", "blocked"]
+        assert data["ready"] == 1
+        assert data["blocked"] == 1
+        applied = csv_result(book, body, "--rules", str(rules), "--apply")
+        assert applied.exit_code == 4
+        assert "Expenses:Nope" in applied.stderr
+
+    def test_human_summary_shows_blocked_rows(self, tmp_path: Path, isolated_config: Path) -> None:
+        book = self._ledger(tmp_path)
+        source = tmp_path / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        result = runner.invoke(
+            app,
+            [
+                "--file",
+                str(book),
+                "import",
+                str(source),
+                "--csv",
+                TestStickyRecall.MAPPING,
+                "--account",
+                "Assets:Checking",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert "0 ready" in result.stdout
+        assert "1 blocked" in result.stdout
+        assert "blocked" in result.stdout
+        assert "Expenses:Uncategorized" in result.stdout
+        assert "bea add open" in result.stdout

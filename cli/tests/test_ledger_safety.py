@@ -155,9 +155,10 @@ def test_allow_errors_refuses_new_import_rows(tmp_path: Path) -> None:
         "include",
         "--allow-errors",
     )
-    assert result.exit_code == 1, result.output
+    assert result.exit_code == 4, result.output
     assert book.read_bytes() == before
-    assert "Import would leave the ledger invalid" in result.stderr
+    assert "Import needs review; nothing was written" in result.stderr
+    assert "Expenses:Uncategorized" in result.stderr
 
 
 def test_allow_errors_bulk_rejects_new_accounts_without_writing(book: Path) -> None:

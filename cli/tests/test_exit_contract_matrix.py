@@ -233,9 +233,9 @@ CASES: list[dict[str, Any]] = [
             "include",
             "--allow-errors",
         ],
-        "exit": 1,
+        "exit": 4,
         "unchanged": ["main.bean"],
-        "stderr_has": ["Import would leave the ledger invalid"],
+        "stderr_has": ["Import needs review; nothing was written", "Expenses:Uncategorized"],
     },
     {
         "id": "w3/323",
