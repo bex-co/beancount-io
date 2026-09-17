@@ -1071,3 +1071,108 @@ def test_an_importer_that_raises_is_still_a_different_error(book: Path, tmp_path
 
     assert result.exit_code != 0
     assert "Importer dependency is unavailable" not in result.stderr
+
+
+class TestCsvBankAmountSpellings:
+    """The no-code path parses the spellings real exports use (w1/m24/t003)."""
+
+    MAPPING = "date=Date,amount=Amount,payee=Payee,narration=Narration"
+
+    def _apply(self, book: Path, body: str) -> dict:
+        source = book.parent / "bank.csv"
+        source.write_text(body)
+        result = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking", "--apply")
+        assert result.exit_code == 0, result.output
+        return json.loads(result.stdout)["data"]
+
+    def _posted(self, book: Path) -> str:
+        entries, errors, _ = loader.load_file(book)
+        assert not errors
+        transaction = next(e for e in entries if isinstance(e, Transaction))
+        return str(transaction.postings[0].units)
+
+    @pytest.mark.parametrize(
+        ("cell", "expected"),
+        [
+            ('"$1,000.00"', "1000.00 USD"),
+            ("(4.50)", "-4.50 USD"),
+            ("4.50-", "-4.50 USD"),
+            ("€12.50", "12.50 USD"),
+            ("4.50€", "4.50 USD"),
+            ('"1,00,000"', "100000 USD"),
+            ("1\u2009000.00", "1000.00 USD"),
+        ],
+    )
+    def test_bank_spellings_import_exact(self, book: Path, isolated_config: Path, cell: str, expected: str) -> None:
+        self._apply(book, f"Date,Payee,Narration,Amount\n2026-08-02,Cafe,Coffee,{cell}\n")
+        assert self._posted(book) == expected
+
+    def test_comma_decimals_import_under_eu_column(self, book: Path, isolated_config: Path) -> None:
+        body = "Date;Payee;Narration;Amount\n2026-08-02;Cafe;Coffee;1.000,00\n2026-08-03;Cafe;Coffee;1.000\n"
+        source = book.parent / "bank.csv"
+        source.write_text(body)
+        result = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking", "--apply")
+        assert result.exit_code == 0, result.output
+        entries, errors, _ = loader.load_file(book)
+        assert not errors
+        amounts = sorted(str(t.postings[0].units) for t in entries if isinstance(t, Transaction))
+        assert amounts == ["1000 USD", "1000.00 USD"]
+
+    def test_mixed_decimal_conventions_refused(self, book: Path, isolated_config: Path) -> None:
+        body = 'Date,Payee,Narration,Amount\n2026-08-02,Cafe,Coffee,"1,000.00"\n2026-08-03,Cafe,Coffee,"1.000,00"\n'
+        source = book.parent / "bank.csv"
+        source.write_text(body)
+        before = book.read_bytes()
+        result = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
+        assert result.exit_code == 2, result.output
+        assert "decimal conventions" in result.stderr
+        assert "1,000.00" in result.stderr
+        assert "1.000,00" in result.stderr
+        assert book.read_bytes() == before
+
+    @pytest.mark.parametrize("cell", ["NaN", "nan", "Infinity", "-INF", "+inf"])
+    def test_nonfinite_amounts_blocked_in_preview(self, book: Path, isolated_config: Path, cell: str) -> None:
+        body = f"Date,Payee,Narration,Amount\n2026-08-02,Cafe,Coffee,{cell}\n"
+        source = book.parent / "bank.csv"
+        source.write_text(body)
+        before = book.read_bytes()
+        preview = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
+        assert preview.exit_code == 2, preview.output
+        assert "not a finite number" in preview.stderr
+        assert "Row 2" in preview.stderr
+        applied = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking", "--apply")
+        assert applied.exit_code == 2, applied.output
+        assert book.read_bytes() == before
+
+    def test_bad_amount_names_cell_row_and_spellings(self, book: Path, isolated_config: Path) -> None:
+        body = "Date,Payee,Narration,Amount\n2026-08-02,Cafe,Coffee,abc\n"
+        source = book.parent / "bank.csv"
+        source.write_text(body)
+        result = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
+        assert result.exit_code == 2, result.output
+        assert "abc" in result.stderr
+        assert "Row 2" in result.stderr
+        assert "Accepted" in result.stderr
+
+    def test_comma_decimal_lookalike_refused_in_us_column(self, book: Path, isolated_config: Path) -> None:
+        body = 'Date,Payee,Narration,Amount\n2026-08-02,Cafe,Coffee,"1,000.00"\n2026-08-03,Cafe,Coffee,"4,50"\n'
+        source = book.parent / "bank.csv"
+        source.write_text(body)
+        result = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
+        assert result.exit_code == 2, result.output
+        assert "4,50" in result.stderr
+
+    def test_debit_credit_accepts_symbols(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Payee,Debit,Credit\n2026-08-02,Cafe,$5.25,\n")
+        result = run_csv(
+            book,
+            source,
+            "--csv",
+            "date=Date,payee=Payee,debit=Debit,credit=Credit",
+            "--account",
+            "Assets:Checking",
+            "--apply",
+        )
+        assert result.exit_code == 0, result.output
+        assert self._posted(book) == "-5.25 USD"

@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import re
+import unicodedata
 from collections import Counter
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -25,6 +26,136 @@ from bea_engine.protocol import UsageError
 _MAPPING_FIELDS = frozenset(
     {"date", "amount", "payee", "narration", "id", "currency", "debit", "credit", "category", "sign"}
 )
+
+_THOUSAND_SEPARATOR_FILLER = re.compile(r"[\s'\u2019]")
+_NON_FINITE_AMOUNT = re.compile(r"[+-]?(?:nan|inf(?:inity)?)\Z", re.IGNORECASE)
+_EU_GROUPING = re.compile(r"\d{1,3}(?:\.\d{3})+")
+_ACCEPTED_AMOUNTS = (
+    "Accepted: plain decimals (1000.50), $/€ symbols, thousands separators, "
+    "(parentheses) or trailing-minus negatives; comma decimals like 1.000,00 "
+    "only when the whole column uses them."
+)
+
+
+def _is_currency_symbol(text: str) -> bool:
+    return len(text) == 1 and unicodedata.category(text) == "Sc"
+
+
+def _split_amount_sign(value: str) -> tuple[str, str, bool]:
+    """Split the sign, currency symbols, and parentheses off an amount cell.
+
+    Returns the leading +/- sign (kept for Decimal), the bare core, and whether
+    parentheses/trailing-minus negation applies.
+    """
+    text = value.strip()
+    negate = False
+    if len(text) >= 2 and text.startswith("(") and text.endswith(")"):
+        negate = True
+        text = text[1:-1]
+    text = text.strip()
+    sign = ""
+    if text[:1] in ("+", "-"):
+        sign, text = text[0], text[1:]
+    trailing_minus_seen = False
+    for _ in range(4):
+        text = text.strip()
+        if not text:
+            break
+        if _is_currency_symbol(text[:1]):
+            text = text[1:]
+        elif _is_currency_symbol(text[-1:]):
+            text = text[:-1]
+        elif text.endswith("-") and not trailing_minus_seen:
+            trailing_minus_seen = True
+            negate = not negate
+            text = text[:-1]
+        else:
+            break
+    return sign, text.strip(), negate
+
+
+def _separator_vote(core: str) -> str | None:
+    """Vote on a cell's decimal convention: 'us', 'eu', 'eu-weak', or None."""
+    if "." in core and "," in core:
+        return "eu" if core.rfind(",") > core.rfind(".") else "us"
+    if "," in core and re.search(r",\d{2}$", core):
+        return "eu-weak"
+    return None
+
+
+def _resolve_decimal_comma(cells: list[tuple[int, str]]) -> bool:
+    """Decide from every amount cell whether the column uses comma decimals.
+
+    Refuses columns that mix point and comma decimals — no row may resolve
+    the ambiguity alone.
+    """
+    first_us: tuple[int, str] | None = None
+    first_eu: tuple[int, str] | None = None
+    only_weak_eu = False
+    for line, value in cells:
+        if not value.strip():
+            continue
+        _sign, core, _negate = _split_amount_sign(value)
+        vote = _separator_vote(core)
+        if vote == "us" and first_us is None:
+            first_us = (line, value.strip())
+        elif vote == "eu" and first_eu is None:
+            first_eu = (line, value.strip())
+        elif vote == "eu-weak":
+            only_weak_eu = True
+        if first_us is not None and first_eu is not None:
+            first, second = sorted(
+                [(first_us, "point decimals"), (first_eu, "comma decimals")],
+                key=lambda item: item[0][0],
+            )
+            raise UsageError(
+                f"The amount columns mix decimal conventions: row {first[0][0]} "
+                f"uses {first[1]} ({first[0][1]!r}) but row {second[0][0]} uses "
+                f"{second[1]} ({second[0][1]!r}). Use one convention per column."
+            )
+    if first_eu is not None:
+        return True
+    return first_us is None and only_weak_eu
+
+
+def _unparseable_amount(line: int, column: str, value: str) -> UsageError:
+    return UsageError(f"Row {line}: cannot parse amount {value!r} in column {column!r}. {_ACCEPTED_AMOUNTS}")
+
+
+def _comma_decimal_to_point(line: int, column: str, value: str, text: str) -> str:
+    whole, comma, fraction = text.partition(",")
+    if "," in fraction:
+        raise _unparseable_amount(line, column, value)
+    if "." in whole:
+        if not _EU_GROUPING.fullmatch(whole):
+            raise _unparseable_amount(line, column, value)
+        whole = whole.replace(".", "")
+    elif whole and not whole.isdigit():
+        raise _unparseable_amount(line, column, value)
+    if comma and (not fraction or not fraction.isdigit()):
+        raise _unparseable_amount(line, column, value)
+    return f"{whole or '0'}.{fraction}" if comma else whole
+
+
+def _parse_amount_cell(line: int, column: str, value: str, *, decimal_comma: bool) -> Decimal:
+    """Parse one bank amount cell under the column's resolved convention."""
+    sign, core, negate = _split_amount_sign(value)
+    if _NON_FINITE_AMOUNT.fullmatch(core):
+        raise UsageError(f"Row {line}: amount {value!r} in column {column!r} is not a finite number.")
+    text = _THOUSAND_SEPARATOR_FILLER.sub("", core)
+    if decimal_comma:
+        text = _comma_decimal_to_point(line, column, value, text)
+    else:
+        if "." not in text and re.search(r",\d{2}$", text):
+            raise _unparseable_amount(line, column, value)
+        text = text.replace(",", "")
+    try:
+        number = Decimal(require_decimal_notation(sign + text))
+    except ValueError as exc:
+        raise UsageError(f"Row {line}, column {column!r}: {exc}") from None
+    except InvalidOperation:
+        raise _unparseable_amount(line, column, value) from None
+    return -number if negate else number
 
 
 @dataclass(frozen=True)
@@ -453,6 +584,7 @@ class CsvImporter:
         self._rules = rules or []
         self._default_account = default_account
         self._currency = currency
+        self._decimal_comma = False
         # Category values that were not account names, for the caller to report once.
         self.rejected_categories: Counter[str] = Counter()
 
@@ -486,12 +618,7 @@ class CsvImporter:
                 )
 
     def _parse_decimal(self, line: int, column: str, value: str) -> Decimal:
-        try:
-            return Decimal(require_decimal_notation(value.strip()))
-        except ValueError as exc:
-            raise UsageError(f"Row {line}, column {column!r}: {exc}") from None
-        except InvalidOperation:
-            raise UsageError(f"Row {line}: cannot parse amount {value!r} in column {column!r}.") from None
+        return _parse_amount_cell(line, column, value, decimal_comma=self._decimal_comma)
 
     def extract(self, filepath: str, existing: Any) -> list[Any]:
         from beancount.core.amount import Amount
@@ -505,7 +632,16 @@ class CsvImporter:
             if category_header is None:
                 category_header = next((h for h in headers if h.casefold() == "category"), None)
             self._check_columns(source, headers, category_header)
-            for index, row in enumerate(records):
+            materialized = list(records)
+            amount_columns = [columns[field] for field in ("amount", "debit", "credit") if field in columns]
+            self._decimal_comma = _resolve_decimal_comma(
+                [
+                    (index + 2, row.get(header, ""))
+                    for index, row in enumerate(materialized)
+                    for header in amount_columns
+                ]
+            )
+            for index, row in enumerate(materialized):
                 line = index + 2
                 date_column = columns["date"]
                 try:
