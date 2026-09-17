@@ -65,6 +65,15 @@ def _amount(amount: dict[str, Any]) -> str:
     return f"{amount['number']} {amount['currency']}"
 
 
+def _balance_amount(balance: dict[str, Any]) -> str:
+    amount = _amount(balance["amount"])
+    tolerance = balance.get("tolerance")
+    if tolerance is None:
+        return amount
+    number, _, currency = amount.partition(" ")
+    return f"{number} ~ {tolerance} {currency}"
+
+
 SPECS: dict[str, _Spec] = {
     "transaction": _Spec(
         headers=["DATE", "FLAG", "PAYEE", "NARRATION", "POSTINGS"],
@@ -80,7 +89,7 @@ SPECS: dict[str, _Spec] = {
     ),
     "balance": _Spec(
         headers=["DATE", "ACCOUNT", "AMOUNT"],
-        row=lambda b: [b["date"], b["account"], _amount(b["amount"])],
+        row=lambda b: [b["date"], b["account"], _balance_amount(b)],
         empty="No balance assertions found.",
         filter="account",
     ),
