@@ -686,10 +686,16 @@ def appended_content(original: bytes, texts: list[str]) -> str:
     formatted file is still formatted after an append, and `bea format` can
     never touch a line written here: when a new line is wider than any before
     it, the older lines are what a later format realigns.
+
+    New lines use the file's dominant ending, so a CRLF ledger stays CRLF
+    throughout instead of mixing; a missing final newline is repaired as part
+    of the same write rather than gluing the first appended line to the last
+    existing one.
     """
     if not texts:
         return original.decode("utf-8")
     text = original.decode("utf-8")
+    ending = _dominant_ending(original)
     blocks = _indent_block(texts, _destination_indent(text))
     draft = text + "".join("\n" + block + "\n" for block in blocks)
     kept = len(text.splitlines())
@@ -704,7 +710,19 @@ def appended_content(original: bytes, texts: list[str]) -> str:
         tail = aligned.splitlines()[kept:]
     except AssertionError:
         pass  # The aligner refused the text; alignment is cosmetic, the append is not.
-    return text + "\n".join(tail) + "\n"
+    head = text if text.endswith("\n") or not text else text + ending
+    return head + ending.join(tail) + ending
+
+
+def _dominant_ending(content: bytes) -> str:
+    """The line ending new lines should use: CRLF only when CRLF lines win.
+
+    A tie or no newlines at all answers LF, the default for new ledgers; a
+    mixed file keeps its existing bytes verbatim either way — only the
+    appended lines follow the dominant ending.
+    """
+    crlf = content.count(b"\r\n")
+    return "\r\n" if crlf > content.count(b"\n") - crlf else "\n"
 
 
 def validate_append(

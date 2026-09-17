@@ -302,6 +302,13 @@ out first. The same formatter is a text transformation and not a parse, so
 formatting no longer refuses a file with a syntax error: it aligns the amounts
 it recognises and leaves the rest alone. Run `bea check` to validate.
 
+Writes match the file they append to: new lines use CRLF in a CRLF ledger and
+LF elsewhere, a missing final newline is repaired as part of the append, and
+existing bytes are never renormalised as a side effect. `format -i` is the
+convergence path instead — it rewrites the file to LF, strips a UTF-8 BOM, and
+reports the file as formatted even when alignment alone did not change — so
+`--check` fails on a BOM-marked or carriage-return file until `-i` has run.
+
 A directory is walked for `.bean` and `.beancount` files, and a walked entry it
 cannot read stops the run (exit **2**) naming the path and where it points — a
 broken `include` symlink is the shape this usually takes. Silently dropping it

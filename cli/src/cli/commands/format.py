@@ -25,6 +25,7 @@ import typer
 from cli import context, output
 from cli.engine import launch
 from cli.errors import BeaError, LedgerError, UsageError
+from cli.utils import UTF8_BOM
 
 SUFFIXES = {".bean", ".beancount"}
 STDIN = "-"
@@ -149,7 +150,7 @@ def _format_in_place(
     # Unparseable files are skipped, not "formatted": upstream would echo them
     # back with a newline appended and call that a rewrite.
     formattable = [file for file in files if str(file) not in failed]
-    before = {file: _text(file) for file in formattable}
+    before = {file: _raw(file) for file in formattable}
     for file in formattable:
         _strip_bom(file)
     completed = (
@@ -164,8 +165,8 @@ def _format_in_place(
             text = _text(file)
             fixed = _canonical_posting_indent(text)
             if fixed != text:
-                file.write_text(fixed)
-    changed = [str(file) for file in formattable if _text(file) != before[file]]
+                file.write_bytes(fixed.encode("utf-8"))
+    changed = [str(file) for file in formattable if _raw(file) != before[file]]
     result = _result(files, changed, failed, missing) | {"in_place": True}
     if completed is not None and completed.returncode != 0:
         diagnostic = (completed.stderr or "").strip()
@@ -289,11 +290,17 @@ def _would_change(file: Path, alignment: list[str]) -> bool:
     something to print. A formatter that fails is reported as a failure instead
     of being read as "already formatted".
     """
-    if _has_bom(file):
-        # Upstream cannot parse the mark at all; `-i` strips it, so a marked
-        # file always needs formatting. Answered here so `--check` names the
-        # remedy instead of failing on upstream's parse error.
-        return True
+    try:
+        raw = file.read_bytes()
+    except OSError:
+        pass
+    else:
+        # Upstream cannot parse a BOM at all and always emits LF, so a marked
+        # file or any carriage return means `-i` would rewrite the bytes.
+        # Answered here so `--check` names the remedy instead of failing on
+        # upstream's parse error, and stays coherent with what `-i` reports.
+        if raw.startswith(UTF8_BOM) or b"\r" in raw:
+            return True
     completed = launch.capture_native("bean-format", [*alignment, str(file)])
     if completed.returncode != 0:
         raise BeaError(
@@ -326,18 +333,6 @@ def _canonical_posting_indent(text: str) -> str:
     return "".join(lines)
 
 
-_UTF8_BOM = b"\xef\xbb\xbf"
-
-
-def _has_bom(file: Path) -> bool:
-    """Whether the file starts with a UTF-8 byte-order mark."""
-    try:
-        with open(file, "rb") as stream:
-            return stream.read(len(_UTF8_BOM)) == _UTF8_BOM
-    except OSError:
-        return False
-
-
 def _strip_bom(file: Path) -> None:
     """Remove a leading UTF-8 BOM from the file on disk, leaving all other bytes.
 
@@ -348,21 +343,34 @@ def _strip_bom(file: Path) -> None:
         raw = file.read_bytes()
     except OSError:
         return
-    if not raw.startswith(_UTF8_BOM):
+    if not raw.startswith(UTF8_BOM):
         return
     try:
-        file.write_bytes(raw[len(_UTF8_BOM) :])
+        file.write_bytes(raw[len(UTF8_BOM) :])
     except OSError:
         # A file that cannot be rewritten is upstream's failure to report,
         # not a crash here: bean-format still cannot parse the kept mark.
         return
 
 
-def _text(file: Path) -> str:
-    """The file as the comparison sees it: text mode, so CRLF and LF read alike.
+def _raw(file: Path) -> bytes:
+    """The file's bytes, for comparing what `-i` actually rewrote.
 
-    Upstream writes LF, and a CRLF file is not "unformatted" for that reason
-    alone — the alignment is what is being compared.
+    A BOM strip or a CRLF-to-LF normalization changes no alignment, so a
+    text comparison would report the file untouched while its bytes changed.
+    """
+    try:
+        return file.read_bytes()
+    except OSError as exc:
+        raise LedgerError(f"Could not read {file}: {exc.strerror or exc}.") from exc
+
+
+def _text(file: Path) -> str:
+    """The file as the alignment comparison sees it: CRLF and LF read alike.
+
+    Endings themselves are answered from bytes before this is reached (any
+    carriage return means `-i` would rewrite the file); here only the
+    alignment is being compared.
     """
     try:
         return file.read_text(encoding="utf-8")

@@ -52,15 +52,10 @@ def check(ctx: typer.Context) -> None:
 
 def _closure_has_bom(file: Path) -> bool:
     """Whether the ledger or anything it includes starts with a UTF-8 BOM."""
+    from cli.utils import has_bom
+
     try:
         members = output.ledger_closure(file)
     except OSError:
         return False
-    for member in members:
-        try:
-            with open(member, "rb") as stream:
-                if stream.read(3) == b"\xef\xbb\xbf":
-                    return True
-        except OSError:
-            continue
-    return False
+    return any(has_bom(member) for member in members)

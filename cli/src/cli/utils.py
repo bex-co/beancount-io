@@ -18,6 +18,23 @@ def single_line(text: str) -> str:
     return re.sub(r"[\r\n]+", " ", text)
 
 
+UTF8_BOM = b"\xef\xbb\xbf"
+"""The three bytes several Windows editors prepend to a UTF-8 ledger.
+
+The engine twin (`bea_engine.compat.UTF8_BOM`) carries the same value;
+neither side may import the other, so the constant is repeated, not shared.
+"""
+
+
+def has_bom(path: Path) -> bool:
+    """Whether the file at `path` starts with a UTF-8 byte-order mark."""
+    try:
+        with open(path, "rb") as stream:
+            return stream.read(len(UTF8_BOM)) == UTF8_BOM
+    except OSError:
+        return False
+
+
 def refuse_blank_filter(flag: str, value: str | None) -> None:
     """Reject an empty or whitespace-only filter value as a usage error.
 
