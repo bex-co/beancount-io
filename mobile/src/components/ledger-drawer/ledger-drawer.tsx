@@ -60,6 +60,7 @@ import { LoadingTile } from "@/components/loading-tile";
 import { MenuButton } from "@/components/menu-button";
 import { SearchBar } from "@/components/search-bar";
 import {
+  DRAWER_LEDGERS_PAGE_SIZE,
   filterLedgers,
   getDrawerLedgers,
   groupLedgersByOwner,
@@ -379,7 +380,11 @@ export function LedgerDrawer({
   const insets = useSafeAreaInsets();
 
   const ledgerId = useReactiveVar(ledgerVar);
-  const { data, loading, error, refetch } = useListLedgersQuery();
+  // Explicit pagination matching Browse page one: the server's no-argument
+  // default silently drops ledgers Browse lists (w1/031).
+  const { data, loading, error, refetch } = useListLedgersQuery({
+    variables: { page: 1, limit: DRAWER_LEDGERS_PAGE_SIZE },
+  });
   const ledgers = useMemo(() => data?.listLedgers ?? [], [data?.listLedgers]);
   const listedCurrent = ledgers.find(
     (ledger) => ledger.id === ledgerId || ledger.fullName === ledgerId,

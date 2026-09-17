@@ -1,3 +1,15 @@
+/**
+ * How many collection ledgers the quick-switch drawer asks for.
+ *
+ * Kept equal to Browse's page size (`PAGE_SIZE` in
+ * `screens/ledger-selection/use-discovery.ts`) so the drawer shows exactly
+ * Browse → Your ledgers page one. The drawer passes this explicitly because
+ * the server answers the no-argument shape with a smaller default set than
+ * the explicit `{page, limit}` shape (w1/031); the limit lives here so the
+ * call site and the regression test share one value.
+ */
+export const DRAWER_LEDGERS_PAGE_SIZE = 30;
+
 type DrawerLedger = {
   id: string;
   name: string;
