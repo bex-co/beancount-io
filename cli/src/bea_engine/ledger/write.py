@@ -606,5 +606,10 @@ def metadata_for_write(meta: dict[str, Any]) -> dict[str, Any]:
                     raise LedgerError(f"Unsupported metadata value for {key!r}.")
             except (KeyError, TypeError, ValueError, InvalidOperation) as exc:
                 raise LedgerError(f"Invalid {kind!r} metadata for {key!r}: {exc}") from exc
+        elif isinstance(value, bool):
+            pass
+        elif isinstance(value, int | float):
+            # JSON numbers arrive as int/float; Beancount's printer only accepts Decimal.
+            value = Decimal(str(value))
         result[key] = value
     return result
