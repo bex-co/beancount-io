@@ -1,6 +1,6 @@
 # Beancount.io CLI - Development Makefile
 
-.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all release-check release-lock engine-release-lock engine-optional-locks release-artifacts spec-check spec-sync docs docs-check
+.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test live-prices codegen check-all release-check release-lock engine-release-lock engine-optional-locks release-artifacts spec-check spec-sync docs docs-check
 
 # Default target
 help:
@@ -17,6 +17,7 @@ help:
 	@echo "  make format-check     - Check formatting without modifying files"
 	@echo "  make typecheck        - Run mypy type checks"
 	@echo "  make test             - Run tests with pytest across all cores"
+	@echo "  make live-prices      - Probe the hosted price feed; record mount status for the live test"
 	@echo "  make codegen          - Regenerate the REST client and cloud command stubs from openapi/v1.json"
 	@echo "  make spec-check       - Fail if openapi/v1.json drifted from backend-cluster/idl's canonical spec"
 	@echo "  make spec-sync        - Refresh openapi/v1.json from the canonical spec"
@@ -64,6 +65,9 @@ typecheck:
 
 test:
 	uv run pytest tests/ -n auto
+
+live-prices:
+	uv run python scripts/live_prices.py
 
 test-cov:
 	uv run pytest tests/ --cov=fava --cov=cli --cov-report=term-missing --cov-report=html --cov-report=json

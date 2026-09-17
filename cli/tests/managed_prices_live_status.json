@@ -1,0 +1,10 @@
+{
+  "_readme": "Probe record for the hosted price feed (w1/m29/t006). Regenerate with `make live-prices` from cli/. The suite's live test trips when the route no longer matches; a promotion commit re-runs this script and commits the result.",
+  "url": "https://beancount.io/prices/BTC-USD",
+  "date": "2026-09-17",
+  "status": "pending",
+  "evidence": "redirect: redirects are not followed (HTTP 302)",
+  "revision": null,
+  "observed_at": null,
+  "fetched_at": null
+}

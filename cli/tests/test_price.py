@@ -1511,3 +1511,71 @@ class TestPriceExport:
         assert "112000.00" not in text
         assert "113500.50" in text
         assert text.count("shadowed by a ledger-authored price") == 1
+
+
+# --------------------------------------------------------------------------- #
+# Fixture coverage audit and hosted acceptance (t006)
+# --------------------------------------------------------------------------- #
+
+LIVE_STATUS = Path(__file__).resolve().parent / "managed_prices_live_status.json"
+
+
+class TestFeedCacheTruncation:
+    def test_oversized_body_on_refresh_keeps_serving(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        url = f"{feed_server}/prices/BTC-USD"
+        root = tmp_path / "cache"
+        first = resolve_feed(url, "BTC-USD", root=root, now=now)
+        assert first.blob is not None
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": b"x" * 300}
+
+        resolved = resolve_feed(url, "BTC-USD", root=root, now=now + 301, max_body_bytes=100)
+
+        assert resolved.blob is not None
+        assert resolved.blob.text == first.blob.text
+        assert resolved.head.last_error == "fetch failed (too-large): body exceeds 100 bytes"
+
+
+class TestHostedFeedLive:
+    """The one test allowed to dial past localhost (w1/m29/t006).
+
+    Everything else in the suite resolves against the thread-local fixture
+    server, so the suite stays green offline. This test skips when the
+    network cannot tell mounted from pending, passes when the probe matches
+    the checked-in record, and fails with promotion instructions when the
+    route's state changed.
+    """
+
+    def test_hosted_feed_matches_recorded_status(self, tmp_path: Path) -> None:
+        record = json.loads(LIVE_STATUS.read_text())
+        url = record["url"]
+        assert record["status"] in ("pending", "mounted"), "re-run make live-prices"
+        result = fetch_managed_price_feed(url, timeout_seconds=10)
+        if result.kind == "failed" and result.reason in (
+            "network",
+            "timeout",
+            "too-large",
+            "not-utf8",
+        ):
+            pytest.skip(f"network cannot verify the hosted route: {result.message}")
+        if record["status"] == "pending":
+            assert result.kind == "failed" and result.reason in ("redirect", "http"), (
+                f"the hosted route looks mounted ({result.kind}); run make live-prices "
+                "from cli/ and commit the promotion"
+            )
+            return
+        assert isinstance(result, FetchedFeed), (
+            f"the hosted route no longer serves a feed ({result.kind}); run make live-prices "
+            "from cli/ and commit the new record"
+        )
+        validation = check_feed_identity(validate_managed_price_text(result.text), "BTC-USD", None)
+        assert isinstance(validation, ValidFeed), validation
+        resolved = resolve_feed(url, "BTC-USD", root=tmp_path / "cache")
+        assert resolved.blob is not None
+        assert resolved.blob.revision
+        assert resolved.blob.feed.prices
+        print(
+            f"live revision={resolved.blob.revision} "
+            f"observed_at={resolved.blob.feed.latest_observed_at} "
+            f"fetched_at={resolved.blob.fetched_at}"
+        )
