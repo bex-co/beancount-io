@@ -32,6 +32,67 @@ FORMATS = ("text", "csv", "beancount")
 _SHELL_ALIASES = frozenset({"clear", "errors", "exit", "help", "history", "parse", "quit", "run", "set"})
 
 
+def _refuse_one_shot_output(query_string: str) -> None:
+    """Refuse a one-shot `.output`, which writes nothing and reports success.
+
+    The interactive shell redirects later queries into the file, but a
+    one-shot runs a single command: `.output FILE` alone opens and truncates
+    the path, then exits 0 with a 0-byte artifact. The supported one-shot form
+    carries the query and the destination together.
+    """
+    words = query_string.strip().lower().split(None, 1)
+    if words and words[0] == ".output":
+        raise UsageError(
+            "One-shot `.output` writes nothing: pass the query with `--output FILE` instead, "
+            "as in `bea query --output FILE 'SELECT …'`."
+        )
+
+
+def _split_statements(query_string: str) -> list[str]:
+    """Split a one-shot query on top-level semicolons, honoring quotes."""
+    statements: list[str] = []
+    current: list[str] = []
+    quote: str | None = None
+    escaped = False
+    for char in query_string:
+        if escaped:
+            current.append(char)
+            escaped = False
+        elif quote is not None and char == "\\":
+            current.append(char)
+            escaped = True
+        elif quote is not None and char == quote:
+            current.append(char)
+            quote = None
+        elif quote is None and char in "\"'":
+            current.append(char)
+            quote = char
+        elif quote is None and char == ";":
+            statements.append("".join(current))
+            current = []
+        else:
+            current.append(char)
+    statements.append("".join(current))
+    return [part for part in (piece.strip() for piece in statements) if part]
+
+
+def _refuse_multi_statement(query_string: str) -> None:
+    """Refuse a one-shot carrying two BQL statements when only one would run.
+
+    The engine executes the first statement and drops the rest with exit 0.
+    Dot-commands are not BQL statements — `.run` legitimately replays a file
+    of them — so only plain queries are split. A trailing `;` is not a second
+    statement.
+    """
+    if query_string.strip().startswith("."):
+        return
+    statements = _split_statements(query_string)
+    if len(statements) > 1:
+        raise UsageError(
+            f"One BQL statement per invocation; got {len(statements)}. Run each query in its own `bea query` call."
+        )
+
+
 def _is_shell_utility(query: str) -> bool:
     """True when the string is a BQL shell utility, not a SELECT/PRINT statement."""
     stripped = query.lstrip()
@@ -118,6 +179,10 @@ def query(
             raise UsageError("A query is required with --no-input. Pass it as an argument or on stdin.")
         else:
             raise typer.Exit(launch.run_engine_argv(["shell", "--file", str(file), *rendering]))
+    if not query_string.strip():
+        raise UsageError("A query is required as an argument or on stdin.")
+    _refuse_one_shot_output(query_string)
+    _refuse_multi_statement(query_string)
 
     # `--allow-errors` / `--strict` are frontend policy; the engine enforces
     # them before running the query so a total from a broken ledger is never

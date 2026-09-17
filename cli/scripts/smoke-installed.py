@@ -389,7 +389,8 @@ def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None,
     envelope = json.loads(exported.read_text())
     assert envelope["data"]["rows"] and envelope["target"]["file"] == str(file)
     assert all(column["type"] != "Inventory" for column in envelope["data"]["columns"])
-    run("--file", str(file), "query", ".output", json_output=False)
+    reset = run("--file", str(file), "query", ".output", json_output=False, exit_code=2)
+    assert "--output FILE" in reset
     for command, expected in [("example", "--date-begin"), ("treeify", "--pattern"), ("price", "--no-cache")]:
         assert expected in run(command, "--help", json_output=False)
     # Six native commands: doctor / example / treeify (check/format/query already above).

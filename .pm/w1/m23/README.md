@@ -1,6 +1,6 @@
 # w1 · m23 — Exit status tells the truth: no success without the effect
 
-**Worker:** worker1 **Goal:** every `bea` exit code matches what actually happened on disk — exit 0 means the documented effect occurred and the ledger still checks, and nonzero means nothing was written or the partial writes are named **Status:** todo (t001, t002, t003, t004 done)
+**Worker:** worker1 **Goal:** every `bea` exit code matches what actually happened on disk — exit 0 means the documented effect occurred and the ledger still checks, and nonzero means nothing was written or the partial writes are named **Status:** todo (t001, t002, t003, t004, t005 done)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | t002 | Scope `--allow-errors` to pre-existing errors — **DONE** | 45m | — |
 | t003 | Make `format --check` and `format -i` honor the include closure — **DONE** | 45m | — |
 | t004 | Map doctor diagnostics to exit status — **DONE** | 45m | — |
-| t005 | Stop query one-shots exiting 0 on nothing | 45m | — |
+| t005 | Stop query one-shots exiting 0 on nothing — **DONE** | 45m | — |
 | t006 | Make "did nothing" a failure for treeify, ingest, and format | 30m | — |
 | t007 | Mark plugin-synthesized directives as generated, not on disk | 45m | — |
 | t008 | Adoption surface | 25m | t001, t002, t003, t004, t005, t006, t007 |

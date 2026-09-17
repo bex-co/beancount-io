@@ -362,13 +362,22 @@ def _require_entries(description: Any, rows: Any) -> None:
 
     Upstream's renderer unpacks every row as a single directive, so a column
     `SELECT` fails inside it with 'too many values to unpack' or a missing
-    `meta` attribute. `PRINT` and `SELECT entry` answer one directive per row
-    and still go to upstream unchanged; the ledger is fine either way, so this
-    is a usage failure rather than a validation one.
+    `meta` attribute. `PRINT` answers one directive per row and still goes to
+    upstream unchanged; the ledger is fine either way, so this is a usage
+    failure rather than a validation one.
+
+    An empty result keys on the cursor, not the rows: `SELECT entry` types its
+    lone column as the directive, while a column `SELECT` types it scalar, so
+    emptiness can no longer hide an incompatible format behind "(no rows)".
     """
     from beancount.core.data import ALL_DIRECTIVES
 
-    if len(description or ()) == 1 and all(len(row) == 1 and isinstance(row[0], ALL_DIRECTIVES) for row in rows):
+    columns = tuple(description or ())
+    entries_column = len(columns) == 1 and (
+        columns[0].datatype in ALL_DIRECTIVES
+        or (rows and all(len(row) == 1 and isinstance(row[0], ALL_DIRECTIVES) for row in rows))
+    )
+    if entries_column:
         return
     raise protocol.UsageError(
         "--format beancount prints directives, so the query must return entries; "
