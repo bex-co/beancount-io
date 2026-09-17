@@ -299,6 +299,15 @@ in the ledger happen to use whole amounts.
 An empty result prints `(no rows)` on stderr. JSON mode keeps the usual
 envelope with an empty `rows` array and no human notice.
 
+BQL's `CLOSE ON D` is exclusive, unlike the inclusive `--from-date` /
+`--to-date` filters elsewhere in `bea`, so `FROM OPEN ON D CLOSE ON D` asks for
+a window of zero days. That is refused (exit **2**) rather than answered with an
+empty result that reads like an empty day: the error names the exclusive bound
+and points at `CLOSE ON D+1` and at
+`bea list transaction --from-date D --to-date D`. A reversed window
+(`OPEN ON` after `CLOSE ON`) is refused the same way. Windows that cover at
+least one day are untouched.
+
 Reads are lenient in a terminal and strict everywhere else. `query`, `list`,
 and `report` print the data with the loader errors as a banner on stderr and
 exit 0 when stdout is a terminal; under `--json`, when stdout is piped, when

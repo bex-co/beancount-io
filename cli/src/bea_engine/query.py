@@ -420,10 +420,47 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
     """Run a query, turning beanquery's terse complaint into one that names the problem."""
     from beanquery import Error as BeanqueryError
 
+    statement = _quote_reserved_tables(query_string)
+    _refuse_empty_window(statement, ledger_errors)
     try:
-        return run(_quote_reserved_tables(query_string))
+        return run(statement)
     except BeanqueryError as exc:
         raise _usage_error(exc, query_string, conn, ledger_errors) from None
+
+
+def _refuse_empty_window(query_string: str, ledger_errors: list[str]) -> None:
+    """Refuse a `FROM OPEN ON … CLOSE ON …` window that can hold no entries.
+
+    `CLOSE ON D` is exclusive, so `OPEN ON D CLOSE ON D` spans zero days while
+    the `--from-date D --to-date D` filters everywhere else in `bea` span one.
+    Answering `(no rows)` reads as "that day is empty" rather than "you asked
+    for no days", so say which it is and how to ask for the day.
+    """
+    from datetime import date, timedelta
+
+    try:
+        from beanquery.parser import parse
+
+        parsed = parse(query_string)
+    except Exception:  # noqa: BLE001 - a dot command or a broken query; beanquery reports it
+        return
+    clause = getattr(parsed, "from_clause", None)
+    begin, end = getattr(clause, "open", None), getattr(clause, "close", None)
+    # A bare `CLOSE` is `True`, not a date, and closes at the end of the ledger.
+    if not isinstance(begin, date) or not isinstance(end, date) or begin < end:
+        return
+    if begin == end:
+        message = (
+            f"This BQL window covers no days: CLOSE ON {end} is exclusive, so it ends where OPEN ON {begin} starts."
+        )
+        details = [
+            f"Use CLOSE ON {end + timedelta(days=1)} to cover {begin}.",
+            f"Or run: bea list transaction --from-date {begin} --to-date {begin} — those dates are inclusive.",
+        ]
+    else:
+        message = f"This BQL window covers no days: OPEN ON {begin} starts after the exclusive CLOSE ON {end}."
+        details = [f"Did you mean OPEN ON {end} CLOSE ON {begin + timedelta(days=1)}?"]
+    raise protocol.UsageError(message, details=details, ledger_errors=ledger_errors)
 
 
 def _usage_error(exc: Exception, query_string: str, conn: Any, ledger_errors: list[str]) -> protocol.UsageError:
