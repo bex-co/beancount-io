@@ -72,6 +72,13 @@ take either `amount=Column` or the `debit=A,credit=B` pair (exactly one of the
 two): with the pair, exactly one cell per row must be filled, debits post
 negative. Amount, debit, and credit cells must use decimal notation (`1000`,
 not `1e3`); a notation error names the row and column before anything is written.
+Cells may carry currency symbols (`$4.50`, `4,50 €`), thousands separators,
+accounting parentheses or a trailing minus for negatives, and comma decimals —
+the point-vs-comma convention is resolved from the whole column, and a column
+mixing `1,000.00` with `1.000,00` is refused rather than guessed. `NaN` and
+`Infinity` are blocked at preview time with the row named, so `--apply` can
+never write them. A failed parse names the cell, the row, and the accepted
+spellings.
 Amounts default to bank sign (outflows negative); add `sign=ledger`
 when the export uses the opposite convention. The currency defaults to the
 ledger's single operating currency. `--account` names the source account and
@@ -86,9 +93,16 @@ and then infers the mapping like `auto`. Without the key, a non-UTF-8 file
 fails before anything is read: the error names the byte offset and, when the
 file decodes as cp1252, says so with the override to pass. A file no
 candidate decodes lists the encodings tried instead. Unknown fields, missing columns, bad dates, and bad amounts fail
-with the row number and column name. A mapped column that appears more than
+with the row number and column name. Rows whose mapped cells are all empty or
+whitespace are skipped instead, and the preview counts them. A mapped column that appears more than
 once in the header, or a quote left open at the end of the file, fails before
 anything is written. Misuse exits **2**.
+
+Rows that would post to an account the ledger never opened — or a currency
+the open directive disallows — are shown `blocked`, not ready: the row names
+the missing account and the `bea add open` line that fixes it, stays in the
+diff so the proposal stays visible, and `--apply` refuses with exit **4**
+while any row is blocked.
 
 ### Reading the header row
 
@@ -96,7 +110,8 @@ With no `--csv`, no remembered mapping, and no Python importer configured, bea
 reads the mapping off the header row. `--csv auto` asks for the same reading
 outright and fails naming the file's actual columns when it cannot. A role is
 only filled when exactly one column claims it, so an export carrying both
-`Description` and `Memo` reports the ambiguity and leaves that
+`Description` and `Memo` reports the ambiguity — naming the role, the tied
+columns, and a `--csv` line that resolves it — and leaves that
 role unmapped rather than guessing. `Description`-style headers map to
 `narration`; `Payee` and `Merchant` map to `payee`.
 
