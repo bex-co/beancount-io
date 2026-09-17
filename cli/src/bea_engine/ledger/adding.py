@@ -419,7 +419,19 @@ def _parse_metadata(items: list[str]) -> dict[str, Any]:
     for item in items:
         key, separator, raw = item.partition(":")
         key, raw = key.strip(), single_line(raw).strip()
-        if not separator or not re.fullmatch(r"[a-z][A-Za-z0-9_-]*", key) or key in {"filename", "lineno"} or not raw:
+        if not separator:
+            raise protocol.UsageError(
+                "Each --meta must be 'key:value', such as 'receipt:IMG_1234.jpg'; use '\"\"' for empty text."
+            )
+        if not re.fullmatch(r"[a-z][A-Za-z0-9_-]*", key):
+            raise protocol.UsageError(
+                f"Invalid --meta key {key!r}; keys must match [a-z][A-Za-z0-9_-]* (start with a lowercase letter)."
+            )
+        if key in {"filename", "lineno"}:
+            raise protocol.UsageError(
+                f"Metadata key {key!r} is reserved for Beancount source location; choose another key."
+            )
+        if not raw:
             raise protocol.UsageError(
                 "Each --meta must be 'key:value', such as 'receipt:IMG_1234.jpg'; use '\"\"' for empty text."
             )
