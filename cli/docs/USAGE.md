@@ -513,7 +513,10 @@ the same account instead of a false unknown-account error, and the new
 directive is written NFC. Amount strings use decimal notation
 (e.g. `1000`, not `1e3`) in command arguments, bulk JSON, and imports,
 including units, costs, and prices; scientific notation is refused on every
-path with the same message. Bulk notation errors follow the normal row-validation and
+path with the same message. Bulk JSON amounts must be decimal strings or
+integers — a JSON float such as `0.3` is refused naming the field, the row,
+and the string form to send, because the double already carries binary
+error. Bulk notation errors follow the normal row-validation and
 `--partial` rules. JSON listings spell amounts in decimal notation so tiny values
 can be fed back into bulk input without losing precision. Native posting
 arithmetic such as `84/2 EUR` works. A literal zero divisor (`100/0`) is
@@ -665,8 +668,14 @@ response can be sent again unchanged.
 
 `add price` skips an exact date/commodity/amount match anywhere in the root
 ledger's includes. It reports the existing location and exits **0** with
-`written: 0` and `duplicate: true` in JSON. A different price or date remains
-an explicit addition.
+`written: 0` and `duplicate: true` in JSON. A different amount for the same
+date and commodity is refused naming both values; pass `--force` to record a
+corrected quote. `add balance` is idempotent the same way: re-running an
+identical assertion reports the existing location and writes nothing, and a
+different value for the same date, account, and currency needs `--force`
+(ledger validation still applies, so a conflicting value cannot land).
+Repeated `--amount` is refused on both commands — a price and an assertion
+each hold one amount.
 
 Aliases: `price` and `commodity` accept `--commodity`; `document` accepts
 `--path`; `note` accepts `--message`. Existing option names remain supported.
@@ -739,8 +748,9 @@ bea add transaction "Buy AAPL" --date 2026-08-02 \
 ```
 
 Per-unit and total prices (`@`, `@@`) and total costs (`{{...}}`) are supported.
-JSON remains useful for batches and metadata. Open `Assets:Brokerage` in AAPL
-and `Assets:Cash` in USD before applying this purchase:
+A `@@` total is written back with `@@` and its exact total, never divided
+into a repeating unit price. JSON remains useful for batches and metadata.
+Open `Assets:Brokerage` in AAPL and `Assets:Cash` in USD before applying this purchase:
 
 ```json
 [
@@ -762,7 +772,8 @@ and `Assets:Cash` in USD before applying this purchase:
 
 For a sale, use negative units with the existing cost and optionally
 `"price": {"number": "120", "currency": "USD"}` on that posting, plus the cash
-proceeds and realized gain postings. Booking validates that the lot exists.
+proceeds and realized gain postings. Use `"price_total"` instead of `"price"`
+for a total price; the two are mutually exclusive. Booking validates that the lot exists.
 Cost dates are optional; specify one to select a particular acquisition lot.
 Bulk `amount` shorthand accepts the same lot spelling: `"amount": "5 HOOL
 {10 USD}"`, with optional date, label, and `@`/`@@` price. Total costs
@@ -779,6 +790,12 @@ amount metadata use tagged objects: `{"kind":"number","value":"1.125"}`,
 back as transaction metadata.
 
 ## Reports
+
+Human tables round each currency to the finest precision the ledger itself
+uses for it, so a whole-dollar ledger prints `10 USD` rather than `10.00`.
+A currency the ledger never names — usually a `--conversion` target — has no
+precision to infer and renders with two decimals; `--json` keeps the exact
+value either way.
 
 Report interval breakdowns cover the complete requested period, including more
 than 100 daily or monthly intervals. The interval selects the aggregation

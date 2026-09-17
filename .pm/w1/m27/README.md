@@ -1,6 +1,6 @@
 # w1 · m27 — Amounts are exact on the way in and out
 
-**Worker:** worker1 **Goal:** every number a caller supplies reaches the ledger as the exact decimal they wrote, every number bea renders is bounded by the ledger's display context, and a retried write does not duplicate a directive **Status:** todo (t001–t006 done)
+**Worker:** worker1 **Goal:** every number a caller supplies reaches the ledger as the exact decimal they wrote, every number bea renders is bounded by the ledger's display context, and a retried write does not duplicate a directive **Status:** todo (t001–t007 done)
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Bound converted output by the ledger's display context — **DONE** | 45m | — |
 | t005 | Make cost shapes symmetric between `add transaction` and `add transactions` — **DONE** | 30m | t001 |
 | t006 | Make repeated `add price` and `add balance` idempotent — **DONE** | 45m | — |
-| t007 | Adoption surface | 25m | t001, t002, t003, t004, t005, t006 |
+| t007 | Adoption surface — **DONE** | 25m | t001, t002, t003, t004, t005, t006 |
 | t008 | Simplify | 30m | t007 |
 | t009 | Test coverage | 45m | t007, t008 |
 | t010 | Closeout | 15m | t009 |
