@@ -15,7 +15,10 @@ from beancount import loader
 from beancount.core.data import Transaction
 from pydantic import ValidationError
 
+from bea_engine.amounts import require_decimal_notation
 from bea_engine.ledger.models import Amount, Cost, TransactionDirective
+from cli.commands.add import _check_decimal_notation
+from cli.errors import UsageError
 
 CLI_ROOT = Path(__file__).resolve().parents[1]
 LEDGER = """option "operating_currency" "USD"
@@ -141,6 +144,15 @@ def test_bulk_string_and_int_amounts_write_exactly(ledger: Path) -> None:
     transactions = [entry for entry in entries if isinstance(entry, Transaction)]
     assert [entry.postings[0].units.number for entry in transactions] == [Decimal("0.3"), Decimal("3")]
     assert "0.30000000000000004" not in ledger.read_text()
+
+
+def test_exponent_refusal_matches_across_the_process_boundary() -> None:
+    with pytest.raises(ValueError, match="Scientific notation") as engine:
+        require_decimal_notation("1e2")
+    with pytest.raises(UsageError) as frontend:
+        _check_decimal_notation("1e2 USD")
+
+    assert str(frontend.value) == str(engine.value)
 
 
 @pytest.mark.parametrize("field", ["amount", "units", "cost", "price"])

@@ -511,8 +511,9 @@ different Unicode normalization than the ledger uses — NFC where the ledger ha
 NFD, which is what a name taken from a macOS file path looks like — resolves to
 the same account instead of a false unknown-account error, and the new
 directive is written NFC. Amount strings use decimal notation
-(e.g. `1000`, not `1e3`) in command arguments and bulk JSON, including units,
-costs, and prices. Bulk notation errors follow the normal row-validation and
+(e.g. `1000`, not `1e3`) in command arguments, bulk JSON, and imports,
+including units, costs, and prices; scientific notation is refused on every
+path with the same message. Bulk notation errors follow the normal row-validation and
 `--partial` rules. JSON listings spell amounts in decimal notation so tiny values
 can be fed back into bulk input without losing precision. Native posting
 arithmetic such as `84/2 EUR` works. A literal zero divisor (`100/0`) is

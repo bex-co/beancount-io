@@ -1,13 +1,13 @@
 # w1 · m27 — Amounts are exact on the way in and out
 
-**Worker:** worker1 **Goal:** every number a caller supplies reaches the ledger as the exact decimal they wrote, every number bea renders is bounded by the ledger's display context, and a retried write does not duplicate a directive **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** every number a caller supplies reaches the ledger as the exact decimal they wrote, every number bea renders is bounded by the ledger's display context, and a retried write does not duplicate a directive **Status:** todo (t001–t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Refuse JSON floats in bulk amount fields — **DONE** | 30m | — |
-| t002 | Apply one scientific-notation rule across every write path | 20m | t001 |
+| t002 | Apply one scientific-notation rule across every write path — **DONE** | 20m | t001 |
 | t003 | Preserve `@@` total prices instead of converting them to unit prices | 45m | — |
 | t004 | Bound converted output by the ledger's display context | 45m | — |
 | t005 | Make cost shapes symmetric between `add transaction` and `add transactions` | 30m | t001 |
