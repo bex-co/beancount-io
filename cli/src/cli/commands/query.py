@@ -27,6 +27,21 @@ from cli.errors import UsageError
 
 FORMATS = ("text", "csv", "beancount")
 
+# Bare names that PreciseShell rewrites to dot commands (beanquery deprecates
+# the undotted forms). Any leading-`.` token also goes through the shell.
+_SHELL_ALIASES = frozenset({"clear", "errors", "exit", "help", "history", "parse", "quit", "run", "set"})
+
+
+def _is_shell_utility(query: str) -> bool:
+    """True when the string is a BQL shell utility, not a SELECT/PRINT statement."""
+    stripped = query.lstrip()
+    if not stripped:
+        return False
+    first = stripped.split(maxsplit=1)[0]
+    if first.startswith("."):
+        return True
+    return first.lower() in _SHELL_ALIASES
+
 
 def query(
     query_string: Annotated[str | None, typer.Argument(help="BQL query (omit to read stdin or open the shell)")] = None,
@@ -88,8 +103,15 @@ def query(
     # `--allow-errors` / `--strict` are frontend policy; the engine enforces
     # them before running the query so a total from a broken ledger is never
     # computed.
+    #
+    # Global `--json` normally forces the engine's columns/rows shape, but shell
+    # utilities (`.tables`, `.run`, …) only exist on the shell/text path. Keep
+    # that path and put the rendered text in the frontend JSON envelope.
+    engine_format = output_format
+    if ctx.json_output:
+        engine_format = "text" if _is_shell_utility(query_string) else "json"
     args = ["query", "--file", str(file), query_string]
-    args += ["--format", "json" if ctx.json_output else output_format]
+    args += ["--format", engine_format]
     if allow_errors or not ctx.strict_reads():
         args.append("--allow-errors")
     if output_file is not None:
@@ -102,8 +124,13 @@ def query(
         output.render_ledger_errors([str(error) for error in data.get("errors", [])], allow=True)
 
     if ctx.json_output:
+        payload: dict[str, object]
+        if engine_format == "json":
+            payload = {"columns": data.get("columns", []), "rows": data.get("rows", [])}
+        else:
+            payload = {"text": str(data.get("text", ""))}
         output.emit(
-            {"columns": data.get("columns", []), "rows": data.get("rows", [])},
+            payload,
             target=output.file_target(file),
             destination=Path(output_file) if output_file is not None else None,
         )
