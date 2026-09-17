@@ -71,8 +71,16 @@ class Posting(BaseModel):
     units: Amount | None = None
     cost: Cost | None = None
     price: Amount | None = None
+    price_total: Amount | None = None
     flag: str | None = None
     meta: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def exclusive_price(cls, value: Any) -> Any:
+        if isinstance(value, dict) and value.get("price") is not None and value.get("price_total") is not None:
+            raise ValueError("Use either price or price_total for a posting, not both.")
+        return value
 
     @model_validator(mode="before")
     @classmethod

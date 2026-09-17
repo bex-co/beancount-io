@@ -428,7 +428,14 @@ def _transaction(
                     details=write.root_ledger_hints(file),
                 )
             units = units._replace(currency=choices[0])
-        normalized.append(posting._replace(units=units, meta={}))
+        # Parsed postings keep the input order, so the raw line with the `@@`
+        # spelling sits at the same index; incomplete prices raised above.
+        meta: dict[str, Any] = {}
+        if number <= len(postings):
+            total = _total_price(postings[number - 1])
+            if total is not None:
+                meta[writer.TOTAL_PRICE_META] = total
+        normalized.append(posting._replace(units=units, meta=meta))
     if elided > 1:
         raise protocol.UsageError("Only one posting may omit its amount; supply amounts for the other postings.")
     if elided == 1:
@@ -449,6 +456,9 @@ def _transaction(
             )
     entry = entry._replace(postings=normalized, meta=write.metadata_for_write(entry.meta))
     rendered = writer.format_entry(entry)
+    # The `@@` stash served the render; the JSON answer must not carry it.
+    # Normalized posting metas hold nothing else, so they go back to empty.
+    entry = entry._replace(postings=[posting._replace(meta={}) for posting in entry.postings])
     warnings = write.append(file, [rendered], allow_errors=allow_errors, into=into, snapshot=snapshot)
     return {
         "written": 1,
@@ -457,6 +467,33 @@ def _transaction(
         "warnings": warnings,
         "target": str(write.destination(file, into)),
     }
+
+
+_PLAIN_DECIMAL = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)")
+"""A decimal without exponent notation, the only spelling that reaches here."""
+
+
+def _total_price(posting_text: str) -> Any | None:
+    """The `@@` total from a raw posting line, or None without one.
+
+    The parser has already validated the line, so a total that cannot be
+    read here means the split misread the text — never a user error — and
+    the posting falls back to its parsed unit price. The rendered candidate
+    is fully revalidated before anything is written, so a misread could only
+    ever refuse a valid line, never corrupt one.
+    """
+    from beancount.core.amount import Amount as BcAmount
+
+    unquoted = re.sub(r'"(?:[^"\\]|\\.)*"|;[^\r\n]*', "", posting_text)
+    if "@@" not in unquoted:
+        return None
+    tail = unquoted.rsplit("@@", 1)[1].split()
+    if len(tail) < 2 or not _PLAIN_DECIMAL.fullmatch(tail[0]):
+        return None
+    try:
+        return BcAmount(Decimal(tail[0]), tail[1])
+    except InvalidOperation:
+        return None
 
 
 def _refuse_missing_price(postings: list[str], number: int, posting: Any) -> None:

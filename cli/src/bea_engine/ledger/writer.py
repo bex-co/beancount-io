@@ -28,7 +28,7 @@ from beancount.core.data import (
     Transaction,
 )
 from beancount.core.position import CostSpec
-from beancount.parser.printer import format_entry as upstream_format_entry
+from beancount.parser.printer import EntryPrinter
 from beancount.utils import misc_utils
 
 from bea_engine.ledger import write as ledger_write
@@ -62,6 +62,30 @@ class _ValueType(NamedTuple):
 
 
 escape_string: Callable[[str], str] = misc_utils.escape_string
+
+TOTAL_PRICE_META = "__bea_total_price__"
+"""Posting meta key carrying a `@@` total the Beancount object cannot hold.
+
+Posting.price is always a unit price, so a parsed `@@` total would print
+back as `@` with a divided, possibly repeating value. The stash rides the
+`__` never-write convention — the printer, `metadata_for_write`, and
+`metadata_to_json` all skip it — and only `_TotalPricePrinter` reads it.
+The value is a Beancount Amount. A ledger file cannot smuggle the key in:
+metadata names there are lowercase without leading underscores.
+"""
+
+
+class _TotalPricePrinter(EntryPrinter):
+    """Upstream's printer, rendering stashed `@@` totals back as totals."""
+
+    def render_posting_strings(self, posting: Any) -> tuple[str, str, str]:
+        flag_account, position_str, weight_str = super().render_posting_strings(posting)  # type: ignore[no-untyped-call]
+        total = (posting.meta or {}).get(TOTAL_PRICE_META)
+        if total is None:
+            return flag_account, position_str, weight_str
+        head, separator, _unit = position_str.rpartition(" @ ")
+        base = head if separator else position_str
+        return flag_account, f"{base} @@ {total.to_string(self.dformat_max)}", weight_str
 
 
 class _FixedPointDecimal(Decimal):
@@ -189,7 +213,9 @@ def format_entry(entry: Any) -> str:
                 for p in entry.postings
             ]
         )
-    rendered = str(upstream_format_entry(entry))
+    # Default construction matches upstream format_entry exactly; only postings
+    # carrying TOTAL_PRICE_META render differently.
+    rendered = str(_TotalPricePrinter()(entry))  # type: ignore[no-untyped-call]
     first, separator, rest = rendered.partition("\n")
     if isinstance(entry, Open | Balance):
         # The upstream printer pads opens and balances to 47 columns. bean-format
@@ -208,17 +234,27 @@ def _append(file_path: Path, *texts: str, allow_errors: bool = False, into: Path
 
 
 def format_transaction(directive: TransactionHeader) -> str:
-    postings = [
-        Posting(
-            account=p.account,
-            units=BcAmount(p.units.number, p.units.currency) if p.units else None,
-            cost=CostSpec(p.cost.number, None, p.cost.currency, p.cost.date, p.cost.label, False) if p.cost else None,
-            price=BcAmount(p.price.number, p.price.currency) if p.price else None,
-            flag=p.flag,
-            meta=ledger_write.metadata_for_write(p.meta),
+    postings = []
+    for p in directive.postings:
+        # The schema forbids price and price_total together; a total travels
+        # as a stash because a Beancount Posting cannot hold one.
+        price = BcAmount(p.price.number, p.price.currency) if p.price else None
+        meta = ledger_write.metadata_for_write(p.meta)
+        if p.price_total is not None:
+            price = None
+            meta[TOTAL_PRICE_META] = BcAmount(p.price_total.number, p.price_total.currency)
+        postings.append(
+            Posting(
+                account=p.account,
+                units=BcAmount(p.units.number, p.units.currency) if p.units else None,
+                cost=CostSpec(p.cost.number, None, p.cost.currency, p.cost.date, p.cost.label, False)
+                if p.cost
+                else None,
+                price=price,
+                flag=p.flag,
+                meta=meta,
+            )
         )
-        for p in directive.postings
-    ]
     entry = Transaction(
         meta=ledger_write.metadata_for_write(directive.meta),
         date=directive.date,
