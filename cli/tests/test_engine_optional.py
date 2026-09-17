@@ -80,8 +80,9 @@ class TestEnableFeature:
         monkeypatch.setattr(provision, "_run", fake_run)
         monkeypatch.setattr(provision, "_feature_present", lambda _root, _name: True)
 
-        enabled = provision.enable_feature("beangulp")
+        changed, enabled = provision.enable_feature("beangulp")
 
+        assert changed is True
         assert enabled == {"beangulp"}
         assert (root / provision.FEATURES_FILE).is_file()
         assert json.loads((root / provision.FEATURES_FILE).read_text())["enabled"] == ["beangulp"]
@@ -104,10 +105,12 @@ class TestEnableFeature:
         monkeypatch.setattr(provision, "_run", fake_run)
         monkeypatch.setattr(provision, "_feature_present", lambda _root, _name: True)
 
-        first = provision.enable_feature("beanprice")
+        first_changed, first = provision.enable_feature("beanprice")
         steps.clear()
-        second = provision.enable_feature("beanprice")
+        second_changed, second = provision.enable_feature("beanprice")
 
+        assert first_changed is True
+        assert second_changed is False
         assert first == second == {"beanprice"}
         assert steps == []  # no second install when already present
 

@@ -153,12 +153,15 @@ def enabled_features(root: Path | None = None) -> set[str]:
     return {str(name) for name in names if str(name) in known}
 
 
-def enable_feature(name: str) -> set[str]:
+def enable_feature(name: str) -> tuple[bool, set[str]]:
     """Provision `name` into the managed engine and remember it across repairs.
 
     Always targets the managed engine directory — never the frontend interpreter
     and never `$BEA_ENGINE_PYTHON`, which is an escape hatch outside bea's
     ownership.
+
+    Returns `(changed, enabled_features)`. `changed` is False when the feature
+    was already present so callers can avoid claiming a fresh enable.
     """
     if paths.python_override() is not None:
         raise UsageError(
@@ -177,13 +180,13 @@ def enable_feature(name: str) -> set[str]:
     already = enabled_features(root)
     if name in already and _feature_present(root, name):
         output.note(f"Engine feature '{name}' is already enabled.")
-        return already
+        return False, already
 
     output.note(f"Enabling engine feature '{name}' in {root}...")
     _install_feature(root, name)
     recorded = _record_feature(root, name)
     output.note(f"Engine feature '{name}' ready.")
-    return recorded
+    return True, recorded
 
 
 def feature_available(name: str) -> bool:

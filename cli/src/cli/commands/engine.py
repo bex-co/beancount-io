@@ -71,9 +71,11 @@ def engine_enable(
 ) -> None:
     """Install a reviewed optional package into the managed engine (not the frontend)."""
     name = feature.strip().lower()
-    enabled = provision.enable_feature(name)
+    changed, enabled = provision.enable_feature(name)
     payload = {
         "feature": name,
+        "changed": changed,
+        "already_enabled": not changed,
         "enabled": sorted(enabled),
         "engine_root": str(paths.engine_root()),
         "engine_version": paths.engine_version(),
@@ -81,4 +83,5 @@ def engine_enable(
     if context.current().json_output:
         output.emit(payload)
         return
-    output.success(f"Enabled '{name}' in the managed engine. It is not installed into the bea frontend.")
+    if changed:
+        output.success(f"Enabled '{name}' in the managed engine. It is not installed into the bea frontend.")
