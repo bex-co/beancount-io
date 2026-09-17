@@ -725,6 +725,21 @@ def _dominant_ending(content: bytes) -> str:
     return "\r\n" if crlf > content.count(b"\n") - crlf else "\n"
 
 
+def _appended_or_report(target: Path, original: bytes, texts: list[str]) -> str:
+    """The append candidate, or a decode failure naming path, offset, and encoding.
+
+    A ledger that is not UTF-8 cannot take an append, and the raw codec error
+    names none of what the caller needs to fix it. The ledger itself is left
+    untouched either way: this runs before any candidate is written.
+    """
+    from bea_engine.ledger.text import decode_error_message
+
+    try:
+        return appended_content(original, texts)
+    except UnicodeDecodeError as exc:
+        raise LedgerError(decode_error_message(target, exc)) from exc
+
+
 def validate_append(
     file: Path,
     texts: list[str],
@@ -737,7 +752,7 @@ def validate_append(
     snapshot = snapshot or LedgerSnapshot.capture(file)
     target = destination(file, into)
     snapshot.require_target(target)
-    with candidate_file(target, appended_content(target.read_bytes(), texts)) as candidate:
+    with candidate_file(target, _appended_or_report(target, target.read_bytes(), texts)) as candidate:
         warnings = validate_candidate(candidate, target, allow_errors=allow_errors, snapshot=snapshot)
     snapshot.verify()
     return warnings
@@ -794,7 +809,7 @@ def append(
         original = target.read_bytes()
         if expected is not None and original != expected:
             raise ConflictError("The ledger changed since the preview was prepared; nothing was written. Retry.")
-        with candidate_file(target, appended_content(original, texts)) as candidate:
+        with candidate_file(target, _appended_or_report(target, original, texts)) as candidate:
             warnings = validate_candidate(candidate, target, allow_errors=allow_errors, snapshot=snapshot)
             snapshot.verify()
             replace_checked(target, candidate, original, original_stat)

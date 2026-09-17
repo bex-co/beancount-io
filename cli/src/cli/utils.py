@@ -35,6 +35,17 @@ def has_bom(path: Path) -> bool:
         return False
 
 
+def decode_error_message(path: object, exc: UnicodeDecodeError) -> str:
+    """A decode failure as path, byte offset, attempted encoding, and remedy.
+
+    The engine twin (`bea_engine.ledger.text.decode_error_message`) carries
+    the same wording; neither side may import the other, so the helper is
+    repeated, not shared. Callers choose the category: a caller's input file
+    is a usage error, an undecodable ledger is a validation error.
+    """
+    return f"Cannot decode '{path}' as UTF-8: {exc.reason} at byte {exc.start}. Re-save the file as UTF-8 and retry."
+
+
 def refuse_blank_filter(flag: str, value: str | None) -> None:
     """Reject an empty or whitespace-only filter value as a usage error.
 

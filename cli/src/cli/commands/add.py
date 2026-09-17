@@ -22,7 +22,7 @@ import typer
 
 from cli import context, output
 from cli.errors import UsageError
-from cli.utils import parse_date
+from cli.utils import decode_error_message, parse_date
 
 add_app = typer.Typer(
     help="Add beancount directives to a local .bean file", no_args_is_help=True, rich_markup_mode=None
@@ -480,6 +480,8 @@ def _load_transactions_json(from_file: Path) -> Any:
             ) from exc
         except OSError as exc:
             raise UsageError(f"Cannot read transactions file '{from_file}' (from --from): {exc.strerror}.") from exc
+        except UnicodeDecodeError as exc:
+            raise UsageError(decode_error_message(from_file, exc)) from exc
     text = text.removeprefix("\ufeff")
     try:
         return json.loads(text)

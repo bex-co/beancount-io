@@ -379,3 +379,62 @@ def test_single_character_filters_still_work(book: Path) -> None:
     assert len(json.loads(result.stdout)["data"]) == 1
 
     assert invoke(book, "balance", "E").exit_code == 0
+
+
+def test_non_utf8_json_input_reports_path_offset_and_encoding(book: Path, tmp_path: Path) -> None:
+    bad = tmp_path / "rows.json"
+    bad.write_bytes(b"\xff\xfe[]")
+
+    result = invoke(book, "add", "transactions", "--from", str(bad))
+
+    assert result.exit_code == 2, result.output
+    error = json.loads(result.stderr)["error"]
+    assert error["category"] == "usage"
+    for expected in (str(bad), "byte 0", "UTF-8", "Re-save"):
+        assert expected in error["message"], error["message"]
+    human = runner.invoke(app, ["-f", str(book), "add", "transactions", "--from", str(bad)])
+    assert human.exit_code == 2, human.output
+    assert str(bad) in human.stderr
+
+
+def test_non_utf8_bean_in_format_tree_reports_offset(tmp_path: Path) -> None:
+    tree = tmp_path / "tree"
+    tree.mkdir()
+    bad = tree / "bin.bean"
+    raw = b"2020-01-01 open Assets:Cash USD\n\xff"
+    bad.write_bytes(raw)
+
+    result = runner.invoke(app, ["--json", "format", str(tree), "--check"])
+
+    assert result.exit_code == 1, result.output
+    error = json.loads(result.stderr)["error"]
+    assert error["category"] == "validation"
+    for expected in (str(bad), f"byte {raw.index(0xFF)}", "UTF-8", "Re-save"):
+        assert expected in error["message"], error["message"]
+
+
+def test_add_to_non_utf8_ledger_reports_and_writes_nothing(book: Path) -> None:
+    raw = book.read_bytes() + "; café\n".encode("latin-1")
+    book.write_bytes(raw)
+    offset = raw.index(b"\xe9")
+
+    result = invoke(
+        book,
+        "add",
+        "transaction",
+        "--date",
+        "2026-03-01",
+        "--narration",
+        "Tea",
+        "-p",
+        "Expenses:Food 2 USD",
+        "-p",
+        "Assets:Checking",
+    )
+
+    assert result.exit_code == 1, result.output
+    error = json.loads(result.stderr)["error"]
+    assert error["category"] == "validation"
+    for expected in (str(book), f"byte {offset}", "UTF-8", "Re-save"):
+        assert expected in error["message"], error["message"]
+    assert book.read_bytes() == raw

@@ -25,7 +25,7 @@ import typer
 from cli import context, output
 from cli.engine import launch
 from cli.errors import BeaError, LedgerError, UsageError
-from cli.utils import UTF8_BOM
+from cli.utils import UTF8_BOM, decode_error_message
 
 SUFFIXES = {".bean", ".beancount"}
 STDIN = "-"
@@ -375,7 +375,7 @@ def _text(file: Path) -> str:
     try:
         return file.read_text(encoding="utf-8")
     except UnicodeDecodeError as exc:
-        raise LedgerError(f"Could not read {file} as UTF-8 text ({exc.reason}).") from exc
+        raise LedgerError(decode_error_message(file, exc)) from exc
     except OSError as exc:
         raise LedgerError(f"Could not read {file}: {exc.strerror or exc}.") from exc
 

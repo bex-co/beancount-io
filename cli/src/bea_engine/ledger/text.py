@@ -39,6 +39,17 @@ def fold_account(name: str) -> str:
     return unicodedata.normalize("NFC", unicodedata.normalize("NFC", name).casefold())
 
 
+def decode_error_message(path: object, exc: UnicodeDecodeError) -> str:
+    """A decode failure as path, byte offset, attempted encoding, and remedy.
+
+    The frontend keeps its own copy (`cli.utils.decode_error_message`):
+    neither side may import the other, and both have to report the same
+    failure. Callers choose the category: a caller's input file is a usage
+    error, an undecodable ledger is a validation error.
+    """
+    return f"Cannot decode '{path}' as UTF-8: {exc.reason} at byte {exc.start}. Re-save the file as UTF-8 and retry."
+
+
 def syntax_errors(path: Path) -> list[str]:
     """Syntax errors in one file, without following includes or validating semantics.
 
