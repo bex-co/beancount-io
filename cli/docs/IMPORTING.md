@@ -70,7 +70,9 @@ reference:
 payee-based reporting groups by. `id` and `currency` are optional. Amounts
 take either `amount=Column` or the `debit=A,credit=B` pair (exactly one of the
 two): with the pair, exactly one cell per row must be filled, debits post
-negative. Amounts default to bank sign (outflows negative); add `sign=ledger`
+negative. Amount, debit, and credit cells must use decimal notation (`1000`,
+not `1e3`); a notation error names the row and column before anything is written.
+Amounts default to bank sign (outflows negative); add `sign=ledger`
 when the export uses the opposite convention. The currency defaults to the
 ledger's single operating currency. `--account` names the source account and
 is required. The file may start with a BOM; header cells are stripped before

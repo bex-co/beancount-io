@@ -19,6 +19,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
+from bea_engine.amounts import require_decimal_notation
 from bea_engine.protocol import UsageError
 
 _MAPPING_FIELDS = frozenset(
@@ -329,7 +330,9 @@ class CsvImporter:
 
     def _parse_decimal(self, line: int, column: str, value: str) -> Decimal:
         try:
-            return Decimal(value.strip())
+            return Decimal(require_decimal_notation(value.strip()))
+        except ValueError as exc:
+            raise UsageError(f"Row {line}, column {column!r}: {exc}") from None
         except InvalidOperation:
             raise UsageError(f"Row {line}: cannot parse amount {value!r} in column {column!r}.") from None
 

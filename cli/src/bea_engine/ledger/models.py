@@ -7,7 +7,9 @@ from collections.abc import Callable
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, PlainSerializer, model_validator
+
+from bea_engine.amounts import require_decimal_notation
 
 
 def _strip_sigil(sigil: str) -> Callable[[Any], Any]:
@@ -28,13 +30,22 @@ Tag = Annotated[str, BeforeValidator(_strip_sigil("#"))]
 Link = Annotated[str, BeforeValidator(_strip_sigil("^"))]
 
 
+# Listings must remain valid bulk input even when Decimal internally chooses
+# exponent notation for a tiny number. Preserve all digits and trailing zeros.
+AmountNumber = Annotated[
+    Decimal,
+    BeforeValidator(require_decimal_notation),
+    PlainSerializer(lambda number: format(number, "f"), return_type=str, when_used="json"),
+]
+
+
 class Amount(BaseModel):
-    number: Decimal
+    number: AmountNumber
     currency: str
 
 
 class Cost(BaseModel):
-    number: Decimal
+    number: AmountNumber
     currency: str
     date: datetime.date | None = None
     label: str | None = None

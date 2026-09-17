@@ -363,8 +363,12 @@ accounts, invalid currencies, unavailable cost lots, and unbalanced transactions
 leave the original bytes unchanged. Account typos include suggested matches.
 Account syntax follows Beancount: colon-separated segments with an uppercase
 root; each subaccount starts with an uppercase letter or digit. Unicode
-letters and configured root names are supported. Amounts use decimal notation
-(e.g. `1000`, not `1e3`); native posting arithmetic such as `84/2 EUR` works.
+letters and configured root names are supported. Amount strings use decimal notation
+(e.g. `1000`, not `1e3`) in command arguments and bulk JSON, including units,
+costs, and prices. Bulk notation errors follow the normal row-validation and
+`--partial` rules. JSON listings spell amounts in decimal notation so tiny values
+can be fed back into bulk input without losing precision. Native posting
+arithmetic such as `84/2 EUR` works.
 
 For split ledgers, keep `--file` pointed at the root and choose the included
 destination with `--into`. The destination must already exist and be included
