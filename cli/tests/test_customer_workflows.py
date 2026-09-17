@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import subprocess
 import sys
 from decimal import Decimal
@@ -601,3 +602,100 @@ class TestReportAccountFilter:
 
         assert result.exit_code == 0, result.output
         assert json.loads(result.stdout)["data"]["account_filter"] == pattern
+
+
+class TestListMarksPluginSynthesizedRows:
+    """Plugin-synthesized directives read as generated, never as text on disk (w1/m23/t007)."""
+
+    AUTO_BOOK = """plugin "beancount.plugins.auto_accounts"
+2020-01-01 open Assets:Cash USD
+2020-01-02 * "T"
+  Expenses:Food 5 USD
+  Assets:Cash
+"""
+
+    IMPLICIT_BOOK = """plugin "beancount.plugins.implicit_prices"
+2020-01-01 open Assets:Cash USD
+2020-01-01 open Assets:Stock HOOL
+2020-01-02 * "B"
+  Assets:Stock 10 HOOL {100 USD}
+  Assets:Cash
+"""
+
+    CURRENCY_BOOK = """plugin "beancount.plugins.currency_accounts" "Equity:Trading"
+2020-01-01 open Assets:Cash
+2020-01-01 open Expenses:Food
+2020-01-02 * "Convert"
+  Assets:Cash 100 EUR @ 1.2 USD
+  Expenses:Food
+"""
+
+    CLOSE_BOOK = """plugin "beancount.plugins.close_tree"
+2020-01-01 open Assets:Cash USD
+2020-01-01 open Assets:Cash:Pocket USD
+2020-01-01 open Expenses:Food USD
+2020-01-02 close Assets:Cash
+"""
+
+    def _book(self, tmp_path: Path, text: str) -> Path:
+        file = tmp_path / "main.bean"
+        file.write_text(text)
+        return file
+
+    def _items(self, file: Path, *args: str) -> list[dict]:
+        result = run(file, *args)
+        assert result.exit_code == 0, result.output
+        return json.loads(result.stdout)["data"]
+
+    def test_auto_accounts_open_marked_generated(self, tmp_path: Path) -> None:
+        file = self._book(tmp_path, self.AUTO_BOOK)
+        items = self._items(file, "list", "open")
+        by_account = {item["account"]: item for item in items}
+        assert by_account["Expenses:Food"]["generated"] is True
+        assert "generated" not in by_account["Assets:Cash"]
+        human = runner.invoke(app, ["--file", str(file), "list", "open"])
+        assert human.exit_code == 0, human.output
+        assert "SOURCE" in human.stdout
+        [marked] = [line for line in human.stdout.splitlines() if "Expenses:Food" in line]
+        assert marked.rstrip().endswith("generated")
+
+    def test_implicit_prices_price_marked_generated(self, tmp_path: Path) -> None:
+        file = self._book(tmp_path, self.IMPLICIT_BOOK)
+        items = self._items(file, "list", "price")
+        assert len(items) == 1
+        assert items[0]["generated"] is True
+        human = runner.invoke(app, ["--file", str(file), "list", "price"])
+        assert human.exit_code == 0, human.output
+        assert "generated" in human.stdout
+
+    def test_currency_accounts_opens_marked_generated(self, tmp_path: Path) -> None:
+        file = self._book(tmp_path, self.CURRENCY_BOOK)
+        items = self._items(file, "list", "open")
+        by_account = {item["account"]: item for item in items}
+        assert by_account["Equity:Trading:EUR"]["generated"] is True
+        assert by_account["Equity:Trading:USD"]["generated"] is True
+        assert "generated" not in by_account["Assets:Cash"]
+
+    def test_close_tree_close_marked_generated(self, tmp_path: Path) -> None:
+        file = self._book(tmp_path, self.CLOSE_BOOK)
+        items = self._items(file, "list", "close")
+        by_account = {item["account"]: item for item in items}
+        assert by_account["Assets:Cash:Pocket"]["generated"] is True
+        assert "generated" not in by_account["Assets:Cash"]
+
+    def test_on_disk_only_matches_what_grep_finds(self, tmp_path: Path) -> None:
+        file = self._book(tmp_path, self.AUTO_BOOK)
+        items = self._items(file, "list", "open", "--on-disk")
+        assert [item["account"] for item in items] == ["Assets:Cash"]
+        assert all("generated" not in item for item in items)
+        grep_hits = [line for line in file.read_text().splitlines() if re.match(r"\d{4}-\d{2}-\d{2} open ", line)]
+        assert len(items) == len(grep_hits)
+
+    def test_plain_ledger_lists_nothing_generated(self, book: Path) -> None:
+        items = self._items(book, "list", "open")
+        assert items
+        assert all("generated" not in item for item in items)
+        human = runner.invoke(app, ["--file", str(book), "list", "open"])
+        assert human.exit_code == 0, human.output
+        assert "SOURCE" not in human.stdout
+        assert "generated" not in human.stdout

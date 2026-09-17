@@ -643,6 +643,7 @@ Usage: bea list note [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--account, -a` | str |  | Filter by account (case-insensitive substring) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 
 ### `bea list balance`
 
@@ -659,6 +660,7 @@ Usage: bea list balance [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--account, -a` | str |  | Filter by account (case-insensitive substring) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 
 ### `bea list open`
 
@@ -675,6 +677,7 @@ Usage: bea list open [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--account, -a` | str |  | Filter by account (case-insensitive substring) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 
 ### `bea list close`
 
@@ -691,6 +694,7 @@ Usage: bea list close [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--account, -a` | str |  | Filter by account (case-insensitive substring) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 
 ### `bea list document`
 
@@ -707,6 +711,7 @@ Usage: bea list document [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--account, -a` | str |  | Filter by account (case-insensitive substring) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 
 ### `bea list pad`
 
@@ -723,6 +728,7 @@ Usage: bea list pad [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--account, -a` | str |  | Filter by account (case-insensitive substring) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 
 ### `bea list price`
 
@@ -739,6 +745,7 @@ Usage: bea list price [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--currency, -c` | str |  | Exact currency (case-insensitive) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 
 ### `bea list commodity`
 
@@ -755,6 +762,7 @@ Usage: bea list commodity [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--currency, -c` | str |  | Exact currency (case-insensitive) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 
 ### `bea list event`
 
@@ -771,6 +779,7 @@ Usage: bea list event [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--type, -t` | str |  | Exact event/custom type (case-insensitive) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 
 ### `bea list custom`
 
@@ -787,6 +796,7 @@ Usage: bea list custom [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--type, -t` | str |  | Exact event/custom type (case-insensitive) |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 
 ### `bea list transaction`
 
@@ -807,6 +817,7 @@ Usage: bea list transaction [OPTIONS]
 | `--tag` | str (repeatable) |  | Tag with or without '#'; repeatable |
 | `--link` | str (repeatable) |  | Link with or without '^'; repeatable |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |
+| `--on-disk` | flag |  | Only directives written in a ledger file (hide plugin-synthesized rows) |
 | `--details` | flag |  | Render Beancount syntax with every posting, metadata, and source location |
 | `--sort` | choice: oldest \| newest | newest | Transaction date order, applied before the limit |
 

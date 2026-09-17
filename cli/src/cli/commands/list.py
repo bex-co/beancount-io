@@ -40,6 +40,10 @@ AllowErrorsOpt = Annotated[
         "--allow-errors", help="Report partial data with errors on stderr; opts strict reads into partial answers"
     ),
 ]
+OnDiskOpt = Annotated[
+    bool,
+    typer.Option("--on-disk", help="Only directives written in a ledger file (hide plugin-synthesized rows)"),
+]
 
 
 @dataclass(frozen=True)
@@ -300,6 +304,8 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
             argv += [option, str(value)]
     if filters.get("newest"):
         argv.append("--newest")
+    if filters.get("on_disk"):
+        argv.append("--on-disk")
     if rendering:
         argv.append("--details")
 
@@ -319,16 +325,23 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
     if not items:
         typer.echo(spec.empty)
         return
+    # A plugin can add rows the ledger file never declares. They read as
+    # `generated`, and the column only exists when one does — a plugin-free
+    # table renders exactly as before.
+    generated = [bool(item.get("generated")) for item in items]
+    show_source = any(generated)
     if rendering:
         output.note("Transactions rendered in Beancount syntax: all postings, with source locations.")
         for item, rendered in zip(items, data["rendered"], strict=True):
             if item.get("source"):
-                typer.echo(f"{item['source']['filename']}:{item['source']['lineno']}")
+                suffix = " (generated)" if item.get("generated") else ""
+                typer.echo(f"{item['source']['filename']}:{item['source']['lineno']}{suffix}")
             typer.echo(rendered)
     elif name == "transaction":
         account = fold_account(filters.get("account") or "")
+        amounts = "MATCHING POSTING AMOUNTS" if account else "POSTING AMOUNTS"
         _transaction_table(
-            ["DATE", "FLAG", "PAYEE", "NARRATION", "MATCHING POSTING AMOUNTS" if account else "POSTING AMOUNTS"],
+            ["DATE", "FLAG", "PAYEE", "NARRATION", *(["SOURCE"] if show_source else []), amounts],
             [
                 (
                     [
@@ -336,6 +349,7 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
                         item["flag"],
                         item["payee"] or "",
                         item["narration"] or "(no narration)",
+                        *(["generated" if item.get("generated") else ""] if show_source else []),
                     ],
                     [
                         (
@@ -350,7 +364,11 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
             ],
         )
     else:
-        output.table(spec.headers, [spec.row(item) for item in items])
+        headers, rows = spec.headers, [spec.row(item) for item in items]
+        if show_source:
+            headers = [*headers, "SOURCE"]
+            rows = [[*row, "generated" if marker else ""] for row, marker in zip(rows, generated, strict=True)]
+        output.table(headers, rows)
     if truncated:
         advice = "pass --limit for more" if limit == 50 else "raise --limit for more"
         output.note(f"Showing the first {limit}; {advice}.")
@@ -363,6 +381,7 @@ def _account_command(name: str, spec: _Spec) -> Callable[..., None]:
         to_date: ToDateOpt = None,
         account: AccountFilterOpt = None,
         allow_errors: AllowErrorsOpt = False,
+        on_disk: OnDiskOpt = False,
     ) -> None:
         _run(
             name,
@@ -372,6 +391,7 @@ def _account_command(name: str, spec: _Spec) -> Callable[..., None]:
             from_date=parse_opt_date(from_date),
             to_date=parse_opt_date(to_date),
             account=account,
+            on_disk=on_disk,
         )
 
     return command
@@ -384,6 +404,7 @@ def _currency_command(name: str, spec: _Spec) -> Callable[..., None]:
         to_date: ToDateOpt = None,
         currency: CurrencyFilterOpt = None,
         allow_errors: AllowErrorsOpt = False,
+        on_disk: OnDiskOpt = False,
     ) -> None:
         _run(
             name,
@@ -393,6 +414,7 @@ def _currency_command(name: str, spec: _Spec) -> Callable[..., None]:
             from_date=parse_opt_date(from_date),
             to_date=parse_opt_date(to_date),
             currency=currency,
+            on_disk=on_disk,
         )
 
     return command
@@ -405,6 +427,7 @@ def _type_command(name: str, spec: _Spec) -> Callable[..., None]:
         to_date: ToDateOpt = None,
         type: TypeFilterOpt = None,
         allow_errors: AllowErrorsOpt = False,
+        on_disk: OnDiskOpt = False,
     ) -> None:
         _run(
             name,
@@ -414,6 +437,7 @@ def _type_command(name: str, spec: _Spec) -> Callable[..., None]:
             from_date=parse_opt_date(from_date),
             to_date=parse_opt_date(to_date),
             kind=type,
+            on_disk=on_disk,
         )
 
     return command
@@ -425,6 +449,7 @@ def _plain_command(name: str, spec: _Spec) -> Callable[..., None]:
         from_date: FromDateOpt = None,
         to_date: ToDateOpt = None,
         allow_errors: AllowErrorsOpt = False,
+        on_disk: OnDiskOpt = False,
     ) -> None:
         _run(
             name,
@@ -433,6 +458,7 @@ def _plain_command(name: str, spec: _Spec) -> Callable[..., None]:
             allow_errors,
             from_date=parse_opt_date(from_date),
             to_date=parse_opt_date(to_date),
+            on_disk=on_disk,
         )
 
     return command
@@ -475,6 +501,7 @@ def transactions(
     tag: Annotated[list[str] | None, typer.Option("--tag", help="Tag with or without '#'; repeatable")] = None,
     link: Annotated[list[str] | None, typer.Option("--link", help="Link with or without '^'; repeatable")] = None,
     allow_errors: AllowErrorsOpt = False,
+    on_disk: OnDiskOpt = False,
     details: Annotated[
         bool,
         typer.Option("--details", help="Render Beancount syntax with every posting, metadata, and source location"),
@@ -500,4 +527,5 @@ def transactions(
         tags=tag,
         links=link,
         newest=sort == TransactionSort.newest,
+        on_disk=on_disk,
     )

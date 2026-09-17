@@ -33,6 +33,20 @@ _LISTERS: dict[str, tuple[str, str | None]] = {
 TYPES = tuple(_LISTERS)
 
 
+def _row(item: Any) -> dict[str, Any]:
+    """The item's JSON, with `generated` present only when true.
+
+    The flag defaults off and is excluded from dumps, so every other
+    consumer of these models — `add`, bulk input — never sees the key.
+    Listings opt back in for the rows a plugin synthesized, which keeps a
+    plugin-free ledger's answer byte-identical.
+    """
+    data: dict[str, Any] = item.model_dump(mode="json")
+    if item.generated:
+        data["generated"] = True
+    return data
+
+
 def answer(
     file: Any,
     directive_type: str,
@@ -49,6 +63,7 @@ def answer(
     links: list[str] | None = None,
     newest: bool = False,
     details: bool = False,
+    on_disk_only: bool = False,
 ) -> dict[str, Any]:
     """List one directive type, and say whether the limit cut the answer short.
 
@@ -79,12 +94,16 @@ def answer(
         filters |= {"flag": flag, "search": search, "tags": tags, "links": links, "newest": newest}
 
     entries, errors = reader.load_file(file)
+    if on_disk_only:
+        # Before the limit: truncation must count answerable rows, not rows
+        # the filter is about to drop.
+        entries = [entry for entry in entries if not reader.entry_generated(entry, directive_type)]
     items = getattr(reader, lister_name)(entries, limit=limit + 1, **filters)
     truncated = len(items) > limit
     items = items[:limit]
 
     data: dict[str, Any] = {
-        "items": [item.model_dump(mode="json") for item in items],
+        "items": [_row(item) for item in items],
         "truncated": truncated,
         "errors": [format_error(error) for error in errors],
     }

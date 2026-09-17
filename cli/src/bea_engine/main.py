@@ -147,6 +147,10 @@ def list_directives(
     details: Annotated[
         bool, typer.Option("--details", help="Also render each transaction as Beancount syntax.")
     ] = False,
+    on_disk: Annotated[
+        bool,
+        typer.Option("--on-disk", help="Only directives written in a ledger file; hide plugin-synthesized rows."),
+    ] = False,
 ) -> None:
     """Read one directive type out of a ledger.
 
@@ -176,6 +180,7 @@ def list_directives(
             links=list(link) if link else None,
             newest=newest,
             details=details,
+            on_disk_only=on_disk,
         )
 
 

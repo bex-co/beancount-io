@@ -114,6 +114,12 @@ class TransactionHeader(BaseModel):
     links: list[Link] = Field(default_factory=list)
     meta: dict[str, Any] = Field(default_factory=dict)
     source: SourceLocation | None = None
+    generated: bool = Field(
+        default=False,
+        exclude=True,
+        description="A plugin synthesized this row; it is not text in any ledger file. "
+        "Excluded from dumps so only listings opt back in.",
+    )
 
 
 class TransactionDirective(TransactionHeader):
@@ -129,12 +135,14 @@ class OpenDirective(BaseModel):
     currencies: list[str] = Field(default_factory=list)
     booking: str | None = None
     meta: dict[str, Any] = Field(default_factory=dict)
+    generated: bool = Field(default=False, exclude=True)
 
 
 class CloseDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
     date: LedgerDate
     account: str
+    generated: bool = Field(default=False, exclude=True)
 
 
 class BalanceDirective(BaseModel):
@@ -143,6 +151,7 @@ class BalanceDirective(BaseModel):
     account: str
     amount: Amount
     tolerance: Decimal | None = None
+    generated: bool = Field(default=False, exclude=True)
 
 
 class PadDirective(BaseModel):
@@ -150,6 +159,7 @@ class PadDirective(BaseModel):
     date: LedgerDate
     account: str
     source_account: str
+    generated: bool = Field(default=False, exclude=True)
 
 
 class NoteDirective(BaseModel):
@@ -158,6 +168,7 @@ class NoteDirective(BaseModel):
     account: str
     comment: str
     meta: dict[str, Any] = Field(default_factory=dict)
+    generated: bool = Field(default=False, exclude=True)
 
 
 class EventDirective(BaseModel):
@@ -166,6 +177,7 @@ class EventDirective(BaseModel):
     type: str
     description: str
     meta: dict[str, Any] = Field(default_factory=dict)
+    generated: bool = Field(default=False, exclude=True)
 
 
 class PriceDirective(BaseModel):
@@ -173,6 +185,7 @@ class PriceDirective(BaseModel):
     date: LedgerDate
     currency: str
     amount: Amount
+    generated: bool = Field(default=False, exclude=True)
 
 
 class CommodityDirective(BaseModel):
@@ -180,6 +193,7 @@ class CommodityDirective(BaseModel):
     date: LedgerDate
     currency: str
     meta: dict[str, Any] = Field(default_factory=dict)
+    generated: bool = Field(default=False, exclude=True)
 
 
 class DocumentDirective(BaseModel):
@@ -190,6 +204,7 @@ class DocumentDirective(BaseModel):
     tags: list[Tag] = Field(default_factory=list)
     links: list[Link] = Field(default_factory=list)
     meta: dict[str, Any] = Field(default_factory=dict)
+    generated: bool = Field(default=False, exclude=True)
 
 
 class CustomDirectiveValueText(BaseModel):
@@ -240,3 +255,4 @@ class CustomDirective(BaseModel):
     type: str
     values: list[CustomDirectiveValue] = Field(default_factory=list)
     meta: dict[str, Any] = Field(default_factory=dict)
+    generated: bool = Field(default=False, exclude=True)

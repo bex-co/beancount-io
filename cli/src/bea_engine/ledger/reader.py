@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import datetime
+import re
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -57,6 +59,52 @@ def load_file(file_path: Path) -> tuple[list[Any], list[Any]]:
     """
     entries, errors, _options = beancount.loader.load_file(str(file_path))
     return list(entries), list(errors)
+
+
+_DATE_TOKEN = re.compile(r"^\s*\d{4}-\d{2}-\d{2}\s+(\S+)")
+
+# A transaction line carries a flag where the other directives carry their
+# own word: `txn`, `*`, the lexer's FLAG characters, or one capital letter.
+_TXN_TOKEN = re.compile(r"\*|txn|[!&#?%]|[A-Z]")
+
+
+@lru_cache(maxsize=64)
+def _source_lines(filename: str) -> tuple[str, ...] | None:
+    """The ledger file's lines, or None when they cannot be read.
+
+    The engine answers one invocation per process, so a cached read cannot
+    outlive the file it came from.
+    """
+    try:
+        return tuple(Path(filename).read_text(encoding="utf-8", errors="replace").splitlines())
+    except OSError:
+        return None
+
+
+def entry_generated(entry: Any, directive_type: str) -> bool:
+    """Whether a plugin synthesized this entry rather than the ledger declaring it.
+
+    A synthesized entry either points nowhere real (`<auto_accounts>`) or
+    borrows a real line that declares something else (an implicit price
+    stamped with its transaction's location). So the entry is on disk only
+    when its file exists and the line there starts this directive — exactly
+    what `grep` would find.
+    """
+    meta = getattr(entry, "meta", None) or {}
+    filename = meta.get("filename")
+    lineno = meta.get("lineno")
+    if not filename or not isinstance(lineno, int) or isinstance(lineno, bool) or lineno < 1:
+        return True
+    lines = _source_lines(str(filename))
+    if lines is None or lineno > len(lines):
+        return True
+    match = _DATE_TOKEN.match(lines[lineno - 1])
+    if match is None:
+        return True
+    token = match.group(1)
+    if directive_type == "transaction":
+        return _TXN_TOKEN.fullmatch(token) is None
+    return token != directive_type
 
 
 def _in_date_range(
@@ -124,6 +172,7 @@ def _to_transaction(entry: Any) -> TransactionDirective:
         links=sorted(entry.links),
         meta=metadata_to_json(entry.meta),
         source=SourceLocation(filename=entry.meta["filename"], lineno=entry.meta["lineno"]),
+        generated=entry_generated(entry, "transaction"),
     )
 
 
@@ -187,6 +236,7 @@ def list_notes(
                 account=entry.account,
                 comment=entry.comment,
                 meta=metadata_to_json(entry.meta),
+                generated=entry_generated(entry, "note"),
             )
         )
         if len(results) >= limit:
@@ -209,7 +259,14 @@ def list_prices(
             continue
         if currency and entry.currency.casefold() != currency.casefold():
             continue
-        results.append(PriceDirective(date=entry.date, currency=entry.currency, amount=_to_amount(entry.amount)))
+        results.append(
+            PriceDirective(
+                date=entry.date,
+                currency=entry.currency,
+                amount=_to_amount(entry.amount),
+                generated=entry_generated(entry, "price"),
+            )
+        )
         if len(results) >= limit:
             break
     return results
@@ -232,7 +289,11 @@ def list_balances(
             continue
         results.append(
             BalanceDirective(
-                date=entry.date, account=entry.account, amount=_to_amount(entry.amount), tolerance=entry.tolerance
+                date=entry.date,
+                account=entry.account,
+                amount=_to_amount(entry.amount),
+                tolerance=entry.tolerance,
+                generated=entry_generated(entry, "balance"),
             )
         )
         if len(results) >= limit:
@@ -264,6 +325,7 @@ def list_opens(
                 currencies=currencies,
                 booking=booking,
                 meta=metadata_to_json(entry.meta),
+                generated=entry_generated(entry, "open"),
             )
         )
         if len(results) >= limit:
@@ -286,7 +348,9 @@ def list_closes(
             continue
         if account and fold_account(account) not in fold_account(entry.account):
             continue
-        results.append(CloseDirective(date=entry.date, account=entry.account))
+        results.append(
+            CloseDirective(date=entry.date, account=entry.account, generated=entry_generated(entry, "close"))
+        )
         if len(results) >= limit:
             break
     return results
@@ -312,6 +376,7 @@ def list_commodities(
                 date=entry.date,
                 currency=entry.currency,
                 meta=metadata_to_json(entry.meta),
+                generated=entry_generated(entry, "commodity"),
             )
         )
         if len(results) >= limit:
@@ -341,6 +406,7 @@ def list_events(
                 type=entry.type,
                 description=entry.description,
                 meta=metadata_to_json(entry.meta),
+                generated=entry_generated(entry, "event"),
             )
         )
         if len(results) >= limit:
@@ -373,6 +439,7 @@ def list_documents(
                 tags=tags,
                 links=links,
                 meta=metadata_to_json(entry.meta),
+                generated=entry_generated(entry, "document"),
             )
         )
         if len(results) >= limit:
@@ -446,6 +513,7 @@ def list_customs(
                 type=entry.type,
                 values=values,
                 meta=metadata_to_json(entry.meta),
+                generated=entry_generated(entry, "custom"),
             )
         )
         if len(results) >= limit:
@@ -470,7 +538,14 @@ def list_pads(
             needle = fold_account(account)
             if needle not in fold_account(entry.account) and needle not in fold_account(entry.source_account):
                 continue
-        results.append(PadDirective(date=entry.date, account=entry.account, source_account=entry.source_account))
+        results.append(
+            PadDirective(
+                date=entry.date,
+                account=entry.account,
+                source_account=entry.source_account,
+                generated=entry_generated(entry, "pad"),
+            )
+        )
         if len(results) >= limit:
             break
     return results

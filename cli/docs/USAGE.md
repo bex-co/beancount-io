@@ -404,6 +404,7 @@ errors, the `missing` includes, `check`, and `dry_run`.
 | `--currency / -c` | Exact symbol, case-insensitive (`price`, `commodity`); `eur` matches `EUR` |
 | `--type / -t` | Exact type, case-insensitive (`event`, `custom`); `Location` matches `location` |
 | `--allow-errors` | Return data even though the ledger has loader errors (they still print on stderr) |
+| `--on-disk` | Only directives written in a ledger file; hide rows a plugin synthesized |
 
 ```bash
 bea list transaction
@@ -413,12 +414,20 @@ bea list price --currency BTC
 bea list open
 bea list transaction --flag '!' --details
 bea list transaction --search netflix --tag trip
+bea list open --on-disk
 ```
 
 `bea list open` writes `(any)` in its `CURRENCIES` column for an account whose
 `open` names no currencies and therefore accepts any commodity — a fact about
 the account, not a cell the renderer failed to fill. JSON keeps the empty
 `currencies` list.
+
+A plugin can add directives the ledger file never declares — `auto_accounts`
+opens, `implicit_prices` prices, `currency_accounts` opens, `close_tree`
+closes. `list` marks those rows `generated`: a `SOURCE` column in human
+tables, a `"generated": true` field in JSON. The field is absent when false,
+so a plugin-free answer is unchanged. `--on-disk` drops the synthesized rows,
+answering exactly what `grep` would find in the file.
 
 The transaction table shows signed amounts by account and currency, with the
 cost basis and price that tell one lot from another — `5 HOOL {50.00 USD,
