@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from functools import cached_property
 from typing import TYPE_CHECKING
 
-from .beans.abc import Directive, Price, Transaction
+from .beans.abc import Close, Commodity, Directive, Open
 from .beans.account import account_tester, get_entry_accounts
 from .beans.prices import FavaPriceMap
 from .core.bcio_options import BcioOptionError, BcioOptions, parse_bcio_options
@@ -192,12 +192,14 @@ class FilteredLedger:
 
         self._date_first = None
         self._date_last = None
+        # Match report `_metadata` period bounds: every dated fact except
+        # Open/Close/Commodity declarations (notes, balances, events, …).
         for entry in self.entries:
-            if isinstance(entry, Transaction):
+            if not isinstance(entry, Open | Close | Commodity):
                 self._date_first = entry.date
                 break
         for entry in reversed(self.entries):
-            if isinstance(entry, Transaction | Price):
+            if not isinstance(entry, Open | Close | Commodity):
                 self._date_last = entry.date + timedelta(1)
                 break
 
