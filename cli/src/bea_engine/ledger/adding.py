@@ -484,6 +484,11 @@ def _parse_metadata(items: list[str]) -> dict[str, Any]:
                 f"Invalid --meta key {key!r}; Beancount rejected it ({errors[0].message}).",
                 details=[str(error.message) for error in errors],
             )
+        elif re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
+            raise protocol.UsageError(
+                f"Invalid --meta date for {key!r}: {raw!r} is not a valid calendar date. "
+                "Use YYYY-MM-DD (for example 2020-01-15). Nothing was written."
+            )
         else:
             metadata[key] = raw
     return metadata
