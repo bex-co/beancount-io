@@ -205,7 +205,10 @@ def _forward_scoped(op: str, ctx: typer.Context) -> None:
         hint="Run without --json and pass the ledger path as a positional argument.",
     )
     args = _located_against_ledger(op, list(ctx.args))
-    completed = launch.capture_native("bean-doctor", [op, *args])
+    # Through the helper rather than the `bean-doctor` script: same upstream
+    # command, run where bea can number its balance tree from the entries in
+    # scope instead of from the whole ledger's display context (w3/352).
+    completed = launch.capture_engine(["scoped", op, *args])
     _replay(completed)
     if completed.returncode != 0:
         raise typer.Exit(completed.returncode)

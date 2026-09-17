@@ -259,6 +259,13 @@ bea example --seed 1 -o example.beancount
 bea treeify < balances.txt
 ```
 
+`bea doctor region` and `bea doctor linked` number their balance tree from the
+amounts in scope, so a `5.50 USD` region reads `5.50 USD` in a ledger whose other
+amounts are whole numbers — upstream formats that tree with the whole ledger's
+display context, which rounded it to `6 USD` while the `Net Income` line below
+said `-5.50 USD`. The tree and `Net Income` now agree in both directions:
+a whole-number scope shows no trailing zeros either.
+
 `bea doctor context`, `linked` and `region` take a location such as
 `txns/jan.bean:4` — the spelling the ledger's own `include` uses. Upstream
 resolves that filename against the working directory, so `bea` first resolves it

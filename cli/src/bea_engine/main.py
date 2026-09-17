@@ -470,6 +470,24 @@ def shell(
     bql.interactive(ledger, format=format, output=output, numberify=numberify, show_errors=not no_errors)
 
 
+@app.command(
+    "scoped",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def scoped_command(
+    ctx: typer.Context,
+    op: Annotated[str, typer.Argument(help="bean-doctor operation: region or linked.")],
+) -> None:
+    """Run `bean-doctor region` / `linked`, numbering balances from the scope.
+
+    Like `shell`, this streams upstream's own output rather than an envelope:
+    `bea` captures it, and the tree upstream prints is the answer.
+    """
+    from bea_engine import scoped
+
+    raise SystemExit(scoped.run(op, list(ctx.args)))
+
+
 @app.command("version")
 def version_command() -> None:
     """Report the engine version, for provisioning to confirm what it installed."""

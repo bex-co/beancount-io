@@ -177,6 +177,17 @@ def capture_native(name: str, args: Sequence[str]) -> subprocess.CompletedProces
     return subprocess.run([str(native_command(name)), *args], capture_output=True, text=True, check=False)
 
 
+def capture_engine(argv: Sequence[str]) -> subprocess.CompletedProcess[str]:
+    """Run the engine helper and keep its output instead of inheriting the streams.
+
+    For a helper command that streams upstream's own text rather than an
+    envelope, where `bea` has to read the answer before it can decide what the
+    exit status should be.
+    """
+    command, env = helper_command()
+    return _run_helper([*command, *argv], env, None)
+
+
 def native_command(name: str) -> Path:
     """The upstream executable `name`, resolved inside the engine environment.
 
