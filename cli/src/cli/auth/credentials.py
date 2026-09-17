@@ -21,12 +21,14 @@ _INVALID_TOKEN = re.compile(r"[\s\x00-\x1f\x7f]")
 
 
 def _validate_token(token: str) -> str:
-    if not token or _INVALID_TOKEN.search(token):
+    if _INVALID_TOKEN.search(token):
         raise AuthError(
             "Invalid BEA_TOKEN or stored credential (contains whitespace or "
             "control characters). Fix the environment value or run "
             "'bea cloud login'."
         )
+    if not token:
+        raise AuthError("Not logged in. Run 'bea cloud login', or set BEA_TOKEN.")
     return token
 
 
@@ -86,7 +88,9 @@ def load_credentials() -> Credentials | None:
     runner needs no browser ceremony and leaves no credential behind.
     """
     token = os.environ.get("BEA_TOKEN")
-    if token is not None:
+    # Empty BEA_TOKEN= is the same as unset: fall through to the stored file
+    # (or "Not logged in"), rather than a whitespace-oriented auth error.
+    if token:
         return Credentials(token=_validate_token(token), expire_at=None, source=ENVIRONMENT)
     try:
         data = json.loads(credentials_path().read_text())

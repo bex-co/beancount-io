@@ -126,6 +126,12 @@ def _format_in_place(files: list[Path], alignment: list[str], target: dict[str, 
     completed = launch.capture_native("bean-format", [*alignment, "--in-place", *(str(f) for f in files)])
     # Read back even after failure: upstream can rewrite earlier files before
     # encountering one it cannot write. Never invite a retry without that result.
+    if completed.returncode == 0:
+        for file in files:
+            text = _text(file)
+            fixed = _canonical_posting_indent(text)
+            if fixed != text:
+                file.write_text(fixed)
     changed = [str(file) for file in files if _text(file) != before[file]]
     result = _result(files, changed) | {"in_place": True}
     if completed.returncode != 0:
@@ -195,7 +201,30 @@ def _would_change(file: Path, alignment: list[str]) -> bool:
             f"bean-format could not read {file} (exit {completed.returncode}).",
             details=[line for line in (completed.stderr or "").splitlines() if line.strip()][-20:],
         )
-    return completed.stdout != _text(file)
+    return _canonical_posting_indent(completed.stdout) != _canonical_posting_indent(_text(file))
+
+
+def _canonical_posting_indent(text: str) -> str:
+    """Normalize tab / single-space posting indents to the usual two spaces.
+
+    Upstream bean-format turns tabs into one ASCII space and then treats that
+    as already formatted. Agents and docs use two spaces; rewrite leftover
+    odd indents so --check stays honest.
+    """
+    import re
+
+    lines: list[str] = []
+    for line in text.splitlines(keepends=True):
+        match = re.match(r"^([ \t]+)(.*)$", line)
+        if match and match.group(1) != "  ":
+            rest = match.group(2)
+            if rest and not re.match(r"^\d{4}-\d{2}-\d{2}\b", rest):
+                ending = "\n" if line.endswith("\n") else ""
+                body = line[: -len(ending)] if ending else line
+                lines.append("  " + body.lstrip(" \t") + ending)
+                continue
+        lines.append(line)
+    return "".join(lines)
 
 
 def _text(file: Path) -> str:
