@@ -33,6 +33,25 @@ _IDENTITY_KINDS = {
 _DEFAULT_ID_KEYS = ["bank_id", "fitid", "transaction_id", "imported_id"]
 
 
+def _effective_id_keys(id_keys: list[str] | None) -> list[str]:
+    """Resolve `--id-key` values to metadata keys the CSV mapper actually writes.
+
+    CSV `id=` always lands in `bank_id` metadata. Agents often pass `--id-key id`
+    after naming the column that way; treat that alias as `bank_id` so bank-ID
+    dedupe stays on instead of falling back to content hashes.
+    """
+    if not id_keys:
+        return list(_DEFAULT_ID_KEYS)
+    resolved: list[str] = []
+    seen: set[str] = set()
+    for key in id_keys:
+        mapped = "bank_id" if key == "id" else key
+        if mapped not in seen:
+            seen.add(mapped)
+            resolved.append(mapped)
+    return resolved
+
+
 def answer(
     file: Path,
     source: Path,
@@ -154,7 +173,7 @@ def answer(
         finally:
             sys.path.pop(0)
 
-    keys = id_keys or _DEFAULT_ID_KEYS
+    keys = _effective_id_keys(id_keys)
     identities: dict[tuple[str, str, str], Any] = {}
     fingerprints: dict[tuple[Any, ...], Any] = {}
     for entry in existing:
