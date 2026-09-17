@@ -434,13 +434,24 @@ def _helper_env(source_root: Path | None = None) -> dict[str, str] | None:
 
     Checkouts use src; installed releases use cli/_runtime. Neither adds the
     frontend site-packages (or its AI SDKs) to the managed interpreter's path.
+
+    The global managed-price modes travel here too, so every load-bearing
+    helper call honors `--offline` / `--strict-prices` without threading
+    them through each command's argv. Flags win over the process environment;
+    without them the child's environment is exactly what was inherited.
     """
     root = source_root if source_root is not None else paths.helper_source_root()
     if root is None:
         return None
     inherited = os.environ.get("PYTHONPATH", "")
     search_path = os.pathsep.join([str(root), inherited]) if inherited else str(root)
-    return {**os.environ, "PYTHONPATH": search_path}
+    env = {**os.environ, "PYTHONPATH": search_path}
+    current = context.current()
+    if current.offline:
+        env["MANAGED_PRICE_OFFLINE"] = "1"
+    if current.strict_prices:
+        env["MANAGED_PRICE_STRICT"] = "1"
+    return env
 
 
 def _spawn(command: list[str], env: dict[str, str] | None) -> int:

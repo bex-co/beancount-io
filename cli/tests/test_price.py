@@ -1227,3 +1227,152 @@ class TestManagedLoadCommands:
 
         assert result.returncode == 0, result.stderr
         assert "5 USD" in ledger.read_text()
+
+
+class TestPriceStatus(TestManagedLoadCommands):
+    """`price status` and `price refresh` speak the ADR 015 vocabulary (t004)."""
+
+    def test_status_lists_sources_human(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+
+        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
+
+        assert result.returncode == 0, result.stderr
+        for token in ("BTC-USD", "FRESHNESS", "REVISION", "r1", "2026-09-11", "SHADOWED"):
+            assert token in result.stdout
+
+    def test_status_json_carries_the_adr015_record(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+
+        result = self._bea(tmp_path, feed_server, "--json", "--file", str(ledger), "price", "status")
+
+        assert result.returncode == 0, result.stderr
+        (source,) = json.loads(result.stdout)["data"]["sources"]
+        assert source["url"] == f"{feed_server}/prices/BTC-USD"
+        assert source["alias"] == "BTC-USD"
+        assert (source["commodity"], source["quote"], source["source"]) == ("BTC", "USD", "fixture")
+        assert (source["revision"], source["etag"]) == ("r1", '"r1"')
+        assert source["observed_at"] == "2026-09-11T00:00:00Z"
+        assert source["fetched_at"] is not None
+        assert source["next_refresh_at"] is not None
+        assert source["freshness"] in ("recent", "stale")
+        assert source["error"] is None
+        assert source["shadowed_count"] == 0
+        assert source["effective_dates"] == ["2026-09-10", "2026-09-11"]
+        assert source["included_from"][0]["line"] == 2
+
+    def test_status_without_includes_says_so(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = tmp_path / "main.bean"
+        ledger.write_text('option "operating_currency" "USD"\n2024-01-01 open Assets:Broker\n')
+
+        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
+
+        assert result.returncode == 0, result.stderr
+        assert "No managed price includes" in result.stdout
+
+    def test_status_reports_unavailable_with_cause(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server, _managed_ledger(feed_server, "/prices/NOPE"))
+
+        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
+
+        assert result.returncode == 0, result.stderr
+        assert "unavailable" in result.stdout
+        assert "HTTP 404" in result.stdout
+
+    def test_status_shows_stale_after_ten_minutes(self, feed_server: str, tmp_path: Path) -> None:
+        body = _feed_text(_stamp(time.time() - 660)).encode("utf-8")
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": body}
+        ledger = self._ledger(tmp_path, feed_server)
+
+        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
+
+        assert result.returncode == 0, result.stderr
+        assert "stale" in result.stdout
+
+    def test_refresh_reports_changed_revision(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+        first = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh")
+        assert first.returncode == 0, first.stderr
+        assert "none → r1" in first.stdout
+        body = _feed_text(_stamp(time.time()), revision="r2").encode("utf-8")
+        _FeedHandler.routes["/prices/BTC-USD"] = {
+            "body": body,
+            "headers": {"ETag": '"r2"'},
+            "etag": '"r2"',
+            "etag_match": True,
+        }
+
+        second = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh")
+
+        assert second.returncode == 0, second.stderr
+        assert "r1 → r2" in second.stdout
+
+    def test_refresh_reports_unchanged(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+        assert self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh").returncode == 0
+
+        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh")
+
+        assert result.returncode == 0, result.stderr
+        assert "unchanged at r1" in result.stdout
+
+    def test_refresh_json_reports_changed_shape(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+
+        result = self._bea(tmp_path, feed_server, "--json", "--file", str(ledger), "price", "refresh")
+
+        assert result.returncode == 0, result.stderr
+        data = json.loads(result.stdout)["data"]
+        assert data["changed"] == [
+            {
+                "url": f"{feed_server}/prices/BTC-USD",
+                "alias": "BTC-USD",
+                "previous_revision": None,
+                "revision": "r1",
+            }
+        ]
+
+    def test_status_rejects_extra_arguments(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+
+        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status", "extra")
+
+        assert result.returncode == 2, result.stderr
+        assert "takes no arguments" in result.stderr
+
+    def test_price_help_names_the_managed_subcommands(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+
+        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "--help")
+
+        assert result.returncode == 0, result.stderr
+        assert "status" in result.stdout
+        assert "refresh" in result.stdout
+
+    def test_offline_flag_resolves_from_cache(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+        seed = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
+        assert seed.returncode == 0, seed.stderr
+        _FeedHandler.hits.clear()
+
+        result = self._bea(tmp_path, feed_server, "--offline", "--file", str(ledger), "price", "status")
+
+        assert result.returncode == 0, result.stderr
+        assert "r1" in result.stdout
+        assert _FeedHandler.hits == []
+
+    def test_strict_flag_fails_naming_a_stale_source(self, feed_server: str, tmp_path: Path) -> None:
+        body = _feed_text(_stamp(time.time() - 660)).encode("utf-8")
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": body}
+        ledger = self._ledger(tmp_path, feed_server)
+
+        result = self._bea(tmp_path, feed_server, "--strict-prices", "--file", str(ledger), "check")
+
+        assert result.returncode != 0
+        assert f"{feed_server}/prices/BTC-USD" in result.stderr
+
+    def test_unavailable_error_points_at_status(self, feed_server: str, tmp_path: Path) -> None:
+        loaded = _load(feed_server, tmp_path, _managed_ledger(feed_server, "/prices/NOPE"))
+
+        assert len(loaded.errors) == 1
+        assert "bea price status" in loaded.errors[0].message

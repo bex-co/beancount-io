@@ -9,7 +9,7 @@ bea init [DIRECTORY] --currency USD
 bea import EXPORT [--config importers.py] [--into FILE] [--apply]
 bea import EXPORT.csv --csv date=Date,amount=Amount,payee=Payee --account Assets:Checking [--rules rules.toml]
 bea ingest identify|extract|archive --config ingest.py [PATH…]   # needs beangulp
-bea price [bean-price options…]                                  # needs beanprice
+bea price status|refresh | bea price [bean-price options…]     # latter needs beanprice
 bea check | format | query "<BQL>"
 bea list <type> | bea add <type>          # eleven directive types; add transactions --from PATH
 bea report balance-sheet | income-statement | trial-balance | overview
@@ -84,6 +84,8 @@ Global options come before the command.
 | `--json` | Emit the JSON envelope on stdout and JSON errors on stderr. Implies `--no-input`. |
 | `--no-input` | Never prompt. Missing confirmation or input fails with exit 2 instead of waiting. |
 | `--strict` | Refuse partial answers even in a terminal; `--allow-errors` opts into them. |
+| `--offline` | Resolve managed price includes from the local cache only; never fetch. |
+| `--strict-prices` | Fail the load when a managed price source is stale or unavailable. |
 | `--yes / -y` | Answer confirmations with yes. |
 | `--debug` | Include exception tracebacks; JSON errors gain a `traceback` string. |
 | `--show-completion` / `--install-completion` | Print or install shell completion. |
@@ -905,6 +907,42 @@ Text amounts are rounded to the display precision the ledger uses for each
 currency (half up, so `4.9050 USD` of converted dining reads `4.91 USD`);
 JSON keeps the full-precision decimal string (`"4.9050"`).
 
+## Managed price includes
+
+One line values a holding at market in every command — no quote provider to
+configure and no recurring download chore:
+
+```beancount
+include "https://beancount.io/prices/BTC-USD"
+```
+
+`check`, `list`, `query`, `report`, `import`, and write validation all see
+the same resolved prices. The URL is a registered price request, not a
+general remote include: only allowlisted origins and exact
+`/prices/<ALIAS>` paths resolve, redirects are refused, and the request
+carries no credential, ledger name, or private content. Ordinary ledgers
+keep working with no network dependency, and resolving a public feed needs
+no Beancount.io account.
+
+A price you declare yourself wins: a ledger-authored price for the same date
+and pair shadows the managed point, and the shadowed count is reported. Feed
+entries are read-only — a write targeting one fails naming the managed
+source — and your files are never rewritten to accommodate a feed.
+
+```bash
+bea price status            # freshness, revision, observed-at, errors per source
+bea price refresh           # re-resolve now; reports which sources changed
+bea --offline balance       # resolve from the cache only; never fetch
+bea --strict-prices check   # fail when a source is stale or unavailable
+```
+
+Freshness is computed at read time from the latest observation: `recent`
+within ten minutes, `stale` beyond it, `unavailable` when no revision ever
+validated. A failed refresh never replaces the last good revision. `status`
+and `refresh` take no arguments; anything else after `bea price` still
+forwards to `bean-price`, so name a quotes job file `status` by path
+(`./status`) if you ever have one.
+
 ## Ask (optional extra)
 
 `bea ask` needs the AI dependencies, which the default install does not carry:
@@ -1116,6 +1154,9 @@ select targets, endpoints, and state directories:
 | `BEA_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL, used by the device login flow |
 | `BEA_NO_UPDATE_NOTIFIER` | — | Truthy disables the update notice entirely |
 | `CI` | — | Truthy implies `--no-input`, and disables the update notice |
+| `MANAGED_PRICE_ORIGINS` | `https://beancount.io` | Comma-separated origin allowlist for managed price includes; empty disables them |
+| `MANAGED_PRICE_OFFLINE` | — | Truthy resolves managed includes from the cache only, like `--offline` |
+| `MANAGED_PRICE_STRICT` | — | Truthy fails loads on stale or unavailable sources, like `--strict-prices` |
 
 Homebrew sets `BEA_ENGINE_DIR` to the keg-local engine so installs never look
 for a separately provisioned copy. Advanced overrides (`BEA_ENGINE_PYTHON`,

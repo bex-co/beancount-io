@@ -172,6 +172,13 @@ def main(
     strict: Annotated[
         bool, typer.Option("--strict", help="Refuse partial answers even in a terminal; --allow-errors opts in")
     ] = False,
+    offline: Annotated[
+        bool, typer.Option("--offline", help="Resolve managed price includes from the local cache only; never fetch")
+    ] = False,
+    strict_prices: Annotated[
+        bool,
+        typer.Option("--strict-prices", help="Fail the load when a managed price source is stale or unavailable"),
+    ] = False,
     shell: Annotated[
         str | None, typer.Option("--shell", help="Completion shell: bash, zsh, fish, powershell or pwsh")
     ] = None,
@@ -200,7 +207,16 @@ def main(
 ) -> None:
     """Global options, resolved once for whichever command runs."""
     del shell, show_completion, install_completion  # Handled by the completion callbacks.
-    ctx = context.configure(file=file, json_output=json_output, no_input=no_input, yes=yes, debug=debug, strict=strict)
+    ctx = context.configure(
+        file=file,
+        json_output=json_output,
+        no_input=no_input,
+        yes=yes,
+        debug=debug,
+        strict=strict,
+        offline=offline,
+        strict_prices=strict_prices,
+    )
     # Started here, where the machine-mode options are already resolved, so the
     # check overlaps the command instead of delaying it.
     update.start(json_output=ctx.json_output, no_input=ctx.no_input, channel=current_channel().name)

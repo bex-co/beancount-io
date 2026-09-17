@@ -406,7 +406,8 @@ def _rewrite_includes(
         unavailable.append(
             load_error(
                 {"filename": str(path), "lineno": span.line},
-                f'managed price source unavailable: include "{span.target}" in {path}:{span.line}: {cause}',
+                f'managed price source unavailable: include "{span.target}" in {path}:{span.line}: {cause}. '
+                "Run bea price status to inspect the source.",
             )
         )
     return content

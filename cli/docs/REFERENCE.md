@@ -15,6 +15,8 @@ with its usage line, arguments, and options.
 | `--yes, -y` | flag |  | Answer confirmations with yes |
 | `--debug` | flag |  | Include exception tracebacks in errors |
 | `--strict` | flag |  | Refuse partial answers even in a terminal; --allow-errors opts in |
+| `--offline` | flag |  | Resolve managed price includes from the local cache only; never fetch |
+| `--strict-prices` | flag |  | Fail the load when a managed price source is stale or unavailable |
 | `--shell` | str |  | Completion shell: bash, zsh, fish, powershell or pwsh |
 | `--show-completion` | flag |  | Print completion script; detects the shell unless --shell is supplied |
 | `--install-completion` | flag |  | Install shell completion; optionally select --shell |
@@ -158,7 +160,7 @@ Usage: bea query [OPTIONS] [query_string]
 
 ### `bea price`
 
-Fetch prices via bean-price (requires 'bea engine enable beanprice').
+Inspect managed price includes (status, refresh), or fetch quotes via bean-price.
 
 ```text
 Usage: bea price [OPTIONS]

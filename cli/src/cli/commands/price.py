@@ -1,20 +1,94 @@
-"""`bea price` — fetch quotes through upstream `bean-price` in the engine.
+"""`bea price` — managed price status and refresh, or upstream `bean-price`.
 
-Requires `bea engine enable beanprice`. This is quote retrieval only: it prints
-price directives (or dry-run job lists) the way bean-price does. Recording a
-supplied quote remains `bea add price` and does not need Beanprice.
+`status` and `refresh` report the ledger's managed price includes; anything
+else forwards to bean-price exactly as before (requires `bea engine enable
+beanprice`). Recording a supplied quote remains `bea add price` and does not
+need Beanprice.
 """
 
 from __future__ import annotations
 
+from typing import Any
+
 import typer
 
+from cli import context, output
 from cli.engine import launch
-from cli.errors import refuse_json
+from cli.errors import UsageError, refuse_json
 
 
 def price(ctx: typer.Context) -> None:
-    """Fetch prices via bean-price (requires 'bea engine enable beanprice')."""
+    """Inspect managed price includes (status, refresh), or fetch quotes via bean-price.
+
+    `status` lists every managed source with its freshness, revision, and
+    errors; `refresh` re-resolves now and reports what changed. Anything
+    else forwards to bean-price (requires `bea engine enable beanprice`),
+    so a quotes job file named `status` must be passed by path.
+    """
+    args = list(ctx.args)
+    if args[:1] == ["status"]:
+        _status(args[1:])
+        return
+    if args[:1] == ["refresh"]:
+        _refresh(args[1:])
+        return
     refuse_json("price", hint="Run without --json to print price directives.")
-    code = launch.run_optional_native("beanprice", "bean-price", list(ctx.args))
+    code = launch.run_optional_native("beanprice", "bean-price", args)
     raise typer.Exit(code)
+
+
+def _status(extra: list[str]) -> None:
+    if extra:
+        raise UsageError(f"bea price status takes no arguments; got: {' '.join(extra)}.")
+    current = context.current()
+    file = current.entry_file()
+    data = launch.helper_json(["price-status", "--file", str(file)])
+    output.render_ledger_errors(data.get("errors") or [], allow=True)
+    sources: list[dict[str, Any]] = data["sources"]
+    if current.json_output:
+        output.emit({"sources": sources}, target=output.file_target(file))
+        return
+    if not sources:
+        typer.echo("No managed price includes in this ledger.")
+        return
+    output.table(
+        ["ALIAS", "FRESHNESS", "REVISION", "OBSERVED AT", "NEXT REFRESH", "SHADOWED", "ERROR"],
+        [
+            [
+                str(source["alias"]),
+                str(source["freshness"]),
+                str(source["revision"] or "-"),
+                str(source["observed_at"] or "-"),
+                str(source["next_refresh_at"] or "-"),
+                str(source["shadowed_count"]),
+                str(source["error"] or ""),
+            ]
+            for source in sources
+        ],
+    )
+
+
+def _refresh(extra: list[str]) -> None:
+    if extra:
+        raise UsageError(f"bea price refresh takes no arguments; got: {' '.join(extra)}.")
+    current = context.current()
+    file = current.entry_file()
+    data = launch.helper_json(["price-refresh", "--file", str(file)])
+    output.render_ledger_errors(data.get("errors") or [], allow=True)
+    sources: list[dict[str, Any]] = data["sources"]
+    if current.json_output:
+        output.emit({"sources": sources, "changed": data["changed"]}, target=output.file_target(file))
+        return
+    if not sources:
+        typer.echo("No managed price includes in this ledger.")
+        return
+    changed = {item["url"]: item for item in data["changed"]}
+    for source in sources:
+        if source["freshness"] == "unavailable":
+            typer.echo(f"{source['alias']}: still unavailable ({source['error'] or 'no cached revision'})")
+        elif source["url"] in changed:
+            item = changed[source["url"]]
+            before = item["previous_revision"] or "none"
+            typer.echo(f"{source['alias']}: {before} → {item['revision']}")
+        else:
+            typer.echo(f"{source['alias']}: unchanged at {source['revision']}")

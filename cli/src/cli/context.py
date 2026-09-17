@@ -49,6 +49,8 @@ class RunContext:
     yes: bool = False
     debug: bool = False
     strict: bool = False
+    offline: bool = False
+    strict_prices: bool = False
     _no_input: bool = field(default=False, repr=False)
 
     @property
@@ -141,9 +143,20 @@ def configure(
     yes: bool = False,
     debug: bool = False,
     strict: bool = False,
+    offline: bool = False,
+    strict_prices: bool = False,
 ) -> RunContext:
     global _context
-    _context = RunContext(file=file, json_output=json_output, yes=yes, _no_input=no_input, debug=debug, strict=strict)
+    _context = RunContext(
+        file=file,
+        json_output=json_output,
+        yes=yes,
+        _no_input=no_input,
+        debug=debug,
+        strict=strict,
+        offline=offline,
+        strict_prices=strict_prices,
+    )
     return _context
 
 

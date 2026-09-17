@@ -504,6 +504,95 @@ def version_command() -> None:
         answer.data = {"version": version()}
 
 
+@app.command("price-status")
+def price_status(
+    file: Annotated[Path, typer.Option("--file", "-f", help="Root ledger file to inspect.")],
+) -> None:
+    """Report every managed price include in the ledger with its freshness.
+
+    Answers `{"sources": [...], "errors": [...]}`: one record per resolved
+    URL with alias, revision, observed-at, fetched-at, next refresh,
+    freshness computed at read time, shadowed count, and the last error when
+    any, plus the load's own errors for the frontend to banner. Status never
+    fails on ledger errors; only strict mode fails it, on stale sources.
+    """
+    with protocol.answering("price-status") as answer:
+        from bea_engine import managed_load
+        from bea_engine.query import format_error
+
+        loaded = managed_load.load_with_sources(_ledger(file))
+        answer.data = {
+            "sources": [_source_json(source) for source in loaded.sources],
+            "errors": [format_error(error) for error in loaded.errors],
+        }
+
+
+@app.command("price-refresh")
+def price_refresh(
+    file: Annotated[Path, typer.Option("--file", "-f", help="Root ledger file to refresh.")],
+) -> None:
+    """Zero every managed source window and re-resolve, reporting what changed.
+
+    Answers `{"sources": [...], "changed": [...], "errors": [...]}`: the
+    fresh status records, one `{url, alias, previous_revision, revision}` per
+    source whose serving revision differs from before the refresh, and the
+    load's own errors for the frontend to banner.
+    """
+    with protocol.answering("price-refresh") as answer:
+        from bea_engine import managed_load
+        from bea_engine.managed_price_cache import zero_next_refresh
+        from bea_engine.query import format_error
+
+        root = _ledger(file)
+        # The before-read never fails: it only records previous revisions, and
+        # strict mode judges the re-resolved state below, not the stale one.
+        before = {
+            source.url: source.revision
+            for source in managed_load.load_with_sources(root, offline=True, strict=False).sources
+        }
+        for url in before:
+            zero_next_refresh(url)
+        loaded = managed_load.load_with_sources(root)
+        after = {source.url: source for source in loaded.sources}
+        answer.data = {
+            "sources": [_source_json(source) for source in loaded.sources],
+            "changed": [
+                {
+                    "url": url,
+                    "alias": source.alias,
+                    "previous_revision": before.get(url),
+                    "revision": source.revision,
+                }
+                for url, source in sorted(after.items())
+                if source.revision != before.get(url)
+            ],
+            "errors": [format_error(error) for error in loaded.errors],
+        }
+
+
+def _source_json(source: Any) -> dict[str, Any]:
+    """One managed source as the status record ADR 015 section 8 describes."""
+    return {
+        "url": source.url,
+        "alias": source.alias,
+        "included_from": [
+            {"file": include.file, "line": include.line, "target": include.target} for include in source.included_from
+        ],
+        "commodity": source.commodity,
+        "quote": source.quote,
+        "source": source.source,
+        "revision": source.revision,
+        "etag": source.etag,
+        "observed_at": source.observed_at,
+        "fetched_at": source.fetched_at,
+        "next_refresh_at": source.next_refresh_at,
+        "freshness": source.freshness,
+        "error": source.error,
+        "shadowed_count": source.shadowed_count,
+        "effective_dates": list(source.effective_dates),
+    }
+
+
 def _ledger(file: Path) -> Path:
     """The ledger as an absolute path, or a usage failure naming what is wrong.
 
