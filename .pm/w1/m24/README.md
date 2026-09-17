@@ -1,6 +1,6 @@
 # w1 · m24 — Bank CSVs import as exported: delimiters, amounts, encodings, IDs
 
-**Worker:** worker1 **Goal:** the documented no-code CSV path works on the exports people actually download — semicolon and tab delimiters, cp1252 and BOM encodings, currency symbols and accounting negatives, blank trailer rows, and bank identifier columns — without writing a Python importer **Status:** todo (t001, t002, t003, t004 done)
+**Worker:** worker1 **Goal:** the documented no-code CSV path works on the exports people actually download — semicolon and tab delimiters, cp1252 and BOM encodings, currency symbols and accounting negatives, blank trailer rows, and bank identifier columns — without writing a Python importer **Status:** todo (t001, t002, t003, t004, t005 done)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | t002 | Decode BOM, cp1252 and latin-1 exports with a `--csv encoding=` override — **DONE** | 30m | — |
 | t003 | Parse the amount spellings real bank exports use — **DONE** | 45m | — |
 | t004 | Skip blank rows and name the columns that tied for a role — **DONE** | 30m | — |
-| t005 | Recognize bare id columns and align `--id-key` with what the CSV path writes | 30m | — |
+| t005 | Recognize bare id columns and align `--id-key` with what the CSV path writes — **DONE** | 30m | — |
 | t006 | Refuse an empty rules match and honor the category column the preview promises | 45m | — |
 | t007 | Make sticky CSV recall visible and safe | 45m | — |
 | t008 | Block preview rows whose counter-account is not open | 30m | — |

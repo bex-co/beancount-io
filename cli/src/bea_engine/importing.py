@@ -204,13 +204,21 @@ def answer(
     for index, entry in enumerate(entries):
         entry = normalize_entry_strings(entry)
         status, reason, match = "new", None, None
+        id_source: str | None = None
         if isinstance(entry, Transaction):
             if not any(p.account == account for p in entry.postings):
                 raise LedgerError(f"Importer row {index + 1} has no posting to its source account {account}.")
             fingerprint = _fingerprint(entry, account)
-            if not entry.meta.get("import-id"):
+            if entry.meta.get("import-id"):
+                id_source = "importer"
+            else:
                 native = _native_import_id(entry.meta, keys)
-                entry.meta["import-id"] = native if native is not None else _hash_import_id(entry, account, seen_inputs)
+                if native is not None:
+                    entry.meta["import-id"] = native
+                    id_source = "bank"
+                else:
+                    entry.meta["import-id"] = _hash_import_id(entry, account, seen_inputs)
+                    id_source = "hash"
             ids = _identities(entry, account, keys)
             ids.append((account, "file", hashlib.sha256(f"{account}:{source_hash}:{index}".encode()).hexdigest()))
             hits = [(key, identities[key]) for key in ids if key in identities]
@@ -250,6 +258,7 @@ def answer(
             "row": index + 1,
             "status": status,
             "reason": reason,
+            "id_source": id_source,
             "include": include,
             "entry": text,
             "accounts": [p.account for p in entry.postings] if isinstance(entry, Transaction) else [],

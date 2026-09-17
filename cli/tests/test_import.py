@@ -1243,3 +1243,79 @@ class TestCsvBlankRowsAndTies:
         result = run_csv(book, source, "--csv", "auto", "--account", "Assets:Checking")
         assert result.exit_code == 2
         assert "narration (Description, Original Description)" in result.stderr
+
+
+class TestCsvBankIdentifiers:
+    def test_bare_id_column_dedups_across_runs(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount,ID\n2026-08-02,Cafe,-5.25,txn-1\n")
+        preview = run_csv(book, source, "--csv", "auto", "--account", "Assets:Checking")
+        assert preview.exit_code == 0, preview.output
+        assert "id=ID" in json.loads(preview.stdout)["data"]["config"]
+        applied = run_csv(book, source, "--csv", "auto", "--account", "Assets:Checking", "--apply")
+        assert applied.exit_code == 0, applied.output
+        assert 'import-id: "bank:txn-1"' in book.read_text()
+        repeat = run_csv(book, source, "--csv", "auto", "--account", "Assets:Checking")
+        assert repeat.exit_code == 0, repeat.output
+        data = json.loads(repeat.stdout)["data"]
+        assert data["ready"] == 0
+        assert data["duplicates"] == 1
+
+    def test_lowercase_id_column_infers(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount,id\n2026-08-02,Cafe,-5.25,txn-1\n")
+        result = run_csv(book, source, "--csv", "auto", "--account", "Assets:Checking", "--apply")
+        assert result.exit_code == 0, result.output
+        assert 'import-id: "bank:txn-1"' in book.read_text()
+
+    def test_skill_written_bank_id_is_an_exact_duplicate(self, book: Path, isolated_config: Path) -> None:
+        with book.open("a") as handle:
+            handle.write(
+                '\n2026-08-02 * "Cafe" "Coffee"\n'
+                '  import-id: "bank:txn-9"\n'
+                "  Assets:Checking  -5.25 USD\n"
+                "  Expenses:Uncategorized  5.25 USD\n"
+            )
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Payee,Description,Amount,ID\n2026-08-02,Cafe,Coffee,-5.25,txn-9\n")
+        result = run_csv(book, source, "--csv", "auto", "--account", "Assets:Checking")
+        assert result.exit_code == 0, result.output
+        (row,) = json.loads(result.stdout)["data"]["rows"]
+        assert row["status"] == "duplicate"
+        assert "bank:txn-9" in (row["reason"] or "")
+
+    def test_preview_names_the_identifier_source(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount,ID\n2026-08-02,Cafe,-5.25,txn-1\n2026-08-03,Tea,-2.00,\n")
+        result = run_csv(
+            book,
+            source,
+            "--csv",
+            "date=Date,amount=Amount,narration=Description,id=ID",
+            "--account",
+            "Assets:Checking",
+        )
+        assert result.exit_code == 0, result.output
+        rows = json.loads(result.stdout)["data"]["rows"]
+        assert [row["id_source"] for row in rows] == ["bank", "hash"]
+
+    def test_human_table_shows_the_identifier_source(self, book: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount,ID\n2026-08-02,Cafe,-5.25,txn-1\n2026-08-03,Tea,-2.00,\n")
+        result = runner.invoke(
+            app,
+            [
+                "--file",
+                str(book),
+                "import",
+                str(source),
+                "--csv",
+                "date=Date,amount=Amount,narration=Description,id=ID",
+                "--account",
+                "Assets:Checking",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert "ID" in result.stdout.splitlines()[1]
+        assert "bank" in result.stdout
+        assert "hash" in result.stdout

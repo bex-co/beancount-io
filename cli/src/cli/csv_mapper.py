@@ -204,7 +204,7 @@ _HEADER_SYNONYMS: dict[str, tuple[str, ...]] = {
         "orig description",
     ),
     "currency": ("currency", "currency code", "ccy"),
-    "id": ("transaction id", "transaction_id", "reference number", "fitid"),
+    "id": ("id", "transaction id", "transaction_id", "reference number", "fitid", "txn id", "txnid", "bank id"),
     "category": ("category",),
 }
 

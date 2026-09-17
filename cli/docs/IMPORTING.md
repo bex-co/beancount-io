@@ -229,9 +229,13 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   scoped to the importer's source account, and always checks `import-id` and
   `import-id-2`. Use repeated `--id-key KEY` options to replace the native-ID
   list for your importer (a custom key uses its own name as the namespace).
+  `--id-key id` is accepted as an alias for `bank_id`, the canonical key the
+  `--csv` path writes, so it never silently disables bank-ID dedupe.
   IDs must be stable and unique within that account. An exact match is skipped;
   reused IDs with different dates, payees, narration, or source amounts are
-  conflicts requiring review.
+  conflicts requiring review. The preview's `ID` column names each row's
+  identifier source: `bank` for a bank column, `hash` for a content hash, or
+  `importer` for an `import-id` the importer supplied.
 - A row with a native ID is written with `import-id: "<kind>:<id>"` (`bank_id`
   becomes `bank:`, `fitid` becomes `ofx:`). A row without one is written with
   `import-id: "csv:sha256:<16 hex>"` hashed from

@@ -489,7 +489,7 @@ def import_entries(
             noun = "row" if preview["skipped_blank"] == 1 else "rows"
             summary += f", {preview['skipped_blank']} blank {noun} skipped"
         typer.echo(summary)
-        headers = ["ROW", "STATUS", "DATE", "PAYEE / NARRATION", "SOURCE AMOUNT"]
+        headers = ["ROW", "STATUS", "DATE", "PAYEE / NARRATION", "SOURCE AMOUNT", "ID"]
         if csv_mode:
             headers.append("RULE")
         rows = preview["rows"]
@@ -502,6 +502,7 @@ def import_entries(
                     row["date"],
                     " / ".join(v for v in (row["payee"], row["narration"]) if v),
                     row["amount"],
+                    row.get("id_source") or "",
                     *([row.get("rule") or ""] if csv_mode else []),
                 ]
                 for row in rows
