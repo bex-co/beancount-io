@@ -253,6 +253,14 @@ out first. The same formatter is a text transformation and not a parse, so
 formatting no longer refuses a file with a syntax error: it aligns the amounts
 it recognises and leaves the rest alone. Run `bea check` to validate.
 
+A directory is walked for `.bean` and `.beancount` files, and a walked entry it
+cannot read stops the run (exit **2**) naming the path and where it points — a
+broken `include` symlink is the shape this usually takes. Silently dropping it
+would let `--check` report a tree it never looked at, green while `bea check`
+fails on the very include the entry stands for. A symlink resolving outside the
+requested directory is still skipped; one resolving inside is formatted once,
+under its real path.
+
 With no paths at all it is a filter: it formats stdin and writes to stdout, so
 `cat main.bean | bea format` and `bea format < main.bean` work in a pipeline
 without a temporary file. An explicit `-` asks for the same thing by name, and

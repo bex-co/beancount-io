@@ -283,8 +283,15 @@ def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | Non
             root = resolved
             for pattern in ("*.bean", "*.beancount"):
                 for match in root.rglob(pattern):
-                    if not match.is_file():
+                    if match.is_dir():
                         continue
+                    if not match.is_file():
+                        # A walked entry the scan cannot read is not one it may
+                        # drop: naming the same path explicitly is an error, and
+                        # a `--check` that skips it reports a tree it never
+                        # looked at — green while `bea check` fails on the very
+                        # include the entry stands for.
+                        raise UsageError(_unreadable(match))
                     target = match.resolve()
                     try:
                         target.relative_to(root)
@@ -304,6 +311,16 @@ def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | Non
 # Upstream pads with spaces to these columns; unbounded values rewrite a ledger
 # into hundreds of KiB of whitespace (w3/331). 200 is well above useful layouts.
 _MAX_ALIGNMENT_WIDTH = 200
+
+
+def _unreadable(path: Path) -> str:
+    """Why a `*.bean` entry found by the directory walk could not be formatted."""
+    if path.is_symlink():
+        return (
+            f"Formatting target does not exist: {path} → {path.readlink()}. "
+            "Repair or remove the broken link; a directory scan cannot format what it cannot read."
+        )
+    return f"Not a regular file: {path}."
 
 
 def _alignment(prefix_width: int | None, num_width: int | None, currency_column: int | None) -> list[str]:
