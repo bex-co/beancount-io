@@ -151,7 +151,7 @@ Usage: bea query [OPTIONS] [query_string]
 | --- | --- | --- | --- |
 | `--source` | str |  | Native Beanquery source URI; delegates directly to bean-query |
 | `--allow-errors` | flag |  | Answer with errors on stderr; opts strict reads into partial answers |
-| `--format, -f` | str | text | Rendering for a printed result: text, csv, beancount |
+| `--format, -f` | str |  | Rendering for a printed result: text, csv, beancount |
 | `--output, -o` | str |  | Write the result to this file instead of stdout |
 | `--numberify, -m` | flag |  | Split amounts into one column per currency |
 | `--no-errors, -q` | flag |  | Hide ledger load errors |

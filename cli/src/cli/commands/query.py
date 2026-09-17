@@ -53,8 +53,8 @@ def query(
         typer.Option("--allow-errors", help="Answer with errors on stderr; opts strict reads into partial answers"),
     ] = False,
     output_format: Annotated[
-        str, typer.Option("--format", "-f", help=f"Rendering for a printed result: {', '.join(FORMATS)}")
-    ] = "text",
+        str | None, typer.Option("--format", "-f", help=f"Rendering for a printed result: {', '.join(FORMATS)}")
+    ] = None,
     output_file: Annotated[
         str | None, typer.Option("--output", "-o", help="Write the result to this file instead of stdout")
     ] = None,
@@ -69,10 +69,21 @@ def query(
     or open the interactive shell when stdin is a terminal.
     """
     ctx = context.current()
-    if output_format not in FORMATS:
-        raise UsageError(f"Unknown query format '{output_format}'. Choose one of: {', '.join(FORMATS)}.")
     if output_file == "-":
         output_file = None
+    if output_format is None and output_file is not None:
+        suffix = Path(output_file).suffix.casefold()
+        if suffix == ".csv":
+            output_format = "csv"
+        elif suffix == ".tsv":
+            raise UsageError(
+                f"--output {output_file} looks like TSV; pass --format csv (or rename the file) "
+                "so the destination is not an ASCII text table."
+            )
+    if output_format is None:
+        output_format = "text"
+    if output_format not in FORMATS:
+        raise UsageError(f"Unknown query format '{output_format}'. Choose one of: {', '.join(FORMATS)}.")
     if output_file is not None:
         destination = Path(output_file)
         if destination.exists() and destination.is_dir():
