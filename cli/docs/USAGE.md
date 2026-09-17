@@ -171,6 +171,24 @@ In `--json` mode a failure writes nothing to stdout and one object to stderr:
 
 Cloud commands map the server's HTTP status onto the same table, keeping the server's own message: `401`/`403` exit **3**, `400` exits **2**, `409` exits **4**, and everything else — including `404`, rate limiting, and server errors — exits **1**. A write whose outcome the CLI cannot know (a timeout mid-delete) exits **4** and says so rather than guessing.
 
+### `bea doctor` exit contract
+
+`doctor` delegates to upstream `bean-doctor` but maps its diagnostics onto the
+table above instead of forwarding exit **0** regardless. Valid ledgers print
+upstream's output unchanged; these are the failure modes:
+
+| Operation | Exits 1 when |
+|---|---|
+| `parse`, `lex` | The ledger has syntax errors (upstream's trace still prints) |
+| `print-options` | The ledger does not parse; no default options are printed |
+| `roundtrip` | The ledger does not parse; the trace prints without its congratulations |
+| `linked`, `region` | The link or region matches no entries |
+| `missing-open` | Postings reference a closed account (upstream's missing opens still print) |
+| `directories` | Upstream reports an `ERROR:` line |
+
+`context`, `display-context`, and `list-options` forward upstream's exit
+unchanged. A nonzero upstream status is never rewritten.
+
 ## Creating a ledger
 
 ```bash

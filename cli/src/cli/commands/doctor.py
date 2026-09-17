@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 import typer
 
 from cli.engine import launch
-from cli.errors import refuse_json
+from cli.errors import BeaError, LedgerError, refuse_json
 from cli.native_help import native_help
 
 doctor_app = typer.Typer(
@@ -33,6 +36,31 @@ _OPS = (
 )
 
 
+def _positionals(args: list[str]) -> list[str]:
+    """The operands bean-doctor will see: past `--`, skipping flags."""
+    if "--" in args:
+        args = args[args.index("--") + 1 :]
+    return [arg for arg in args if not arg.startswith("-")]
+
+
+def _syntax_errors_of(filename: str) -> list[str]:
+    """Syntax errors in one file, or [] when the file cannot be checked here.
+
+    A name that is not a readable file is upstream's to report, and a dead
+    engine must not take the diagnostics tool down with it: both fail open to
+    the plain passthrough.
+    """
+    from pathlib import Path
+
+    if not Path(filename).is_file():
+        return []
+    try:
+        data = launch.helper_json(["syntax", filename])
+    except BeaError:
+        return []
+    return [str(error) for error in data.get("files", {}).get(filename, [])]
+
+
 def _forward(op: str, ctx: typer.Context) -> None:
     """Pass remaining argv through to bean-doctor unchanged."""
     refuse_json(
@@ -43,8 +71,167 @@ def _forward(op: str, ctx: typer.Context) -> None:
     raise typer.Exit(code)
 
 
+def _replay(completed: subprocess.CompletedProcess[str]) -> None:
+    """Print captured upstream output back to its own streams, verbatim."""
+    if completed.stdout:
+        sys.stdout.write(completed.stdout)
+    if completed.stderr:
+        sys.stderr.write(completed.stderr)
+    # A failure line follows on stderr; flush first so redirected streams keep
+    # upstream's output ahead of the error that refers to it.
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+
+def _forward_parse(op: str, ctx: typer.Context) -> None:
+    """Trace the parse, but exit 1 when recovery ran on unparseable input."""
+    refuse_json(
+        "doctor",
+        hint="Run without --json and pass the ledger path as a positional argument.",
+    )
+    args = list(ctx.args)
+    positionals = _positionals(args)
+    errors = _syntax_errors_of(positionals[0]) if positionals else []
+    code = launch.run_native("bean-doctor", [op, *args])
+    if code == 0 and errors:
+        raise LedgerError(f"doctor {op} recovered from syntax errors in {positionals[0]} (see above).")
+    raise typer.Exit(code)
+
+
+def _forward_print_options(ctx: typer.Context) -> None:
+    """Refuse to print default options for a file that did not load."""
+    refuse_json(
+        "doctor",
+        hint="Run without --json and pass the ledger path as a positional argument.",
+    )
+    args = list(ctx.args)
+    positionals = _positionals(args)
+    if positionals:
+        errors = _syntax_errors_of(positionals[0])
+        if errors:
+            raise LedgerError(f"doctor print-options cannot load {positionals[0]}: {errors[0]}")
+    code = launch.run_native("bean-doctor", ["print-options", *args])
+    raise typer.Exit(code)
+
+
+def _forward_roundtrip(ctx: typer.Context) -> None:
+    """Compare entry sets, without congratulations on unparseable input."""
+    refuse_json(
+        "doctor",
+        hint="Run without --json and pass the ledger path as a positional argument.",
+    )
+    args = list(ctx.args)
+    positionals = _positionals(args)
+    errors = _syntax_errors_of(positionals[0]) if positionals else []
+    if not errors:
+        raise typer.Exit(launch.run_native("bean-doctor", ["roundtrip", *args]))
+    completed = launch.capture_native("bean-doctor", ["roundtrip", *args])
+    _replay_without_congratulations(completed)
+    raise LedgerError(f"doctor roundtrip cannot compare {positionals[0]}: {errors[0]}")
+
+
+def _replay_without_congratulations(completed: subprocess.CompletedProcess[str]) -> None:
+    """Upstream's trace minus its success copy, which the errors above belie."""
+    for stream, write in ((completed.stdout, sys.stdout.write), (completed.stderr, sys.stderr.write)):
+        kept = "".join(line for line in stream.splitlines(keepends=True) if "Congratulations" not in line)
+        if kept:
+            write(kept)
+
+
+def _forward_directories(ctx: typer.Context) -> None:
+    """Map upstream's ERROR lines to the exit status gates need."""
+    refuse_json(
+        "doctor",
+        hint="Run without --json and pass the ledger path as a positional argument.",
+    )
+    args = list(ctx.args)
+    completed = launch.capture_native("bean-doctor", ["directories", *args])
+    _replay(completed)
+    if completed.returncode != 0:
+        raise typer.Exit(completed.returncode)
+    problems = [
+        line
+        for stream in (completed.stdout, completed.stderr)
+        for line in stream.splitlines()
+        if line.startswith("ERROR:")
+    ]
+    if problems:
+        noun = "directory" if len(problems) == 1 else "directories"
+        raise LedgerError(f"doctor directories found {len(problems)} invalid {noun} (see above).")
+    raise typer.Exit(0)
+
+
+def _forward_scoped(op: str, ctx: typer.Context) -> None:
+    """Fail an empty link/region scope instead of printing a blank success."""
+    refuse_json(
+        "doctor",
+        hint="Run without --json and pass the ledger path as a positional argument.",
+    )
+    args = list(ctx.args)
+    completed = launch.capture_native("bean-doctor", [op, *args])
+    _replay(completed)
+    if completed.returncode != 0:
+        raise typer.Exit(completed.returncode)
+    rest = [
+        line
+        for stream in (completed.stdout, completed.stderr)
+        for line in stream.splitlines()
+        if line.strip() and line.strip() != "Net Income: ()"
+    ]
+    if not rest:
+        positionals = _positionals(args)
+        scope = positionals[1] if len(positionals) > 1 else "?"
+        ledger = positionals[0] if positionals else "?"
+        raise LedgerError(f"doctor {op} matched no entries for '{scope}' in {ledger}.")
+    raise typer.Exit(0)
+
+
+def _forward_missing_open(ctx: typer.Context) -> None:
+    """Print upstream's missing opens, then name the inactive ones it omits."""
+    refuse_json(
+        "doctor",
+        hint="Run without --json and pass the ledger path as a positional argument.",
+    )
+    args = list(ctx.args)
+    completed = launch.capture_native("bean-doctor", ["missing-open", *args])
+    _replay(completed)
+    if completed.returncode != 0:
+        raise typer.Exit(completed.returncode)
+    positionals = _positionals(args)
+    if not positionals:
+        raise typer.Exit(0)
+    try:
+        launch.helper_json(["check", "--file", positionals[0]])
+    except BeaError as exc:
+        details = exc.details or []
+    else:
+        details = []
+    inactive = [line for line in details if "inactive account" in line]
+    if inactive:
+        for line in inactive:
+            typer.echo(line)
+        raise LedgerError(
+            f"doctor missing-open still references {len(inactive)} closed account(s); reopen them or fix the postings."
+        )
+    raise typer.Exit(0)
+
+
 def _register(op: str) -> None:
     help_text = f"Run bean-doctor {op}."
+    forwarder = {
+        "lex": lambda ctx: _forward_parse("lex", ctx),
+        "parse": lambda ctx: _forward_parse("parse", ctx),
+        "roundtrip": _forward_roundtrip,
+        "directories": _forward_directories,
+        "print-options": _forward_print_options,
+        "linked": lambda ctx: _forward_scoped("linked", ctx),
+        "region": lambda ctx: _forward_scoped("region", ctx),
+        "missing-open": _forward_missing_open,
+    }.get(op)
+    if forwarder is None:
+
+        def forwarder(ctx: typer.Context, op: str = op) -> None:
+            _forward(op, ctx)
 
     @doctor_app.command(
         op,
@@ -53,7 +240,8 @@ def _register(op: str) -> None:
         context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
     )
     def _cmd(ctx: typer.Context) -> None:
-        _forward(op, ctx)
+        assert forwarder is not None
+        forwarder(ctx)
 
 
 for _op in _OPS:
@@ -67,4 +255,4 @@ for _op in _OPS:
 )
 def dump_lexer(ctx: typer.Context) -> None:
     """Alias for bean-doctor lex."""
-    _forward("lex", ctx)
+    _forward_parse("lex", ctx)

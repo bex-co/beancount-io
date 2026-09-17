@@ -342,3 +342,119 @@ def test_in_place_format_failure_reports_partial_changes(
         assert (f"formatted: {files[0]}" in result.stderr) is recursive
     assert (files[0].read_text() != UNALIGNED) is recursive
     assert files[1].read_text() == files[2].read_text() == UNALIGNED
+
+
+LINKED_LEDGER = """option "operating_currency" "USD"
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Expenses:Food USD
+2026-01-02 * "Lunch" ^coffee-jan
+  Assets:Checking  -5 USD
+  Expenses:Food  5 USD
+"""
+
+
+def _linked(tmp_path: Path) -> Path:
+    file = tmp_path / "linked.bean"
+    file.write_text(LINKED_LEDGER)
+    return file
+
+
+@pytest.mark.parametrize("op", ["parse", "lex", "roundtrip"])
+def test_doctor_parse_family_fails_on_unparseable_ledgers(tmp_path: Path, ledger: Path, op: str) -> None:
+    half = tmp_path / "half.bean"
+    half.write_text("2026-01-01 open\n")
+    bad = bea(tmp_path, "doctor", op, str(half))
+    assert bad.returncode == 1, bad.stderr
+    assert str(half) in bad.stderr
+    good = bea(tmp_path, "doctor", op, str(ledger))
+    assert good.returncode == 0, good.stderr
+
+
+def test_doctor_roundtrip_prints_no_congratulations_on_invalid_input(tmp_path: Path) -> None:
+    half = tmp_path / "half.bean"
+    half.write_text("2026-01-01 open\n")
+    bad = bea(tmp_path, "doctor", "roundtrip", str(half))
+    assert bad.returncode == 1, bad.stderr
+    assert "Congratulations" not in bad.stdout + bad.stderr
+
+
+def test_doctor_print_options_refuses_files_that_do_not_parse(tmp_path: Path, ledger: Path) -> None:
+    half = tmp_path / "half.bean"
+    half.write_text("2026-01-01 open\n")
+    bad = bea(tmp_path, "doctor", "print-options", str(half))
+    assert bad.returncode == 1, bad.stderr
+    assert bad.stdout == ""
+    assert "cannot load" in bad.stderr
+    good = bea(tmp_path, "doctor", "print-options", str(ledger))
+    assert good.returncode == 0, good.stderr
+    assert "operating_currency" in good.stdout
+
+
+def test_doctor_linked_and_region_fail_on_empty_scope(tmp_path: Path) -> None:
+    book = _linked(tmp_path)
+    missing = bea(tmp_path, "doctor", "linked", str(book), "^does-not-exist")
+    assert missing.returncode == 1, missing.stderr
+    assert "^does-not-exist" in missing.stderr
+    assert "Net Income: ()" in missing.stdout
+    valid = bea(tmp_path, "doctor", "linked", str(book), "^coffee-jan")
+    assert valid.returncode == 0, valid.stderr
+    assert "Net Income: (-5 USD)" in valid.stdout
+    region = bea(tmp_path, "doctor", "region", str(book), "999:999")
+    assert region.returncode == 1, region.stderr
+    assert "999:999" in region.stderr
+
+
+def test_doctor_linked_zero_net_scope_is_not_empty(tmp_path: Path) -> None:
+    book = tmp_path / "zero.bean"
+    book.write_text(
+        "2026-01-01 open Assets:A USD\n"
+        "2026-01-01 open Assets:B USD\n"
+        '2026-02-01 * "x" ^zero\n'
+        "  Assets:A -5 USD\n"
+        "  Assets:B 5 USD\n"
+        '2026-02-02 * "y" ^zero\n'
+        "  Assets:A 5 USD\n"
+        "  Assets:B -5 USD\n"
+    )
+    result = bea(tmp_path, "doctor", "linked", str(book), "^zero")
+    assert result.returncode == 0, result.stderr
+    assert "Net Income: ()" in result.stdout
+
+
+def test_doctor_missing_open_names_pre_closed_accounts(tmp_path: Path) -> None:
+    closed_only = tmp_path / "closed-only.bean"
+    closed_only.write_text(
+        "2026-01-01 open Assets:Bank:Checking USD\n"
+        "2026-01-01 open Expenses:Food USD\n"
+        "2026-06-01 close Assets:Bank:Checking\n"
+        '2026-07-01 * "late"\n'
+        "  Assets:Bank:Checking -1 USD\n"
+        "  Expenses:Food 1 USD\n"
+    )
+    result = bea(tmp_path, "doctor", "missing-open", str(closed_only))
+    assert result.returncode == 1, result.stderr
+    assert "Assets:Bank:Checking" in result.stdout
+    mixed = tmp_path / "mixed.bean"
+    mixed.write_text(
+        "2026-01-01 open Assets:Bank:Checking USD\n"
+        "2026-06-01 close Assets:Bank:Checking\n"
+        '2026-07-01 * "late"\n'
+        "  Assets:Bank:Checking -1 USD\n"
+        "  Equity:Open 1 USD\n"
+    )
+    both = bea(tmp_path, "doctor", "missing-open", str(mixed))
+    assert both.returncode == 1, both.stderr
+    assert "open Equity:Open" in both.stdout
+    assert "Assets:Bank:Checking" in both.stdout
+
+
+def test_doctor_directories_maps_error_lines_to_exit_status(tmp_path: Path, ledger: Path) -> None:
+    bad_tree = tmp_path / "docs_bad"
+    (bad_tree / "Wrong" / "Account").mkdir(parents=True)
+    bad = bea(tmp_path, "doctor", "directories", str(ledger), str(bad_tree))
+    assert bad.returncode == 1, bad.stderr
+    assert "Wrong:Account" in bad.stdout
+    good_tree = tmp_path / "docs_ok"
+    (good_tree / "Assets" / "Checking").mkdir(parents=True)
+    good = bea(tmp_path, "doctor", "directories", str(ledger), str(good_tree))
+    assert good.returncode == 0, good.stderr
