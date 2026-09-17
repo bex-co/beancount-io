@@ -145,7 +145,14 @@ def _version_callback(value: bool) -> None:
         from cli.config import package_version
 
         version = package_version()
-        typer.echo(f"bea {version}")
+        # Eager, like print_version_hint below: the run context does not exist
+        # yet, so machine mode is read from argv (either flag order works).
+        if "--json" in sys.argv[1:]:
+            from cli import output
+
+            output.emit({"version": version}, target=None)
+        else:
+            typer.echo(f"bea {version}")
         # From the day-old cache only: `--version` is what scripts parse and
         # what people run when the network is the thing that is broken.
         update.print_version_hint(version, sys.argv[1:], channel=current_channel().name)

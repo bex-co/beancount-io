@@ -152,6 +152,7 @@ def query(
     ctx = context.current()
     if output_file == "-":
         output_file = None
+    explicit_format = output_format
     if output_format is None and output_file is not None:
         suffix = Path(output_file).suffix.casefold()
         if suffix == ".csv":
@@ -161,10 +162,15 @@ def query(
                 f"--output {output_file} looks like TSV; pass --format csv (or rename the file) "
                 "so the destination is not an ASCII text table."
             )
+    if output_format is not None and output_format not in FORMATS:
+        raise UsageError(f"Unknown query format '{output_format}'. Choose one of: {', '.join(FORMATS)}.")
+    if ctx.json_output and explicit_format is not None:
+        raise UsageError(
+            f"--json and --format {explicit_format} cannot be combined: --json already selects JSON output. "
+            "Drop --format or drop --json."
+        )
     if output_format is None:
         output_format = "text"
-    if output_format not in FORMATS:
-        raise UsageError(f"Unknown query format '{output_format}'. Choose one of: {', '.join(FORMATS)}.")
     if output_file is not None:
         output.check_output_destination(Path(output_file))
 

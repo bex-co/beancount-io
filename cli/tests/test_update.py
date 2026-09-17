@@ -329,7 +329,11 @@ class TestVersionHint:
 
         result = runner.invoke(app, [flag, "--version"])
 
-        assert result.stdout.strip() == "bea 0.1.0"
+        if flag == "--json":
+            payload = json.loads(result.stdout)
+            assert payload["data"]["version"] == "0.1.0"
+        else:
+            assert result.stdout.strip() == "bea 0.1.0"
         assert "is available" not in result.stderr
 
     def test_no_hint_when_nothing_was_ever_checked(

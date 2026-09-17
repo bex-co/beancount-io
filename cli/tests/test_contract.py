@@ -833,3 +833,29 @@ def test_query_source_bare_path_still_works(tmp_path: Path, monkeypatch: pytest.
     result = runner.invoke(app, ["query", "--source", str(VALID), "SELECT account LIMIT 1"])
     assert result.exit_code == 0, result.output
     assert "Assets:" in result.stdout
+
+
+def test_json_query_with_format_is_usage_error() -> None:
+    result = runner.invoke(app, ["--json", "--file", str(VALID), "query", "SELECT account LIMIT 1", "-f", "csv"])
+    assert result.exit_code == 2, result.output
+    assert error_object(result)["category"] == "usage"
+    assert "--format csv" in error_object(result)["message"]
+
+
+def test_human_query_with_format_still_works() -> None:
+    result = runner.invoke(app, ["--file", str(VALID), "query", "SELECT account LIMIT 1", "-f", "csv"])
+    assert result.exit_code == 0, result.output
+    assert "account" in result.stdout
+
+
+class TestJsonVersion:
+    @pytest.mark.parametrize("argv", [["--json", "--version"], ["--version", "--json"]])
+    def test_json_version_emits_envelope(self, argv: list[str], monkeypatch: pytest.MonkeyPatch) -> None:
+        # The --version callback is eager: it reads machine mode from argv
+        # because the run context does not exist yet.
+        monkeypatch.setattr(sys, "argv", ["bea", *argv])
+        result = runner.invoke(app, argv)
+        assert result.exit_code == 0, result.output
+        payload = envelope(result)
+        assert payload["data"]["version"]
+        assert payload["data"]["version"] in result.stdout

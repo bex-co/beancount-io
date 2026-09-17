@@ -56,3 +56,14 @@ def test_json_example_refuses_instead_of_raw_sample(tmp_path: Path) -> None:
 def test_json_treeify_refuses_instead_of_ascii_tree(tmp_path: Path) -> None:
     tree_in = "Assets:Bank:Checking               100\nAssets:Cash                       25\n"
     _assert_json_refusal(_bea(tmp_path, "--json", "treeify", stdin=tree_in), "treeify")
+
+
+def test_json_price_refuses_instead_of_upstream_text(tmp_path: Path) -> None:
+    _assert_json_refusal(_bea(tmp_path, "--json", "price", "-n", "-e", "USD:yahoo/AAPL"), "price")
+
+
+def test_json_ingest_refuses_instead_of_beangulp_text(tmp_path: Path) -> None:
+    script = tmp_path / "ingest.py"
+    script.write_text("from beangulp import Ingest\nIngest([])()\n")
+    (tmp_path / "bank.csv").write_text("a\n")
+    _assert_json_refusal(_bea(tmp_path, "--json", "ingest", "identify", "--config", str(script), "bank.csv"), "ingest")
