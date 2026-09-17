@@ -52,9 +52,13 @@ def ledger_create(
     import httpx
 
     from cli.api.client import authenticated_client
+    from cli.utils import ledger_name
 
     from . import manager
 
+    # Before credentials, as in `clone` and `show`: a name the service would
+    # refuse is the caller's mistake, and saying "not logged in" hides it.
+    name = ledger_name(name)
     if clone:
         manager.ensure_git_available()
 

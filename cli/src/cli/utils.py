@@ -38,6 +38,30 @@ def owner_and_name(full_name: str) -> tuple[str, str]:
     return owner, name
 
 
+# The server accepts exactly this, in REST v1 and in GraphQL alike. Keep the two
+# in step: a stricter rule here would refuse a name the service would have taken.
+_LEDGER_NAME = re.compile(r"^[a-z0-9_-]+$")
+_LEDGER_NAME_MAX = 100
+
+
+def ledger_name(name: str) -> str:
+    """A hosted ledger name, checked against the service's own slug rule.
+
+    Checked locally so a malformed name is a usage error with the rule in it,
+    rather than an authentication failure that never mentions the name — the
+    same reason `owner_and_name` runs before credentials are touched.
+    """
+    if _LEDGER_NAME.fullmatch(name) and len(name) <= _LEDGER_NAME_MAX:
+        return name
+    rule = (
+        f"Ledger names use lowercase letters, digits, hyphens and underscores, at most {_LEDGER_NAME_MAX} characters."
+    )
+    suggestion = re.sub(r"^[-_]+|[-_]+$", "", re.sub(r"[^a-z0-9_-]+", "-", name.lower()))[:_LEDGER_NAME_MAX]
+    if suggestion and suggestion != name:
+        rule += f" Try '{suggestion}'."
+    raise UsageError(f"'{name}' is not a valid ledger name. {rule}")
+
+
 def snake_case(name: str) -> str:
     return re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name).lower()
 

@@ -844,6 +844,12 @@ bea cloud ledger delete alice/my-books          # asks for confirmation
 bea --yes cloud ledger delete alice/old-books   # global switches precede the command
 ```
 
+A ledger name uses lowercase letters, digits, hyphens and underscores, at most
+100 characters — the service's own rule. `create` checks it before touching
+credentials, so a malformed name exits **2** naming the rule and a slugified
+suggestion rather than exiting **3** with "Not logged in", which would say
+nothing about the name.
+
 Cloning uses `git clone` over SSH, so it needs Git and working SSH access. If a clone fails after the ledger was created, the command exits nonzero and prints the manual `git clone` command — the ledger exists either way.
 
 ## Updating
