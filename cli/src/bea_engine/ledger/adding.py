@@ -126,10 +126,16 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
             meta=_parse_metadata([str(item) for item in request.get("meta") or []]),
         )
     if directive_type == "document":
+        filename = _text(request, "filename")
+        if Path(filename).is_absolute():
+            raise protocol.UsageError(
+                f"Document path {filename!r} must be relative to the destination ledger file's "
+                "directory so copies of the ledger stay portable. Pass a relative --path."
+            )
         return DocumentDirective(
             date=date,
             account=parse_account(_text(request, "account")),
-            filename=_text(request, "filename"),
+            filename=filename,
             tags=list(request.get("tags") or []),
             links=list(request.get("links") or []),
         )

@@ -544,14 +544,38 @@ def _text(value: str) -> str:
 
 
 def _validate(file: Path) -> dict[str, Any]:
+    from beancount.core.data import Document
+
     from bea_engine.query import format_error
     from fava.core.loader import load_file
 
-    _entries, errors, _options = load_file(str(file))
+    entries, errors, _options = load_file(str(file))
 
     if errors:
         raise protocol.LedgerError(
             f"{file}: {len(errors)} error(s).",
             details=[format_error(error) for error in errors],
+        )
+
+    root = file.resolve().parent
+    portable: list[str] = []
+    for entry in entries:
+        if not isinstance(entry, Document):
+            continue
+        path = Path(entry.filename)
+        if not path.is_absolute():
+            continue
+        try:
+            path.resolve().relative_to(root)
+        except ValueError:
+            portable.append(
+                f"{entry.meta.get('filename', file)}:{entry.meta.get('lineno', '?')}: "
+                f"Document path {entry.filename!r} is absolute and outside the ledger "
+                f"directory {root}. Prefer a path relative to the ledger file so copies stay portable."
+            )
+    if portable:
+        raise protocol.LedgerError(
+            f"{file}: {len(portable)} portable-document warning(s).",
+            details=portable,
         )
     return {"valid": True, "errors": []}
