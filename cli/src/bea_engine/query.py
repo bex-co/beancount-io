@@ -28,6 +28,7 @@ from __future__ import annotations
 import difflib
 import re
 import sys
+import unicodedata
 from collections.abc import Mapping
 from decimal import Decimal, localcontext
 from pathlib import Path
@@ -317,8 +318,6 @@ def build_shell(
             self.execute(query.query_string, default_close_date=query.date)
 
         def onecmd(self, line: str) -> Any:
-            import unicodedata
-
             # Ledger text loads NFC-normalized, so interactive input is too; a
             # pasted NFD literal would otherwise miss the identical NFC row.
             line = unicodedata.normalize("NFC", line)
@@ -442,8 +441,6 @@ def _csv_from_jsonable(value: Any) -> str:
 
 def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) -> Any:
     """Run a query, turning beanquery's terse complaint into one that names the problem."""
-    import unicodedata
-
     from beanquery import Error as BeanqueryError
 
     # Ledger text loads NFC-normalized, so the query must be too: a regex or

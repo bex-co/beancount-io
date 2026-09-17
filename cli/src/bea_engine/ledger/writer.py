@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import re
+import unicodedata
 from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
@@ -135,8 +136,6 @@ def _nfc_entry_accounts(entry: Any) -> Any:
     keeps the file canonical from the first write. Untouched entries pass
     through unchanged.
     """
-    import unicodedata
-
     if isinstance(entry, Transaction):
         postings = [
             posting._replace(account=unicodedata.normalize("NFC", posting.account)) for posting in entry.postings
@@ -153,7 +152,7 @@ def _nfc_entry_accounts(entry: Any) -> Any:
         values = []
         for v in entry.values:
             if v.dtype is beancount_account.TYPE and isinstance(v.value, str):
-                values.append(_ValueType(unicodedata.normalize("NFC", v.value), v.dtype))  # type: ignore[arg-type]
+                values.append(v._replace(value=unicodedata.normalize("NFC", v.value)))
             else:
                 values.append(v)
         return entry._replace(values=values)

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import dataclasses
 import re
+import unicodedata
 from collections.abc import Iterable, Mapping
 from datetime import date, timedelta
 from decimal import Decimal
@@ -264,8 +265,6 @@ def _trial_balance(filtered: Any, conversion: str, allow_errors: bool, ledger_er
 def _load(
     file: Path, account: str | None, time: str | None, conversion: str | None, allow_errors: bool
 ) -> tuple[Any, str, list[str]]:
-    import unicodedata
-
     from fava.core.filters import FilterError
     from fava.core.loader import load_file
     from fava.ledger import FavaLedger

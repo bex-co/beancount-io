@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import unicodedata
 from pathlib import Path
 
 import typer
@@ -58,8 +59,6 @@ def _closure_needs_compat(file: Path) -> str | None:
     normalizations read as distinct accounts there; the helper reads both
     shapes. Pure NFC unmarked closures keep native output byte for byte.
     """
-    import unicodedata
-
     from cli.utils import has_bom
 
     try:
