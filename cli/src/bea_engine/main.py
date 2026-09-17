@@ -388,6 +388,9 @@ def import_entries(
     delimiter: Annotated[
         str | None, typer.Option("--delimiter", help="CSV field delimiter for --csv: ',', ';', '|', or 'tab'.")
     ] = None,
+    encoding: Annotated[
+        str | None, typer.Option("--encoding", help="CSV text encoding for --csv: utf-8, cp1252, or latin-1.")
+    ] = None,
     rules_file: Annotated[
         Path | None, typer.Option("--rules", help="TOML categorization rules for --csv rows.")
     ] = None,
@@ -430,6 +433,7 @@ def import_entries(
             csv_account=csv_account,
             date_format=date_format,
             delimiter=delimiter,
+            encoding=encoding,
             rules_file=rules_file,
             default_account=default_account,
             config=config,

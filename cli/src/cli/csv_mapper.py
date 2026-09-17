@@ -20,7 +20,20 @@ from typing import Any
 from cli.errors import UsageError
 
 _MAPPING_FIELDS = frozenset(
-    {"date", "amount", "payee", "narration", "id", "currency", "debit", "credit", "category", "sign", "delimiter"}
+    {
+        "date",
+        "amount",
+        "payee",
+        "narration",
+        "id",
+        "currency",
+        "debit",
+        "credit",
+        "category",
+        "sign",
+        "delimiter",
+        "encoding",
+    }
 )
 
 
@@ -31,6 +44,7 @@ class CsvMapping:
     columns: dict[str, str]
     sign: str = "bank"
     delimiter: str | None = None
+    encoding: str | None = None
 
     def column(self, name: str) -> str | None:
         return self.columns.get(name)
@@ -67,6 +81,7 @@ def parse_mapping(spec: str) -> CsvMapping:
     columns: dict[str, str] = {}
     sign = "bank"
     delimiter: str | None = None
+    encoding: str | None = None
     for part in spec.split(","):
         name, separator, column = part.partition("=")
         name, column = name.strip(), column.strip()
@@ -89,27 +104,47 @@ def parse_mapping(spec: str) -> CsvMapping:
             if delimiter is not None:
                 raise UsageError("Duplicate --csv field 'delimiter'.")
             delimiter = _parse_delimiter_value(column)
+        elif name == "encoding":
+            if encoding is not None:
+                raise UsageError("Duplicate --csv field 'encoding'.")
+            encoding = _parse_encoding_value(column)
         elif name in columns:
             raise UsageError(f"Duplicate --csv field {name!r}.")
         else:
             columns[name] = column
-    if "date" not in columns:
-        raise UsageError(f"--csv needs date=Column; got {spec!r}.")
-    # Beancount's payee is optional, and most exports carry one free-text
-    # column. Forcing it into payee would put a raw bank memo in the field
-    # payee-based reporting groups by, so either description field will do.
-    if "payee" not in columns and "narration" not in columns:
-        raise UsageError(
-            f"--csv needs payee=Column or narration=Column for the description; got {spec!r}. "
-            "A single bank description column belongs in narration=."
-        )
-    has_amount = "amount" in columns
-    has_pair = "debit" in columns or "credit" in columns
-    if has_amount == has_pair:
-        raise UsageError("--csv needs amount=Column or debit=A,credit=B (exactly one of the two).")
-    if has_pair and ("debit" not in columns or "credit" not in columns):
-        raise UsageError("--csv needs both debit=A and credit=B together.")
-    return CsvMapping(columns=columns, sign=sign, delimiter=delimiter)
+    if columns:
+        # Keys without columns (`encoding=`/`delimiter=`/`sign=` alone) parse:
+        # the caller infers the mapping instead of failing it.
+        if "date" not in columns:
+            raise UsageError(f"--csv needs date=Column; got {spec!r}.")
+        # Beancount's payee is optional, and most exports carry one free-text
+        # column. Forcing it into payee would put a raw bank memo in the field
+        # payee-based reporting groups by, so either description field will do.
+        if "payee" not in columns and "narration" not in columns:
+            raise UsageError(
+                f"--csv needs payee=Column or narration=Column for the description; got {spec!r}. "
+                "A single bank description column belongs in narration=."
+            )
+        has_amount = "amount" in columns
+        has_pair = "debit" in columns or "credit" in columns
+        if has_amount == has_pair:
+            raise UsageError("--csv needs amount=Column or debit=A,credit=B (exactly one of the two).")
+        if has_pair and ("debit" not in columns or "credit" not in columns):
+            raise UsageError("--csv needs both debit=A and credit=B together.")
+    return CsvMapping(columns=columns, sign=sign, delimiter=delimiter, encoding=encoding)
+
+
+def _parse_encoding_value(column: str) -> str:
+    """Normalize a `--csv encoding=` value to a codec name."""
+    value = column.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+        value = value[1:-1]
+    if value:
+        try:
+            return parse_encoding(value)
+        except UsageError:
+            pass
+    raise UsageError(f"Bad --csv encoding {column!r}: write utf-8, cp1252, or latin-1.")
 
 
 def _parse_delimiter_value(column: str) -> str:
@@ -229,11 +264,62 @@ def _malformed(source: Path, line: int, exc: csv.Error) -> UsageError:
     )
 
 
-def _utf8_usage_error(source: Path, exc: UnicodeDecodeError) -> UsageError:
-    """Name a decode failure instead of pretending the CSV had no columns."""
+def _read_codec(encoding: str) -> str:
+    """The `open()` codec: UTF-8 tolerates a BOM, the rest read as named."""
+    return "utf-8-sig" if encoding == "utf-8" else encoding
+
+
+def probe_decoding(source: Path) -> str:
+    """First of utf-8, cp1252, latin-1 that decodes this file.
+
+    latin-1 maps every byte, so it always matches — callers treat a
+    latin-1-only win as a refusal, not a decoding, rather than mojibake
+    binary garbage silently.
+    """
+    data = source.read_bytes()
+    for codec in ("utf-8", "cp1252"):
+        try:
+            data.decode(codec)
+        except UnicodeDecodeError:
+            continue
+        return codec
+    return "latin-1"
+
+
+def parse_encoding(value: str) -> str:
+    """Normalize an `--encoding` value to utf-8, cp1252, or latin-1."""
+    folded = value.strip().casefold()
+    if folded in {"utf-8", "utf8"}:
+        return "utf-8"
+    if folded in {"cp1252", "windows-1252"}:
+        return "cp1252"
+    if folded in {"latin-1", "latin1", "iso-8859-1"}:
+        return "latin-1"
+    raise UsageError(f"Bad --encoding {value!r}: use utf-8, cp1252, or latin-1.")
+
+
+def _decode_usage_error(source: Path, exc: UnicodeDecodeError, encoding: str) -> UsageError:
+    """Name a decode failure instead of pretending the CSV had no columns.
+
+    Under the default UTF-8 the whole fallback chain is probed so the
+    refusal can name the decoding that works; a latin-1-only file is still
+    refused with the tried list, and an explicitly chosen codec reports
+    itself.
+    """
+    if encoding != "utf-8":
+        return UsageError(f"{source.name} is not valid {encoding} ({exc.reason} at byte {exc.start}).")
+    try:
+        winner = probe_decoding(source)
+    except OSError:
+        winner = "latin-1"
+    if winner == "cp1252":
+        return UsageError(
+            f"{source.name} is not valid UTF-8 ({exc.reason} at byte {exc.start}); "
+            "it decodes as cp1252 — pass --csv encoding=cp1252."
+        )
     return UsageError(
-        f"{source.name} is not valid UTF-8 ({exc.reason} at byte {exc.start}). "
-        "Save or re-export the file as UTF-8 (with or without BOM) and retry."
+        f"Cannot decode {source.name}: tried utf-8, cp1252, latin-1 ({exc.reason} at byte {exc.start}). "
+        "Force one with --csv encoding=latin-1."
     )
 
 
@@ -250,7 +336,7 @@ def _field_count(line: str, delim: str) -> int | None:
         return None
 
 
-def detect_delimiter(source: Path) -> str:
+def detect_delimiter(source: Path, encoding: str = "utf-8") -> str:
     """Pick comma, semicolon, tab, or pipe from the first non-empty lines.
 
     Bank exports often use ``;`` (EU), tabs, or ``|`` (brokers). Prefer the
@@ -261,7 +347,7 @@ def detect_delimiter(source: Path) -> str:
     header line wins as before.
     """
     try:
-        with open(source, encoding="utf-8-sig", newline="") as stream:
+        with open(source, encoding=_read_codec(encoding), newline="") as stream:
             sample = []
             for line in stream:
                 if line.strip():
@@ -269,7 +355,7 @@ def detect_delimiter(source: Path) -> str:
                     if len(sample) >= _SAMPLE_LINES:
                         break
     except UnicodeDecodeError as exc:
-        raise _utf8_usage_error(source, exc) from None
+        raise _decode_usage_error(source, exc, encoding) from None
     if not sample:
         return ","
     best = ","
@@ -311,7 +397,9 @@ def parse_delimiter(value: str) -> str:
 
 
 @contextmanager
-def open_records(source: Path, *, delimiter: str | None = None) -> Iterator[tuple[list[str], Iterator[dict[str, str]]]]:
+def open_records(
+    source: Path, *, delimiter: str | None = None, encoding: str = "utf-8"
+) -> Iterator[tuple[list[str], Iterator[dict[str, str]]]]:
     """The stripped header row and one dict per data row, keyed by those names.
 
     This is the one reader every CSV path shares, so discovery, date inference,
@@ -319,15 +407,17 @@ def open_records(source: Path, *, delimiter: str | None = None) -> Iterator[tupl
     the BOM dropped) exactly as `IMPORTING.md` promises. Quoting is strict —
     a quote left open at end of file fails with its line instead of silently
     folding every later row into one field. When ``delimiter`` is omitted the
-    first line chooses among comma, semicolon, and tab.
+    sampled rows choose among comma, semicolon, tab, and pipe.
     """
-    delim = detect_delimiter(source) if delimiter is None else delimiter
-    with open(source, encoding="utf-8-sig", newline="") as stream:
+    delim = detect_delimiter(source, encoding=encoding) if delimiter is None else delimiter
+    with open(source, encoding=_read_codec(encoding), newline="") as stream:
         reader = csv.reader(stream, delimiter=delim, strict=True)
         try:
             first = next(reader, None)
         except csv.Error as exc:
             raise _malformed(source, reader.line_num, exc) from None
+        except UnicodeDecodeError as exc:
+            raise _decode_usage_error(source, exc, encoding) from None
         headers = [cell.strip() for cell in first or []]
 
         def rows() -> Iterator[dict[str, str]]:
@@ -336,12 +426,14 @@ def open_records(source: Path, *, delimiter: str | None = None) -> Iterator[tupl
                     yield {name: record[i] if i < len(record) else "" for i, name in enumerate(headers)}
             except csv.Error as exc:
                 raise _malformed(source, reader.line_num, exc) from None
+            except UnicodeDecodeError as exc:
+                raise _decode_usage_error(source, exc, encoding) from None
 
         yield headers, rows()
 
 
 def infer_date_format(
-    source: Path, column: str, limit: int = 200, *, delimiter: str | None = None
+    source: Path, column: str, limit: int = 200, *, delimiter: str | None = None, encoding: str = "utf-8"
 ) -> tuple[str | None, bool]:
     """The one date format that parses this column, and whether others also did.
 
@@ -351,7 +443,7 @@ def infer_date_format(
     """
     values: list[str] = []
     try:
-        with open_records(source, delimiter=delimiter) as (headers, rows):
+        with open_records(source, delimiter=delimiter, encoding=encoding) as (headers, rows):
             if column not in headers:
                 return None, False
             for row in rows:
@@ -384,16 +476,16 @@ def header_signature(headers: list[str] | None) -> str | None:
     return hashlib.sha256("\0".join(headers).encode("utf-8")).hexdigest()
 
 
-def read_header(source: Path, *, delimiter: str | None = None) -> list[str] | None:
+def read_header(source: Path, *, delimiter: str | None = None, encoding: str = "utf-8") -> list[str] | None:
     """Read a CSV header row, or None when the file is not a readable CSV.
 
     Decode failures raise ``UsageError`` so import does not claim the header
     had zero columns and suggest a ``--csv`` mapping that cannot help.
     """
     try:
-        with open_records(source, delimiter=delimiter) as (headers, _rows):
+        with open_records(source, delimiter=delimiter, encoding=encoding) as (headers, _rows):
             return headers or None
     except UnicodeDecodeError as exc:
-        raise _utf8_usage_error(source, exc) from None
+        raise _decode_usage_error(source, exc, encoding) from None
     except OSError:
         return None

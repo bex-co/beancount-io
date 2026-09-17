@@ -65,7 +65,18 @@ def _display_delimiter(delim: str) -> str:
     return {"\t": "tab"}.get(delim, f"'{delim}'")
 
 
-def _inferred_mapping(source: Path, *, explicit: bool, notes: list[str], delimiter: str | None = None) -> str | None:
+def _check_delimiter_conflict(flag: str | None, key: str | None) -> None:
+    """`--delimiter` and `--csv delimiter=` must agree when both are set."""
+    if flag is not None and key is not None and flag != key:
+        raise UsageError(
+            f"--delimiter {_display_delimiter(flag)} disagrees with "
+            f"--csv delimiter={_display_delimiter(key)}; pass only one."
+        )
+
+
+def _inferred_mapping(
+    source: Path, *, explicit: bool, notes: list[str], delimiter: str | None = None, encoding: str = "utf-8"
+) -> str | None:
     """A `--csv` spec read off the export's header row.
 
     `--csv auto` fails for any unreadable header. The automatic attempt falls
@@ -73,7 +84,7 @@ def _inferred_mapping(source: Path, *, explicit: bool, notes: list[str], delimit
     """
     from cli.csv_mapper import detect_delimiter, infer_mapping, read_header
 
-    headers = read_header(source, delimiter=delimiter)
+    headers = read_header(source, delimiter=delimiter, encoding=encoding)
     inferred = infer_mapping(headers)
     if inferred is not None and inferred.ambiguities:
         notes.append(
@@ -84,7 +95,7 @@ def _inferred_mapping(source: Path, *, explicit: bool, notes: list[str], delimit
         if inferred is None and not explicit:
             return None
         columns = ", ".join(headers) if headers else "(none)"
-        used = delimiter if delimiter is not None else detect_delimiter(source)
+        used = delimiter if delimiter is not None else detect_delimiter(source, encoding=encoding)
         if headers and len(headers) == 1 and any(sep in headers[0] for sep in (";", "\t", "|")):
             raise UsageError(
                 f"Cannot read a column mapping from the header row of {source.name}. "
@@ -133,7 +144,17 @@ def _recall_csv(file: Path, source: Path, account: str | None = None) -> dict[st
         sources = json.loads(record.read_text()).get("sources", [])
     except (ValueError, AttributeError):
         return None
-    headers = read_header(source)
+    try:
+        headers = read_header(source)
+    except UsageError:
+        # A non-UTF-8 export can still match a remembered mapping: fingerprint
+        # with the decoding that works, then replay the mapping's own key.
+        from cli.csv_mapper import probe_decoding
+
+        try:
+            headers = read_header(source, encoding=probe_decoding(source))
+        except (UsageError, OSError):
+            return None
     if not headers:
         return None
     wanted = header_signature(headers)
@@ -156,11 +177,11 @@ def _recall_csv(file: Path, source: Path, account: str | None = None) -> dict[st
     return matches[0] if matches else None
 
 
-def _remember_csv(file: Path, source: Path, spec: dict[str, Any]) -> None:
+def _remember_csv(file: Path, source: Path, spec: dict[str, Any], encoding: str = "utf-8") -> None:
     """Remember a `--csv` run keyed by root ledger, CSV header row and account."""
     from cli.csv_mapper import header_signature, read_header
 
-    headers = read_header(source)
+    headers = read_header(source, encoding=encoding)
     if not headers:
         return
     record = _csv_record(file)
@@ -195,7 +216,8 @@ def import_entries(
         typer.Option(
             "--csv",
             help="Column mapping (date=Date,amount=Amount,narration=Description,...; delimiter=';' overrides "
-            "detection), or 'auto' to read the header row; no Python importer needed",
+            "detection, encoding=cp1252 overrides UTF-8), or 'auto' to read the header row; "
+            "no Python importer needed",
         ),
     ] = None,
     csv_account: Annotated[str | None, typer.Option("--account", help="Source account for --csv rows")] = None,
@@ -262,6 +284,7 @@ def import_entries(
     source = source.expanduser().resolve()
     flag_delimiter: str | None = parse_delimiter(delimiter) if delimiter is not None else None
     csv_delimiter: str | None = flag_delimiter
+    csv_encoding = "utf-8"
     if csv_mapping is not None and config is not None:
         raise UsageError("Pass --csv or --config, not both.")
     if not source.is_file():
@@ -279,8 +302,31 @@ def import_entries(
     # row without sharing a date convention.
     chosen_date_format = date_format
     if csv_request is not None and csv_request.strip().casefold() == "auto":
-        csv_request = _inferred_mapping(source, explicit=True, notes=inferred_notes, delimiter=csv_delimiter)
+        csv_request = _inferred_mapping(
+            source, explicit=True, notes=inferred_notes, delimiter=csv_delimiter, encoding=csv_encoding
+        )
         csv_origin = "inferred --csv"
+    if csv_request is not None and csv_request.strip().casefold() != "auto":
+        try:
+            peek = parse_mapping(csv_request)
+        except UsageError:
+            peek = None
+        if peek is not None and peek.encoding is not None:
+            # The decoding key applies before any read, so detection itself
+            # decodes with it; the merge below re-applies it idempotently.
+            csv_encoding = peek.encoding
+        if peek is not None and not peek.columns:
+            # Keys without columns (`encoding=`, `delimiter=`, `sign=` alone):
+            # decode with the keys, then infer the mapping like `auto`.
+            _check_delimiter_conflict(flag_delimiter, peek.delimiter)
+            if peek.delimiter is not None:
+                csv_delimiter = peek.delimiter
+            csv_request = _inferred_mapping(
+                source, explicit=True, notes=inferred_notes, delimiter=csv_delimiter, encoding=csv_encoding
+            )
+            if peek.sign != "bank" and csv_request is not None:
+                csv_request = f"{csv_request},sign={peek.sign}"
+            csv_origin = "inferred --csv"
     if csv_request is None and config is None:
         remembered = _recall_csv(file, source, csv_account)
         if remembered is not None:
@@ -297,21 +343,21 @@ def import_entries(
             if csv_delimiter is None and isinstance(remembered.get("delimiter"), str):
                 csv_delimiter = remembered["delimiter"]
         elif config is None and _config_available(file) is None:
-            csv_request = _inferred_mapping(source, explicit=False, notes=inferred_notes, delimiter=csv_delimiter)
+            csv_request = _inferred_mapping(
+                source, explicit=False, notes=inferred_notes, delimiter=csv_delimiter, encoding=csv_encoding
+            )
             if csv_request is not None:
                 csv_origin = "inferred --csv"
 
     csv_mode = csv_request is not None
     if csv_mode and csv_delimiter is None:
-        csv_delimiter = detect_delimiter(source)
-    if (
-        csv_origin == "inferred --csv"
-        and csv_request is not None
-        and csv_delimiter is not None
-        and csv_delimiter != ","
-    ):
+        csv_delimiter = detect_delimiter(source, encoding=csv_encoding)
+    if csv_origin == "inferred --csv" and csv_request is not None:
         # The echoed spec carries what was assumed, so it pastes back verbatim.
-        csv_request = f"{csv_request},delimiter={_display_delimiter(csv_delimiter)}"
+        if csv_delimiter is not None and csv_delimiter != ",":
+            csv_request = f"{csv_request},delimiter={_display_delimiter(csv_delimiter)}"
+        if csv_encoding != "utf-8":
+            csv_request = f"{csv_request},encoding={csv_encoding}"
     argv = ["import", "--file", str(file), "--source", str(source), "--duplicates", duplicates.value]
     if apply:
         argv.append("--apply")
@@ -337,15 +383,15 @@ def import_entries(
             )
         mapping = parse_mapping(csv_request)
         spec_delimiter = mapping.delimiter
-        if flag_delimiter is not None and spec_delimiter is not None and flag_delimiter != spec_delimiter:
-            raise UsageError(
-                f"--delimiter {_display_delimiter(flag_delimiter)} disagrees with "
-                f"--csv delimiter={_display_delimiter(spec_delimiter)}; pass only one."
-            )
+        _check_delimiter_conflict(flag_delimiter, spec_delimiter)
         if spec_delimiter is not None:
             csv_delimiter = spec_delimiter
+        if mapping.encoding is not None:
+            csv_encoding = mapping.encoding
         if date_format is None:
-            date_format, ambiguous = infer_date_format(source, mapping.columns["date"], delimiter=csv_delimiter)
+            date_format, ambiguous = infer_date_format(
+                source, mapping.columns["date"], delimiter=csv_delimiter, encoding=csv_encoding
+            )
             if date_format is None:
                 date_format = "%Y-%m-%d"
             elif ambiguous:
@@ -357,10 +403,12 @@ def import_entries(
         delimiter_note = ""
         if csv_delimiter is not None and csv_delimiter != ",":
             delimiter_note = f", delimiter {_display_delimiter(csv_delimiter)}"
+        encoding_note = f", encoding {csv_encoding}" if csv_encoding != "utf-8" else ""
         frontend_notes: list[str] = []
         if remembered_run:
             frontend_notes.append(
-                f"Using remembered column mapping for {source.name} (--date-format {date_format}{delimiter_note})."
+                f"Using remembered column mapping for {source.name} "
+                f"(--date-format {date_format}{delimiter_note}{encoding_note})."
             )
         elif csv_origin == "inferred --csv":
             frontend_notes.append(
@@ -368,16 +416,18 @@ def import_entries(
                 "Pass --csv to override."
             )
         else:
-            frontend_notes.append(f"Using column mapping (--csv{delimiter_note}).")
+            frontend_notes.append(f"Using column mapping (--csv{delimiter_note}{encoding_note}).")
         frontend_notes.extend(inferred_notes)
         for line in frontend_notes:
             output.note(line)
-        # The engine's parser rejects `delimiter=` by design: the frontend owns
-        # the merge above and forwards columns only.
+        # The engine's parser rejects `delimiter=` and `encoding=` by design:
+        # the frontend owns the merge above and forwards columns only.
         forward_spec = ",".join(
-            part for part in csv_request.split(",") if part.partition("=")[0].strip() != "delimiter"
+            part for part in csv_request.split(",") if part.partition("=")[0].strip() not in {"delimiter", "encoding"}
         )
         argv += ["--csv", forward_spec, "--account", csv_run_account, "--config-source", csv_origin]
+        if csv_encoding != "utf-8":
+            argv += ["--encoding", csv_encoding]
         argv += ["--date-format", date_format, "--default-account", default_account]
         if csv_delimiter is not None:
             argv += ["--delimiter", "tab" if csv_delimiter == "\t" else csv_delimiter]
@@ -395,6 +445,7 @@ def import_entries(
                     "date_format": chosen_date_format,
                     "delimiter": csv_delimiter,
                 },
+                encoding=csv_encoding,
             )
     else:
         frontend_notes = []

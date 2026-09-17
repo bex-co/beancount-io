@@ -77,8 +77,15 @@ when the export uses the opposite convention. The currency defaults to the
 ledger's single operating currency. `--account` names the source account and
 is required. The file may start with a BOM; header cells are stripped before
 matching. Field separators are detected from the header among comma,
-semicolon, and tab; pass `--delimiter ','`, `--delimiter ';'`, or
-`--delimiter tab` to force one. Unknown fields, missing columns, bad dates, and bad amounts fail
+semicolon, tab, and pipe; pass `--delimiter ','`, `--delimiter ';'`, or
+`--delimiter tab` to force one — or `delimiter=';'` inside `--csv` itself.
+Files read as UTF-8 (with or without a BOM) unless `--csv encoding=` names
+cp1252 or latin-1 — Windows exports with accented payees need
+`encoding=cp1252`. A bare `--csv encoding=cp1252` decodes with that codec
+and then infers the mapping like `auto`. Without the key, a non-UTF-8 file
+fails before anything is read: the error names the byte offset and, when the
+file decodes as cp1252, says so with the override to pass. A file no
+candidate decodes lists the encodings tried instead. Unknown fields, missing columns, bad dates, and bad amounts fail
 with the row number and column name. A mapped column that appears more than
 once in the header, or a quote left open at the end of the file, fails before
 anything is written. Misuse exits **2**.
