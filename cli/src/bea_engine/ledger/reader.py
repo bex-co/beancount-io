@@ -332,11 +332,39 @@ def list_documents(
         tags = sorted(entry.tags) if entry.tags else []
         links = sorted(entry.links) if entry.links else []
         results.append(
-            DocumentDirective(date=entry.date, account=entry.account, filename=entry.filename, tags=tags, links=links)
+            DocumentDirective(
+                date=entry.date,
+                account=entry.account,
+                filename=_document_filename_for_json(entry),
+                tags=tags,
+                links=links,
+            )
         )
         if len(results) >= limit:
             break
     return results
+
+
+def _document_filename_for_json(entry: Any) -> str:
+    """Prefer the ledger-relative path token when Beancount resolved it absolutely.
+
+    `add document` writes and returns the relative `--path`; the loader expands
+    it. Relativize against the directive's source file so list matches add.
+    """
+    from pathlib import Path
+
+    filename = str(entry.filename)
+    source = entry.meta.get("filename") if getattr(entry, "meta", None) else None
+    if not source:
+        return filename
+    try:
+        path = Path(filename)
+        root = Path(str(source)).resolve().parent
+        if path.is_absolute():
+            return str(path.resolve().relative_to(root))
+    except (OSError, ValueError):
+        return filename
+    return filename
 
 
 def list_customs(
