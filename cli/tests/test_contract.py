@@ -859,3 +859,99 @@ class TestJsonVersion:
         payload = envelope(result)
         assert payload["data"]["version"]
         assert payload["data"]["version"] in result.stdout
+
+
+_TXN = '2026-02-01 * "Cafe" "Lunch"\n  Expenses:Food 10.00 USD\n  Assets:Cash\n'
+
+
+class TestEnvelopeHoldsUnderFailure:
+    """Every milestone reproducer fails as one parseable object, never a traceback."""
+
+    @pytest.fixture
+    def books(self, tmp_path: Path) -> dict[str, Path]:
+        book = tmp_path / "main.bean"
+        book.write_text(VALID.read_text())
+        plugin = tmp_path / "plugin.bean"
+        plugin.write_text('plugin "beancount.plugins.no_such_plugin"\n' + VALID.read_text())
+        dup = tmp_path / "dup.bean"
+        dup.write_text('plugin "beancount.plugins.noduplicates"\n' + VALID.read_text() + _TXN + _TXN)
+        return {"book": book, "plugin": plugin, "dup": dup}
+
+    @pytest.mark.parametrize(
+        ("ledger", "command", "exit_code", "category"),
+        [
+            ("plugin", ["check"], 1, "validation"),
+            ("dup", ["check"], 1, "validation"),
+            (
+                "book",
+                [
+                    "add",
+                    "transaction",
+                    "--date",
+                    "2026-03-01",
+                    "--narration",
+                    "Buy",
+                    "-p",
+                    "Assets:Cash 10 USD @",
+                    "-p",
+                    "Expenses:Food",
+                ],
+                2,
+                "usage",
+            ),
+            ("book", ["list", "transaction", "--search", ""], 2, "usage"),
+            ("book", ["list", "transaction", "--account", ""], 2, "usage"),
+            ("book", ["list", "transaction", "--search", "Lunch", "--tag", ""], 2, "usage"),
+            ("book", ["balance", ""], 2, "usage"),
+            ("book", ["report", "trial-balance", "--time", ""], 2, "usage"),
+            ("book", ["report", "trial-balance", "--conversion", ""], 2, "usage"),
+            ("book", ["query", "SELECT account LIMIT 1", "-f", "csv"], 2, "usage"),
+            ("book", ["query", "SELECT accounts, count(*) GROUP BY accounts"], 2, "usage"),
+            ("book", ["query", "SELECT account, (SELECT payee FROM postings LIMIT 1) FROM accounts"], 2, "usage"),
+        ],
+        ids=[
+            "broken-plugin",
+            "duplicate-entry",
+            "bare-price",
+            "blank-search",
+            "blank-account",
+            "blank-tag-in-combination",
+            "blank-balance",
+            "blank-time",
+            "blank-conversion",
+            "json-with-format",
+            "group-by-set",
+            "select-subquery",
+        ],
+    )
+    def test_failure_is_one_parseable_object(
+        self, books: dict[str, Path], ledger: str, command: list[str], exit_code: int, category: str
+    ) -> None:
+        result = runner.invoke(app, ["--json", "--file", str(books[ledger]), *command])
+
+        assert result.exit_code == exit_code, result.output
+        assert result.stdout == "", result.output
+        error = error_object(result)  # raises unless stderr is exactly one object
+        assert error["category"] == category
+        assert error["exit_code"] == exit_code
+        assert "Traceback (most recent call last)" not in result.stderr
+
+    @pytest.mark.parametrize(
+        "command",
+        [
+            ["example", "--date-begin", "2026-02-01", "--date-end", "2026-01-01"],
+            ["treeify", "/nonexistent/dir"],
+        ],
+        ids=["inverted-example-dates", "treeify-missing-dir"],
+    )
+    def test_human_native_failure_has_no_traceback(self, command: list[str]) -> None:
+        result = runner.invoke(app, command)
+
+        assert result.exit_code != 0, result.output
+        assert "Traceback (most recent call last)" not in result.output
+
+    def test_debug_keeps_the_traceback_in_the_envelope(self, books: dict[str, Path]) -> None:
+        result = runner.invoke(app, ["--json", "--debug", "--file", str(books["plugin"]), "check"])
+
+        assert result.exit_code == 1, result.output
+        assert "Traceback (most recent call last)" in error_object(result)["traceback"]
