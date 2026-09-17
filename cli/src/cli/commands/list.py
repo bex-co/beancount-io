@@ -83,6 +83,16 @@ def _balance_amount(balance: dict[str, Any]) -> str:
     return f"{number} ~ {tolerance} {currency}"
 
 
+def _currencies(currencies: list[str]) -> str:
+    """The currencies an open restricts the account to, or that it restricts none.
+
+    An `open` with no currency list accepts any commodity, which is a fact about
+    the account rather than a cell the renderer failed to fill — so it says so
+    instead of leaving whitespace. JSON keeps the empty list.
+    """
+    return ", ".join(currencies) or "(any)"
+
+
 def _cost(cost: dict[str, Any]) -> str:
     """A cost basis in Beancount's own `{…}` spelling, lot date and label included."""
     parts = [_amount(cost)]
@@ -138,7 +148,7 @@ SPECS: dict[str, _Spec] = {
     ),
     "open": _Spec(
         headers=["DATE", "ACCOUNT", "CURRENCIES", "BOOKING"],
-        row=lambda o: [o["date"], o["account"], ", ".join(o["currencies"]), o.get("booking") or ""],
+        row=lambda o: [o["date"], o["account"], _currencies(o["currencies"]), o.get("booking") or ""],
         empty="No open directives found.",
         filter="account",
     ),

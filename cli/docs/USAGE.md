@@ -373,6 +373,11 @@ bea list transaction --flag '!' --details
 bea list transaction --search netflix --tag trip
 ```
 
+`bea list open` writes `(any)` in its `CURRENCIES` column for an account whose
+`open` names no currencies and therefore accepts any commodity — a fact about
+the account, not a cell the renderer failed to fill. JSON keeps the empty
+`currencies` list.
+
 The transaction table shows signed amounts by account and currency, with the
 cost basis and price that tell one lot from another — `5 HOOL {50.00 USD,
 2024-02-01}`, `1 HOOL @ 60.00 USD` — spelled the way `--details` and the ledger
