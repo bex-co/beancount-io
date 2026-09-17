@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Callable
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, PlainSerializer, model_validator
 
-from bea_engine.amounts import require_decimal_notation
+from bea_engine.amounts import require_decimal_notation, split_total_price
 
 
 def _strip_sigil(sigil: str) -> Callable[[Any], Any]:
@@ -91,11 +91,85 @@ class Posting(BaseModel):
             raise ValueError("Use either amount or units for a posting, not both.")
         value = dict(value)
         amount = value.pop("amount")
-        if not isinstance(amount, str) or len(amount.split()) != 2:
+        if not isinstance(amount, str):
             raise ValueError("amount must be a string such as '-30 USD'.")
-        number, currency = amount.split()
-        value["units"] = {"number": number, "currency": currency}
+        if len(amount.split()) == 2:
+            number, currency = amount.split()
+            try:
+                Decimal(number)
+            except InvalidOperation:
+                raise ValueError(
+                    f"Could not parse amount {amount!r} as 'NUMBER CURRENCY': {number!r} is not a number. "
+                    f"{_FRAGMENT_HELP}"
+                ) from None
+            value["units"] = {"number": number, "currency": currency}
+            return value
+        value |= _posting_fragment(amount)
         return value
+
+
+_FRAGMENT_HELP = (
+    "Use 'NUMBER CURRENCY' such as '-30 USD', optionally with a cost and price such as '3 HOOL {100 USD} @ 11 USD'."
+)
+
+
+def _posting_fragment(amount: str) -> dict[str, Any]:
+    """Expand a cost/price shorthand fragment to structured posting fields.
+
+    Plain two-token amounts never reach here; this is the lot spelling ('3
+    HOOL {100 USD}'), parsed by Beancount's own grammar so the shorthand
+    accepts exactly the native syntax. Numbers are formatted back to plain
+    decimals: str() of a tiny Decimal would spell an exponent the schema
+    refuses. A `@@` total is read from the raw text for the same reason the
+    flag path reads it there: the parser divides it into a unit price.
+    """
+    from beancount.core.number import MISSING
+    from beancount.parser import parser as beancount_parser
+
+    if "\n" in amount or "\r" in amount:
+        raise ValueError(f"amount {amount!r} must be one posting fragment without line breaks. {_FRAGMENT_HELP}")
+    entries, errors, _ = beancount_parser.parse_string(
+        f'2026-01-02 * "probe"\n  Assets:Probe {amount}\n  Equity:Probe\n'
+    )
+    entry: Any = entries[0] if len(entries) == 1 and not errors else None
+    posting: Any = entry.postings[0] if entry is not None else None
+    if posting is None:
+        reason = errors[0].message if errors else "it is not a valid posting"
+        raise ValueError(f"Could not parse amount {amount!r} as a posting fragment: {reason}. {_FRAGMENT_HELP}")
+    units = posting.units
+    if units is MISSING or units.number is MISSING or units.currency is MISSING:
+        raise ValueError(f"Could not parse amount {amount!r} as a posting fragment: no amount found. {_FRAGMENT_HELP}")
+    fields: dict[str, Any] = {
+        "units": {"number": format(units.number, "f"), "currency": units.currency},
+    }
+    cost = posting.cost
+    if cost is not None:
+        if cost.number_total is not None and cost.number_total is not MISSING:
+            raise ValueError(
+                f"amount {amount!r} uses a total cost '{{{{...}}}}', which bulk input cannot express. "
+                "Split the lot into a per-unit cost '{...}', or use `add transaction` for a total cost."
+            )
+        if cost.number_per is MISSING or cost.currency is MISSING:
+            raise ValueError(
+                f"Could not parse amount {amount!r} as a posting fragment: incomplete cost. {_FRAGMENT_HELP}"
+            )
+        fields["cost"] = {
+            "number": format(cost.number_per, "f"),
+            "currency": cost.currency,
+            "date": cost.date,
+            "label": cost.label,
+        }
+    total = split_total_price(amount)
+    if total is not None:
+        fields["price_total"] = {"number": total[0], "currency": total[1]}
+    elif posting.price is not None:
+        price = posting.price
+        if price is MISSING or price.number is MISSING or price.currency is MISSING:
+            raise ValueError(
+                f"Could not parse amount {amount!r} as a posting fragment: incomplete price. {_FRAGMENT_HELP}"
+            )
+        fields["price"] = {"number": format(price.number, "f"), "currency": price.currency}
+    return fields
 
 
 class SourceLocation(BaseModel):

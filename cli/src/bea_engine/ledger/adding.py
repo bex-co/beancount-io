@@ -469,10 +469,6 @@ def _transaction(
     }
 
 
-_PLAIN_DECIMAL = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)")
-"""A decimal without exponent notation, the only spelling that reaches here."""
-
-
 def _total_price(posting_text: str) -> Any | None:
     """The `@@` total from a raw posting line, or None without one.
 
@@ -484,16 +480,12 @@ def _total_price(posting_text: str) -> Any | None:
     """
     from beancount.core.amount import Amount as BcAmount
 
-    unquoted = re.sub(r'"(?:[^"\\]|\\.)*"|;[^\r\n]*', "", posting_text)
-    if "@@" not in unquoted:
+    from bea_engine.amounts import split_total_price
+
+    total = split_total_price(posting_text)
+    if total is None:
         return None
-    tail = unquoted.rsplit("@@", 1)[1].split()
-    if len(tail) < 2 or not _PLAIN_DECIMAL.fullmatch(tail[0]):
-        return None
-    try:
-        return BcAmount(Decimal(tail[0]), tail[1])
-    except InvalidOperation:
-        return None
+    return BcAmount(Decimal(total[0]), total[1])
 
 
 def _refuse_missing_price(postings: list[str], number: int, posting: Any) -> None:

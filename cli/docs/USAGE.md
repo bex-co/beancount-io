@@ -764,6 +764,13 @@ For a sale, use negative units with the existing cost and optionally
 `"price": {"number": "120", "currency": "USD"}` on that posting, plus the cash
 proceeds and realized gain postings. Booking validates that the lot exists.
 Cost dates are optional; specify one to select a particular acquisition lot.
+Bulk `amount` shorthand accepts the same lot spelling: `"amount": "5 HOOL
+{10 USD}"`, with optional date, label, and `@`/`@@` price. Total costs
+(`{{...}}`) need `add transaction`; bulk costs are per-unit.
+
+Round-trip guarantee: the `units`, `cost`, and `price` shapes in `add
+transaction --json` output are valid `add transactions` input, so a
+returned posting pipes back into `--from -` unedited.
 Transaction and posting `meta` preserve text and booleans; numeric, date and
 amount metadata use tagged objects: `{"kind":"number","value":"1.125"}`,
 `{"kind":"date","value":"2026-08-03"}`, or

@@ -5,6 +5,29 @@ from __future__ import annotations
 import re
 from typing import Any
 
+_PLAIN_DECIMAL = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)")
+"""A decimal without exponent notation, the only spelling that reaches here."""
+
+_QUOTED_OR_COMMENT = re.compile(r'"(?:[^"\\]|\\.)*"|;[^\r\n]*')
+"""Quoted strings and comments, inside which an `@@` is text, not a price."""
+
+
+def split_total_price(text: str) -> tuple[str, str] | None:
+    """The `@@` total from a posting line as `(number, currency)` strings, or None.
+
+    The caller has already validated the line through Beancount's parser, so
+    a total that cannot be read here means the split misread the text — never
+    a user error. Plain decimals only: exponent notation never reaches this
+    far, and anything else falls back to the parsed unit price.
+    """
+    unquoted = _QUOTED_OR_COMMENT.sub("", text)
+    if "@@" not in unquoted:
+        return None
+    tail = unquoted.rsplit("@@", 1)[1].split()
+    if len(tail) < 2 or not _PLAIN_DECIMAL.fullmatch(tail[0]):
+        return None
+    return tail[0], tail[1]
+
 
 def require_decimal_notation(value: Any) -> Any:
     """Reject exponent notation and JSON floats before conversion; internal Decimals remain valid.
