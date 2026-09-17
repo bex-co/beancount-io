@@ -65,12 +65,18 @@ describe("MCP tool list", () => {
     // schemas alone are ~29 KB and ADR 0008 D8 requires them published, and
     // even deleting every output schema leaves ~33 KB — the nine directive
     // shapes behind addLedgerEntries are the shared REST contract and cannot
-    // shrink on MCP alone. So the gate pins the achieved ~60 KB (25 tools,
-    // down from 28 with the compat shims gone and descriptions trimmed)
-    // instead of an unreachable aspiration: growing it stays a decision.
+    // shrink on MCP alone. So the gate pins the achieved size (25 tools, down
+    // from 28 with the compat shims gone and descriptions trimmed) instead of
+    // an unreachable aspiration: growing it stays a decision.
+    //
+    // It grew from 61 KB to 63 KB when w4/069 restored `manageApiKeys`'s
+    // advertised input — 1.4 KB, of which 0.4 KB is the ISO 8601 pattern for
+    // `expiresAt`. w2/m27:t005 believed it had deleted that regex; what it had
+    // actually done was publish the whole schema as `properties: {}`, so the
+    // savings it recorded were the bug.
     const { tools } = await listTools();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(61 * 1024);
+    expect(bytes).toBeLessThan(63 * 1024);
   });
 
   it("publishes all four annotations on every tool", async () => {
@@ -92,5 +98,56 @@ describe("MCP tool list", () => {
     expect(names).not.toContain("createApiKey");
     expect(names).not.toContain("revokeApiKey");
     expect(names).toContain("manageApiKeys");
+  });
+
+  /**
+   * A tool's advertised input is the only thing an agent can read before it
+   * calls (w4/069). `manageApiKeys` published `{"type":"object",
+   * "properties":{}}` for a week because its schema was wrapped in
+   * `z.preprocess`, which the SDK's JSON-Schema conversion sees as opaque —
+   * the runtime still refused a bad call, so nothing else noticed.
+   */
+  it("advertises the arguments of every tool that takes some", async () => {
+    // The one tool that genuinely takes no arguments; everything else has to
+    // publish its fields.
+    const noArguments = new Set(["deleteAccount"]);
+    const { tools } = await listTools();
+    for (const tool of tools) {
+      const properties = Object.keys(tool.inputSchema.properties ?? {});
+      if (noArguments.has(tool.name)) {
+        expect(properties).toEqual([]);
+      } else {
+        expect({ tool: tool.name, properties }).toEqual({
+          tool: tool.name,
+          properties: expect.arrayContaining([expect.any(String)]),
+        });
+      }
+    }
+  });
+
+  it("publishes manageApiKeys with its operation enum and dated expiry", async () => {
+    const { tools } = await listTools();
+    const schema = tools.find((tool) => tool.name === "manageApiKeys")!
+      .inputSchema as {
+      required?: string[];
+      properties?: Record<string, { enum?: string[]; format?: string }>;
+    };
+    expect(schema.required).toEqual(["operation"]);
+    expect(schema.properties?.operation?.enum).toEqual([
+      "list",
+      "create",
+      "revoke",
+    ]);
+    expect(schema.properties?.expiresAt?.format).toBe("date-time");
+    // The snake_case spellings stay accepted on input but are not advertised:
+    // one spelling per field in `tools/list` is what w2/m27:t005 bought.
+    expect(Object.keys(schema.properties ?? {}).sort()).toEqual([
+      "expiresAt",
+      "id",
+      "ledgerScope",
+      "name",
+      "operation",
+      "scopes",
+    ]);
   });
 });

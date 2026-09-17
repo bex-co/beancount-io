@@ -64,57 +64,76 @@ const present = (key: ReturnType<typeof toPublicApiKey>) => ({
 export const manageApiKeysDescription =
   "List, mint, or revoke the caller's API keys. `operation` selects the branch: `list` never returns the key itself; `create` mints a key (requires a paid plan, cannot be called with an API key; the plaintext is returned once and is unrecoverable); `revoke` takes a key id and applies on next use.";
 
-const manageApiKeysStrictInput = z
-  .object({
-    operation: z
-      .enum(["list", "create", "revoke"])
-      .describe("Which key-management branch to run."),
-    name: z
-      .string()
-      .min(1)
-      .max(200)
-      .optional()
-      .describe(
-        "Required by `create`: what this key is for; shown in the key list.",
-      ),
-    scopes: z
-      .array(z.enum(API_SCOPES))
-      .min(1)
-      .optional()
-      .describe(
-        "Required by `create`: what the key may do. Cannot exceed what the caller already holds.",
-      ),
-    ledgerScope: z
-      .string()
-      .optional()
-      .describe(
-        "`create` only: confine the key to one ledger, as `owner/name`. Omit to inherit the caller's own confinement; a credential pinned to one ledger cannot name a different one.",
-      ),
-    expiresAt: z
-      .string()
-      .datetime({ offset: true })
-      .optional()
-      .describe(
-        "`create` only: when the key stops working (ISO 8601). Omit for no expiry.",
-      ),
-    id: z
-      .string()
-      .optional()
-      .describe(
-        "Required by `revoke`: the key's id (`akey_…`), not the key itself.",
-      ),
-  })
-  .strict();
+const manageApiKeysFields = z.object({
+  operation: z
+    .enum(["list", "create", "revoke"])
+    .describe("Which key-management branch to run."),
+  name: z
+    .string()
+    .min(1)
+    .max(200)
+    .optional()
+    .describe(
+      "Required by `create`: what this key is for; shown in the key list.",
+    ),
+  scopes: z
+    .array(z.enum(API_SCOPES))
+    .min(1)
+    .optional()
+    .describe(
+      "Required by `create`: what the key may do. Cannot exceed what the caller already holds.",
+    ),
+  ledgerScope: z
+    .string()
+    .optional()
+    .describe(
+      "`create` only: confine the key to one ledger, as `owner/name`. Omit to inherit the caller's own confinement; a credential pinned to one ledger cannot name a different one.",
+    ),
+  expiresAt: z
+    .string()
+    .datetime({ offset: true })
+    .optional()
+    .describe(
+      "`create` only: when the key stops working (ISO 8601). Omit for no expiry.",
+    ),
+  id: z
+    .string()
+    .optional()
+    .describe(
+      "Required by `revoke`: the key's id (`akey_…`), not the key itself.",
+    ),
+});
+
+/** The contract the handler enforces: camelCase only, nothing unknown. */
+const manageApiKeysStrictInput = manageApiKeysFields.strict();
 
 /**
- * The advertised input carries one `expiresAt` (`format: date-time`) and one
- * `ledgerScope` — the 400-character date regex and the alias pair are gone
- * from `tools/list`. The snake_case spellings stay accepted on input for one
- * release: a snake_case value fills the camelCase field only when the
- * advertised spelling is absent, so the documented spelling always wins a
- * conflict, and both spellings are normalized away before the strict parse.
+ * What `tools/list` advertises, and what the SDK validates a call against.
+ *
+ * It has to be a plain object. The SDK derives a tool's published JSON Schema
+ * by introspecting a Zod *object*, and anything it cannot normalize publishes
+ * as `{"type":"object","properties":{}}` instead. This schema used to be a
+ * `z.preprocess` wrapper folding the deprecated snake_case spellings, so the
+ * one destructive key-management tool advertised no arguments at all while
+ * still refusing every call that omitted them — an agent had to guess
+ * `operation`, `scopes`, `ledgerScope` and `expiresAt` from prose (w4/069).
+ *
+ * It is loose rather than strict so `ledger_scope` and `expires_at` survive
+ * the SDK's parse and reach {@link executeManageApiKeys}, which folds them and
+ * then re-parses strictly. That keeps one spelling per field in `tools/list`
+ * (w2/m27:t005) while both stay accepted on the wire, and an unknown field is
+ * still refused — as this tool's own `{ ok: false }` rather than the SDK's
+ * transport error, which is the dialect ADR 0007 asks a tool failure to use.
  */
-export const manageApiKeysInputSchema = z.preprocess((input) => {
+export const manageApiKeysInputSchema = manageApiKeysFields.loose();
+
+/**
+ * Fold the deprecated snake_case spellings, which stay accepted on input for
+ * one release. A snake_case value fills the camelCase field only when the
+ * advertised spelling is absent, so the documented spelling always wins a
+ * conflict, and both spellings are gone before the strict parse.
+ */
+function foldDeprecatedSpellings(input: unknown): unknown {
   if (typeof input !== "object" || input === null || Array.isArray(input)) {
     return input;
   }
@@ -128,7 +147,7 @@ export const manageApiKeysInputSchema = z.preprocess((input) => {
   delete record.ledger_scope;
   delete record.expires_at;
   return record;
-}, manageApiKeysStrictInput);
+}
 
 export const manageApiKeysOutputSchema = toolOutputSchema(
   z.union([
@@ -148,20 +167,15 @@ type ManageApiKeysContext = Pick<ToolContext, "apiKeyService" | "identity">;
  */
 export async function executeManageApiKeys(
   ctx: ManageApiKeysContext,
-  input: {
-    operation: "list" | "create" | "revoke";
-    name?: string;
-    scopes?: string[];
-    ledgerScope?: string;
-    expiresAt?: string;
-    id?: string;
-  },
+  input: unknown,
 ): Promise<z.infer<typeof manageApiKeysOutputSchema>> {
   return runToolSafely({
     logger: toolLogger,
     message: "Failed to manage API keys",
     execute: async () => {
-      const parsed = manageApiKeysInputSchema.parse(input);
+      const parsed = manageApiKeysStrictInput.parse(
+        foldDeprecatedSpellings(input),
+      );
       switch (parsed.operation) {
         case "list":
           return (await ctx.apiKeyService.list(ctx.identity)).map((key) =>
