@@ -193,6 +193,14 @@ def _malformed(source: Path, line: int, exc: csv.Error) -> UsageError:
     )
 
 
+def _utf8_usage_error(source: Path, exc: UnicodeDecodeError) -> UsageError:
+    """Name a decode failure instead of pretending the CSV had no columns."""
+    return UsageError(
+        f"{source.name} is not valid UTF-8 ({exc.reason} at byte {exc.start}). "
+        "Save or re-export the file as UTF-8 (with or without BOM) and retry."
+    )
+
+
 _CANDIDATE_DELIMITERS = (",", ";", "\t")
 
 
@@ -203,12 +211,15 @@ def detect_delimiter(source: Path) -> str:
     the most fields on the header line so ``--csv auto`` and an explicit
     ``--csv`` mapping see the same columns.
     """
-    with open(source, encoding="utf-8-sig", newline="") as stream:
-        sample = ""
-        for line in stream:
-            if line.strip():
-                sample = line.rstrip("\r\n")
-                break
+    try:
+        with open(source, encoding="utf-8-sig", newline="") as stream:
+            sample = ""
+            for line in stream:
+                if line.strip():
+                    sample = line.rstrip("\r\n")
+                    break
+    except UnicodeDecodeError as exc:
+        raise _utf8_usage_error(source, exc) from None
     if not sample:
         return ","
     best = ","
@@ -312,9 +323,15 @@ def header_signature(headers: list[str] | None) -> str | None:
 
 
 def read_header(source: Path, *, delimiter: str | None = None) -> list[str] | None:
-    """Read a CSV header row, or None when the file is not a readable CSV."""
+    """Read a CSV header row, or None when the file is not a readable CSV.
+
+    Decode failures raise ``UsageError`` so import does not claim the header
+    had zero columns and suggest a ``--csv`` mapping that cannot help.
+    """
     try:
         with open_records(source, delimiter=delimiter) as (headers, _rows):
             return headers or None
-    except (OSError, UnicodeDecodeError, UsageError):
+    except UnicodeDecodeError as exc:
+        raise _utf8_usage_error(source, exc) from None
+    except OSError:
         return None
