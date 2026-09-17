@@ -54,10 +54,19 @@ class _Spec:
 def _format_custom_values(custom: dict[str, Any]) -> str:
     parts = []
     for value in custom["values"]:
-        if value["kind"] == "amount":
-            parts.append(f"{value['number']} {value['currency']}")
+        kind = value["kind"]
+        if kind == "amount":
+            parts.append(f"amount:{value['number']} {value['currency']}")
+        elif kind == "bool":
+            parts.append(f"bool:{'TRUE' if value['value'] else 'FALSE'}")
+        elif kind == "date":
+            parts.append(f"date:{value['value']}")
+        elif kind == "number":
+            parts.append(f"number:{value['value']}")
+        elif kind == "account":
+            parts.append(f"account:{value['value']}")
         else:
-            parts.append(str(value["value"]))
+            parts.append(f"text:{value['value']}")
     return " ".join(parts)
 
 
