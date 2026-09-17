@@ -195,20 +195,23 @@ def overview(
     for title, balance in data["totals"].items():
         typer.echo(f"  {title.replace('_', ' ').title() + ':':<16} {_amounts(balance, conversion, precision)}")
     typer.echo(f"\n{data['interval'].title()} breakdown")
-    # Join flow and balance series by their valuation date.
-    assets_by_date = {point["date"]: point["balance"] for point in data["series"]["assets"]}
-    liabilities_by_date = {point["date"]: point["balance"] for point in data["series"]["liabilities"]}
+    # Join flow and balance series by their valuation date. The balance series
+    # span the whole filtered period; a flow series stops one bucket earlier
+    # when the filter clipped the last interval into a quiet fragment, so the
+    # dates are the union and a missing cell renders empty.
+    by_date = {name: {point["date"]: point["balance"] for point in series} for name, series in data["series"].items()}
+    dates = sorted({date for series in by_date.values() for date in series})
     output.table(
         ["DATE", "ASSETS", "LIABILITIES", "INCOME (CREDIT)", "EXPENSES"],
         [
             [
-                str(flow["date"]),
-                _amounts(assets_by_date.get(flow["date"], {}), conversion, precision),
-                _amounts(liabilities_by_date.get(flow["date"], {}), conversion, precision),
-                _amounts(flow["balance"], conversion, precision),
-                _amounts(expense["balance"], conversion, precision),
+                str(date),
+                *(
+                    _amounts(by_date[name].get(date, {}), conversion, precision)
+                    for name in ("assets", "liabilities", "income", "expenses")
+                ),
             ]
-            for flow, expense in zip(data["series"]["income"], data["series"]["expenses"], strict=True)
+            for date in dates
         ],
     )
 

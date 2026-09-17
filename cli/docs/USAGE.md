@@ -637,6 +637,16 @@ Report interval breakdowns cover the complete requested period, including more
 than 100 daily or monthly intervals. The interval selects the aggregation
 grain, not a limit on the returned history.
 
+When `--time` ends partway through an interval, the last bucket is a fragment
+of it — `-t 2020-03 -i weekly` ends on the Monday–Tuesday tail of an ISO week
+that runs into April. Flow series (income statement periods, the overview's
+income and expense series) drop that fragment when no entries fall in it, so a
+clipped boundary does not read as one more quiet week; a fragment holding
+entries — a transaction on `2020-12-31` — stays, and so does the only bucket of
+a short filter. Balance series (net worth, assets, liabilities, equity) keep
+every bucket, because their value is real whether or not the fragment saw
+activity and the series must still reach the as-of date.
+
 ```bash
 bea report overview
 bea report income-statement

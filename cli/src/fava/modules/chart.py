@@ -19,17 +19,44 @@ from ..util import listify
 
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Iterable, Mapping, Sequence
 
     from ..core.conversion import Conversion
     from ..core.inventory import SimpleCounterInventory
     from ..core.tree import SerialisedTreeNode
     from ..ledger import FilteredLedger
-    from ..util.date import Interval
+    from ..util.date import DateRange, Interval
 
 
 ONE_DAY = timedelta(days=1)
 ZERO = Decimal()
+
+
+def _flow_ranges(
+    filtered: FilteredLedger,
+    interval: Interval,
+) -> Sequence[DateRange]:
+    """The interval ranges a flow series should report.
+
+    A time filter clips the last range to whatever part of the interval falls
+    inside the filter: `-t 2020-03 -i weekly` ends on the Mon-Tue tail of an
+    ISO week that runs into April. With no entries in it, that fragment reads
+    as one more quiet week rather than the boundary it is, so it is dropped —
+    but a fragment that carries entries (a transaction on 2020-12-31) is a real
+    period and stays, as does the sole range of a short filter.
+
+    Only flow series do this. A cumulative series reports a balance that is
+    real whether or not the fragment saw activity, and must keep reaching the
+    end of the filtered period.
+    """
+    ranges = filtered.interval_ranges(interval)
+    if len(ranges) < 2:
+        return ranges
+    last = ranges[-1]
+    whole = interval.get_prev(last.begin) == last.begin and interval.get_next(last.begin) == last.end
+    if whole or slice_entry_dates(filtered.entries, last.begin, last.end):
+        return ranges
+    return ranges[:-1]
 
 
 def _omit_empty_clamp_phantoms(
@@ -122,7 +149,8 @@ class ChartModule:
         This computes totals within each interval (not cumulative balances),
         returning both the aggregated total across the provided accounts and a
         per-account breakdown for the same interval. Useful for bar charts like
-        monthly income/expenses. Covers every interval in the filtered period.
+        monthly income/expenses. Covers every interval in the filtered period,
+        except an empty trailing fragment of one (see :func:`_flow_ranges`).
 
         Args:
             filtered: The filtered ledger.
@@ -137,7 +165,7 @@ class ChartModule:
         """
         prices = filtered.ledger.prices
 
-        intervals = filtered.interval_ranges(interval)
+        intervals = _flow_ranges(filtered, interval)
 
         for date_range in intervals:
             inventory = CounterInventory()
