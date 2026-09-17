@@ -192,6 +192,18 @@ def native_command(name: str) -> Path:
     directory = paths.bin_dir_for(provision.ensure_engine())
     executable = directory / filename
     if not executable.exists():
+        # Which installation to blame depends on which one was consulted. Under
+        # an override those are different places, and the managed engine named
+        # by `engine_root()` is neither the thing that failed nor the thing that
+        # would be used next — advising its removal destroys a working engine
+        # and leaves the override still pointing where it did. `require_feature`
+        # above already branches this way.
+        override = paths.python_override()
+        if override is not None:
+            raise BeaError(
+                f"{paths.PYTHON_ENV}={override} names an environment with no '{name}' ({directory}). "
+                f"Correct or unset {paths.PYTHON_ENV}, or run 'bea engine status' to see which engine would serve."
+            )
         raise BeaError(
             f"The engine environment has no '{name}' ({directory}). "
             f"Remove {paths.engine_root()} and rerun to provision it again."

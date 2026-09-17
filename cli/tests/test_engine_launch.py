@@ -318,6 +318,27 @@ class TestProvision:
         with pytest.raises(BeaError, match="uv"):
             provision._find_uv()
 
+    def test_a_uv_override_naming_nothing_is_reported_against_its_variable(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Left to subprocess this surfaced as a bare errno that never named BEA_UV."""
+        monkeypatch.setenv(provision.UV_ENV, str(tmp_path / "absent-uv"))
+
+        with pytest.raises(BeaError) as raised:
+            provision._find_uv()
+
+        assert provision.UV_ENV in str(raised.value)
+        assert "does not exist" in str(raised.value)
+        # The same situation for the sibling override exits 1; the pair agrees.
+        assert raised.value.exit_code == 1
+
+    def test_a_uv_override_that_exists_is_used(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        override = tmp_path / "uv"
+        override.touch()
+        monkeypatch.setenv(provision.UV_ENV, str(override))
+
+        assert provision._find_uv() == str(override)
+
 
 class TestFrontendIsolation:
     """ADR014's central promise, checked where it can actually fail: a fresh process."""
@@ -479,3 +500,50 @@ def test_managed_engine_layout_and_native_executable(
     monkeypatch.delenv("BEA_ENGINE_PYTHON", raising=False)
     assert paths.is_provisioned(root)
     assert launch.native_command("bean-check") == command
+
+
+class TestMissingNativeExecutable:
+    """Which installation the remedy blames has to be the one that was consulted."""
+
+    def test_an_override_without_the_tool_points_at_its_own_variable(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """The managed engine is a different, working installation — never advise deleting it."""
+        override = tmp_path / "elsewhere" / "bin" / "python3"
+        override.parent.mkdir(parents=True)
+        override.touch()
+        monkeypatch.setenv(paths.PYTHON_ENV, str(override))
+
+        with pytest.raises(BeaError) as raised:
+            launch.native_command("bean-check")
+
+        message = str(raised.value)
+        assert paths.PYTHON_ENV in message
+        assert str(override) in message
+        # Deleting the managed engine fixes nothing here and destroys a healthy
+        # install: the override would still point where it did.
+        assert "Remove" not in message
+        assert str(paths.engine_root()) not in message
+
+    def test_a_managed_engine_without_the_tool_still_advises_reprovisioning(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """The original advice is right when the managed engine really is the broken one."""
+        root = tmp_path / "engine"
+        python = paths.venv_python(root)
+        python.parent.mkdir(parents=True)
+        python.touch()
+        (root / "lib" / "python3.12" / "site-packages" / "beanquery").mkdir(parents=True)
+        monkeypatch.setenv("BEA_ENGINE_DIR", str(root))
+        monkeypatch.delenv(paths.PYTHON_ENV, raising=False)
+        # An installed copy, not a checkout: otherwise the developer's own
+        # bean-check answers and nothing fails.
+        monkeypatch.setattr(paths, "checkout_source_root", lambda: None)
+
+        with pytest.raises(BeaError) as raised:
+            launch.native_command("bean-check")
+
+        message = str(raised.value)
+        assert "Remove" in message
+        assert str(root) in message
+        assert paths.PYTHON_ENV not in message

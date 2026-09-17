@@ -357,6 +357,12 @@ def _find_uv() -> str:
     """Locate uv, which builds the environment."""
     override = os.environ.get(UV_ENV)
     if override:
+        # Checked here rather than left to `subprocess`, whose FileNotFoundError
+        # names the path but never the variable that supplied it — which is the
+        # only part a user with an inherited profile or CI image cannot guess.
+        # `paths.python_override()` validates its own variable the same way.
+        if not Path(override).expanduser().exists():
+            raise BeaError(f"{UV_ENV} points at '{override}', which does not exist.")
         return override
     found = shutil.which("uv")
     if found:
