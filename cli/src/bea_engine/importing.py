@@ -307,8 +307,23 @@ def answer(
                 for row in rows
                 if row["status"] == "conflict" or (row["status"] == "possible_duplicate" and duplicates == "review")
             ]
+            if conflicts and not (preview["possible_duplicates"] and duplicates == "review"):
+                guidance = (
+                    "Import needs review; nothing was written. A stable ID already matches a ledger "
+                    "entry with different data — edit or remove that entry, change the bank ID, or drop the row."
+                )
+            elif conflicts:
+                guidance = (
+                    "Import needs review; nothing was written. Resolve ID conflicts (stable ID with different "
+                    "ledger data) and choose --duplicates skip/include for possible duplicates."
+                )
+            else:
+                guidance = (
+                    "Import needs review; nothing was written. Choose --duplicates skip/include "
+                    "for possible duplicates."
+                )
             raise ConflictError(
-                "Import needs review; nothing was written. Resolve ID conflicts or choose --duplicates skip/include.",
+                guidance,
                 details=review,
                 result=preview,
             )
