@@ -127,6 +127,7 @@ class OpenDirective(BaseModel):
     date: LedgerDate
     account: str
     currencies: list[str] = Field(default_factory=list)
+    meta: dict[str, Any] = Field(default_factory=dict)
 
 
 class CloseDirective(BaseModel):
@@ -155,6 +156,7 @@ class NoteDirective(BaseModel):
     date: LedgerDate
     account: str
     comment: str
+    meta: dict[str, Any] = Field(default_factory=dict)
 
 
 class EventDirective(BaseModel):
@@ -162,6 +164,7 @@ class EventDirective(BaseModel):
     date: LedgerDate
     type: str
     description: str
+    meta: dict[str, Any] = Field(default_factory=dict)
 
 
 class PriceDirective(BaseModel):
@@ -175,6 +178,7 @@ class CommodityDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
     date: LedgerDate
     currency: str
+    meta: dict[str, Any] = Field(default_factory=dict)
 
 
 class DocumentDirective(BaseModel):
@@ -184,6 +188,7 @@ class DocumentDirective(BaseModel):
     filename: str
     tags: list[Tag] = Field(default_factory=list)
     links: list[Link] = Field(default_factory=list)
+    meta: dict[str, Any] = Field(default_factory=dict)
 
 
 class CustomDirectiveValueText(BaseModel):
@@ -233,3 +238,4 @@ class CustomDirective(BaseModel):
     date: LedgerDate
     type: str
     values: list[CustomDirectiveValue] = Field(default_factory=list)
+    meta: dict[str, Any] = Field(default_factory=dict)

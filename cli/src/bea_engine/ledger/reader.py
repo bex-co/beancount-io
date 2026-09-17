@@ -181,7 +181,14 @@ def list_notes(
             continue
         if account and fold_account(account) not in fold_account(entry.account):
             continue
-        results.append(NoteDirective(date=entry.date, account=entry.account, comment=entry.comment))
+        results.append(
+            NoteDirective(
+                date=entry.date,
+                account=entry.account,
+                comment=entry.comment,
+                meta=metadata_to_json(entry.meta),
+            )
+        )
         if len(results) >= limit:
             break
     return results
@@ -249,7 +256,14 @@ def list_opens(
         if account and fold_account(account) not in fold_account(entry.account):
             continue
         currencies = list(entry.currencies) if entry.currencies else []
-        results.append(OpenDirective(date=entry.date, account=entry.account, currencies=currencies))
+        results.append(
+            OpenDirective(
+                date=entry.date,
+                account=entry.account,
+                currencies=currencies,
+                meta=metadata_to_json(entry.meta),
+            )
+        )
         if len(results) >= limit:
             break
     return results
@@ -291,7 +305,13 @@ def list_commodities(
             continue
         if currency and entry.currency.casefold() != currency.casefold():
             continue
-        results.append(CommodityDirective(date=entry.date, currency=entry.currency))
+        results.append(
+            CommodityDirective(
+                date=entry.date,
+                currency=entry.currency,
+                meta=metadata_to_json(entry.meta),
+            )
+        )
         if len(results) >= limit:
             break
     return results
@@ -309,7 +329,14 @@ def list_events(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        results.append(EventDirective(date=entry.date, type=entry.type, description=entry.description))
+        results.append(
+            EventDirective(
+                date=entry.date,
+                type=entry.type,
+                description=entry.description,
+                meta=metadata_to_json(entry.meta),
+            )
+        )
         if len(results) >= limit:
             break
     return results
@@ -339,6 +366,7 @@ def list_documents(
                 filename=_document_filename_for_json(entry),
                 tags=tags,
                 links=links,
+                meta=metadata_to_json(entry.meta),
             )
         )
         if len(results) >= limit:
@@ -402,7 +430,14 @@ def list_customs(
                 values.append(CustomDirectiveValueDate(kind="date", value=v.value))
             else:
                 values.append(CustomDirectiveValueAccount(kind="account", value=str(v.value)))
-        results.append(CustomDirective(date=entry.date, type=entry.type, values=values))
+        results.append(
+            CustomDirective(
+                date=entry.date,
+                type=entry.type,
+                values=values,
+                meta=metadata_to_json(entry.meta),
+            )
+        )
         if len(results) >= limit:
             break
     return results
