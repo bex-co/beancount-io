@@ -83,6 +83,15 @@ def _balance_amount(balance: dict[str, Any]) -> str:
     return f"{number} ~ {tolerance} {currency}"
 
 
+def _matching_postings(item: dict[str, Any], account: str) -> list[dict[str, Any]]:
+    """The postings `--account` selected, in entry order.
+
+    `account` is already folded, so the empty filter matches every posting and
+    the human column and the JSON envelope always agree on what "matching" is.
+    """
+    return [p for p in item["postings"] if account in fold_account(p["account"])]
+
+
 SPECS: dict[str, _Spec] = {
     "transaction": _Spec(
         headers=["DATE", "FLAG", "PAYEE", "NARRATION", "POSTINGS"],
@@ -261,6 +270,10 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
     truncated = bool(data["truncated"])
 
     if ctx.json_output:
+        # `postings` stays the whole entry — an agent needs the counterparty legs
+        # to read it. `--account` adds the narrowed list the human column shows.
+        if name == "transaction" and (folded := fold_account(filters.get("account") or "")):
+            items = [{**item, "matching_postings": _matching_postings(item, folded)} for item in items]
         output.emit(items, target=output.file_target(file), truncated=truncated, limit=limit)
         return
 
@@ -285,11 +298,7 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
                         item["payee"] or "",
                         item["narration"] or "(no narration)",
                     ],
-                    [
-                        (p["account"], _amount(p["units"]))
-                        for p in item["postings"]
-                        if p["units"] and (not account or account in fold_account(p["account"]))
-                    ],
+                    [(p["account"], _amount(p["units"])) for p in _matching_postings(item, account) if p["units"]],
                 )
                 for item in items
             ],

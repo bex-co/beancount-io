@@ -356,9 +356,13 @@ bea list transaction --search netflix --tag trip
 
 The transaction table shows signed amounts by account and currency. With
 `--account`, the amounts column is labeled `MATCHING POSTING AMOUNTS` and shows
-only those postings. `--details` labels its output as transactions rendered in
-Beancount syntax and shows every posting and its metadata, including inferred
-amounts. Amounts on opposite sides are not combined into a zero total.
+only those postings. Under `--json`, `postings` always stays the complete entry
+— the counterparty legs are what make a transaction readable — and `--account`
+adds a `matching_postings` array holding exactly the postings the filter
+selected, in entry order; without `--account` the key is absent. `--details`
+labels its output as transactions rendered in Beancount syntax and shows every
+posting and its metadata, including inferred amounts. Amounts on opposite sides
+are not combined into a zero total.
 
 
 ## Adding directives
