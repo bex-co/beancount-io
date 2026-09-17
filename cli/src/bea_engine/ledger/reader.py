@@ -76,7 +76,10 @@ def _source_lines(filename: str) -> tuple[str, ...] | None:
     outlive the file it came from.
     """
     try:
-        return tuple(Path(filename).read_text(encoding="utf-8", errors="replace").splitlines())
+        text = (
+            Path(filename).read_text(encoding="utf-8", errors="replace").removeprefix("\ufeff")
+        )  # a BOM glued to the first line
+        return tuple(text.splitlines())
     except OSError:
         return None
 

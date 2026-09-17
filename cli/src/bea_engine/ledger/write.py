@@ -43,6 +43,12 @@ def destination(root: Path, into: Path | None = None) -> Path:
 def _includes(content: bytes) -> Iterator[tuple[int, int, str]]:
     from beancount.parser.lexer import lex_iter_string
 
+    from bea_engine.compat import UTF8_BOM
+
+    if content.startswith(UTF8_BOM):
+        # A BOM glued to a first-line `include` lexes as an error token;
+        # spaces keep the byte offsets below valid while restoring the keyword.
+        content = b"   " + content[len(UTF8_BOM) :]
     starts = [0]
     for line in content.splitlines(keepends=True):
         starts.append(starts[-1] + len(line))

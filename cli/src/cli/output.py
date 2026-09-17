@@ -171,7 +171,7 @@ def _walk_closure(root: Path) -> tuple[list[Path], list[MissingInclude]]:
         seen.add(key)
         members.append(current)
         try:
-            text = current.read_text(encoding="utf-8", errors="replace")
+            text = current.read_text(encoding="utf-8", errors="replace").removeprefix("\ufeff")
         except OSError:
             continue
         for match in _INCLUDE_DIRECTIVE.finditer(text):

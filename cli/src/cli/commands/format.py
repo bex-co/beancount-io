@@ -150,6 +150,8 @@ def _format_in_place(
     # back with a newline appended and call that a rewrite.
     formattable = [file for file in files if str(file) not in failed]
     before = {file: _text(file) for file in formattable}
+    for file in formattable:
+        _strip_bom(file)
     completed = (
         launch.capture_native("bean-format", [*alignment, "--in-place", *(str(f) for f in formattable)])
         if formattable
@@ -287,6 +289,11 @@ def _would_change(file: Path, alignment: list[str]) -> bool:
     something to print. A formatter that fails is reported as a failure instead
     of being read as "already formatted".
     """
+    if _has_bom(file):
+        # Upstream cannot parse the mark at all; `-i` strips it, so a marked
+        # file always needs formatting. Answered here so `--check` names the
+        # remedy instead of failing on upstream's parse error.
+        return True
     completed = launch.capture_native("bean-format", [*alignment, str(file)])
     if completed.returncode != 0:
         raise BeaError(
@@ -317,6 +324,38 @@ def _canonical_posting_indent(text: str) -> str:
                 continue
         lines.append(line)
     return "".join(lines)
+
+
+_UTF8_BOM = b"\xef\xbb\xbf"
+
+
+def _has_bom(file: Path) -> bool:
+    """Whether the file starts with a UTF-8 byte-order mark."""
+    try:
+        with open(file, "rb") as stream:
+            return stream.read(len(_UTF8_BOM)) == _UTF8_BOM
+    except OSError:
+        return False
+
+
+def _strip_bom(file: Path) -> None:
+    """Remove a leading UTF-8 BOM from the file on disk, leaving all other bytes.
+
+    The mark is an encoding declaration, not content: every other byte stays
+    verbatim, so this converges a Windows-saved ledger without reformatting it.
+    """
+    try:
+        raw = file.read_bytes()
+    except OSError:
+        return
+    if not raw.startswith(_UTF8_BOM):
+        return
+    try:
+        file.write_bytes(raw[len(_UTF8_BOM) :])
+    except OSError:
+        # A file that cannot be rewritten is upstream's failure to report,
+        # not a crash here: bean-format still cannot parse the kept mark.
+        return
 
 
 def _text(file: Path) -> str:
