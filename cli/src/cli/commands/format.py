@@ -204,7 +204,12 @@ def _text(file: Path) -> str:
     Upstream writes LF, and a CRLF file is not "unformatted" for that reason
     alone — the alignment is what is being compared.
     """
-    return file.read_text()
+    try:
+        return file.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise LedgerError(f"Could not read {file} as UTF-8 text ({exc.reason}).") from exc
+    except OSError as exc:
+        raise LedgerError(f"Could not read {file}: {exc.strerror or exc}.") from exc
 
 
 def _named(paths: list[Path] | None, default: Path | None) -> list[Path]:
