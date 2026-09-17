@@ -571,9 +571,17 @@ def import_entries(
                 discarded: list[str] = []
                 if isinstance(prior.get("rules"), str) and csv_rules_arg is None:
                     discarded.append(f"--rules {prior['rules']}")
-                if isinstance(prior.get("default_account"), str) and chosen_default_account is None:
+                if (
+                    isinstance(prior.get("default_account"), str)
+                    and chosen_default_account is None
+                    and prior["default_account"] != default_account
+                ):
                     discarded.append(f"--default-account {prior['default_account']}")
-                if isinstance(prior.get("date_format"), str) and chosen_date_format is None:
+                if (
+                    isinstance(prior.get("date_format"), str)
+                    and chosen_date_format is None
+                    and prior["date_format"] != date_format
+                ):
                     discarded.append(f"--date-format {prior['date_format']}")
                 if discarded:
                     message = (

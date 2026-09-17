@@ -1599,6 +1599,15 @@ class TestStickyRecall:
         assert row["rule"] == "Coffee"
         assert "Expenses:Food" in row["entry"]
 
+    def test_refresh_with_same_effective_values_announces_nothing(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        seed = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
+        assert seed.exit_code == 0, seed.output
+        refresh = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
+        assert refresh.exit_code == 0, refresh.output
+        assert "Discarded remembered" not in " ".join(json.loads(refresh.stdout)["data"]["notes"])
+
     def test_old_record_with_sign_announces_the_drop(self, book: Path, isolated_config: Path) -> None:
         record = self._record(book, isolated_config)
         record.parent.mkdir(parents=True, exist_ok=True)
