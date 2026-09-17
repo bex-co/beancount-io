@@ -541,10 +541,12 @@ import. A read-only root can still validate a writable `--into` file.
 `bea format -i` is upstream's formatter writing the file itself, so a read-only
 file fails there with exit **1** and the formatter's own message.
 
-Payees, narrations, and string metadata are written on one line: runs of CR/LF
-line breaks become spaces in single adds, bulk JSON, and imports. Quotes and
-backslashes retain their contents. Human tables also flatten line breaks from
-existing entries without modifying the ledger.
+Payees, narrations, string metadata, and the string fields of `note`, `event`,
+and `custom` are written on one line: runs of CR/LF line breaks become spaces
+in single adds, bulk JSON, and imports, so a pasted multi-line value can never
+write a directive that breaks the file. Quotes and backslashes retain their
+contents. Human tables also flatten line breaks from existing entries without
+modifying the ledger.
 
 Examples below assume their accounts were opened and their dates, balances,
 and document paths are valid for your ledger. Every add command, and `import`,

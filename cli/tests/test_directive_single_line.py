@@ -93,3 +93,30 @@ def test_note_event_custom_flatten_newlines(tmp_path: Path) -> None:
     assert custom.returncode == 0, custom.stderr
     text = ledger.read_text()
     assert 'custom "budget" "hello world"' in text
+    assert _bea(tmp_path, "--file", str(ledger), "check").returncode == 0
+
+
+def test_bulk_json_flattens_narration_like_the_flag_path(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    rows = tmp_path / "rows.json"
+    rows.write_text(
+        json.dumps(
+            [
+                {
+                    "date": "2024-05-01",
+                    "narration": "bulk1\nbulk2",
+                    "postings": [
+                        {"account": "Expenses:Transport", "amount": "3 USD"},
+                        {"account": "Assets:Cash", "amount": "-3 USD"},
+                    ],
+                }
+            ]
+        )
+    )
+
+    result = _bea(tmp_path, "--file", str(ledger), "add", "transactions", "--from", str(rows))
+
+    assert result.returncode == 0, result.stderr
+    assert '"bulk1 bulk2"' in ledger.read_text()
+    assert _bea(tmp_path, "--file", str(ledger), "check").returncode == 0
