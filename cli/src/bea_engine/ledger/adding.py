@@ -116,6 +116,11 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
             links=list(request.get("links") or []),
         )
     values = list(request.get("values") or [])
+    if not values:
+        raise protocol.UsageError(
+            "Custom directives need at least one value "
+            "(for example --value 'text:x'). An empty custom breaks Beancount's pad plugin."
+        )
     for value in values:
         # Only this side knows what a valid account is, so an account-typed
         # custom value is checked here rather than where it was typed.

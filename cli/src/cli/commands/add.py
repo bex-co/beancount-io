@@ -396,10 +396,15 @@ def add_custom(
       --value 'amount:500 USD'
       --value 'account:Assets:Cash'
     """
+    if not value:
+        raise UsageError(
+            "bea add custom needs at least one --value (for example --value 'text:x'). "
+            "A custom with no values breaks Beancount's pad plugin."
+        )
     request = {
         "date": parse_date(date).isoformat(),
         "type": type,
-        "values": [_parse_custom_value(v) for v in value or []],
+        "values": [_parse_custom_value(v) for v in value],
     }
     file, data = _write("custom", request, allow_errors=allow_errors, into=into)
     _appended("custom", file, data)
