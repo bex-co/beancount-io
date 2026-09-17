@@ -77,6 +77,7 @@ def init(
     Credit card debt uses a negative opening balance.
     New ledger files are private (0600 on POSIX); chmod explicitly to share.
     """
+    from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS
     from cli.engine import launch
 
     ctx = context.current()
@@ -89,6 +90,18 @@ def init(
         file = directory if directory.suffix in {".bean", ".beancount"} else directory / "main.bean"
     if file.exists() or file.is_symlink():
         raise ConflictError(f"Already exists: {file}. Choose a new path; init never overwrites a ledger.")
+    # Refuse shadowing a sibling default root ledger (cwd discovery prefers main.bean).
+    if file.name in {name.name for name in DEFAULT_ENTRY_FILE_FALLBACKS}:
+        for sibling_name in DEFAULT_ENTRY_FILE_FALLBACKS:
+            sibling = file.with_name(sibling_name.name)
+            if sibling == file:
+                continue
+            if sibling.exists() or sibling.is_symlink():
+                raise ConflictError(
+                    f"Already exists: {sibling}. Init would create {file} and cwd discovery "
+                    f"would prefer main.bean over main.beancount — choose a new path; init never "
+                    f"shadows an existing root ledger."
+                )
     prompted = currency is None
     if currency is None:
         if ctx.no_input:
