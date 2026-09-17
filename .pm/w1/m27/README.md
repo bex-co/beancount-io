@@ -9,7 +9,7 @@
 | t001 | Refuse JSON floats in bulk amount fields — **DONE** | 30m | — |
 | t002 | Apply one scientific-notation rule across every write path — **DONE** | 20m | t001 |
 | t003 | Preserve `@@` total prices instead of converting them to unit prices — **DONE** | 45m | — |
-| t004 | Bound converted output by the ledger's display context | 45m | — |
+| t004 | Bound converted output by the ledger's display context — **DONE** | 45m | — |
 | t005 | Make cost shapes symmetric between `add transaction` and `add transactions` | 30m | t001 |
 | t006 | Make repeated `add price` and `add balance` idempotent | 45m | — |
 | t007 | Adoption surface | 25m | t001, t002, t003, t004, t005, t006 |
