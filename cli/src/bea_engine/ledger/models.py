@@ -101,7 +101,7 @@ class TransactionDirective(BaseModel):
     flag: str = "*"
     payee: str | None = None
     narration: str | None = None
-    postings: list[Posting]
+    postings: list[Posting] = Field(min_length=1)
     tags: list[Tag] = Field(default_factory=list)
     links: list[Link] = Field(default_factory=list)
     meta: dict[str, Any] = Field(default_factory=dict)
