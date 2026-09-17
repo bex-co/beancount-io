@@ -1037,3 +1037,37 @@ def test_csv_quoted_multiline_and_escaped_quotes_still_import(book: Path, isolat
     entries, _, _ = loader.load_file(book)
     narrations = [e.narration for e in entries if isinstance(e, Transaction) and e.narration]
     assert "Shop second line" in narrations and 'say "hi"' in narrations
+
+
+def test_a_missing_importer_dependency_names_the_engine_not_the_frontend(book: Path, tmp_path: Path) -> None:
+    """Importer configurations run under the engine interpreter, so that is the
+    environment the package is missing from — installing it beside `bea` changes nothing."""
+    source = tmp_path / "bank.csv"
+    source.write_text(HEADER + ROW)
+    config = tmp_path / "needs_a_package.py"
+    config.write_text("import definitely_not_installed_module_xyz\nCONFIG = []\n")
+
+    result = runner.invoke(app, ["--file", str(book), "import", str(source), "--config", str(config)])
+
+    assert result.exit_code == 2, result.output
+    message = result.stderr
+    assert "Importer dependency is unavailable" in message
+    assert "managed engine" in message
+    assert "bea engine status" in message
+    assert "docs/IMPORTING.md" in message
+    # The advice this replaces: it sent the user to change the environment
+    # running bea, which the engine never consults.
+    assert "Run bea in an environment" not in message
+
+
+def test_an_importer_that_raises_is_still_a_different_error(book: Path, tmp_path: Path) -> None:
+    """The ImportError branch must stay distinct from the general failure branch."""
+    source = tmp_path / "bank.csv"
+    source.write_text(HEADER + ROW)
+    config = tmp_path / "boom.py"
+    config.write_text("raise ValueError('boom')\nCONFIG = []\n")
+
+    result = runner.invoke(app, ["--file", str(book), "import", str(source), "--config", str(config)])
+
+    assert result.exit_code != 0
+    assert "Importer dependency is unavailable" not in result.stderr

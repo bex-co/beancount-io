@@ -160,9 +160,14 @@ def answer(
         except EngineError:
             raise
         except ImportError as exc:
+            # This handler runs inside the engine, so the module is missing from
+            # the engine's environment — not from whatever launched `bea`.
+            # Installing it beside the frontend changes nothing here.
             raise UsageError(
-                f"Importer dependency is unavailable: {exc}. Run bea in an environment containing your importer's "
-                "dependencies; see docs/IMPORTING.md.",
+                f"Importer dependency is unavailable: {exc}. Importer configurations are executed by the "
+                "managed engine, not the environment you run bea from, so the package has to be installed "
+                "there; 'bea engine status' prints which engine serves and where it lives. "
+                "See docs/IMPORTING.md.",
                 traceback=_traceback(exc),
             ) from exc
         except Exception as exc:
