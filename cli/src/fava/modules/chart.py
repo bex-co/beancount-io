@@ -32,6 +32,43 @@ ONE_DAY = timedelta(days=1)
 ZERO = Decimal()
 
 
+def _omit_empty_clamp_phantoms(
+    node: SerialisedTreeNode,
+    filtered: FilteredLedger,
+) -> SerialisedTreeNode:
+    """Drop zero clamp-transfer accounts that were never opened in the ledger.
+
+    Mid-period TimeFilter clamping invents Equity:Opening-Balances (and related
+    previous-* accounts) for the pre-period transfer. Those often net to empty
+    inventories; leave them out of the rendered tree unless the books actually
+    opened them.
+    """
+    from dataclasses import replace
+
+    from beancount.core.data import Open
+    from beancount.parser import options as optmod
+
+    opened = {entry.account for entry in filtered.ledger.all_entries if isinstance(entry, Open)}
+    hide = set(optmod.get_previous_accounts(filtered.ledger.options))
+
+    def walk(current: SerialisedTreeNode) -> SerialisedTreeNode:
+        children = []
+        for child in current.children:
+            walked = walk(child)
+            if (
+                walked.account in hide
+                and walked.account not in opened
+                and walked.balance.is_empty()
+                and walked.balance_children.is_empty()
+                and not walked.children
+            ):
+                continue
+            children.append(walked)
+        return replace(current, children=children)
+
+    return walk(node)
+
+
 @dataclass(frozen=True)
 class DateAndBalance:
     """Balance at a date."""
@@ -65,11 +102,12 @@ class ChartModule:
             tree = Tree(slice_entry_dates(filtered.entries, begin, end))
         else:
             tree = Tree(filtered.entries)
-        return tree.get(account_name).serialise(
+        node = tree.get(account_name).serialise(
             conversion,
             filtered.ledger.prices,
             end - ONE_DAY if end is not None else filtered.end_date,
         )
+        return _omit_empty_clamp_phantoms(node, filtered)
 
     @listify
     def interval_totals(
@@ -151,7 +189,9 @@ class ChartModule:
         over time. In contrast, :meth:`interval_totals` returns per-interval
         totals (flows), not cumulative balances.
         """
-        transactions = (entry for entry in filtered.entries if (isinstance(entry, Transaction) and entry.flag != FLAG_UNREALIZED))
+        transactions = (
+            entry for entry in filtered.entries if (isinstance(entry, Transaction) and entry.flag != FLAG_UNREALIZED)
+        )
 
         is_child_account = account_tester(account_name, with_children=True)
 
@@ -246,7 +286,9 @@ class ChartModule:
             net worth (Assets + Liabilities) separately converted to all
             operating currencies.
         """
-        transactions = (entry for entry in filtered.entries if (isinstance(entry, Transaction) and entry.flag != FLAG_UNREALIZED))
+        transactions = (
+            entry for entry in filtered.entries if (isinstance(entry, Transaction) and entry.flag != FLAG_UNREALIZED)
+        )
 
         types = (
             filtered.ledger.options["name_assets"],
