@@ -155,20 +155,29 @@ EOF
 bea --file books/main.bean import category.csv --csv date=Date,amount=Amount,narration=Description,category=Category --account Assets:Checking --rules category-rules.toml
 ```
 
-The mapping is remembered per root ledger, CSV header row, and source account.
-When only one account uses those headers, the next import needs no flags.
-If checking and savings exports share headers, their mappings are kept separately
-and subsequent previews and applies require `--account ACCOUNT`; bea refuses
-to choose between them. Always specify `--account` when importing from a new
-account, since headers alone cannot identify a bank account. For example:
+The mapping is remembered per root ledger, CSV header row, and source account,
+along with the `--rules` path, `--default-account`, an explicit
+`--date-format`, and the delimiter — but never `sign=`, which always needs an
+explicit pass. When only one account uses those headers, the next import needs
+no flags. If checking and savings exports share headers, their mappings are
+kept separately and subsequent previews and applies require
+`--account ACCOUNT`; bea refuses to choose between them. Always specify
+`--account` when importing from a new account, since headers alone cannot
+identify a bank account. For example:
 `bea import checking.csv --account Assets:Checking --apply`.
 For a remembered mapping, human output reports
-`Using remembered column mapping for <file>` and JSON reports
-`config_source` `remembered --csv`. An explicit `--csv` run updates the
-remembered mapping. Only a `--date-format` you passed is remembered with it;
-an inferred one is re-read per file, since two exports can share a header row
-without sharing a date convention. A changed header row matches nothing
-remembered, and bea falls back to reading that header directly.
+`Using remembered settings for <file>` (or `Using settings remembered from
+<seeding file> for <file>`) listing every setting in force, and JSON reports
+`config_source` `remembered --csv` plus a `remembered` object with the same
+fields (`null` when the run used no memory). An explicit `--csv` run replaces
+the remembered settings; settings it drops are named, never silently
+discarded. Only a `--date-format` you passed is remembered, and even that is
+re-validated per file: when the new export unambiguously uses another
+convention, the import refuses and names the expected format, since two
+exports can share a header row without sharing a date convention. A
+remembered `--rules` path that is missing or unreadable degrades to a warning
+and an unruled import rather than failing. A changed header row matches
+nothing remembered, and bea falls back to reading that header directly.
 
 ## A Python importer (`--config`)
 

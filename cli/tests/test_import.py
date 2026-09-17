@@ -1362,3 +1362,266 @@ class TestCsvRulesMatching:
         assert row["rule"] == "STARBUCKS"
         assert "Expenses:Food" in row["entry"]
         assert "STARBUCKS" not in " ".join(data["notes"])
+
+
+class TestStickyRecall:
+    MAPPING = "date=Date,amount=Amount,narration=Description"
+
+    def _record(self, book: Path, cfg: Path) -> Path:
+        key = hashlib.sha256(str(book.resolve()).encode()).hexdigest()
+        return cfg / "importers" / f"csv-{key}.json"
+
+    def test_remembered_run_lists_every_setting(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Food"\n')
+        first = book.parent / "first.csv"
+        first.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        seed = run_csv(
+            book,
+            first,
+            "--csv",
+            self.MAPPING,
+            "--account",
+            "Assets:Checking",
+            "--rules",
+            str(rules),
+            "--default-account",
+            "Expenses:Misc",
+            "--date-format",
+            "%Y-%m-%d",
+        )
+        assert seed.exit_code == 0, seed.output
+        second = book.parent / "second.csv"
+        second.write_text("Date,Description,Amount\n2026-08-03,Tea,-2.00\n")
+        result = runner.invoke(app, ["--file", str(book), "import", str(second), "--account", "Assets:Checking"])
+        assert result.exit_code == 0, result.output
+        assert "remembered" in result.stderr
+        assert "first.csv" in result.stderr
+        assert "--csv date=Date" in result.stderr
+        assert "--date-format %Y-%m-%d" in result.stderr
+        assert "rules.toml" in result.stderr
+        assert "--default-account Expenses:Misc" in result.stderr
+
+    def test_remembered_json_exposes_settings(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Food"\n')
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        seed = run_csv(
+            book,
+            source,
+            "--csv",
+            self.MAPPING,
+            "--account",
+            "Assets:Checking",
+            "--rules",
+            str(rules),
+            "--default-account",
+            "Expenses:Misc",
+        )
+        assert seed.exit_code == 0, seed.output
+        assert json.loads(seed.stdout)["data"]["remembered"] is None
+        repeat = run_csv(book, source, "--account", "Assets:Checking")
+        assert repeat.exit_code == 0, repeat.output
+        data = json.loads(repeat.stdout)["data"]
+        assert data["config_source"] == "remembered --csv"
+        assert data["remembered"]["rules"] == str(rules)
+        assert data["remembered"]["default_account"] == "Expenses:Misc"
+        assert "date=Date" in data["remembered"]["mapping"]
+
+    def test_remembered_sign_is_not_reused(self, book: Path, isolated_config: Path) -> None:
+        ledger_sign = book.parent / "ledger-sign.csv"
+        ledger_sign.write_text("Date,Description,Amount\n2026-08-02,Cafe,4.50\n")
+        seed = run_csv(book, ledger_sign, "--csv", f"{self.MAPPING},sign=ledger", "--account", "Assets:Checking")
+        assert seed.exit_code == 0, seed.output
+        stored = json.loads(self._record(book, isolated_config).read_text())["sources"][0]
+        assert "sign=" not in stored["mapping"]
+        bank = book.parent / "bank.csv"
+        bank.write_text("Date,Description,Amount\n2026-08-03,Coffee,-4.50\n")
+        repeat = run_csv(book, bank, "--account", "Assets:Checking")
+        assert repeat.exit_code == 0, repeat.output
+        (row,) = json.loads(repeat.stdout)["data"]["rows"]
+        assert row["amount"] == "-4.50 USD"
+
+    def test_explicit_sign_ledger_still_works(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Cafe,4.50\n")
+        result = run_csv(book, source, "--csv", f"{self.MAPPING},sign=ledger", "--account", "Assets:Checking")
+        assert result.exit_code == 0, result.output
+        (row,) = json.loads(result.stdout)["data"]["rows"]
+        assert row["amount"] == "-4.50 USD"
+
+    def test_remembered_date_format_mismatch_is_refused(self, book: Path, isolated_config: Path) -> None:
+        us = book.parent / "us.csv"
+        us.write_text("Date,Description,Amount\n08/02/2026,Coffee,-5.25\n")
+        seed = run_csv(book, us, "--csv", self.MAPPING, "--account", "Assets:Checking", "--date-format", "%m/%d/%Y")
+        assert seed.exit_code == 0, seed.output
+        iso = book.parent / "iso.csv"
+        iso.write_text("Date,Description,Amount\n2026-08-03,Tea,-2.00\n")
+        result = run_csv(book, iso, "--account", "Assets:Checking")
+        assert result.exit_code == 2
+        assert "Remembered --date-format %m/%d/%Y" in result.stderr
+        assert "%Y-%m-%d" in result.stderr
+        assert "--date-format" in result.stderr
+
+    def test_remembered_date_format_reused_when_file_agrees(self, book: Path, isolated_config: Path) -> None:
+        us = book.parent / "us.csv"
+        us.write_text("Date,Description,Amount\n08/02/2026,Coffee,-5.25\n")
+        seed = run_csv(book, us, "--csv", self.MAPPING, "--account", "Assets:Checking", "--date-format", "%m/%d/%Y")
+        assert seed.exit_code == 0, seed.output
+        us2 = book.parent / "us2.csv"
+        us2.write_text("Date,Description,Amount\n08/20/2026,Tea,-2.00\n")
+        result = run_csv(book, us2, "--account", "Assets:Checking")
+        assert result.exit_code == 0, result.output
+        (row,) = json.loads(result.stdout)["data"]["rows"]
+        assert row["date"] == "2026-08-20"
+
+    def test_missing_remembered_rules_warns_and_continues(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Food"\n')
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        seed = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking", "--rules", str(rules))
+        assert seed.exit_code == 0, seed.output
+        rules.unlink()
+        result = runner.invoke(app, ["--file", str(book), "import", str(source), "--account", "Assets:Checking"])
+        assert result.exit_code == 0, result.output
+        assert "rules.toml" in result.stderr
+        assert "without rules" in result.stderr
+        assert "unmatched" in result.stdout
+        again = runner.invoke(app, ["--file", str(book), "import", str(source), "--account", "Assets:Checking"])
+        assert again.exit_code == 0, again.output
+        assert "without rules" not in again.stderr
+
+    def test_corrupt_remembered_rules_warns_and_continues(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Food"\n')
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        seed = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking", "--rules", str(rules))
+        assert seed.exit_code == 0, seed.output
+        rules.write_text("NOT TOML {{{")
+        result = runner.invoke(app, ["--file", str(book), "import", str(source), "--account", "Assets:Checking"])
+        assert result.exit_code == 0, result.output
+        assert "rules.toml" in result.stderr
+        assert "without rules" in result.stderr
+        assert "unmatched" in result.stdout
+
+    def test_explicit_rules_failure_still_hard(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        result = run_csv(
+            book,
+            source,
+            "--csv",
+            self.MAPPING,
+            "--account",
+            "Assets:Checking",
+            "--rules",
+            str(book.parent / "missing.toml"),
+        )
+        assert result.exit_code == 2
+
+    def test_bare_csv_refresh_announces_discards(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Food"\n')
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        seed = run_csv(
+            book,
+            source,
+            "--csv",
+            self.MAPPING,
+            "--account",
+            "Assets:Checking",
+            "--rules",
+            str(rules),
+            "--default-account",
+            "Expenses:Misc",
+        )
+        assert seed.exit_code == 0, seed.output
+        refresh = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
+        assert refresh.exit_code == 0, refresh.output
+        assert "Discarded remembered" in " ".join(json.loads(refresh.stdout)["data"]["notes"])
+        (row,) = json.loads(refresh.stdout)["data"]["rows"]
+        assert row["rule"] == "unmatched"
+        assert "Expenses:Uncategorized" in row["entry"]
+        reseed = run_csv(
+            book,
+            source,
+            "--csv",
+            self.MAPPING,
+            "--account",
+            "Assets:Checking",
+            "--rules",
+            str(rules),
+            "--default-account",
+            "Expenses:Misc",
+        )
+        assert reseed.exit_code == 0, reseed.output
+        human = runner.invoke(
+            app,
+            ["--file", str(book), "import", str(source), "--csv", self.MAPPING, "--account", "Assets:Checking"],
+        )
+        assert human.exit_code == 0, human.output
+        assert "Discarded remembered" in human.stderr
+        assert "--rules" in human.stderr
+        assert "--default-account Expenses:Misc" in human.stderr
+
+    def test_csv_refresh_keeping_flags_announces_nothing(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Food"\n')
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        seed = run_csv(
+            book,
+            source,
+            "--csv",
+            self.MAPPING,
+            "--account",
+            "Assets:Checking",
+            "--rules",
+            str(rules),
+            "--default-account",
+            "Expenses:Misc",
+        )
+        assert seed.exit_code == 0, seed.output
+        refresh = run_csv(
+            book,
+            source,
+            "--csv",
+            self.MAPPING,
+            "--account",
+            "Assets:Checking",
+            "--rules",
+            str(rules),
+            "--default-account",
+            "Expenses:Misc",
+        )
+        assert refresh.exit_code == 0, refresh.output
+        assert "Discarded remembered" not in refresh.stderr
+        repeat = run_csv(book, source, "--account", "Assets:Checking")
+        (row,) = json.loads(repeat.stdout)["data"]["rows"]
+        assert row["rule"] == "Coffee"
+        assert "Expenses:Food" in row["entry"]
+
+    def test_old_record_with_sign_announces_the_drop(self, book: Path, isolated_config: Path) -> None:
+        record = self._record(book, isolated_config)
+        record.parent.mkdir(parents=True, exist_ok=True)
+        record.write_text(
+            json.dumps(
+                {
+                    "sources": [
+                        {
+                            "headers": ["Date", "Description", "Amount"],
+                            "mapping": f"{self.MAPPING},sign=ledger",
+                            "account": "Assets:Checking",
+                            "rules": None,
+                            "default_account": "Expenses:Uncategorized",
+                            "date_format": None,
+                            "delimiter": ",",
+                        }
+                    ]
+                }
+            )
+        )
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        result = runner.invoke(app, ["--file", str(book), "import", str(source), "--account", "Assets:Checking"])
+        assert result.exit_code == 0, result.output
+        assert "sign=ledger" in result.stderr
+        assert "-5.25 USD" in result.stdout

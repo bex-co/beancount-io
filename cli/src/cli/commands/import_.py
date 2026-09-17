@@ -130,13 +130,66 @@ def _csv_record(file: Path) -> Path:
     return config_dir() / "importers" / f"csv-{key}.json"
 
 
-def _recall_csv(file: Path, source: Path, account: str | None = None) -> dict[str, Any] | None:
+def _patch_csv_entry(file: Path, headers: list[str], account: str, updates: dict[str, Any]) -> None:
+    """Rewrite stored keys for one remembered entry; failures warn, never fail."""
+    from cli.csv_mapper import header_signature
+
+    record = _csv_record(file)
+    try:
+        payload = json.loads(record.read_text())
+        sources = payload.get("sources", [])
+        wanted = header_signature(headers)
+        for entry in sources:
+            if (
+                isinstance(entry, dict)
+                and header_signature(entry.get("headers")) == wanted
+                and entry.get("account") == account
+            ):
+                entry.update(updates)
+        record.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write(record, json.dumps({"sources": sources}))
+    except OSError as exc:
+        output.note(f"Could not update the remembered column mapping: {exc}.")
+    except (ValueError, AttributeError):
+        pass
+
+
+def _find_csv_entry(file: Path, headers: list[str] | None, account: str) -> dict[str, Any] | None:
+    """The remembered entry for a header row and account, without side effects."""
+    from cli.csv_mapper import header_signature
+
+    if not headers:
+        return None
+    record = _csv_record(file)
+    if not record.is_file():
+        return None
+    try:
+        sources = json.loads(record.read_text()).get("sources", [])
+    except (ValueError, AttributeError):
+        return None
+    wanted = header_signature(headers)
+    for entry in sources:
+        if (
+            isinstance(entry, dict)
+            and header_signature(entry.get("headers")) == wanted
+            and entry.get("account") == account
+            and isinstance(entry.get("mapping"), str)
+        ):
+            return entry
+    return None
+
+
+def _recall_csv(file: Path, source: Path, account: str | None = None, *, notes: list[str]) -> dict[str, Any] | None:
     """A remembered `--csv` run for this root ledger and CSV header row, if any.
 
     Returns the stored spec only when its mapping and account are usable
     strings; a corrupt record reads as no memory rather than a crash.
+    Stale assumptions are repaired loudly: a remembered `sign=ledger` is
+    dropped (sign is never re-applied across files) and an unreadable
+    remembered `--rules` path degrades to an unruled import, each announced
+    in `notes` and persisted back to the record.
     """
-    from cli.csv_mapper import header_signature, read_header
+    from cli.csv_mapper import header_signature, load_rules, parse_mapping, read_header
 
     record = _csv_record(file)
     if not record.is_file():
@@ -175,7 +228,34 @@ def _recall_csv(file: Path, source: Path, account: str | None = None) -> dict[st
             f"This CSV header matches multiple source accounts: {accounts}. "
             "Pass --account ACCOUNT to select the export's account; nothing was written."
         )
-    return matches[0] if matches else None
+    if not matches:
+        return None
+    entry = matches[0]
+    mapping = entry.get("mapping")
+    try:
+        sign = parse_mapping(mapping).sign if isinstance(mapping, str) else "bank"
+    except UsageError:
+        sign = "bank"
+    if sign == "ledger" and isinstance(mapping, str):
+        stripped = ",".join(part for part in mapping.split(",") if part.partition("=")[0].strip() != "sign")
+        entry["mapping"] = stripped
+        notes.append(
+            f"Dropped remembered sign=ledger for {source.name}; sign is never re-applied across files. "
+            "Pass sign=ledger explicitly for a ledger-signed export."
+        )
+        _patch_csv_entry(file, headers, entry["account"], {"mapping": stripped})
+    rules_path = entry.get("rules")
+    if isinstance(rules_path, str):
+        try:
+            load_rules(Path(rules_path))
+        except UsageError as exc:
+            notes.append(
+                f"Remembered --rules {rules_path} cannot be used ({exc}); importing without rules. "
+                "Re-pass --rules to restore it."
+            )
+            entry["rules"] = None
+            _patch_csv_entry(file, headers, entry["account"], {"rules": None})
+    return entry
 
 
 def _remember_csv(file: Path, source: Path, spec: dict[str, Any], encoding: str = "utf-8") -> None:
@@ -298,10 +378,14 @@ def import_entries(
     csv_rules_arg: Path | None = rules_file.expanduser().resolve() if rules_file is not None else None
     remembered_run = False
     inferred_notes: list[str] = []
+    recall_notes: list[str] = []
+    recalled_date_format: str | None = None
+    recalled_source: str | None = None
     # Only a date format the caller chose is worth remembering. An inferred one
     # belongs to the file it was read from, and two exports can share a header
     # row without sharing a date convention.
     chosen_date_format = date_format
+    chosen_default_account = default_account
     if csv_request is not None and csv_request.strip().casefold() == "auto":
         csv_request = _inferred_mapping(
             source, explicit=True, notes=inferred_notes, delimiter=csv_delimiter, encoding=csv_encoding
@@ -329,18 +413,21 @@ def import_entries(
                 csv_request = f"{csv_request},sign={peek.sign}"
             csv_origin = "inferred --csv"
     if csv_request is None and config is None:
-        remembered = _recall_csv(file, source, csv_account)
+        remembered = _recall_csv(file, source, csv_account, notes=recall_notes)
         if remembered is not None:
             csv_request = remembered["mapping"]
             csv_run_account = csv_account or remembered["account"]
             remembered_run = True
             csv_origin = "remembered --csv"
+            if isinstance(remembered.get("source"), str):
+                recalled_source = remembered["source"]
             if csv_rules_arg is None and isinstance(remembered.get("rules"), str):
                 csv_rules_arg = Path(remembered["rules"])
             if default_account is None and isinstance(remembered.get("default_account"), str):
                 default_account = remembered["default_account"]
             if date_format is None and isinstance(remembered.get("date_format"), str):
                 date_format = remembered["date_format"]
+                recalled_date_format = remembered["date_format"]
             if csv_delimiter is None and isinstance(remembered.get("delimiter"), str):
                 csv_delimiter = remembered["delimiter"]
         elif config is None and _config_available(file) is None:
@@ -400,6 +487,21 @@ def import_entries(
                     f"Dates parse as {date_format} but the column has no day past the twelfth, so day-first and "
                     "month-first cannot be told apart. Pass --date-format if that is the wrong reading."
                 )
+        elif recalled_date_format is not None:
+            # A remembered format is re-validated against each file: two
+            # exports can share headers without sharing a date convention.
+            # Ambiguous files cannot prove a mismatch, so only an unambiguous
+            # disagreement refuses; an unreadable column keeps the memory.
+            inferred_format, ambiguous = infer_date_format(
+                source, mapping.columns["date"], delimiter=csv_delimiter, encoding=csv_encoding
+            )
+            if inferred_format is not None and not ambiguous and inferred_format != recalled_date_format:
+                raise UsageError(
+                    f"Remembered --date-format {recalled_date_format} does not match {source.name}, whose "
+                    f"dates look like {inferred_format}. Pass --date-format {inferred_format} (or --csv) "
+                    "for this file.",
+                    details=recall_notes,
+                )
         default_account = default_account or "Expenses:Uncategorized"
         delimiter_note = ""
         if csv_delimiter is not None and csv_delimiter != ",":
@@ -407,10 +509,28 @@ def import_entries(
         encoding_note = f", encoding {csv_encoding}" if csv_encoding != "utf-8" else ""
         frontend_notes: list[str] = []
         if remembered_run:
-            frontend_notes.append(
-                f"Using remembered column mapping for {source.name} "
-                f"(--date-format {date_format}{delimiter_note}{encoding_note})."
+            columns_only = ",".join(
+                part
+                for part in (csv_request or "").split(",")
+                if part.partition("=")[0].strip() not in {"delimiter", "encoding", "sign"}
             )
+            settings = [f"--csv {columns_only}"]
+            if date_format is not None:
+                settings.append(f"--date-format {date_format}")
+            if csv_rules_arg is not None:
+                settings.append(f"--rules {csv_rules_arg}")
+            if default_account is not None:
+                settings.append(f"--default-account {default_account}")
+            if csv_delimiter is not None and csv_delimiter != ",":
+                settings.append(f"--delimiter {_display_delimiter(csv_delimiter)}")
+            if csv_encoding != "utf-8":
+                settings.append(f"--csv encoding={csv_encoding}")
+            if recalled_source is not None and recalled_source != source.name:
+                frontend_notes.append(
+                    f"Using settings remembered from {recalled_source} for {source.name}: {' '.join(settings)}."
+                )
+            else:
+                frontend_notes.append(f"Using remembered settings for {source.name}: {' '.join(settings)}.")
         elif csv_origin == "inferred --csv":
             frontend_notes.append(
                 f"Read the column mapping from the header row: --csv {csv_request} --date-format {date_format}. "
@@ -418,6 +538,7 @@ def import_entries(
             )
         else:
             frontend_notes.append(f"Using column mapping (--csv{delimiter_note}{encoding_note}).")
+        frontend_notes.extend(recall_notes)
         frontend_notes.extend(inferred_notes)
         for line in frontend_notes:
             output.note(line)
@@ -435,11 +556,38 @@ def import_entries(
         if csv_rules_arg is not None:
             argv += ["--rules", str(csv_rules_arg)]
         if not remembered_run:
+            # Sign is never remembered: a ledger-signed export must not flip
+            # a later bank-signed file that merely shares its headers.
+            stored_mapping = ",".join(
+                part for part in (csv_request or "").split(",") if part.partition("=")[0].strip() != "sign"
+            )
+            try:
+                from cli.csv_mapper import read_header
+
+                prior = _find_csv_entry(file, read_header(source, encoding=csv_encoding), csv_run_account or "")
+            except UsageError:
+                prior = None
+            if prior is not None:
+                discarded: list[str] = []
+                if isinstance(prior.get("rules"), str) and csv_rules_arg is None:
+                    discarded.append(f"--rules {prior['rules']}")
+                if isinstance(prior.get("default_account"), str) and chosen_default_account is None:
+                    discarded.append(f"--default-account {prior['default_account']}")
+                if isinstance(prior.get("date_format"), str) and chosen_date_format is None:
+                    discarded.append(f"--date-format {prior['date_format']}")
+                if discarded:
+                    message = (
+                        f"Discarded remembered settings for {source.name}: "
+                        f"{', '.join(discarded)}. Re-pass them to keep them across refreshes."
+                    )
+                    frontend_notes.append(message)
+                    output.note(message)
             _remember_csv(
                 file,
                 source,
                 {
-                    "mapping": csv_request,
+                    "mapping": stored_mapping,
+                    "source": source.name,
                     "account": csv_run_account,
                     "rules": str(csv_rules_arg) if csv_rules_arg is not None else None,
                     "default_account": default_account,
@@ -479,6 +627,20 @@ def import_entries(
             preview["notes"] = notes
         if csv_mode and date_format is not None:
             preview["date_format"] = date_format
+        preview["remembered"] = (
+            {
+                "mapping": csv_request,
+                "source": recalled_source,
+                "account": csv_run_account,
+                "date_format": date_format,
+                "delimiter": csv_delimiter,
+                "encoding": csv_encoding,
+                "rules": str(csv_rules_arg) if csv_rules_arg is not None else None,
+                "default_account": default_account,
+            }
+            if remembered_run
+            else None
+        )
         output.emit(preview, target=output.file_target(file))
     else:
         summary = (
