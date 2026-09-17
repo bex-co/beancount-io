@@ -234,7 +234,8 @@ def _balance_recovery_hints(
             active.pop(entry.account, None)
     if balance.account not in active:
         return [
-            f"Review the assertion date: {balance.account} must be open on an earlier day to use --pad-from. "
+            f"Review the assertion date: {balance.account} must be open on an earlier day "
+            "before this balance assertion (bea add open, or a later --date). "
             "Balance assertions run at the start of the day."
         ]
     source_account = f"{options['name_equity']}:OpeningBalances"
