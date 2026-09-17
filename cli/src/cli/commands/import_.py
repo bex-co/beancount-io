@@ -327,16 +327,18 @@ def import_entries(
                     "month-first cannot be told apart. Pass --date-format if that is the wrong reading."
                 )
         default_account = default_account or "Expenses:Uncategorized"
+        frontend_notes: list[str] = []
         if remembered_run:
-            output.note(f"Using remembered column mapping for {source.name} (--date-format {date_format}).")
+            frontend_notes.append(f"Using remembered column mapping for {source.name} (--date-format {date_format}).")
         elif csv_origin == "inferred --csv":
-            output.note(
+            frontend_notes.append(
                 f"Read the column mapping from the header row: --csv {csv_request} --date-format {date_format}. "
                 "Pass --csv to override."
             )
         else:
-            output.note("Using column mapping (--csv).")
-        for line in inferred_notes:
+            frontend_notes.append("Using column mapping (--csv).")
+        frontend_notes.extend(inferred_notes)
+        for line in frontend_notes:
             output.note(line)
         argv += ["--csv", csv_request, "--account", csv_run_account, "--config-source", csv_origin]
         argv += ["--date-format", date_format, "--default-account", default_account]
@@ -358,9 +360,11 @@ def import_entries(
                 },
             )
     else:
+        frontend_notes = []
         config_path, config_source = _config_path(file, config)
         config_to_remember = config_path
-        output.note(f"Using importers from {config_path} ({config_source})")
+        frontend_notes.append(f"Using importers from {config_path} ({config_source})")
+        output.note(frontend_notes[0])
         argv += ["--config", str(config_path), "--config-source", config_source]
         if importer_name is not None:
             argv += ["--importer", importer_name]
@@ -374,12 +378,18 @@ def import_entries(
             for note in exc.result.get("notes") or []:
                 output.note(str(note))
         raise
-    for note in preview.pop("notes", []) or []:
-        output.note(str(note))
+    engine_notes = [str(note) for note in preview.pop("notes", []) or []]
+    for note in engine_notes:
+        output.note(note)
     if config_to_remember is not None:
         _remember_config(file, config_to_remember)
 
     if context.current().json_output:
+        notes = [*frontend_notes, *engine_notes]
+        if notes:
+            preview["notes"] = notes
+        if csv_mode and date_format is not None:
+            preview["date_format"] = date_format
         output.emit(preview, target=output.file_target(file))
     else:
         typer.echo(
