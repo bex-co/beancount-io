@@ -87,10 +87,16 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
         booking = request.get("booking")
         if booking is not None:
             booking = str(booking).strip().upper() or None
+        raw_currencies = list(request.get("currencies") or [])
+        currencies = [str(item).strip() for item in raw_currencies if str(item).strip()]
+        if raw_currencies and not currencies:
+            raise protocol.UsageError(
+                "Every --currency value is blank after trimming; supply a currency symbol or omit -c."
+            )
         return OpenDirective(
             date=date,
             account=parse_account(_text(request, "account")),
-            currencies=list(request.get("currencies") or []),
+            currencies=currencies,
             booking=booking,
         )
     if directive_type == "close":
