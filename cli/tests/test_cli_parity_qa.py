@@ -136,7 +136,8 @@ def test_native_help_matches_runtime_pins() -> None:
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX PTY; Windows export/help covered separately")
-def test_shell_redirect_reset_and_failed_redirect_keep_session_usable(ledger: Path) -> None:
+@pytest.mark.parametrize("failure", ["missing-parent", "directory", "readonly-file", "readonly-directory"])
+def test_shell_redirect_reset_and_failed_redirect_keep_session_usable(ledger: Path, failure: str) -> None:
     import pty
     import select
     import signal
@@ -151,6 +152,20 @@ def test_shell_redirect_reset_and_failed_redirect_keep_session_usable(ledger: Pa
     )
     env = environment(ledger.parent)
     env["PYTHONPATH"] += os.pathsep + str(instrument)
+    failed_target = ledger.parent / "absent/out.txt"
+    readonly = ledger.parent / "readonly"
+    if failure == "directory":
+        failed_target = ledger.parent
+    elif failure == "readonly-file":
+        readonly.write_text("KEEP")
+        readonly.chmod(0o444)
+        failed_target = readonly
+    elif failure == "readonly-directory":
+        readonly.mkdir()
+        readonly.chmod(0o555)
+        failed_target = readonly / "out.txt"
+    if failure.startswith("readonly") and os.access(readonly, os.W_OK):
+        pytest.skip("This user can write read-only paths")
     master, slave = pty.openpty()
     proc = subprocess.Popen(
         [sys.executable, "-m", "cli.main", "--file", str(ledger), "query"],
@@ -188,8 +203,22 @@ def test_shell_redirect_reset_and_failed_redirect_keep_session_usable(ledger: Pa
         assert "Traceback" not in command(".output")
         assert "Assets:Checking" in command("SELECT account;")
         # Failure to open a new target must leave the current stream usable.
-        command(f".output {ledger.parent / 'absent/out.txt'}")
+        failed = command(f".output {failed_target}")
+        assert "Cannot write to" in failed and "Traceback" not in failed
+        assert str(failed_target) in failed
         assert "Assets:Checking" in command("SELECT account;")
+        # The same failure must preserve a previously redirected file, too.
+        command(f".output {destination}")
+        failed = command(f".output {failed_target}")
+        assert "Cannot write to" in failed and "Traceback" not in failed
+        command("SELECT account;")
+        command(".output")
+        assert "Assets:Checking" in destination.read_text()
+        assert "Cannot write" not in destination.read_text()
+        if failure == "readonly-file":
+            assert readonly.read_text() == "KEEP"
+        elif failure in {"missing-parent", "readonly-directory"}:
+            assert not failed_target.exists()
         for line in [".reload", ".format csv", ".run"]:
             assert "Traceback" not in command(line)
         os.write(master, b".quit\n")
@@ -207,6 +236,8 @@ def test_shell_redirect_reset_and_failed_redirect_keep_session_usable(ledger: Pa
             os.killpg(proc.pid, signal.SIGKILL)
             proc.wait()
         os.close(master)
+        if readonly.exists():
+            readonly.chmod(0o755 if readonly.is_dir() else 0o644)
 
 
 UNALIGNED = '2026-01-02 * "Food"\n Assets:Checking -1 USD\n Expenses:Food 1 USD\n'

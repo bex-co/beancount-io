@@ -171,7 +171,11 @@ def build_shell(
             # Beanquery 0.2.0 calls open(sys.stdout) on reset and closes the old
             # stream before opening its replacement. Remove this override when
             # upstream supports reset and failed redirection without losing output.
-            destination = open(arg, "w", encoding="utf-8") if arg else stream
+            try:
+                destination = open(arg, "w", encoding="utf-8") if arg else stream
+            except OSError as exc:
+                protocol.note(f"Cannot write to {arg}: {exc.strerror or exc}.")
+                return
             if self.outfile is not stream:
                 self.outfile.close()
             self.outfile = destination

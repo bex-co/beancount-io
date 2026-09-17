@@ -282,7 +282,8 @@ Native forwarding commands include their pinned upstream usage/options in
 native `FILENAME` in check help is supplied by global `bea --file`.
 
 In the interactive query shell, `.output FILE` redirects results and `.output`
-restores the original output stream. A failed redirection leaves that stream usable.
+restores the original output stream. A failed redirection reports the path and
+reason on stderr, keeps the current output destination, and leaves the shell usable.
 
 Query tables preserve the precision of result values, including calculated
 amounts and commodity quantities. Interactive queries and the `ask` BQL tool
