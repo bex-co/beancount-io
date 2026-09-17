@@ -950,9 +950,17 @@ include is rewritten relative. An unavailable source refuses the export
 unless `--allow-errors` carries its marker alone.
 
 ```bash
-bea price export                      # <ledger>-export/ beside the ledger
-bea price export --output /tmp/audit  # a chosen directory instead
-bean-check /tmp/audit/main.bean       # stock Beancount checks it untouched
+bea price export                    # <ledger>-export/ beside the ledger
+bea price export --output audit     # a chosen directory instead
+```
+
+A managed URL include resolves only in `bea` (and Beancount.io hosted
+tools). Upstream Beancount, Fava, and `bean-query` read plain file includes,
+so give them the exported local line instead:
+
+```beancount
+include "https://beancount.io/prices/BTC-USD"   # bea: fetched, cached, refreshed
+include "prices/BTC-USD.beancount"              # stock tools: the exported snapshot
 ```
 
 ## Ask (optional extra)

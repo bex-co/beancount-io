@@ -90,7 +90,7 @@ for your first month end to end, follow the
 | `bea add TYPE` | Append one of eleven directive types |
 | `bea import SOURCE` | Preview or apply a bank CSV (`--csv`) or importer (`--config`) |
 | `bea ingest OP` | Beangulp identify/extract/archive (needs `bea engine enable beangulp`) |
-| `bea price` | Fetch quotes via bean-price (needs `bea engine enable beanprice`; not `bea add price`) |
+| `bea price` | Managed price status/refresh/export, or fetch quotes via bean-price (needs `bea engine enable beanprice`; not `bea add price`) |
 | `bea list TYPE` | Inspect directives and filter transactions |
 | `bea check` | Validate the complete ledger |
 | `bea format [PATH…]` | Format to stdout (safe default); `--in-place` / `-i` rewrites, `-o` writes elsewhere |
@@ -116,6 +116,23 @@ bea doctor region --help
 
 Every flag, default, and help string is listed in the generated
 [command reference](https://github.com/bex-co/beancount-io/blob/main/cli/docs/REFERENCE.md).
+
+### Managed price includes
+
+One line values a holding at market in every `bea` command, with no quote
+provider to configure:
+
+```beancount
+include "https://beancount.io/prices/BTC-USD"
+```
+
+`bea price status` shows each source's freshness, `bea price refresh`
+re-resolves on demand, `--offline` reads the cache only, `--strict-prices`
+fails the load on a stale or unavailable source, and `bea price export`
+snapshots portable local includes for stock Beancount and Fava — which
+cannot fetch the URL themselves. The
+[usage guide](https://github.com/bex-co/beancount-io/blob/main/cli/docs/USAGE.md#managed-price-includes)
+has the full contract.
 
 ## Exit codes
 

@@ -26,7 +26,7 @@ Tooling, in order of preference:
 1. `bea --file <ledger> --json query "<BQL>"` — when `bea` is installed (managed engine runs Beanquery). Drop `--json` when reading the table yourself. `bea --file <ledger> --json balance` gives the pruned trial-balance subtree, and `bea list transaction --search/--tag/--link` finds entries without BQL. Do not `pip install beanquery` or configure private engine paths while `bea` is present; if the engine fails, repair/retry provisioning rather than switching to a global `bean-query`.
 2. Without `bea`: `bean-query <ledger> "<BQL>"` if a developer environment already provides it; otherwise suggest installing `bea`.
 3. For polished statements (income statement, balance sheet trees), `bea --file <ledger> report income-statement` beats raw BQL — say so rather than rebuilding them in BQL.
-4. Optional quotes: `bea price …` needs `bea engine enable beanprice` first; recording a known quote uses `bea add price` without that feature.
+4. Optional quotes: `bea price …` needs `bea engine enable beanprice` first; recording a known quote uses `bea add price` without that feature. For market values with zero setup, a managed include (`include "https://beancount.io/prices/BTC-USD"`) resolves inside every `bea` load — `bea price status` shows its freshness — but upstream tools cannot fetch the URL, so hand them `bea price export`'s local includes instead.
 
 ### 2. Translate the question
 
@@ -45,7 +45,7 @@ Interpretation rules (the classic sign traps are in the recipes reference): Inco
 
 ### 4. When the data can't answer
 
-Missing period, no such account/payee, ledger doesn't track it (e.g. market values without price directives): say exactly what's missing and what would make it answerable. **Never estimate.** If the answer needs a write (adding price directives, opening accounts), that's another skill's job — name it and stop.
+Missing period, no such account/payee, ledger doesn't track it (e.g. market values without price directives or a managed include): say exactly what's missing and what would make it answerable. **Never estimate.** If the answer needs a write (adding price directives, opening accounts), that's another skill's job — name it and stop.
 
 ## What NOT to do
 
