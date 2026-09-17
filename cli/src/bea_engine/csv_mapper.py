@@ -183,6 +183,8 @@ class CsvRule:
         account = raw.get("account") if isinstance(raw, dict) else None
         if not isinstance(match, str) or not isinstance(account, str):
             raise UsageError(f'Rule {index + 1} must be {{ match = "<regex>", account = "..." }}; got {raw!r}.')
+        if not match.strip():
+            raise UsageError(f"Rule {index + 1} has an empty match; write a regex, or .* for a catch-all.")
         try:
             expression = re.compile(match, re.IGNORECASE)
         except re.error as exc:
@@ -248,7 +250,10 @@ def load_rules(path: Path) -> list[CsvRule]:
     entries = raw.get("rule")
     if not isinstance(entries, list) or not entries:
         raise UsageError(f"Rules file {path} must hold a [[rule]] list with match and account each.")
-    return [CsvRule.compile(index, entry) for index, entry in enumerate(entries)]
+    try:
+        return [CsvRule.compile(index, entry) for index, entry in enumerate(entries)]
+    except UsageError as exc:
+        raise UsageError(f"Rules file {path}: {exc}") from exc
 
 
 # Header names, lowercased, that identify a field beyond doubt. A role is only
@@ -726,11 +731,20 @@ class CsvImporter:
         narration: str,
         category_header: str | None,
     ) -> tuple[str, str, str]:
-        """Counter account, flag, and rule name: rules beat the category column."""
+        """Counter account, flag, and rule name: rules beat the category column.
+
+        Rules match payee, narration, then the category label, so a label the
+        preview suggests categorizing with --rules is actually matchable.
+        """
         from beancount.core.account import is_valid
 
+        category_text = row.get(category_header, "").strip() if category_header is not None else ""
         for rule in self._rules:
-            if rule.expression.search(payee or "") or rule.expression.search(narration):
+            if (
+                rule.expression.search(payee or "")
+                or rule.expression.search(narration)
+                or rule.expression.search(category_text)
+            ):
                 return rule.account, "*", rule.pattern
         if category_header is not None:
             if category_header not in row:

@@ -64,6 +64,8 @@ class CsvRule:
         account = raw.get("account") if isinstance(raw, dict) else None
         if not isinstance(match, str) or not isinstance(account, str):
             raise UsageError(f'Rule {index + 1} must be {{ match = "<regex>", account = "..." }}; got {raw!r}.')
+        if not match.strip():
+            raise UsageError(f"Rule {index + 1} has an empty match; write a regex, or .* for a catch-all.")
         try:
             expression = re.compile(match, re.IGNORECASE)
         except re.error as exc:
@@ -180,7 +182,10 @@ def load_rules(path: Path) -> list[CsvRule]:
     entries = raw.get("rule")
     if not isinstance(entries, list) or not entries:
         raise UsageError(f"Rules file {path} must hold a [[rule]] list with match and account each.")
-    return [CsvRule.compile(index, entry) for index, entry in enumerate(entries)]
+    try:
+        return [CsvRule.compile(index, entry) for index, entry in enumerate(entries)]
+    except UsageError as exc:
+        raise UsageError(f"Rules file {path}: {exc}") from exc
 
 
 # Header names, lowercased, that identify a field beyond doubt. A role is only

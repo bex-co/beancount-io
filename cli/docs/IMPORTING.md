@@ -113,8 +113,9 @@ described under [Duplicate decisions](#duplicate-decisions).
 
 ### Categorization rules (`--rules`)
 
-A TOML rules file categorizes rows by regex over payee, then narration
-(case-insensitive); the first matching rule wins:
+A TOML rules file categorizes rows by regex over three fields — payee,
+narration, then the category label (case-insensitive); the first matching
+rule wins:
 
 ```toml
 [[rule]]
@@ -124,19 +125,35 @@ account = "Expenses:Groceries"
 
 See the bundled [rules example](examples/rules.toml). Each entry needs
 `match` and `account`; a bad regex or a file without a `[[rule]]` list fails
-naming the rule number. Rules beat a `category` column: an explicit
-`category=Column` mapping, or a `Category` header when unmapped, categorizes
-rows the rules skip, but only when the value is a full account name such as
-`Expenses:Groceries`. A bank's own label such as `Groceries` is not an
-account; those rows join the review queue and the preview says so once,
-naming the labels it saw. Rows nothing matches post to `--default-account`
-(`Expenses:Uncategorized`) with flag `!`, while matched rows carry `*`. The
-preview's `RULE` column names the winning pattern (or the category value, or
-`unmatched`), and JSON rows carry the same value in `rule`. List the
-categorization queue with `bea list transaction --flag '!'`, categorize, and
-re-import only after opening any missing accounts: a rule naming an account
-the ledger does not open fails validation with the `bea add open` command to
-run.
+naming the rule number. An empty or whitespace-only `match` is refused —
+write `match = ".*"` for an explicit catch-all. Rules beat a `category`
+column, and also match its labels: a rule pattern matching a bank's own
+label categorizes the row before the category column is considered. An
+explicit `category=Column` mapping, or a `Category` header when unmapped,
+categorizes rows the rules skip, but only when the value is a full account
+name such as `Expenses:Groceries`. A bank's own label such as `Groceries`
+is not an account; rows no rule matches join the review queue and the
+preview says so once, naming the labels it saw. Rows nothing matches post to
+`--default-account` (`Expenses:Uncategorized`) with flag `!`, while matched
+rows carry `*`. The preview's `RULE` column names the winning pattern (or
+the category value, or `unmatched`), and JSON rows carry the same value in
+`rule`. List the categorization queue with
+`bea list transaction --flag '!'`, categorize, and re-import only after
+opening any missing accounts: a rule naming an account the ledger does not
+open fails validation with the `bea add open` command to run.
+
+```bash
+cat > category.csv <<'EOF'
+Date,Description,Amount,Category
+2026-08-05,Card purchase,-12.50,STARBUCKS
+EOF
+cat > category-rules.toml <<'EOF'
+[[rule]]
+match = "starbucks"
+account = "Expenses:Dining"
+EOF
+bea --file books/main.bean import category.csv --csv date=Date,amount=Amount,narration=Description,category=Category --account Assets:Checking --rules category-rules.toml
+```
 
 The mapping is remembered per root ledger, CSV header row, and source account.
 When only one account uses those headers, the next import needs no flags.

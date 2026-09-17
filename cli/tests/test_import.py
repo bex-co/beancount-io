@@ -1319,3 +1319,46 @@ class TestCsvBankIdentifiers:
         assert "ID" in result.stdout.splitlines()[1]
         assert "bank" in result.stdout
         assert "hash" in result.stdout
+
+
+class TestCsvRulesMatching:
+    def test_empty_match_refused_naming_file_and_rule(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = ""\naccount = "Expenses:Food"\n')
+        before = book.read_bytes()
+        result = csv_result(book, CSV_HEADER + CSV_ROW, "--rules", str(rules))
+        assert result.exit_code == 2, result.output
+        assert "rules.toml" in result.stderr
+        assert "Rule 1" in result.stderr
+        assert ".*" in result.stderr
+        assert book.read_bytes() == before
+
+    def test_whitespace_match_refused(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = "   "\naccount = "Expenses:Food"\n')
+        result = csv_result(book, CSV_HEADER + CSV_ROW, "--rules", str(rules))
+        assert result.exit_code == 2, result.output
+        assert "Rule 1" in result.stderr
+        assert "empty match" in result.stderr
+
+    def test_explicit_catch_all_categorizes_everything(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = ".*"\naccount = "Expenses:Food"\n')
+        result = csv_result(book, CSV_HEADER + CSV_ROW, "--rules", str(rules))
+        assert result.exit_code == 0, result.output
+        row = json.loads(result.stdout)["data"]["rows"][0]
+        assert row["rule"] == ".*"
+        assert "Expenses:Food" in row["entry"]
+
+    def test_rule_matches_category_label(self, book: Path, isolated_config: Path) -> None:
+        rules = rules_file(book, '[[rule]]\nmatch = "STARBUCKS"\naccount = "Expenses:Food"\n')
+        result = csv_result(
+            book,
+            "Date,Description,Amount,Category\n2026-08-02,Card purchase,-12.50,STARBUCKS\n",
+            "--rules",
+            str(rules),
+            mapping="date=Date,amount=Amount,narration=Description,category=Category",
+        )
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.stdout)["data"]
+        (row,) = data["rows"]
+        assert row["rule"] == "STARBUCKS"
+        assert "Expenses:Food" in row["entry"]
+        assert "STARBUCKS" not in " ".join(data["notes"])
