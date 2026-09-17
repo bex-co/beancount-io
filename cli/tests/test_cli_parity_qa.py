@@ -270,3 +270,44 @@ def test_json_format_refuses_a_destination_that_is_the_json_stream(ledger: Path)
     text = bea(ledger.parent, "format", str(ledger), "--output", "-")
     assert text.returncode == 0, text.stderr
     assert "Assets:Checking" in text.stdout
+
+
+@pytest.mark.parametrize("recursive", [False, True])
+@pytest.mark.parametrize("json_output", [False, True])
+@pytest.mark.parametrize("debug", [False, True])
+def test_in_place_format_failure_reports_partial_changes(
+    tmp_path: Path, recursive: bool, json_output: bool, debug: bool
+) -> None:
+    files = [tmp_path / name for name in ("a.bean", "b.bean", "c.bean")]
+    for file in files:
+        file.write_text(UNALIGNED)
+    readonly = files[1]
+    readonly.chmod(0o444)
+    if os.access(readonly, os.W_OK):
+        pytest.skip("This user can write read-only files")
+    try:
+        result = bea(
+            tmp_path,
+            *(["--json"] if json_output else []),
+            *(["--debug"] if debug else []),
+            "format",
+            str(tmp_path if recursive else readonly),
+            "-i",
+        )
+    finally:
+        readonly.chmod(0o644)
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert str(readonly) in result.stderr
+    assert ("Traceback (most recent call last)" in result.stderr) is debug
+    changed = [str(files[0])] if recursive else []
+    if json_output:
+        error = json.loads(result.stderr)["error"]
+        assert error["category"] == "validation"
+        assert error["result"]["formatted"] == changed
+        assert error["result"]["in_place"] is True
+        assert ("traceback" in error) is debug
+    else:
+        assert (f"formatted: {files[0]}" in result.stderr) is recursive
+    assert (files[0].read_text() != UNALIGNED) is recursive
+    assert files[1].read_text() == files[2].read_text() == UNALIGNED

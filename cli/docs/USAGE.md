@@ -143,7 +143,9 @@ A nonzero exit does not universally mean nothing changed:
 `add transactions --partial` can write accepted rows, `format --in-place` over
 several files can rewrite some before failing on one it cannot write, and
 `cloud ledger create --clone` can create a ledger before cloning fails. Read
-the operation result before retrying mutations.
+the operation result before retrying mutations. An in-place formatter failure
+reports the paths already changed in `error.result.formatted` under `--json`
+and alongside the error in human output; `--debug` includes any upstream traceback.
 
 In `--json` mode a failure writes nothing to stdout and one object to stderr:
 

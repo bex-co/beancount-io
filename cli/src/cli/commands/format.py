@@ -89,27 +89,37 @@ def format_beans(
     if ctx.json_output:
         _require_json_destination(in_place, output_file)
 
-    before = {file: _text(file) for file in files} if in_place else {}
-    status = launch.run_native(
-        "bean-format",
-        [*alignment, *_destination(output_file), *(["--in-place"] if in_place else []), *(str(f) for f in files)],
-    )
-    if status != 0:
-        raise typer.Exit(status)
-    if not in_place:
-        # The formatted text went to `--output FILE` or to stdout. Only the file
-        # is a result worth reporting, and only machine mode is waiting to hear
-        # it — a successful write that says nothing is indistinguishable from a
-        # command that did nothing.
-        if ctx.json_output and output_file is not None:
-            output.emit(_wrote(len(files), output_file), target=target)
+    if in_place:
+        _format_in_place(files, alignment, target)
         return
 
-    # Read back rather than assume: the report says which files changed, and a
-    # file upstream left alone was already formatted.
+    status = launch.run_native("bean-format", [*alignment, *_destination(output_file), *(str(f) for f in files)])
+    if status != 0:
+        raise typer.Exit(status)
+    if ctx.json_output and output_file is not None:
+        output.emit(_wrote(len(files), output_file), target=target)
+
+
+def _format_in_place(files: list[Path], alignment: list[str], target: dict[str, str]) -> None:
+    before = {file: _text(file) for file in files}
+    completed = launch.capture_native("bean-format", [*alignment, "--in-place", *(str(f) for f in files)])
+    # Read back even after failure: upstream can rewrite earlier files before
+    # encountering one it cannot write. Never invite a retry without that result.
     changed = [str(file) for file in files if _text(file) != before[file]]
-    if ctx.json_output:
-        output.emit(_result(files, changed) | {"in_place": True}, target=target)
+    result = _result(files, changed) | {"in_place": True}
+    if completed.returncode != 0:
+        diagnostic = (completed.stderr or "").strip()
+        # An uncaught upstream exception ends with its type, reason, and path;
+        # the stack itself belongs only in the --debug traceback field.
+        reason = diagnostic.splitlines()[-1] if diagnostic else "No diagnostic was returned."
+        raise LedgerError(
+            f"bean-format could not finish in-place formatting (exit {completed.returncode}): {reason}",
+            details=[f"formatted: {name}" for name in changed],
+            result=result,
+            traceback=diagnostic or None,
+        )
+    if context.current().json_output:
+        output.emit(result, target=target)
         return
     for name in changed:
         typer.echo(f"formatted: {name}")
