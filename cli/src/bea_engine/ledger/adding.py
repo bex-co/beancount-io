@@ -349,7 +349,8 @@ def _transaction(
             details.append(f"{location}: {error.message}")
         if details and all(detail.startswith("Transaction options:") for detail in details):
             message = (
-                "Invalid transaction header (--tag, --link, --flag, --payee, or --narration). Nothing was written."
+                "Invalid transaction header (--tag, --link, --flag, --payee, --narration, or --meta). "
+                "Nothing was written."
             )
         else:
             message = (
@@ -411,6 +412,11 @@ def _parse_metadata(items: list[str]) -> dict[str, Any]:
             raise protocol.UsageError(
                 "Each --meta must be 'key:value', such as 'receipt:IMG_1234.jpg'; use '\"\"' for empty text."
             )
+        if len(key) < 2:
+            raise protocol.UsageError(
+                f"Invalid --meta key {key!r}; Beancount metadata keys need at least two characters "
+                f"(for example 'id:3' or 'n{key}:3')."
+            )
         if key in metadata:
             raise protocol.UsageError(f"Metadata key {key!r} was supplied more than once; use one --meta per key.")
         entries, errors, _ = parser.parse_string(f'2000-01-01 * ""\n  {key}: {raw}\n')
@@ -419,6 +425,11 @@ def _parse_metadata(items: list[str]) -> dict[str, Any]:
         elif raw.startswith('"'):
             raise protocol.UsageError(
                 f"Invalid --meta {key!r}; close the quoted string or supply a bare value such as '{key}:hello'.",
+                details=[str(error.message) for error in errors],
+            )
+        elif errors and any(f"{key}:" in str(error.message) for error in errors):
+            raise protocol.UsageError(
+                f"Invalid --meta key {key!r}; Beancount rejected it ({errors[0].message}).",
                 details=[str(error.message) for error in errors],
             )
         else:
