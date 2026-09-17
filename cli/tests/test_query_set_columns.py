@@ -95,3 +95,24 @@ def test_distinct_on_an_ordinary_column_is_unchanged(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     rows = {row[0] for row in json.loads(result.stdout)["data"]["rows"]}
     assert rows == {"Assets:Cash", "Expenses:Food"}
+
+
+def test_group_by_accounts_names_the_set_problem(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    result = _bea(
+        tmp_path, "--file", str(ledger), "query", "SELECT accounts, count(*) FROM transactions GROUP BY accounts"
+    )
+    assert result.returncode == 2, result.stderr
+    assert "accounts" in result.stderr
+    assert "issubclass" not in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_group_by_accounts_without_target_still_names_it(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    result = _bea(tmp_path, "--file", str(ledger), "query", "SELECT count(*) FROM transactions GROUP BY accounts")
+    assert result.returncode == 2, result.stderr
+    assert "accounts" in result.stderr
+    assert "issubclass" not in result.stderr

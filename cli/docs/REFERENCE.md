@@ -149,7 +149,7 @@ Usage: bea query [OPTIONS] [query_string]
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--source` | str |  | Native Beanquery source URI; delegates directly to bean-query |
+| `--source` | str |  | Native Beanquery source URI (beancount:<path>, csv:..., or a bare path); delegates to bean-query |
 | `--allow-errors` | flag |  | Answer with errors on stderr; opts strict reads into partial answers |
 | `--format, -f` | str |  | Rendering for a printed result: text, csv, beancount |
 | `--output, -o` | str |  | Write the result to this file instead of stdout |

@@ -361,6 +361,9 @@ def build_shell(
                 )
             return super().on_Print(statement)
 
+    # The override above drops upstream's SELECT help; without it, `help
+    # select` crashes formatting a missing docstring.
+    PreciseShell.on_Select.__doc__ = BQLShell.on_Select.__doc__
     return PreciseShell(LEDGER_DSN, stream, interactive, True, format, numberify, show_errors)
 
 
@@ -460,9 +463,35 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
             details=_SET_COLUMN_ADVICE,
             ledger_errors=ledger_errors,
         ) from None
+    except TypeError as exc:
+        # The hashability check calls `issubclass(dtype, Hashable)`, which
+        # raises TypeError on the parameterized `set[str]` behind `accounts` —
+        # the GROUP BY equivalent of the non-hashable error tags and links get.
+        # Anything else is a genuine bug and propagates untouched.
+        grouped = [column for column in _grouped_columns(statement) if column in _SET_COLUMNS_PLUS_ACCOUNTS]
+        if "issubclass" in str(exc) and grouped:
+            named = ", ".join(grouped)
+            raise protocol.UsageError(
+                f"BQL cannot use DISTINCT or GROUP BY on {named}: a set is not a value it can compare.",
+                details=_SET_COLUMN_ADVICE,
+                ledger_errors=ledger_errors,
+            ) from None
+        raise
+    except AttributeError as exc:
+        # A scalar subquery in the SELECT list reaches scalar evaluation as an
+        # EvalQuery node, which has no childnodes to evaluate.
+        if "childnodes" in str(exc):
+            raise protocol.UsageError(
+                "BQL cannot use a subquery in the SELECT list.",
+                details=["Filter with it instead: SELECT ... WHERE column IN (SELECT ...)"],
+                ledger_errors=ledger_errors,
+            ) from None
+        raise
 
 
 _SET_COLUMNS = ("tags", "links")
+
+_SET_COLUMNS_PLUS_ACCOUNTS = ("tags", "links", "accounts")
 
 _SET_COLUMN_ADVICE = [
     "`tags` and `links` hold a whole set per entry, so BQL cannot hash them.",
@@ -490,6 +519,18 @@ def _set_columns(query_string: str) -> list[str]:
         if name in _SET_COLUMNS and name not in found:
             found.append(name)
     return found
+
+
+def _grouped_columns(query_string: str) -> list[str]:
+    """The columns this query groups by, for naming the set GROUP BY cannot hash."""
+    try:
+        from beanquery.parser import parse
+
+        parsed = parse(query_string)
+    except Exception:  # noqa: BLE001 - the query already failed; advice is best effort
+        return []
+    group_by = getattr(parsed, "group_by", None)
+    return [column.name for column in getattr(group_by, "columns", None) or []]
 
 
 def _refuse_empty_window(query_string: str, ledger_errors: list[str]) -> None:

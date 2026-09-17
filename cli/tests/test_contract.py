@@ -793,3 +793,43 @@ def test_query_native_source_without_a_local_ledger(tmp_path: Path, monkeypatch:
     result = runner.invoke(app, ["query", "--source", "beancount:" + str(VALID), "SELECT account LIMIT 1"])
     assert result.exit_code == 0, result.output
     assert "Assets:" in result.stdout
+
+
+def test_query_scalar_subquery_is_a_usage_error() -> None:
+    result = runner.invoke(
+        app,
+        ["--file", str(VALID), "query", "SELECT account, (SELECT payee FROM postings LIMIT 1) FROM accounts"],
+    )
+    assert result.exit_code == 2, result.output
+    assert "subquery in the SELECT list" in result.stderr
+    assert "childnodes" not in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_query_scalar_subquery_json_envelope() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "--json",
+            "--file",
+            str(VALID),
+            "query",
+            "SELECT account, (SELECT payee FROM postings LIMIT 1) FROM accounts",
+        ],
+    )
+    assert result.exit_code == 2, result.output
+    assert error_object(result)["category"] == "usage"
+
+
+def test_query_source_unknown_scheme_names_supported_schemes() -> None:
+    result = runner.invoke(app, ["query", "--source", "bean:x", "SELECT 1"])
+    assert result.exit_code == 2, result.output
+    assert "beancount" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_query_source_bare_path_still_works(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["query", "--source", str(VALID), "SELECT account LIMIT 1"])
+    assert result.exit_code == 0, result.output
+    assert "Assets:" in result.stdout

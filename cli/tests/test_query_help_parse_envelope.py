@@ -84,3 +84,22 @@ def test_engine_help_json_puts_text_in_envelope(tmp_path: Path) -> None:
     text = payload["data"]["text"]
     assert "Shell utility commands" in text
     assert "tables" in text.casefold()
+
+
+def test_help_select_answers_without_crash(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    for query in ("help select", ".help select"):
+        result = _bea(tmp_path, "--file", str(ledger), "query", query)
+        assert result.returncode == 0, result.stderr
+        assert "SELECT" in result.stdout
+        assert "NoneType" not in result.stderr
+
+
+def test_help_select_stays_in_json_envelope(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    result = _bea(tmp_path, "--json", "--file", str(ledger), "query", "help select")
+    assert result.returncode == 0, result.stderr
+    data = json.loads(result.stdout)["data"]
+    assert "SELECT" in data["text"]

@@ -32,6 +32,22 @@ FORMATS = ("text", "csv", "beancount")
 _SHELL_ALIASES = frozenset({"clear", "errors", "exit", "help", "history", "parse", "quit", "run", "set"})
 
 
+#: Schemes `bean-query` resolves to `beanquery.sources.<scheme>`; anything else
+#: dies there with a ModuleNotFoundError traceback, so the frontend refuses it
+#: first. A bare path (no scheme) loads as a ledger.
+_SOURCE_SCHEMES = ("beancount", "csv", "memory", "test")
+
+
+def _check_source_scheme(source: str) -> None:
+    """Refuse a `--source` URI whose scheme upstream cannot resolve."""
+    scheme, separator, _rest = source.partition(":")
+    if not separator or not scheme.isidentifier() or len(scheme) == 1:
+        return
+    if scheme.casefold() not in _SOURCE_SCHEMES:
+        supported = ", ".join(f"{name}:..." for name in _SOURCE_SCHEMES)
+        raise UsageError(f"--source scheme '{scheme}' is not supported; use {supported}, or a bare path.")
+
+
 def _refuse_one_shot_output(query_string: str) -> None:
     """Refuse a one-shot `.output`, which writes nothing and reports success.
 
@@ -107,7 +123,11 @@ def _is_shell_utility(query: str) -> bool:
 def query(
     query_string: Annotated[str | None, typer.Argument(help="BQL query (omit to read stdin or open the shell)")] = None,
     source: Annotated[
-        str | None, typer.Option("--source", help="Native Beanquery source URI; delegates directly to bean-query")
+        str | None,
+        typer.Option(
+            "--source",
+            help="Native Beanquery source URI (beancount:<path>, csv:..., or a bare path); delegates to bean-query",
+        ),
     ] = None,
     allow_errors: Annotated[
         bool,
@@ -158,6 +178,7 @@ def query(
     if source is not None:
         if ctx.json_output or ctx.strict:
             raise UsageError("--source uses native Beanquery output; --json and --strict require a local --file.")
+        _check_source_scheme(source)
         native_args = [*rendering, source]
         if query_string is not None:
             native_args.append(query_string)

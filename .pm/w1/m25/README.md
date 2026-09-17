@@ -1,13 +1,13 @@
 # w1 · m25 — Every failure is a JSON envelope, and empty inputs are errors
 
-**Worker:** worker1 **Goal:** an agent that wraps every `bea` call in `--json` can parse success and failure alike — no tracebacks, no raw errno text, no silently ignored flags — and an empty filter value is an error rather than a wildcard **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** an agent that wraps every `bea` call in `--json` can parse success and failure alike — no tracebacks, no raw errno text, no silently ignored flags — and an empty filter value is an error rather than a wildcard **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Convert every engine and native failure into the JSON envelope at one boundary — **DONE** | 60m | — |
-| t002 | Turn query-shell crashes into structured errors | 60m | t001 |
+| t002 | Turn query-shell crashes into structured errors — **DONE** | 60m | t001 |
 | t003 | Make `--json` compose with `--format`, `-o`, and every command | 30m | t001 |
 | t004 | Render ledger-load failures readably | 45m | t001 |
 | t005 | Make empty-string filter values usage errors | 30m | — |
