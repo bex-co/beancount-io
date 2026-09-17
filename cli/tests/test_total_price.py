@@ -6,12 +6,14 @@ import json
 import os
 import subprocess
 import sys
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
+from bea_engine.amounts import split_total_price
 from bea_engine.ledger.models import TransactionDirective
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -183,3 +185,51 @@ def test_json_answer_carries_no_render_stash(ledger: Path) -> None:
     directive = json.loads(result.stdout)["data"]["directive"]
     assert "__bea_total_price__" not in json.dumps(directive)
     assert directive["postings"][0]["meta"] == {}
+
+
+@pytest.mark.parametrize(
+    ("text", "total"),
+    [
+        ("3 HOOL @@ 100 USD", ("100", "USD")),
+        ("Assets:Brokerage 3 HOOL @@ 100 USD", ("100", "USD")),
+        ("3 HOOL {10 USD} @@ 30 USD", ("30", "USD")),
+        ("3 HOOL @@ -100 USD", ("-100", "USD")),
+    ],
+)
+def test_split_total_price_reads_plain_totals(text: str, total: tuple[str, str]) -> None:
+    assert split_total_price(text) == total
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "3 HOOL @ 10 USD",
+        "3 HOOL",
+        "Assets:X 3 HOOL @ 10 USD ; costs @@ 5 EUR one day",
+        'Assets:X 3 HOOL @ 10 USD "memo @@ 1 USD"',
+        "3 HOOL @@",
+        "3 HOOL @@ USD",
+        "3 HOOL @@ 1e3 USD",
+    ],
+)
+def test_split_total_price_ignores_non_totals(text: str) -> None:
+    """Quoted, commented, and malformed `@@` spellings fall back to the unit price, never a misread total."""
+    assert split_total_price(text) is None
+
+
+def test_shorthand_total_price_parses_without_a_subprocess() -> None:
+    row = {
+        "date": "2024-03-23",
+        "narration": "buy",
+        "postings": [
+            {"account": "Assets:Brokerage", "amount": "3 HOOL @@ 100 USD"},
+            {"account": "Equity:Opening-Balances"},
+        ],
+    }
+
+    [posting, _] = TransactionDirective.model_validate(row).postings
+
+    assert posting.units is not None and posting.units.number == Decimal("3")
+    assert posting.price is None
+    assert posting.price_total is not None
+    assert (posting.price_total.number, posting.price_total.currency) == (Decimal("100"), "USD")

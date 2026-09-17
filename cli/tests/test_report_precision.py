@@ -6,9 +6,12 @@ import json
 import os
 import subprocess
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
+
+from cli.commands.report import _quantize
 
 ROOT = Path(__file__).resolve().parents[1]
 WHOLE = """option "operating_currency" "USD"
@@ -80,9 +83,7 @@ def test_cents_ledger_still_renders_cents(books: Path) -> None:
 
 
 def test_conversion_to_an_unknown_currency_is_bounded(books: Path) -> None:
-    result = _bea(
-        books, "--file", str(books / "conv.bean"), "report", "balance-sheet", "--conversion", "HOOL"
-    )
+    result = _bea(books, "--file", str(books / "conv.bean"), "report", "balance-sheet", "--conversion", "HOOL")
 
     assert result.returncode == 0, result.stderr
     assert "3.33 HOOL" in result.stdout
@@ -104,3 +105,15 @@ def test_conversion_json_stays_exact(books: Path) -> None:
     assert result.returncode == 0, result.stderr
     net_worth = json.loads(result.stdout)["data"]["net_worth"]
     assert net_worth == {"HOOL": "-3.333333333333333333333333333"}
+
+
+def test_quantize_without_precision_passes_values_through() -> None:
+    assert _quantize(Decimal("4.9050"), "USD", None) == Decimal("4.9050")
+
+
+@pytest.mark.parametrize("spelling", ["NaN", "Infinity", "-Infinity"])
+def test_quantize_passes_non_finite_values_through(spelling: str) -> None:
+    """Rounding a non-finite value would raise, so it reaches the table as is."""
+    number = Decimal(spelling)
+
+    assert _quantize(number, "USD", {"USD": 2}) is number

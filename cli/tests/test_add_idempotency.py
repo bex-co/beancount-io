@@ -9,7 +9,11 @@ import sys
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
+from cli.main import app
+
+runner = CliRunner()
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = """option "operating_currency" "USD"
 2024-01-01 open Assets:Checking
@@ -244,3 +248,144 @@ def test_pad_from_retry_reports_the_existing_assertion(tmp_path: Path) -> None:
     text = ledger.read_text()
     assert text.count("balance Assets:Bank:Checking") == 1
     assert "pad Assets:Bank:Checking" not in text
+
+
+def test_repeated_amount_is_refused_in_process(ledger: Path) -> None:
+    """The in-process run measures the refusal the subprocess run only exercises."""
+    result = runner.invoke(
+        app,
+        [
+            "--file",
+            str(ledger),
+            "add",
+            "balance",
+            "--date",
+            "2024-01-04",
+            "--account",
+            "Assets:Checking",
+            "--amount",
+            "-10 USD",
+            "--amount",
+            "-9 USD",
+        ],
+    )
+
+    assert result.exit_code == 2, result.output
+    assert "exactly once" in result.output
+
+
+def test_identical_balance_retry_reports_recorded_in_process(ledger: Path) -> None:
+    args = [
+        "--file",
+        str(ledger),
+        "add",
+        "balance",
+        "--date",
+        "2024-01-03",
+        "--account",
+        "Assets:Checking",
+        "--amount",
+        "-10 USD",
+    ]
+
+    first = runner.invoke(app, args)
+    assert first.exit_code == 0, first.output
+    again = runner.invoke(app, args)
+
+    assert again.exit_code == 0, again.output
+    assert "already recorded" in again.output
+    assert ledger.read_text().count("balance Assets:Checking") == 1
+
+
+def test_identical_price_retry_reports_recorded_in_process(ledger: Path) -> None:
+    args = [
+        "--file",
+        str(ledger),
+        "add",
+        "price",
+        "--date",
+        "2024-01-02",
+        "--currency",
+        "HOOL",
+        "--amount",
+        "3 USD",
+    ]
+
+    first = runner.invoke(app, args)
+    assert first.exit_code == 0, first.output
+    again = runner.invoke(app, args)
+
+    assert again.exit_code == 0, again.output
+    assert "already recorded" in again.output
+    assert ledger.read_text().count("price HOOL") == 1
+
+
+def test_pad_retry_reports_recorded_in_process(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(
+        """option "operating_currency" "USD"
+2024-01-01 open Assets:Bank:Checking USD
+2024-01-01 open Equity:Opening-Balances USD
+2024-01-01 * "seed"
+  Assets:Bank:Checking  3357.83 USD
+  Equity:Opening-Balances
+"""
+    )
+    args = [
+        "--file",
+        str(ledger),
+        "add",
+        "balance",
+        "--date",
+        "2024-03-10",
+        "--account",
+        "Assets:Bank:Checking",
+        "--amount",
+        "3357.83 USD",
+        "--pad-from",
+        "Equity:Opening-Balances",
+    ]
+
+    first = runner.invoke(app, args)
+    assert first.exit_code == 0, first.output
+    again = runner.invoke(app, args)
+
+    assert again.exit_code == 0, again.output
+    assert "already recorded" in again.output
+    assert ledger.read_text().count("balance Assets:Bank:Checking") == 1
+
+
+def test_duplicate_balance_notes_ledger_warnings_in_process(tmp_path: Path) -> None:
+    """A retry on a ledger with errors still reports each warning beside the duplicate."""
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(
+        """option "operating_currency" "USD"
+2024-01-01 open Assets:Checking
+2024-01-01 open Assets:Savings
+2024-01-01 open Equity:Opening-Balances
+2024-01-02 pad Assets:Savings Equity:Opening-Balances
+2024-01-02 * "seed"
+  Assets:Checking  10 USD
+  Equity:Opening-Balances
+"""
+    )
+    args = [
+        "--file",
+        str(ledger),
+        "add",
+        "balance",
+        "--date",
+        "2024-01-03",
+        "--account",
+        "Assets:Checking",
+        "--amount",
+        "10 USD",
+    ]
+
+    first = runner.invoke(app, [*args, "--allow-errors"])
+    assert first.exit_code == 0, first.output
+    again = runner.invoke(app, args)
+
+    assert again.exit_code == 0, again.output
+    assert "already recorded" in again.output
+    assert "Unused Pad" in again.output
