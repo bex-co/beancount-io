@@ -147,6 +147,13 @@ the operation result before retrying mutations. An in-place formatter failure
 reports the paths already changed in `error.result.formatted` under `--json`
 and alongside the error in human output; `--debug` includes any upstream traceback.
 
+These five codes are the whole table. If the engine process dies on a signal —
+an upstream crash, an out-of-memory kill — `bea` reports it as exit 1 with a
+message naming the signal, rather than passing the shell's `128+N` convention
+through as an undocumented status. The exceptions are the two signals that mean
+the run was ended on purpose: `Ctrl-C` still exits 130 and a closed downstream
+pipe still exits 141, both without a message.
+
 In `--json` mode a failure writes nothing to stdout and one object to stderr:
 
 ```json
@@ -373,7 +380,9 @@ rather than silently rewriting the name you typed. Amount strings use decimal no
 costs, and prices. Bulk notation errors follow the normal row-validation and
 `--partial` rules. JSON listings spell amounts in decimal notation so tiny values
 can be fed back into bulk input without losing precision. Native posting
-arithmetic such as `84/2 EUR` works.
+arithmetic such as `84/2 EUR` works. A literal zero divisor (`100/0`) is
+refused as a usage error before it reaches the engine, because Beancount
+evaluates amount arithmetic while parsing and a zero divisor crashes it.
 
 For split ledgers, keep `--file` pointed at the root and choose the included
 destination with `--into`. The destination must already exist and be included

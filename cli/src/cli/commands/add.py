@@ -60,6 +60,13 @@ def _parse_number(text: str) -> Decimal:
 
 
 def _check_decimal_notation(text: str) -> None:
+    """Reject the amount spellings that never reach a useful engine answer.
+
+    Both checks run here, at the input boundary, because both cost more to
+    diagnose once the expression is inside the engine: an exponent is rejected
+    by a parser that cannot say which posting it came from, and a zero divisor
+    crashes it outright.
+    """
     # A cost label or comment may contain an exponent-looking string. Only
     # reject numeric tokens, leaving native arithmetic and quoted text alone.
     unquoted = re.sub(r'"(?:[^"\\]|\\.)*"|;[^\r\n]*', "", text)
@@ -68,6 +75,16 @@ def _check_decimal_notation(text: str) -> None:
         raise UsageError(
             f"Scientific notation {match[0]!r} is not supported in Beancount amounts. "
             "Use decimal notation, such as '1000' instead of '1e3'."
+        )
+    # Upstream's parser segfaults on a zero divisor rather than reporting it,
+    # which takes the whole engine process down and leaves nothing to attribute
+    # to a posting. A literal zero is the case worth catching here; anything
+    # computed (`100/(2-2)`) still reaches the engine.
+    divisor = re.search(r"/\s*[-+]?(?:0+(?:\.0*)?|\.0+)(?![\d.])", unquoted)
+    if divisor:
+        raise UsageError(
+            f"Division by zero in {text.strip()!r}. Beancount evaluates amount arithmetic while parsing, "
+            "and a zero divisor crashes it outright, so bea refuses the expression instead of sending it."
         )
 
 

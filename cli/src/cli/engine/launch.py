@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import subprocess
 import sys
 from collections.abc import Sequence
@@ -267,9 +268,23 @@ def _parse(completed: subprocess.CompletedProcess[str], args: Sequence[str]) -> 
         # No envelope at all: the engine died before it could answer, or it is
         # not the program we think it is. Its own output is the only evidence,
         # so it becomes the details rather than being swallowed.
+        printed = [line for line in (completed.stderr or completed.stdout).splitlines() if line.strip()][-20:]
+        if completed.returncode < 0:
+            # Killed by a signal: the child printed nothing to carry the
+            # explanation, so name the signal and what usually causes it.
+            number = -completed.returncode
+            try:
+                name = signal.Signals(number).name
+            except ValueError:
+                name = f"signal {number}"
+            raise BeaError(
+                f"The Beancount engine was killed by {name} answering "
+                f"'bea-engine {' '.join(args)}' and produced no result.",
+                details=[*printed, _signal_hint(number)],
+            ) from None
         raise BeaError(
             f"The Beancount engine did not answer 'bea-engine {' '.join(args)}' (exit {completed.returncode}).",
-            details=[line for line in (completed.stderr or completed.stdout).splitlines() if line.strip()][-20:],
+            details=printed,
         ) from None
     if not isinstance(envelope, dict):
         raise BeaError(f"The Beancount engine answered with {type(envelope).__name__}, not a result object.")
@@ -328,9 +343,57 @@ def _spawn(command: list[str], env: dict[str, str] | None) -> int:
     else:
         inherited = subprocess.run(command, env=env, check=False)
         returncode = inherited.returncode
-    # A child killed by a signal reports -N; a shell reports 128+N, and `bea`
-    # is what the shell sees.
-    return 128 - returncode if returncode < 0 else returncode
+    if returncode < 0:
+        return _died_on_signal(-returncode, command)
+    return returncode
+
+
+def _signals(*names: str) -> frozenset[int]:
+    """The named signals that exist here — SIGBUS and SIGPIPE are absent on Windows."""
+    return frozenset(member.value for name in names if (member := getattr(signal, name, None)) is not None)
+
+
+#: Signals that mean the run was ended deliberately rather than failing: Ctrl-C,
+#: and a closed downstream pipe such as `bea example | head`. These keep the
+#: shell's 128+N convention and stay silent — the user already knows about the
+#: first, and there is nowhere left to write about the second.
+_QUIET_SIGNALS = _signals("SIGINT", "SIGPIPE")
+
+#: Signals that mean the child crashed, as opposed to being told to stop.
+_CRASH_SIGNALS = _signals("SIGSEGV", "SIGBUS", "SIGABRT", "SIGFPE", "SIGILL")
+
+
+def _died_on_signal(number: int, command: list[str]) -> int:
+    """Report a child killed by a signal as something the exit table documents.
+
+    A child that dies on a signal usually writes nothing first, so passing the
+    shell's 128+N straight through failed twice over: with an exit code outside
+    the documented 0-4 table, and with nothing on either stream to say why.
+    `bea check` on a ledger whose amount arithmetic divides by zero exited 139
+    in complete silence, which is the one command whose whole job is to report
+    what is wrong with a ledger.
+    """
+    if number in _QUIET_SIGNALS:
+        return 128 + number
+    try:
+        name = signal.Signals(number).name
+    except ValueError:
+        name = f"signal {number}"
+    program = Path(command[0]).name
+    raise BeaError(
+        f"The Beancount engine ({program}) was killed by {name} and produced no result.",
+        details=[_signal_hint(number), f"Command: {' '.join(command)}"],
+    )
+
+
+def _signal_hint(number: int) -> str:
+    """The likely cause, which differs by how the child died."""
+    if number in _CRASH_SIGNALS:
+        return (
+            "Upstream's parser crashes this way on a zero divisor in an amount expression, such as "
+            "'100/0 EUR'; searching the ledger for '/0' is the first thing to try."
+        )
+    return "Nothing in bea sends this signal, so it came from outside: an out-of-memory killer, a timeout, or a kill."
 
 
 def _stream_is_captured(stream: Any) -> bool:

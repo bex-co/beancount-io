@@ -101,15 +101,32 @@ class TestRunEngineArgv:
         assert launch.run_engine_argv(["check", "--file", str(ledger)]) == 0
         assert launch.run_engine_argv(["check", "--file", str(broken_ledger)]) == 1
 
-    def test_a_child_killed_by_a_signal_reports_the_shells_code(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """`bea` is what the shell sees, and a shell reports 128+N rather than -N."""
+    def test_a_child_killed_by_a_signal_is_reported_inside_the_exit_table(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A child that dies on a signal writes nothing, so forwarding the shell's
+        128+N reported a failure with an undocumented status and no explanation."""
         monkeypatch.setattr(
             launch,
             "helper_command",
             lambda: ([sys.executable, "-c", "import os, signal; os.kill(os.getpid(), signal.SIGTERM)"], None),
         )
 
-        assert launch.run_engine_argv([]) == 128 + 15
+        with pytest.raises(BeaError) as raised:
+            launch.run_engine_argv([])
+
+        assert raised.value.exit_code == 1
+        assert "SIGTERM" in str(raised.value)
+
+    def test_an_interrupted_child_keeps_the_shells_code(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Ctrl-C is the one case where 128+N is right: the user ended the run themselves."""
+        monkeypatch.setattr(
+            launch,
+            "helper_command",
+            lambda: ([sys.executable, "-c", "import os, signal; os.kill(os.getpid(), signal.SIGINT)"], None),
+        )
+
+        assert launch.run_engine_argv([]) == 128 + 2
 
 
 class TestResolution:
