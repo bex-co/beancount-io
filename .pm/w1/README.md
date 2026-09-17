@@ -4,13 +4,12 @@
 
 ## Milestones
 
-Milestones m1–m22 are complete; no pending ADR014 follow-up milestones remain from that run. The open block m23–m27 and m29 was materialized on 2026-09-16 from `/pm-brainstorm for w1`: five of them absorb the 2026-09-15/16 continuous CLI QA sweep by shared root cause rather than one note at a time, and m29 carries promoted work from w2/027. There is no m28 — see `## Dropped`.
+Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain from that run. The block m23–m27 and m29 was materialized on 2026-09-16 from `/pm-brainstorm for w1`: five of them absorb the 2026-09-15/16 continuous CLI QA sweep by shared root cause rather than one note at a time, and m29 carries promoted work from w2/027. m23 has shipped; m24–m27 and m29 remain open. There is no m28 — see `## Dropped`.
 
-**Suggested order:** m23 → m24 → m25 → m26 → m27 → m29. The five CLI-sweep milestones are independent of one another and can be taken in any order, but m23 comes first because it fixes a silent ledger-wipe path (`w3/300`, critical) and establishes the exit contract the others are tested against. m29 is the non-sweep item and depends on nothing in this queue.
+**Suggested order:** m24 → m25 → m26 → m27 → m29. The five CLI-sweep milestones are independent of one another and can be taken in any order; m23 shipped first because it fixes a silent ledger-wipe path (`w3/300`, critical) and establishes the exit contract the others are tested against. m29 is the non-sweep item and depends on nothing in this queue.
 
 ### Open
 
-- [ ] **m23** — [Exit status tells the truth: no success without the effect](./m23/README.md) (11 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 1; absorbs 24 CLI QA notes from w3
 - [ ] **m24** — [Bank CSVs import as exported: delimiters, amounts, encodings, IDs](./m24/README.md) (12 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 2; absorbs 15 CLI QA notes from w3 plus w5/003
 - [ ] **m25** — [Every failure is a JSON envelope, and empty inputs are errors](./m25/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 3; absorbs 24 CLI QA notes from w3 plus w5/004
 - [ ] **m26** — [Ledgers survive Windows editors and Unicode](./m26/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 4; absorbs 9 CLI QA notes from w3
@@ -23,6 +22,7 @@ Milestones m1–m22 are complete; no pending ADR014 follow-up milestones remain 
 
 ### Complete
 
+- [x] **m23** — [Exit status tells the truth: no success without the effect](./done/m23/README.md) (11 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 1; absorbs 24 CLI QA notes from w3
 - [x] **m22** — [Fix published CLI exports, native help, and shell output reset](./done/m22/README.md) (7 tasks) ← published 0.2.0 QA, 2026-09-12; user routed to w1
 
 - [x] **m19** — [Independent Beancount engine and complete bea command parity](./done/m19/README.md) (23 tasks) ← ADR014 replan, 2026-09-11; license resolution, complete engine separation, and installed-artifact proof
