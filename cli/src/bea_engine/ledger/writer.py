@@ -13,6 +13,7 @@ from beancount.core import account as beancount_account
 from beancount.core.amount import Amount as BcAmount
 from beancount.core.data import (
     Balance,
+    Booking,
     Close,
     Commodity,
     Custom,
@@ -51,6 +52,7 @@ from bea_engine.ledger.models import (
     TransactionHeader,
 )
 from bea_engine.ledger.text import single_line
+from bea_engine import protocol
 
 
 class _ValueType(NamedTuple):
@@ -213,12 +215,21 @@ def write_transactions(
 def write_open(
     file_path: Path, directive: OpenDirective, *, allow_errors: bool = False, into: Path | None = None
 ) -> list[str]:
+    booking = None
+    if directive.booking is not None:
+        try:
+            booking = Booking[directive.booking]
+        except KeyError as exc:
+            choices = ", ".join(member.name for member in Booking)
+            raise protocol.UsageError(
+                f"Unknown booking method {directive.booking!r}. Choose one of: {choices}."
+            ) from exc
     entry = Open(
         meta={},
         date=directive.date,
         account=directive.account,
         currencies=directive.currencies if directive.currencies else [],
-        booking=None,
+        booking=booking,
     )
     return _append(file_path, format_entry(entry), allow_errors=allow_errors, into=into)
 

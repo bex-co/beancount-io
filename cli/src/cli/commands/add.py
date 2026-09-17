@@ -186,15 +186,21 @@ def add_open(
     date: DateOpt,
     account: Annotated[str, typer.Option("--account", "-a", help="Account name")],
     currency: Annotated[list[str] | None, typer.Option("--currency", "-c", help="Allowed currency (repeat)")] = None,
+    booking: Annotated[
+        str | None,
+        typer.Option("--booking", help="Lot booking method: FIFO, LIFO, STRICT, NONE, AVERAGE, …"),
+    ] = None,
     allow_errors: AllowErrorsOpt = False,
     into: IntoOpt = None,
 ) -> None:
     """Append an open directive."""
-    request = {
+    request: dict[str, Any] = {
         "date": parse_date(date).isoformat(),
         "account": account,
         "currencies": list(currency) if currency else [],
     }
+    if booking is not None:
+        request["booking"] = booking
     file, data = _write("open", request, allow_errors=allow_errors, into=into)
     _appended("open", file, data)
 

@@ -84,10 +84,14 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
 
     date = _date(request)
     if directive_type == "open":
+        booking = request.get("booking")
+        if booking is not None:
+            booking = str(booking).strip().upper() or None
         return OpenDirective(
             date=date,
             account=parse_account(_text(request, "account")),
             currencies=list(request.get("currencies") or []),
+            booking=booking,
         )
     if directive_type == "close":
         return CloseDirective(date=date, account=parse_account(_text(request, "account")))
