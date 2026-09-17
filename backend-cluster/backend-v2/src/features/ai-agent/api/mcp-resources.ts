@@ -867,7 +867,7 @@ const templateCache = new WeakMap<
   McpResourceDescriptor,
   QueryResourceTemplate
 >();
-const queryTemplateFor = (
+export const queryTemplateFor = (
   descriptor: McpResourceDescriptor,
 ): QueryResourceTemplate => {
   const cached = templateCache.get(descriptor);

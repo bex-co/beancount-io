@@ -7,9 +7,10 @@ a Beancount.io deployment; this endpoint does not open a local `.bean` file on
 the agent's machine.
 
 This guide describes the implementation in this repository, reviewed on
-2026-09-07. It covers 24 tools and 66 resource templates. Use `tools/list` and
-`resources/templates/list` to discover what your deployment actually serves;
-this document is not a production availability check.
+2026-09-16. It explains the surface rather than counting it: `tools/list` and
+`resources/templates/list` are the inventory, and they are what your deployment
+actually serves. A number written down here only says when someone last looked.
+This document is not a production availability check.
 
 ## Connect a client
 
@@ -326,15 +327,13 @@ prevents issuing new URLs. Archive URLs instead require current authorization
 at download time. These resources discover URLs.
 
 For direct archive delivery, read
-`beancount://{owner}/{name}/archive/{archive}`. The compatibility spelling is
-`beancount://legacy/ledgers/{ledgerId}/archive/{archive}`, with the slash in
-`ledgerId` encoded as `%2F`. Both return an MCP resource `blob` containing
-base64-encoded archive bytes, with the upstream `mimeType`. The original
-Content-Disposition value is retained in
+`beancount://{owner}/{name}/archive/{archive}`. It returns an MCP resource
+`blob` containing base64-encoded archive bytes, with the upstream `mimeType`.
+The original Content-Disposition value is retained in
 `_meta["beancount/contentDisposition"]`. Decode `blob` to save the archive.
 
-Both MCP spellings and both REST spellings share the existing 30-downloads-per-
-minute credential bucket. Every download checks current ledger access. REST
+MCP and both REST spellings share the existing 30-downloads-per-minute
+credential bucket. Every download checks current ledger access. REST
 streams the response; MCP buffers it to produce a base64 resource payload.
 GraphQL's deliberate raw-byte exclusion remains unchanged.
 
@@ -430,9 +429,14 @@ protected call.
 Resources provide URI-addressed context, separate from `tools/call`, following
 MCP's [resource model](https://modelcontextprotocol.io/specification/2025-11-25/server/resources).
 Discover them with **`resources/templates/list`**, then instantiate a URI and
-send `resources/read`. This server does not enumerate instances with
-`resources/list`; an empty result there does not mean resources are unavailable.
-Clients vary in how they expose these reads to an agent.
+send `resources/read`. Templates are the complete inventory. `resources/list`
+enumerates instances rather than templates, and returns a narrower set: each of
+the credential's ledgers' static reads — `source-files`,
+`statements/income-statement`, `statements/balance-sheet`, `accounts`,
+`metadata`, `payees`, `errors` — plus up to the capped number of its source
+files. A template with a required argument a URI cannot guess, such as
+`{archive}` or `{prNumber}`, is not enumerable and appears only in the template
+list. Clients vary in how they expose these reads to an agent.
 
 Ledger-scoped templates start with `beancount://{owner}/{name}/`. The following table
 lists the accounting and bank suffixes; replace the braces with your ledger and resource values.
@@ -508,7 +512,6 @@ subsequent pages are empty). Owned/search results omit other ledgers from the
 returned upstream page. Unpinned credentials use the caller's account catalog.
 
 The legacy `ledgerMeta` shape is available at
-`beancount://legacy/ledger-meta{?userId,ledgerId}` and
 `GET /api-gateway/v1/legacy/ledger-meta`. Its optional `userId` is a compatibility
 argument; authentication determines the caller. The legacy metadata and journal operations
 preserve the historical default: omitted `ledgerId` uses the credential pin,
@@ -516,8 +519,8 @@ then the caller's first ledger if unpinned. Explicit targets still cannot expand
 a pin. Ordinary MCP ledger tools continue to require an explicit target for an
 unpinned credential.
 
-Legacy `journalEntries` is available at `beancount://legacy/journal-entries`
-and `GET /api-gateway/v1/legacy/journal-entries`. It accepts `first`, `after`,
+Legacy `journalEntries` is available at
+`GET /api-gateway/v1/legacy/journal-entries`. It accepts `first`, `after`,
 `last`, `before`, `detailed`, `searchQuery`, `accountFilter`, `amountMin`,
 `amountMax`, `entryTypes`, `sortBy`, `sortOrder`, and `groupBy` as query
 parameters. `entryTypes` is a JSON-encoded string array. The response preserves
@@ -654,9 +657,13 @@ operation-class budgets, not one combined allowance for the entire MCP endpoint.
 
 The MCP endpoint itself also carries a read-class transport budget, and the
 handshake — `initialize`, its acknowledgement, `tools/list`,
-`resources/templates/list`, and `ping` — is not charged at all. A long session
-is therefore bounded by the work it does, not by how many JSON-RPC messages it
-took to do it.
+`resources/templates/list`, `prompts/list`, and `ping` — is charged to a
+separate, far larger bucket instead of the session's own. A long session is
+therefore bounded by the work it does, not by how many JSON-RPC messages it
+took to do it, while a client that only ever posts `{"method":"ping"}` is still
+bounded by something. `prompts/get` and `resources/list` are deliberately
+charged as work: one is the caller choosing to do something, the other
+enumerates ledgers and source files.
 
 ### The result envelope
 
