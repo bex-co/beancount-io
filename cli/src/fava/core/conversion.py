@@ -64,6 +64,16 @@ def get_market_value(
                 value_currency,
             )
         return _Amount(units_.number * cost_.number, value_currency)
+
+    # Costless lots (e.g. `2 HOOL @ 10.5 USD` with a `price HOOL`) still have a
+    # market value when a price directive exists; look it up the same way a
+    # currency conversion would, instead of leaving the commodity units bare.
+    for base, quote in prices._forward_pairs:
+        if base != units_.currency:
+            continue
+        price_number = prices.get_price((base, quote), date)
+        if price_number is not None:
+            return _Amount(units_.number * price_number, quote)
     return units_
 
 
