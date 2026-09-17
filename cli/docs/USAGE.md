@@ -133,11 +133,17 @@ $ echo $?
 
 | Code | Category | Meaning |
 |---|---|---|
-| 0 | — | Success |
+| 0 | — | Success: the documented effect happened |
 | 1 | `validation` | Ledger or validation error, and the catch-all for any other runtime failure |
 | 2 | `usage` | Bad arguments, missing target, missing extra, or input needed under `--no-input` |
 | 3 | `auth` | Authentication or permission failure |
 | 4 | `conflict` | Conflict, or a write whose outcome is unknown |
+
+Exit 0 is a promise: the documented effect happened, and the run left the
+ledger no worse than it found it — a write that exits 0 introduces no new
+`bea check` error. A command that did nothing, or that wrote only part of
+what it promised, exits nonzero and says what is missing, so a script or an
+agent can branch on the status without re-checking the books.
 
 A nonzero exit does not universally mean nothing changed:
 `add transactions --partial` can write accepted rows, `format --in-place` over
@@ -273,6 +279,12 @@ against the root ledger's directory when the working directory has no such file.
 A location that already resolves, and an absolute one, are passed through
 untouched.
 
+`bea treeify` exits 2 when its input has no hierarchical column to render,
+naming what it looked for — piping plain text is not a tree. `bea ingest`
+needs a script that calls `beangulp.Ingest(...)()`; a `CONFIG = [...]`
+import module is refused with exit 2 and pointed at `bea import --config`,
+which is the command that shape belongs to.
+
 ### `bea format` writes to stdout unless you ask for a file
 
 Formatting used to rewrite whatever path it was given. It now prints the
@@ -292,7 +304,9 @@ broken `include` symlink is the shape this usually takes. Silently dropping it
 would let `--check` report a tree it never looked at, green while `bea check`
 fails on the very include the entry stands for. A symlink resolving outside the
 requested directory is still skipped; one resolving inside is formatted once,
-under its real path.
+under its real path. `format -i` over a directory with no `.bean` or
+`.beancount` files exits 2 — there was nothing to rewrite. Under `--json`
+the error carries the zero-file scan result.
 
 With no paths at all it is a filter: it formats stdin and writes to stdout, so
 `cat main.bean | bea format` and `bea format < main.bean` work in a pipeline
@@ -320,6 +334,12 @@ writes the standard JSON envelope to the file with no duplicate stdout output.
 in JSON as well as text. JSON exports replace the destination only after a successful
 query; a failed query or write preserves an existing export.
 
+An `-o` destination that is the ledger under read — the root file or anything
+it includes, under any spelling, symlink, or hard link — is refused with exit
+2 before anything is written, in one-shots and in the interactive shell's
+`.output` alike. The same guard covers `format -o`, and `example -o` refuses
+an existing file unless `--force` is passed.
+
 `--format beancount` prints directives, so the query has to return entries:
 `bea query PRINT -f beancount` (or `SELECT entry`) renders them through upstream's
 printer. A column result such as `SELECT date, account` is a usage error (exit 2)
@@ -332,6 +352,11 @@ native `FILENAME` in check help is supplied by global `bea --file`.
 In the interactive query shell, `.output FILE` redirects results and `.output`
 restores the original output stream. A failed redirection reports the path and
 reason on stderr, keeps the current output destination, and leaves the shell usable.
+
+One-shot queries carry exactly one statement: an empty or whitespace-only
+query, a `.output` with no query, a `.run` naming no stored query, and two
+statements joined by `;` are each refused with exit 2 and the supported form.
+A trailing `;`, and semicolons inside quotes, are not second statements.
 
 Query tables preserve the precision of result values, including calculated
 amounts and commodity quantities. Interactive queries and the `ask` BQL tool
