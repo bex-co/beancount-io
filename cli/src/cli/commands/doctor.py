@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from pathlib import Path
 
 import typer
 
@@ -43,6 +44,44 @@ def _positionals(args: list[str]) -> list[str]:
     return [arg for arg in args if not arg.startswith("-")]
 
 
+# `context` and `linked` take `FILENAME LOCATION`; `region` takes
+# `FILENAME REGION`, which may also carry a filename. All three resolve that
+# filename the same way, and get it wrong the same way.
+_LOCATED_OPS = frozenset({"context", "linked", "region"})
+
+
+def _located_against_ledger(op: str, args: list[str]) -> list[str]:
+    """Resolve a relative location filename against the ledger it belongs to.
+
+    `bean-doctor` resolves it against the process working directory, so
+    `doctor context /abs/books/main.bean txns/jan.bean:4` only works from inside
+    the books tree — even though `txns/jan.bean` is exactly how the ledger's own
+    `include` spells that file. When the working directory has no such file but
+    the root ledger's directory does, that is the file meant.
+
+    A location that already resolves is passed through untouched, so this only
+    ever turns a guaranteed failure into an answer.
+    """
+    if op not in _LOCATED_OPS:
+        return args
+    # Read by shape, not by position: options and their values sit anywhere in
+    # the forwarded argv, and only the ledger argument names a file that exists.
+    for index, value in enumerate(args[:-1]):
+        if value.startswith("-") or not Path(value).expanduser().is_file():
+            continue
+        ledger, position = Path(value).expanduser(), index + 1
+        head, sep, rest = args[position].partition(":")
+        if not sep or not head or head.isdigit() or Path(head).is_absolute() or Path(head).exists():
+            return args
+        candidate = ledger.parent / head
+        if not candidate.exists():
+            return args
+        args = list(args)
+        args[position] = f"{candidate}{sep}{rest}"
+        return args
+    return args
+
+
 def _syntax_errors_of(filename: str) -> list[str]:
     """Syntax errors in one file, or [] when the file cannot be checked here.
 
@@ -50,8 +89,6 @@ def _syntax_errors_of(filename: str) -> list[str]:
     engine must not take the diagnostics tool down with it: both fail open to
     the plain passthrough.
     """
-    from pathlib import Path
-
     if not Path(filename).is_file():
         return []
     try:
@@ -62,12 +99,12 @@ def _syntax_errors_of(filename: str) -> list[str]:
 
 
 def _forward(op: str, ctx: typer.Context) -> None:
-    """Pass remaining argv through to bean-doctor unchanged."""
+    """Pass remaining argv through to bean-doctor, resolving a relative location."""
     refuse_json(
         "doctor",
         hint="Run without --json and pass the ledger path as a positional argument.",
     )
-    code = launch.run_native("bean-doctor", [op, *ctx.args])
+    code = launch.run_native("bean-doctor", [op, *_located_against_ledger(op, list(ctx.args))])
     raise typer.Exit(code)
 
 
@@ -167,7 +204,7 @@ def _forward_scoped(op: str, ctx: typer.Context) -> None:
         "doctor",
         hint="Run without --json and pass the ledger path as a positional argument.",
     )
-    args = list(ctx.args)
+    args = _located_against_ledger(op, list(ctx.args))
     completed = launch.capture_native("bean-doctor", [op, *args])
     _replay(completed)
     if completed.returncode != 0:

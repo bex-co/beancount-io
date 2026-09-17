@@ -253,10 +253,18 @@ bea query "PRINT"          # parseable directives, not a table
 bea query                  # needs a terminal; exits 2 without one
 
 # Upstream's own diagnostics and generators
+bea doctor context main.bean txns/jan.bean:4
 bea doctor context main.bean 2026-01-02
 bea example --seed 1 -o example.beancount
 bea treeify < balances.txt
 ```
+
+`bea doctor context`, `linked` and `region` take a location such as
+`txns/jan.bean:4` — the spelling the ledger's own `include` uses. Upstream
+resolves that filename against the working directory, so `bea` first resolves it
+against the root ledger's directory when the working directory has no such file.
+A location that already resolves, and an absolute one, are passed through
+untouched.
 
 ### `bea format` writes to stdout unless you ask for a file
 
