@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, NoReturn
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, PlainSerializer, model_validator
 
@@ -126,6 +126,9 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
     from beancount.core.number import MISSING
     from beancount.parser import parser as beancount_parser
 
+    def refuse(reason: str) -> NoReturn:
+        raise ValueError(f"Could not parse amount {amount!r} as a posting fragment: {reason}. {_FRAGMENT_HELP}")
+
     if "\n" in amount or "\r" in amount:
         raise ValueError(f"amount {amount!r} must be one posting fragment without line breaks. {_FRAGMENT_HELP}")
     entries, errors, _ = beancount_parser.parse_string(
@@ -134,11 +137,10 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
     entry: Any = entries[0] if len(entries) == 1 and not errors else None
     posting: Any = entry.postings[0] if entry is not None else None
     if posting is None:
-        reason = errors[0].message if errors else "it is not a valid posting"
-        raise ValueError(f"Could not parse amount {amount!r} as a posting fragment: {reason}. {_FRAGMENT_HELP}")
+        refuse(errors[0].message if errors else "it is not a valid posting")
     units = posting.units
     if units is MISSING or units.number is MISSING or units.currency is MISSING:
-        raise ValueError(f"Could not parse amount {amount!r} as a posting fragment: no amount found. {_FRAGMENT_HELP}")
+        refuse("no amount found")
     fields: dict[str, Any] = {
         "units": {"number": format(units.number, "f"), "currency": units.currency},
     }
@@ -150,9 +152,7 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
                 "Split the lot into a per-unit cost '{...}', or use `add transaction` for a total cost."
             )
         if cost.number_per is MISSING or cost.currency is MISSING:
-            raise ValueError(
-                f"Could not parse amount {amount!r} as a posting fragment: incomplete cost. {_FRAGMENT_HELP}"
-            )
+            refuse("incomplete cost")
         fields["cost"] = {
             "number": format(cost.number_per, "f"),
             "currency": cost.currency,
@@ -165,9 +165,7 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
     elif posting.price is not None:
         price = posting.price
         if price is MISSING or price.number is MISSING or price.currency is MISSING:
-            raise ValueError(
-                f"Could not parse amount {amount!r} as a posting fragment: incomplete price. {_FRAGMENT_HELP}"
-            )
+            refuse("incomplete price")
         fields["price"] = {"number": format(price.number, "f"), "currency": price.currency}
     return fields
 

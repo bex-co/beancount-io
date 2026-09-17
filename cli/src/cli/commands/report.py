@@ -95,9 +95,9 @@ def _amounts(
             return f"Unavailable {currency}"
         shown = _quantize(value, currency, precision)
         # The floor is the currency's own precision: a zero-fraction ledger
-        # prints whole dollars, while unknown currencies keep the two-decimal
-        # floor the fallback quantize just rounded them to.
-        minimum = 2 if precision is None else precision.get(currency, 2)
+        # prints whole dollars, while unknown currencies keep the fallback
+        # floor the quantize just rounded them to.
+        minimum = 2 if precision is None else precision.get(currency, _FALLBACK_FRACTIONAL_DIGITS)
         return f"{shown:,.{max(minimum, -int(shown.as_tuple().exponent))}f} {currency}"
 
     return "  ".join(render(currency, number) for currency, number in sorted(balance.items())) or "—"

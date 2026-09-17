@@ -125,6 +125,11 @@ def _write(
     return file, launch.helper_json(argv, stdin=json.dumps(request))
 
 
+def _already_recorded(name: str, source: dict[str, Any]) -> None:
+    """Report a retried write that changed nothing — the same way for every type."""
+    output.success(f"{name} already recorded at {source['filename']}:{source['lineno']}; nothing was written.")
+
+
 def _appended(name: str, file: Path, data: dict[str, Any]) -> None:
     """Report one appended directive — the same way for every type."""
     target = data.pop("target")
@@ -287,7 +292,7 @@ def add_balance(
         elif source:
             for warning in data["warnings"]:
                 output.note(warning)
-            output.success(f"Balance already recorded at {source['filename']}:{source['lineno']}; nothing was written.")
+            _already_recorded("Balance", source)
         else:
             _appended("balance", file, {**data, "target": target})
         return
@@ -309,7 +314,7 @@ def add_balance(
         for warning in warnings:
             output.note(warning)
         if source:
-            output.success(f"Balance already recorded at {source['filename']}:{source['lineno']}; nothing was written.")
+            _already_recorded("Balance", source)
         elif written == 1:
             output.success(f"Added 1 balance to {target}.")
         else:
@@ -401,7 +406,7 @@ def add_price(
         for warning in data["warnings"]:
             output.note(warning)
         if source:
-            output.success(f"Price already recorded at {source['filename']}:{source['lineno']}; nothing was written.")
+            _already_recorded("Price", source)
         else:
             output.success(f"Added 1 price to {target}.")
 
