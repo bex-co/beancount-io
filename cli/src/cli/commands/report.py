@@ -85,9 +85,7 @@ def _amounts(
         shown = _quantize(value, currency, precision)
         return f"{shown:,.{max(2, -int(shown.as_tuple().exponent))}f} {currency}"
 
-    return "  ".join(render(currency, number) for currency, number in sorted(balance.items())) or (
-        f"0.00 {conversion}" if conversion and conversion not in {"units", "at_cost", "at_value"} else "—"
-    )
+    return "  ".join(render(currency, number) for currency, number in sorted(balance.items())) or "—"
 
 
 def _negated(balance: Mapping[str, Any]) -> dict[str, Decimal | None]:
