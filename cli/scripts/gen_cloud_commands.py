@@ -169,15 +169,21 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
     # be answered with "pass --yes".
     lines.extend(body)
 
-    if cmd.confirm:
-        lines.append(f'    if not context.current().confirm(f"{esc(cmd.confirm)}"):')
-        lines.append('        output.success("Cancelled.")')
-        lines.append("        return")
-
     lines.append("    from cli.api.client import authenticated_client, unwrap")
     lines.append(f"    from cli.api.rest_client.api.ledger_v_1 import {module}")
 
-    call = f"{module}.sync_detailed({', '.join(call_args)}{', ' if call_args else ''}client=authenticated_client())"
+    # Resolve credentials before the destructive confirmation gate so a
+    # signed-out agent sees exit 3 (auth) instead of exit 2 (pass --yes).
+    if cmd.confirm:
+        lines.append("    client = authenticated_client()")
+        lines.append(f'    if not context.current().confirm(f"{esc(cmd.confirm)}"):')
+        lines.append('        output.success("Cancelled.")')
+        lines.append("        return")
+        client_expr = "client"
+    else:
+        client_expr = "authenticated_client()"
+
+    call = f"{module}.sync_detailed({', '.join(call_args)}{', ' if call_args else ''}client={client_expr})"
     if method == "get":
         lines.append(f"    result = unwrap({call})")
     else:

@@ -75,17 +75,19 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
         full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],
     ) -> None:
         owner, name = owner_and_name(full_name)
+        from cli.api.client import authenticated_client, unwrap
+        from cli.api.rest_client.api.ledger_v_1 import delete_ledger
+
+        client = authenticated_client()
         if not context.current().confirm(f"Permanently delete ledger '{full_name}'?"):
             output.success("Cancelled.")
             return
-        from cli.api.client import authenticated_client, unwrap
-        from cli.api.rest_client.api.ledger_v_1 import delete_ledger
         import httpx
 
         from cli.errors import unknown_write_outcome
 
         try:
-            result = unwrap(delete_ledger.sync_detailed(owner, name, client=authenticated_client()))
+            result = unwrap(delete_ledger.sync_detailed(owner, name, client=client))
         except (httpx.TimeoutException, httpx.TransportError) as e:
             raise unknown_write_outcome(f"Deleting ledger '{full_name}'", e) from e
         data = result if isinstance(result, list) else [result]
