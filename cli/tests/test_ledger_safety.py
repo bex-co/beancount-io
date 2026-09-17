@@ -58,13 +58,163 @@ def test_invalid_writes_preserve_original_bytes(book: Path, postings: list[str])
 def test_allow_errors_is_explicit_and_never_permits_bad_syntax(book: Path) -> None:
     args = ["add", "balance", "--date", "2026-08-01", "--account", "Assets:Cash", "--amount", "5 USD"]
     assert invoke(book, *args).exit_code == 1
-    allowed = invoke(book, *args, "--allow-errors")
-    assert allowed.exit_code == 0, allowed.output
-    assert json.loads(allowed.stdout)["data"]["warnings"]
+    # The flag tolerates errors already in the books, not ones the write would
+    # introduce: a bare failing balance is refused with the flag too.
     before = book.read_bytes()
+    introduced = invoke(book, *args, "--allow-errors")
+    assert introduced.exit_code == 1, introduced.output
+    assert book.read_bytes() == before
+    assert "would introduce 1 new ledger error(s)" in introduced.stderr
     result = invoke(book, "add", "open", "--date", "2026-08-01", "--account", "INVALID", "--allow-errors")
     assert result.exit_code == 2
     assert book.read_bytes() == before
+
+
+def _check_errors(book: Path) -> list[tuple[str, int | None, str]]:
+    """The loader errors `bea check` would report, as comparable keys."""
+    _, errors, _ = loader.load_file(book)
+    return [(e.source.get("filename", ""), e.source.get("lineno"), e.message) for e in errors]
+
+
+@pytest.mark.parametrize(
+    ("args", "detail"),
+    [
+        (
+            ["transaction", "--date", "2026-08-01", "-p", "Assets:Cash -1 USD", "-p", "Expenses:Missing"],
+            "unknown account 'Expenses:Missing'",
+        ),
+        (
+            ["note", "--date", "2026-08-01", "--account", "Expenses:Missing", "--comment", "hi"],
+            "unknown account 'Expenses:Missing'",
+        ),
+        (
+            ["close", "--date", "2026-08-01", "--account", "Expenses:Missing"],
+            "Unopened account Expenses:Missing is being closed",
+        ),
+        (
+            ["transaction", "--date", "2026-08-01", "-p", "Assets:Cash -1 EUR", "-p", "Expenses:Food 1 EUR"],
+            "Invalid currency EUR for account 'Assets:Cash'",
+        ),
+    ],
+)
+def test_allow_errors_refuses_newly_introduced_errors(book: Path, args: list[str], detail: str) -> None:
+    before = book.read_bytes()
+    assert _check_errors(book) == []
+    result = invoke(book, "add", *args, "--allow-errors")
+    assert result.exit_code == 1, result.output
+    assert book.read_bytes() == before
+    assert "would introduce" in result.stderr
+    assert detail in result.stderr
+
+
+def test_allow_errors_still_writes_clean_adds_over_failing_ledgers(book: Path) -> None:
+    with book.open("a") as stream:
+        stream.write("2026-08-01 balance Assets:Cash 999 USD\n")
+    before_errors = _check_errors(book)
+    assert before_errors != []
+    result = invoke(
+        book,
+        "add",
+        "transaction",
+        "--date",
+        "2026-08-02",
+        "-p",
+        "Assets:Cash -1 USD",
+        "-p",
+        "Expenses:Food 1 USD",
+        "--allow-errors",
+    )
+    assert result.exit_code == 0, result.output
+    assert _check_errors(book) == before_errors
+
+
+def test_allow_errors_refuses_new_import_rows(tmp_path: Path) -> None:
+    book = tmp_path / "main.bean"
+    book.write_text(
+        'option "operating_currency" "USD"\n'
+        "2020-01-01 open Assets:Cash USD\n"
+        "2020-01-01 open Equity:Opening-Balances\n"
+        "2020-01-01 open Expenses:Food USD\n"
+        '2020-01-01 * "seed"\n'
+        "  Assets:Cash               100 USD\n"
+        "  Equity:Opening-Balances  -100 USD\n"
+    )
+    csv_file = tmp_path / "bank.csv"
+    csv_file.write_text("date,amount,description\n2020-08-01,-2.00,coffee\n")
+    before = book.read_bytes()
+    result = invoke(
+        book,
+        "import",
+        str(csv_file),
+        "--csv",
+        "auto",
+        "--account",
+        "Assets:Cash",
+        "--apply",
+        "--duplicates",
+        "include",
+        "--allow-errors",
+    )
+    assert result.exit_code == 1, result.output
+    assert book.read_bytes() == before
+    assert "Import would leave the ledger invalid" in result.stderr
+
+
+def test_allow_errors_bulk_rejects_new_accounts_without_writing(book: Path) -> None:
+    rows = [
+        {
+            "date": "2026-08-01",
+            "narration": "good",
+            "postings": [
+                {"account": "Assets:Cash", "units": {"number": "-5", "currency": "USD"}},
+                {"account": "Expenses:Food", "units": {"number": "5", "currency": "USD"}},
+            ],
+        },
+        {
+            "date": "2026-08-02",
+            "narration": "bad",
+            "postings": [
+                {"account": "Assets:Cash", "units": {"number": "-5", "currency": "USD"}},
+                {"account": "Expenses:Missing", "units": {"number": "5", "currency": "USD"}},
+            ],
+        },
+    ]
+    source = book.parent / "rows.json"
+    source.write_text(json.dumps(rows))
+    before = book.read_bytes()
+    atomic = invoke(book, "add", "transactions", "--from", str(source), "--allow-errors")
+    assert atomic.exit_code == 1, atomic.output
+    assert book.read_bytes() == before
+    assert "would introduce" in atomic.stderr
+    partial = invoke(book, "add", "transactions", "--from", str(source), "--allow-errors", "--partial")
+    assert partial.exit_code == 1, partial.output
+    assert json.loads(partial.stderr)["error"]["result"] == {"written": 1, "written_rows": [0], "rejected_rows": [1]}
+    assert "Row 2" in partial.stderr
+
+
+def test_allow_errors_pad_staging_pair_still_writes(tmp_path: Path) -> None:
+    book = tmp_path / "main.bean"
+    book.write_text(
+        'option "operating_currency" "USD"\n'
+        "2020-01-01 open Assets:Savings USD\n"
+        "2020-01-01 open Equity:OpeningBalances USD\n"
+    )
+    staged = invoke(
+        book,
+        "add",
+        "pad",
+        "--date",
+        "2020-01-01",
+        "--account",
+        "Assets:Savings",
+        "--source",
+        "Equity:OpeningBalances",
+        "--allow-errors",
+    )
+    assert staged.exit_code == 0, staged.output
+    paired = invoke(book, "add", "balance", "--date", "2020-01-02", "--account", "Assets:Savings", "--amount", "50 USD")
+    assert paired.exit_code == 0, paired.output
+    assert _check_errors(book) == []
 
 
 # An empty string is no longer valid input for these fields; its refusal is

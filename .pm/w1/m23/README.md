@@ -1,13 +1,13 @@
 # w1 · m23 — Exit status tells the truth: no success without the effect
 
-**Worker:** worker1 **Goal:** every `bea` exit code matches what actually happened on disk — exit 0 means the documented effect occurred and the ledger still checks, and nonzero means nothing was written or the partial writes are named **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** every `bea` exit code matches what actually happened on disk — exit 0 means the documented effect occurred and the ledger still checks, and nonzero means nothing was written or the partial writes are named **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Refuse output destinations that alias a loaded ledger file — **DONE** | 45m | — |
-| t002 | Scope `--allow-errors` to pre-existing errors | 45m | — |
+| t002 | Scope `--allow-errors` to pre-existing errors — **DONE** | 45m | — |
 | t003 | Make `format --check` and `format -i` honor the include closure | 45m | — |
 | t004 | Map doctor diagnostics to exit status | 45m | — |
 | t005 | Stop query one-shots exiting 0 on nothing | 45m | — |

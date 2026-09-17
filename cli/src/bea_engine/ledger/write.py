@@ -427,6 +427,17 @@ def unknown_account_is_normalization(account: str, accounts: Iterable[str]) -> s
 def validate_candidate(
     candidate: Path, file: Path, *, allow_errors: bool = False, snapshot: LedgerSnapshot | None = None
 ) -> list[str]:
+    """Refuse a candidate that fails validation, naming what it would break.
+
+    `--allow-errors` tolerates errors the ledger already had — a failing
+    balance assertion stays failing — but nothing the write itself introduces:
+    a new unknown account, currency violation, or balance failure refuses the
+    write even with the flag, so an exit-0 write never leaves a ledger `check`
+    rejects for reasons absent before it. Three categories always refuse, flag
+    or no flag: syntax errors, pad references to unknown or inactive accounts,
+    and newly introduced errors. The one carve-out is a newly staged pad,
+    whose `Unused Pad` the documented two-step pad-then-balance flow needs.
+    """
     from beancount import loader
     from beancount.core import interpolate
     from beancount.core.data import Balance, Close, Document, Open, Pad, Transaction
@@ -445,8 +456,17 @@ def validate_candidate(
         original_line_counts = {
             path.resolve(): len(content.splitlines()) for path, content in snapshot.contents.items()
         }
+    # The error set before the write, keyed so an identical failure after the
+    # append reads as the same error. Appends land at end of file over
+    # verbatim existing bytes, so a pre-existing error keeps its file, line,
+    # and message; anything else in the after set is newly introduced.
+    before_keys: Counter[tuple[str, int | None, str]] | None = None
+    if allow_errors:
+        _, before_errors, _ = loader.load_file(snapshot.root if snapshot else file)
+        before_keys = Counter(_error_key(before, {}) for before in before_errors)
     accounts = [entry.account for entry in entries if isinstance(entry, Open)]
     records: list[_ErrorRecord] = []
+    introduced: list[bool] = []
     invalid_pad_accounts = False
     for error in errors:
         hints = []
@@ -456,9 +476,25 @@ def validate_candidate(
         source = Path(error.source.get("filename", str(candidate)))
         source = filenames.get(source, source)
         lineno = error.source.get("lineno")
+        # Multiset consumption: each after-error spends one matching
+        # before-error, so duplicates are only tolerated while they last.
+        # A staged pad's `Unused Pad` is the documented carve-out — the
+        # two-step pad-then-balance flow cannot start without it.
+        is_new = False
+        if before_keys is not None:
+            key = _error_key(error, filenames)
+            if before_keys[key] > 0:
+                before_keys[key] -= 1
+            else:
+                is_new = "Unused Pad" not in getattr(error, "message", "")
+        introduced.append(is_new)
         # Candidate validation invents line numbers past EOF when the append
         # is rejected. Do not send agents to a line that will not exist.
-        if not allow_errors and isinstance(lineno, int) and lineno > original_line_counts.get(source.resolve(), lineno):
+        if (
+            (not allow_errors or is_new)
+            and isinstance(lineno, int)
+            and lineno > original_line_counts.get(source.resolve(), lineno)
+        ):
             prefix = f"{source}:{lineno}: "
             if message.startswith(prefix):
                 message = "Proposed append (not written): " + message[len(prefix) :]
@@ -549,9 +585,56 @@ def validate_candidate(
         records.append(_ErrorRecord(getattr(error, "message", str(error)), message, error.source.get("lineno"), hints))
     messages = _collapse_repeats(records)
     syntax_errors = [err for err in errors if isinstance(err, ParserError | ParserSyntaxError | LexerError)]
-    if errors and (not allow_errors or syntax_errors or invalid_pad_accounts):
-        raise LedgerError("The change would leave the ledger invalid; nothing was written.", details=messages)
+    new_records = [record for record, is_new in zip(records, introduced, strict=True) if is_new]
+    if errors and (not allow_errors or syntax_errors or invalid_pad_accounts or new_records):
+        if not allow_errors:
+            raise LedgerError("The change would leave the ledger invalid; nothing was written.", details=messages)
+        # A refused `--allow-errors` write names what forced the refusal —
+        # the introduced errors, any syntax failure, any invalid pad — and
+        # not the pre-existing errors the flag tolerates.
+        reasons = [
+            record
+            for record, error, is_new in zip(records, errors, introduced, strict=True)
+            if is_new
+            or isinstance(error, ParserError | ParserSyntaxError | LexerError)
+            or (isinstance(error.entry, Pad) and str(getattr(error, "message", "")).startswith("Invalid reference to "))
+        ]
+        if new_records:
+            raise LedgerError(
+                f"The change would introduce {len(new_records)} new ledger error(s); nothing was written.",
+                details=_collapse_repeats(reasons),
+            )
+        raise LedgerError(
+            "The change would leave the ledger invalid; nothing was written.", details=_collapse_repeats(reasons)
+        )
     return messages
+
+
+def _error_key(error: Any, filenames: dict[Path, Path]) -> tuple[str, int | None, str]:
+    """Identity of one loader error across the before/after loads of a write.
+
+    The raw message, not the augmented display text: hints like close account
+    matches depend on the entry set, which is what the write changes. Staged
+    paths map back to the files they stand in for so both loads key alike.
+
+    Balance failures key by assertion rather than by amount: an append to the
+    asserted account moves the accumulated total, so the same still-failing
+    assertion would otherwise read as a new error and block every import into
+    a book mid-reconciliation. The warning text still shows the new amounts.
+    """
+    from beancount.core.data import Balance
+
+    source = Path(error.source.get("filename", ""))
+    try:
+        name = str(filenames.get(source, source).resolve())
+    except OSError:
+        name = str(filenames.get(source, source))
+    entry = getattr(error, "entry", None)
+    if isinstance(entry, Balance):
+        message = f"Balance failed for {entry.account} on {entry.date}"
+    else:
+        message = getattr(error, "message", str(error))
+    return (name, error.source.get("lineno"), message)
 
 
 def _destination_indent(content: str) -> str:

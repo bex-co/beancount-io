@@ -127,11 +127,10 @@ def test_balance_hint_command_can_be_run_for_the_exact_root_and_destination(book
 
 
 def test_existing_failed_balance_is_not_given_a_duplicate_add_recipe(book: Path) -> None:
-    staged = invoke(
-        book, "add", "balance", "--date", "2026-01-02", "-a", "Assets:Checking", "--amount", "100 USD", "--allow-errors"
-    )
-    assert staged.exit_code == 0, staged.output
-    assert "Opening adjustment command:" not in staged.stdout
+    # A failing assertion bea itself can no longer write: hand-placed, as from
+    # an edit outside bea, since --allow-errors tolerates only pre-existing errors.
+    with book.open("a") as stream:
+        stream.write("2026-01-02 balance Assets:Checking 100 USD\n")
     before = book.read_bytes()
     failed = invoke(book, "add", "note", "--date", "2026-01-03", "-a", "Assets:Checking", "--comment", "Review")
     assert failed.exit_code == 1 and book.read_bytes() == before
