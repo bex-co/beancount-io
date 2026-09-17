@@ -721,6 +721,55 @@ class TestFeedCache:
         assert resolved.head.last_error is not None
         assert "invalid feed at line 1" in resolved.head.last_error
 
+    def test_timeout_on_refresh_keeps_serving(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        url = f"{feed_server}/prices/BTC-USD"
+        root = tmp_path / "cache"
+        first = resolve_feed(url, "BTC-USD", root=root, now=now)
+        assert first.blob is not None
+        _FeedHandler.routes["/prices/BTC-USD"] = {
+            "body": FEED.encode("utf-8"),
+            "sleep": 3,
+        }
+
+        resolved = resolve_feed(url, "BTC-USD", root=root, now=now + 301, timeout_seconds=1)
+
+        assert resolved.blob is not None
+        assert resolved.blob.text == first.blob.text
+        assert resolved.head.last_error == "fetch failed (timeout): timed out after 1 seconds"
+
+    def test_rate_limited_refresh_keeps_serving_with_retry_after(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        url = f"{feed_server}/prices/BTC-USD"
+        root = tmp_path / "cache"
+        first = resolve_feed(url, "BTC-USD", root=root, now=now)
+        assert first.blob is not None
+        _FeedHandler.routes["/prices/BTC-USD"] = {
+            "status": 429,
+            "headers": {"Retry-After": "120"},
+            "body": b"slow down",
+        }
+
+        resolved = resolve_feed(url, "BTC-USD", root=root, now=now + 301)
+
+        assert resolved.blob is not None
+        assert resolved.blob.text == first.blob.text
+        assert resolved.head.last_error == "fetch failed (http): HTTP 429 (retry after 120)"
+
+    def test_empty_body_on_refresh_keeps_serving(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        url = f"{feed_server}/prices/BTC-USD"
+        root = tmp_path / "cache"
+        first = resolve_feed(url, "BTC-USD", root=root, now=now)
+        assert first.blob is not None
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": b""}
+
+        resolved = resolve_feed(url, "BTC-USD", root=root, now=now + 301)
+
+        assert resolved.blob is not None
+        assert resolved.blob.text == first.blob.text
+        assert resolved.head.last_error == "invalid feed: no price directives"
+
     def test_empty_cache_failure_records_error_without_blob(self, feed_server: str, tmp_path: Path) -> None:
         resolved = _resolve(feed_server, tmp_path, path="/prices/NOPE", alias="NOPE")
 
@@ -1074,6 +1123,39 @@ include "prices.bean"
         _FeedHandler.hits.clear()
         assert load_with_sources(ledger, root=root).sources != ()
         assert _FeedHandler.hits == []
+
+    def test_seventeenth_url_is_left_for_the_engine(self, feed_server: str, tmp_path: Path) -> None:
+        for index in range(17):
+            alias = f"F-{index:02d}"
+            base = f"F{index:02d}"
+            _FeedHandler.routes[f"/prices/{alias}"] = {
+                "body": (
+                    f"; alias: {alias}\n; commodity: {base}\n; quote: USD\n2024-01-15 price {base} 10 USD\n"
+                ).encode()
+            }
+        lines = ['option "operating_currency" "USD"']
+        lines += [f'include "{feed_server}/prices/F-{index:02d}"' for index in range(17)]
+        lines += ["2024-01-01 open Assets:Broker", "2024-01-01 open Expenses:Food"]
+        loaded = _load(feed_server, tmp_path, "\n".join(lines) + "\n")
+
+        assert len(loaded.sources) == 16
+        assert [source.alias for source in loaded.sources] == [f"F-{index:02d}" for index in range(16)]
+        assert _price_numbers(loaded) == ["10"] * 16
+        assert any("F-16" in getattr(error, "message", "") for error in loaded.errors)
+
+    def test_load_never_rewrites_customer_files(self, feed_server: str, tmp_path: Path) -> None:
+        books = tmp_path / "books"
+        books.mkdir()
+        ledger = books / "main.bean"
+        ledger.write_text(_managed_ledger(feed_server))
+        before = ledger.read_bytes()
+        origins = (f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}",)
+
+        loaded = load_with_sources(ledger, origins=origins, root=tmp_path / "cache")
+
+        assert loaded.errors == []
+        assert ledger.read_bytes() == before
+        assert sorted(path.name for path in books.iterdir()) == ["main.bean"]
 
     def test_write_to_a_feed_path_is_refused(
         self, feed_server: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
