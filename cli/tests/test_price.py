@@ -177,3 +177,15 @@ class TestPriceDelegation:
         assert result.exit_code == 0, result.output
         assert "2024-06-15 price HOOL" in book.read_text()
         assert "185.50 USD" in book.read_text()
+
+
+@pytest.mark.usefixtures("use_optional_engine")
+def test_json_price_refuses_before_fetching_a_quote(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _install_fake_source(tmp_path)
+    monkeypatch.setenv("PYTHONPATH", str(tmp_path))
+    result = runner.invoke(app, ["--json", "price", "--no-cache", "-e", "USD:bea_test_price.source/HOOL"])
+    assert result.exit_code == 2, result.output
+    assert result.stdout == ""
+    error = json.loads(result.stderr)["error"]
+    assert error["category"] == "usage"
+    assert "bea price has no JSON output" in error["message"]

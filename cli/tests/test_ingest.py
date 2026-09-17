@@ -305,3 +305,34 @@ class TestIngestLifecycle:
         )
         assert result.exit_code == 0, result.output
         assert "test.CsvImporter" in result.output
+
+
+@pytest.mark.usefixtures("use_optional_engine")
+@pytest.mark.parametrize("operation", ["identify", "extract", "archive"])
+def test_json_ingest_refuses_before_native_output_or_file_effects(tmp_path: Path, operation: str) -> None:
+    script = _write_ingest(tmp_path)
+    downloads = tmp_path / "downloads"
+    documents = tmp_path / "documents"
+    downloads.mkdir()
+    documents.mkdir()
+    source = downloads / "statement.csv"
+    source.write_text("synthetic export")
+    result = runner.invoke(
+        app,
+        [
+            "--json",
+            "ingest",
+            operation,
+            "--config",
+            str(script),
+            str(downloads),
+            *(["-o", str(documents)] if operation == "archive" else []),
+        ],
+    )
+    assert result.exit_code == 2, result.output
+    assert result.stdout == ""
+    error = json.loads(result.stderr)["error"]
+    assert error["category"] == "usage"
+    assert "bea ingest has no JSON output" in error["message"]
+    assert source.read_text() == "synthetic export"
+    assert not list(documents.iterdir())

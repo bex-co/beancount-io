@@ -15,7 +15,7 @@ import typer
 
 from cli import context
 from cli.engine import launch
-from cli.errors import UsageError
+from cli.errors import UsageError, refuse_json
 from cli.native_help import native_help
 
 _EXTRA = {"allow_extra_args": True, "ignore_unknown_options": True}
@@ -55,6 +55,7 @@ def _ingest_script(supplied: Path | None) -> Path:
 
 
 def _forward(operation: str, ctx: typer.Context, config: Path | None) -> None:
+    refuse_json("ingest", hint="Run without --json for native output; use bea import for a JSON preview.")
     script = _ingest_script(config)
     code = launch.run_optional_script("beangulp", script, [operation, *ctx.args])
     raise typer.Exit(code)

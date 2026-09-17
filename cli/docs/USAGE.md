@@ -809,7 +809,7 @@ advertised to a Homebrew installation before the tap can install them.
 
 ## JSON output
 
-Every read-side command accepts global `--json`: `check`, `query`, `list <type>`, all four `report` commands, `cloud status`, `cloud ledger list`, and `cloud ledger show`. `init`, `import`, `format`, `add`, `cloud ledger create`, and `cloud ledger delete` also emit an envelope so a script can confirm what was written (create returns the new ledger's metadata, delete the deleted ledger's id). Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
+Global `--json` provides structured results for `check`, local-file `query`, `list <type>`, `balance`, `report`, `engine status`, and hosted reads such as `cloud status`, `cloud ledger list`, and `cloud ledger show`. `init`, `import`, `format`, `add`, `engine enable`, `cloud ledger create`, and `cloud ledger delete` also emit an envelope so a script can confirm what was written (create returns the new ledger's metadata, delete the deleted ledger's id). Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
 
 The envelope is always:
 
@@ -856,11 +856,11 @@ $ bea --json cloud status | jq '{source: .data.source, tier: .data.tier}'
 Report JSON carries the same tree the text renderer walks — `account`, `balance`, `balance_children`, `has_txns`, `children` — not a rendering of it.
 
 Commands that cannot produce JSON keep their own shapes: `ask`, `doctor`,
-`example`, and `treeify` reject JSON mode, `cloud login` requires interaction,
+`example`, `treeify`, `price`, `ingest`, and `query --source` reject JSON mode, `cloud login` requires interaction,
 successful `cloud logout` and `cloud ledger clone` emit no JSON success object
 (use their exit status), and help, version, and completion output stay textual.
 `upgrade` can stream package-manager output to stderr even in JSON mode. The
-[directive models](https://github.com/bex-co/beancount-io/blob/main/cli/src/cli/directives/models.py)
+[directive models](https://github.com/bex-co/beancount-io/blob/main/cli/src/bea_engine/ledger/models.py)
 define the exact object fields for directive listings and bulk input.
 
 ## Environment variables

@@ -10,9 +10,11 @@ from __future__ import annotations
 import typer
 
 from cli.engine import launch
+from cli.errors import refuse_json
 
 
 def price(ctx: typer.Context) -> None:
     """Fetch prices via bean-price (requires 'bea engine enable beanprice')."""
+    refuse_json("price", hint="Run without --json to print price directives.")
     code = launch.run_optional_native("beanprice", "bean-price", list(ctx.args))
     raise typer.Exit(code)
