@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import difflib
+import fnmatch
 import glob
 import hashlib
 import os
@@ -80,11 +81,28 @@ class LedgerSnapshot:
         return snapshot
 
     def require_target(self, target: Path) -> None:
-        if not any(path.resolve() == target for path in self.contents):
-            raise UsageError(
-                f"Write destination {target} is not included by {self.root}. "
-                "Create it and add an include directive to the root first."
-            )
+        resolved = target.resolve()
+        if any(path.resolve() == resolved for path in self.contents):
+            return
+        for pattern, matches in self.patterns.items():
+            if not fnmatch.fnmatch(str(resolved), pattern):
+                continue
+            # Covered by an include glob that was expanded before this path existed.
+            if not resolved.parent.is_dir():
+                raise UsageError(
+                    f"Write destination {target} matches include {pattern!r} but its directory "
+                    f"{resolved.parent} does not exist. Create the directory first."
+                )
+            if not resolved.exists():
+                resolved.write_bytes(b"")
+            self.contents[resolved] = resolved.read_bytes()
+            self.stats[resolved] = resolved.stat()
+            self.patterns[pattern] = tuple(sorted({*matches, resolved}))
+            return
+        raise UsageError(
+            f"Write destination {target} is not included by {self.root}. "
+            "Create it and add an include directive to the root first."
+        )
 
     def verify(self) -> None:
         for path, original in self.contents.items():
