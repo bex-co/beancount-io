@@ -18,6 +18,19 @@ def single_line(text: str) -> str:
     return re.sub(r"[\r\n]+", " ", text)
 
 
+def refuse_blank_filter(flag: str, value: str | None) -> None:
+    """Reject an empty or whitespace-only filter value as a usage error.
+
+    An empty filter is almost always a template hole or an unset shell
+    variable, and a substring test would silently match every row — so the
+    caller is told which flag was empty rather than handed a full result set.
+    `list`, `report`, and `balance` all validate through this one helper so
+    the behavior cannot drift between them.
+    """
+    if value is not None and not value.strip():
+        raise UsageError(f"{flag} needs a non-empty value; drop {flag} to leave it unset.")
+
+
 def fold_account(name: str) -> str:
     """The key two account names must share to match in a filter.
 

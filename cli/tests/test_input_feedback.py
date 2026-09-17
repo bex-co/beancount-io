@@ -321,3 +321,59 @@ def test_formatting_split_files_does_not_require_root_options_or_account_opens(b
     result = invoke(book, "format", str(book.parent), "--in-place")
     assert result.exit_code == 0, result.output
     assert invoke(book, "format", str(book.parent), "--check").exit_code == 0
+
+
+@pytest.mark.parametrize(
+    ("command", "flag"),
+    [
+        (("list", "transaction"), "--search"),
+        (("list", "transaction"), "--account"),
+        (("list", "transaction"), "--tag"),
+        (("list", "transaction"), "--link"),
+        (("list", "balance"), "--account"),
+        (("list", "price"), "--currency"),
+        (("report", "trial-balance"), "--account"),
+        (("report", "trial-balance"), "--time"),
+        (("report", "trial-balance"), "--conversion"),
+        (("balance",), "--conversion"),
+        (("balance",), "--time"),
+    ],
+)
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_blank_filter_value_is_usage_error(book: Path, command: tuple[str, ...], flag: str, blank: str) -> None:
+    result = invoke(book, *command, flag, blank)
+
+    assert result.exit_code == 2, result.output
+    error = json.loads(result.stderr)["error"]
+    assert error["category"] == "usage"
+    assert flag in error["message"]
+    human = runner.invoke(app, ["-f", str(book), *command, flag, blank])
+    assert human.exit_code == 2, human.output
+    assert flag in human.stderr
+
+
+def test_blank_balance_account_is_usage_error(book: Path) -> None:
+    result = invoke(book, "balance", "")
+
+    assert result.exit_code == 2, result.output
+    assert "accounts" in json.loads(result.stderr)["error"]["message"]
+
+
+def test_blank_filter_in_combination_refuses_without_querying(book: Path) -> None:
+    with book.open("a") as stream:
+        stream.write('2026-01-01 * "Lunch"\n  Expenses:Food 10.00 USD\n  Assets:Checking\n')
+    result = invoke(book, "list", "transaction", "--search", "Lunch", "--tag", "")
+
+    assert result.exit_code == 2, result.output
+    assert "--tag" in json.loads(result.stderr)["error"]["message"]
+
+
+def test_single_character_filters_still_work(book: Path) -> None:
+    with book.open("a") as stream:
+        stream.write('2026-01-01 * "Lunch"\n  Expenses:Food 10.00 USD\n  Assets:Checking\n')
+
+    result = invoke(book, "list", "transaction", "--search", "u")
+    assert result.exit_code == 0, result.output
+    assert len(json.loads(result.stdout)["data"]) == 1
+
+    assert invoke(book, "balance", "E").exit_code == 0

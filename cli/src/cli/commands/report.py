@@ -16,6 +16,7 @@ import typer
 
 from cli import context, output
 from cli.engine import launch
+from cli.utils import refuse_blank_filter
 
 report_app = typer.Typer(help="Financial reports from a local ledger", no_args_is_help=True, rich_markup_mode=None)
 
@@ -139,6 +140,11 @@ def _ask(
     allow_errors: bool,
 ) -> tuple[Any, dict[str, Any]]:
     """Ask the engine for one report payload and surface tolerated load errors."""
+    refuse_blank_filter("--account", account)
+    refuse_blank_filter("--conversion", conversion)
+    refuse_blank_filter("--time", time)
+    for term in accounts or []:
+        refuse_blank_filter("accounts", term)
     ctx = context.current()
     file = ctx.entry_file()
     argv: list[str]
