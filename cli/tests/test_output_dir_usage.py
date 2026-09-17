@@ -74,3 +74,34 @@ def test_json_query_output_dir_is_usage_error(tmp_path: Path) -> None:
     assert "directory" in error["message"].casefold()
     assert ".tmp" not in error["message"]
     assert "Errno" not in error["message"]
+
+
+def test_query_output_missing_parent_is_usage_error(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    result = _bea(
+        tmp_path,
+        "--json",
+        "--file",
+        str(ledger),
+        "query",
+        "SELECT account LIMIT 1",
+        "-o",
+        str(tmp_path / "nope" / "out.txt"),
+    )
+    assert result.returncode == 2, result.stderr
+    error = json.loads(result.stderr)["error"]
+    assert error["category"] == "usage"
+    assert "--output" in error["message"]
+    assert "nope" in error["message"]
+    assert "Errno" not in error["message"]
+
+
+def test_format_output_missing_parent_is_usage_error(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    result = _bea(tmp_path, "--file", str(ledger), "format", "-o", str(tmp_path / "nope" / "out.bean"))
+    assert result.returncode == 2, result.stderr
+    assert "--output" in result.stderr
+    assert "nope" in result.stderr
+    assert "Errno" not in result.stderr

@@ -146,9 +146,7 @@ def query(
     if output_format not in FORMATS:
         raise UsageError(f"Unknown query format '{output_format}'. Choose one of: {', '.join(FORMATS)}.")
     if output_file is not None:
-        destination = Path(output_file)
-        if destination.exists() and destination.is_dir():
-            raise UsageError(f"--output must be a file path, not a directory ({destination}).")
+        output.check_output_destination(Path(output_file))
 
     rendering = ["--format", output_format]
     if output_file is not None:

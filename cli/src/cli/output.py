@@ -225,6 +225,21 @@ def refuse_ledger_alias(destination: Path, ledger: Path) -> None:
             )
 
 
+def check_output_destination(destination: Path, flag: str = "--output") -> None:
+    """Refuse an output destination that cannot become a fresh file.
+
+    A directory and a missing parent are usage errors naming the flag and the
+    path the caller supplied — never a downstream errno or temp-file rename.
+    Call this before any temp file is created or any stream is opened.
+    """
+    if destination.exists() and destination.is_dir():
+        raise UsageError(f"{flag} must be a file path, not a directory ({destination}).")
+    if not destination.parent.exists():
+        raise UsageError(
+            f"{flag} parent directory does not exist ({destination.parent}); create it or choose another path."
+        )
+
+
 def server_target() -> dict[str, Any]:
     from cli.config import settings
 

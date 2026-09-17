@@ -547,3 +547,99 @@ class TestMissingNativeExecutable:
         assert "Remove" in message
         assert str(root) in message
         assert paths.PYTHON_ENV not in message
+
+
+class TestCheckNative:
+    def _completed(self, code: int, out: str, err: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(["treeify"], code, out, err)
+
+    def test_success_passes_through_silently(self) -> None:
+        assert launch.check_native(self._completed(0, "tree\n", "warning\n"), "treeify") is None
+
+    def test_traceback_becomes_a_one_line_error(self) -> None:
+        err = 'Traceback (most recent call last):\n  File "x", line 1\nFileNotFoundError: [Errno 2] No such file\n'
+        with pytest.raises(BeaError) as caught:
+            launch.check_native(self._completed(1, "", err), "treeify")
+        message = str(caught.value)
+        assert "treeify failed (exit 1)" in message
+        assert "FileNotFoundError" in message
+        assert "Traceback" not in message
+        assert all("Traceback" not in detail for detail in caught.value.details)
+        assert caught.value.traceback is not None and "Traceback" in caught.value.traceback
+
+    def test_plain_stderr_keeps_a_tail_in_details(self) -> None:
+        with pytest.raises(BeaError) as caught:
+            launch.check_native(self._completed(2, "", "first problem\nsecond problem\n"), "bean-x")
+        assert str(caught.value) == "bean-x failed (exit 2): second problem"
+        assert caught.value.details == ["first problem"]
+        assert caught.value.traceback is None
+
+    def test_empty_stderr_names_the_exit(self) -> None:
+        with pytest.raises(BeaError) as caught:
+            launch.check_native(self._completed(3, "", ""), "bean-x")
+        assert str(caught.value) == "bean-x failed (exit 3): No diagnostic was returned."
+
+
+def _bea_native(tmp_path: Path, *args: str, stdin: str | None = None) -> subprocess.CompletedProcess[str]:
+    env = {k: v for k, v in os.environ.items() if not k.startswith("BEA_")}
+    env.update(
+        BEA_CONFIG_DIR=str(tmp_path / "config"),
+        XDG_CACHE_HOME=str(tmp_path / "cache"),
+        XDG_DATA_HOME=str(tmp_path / "data"),
+        BEA_NO_UPDATE_NOTIFIER="1",
+        PYTHONPATH=str(SOURCE_ROOT),
+        TERM="dumb",
+        NO_COLOR="1",
+    )
+    return subprocess.run(
+        [sys.executable, "-m", "cli.main", *args],
+        env=env,
+        cwd=tmp_path,
+        input=stdin,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+
+
+class TestNativeMisuse:
+    def test_treeify_missing_path_has_no_traceback(self, tmp_path: Path) -> None:
+        result = _bea_native(tmp_path, "treeify", "/no/such/file.txt")
+        assert result.returncode != 0
+        assert "Traceback" not in result.stderr
+        assert "/no/such/file.txt" in result.stderr
+
+    def test_treeify_missing_path_debug_shows_traceback(self, tmp_path: Path) -> None:
+        result = _bea_native(tmp_path, "--debug", "treeify", "/no/such/file.txt")
+        assert result.returncode != 0
+        assert "Traceback" in result.stderr
+
+    def test_treeify_stdin_still_works(self, tmp_path: Path) -> None:
+        result = _bea_native(tmp_path, "treeify", stdin="Assets:Cash 1\n")
+        assert result.returncode == 0, result.stderr
+        assert "Assets" in result.stdout
+
+    def test_example_inverted_dates_is_usage_error(self, tmp_path: Path) -> None:
+        target = tmp_path / "ex.bean"
+        result = _bea_native(
+            tmp_path,
+            "example",
+            "--date-begin",
+            "2020-12-01",
+            "--date-end",
+            "2020-01-01",
+            "-o",
+            str(target),
+        )
+        assert result.returncode == 2, result.stderr
+        assert "begin must be on or before end" in result.stderr
+        assert "Traceback" not in result.stderr
+        assert not target.exists()
+
+    def test_example_valid_range_still_works(self, tmp_path: Path) -> None:
+        target = tmp_path / "ex.bean"
+        result = _bea_native(
+            tmp_path, "example", "--date-begin", "2020-01-01", "--date-end", "2020-02-01", "-o", str(target)
+        )
+        assert result.returncode == 0, result.stderr
+        assert target.exists()

@@ -31,9 +31,8 @@ STDIN = "-"
 
 
 def _require_output_file(path: Path) -> None:
-    """Refuse -o when the path is already a directory."""
-    if path.exists() and path.is_dir():
-        raise UsageError(f"--output must be a file path, not a directory ({path}).")
+    """Refuse -o when the path cannot become a fresh file."""
+    output.check_output_destination(path)
 
 
 def format_beans(

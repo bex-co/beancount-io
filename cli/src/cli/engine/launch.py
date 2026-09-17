@@ -177,6 +177,34 @@ def capture_native(name: str, args: Sequence[str]) -> subprocess.CompletedProces
     return subprocess.run([str(native_command(name)), *args], capture_output=True, text=True, check=False)
 
 
+def check_native(
+    completed: subprocess.CompletedProcess[str], name: str, *, result: dict[str, Any] | None = None
+) -> None:
+    """Raise the standard error for a failed native call; pass successes through.
+
+    The one boundary for non-envelope children: the last stderr line becomes
+    the message, a stderr tail stays in the details for diagnosis, and a
+    Python traceback reaches only the `--debug` traceback field — never the
+    message, the details, or either stream.
+    """
+    if completed.returncode == 0:
+        return
+    diagnostic = (completed.stderr or "").strip()
+    tail = [line for line in diagnostic.splitlines() if line.strip()][-20:]
+    reason = tail[-1] if tail else "No diagnostic was returned."
+    if "Traceback (most recent call last)" in (completed.stderr or ""):
+        details: list[str] = []
+        traceback_text: str | None = diagnostic or None
+    else:
+        details, traceback_text = tail[:-1], None
+    raise BeaError(
+        f"{name} failed (exit {completed.returncode}): {reason}",
+        details=details,
+        result=result,
+        traceback=traceback_text,
+    )
+
+
 def capture_engine(argv: Sequence[str]) -> subprocess.CompletedProcess[str]:
     """Run the engine helper and keep its output instead of inheriting the streams.
 

@@ -24,8 +24,8 @@ def treeify(ctx: typer.Context) -> None:
             "treeify found no hierarchical column to render (colon-separated names like Assets:Cash). "
             "Pipe balances or an account listing, not plain text."
         )
+    launch.check_native(completed, "treeify")
     if completed.stdout:
         sys.stdout.write(completed.stdout)
     if completed.stderr:
         sys.stderr.write(completed.stderr)
-    raise typer.Exit(completed.returncode)
