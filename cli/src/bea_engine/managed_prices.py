@@ -49,6 +49,7 @@ MAX_URLS_PER_LOAD = 16
 _USER_AGENT = "bea managed-prices"
 
 _PRICES_PATH_RE = re.compile(r"^/prices/([A-Za-z0-9._-]{1,64})$")
+_URL_TARGET_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.IGNORECASE)
 _COMMENT_RE = re.compile(r"^\s*;")
 _HEADER_RE = re.compile(r"^;\s*([a-z][a-z0-9_-]*)\s*:\s*(.+?)\s*$")
 _PRICE_RE = re.compile(
@@ -79,6 +80,11 @@ class RefusedUrl:
 
     allowed: Literal[False] = False
     detail: str = ""
+
+
+def is_url_include_target(target: str) -> bool:
+    """Whether an include target is a URL rather than a file path or glob."""
+    return _URL_TARGET_RE.match(target) is not None
 
 
 def parse_managed_price_url(target: str, origins: tuple[str, ...] = DEFAULT_ORIGINS) -> AllowedUrl | RefusedUrl:

@@ -1,6 +1,6 @@
 # w1 · m29 — `bea` resolves managed price includes locally
 
-**Worker:** worker1 **Goal:** the one-line `include "https://beancount.io/prices/BTC-USD"` that PRFAQ002 promises works in the CLI too — in every load path, offline-safe, with inspectable freshness and a portable escape hatch **Status:** todo (t001–t002 done)
+**Worker:** worker1 **Goal:** the one-line `include "https://beancount.io/prices/BTC-USD"` that PRFAQ002 promises works in the CLI too — in every load path, offline-safe, with inspectable freshness and a portable escape hatch **Status:** todo (t001–t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | t001 | Mirror the ADR 015 URL policy, bounded fetch, and price-only validation in the CLI — **DONE** | 60m | — |
 | t002 | Cache feeds locally with an immutable revision and a mutable head — **DONE** | 60m | t001 |
-| t003 | Resolve managed includes in every load path, with ledger prices winning | 60m | t002 |
+| t003 | Resolve managed includes in every load path, with ledger prices winning — **DONE** | 60m | t002 |
 | t004 | Report source status through `bea price status` and refresh on demand | 45m | t003 |
 | t005 | Export the effective include so upstream tools value the same books | 45m | t003 |
 | t006 | Test against a fixture feed server, then verify once against the hosted feed | 45m | t004, t005 |

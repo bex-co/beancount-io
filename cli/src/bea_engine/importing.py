@@ -78,9 +78,9 @@ def answer(
     always skipped. Nothing is written unless `--apply` is set and the preview
     is free of conflicts / unresolved possible duplicates / validation errors.
     """
-    from beancount import loader
     from beancount.core.data import Open, Transaction
 
+    from bea_engine import managed_load
     from bea_engine.csv_mapper import CsvImporter, load_rules, parse_delimiter, parse_encoding, parse_mapping
 
     if duplicates not in {"review", "skip", "include"}:
@@ -98,7 +98,7 @@ def answer(
     target = ledger_write.destination(file, into)
     snapshot.require_target(target)
     original = target.read_bytes()
-    existing, errors, options = loader.load_file(file)
+    existing, errors, options = managed_load.load_file(file)
     if not allow_errors and errors:
         raise LedgerError(
             f"Ledger has {len(errors)} error(s). Pass --allow-errors to preview and apply anyway.",

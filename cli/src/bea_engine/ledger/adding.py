@@ -184,9 +184,9 @@ def _appended(file: Path, directive: Any, *, allow_errors: bool, into: Path | No
 def _balance(
     file: Path, request: dict[str, Any], *, into: Path | None, allow_errors: bool, strict_read: bool
 ) -> dict[str, Any]:
-    from beancount import loader
     from beancount.core.data import Balance
 
+    from bea_engine import managed_load
     from bea_engine.ledger.models import Amount, BalanceDirective
     from bea_engine.query import format_error
 
@@ -201,7 +201,7 @@ def _balance(
         snapshot = write.LedgerSnapshot.capture(file)
         target = write.destination(file, into)
         snapshot.require_target(target)
-        entries, errors, _ = loader.load_file(file)
+        entries, errors, _ = managed_load.load_file(file)
         ledger_errors = [format_error(error, ledger_file=file) for error in errors]
         if ledger_errors and strict_read and not all("Unused Pad" in error for error in ledger_errors):
             # A staged pad is the transient error this very write resolves:
@@ -250,7 +250,7 @@ def _balance(
         # --pad-from path still wants the assertion; write that alone.
         if allow_errors or not _unused_pad_only(exc):
             raise
-        loaded, _, _ = loader.load_file(file)
+        loaded, _, _ = managed_load.load_file(file)
         match = _balance_match(loaded, date, account, number, currency, tolerance)
         if match is not None:
             source = {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
@@ -366,10 +366,10 @@ def _price(
     Recording the same quote twice is not an error and not a change, so the
     duplicate is answered with its source location and the file is left alone.
     """
-    from beancount import loader
     from beancount.core.amount import Amount as BcAmount
     from beancount.core.data import Price
 
+    from bea_engine import managed_load
     from bea_engine.ledger.models import Amount, PriceDirective
     from bea_engine.query import format_error
 
@@ -382,7 +382,7 @@ def _price(
     snapshot = write.LedgerSnapshot.capture(file)
     target = write.destination(file, into)
     snapshot.require_target(target)
-    entries, errors, _ = loader.load_file(file)
+    entries, errors, _ = managed_load.load_file(file)
     ledger_errors = [format_error(error, ledger_file=file) for error in errors]
     if ledger_errors and strict_read:
         raise protocol.LedgerError(
@@ -454,12 +454,12 @@ def _transaction(
     file: Path, request: dict[str, Any], *, into: Path | None, allow_errors: bool, strict_read: bool
 ) -> dict[str, Any]:
     del strict_read  # Only an ambiguous currency reads the ledger, and it says so itself.
-    from beancount import loader
     from beancount.core.data import Open, Transaction
     from beancount.core.number import MISSING
     from beancount.parser import parser
     from beancount.parser.grammar import ParserError
 
+    from bea_engine import managed_load
     from bea_engine.ledger.models import TransactionHeader
     from bea_engine.ledger.reader import metadata_to_json
 
@@ -512,7 +512,7 @@ def _transaction(
     raw_postings: Any = entry.postings
     if any(p.units is not MISSING and p.units.currency is MISSING for p in raw_postings):
         snapshot = write.LedgerSnapshot.capture(file)
-        existing, _, options = loader.load_file(file)
+        existing, _, options = managed_load.load_file(file)
         currencies = options["operating_currency"]
         allowed = {e.account: e.currencies for e in existing if isinstance(e, Open)}
     normalized = []

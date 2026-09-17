@@ -41,25 +41,10 @@ def destination(root: Path, into: Path | None = None) -> Path:
 
 
 def _includes(content: bytes) -> Iterator[tuple[int, int, str]]:
-    from beancount.parser.lexer import lex_iter_string
+    from bea_engine.ledger.text import iter_includes
 
-    from bea_engine.compat import UTF8_BOM
-
-    if content.startswith(UTF8_BOM):
-        # A BOM glued to a first-line `include` lexes as an error token;
-        # spaces keep the byte offsets below valid while restoring the keyword.
-        content = b"   " + content[len(UTF8_BOM) :]
-    starts = [0]
-    for line in content.splitlines(keepends=True):
-        starts.append(starts[-1] + len(line))
-    pending = False
-    for kind, line, text, value in lex_iter_string(content):  # type: ignore[no-untyped-call]
-        if pending and kind == "STRING":
-            start = content.find(text, starts[line - 1])
-            if start < 0:
-                raise UsageError("Cannot locate an include path in the ledger.")
-            yield start, start + len(text), value
-        pending = kind == "INCLUDE"
+    for span in iter_includes(content):
+        yield span.start, span.end, span.target
 
 
 @dataclass
@@ -89,6 +74,14 @@ class LedgerSnapshot:
         return snapshot
 
     def require_target(self, target: Path) -> None:
+        from bea_engine.managed_price_cache import managed_source_for_path
+
+        source = managed_source_for_path(target)
+        if source is not None:
+            raise UsageError(
+                f"Write destination {target} is a managed price feed resolved from {source} and is read-only; "
+                "declare a price directive in your own ledger file to override it."
+            )
         resolved = target.resolve()
         if any(path.resolve() == resolved for path in self.contents):
             return
@@ -444,21 +437,22 @@ def validate_candidate(
     and newly introduced errors. The one carve-out is a newly staged pad,
     whose `Unused Pad` the documented two-step pad-then-balance flow needs.
     """
-    from beancount import loader
     from beancount.core import interpolate
     from beancount.core.data import Balance, Close, Document, Open, Pad, Transaction
     from beancount.parser.grammar import ParserError, ParserSyntaxError
     from beancount.parser.lexer import LexerError
 
+    from bea_engine import managed_load
+
     if snapshot is None:
-        entries, errors, options = loader.load_file(candidate)
+        entries, errors, options = managed_load.load_file(candidate)
         filenames = {candidate: file}
         # `bea init` validates a candidate before the destination exists; treat
         # a missing original as zero lines so creation still works.
         original_line_counts = {file.resolve(): len(file.read_bytes().splitlines())} if file.exists() else {}
     else:
         with snapshot.staged(candidate, file) as (root, filenames):
-            entries, errors, options = loader.load_file(root)
+            entries, errors, options = managed_load.load_file(root)
         original_line_counts = {
             path.resolve(): len(content.splitlines()) for path, content in snapshot.contents.items()
         }
@@ -468,7 +462,7 @@ def validate_candidate(
     # and message; anything else in the after set is newly introduced.
     before_keys: Counter[tuple[str, int | None, str]] | None = None
     if allow_errors:
-        _, before_errors, _ = loader.load_file(snapshot.root if snapshot else file)
+        _, before_errors, _ = managed_load.load_file(snapshot.root if snapshot else file)
         before_keys = Counter(_error_key(before, {}) for before in before_errors)
     accounts = [entry.account for entry in entries if isinstance(entry, Open)]
     records: list[_ErrorRecord] = []

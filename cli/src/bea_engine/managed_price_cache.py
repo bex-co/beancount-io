@@ -162,21 +162,20 @@ def freshness(
     """Freshness computed at read time, never stored (ADR 015 section 8).
 
     Recent within the stale window of the latest `observed-at`, stale beyond
-    it, unavailable when no revision validated. A feed without any observed-at
-    falls back to its fetch time: the stamp says when the observation reached
-    us, which is the only age we can honestly report.
+    it, unavailable when no revision validated. A feed with no parseable
+    observed-at reads stale: without an observation age there is nothing
+    fresh to claim, and the hosted side reads the same feed the same way.
     """
     if blob is None:
         return "unavailable"
     stamp = blob.feed.latest_observed_at
-    if stamp is not None:
-        moment = stamp[:-1] + "+00:00" if stamp.endswith("Z") else stamp
-        try:
-            age = now - datetime.fromisoformat(moment).timestamp()
-        except ValueError:
-            age = now - blob.fetched_at
-    else:
-        age = now - blob.fetched_at
+    if stamp is None:
+        return "stale"
+    moment = stamp[:-1] + "+00:00" if stamp.endswith("Z") else stamp
+    try:
+        age = now - datetime.fromisoformat(moment).timestamp()
+    except ValueError:
+        return "stale"
     return "recent" if age <= stale_seconds else "stale"
 
 
@@ -269,6 +268,9 @@ def resolve_feed(
             if previous is not None and previous.revision != revision:
                 (directory / f"{previous.revision}.beancount").unlink(missing_ok=True)
                 (directory / f"{previous.revision}.json").unlink(missing_ok=True)
+                # Per-ledger effective texts key off the revision; they die with it.
+                for effective in directory.glob(f"{previous.revision}.effective.*.beancount"):
+                    effective.unlink(missing_ok=True)
             resolved = ResolvedFeed(blob=blob, head=refreshed)
             _enforce_strict(url, resolved, at, stale_seconds, strict)
             return resolved
@@ -302,6 +304,28 @@ def _enforce_strict(url: str, resolved: ResolvedFeed, at: float, stale_seconds: 
             f"managed price source {url} is stale in strict mode: latest observation {stamp} "
             f"is older than {stale_seconds} seconds."
         )
+
+
+def managed_source_for_path(path: Path, root: Path | None = None) -> str | None:
+    """The feed URL a cache path belongs to, or None outside the feed cache.
+
+    The read-only write boundary uses this to name the managed source a
+    write tried to target.
+    """
+    try:
+        path.resolve().relative_to((root or cache_root()).resolve())
+    except (OSError, ValueError):
+        return None
+    for sidecar in sorted(path.parent.glob("*.json")):
+        if sidecar.name == "head.json":
+            continue
+        try:
+            url = json.loads(sidecar.read_text(encoding="utf-8")).get("url")
+        except (OSError, ValueError, AttributeError):
+            continue
+        if isinstance(url, str):
+            return url
+    return None
 
 
 def zero_next_refresh(url: str, root: Path | None = None) -> PriceFeedHead:

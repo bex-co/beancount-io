@@ -22,6 +22,12 @@ from typing import Any
 import pytest
 from typer.testing import CliRunner
 
+from bea_engine.managed_load import (
+    LoadedLedger,
+    apply_ledger_price_precedence,
+    collect_ledger_price_pairs,
+    load_with_sources,
+)
 from bea_engine.managed_price_cache import (
     PriceFeedBlob,
     feed_dir,
@@ -49,7 +55,8 @@ from bea_engine.protocol import LedgerError
 from cli.main import app
 
 runner = CliRunner()
-SOURCE_ROOT = Path(__file__).resolve().parents[1] / "src"
+CLI_ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = CLI_ROOT / "src"
 
 FAKE_SOURCE = textwrap.dedent(
     '''\
@@ -843,13 +850,380 @@ class TestFreshness:
 
         assert freshness(self._blob(_stamp(now - 601), now - 601), now) == "stale"
 
-    def test_missing_observed_at_falls_back_to_fetch_time(self) -> None:
+    def test_missing_observed_at_reads_stale(self) -> None:
         now = time.time()
 
-        assert freshness(self._blob(None, now - 60), now) == "recent"
-        assert freshness(self._blob(None, now - 601), now) == "stale"
+        assert freshness(self._blob(None, now - 60), now) == "stale"
 
-    def test_unparseable_observed_at_falls_back_to_fetch_time(self) -> None:
+    def test_unparseable_observed_at_reads_stale(self) -> None:
         now = time.time()
 
-        assert freshness(self._blob("whenever", now - 60), now) == "recent"
+        assert freshness(self._blob("whenever", now - 60), now) == "stale"
+
+
+# --------------------------------------------------------------------------- #
+# Managed loads: one resolution step for every load path (t003)
+# --------------------------------------------------------------------------- #
+
+
+def _managed_ledger(feed_server: str, path: str = "/prices/BTC-USD") -> str:
+    return f"""option "operating_currency" "USD"
+include "{feed_server}{path}"
+2024-01-01 open Assets:Broker
+2024-01-01 open Expenses:Food
+"""
+
+
+def _load(feed_server: str, tmp_path: Path, text: str | None = None, **kwargs: Any) -> LoadedLedger:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(text if text is not None else _managed_ledger(feed_server))
+    origins = kwargs.pop("origins", (f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}",))
+    return load_with_sources(ledger, origins=origins, root=tmp_path / "cache", **kwargs)
+
+
+def _price_numbers(loaded: LoadedLedger) -> list[str]:
+    from beancount.core.data import Price
+
+    return sorted(str(entry.amount.number) for entry in loaded.entries if isinstance(entry, Price))
+
+
+class TestLedgerPricePrecedence:
+    def test_collect_finds_prices_and_ignores_comments(self) -> None:
+        text = """; 2024-01-01 price BTC 1 USD is a comment
+2024-01-01 price BTC 100 USD
+option "title" "x"
+2024-01-02 price ETH 5 USD ; trailing
+"""
+
+        assert collect_ledger_price_pairs(text) == {
+            ("2024-01-01", "BTC", "USD"),
+            ("2024-01-02", "ETH", "USD"),
+        }
+
+    def test_shadowed_points_become_comments_with_stable_lines(self) -> None:
+        validation = validate_managed_price_text(FEED)
+        assert isinstance(validation, ValidFeed)
+
+        effective = apply_ledger_price_precedence(FEED, validation.feed.prices, {("2026-09-10", "BTC", "USD")})
+
+        assert effective.shadowed_count == 1
+        assert effective.effective_dates == ("2026-09-11",)
+        assert len(effective.text.split("\n")) == len(FEED.split("\n"))
+        assert "; shadowed by a ledger-authored price" in effective.text
+        assert "112000.00" not in effective.text
+        assert "113500.50" in effective.text
+
+    def test_reciprocal_pair_is_shadowed(self) -> None:
+        validation = validate_managed_price_text(FEED)
+        assert isinstance(validation, ValidFeed)
+
+        effective = apply_ledger_price_precedence(FEED, validation.feed.prices, {("2026-09-11", "USD", "BTC")})
+
+        assert effective.shadowed_count == 1
+        assert effective.effective_dates == ("2026-09-10",)
+
+    def test_nothing_shadowed_keeps_identical_text(self) -> None:
+        validation = validate_managed_price_text(FEED)
+        assert isinstance(validation, ValidFeed)
+
+        effective = apply_ledger_price_precedence(FEED, validation.feed.prices, set())
+
+        assert effective.text == FEED
+        assert effective.shadowed_count == 0
+        assert effective.effective_dates == ("2026-09-10", "2026-09-11")
+
+
+class TestManagedLoad:
+    def test_plain_ledger_loads_without_sources(self, feed_server: str, tmp_path: Path) -> None:
+        lines = _managed_ledger(feed_server).splitlines()
+        text = "\n".join([lines[0], *lines[2:]]) + "\n"
+
+        loaded = _load(feed_server, tmp_path, text)
+
+        assert loaded.sources == ()
+        assert loaded.errors == []
+        assert _FeedHandler.hits == []
+
+    def test_feed_prices_merge_into_the_load(self, feed_server: str, tmp_path: Path) -> None:
+        loaded = _load(feed_server, tmp_path)
+
+        assert loaded.errors == []
+        assert _price_numbers(loaded) == ["112000.00", "113500.50"]
+        assert len(loaded.sources) == 1
+        source = loaded.sources[0]
+        assert source.alias == "BTC-USD"
+        assert (source.commodity, source.quote) == ("BTC", "USD")
+        assert source.revision == "r1"
+        assert source.shadowed_count == 0
+        assert source.effective_dates == ("2026-09-10", "2026-09-11")
+
+    def test_ledger_price_wins_and_shadowed_count_is_reported(self, feed_server: str, tmp_path: Path) -> None:
+        text = _managed_ledger(feed_server) + "2026-09-10 price BTC 1 USD\n"
+
+        loaded = _load(feed_server, tmp_path, text)
+
+        assert loaded.errors == []
+        assert _price_numbers(loaded) == ["1", "113500.50"]
+        assert loaded.sources[0].shadowed_count == 1
+        assert loaded.sources[0].effective_dates == ("2026-09-11",)
+
+    def test_entry_filenames_map_back_to_originals(self, feed_server: str, tmp_path: Path) -> None:
+        from beancount.core.data import Price, Transaction
+
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(
+            _managed_ledger(feed_server) + '2024-02-01 * "buy"\n  Assets:Broker  1 BTC\n  Expenses:Food\n'
+        )
+        origins = (f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}",)
+        loaded = load_with_sources(ledger, origins=origins, root=tmp_path / "cache")
+
+        assert loaded.errors == []
+        transactions = [entry for entry in loaded.entries if isinstance(entry, Transaction)]
+        assert [entry.meta["filename"] for entry in transactions] == [str(ledger.resolve())]
+        prices = [entry for entry in loaded.entries if isinstance(entry, Price)]
+        assert all("effective" in str(price.meta["filename"]) for price in prices)
+        assert loaded.options["filename"] == str(ledger.resolve())
+
+    def test_nested_include_resolves(self, feed_server: str, tmp_path: Path) -> None:
+        (tmp_path / "prices.bean").write_text(f'include "{feed_server}/prices/BTC-USD"\n')
+        text = """option "operating_currency" "USD"
+include "prices.bean"
+2024-01-01 open Assets:Broker
+2024-01-01 open Expenses:Food
+"""
+
+        loaded = _load(feed_server, tmp_path, text)
+
+        assert loaded.errors == []
+        assert _price_numbers(loaded) == ["112000.00", "113500.50"]
+        assert loaded.sources[0].included_from[0].file.endswith("prices.bean")
+
+    def test_same_url_twice_resolves_once(self, feed_server: str, tmp_path: Path) -> None:
+        text = _managed_ledger(feed_server) + f'include "{feed_server}/prices/BTC-USD"\n'
+
+        loaded = _load(feed_server, tmp_path, text)
+
+        assert loaded.errors == []
+        assert _price_numbers(loaded) == ["112000.00", "113500.50"]
+        assert len(loaded.sources) == 1
+        assert len(loaded.sources[0].included_from) == 2
+
+    def test_unavailable_source_keeps_books_loadable(self, feed_server: str, tmp_path: Path) -> None:
+        loaded = _load(feed_server, tmp_path, _managed_ledger(feed_server, "/prices/NOPE"))
+
+        assert _price_numbers(loaded) == []
+        assert len(loaded.errors) == 1
+        error = loaded.errors[0]
+        assert "managed price source unavailable" in error.message
+        assert "/prices/NOPE" in error.message
+        assert error.source["filename"].endswith("main.bean")
+        assert error.source["lineno"] == 2
+        assert loaded.sources[0].freshness == "unavailable"
+        assert "HTTP 404" in (loaded.sources[0].error or "")
+
+    def test_disallowed_url_is_left_for_the_engine(self, feed_server: str, tmp_path: Path) -> None:
+        text = _managed_ledger(feed_server) + 'include "https://evil.example.com/prices/BTC-USD"\n'
+
+        loaded = _load(feed_server, tmp_path, text)
+
+        assert _price_numbers(loaded) == ["112000.00", "113500.50"]
+        assert len(loaded.sources) == 1
+        assert any("evil.example.com" in getattr(error, "message", "") for error in loaded.errors)
+
+    def test_strict_unavailable_raises_through_load(self, feed_server: str, tmp_path: Path) -> None:
+        with pytest.raises(LedgerError, match="is unavailable in strict mode"):
+            _load(feed_server, tmp_path, _managed_ledger(feed_server, "/prices/NOPE"), strict=True)
+
+    def test_offline_load_fetches_nothing(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(_managed_ledger(feed_server))
+        origins = (f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}",)
+        root = tmp_path / "cache"
+        load_with_sources(ledger, origins=origins, root=root)
+        _FeedHandler.hits.clear()
+
+        loaded = load_with_sources(ledger, origins=origins, root=root, offline=True)
+
+        assert _price_numbers(loaded) == ["112000.00", "113500.50"]
+        assert _FeedHandler.hits == []
+
+    def test_origins_default_refuses_fixture_host(
+        self, feed_server: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("MANAGED_PRICE_ORIGINS", raising=False)
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(_managed_ledger(feed_server))
+
+        loaded = load_with_sources(ledger, root=tmp_path / "cache")
+
+        assert loaded.sources == ()
+        assert loaded.errors != []
+
+    def test_origins_and_modes_read_from_env(
+        self, feed_server: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        origin = f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}"
+        monkeypatch.setenv("MANAGED_PRICE_ORIGINS", origin)
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(_managed_ledger(feed_server))
+        root = tmp_path / "cache"
+
+        assert load_with_sources(ledger, root=root).sources != ()
+
+        monkeypatch.setenv("MANAGED_PRICE_OFFLINE", "1")
+        _FeedHandler.hits.clear()
+        assert load_with_sources(ledger, root=root).sources != ()
+        assert _FeedHandler.hits == []
+
+    def test_write_to_a_feed_path_is_refused(
+        self, feed_server: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from bea_engine.ledger.write import LedgerSnapshot
+        from bea_engine.protocol import UsageError
+
+        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg"))
+        root = tmp_path / "xdg" / "bea" / "managed-prices"
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(_managed_ledger(feed_server))
+        origins = (f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}",)
+        loaded = load_with_sources(ledger, origins=origins, root=root)
+        assert loaded.sources[0].effective_path is not None
+        snapshot = LedgerSnapshot.capture(tmp_path / "main.bean")
+
+        with pytest.raises(UsageError, match="is read-only") as error:
+            snapshot.require_target(Path(loaded.sources[0].effective_path))
+
+        assert f"{feed_server}/prices/BTC-USD" in str(error.value)
+
+
+class TestManagedLoadCommands:
+    """`check`, `list`, `query`, `report`, `import`, and writes resolve identically."""
+
+    def _env(self, tmp_path: Path, feed_server: str) -> dict[str, str]:
+        origin = f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}"
+        env = {k: v for k, v in os.environ.items() if not k.startswith("BEA_")}
+        env.update(
+            BEA_CONFIG_DIR=str(tmp_path / "config"),
+            XDG_CACHE_HOME=str(tmp_path / "cache"),
+            XDG_DATA_HOME=str(tmp_path / "data"),
+            BEA_NO_UPDATE_NOTIFIER="1",
+            MANAGED_PRICE_ORIGINS=origin,
+            PYTHONPATH=str(SOURCE_ROOT),
+            TERM="dumb",
+            NO_COLOR="1",
+        )
+        return env
+
+    def _bea(self, tmp_path: Path, feed_server: str, *args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, "-m", "cli.main", *args],
+            env=self._env(tmp_path, feed_server),
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+
+    def _ledger(self, tmp_path: Path, feed_server: str, extra: str = "") -> Path:
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(_managed_ledger(feed_server) + extra)
+        return ledger
+
+    def test_check_accepts_a_managed_include(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+
+        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "check")
+
+        assert result.returncode == 0, result.stderr
+
+    def test_list_price_shows_feed_prices(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+
+        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "list", "price")
+
+        assert result.returncode == 0, result.stderr
+        assert "112000.00 USD" in result.stdout
+        assert "113500.50 USD" in result.stdout
+
+    def test_query_loads_through_the_wrapper(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(
+            tmp_path,
+            feed_server,
+            '2024-02-01 * "buy"\n  Assets:Broker  1 BTC\n  Expenses:Food\n',
+        )
+
+        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "query", "select date, narration")
+
+        assert result.returncode == 0, result.stderr
+        assert "2024-02-01" in result.stdout
+
+    def test_report_values_holdings_from_the_feed(self, feed_server: str, tmp_path: Path) -> None:
+        _FeedHandler.routes["/prices/BTC-USD"] = {
+            "body": (b"; alias: BTC-USD\n; commodity: BTC\n; quote: USD\n2024-01-15 price BTC 10 USD\n")
+        }
+        ledger = self._ledger(
+            tmp_path,
+            feed_server,
+            '2024-02-01 * "buy"\n  Assets:Broker  3 BTC\n  Expenses:Food\n',
+        )
+
+        result = self._bea(
+            tmp_path,
+            feed_server,
+            "--file",
+            str(ledger),
+            "report",
+            "balance-sheet",
+            "--conversion",
+            "USD",
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert "30 USD" in result.stdout
+        assert "Partial valuation" not in result.stdout
+
+    def test_import_applies_beside_a_managed_include(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server, "2024-01-01 open Assets:Checking\n")
+        source = tmp_path / "bank.csv"
+        source.write_text(
+            "Date,Payee,Narration,Amount,Currency,Category,BankID\n"
+            "2024-02-01,Cafe,beans,12.00,USD,Expenses:Food,bank-001\n"
+        )
+
+        result = self._bea(
+            tmp_path,
+            feed_server,
+            "--file",
+            str(ledger),
+            "import",
+            str(source),
+            "--config",
+            str(CLI_ROOT / "docs/examples/csv_importers.py"),
+            "--apply",
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert "12.00 USD" in ledger.read_text()
+
+    def test_add_validates_through_the_wrapper(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = self._ledger(tmp_path, feed_server)
+
+        result = self._bea(
+            tmp_path,
+            feed_server,
+            "--file",
+            str(ledger),
+            "add",
+            "transaction",
+            "--date",
+            "2024-03-01",
+            "--narration",
+            "lunch",
+            "--posting",
+            "Expenses:Food 5 USD",
+            "--posting",
+            "Assets:Broker",
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert "5 USD" in ledger.read_text()

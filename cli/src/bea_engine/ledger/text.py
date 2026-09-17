@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Iterator
+from dataclasses import dataclass
 from pathlib import Path
 
 from bea_engine import protocol
@@ -88,3 +90,41 @@ def parse_account(name: str) -> str:
             "Assets, Liabilities, Equity, Income and Expenses; configured root names are also supported."
         )
     return name
+
+
+@dataclass(frozen=True)
+class IncludeSpan:
+    """One `include` target with its byte span and 1-based line in the file."""
+
+    start: int
+    end: int
+    line: int
+    target: str
+
+
+def iter_includes(content: bytes) -> Iterator[IncludeSpan]:
+    """Every include target the lexer sees, with spans for rewriting.
+
+    Lexer-based rather than line-based, so an `include` inside a comment or a
+    quoted string is not mistaken for a directive. Byte spans stay valid for
+    splicing rewritten targets back into `content`.
+    """
+    from beancount.parser.lexer import lex_iter_string
+
+    from bea_engine.compat import UTF8_BOM
+
+    if content.startswith(UTF8_BOM):
+        # A BOM glued to a first-line `include` lexes as an error token;
+        # spaces keep the byte offsets below valid while restoring the keyword.
+        content = b"   " + content[len(UTF8_BOM) :]
+    starts = [0]
+    for line in content.splitlines(keepends=True):
+        starts.append(starts[-1] + len(line))
+    pending = False
+    for kind, line, text, value in lex_iter_string(content):  # type: ignore[no-untyped-call]
+        if pending and kind == "STRING":
+            start = content.find(text, starts[line - 1])
+            if start < 0:
+                raise protocol.UsageError("Cannot locate an include path in the ledger.")
+            yield IncludeSpan(start, start + len(text), line, value)
+        pending = kind == "INCLUDE"

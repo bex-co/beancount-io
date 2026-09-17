@@ -10,7 +10,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import beancount.loader
 from beancount.core.data import (
     Balance,
     Close,
@@ -58,7 +57,9 @@ def load_file(file_path: Path) -> tuple[list[Any], list[Any]]:
     The caller decides what an unloadable ledger means; a reader that silently
     discarded errors would let a partial journal look like the whole ledger.
     """
-    entries, errors, _options = beancount.loader.load_file(str(file_path))
+    from bea_engine import managed_load
+
+    entries, errors, _options = managed_load.load_file(str(file_path))
     return list(entries), list(errors)
 
 

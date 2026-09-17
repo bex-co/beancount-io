@@ -32,9 +32,9 @@ def load_uncached(
     if is_encrypted:  # pragma: no cover
         return loader.load_file(beancount_file_path)  # type: ignore[return-value]
 
-    return loader._load(  # type: ignore[return-value]
-        [(beancount_file_path, True)],
-        None,
-        None,
-        None,
-    )
+    # Beancount.io addition: managed price includes resolve here, so reports
+    # and checks see the same ledger as every other load path (w1/m29). Without
+    # one this delegates straight to Beancount with zero behavior change.
+    from bea_engine import managed_load
+
+    return managed_load.load_file(beancount_file_path)  # type: ignore[return-value]

@@ -51,9 +51,9 @@ def _quote_reserved_tables(query_string: str) -> str:
 
 def load(file: Path) -> dict[str, Any]:
     """Load exactly this ledger file, for attaching to a pathless connection."""
-    from beancount import loader
+    from bea_engine import managed_load
 
-    entries, errors, options = loader.load_file(str(file))
+    entries, errors, options = managed_load.load_file(str(file))
     return {"entries": entries, "errors": errors, "options": options}
 
 
