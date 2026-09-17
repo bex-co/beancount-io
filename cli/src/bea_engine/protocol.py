@@ -176,6 +176,11 @@ def _jsonable(value: Any) -> Any:
         return None
     number = getattr(value, "number", None)
     currency = getattr(value, "currency", None)
+    if number is None and currency is not None:
+        # Beancount CostSpec uses number_per / number_total, not number.
+        number = getattr(value, "number_per", None)
+        if number is None:
+            number = getattr(value, "number_total", None)
     if number is not None and currency is not None:
         amount: dict[str, Any] = {"number": _jsonable(number), "currency": currency}
         if hasattr(value, "date") and hasattr(value, "label"):
