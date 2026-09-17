@@ -240,19 +240,9 @@ def fetch_managed_price_feed(
         if isinstance(reason, TimeoutError) or "timed out" in str(reason):
             return FetchFailed(reason="timeout", message=f"timed out after {timeout_seconds} seconds")
         return FetchFailed(reason="network", message=str(reason))
+    # Only 200 arrives here: any other status raises HTTPError above, and the
+    # redirect handler turns 3xx into that error instead of following it.
     with response:
-        if response.status == 304:
-            return NotModified()
-        if 300 <= response.status < 400:
-            return FetchFailed(reason="redirect", message=f"redirects are not followed (HTTP {response.status})")
-        if response.status != 200:
-            retry_after = response.headers.get("Retry-After")
-            return FetchFailed(
-                reason="http",
-                message=f"HTTP {response.status} (retry after {retry_after})"
-                if retry_after
-                else f"HTTP {response.status}",
-            )
         body = _read_capped(response, max_body_bytes)
     if body is None:
         return FetchFailed(reason="too-large", message=f"body exceeds {max_body_bytes} bytes")

@@ -1,6 +1,6 @@
 # w1 · m29 — `bea` resolves managed price includes locally
 
-**Worker:** worker1 **Goal:** the one-line `include "https://beancount.io/prices/BTC-USD"` that PRFAQ002 promises works in the CLI too — in every load path, offline-safe, with inspectable freshness and a portable escape hatch **Status:** todo (t001–t007 done)
+**Worker:** worker1 **Goal:** the one-line `include "https://beancount.io/prices/BTC-USD"` that PRFAQ002 promises works in the CLI too — in every load path, offline-safe, with inspectable freshness and a portable escape hatch **Status:** todo (t001–t008 done)
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Export the effective include so upstream tools value the same books — **DONE** | 45m | t003 |
 | t006 | Test against a fixture feed server, then verify once against the hosted feed — **DONE** | 45m | t004, t005 |
 | t007 | Adoption surface — **DONE** | 25m | t004, t005, t006 |
-| t008 | Simplify | 30m | t007 |
+| t008 | Simplify — **DONE** | 30m | t007 |
 | t009 | Test coverage | 45m | t007, t008 |
 | t010 | Closeout | 15m | t009 |
 

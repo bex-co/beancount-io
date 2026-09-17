@@ -41,14 +41,19 @@ def price(ctx: typer.Context) -> None:
     raise typer.Exit(code)
 
 
+def _answer(argv: list[str]) -> dict[str, Any]:
+    """The helper answer, with the load's own errors bannered, never raised."""
+    data = launch.helper_json(argv)
+    output.render_ledger_errors(data.get("errors") or [], allow=True)
+    return data
+
+
 def _status(extra: list[str]) -> None:
     if extra:
         raise UsageError(f"bea price status takes no arguments; got: {' '.join(extra)}.")
     current = context.current()
     file = current.entry_file()
-    data = launch.helper_json(["price-status", "--file", str(file)])
-    output.render_ledger_errors(data.get("errors") or [], allow=True)
-    sources: list[dict[str, Any]] = data["sources"]
+    sources: list[dict[str, Any]] = _answer(["price-status", "--file", str(file)])["sources"]
     if current.json_output:
         output.emit({"sources": sources}, target=output.file_target(file))
         return
@@ -77,8 +82,7 @@ def _refresh(extra: list[str]) -> None:
         raise UsageError(f"bea price refresh takes no arguments; got: {' '.join(extra)}.")
     current = context.current()
     file = current.entry_file()
-    data = launch.helper_json(["price-refresh", "--file", str(file)])
-    output.render_ledger_errors(data.get("errors") or [], allow=True)
+    data = _answer(["price-refresh", "--file", str(file)])
     sources: list[dict[str, Any]] = data["sources"]
     if current.json_output:
         output.emit({"sources": sources, "changed": data["changed"]}, target=output.file_target(file))
@@ -123,8 +127,7 @@ def _export(args: list[str]) -> None:
         argv += ["--output", output_dir]
     if allow_errors:
         argv.append("--allow-errors")
-    data = launch.helper_json(argv)
-    output.render_ledger_errors(data.get("errors") or [], allow=True)
+    data = _answer(argv)
     if current.json_output:
         output.emit(
             {"output": data["output"], "files": data["files"], "sources": data["sources"]},

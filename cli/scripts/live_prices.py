@@ -20,11 +20,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from bea_engine.managed_price_cache import resolve_feed  # noqa: E402
-from bea_engine.managed_prices import (  # noqa: E402
-    check_feed_identity,
-    fetch_managed_price_feed,
-    validate_managed_price_text,
-)
 
 URL = "https://beancount.io/prices/BTC-USD"
 RECORD = ROOT / "tests" / "managed_prices_live_status.json"
@@ -41,45 +36,25 @@ def main() -> int:
         "url": URL,
         "date": today,
     }
-    result = fetch_managed_price_feed(URL)
-    if result.kind == "fetched":
-        validation = check_feed_identity(validate_managed_price_text(result.text), "BTC-USD", None)
-        if not validation.ok:
-            record.update(
-                status="pending",
-                evidence=f"HTTP 200 but invalid feed: {validation.reason}",
-                revision=None,
-                observed_at=None,
-                fetched_at=None,
-            )
-        else:
-            with tempfile.TemporaryDirectory(prefix="bea-live-prices-") as cache:
-                resolved = resolve_feed(URL, "BTC-USD", root=Path(cache))
-            blob = resolved.blob
-            assert blob is not None
-            fetched = datetime.fromtimestamp(blob.fetched_at, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-            record.update(
-                status="mounted",
-                evidence=f"HTTP 200 with {len(blob.feed.prices)} validated prices",
-                revision=blob.revision,
-                observed_at=blob.feed.latest_observed_at,
-                fetched_at=fetched,
-            )
-    elif result.kind == "not-modified":
+    with tempfile.TemporaryDirectory(prefix="bea-live-prices-") as cache:
+        resolved = resolve_feed(URL, "BTC-USD", root=Path(cache))
+    blob = resolved.blob
+    if blob is None:
         record.update(
             status="pending",
-            evidence="unexpected 304 without a conditional request",
+            evidence=resolved.head.last_error or "no cached revision",
             revision=None,
             observed_at=None,
             fetched_at=None,
         )
     else:
+        fetched = datetime.fromtimestamp(blob.fetched_at, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         record.update(
-            status="pending",
-            evidence=f"{result.reason}: {result.message}",
-            revision=None,
-            observed_at=None,
-            fetched_at=None,
+            status="mounted",
+            evidence=f"HTTP 200 with {len(blob.feed.prices)} validated prices",
+            revision=blob.revision,
+            observed_at=blob.feed.latest_observed_at,
+            fetched_at=fetched,
         )
     RECORD.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(record, indent=2))

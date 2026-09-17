@@ -267,7 +267,7 @@ def load_with_sources(
                 path,
                 snapshot.patterns,
                 staged,
-                managed,
+                pending,
                 resolved,
                 effective,
                 primary,
@@ -326,15 +326,13 @@ class _PendingSource:
 def _collect_managed(snapshot: Any, origins: tuple[str, ...]) -> list[_PendingSource]:
     """Group the closure's allowed managed includes by canonical feed URL.
 
-    Disallowed URLs are left for Beancount to report, exactly as today; URLs
-    past the per-load cap are left the same way, so no feed is ever partially
-    ingested. Nested includes, globs, and cycles are already handled by the
-    snapshot's closure walk.
+    Disallowed URLs are left for Beancount to report, exactly as today.
+    Nested includes, globs, and cycles are already handled by the snapshot's
+    closure walk. The per-load cap applies later, when the budget claims.
     """
     from bea_engine.ledger.text import iter_includes
 
     by_url: dict[str, _PendingSource] = {}
-    count = 0
     for path, content in snapshot.contents.items():
         for span in iter_includes(content):
             if not is_url_include_target(span.target):
@@ -346,10 +344,7 @@ def _collect_managed(snapshot: Any, origins: tuple[str, ...]) -> list[_PendingSo
             existing = by_url.get(decision.url)
             if existing is not None:
                 existing.includes.append(include)
-            elif count >= MAX_URLS_PER_LOAD:
-                continue
             else:
-                count += 1
                 by_url[decision.url] = _PendingSource(url=decision.url, alias=decision.alias, includes=[include])
     return list(by_url.values())
 
@@ -359,7 +354,7 @@ def _rewrite_includes(
     path: Path,
     patterns: dict[str, tuple[Path, ...]],
     staged: dict[Path, Path],
-    managed: list[_PendingSource],
+    pending: list[_PendingSource],
     resolved: dict[str, Any],
     effective: dict[str, tuple[PriceFeedBlob, EffectiveFeed, Path]],
     primary: set[tuple[str, int]],
@@ -380,7 +375,7 @@ def _rewrite_includes(
     from bea_engine.ledger.text import iter_includes
 
     escape_string: Callable[[str], str] = misc_utils.escape_string
-    by_target = {include.target: source for source in managed for include in source.includes}
+    by_target = {include.target: source for source in pending for include in source.includes}
     content = original
     for span in sorted(iter_includes(content), key=lambda item: item.start, reverse=True):
         source = by_target.get(span.target)
