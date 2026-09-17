@@ -51,6 +51,9 @@ def test_format_directory_skips_outbound_symlinks(tmp_path: Path) -> None:
     assert "external.bean" not in check.stdout + check.stderr
 
     applied = _bea(tmp_path, "format", "-i", str(inner))
-    assert applied.returncode == 0, applied.stderr or applied.stdout
+    # Nothing was eligible to rewrite, so -i is a no-op failure (w1/m23/t006) —
+    # the safety property is that the outbound target is still untouched.
+    assert applied.returncode == 2, applied.stderr or applied.stdout
+    assert "No .bean or .beancount files found to rewrite." in applied.stderr
     assert external.read_bytes() == before
     assert (inner / "link.bean").is_symlink()

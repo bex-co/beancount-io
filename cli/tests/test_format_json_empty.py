@@ -36,9 +36,18 @@ def test_json_in_place_empty_dir_emits_envelope(tmp_path: Path) -> None:
     empty = tmp_path / "emptydir"
     empty.mkdir()
     result = _bea(tmp_path, "--json", "format", "-i", str(empty))
-    assert result.returncode == 0, result.stderr
-    payload = json.loads(result.stdout)
-    data = payload["data"]
-    assert data.get("scanned") == 0
-    assert data.get("formatted") == []
-    assert data.get("in_place") is True
+    assert result.returncode == 2, result.stderr
+    assert result.stdout == ""
+    error = json.loads(result.stderr)["error"]
+    assert error["category"] == "usage"
+    assert error["result"]["scanned"] == 0
+    assert error["result"]["formatted"] == []
+    assert error["result"]["in_place"] is True
+
+
+def test_human_in_place_empty_dir_exits_nonzero(tmp_path: Path) -> None:
+    empty = tmp_path / "emptydir"
+    empty.mkdir()
+    result = _bea(tmp_path, "format", "-i", str(empty))
+    assert result.returncode == 2, result.stderr
+    assert "No .bean or .beancount files found to rewrite." in result.stderr

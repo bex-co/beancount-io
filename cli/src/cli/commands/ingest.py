@@ -8,6 +8,7 @@ interpreter, requires `bea engine enable beangulp`, and forwards the subcommand.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Annotated
 
@@ -57,8 +58,32 @@ def _ingest_script(supplied: Path | None) -> Path:
 def _forward(operation: str, ctx: typer.Context, config: Path | None) -> None:
     refuse_json("ingest", hint="Run without --json for native output; use bea import for a JSON preview.")
     script = _ingest_script(config)
+    _refuse_config_only_script(script)
     code = launch.run_optional_script("beangulp", script, [operation, *ctx.args])
     raise typer.Exit(code)
+
+
+def _refuse_config_only_script(script: Path) -> None:
+    """Refuse an import CONFIG module, which would otherwise exit 0 silently.
+
+    A `CONFIG = [...]` module loads, ignores argv, and exits 0 with empty
+    output — indistinguishable from success. That shape belongs to
+    `bea import --config`; `bea ingest` needs a script whose `__main__`
+    calls the Beangulp entrypoint. Anything else passes through untouched:
+    only the known-silent shape is refused.
+    """
+    try:
+        text = script.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return
+    if re.search(r"Ingest\s*\(", text):
+        return
+    if re.search(r"^CONFIG\s*=", text, re.MULTILINE):
+        raise UsageError(
+            f"{script} looks like a `bea import --config` module (CONFIG = [...]). "
+            "`bea ingest` needs a script that calls beangulp.Ingest(...)(); "
+            "run `bea import --config` for this file instead."
+        )
 
 
 @ingest_app.command("identify", epilog=native_help("ingest identify"), context_settings=_EXTRA)

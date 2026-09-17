@@ -64,7 +64,8 @@ def test_relative_document_path_round_trips_list(tmp_path: Path) -> None:
     assert rows[0]["filename"] == "receipt.pdf"
 
 
-def test_absolute_document_path_still_lists(tmp_path: Path) -> None:
+def test_absolute_document_path_refused_for_portability(tmp_path: Path) -> None:
+    # w3/351: add document requires relative paths so ledger copies stay portable.
     ledger = tmp_path / "main.bean"
     ledger.write_text(LEDGER)
     receipt = tmp_path / "abs-receipt.pdf"
@@ -83,8 +84,7 @@ def test_absolute_document_path_still_lists(tmp_path: Path) -> None:
         "--path",
         str(receipt),
     )
-    assert added.returncode == 0, added.stderr
-    listed = _bea(tmp_path, "--json", "--file", str(ledger), "list", "document")
-    assert listed.returncode == 0, listed.stderr
-    names = [row["filename"] for row in json.loads(listed.stdout)["data"]]
-    assert str(receipt) in names or "abs-receipt.pdf" in names
+    assert added.returncode == 2, added.stderr
+    error = json.loads(added.stderr)["error"]
+    assert error["category"] == "usage"
+    assert "relative" in error["message"]

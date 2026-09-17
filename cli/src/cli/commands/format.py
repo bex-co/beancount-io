@@ -102,12 +102,16 @@ def format_beans(
     if not files:
         if ctx.json_output:
             if in_place:
-                output.emit(_result([], [], {}, []) | {"in_place": True}, target=target)
-                return
+                raise UsageError(
+                    "No .bean or .beancount files found to rewrite.",
+                    result=_result([], [], {}, []) | {"in_place": True},
+                )
             _require_json_destination(in_place, output_file)
             if output_file is not None:
                 output.emit(_wrote(0, output_file), target=target)
                 return
+        if in_place:
+            raise UsageError("No .bean or .beancount files found to rewrite.")
         output.success("No .bean or .beancount files found.")
         return
 

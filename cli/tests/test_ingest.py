@@ -307,6 +307,21 @@ class TestIngestLifecycle:
         assert "test.CsvImporter" in result.output
 
 
+def test_config_module_refused_before_silent_noop(tmp_path: Path) -> None:
+    """A CONFIG = [...] module would load, ignore argv, and exit 0 with no output."""
+    script = tmp_path / "importers.py"
+    script.write_text("CONFIG = []\n")
+    downloads = tmp_path / "downloads"
+    downloads.mkdir()
+    result = runner.invoke(
+        app,
+        ["ingest", "identify", "--config", str(script), str(downloads)],
+    )
+    assert result.exit_code == 2, result.output
+    assert "bea import --config" in result.output
+    assert "beangulp.Ingest" in result.output
+
+
 @pytest.mark.usefixtures("use_optional_engine")
 @pytest.mark.parametrize("operation", ["identify", "extract", "archive"])
 def test_json_ingest_refuses_before_native_output_or_file_effects(tmp_path: Path, operation: str) -> None:
