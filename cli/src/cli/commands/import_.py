@@ -63,26 +63,26 @@ def _config_path(file: Path, supplied: Path | None) -> tuple[Path, str]:
 def _inferred_mapping(source: Path, *, explicit: bool, notes: list[str]) -> str | None:
     """A `--csv` spec read off the export's header row.
 
-    `--csv auto` asks for this outright and fails loudly when the header is
-    unreadable; the automatic attempt returns None instead, leaving the caller
-    to raise its own "choose an importer" message.
+    `--csv auto` fails for any unreadable header. The automatic attempt falls
+    back to Python importers only when no columns were recognized at all.
     """
     from cli.csv_mapper import infer_mapping, read_header
 
     headers = read_header(source)
     inferred = infer_mapping(headers)
-    if inferred is None:
-        if not explicit:
+    if inferred is not None and inferred.ambiguities:
+        notes.append(
+            f"Several columns could be {'; '.join(inferred.ambiguities)}; none was chosen. "
+            "Name the one you want with --csv."
+        )
+    if inferred is None or inferred.spec is None:
+        if inferred is None and not explicit:
             return None
         columns = ", ".join(headers) if headers else "(none)"
         raise UsageError(
             f"Cannot read a column mapping from the header row of {source.name}. Its columns are: {columns}. "
-            "Name them with --csv date=Date,amount=Amount,narration=Description."
-        )
-    if inferred.ambiguities:
-        notes.append(
-            f"Several columns could be {'; '.join(inferred.ambiguities)}; none was chosen. "
-            "Name the one you want with --csv."
+            "Name them with --csv date=Date,amount=Amount,narration=Description.",
+            details=notes,
         )
     return inferred.spec
 

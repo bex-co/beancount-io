@@ -814,6 +814,69 @@ def test_csv_auto_reports_the_columns_it_could_not_read(book: Path, isolated_con
     assert "col1, col2" in result.stderr
 
 
+@pytest.mark.parametrize("auto", [False, True])
+@pytest.mark.parametrize("json_output", [False, True])
+@pytest.mark.parametrize(
+    ("header", "ambiguity"),
+    [
+        ("Date,Description,Memo,Amount", "narration (Description, Memo)"),
+        ("Date,Posting Date,Description,Amount", "date (Date, Posting Date)"),
+        ("Date,Description,Amount,Transaction Amount", "amount (Amount, Transaction Amount)"),
+    ],
+)
+def test_fatal_csv_ambiguity_names_competing_columns(
+    book: Path, auto: bool, json_output: bool, header: str, ambiguity: str
+) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text(header + "\n2026-08-02,A,B,-5.25\n")
+    before = book.read_bytes()
+    result = runner.invoke(
+        app,
+        [
+            *(["--json"] if json_output else []),
+            "--file",
+            str(book),
+            "import",
+            str(source),
+            "--account",
+            "Assets:Checking",
+            *(["--csv", "auto"] if auto else []),
+        ],
+    )
+    assert result.exit_code == 2
+    assert result.stdout == ""
+    if json_output:
+        error = json.loads(result.stderr)["error"]
+        assert error["category"] == "usage"
+        assert any(ambiguity in detail for detail in error["details"])
+    else:
+        assert ambiguity in result.stderr
+    assert "Choose a Python importer" not in result.stderr
+    assert "--csv" in result.stderr
+    assert book.read_bytes() == before
+
+
+def test_nonfatal_csv_ambiguity_still_reports_the_dropped_role(book: Path) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text("Date,Payee,Merchant,Description,Amount\n2026-08-02,A,B,Coffee,-5.25\n")
+    result = runner.invoke(app, ["-f", str(book), "import", str(source), "--account", "Assets:Checking"])
+    assert result.exit_code == 0, result.output
+    assert "payee (Merchant, Payee)" in result.stderr
+    assert "1 ready" in result.stdout
+
+
+def test_changed_recognizable_csv_header_requests_mapping_instead_of_python(book: Path) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text(CSV_HEADER + CSV_ROW)
+    assert run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking").exit_code == 0
+    source.write_text("Date,Memo,Debit\n2026-08-02,Coffee,5.25\n")
+    result = run_csv(book, source, "--account", "Assets:Checking")
+    assert result.exit_code == 2
+    error = json.loads(result.stderr)["error"]
+    assert "Date, Memo, Debit" in error["message"]
+    assert "--config" not in error["message"]
+
+
 def test_an_option_typed_on_this_run_beats_the_remembered_one(book: Path, isolated_config: Path) -> None:
     source = book.parent / "bank.csv"
     source.write_text(CSV_HEADER + CSV_ROW)

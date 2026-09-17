@@ -85,7 +85,7 @@ With no `--csv`, no remembered mapping, and no Python importer configured, bea
 reads the mapping off the header row. `--csv auto` asks for the same reading
 outright and fails naming the file's actual columns when it cannot. A role is
 only filled when exactly one column claims it, so an export carrying both
-`Description` and `Original Description` reports the ambiguity and leaves that
+`Description` and `Memo` reports the ambiguity and leaves that
 role unmapped rather than guessing. `Description`-style headers map to
 `narration`; `Payee` and `Merchant` map to `payee`.
 

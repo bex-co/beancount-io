@@ -116,7 +116,7 @@ def load_rules(path: Path) -> list[CsvRule]:
 
 # Header names, lowercased, that identify a field beyond doubt. A role is only
 # inferred when exactly one column claims it, so a bank that ships both
-# "Description" and "Original Description" is reported as ambiguous rather than
+# "Description" and "Memo" is reported as ambiguous rather than
 # guessed at. "Description"-style columns map to narration, never to payee.
 _HEADER_SYNONYMS: dict[str, tuple[str, ...]] = {
     "date": ("date", "transaction date", "posting date", "post date", "posted date", "date posted", "booking date"),
@@ -152,16 +152,15 @@ _DATE_FORMATS = (
 class InferredMapping:
     """A `--csv` spec read off the header row, with what stayed uncertain."""
 
-    spec: str
+    spec: str | None
     ambiguities: list[str]
 
 
 def infer_mapping(headers: list[str] | None) -> InferredMapping | None:
-    """A `--csv` spec for a header row bea can read confidently, else None.
+    """Recognized columns and ambiguities, or None for an unrecognized header.
 
-    Confidence means one column per role: a role two columns claim is dropped
-    rather than guessed, and a file with no usable date or amount infers
-    nothing at all so the caller falls back to asking.
+    A role two columns claim is dropped rather than guessed. An incomplete
+    mapping keeps its ambiguities but has no usable spec.
     """
     if not headers:
         return None
@@ -173,13 +172,15 @@ def infer_mapping(headers: list[str] | None) -> InferredMapping | None:
             columns[role] = matches[0]
         elif matches:
             ambiguities.append(f"{role} ({', '.join(sorted(matches))})")
+    if not columns and not ambiguities:
+        return None
     if "amount" in columns:
         columns.pop("debit", None)
         columns.pop("credit", None)
     elif "debit" not in columns or "credit" not in columns:
-        return None
+        return InferredMapping(spec=None, ambiguities=ambiguities)
     if "date" not in columns or ("payee" not in columns and "narration" not in columns):
-        return None
+        return InferredMapping(spec=None, ambiguities=ambiguities)
     order = [role for role in _HEADER_SYNONYMS if role in columns]
     return InferredMapping(
         spec=",".join(f"{role}={columns[role]}" for role in order),
