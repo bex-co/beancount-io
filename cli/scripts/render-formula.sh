@@ -45,8 +45,8 @@ class Bea < Formula
   license all_of: ["MIT", "GPL-2.0-only"]
 
   depends_on "python@3.12"
-  # Not \`=> :build\`: post_install needs uv too, and a build-only dependency is
-  # what \`brew autoremove\` would take away first.
+  # Not \`=> :build\`: the post-install steps need uv too, and a build-only
+  # dependency is what \`brew autoremove\` would take away first.
   depends_on "uv"
 
   def install
@@ -79,17 +79,33 @@ class Bea < Formula
   # toolchain, no source builds on a user's machine), so they arrive here,
   # after that pass has already run. --require-hashes pins every one of them to
   # the exact artifact the release tested.
-  def post_install
-    uv = Formula["uv"].opt_bin/"uv"
-    system uv, "pip", "install",
-           "--python", libexec/"venv/bin/python",
-           "--require-hashes", "--only-binary", ":all:", "--requirement", libexec/"project/requirements.lock"
+  #
+  # Declarative steps, not \`def post_install\`: Homebrew deprecated that method
+  # in favour of \`post_install_steps\`, and under HOMEBREW_DEVELOPER — which the
+  # release rehearsal sets — calling it raises instead of warning. The steps are
+  # serialised when the formula loads, so they cannot call \`Formula[...]\`;
+  # dependencies are addressed through their stable \`opt\` paths instead, and
+  # \`{{libexec}}\`/\`{{HOMEBREW_PREFIX}}\` expand when the steps run.
+  post_install_steps do
+    run "{{HOMEBREW_PREFIX}}/opt/uv/bin/uv", network_access: true, args: [
+      "pip", "install",
+      "--python", "{{libexec}}/venv/bin/python",
+      "--require-hashes", "--only-binary", ":all:",
+      "--requirement", "{{libexec}}/project/requirements.lock"
+    ]
     # Separate engine environment (ADR014): relocatable so console-script
     # shebangs survive any keg move; only hash-pinned upstream packages go here.
-    system uv, "venv", "--relocatable", "--python", Formula["python@3.12"].opt_bin/"python3.12", libexec/"engine"
-    system uv, "pip", "install",
-           "--python", libexec/"engine/bin/python",
-           "--require-hashes", "--only-binary", ":all:", "--requirement", libexec/"project/engine-requirements.lock"
+    run "{{HOMEBREW_PREFIX}}/opt/uv/bin/uv", args: [
+      "venv", "--relocatable",
+      "--python", "{{HOMEBREW_PREFIX}}/opt/python@3.12/bin/python3.12",
+      "{{libexec}}/engine"
+    ]
+    run "{{HOMEBREW_PREFIX}}/opt/uv/bin/uv", network_access: true, args: [
+      "pip", "install",
+      "--python", "{{libexec}}/engine/bin/python",
+      "--require-hashes", "--only-binary", ":all:",
+      "--requirement", "{{libexec}}/project/engine-requirements.lock"
+    ]
   end
 
   test do

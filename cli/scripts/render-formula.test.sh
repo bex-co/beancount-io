@@ -55,26 +55,49 @@ expect_contains "the URL is the exact published artifact" "$URL"
 expect_contains "the install step uses the hashed lock" 'requirements.lock'
 expect_contains "the install step uses the engine hashed lock" 'engine-requirements.lock'
 expect_contains "the install step requires hashes" '--require-hashes'
-expect_contains "the dependency install has its own post_install hook" 'def post_install'
-expect_contains "Homebrew provisions a separate engine venv" 'libexec/"engine"'
+expect_contains "the dependency install has its own post-install hook" 'post_install_steps do'
+expect_contains "Homebrew provisions a separate engine venv" '"{{libexec}}/engine"'
 expect_contains "bea wrapper sets BEA_ENGINE_DIR" 'BEA_ENGINE_DIR'
 expect_contains "sdist engine tree is installed for the helper build" 'project.install "pyproject.toml", "README.md", "LICENSE", "NOTICE.fava", "requirements.lock", "engine-requirements.lock", "engine-optional-beangulp.lock", "engine-optional-beanprice.lock", "src", "LICENSE.engine"'
 expect_contains "helper resources ship with bea" '"LICENSE.engine"'
 
 # Homebrew rewrites the dylib ID of every Mach-O file in the keg *before* it
-# runs post_install, and it cannot lengthen the install name inside a prebuilt
-# wheel — pydantic-core's extension fails that rewrite, and the failure is fatal
-# to `brew install` (exit 1, after the beer emoji). Moving the wheels behind
-# post_install is the whole reason `brew install bex-co/tap/bea` succeeds, and
-# nothing else in the formula makes that ordering obvious.
-# Comments are skipped: the reason for this ordering is itself written above
-# post_install, and it mentions the flag.
-post_install_at="$(awk '/def post_install/ { print NR; exit }' "$formula")"
+# runs the post-install steps, and it cannot lengthen the install name inside a
+# prebuilt wheel — pydantic-core's extension fails that rewrite, and the failure
+# is fatal to `brew install` (exit 1, after the beer emoji). Moving the wheels
+# behind post-install is the whole reason `brew install bex-co/tap/bea`
+# succeeds, and nothing else in the formula makes that ordering obvious.
+# Comments are skipped: the reason for this ordering is itself written above the
+# steps, and it mentions the flag.
+post_install_at="$(awk '/post_install_steps do/ { print NR; exit }' "$formula")"
 hashed_install_at="$(awk '!/^[[:space:]]*#/ && /--require-hashes/ { print NR; exit }' "$formula")"
 if [ -n "$post_install_at" ] && [ -n "$hashed_install_at" ] && [ "$hashed_install_at" -gt "$post_install_at" ]; then
   pass "the wheels are installed after Homebrew's relocation pass, not before"
 else
-  fail "the wheels must be installed inside post_install (line $hashed_install_at vs post_install at $post_install_at)"
+  fail "the wheels must be installed inside post_install_steps (line $hashed_install_at vs steps at $post_install_at)"
+fi
+
+# `def post_install` still parses, and under a normal install it only warns — so
+# a regression would sail past `brew install` and only turn fatal in the release
+# rehearsal, which sets HOMEBREW_DEVELOPER and makes the deprecation raise.
+if grep -qE '^[[:space:]]*def post_install\b' "$formula"; then
+  fail "the formula uses def post_install, which Homebrew deprecated for post_install_steps"
+else
+  pass "the formula avoids the deprecated def post_install hook"
+fi
+
+# The steps are serialised when the formula loads, so `Formula[...]` lookups are
+# unavailable there; dependencies have to be reached through their opt paths.
+steps_body="$(awk '/post_install_steps do/,/^  end$/' "$formula" | grep -v '^[[:space:]]*#')"
+if printf '%s' "$steps_body" | grep -q 'Formula\['; then
+  fail "post_install_steps cannot resolve Formula[...] at run time"
+else
+  pass "post_install_steps addresses dependencies without Formula[...]"
+fi
+if printf '%s' "$steps_body" | grep -q '{{HOMEBREW_PREFIX}}/opt/uv/bin/uv'; then
+  pass "post_install_steps runs uv from its opt path"
+else
+  fail "post_install_steps must run uv from {{HOMEBREW_PREFIX}}/opt/uv/bin/uv"
 fi
 expect_contains "the install step requires wheels" '--only-binary'
 expect_contains "the formula tests customer workflows" 'system libexec/"venv/bin/python", pkgshare/"smoke-installed.py", bin/"bea"'
