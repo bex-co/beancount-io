@@ -72,7 +72,8 @@ def format_beans(
         mode = "--check" if check else "--dry-run"
         raise UsageError(f"{mode} writes nothing, so it cannot be combined with --in-place or --output.")
 
-    files = _targets(paths, ctx.file)
+    walking = reporting or in_place
+    files, missing = _targets(paths, ctx.file, expand_includes=walking)
     if files is None:
         if reporting or in_place:
             raise UsageError("Name the files to format: reading stdin has nothing to compare or rewrite.")
@@ -89,15 +90,19 @@ def format_beans(
         raise typer.Exit(status)
 
     target = _target(paths, files)
+    # The walk modes see whole ledgers: a root stands for its include closure,
+    # and a file bean-format cannot parse is a failure rather than "already
+    # formatted". Single-file stdout output stays a plain filter.
+    failed: dict[str, list[str]] = _syntax_failures(files) if walking and files else {}
     if reporting:
         remedy = _remedy(_named(paths, ctx.file), alignment)
-        _report(files, alignment, target, remedy, check=check, dry_run=dry_run)
+        _report(files, alignment, target, remedy, failed, missing, check=check, dry_run=dry_run)
         return
 
     if not files:
         if ctx.json_output:
             if in_place:
-                output.emit(_result([], []) | {"in_place": True}, target=target)
+                output.emit(_result([], [], {}, []) | {"in_place": True}, target=target)
                 return
             _require_json_destination(in_place, output_file)
             if output_file is not None:
@@ -110,7 +115,7 @@ def format_beans(
         _require_json_destination(in_place, output_file)
 
     if in_place:
-        _format_in_place(files, alignment, target)
+        _format_in_place(files, alignment, target, failed, missing)
         return
 
     if len(files) > 1:
@@ -131,20 +136,33 @@ def format_beans(
         output.emit(_wrote(len(files), output_file), target=target)
 
 
-def _format_in_place(files: list[Path], alignment: list[str], target: dict[str, str]) -> None:
-    before = {file: _text(file) for file in files}
-    completed = launch.capture_native("bean-format", [*alignment, "--in-place", *(str(f) for f in files)])
+def _format_in_place(
+    files: list[Path],
+    alignment: list[str],
+    target: dict[str, str],
+    failed: dict[str, list[str]],
+    missing: list[output.MissingInclude],
+) -> None:
+    # Unparseable files are skipped, not "formatted": upstream would echo them
+    # back with a newline appended and call that a rewrite.
+    formattable = [file for file in files if str(file) not in failed]
+    before = {file: _text(file) for file in formattable}
+    completed = (
+        launch.capture_native("bean-format", [*alignment, "--in-place", *(str(f) for f in formattable)])
+        if formattable
+        else None
+    )
     # Read back even after failure: upstream can rewrite earlier files before
     # encountering one it cannot write. Never invite a retry without that result.
-    if completed.returncode == 0:
-        for file in files:
+    if completed is not None and completed.returncode == 0:
+        for file in formattable:
             text = _text(file)
             fixed = _canonical_posting_indent(text)
             if fixed != text:
                 file.write_text(fixed)
-    changed = [str(file) for file in files if _text(file) != before[file]]
-    result = _result(files, changed) | {"in_place": True}
-    if completed.returncode != 0:
+    changed = [str(file) for file in formattable if _text(file) != before[file]]
+    result = _result(files, changed, failed, missing) | {"in_place": True}
+    if completed is not None and completed.returncode != 0:
         diagnostic = (completed.stderr or "").strip()
         # An uncaught upstream exception ends with its type, reason, and path;
         # the stack itself belongs only in the --debug traceback field.
@@ -155,6 +173,12 @@ def _format_in_place(files: list[Path], alignment: list[str], target: dict[str, 
             result=result,
             traceback=diagnostic or None,
         )
+    if failed or missing:
+        raise LedgerError(
+            _problems_message(len(changed), failed, missing) + " Nothing was written to the failed files.",
+            details=[f"formatted: {name}" for name in changed] + _problem_lines(failed, missing),
+            result=result,
+        )
     if context.current().json_output:
         output.emit(result, target=target)
         return
@@ -164,17 +188,27 @@ def _format_in_place(files: list[Path], alignment: list[str], target: dict[str, 
 
 
 def _report(
-    files: list[Path], alignment: list[str], target: dict[str, str], remedy: str, *, check: bool, dry_run: bool
+    files: list[Path],
+    alignment: list[str],
+    target: dict[str, str],
+    remedy: str,
+    failed: dict[str, list[str]],
+    missing: list[output.MissingInclude],
+    *,
+    check: bool,
+    dry_run: bool,
 ) -> None:
     """Which files upstream would rewrite, without rewriting any of them."""
     ctx = context.current()
-    changed = [str(f) for f in files if _would_change(f, alignment)]
-    result = _result(files, changed) | {"check": check, "dry_run": dry_run}
+    changed = [str(f) for f in files if str(f) not in failed and _would_change(f, alignment)]
+    result = _result(files, changed, failed, missing) | {"check": check, "dry_run": dry_run}
 
-    if check and changed:
+    if check and (changed or failed or missing):
         for name in changed:
             output.note(f"would format: {name}")
-        raise LedgerError(f"{len(changed)} file(s) need formatting. Run {remedy} to apply.", result=result)
+        for line in _problem_lines(failed, missing):
+            output.note(line)
+        raise LedgerError(_check_message(len(changed), failed, missing, remedy), result=result)
     if ctx.json_output:
         output.emit(result, target=target)
         return
@@ -183,10 +217,52 @@ def _report(
         return
     for name in changed:
         typer.echo(f"would format: {name}")
+    for line in _problem_lines(failed, missing):
+        typer.echo(line)
     if check:
+        for file in files:
+            typer.echo(f"checked: {file}")
         output.success(f"All {len(files)} file(s) are formatted.")
     else:
         output.success(f"Would format {len(changed)}/{len(files)} file(s) (dry run).")
+
+
+def _problem_lines(failed: dict[str, list[str]], missing: list[output.MissingInclude]) -> list[str]:
+    """One human line per file that could not be processed, naming each one."""
+    lines = [f"cannot parse: {errors[0]}" for _, errors in sorted(failed.items()) if errors]
+    lines.extend(f'missing include: "{item.include}" (included by {item.source})' for item in missing)
+    return lines
+
+
+def _check_message(
+    changed_count: int, failed: dict[str, list[str]], missing: list[output.MissingInclude], remedy: str
+) -> str:
+    """What a failing `--check` reports: every problem class, each named."""
+    if changed_count and not failed and not missing:
+        return f"{changed_count} file(s) need formatting. Run {remedy} to apply."
+    parts = []
+    if changed_count:
+        parts.append(f"{changed_count} file(s) need formatting")
+    if failed:
+        parts.append(f"{len(failed)} file(s) cannot be parsed")
+    if missing:
+        parts.append(f"{len(missing)} include(s) are missing")
+    message = "; ".join(parts) + "."
+    if changed_count:
+        message += f" Run {remedy} to apply formatting."
+    if failed or missing:
+        message += " Fix the files above and re-run."
+    return message
+
+
+def _problems_message(formatted_count: int, failed: dict[str, list[str]], missing: list[output.MissingInclude]) -> str:
+    """What a partial `-i` reports: what it did, and what it could not do."""
+    parts = [f"{formatted_count} file(s) formatted"]
+    if failed:
+        parts.append(f"{len(failed)} file(s) cannot be parsed")
+    if missing:
+        parts.append(f"{len(missing)} include(s) are missing")
+    return "; ".join(parts) + "."
 
 
 def _remedy(named: list[Path], alignment: list[str]) -> str:
@@ -256,8 +332,10 @@ def _named(paths: list[Path] | None, default: Path | None) -> list[Path]:
     return [path for path in (paths or []) if str(path)] or ([default] if default is not None else [])
 
 
-def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | None:
-    """The files to format, or None for upstream's stdin filter.
+def _targets(
+    paths: list[Path] | None, default: Path | None, *, expand_includes: bool
+) -> tuple[list[Path] | None, list[output.MissingInclude]]:
+    """The files to format, or None for upstream's stdin filter, plus missing includes.
 
     An explicit path wins; otherwise the global `--file` names the ledger. A
     bare `bea format` formats stdin, which is what `bean-format` does — it no
@@ -265,16 +343,22 @@ def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | Non
     stdout would concatenate a whole tree into one stream. An explicit `-` asks
     for that same filter by name, as it does in every other shell tool; reading
     it as a path would look for a file called `-` in the working directory.
+
+    In the walk modes an explicitly named file stands for its include closure:
+    every reachable ledger file joins the scan, and every include that
+    resolves nowhere is reported. Directory walks keep their on-disk set —
+    naming a directory must not rewrite files outside it.
     """
     named = _named(paths, default)
     if any(str(path) == STDIN for path in named):
         if len(named) > 1:
             raise UsageError(f"Read either stdin ('{STDIN}') or named files, not both.")
-        return None
+        return None, []
     if not named:
-        return None
+        return None, []
 
     files: set[Path] = set()
+    missing: dict[tuple[str, Path], output.MissingInclude] = {}
     for path in named:
         resolved = path.expanduser().resolve()
         if not resolved.exists():
@@ -303,9 +387,43 @@ def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | Non
             if resolved.suffix not in SUFFIXES:
                 raise UsageError("Expected a .bean or .beancount file, or a directory.")
             files.add(resolved)
+            if expand_includes:
+                for member in output.ledger_closure(resolved):
+                    if member.suffix in SUFFIXES:
+                        files.add(member.resolve())
+                for item in output.missing_includes(resolved):
+                    missing[(item.include, item.source)] = item
         else:
             raise UsageError(f"Not a regular file or directory: {resolved}")
-    return sorted(files)
+    if expand_includes:
+        for file in sorted(files):
+            for item in output.missing_includes(file):
+                missing[(item.include, item.source)] = item
+    return sorted(files), list(missing.values())
+
+
+def _syntax_failures(files: list[Path]) -> dict[str, list[str]]:
+    """The scanned files bean-format cannot parse, each with its syntax errors.
+
+    One engine call for the whole set: parsing is Beancount's job and the
+    frontend has none. A file with no errors is absent from the answer. Files
+    are read as UTF-8 first, so an undecodable path raises the same error it
+    always has instead of arriving as a parse failure.
+    """
+    for file in files:
+        _text(file)
+    data = launch.helper_json(["syntax", *(str(file) for file in files)])
+    reported = data.get("files", {})
+    failures: dict[str, list[str]] = {}
+    for file in files:
+        errors = [str(error) for error in reported.get(str(file), [])]
+        if not errors:
+            continue
+        if len(errors) == 1 and errors[0].startswith(f"{file}: cannot read file"):
+            _text(file)
+            continue
+        failures[str(file)] = errors
+    return failures
 
 
 # Upstream pads with spaces to these columns; unbounded values rewrite a ledger
@@ -375,8 +493,19 @@ def _wrote(scanned: int, destination: Path) -> dict[str, object]:
     return {"scanned": scanned, "output": str(destination.expanduser().resolve())}
 
 
-def _result(files: list[Path], changed: list[str]) -> dict[str, object]:
-    return {"scanned": len(files), "formatted": changed}
+def _result(
+    files: list[Path],
+    changed: list[str],
+    failed: dict[str, list[str]],
+    missing: list[output.MissingInclude],
+) -> dict[str, object]:
+    """The scanned set: how many files were walked, and what happened to each."""
+    return {
+        "scanned": len(files),
+        "formatted": changed,
+        "failed": [{"file": name, "errors": errors} for name, errors in sorted(failed.items())],
+        "missing": [{"include": item.include, "from": str(item.source)} for item in missing],
+    }
 
 
 def _target(paths: list[Path] | None, files: list[Path]) -> dict[str, str]:

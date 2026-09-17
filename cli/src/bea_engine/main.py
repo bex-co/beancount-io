@@ -47,6 +47,23 @@ def check(
 
 
 @app.command()
+def syntax(
+    files: Annotated[list[Path], typer.Argument(help="Ledger files to parse.")],
+) -> None:
+    """Report syntax errors per file, without following includes or validating semantics.
+
+    Answers `{"files": {path: [errors]}}`, one `file:line: message` per error.
+    A file that cannot be read reports that against its own path rather than
+    failing the batch. `format --check` uses this to tell "already formatted"
+    from "bean-format echoed text it could not parse".
+    """
+    with protocol.answering("syntax") as answer:
+        from bea_engine.ledger import text
+
+        answer.data = {"files": {str(path): text.syntax_errors(path) for path in files}}
+
+
+@app.command()
 def query(
     query_string: Annotated[str, typer.Argument(help="The BQL statement, dot command or stored query to run.")],
     file: Annotated[Path, typer.Option("--file", "-f", help="Root ledger file to query.")],

@@ -241,12 +241,17 @@ def test_format_check_detects_misalignment_and_in_place_fixes_it(book: Path) -> 
     assert invoke(book, "format", str(misaligned), "--in-place").exit_code == 0
     assert misaligned.read_bytes() != before
     assert invoke(book, "format", str(misaligned), "--check").exit_code == 0
-    # bean-format is a text transform; invalid account names are not parse-checked.
+    # The parser rejects a lowercase account outright, so --check fails it
+    # instead of echoing it back as "already formatted".
     bad_account = book.parent / "bad-account.beancount"
     bad_account.write_text("2026-01-01 open assets:lower USD\n")
     before_bad = bad_account.read_bytes()
-    assert invoke(book, "format", str(bad_account), "--check").exit_code == 0
-    assert invoke(book, "format", str(bad_account), "--in-place").exit_code == 0
+    bad_check = invoke(book, "format", str(bad_account), "--check")
+    assert bad_check.exit_code == 1, bad_check.output
+    failed = json.loads(bad_check.stderr)["error"]["result"]["failed"]
+    assert [entry["file"] for entry in failed] == [str(bad_account)]
+    bad_place = invoke(book, "format", str(bad_account), "--in-place")
+    assert bad_place.exit_code == 1, bad_place.output
     assert bad_account.read_bytes() == before_bad
 
 
@@ -310,9 +315,9 @@ def test_format_rejects_negative_alignment_as_usage_error(book: Path, flag: str,
 
 
 def test_formatting_split_files_does_not_require_root_options_or_account_opens(book: Path) -> None:
-    book.write_text('option "name_assets" "Actif"\ninclude "year.bean"\n')
+    book.write_text('option "operating_currency" "USD"\ninclude "year.bean"\n')
     year = book.parent / "year.bean"
-    year.write_text('2026-01-02 * "Food"\n Actif:Épargne -1 USD\n Expenses:Food 1 USD\n')
+    year.write_text('2026-01-02 * "Food"\n Assets:Checking -1 USD\n Expenses:Food 1 USD\n')
     result = invoke(book, "format", str(book.parent), "--in-place")
     assert result.exit_code == 0, result.output
     assert invoke(book, "format", str(book.parent), "--check").exit_code == 0

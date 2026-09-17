@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from pathlib import Path
 
 from bea_engine import protocol
 
@@ -36,6 +37,25 @@ def fold_account(name: str) -> str:
     may import the other, and both have to compare the same names.
     """
     return unicodedata.normalize("NFC", unicodedata.normalize("NFC", name).casefold())
+
+
+def syntax_errors(path: Path) -> list[str]:
+    """Syntax errors in one file, without following includes or validating semantics.
+
+    A transactions-only child parses clean — its accounts open elsewhere — so
+    this gates formatting on what bean-format can meaningfully align, not on
+    what `check` would accept. An unreadable file reports that instead of
+    raising, so one bad path cannot fail a whole batch.
+    """
+    from beancount.parser import parser
+
+    from bea_engine.query import format_error
+
+    try:
+        _, errors, _ = parser.parse_file(str(path))
+    except (OSError, UnicodeError) as exc:
+        return [f"{path}: cannot read file ({exc.strerror if isinstance(exc, OSError) else exc})."]
+    return [format_error(error) for error in errors]
 
 
 def parse_account(name: str) -> str:

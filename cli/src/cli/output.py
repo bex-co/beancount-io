@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import dataclasses
 import datetime
+import glob
 import json
 import re
 import sys
@@ -118,17 +119,45 @@ def file_target(path: Path) -> dict[str, Any]:
 _INCLUDE_DIRECTIVE = re.compile(r'^\s*include\s+"([^"]+)"', re.MULTILINE)
 
 
-def ledger_closure(root: Path) -> list[Path]:
-    """The root ledger plus every file its `include` chain can reach.
+@dataclasses.dataclass(frozen=True)
+class MissingInclude:
+    """An `include` string that matched no file, and the file that names it."""
+
+    include: str
+    source: Path
+
+
+def _include_matches(source: Path, raw: str) -> list[Path]:
+    """The files one `include` string resolves to, beancount's way.
+
+    Every include is a glob, matched first against the including file's
+    directory — the base the loader uses — then against the working directory.
+    Only files count: a match that is not a regular file resolves nothing.
+    """
+    if Path(raw).is_absolute():
+        return _glob_files(raw)
+    for base in (source.parent, Path.cwd()):
+        matches = _glob_files(str(base / raw))
+        if matches:
+            return matches
+    return []
+
+
+def _glob_files(pattern: str) -> list[Path]:
+    """The regular files one glob pattern matches, sorted."""
+    return [path for path in sorted(Path(p) for p in glob.glob(pattern, recursive=True)) if path.is_file()]
+
+
+def _walk_closure(root: Path) -> tuple[list[Path], list[MissingInclude]]:
+    """The root plus every reachable file, with the includes that resolve nowhere.
 
     Read textually on purpose: this runs before the ledger is loaded (it is
-    what keeps a `-o` from truncating the file the load is about to read), so
-    it cannot ask the loader what the closure is. Each relative include is
-    tried against the including file's directory and against the working
-    directory, because either base can be the one that resolves; an
-    over-approximated member only ever causes a refusal, never a write.
+    what keeps a `-o` from truncating the file the load is about to read, and
+    what tells `format` which files a root stands for), so it cannot ask the
+    loader what the closure is.
     """
     members: list[Path] = []
+    missing: list[MissingInclude] = []
     seen: set[Path] = set()
     stack = [root]
     while stack:
@@ -147,13 +176,24 @@ def ledger_closure(root: Path) -> list[Path]:
             continue
         for match in _INCLUDE_DIRECTIVE.finditer(text):
             raw = match.group(1)
-            candidate = Path(raw)
-            if candidate.is_absolute():
-                stack.append(candidate)
+            matches = _include_matches(current, raw)
+            if matches:
+                stack.extend(matches)
             else:
-                stack.append(current.parent / raw)
-                stack.append(Path(raw))
+                missing.append(MissingInclude(include=raw, source=current))
+    return members, missing
+
+
+def ledger_closure(root: Path) -> list[Path]:
+    """The root ledger plus every file its `include` chain can reach."""
+    members, _ = _walk_closure(root)
     return members
+
+
+def missing_includes(root: Path) -> list[MissingInclude]:
+    """The `include` strings in the root's reachable graph that match no file."""
+    _, missing = _walk_closure(root)
+    return missing
 
 
 def _same_file(left: Path, right: Path) -> bool:

@@ -227,7 +227,7 @@ bea format -i main.bean            # rewrite it
 cat main.bean | bea format         # or read stdin; 'bea format -' says so outright
 bea format -i .                    # rewrite every .bean/.beancount file under a directory
 bea format . --dry-run             # write nothing; list the files that would change
-bea format . --check               # CI/pre-commit alignment gate; pair with bea check for validity
+bea format . --check               # CI/pre-commit gate: alignment, parseable files, complete includes
 
 # Run a BQL query and print a table; omit the query for the interactive shell
 bea query "SELECT account, sum(position) GROUP BY account"
@@ -331,16 +331,18 @@ writing and exits **0** even when formatting is needed. `format --check` leaves
 files untouched and exits **1** when formatting is needed, **0** when all
 scanned files are formatted.
 
-`format --check` is an alignment gate, not a validity gate. Formatting is
-delegated to `bean-format`, a regex text transformation that never parses the
-ledger, so a file with a syntax error is realigned like any other: `--check`
-flags it only when its alignment would change, `--in-place` rewrites it and
-exits **0**, and no mode skips it or reports its syntax errors. For CI or a
-pre-commit hook, run `bea check` alongside `bea format --check` so an
-unparseable ledger fails too. Included files are formatted independently of
-their root ledger's account opens and options. In JSON mode, a failing
-`--check` returns the scan result in `error.result`: `scanned`, the
-`formatted` paths that would change, `check`, and `dry_run`.
+`format --check` gates on alignment, parseability, and the include graph:
+a named file stands for its whole include closure, a file the parser rejects
+fails instead of reading as "already formatted", and an include that matches
+nothing fails naming the directive. `--in-place` formats every reachable file
+and skips the unparseable ones, exiting nonzero when anything was skipped.
+Semantic validity stays with `bea check`: a failing balance assertion or an
+unbalanced transaction does not fail `--check`, so for CI or a pre-commit hook
+run `bea check` alongside `bea format --check`. Included files are formatted
+independently of their root ledger's account opens and options. In JSON mode, a
+failing `--check` returns the scan result in `error.result`: `scanned`, the
+`formatted` paths that would change, the `failed` files with their syntax
+errors, the `missing` includes, `check`, and `dry_run`.
 
 ## Listing directives
 

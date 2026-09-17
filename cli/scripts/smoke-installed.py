@@ -335,10 +335,13 @@ def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None,
     assert formatting.read_bytes() == before
     run("format", str(formatting), "--in-place")
     assert run("format", str(formatting), "--check")["data"]["formatted"] == []
-    # bean-format does not parse ledgers; invalid account names are not rejected.
+    # The parser rejects a lowercase account, so --check fails it and -i leaves it alone.
     formatting.write_text("2026-01-01 open assets:lower USD\n")
-    assert run("format", str(formatting), "--check")["data"]["formatted"] == []
-    run("format", str(formatting), "--in-place")
+    bad = run("format", str(formatting), "--check", exit_code=1)
+    assert bad["error"]["result"]["failed"][0]["file"] == str(formatting)
+    before_bad = formatting.read_bytes()
+    run("format", str(formatting), "--in-place", exit_code=1)
+    assert formatting.read_bytes() == before_bad
     bad_number = run(
         *valued_target, "add", "transaction", "-p", "Assets:Checking -1e3 EUR", "-p", "Expenses:Food", exit_code=2
     )
