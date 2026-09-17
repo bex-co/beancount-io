@@ -38,6 +38,15 @@ from bea_engine import protocol
 LEDGER_DSN = "beancount:"
 """A pathless beanquery DSN: the source attaches the entries handed to it instead of loading a file."""
 
+# Table names that are also BQL keywords: unquoted FROM binds wrongly (accounts →
+# postings) or is a syntax error (balances). Quote them before execute.
+_RESERVED_TABLE_FROM = re.compile(r'(?i)\b(FROM|JOIN)\s+(?<!")(accounts|balances)\b(?!")')
+
+
+def _quote_reserved_tables(query_string: str) -> str:
+    """Rewrite `FROM accounts|balances` to the quoted form discovery documents."""
+    return _RESERVED_TABLE_FROM.sub(r'\1 "\2"', query_string)
+
 
 def load(file: Path) -> dict[str, Any]:
     """Load exactly this ledger file, for attaching to a pathless connection."""
@@ -306,7 +315,7 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
     from beanquery import Error as BeanqueryError
 
     try:
-        return run(query_string)
+        return run(_quote_reserved_tables(query_string))
     except BeanqueryError as exc:
         raise _usage_error(exc, query_string, conn, ledger_errors) from None
 
