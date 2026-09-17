@@ -1,6 +1,6 @@
 # w1 · m26 — Ledgers survive Windows editors and Unicode
 
-**Worker:** worker1 **Goal:** a ledger written by a Windows editor or containing non-ASCII account names behaves exactly like an LF-only ASCII one: it loads, it appends cleanly, and equivalent Unicode spellings are one account **Status:** todo (t001–t005 done)
+**Worker:** worker1 **Goal:** a ledger written by a Windows editor or containing non-ASCII account names behaves exactly like an LF-only ASCII one: it loads, it appends cleanly, and equivalent Unicode spellings are one account **Status:** todo (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Report undecodable inputs with the path and the byte offset — **DONE** | 30m | — |
 | t004 | Normalize account names and search to NFC — **DONE** | 60m | — |
 | t005 | Handle embedded CR/LF in note, event, and custom string fields — **DONE** | 30m | — |
-| t006 | Adoption surface | 25m | t001, t002, t003, t004, t005 |
+| t006 | Adoption surface — **DONE** | 25m | t001, t002, t003, t004, t005 |
 | t007 | Simplify | 30m | t006 |
 | t008 | Test coverage | 45m | t006, t007 |
 | t009 | Closeout | 15m | t008 |
