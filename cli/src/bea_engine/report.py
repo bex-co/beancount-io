@@ -161,15 +161,7 @@ def _income_statement(
             "net_profit": _summary(
                 -profit.balance,
                 conversion,
-                incomplete=bool(
-                    _valuation(
-                        conversion,
-                        [(income.date, income.balance), (expenses.date, expenses.balance)],
-                        True,
-                        None,
-                        ledger_errors,
-                    )["missing_prices"]
-                ),
+                incomplete=_unvalued(income.balance, conversion) or _unvalued(expenses.balance, conversion),
             ),
         }
         for income, expenses, profit in zip(data.income_data, data.expenses_data, data.net_profit_data, strict=True)
@@ -211,7 +203,7 @@ def _balance_sheet(
         "equity_total": data.equity_total if reconciled else None,
         "equity_reconciled": reconciled,
         "net_worth": worth,
-        "net_worth_series": _series_json(data.net_worth_data),
+        "net_worth_series": _summary_series_json(data.net_worth_data, conversion),
     }
 
 
@@ -388,6 +380,36 @@ def _tree_json(node: Any) -> dict[str, Any]:
 
 def _series_json(series: Iterable[Any]) -> list[dict[str, Any]]:
     return [{"date": point.date, "balance": _balance_map(point.balance)} for point in series]
+
+
+def _unvalued(balance: Mapping[str, Decimal], conversion: str) -> bool:
+    """Whether this balance kept a commodity the report could not value.
+
+    Conversion leaves what it has no price for in its own commodity, so a
+    balance still holding a currency other than the one asked for is a partial
+    valuation. Per-unit conversions ask for no valuation and are never partial.
+    """
+    if conversion in {"units", "at_cost", "at_value"}:
+        return False
+    return any(amount and currency != conversion for currency, amount in balance.items())
+
+
+def _summary_series_json(series: Iterable[Any], conversion: str) -> list[dict[str, Any]]:
+    """A balance series under the same partial-valuation policy as its headline.
+
+    A row that kept a commodity the report could not value reads `null` — the
+    "Unavailable" the headline shows — rather than falling back to per-unit
+    amounts and contradicting it on the same screen. Rows that did convert keep
+    their number, an empty row stays empty, and per-unit conversions are
+    unchanged.
+    """
+    rows: list[dict[str, Any]] = []
+    for point in series:
+        balance: Mapping[str, Decimal | None] = _balance_map(point.balance)
+        if balance:
+            balance = _summary(point.balance, conversion, incomplete=_unvalued(point.balance, conversion))
+        rows.append({"date": point.date, "balance": balance})
+    return rows
 
 
 def _negated(balance: Mapping[str, Decimal]) -> dict[str, Decimal | None]:
