@@ -547,6 +547,8 @@ def _text(request: dict[str, Any], field: str) -> str:
     value = request.get(field)
     if not isinstance(value, str):
         raise protocol.UsageError(f"The request is missing its {field!r}.")
+    if not value.strip():
+        raise protocol.UsageError(f"Request field {field!r} must be a non-empty string.")
     return value
 
 
