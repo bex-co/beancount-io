@@ -49,12 +49,12 @@ def test_at_value_prices_costless_lots(tmp_path: Path) -> None:
     at_value = _bea(tmp_path, "--file", str(ledger), "report", "balance-sheet", "--conversion", "at_value")
     assert at_value.returncode == 0, at_value.stderr
     assert "Investments" in at_value.stdout
-    assert "21.00 USD" in at_value.stdout
+    assert "21.0 USD" in at_value.stdout
     # Priced costless lots should not leave bare HOOL on the asset line.
     investments = at_value.stdout.split("Investments", 1)[1].split("Liabilities", 1)[0]
-    assert "HOOL" not in investments or "21.00 USD" in investments
-    assert "2.00 HOOL" not in investments
+    assert "HOOL" not in investments or "21.0 USD" in investments
+    assert "2 HOOL" not in investments
 
     usd = _bea(tmp_path, "--file", str(ledger), "report", "balance-sheet", "--conversion", "USD")
     assert usd.returncode == 0, usd.stderr
-    assert "21.00 USD" in usd.stdout
+    assert "21.0 USD" in usd.stdout

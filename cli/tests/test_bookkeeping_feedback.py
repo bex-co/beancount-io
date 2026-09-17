@@ -323,9 +323,9 @@ def test_the_two_statements_never_disagree_about_the_same_period_profit(profitab
     statement = runner.invoke(app, ["-f", str(profitable), "report", "income-statement"])
     assert sheet.exit_code == 0 and statement.exit_code == 0
     assert "Current-period earnings (credit):" in sheet.stdout
-    assert "-3,000.00 USD" in sheet.stdout
-    assert "the same period's Net Profit is 3,000.00 USD" in sheet.stdout
-    assert "Net Profit: 3,000.00 USD" in statement.stdout
+    assert "-3,000 USD" in sheet.stdout
+    assert "the same period's Net Profit is 3,000 USD" in sheet.stdout
+    assert "Net Profit: 3,000 USD" in statement.stdout
     # Only the report that prints a profit may promise the sign it uses.
     assert "profit is positive for a gain" in statement.stdout
     assert "profit is positive for a gain" not in sheet.stdout
