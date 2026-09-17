@@ -30,6 +30,7 @@ _MAPPING_FIELDS = frozenset(
 _THOUSAND_SEPARATOR_FILLER = re.compile(r"[\s'\u2019]")
 _NON_FINITE_AMOUNT = re.compile(r"[+-]?(?:nan|inf(?:inity)?)\Z", re.IGNORECASE)
 _EU_GROUPING = re.compile(r"\d{1,3}(?:\.\d{3})+")
+_COMMA_DECIMAL_TAIL = re.compile(r",\d{2}$")
 _ACCEPTED_AMOUNTS = (
     "Accepted: plain decimals (1000.50), $/€ symbols, thousands separators, "
     "(parentheses) or trailing-minus negatives; comma decimals like 1.000,00 "
@@ -57,6 +58,7 @@ def _split_amount_sign(value: str) -> tuple[str, str, bool]:
     if text[:1] in ("+", "-"):
         sign, text = text[0], text[1:]
     trailing_minus_seen = False
+    # At most two currency symbols plus a trailing minus, then a quiet pass.
     for _ in range(4):
         text = text.strip()
         if not text:
@@ -78,7 +80,7 @@ def _separator_vote(core: str) -> str | None:
     """Vote on a cell's decimal convention: 'us', 'eu', 'eu-weak', or None."""
     if "." in core and "," in core:
         return "eu" if core.rfind(",") > core.rfind(".") else "us"
-    if "," in core and re.search(r",\d{2}$", core):
+    if "," in core and _COMMA_DECIMAL_TAIL.search(core):
         return "eu-weak"
     return None
 
@@ -104,14 +106,15 @@ def _resolve_decimal_comma(cells: list[tuple[int, str]]) -> bool:
         elif vote == "eu-weak":
             only_weak_eu = True
         if first_us is not None and first_eu is not None:
-            first, second = sorted(
-                [(first_us, "point decimals"), (first_eu, "comma decimals")],
-                key=lambda item: item[0][0],
-            )
+            earlier, later = (first_us, "point decimals"), (first_eu, "comma decimals")
+            if earlier[0][0] > later[0][0]:
+                earlier, later = later, earlier
+            (early_line, early_cell), early_kind = earlier
+            (late_line, late_cell), late_kind = later
             raise UsageError(
-                f"The amount columns mix decimal conventions: row {first[0][0]} "
-                f"uses {first[1]} ({first[0][1]!r}) but row {second[0][0]} uses "
-                f"{second[1]} ({second[0][1]!r}). Use one convention per column."
+                f"The amount columns mix decimal conventions: row {early_line} uses {early_kind} "
+                f"({early_cell!r}) but row {late_line} uses {late_kind} ({late_cell!r}). "
+                "Use one convention per column."
             )
     if first_eu is not None:
         return True
@@ -146,7 +149,7 @@ def _parse_amount_cell(line: int, column: str, value: str, *, decimal_comma: boo
     if decimal_comma:
         text = _comma_decimal_to_point(line, column, value, text)
     else:
-        if "." not in text and re.search(r",\d{2}$", text):
+        if "." not in text and _COMMA_DECIMAL_TAIL.search(text):
             raise _unparseable_amount(line, column, value)
         text = text.replace(",", "")
     try:
@@ -455,19 +458,14 @@ def detect_delimiter(source: Path, encoding: str = "utf-8") -> str:
     best = ","
     best_count = 0
     body = sample[1:]
-    if body:
-        for delim in _CANDIDATE_DELIMITERS:
-            parsed: list[int] = []
-            for line in body:
-                count = _field_count(line, delim)
-                if count is None:
-                    break
-                parsed.append(count)
-            else:
-                if len(set(parsed)) == 1 and parsed[0] > best_count and parsed[0] > 1:
-                    best, best_count = delim, parsed[0]
-        if best_count > 1:
-            return best
+    for delim in _CANDIDATE_DELIMITERS:
+        counts = {_field_count(line, delim) for line in body}
+        if len(counts) == 1:
+            (count,) = counts
+            if count is not None and count > 1 and count > best_count:
+                best, best_count = delim, count
+    if best_count > 1:
+        return best
     for delim in _CANDIDATE_DELIMITERS:
         count = _field_count(sample[0], delim)
         if count is not None and count > best_count:
@@ -647,11 +645,8 @@ class CsvImporter:
     def _parse_decimal(self, line: int, column: str, value: str) -> Decimal:
         return _parse_amount_cell(line, column, value, decimal_comma=self._decimal_comma)
 
-    def _is_blank_row(self, row: dict[str, str], columns: dict[str, str], category_header: str | None) -> bool:
+    def _is_blank_row(self, row: dict[str, str], headers: set[str]) -> bool:
         """Whether every mapped cell in the row is empty or whitespace."""
-        headers = set(columns.values())
-        if category_header is not None:
-            headers.add(category_header)
         return all(not (row.get(header) or "").strip() for header in headers)
 
     def extract(self, filepath: str, existing: Any) -> list[Any]:
@@ -675,9 +670,12 @@ class CsvImporter:
                     for header in amount_columns
                 ]
             )
+            blank_headers = set(columns.values())
+            if category_header is not None:
+                blank_headers.add(category_header)
             for index, row in enumerate(materialized):
                 line = index + 2
-                if self._is_blank_row(row, columns, category_header):
+                if self._is_blank_row(row, blank_headers):
                     self.skipped_blank_rows += 1
                     continue
                 date_column = columns["date"]

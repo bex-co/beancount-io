@@ -74,6 +74,11 @@ def _check_delimiter_conflict(flag: str | None, key: str | None) -> None:
         )
 
 
+def _strip_spec_keys(spec: str, keys: set[str]) -> str:
+    """A `--csv` spec without its `key=` control parts (delimiter/encoding/sign)."""
+    return ",".join(part for part in spec.split(",") if part.partition("=")[0].strip() not in keys)
+
+
 def _inferred_mapping(
     source: Path, *, explicit: bool, notes: list[str], delimiter: str | None = None, encoding: str = "utf-8"
 ) -> str | None:
@@ -232,18 +237,19 @@ def _recall_csv(file: Path, source: Path, account: str | None = None, *, notes: 
         return None
     entry = matches[0]
     mapping = entry.get("mapping")
-    try:
-        sign = parse_mapping(mapping).sign if isinstance(mapping, str) else "bank"
-    except UsageError:
-        sign = "bank"
-    if sign == "ledger" and isinstance(mapping, str):
-        stripped = ",".join(part for part in mapping.split(",") if part.partition("=")[0].strip() != "sign")
-        entry["mapping"] = stripped
-        notes.append(
-            f"Dropped remembered sign=ledger for {source.name}; sign is never re-applied across files. "
-            "Pass sign=ledger explicitly for a ledger-signed export."
-        )
-        _patch_csv_entry(file, headers, entry["account"], {"mapping": stripped})
+    if isinstance(mapping, str):
+        try:
+            sign = parse_mapping(mapping).sign
+        except UsageError:
+            sign = "bank"
+        if sign == "ledger":
+            stripped = _strip_spec_keys(mapping, {"sign"})
+            entry["mapping"] = stripped
+            notes.append(
+                f"Dropped remembered sign=ledger for {source.name}; sign is never re-applied across files. "
+                "Pass sign=ledger explicitly for a ledger-signed export."
+            )
+            _patch_csv_entry(file, headers, entry["account"], {"mapping": stripped})
     rules_path = entry.get("rules")
     if isinstance(rules_path, str):
         try:
@@ -396,22 +402,23 @@ def import_entries(
             peek = parse_mapping(csv_request)
         except UsageError:
             peek = None
-        if peek is not None and peek.encoding is not None:
-            # The decoding key applies before any read, so detection itself
-            # decodes with it; the merge below re-applies it idempotently.
-            csv_encoding = peek.encoding
-        if peek is not None and not peek.columns:
-            # Keys without columns (`encoding=`, `delimiter=`, `sign=` alone):
-            # decode with the keys, then infer the mapping like `auto`.
-            _check_delimiter_conflict(flag_delimiter, peek.delimiter)
-            if peek.delimiter is not None:
-                csv_delimiter = peek.delimiter
-            csv_request = _inferred_mapping(
-                source, explicit=True, notes=inferred_notes, delimiter=csv_delimiter, encoding=csv_encoding
-            )
-            if peek.sign != "bank" and csv_request is not None:
-                csv_request = f"{csv_request},sign={peek.sign}"
-            csv_origin = "inferred --csv"
+        if peek is not None:
+            if peek.encoding is not None:
+                # The decoding key applies before any read, so detection itself
+                # decodes with it; the merge below re-applies it idempotently.
+                csv_encoding = peek.encoding
+            if not peek.columns:
+                # Keys without columns (`encoding=`, `delimiter=`, `sign=` alone):
+                # decode with the keys, then infer the mapping like `auto`.
+                _check_delimiter_conflict(flag_delimiter, peek.delimiter)
+                if peek.delimiter is not None:
+                    csv_delimiter = peek.delimiter
+                csv_request = _inferred_mapping(
+                    source, explicit=True, notes=inferred_notes, delimiter=csv_delimiter, encoding=csv_encoding
+                )
+                if peek.sign != "bank" and csv_request is not None:
+                    csv_request = f"{csv_request},sign={peek.sign}"
+                csv_origin = "inferred --csv"
     if csv_request is None and config is None:
         remembered = _recall_csv(file, source, csv_account, notes=recall_notes)
         if remembered is not None:
@@ -509,11 +516,7 @@ def import_entries(
         encoding_note = f", encoding {csv_encoding}" if csv_encoding != "utf-8" else ""
         frontend_notes: list[str] = []
         if remembered_run:
-            columns_only = ",".join(
-                part
-                for part in (csv_request or "").split(",")
-                if part.partition("=")[0].strip() not in {"delimiter", "encoding", "sign"}
-            )
+            columns_only = _strip_spec_keys(csv_request or "", {"delimiter", "encoding", "sign"})
             settings = [f"--csv {columns_only}"]
             if date_format is not None:
                 settings.append(f"--date-format {date_format}")
@@ -544,9 +547,7 @@ def import_entries(
             output.note(line)
         # The engine's parser rejects `delimiter=` and `encoding=` by design:
         # the frontend owns the merge above and forwards columns only.
-        forward_spec = ",".join(
-            part for part in csv_request.split(",") if part.partition("=")[0].strip() not in {"delimiter", "encoding"}
-        )
+        forward_spec = _strip_spec_keys(csv_request, {"delimiter", "encoding"})
         argv += ["--csv", forward_spec, "--account", csv_run_account, "--config-source", csv_origin]
         if csv_encoding != "utf-8":
             argv += ["--encoding", csv_encoding]
@@ -558,9 +559,7 @@ def import_entries(
         if not remembered_run:
             # Sign is never remembered: a ledger-signed export must not flip
             # a later bank-signed file that merely shares its headers.
-            stored_mapping = ",".join(
-                part for part in (csv_request or "").split(",") if part.partition("=")[0].strip() != "sign"
-            )
+            stored_mapping = _strip_spec_keys(csv_request or "", {"sign"})
             try:
                 from cli.csv_mapper import read_header
 

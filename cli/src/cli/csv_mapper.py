@@ -387,19 +387,14 @@ def detect_delimiter(source: Path, encoding: str = "utf-8") -> str:
     best = ","
     best_count = 0
     body = sample[1:]
-    if body:
-        for delim in _CANDIDATE_DELIMITERS:
-            parsed: list[int] = []
-            for line in body:
-                count = _field_count(line, delim)
-                if count is None:
-                    break
-                parsed.append(count)
-            else:
-                if len(set(parsed)) == 1 and parsed[0] > best_count and parsed[0] > 1:
-                    best, best_count = delim, parsed[0]
-        if best_count > 1:
-            return best
+    for delim in _CANDIDATE_DELIMITERS:
+        counts = {_field_count(line, delim) for line in body}
+        if len(counts) == 1:
+            (count,) = counts
+            if count is not None and count > 1 and count > best_count:
+                best, best_count = delim, count
+    if best_count > 1:
+        return best
     for delim in _CANDIDATE_DELIMITERS:
         count = _field_count(sample[0], delim)
         if count is not None and count > best_count:
