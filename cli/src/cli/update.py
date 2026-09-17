@@ -53,8 +53,8 @@ def release_parts(version: str) -> tuple[int, int, int] | None:
     refuses to build a tag that is not — so anything else is something this
     module cannot reason about: `0+unknown` from a package with no metadata, a
     checkout's `.dev` version, a local version segment, a pre-release. Those
-    stay silent rather than guess, which is also how a development install
-    ends up never checking at all.
+    stay silent rather than guess. Install-channel gating separately silences
+    checkouts even when they carry a canonical release version.
     """
     parts = version.split(".")
     if len(parts) != 3 or not all(p.isascii() and p.isdigit() for p in parts):
@@ -86,13 +86,25 @@ def _stderr_is_a_terminal() -> bool:
         return False
 
 
-def muted(*, json_output: bool, no_input: bool) -> bool:
+def muted(*, json_output: bool, no_input: bool, channel: str = "pypi") -> bool:
     """Every reason to stay quiet that costs nothing to check.
 
     Deliberately cheap and checked first: resolving the installed version and
     starting a thread are work that a scripted run should never pay for.
+
+    `checkout` and `unknown` are the channels whose `bea upgrade` runs nothing,
+    so a notice pointing at it would be advice the user cannot take. They are
+    named as strings because `cli.commands.upgrade`, which owns the `Channel`
+    values, imports this module.
     """
-    return json_output or no_input or env_flag(DISABLE_ENV) or env_flag("CI") or not _stderr_is_a_terminal()
+    return (
+        channel in {"checkout", "unknown"}
+        or json_output
+        or no_input
+        or env_flag(DISABLE_ENV)
+        or env_flag("CI")
+        or not _stderr_is_a_terminal()
+    )
 
 
 def read_cache(channel: str = "pypi", *, cache_file: Path | None = None) -> tuple[float, str] | None:
@@ -173,7 +185,7 @@ def start(*, json_output: bool, no_input: bool, channel: str = "pypi") -> None:
     """Begin the daily check alongside the command, so a person waits for nothing."""
     global _pending
     _pending = None
-    if muted(json_output=json_output, no_input=no_input):
+    if muted(json_output=json_output, no_input=no_input, channel=channel):
         return
     version = package_version()
     if not is_release(version):
@@ -230,7 +242,7 @@ def print_version_hint(version: str, argv: Sequence[str], *, channel: str = "pyp
     instead. The hint goes to stderr so that stdout stays exactly one parseable
     `bea X.Y.Z` line.
     """
-    if muted(json_output="--json" in argv, no_input="--no-input" in argv):
+    if muted(json_output="--json" in argv, no_input="--no-input" in argv, channel=channel):
         return
     # Whatever the last check found, however old: a stale answer here can only
     # be wrong in the harmless direction, because once the user has upgraded

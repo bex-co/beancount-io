@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ import pytest
 from typer.testing import CliRunner
 
 from cli import update
+from cli.commands.upgrade import CHECKOUT, UNKNOWN, UV_TOOL, Channel
 from cli.main import app
 
 from .conftest import FakeIndex
@@ -40,6 +42,9 @@ def in_a_terminal(monkeypatch: pytest.MonkeyPatch) -> None:
     """Look like a person's session: a terminal on stderr, and a terminal on stdin."""
     monkeypatch.setattr("cli.update._stderr_is_a_terminal", lambda: True)
     monkeypatch.setattr("cli.context._stdin_is_a_terminal", lambda: True)
+    # Notice tests model a supported installed channel, independent of whether
+    # pytest itself is running from an editable checkout.
+    monkeypatch.setattr("cli.main.current_channel", lambda: UV_TOOL)
 
 
 def check_ledger(*args: str) -> Any:
@@ -336,3 +341,39 @@ class TestVersionHint:
 
         assert fake_index.requests == []
         assert "is available" not in result.stderr
+
+
+@pytest.mark.parametrize("channel", [CHECKOUT, UNKNOWN])
+@pytest.mark.parametrize("cached", [False, True])
+def test_unmanaged_installs_neither_check_nor_print_cached_notices(
+    channel: Channel, cached: bool, fake_index: FakeIndex, in_a_terminal: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("cli.main.current_channel", lambda: channel)
+    if cached:
+        update.write_cache(time.time(), "9.9.9")
+    cache = update.cache_path()
+    before = cache.read_bytes() if cached else None
+
+    result = check_ledger()
+    version = runner.invoke(app, ["--version"])
+
+    assert result.exit_code == version.exit_code == 0
+    assert fake_index.requests == []
+    assert "is available" not in result.stderr
+    assert version.stderr == ""
+    assert (cache.read_bytes() if cache.exists() else None) == before
+
+
+def test_checkout_explicit_upgrade_check_still_asks_the_index(
+    fake_index: FakeIndex, in_a_terminal: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("cli.main.current_channel", lambda: CHECKOUT)
+    monkeypatch.setattr("cli.commands.upgrade.current_channel", lambda: CHECKOUT)
+
+    result = runner.invoke(app, ["upgrade", "--check"])
+
+    assert result.exit_code == 0, result.output
+    assert fake_index.requests == ["/pypi/beancount-io/json"]
+    assert "Latest release: 9.9.9" in result.stdout
+    assert "git pull" in result.stdout
+    assert "is available" not in result.stderr
