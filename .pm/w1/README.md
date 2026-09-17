@@ -4,13 +4,13 @@
 
 ## Milestones
 
-Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain from that run. The block m23–m27 and m29 was materialized on 2026-09-16 from `/pm-brainstorm for w1`: five of them absorb the 2026-09-15/16 continuous CLI QA sweep by shared root cause rather than one note at a time, and m29 carries promoted work from w2/027. m23–m24 have shipped; m25–m27 and m29 remain open. There is no m28 — see `## Dropped`.
+Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain from that run. The block m23–m27 and m29 was materialized on 2026-09-16 from `/pm-brainstorm for w1`: five of them absorb the 2026-09-15/16 continuous CLI QA sweep by shared root cause rather than one note at a time, and m29 carries promoted work from w2/027. m23–m25 have shipped; m26–m27 and m29 remain open. There is no m28 — see `## Dropped`.
 
 **Suggested order:** m25 → m26 → m27 → m29. The five CLI-sweep milestones are independent of one another and can be taken in any order; m23 shipped first because it fixes a silent ledger-wipe path (`w3/300`, critical) and establishes the exit contract the others are tested against. m29 is the non-sweep item and depends on nothing in this queue.
 
 ### Open
 
-- [ ] **m25** — [Every failure is a JSON envelope, and empty inputs are errors](./m25/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 3; absorbs 24 CLI QA notes from w3 plus w5/004
+- [x] **m25** — [Every failure is a JSON envelope, and empty inputs are errors](./done/m25/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 3; absorbs 24 CLI QA notes from w3 plus w5/004
 - [ ] **m26** — [Ledgers survive Windows editors and Unicode](./m26/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 4; absorbs 9 CLI QA notes from w3
 - [ ] **m27** — [Amounts are exact on the way in and out](./m27/README.md) (10 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 5; absorbs 10 CLI QA notes from w3
 - [ ] **m29** — [`bea` resolves managed price includes locally](./m29/README.md) (10 tasks) ← promoted [w2/027](../w2/027.md); ADR 015 + PRFAQ002

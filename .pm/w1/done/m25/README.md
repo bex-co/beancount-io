@@ -1,6 +1,6 @@
 # w1 · m25 — Every failure is a JSON envelope, and empty inputs are errors
 
-**Worker:** worker1 **Goal:** an agent that wraps every `bea` call in `--json` can parse success and failure alike — no tracebacks, no raw errno text, no silently ignored flags — and an empty filter value is an error rather than a wildcard **Status:** todo (t001–t008 done)
+**Worker:** worker1 **Goal:** an agent that wraps every `bea` call in `--json` can parse success and failure alike — no tracebacks, no raw errno text, no silently ignored flags — and an empty filter value is an error rather than a wildcard **Status:** done
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | t006 | Adoption surface — **DONE** | 25m | t001, t002, t003, t004, t005 |
 | t007 | Simplify — **DONE** | 30m | t006 |
 | t008 | Test coverage — **DONE** | 45m | t006, t007 |
-| t009 | Closeout | 15m | t008 |
+| t009 | Closeout — **DONE** | 15m | t008 |
 
 ## Definition of done
 
