@@ -160,7 +160,7 @@ Usage: bea query [OPTIONS] [query_string]
 
 ### `bea price`
 
-Inspect managed price includes (status, refresh), or fetch quotes via bean-price.
+Inspect managed price includes (status, refresh, export), or fetch quotes via bean-price.
 
 ```text
 Usage: bea price [OPTIONS]

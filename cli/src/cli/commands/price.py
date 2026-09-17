@@ -18,12 +18,13 @@ from cli.errors import UsageError, refuse_json
 
 
 def price(ctx: typer.Context) -> None:
-    """Inspect managed price includes (status, refresh), or fetch quotes via bean-price.
+    """Inspect managed price includes (status, refresh, export), or fetch quotes via bean-price.
 
     `status` lists every managed source with its freshness, revision, and
-    errors; `refresh` re-resolves now and reports what changed. Anything
-    else forwards to bean-price (requires `bea engine enable beanprice`),
-    so a quotes job file named `status` must be passed by path.
+    errors; `refresh` re-resolves now and reports what changed; `export`
+    snapshots a portable copy with local price files. Anything else forwards
+    to bean-price (requires `bea engine enable beanprice`), so a quotes job
+    file named `status` must be passed by path.
     """
     args = list(ctx.args)
     if args[:1] == ["status"]:
@@ -31,6 +32,9 @@ def price(ctx: typer.Context) -> None:
         return
     if args[:1] == ["refresh"]:
         _refresh(args[1:])
+        return
+    if args[:1] == ["export"]:
+        _export(args[1:])
         return
     refuse_json("price", hint="Run without --json to print price directives.")
     code = launch.run_optional_native("beanprice", "bean-price", args)
@@ -92,3 +96,40 @@ def _refresh(extra: list[str]) -> None:
             typer.echo(f"{source['alias']}: {before} → {item['revision']}")
         else:
             typer.echo(f"{source['alias']}: unchanged at {source['revision']}")
+
+
+def _export(args: list[str]) -> None:
+    output_dir: str | None = None
+    allow_errors = False
+    pending = list(args)
+    while pending:
+        arg = pending.pop(0)
+        if arg in ("--output", "-o"):
+            if not pending:
+                raise UsageError("bea price export --output needs a directory.")
+            output_dir = pending.pop(0)
+        elif arg.startswith("--output="):
+            output_dir = arg.split("=", 1)[1]
+            if not output_dir:
+                raise UsageError("bea price export --output needs a directory.")
+        elif arg == "--allow-errors":
+            allow_errors = True
+        else:
+            raise UsageError(f"bea price export takes only --output and --allow-errors; got: {arg}.")
+    current = context.current()
+    file = current.entry_file()
+    argv = ["price-export", "--file", str(file)]
+    if output_dir is not None:
+        argv += ["--output", output_dir]
+    if allow_errors:
+        argv.append("--allow-errors")
+    data = launch.helper_json(argv)
+    output.render_ledger_errors(data.get("errors") or [], allow=True)
+    if current.json_output:
+        output.emit(
+            {"output": data["output"], "files": data["files"], "sources": data["sources"]},
+            target={**output.file_target(file), "into": data["output"]},
+        )
+        return
+    files: list[str] = data["files"]
+    output.success(f"Exported {len(files)} file{'s' if len(files) != 1 else ''} to {data['output']}.")

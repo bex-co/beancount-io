@@ -943,6 +943,18 @@ and `refresh` take no arguments; anything else after `bea price` still
 forwards to `bean-price`, so name a quotes job file `status` by path
 (`./status`) if you ever have one.
 
+`price export` snapshots a self-contained copy for stock tools: each feed
+lands at `prices/<ALIAS>.beancount` as a `custom "bea-managed-source"`
+marker directive plus the exact effective text the load parsed, and every
+include is rewritten relative. An unavailable source refuses the export
+unless `--allow-errors` carries its marker alone.
+
+```bash
+bea price export                      # <ledger>-export/ beside the ledger
+bea price export --output /tmp/audit  # a chosen directory instead
+bean-check /tmp/audit/main.bean       # stock Beancount checks it untouched
+```
+
 ## Ask (optional extra)
 
 `bea ask` needs the AI dependencies, which the default install does not carry:

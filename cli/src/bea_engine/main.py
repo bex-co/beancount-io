@@ -570,6 +570,34 @@ def price_refresh(
         }
 
 
+@app.command("price-export")
+def price_export(
+    file: Annotated[Path, typer.Option("--file", "-f", help="Root ledger file to export.")],
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Directory for the portable copy.")] = None,
+    allow_errors: Annotated[
+        bool,
+        typer.Option("--allow-errors", help="Export unavailable sources with their marker alone."),
+    ] = False,
+) -> None:
+    """Snapshot the ledger with local price files and relative includes.
+
+    Answers `{"output": ..., "files": [...], "sources": [...], "errors": [...]}`.
+    An unavailable source refuses the export naming it unless `--allow-errors`
+    carries the marker alone.
+    """
+    with protocol.answering("price-export") as answer:
+        from bea_engine import managed_load
+        from bea_engine.query import format_error
+
+        exported = managed_load.export_portable(_ledger(file), output, allow_errors=allow_errors)
+        answer.data = {
+            "output": str(exported.output),
+            "files": list(exported.files),
+            "sources": [_source_json(source) for source in exported.sources],
+            "errors": [format_error(error) for error in exported.errors],
+        }
+
+
 def _source_json(source: Any) -> dict[str, Any]:
     """One managed source as the status record ADR 015 section 8 describes."""
     return {

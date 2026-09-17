@@ -1096,63 +1096,66 @@ include "prices.bean"
         assert f"{feed_server}/prices/BTC-USD" in str(error.value)
 
 
+def _cli_env(tmp_path: Path, feed_server: str) -> dict[str, str]:
+    origin = f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}"
+    env = {k: v for k, v in os.environ.items() if not k.startswith("BEA_")}
+    env.update(
+        BEA_CONFIG_DIR=str(tmp_path / "config"),
+        XDG_CACHE_HOME=str(tmp_path / "cache"),
+        XDG_DATA_HOME=str(tmp_path / "data"),
+        BEA_NO_UPDATE_NOTIFIER="1",
+        MANAGED_PRICE_ORIGINS=origin,
+        PYTHONPATH=str(SOURCE_ROOT),
+        TERM="dumb",
+        NO_COLOR="1",
+    )
+    return env
+
+
+def _run_bea(tmp_path: Path, feed_server: str, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-m", "cli.main", *args],
+        env=_cli_env(tmp_path, feed_server),
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+
+
+def _write_managed_ledger(tmp_path: Path, feed_server: str, extra: str = "") -> Path:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(_managed_ledger(feed_server) + extra)
+    return ledger
+
+
 class TestManagedLoadCommands:
     """`check`, `list`, `query`, `report`, `import`, and writes resolve identically."""
 
-    def _env(self, tmp_path: Path, feed_server: str) -> dict[str, str]:
-        origin = f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}"
-        env = {k: v for k, v in os.environ.items() if not k.startswith("BEA_")}
-        env.update(
-            BEA_CONFIG_DIR=str(tmp_path / "config"),
-            XDG_CACHE_HOME=str(tmp_path / "cache"),
-            XDG_DATA_HOME=str(tmp_path / "data"),
-            BEA_NO_UPDATE_NOTIFIER="1",
-            MANAGED_PRICE_ORIGINS=origin,
-            PYTHONPATH=str(SOURCE_ROOT),
-            TERM="dumb",
-            NO_COLOR="1",
-        )
-        return env
-
-    def _bea(self, tmp_path: Path, feed_server: str, *args: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(
-            [sys.executable, "-m", "cli.main", *args],
-            env=self._env(tmp_path, feed_server),
-            cwd=tmp_path,
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
-
-    def _ledger(self, tmp_path: Path, feed_server: str, extra: str = "") -> Path:
-        ledger = tmp_path / "main.bean"
-        ledger.write_text(_managed_ledger(feed_server) + extra)
-        return ledger
-
     def test_check_accepts_a_managed_include(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
+        ledger = _write_managed_ledger(tmp_path, feed_server)
 
-        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "check")
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "check")
 
         assert result.returncode == 0, result.stderr
 
     def test_list_price_shows_feed_prices(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
+        ledger = _write_managed_ledger(tmp_path, feed_server)
 
-        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "list", "price")
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "list", "price")
 
         assert result.returncode == 0, result.stderr
         assert "112000.00 USD" in result.stdout
         assert "113500.50 USD" in result.stdout
 
     def test_query_loads_through_the_wrapper(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(
+        ledger = _write_managed_ledger(
             tmp_path,
             feed_server,
             '2024-02-01 * "buy"\n  Assets:Broker  1 BTC\n  Expenses:Food\n',
         )
 
-        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "query", "select date, narration")
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "query", "select date, narration")
 
         assert result.returncode == 0, result.stderr
         assert "2024-02-01" in result.stdout
@@ -1161,13 +1164,13 @@ class TestManagedLoadCommands:
         _FeedHandler.routes["/prices/BTC-USD"] = {
             "body": (b"; alias: BTC-USD\n; commodity: BTC\n; quote: USD\n2024-01-15 price BTC 10 USD\n")
         }
-        ledger = self._ledger(
+        ledger = _write_managed_ledger(
             tmp_path,
             feed_server,
             '2024-02-01 * "buy"\n  Assets:Broker  3 BTC\n  Expenses:Food\n',
         )
 
-        result = self._bea(
+        result = _run_bea(
             tmp_path,
             feed_server,
             "--file",
@@ -1183,14 +1186,14 @@ class TestManagedLoadCommands:
         assert "Partial valuation" not in result.stdout
 
     def test_import_applies_beside_a_managed_include(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server, "2024-01-01 open Assets:Checking\n")
+        ledger = _write_managed_ledger(tmp_path, feed_server, "2024-01-01 open Assets:Checking\n")
         source = tmp_path / "bank.csv"
         source.write_text(
             "Date,Payee,Narration,Amount,Currency,Category,BankID\n"
             "2024-02-01,Cafe,beans,12.00,USD,Expenses:Food,bank-001\n"
         )
 
-        result = self._bea(
+        result = _run_bea(
             tmp_path,
             feed_server,
             "--file",
@@ -1206,9 +1209,9 @@ class TestManagedLoadCommands:
         assert "12.00 USD" in ledger.read_text()
 
     def test_add_validates_through_the_wrapper(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
+        ledger = _write_managed_ledger(tmp_path, feed_server)
 
-        result = self._bea(
+        result = _run_bea(
             tmp_path,
             feed_server,
             "--file",
@@ -1229,22 +1232,22 @@ class TestManagedLoadCommands:
         assert "5 USD" in ledger.read_text()
 
 
-class TestPriceStatus(TestManagedLoadCommands):
+class TestPriceStatus:
     """`price status` and `price refresh` speak the ADR 015 vocabulary (t004)."""
 
     def test_status_lists_sources_human(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
+        ledger = _write_managed_ledger(tmp_path, feed_server)
 
-        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
 
         assert result.returncode == 0, result.stderr
         for token in ("BTC-USD", "FRESHNESS", "REVISION", "r1", "2026-09-11", "SHADOWED"):
             assert token in result.stdout
 
     def test_status_json_carries_the_adr015_record(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
+        ledger = _write_managed_ledger(tmp_path, feed_server)
 
-        result = self._bea(tmp_path, feed_server, "--json", "--file", str(ledger), "price", "status")
+        result = _run_bea(tmp_path, feed_server, "--json", "--file", str(ledger), "price", "status")
 
         assert result.returncode == 0, result.stderr
         (source,) = json.loads(result.stdout)["data"]["sources"]
@@ -1265,15 +1268,15 @@ class TestPriceStatus(TestManagedLoadCommands):
         ledger = tmp_path / "main.bean"
         ledger.write_text('option "operating_currency" "USD"\n2024-01-01 open Assets:Broker\n')
 
-        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
 
         assert result.returncode == 0, result.stderr
         assert "No managed price includes" in result.stdout
 
     def test_status_reports_unavailable_with_cause(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server, _managed_ledger(feed_server, "/prices/NOPE"))
+        ledger = _write_managed_ledger(tmp_path, feed_server, _managed_ledger(feed_server, "/prices/NOPE"))
 
-        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
 
         assert result.returncode == 0, result.stderr
         assert "unavailable" in result.stdout
@@ -1282,16 +1285,16 @@ class TestPriceStatus(TestManagedLoadCommands):
     def test_status_shows_stale_after_ten_minutes(self, feed_server: str, tmp_path: Path) -> None:
         body = _feed_text(_stamp(time.time() - 660)).encode("utf-8")
         _FeedHandler.routes["/prices/BTC-USD"] = {"body": body}
-        ledger = self._ledger(tmp_path, feed_server)
+        ledger = _write_managed_ledger(tmp_path, feed_server)
 
-        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
 
         assert result.returncode == 0, result.stderr
         assert "stale" in result.stdout
 
     def test_refresh_reports_changed_revision(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
-        first = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh")
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        first = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh")
         assert first.returncode == 0, first.stderr
         assert "none → r1" in first.stdout
         body = _feed_text(_stamp(time.time()), revision="r2").encode("utf-8")
@@ -1302,24 +1305,24 @@ class TestPriceStatus(TestManagedLoadCommands):
             "etag_match": True,
         }
 
-        second = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh")
+        second = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh")
 
         assert second.returncode == 0, second.stderr
         assert "r1 → r2" in second.stdout
 
     def test_refresh_reports_unchanged(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
-        assert self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh").returncode == 0
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        assert _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh").returncode == 0
 
-        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh")
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh")
 
         assert result.returncode == 0, result.stderr
         assert "unchanged at r1" in result.stdout
 
     def test_refresh_json_reports_changed_shape(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
+        ledger = _write_managed_ledger(tmp_path, feed_server)
 
-        result = self._bea(tmp_path, feed_server, "--json", "--file", str(ledger), "price", "refresh")
+        result = _run_bea(tmp_path, feed_server, "--json", "--file", str(ledger), "price", "refresh")
 
         assert result.returncode == 0, result.stderr
         data = json.loads(result.stdout)["data"]
@@ -1333,29 +1336,29 @@ class TestPriceStatus(TestManagedLoadCommands):
         ]
 
     def test_status_rejects_extra_arguments(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
+        ledger = _write_managed_ledger(tmp_path, feed_server)
 
-        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status", "extra")
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "status", "extra")
 
         assert result.returncode == 2, result.stderr
         assert "takes no arguments" in result.stderr
 
     def test_price_help_names_the_managed_subcommands(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
+        ledger = _write_managed_ledger(tmp_path, feed_server)
 
-        result = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "--help")
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "--help")
 
         assert result.returncode == 0, result.stderr
         assert "status" in result.stdout
         assert "refresh" in result.stdout
 
     def test_offline_flag_resolves_from_cache(self, feed_server: str, tmp_path: Path) -> None:
-        ledger = self._ledger(tmp_path, feed_server)
-        seed = self._bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        seed = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
         assert seed.returncode == 0, seed.stderr
         _FeedHandler.hits.clear()
 
-        result = self._bea(tmp_path, feed_server, "--offline", "--file", str(ledger), "price", "status")
+        result = _run_bea(tmp_path, feed_server, "--offline", "--file", str(ledger), "price", "status")
 
         assert result.returncode == 0, result.stderr
         assert "r1" in result.stdout
@@ -1364,9 +1367,9 @@ class TestPriceStatus(TestManagedLoadCommands):
     def test_strict_flag_fails_naming_a_stale_source(self, feed_server: str, tmp_path: Path) -> None:
         body = _feed_text(_stamp(time.time() - 660)).encode("utf-8")
         _FeedHandler.routes["/prices/BTC-USD"] = {"body": body}
-        ledger = self._ledger(tmp_path, feed_server)
+        ledger = _write_managed_ledger(tmp_path, feed_server)
 
-        result = self._bea(tmp_path, feed_server, "--strict-prices", "--file", str(ledger), "check")
+        result = _run_bea(tmp_path, feed_server, "--strict-prices", "--file", str(ledger), "check")
 
         assert result.returncode != 0
         assert f"{feed_server}/prices/BTC-USD" in result.stderr
@@ -1376,3 +1379,135 @@ class TestPriceStatus(TestManagedLoadCommands):
 
         assert len(loaded.errors) == 1
         assert "bea price status" in loaded.errors[0].message
+
+
+class TestPriceExport:
+    """`price export` snapshots a portable tree stock tools check (t005)."""
+
+    def _stock_check(self, target: Path) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, "-m", "beancount.scripts.check", str(target)],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+
+    def test_export_writes_portable_tree_with_markers(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "export")
+
+        assert result.returncode == 0, result.stderr
+        assert "Exported 2 files" in result.stdout
+        exported = tmp_path / "main-export" / "main.bean"
+        feed = tmp_path / "main-export" / "prices" / "BTC-USD.beancount"
+        assert exported.is_file()
+        assert feed.is_file()
+        assert f'include "{feed_server}/prices/BTC-USD"' not in exported.read_text()
+        assert 'include "prices/BTC-USD.beancount"' in exported.read_text()
+        text = feed.read_text()
+        assert f'custom "bea-managed-source" "BTC-USD" "{feed_server}/prices/BTC-USD" "r1"' in text
+        assert "2026-09-10 price BTC 112000.00 USD" in text
+        # Re-exporting is deterministic: the same bytes, not a growing tree.
+        again = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "export")
+        assert again.returncode == 0, again.stderr
+        assert feed.read_text() == text
+
+    def test_export_parses_under_stock_beancount(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        assert _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "export").returncode == 0
+
+        assert self._stock_check(tmp_path / "main-export" / "main.bean").returncode == 0
+
+    def test_export_values_equivalently(self, feed_server: str, tmp_path: Path) -> None:
+        _FeedHandler.routes["/prices/BTC-USD"] = {
+            "body": (b"; alias: BTC-USD\n; commodity: BTC\n; quote: USD\n2024-01-15 price BTC 10 USD\n")
+        }
+        ledger = _write_managed_ledger(
+            tmp_path,
+            feed_server,
+            '2024-02-01 * "buy"\n  Assets:Broker  3 BTC\n  Expenses:Food\n',
+        )
+        assert _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "export").returncode == 0
+
+        result = _run_bea(
+            tmp_path,
+            feed_server,
+            "--file",
+            str(tmp_path / "main-export" / "main.bean"),
+            "report",
+            "balance-sheet",
+            "--conversion",
+            "USD",
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert "30 USD" in result.stdout
+
+    def test_export_refuses_unavailable_naming_the_source(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(_managed_ledger(feed_server, "/prices/NOPE"))
+
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "export")
+
+        assert result.returncode != 0
+        assert f"{feed_server}/prices/NOPE" in result.stderr
+        assert not (tmp_path / "main-export").exists()
+
+    def test_export_allow_errors_carries_the_marker(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(_managed_ledger(feed_server, "/prices/NOPE"))
+
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "export", "--allow-errors")
+
+        assert result.returncode == 0, result.stderr
+        feed = tmp_path / "main-export" / "prices" / "NOPE.beancount"
+        assert feed.is_file()
+        assert '"none"' in feed.read_text()
+        assert self._stock_check(tmp_path / "main-export" / "main.bean").returncode == 0
+
+    def test_export_output_flag_chooses_the_directory(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+
+        result = _run_bea(
+            tmp_path,
+            feed_server,
+            "--file",
+            str(ledger),
+            "price",
+            "export",
+            "--output",
+            str(tmp_path / "audit"),
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert (tmp_path / "audit" / "main.bean").is_file()
+        assert not (tmp_path / "main-export").exists()
+
+    def test_export_into_the_source_directory_is_refused(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+
+        result = _run_bea(
+            tmp_path,
+            feed_server,
+            "--file",
+            str(ledger),
+            "price",
+            "export",
+            "--output",
+            str(tmp_path),
+        )
+
+        assert result.returncode == 2, result.stderr
+        assert "would overwrite" in result.stderr
+
+    def test_export_excludes_shadowed_points(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server, "2026-09-10 price BTC 1 USD\n")
+
+        result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "export")
+
+        assert result.returncode == 0, result.stderr
+        text = (tmp_path / "main-export" / "prices" / "BTC-USD.beancount").read_text()
+        assert "112000.00" not in text
+        assert "113500.50" in text
+        assert text.count("shadowed by a ledger-authored price") == 1

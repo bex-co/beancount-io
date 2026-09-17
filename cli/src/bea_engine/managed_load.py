@@ -469,6 +469,148 @@ def load_file(
     return loaded.entries, loaded.errors, loaded.options
 
 
+@dataclass(frozen=True)
+class PortableExport:
+    """A self-contained copy of the ledger with local price files."""
+
+    output: Path
+    files: tuple[str, ...]
+    sources: tuple[ManagedSource, ...]
+    errors: list[Any]
+
+
+def export_portable(
+    entry: Path,
+    output: Path | None = None,
+    *,
+    allow_errors: bool = False,
+    offline: bool | None = None,
+    strict: bool | None = None,
+    origins: tuple[str, ...] | None = None,
+    root: Path | None = None,
+    now: float | None = None,
+    opener: OpenerDirector | None = None,
+) -> PortableExport:
+    """Snapshot the ledger with local price files and relative includes.
+
+    Each managed feed lands at `prices/<ALIAS>.beancount` under the output
+    directory as a `custom "bea-managed-source"` marker directive plus the
+    exact effective text the load parsed, so the next pipeline stage replays
+    the mapping and stock Beancount checks the tree untouched. An unavailable
+    source refuses the export naming it, unless `allow_errors` carries the
+    marker alone.
+    """
+    from bea_engine.ledger.write import LedgerSnapshot
+    from bea_engine.protocol import UsageError
+
+    loaded = load_with_sources(
+        entry, offline=offline, strict=strict, origins=origins, root=root, now=now, opener=opener
+    )
+    failed = [source for source in loaded.sources if source.revision is None]
+    if failed and not allow_errors:
+        names = ", ".join(f"{source.alias} ({source.url})" for source in failed)
+        raise UsageError(
+            f"Cannot export: managed price source {names} is unavailable. "
+            "Retry, or pass --allow-errors to export with its marker only."
+        )
+    target = (output or entry.parent / f"{entry.stem}-export").expanduser()
+    snapshot = LedgerSnapshot.capture(entry.resolve())
+    resolved_target = target.resolve() if target.exists() else target.absolute()
+    for path in snapshot.contents:
+        if resolved_target == path.parent.resolve():
+            raise UsageError(
+                f"Cannot export into {target}: it holds {path.name}, which the export would overwrite. "
+                "Choose an empty or dedicated directory."
+            )
+    destinations: dict[Path, Path] = {}
+    external = 0
+    for path in snapshot.contents:
+        try:
+            destinations[path] = target / path.relative_to(snapshot.root.parent)
+        except ValueError:
+            external += 1
+            destinations[path] = target / "_shared" / f"{external:02d}-{path.name}"
+    feed_files: dict[str, Path] = {}
+    for source in loaded.sources:
+        feed_files[source.url] = target / "prices" / f"{source.alias}.beancount"
+    by_target = {
+        include.target: feed_files[source.url] for source in loaded.sources for include in source.included_from
+    }
+    written: list[str] = []
+    for path, original in snapshot.contents.items():
+        dest = destinations[path]
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(_rewrite_export_includes(original, path, snapshot.patterns, destinations, by_target))
+        written.append(str(dest))
+    at = time.time() if now is None else now
+    for source in loaded.sources:
+        dest = feed_files[source.url]
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(_export_feed_text(source, at), encoding="utf-8")
+        written.append(str(dest))
+    return PortableExport(
+        output=target, files=tuple(sorted(written)), sources=loaded.sources, errors=list(loaded.errors)
+    )
+
+
+def _rewrite_export_includes(
+    original: bytes,
+    path: Path,
+    patterns: dict[str, tuple[Path, ...]],
+    destinations: dict[Path, Path],
+    by_target: dict[str, Path],
+) -> bytes:
+    """Rewrite one copied file's includes as portable relative targets.
+
+    Local includes follow their files to the new tree, managed URLs become
+    the sibling price files, and anything the loader left unresolved stays
+    byte-identical so stock tools report it the same way.
+    """
+    from beancount.utils import misc_utils
+
+    from bea_engine.ledger.text import iter_includes
+
+    escape_string: Callable[[str], str] = misc_utils.escape_string
+    content = original
+    dest = destinations[path]
+    for span in sorted(iter_includes(content), key=lambda item: item.start, reverse=True):
+        feed = by_target.get(span.target)
+        if feed is not None:
+            replacement = f'"{escape_string(os.path.relpath(feed, dest.parent))}"'
+            content = content[: span.start] + replacement.encode() + content[span.end :]
+            continue
+        matches = patterns.get(str(path.parent / span.target), ())
+        if matches:
+            replacement = "\ninclude ".join(
+                f'"{escape_string(os.path.relpath(destinations[p], dest.parent))}"' for p in matches
+            )
+            content = content[: span.start] + replacement.encode() + content[span.end :]
+    return content
+
+
+def _export_feed_text(source: ManagedSource, at: float) -> str:
+    """A marker directive the next stage replays, plus the effective text."""
+    if source.revision is None:
+        day = datetime.fromtimestamp(at, UTC).strftime("%Y-%m-%d")
+        marker = f'{day} custom "bea-managed-source" "{source.alias}" "{source.url}" "none" "unknown" "unknown" 0\n'
+        cause = source.error or "no cached revision"
+        return f"; bea-managed-error: {cause}\n{marker}"
+    effective = Path(source.effective_path).read_text(encoding="utf-8") if source.effective_path else ""
+    day = max(source.effective_dates) if source.effective_dates else _iso_day(source.fetched_at, at)
+    marker = (
+        f'{day} custom "bea-managed-source" "{source.alias}" "{source.url}" '
+        f'"{source.revision}" "{source.observed_at or "unknown"}" "{source.fetched_at or "unknown"}" '
+        f"{source.shadowed_count}\n"
+    )
+    return f"{marker}{effective}" if effective.endswith("\n") or not effective else f"{marker}{effective}\n"
+
+
+def _iso_day(stamp: str | None, at: float) -> str:
+    if stamp:
+        return stamp[:10]
+    return datetime.fromtimestamp(at, UTC).strftime("%Y-%m-%d")
+
+
 __all__ = [
     "EffectiveFeed",
     "IncludeRef",
@@ -476,9 +618,11 @@ __all__ = [
     "ManagedSource",
     "OFFLINE_ENV",
     "ORIGINS_ENV",
+    "PortableExport",
     "STRICT_ENV",
     "apply_ledger_price_precedence",
     "collect_ledger_price_pairs",
+    "export_portable",
     "load_file",
     "load_with_sources",
 ]
