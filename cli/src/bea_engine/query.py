@@ -268,6 +268,17 @@ def build_shell(
                 renderer = FORMATS[self.settings.format]
                 return renderer(description, rows, out, dcontext=dcontext, **self.settings.todict())
 
+        def on_Print(self, statement: Any) -> Any:  # noqa: N802 - beanquery dispatch name
+            # Upstream PRINT forces the beancount renderer, silently ignoring
+            # `--format csv`. Refuse that combination so agents do not get
+            # directive text labeled as CSV.
+            if self.settings.format == "csv":
+                raise protocol.UsageError(
+                    "PRINT renders Beancount directives; --format csv cannot represent them. "
+                    "Use --format text or --format beancount, or SELECT for a CSV table."
+                )
+            return super().on_Print(statement)
+
     return PreciseShell(LEDGER_DSN, stream, interactive, True, format, numberify, show_errors)
 
 
