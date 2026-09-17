@@ -204,42 +204,66 @@ def _utf8_usage_error(source: Path, exc: UnicodeDecodeError) -> UsageError:
     )
 
 
-_CANDIDATE_DELIMITERS = (",", ";", "\t")
+_CANDIDATE_DELIMITERS = (",", ";", "\t", "|")
+
+_SAMPLE_LINES = 5
+
+
+def _field_count(line: str, delim: str) -> int | None:
+    """The field count one candidate yields, or None when it cannot parse."""
+    try:
+        return len(next(csv.reader([line], delimiter=delim, strict=True), []))
+    except csv.Error:
+        return None
 
 
 def detect_delimiter(source: Path) -> str:
-    """Pick comma, semicolon, or tab from the first non-empty line.
+    """Pick comma, semicolon, tab, or pipe from the first non-empty lines.
 
-    Bank exports often use ``;`` (EU) or tabs. Prefer the separator that yields
-    the most fields on the header line so ``--csv auto`` and an explicit
-    ``--csv`` mapping see the same columns.
+    Bank exports often use ``;`` (EU), tabs, or ``|`` (brokers). Prefer the
+    separator with a consistent multi-field column count across the sampled
+    body rows, so a header tied on field count resolves by the body; the
+    header itself stays out of the uniformity check (a merged header cell is
+    not a vote), and when no candidate is consistent the most fields on the
+    header line wins as before.
     """
     try:
         with open(source, encoding="utf-8-sig", newline="") as stream:
-            sample = ""
+            sample = []
             for line in stream:
                 if line.strip():
-                    sample = line.rstrip("\r\n")
-                    break
+                    sample.append(line.rstrip("\r\n"))
+                    if len(sample) >= _SAMPLE_LINES:
+                        break
     except UnicodeDecodeError as exc:
         raise _utf8_usage_error(source, exc) from None
     if not sample:
         return ","
     best = ","
     best_count = 0
+    body = sample[1:]
+    if body:
+        for delim in _CANDIDATE_DELIMITERS:
+            parsed: list[int] = []
+            for line in body:
+                count = _field_count(line, delim)
+                if count is None:
+                    break
+                parsed.append(count)
+            else:
+                if len(set(parsed)) == 1 and parsed[0] > best_count and parsed[0] > 1:
+                    best, best_count = delim, parsed[0]
+        if best_count > 1:
+            return best
     for delim in _CANDIDATE_DELIMITERS:
-        try:
-            row = next(csv.reader([sample], delimiter=delim, strict=True), [])
-        except csv.Error:
-            continue
-        count = len(row)
-        if count > best_count:
+        count = _field_count(sample[0], delim)
+        if count is not None and count > best_count:
             best, best_count = delim, count
     return best
 
 
 def parse_delimiter(value: str) -> str:
-    """Normalize ``--delimiter`` to a single character (``,``, ``;``, or tab)."""
+    """Normalize ``--delimiter`` to a single character (``,``, ``;``, tab, ``|``)."""
     raw = value.strip()
     folded = raw.casefold()
     if folded in {",", "comma"}:
@@ -248,7 +272,9 @@ def parse_delimiter(value: str) -> str:
         return ";"
     if folded in {"tab", r"\t", "t"} or raw == "\t":
         return "\t"
-    raise UsageError(f"Bad --delimiter {value!r}: use ',', ';', or 'tab'.")
+    if folded in {"|", "pipe"}:
+        return "|"
+    raise UsageError(f"Bad --delimiter {value!r}: use ',', ';', '|', or 'tab'.")
 
 
 @contextmanager

@@ -60,13 +60,18 @@ def _config_path(file: Path, supplied: Path | None) -> tuple[Path, str]:
     )
 
 
+def _display_delimiter(delim: str) -> str:
+    """The `--csv delimiter=` spelling for an effective delimiter."""
+    return {"\t": "tab"}.get(delim, f"'{delim}'")
+
+
 def _inferred_mapping(source: Path, *, explicit: bool, notes: list[str], delimiter: str | None = None) -> str | None:
     """A `--csv` spec read off the export's header row.
 
     `--csv auto` fails for any unreadable header. The automatic attempt falls
     back to Python importers only when no columns were recognized at all.
     """
-    from cli.csv_mapper import infer_mapping, read_header
+    from cli.csv_mapper import detect_delimiter, infer_mapping, read_header
 
     headers = read_header(source, delimiter=delimiter)
     inferred = infer_mapping(headers)
@@ -79,15 +84,20 @@ def _inferred_mapping(source: Path, *, explicit: bool, notes: list[str], delimit
         if inferred is None and not explicit:
             return None
         columns = ", ".join(headers) if headers else "(none)"
-        if headers and len(headers) == 1 and any(sep in headers[0] for sep in (";", "\t")):
+        used = delimiter if delimiter is not None else detect_delimiter(source)
+        if headers and len(headers) == 1 and any(sep in headers[0] for sep in (";", "\t", "|")):
             raise UsageError(
                 f"Cannot read a column mapping from the header row of {source.name}. "
-                f"The file looks semicolon- or tab-separated but was read as one column ({headers[0]!r}). "
-                "Pass --delimiter ';' or --delimiter tab (or omit --delimiter so bea can detect it).",
+                f"The file looks semicolon-, tab-, or pipe-separated but was read as one column ({headers[0]!r}) "
+                f"with delimiter {_display_delimiter(used)}. "
+                "Pass --delimiter ';' (or tab, or '|'), --csv delimiter=';' — "
+                "or omit the override so bea can detect it.",
                 details=notes,
             )
+        clause = f" (delimiter {_display_delimiter(used)})" if used != "," else ""
         raise UsageError(
-            f"Cannot read a column mapping from the header row of {source.name}. Its columns are: {columns}. "
+            f"Cannot read a column mapping from the header row of {source.name}. "
+            f"Its columns are: {columns}{clause}. "
             "Name them with --csv date=Date,amount=Amount,narration=Description.",
             details=notes,
         )
@@ -184,8 +194,8 @@ def import_entries(
         str | None,
         typer.Option(
             "--csv",
-            help="Column mapping (date=Date,amount=Amount,narration=Description,...), or 'auto' to read the "
-            "header row; no Python importer needed",
+            help="Column mapping (date=Date,amount=Amount,narration=Description,...; delimiter=';' overrides "
+            "detection), or 'auto' to read the header row; no Python importer needed",
         ),
     ] = None,
     csv_account: Annotated[str | None, typer.Option("--account", help="Source account for --csv rows")] = None,
@@ -197,7 +207,7 @@ def import_entries(
         str | None,
         typer.Option(
             "--delimiter",
-            help="CSV field delimiter for --csv: ',', ';', or 'tab' (detected from the header when omitted)",
+            help="CSV field delimiter for --csv: ',', ';', '|', or 'tab' (detected from the header when omitted)",
         ),
     ] = None,
     rules_file: Annotated[Path | None, typer.Option("--rules", help="TOML categorization rules for --csv rows")] = None,
@@ -250,7 +260,8 @@ def import_entries(
 
     file = context.current().entry_file()
     source = source.expanduser().resolve()
-    csv_delimiter: str | None = parse_delimiter(delimiter) if delimiter is not None else None
+    flag_delimiter: str | None = parse_delimiter(delimiter) if delimiter is not None else None
+    csv_delimiter: str | None = flag_delimiter
     if csv_mapping is not None and config is not None:
         raise UsageError("Pass --csv or --config, not both.")
     if not source.is_file():
@@ -293,6 +304,14 @@ def import_entries(
     csv_mode = csv_request is not None
     if csv_mode and csv_delimiter is None:
         csv_delimiter = detect_delimiter(source)
+    if (
+        csv_origin == "inferred --csv"
+        and csv_request is not None
+        and csv_delimiter is not None
+        and csv_delimiter != ","
+    ):
+        # The echoed spec carries what was assumed, so it pastes back verbatim.
+        csv_request = f"{csv_request},delimiter={_display_delimiter(csv_delimiter)}"
     argv = ["import", "--file", str(file), "--source", str(source), "--duplicates", duplicates.value]
     if apply:
         argv.append("--apply")
@@ -317,6 +336,14 @@ def import_entries(
                 details=inferred_notes,
             )
         mapping = parse_mapping(csv_request)
+        spec_delimiter = mapping.delimiter
+        if flag_delimiter is not None and spec_delimiter is not None and flag_delimiter != spec_delimiter:
+            raise UsageError(
+                f"--delimiter {_display_delimiter(flag_delimiter)} disagrees with "
+                f"--csv delimiter={_display_delimiter(spec_delimiter)}; pass only one."
+            )
+        if spec_delimiter is not None:
+            csv_delimiter = spec_delimiter
         if date_format is None:
             date_format, ambiguous = infer_date_format(source, mapping.columns["date"], delimiter=csv_delimiter)
             if date_format is None:
@@ -327,20 +354,30 @@ def import_entries(
                     "month-first cannot be told apart. Pass --date-format if that is the wrong reading."
                 )
         default_account = default_account or "Expenses:Uncategorized"
+        delimiter_note = ""
+        if csv_delimiter is not None and csv_delimiter != ",":
+            delimiter_note = f", delimiter {_display_delimiter(csv_delimiter)}"
         frontend_notes: list[str] = []
         if remembered_run:
-            frontend_notes.append(f"Using remembered column mapping for {source.name} (--date-format {date_format}).")
+            frontend_notes.append(
+                f"Using remembered column mapping for {source.name} (--date-format {date_format}{delimiter_note})."
+            )
         elif csv_origin == "inferred --csv":
             frontend_notes.append(
                 f"Read the column mapping from the header row: --csv {csv_request} --date-format {date_format}. "
                 "Pass --csv to override."
             )
         else:
-            frontend_notes.append("Using column mapping (--csv).")
+            frontend_notes.append(f"Using column mapping (--csv{delimiter_note}).")
         frontend_notes.extend(inferred_notes)
         for line in frontend_notes:
             output.note(line)
-        argv += ["--csv", csv_request, "--account", csv_run_account, "--config-source", csv_origin]
+        # The engine's parser rejects `delimiter=` by design: the frontend owns
+        # the merge above and forwards columns only.
+        forward_spec = ",".join(
+            part for part in csv_request.split(",") if part.partition("=")[0].strip() != "delimiter"
+        )
+        argv += ["--csv", forward_spec, "--account", csv_run_account, "--config-source", csv_origin]
         argv += ["--date-format", date_format, "--default-account", default_account]
         if csv_delimiter is not None:
             argv += ["--delimiter", "tab" if csv_delimiter == "\t" else csv_delimiter]

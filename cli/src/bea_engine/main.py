@@ -386,7 +386,7 @@ def import_entries(
     csv_account: Annotated[str | None, typer.Option("--account", help="Source account for --csv rows.")] = None,
     date_format: Annotated[str | None, typer.Option("--date-format", help="strptime date format for --csv.")] = None,
     delimiter: Annotated[
-        str | None, typer.Option("--delimiter", help="CSV field delimiter for --csv: ',', ';', or 'tab'.")
+        str | None, typer.Option("--delimiter", help="CSV field delimiter for --csv: ',', ';', '|', or 'tab'.")
     ] = None,
     rules_file: Annotated[
         Path | None, typer.Option("--rules", help="TOML categorization rules for --csv rows.")

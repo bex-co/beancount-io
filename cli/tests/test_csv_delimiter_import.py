@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from importlib import import_module
 from pathlib import Path
 
 import pytest
@@ -102,3 +103,125 @@ def test_forced_comma_on_semicolon_names_delimiter(books: Path, tmp_path: Path) 
     assert result.returncode == 2, result.stdout
     assert "--delimiter" in result.stderr
     assert "one column" in result.stderr or "Date;Description;Amount" in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("body", "key"),
+    [
+        ("Date;Description;Amount\n2024-03-10;Cafe;-4.50\n", "delimiter=';'"),
+        ("Date|Description|Amount\n2024-03-10|Cafe|-4.50\n", "delimiter='|'"),
+        ("Date\tDescription\tAmount\n2024-03-10\tCafe\t-4.50\n", "delimiter=tab"),
+    ],
+)
+def test_csv_delimiter_key_forces_delimiter(books: Path, tmp_path: Path, body: str, key: str) -> None:
+    """`--csv delimiter=` overrides detection, including pipe (m24/t001)."""
+    export = tmp_path / "export.csv"
+    export.write_text(body)
+    result = _bea(
+        tmp_path,
+        books,
+        "import",
+        str(export),
+        "--csv",
+        f"date=Date,amount=Amount,narration=Description,{key}",
+        "--account",
+        "Assets:Bank:Checking",
+    )
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "1 ready" in result.stdout
+
+
+def test_pipe_csv_imports_with_auto_detection(books: Path, tmp_path: Path) -> None:
+    export = tmp_path / "export.csv"
+    export.write_text("Date|Description|Amount\n2024-03-10|Cafe|-4.50\n")
+    result = _bea(tmp_path, books, "import", str(export), "--csv", "auto", "--account", "Assets:Bank:Checking")
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "1 ready" in result.stdout
+
+
+@pytest.mark.parametrize("flag", ["|", "pipe"])
+def test_delimiter_flag_accepts_pipe(books: Path, tmp_path: Path, flag: str) -> None:
+    export = tmp_path / "export.csv"
+    export.write_text("Date|Description|Amount\n2024-03-10|Cafe|-4.50\n")
+    result = _bea(
+        tmp_path,
+        books,
+        "import",
+        str(export),
+        "--csv",
+        "auto",
+        "--delimiter",
+        flag,
+        "--account",
+        "Assets:Bank:Checking",
+    )
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "1 ready" in result.stdout
+
+
+def test_delimiter_flag_and_key_must_agree(books: Path, tmp_path: Path) -> None:
+    export = tmp_path / "export.csv"
+    export.write_text("Date;Description;Amount\n2024-03-10;Cafe;-4.50\n")
+    result = _bea(
+        tmp_path,
+        books,
+        "import",
+        str(export),
+        "--csv",
+        "date=Date,amount=Amount,narration=Description,delimiter=';'",
+        "--delimiter",
+        ",",
+        "--account",
+        "Assets:Bank:Checking",
+    )
+    assert result.returncode == 2, result.stdout
+    assert "--delimiter" in result.stderr
+    assert "delimiter=" in result.stderr
+
+
+def test_preview_names_non_comma_delimiter(books: Path, tmp_path: Path) -> None:
+    export = tmp_path / "export.csv"
+    export.write_text("Date;Description;Amount\n2024-03-10;Cafe;-4.50\n")
+    result = _bea(tmp_path, books, "import", str(export), "--csv", "auto", "--account", "Assets:Bank:Checking")
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "delimiter=';'" in result.stderr
+
+
+def test_preview_leaves_comma_unsaid(books: Path, tmp_path: Path) -> None:
+    export = tmp_path / "export.csv"
+    export.write_text("Date,Description,Amount\n2024-03-10,Cafe,-4.50\n")
+    result = _bea(tmp_path, books, "import", str(export), "--csv", "auto", "--account", "Assets:Bank:Checking")
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "delimiter" not in result.stderr
+
+
+def test_header_failure_names_delimiter_in_use(books: Path, tmp_path: Path) -> None:
+    export = tmp_path / "export.csv"
+    export.write_text("Date|Description|Amount\n2024-03-10|Cafe|-4.50\n")
+    result = _bea(
+        tmp_path,
+        books,
+        "import",
+        str(export),
+        "--csv",
+        "auto",
+        "--delimiter",
+        ",",
+        "--account",
+        "Assets:Bank:Checking",
+    )
+    assert result.returncode == 2, result.stdout
+    assert "','" in result.stderr
+    assert "--csv delimiter=" in result.stderr or "--delimiter" in result.stderr
+
+
+@pytest.mark.parametrize("module", ["cli.csv_mapper", "bea_engine.csv_mapper"])
+def test_sniffer_prefers_consistent_column_count(tmp_path: Path, module: str) -> None:
+    """A header tied on field count resolves by body consistency (m24/t001)."""
+    detect = import_module(module).detect_delimiter
+    tied = tmp_path / "tied.csv"
+    tied.write_text("AB,CD;EF\n12;34\n56;78\n")
+    assert detect(tied) == ";"
+    comma = tmp_path / "comma.csv"
+    comma.write_text("A,B,C\n1,2,3\n4,5,6\n")
+    assert detect(comma) == ","

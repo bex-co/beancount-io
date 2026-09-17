@@ -99,10 +99,10 @@ Usage: bea import [OPTIONS] {source}
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--csv` | str |  | Column mapping (date=Date,amount=Amount,narration=Description,...), or 'auto' to read the header row; no Python importer needed |
+| `--csv` | str |  | Column mapping (date=Date,amount=Amount,narration=Description,...; delimiter=';' overrides detection), or 'auto' to read the header row; no Python importer needed |
 | `--account` | str |  | Source account for --csv rows |
 | `--date-format` | str |  | strptime date format for --csv; inferred from the file if unset |
-| `--delimiter` | str |  | CSV field delimiter for --csv: ',', ';', or 'tab' (detected from the header when omitted) |
+| `--delimiter` | str |  | CSV field delimiter for --csv: ',', ';', '\|', or 'tab' (detected from the header when omitted) |
 | `--rules` | path |  | TOML categorization rules for --csv rows |
 | `--default-account` | str |  | Counter account for --csv rows no rule matches [default: Expenses:Uncategorized] |
 | `--config` | path |  | Python CONFIG file; defaults to the saved path or root-ledger/importers.py |

@@ -1,12 +1,12 @@
 # w1 · m24 — Bank CSVs import as exported: delimiters, amounts, encodings, IDs
 
-**Worker:** worker1 **Goal:** the documented no-code CSV path works on the exports people actually download — semicolon and tab delimiters, cp1252 and BOM encodings, currency symbols and accounting negatives, blank trailer rows, and bank identifier columns — without writing a Python importer **Status:** todo
+**Worker:** worker1 **Goal:** the documented no-code CSV path works on the exports people actually download — semicolon and tab delimiters, cp1252 and BOM encodings, currency symbols and accounting negatives, blank trailer rows, and bank identifier columns — without writing a Python importer **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Sniff CSV delimiters and accept a `--csv delimiter=` override | 45m | — |
+| t001 | Sniff CSV delimiters and accept a `--csv delimiter=` override — **DONE** | 45m | — |
 | t002 | Decode BOM, cp1252 and latin-1 exports with a `--csv encoding=` override | 30m | — |
 | t003 | Parse the amount spellings real bank exports use | 45m | — |
 | t004 | Skip blank rows and name the columns that tied for a role | 30m | — |

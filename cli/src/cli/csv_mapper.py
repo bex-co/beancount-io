@@ -20,7 +20,7 @@ from typing import Any
 from cli.errors import UsageError
 
 _MAPPING_FIELDS = frozenset(
-    {"date", "amount", "payee", "narration", "id", "currency", "debit", "credit", "category", "sign"}
+    {"date", "amount", "payee", "narration", "id", "currency", "debit", "credit", "category", "sign", "delimiter"}
 )
 
 
@@ -30,6 +30,7 @@ class CsvMapping:
 
     columns: dict[str, str]
     sign: str = "bank"
+    delimiter: str | None = None
 
     def column(self, name: str) -> str | None:
         return self.columns.get(name)
@@ -57,13 +58,24 @@ class CsvRule:
 
 
 def parse_mapping(spec: str) -> CsvMapping:
-    """Parse `--csv field=Column,...` into a validated mapping (exit 2 on misuse)."""
+    """Parse `--csv field=Column,...` into a validated mapping (exit 2 on misuse).
+
+    `delimiter=` is a parsing directive, not a column: the frontend strips it
+    before forwarding the spec, and the engine's copy of this parser rejects
+    it — that rejection is the safety net proving the strip happened.
+    """
     columns: dict[str, str] = {}
     sign = "bank"
+    delimiter: str | None = None
     for part in spec.split(","):
         name, separator, column = part.partition("=")
         name, column = name.strip(), column.strip()
         if not separator or not name or not column:
+            if name == "delimiter" and separator:
+                raise UsageError(
+                    "Bad --csv delimiter '': a bare comma separates fields, so write delimiter=comma "
+                    "(or semicolon, tab, pipe — or ';', '|', a literal tab)."
+                )
             raise UsageError(
                 f"Bad --csv mapping {part!r}: use field=Column pairs like date=Date,amount=Amount,payee=Payee."
             )
@@ -73,6 +85,10 @@ def parse_mapping(spec: str) -> CsvMapping:
             if column not in ("bank", "ledger"):
                 raise UsageError(f"Bad --csv sign {column!r}: use sign=bank or sign=ledger.")
             sign = column
+        elif name == "delimiter":
+            if delimiter is not None:
+                raise UsageError("Duplicate --csv field 'delimiter'.")
+            delimiter = _parse_delimiter_value(column)
         elif name in columns:
             raise UsageError(f"Duplicate --csv field {name!r}.")
         else:
@@ -93,7 +109,27 @@ def parse_mapping(spec: str) -> CsvMapping:
         raise UsageError("--csv needs amount=Column or debit=A,credit=B (exactly one of the two).")
     if has_pair and ("debit" not in columns or "credit" not in columns):
         raise UsageError("--csv needs both debit=A and credit=B together.")
-    return CsvMapping(columns=columns, sign=sign)
+    return CsvMapping(columns=columns, sign=sign, delimiter=delimiter)
+
+
+def _parse_delimiter_value(column: str) -> str:
+    """Normalize a `--csv delimiter=` value to one character.
+
+    A bare comma cannot appear: it is the spec's own separator, so
+    `delimiter=,` arrives here as an empty value and is pointed at the
+    `comma` word.
+    """
+    value = column.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+        value = value[1:-1]
+    if value:
+        try:
+            return parse_delimiter(value)
+        except UsageError:
+            pass
+    raise UsageError(
+        f"Bad --csv delimiter {column!r}: write comma, semicolon, tab, or pipe (or ';', '|', a literal tab)."
+    )
 
 
 def load_rules(path: Path) -> list[CsvRule]:
@@ -201,42 +237,66 @@ def _utf8_usage_error(source: Path, exc: UnicodeDecodeError) -> UsageError:
     )
 
 
-_CANDIDATE_DELIMITERS = (",", ";", "\t")
+_CANDIDATE_DELIMITERS = (",", ";", "\t", "|")
+
+_SAMPLE_LINES = 5
+
+
+def _field_count(line: str, delim: str) -> int | None:
+    """The field count one candidate yields, or None when it cannot parse."""
+    try:
+        return len(next(csv.reader([line], delimiter=delim, strict=True), []))
+    except csv.Error:
+        return None
 
 
 def detect_delimiter(source: Path) -> str:
-    """Pick comma, semicolon, or tab from the first non-empty line.
+    """Pick comma, semicolon, tab, or pipe from the first non-empty lines.
 
-    Bank exports often use ``;`` (EU) or tabs. Prefer the separator that yields
-    the most fields on the header line so ``--csv auto`` and an explicit
-    ``--csv`` mapping see the same columns.
+    Bank exports often use ``;`` (EU), tabs, or ``|`` (brokers). Prefer the
+    separator with a consistent multi-field column count across the sampled
+    body rows, so a header tied on field count resolves by the body; the
+    header itself stays out of the uniformity check (a merged header cell is
+    not a vote), and when no candidate is consistent the most fields on the
+    header line wins as before.
     """
     try:
         with open(source, encoding="utf-8-sig", newline="") as stream:
-            sample = ""
+            sample = []
             for line in stream:
                 if line.strip():
-                    sample = line.rstrip("\r\n")
-                    break
+                    sample.append(line.rstrip("\r\n"))
+                    if len(sample) >= _SAMPLE_LINES:
+                        break
     except UnicodeDecodeError as exc:
         raise _utf8_usage_error(source, exc) from None
     if not sample:
         return ","
     best = ","
     best_count = 0
+    body = sample[1:]
+    if body:
+        for delim in _CANDIDATE_DELIMITERS:
+            parsed: list[int] = []
+            for line in body:
+                count = _field_count(line, delim)
+                if count is None:
+                    break
+                parsed.append(count)
+            else:
+                if len(set(parsed)) == 1 and parsed[0] > best_count and parsed[0] > 1:
+                    best, best_count = delim, parsed[0]
+        if best_count > 1:
+            return best
     for delim in _CANDIDATE_DELIMITERS:
-        try:
-            row = next(csv.reader([sample], delimiter=delim, strict=True), [])
-        except csv.Error:
-            continue
-        count = len(row)
-        if count > best_count:
+        count = _field_count(sample[0], delim)
+        if count is not None and count > best_count:
             best, best_count = delim, count
     return best
 
 
 def parse_delimiter(value: str) -> str:
-    """Normalize ``--delimiter`` to a single character (``,``, ``;``, or tab)."""
+    """Normalize ``--delimiter`` to a single character (``,``, ``;``, tab, ``|``)."""
     raw = value.strip()
     folded = raw.casefold()
     if folded in {",", "comma"}:
@@ -245,7 +305,9 @@ def parse_delimiter(value: str) -> str:
         return ";"
     if folded in {"tab", r"\t", "t"} or raw == "\t":
         return "\t"
-    raise UsageError(f"Bad --delimiter {value!r}: use ',', ';', or 'tab'.")
+    if folded in {"|", "pipe"}:
+        return "|"
+    raise UsageError(f"Bad --delimiter {value!r}: use ',', ';', '|', or 'tab'.")
 
 
 @contextmanager
