@@ -276,9 +276,18 @@ def _targets(paths: list[Path] | None, default: Path | None) -> list[Path] | Non
         if not resolved.exists():
             raise UsageError(f"Formatting target does not exist: {resolved}")
         if resolved.is_dir():
-            files.update(
-                f.resolve() for pattern in ("*.bean", "*.beancount") for f in resolved.rglob(pattern) if f.is_file()
-            )
+            root = resolved
+            for pattern in ("*.bean", "*.beancount"):
+                for match in root.rglob(pattern):
+                    if not match.is_file():
+                        continue
+                    target = match.resolve()
+                    try:
+                        target.relative_to(root)
+                    except ValueError:
+                        # Outbound symlink: stay inside the requested directory tree.
+                        continue
+                    files.add(target)
         elif resolved.is_file():
             if resolved.suffix not in SUFFIXES:
                 raise UsageError("Expected a .bean or .beancount file, or a directory.")
