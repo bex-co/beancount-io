@@ -146,7 +146,7 @@ With `bea`, this stage is `bea … --apply` (CSV path) or `bea add transactions 
 
 On **yes**:
 
-- Insert in date order; preserve blank-line separators and trailing newlines. New `open` directives go after existing opens near the top of the main file.
+- Insert in date order; match the file's existing line endings (CRLF stays CRLF) and preserve blank-line separators and trailing newlines. New `open` directives go after existing opens near the top of the main file.
 - Every written entry carries its `import-id` as transaction metadata:
 
 ```

@@ -309,6 +309,14 @@ convergence path instead — it rewrites the file to LF, strips a UTF-8 BOM, and
 reports the file as formatted even when alignment alone did not change — so
 `--check` fails on a BOM-marked or carriage-return file until `-i` has run.
 
+A ledger saved with a UTF-8 BOM loads like any other: the mark is skipped on
+read, kept by appends, and removed only by `format -i`. Account names, search
+terms, and BQL literals compare NFC-normalized, so NFC and NFD spellings of
+one name resolve to one account with one balance; new directives are written
+NFC while existing bytes are never renormalised as a side effect. A file that
+is not UTF-8 at all fails with its path, the offending byte offset, and a hint
+to re-save as UTF-8.
+
 A directory is walked for `.bean` and `.beancount` files, and a walked entry it
 cannot read stops the run (exit **2**) naming the path and where it points — a
 broken `include` symlink is the shape this usually takes. Silently dropping it
@@ -500,10 +508,9 @@ Account syntax follows Beancount: colon-separated segments with an uppercase
 root; each subaccount starts with an uppercase letter or digit. Unicode
 letters and configured root names are supported. An account name written in a
 different Unicode normalization than the ledger uses — NFC where the ledger has
-NFD, which is what a name taken from a macOS file path looks like — is reported
-as such, quoting both spellings as escapes, rather than suggesting a name that
-renders identically to the one it rejected. Writes stay exact: `bea add` refuses
-rather than silently rewriting the name you typed. Amount strings use decimal notation
+NFD, which is what a name taken from a macOS file path looks like — resolves to
+the same account instead of a false unknown-account error, and the new
+directive is written NFC. Amount strings use decimal notation
 (e.g. `1000`, not `1e3`) in command arguments and bulk JSON, including units,
 costs, and prices. Bulk notation errors follow the normal row-validation and
 `--partial` rules. JSON listings spell amounts in decimal notation so tiny values
