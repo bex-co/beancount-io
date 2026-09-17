@@ -184,25 +184,60 @@ def _appended(file: Path, directive: Any, *, allow_errors: bool, into: Path | No
 def _balance(
     file: Path, request: dict[str, Any], *, into: Path | None, allow_errors: bool, strict_read: bool
 ) -> dict[str, Any]:
-    del strict_read  # A balance assertion needs no prior read of its own.
+    from beancount import loader
+    from beancount.core.data import Balance
+
     from bea_engine.ledger.models import Amount, BalanceDirective
+    from bea_engine.query import format_error
 
     date = _date(request)
     number, currency, tolerance = _parse_balance_amount(_text(request, "amount"))
+    account = parse_account(_text(request, "account"))
+    directive = BalanceDirective(
+        date=date, account=account, amount=Amount(number=number, currency=currency), tolerance=tolerance
+    )
     pad_from = request.get("pad_from")
     if pad_from is None:
-        directive = BalanceDirective(
-            date=date,
-            account=parse_account(_text(request, "account")),
-            amount=Amount(number=number, currency=currency),
-            tolerance=tolerance,
-        )
+        snapshot = write.LedgerSnapshot.capture(file)
+        target = write.destination(file, into)
+        snapshot.require_target(target)
+        entries, errors, _ = loader.load_file(file)
+        ledger_errors = [format_error(error, ledger_file=file) for error in errors]
+        if ledger_errors and strict_read and not all("Unused Pad" in error for error in ledger_errors):
+            # A staged pad is the transient error this very write resolves:
+            # the two-step pad flow stages with --allow-errors, then completes
+            # with the balance. Anything else still gates strict callers.
+            raise protocol.LedgerError(
+                f"Ledger has {len(ledger_errors)} error(s). Pass --allow-errors to report anyway.",
+                details=ledger_errors,
+            )
+        match = _balance_match(entries, date, account, number, currency, tolerance)
+        if match is not None:
+            snapshot.verify()
+            source = {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
+            return {
+                "written": 0,
+                "directive": directive.model_dump(mode="json"),
+                "warnings": ledger_errors,
+                "duplicate": True,
+                "source": source,
+                "ledger_errors": ledger_errors,
+                "target": str(target),
+            }
+        conflict = _balance_conflict(entries, date, account, number, currency, tolerance)
+        if conflict is not None and not request.get("force"):
+            where = conflict.meta.get("filename"), conflict.meta.get("lineno")
+            raise protocol.UsageError(
+                f"{account} already has a {date.isoformat()} balance of "
+                f"{_balance_amount(conflict.amount.number, currency, conflict.tolerance)} "
+                f"(at {where[0]}:{where[1]}); refusing {_balance_amount(number, currency, tolerance)}. "
+                "Pass --force to record another assertion."
+            )
         return _appended(file, directive, allow_errors=allow_errors, into=into)
 
     from beancount.core.amount import Amount as BcAmount
-    from beancount.core.data import Balance, Pad
+    from beancount.core.data import Pad
 
-    account = parse_account(_text(request, "account"))
     padded = _date(request, "pad_date")
     entries = [
         Pad({}, padded, account, parse_account(str(pad_from))),
@@ -215,17 +250,22 @@ def _balance(
         # --pad-from path still wants the assertion; write that alone.
         if allow_errors or not _unused_pad_only(exc):
             raise
-        result = _appended(
-            file,
-            BalanceDirective(
-                date=date,
-                account=account,
-                amount=Amount(number=number, currency=currency),
-                tolerance=tolerance,
-            ),
-            allow_errors=allow_errors,
-            into=into,
-        )
+        loaded, _, _ = loader.load_file(file)
+        match = _balance_match(loaded, date, account, number, currency, tolerance)
+        if match is not None:
+            source = {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
+            return {
+                "written": 0,
+                "directive": directive.model_dump(mode="json"),
+                "warnings": [
+                    f"Book balance already matches {number} {currency}; omitted the pad from "
+                    f"--pad-from (assertion already recorded at {source['filename']}:{source['lineno']})."
+                ],
+                "duplicate": True,
+                "source": source,
+                "target": str(write.destination(file, into)),
+            }
+        result = _appended(file, directive, allow_errors=allow_errors, into=into)
         warnings = list(result.get("warnings") or [])
         warnings.append(
             f"Book balance already matches {number} {currency}; omitted the pad from "
@@ -239,6 +279,52 @@ def _balance(
         "warnings": warnings,
         "target": str(write.destination(file, into)),
     }
+
+
+def _balance_match(
+    entries: list[Any], date: Any, account: str, number: Decimal, currency: str, tolerance: Decimal | None
+) -> Any | None:
+    """An identical balance assertion already in the ledger, or None."""
+    from beancount.core.data import Balance
+
+    return next(
+        (
+            entry
+            for entry in entries
+            if isinstance(entry, Balance)
+            and entry.date == date
+            and entry.account == account
+            and entry.amount.number == number
+            and entry.amount.currency == currency
+            and entry.tolerance == tolerance
+        ),
+        None,
+    )
+
+
+def _balance_conflict(
+    entries: list[Any], date: Any, account: str, number: Decimal, currency: str, tolerance: Decimal | None
+) -> Any | None:
+    """A same-key assertion with a different value, or None."""
+    from beancount.core.data import Balance
+
+    return next(
+        (
+            entry
+            for entry in entries
+            if isinstance(entry, Balance)
+            and entry.date == date
+            and entry.account == account
+            and entry.amount.currency == currency
+            and (entry.amount.number != number or entry.tolerance != tolerance)
+        ),
+        None,
+    )
+
+
+def _balance_amount(number: Decimal, currency: str, tolerance: Decimal | None) -> str:
+    """A balance amount as the user typed it, tolerance included."""
+    return f"{number} {currency}" if tolerance is None else f"{number} ~ {tolerance} {currency}"
 
 
 def _unused_pad_only(exc: protocol.LedgerError) -> bool:
@@ -326,6 +412,25 @@ def _price(
             "ledger_errors": ledger_errors,
             "target": str(target),
         }
+    conflict = next(
+        (
+            entry
+            for entry in entries
+            if isinstance(entry, Price)
+            and entry.date == directive.date
+            and entry.currency == currency
+            and entry.amount.currency == amount_currency
+            and entry.amount.number != number
+        ),
+        None,
+    )
+    if conflict is not None and not request.get("force"):
+        where = conflict.meta.get("filename"), conflict.meta.get("lineno")
+        raise protocol.UsageError(
+            f"{currency} already has a {directive.date.isoformat()} price of "
+            f"{conflict.amount.number} {amount_currency} (at {where[0]}:{where[1]}); "
+            f"refusing {number} {amount_currency}. Pass --force to record another quote."
+        )
 
     entry = Price({}, directive.date, currency, BcAmount(number, amount_currency))
     warnings = write.append(file, [writer.format_entry(entry)], allow_errors=allow_errors, into=into, snapshot=snapshot)

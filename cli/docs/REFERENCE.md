@@ -493,9 +493,10 @@ Usage: bea add balance [OPTIONS]
 | --- | --- | --- | --- |
 | `--date` | str | required | Date in YYYY-MM-DD format |
 | `--account, -a` | str | required | Account name |
-| `--amount` | str | required | 'NUMBER [~ TOLERANCE] CURRENCY' |
+| `--amount` | str (repeatable) | required | 'NUMBER [~ TOLERANCE] CURRENCY' (pass once) |
 | `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
 | `--into` | path |  | Write to an included file, relative to the root ledger |
+| `--force` | flag |  | Record another assertion when the date/account already has one |
 | `--pad-from` | str |  | Explicitly add a pad and this balance assertion together; source account |
 | `--pad-date` | str |  | Pad date; defaults to the day before the balance assertion |
 
@@ -559,9 +560,10 @@ Usage: bea add price [OPTIONS]
 | --- | --- | --- | --- |
 | `--date` | str | required | Date in YYYY-MM-DD format |
 | `--currency, --commodity, -c` | str | required | Commodity being priced |
-| `--amount` | str | required | 'NUMBER CURRENCY' |
+| `--amount` | str (repeatable) | required | 'NUMBER CURRENCY' (pass once) |
 | `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
 | `--into` | path |  | Write to an included file, relative to the root ledger |
+| `--force` | flag |  | Record another quote when the date/commodity already has one |
 
 ### `bea add commodity`
 

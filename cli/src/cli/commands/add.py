@@ -48,6 +48,16 @@ def _parse_amount(amount_str: str) -> tuple[Decimal, str]:
     return _parse_number(parts[0]), parts[1]
 
 
+def _single_amount(amounts: list[str], name: str) -> str:
+    """The one --amount a directive holds; repeats are refused, never silently dropped."""
+    if len(amounts) != 1:
+        raise UsageError(
+            f"Pass --amount exactly once; a {name} holds one amount ({len(amounts)} given). "
+            "Repeat the command for another."
+        )
+    return amounts[0]
+
+
 def _parse_number(text: str) -> Decimal:
     _check_decimal_notation(text)
     try:
@@ -223,9 +233,13 @@ def add_close(
 def add_balance(
     date: DateOpt,
     account: Annotated[str, typer.Option("--account", "-a", help="Account name")],
-    amount: Annotated[str, typer.Option("--amount", help="'NUMBER [~ TOLERANCE] CURRENCY'")],
+    amount: Annotated[list[str], typer.Option("--amount", help="'NUMBER [~ TOLERANCE] CURRENCY' (pass once)")],
     allow_errors: AllowErrorsOpt = False,
     into: IntoOpt = None,
+    force: Annotated[
+        bool,
+        typer.Option("--force", help="Record another assertion when the date/account already has one"),
+    ] = False,
     pad_from: Annotated[
         str | None,
         typer.Option("--pad-from", help="Explicitly add a pad and this balance assertion together; source account"),
@@ -241,15 +255,41 @@ def add_balance(
     """
     if pad_date is not None and pad_from is None:
         raise UsageError("--pad-date requires --pad-from.")
-    if "\n" not in amount and "\r" not in amount:
+    single = _single_amount(amount, "balance assertion")
+    if "\n" not in single and "\r" not in single:
         # Multi-line text is the engine's complaint to make; this only rejects
         # an exponent, which no Beancount amount accepts.
-        _check_decimal_notation(amount)
+        _check_decimal_notation(single)
     day = parse_date(date)
-    request: dict[str, Any] = {"date": day.isoformat(), "account": account, "amount": amount}
+    request: dict[str, Any] = {"date": day.isoformat(), "account": account, "amount": single, "force": force}
+    ctx = context.current()
     if pad_from is None:
-        file, data = _write("balance", request, allow_errors=allow_errors, into=into)
-        _appended("balance", file, data)
+        # Finding a duplicate means reading the ledger: strict callers refuse
+        # a ledger that does not load (see add price), a person at a terminal
+        # gets the errors as a banner and the write goes ahead.
+        file, data = _write(
+            "balance",
+            request,
+            allow_errors=allow_errors,
+            into=into,
+            strict_read=not allow_errors and ctx.strict_reads(),
+        )
+        ledger_errors = data.pop("ledger_errors", [])
+        if not allow_errors:
+            output.render_ledger_errors(ledger_errors, allow=True)
+        target = data.pop("target")
+        # Price answers always carry duplicate/source; a fresh balance matches that shape.
+        data.setdefault("duplicate", False)
+        data.setdefault("source", None)
+        source = data.get("source")
+        if ctx.json_output:
+            output.emit(data, target={**output.file_target(file), "into": target})
+        elif source:
+            for warning in data["warnings"]:
+                output.note(warning)
+            output.success(f"Balance already recorded at {source['filename']}:{source['lineno']}; nothing was written.")
+        else:
+            _appended("balance", file, {**data, "target": target})
         return
 
     if day == datetime.date.min and pad_date is None:
@@ -262,12 +302,15 @@ def add_balance(
     target = data.pop("target")
     warnings = data.pop("warnings", [])
     written = int(data.get("written") or 0)
-    if context.current().json_output:
+    source = data.get("source")
+    if ctx.json_output:
         output.emit({**data, "warnings": warnings}, target={**output.file_target(file), "into": target})
     else:
         for warning in warnings:
             output.note(warning)
-        if written == 1:
+        if source:
+            output.success(f"Balance already recorded at {source['filename']}:{source['lineno']}; nothing was written.")
+        elif written == 1:
             output.success(f"Added 1 balance to {target}.")
         else:
             output.success(f"Added 1 pad and 1 balance to {target}.")
@@ -319,17 +362,22 @@ def add_event(
 def add_price(
     date: DateOpt,
     currency: Annotated[str, typer.Option("--currency", "--commodity", "-c", help="Commodity being priced")],
-    amount: Annotated[str, typer.Option("--amount", help="'NUMBER CURRENCY'")],
+    amount: Annotated[list[str], typer.Option("--amount", help="'NUMBER CURRENCY' (pass once)")],
     allow_errors: AllowErrorsOpt = False,
     into: IntoOpt = None,
+    force: Annotated[
+        bool,
+        typer.Option("--force", help="Record another quote when the date/commodity already has one"),
+    ] = False,
 ) -> None:
     """Append a price, or report an exact existing date/commodity/amount match."""
-    number, price_currency = _parse_amount(amount)
+    number, price_currency = _parse_amount(_single_amount(amount, "price"))
     request = {
         "date": parse_date(date).isoformat(),
         "currency": currency,
         "number": str(number),
         "amount_currency": price_currency,
+        "force": force,
     }
     ctx = context.current()
     # Finding a duplicate means reading the ledger, so this one write has a read
