@@ -37,9 +37,11 @@ bea engine enable beangulp    # then: bea ingest identify|extract|archive …
 bea engine enable beanprice   # then: bea price …  (not bea add price)
 ```
 
-`bea import --csv` and `bea add price` work without those features. Ledger-skill
-updates that still mention a separate Beancount install are tracked in milestone
-m21.
+`bea import --csv` and `bea add price` work without those features. The eight
+`beancount-*` ledger skills for Claude Code and Codex run on this single `bea`
+installation and never ask you to install Beancount separately — see the
+[skills installation guide](https://github.com/bex-co/beancount-io/blob/main/skills/docs/installation.md)
+and the [first-query walkthrough](https://github.com/bex-co/beancount-io/blob/main/skills/docs/first-query.md).
 
 | Channel | When the engine appears | After that |
 | --- | --- | --- |
@@ -164,7 +166,8 @@ lockfiles; keep scratch files under `tmp/`.
 See the [package guide](https://github.com/bex-co/beancount-io/blob/main/cli/CLAUDE.md)
 for architecture boundaries and contribution rules.
 Optional Beangulp/Beanprice are enabled with `bea engine enable` (see Usage);
-ledger-skill onboarding updates remain milestone m21.
+the customer-facing `beancount-*` ledger skills live in `skills/` and target
+this same single installation.
 
 ## Releases
 
