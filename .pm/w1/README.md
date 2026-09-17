@@ -61,6 +61,10 @@ Blocked notes live under [`blocked/`](./blocked/) with their reason and **Unbloc
 
 The 2026-09-15/16 continuous CLI QA sweep filed 151 findings in `w3`. Eighty-two of them share five root-cause classes and are absorbed by m23–m27 rather than drained one at a time; each absorbed note carries a **Promoted** disposition line naming its milestone and task, and stays open in `w3` as the reproducer of record until that milestone's closeout closes it with `/pm done`. The remaining `w3` notes have heterogeneous causes and stay in that queue for `/loopx w3`.
 
+**Coordination with `/loopx w3`.** A concurrent drain of `w3` is fixing some of these notes individually, which is fine and is not wasted work — but it means an absorbed note may already be shipped by the time its milestone is picked up. The rule: before starting any task in m23–m27, check whether its absorbed notes already sit in `w3/done/`; if one does, read the shipped fix and its regression test first, then narrow the task to what is genuinely left. At closeout, a task whose work landed that way is closed with a `## Closed by triage` section citing the commit and tests, per `.agents/skills/pm/SKILL.md`. A milestone keeps its value even when most of its notes arrive pre-fixed, because the shared contract, the matrix test and the documentation are the parts no individual note fix delivers — but if every note in a cluster is fixed and that contract already holds, close the milestone rather than inventing work for it.
+
+Already fixed by `/loopx w3` as of 2026-09-16 (fourteen of the eighty-two, plus w5/003 and w5/004, all now in their queues' `done/`): m23 — w3/236, 249. m24 — w3/226, 227, 237. m25 — w3/233, 234, 238, 239, 250. m26 — w3/248, 251, 252. m27 — w3/240. This list is a snapshot, not a ledger; re-check `w3/done/` at pickup time.
+
 | Milestone | Absorbed notes |
 | --- | --- |
 | m23 | w3/236, 249, 262, 269, 273, 277, 282, 300, 301, 317, 318, 319, 320, 321, 323, 332, 336, 338, 345, 363, 364, 369, 370, 371 |
