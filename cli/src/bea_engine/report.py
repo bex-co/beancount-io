@@ -289,7 +289,10 @@ def _metadata(filtered: Any, conversion: str, ledger_errors: list[str], interval
     if filtered.date_range:
         start, end = filtered.date_range.begin, filtered.date_range.end
     else:
-        dates = [entry.date for entry in filtered.entries if not isinstance(entry, Open | Close | Commodity)]
+        # Account filters narrow balances, not the calendar. An over-narrow
+        # `--account` that matches nothing must not read as "no dated activity".
+        period_entries = filtered.entries if not filtered.account else filtered.ledger.all_entries
+        dates = [entry.date for entry in period_entries if not isinstance(entry, Open | Close | Commodity)]
         start = min(dates) if dates else None
         end = max(dates) + timedelta(days=1) if dates else None
     data: dict[str, Any] = {
@@ -297,6 +300,7 @@ def _metadata(filtered: Any, conversion: str, ledger_errors: list[str], interval
         "period": {"start": start, "end_exclusive": end},
         "as_of": end - timedelta(days=1) if end else None,
         "account_filter": filtered.account,
+        "account_filter_empty": bool(filtered.account) and not filtered.entries,
         "balance_signs": "beancount",
         "ledger_valid": not filtered.ledger.load_errors,
         "ledger_errors": ledger_errors,

@@ -122,6 +122,8 @@ def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False)
     # explains itself where it is printed.
     convention = "Account balances use Beancount signs (credits negative)"
     typer.echo(f"{convention}; profit is positive for a gain." if profit_line else f"{convention}.")
+    if metadata.get("account_filter_empty"):
+        output.note(f"No accounts match {metadata['account_filter']}.")
     if metadata["missing_prices"]:
         typer.echo("Partial valuation: some prices are missing; combined totals are unavailable.")
         for line in metadata["missing_price_summary"]:
