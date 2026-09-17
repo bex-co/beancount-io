@@ -278,6 +278,10 @@ def build_shell(
             if self.settings.numberify:
                 description, rows = numberify_results(description, rows, dcontext.build())
             with self.output as out:
+                if self.settings.format == "csv":
+                    # Upstream CSV reuses text DecimalRenderer padding. Emit
+                    # unpadded machine cells so spreadsheets and Decimal() parse.
+                    return _render_csv(description, rows, out)
                 renderer = FORMATS[self.settings.format]
                 return renderer(description, rows, out, dcontext=dcontext, **self.settings.todict())
 
@@ -312,6 +316,46 @@ def _require_entries(description: Any, rows: Any) -> None:
         "--format beancount prints directives, so the query must return entries; "
         "use PRINT, or --format text or csv for a column result."
     )
+
+
+def _render_csv(description: Any, rows: Any, out: TextIO) -> None:
+    """Write CSV without text-table decimal alignment padding."""
+    import csv
+
+    writer = csv.writer(out)
+    writer.writerow([column.name for column in description or ()])
+    for row in rows:
+        writer.writerow([_csv_cell(value) for value in row])
+
+
+def _csv_cell(value: Any) -> str:
+    """One unpadded CSV field from a BQL cell."""
+    if value is None:
+        return ""
+    rendered = protocol._jsonable(value)
+    return _csv_from_jsonable(rendered)
+
+
+def _csv_from_jsonable(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "TRUE" if value else "FALSE"
+    if isinstance(value, str | int):
+        return str(value)
+    if isinstance(value, dict):
+        if "units" in value:
+            units = _csv_from_jsonable(value["units"])
+            cost = value.get("cost")
+            if cost:
+                return f"{units} {{{_csv_from_jsonable(cost)}}}"
+            return units
+        if "number" in value and "currency" in value:
+            return f"{value['number']} {value['currency']}"
+        return str(value)
+    if isinstance(value, list):
+        return ", ".join(_csv_from_jsonable(item) for item in value)
+    return str(value)
 
 
 def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) -> Any:
