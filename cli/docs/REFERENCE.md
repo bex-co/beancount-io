@@ -800,7 +800,7 @@ Usage: bea list transaction [OPTIONS]
 | `--to-date` | str |  | End date YYYY-MM-DD |
 | `--account, -a` | str |  | Filter by account (case-insensitive substring) |
 | `--flag` | str |  | Transaction flag, e.g. '!' for entries to review |
-| `--search` | str (repeatable) |  | Case-insensitive text in payee or narration; repeatable |
+| `--search` | str (repeatable) |  | Case-insensitive text in payee or narration; repeatable (AND — every term must match) |
 | `--tag` | str (repeatable) |  | Tag with or without '#'; repeatable |
 | `--link` | str (repeatable) |  | Link with or without '^'; repeatable |
 | `--allow-errors` | flag |  | Report partial data with errors on stderr; opts strict reads into partial answers |

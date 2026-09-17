@@ -344,7 +344,7 @@ their root ledger's account opens and options. In JSON mode, a failing
 | `--sort oldest/newest` | Transaction order, applied before the limit; default `newest`. Specify `oldest` in scripts that depend on ascending order. |
 | `--details` | Transactions: render Beancount syntax with every posting, cost/price, metadata, and source location |
 | `--flag` | Transactions: select a flag, such as `!` for entries needing review; applied before the limit. |
-| `--search TEXT` | Transactions: case-insensitive substring over payee and narration; repeatable, applied before the limit. |
+| `--search TEXT` | Transactions: case-insensitive substring over payee and narration; repeatable (AND — every term must match a row), applied before the limit. |
 | `--tag TAG` | Transactions: tag with or without `#`; repeatable. |
 | `--link LINK` | Transactions: link with or without `^`; repeatable. |
 | `--from-date` | Only directives on or after this date (`YYYY-MM-DD`) |

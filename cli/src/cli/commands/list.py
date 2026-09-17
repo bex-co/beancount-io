@@ -426,7 +426,11 @@ def transactions(
     account: AccountFilterOpt = None,
     flag: Annotated[str | None, typer.Option("--flag", help="Transaction flag, e.g. '!' for entries to review")] = None,
     search: Annotated[
-        list[str] | None, typer.Option("--search", help="Case-insensitive text in payee or narration; repeatable")
+        list[str] | None,
+        typer.Option(
+            "--search",
+            help="Case-insensitive text in payee or narration; repeatable (AND — every term must match)",
+        ),
     ] = None,
     tag: Annotated[list[str] | None, typer.Option("--tag", help="Tag with or without '#'; repeatable")] = None,
     link: Annotated[list[str] | None, typer.Option("--link", help="Link with or without '^'; repeatable")] = None,
