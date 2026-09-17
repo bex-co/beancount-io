@@ -193,6 +193,22 @@ def build_shell(
             if self.context.errors and self.show_load_errors:
                 printer.print_errors(self.context.errors, file=sys.stderr)  # type: ignore[no-untyped-call]
 
+        def do_help(self, arg: str) -> None:
+            """List commands, writing to outfile so one-shot JSON stays clean."""
+            # Upstream `cmd.Cmd.do_help` writes to `self.stdout`, which starts as
+            # process stdout. Point it at outfile for the duration so `bea query
+            # '.help'` keeps a single JSON object on the engine's stdout.
+            previous: TextIO = self.stdout  # type: ignore[has-type]
+            self.stdout = self.outfile
+            try:
+                super().do_help(arg)
+            finally:
+                self.stdout = previous
+
+        def do_parse(self, arg: str) -> None:
+            """Print the parsed sexp to outfile (not process stdout)."""
+            print(self.parse(arg).tosexp(), file=self.outfile)
+
         def onecmd(self, line: str) -> Any:
             # A query that opens with a comment (`/* … */`, `;`) has no leading
             # identifier, so `cmd.Cmd.parseline` finds no command and upstream
