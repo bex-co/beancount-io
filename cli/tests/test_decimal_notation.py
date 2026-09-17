@@ -45,7 +45,7 @@ def _bea(ledger: Path, *args: str, stdin: str | None = None) -> subprocess.Compl
     )
 
 
-def _row(field: str, number: str, narration: str = "Amount") -> dict[str, Any]:
+def _row(field: str, number: str | float, narration: str = "Amount") -> dict[str, Any]:
     posting: dict[str, Any] = {"account": "Expenses:Food"}
     if field == "amount":
         posting["amount"] = f"{number} USD"
@@ -75,6 +75,72 @@ def test_exponent_amount_strings_fail_at_their_schema_field(field: str, number: 
     assert len(errors) == 1
     assert ".".join(str(part) for part in errors[0]["loc"]) == _field_path(field)
     assert "decimal notation" in errors[0]["msg"]
+
+
+@pytest.mark.parametrize("number", [0.3, 3.0, 0.30000000000000004])
+@pytest.mark.parametrize("field", ["units", "cost", "price"])
+def test_float_amounts_fail_at_their_schema_field(field: str, number: float) -> None:
+    with pytest.raises(ValidationError) as raised:
+        TransactionDirective.model_validate(_row(field, number))
+
+    errors = raised.value.errors(include_url=False, include_input=False)
+    assert len(errors) == 1
+    assert ".".join(str(part) for part in errors[0]["loc"]) == _field_path(field)
+    assert "decimal string" in errors[0]["msg"]
+    assert f"'{number}'" in errors[0]["msg"]
+
+
+def test_float_amount_shorthand_is_rejected_as_a_string() -> None:
+    row = _row("amount", "2")
+    row["postings"][0]["amount"] = 0.3
+
+    with pytest.raises(ValidationError, match="must be a string"):
+        TransactionDirective.model_validate(row)
+
+
+@pytest.mark.parametrize("field", ["units", "cost", "price"])
+def test_bulk_floats_name_the_row_and_leave_the_ledger_unchanged(ledger: Path, field: str) -> None:
+    source = ledger.parent / "rows.json"
+    source.write_text(json.dumps([_row("amount", "2", "Valid"), _row(field, 0.3, "Rejected")]))
+    before = ledger.read_bytes()
+
+    result = _bea(ledger, "add", "transactions", "--from", str(source))
+
+    assert result.returncode == 1, result.stderr
+    assert result.stdout == ""
+    error = json.loads(result.stderr)["error"]
+    assert error["category"] == "validation"
+    assert any(
+        detail.startswith(f"Row 2, {_field_path(field)}:") and "decimal string" in detail and "'0.3'" in detail
+        for detail in error["details"]
+    )
+    assert error["result"] == {"written": 0, "written_rows": [], "rejected_rows": [1]}
+    assert ledger.read_bytes() == before
+
+
+def test_bulk_string_and_int_amounts_write_exactly(ledger: Path) -> None:
+    rows = [
+        _row("units", "0.3", "String"),
+        {
+            "date": "2026-01-03",
+            "narration": "Int",
+            "postings": [
+                {"account": "Expenses:Food", "units": {"number": 3, "currency": "USD"}},
+                {"account": "Assets:Checking"},
+            ],
+        },
+    ]
+    source = ledger.parent / "rows.json"
+    source.write_text(json.dumps(rows))
+
+    result = _bea(ledger, "add", "transactions", "--from", str(source))
+
+    assert result.returncode == 0, result.stderr
+    entries, errors, _ = loader.load_file(ledger)
+    assert not errors
+    transactions = [entry for entry in entries if isinstance(entry, Transaction)]
+    assert [entry.postings[0].units.number for entry in transactions] == [Decimal("0.3"), Decimal("3")]
+    assert "0.30000000000000004" not in ledger.read_text()
 
 
 @pytest.mark.parametrize("field", ["amount", "units", "cost", "price"])
