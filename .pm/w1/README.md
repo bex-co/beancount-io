@@ -4,7 +4,24 @@
 
 ## Milestones
 
-Milestones m18–m22 are complete. m22 fixed the published CLI QA gaps with green cross-platform CI; no pending ADR014 follow-up milestones remain in this queue.
+Milestones m1–m22 are complete; no pending ADR014 follow-up milestones remain from that run. The open block m23–m27 and m29 was materialized on 2026-09-16 from `/pm-brainstorm for w1`: five of them absorb the 2026-09-15/16 continuous CLI QA sweep by shared root cause rather than one note at a time, and m29 carries promoted work from w2/027. There is no m28 — see `## Dropped`.
+
+**Suggested order:** m23 → m24 → m25 → m26 → m27 → m29. The five CLI-sweep milestones are independent of one another and can be taken in any order, but m23 comes first because it fixes a silent ledger-wipe path (`w3/300`, critical) and establishes the exit contract the others are tested against. m29 is the non-sweep item and depends on nothing in this queue.
+
+### Open
+
+- [ ] **m23** — [Exit status tells the truth: no success without the effect](./m23/README.md) (11 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 1; absorbs 24 CLI QA notes from w3
+- [ ] **m24** — [Bank CSVs import as exported: delimiters, amounts, encodings, IDs](./m24/README.md) (12 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 2; absorbs 15 CLI QA notes from w3 plus w5/003
+- [ ] **m25** — [Every failure is a JSON envelope, and empty inputs are errors](./m25/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 3; absorbs 24 CLI QA notes from w3 plus w5/004
+- [ ] **m26** — [Ledgers survive Windows editors and Unicode](./m26/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 4; absorbs 9 CLI QA notes from w3
+- [ ] **m27** — [Amounts are exact on the way in and out](./m27/README.md) (10 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 5; absorbs 10 CLI QA notes from w3
+- [ ] **m29** — [`bea` resolves managed price includes locally](./m29/README.md) (10 tasks) ← promoted [w2/027](../w2/027.md); ADR 015 + PRFAQ002
+
+## Dropped
+
+- ~~**m28**~~ — Read-after-delete consistency for hosted slice deletes — dropped 2026-09-16: proposed by `/pm-brainstorm for w1` as a promotion of `w1/033`, but never materialized as open work. Triage the same day established that every layer of the delete path in this monorepo already applies synchronously — backend-v2 awaits the ledger-service call, the ledger service awaits a Gitea CAS commit with bounded retry, reads resolve live HEAD per load, and backend-v2 caches no journal or context read — so there is no async-apply code here to fix and no in-monorepo change can be proven against the acceptance. The work is still wanted and waits with its full record and **Unblock:** condition at [blocked/033](./blocked/033.md), which needs hosted diagnosis naming the lagging layer. Promoting it into a milestone would have duplicated that note and put unbuildable work in the open tree.
+
+### Complete
 
 - [x] **m22** — [Fix published CLI exports, native help, and shell output reset](./done/m22/README.md) (7 tasks) ← published 0.2.0 QA, 2026-09-12; user routed to w1
 
@@ -32,3 +49,22 @@ Milestones m18–m22 are complete. m22 fixed the published CLI QA gaps with gree
 
 ## Inbox
 
+No open inbox notes. The four mobile QA findings filed on 2026-09-16 were drained the same day: [031](./done/031.md), [032](./done/032.md), and [034](./done/034.md) shipped with regression coverage, and [033](./blocked/033.md) is blocked.
+
+## Blocked
+
+Blocked notes live under [`blocked/`](./blocked/) with their reason and **Unblock:** condition; they keep their IDs and return to the open tree when work can resume.
+
+- [033](./blocked/033.md) — Slice-delete success precedes removal by minutes; a refetch resurrects the row — **blocked:** no async-apply code exists in this monorepo and the acceptance cannot be proven here. **Unblock:** hosted diagnosis naming the lagging layer, or a local full-stack repro. Cleared by the user (hosted access plus QA credentials).
+
+## Absorbed CLI QA notes (m23–m27)
+
+The 2026-09-15/16 continuous CLI QA sweep filed 151 findings in `w3`. Eighty-two of them share five root-cause classes and are absorbed by m23–m27 rather than drained one at a time; each absorbed note carries a **Promoted** disposition line naming its milestone and task, and stays open in `w3` as the reproducer of record until that milestone's closeout closes it with `/pm done`. The remaining `w3` notes have heterogeneous causes and stay in that queue for `/loopx w3`.
+
+| Milestone | Absorbed notes |
+| --- | --- |
+| m23 | w3/236, 249, 262, 269, 273, 277, 282, 300, 301, 317, 318, 319, 320, 321, 323, 332, 336, 338, 345, 363, 364, 369, 370, 371 |
+| m24 | w3/226, 227, 237, 256, 263, 265, 276, 279, 280, 281, 308, 310, 311, 342, 368; w5/003 |
+| m25 | w3/233, 234, 238, 239, 250, 268, 270, 274, 286, 287, 294, 296, 298, 299, 302, 312, 314, 327, 328, 333, 335, 358, 359, 360; w5/004 |
+| m26 | w3/248, 251, 252, 257, 258, 266, 275, 278, 283 |
+| m27 | w3/240, 259, 260, 272, 291, 297, 304, 309, 365, 367 |
