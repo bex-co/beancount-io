@@ -112,13 +112,26 @@ def _overview(
     from fava.modules.financial_statements import FinancialStatementsModule
 
     data = FinancialStatementsModule().overview(filtered, _interval(interval), conversion)
-    trees = (data.assets_hierarchy, data.liabilities_hierarchy, data.income_hierarchy, data.expenses_hierarchy)
-    balances = [(filtered.end_date, balance) for tree in trees for balance in _tree_balances(tree)]
+    sections = _prune_sections(
+        {
+            "assets": data.assets_hierarchy,
+            "liabilities": data.liabilities_hierarchy,
+            "income": data.income_hierarchy,
+            "expenses": data.expenses_hierarchy,
+        },
+        filtered.account,
+    )
+    trees = tuple(sections[name] for name in ("assets", "liabilities", "income", "expenses"))
+    balances = [(filtered.end_date, balance) for tree in trees if tree is not None for balance in _tree_balances(tree)]
     for series in (data.assets_data, data.liabilities_data, data.income_interval_data, data.expenses_interval_data):
         balances.extend((point.date, point.balance) for point in series)
     valuation = _valuation(conversion, balances, allow_errors, filtered.ledger.prices, ledger_errors)
     metadata = _metadata(filtered, conversion, ledger_errors, interval) | valuation
-    assets, liabilities, income, expenses = (tree.balance_children for tree in trees)
+    empty = type(data.assets_hierarchy.balance_children)()
+    assets = trees[0].balance_children if trees[0] is not None else empty
+    liabilities = trees[1].balance_children if trees[1] is not None else empty
+    income = trees[2].balance_children if trees[2] is not None else empty
+    expenses = trees[3].balance_children if trees[3] is not None else empty
     worth = _summary(_sum(assets, liabilities), conversion, incomplete=bool(valuation["missing_prices"]))
     return metadata | {
         "display_precision": _display_precision(filtered),
@@ -144,15 +157,19 @@ def _income_statement(
     from fava.modules.financial_statements import FinancialStatementsModule
 
     data = FinancialStatementsModule().income_statement(filtered, _interval(interval), conversion)
-    trees = (data.income_hierarchy, data.expenses_hierarchy)
-    balances = [(filtered.end_date, balance) for tree in trees for balance in _tree_balances(tree)]
+    sections = _prune_sections(
+        {"income": data.income_hierarchy, "expenses": data.expenses_hierarchy},
+        filtered.account,
+    )
+    trees = (sections["income"], sections["expenses"])
+    balances = [(filtered.end_date, balance) for tree in trees if tree is not None for balance in _tree_balances(tree)]
     for series in (data.income_data, data.expenses_data):
         balances.extend((point.date, point.balance) for point in series)
     valuation = _valuation(conversion, balances, allow_errors, filtered.ledger.prices, ledger_errors)
     metadata = _metadata(filtered, conversion, ledger_errors, interval) | valuation
-    net = _summary(
-        -_sum(*(tree.balance_children for tree in trees)), conversion, incomplete=bool(valuation["missing_prices"])
-    )
+    empty = type(data.income_hierarchy.balance_children)()
+    kept = [tree.balance_children if tree is not None else empty for tree in trees]
+    net = _summary(-_sum(*kept), conversion, incomplete=bool(valuation["missing_prices"]))
     periods: list[dict[str, Any]] = [
         {
             "date": profit.date,
@@ -169,8 +186,8 @@ def _income_statement(
     return metadata | {
         "display_precision": _display_precision(filtered),
         "net_profit_signs": "positive_for_gain",
-        "income": _tree_json(trees[0]),
-        "expenses": _tree_json(trees[1]),
+        "income": _tree_json(trees[0]) if trees[0] is not None else None,
+        "expenses": _tree_json(trees[1]) if trees[1] is not None else None,
         "net_profit": net,
         "periods": periods,
     }
@@ -182,20 +199,31 @@ def _balance_sheet(
     from fava.modules.financial_statements import FinancialStatementsModule
 
     data = FinancialStatementsModule().balance_sheet(filtered, _interval(interval), conversion)
-    trees = (data.assets_hierarchy, data.liabilities_hierarchy, data.equity_hierarchy)
-    balances = [(filtered.end_date, balance) for tree in trees for balance in _tree_balances(tree)]
+    sections = _prune_sections(
+        {
+            "assets": data.assets_hierarchy,
+            "liabilities": data.liabilities_hierarchy,
+            "equity": data.equity_hierarchy,
+        },
+        filtered.account,
+    )
+    trees = (sections["assets"], sections["liabilities"], sections["equity"])
+    balances = [(filtered.end_date, balance) for tree in trees if tree is not None for balance in _tree_balances(tree)]
     balances.append((filtered.end_date, data.current_earnings))
     balances.extend((point.date, point.balance) for point in data.net_worth_data)
     valuation = _valuation(conversion, balances, allow_errors, filtered.ledger.prices, ledger_errors)
     metadata = _metadata(filtered, conversion, ledger_errors, interval) | valuation
     incomplete = bool(valuation["missing_prices"])
-    worth = _summary(_sum(trees[0].balance_children, trees[1].balance_children), conversion, incomplete=incomplete)
-    reconciled = not incomplete and not filtered.ledger.load_errors and conversion != "units"
+    empty = type(data.assets_hierarchy.balance_children)()
+    assets = trees[0].balance_children if trees[0] is not None else empty
+    liabilities = trees[1].balance_children if trees[1] is not None else empty
+    worth = _summary(_sum(assets, liabilities), conversion, incomplete=incomplete)
+    reconciled = not incomplete and not filtered.ledger.load_errors and conversion != "units" and not filtered.account
     return metadata | {
         "display_precision": _display_precision(filtered),
-        "assets": _tree_json(trees[0]),
-        "liabilities": _tree_json(trees[1]),
-        "equity": _tree_json(trees[2]),
+        "assets": _tree_json(trees[0]) if trees[0] is not None else None,
+        "liabilities": _tree_json(trees[1]) if trees[1] is not None else None,
+        "equity": _tree_json(trees[2]) if trees[2] is not None else None,
         "current_earnings": data.current_earnings,
         "current_earnings_signs": "negative_for_gain",
         "net_profit": _negated(data.current_earnings),
@@ -214,16 +242,22 @@ def _trial_balance(filtered: Any, conversion: str, allow_errors: bool, ledger_er
     sections = {
         name: getattr(data, f"{name}_hierarchy") for name in ("assets", "liabilities", "equity", "income", "expenses")
     }
+    sections = _prune_sections(sections, filtered.account)
     metadata = _metadata(filtered, conversion, ledger_errors) | _valuation(
         conversion,
-        ((filtered.end_date, balance) for tree in sections.values() for balance in _tree_balances(tree)),
+        (
+            (filtered.end_date, balance)
+            for tree in sections.values()
+            if tree is not None
+            for balance in _tree_balances(tree)
+        ),
         allow_errors,
         filtered.ledger.prices,
         ledger_errors,
     )
     return metadata | {
         "display_precision": _display_precision(filtered),
-        **{name: _tree_json(tree) for name, tree in sections.items()},
+        **{name: (_tree_json(tree) if tree is not None else None) for name, tree in sections.items()},
     }
 
 
@@ -455,6 +489,14 @@ def _display_precision(filtered: Any) -> dict[str, int]:
         if fractional is not None:
             precision[str(currency)] = int(fractional)
     return precision
+
+
+def _prune_sections(sections: dict[str, Any], account: str | None) -> dict[str, Any]:
+    """When `--account` is set, keep matching subtrees the way `bea balance` does."""
+    if not account:
+        return sections
+    terms = [fold_account(account)]
+    return {name: _prune_tree(tree, terms) for name, tree in sections.items()}
 
 
 def _prune_tree(node: Any, terms: list[str], closed: set[str] | None = None) -> Any | None:

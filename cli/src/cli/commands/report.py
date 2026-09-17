@@ -240,6 +240,8 @@ def income_statement(
     _heading("Income Statement", data, profit_line=True)
     precision = _precision(data)
     for tree in (data["income"], data["expenses"]):
+        if tree is None:
+            continue
         typer.echo("")
         _print_tree(tree, conversion=conversion, precision=precision)
     typer.echo(f"\nNet Profit: {_amounts(data['net_profit'], conversion, precision)}")
@@ -282,6 +284,8 @@ def balance_sheet(
     _heading("Balance Sheet", data)
     precision = _precision(data)
     for tree in (data["assets"], data["liabilities"], data["equity"]):
+        if tree is None:
+            continue
         typer.echo("")
         _print_tree(tree, conversion=conversion, precision=precision)
     earnings = _amounts(data["current_earnings"], conversion, precision)
@@ -319,8 +323,11 @@ def trial_balance(
     _heading("Trial Balance", data)
     precision = _precision(data)
     for name in ("assets", "liabilities", "equity", "income", "expenses"):
+        tree = data[name]
+        if tree is None:
+            continue
         typer.echo("")
-        _print_tree(data[name], conversion=conversion, precision=precision)
+        _print_tree(tree, conversion=conversion, precision=precision)
 
 
 def balance(
