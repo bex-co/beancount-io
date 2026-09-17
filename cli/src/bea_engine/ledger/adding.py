@@ -470,17 +470,13 @@ def _refuse_missing_price(postings: list[str], number: int, posting: Any) -> Non
     from bea_engine import protocol
 
     price = posting.price
-    if (
-        price is not MISSING
-        and getattr(price, "number", None) is not MISSING
-        and getattr(price, "currency", None) is not MISSING
-    ):
+    number_missing = price is MISSING or getattr(price, "number", None) is MISSING
+    currency_missing = price is MISSING or getattr(price, "currency", None) is MISSING
+    if not (number_missing or currency_missing):
         return
     text = postings[number - 1] if 0 < number <= len(postings) else ""
     marker = "@@" if "@@" in text else "@"
     total = "total " if marker == "@@" else ""
-    number_missing = price is MISSING or getattr(price, "number", None) is MISSING
-    currency_missing = price is MISSING or getattr(price, "currency", None) is MISSING
     if number_missing and currency_missing:
         need = f"the {total}price after {marker} is missing"
     elif number_missing:

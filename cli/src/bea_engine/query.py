@@ -713,11 +713,7 @@ def _entry_summary(entry: Any) -> str:
     date = getattr(entry, "date", "?")
     if not isinstance(entry, Transaction):
         return f"{type(entry).__name__.lower()} on {date}"
-    head = " ".join(
-        part
-        for part in (f'"{entry.payee}"' if entry.payee else "", f'"{entry.narration}"' if entry.narration else "")
-        if part
-    )
+    head = " ".join(f'"{text}"' for text in (entry.payee, entry.narration) if text)
     postings = []
     for posting in entry.postings:
         units: Any = posting.units

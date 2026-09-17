@@ -192,7 +192,7 @@ def check_native(
     diagnostic = (completed.stderr or "").strip()
     tail = [line for line in diagnostic.splitlines() if line.strip()][-20:]
     reason = tail[-1] if tail else "No diagnostic was returned."
-    if "Traceback (most recent call last)" in (completed.stderr or ""):
+    if "Traceback (most recent call last)" in diagnostic:
         details: list[str] = []
         traceback_text: str | None = diagnostic or None
     else:
