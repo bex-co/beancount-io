@@ -115,8 +115,14 @@ SPECS: dict[str, _Spec] = {
         filter="account",
     ),
     "document": _Spec(
-        headers=["DATE", "ACCOUNT", "FILENAME"],
-        row=lambda d: [d["date"], d["account"], d["filename"]],
+        headers=["DATE", "ACCOUNT", "FILENAME", "TAGS", "LINKS"],
+        row=lambda d: [
+            d["date"],
+            d["account"],
+            d["filename"],
+            " ".join(f"#{tag}" for tag in d.get("tags") or []),
+            " ".join(f"^{link}" for link in d.get("links") or []),
+        ],
         empty="No documents found.",
         filter="account",
     ),
