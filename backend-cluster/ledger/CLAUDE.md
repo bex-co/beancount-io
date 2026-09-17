@@ -24,6 +24,18 @@ decommissioned. The OpenAPI contract is `../idl/beancount-ledger.openapi.json`.
   `GET /api/admin/ledger-limits/{ledgerUsername}` (fail-open, see `src/config.ts`
   `BACKEND_V2_*` env vars). Auth is credential-forwarding to Gitea — no sessions,
   no JWT, no user table.
+- **The forwarded context is untrusted; authority is not in it.** Exactly two
+  request headers carry authority — `Authorization` and
+  `x-directive-limit-exempt` (`server/auth.ts`), the second trusted with no
+  authentication because this service has no public port. Everything in the
+  `x-bcio-context` envelope is caller-influenced (ADR 016): never read it for
+  authentication, authorization, or a limit decision, and never move an
+  authority header into it. Keeping them apart is what lets this service tell
+  what backend-v2 decided from what a caller claimed. Its `session-token` is
+  the caller's own credential, relayed unverified to beancount.io's price
+  routes and never trusted here (ADR 016 §7) — it must not reach a log line,
+  which is why the logger copies an allowlist (`LOGGABLE_CONTEXT_KEYS`) rather
+  than spreading the context.
 
 ## Dev commands
 
@@ -56,6 +68,9 @@ files need no import rewrites (decision: keep `foundation/rustledger`, not
   service classes; `ledger-shell-types.ts` / `ledger-entry-input.ts` hold the
   types the engine layer needs without service deps)
 - `src/api/` — route handlers by endpoint family
+- `src/server/` — Koa app, auth, error middleware, and the forwarded request
+  context (ADR 016): `request-context-middleware.ts` populates
+  `shared/async-context` so every log line carries backend-v2's `requestId`
 - `src/shared/` — errors (no postgres-error: this service has no DB), logger,
   cache, lock, safe-repo-path, async-context
 - `parity/` — retired dual-target parity harness + `COVERAGE.md` historical record

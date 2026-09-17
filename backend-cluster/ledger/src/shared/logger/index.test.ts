@@ -204,4 +204,144 @@ describe("logger", () => {
       });
     });
   });
+
+  describe("context allowlist", () => {
+    const LEVELS = ["debug", "info", "warn", "error"] as const;
+
+    /** Spy on the winston instance the logger actually writes through. */
+    function spyOnWinston() {
+      const winstonInstance = (
+        logger as unknown as { winstonInstance: Record<string, jest.Mock> }
+      ).winstonInstance;
+      return LEVELS.map((level) =>
+        jest.spyOn(winstonInstance, level).mockImplementation(() => undefined),
+      );
+    }
+
+    /** Spy on the winston child the logger's `child()` writes through. */
+    function spyOnWinstonChild() {
+      const winstonInstance = (
+        logger as unknown as {
+          winstonInstance: { child: (c: unknown) => unknown; level: string };
+        }
+      ).winstonInstance;
+      const childCalls: Record<string, jest.Mock> = Object.fromEntries(
+        LEVELS.map((level) => [level, jest.fn()]),
+      );
+      const childSpy = jest
+        .spyOn(winstonInstance, "child")
+        .mockReturnValue(childCalls as never);
+      return { childCalls, restore: () => childSpy.mockRestore() };
+    }
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it("writes only allowlisted context fields, never the caller's credential", async () => {
+      // `mergeContext` copies context fields by name, so a field holding a
+      // secret cannot reach a log line by default. This asserts on what
+      // winston actually receives rather than that nothing threw.
+      const spies = spyOnWinston();
+
+      await asyncContext.run(
+        {
+          requestId: "req-1",
+          userId: "user-1",
+          sessionToken: "super-secret-token",
+          customField: "custom-value",
+        },
+        async () => {
+          for (const level of LEVELS) logger[level](`${level} test`);
+        },
+      );
+
+      for (const spy of spies) {
+        const meta = spy.mock.calls[0][1];
+        expect(JSON.stringify(meta)).not.toContain("super-secret-token");
+        expect(meta).not.toHaveProperty("sessionToken");
+        // Correlation fields survive; anything not allowlisted does not —
+        // per-call detail belongs in the `meta` argument instead.
+        expect(meta).toEqual({ requestId: "req-1", userId: "user-1" });
+      }
+    });
+
+    it("keeps the credential out of a child logger's lines too", async () => {
+      const { childCalls } = spyOnWinstonChild();
+      const childLogger = logger.child({ module: "managed-prices" });
+
+      await asyncContext.run(
+        {
+          requestId: "req-2",
+          userId: "user-2",
+          sessionToken: "super-secret-token",
+        },
+        async () => {
+          for (const level of LEVELS) childLogger[level](`${level} test`);
+        },
+      );
+
+      for (const level of LEVELS) {
+        const meta = childCalls[level].mock.calls[0][1];
+        expect(JSON.stringify(meta)).not.toContain("super-secret-token");
+        expect(meta).not.toHaveProperty("sessionToken");
+        expect(meta).toEqual({ requestId: "req-2", userId: "user-2" });
+      }
+    });
+
+    it("does not let per-call metadata drag the credential in either", async () => {
+      const spies = spyOnWinston();
+
+      await asyncContext.run(
+        { requestId: "req-3", sessionToken: "super-secret-token" },
+        async () => {
+          logger.info("with metadata", { ledger: "alice/personal" });
+        },
+      );
+
+      expect(spies[1].mock.calls[0][1]).toEqual({
+        requestId: "req-3",
+        ledger: "alice/personal",
+      });
+    });
+
+    it("passes metadata through untouched when the credential is all there is", async () => {
+      const spies = spyOnWinston();
+
+      // Nothing allowlisted is set, so no correlation object is invented: the
+      // credential must not become the log line's only context.
+      await asyncContext.run(
+        { requestId: "", sessionToken: "super-secret-token" },
+        async () => {
+          logger.info("no correlation fields");
+        },
+      );
+
+      expect(spies[1].mock.calls[0][1]).toBeUndefined();
+    });
+
+    it("lets metadata win over a context field of the same name", async () => {
+      const spies = spyOnWinston();
+
+      await asyncContext.run(
+        { requestId: "req-4", userId: "user-4" },
+        async () => {
+          logger.info("override", { userId: "override-user" });
+        },
+      );
+
+      expect(spies[1].mock.calls[0][1]).toEqual({
+        requestId: "req-4",
+        userId: "override-user",
+      });
+    });
+
+    it("leaves metadata alone outside a request", () => {
+      const spies = spyOnWinston();
+
+      logger.info("no context", { ledger: "alice/personal" });
+
+      expect(spies[1].mock.calls[0][1]).toEqual({ ledger: "alice/personal" });
+    });
+  });
 });

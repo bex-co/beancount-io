@@ -59,3 +59,51 @@ export function parseManagedPriceUrl(
   }
   return { allowed: true, url: `${url.origin}${url.pathname}`, alias: match[1] };
 }
+
+/**
+ * The `Cookie` header for a feed request, or null to send none.
+ *
+ * The value is the caller's own token, relayed from backend-v2 through the
+ * forwarded-context envelope (ADR 016 §7) — this service holds no credential of
+ * its own and mints nothing. Whatever kind of credential the caller presented
+ * is passed through unchanged: beancount.io resolves an OAuth token, a `bcio_`
+ * API key, and a session JWT from this one cookie alike, so narrowing by shape
+ * here would only break the cases that work.
+ *
+ * The path half reuses `PRICES_PATH_RE`, so the cookie decision and the "is
+ * this a managed price URL" decision cannot drift apart. The host half is
+ * matched on `hostname`, deliberately looser than the origin allowlist above:
+ * the include is written `https://` but the gate redirects to `http://`, so
+ * both schemes must qualify. Redirects are still never followed, so the
+ * credential cannot travel to another host. Outside a request — a background
+ * refresh with no caller — there is no token and the fetch goes out anonymous.
+ *
+ * The scheme, credential, and query checks restate `parseManagedPriceUrl`'s,
+ * which today every caller has already passed. That is deliberate rather than
+ * redundant: this function decides whether to hand out a live credential, and
+ * a decision of that kind should not rest on a caller two layers up having
+ * checked first. Attaching the cookie is refused here for anything it cannot
+ * verify itself.
+ */
+export function managedPriceCookieFor(
+  url: string,
+  sessionToken: string | undefined,
+  gate: { host: string; cookieName: string },
+): string | null {
+  if (!sessionToken || gate.host === "") return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  const gated =
+    (parsed.protocol === "https:" || parsed.protocol === "http:") &&
+    parsed.username === "" &&
+    parsed.password === "" &&
+    parsed.search === "" &&
+    parsed.hash === "" &&
+    parsed.hostname === gate.host &&
+    PRICES_PATH_RE.test(parsed.pathname);
+  return gated ? `${gate.cookieName}=${sessionToken}` : null;
+}

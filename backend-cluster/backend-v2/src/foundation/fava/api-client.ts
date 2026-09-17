@@ -1,5 +1,6 @@
 import { Api, FullRequestParams, HttpResponse, ErrorResponse } from "./Api";
 import { logger } from "@/shared/logger";
+import { forwardedContextHeaders } from "./forwarded-context";
 
 const favaLogger = logger.child({ module: "fava-api-client" });
 
@@ -20,6 +21,21 @@ export class FavaApiError extends Error {
     super(message);
     this.name = "FavaApiError";
   }
+}
+
+/**
+ * Add the forwarded-context envelope to one request's headers.
+ *
+ * Applied per request rather than in `baseApiParams`, because a client may
+ * outlive the request that built it (the anonymous client is process-wide) and
+ * the envelope describes the request in flight, not the client. A caller's own
+ * header of the same name wins, and header shapes this codebase never produces
+ * (`Headers`, `[key, value][]`) are passed through untouched rather than
+ * normalized, so no existing call site changes.
+ */
+function withForwardedContext(headers: HeadersInit | undefined): HeadersInit {
+  if (headers instanceof Headers || Array.isArray(headers)) return headers;
+  return { ...forwardedContextHeaders(), ...(headers ?? {}) };
 }
 
 export class ApiClient extends Api<unknown> {
@@ -48,7 +64,11 @@ export class ApiClient extends Api<unknown> {
         : timeoutSignal;
 
       try {
-        return await this.originalRequest<T, E>({ ...params, signal });
+        return await this.originalRequest<T, E>({
+          ...params,
+          headers: withForwardedContext(params.headers),
+          signal,
+        });
       } catch (e: unknown) {
         if (e instanceof Error && e.name === "TimeoutError") {
           favaLogger.warn("Request timed out", {

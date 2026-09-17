@@ -173,6 +173,89 @@ describe("fetchManagedPriceFeed", () => {
     expect(init.headers).not.toHaveProperty("if-none-match");
   });
 
+  it("sends the Cookie header when one is supplied, and omits it otherwise", async () => {
+    const fetchImpl = jest.fn(async () => response(200, GOOD));
+    const call = (cookie: string | null) =>
+      fetchManagedPriceFeed("https://beancount.io/prices/BTC-USD", {
+        ...options,
+        cookie,
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      });
+    await call("authSess:beancount.io=tok-abc");
+    await call(null);
+    const headersOf = (index: number) =>
+      (fetchImpl.mock.calls[index] as unknown as [string, RequestInit])[1]
+        .headers;
+    expect(headersOf(0)).toMatchObject({
+      cookie: "authSess:beancount.io=tok-abc",
+    });
+    expect(headersOf(1)).not.toHaveProperty("cookie");
+  });
+
+  it("sends the cookie alongside If-None-Match on a conditional GET", async () => {
+    const fetchImpl = jest.fn(async () => response(304, null));
+    const result = await fetchManagedPriceFeed(
+      "https://beancount.io/prices/BTC-USD",
+      {
+        ...options,
+        etag: '"e1"',
+        cookie: "authSess:beancount.io=tok-abc",
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      },
+    );
+    expect(result).toEqual({ kind: "not-modified" });
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(init.headers).toEqual({
+      accept: "text/plain",
+      "user-agent": "beancount-ledger-v2 managed-prices",
+      "if-none-match": '"e1"',
+      cookie: "authSess:beancount.io=tok-abc",
+    });
+  });
+
+  it("omits the Cookie header when none is supplied at all", async () => {
+    const fetchImpl = jest.fn(async () => response(200, GOOD));
+    await fetchManagedPriceFeed("https://beancount.io/prices/BTC-USD", {
+      ...options,
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(init.headers).toEqual({
+      accept: "text/plain",
+      "user-agent": "beancount-ledger-v2 managed-prices",
+    });
+  });
+
+  it("refuses a redirect without re-sending the cookie to the new location", async () => {
+    // The gate answers a signed-out caller with a redirect; nothing may follow
+    // it, so the credential never reaches the Location host and never surfaces
+    // in the failure the caller sees.
+    const fetchImpl = jest.fn(async () =>
+      response(302, null, { location: "https://evil.example/login" }),
+    );
+    const result = await fetchManagedPriceFeed(
+      "https://beancount.io/prices/BTC-USD",
+      {
+        ...options,
+        cookie: "authSess:beancount.io=tok-abc",
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      },
+    );
+    expect(result).toEqual({
+      kind: "failed",
+      reason: "redirect",
+      message: "redirects are not followed (HTTP 302)",
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    expect(url).toBe("https://beancount.io/prices/BTC-USD");
+    expect(init.redirect).toBe("manual");
+    expect(JSON.stringify(result)).not.toContain("tok-abc");
+  });
+
   it("reports 304 as not-modified", async () => {
     const fetchImpl = async () => response(304, null);
     await expect(

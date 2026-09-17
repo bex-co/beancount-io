@@ -1,6 +1,6 @@
 # ADR 015: Managed price includes in the ledger service
 
-- Status: Accepted (2026-09-15). Implements the ledger-layer scope of `docs/prfaqs/PRFAQ002-include-live-price.md` (FAQ 16, "Ledger service" row).
+- Status: Accepted (2026-09-15); section 3 amended 2026-09-16 (relayed caller credential, ADR 016 section 7). Implements the ledger-layer scope of `docs/prfaqs/PRFAQ002-include-live-price.md` (FAQ 16, "Ledger service" row).
 - Decision owner: Ledger service (`backend-cluster/ledger`)
 
 ## Context
@@ -28,6 +28,8 @@ A URL is a managed price include only when its origin is in `MANAGED_PRICE_ORIGI
 ### 3. Bounded fetch
 
 Fetches use Node's global `fetch` with a 5-second timeout, `Accept: text/plain`, `redirect: "error"`, and a 1 MiB body cap read incrementally. A ledger may resolve at most 16 distinct managed URLs per load. Materialized bytes count against the existing file-map byte and file limits. No ledger credential, ledger name, or private content is sent with a price request.
+
+**Amended 2026-09-16 (ADR 016 section 7).** One exception to the last sentence: a request to `beancount.io/prices/<ALIAS>` carries the *caller's own* credential as a `Cookie: authSess:beancount.io=<token>` header, relayed from backend-v2 through the forwarded-context envelope. That route sits behind beancount.io's own login gate — a plain GET answers 302 to `/auth/login`, which this section's redirect rule correctly refuses — so without it every managed price include reports as unavailable. The sentence above still holds as written: no *ledger* credential, ledger name, or private content is sent. This service holds no credential of its own here, mints nothing, and does not verify what it relays; beancount.io verifies it, exactly as it would had the caller fetched the URL directly. The cookie is scoped to that host's `/prices/` paths, redirects remain unfollowed, and a request with no caller fetches anonymously. Mounting `/prices/<ALIAS>` as a public route retires the exception.
 
 ### 4. Price-only validation
 

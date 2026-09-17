@@ -10,6 +10,11 @@ import { isIsoDate } from "@/foundation/rustledger/directive-filter";
 export interface FetchManagedPriceFeedOptions {
   /** Last known ETag; sent as `If-None-Match` so an unchanged feed is a 304. */
   etag?: string | null;
+  /**
+   * `Cookie` header for a price route behind beancount.io's login gate,
+   * already scoped to this URL by `managedPriceCookieFor`. Absent by default.
+   */
+  cookie?: string | null;
   timeoutMs: number;
   maxBodyBytes: number;
   fetchImpl?: typeof fetch;
@@ -53,8 +58,11 @@ async function readCapped(
 
 /**
  * GET a feed with a whole-exchange timeout, no redirects, and an incremental
- * byte cap. Sends no cookies or authorization: the request carries the URL
- * and a static user agent, nothing about the ledger.
+ * byte cap. The request carries the URL, a static user agent, and nothing about
+ * the ledger itself: no authorization header, and no cookie beyond the
+ * caller's own credential relayed for beancount.io's login-gated price routes
+ * (ADR 015 §3, amended by ADR 016 §7). Redirects are still refused, so that
+ * cookie can never follow a hop to another host.
  */
 export async function fetchManagedPriceFeed(
   url: string,
@@ -66,6 +74,7 @@ export async function fetchManagedPriceFeed(
     "user-agent": "beancount-ledger-v2 managed-prices",
   };
   if (options.etag) headers["if-none-match"] = options.etag;
+  if (options.cookie) headers["cookie"] = options.cookie;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs);

@@ -4,6 +4,12 @@ import { config } from "@/config";
 import { getRequestContext } from "@/shared/async-context";
 
 /**
+ * Request-context fields that may be written to a log line. Adding one is a
+ * deliberate act — the context also carries the caller's credential.
+ */
+const LOGGABLE_CONTEXT_KEYS = ["requestId", "userId"] as const;
+
+/**
  * Logger interface for abstracting logging implementation.
  * This allows easy migration to different logging libraries in the future.
  */
@@ -84,20 +90,14 @@ abstract class BaseLogger implements ILogger {
       return meta;
     }
 
-    // Extract correlation fields from context
-    const { requestId, userId, ...otherContext } = context;
+    // Copy the correlation fields by name. An allowlist, not a spread: the
+    // context also carries the caller's credential (ADR 016 section 7), and a
+    // mechanism that logs every field by default makes disclosing the next
+    // secret the default too. Per-call detail belongs in `meta`, which every
+    // logger method takes and which already wins over context below.
     const correlationData: Record<string, unknown> = {};
-
-    if (requestId) {
-      correlationData.requestId = requestId;
-    }
-    if (userId) {
-      correlationData.userId = userId;
-    }
-
-    // If there's other context data, include it
-    if (Object.keys(otherContext).length > 0) {
-      Object.assign(correlationData, otherContext);
+    for (const key of LOGGABLE_CONTEXT_KEYS) {
+      if (context[key]) correlationData[key] = context[key];
     }
 
     // Merge with provided metadata (metadata takes precedence)

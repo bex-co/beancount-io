@@ -1,4 +1,5 @@
 import type { ManagedPricesConfig } from "@/config";
+import { getSessionToken } from "@/shared/async-context";
 import { sliceSha256 } from "@/foundation/rustledger/source-slice";
 import { CACHE_KEYS, TTL, type CacheHelper } from "@/shared/cache";
 import { lock } from "@/shared/lock";
@@ -9,6 +10,7 @@ import {
   type ManagedPriceFeedSummary,
   type ManagedPriceValidation,
 } from "./managed-price-feed";
+import { managedPriceCookieFor } from "./managed-price-policy";
 
 const log = logger.child({ module: "managed-prices" });
 const FEED_LOCK_PREFIX = "managed-price:";
@@ -177,8 +179,15 @@ export async function resolveManagedPriceFeed(
       return { blob: previous, head: current };
     }
 
+    // Read inside the lock, so the request that actually performs the fetch
+    // is the one whose credential is presented. Coalesced waiters share that
+    // result — the feed is public market data, identical for every caller.
     const result = await fetchManagedPriceFeed(url, {
       etag: previous?.etag ?? null,
+      cookie: managedPriceCookieFor(url, getSessionToken(), {
+        host: config.gatedPriceHost,
+        cookieName: config.gatedPriceCookieName,
+      }),
       timeoutMs: config.fetchTimeoutMs,
       maxBodyBytes: config.maxBodyBytes,
       fetchImpl: deps.fetchImpl,

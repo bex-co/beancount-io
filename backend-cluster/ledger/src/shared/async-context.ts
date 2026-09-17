@@ -17,6 +17,16 @@ export interface RequestContext {
   userId?: string;
 
   /**
+   * The caller's own credential, relayed by backend-v2 so this service can
+   * reach beancount.io's login-gated price routes on their behalf
+   * (ADR 016 §7). Relayed, never verified or trusted here.
+   *
+   * A live secret. It is not in the logger's `LOGGABLE_CONTEXT_KEYS`, and must
+   * not be added there.
+   */
+  sessionToken?: string;
+
+  /**
    * Additional contextual data that can be added during request processing
    */
   [key: string]: unknown;
@@ -49,4 +59,15 @@ export const asyncContext = new AsyncLocalStorage<RequestContext>();
  */
 export function getRequestContext(): RequestContext | undefined {
   return asyncContext.getStore();
+}
+
+/**
+ * The caller's own credential, or undefined outside a request or when none was
+ * presented. See `RequestContext.sessionToken`.
+ *
+ * Lives here rather than beside the envelope parser so the managed-price layer
+ * can read it without `foundation/` importing from `server/`.
+ */
+export function getSessionToken(): string | undefined {
+  return asyncContext.getStore()?.sessionToken;
 }

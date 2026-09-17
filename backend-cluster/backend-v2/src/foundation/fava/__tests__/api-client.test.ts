@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { asyncContext } from "@/shared/async-context";
 import { ApiClient, FavaApiError } from "../api-client";
 
 jest.mock("@/shared/logger", () => ({
@@ -101,6 +102,142 @@ describe("ApiClient", () => {
         expect.objectContaining({ path: "/test", method: "GET" }),
       );
       expect(result).toEqual(mockResponse);
+    });
+
+    describe("forwarded context", () => {
+      const headersOf = (spy: jest.Mock) =>
+        (spy.mock.calls[0][0] as { headers?: Record<string, string> }).headers;
+
+      it("attaches the envelope for the request in flight", async () => {
+        const spy = jest.fn().mockResolvedValue({ ok: true });
+        stubOriginalRequest(spy);
+
+        await asyncContext.run({ requestId: "req-1" }, () =>
+          apiClient.request({ path: "/test", method: "GET" }),
+        );
+
+        expect(headersOf(spy)).toEqual({
+          "x-bcio-context": "request-id=req-1",
+        });
+      });
+
+      it("keeps a caller's own headers, which is how the exempt flag survives", async () => {
+        const spy = jest.fn().mockResolvedValue({ ok: true });
+        stubOriginalRequest(spy);
+
+        await asyncContext.run({ requestId: "req-2" }, () =>
+          apiClient.request({
+            path: "/test",
+            method: "POST",
+            headers: { "x-directive-limit-exempt": "1" },
+          }),
+        );
+
+        expect(headersOf(spy)).toEqual({
+          "x-bcio-context": "request-id=req-2",
+          "x-directive-limit-exempt": "1",
+        });
+      });
+
+      it("sends no envelope outside a request", async () => {
+        const spy = jest.fn().mockResolvedValue({ ok: true });
+        stubOriginalRequest(spy);
+
+        await apiClient.request({ path: "/test", method: "GET" });
+
+        expect(headersOf(spy)).toEqual({});
+      });
+
+      it("reflects each request's own id when a client outlives one request", async () => {
+        const spy = jest.fn().mockResolvedValue({ ok: true });
+        stubOriginalRequest(spy);
+
+        await asyncContext.run({ requestId: "first" }, () =>
+          apiClient.request({ path: "/a", method: "GET" }),
+        );
+        await asyncContext.run({ requestId: "second" }, () =>
+          apiClient.request({ path: "/b", method: "GET" }),
+        );
+
+        expect(spy.mock.calls.map((c) => c[0].headers)).toEqual([
+          { "x-bcio-context": "request-id=first" },
+          { "x-bcio-context": "request-id=second" },
+        ]);
+      });
+
+      it("relays the caller's credential alongside the request id", async () => {
+        const spy = jest.fn().mockResolvedValue({ ok: true });
+        stubOriginalRequest(spy);
+
+        await asyncContext.run(
+          { requestId: "req-3", sessionToken: "session-jwt" },
+          () => apiClient.request({ path: "/test", method: "GET" }),
+        );
+
+        expect(headersOf(spy)).toEqual({
+          "x-bcio-context": "request-id=req-3,session-token=session-jwt",
+        });
+      });
+
+      it("lets a caller's own envelope win over the generated one", async () => {
+        const spy = jest.fn().mockResolvedValue({ ok: true });
+        stubOriginalRequest(spy);
+
+        await asyncContext.run({ requestId: "req-generated" }, () =>
+          apiClient.request({
+            path: "/test",
+            method: "GET",
+            headers: { "x-bcio-context": "request-id=req-from-caller" },
+          }),
+        );
+
+        expect(headersOf(spy)).toEqual({
+          "x-bcio-context": "request-id=req-from-caller",
+        });
+      });
+
+      it("passes a Headers instance through untouched", async () => {
+        // A shape this codebase never produces: normalizing it would change
+        // what an existing call site sends, so it is left alone.
+        const spy = jest.fn().mockResolvedValue({ ok: true });
+        stubOriginalRequest(spy);
+        const headers = new Headers({ "x-directive-limit-exempt": "1" });
+
+        await asyncContext.run({ requestId: "req-headers" }, () =>
+          apiClient.request({ path: "/test", method: "GET", headers }),
+        );
+
+        const sent = headersOf(spy) as unknown as Headers;
+        expect(sent).toBe(headers);
+        expect(sent.get("x-bcio-context")).toBeNull();
+      });
+
+      it("passes a [key, value][] array through untouched", async () => {
+        const spy = jest.fn().mockResolvedValue({ ok: true });
+        stubOriginalRequest(spy);
+        const headers: [string, string][] = [["x-directive-limit-exempt", "1"]];
+
+        await asyncContext.run({ requestId: "req-array" }, () =>
+          apiClient.request({ path: "/test", method: "GET", headers }),
+        );
+
+        expect(headersOf(spy)).toBe(headers);
+        expect(headersOf(spy)).toEqual([["x-directive-limit-exempt", "1"]]);
+      });
+
+      it("attaches the envelope when the caller passes no headers at all", async () => {
+        const spy = jest.fn().mockResolvedValue({ ok: true });
+        stubOriginalRequest(spy);
+
+        await asyncContext.run(
+          { requestId: "req-no-headers", sessionToken: "tok" },
+          () => apiClient.request({ path: "/test" }),
+        );
+
+        expect(headersOf(spy)).toEqual({
+          "x-bcio-context": "request-id=req-no-headers,session-token=tok",
+        });
+      });
     });
 
     it("should log warn and throw when request times out", async () => {

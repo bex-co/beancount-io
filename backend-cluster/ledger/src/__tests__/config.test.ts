@@ -23,6 +23,8 @@ describe("loadConfig", () => {
       fetchTimeoutMs: 5000,
       maxBodyBytes: 1_048_576,
       maxFeedsPerLedger: 16,
+      gatedPriceHost: "beancount.io",
+      gatedPriceCookieName: "authSess:beancount.io",
     });
   });
 
@@ -44,11 +46,40 @@ describe("loadConfig", () => {
       fetchTimeoutMs: 5000,
       maxBodyBytes: 4096,
       maxFeedsPerLedger: 2,
+      gatedPriceHost: "beancount.io",
+      gatedPriceCookieName: "authSess:beancount.io",
     });
     expect(
       loadConfig({ MANAGED_PRICE_ORIGINS: "" } as NodeJS.ProcessEnv).managedPrices
         .origins,
     ).toEqual([]);
+  });
+
+  it("overrides the login-gated price host and cookie name", () => {
+    const cfg = loadConfig({
+      MANAGED_PRICE_GATED_HOST: "staging.beancount.io",
+      MANAGED_PRICE_GATED_COOKIE_NAME: "authSess:staging",
+    } as NodeJS.ProcessEnv);
+    expect(cfg.managedPrices.gatedPriceHost).toBe("staging.beancount.io");
+    expect(cfg.managedPrices.gatedPriceCookieName).toBe("authSess:staging");
+  });
+
+  it("lets an empty gated host disable the credential relay without disabling feeds", () => {
+    const cfg = loadConfig({
+      MANAGED_PRICE_GATED_HOST: "",
+    } as NodeJS.ProcessEnv);
+    expect(cfg.managedPrices.gatedPriceHost).toBe("");
+    expect(cfg.managedPrices.origins).toEqual(["https://beancount.io"]);
+  });
+
+  it("keeps the default cookie name when the override is blank", () => {
+    // An empty host disables the relay deliberately; an empty cookie name is
+    // just an unset variable, and a nameless cookie would relay nothing.
+    const cfg = loadConfig({
+      MANAGED_PRICE_GATED_COOKIE_NAME: "",
+    } as NodeJS.ProcessEnv);
+    expect(cfg.managedPrices.gatedPriceCookieName).toBe("authSess:beancount.io");
+    expect(cfg.managedPrices.gatedPriceHost).toBe("beancount.io");
   });
 
   it("normalizes and dedupes managed price origins", () => {

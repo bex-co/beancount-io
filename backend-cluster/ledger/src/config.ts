@@ -44,9 +44,21 @@ export interface ManagedPricesConfig {
   maxBodyBytes: number;
   /** Distinct managed URLs one ledger may resolve per load. */
   maxFeedsPerLedger: number;
+  /**
+   * Host whose `/prices/<ALIAS>` routes sit behind a login gate, so the
+   * caller's relayed credential is presented as a cookie (ADR 016 §7). Empty
+   * disables that relay. Configurable for the same reason the origin list is:
+   * a staging or local deployment points elsewhere, and a hardcoded host would
+   * make the fetch silently go out anonymous there.
+   */
+  gatedPriceHost: string;
+  /** Cookie name that gate reads; backend-v2's `COOKIE_NAME`. */
+  gatedPriceCookieName: string;
 }
 
 const DEFAULT_MANAGED_PRICE_ORIGINS = "https://beancount.io";
+const DEFAULT_GATED_PRICE_HOST = "beancount.io";
+const DEFAULT_GATED_PRICE_COOKIE = "authSess:beancount.io";
 
 /**
  * Normalize a comma-separated origin list to canonical `URL.origin` strings,
@@ -121,6 +133,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       fetchTimeoutMs: positiveInt(env.MANAGED_PRICE_FETCH_TIMEOUT_MS, 5000),
       maxBodyBytes: positiveInt(env.MANAGED_PRICE_MAX_BODY_BYTES, 1024 * 1024),
       maxFeedsPerLedger: positiveInt(env.MANAGED_PRICE_MAX_FEEDS, 16),
+      gatedPriceHost:
+        env.MANAGED_PRICE_GATED_HOST ?? DEFAULT_GATED_PRICE_HOST,
+      gatedPriceCookieName:
+        env.MANAGED_PRICE_GATED_COOKIE_NAME || DEFAULT_GATED_PRICE_COOKIE,
     },
   };
 }

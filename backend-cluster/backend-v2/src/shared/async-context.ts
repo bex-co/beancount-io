@@ -23,6 +23,15 @@ export interface RequestContext {
   operationId?: string;
 
   /**
+   * The caller's own credential, relayed to the ledger service so it can reach
+   * beancount.io's login-gated price routes on their behalf (ADR 016 §7).
+   *
+   * A live secret. It is not in the logger's `LOGGABLE_CONTEXT_KEYS`, and must
+   * not be added there.
+   */
+  sessionToken?: string;
+
+  /**
    * Additional contextual data that can be added during request processing
    */
   [key: string]: unknown;

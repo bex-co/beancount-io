@@ -1,3 +1,4 @@
+import { asyncContext } from "@/shared/async-context";
 import { CACHE_KEYS } from "@/shared/cache";
 import {
   managedPriceUrlHash,
@@ -49,6 +50,135 @@ describe("resolveManagedPriceFeed", () => {
     const again = await resolve(deps);
     expect(again.blob?.text).toBe(T1);
     expect(calls).toHaveLength(1);
+  });
+
+  // Wraps the call the way the middleware does in production, so these cover
+  // the ambient read that actually ships rather than an injected substitute.
+  const asCaller = <T>(sessionToken: string, fn: () => Promise<T>) =>
+    asyncContext.run({ requestId: "req-test", sessionToken }, fn);
+
+  it("presents the caller's token as a cookie to the gated host only", async () => {
+    const gated = feedDeps([feedResponse(T1)]);
+    await asCaller("tok-abc", () => resolveManagedPriceFeed(URL_A, ALIAS, gated.deps));
+    expect(gated.calls[0].init.headers).toMatchObject({
+      cookie: "authSess:beancount.io=tok-abc",
+    });
+
+    const elsewhere = feedDeps([feedResponse(T1)]);
+    await asCaller("tok-abc", () =>
+      resolveManagedPriceFeed(
+        "https://other.example/prices/BTC-USD",
+        ALIAS,
+        elsewhere.deps,
+      ),
+    );
+    expect(elsewhere.calls[0].init.headers).not.toHaveProperty("cookie");
+  });
+
+  it.each([
+    ["another host entirely", "https://other.example/prices/BTC-USD"],
+    ["a lookalike host", "https://beancount.io.evil.example/prices/BTC-USD"],
+    ["a sibling subdomain", "https://www.beancount.io/prices/BTC-USD"],
+    ["a non-price path on the gated host", "https://beancount.io/catalog/BTC-USD"],
+    ["the bare prices path", "https://beancount.io/prices"],
+  ])("never relays the credential to %s", async (_label, url) => {
+    const { deps, calls } = feedDeps([feedResponse(T1)]);
+    await asCaller("tok-abc", () =>
+      resolveManagedPriceFeed(url, ALIAS, deps),
+    );
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe(url);
+    expect(calls[0].init.headers).not.toHaveProperty("cookie");
+  });
+
+  it("fetches anonymously when the relay is disabled by configuration", async () => {
+    const { deps, calls } = feedDeps([feedResponse(T1)]);
+    const disabled = {
+      ...deps,
+      config: { ...TEST_CONFIG, gatedPriceHost: "" },
+    };
+    await asCaller("tok-abc", () =>
+      resolveManagedPriceFeed(URL_A, ALIAS, disabled),
+    );
+    expect(calls[0].init.headers).not.toHaveProperty("cookie");
+  });
+
+  it("scopes the credential on the conditional refresh, not just the first fetch", async () => {
+    const { deps, calls, clock } = feedDeps([
+      feedResponse(T1, '"e1"'),
+      feedResponse("", null, 304),
+    ]);
+    await asCaller("tok-first", () => resolveManagedPriceFeed(URL_A, ALIAS, deps));
+    clock.advance(TEST_CONFIG.refreshMs);
+    // A later caller refreshes the same feed; the 304 path must present that
+    // caller's own token, not the one cached with the previous revision.
+    const again = await asCaller("tok-second", () =>
+      resolveManagedPriceFeed(URL_A, ALIAS, deps),
+    );
+    expect(again.blob?.revision).toBe("e1");
+    expect(calls[0].init.headers).toMatchObject({
+      cookie: "authSess:beancount.io=tok-first",
+    });
+    expect(calls[1].init.headers).toMatchObject({
+      "if-none-match": '"e1"',
+      cookie: "authSess:beancount.io=tok-second",
+    });
+  });
+
+  it("keeps the refresh of a non-gated feed anonymous too", async () => {
+    const url = "https://other.example/prices/BTC-USD";
+    const { deps, calls, clock } = feedDeps([
+      feedResponse(T1, '"e1"'),
+      feedResponse("", null, 304),
+    ]);
+    await asCaller("tok-abc", () => resolveManagedPriceFeed(url, ALIAS, deps));
+    clock.advance(TEST_CONFIG.refreshMs);
+    await asCaller("tok-abc", () => resolveManagedPriceFeed(url, ALIAS, deps));
+    expect(calls).toHaveLength(2);
+    for (const call of calls) {
+      expect(call.init.headers).not.toHaveProperty("cookie");
+    }
+  });
+
+  it("gives each concurrent caller its own token across different feeds", async () => {
+    // Two callers, two feeds, one process: the token is read inside the fetch
+    // lock, so each request's own store must reach its own fetch.
+    const URL_B = "https://beancount.io/prices/BTC-USD.2";
+    const { deps, calls } = feedDeps([feedResponse(T1), feedResponse(T1)]);
+    await Promise.all([
+      asCaller("tok-alice", () => resolveManagedPriceFeed(URL_A, ALIAS, deps)),
+      asCaller("tok-bob", () => resolveManagedPriceFeed(URL_B, ALIAS, deps)),
+    ]);
+    const cookieFor = (url: string) =>
+      (calls.find((c) => c.url === url)?.init.headers as
+        | Record<string, string>
+        | undefined)?.cookie;
+    expect(calls).toHaveLength(2);
+    expect(cookieFor(URL_A)).toBe("authSess:beancount.io=tok-alice");
+    expect(cookieFor(URL_B)).toBe("authSess:beancount.io=tok-bob");
+  });
+
+  it("sends no cookie for a load that runs with no active request store", async () => {
+    // A background refresh runs alongside a request; it must not inherit the
+    // request's credential.
+    const URL_B = "https://beancount.io/prices/BTC-USD.2";
+    const { deps, calls } = feedDeps([feedResponse(T1), feedResponse(T1)]);
+    await Promise.all([
+      asCaller("tok-alice", () => resolveManagedPriceFeed(URL_A, ALIAS, deps)),
+      resolveManagedPriceFeed(URL_B, ALIAS, deps),
+    ]);
+    const headersFor = (url: string) =>
+      calls.find((c) => c.url === url)?.init.headers as Record<string, string>;
+    expect(headersFor(URL_A)).toMatchObject({
+      cookie: "authSess:beancount.io=tok-alice",
+    });
+    expect(headersFor(URL_B)).not.toHaveProperty("cookie");
+  });
+
+  it("fetches anonymously when the request carried no credential", async () => {
+    const { deps, calls } = feedDeps([feedResponse(T1)]);
+    await resolve(deps);
+    expect(calls[0].init.headers).not.toHaveProperty("cookie");
   });
 
   it("sends a conditional GET after the window and treats 304 as a refresh", async () => {

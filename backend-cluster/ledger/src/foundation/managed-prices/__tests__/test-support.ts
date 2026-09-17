@@ -16,6 +16,8 @@ export const TEST_CONFIG: ManagedPricesConfig = {
   fetchTimeoutMs: 1000,
   maxBodyBytes: 1024 * 1024,
   maxFeedsPerLedger: 16,
+  gatedPriceHost: "beancount.io",
+  gatedPriceCookieName: "authSess:beancount.io",
 };
 
 /** A controllable clock starting at a fixed instant. */

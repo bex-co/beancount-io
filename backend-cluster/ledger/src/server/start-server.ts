@@ -18,11 +18,14 @@ import { setEntriesHandler } from "@/api/entries";
 import { setLegacyHandler } from "@/api/legacy";
 import { setMetricsHandler } from "@/api/metrics";
 import { restErrorMiddleware } from "@/server/error-middleware";
+import { requestContextMiddleware } from "@/server/request-context-middleware";
 
 function buildApp(): Koa {
   const app = new Koa();
   const router = new Router();
 
+  // Outermost, so the error middleware's own logging carries the request ID.
+  app.use(requestContextMiddleware());
   app.use(restErrorMiddleware());
   app.use(bodyParser());
 

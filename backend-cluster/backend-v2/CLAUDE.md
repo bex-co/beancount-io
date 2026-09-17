@@ -104,6 +104,7 @@ Every data model exposes an interface from its `types.ts`, and the implementatio
 - Tests should assert the error class and, when relevant, `category`/`metadata`, not exact prose.
 - Use a module-scoped child logger from `@/shared/logger`; do not use manual `[module]` tags or `console.*` in production code. Tests and explicit developer-output scripts may use console output.
 - Never log secrets, credentials, tokens, or user financial data.
+- `asyncContextMiddleware` mints or adopts the request ID; `ApiClient` forwards it to the ledger service in the `x-bcio-context` envelope so both services log the same `requestId` (**ADR 016**, `../../docs/adrs/ADR016-backend-cluster-forwarded-request-context.md`). The envelope is caller-influenced, so the receiving side must never read it for authentication, authorization, or a limit decision; authority keeps its own named channels (`Authorization`, `x-directive-limit-exempt`). It carries exactly one credential — `session-token`, the caller's own, which the ledger service relays unverified to beancount.io's login-gated price routes (ADR 016 §7). That field must never be logged: `mergeContext` copies an allowlist (`LOGGABLE_CONTEXT_KEYS`), so a new context field is invisible to logs until deliberately added there; per-call detail belongs in the `meta` argument. Add a field to `forwarded-context.ts`, never by merging the inbound request's headers into the outbound call.
 
 ## Development
 

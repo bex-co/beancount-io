@@ -193,6 +193,120 @@ describe("logger", () => {
       });
     });
 
+    it("writes only allowlisted context fields, never the caller's credential", async () => {
+      // `mergeContext` copies context fields by name, so a field holding a
+      // secret cannot reach a log line by default. This asserts on what winston
+      // actually receives rather than that nothing threw.
+      const winstonInstance = (
+        logger as unknown as { winstonInstance: Record<string, jest.Mock> }
+      ).winstonInstance;
+      const levels = ["debug", "info", "warn", "error"] as const;
+      const spies = levels.map((level) =>
+        jest.spyOn(winstonInstance, level).mockImplementation(() => undefined),
+      );
+
+      try {
+        await asyncContext.run(
+          {
+            requestId: "req-1",
+            userId: "user-1",
+            sessionToken: "super-secret-token",
+            customField: "custom-value",
+          },
+          async () => {
+            for (const level of levels) logger[level](`${level} test`);
+          },
+        );
+
+        for (const spy of spies) {
+          const meta = spy.mock.calls[0][1];
+          expect(JSON.stringify(meta)).not.toContain("super-secret-token");
+          expect(meta).not.toHaveProperty("sessionToken");
+          // Correlation fields survive; anything not allowlisted does not —
+          // per-call detail belongs in the `meta` argument instead.
+          expect(meta).toEqual({ requestId: "req-1", userId: "user-1" });
+        }
+      } finally {
+        for (const spy of spies) spy.mockRestore();
+      }
+    });
+
+    it("keeps the credential out of a child logger's lines too", async () => {
+      // Every module logs through `logger.child(...)`, so the allowlist has to
+      // hold on that path as well as on the four top-level methods.
+      const winstonInstance = (
+        logger as unknown as { winstonInstance: { child: jest.Mock } }
+      ).winstonInstance;
+      const levels = ["debug", "info", "warn", "error"] as const;
+      const childSpies = Object.fromEntries(
+        levels.map((level) => [level, jest.fn()]),
+      ) as Record<(typeof levels)[number], jest.Mock>;
+      const childSpy = jest
+        .spyOn(winstonInstance, "child")
+        .mockReturnValue(childSpies as never);
+
+      try {
+        const moduleLogger = logger.child({ module: "test-module" });
+
+        await asyncContext.run(
+          {
+            requestId: "req-child",
+            userId: "user-child",
+            sessionToken: "super-secret-token",
+            customField: "custom-value",
+          },
+          async () => {
+            for (const level of levels)
+              moduleLogger[level](`${level} child test`);
+          },
+        );
+
+        for (const level of levels) {
+          const meta = childSpies[level].mock.calls[0][1];
+          expect(JSON.stringify(meta)).not.toContain("super-secret-token");
+          expect(meta).not.toHaveProperty("sessionToken");
+          expect(meta).toEqual({
+            requestId: "req-child",
+            userId: "user-child",
+          });
+        }
+      } finally {
+        childSpy.mockRestore();
+      }
+    });
+
+    it("keeps the credential out of lines that also carry per-call meta", async () => {
+      // `meta` wins over context on collision; that merge must not resurrect a
+      // context field the allowlist excluded.
+      const winstonInstance = (
+        logger as unknown as { winstonInstance: Record<string, jest.Mock> }
+      ).winstonInstance;
+      const spy = jest
+        .spyOn(winstonInstance, "info")
+        .mockImplementation(() => undefined);
+
+      try {
+        await asyncContext.run(
+          {
+            requestId: "req-meta",
+            userId: "user-meta",
+            sessionToken: "super-secret-token",
+          },
+          async () => {
+            logger.info("Action", { action: "create", userId: "override" });
+          },
+        );
+
+        expect(spy.mock.calls[0][1]).toEqual({
+          requestId: "req-meta",
+          userId: "override",
+          action: "create",
+        });
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
     it("should allow metadata to override context fields", async () => {
       const context = { requestId: "req-override-123", userId: "user-123" };
 
