@@ -102,7 +102,7 @@ def answer(
     if not allow_errors and errors:
         raise LedgerError(
             f"Ledger has {len(errors)} error(s). Pass --allow-errors to preview and apply anyway.",
-            details=[format_error(error) for error in errors],
+            details=[format_error(error, ledger_file=file) for error in errors],
         )
 
     logs = io.StringIO()

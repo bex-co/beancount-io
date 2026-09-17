@@ -563,7 +563,7 @@ def _validate(file: Path) -> dict[str, Any]:
     if errors:
         raise protocol.LedgerError(
             f"{file}: {len(errors)} error(s).",
-            details=[format_error(error) for error in errors],
+            details=[format_error(error, ledger_file=file) for error in errors],
         )
 
     root = file.resolve().parent

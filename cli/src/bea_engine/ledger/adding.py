@@ -296,7 +296,7 @@ def _price(
     target = write.destination(file, into)
     snapshot.require_target(target)
     entries, errors, _ = loader.load_file(file)
-    ledger_errors = [format_error(error) for error in errors]
+    ledger_errors = [format_error(error, ledger_file=file) for error in errors]
     if ledger_errors and strict_read:
         raise protocol.LedgerError(
             f"Ledger has {len(ledger_errors)} error(s). Pass --allow-errors to report anyway.", details=ledger_errors
@@ -408,7 +408,8 @@ def _transaction(
         allowed = {e.account: e.currencies for e in existing if isinstance(e, Open)}
     normalized = []
     elided = 0
-    for posting in entry.postings:
+    for number, posting in enumerate(entry.postings, start=1):
+        _refuse_missing_price(postings, number, posting)
         # Beancount annotates booked postings; the parser also returns MISSING.
         units: Any = posting.units
         if units is MISSING or units.number is MISSING:
@@ -452,6 +453,42 @@ def _transaction(
         "warnings": warnings,
         "target": str(write.destination(file, into)),
     }
+
+
+def _refuse_missing_price(postings: list[str], number: int, posting: Any) -> None:
+    """A bare `@` or `@@` names its missing part and the accepted syntax.
+
+    The parser accepts an incomplete price and marks the absent part with the
+    MISSING sentinel, which the writer would otherwise stringify into the
+    ledger text as `<class 'beancount.core.number.MISSING'>` — so the mistake
+    is refused here, before anything is rendered or written. Incomplete costs
+    need no such guard: the printer renders a partial `{…}` back verbatim and
+    the loader reports the booking failure readably.
+    """
+    from beancount.core.number import MISSING
+
+    from bea_engine import protocol
+
+    price = posting.price
+    if (
+        price is not MISSING
+        and getattr(price, "number", None) is not MISSING
+        and getattr(price, "currency", None) is not MISSING
+    ):
+        return
+    text = postings[number - 1] if 0 < number <= len(postings) else ""
+    marker = "@@" if "@@" in text else "@"
+    total = "total " if marker == "@@" else ""
+    number_missing = price is MISSING or getattr(price, "number", None) is MISSING
+    currency_missing = price is MISSING or getattr(price, "currency", None) is MISSING
+    if number_missing and currency_missing:
+        need = f"the {total}price after {marker} is missing"
+    elif number_missing:
+        need = f"the {total}price after {marker} needs a number"
+    else:
+        need = f"the {total}price after {marker} needs a currency"
+    example = f"'{posting.account} 10 HOOL {marker} 5.00 USD'"
+    raise protocol.UsageError(f"--posting {number}: {need}: write {example}. Nothing was written.")
 
 
 def _parse_metadata(items: list[str]) -> dict[str, Any]:

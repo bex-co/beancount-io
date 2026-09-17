@@ -470,7 +470,7 @@ def validate_candidate(
     invalid_pad_accounts = False
     for error in errors:
         hints = []
-        message = format_error(error)
+        message = format_error(error, ledger_file=file)
         for staged, original in filenames.items():
             message = message.replace(str(staged), str(original))
         source = Path(error.source.get("filename", str(candidate)))

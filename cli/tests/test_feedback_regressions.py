@@ -458,3 +458,83 @@ def test_query_json_keeps_both_lots_of_an_inventory(tmp_path: Path) -> None:
         ("2026-02-01", "first"),
         ("2026-02-02", "second"),
     ]
+
+
+class TestLoadFailuresReadable:
+    def test_broken_plugin_names_plugin_file_and_line(self, tmp_path: Path) -> None:
+        file = tmp_path / "main.bean"
+        file.write_text('plugin "beancount.plugins.no_such_plugin"\n' + ACCOUNTS)
+
+        result = run(file, "check")
+
+        assert result.exit_code == 1, result.output
+        (detail,) = json.loads(result.stderr)["error"]["details"]
+        assert detail.startswith(f"{file}:1: "), detail
+        assert 'Cannot import plugin "beancount.plugins.no_such_plugin"' in detail
+        assert "ModuleNotFoundError" in detail
+        assert "Traceback" not in result.stderr
+
+    def test_duplicate_is_one_line_with_both_locations(self, tmp_path: Path) -> None:
+        txn = '2026-02-01 * "Cafe" "Lunch"\n  Expenses:Groceries 10.00 USD\n  Assets:Checking\n'
+        file = tmp_path / "main.bean"
+        file.write_text('plugin "beancount.plugins.noduplicates"\n' + ACCOUNTS + txn + txn)
+        lines = file.read_text().splitlines()
+        first = lines.index('2026-02-01 * "Cafe" "Lunch"') + 1
+        again = lines.index('2026-02-01 * "Cafe" "Lunch"', first) + 1
+
+        result = run(file, "check")
+
+        assert result.exit_code == 1, result.output
+        (detail,) = json.loads(result.stderr)["error"]["details"]
+        assert "\n" not in detail
+        assert "Transaction(" not in detail
+        assert len(detail) < 500, len(detail)
+        assert detail.startswith(f"{file}:{again}: Duplicate transaction on 2026-02-01"), detail
+        for expected in ('"Cafe"', '"Lunch"', "Expenses:Groceries 10.00 USD", f"first entered at {file}:{first}"):
+            assert expected in detail, detail
+
+    @pytest.mark.parametrize("posting", ["Assets:Stock 10 AAPL @", "Assets:Stock 10 AAPL @@"])
+    def test_bare_price_names_missing_part_and_syntax(self, book: Path, posting: str) -> None:
+        before = book.read_text()
+
+        result = run(
+            book,
+            "add",
+            "transaction",
+            "--date",
+            "2026-03-01",
+            "--narration",
+            "Buy",
+            "-p",
+            posting,
+            "-p",
+            "Assets:Checking",
+        )
+
+        assert result.exit_code == 2, result.output
+        error = json.loads(result.stderr)["error"]
+        assert error["category"] == "usage"
+        assert "MISSING" not in result.output
+        assert "price after" in error["message"] and "Nothing was written" in error["message"]
+        assert "@ 5.00 USD" in error["message"] or "@@ 5.00 USD" in error["message"]
+        assert book.read_text() == before
+
+    def test_partial_price_names_missing_currency(self, book: Path) -> None:
+        result = run(
+            book,
+            "add",
+            "transaction",
+            "--date",
+            "2026-03-01",
+            "--narration",
+            "Buy",
+            "-p",
+            "Assets:Stock 10 AAPL @ 5",
+            "-p",
+            "Assets:Checking",
+        )
+
+        assert result.exit_code == 2, result.output
+        message = json.loads(result.stderr)["error"]["message"]
+        assert "needs a currency" in message, message
+        assert "MISSING" not in result.output

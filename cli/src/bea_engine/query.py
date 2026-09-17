@@ -72,7 +72,7 @@ def rows_answer(
     date and label that tell it from another lot at the same price.
     """
     conn = connect(file)
-    errors = _gate([format_error(error) for error in conn.errors], allow_errors)
+    errors = _gate([format_error(error, ledger_file=file) for error in conn.errors], allow_errors)
     cursor = _executed(conn, query_string, conn.execute, errors)
     rows = cursor.fetchall() if cursor.description is not None else []
     description = cursor.description
@@ -119,7 +119,7 @@ def text_answer(
     # treats the boolean as width 1 (`max(..., True, ...)`), truncating
     # `count(*)` to `c`. Interactive users can still `.set narrow true`.
     shell.settings.narrow = False
-    errors = _gate([format_error(error) for error in shell.context.errors], allow_errors)
+    errors = _gate([format_error(error, ledger_file=file) for error in shell.context.errors], allow_errors)
     destination = None
     if output is not None:
         _refuse_alias(output, file, shell.context)
@@ -614,10 +614,122 @@ def _type_name(column: Any) -> str:
     return getattr(datatype, "__name__", None) or str(datatype)
 
 
-def format_error(error: Any) -> str:
-    """One loader error as `file:line: message` — the frontend's detail line."""
+_PLUGIN_FAILURE = re.compile(r'^Error (importing|applying plugin) "([^"]+)":\s*(.*)$', re.DOTALL)
+_TXN_LOCATION = re.compile(r"Transaction\(meta=\{'filename': '([^']*)', 'lineno': (\d+)")
+
+
+def format_error(error: Any, ledger_file: Path | str | None = None) -> str:
+    """One loader error as `file:line: message` — the frontend's detail line.
+
+    Two loader messages arrive as internal Python artifacts and are rewritten
+    here, the one boundary where error objects become display strings: plugin
+    failures embed a full traceback with a `<load>:0` location, and duplicate
+    reports embed two whole `Transaction(...)` reprs. Anything unrecognized
+    keeps its legacy rendering rather than losing information.
+    """
     source = getattr(error, "source", None) or {}
-    return f"{source.get('filename', '<ledger>')}:{source.get('lineno', 0)}: {getattr(error, 'message', error)}"
+    message = getattr(error, "message", error)
+    if isinstance(message, str):
+        plugin = _plugin_message(message, ledger_file)
+        if plugin is not None:
+            return plugin
+        duplicate = _duplicate_message(error, message)
+        if duplicate is not None:
+            return duplicate
+    return f"{source.get('filename', '<ledger>')}:{source.get('lineno', 0)}: {message}"
+
+
+def _plugin_message(message: str, ledger_file: Path | str | None) -> str | None:
+    """A plugin load failure as `file:line: Cannot ... plugin "name": cause`.
+
+    The loader reports these against `<load>:0` with the traceback attached,
+    so the directive's own line is found by scanning the ledger source and
+    only the traceback's final exception line is kept as the cause.
+    """
+    match = _PLUGIN_FAILURE.match(message)
+    if match is None:
+        return None
+    kind, name, traceback_text = match.groups()
+    cause = ""
+    for line in traceback_text.splitlines():
+        if line.strip():
+            cause = line.strip()
+    if kind == "importing":
+        text = f'Cannot import plugin "{name}": {cause}. Check the name is spelled right and the plugin is installed.'
+    else:
+        text = f'Plugin "{name}" failed while running: {cause}.'
+    location = _plugin_directive(ledger_file, name)
+    if location is None:
+        return f"<ledger>:0: {text}"
+    return f"{location[0]}:{location[1]}: {text}"
+
+
+def _plugin_directive(ledger_file: Path | str | None, name: str) -> tuple[str, int] | None:
+    """The `file, line` of the `plugin "name"` directive in the ledger source."""
+    if ledger_file is None:
+        return None
+    directive = re.compile(rf"^\s*plugin\s+[\"']{re.escape(name)}[\"']")
+    try:
+        lines = Path(ledger_file).read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return None
+    for lineno, line in enumerate(lines, start=1):
+        if directive.match(line):
+            return (str(ledger_file), lineno)
+    return None
+
+
+def _duplicate_message(error: Any, message: str) -> str | None:
+    """A duplicate report as one line: what repeats, and both locations.
+
+    The loader message is `Duplicate entry: {txn} == {txn}` with two full
+    reprs; the repeated transaction comes from the error's own entry and the
+    original's location from the second repr, so no repr is ever displayed.
+    """
+    if not message.startswith("Duplicate entry: "):
+        return None
+    entry = getattr(error, "entry", None)
+    if entry is None:
+        return None
+    locations = _TXN_LOCATION.findall(message)
+    original = locations[-1] if len(locations) >= 2 else None
+    source = getattr(error, "source", None) or {}
+    filename = source.get("filename", "<ledger>")
+    lineno = source.get("lineno", 0)
+    summary = _entry_summary(entry)
+    if original is None:
+        return f"{filename}:{lineno}: Duplicate {summary}. Delete or change one of them."
+    return (
+        f"{filename}:{lineno}: Duplicate {summary}; "
+        f"first entered at {original[0]}:{original[1]}. Delete or change one of them."
+    )
+
+
+def _entry_summary(entry: Any) -> str:
+    """A transaction as `transaction on DATE "payee" "narration" (postings)`."""
+    from beancount.core.data import Transaction
+    from beancount.core.number import MISSING
+
+    date = getattr(entry, "date", "?")
+    if not isinstance(entry, Transaction):
+        return f"{type(entry).__name__.lower()} on {date}"
+    head = " ".join(
+        part
+        for part in (f'"{entry.payee}"' if entry.payee else "", f'"{entry.narration}"' if entry.narration else "")
+        if part
+    )
+    postings = []
+    for posting in entry.postings:
+        units: Any = posting.units
+        if units is MISSING or getattr(units, "number", MISSING) is MISSING:
+            postings.append(posting.account)
+        else:
+            postings.append(f"{posting.account} {units.number} {units.currency}")
+    legs = f" ({'; '.join(postings)})" if postings else ""
+    words = f"transaction on {date}"
+    if head:
+        words += f" {head}"
+    return words + legs
 
 
 def result_context(rows: Any) -> Any:

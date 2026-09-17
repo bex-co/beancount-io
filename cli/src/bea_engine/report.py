@@ -269,7 +269,7 @@ def _load(
     from fava.ledger import FavaLedger
 
     entries, errors, options = load_file(str(file))
-    ledger_errors = [format_error(error) for error in errors]
+    ledger_errors = [format_error(error, ledger_file=file) for error in errors]
     if ledger_errors and not allow_errors:
         raise protocol.LedgerError(
             f"Ledger has {len(ledger_errors)} error(s). Pass --allow-errors to report anyway.",

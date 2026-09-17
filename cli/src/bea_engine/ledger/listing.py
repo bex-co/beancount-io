@@ -105,7 +105,7 @@ def answer(
     data: dict[str, Any] = {
         "items": [_row(item) for item in items],
         "truncated": truncated,
-        "errors": [format_error(error) for error in errors],
+        "errors": [format_error(error, ledger_file=file) for error in errors],
     }
     if details:
         # Beancount syntax for each row, which only this side can render. Asked
