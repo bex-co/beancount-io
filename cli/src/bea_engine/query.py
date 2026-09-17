@@ -113,6 +113,10 @@ def text_answer(
         # `show_errors=False`: the load errors travel in the envelope, and
         # upstream printing them to stderr too would report each one twice.
         shell = build_shell(file, destination, format=format, numberify=numberify, show_errors=False)
+        # One-shot text tables must keep full headers. Upstream `narrow=True`
+        # treats the boolean as width 1 (`max(..., True, ...)`), truncating
+        # `count(*)` to `c`. Interactive users can still `.set narrow true`.
+        shell.settings.narrow = False
         errors = _gate([format_error(error) for error in shell.context.errors], allow_errors)
         _executed(shell.context, query_string, shell.onecmd, errors)
     finally:
