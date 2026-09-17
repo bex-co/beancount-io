@@ -298,7 +298,14 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
                         item["payee"] or "",
                         item["narration"] or "(no narration)",
                     ],
-                    [(p["account"], _amount(p["units"])) for p in _matching_postings(item, account) if p["units"]],
+                    [
+                        (
+                            (f"{p['flag']} {p['account']}" if p.get("flag") else p["account"]),
+                            _amount(p["units"]),
+                        )
+                        for p in _matching_postings(item, account)
+                        if p["units"]
+                    ],
                 )
                 for item in items
             ],
