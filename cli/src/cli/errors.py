@@ -119,7 +119,7 @@ def error_from_status(status: int, message: str | None, *, request_id: str | Non
     """
     detail = message or f"HTTP {status}"
     if status in (401, 403):
-        return AuthError(f"Not authorized ({detail}). Run 'bea cloud login'.", request_id=request_id)
+        return AuthError(f"Not authorized ({detail}). {_auth_remedy()}", request_id=request_id)
     if status == 409:
         return ConflictError(detail, request_id=request_id)
     if status == 400:
@@ -129,6 +129,32 @@ def error_from_status(status: int, message: str | None, *, request_id: str | Non
     if status >= 500:
         return BeaError(f"Server error ({detail}).", request_id=request_id)
     return BeaError(detail, request_id=request_id)
+
+
+def _auth_remedy() -> str:
+    """What to do about a rejected credential, which depends on which one is in use.
+
+    `BEA_TOKEN` takes precedence over the stored file unconditionally, so
+    telling that caller to log in sends them through a browser ceremony to
+    write a `credentials.json` the next command will not read — and an
+    unattended runner cannot follow it at all. `bea cloud logout` already words
+    this case correctly; this is the same sentence for the rejection path.
+
+    Building a message must never be what fails, so a credential store that
+    cannot be read falls back to the advice that suits the common case.
+    """
+    from cli.auth.credentials import ENVIRONMENT, load_credentials
+
+    try:
+        creds = load_credentials()
+    except Exception:
+        creds = None
+    if creds is not None and creds.source == ENVIRONMENT:
+        return (
+            "BEA_TOKEN is the credential in use, and 'bea cloud login' does not change that: "
+            "correct or unset BEA_TOKEN, or mint a new token."
+        )
+    return "Run 'bea cloud login'."
 
 
 def to_bea_error(exc: BaseException | str) -> BeaError:

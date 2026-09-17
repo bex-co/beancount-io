@@ -751,7 +751,7 @@ bea cloud status
 bea cloud logout
 ```
 
-`bea cloud status` reports the credential source (`file` or `environment`), its expiry, and the account it belongs to. For CI, set `BEA_TOKEN` instead of logging in — it is never written to disk, and `cloud status` reports `source: environment`. `cloud logout` revokes the stored session and deletes the credential file. When `BEA_TOKEN` is set, `cloud logout` changes nothing: it neither revokes the token (another job may share it) nor unsets it in the shell — unset the variable yourself, or revoke the token from the dashboard.
+`bea cloud status` reports the credential source (`file` or `environment`), its expiry, and the account it belongs to. For CI, set `BEA_TOKEN` instead of logging in — it is never written to disk, and `cloud status` reports `source: environment`. `cloud logout` revokes the stored session and deletes the credential file. When `BEA_TOKEN` is set, `cloud logout` changes nothing: it neither revokes the token (another job may share it) nor unsets it in the shell — unset the variable yourself, or revoke the token from the dashboard. A credential the server rejects is reported against the source actually in use: `BEA_TOKEN` takes precedence over the stored file unconditionally, so that failure tells you to correct or unset the variable rather than to log in, which would not change which credential is sent.
 
 ## Cloud: hosted ledgers
 
