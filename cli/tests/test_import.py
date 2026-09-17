@@ -1769,3 +1769,63 @@ class TestBlockedRows:
         assert "blocked" in result.stdout
         assert "Expenses:Uncategorized" in result.stdout
         assert "bea add open" in result.stdout
+
+
+class TestImportFixtureSet:
+    """Real-world export shapes, end to end: preview, apply, check, re-import."""
+
+    US_BANK = b'Date,Description,Amount\n2026-08-02,Whole Foods,"-$1,000.00"\n2026-08-03,Refund,(4.50)\n'
+    EU_BANK = "Date;Description;Amount\n2026-08-02;Café;1.000,00\n2026-08-03;Shop;-4,50\n".encode()
+    BROKER = b"Date\tDescription\tAmount\n2026-08-02\tDividend\t12.34\n"
+    CP1252 = "Date,Description,Amount\n2026-08-02,Café,-5.25\n".encode("cp1252")
+    BOM = b"\xef\xbb\xbfDate,Description,Amount\n2026-08-02,Coffee,-5.25\n"
+    TRAILERS = b"Date,Description,Amount\n2026-08-02,Coffee,-5.25\n\n   \n2026-08-03,Tea,-2.00\n"
+    BARE_ID = b"Date,Description,Amount,ID\n2026-08-02,Coffee,-5.25,txn-1\n"
+
+    @pytest.mark.parametrize(
+        ("name", "content", "csv_args", "amounts"),
+        [
+            ("us_bank.csv", US_BANK, ["--csv", "auto"], ["-1000.00 USD", "-4.50 USD"]),
+            ("eu_bank.csv", EU_BANK, ["--csv", "auto"], ["1000.00 USD", "-4.50 USD"]),
+            ("broker.tsv", BROKER, ["--csv", "auto"], ["12.34 USD"]),
+            (
+                "cp1252.csv",
+                CP1252,
+                ["--csv", "date=Date,amount=Amount,narration=Description,encoding=cp1252"],
+                ["-5.25 USD"],
+            ),
+            ("bom.csv", BOM, ["--csv", "auto"], ["-5.25 USD"]),
+            ("trailers.csv", TRAILERS, ["--csv", "auto"], ["-5.25 USD", "-2.00 USD"]),
+            ("bare_id.csv", BARE_ID, ["--csv", "auto"], ["-5.25 USD"]),
+        ],
+    )
+    def test_fixture_imports_applies_checks_and_dedups(
+        self, book: Path, isolated_config: Path, name: str, content: bytes, csv_args: list[str], amounts: list[str]
+    ) -> None:
+        source = book.parent / name
+        source.write_bytes(content)
+        preview = run_csv(book, source, "--account", "Assets:Checking", *csv_args)
+        assert preview.exit_code == 0, preview.output
+        data = json.loads(preview.stdout)["data"]
+        assert data["ready"] == len(amounts)
+        assert data["blocked"] == 0
+        assert [row["amount"] for row in data["rows"]] == amounts
+        applied = run_csv(book, source, "--account", "Assets:Checking", *csv_args, "--apply")
+        assert applied.exit_code == 0, applied.output
+        assert json.loads(applied.stdout)["data"]["written"] == len(amounts)
+        check = runner.invoke(app, ["--file", str(book), "check"])
+        assert check.exit_code == 0, check.output
+        repeat = run_csv(book, source, "--account", "Assets:Checking", *csv_args)
+        assert repeat.exit_code == 0, repeat.output
+        again = json.loads(repeat.stdout)["data"]
+        assert again["ready"] == 0
+        assert again["duplicates"] == len(amounts)
+
+    def test_two_claimant_header_refuses_without_writing(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "twonarr.csv"
+        source.write_text("Date,Description,Memo,Amount\n2026-08-02,A,B,-5.25\n")
+        before = book.read_bytes()
+        result = run_csv(book, source, "--csv", "auto", "--account", "Assets:Checking")
+        assert result.exit_code == 2
+        assert "narration (Description, Memo)" in result.stderr
+        assert book.read_bytes() == before
