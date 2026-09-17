@@ -209,6 +209,35 @@ def build_shell(
             """Print the parsed sexp to outfile (not process stdout)."""
             print(self.parse(arg).tosexp(), file=self.outfile)
 
+        def do_run(self, arg: str) -> None:
+            """Run a named stored query, or list them; missing names are usage errors."""
+            import shlex
+
+            cleaned = arg.rstrip("; \t")
+            if not cleaned:
+                if self.queries:
+                    print("\n".join(name for name in sorted(self.queries)), file=self.outfile)
+                return
+            if cleaned == "*":
+                for name, query in sorted(self.queries.items()):
+                    print(f"{name}:", file=self.outfile)
+                    self.execute(query.query_string, default_close_date=query.date)
+                    print(file=self.outfile)
+                    print(file=self.outfile)
+                return
+            parts = shlex.split(cleaned)
+            if len(parts) != 1:
+                raise protocol.UsageError('too many arguments for "run" command')
+            name = parts[0]
+            query = self.queries.get(name)
+            if query is None:
+                known = ", ".join(sorted(self.queries)) or "(none)"
+                raise protocol.UsageError(
+                    f'query "{name}" not found.',
+                    details=[f"Stored queries in this ledger: {known}."],
+                )
+            self.execute(query.query_string, default_close_date=query.date)
+
         def onecmd(self, line: str) -> Any:
             # A query that opens with a comment (`/* … */`, `;`) has no leading
             # identifier, so `cmd.Cmd.parseline` finds no command and upstream
