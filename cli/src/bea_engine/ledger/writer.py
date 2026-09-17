@@ -48,6 +48,7 @@ from bea_engine.ledger.models import (
     PadDirective,
     PriceDirective,
     TransactionDirective,
+    TransactionHeader,
 )
 from bea_engine.ledger.text import single_line
 
@@ -171,7 +172,7 @@ def _append(file_path: Path, *texts: str, allow_errors: bool = False, into: Path
     return ledger_write.append(file_path, list(texts), allow_errors=allow_errors, into=into)
 
 
-def format_transaction(directive: TransactionDirective) -> str:
+def format_transaction(directive: TransactionHeader) -> str:
     postings = [
         Posting(
             account=p.account,

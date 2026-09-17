@@ -326,7 +326,7 @@ def _transaction(
     from beancount.parser import parser
     from beancount.parser.grammar import ParserError
 
-    from bea_engine.ledger.models import TransactionDirective
+    from bea_engine.ledger.models import TransactionHeader
     from bea_engine.ledger.reader import metadata_to_json
 
     postings: list[str] = [str(posting) for posting in request.get("postings") or []]
@@ -336,24 +336,14 @@ def _transaction(
         if parts and len(parts[0]) == 1:
             parts = parts[1:]
         parse_account(parts[0] if parts else "")
-    # model_construct skips Tag/Link BeforeValidators; strip sigils so the
-    # printer does not emit doubled `#` / `^` (see models._strip_sigil).
-    tags = [
-        value[1:] if isinstance(value, str) and value.startswith("#") else value
-        for value in (request.get("tags") or [])
-    ]
-    links = [
-        value[1:] if isinstance(value, str) and value.startswith("^") else value
-        for value in (request.get("links") or [])
-    ]
-    header = TransactionDirective.model_construct(
+    header = TransactionHeader(
         date=_date(request),
         flag=str(request.get("flag") or "*"),
         payee=request.get("payee"),
         narration=request.get("narration"),
         postings=[],
-        tags=tags,
-        links=links,
+        tags=list(request.get("tags") or []),
+        links=list(request.get("links") or []),
         meta=_parse_metadata([str(item) for item in request.get("meta") or []]),
     )
     header_text = writer.format_transaction(header)

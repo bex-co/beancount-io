@@ -95,17 +95,31 @@ class SourceLocation(BaseModel):
     lineno: int
 
 
-class TransactionDirective(BaseModel):
+class TransactionHeader(BaseModel):
+    """A transaction's own fields, with no postings required under them.
+
+    `bea add transaction` renders the header and appends the user's native
+    posting lines as text, so it has to build one before any posting exists.
+    It still needs validation: this is where a tag or link written with its
+    sigil loses it, so that formatting does not write it a second time.
+    """
+
     model_config = ConfigDict(extra="forbid")
     date: LedgerDate
     flag: str = "*"
     payee: str | None = None
     narration: str | None = None
-    postings: list[Posting] = Field(min_length=1)
+    postings: list[Posting] = Field(default_factory=list)
     tags: list[Tag] = Field(default_factory=list)
     links: list[Link] = Field(default_factory=list)
     meta: dict[str, Any] = Field(default_factory=dict)
     source: SourceLocation | None = None
+
+
+class TransactionDirective(TransactionHeader):
+    """A complete transaction: a header and the postings it balances."""
+
+    postings: list[Posting] = Field(min_length=1)
 
 
 class OpenDirective(BaseModel):
