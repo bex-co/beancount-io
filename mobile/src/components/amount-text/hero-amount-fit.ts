@@ -1,8 +1,10 @@
 import type { TextProps } from "react-native";
 
 /**
- * Text props for a hero-sized money figure: the transaction detail headline and
- * the chart headline on Home and the account drill-down.
+ * Text props for a hero-sized money figure: the transaction detail headline,
+ * the chart headline on Home and the account drill-down, and the account
+ * table balance (whose 21+ character figures wrapped mid-number at the
+ * default text size — w1/034).
  *
  * A hero amount must stay one visual unit. Left to wrap, `-$26,560,000,000.00`
  * broke after its leading minus and `$640,480,000,000.00` broke inside a digit

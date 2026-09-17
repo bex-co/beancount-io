@@ -29,6 +29,7 @@ import {
   type BalanceDisplay,
 } from "@/common/balance-display";
 import { AmountText } from "@/components/amount-text";
+import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import {
   CATEGORY_SIGN,
@@ -300,9 +301,17 @@ const AccountTableRow = memo(function AccountTableRow({
       chevronIcon
     );
 
+  // A 21+ character balance must stay one visual unit at the default size
+  // too: left to wrap, the sign strands on its own line above the figure
+  // (w1/034). Same fit props as the hero amounts — shrink, never wrap,
+  // never ellipsize.
   const amountBlock = (
     <View style={[styles.amounts, stacked && styles.stackedAmounts]}>
-      <AmountText mono={isCategory ? "medium" : "regular"} style={valueStyle}>
+      <AmountText
+        mono={isCategory ? "medium" : "regular"}
+        style={valueStyle}
+        {...HERO_AMOUNT_FIT}
+      >
         {units
           ? formatHolding(units)
           : formatSignedMoneyWithCurrency(row.value, currency)}
