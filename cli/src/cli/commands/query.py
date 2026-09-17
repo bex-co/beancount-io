@@ -94,6 +94,10 @@ def query(
         raise typer.Exit(launch.run_native("bean-query", native_args))
 
     file = ctx.entry_file()
+    if output_file is not None:
+        # Before anything is forwarded: the engine opens this path for write,
+        # and opening the ledger under read would truncate the books.
+        output.refuse_ledger_alias(Path(output_file), file)
     if not query_string:
         if not sys.stdin.isatty():
             query_string = sys.stdin.read()

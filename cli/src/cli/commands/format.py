@@ -114,6 +114,12 @@ def format_beans(
             "Formatting multiple files to stdout is unsupported; pass --in-place (-i), or format one file at a time."
         )
 
+    if output_file is not None:
+        # Upstream reads the target and writes this path; naming the target
+        # itself would truncate the file before it is read.
+        for ledger_file in files:
+            output.refuse_ledger_alias(output_file, ledger_file)
+
     status = launch.run_native("bean-format", [*alignment, *_destination(output_file), *(str(f) for f in files)])
     if status != 0:
         raise typer.Exit(status)

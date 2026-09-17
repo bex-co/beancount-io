@@ -10,6 +10,7 @@ from __future__ import annotations
 import dataclasses
 import datetime
 import json
+import re
 import sys
 from decimal import Decimal
 from pathlib import Path
@@ -19,7 +20,7 @@ import typer
 
 from cli import context
 from cli.config import package_version
-from cli.errors import LedgerError, to_bea_error
+from cli.errors import LedgerError, UsageError, to_bea_error
 from cli.utils import atomic_write, single_line
 
 
@@ -112,6 +113,76 @@ def table(headers: list[str], rows: list[list[str]]) -> None:
 
 def file_target(path: Path) -> dict[str, Any]:
     return {"file": str(path.resolve())}
+
+
+_INCLUDE_DIRECTIVE = re.compile(r'^\s*include\s+"([^"]+)"', re.MULTILINE)
+
+
+def ledger_closure(root: Path) -> list[Path]:
+    """The root ledger plus every file its `include` chain can reach.
+
+    Read textually on purpose: this runs before the ledger is loaded (it is
+    what keeps a `-o` from truncating the file the load is about to read), so
+    it cannot ask the loader what the closure is. Each relative include is
+    tried against the including file's directory and against the working
+    directory, because either base can be the one that resolves; an
+    over-approximated member only ever causes a refusal, never a write.
+    """
+    members: list[Path] = []
+    seen: set[Path] = set()
+    stack = [root]
+    while stack:
+        current = stack.pop()
+        try:
+            key = current.resolve()
+        except OSError:
+            continue
+        if key in seen:
+            continue
+        seen.add(key)
+        members.append(current)
+        try:
+            text = current.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for match in _INCLUDE_DIRECTIVE.finditer(text):
+            raw = match.group(1)
+            candidate = Path(raw)
+            if candidate.is_absolute():
+                stack.append(candidate)
+            else:
+                stack.append(current.parent / raw)
+                stack.append(Path(raw))
+    return members
+
+
+def _same_file(left: Path, right: Path) -> bool:
+    """True when two paths name one file, through symlinks and hard links alike."""
+    try:
+        first, second = left.stat(), right.stat()
+        return (first.st_ino, first.st_dev) == (second.st_ino, second.st_dev)
+    except OSError:
+        pass
+    try:
+        return left.resolve() == right.resolve()
+    except OSError:
+        return False
+
+
+def refuse_ledger_alias(destination: Path, ledger: Path) -> None:
+    """Refuse an output destination that is the ledger under read, or one of its includes.
+
+    A result redirected onto the file it was read from truncates the books
+    (human mode) or replaces them with a JSON envelope — and the exit status
+    still says success. Call this before any temp file is created or any
+    stream is opened, so a refusal leaves the destination byte-identical.
+    """
+    for member in ledger_closure(ledger):
+        if _same_file(destination, member):
+            raise UsageError(
+                f"--output {destination} would overwrite the ledger it reads ({member}); "
+                "choose a different destination."
+            )
 
 
 def server_target() -> dict[str, Any]:

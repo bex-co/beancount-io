@@ -107,22 +107,70 @@ def text_answer(
     """
     import io
 
+    # The destination opens only after the ledger has loaded: opening it first
+    # would truncate a `-o` that names the ledger under read before the load
+    # sees a byte of it. The shell renders into the buffer until then, and the
+    # stream is swapped once the destination is known safe.
     buffer = io.StringIO()
-    destination = output.open("w") if output is not None else buffer
+    # `show_errors=False`: the load errors travel in the envelope, and
+    # upstream printing them to stderr too would report each one twice.
+    shell = build_shell(file, buffer, format=format, numberify=numberify, show_errors=False)
+    # One-shot text tables must keep full headers. Upstream `narrow=True`
+    # treats the boolean as width 1 (`max(..., True, ...)`), truncating
+    # `count(*)` to `c`. Interactive users can still `.set narrow true`.
+    shell.settings.narrow = False
+    errors = _gate([format_error(error) for error in shell.context.errors], allow_errors)
+    destination = None
+    if output is not None:
+        _refuse_alias(output, file, shell.context)
+        destination = output.open("w")
+        shell.outfile = destination
     try:
-        # `show_errors=False`: the load errors travel in the envelope, and
-        # upstream printing them to stderr too would report each one twice.
-        shell = build_shell(file, destination, format=format, numberify=numberify, show_errors=False)
-        # One-shot text tables must keep full headers. Upstream `narrow=True`
-        # treats the boolean as width 1 (`max(..., True, ...)`), truncating
-        # `count(*)` to `c`. Interactive users can still `.set narrow true`.
-        shell.settings.narrow = False
-        errors = _gate([format_error(error) for error in shell.context.errors], allow_errors)
         _executed(shell.context, query_string, shell.onecmd, errors)
     finally:
-        if output is not None:
+        if destination is not None:
             destination.close()
     return {"text": buffer.getvalue(), "errors": errors}
+
+
+def _loaded_files(root: Path, context: Any) -> list[Path]:
+    """The root ledger plus every file the loaded entries were read from.
+
+    The true include closure, straight from the loader rather than from
+    re-reading `include` lines: anything in this set is a file the query
+    reads, so none of them may be a query destination.
+    """
+    files = [root]
+    table = context.tables.get("entries")
+    entries = getattr(table, "entries", None) or ()
+    for entry in entries:
+        name = (getattr(entry, "meta", None) or {}).get("filename")
+        if name:
+            files.append(Path(name))
+    return files
+
+
+def _same_file(left: Path, right: Path) -> bool:
+    """True when two paths name one file, through symlinks and hard links alike."""
+    try:
+        first, second = left.stat(), right.stat()
+        return (first.st_ino, first.st_dev) == (second.st_ino, second.st_dev)
+    except OSError:
+        pass
+    try:
+        return left.resolve() == right.resolve()
+    except OSError:
+        return False
+
+
+def _refuse_alias(destination: Path, root: Path, context: Any) -> None:
+    """Fail a destination that is one of the files this query reads."""
+    for member in _loaded_files(root, context):
+        if _same_file(destination, member):
+            raise protocol.UsageError(
+                f"--output {destination} would overwrite the ledger it reads ({member}); "
+                "choose a different destination."
+            )
 
 
 def _gate(errors: list[str], allow_errors: bool) -> list[str]:
@@ -152,14 +200,16 @@ def interactive(
     import warnings
 
     warnings.filterwarnings("always")
-    destination = output.open("w") if output is not None else sys.stdout
+    shell = build_shell(file, sys.stdout, interactive=True, format=format, numberify=numberify, show_errors=show_errors)
+    destination = None
+    if output is not None:
+        _refuse_alias(output, file, shell.context)
+        destination = output.open("w")
+        shell.outfile = destination
     try:
-        shell = build_shell(
-            file, destination, interactive=True, format=format, numberify=numberify, show_errors=show_errors
-        )
         shell.cmdloop()
     finally:
-        if output is not None:
+        if destination is not None:
             destination.close()
 
 
@@ -184,6 +234,14 @@ def build_shell(
             # Beanquery 0.2.0 calls open(sys.stdout) on reset and closes the old
             # stream before opening its replacement. Remove this override when
             # upstream supports reset and failed redirection without losing output.
+            if arg:
+                for member in _loaded_files(file, self.context):
+                    if _same_file(Path(arg), member):
+                        protocol.note(
+                            f"Refusing to write query output to {arg}: "
+                            f"it is one of the ledger files under query ({member})."
+                        )
+                        return
             try:
                 destination = open(arg, "w", encoding="utf-8") if arg else stream
             except OSError as exc:

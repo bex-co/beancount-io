@@ -456,6 +456,144 @@ def test_format_accepts_crlf_and_is_idempotent(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
 
 
+def _query_output_book(tmp_path: Path) -> Path:
+    """A standalone ledger with one transaction, for output-alias tests."""
+    file = tmp_path / "main.bean"
+    file.write_text(
+        'option "operating_currency" "USD"\n'
+        "2020-01-01 open Assets:Cash USD\n"
+        "2020-01-01 open Equity:Opening-Balances\n"
+        '2020-01-01 * "seed"\n'
+        "  Assets:Cash               100 USD\n"
+        "  Equity:Opening-Balances  -100 USD\n"
+    )
+    return file
+
+
+@pytest.mark.parametrize("spell", ["same", "relative", "hardlink"])
+@pytest.mark.parametrize("json_mode", [True, False])
+def test_query_output_aliasing_ledger_refuses(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, spell: str, json_mode: bool
+) -> None:
+    book = _query_output_book(tmp_path)
+    before = book.read_bytes()
+    monkeypatch.chdir(tmp_path)
+    if spell == "same":
+        destination = str(book)
+    elif spell == "relative":
+        destination = "./main.bean"
+    else:
+        link = tmp_path / "link.bean"
+        os.link(book, link)
+        destination = str(link)
+    args = ["--file", str(book), "query", "PRINT", "-o", destination]
+    if json_mode:
+        args = ["--json", *args]
+    result = runner.invoke(app, args)
+    assert result.exit_code == 2, result.output
+    assert book.read_bytes() == before
+    if json_mode:
+        error = json.loads(result.stderr)["error"]
+        assert error["category"] == "usage"
+        assert "would overwrite the ledger it reads" in error["message"]
+    else:
+        assert "would overwrite the ledger it reads" in result.stderr
+
+
+def test_query_output_aliasing_an_include_refuses(book: Path) -> None:
+    child = book.parent / "accounts.beancount"
+    before = child.read_bytes()
+    result = runner.invoke(app, ["--file", str(book), "query", "SELECT account", "-o", str(child)])
+    assert result.exit_code == 2, result.output
+    assert child.read_bytes() == before
+    assert "would overwrite the ledger it reads" in result.stderr
+
+
+def test_query_output_to_other_files_still_works(tmp_path: Path) -> None:
+    book = _query_output_book(tmp_path)
+    before = book.read_bytes()
+    fresh = tmp_path / "out.txt"
+    result = runner.invoke(app, ["--file", str(book), "query", "PRINT", "-o", str(fresh)])
+    assert result.exit_code == 0, result.output
+    assert "Assets:Cash" in fresh.read_text()
+    unrelated = tmp_path / "notes.txt"
+    unrelated.write_text("old")
+    result = runner.invoke(app, ["--file", str(book), "query", "PRINT", "-o", str(unrelated)])
+    assert result.exit_code == 0, result.output
+    assert "Assets:Cash" in unrelated.read_text()
+    assert book.read_bytes() == before
+
+
+def test_shell_dot_output_to_ledger_refuses(book: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    import io
+
+    from bea_engine.query import build_shell
+
+    before = book.read_bytes()
+    stream = io.StringIO()
+    shell = build_shell(book, stream)
+    shell.onecmd(f".output {book}")
+    assert "Refusing to write query output" in capsys.readouterr().err
+    shell.onecmd("PRINT")
+    assert book.read_bytes() == before
+    assert "Assets:Cash" in stream.getvalue()
+
+
+@pytest.mark.parametrize("flag", ["-o", "--output", "--output="])
+def test_example_output_refuses_an_existing_file(tmp_path: Path, flag: str) -> None:
+    victim = tmp_path / "victim.bean"
+    victim.write_bytes(b"Real books\n")
+    if flag == "--output=":
+        output_args = [f"--output={victim}"]
+    else:
+        output_args = [flag, str(victim)]
+    # A fixed seed: unseeded `bean-example` draws randomly and occasionally dies
+    # with StopIteration inside balance-check generation.
+    result = runner.invoke(
+        app, ["example", "--date-begin", "2020-01-01", "--date-end", "2020-01-31", "-s", "7", *output_args]
+    )
+    assert result.exit_code == 4, result.output
+    assert victim.read_bytes() == b"Real books\n"
+    assert "Already exists" in result.stderr
+    assert "--force" in result.stderr
+
+
+def test_example_output_force_and_fresh_paths_write(tmp_path: Path) -> None:
+    victim = tmp_path / "victim.bean"
+    victim.write_bytes(b"Real books\n")
+    forced = runner.invoke(
+        app,
+        ["example", "--date-begin", "2020-01-01", "--date-end", "2020-01-31", "-s", "7", "--force", "-o", str(victim)],
+    )
+    assert forced.exit_code == 0, forced.output
+    assert victim.read_bytes() != b"Real books\n"
+    fresh = tmp_path / "fresh.bean"
+    result = runner.invoke(
+        app, ["example", "--date-begin", "2020-01-01", "--date-end", "2020-01-31", "-s", "7", "-o", str(fresh)]
+    )
+    assert result.exit_code == 0, result.output
+    assert fresh.stat().st_size > 0
+
+
+def test_format_output_aliasing_its_target_refuses(tmp_path: Path) -> None:
+    book = _query_output_book(tmp_path)
+    before = book.read_bytes()
+    result = runner.invoke(app, ["format", str(book), "-o", str(book)])
+    assert result.exit_code == 2, result.output
+    assert book.read_bytes() == before
+    assert "would overwrite the ledger it reads" in result.stderr
+
+
+def test_format_output_to_another_file_still_works(tmp_path: Path) -> None:
+    book = _query_output_book(tmp_path)
+    before = book.read_bytes()
+    other = tmp_path / "formatted.bean"
+    result = runner.invoke(app, ["format", str(book), "-o", str(other)])
+    assert result.exit_code == 0, result.output
+    assert "Assets:Cash" in other.read_text()
+    assert book.read_bytes() == before
+
+
 @pytest.mark.parametrize(
     "balances", [["Assets:Checking 0.00000001"], ["Assets:Checking -0.00000001", "Assets:Savings 0.00000003"]]
 )
