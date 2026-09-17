@@ -306,7 +306,8 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
     else:
         output.table(spec.headers, [spec.row(item) for item in items])
     if truncated:
-        output.note(f"Showing the first {limit}; pass --limit for more.")
+        advice = "pass --limit for more" if limit == 50 else "raise --limit for more"
+        output.note(f"Showing the first {limit}; {advice}.")
 
 
 def _account_command(name: str, spec: _Spec) -> Callable[..., None]:
