@@ -238,6 +238,16 @@ def _problem_lines(failed: dict[str, list[str]], missing: list[output.MissingInc
     return lines
 
 
+def _problem_parts(failed: dict[str, list[str]], missing: list[output.MissingInclude]) -> list[str]:
+    """The unparseable-file and missing-include tallies, shared by both reporters."""
+    parts = []
+    if failed:
+        parts.append(f"{len(failed)} file(s) cannot be parsed")
+    if missing:
+        parts.append(f"{len(missing)} include(s) are missing")
+    return parts
+
+
 def _check_message(
     changed_count: int, failed: dict[str, list[str]], missing: list[output.MissingInclude], remedy: str
 ) -> str:
@@ -247,10 +257,7 @@ def _check_message(
     parts = []
     if changed_count:
         parts.append(f"{changed_count} file(s) need formatting")
-    if failed:
-        parts.append(f"{len(failed)} file(s) cannot be parsed")
-    if missing:
-        parts.append(f"{len(missing)} include(s) are missing")
+    parts.extend(_problem_parts(failed, missing))
     message = "; ".join(parts) + "."
     if changed_count:
         message += f" Run {remedy} to apply formatting."
@@ -261,11 +268,7 @@ def _check_message(
 
 def _problems_message(formatted_count: int, failed: dict[str, list[str]], missing: list[output.MissingInclude]) -> str:
     """What a partial `-i` reports: what it did, and what it could not do."""
-    parts = [f"{formatted_count} file(s) formatted"]
-    if failed:
-        parts.append(f"{len(failed)} file(s) cannot be parsed")
-    if missing:
-        parts.append(f"{len(missing)} include(s) are missing")
+    parts = [f"{formatted_count} file(s) formatted", *_problem_parts(failed, missing)]
     return "; ".join(parts) + "."
 
 

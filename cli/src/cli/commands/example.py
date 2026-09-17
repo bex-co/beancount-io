@@ -40,7 +40,7 @@ def _split_output(args: list[str]) -> tuple[list[str], Path | None, bool]:
                 continue
         elif arg.startswith("--output="):
             output = Path(arg.split("=", 1)[1])
-        elif arg.startswith("-o") and len(arg) > 2 and not arg.startswith("--"):
+        elif arg.startswith("-o") and len(arg) > 2:
             output = Path(arg[2:])
         forwarded.append(arg)
         index += 1

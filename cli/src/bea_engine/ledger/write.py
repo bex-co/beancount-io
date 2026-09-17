@@ -600,13 +600,10 @@ def validate_candidate(
             or (isinstance(error.entry, Pad) and str(getattr(error, "message", "")).startswith("Invalid reference to "))
         ]
         if new_records:
-            raise LedgerError(
-                f"The change would introduce {len(new_records)} new ledger error(s); nothing was written.",
-                details=_collapse_repeats(reasons),
-            )
-        raise LedgerError(
-            "The change would leave the ledger invalid; nothing was written.", details=_collapse_repeats(reasons)
-        )
+            message = f"The change would introduce {len(new_records)} new ledger error(s); nothing was written."
+        else:
+            message = "The change would leave the ledger invalid; nothing was written."
+        raise LedgerError(message, details=_collapse_repeats(reasons))
     return messages
 
 

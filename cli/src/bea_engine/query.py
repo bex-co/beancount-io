@@ -163,14 +163,21 @@ def _same_file(left: Path, right: Path) -> bool:
         return False
 
 
-def _refuse_alias(destination: Path, root: Path, context: Any) -> None:
-    """Fail a destination that is one of the files this query reads."""
+def _find_alias(destination: Path, root: Path, context: Any) -> Path | None:
+    """The ledger file a destination would overwrite, or None when it is safe."""
     for member in _loaded_files(root, context):
         if _same_file(destination, member):
-            raise protocol.UsageError(
-                f"--output {destination} would overwrite the ledger it reads ({member}); "
-                "choose a different destination."
-            )
+            return member
+    return None
+
+
+def _refuse_alias(destination: Path, root: Path, context: Any) -> None:
+    """Fail a destination that is one of the files this query reads."""
+    member = _find_alias(destination, root, context)
+    if member is not None:
+        raise protocol.UsageError(
+            f"--output {destination} would overwrite the ledger it reads ({member}); choose a different destination."
+        )
 
 
 def _gate(errors: list[str], allow_errors: bool) -> list[str]:
@@ -235,13 +242,13 @@ def build_shell(
             # stream before opening its replacement. Remove this override when
             # upstream supports reset and failed redirection without losing output.
             if arg:
-                for member in _loaded_files(file, self.context):
-                    if _same_file(Path(arg), member):
-                        protocol.note(
-                            f"Refusing to write query output to {arg}: "
-                            f"it is one of the ledger files under query ({member})."
-                        )
-                        return
+                member = _find_alias(Path(arg), file, self.context)
+                if member is not None:
+                    protocol.note(
+                        f"Refusing to write query output to {arg}: "
+                        f"it is one of the ledger files under query ({member})."
+                    )
+                    return
             try:
                 destination = open(arg, "w", encoding="utf-8") if arg else stream
             except OSError as exc:

@@ -98,12 +98,25 @@ def _syntax_errors_of(filename: str) -> list[str]:
     return [str(error) for error in data.get("files", {}).get(filename, [])]
 
 
-def _forward(op: str, ctx: typer.Context) -> None:
-    """Pass remaining argv through to bean-doctor, resolving a relative location."""
+def _refuse_json() -> None:
+    """Doctor has no JSON output; every operation says so the same way."""
     refuse_json(
         "doctor",
         hint="Run without --json and pass the ledger path as a positional argument.",
     )
+
+
+def _replayed(completed: subprocess.CompletedProcess[str]) -> subprocess.CompletedProcess[str]:
+    """Replay captured upstream output, passing a nonzero status straight through."""
+    _replay(completed)
+    if completed.returncode != 0:
+        raise typer.Exit(completed.returncode)
+    return completed
+
+
+def _forward(op: str, ctx: typer.Context) -> None:
+    """Pass remaining argv through to bean-doctor, resolving a relative location."""
+    _refuse_json()
     code = launch.run_native("bean-doctor", [op, *_located_against_ledger(op, list(ctx.args))])
     raise typer.Exit(code)
 
@@ -122,10 +135,7 @@ def _replay(completed: subprocess.CompletedProcess[str]) -> None:
 
 def _forward_parse(op: str, ctx: typer.Context) -> None:
     """Trace the parse, but exit 1 when recovery ran on unparseable input."""
-    refuse_json(
-        "doctor",
-        hint="Run without --json and pass the ledger path as a positional argument.",
-    )
+    _refuse_json()
     args = list(ctx.args)
     positionals = _positionals(args)
     errors = _syntax_errors_of(positionals[0]) if positionals else []
@@ -137,10 +147,7 @@ def _forward_parse(op: str, ctx: typer.Context) -> None:
 
 def _forward_print_options(ctx: typer.Context) -> None:
     """Refuse to print default options for a file that did not load."""
-    refuse_json(
-        "doctor",
-        hint="Run without --json and pass the ledger path as a positional argument.",
-    )
+    _refuse_json()
     args = list(ctx.args)
     positionals = _positionals(args)
     if positionals:
@@ -153,10 +160,7 @@ def _forward_print_options(ctx: typer.Context) -> None:
 
 def _forward_roundtrip(ctx: typer.Context) -> None:
     """Compare entry sets, without congratulations on unparseable input."""
-    refuse_json(
-        "doctor",
-        hint="Run without --json and pass the ledger path as a positional argument.",
-    )
+    _refuse_json()
     args = list(ctx.args)
     positionals = _positionals(args)
     errors = _syntax_errors_of(positionals[0]) if positionals else []
@@ -177,15 +181,9 @@ def _replay_without_congratulations(completed: subprocess.CompletedProcess[str])
 
 def _forward_directories(ctx: typer.Context) -> None:
     """Map upstream's ERROR lines to the exit status gates need."""
-    refuse_json(
-        "doctor",
-        hint="Run without --json and pass the ledger path as a positional argument.",
-    )
+    _refuse_json()
     args = list(ctx.args)
-    completed = launch.capture_native("bean-doctor", ["directories", *args])
-    _replay(completed)
-    if completed.returncode != 0:
-        raise typer.Exit(completed.returncode)
+    completed = _replayed(launch.capture_native("bean-doctor", ["directories", *args]))
     problems = [
         line
         for stream in (completed.stdout, completed.stderr)
@@ -200,18 +198,12 @@ def _forward_directories(ctx: typer.Context) -> None:
 
 def _forward_scoped(op: str, ctx: typer.Context) -> None:
     """Fail an empty link/region scope instead of printing a blank success."""
-    refuse_json(
-        "doctor",
-        hint="Run without --json and pass the ledger path as a positional argument.",
-    )
+    _refuse_json()
     args = _located_against_ledger(op, list(ctx.args))
     # Through the helper rather than the `bean-doctor` script: same upstream
     # command, run where bea can number its balance tree from the entries in
     # scope instead of from the whole ledger's display context (w3/352).
-    completed = launch.capture_engine(["scoped", op, *args])
-    _replay(completed)
-    if completed.returncode != 0:
-        raise typer.Exit(completed.returncode)
+    completed = _replayed(launch.capture_engine(["scoped", op, *args]))
     rest = [
         line
         for stream in (completed.stdout, completed.stderr)
@@ -228,15 +220,9 @@ def _forward_scoped(op: str, ctx: typer.Context) -> None:
 
 def _forward_missing_open(ctx: typer.Context) -> None:
     """Print upstream's missing opens, then name the inactive ones it omits."""
-    refuse_json(
-        "doctor",
-        hint="Run without --json and pass the ledger path as a positional argument.",
-    )
+    _refuse_json()
     args = list(ctx.args)
-    completed = launch.capture_native("bean-doctor", ["missing-open", *args])
-    _replay(completed)
-    if completed.returncode != 0:
-        raise typer.Exit(completed.returncode)
+    _replayed(launch.capture_native("bean-doctor", ["missing-open", *args]))
     positionals = _positionals(args)
     if not positionals:
         raise typer.Exit(0)
