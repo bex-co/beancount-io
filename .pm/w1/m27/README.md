@@ -1,6 +1,6 @@
 # w1 · m27 — Amounts are exact on the way in and out
 
-**Worker:** worker1 **Goal:** every number a caller supplies reaches the ledger as the exact decimal they wrote, every number bea renders is bounded by the ledger's display context, and a retried write does not duplicate a directive **Status:** todo (t001–t003 done)
+**Worker:** worker1 **Goal:** every number a caller supplies reaches the ledger as the exact decimal they wrote, every number bea renders is bounded by the ledger's display context, and a retried write does not duplicate a directive **Status:** todo (t001–t004 done)
 
 ## Tasks (in order)
 

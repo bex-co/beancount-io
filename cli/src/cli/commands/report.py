@@ -49,6 +49,15 @@ AllowErrorsOpt = Annotated[
 ]
 
 
+_FALLBACK_FRACTIONAL_DIGITS = 2
+"""Fractional digits for a currency the ledger never names, usually a conversion target.
+
+With no display context to infer from, human tables fall back to cents —
+the same floor they use everywhere else — so a conversion can never print
+an unbounded repeating expansion. JSON callers keep the exact value.
+"""
+
+
 def _quantize(number: Decimal, currency: str, precision: Mapping[str, int] | None) -> Decimal:
     """Round a text-report amount to the currency's display precision, half up.
 
@@ -56,13 +65,14 @@ def _quantize(number: Decimal, currency: str, precision: Mapping[str, int] | Non
     (honoring `option "display_precision"`); money rounds half up, the way a
     person reading a total expects. Maximum, not most-common: a ledger of
     whole dollars with one cents purchase keeps its cents, while a converted
-    `4.9050` still caps at the two decimals the ledger uses. A commodity the
-    ledger never wrote has no precision to infer, so it keeps its own
-    exponent. JSON is untouched: it keeps the full-precision decimal string.
+    `4.9050` still caps at the two decimals the ledger uses. A currency the
+    ledger never names renders with the fallback cents. Non-finite values
+    pass through unrounded. JSON is untouched: it keeps the full-precision
+    decimal string.
     """
-    if precision is None or currency not in precision:
+    if precision is None or not number.is_finite():
         return number
-    fractional = precision[currency]
+    fractional = precision.get(currency, _FALLBACK_FRACTIONAL_DIGITS)
     with localcontext() as ctx:
         ctx.prec = max(ctx.prec, len(number.as_tuple().digits) + fractional)
         return number.quantize(Decimal(1).scaleb(-fractional), rounding=ROUND_HALF_UP)
@@ -84,7 +94,11 @@ def _amounts(
         if value is None:
             return f"Unavailable {currency}"
         shown = _quantize(value, currency, precision)
-        return f"{shown:,.{max(2, -int(shown.as_tuple().exponent))}f} {currency}"
+        # The floor is the currency's own precision: a zero-fraction ledger
+        # prints whole dollars, while unknown currencies keep the two-decimal
+        # floor the fallback quantize just rounded them to.
+        minimum = 2 if precision is None else precision.get(currency, 2)
+        return f"{shown:,.{max(minimum, -int(shown.as_tuple().exponent))}f} {currency}"
 
     return "  ".join(render(currency, number) for currency, number in sorted(balance.items())) or "—"
 
