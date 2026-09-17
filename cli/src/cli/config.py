@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from cli.settings import Settings
 
 DEFAULT_ENTRY_FILE = Path("main.bean")
+DEFAULT_ENTRY_FILE_FALLBACKS = (Path("main.bean"), Path("main.beancount"))
 
 
 def config_dir() -> Path:

@@ -156,7 +156,7 @@ def _version_callback(value: bool) -> None:
 def main(
     file: Annotated[
         Path | None,
-        typer.Option("--file", "-f", help="Ledger entry file (overrides $BEA_FILE and ./main.bean)"),
+        typer.Option("--file", "-f", help="Ledger entry file (overrides $BEA_FILE and cwd main.bean/main.beancount)"),
     ] = None,
     json_output: Annotated[bool, typer.Option("--json", help="Emit JSON on stdout and JSON errors on stderr")] = False,
     no_input: Annotated[bool, typer.Option("--no-input", help="Never prompt; fail instead of waiting")] = False,

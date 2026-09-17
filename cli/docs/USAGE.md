@@ -80,7 +80,7 @@ Global options come before the command.
 
 | Option | Description |
 |---|---|
-| `--file / -f PATH` | Ledger entry file. Overrides `BEA_FILE` and `./main.bean`. |
+| `--file / -f PATH` | Ledger entry file. Overrides `BEA_FILE` and cwd `main.bean` / `main.beancount`. |
 | `--json` | Emit the JSON envelope on stdout and JSON errors on stderr. Implies `--no-input`. |
 | `--no-input` | Never prompt. Missing confirmation or input fails with exit 2 instead of waiting. |
 | `--strict` | Refuse partial answers even in a terminal; `--allow-errors` opts into them. |
@@ -103,9 +103,9 @@ Local commands resolve their target in this order:
 
 1. `--file PATH`
 2. `$BEA_FILE`
-3. `./main.bean` in the working directory
+3. `./main.bean` in the working directory, or `./main.beancount` if `main.bean` is absent
 
-If the resolved file does not exist, the command exits **2** and names all three sources. Hosted targeting (`--ledger`) is not implemented yet.
+If the resolved file does not exist, the command exits **2** and names those sources. Hosted targeting (`--ledger`) is not implemented yet.
 Passing a directory also exits **2** with a hint to select its root ledger file.
 Hosted commands name ledgers as `owner/name`; local files are never implicitly
 uploaded. `init` creates its target from its own argument or global `--file`

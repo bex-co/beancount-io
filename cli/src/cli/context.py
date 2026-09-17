@@ -71,7 +71,13 @@ class RunContext:
         return self.strict or self.json_output or not _stdout_is_a_terminal() or env_flag("CI")
 
     def entry_file(self) -> Path:
-        """Resolve the local ledger: `--file`, then `$BEA_FILE`, then `./main.bean`."""
+        """Resolve the local ledger: `--file`, then `$BEA_FILE`, then cwd defaults.
+
+        Cwd discovery prefers `./main.bean`, then `./main.beancount` when the
+        `.bean` name is absent.
+        """
+        from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS
+
         candidate = self.file
         source = "--file"
         if candidate is None:
@@ -79,13 +85,18 @@ class RunContext:
             if env_file:
                 candidate, source = Path(env_file).expanduser(), "$BEA_FILE"
         if candidate is None:
-            candidate, source = DEFAULT_ENTRY_FILE, "the working directory"
+            for name in DEFAULT_ENTRY_FILE_FALLBACKS:
+                if name.is_file():
+                    candidate, source = name, "the working directory"
+                    break
+            else:
+                candidate, source = DEFAULT_ENTRY_FILE, "the working directory"
 
         if not candidate.exists():
             raise UsageError(
                 f"No ledger file at '{candidate}' (from {source}). "
                 f"Name one with --file PATH, set BEA_FILE, or run from a directory containing "
-                f"{DEFAULT_ENTRY_FILE}. To start new books, run bea init books --currency USD."
+                f"main.bean or main.beancount. To start new books, run bea init books --currency USD."
             )
         if candidate.is_dir():
             raise UsageError(

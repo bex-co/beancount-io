@@ -9,7 +9,7 @@ with its usage line, arguments, and options.
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--file, -f` | path |  | Ledger entry file (overrides $BEA_FILE and ./main.bean) |
+| `--file, -f` | path |  | Ledger entry file (overrides $BEA_FILE and cwd main.bean/main.beancount) |
 | `--json` | flag |  | Emit JSON on stdout and JSON errors on stderr |
 | `--no-input` | flag |  | Never prompt; fail instead of waiting |
 | `--yes, -y` | flag |  | Answer confirmations with yes |
