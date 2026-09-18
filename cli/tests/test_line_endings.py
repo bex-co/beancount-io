@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
+import pytest
 from typer.testing import CliRunner
 
+from cli.commands import format as format_command
 from cli.main import app
 
 runner = CliRunner()
@@ -97,4 +100,33 @@ def test_format_in_place_converges_endings_and_reports(tmp_path: Path) -> None:
     again = runner.invoke(app, ["format", str(file), "-i"])
     assert again.exit_code == 0, again.output
     assert "0/1" in again.stdout
+    assert runner.invoke(app, ["format", str(file), "--check"]).exit_code == 0
+
+
+def test_format_in_place_converges_when_upstream_writes_crlf(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """`-i` then `--check` is clean even where upstream hands back CRLF.
+
+    `bean-format` rewrites through Python's default text mode, so on Windows
+    every line it writes comes back with a carriage return — which `--check`
+    reads as unformatted. Simulated here so the invariant holds on every
+    platform, not only the ones whose text mode is already LF.
+    """
+    file = tmp_path / "main.bean"
+    file.write_text(OPENS)
+    real = format_command.launch.capture_native
+
+    def windows_text_mode(name: str, args) -> subprocess.CompletedProcess[str]:
+        completed = real(name, args)
+        if completed.returncode == 0:
+            for path in (Path(arg) for arg in args if arg.endswith((".bean", ".beancount"))):
+                path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+        return completed
+
+    monkeypatch.setattr(format_command.launch, "capture_native", windows_text_mode)
+
+    result = runner.invoke(app, ["format", str(file), "-i"])
+
+    assert result.exit_code == 0, result.output
+    assert b"\r" not in file.read_bytes()
+    monkeypatch.undo()
     assert runner.invoke(app, ["format", str(file), "--check"]).exit_code == 0

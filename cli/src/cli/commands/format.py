@@ -162,10 +162,13 @@ def _format_in_place(
     # encountering one it cannot write. Never invite a retry without that result.
     if completed is not None and completed.returncode == 0:
         for file in formattable:
-            text = _text(file)
-            fixed = _canonical_posting_indent(text)
-            if fixed != text:
-                file.write_bytes(fixed.encode("utf-8"))
+            # Byte comparison, not text: upstream rewrites through Python's
+            # default text mode, so on Windows it hands back CRLF for every
+            # line it wrote. `--check` reads a carriage return as unformatted,
+            # so without normalizing here `-i` would never converge there.
+            fixed = _canonical_posting_indent(_text(file)).encode("utf-8")
+            if fixed != _raw(file):
+                file.write_bytes(fixed)
     changed = [str(file) for file in formattable if _raw(file) != before[file]]
     result = _result(files, changed, failed, missing) | {"in_place": True}
     if completed is not None and completed.returncode != 0:
