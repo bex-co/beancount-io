@@ -7,6 +7,7 @@ import type { CSVParseResult } from "../../../types";
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
     t: (key: string) => key,
+    i18n: { language: "en" },
   }),
 }));
 

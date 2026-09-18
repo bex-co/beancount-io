@@ -10,6 +10,7 @@ vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
     t: (key: string, params?: Record<string, unknown>) =>
       params?.count !== undefined ? `${key}:${params.count}` : key,
+    i18n: { language: "en" },
   }),
 }));
 
