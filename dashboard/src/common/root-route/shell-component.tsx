@@ -10,7 +10,11 @@ export function ShellComponent({
 }): React.ReactNode {
   const { i18n } = useTranslation();
   return (
-    <html lang={i18n.language} suppressHydrationWarning>
+    // i18next already knows which languages read right-to-left, so the
+    // document declares its direction beside its language from the first
+    // server render — not after hydration, which would reflow the page under
+    // the reader.
+    <html lang={i18n.language} dir={i18n.dir()} suppressHydrationWarning>
       <head>
         <ThemeScript />
         {/* GoogleAnalytics self-gates on a configured measurement ID */}
