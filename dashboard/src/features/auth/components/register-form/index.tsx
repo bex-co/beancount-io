@@ -9,6 +9,7 @@ import { Label } from "@/common/components/ui/label";
 import { PasswordInput } from "@/features/auth/components/password-input";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { ScriptRequiredNotice } from "@/features/auth/components/script-required-notice";
 import { useHydrated } from "@/features/auth/lib/use-hydrated";
 import type { RegisterFormData } from "@/features/auth/hooks/use-register-form";
 
@@ -99,11 +100,8 @@ export function RegisterForm({
   const hydrated = useHydrated();
 
   return (
-    /* `method="post"` is defence in depth, not a working fallback: there is no
-       non-JavaScript auth endpoint. It only guarantees that if this form is
-       ever submitted natively — before hydration, or after the entry script
-       fails — the fields go in a request body rather than the URL. The submit
-       button below stays disabled until then, which also blocks Enter. */
+    // Defence in depth: a native submission puts fields in a body, not
+    // the URL. The disabled button below stops it happening at all.
     <form className="space-y-6" method="post" onSubmit={handleSubmit(onSubmit)}>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -268,11 +266,7 @@ export function RegisterForm({
         </Alert>
       )}
 
-      <noscript>
-        <p className="text-sm text-destructive" role="alert">
-          {t("auth.scriptRequired")}
-        </p>
-      </noscript>
+      <ScriptRequiredNotice />
       <Button
         type="submit"
         disabled={!hydrated || isSubmitting || isLoading}

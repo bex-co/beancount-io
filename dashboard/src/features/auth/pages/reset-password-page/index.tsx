@@ -320,10 +320,8 @@ export default function ResetPasswordPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* These forms are client-rendered, so nothing submits before
-                  hydration today — `method="post"` keeps it that way if that
-                  ever changes, since the native default would put every field
-                  in the URL. */}
+              {/* Not server-rendered today; the method keeps a native
+                  submission out of the URL if that ever changes. */}
               <form
                 method="post"
                 className="space-y-4"
