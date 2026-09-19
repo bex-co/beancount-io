@@ -1,6 +1,6 @@
 # w4 · m18 — Make complete BQL cell values readable
 
-**Worker:** worker1 **Goal:** readers can inspect every inventory unit and every line of printed directives without losing virtual-table usability **Status:** todo (t001–t005 done)
+**Worker:** worker1 **Goal:** readers can inspect every inventory unit and every line of printed directives without losing virtual-table usability **Status:** done
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Verify the query inspection adoption journey — **DONE** | 10m | t002 |
 | t004 | Simplify cell presentation and sizing ownership — **DONE** | 10m | t003 |
 | t005 | Test real geometry and large-result behavior, then run gates — **DONE** | 35m | t004 |
-| t006 | Close out after desktop and narrow inspection passes | 10m | t005 |
+| t006 | Close out after desktop and narrow inspection passes — **DONE** | 10m | t005 |
 
 120 minutes across implementation and verification. Promoted w4/078 with its complete evidence preserved in [FINDINGS.md](./FINDINGS.md), expanded by independently reproduced PRINT values.
 

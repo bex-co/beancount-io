@@ -14,7 +14,7 @@
 
 - [ ] **m19** — [Preserve URL fragments in login continuations](./m19/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
 
-- [ ] **m18** — [Make complete BQL cell values readable](./m18/README.md) (6 tasks) ← promoted w4/078 with PRINT evidence, repeated dashboard QA, 2026-09-17
+- [x] **m18** — [Make complete BQL cell values readable](./done/m18/README.md) (6 tasks) ← promoted w4/078 with PRINT evidence, repeated dashboard QA, 2026-09-17
 
 - [x] **m17** — [Keep profile search updates from hijacking ledger navigation](./done/m17/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
 
@@ -46,7 +46,7 @@
 
 - ~~**091**~~ — Budget/Commodities table identities — dropped 2026-09-17: promoted to [m20](./m20/README.md), preserving original evidence and adding all three Statistics tables; coordinated repair and checks exceed one hour.
 
-- ~~**078**~~ — BQL inventory clipping — dropped 2026-09-17: promoted to [m18](./m18/README.md), preserving the original evidence and adding PRINT multiline values; expanded implementation and verification exceed one hour.
+- ~~**078**~~ — BQL inventory clipping — dropped 2026-09-17: promoted to [m18](./done/m18/README.md), preserving the original evidence and adding PRINT multiline values; expanded implementation and verification exceed one hour.
 
 - ~~**082**~~ — Sign-in and recovery error associations — dropped 2026-09-17: promoted to [m15](./done/m15/README.md), preserving the evidence and adding independently reproduced registration fields; the expanded repair now exceeds one hour.
 
