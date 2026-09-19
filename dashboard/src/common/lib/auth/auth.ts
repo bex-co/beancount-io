@@ -143,9 +143,7 @@ export const requireAuth = (fallbackPath?: string) => {
     location: RequireAuthLocation;
   }): void => {
     if (!context.userProfile) {
-      const requested = getSafeRedirectPath(
-        `${location.pathname}${location.searchStr ?? ""}${location.hash ?? ""}`,
-      );
+      const requested = getSafeRedirectPath(toRelativeLocation(location));
       throw redirect({
         to: "/auth/login",
         search: {
