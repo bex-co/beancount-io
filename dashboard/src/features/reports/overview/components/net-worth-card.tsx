@@ -168,6 +168,7 @@ export function NetWorthCard({
             className="size-8"
             onClick={() => setView("chart")}
             aria-label={t("page.overview.chartView")}
+            aria-pressed={view === "chart"}
           >
             <AreaChart className="size-4" />
           </Button>
@@ -178,6 +179,7 @@ export function NetWorthCard({
             className="size-8"
             onClick={() => setView("table")}
             aria-label={t("page.overview.tableView")}
+            aria-pressed={view === "table"}
           >
             <Table2 className="size-4" />
           </Button>

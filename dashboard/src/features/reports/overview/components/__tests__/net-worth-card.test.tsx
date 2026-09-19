@@ -164,3 +164,45 @@ describe("NetWorthCard localization", () => {
     expect(screen.getByText("not-a-date")).toBeInTheDocument();
   });
 });
+
+describe("NetWorthCard view toggle semantics", () => {
+  function toggles() {
+    return {
+      chart: screen.getByRole("button", { name: "page.overview.chartView" }),
+      table: screen.getByRole("button", { name: "page.overview.tableView" }),
+    };
+  }
+
+  it("exposes the chart as the pressed view before any interaction", () => {
+    render(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+
+    const { chart, table } = toggles();
+    expect(chart).toHaveAttribute("aria-pressed", "true");
+    expect(table).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("moves the pressed state onto the table and back on click", async () => {
+    render(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+
+    await userEvent.click(toggles().table);
+    expect(toggles().table).toHaveAttribute("aria-pressed", "true");
+    expect(toggles().chart).toHaveAttribute("aria-pressed", "false");
+
+    await userEvent.click(toggles().chart);
+    expect(toggles().chart).toHaveAttribute("aria-pressed", "true");
+    expect(toggles().table).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("keeps keyboard activation, focus and the rendered amounts intact", async () => {
+    render(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+
+    toggles().table.focus();
+    await userEvent.keyboard("{Enter}");
+
+    expect(toggles().table).toHaveFocus();
+    expect(toggles().table).toHaveAttribute("aria-pressed", "true");
+    // The table view really rendered: the last month's balance is on screen.
+    expect(screen.getByText("Mar 2026")).toBeInTheDocument();
+    expect(screen.getAllByText(/120/).length).toBeGreaterThan(0);
+  });
+});
