@@ -7,10 +7,7 @@ import {
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { LedgerLayout } from "@/common/components/ledger-layout";
 import { LedgerRouteError } from "@/common/components/ledger-layout/ledger-route-error";
-import {
-  getSafeRedirectPath,
-  toRelativeLocation,
-} from "@/common/lib/auth/auth";
+import { getSafeReturnPath } from "@/common/lib/auth/auth";
 import { ledgerFilterSearchSchema } from "@/common/lib/ledger-search-params";
 import { GetLedgerDocument } from "@/graphql/definitions";
 
@@ -53,7 +50,7 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName")({
     } catch (error) {
       const code = ledgerAccessCode(error);
       if (code === "UNAUTHENTICATED") {
-        const next = getSafeRedirectPath(toRelativeLocation(location));
+        const next = getSafeReturnPath(location);
         throw redirect({
           to: "/auth/login",
           search: { next },

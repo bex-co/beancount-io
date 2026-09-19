@@ -102,28 +102,24 @@ export const getSafeRedirectPath = (
 };
 
 type RequireAuthLocation = {
-  pathname: string;
-  searchStr?: string;
-  hash?: string;
+  /**
+   * The router's own `pathname + searchStr + hash` for this location, still
+   * encoded. The parsed `hash` field cannot be used to rebuild it: router-core
+   * composes `href` from the raw hash and only then exposes `hash` with the
+   * `#` sliced off, so reassembling the parts by hand drops the delimiter and
+   * glues the fragment onto the query.
+   */
+  href: string;
 };
 
 /**
- * A TanStack router location as a relative URL string.
- *
- * The delimiters are not symmetrical: `searchStr` keeps its leading `?`, but
- * the parsed `hash` has had its `#` sliced off (router-core builds its own
- * `href` from the raw hash and only then strips the delimiter for the exposed
- * field) — unlike `window.location.hash`, which keeps it. Concatenating the
- * three parts therefore glues the fragment onto the end of the query, or onto
- * the path when there is no query, so `?time=2016#overview` arrives as
- * `?time=2016overview`.
+ * A router location as a safe relative `next` for `/auth/login`, or `undefined`
+ * when it cannot be one. Consumers reading a `next` back off the URL call
+ * `getSafeRedirectPath` directly — they have a string, not a location.
  */
-export const toRelativeLocation = ({
-  pathname,
-  searchStr,
-  hash,
-}: RequireAuthLocation): string =>
-  `${pathname}${searchStr ?? ""}${hash ? `#${hash}` : ""}`;
+export const getSafeReturnPath = (
+  location: RequireAuthLocation,
+): string | undefined => getSafeRedirectPath(location.href);
 
 /**
  * Creates a beforeLoad function that checks authentication using the root route context.
@@ -143,7 +139,7 @@ export const requireAuth = (fallbackPath?: string) => {
     location: RequireAuthLocation;
   }): void => {
     if (!context.userProfile) {
-      const requested = getSafeRedirectPath(toRelativeLocation(location));
+      const requested = getSafeReturnPath(location);
       throw redirect({
         to: "/auth/login",
         search: {

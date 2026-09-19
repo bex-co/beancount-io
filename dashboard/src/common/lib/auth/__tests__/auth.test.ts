@@ -100,11 +100,9 @@ describe("requireAuth", () => {
     expect(() =>
       guard({
         context: { userProfile: null },
-        location: {
-          pathname: "/settings/api-keys",
-          searchStr: "?lang=en",
-          hash: "",
-        },
+        // The router's own href for the location, as ParsedLocation carries
+        // it: already assembled and still encoded.
+        location: { href: "/settings/api-keys?lang=en" },
       }),
     ).toThrow("REDIRECT");
     expect(redirect).toHaveBeenCalledWith({
@@ -118,7 +116,7 @@ describe("requireAuth", () => {
     expect(() =>
       guard({
         context: { userProfile: null },
-        location: { pathname: "", searchStr: "", hash: "" },
+        location: { href: "" },
       }),
     ).toThrow("REDIRECT");
     expect(redirect).toHaveBeenCalledWith({
@@ -132,11 +130,7 @@ describe("requireAuth", () => {
     expect(() =>
       guard({
         context: { userProfile: { id: "u1" } },
-        location: {
-          pathname: "/settings/api-keys",
-          searchStr: "",
-          hash: "",
-        },
+        location: { href: "/settings/api-keys" },
       }),
     ).not.toThrow();
   });

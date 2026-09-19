@@ -1,6 +1,6 @@
 # w4 · m19 — Preserve URL fragments in login continuations
 
-**Worker:** worker1 **Goal:** Return visitors to the correct public ledger or profile after login. **Status:** todo (t001–t003 done)
+**Worker:** worker1 **Goal:** Return visitors to the correct public ledger or profile after login. **Status:** todo (t001–t004 done)
 
 ## Tasks (in order)
 
@@ -9,7 +9,7 @@
 | [t001](./done/t001.md) | Serialize Star and Follow continuations correctly — **DONE** | 30m | — |
 | [t002](./done/t002.md) | Align guarded login continuation producers — **DONE** | 25m | t001 |
 | [t003](./done/t003.md) | Adoption surface — **DONE** | 15m | t002 |
-| [t004](./t004.md) | Simplify | 15m | t003 |
+| [t004](./done/t004.md) | Simplify — **DONE** | 15m | t003 |
 | [t005](./t005.md) | Test coverage | 30m | t003, t004 |
 | [t006](./t006.md) | Closeout | 10m | t005 |
 

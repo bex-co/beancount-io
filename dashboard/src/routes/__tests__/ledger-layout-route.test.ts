@@ -17,35 +17,28 @@ type QueryOptions = { query: unknown; variables?: Record<string, unknown> };
 
 function loaderInput(
   query: (options: QueryOptions) => Promise<unknown>,
-  location?: {
-    pathname: string;
-    searchStr?: string;
-    hash?: string;
-  },
+  href?: string,
 ) {
   return {
     params: { ledgerOwner: "open_ledger", ledgerName: "example" },
     context: { client: { query } } as unknown as RouterContext,
+    // ParsedLocation.href: pathname + search + hash, already assembled by the
+    // router and still encoded.
     location: {
-      pathname: location?.pathname ?? "/ledger/open_ledger/example/journal",
-      searchStr: location?.searchStr ?? "?lang=en&account=Assets",
-      hash: location?.hash ?? "",
+      href:
+        href ?? "/ledger/open_ledger/example/journal?lang=en&account=Assets",
     },
   };
 }
 
 function runLoader(
   query: (options: QueryOptions) => Promise<unknown>,
-  location?: {
-    pathname: string;
-    searchStr?: string;
-    hash?: string;
-  },
+  href?: string,
 ) {
   const loader = Route.options.loader as unknown as (
     input: ReturnType<typeof loaderInput>,
   ) => Promise<unknown>;
-  return loader(loaderInput(query, location));
+  return loader(loaderInput(query, href));
 }
 
 function graphqlDenied(code: string, message: string) {
