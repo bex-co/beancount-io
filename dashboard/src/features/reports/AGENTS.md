@@ -126,6 +126,30 @@ GraphQL hierarchy data
   → ECharts Sankey component
 ```
 
+### Overview chart units
+
+The overview charts add their own parts together — a Sankey into node totals,
+the centre and Savings; a pie into the denominator behind every percentage — so
+each can only be truthful in **one** unit. A ledger balance is a map like
+`{ USD: 386.22, VACHR: 25 }`, and those numbers are not commensurable: no price
+was supplied, so adding them yields neither a dollar total nor a conversion.
+
+`overview/lib/unit-amounts.ts` is the one unit model. Amounts travel as
+`UnitAmounts` (`unit → amount`), `chooseDisplayUnit` picks the unit the most
+accounts use (ties by magnitude, then alphabetically, so the choice is stable
+across renders), and the chart renders that unit alone and names the omitted
+ones through `page.overview.chartUnitScope`. Both `sankey-data-transformer.ts`
+and `buildDistributionData` go through it — never re-derive a unit with
+`balance["USD"] ?? Object.values(balance)[0]`, which silently relabels MUSD or
+EUR as USD and adds vacation hours to dollars.
+
+Two aggregation rules go with it. An account's own `balance` counts at every
+level: the producer stores direct postings there and rolls them into each
+ancestor's `balanceChildren`, so reading it as you descend double-counts
+nothing, while summing only children drops a parent's real money. And every
+descendant resolves its **own** cash-flow role — a `Cash` or `Checking` leaf
+must not reach the investing bucket because its parent did.
+
 The Sankey categorizer resolves accounts through the shared
 `cash-flow/lib/role-resolver.ts` (a declared `cash-flow-role` wins for
 non-`Income`/`Equity` roots; `Income` stays the source side and `Equity`

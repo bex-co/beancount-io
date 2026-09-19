@@ -201,7 +201,9 @@ reads from it:
 - Cash-flow report (activity sections + CCE set + bottom line).
 - CSV / Markdown / print exports (same numbers; the "classification is
   inferred" disclosure appears only for rows still resolved by the heuristic).
-- Overview Sankey: `"cash"` excludes the account from flow nodes;
+- Overview Sankey: `"cash"` excludes the account from flow nodes, and from any
+  ancestor's total — every descendant resolves its own role, so a cash account
+  nested under an investing parent stays out of the investing figure;
   `operating` / `investing` / `financing` are honored for non-`Income`
   accounts. The Sankey's own vocabulary is unchanged — `Income` stays the
   `source` side and `Equity` stays excluded; declarations never remap those
