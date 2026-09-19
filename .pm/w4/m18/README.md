@@ -1,12 +1,12 @@
 # w4 · m18 — Make complete BQL cell values readable
 
-**Worker:** worker1 **Goal:** readers can inspect every inventory unit and every line of printed directives without losing virtual-table usability **Status:** todo
+**Worker:** worker1 **Goal:** readers can inspect every inventory unit and every line of printed directives without losing virtual-table usability **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Expose complete values within the virtual result table | 30m | — |
+| t001 | Expose complete values within the virtual result table — **DONE** | 30m | — |
 | t002 | Preserve inventory units and multiline directive structure | 25m | t001 |
 | t003 | Verify the query inspection adoption journey | 10m | t002 |
 | t004 | Simplify cell presentation and sizing ownership | 10m | t003 |

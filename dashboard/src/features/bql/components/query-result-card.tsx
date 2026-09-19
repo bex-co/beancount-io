@@ -2,7 +2,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { Button } from "@/common/components/ui/button";
 import { ChevronRight, Trash2 } from "lucide-react";
-import { List } from "react-window";
+import { List, useDynamicRowHeight } from "react-window";
 import { cn } from "@/common/lib/utils/utils";
 import {
   formatInventoryEntries,
@@ -15,6 +15,7 @@ import type { QueryShellQuery } from "@/graphql/definitions";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 
+/** Height of an ordinary one-line row, and the starting guess for measurement. */
 const ROW_HEIGHT = 36;
 const CONTAINER_HEIGHT = 600;
 const COLUMN_MIN_WIDTH_PX = 120;
@@ -77,6 +78,15 @@ export function QueryResultCard({
 }: QueryResultCardProps) {
   const { t } = useTranslations();
   const detailsRef = useRef<HTMLDetailsElement>(null);
+  // Rows are measured rather than fixed at ROW_HEIGHT. A multi-unit Inventory
+  // cell stacks one line per unit, so a 36px row clipped every unit past the
+  // first — the amounts were in the DOM and the CSV but not on screen. The
+  // cache is keyed by the result identity so heights measured for one
+  // execution never size the next one's table.
+  const rowHeight = useDynamicRowHeight({
+    defaultRowHeight: ROW_HEIGHT,
+    key: `${query}:${result?.table?.rows?.length ?? 0}`,
+  });
 
   useEffect(() => {
     if (detailsRef.current && isInitiallyOpen) {
@@ -145,10 +155,16 @@ export function QueryResultCard({
             <List<{ rows: typeof rows; dtypes: string[] }>
               role="rowgroup"
               rowCount={rows.length}
-              rowHeight={ROW_HEIGHT}
+              rowHeight={rowHeight}
               rowProps={{ rows, dtypes }}
               style={{
-                height: Math.min(rows.length * ROW_HEIGHT, CONTAINER_HEIGHT),
+                // The viewport is sized from the same measurements the rows
+                // use, so a tall result is not squeezed into a 36px-per-row
+                // box and a short one leaves no empty space below it.
+                height: Math.min(
+                  rows.length * rowHeight.getAverageRowHeight(),
+                  CONTAINER_HEIGHT,
+                ),
                 width: "100%",
                 overflowX: "hidden",
               }}
