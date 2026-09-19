@@ -5,6 +5,7 @@ import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { transformToSankeyData } from "../lib/sankey-data-transformer";
 import { getSankeyNodeColor } from "../lib/sankey-colors";
+import { ChartUnitScope } from "./chart-unit-scope";
 import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 
@@ -147,13 +148,6 @@ export default function CashFlowSankey({
     animationDuration: 800,
   };
 
-  // A Sankey adds its links together, so it can only be truthful in one unit.
-  // When the ledger holds others, say which ones are missing rather than
-  // letting the reader assume the diagram is the whole picture.
-  const omittedUnits = sankeyData.units.filter(
-    (candidate) => candidate !== sankeyData.unit,
-  );
-
   return (
     <div className="w-full">
       <ReactECharts
@@ -161,14 +155,7 @@ export default function CashFlowSankey({
         style={{ height: SANKEY_HEIGHT, width: "100%" }}
         className="w-full"
       />
-      {sankeyData.unit && omittedUnits.length > 0 && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          {t("page.overview.chartUnitScope", {
-            unit: sankeyData.unit,
-            others: omittedUnits.join(", "),
-          })}
-        </p>
-      )}
+      <ChartUnitScope unit={sankeyData.unit} units={sankeyData.units} />
     </div>
   );
 }
