@@ -1,6 +1,6 @@
 # w4 · m16 — Preserve statement chart selection through report reads
 
-**Worker:** worker1 **Goal:** changing an interval or conversion keeps the selected statement chart while replacement data and exports remain safely pending **Status:** todo (t001–t002 done)
+**Worker:** worker1 **Goal:** changing an interval or conversion keeps the selected statement chart while replacement data and exports remain safely pending **Status:** todo (t001–t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | t001 | Preserve Cash Flow view across pending interval reads — **DONE** | 25m | — |
 | t002 | Apply the same lifetime repair to the three sibling reports — **DONE** | 45m | t001 |
-| t003 | Verify the report comparison adoption journey | 10m | t002 |
+| t003 | Verify the report comparison adoption journey — **DONE** | 10m | t002 |
 | t004 | Simplify the state ownership change | 10m | t003 |
 | t005 | Test uncached and cached reads with real content and run gates | 40m | t004 |
 | t006 | Close out after all four report journeys pass | 15m | t005 |

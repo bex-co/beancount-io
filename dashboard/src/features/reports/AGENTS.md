@@ -148,6 +148,11 @@ ledger layout shows an accessible pending state when the route, ledger, or share
 filter scope changes. Same-page list and query URL edits preserve the mounted
 page and its input focus and in-flight work. Statement pages use
 `selectSettledReportData` so export and print only see a coherent completed result.
+Because that pending branch replaces the report content component, view state the
+reader chose — which chart a statement page is showing — belongs to the page, not
+the content. Pass it down as `selectedTab`/`onSelectedTabChange`, alongside
+`conversion` and `timeInterval`, so an uncached interval or conversion regroups
+the selected chart instead of resetting which chart the reader is looking at.
 
 Shared ledger filters (`account`, `filter`, `time`) are validated on the ledger parent route and retained across same-ledger navigation (sidebar, Related Pages) via `retainSearchParams`. Report loaders read them from `loaderDeps` so SSR and client requests match the destination URL. Filter edits use replace navigation; Clear all removes the shared filters. On Journal, a genuine shared-filter edit also clears `offset` in that same navigation; explicit links, reloads, history, and unchanged filters preserve their requested page. Ledger switches clear shared filters unless the destination URL supplies new values. Journal action/directive, BQL `query`, and file-edit params are not propagated to unrelated pages.
 
