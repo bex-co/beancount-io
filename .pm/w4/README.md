@@ -10,7 +10,7 @@
 
 - [ ] **m21** — [Preserve amounts and units in overview charts](./m21/README.md) (7 tasks) ← repeated dashboard QA, 2026-09-17
 
-- [ ] **m20** — [Name Budget, Commodities, Statistics and Settings tables](./m20/README.md) (6 tasks) ← promoted w4/091 with Statistics evidence, repeated dashboard QA, 2026-09-17
+- [x] **m20** — [Name Budget, Commodities, Statistics and Settings tables](./done/m20/README.md) (6 tasks) ← promoted w4/091 with Statistics evidence, repeated dashboard QA, 2026-09-17
 
 - [x] **m19** — [Preserve URL fragments in login continuations](./done/m19/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
 
@@ -44,7 +44,7 @@
 
 - ~~**102**~~ — Source-viewer read-only accessibility state — dropped 2026-09-17: promoted to [m22](./m22/README.md), preserving original evidence and adding Entry Context plus fallback-mode scope; shared integration and checks exceed one hour.
 
-- ~~**091**~~ — Budget/Commodities table identities — dropped 2026-09-17: promoted to [m20](./m20/README.md), preserving original evidence and adding all three Statistics tables; coordinated repair and checks exceed one hour.
+- ~~**091**~~ — Budget/Commodities table identities — dropped 2026-09-17: promoted to [m20](./done/m20/README.md), preserving original evidence and adding all three Statistics tables; coordinated repair and checks exceed one hour.
 
 - ~~**078**~~ — BQL inventory clipping — dropped 2026-09-17: promoted to [m18](./done/m18/README.md), preserving the original evidence and adding PRINT multiline values; expanded implementation and verification exceed one hour.
 
