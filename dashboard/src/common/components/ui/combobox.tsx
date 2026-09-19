@@ -138,9 +138,15 @@ export function Combobox({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
+      // Escape dismisses the suggestions and keeps editing focus. It must not
+      // blur: in `triggerOn="blur"` mode a blur commits the draft, which turned
+      // "cancel this popup" into "apply whatever I had half-typed". With no
+      // popup to dismiss, let Escape through to an enclosing sheet or dialog.
+      if (!open) return;
+      e.preventDefault();
+      e.stopPropagation();
       setOpen(false);
       setHighlightedIndex(-1);
-      inputRef.current?.blur();
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
