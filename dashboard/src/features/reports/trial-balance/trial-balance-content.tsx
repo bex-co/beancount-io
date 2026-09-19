@@ -7,7 +7,7 @@ import {
   type SerializableTreeNode,
 } from "@/graphql/definitions";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { HierarchyList } from "../balance-sheet/hierarchy-list";
 import { HierarchyVisualizationCard } from "../balance-sheet/hierarchy-visualization-card";
 import { List } from "lucide-react";
@@ -32,6 +32,13 @@ interface TrialBalanceContentProps {
   ledgerNameParam: string;
   conversion: ConversionOption;
   onConversionChange: (value: ConversionOption) => void;
+  /**
+   * Owned by the page, which outlives the pending read that replaces this
+   * component, so changing an interval or conversion regroups the selected
+   * chart instead of resetting which chart the reader is looking at.
+   */
+  selectedTab: string;
+  onSelectedTabChange: (value: string) => void;
   invertIncomeLiabilitiesEquity: boolean;
   showZeroBalance: boolean;
   showZeroTransactions: boolean;
@@ -48,6 +55,8 @@ export function TrialBalanceContent({
   ledgerNameParam,
   conversion,
   onConversionChange,
+  selectedTab,
+  onSelectedTabChange,
   invertIncomeLiabilitiesEquity,
   showZeroBalance,
   showZeroTransactions,
@@ -56,7 +65,6 @@ export function TrialBalanceContent({
   collapsePatterns,
 }: TrialBalanceContentProps) {
   const { t } = useTranslations();
-  const [selectedTab, setSelectedTab] = useState<string>("assets");
   const tabOptions = [
     { label: t("common.assets"), value: "assets" },
     { label: t("common.liabilities"), value: "liabilities" },
@@ -188,12 +196,12 @@ export function TrialBalanceContent({
         <Tabs
           defaultValue={selectedTab}
           value={selectedTab}
-          onValueChange={setSelectedTab}
+          onValueChange={onSelectedTabChange}
         >
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
             <ResponsiveTabTriggerList
               selectedTab={selectedTab}
-              setSelectedTab={setSelectedTab}
+              setSelectedTab={onSelectedTabChange}
               tabOptions={tabOptions}
             />
             <ClientOnly>

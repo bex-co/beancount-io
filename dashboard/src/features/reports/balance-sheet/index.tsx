@@ -49,6 +49,11 @@ export default function LedgerBalanceSheetPage() {
     ledgerId,
     primaryCurrency,
   );
+  // Owned here rather than in the content component: a pending read
+  // replaces that component, so a selection living inside it would reset
+  // every time an uncached interval or conversion is chosen. This page
+  // outlives the read and is remounted per ledger, so it stays scoped.
+  const [selectedTab, setSelectedTab] = useState<string>("netWorth");
 
   const {
     data,
@@ -104,6 +109,8 @@ export default function LedgerBalanceSheetPage() {
       ledgerNameParam={ledgerName}
       conversion={conversion}
       onConversionChange={setConversion}
+      selectedTab={selectedTab}
+      onSelectedTabChange={setSelectedTab}
       timeInterval={timeInterval}
       onTimeIntervalChange={setTimeInterval}
       invertIncomeLiabilitiesEquity={getInvertIncomeLiabilitiesEquity(

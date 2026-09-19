@@ -51,6 +51,13 @@ interface IncomeStatementContentProps {
   closedAccountNames: Set<string>;
   collapsePatterns: string[];
   onConversionChange: (value: ConversionOption) => void;
+  /**
+   * Owned by the page, which outlives the pending read that replaces this
+   * component, so changing an interval or conversion regroups the selected
+   * chart instead of resetting which chart the reader is looking at.
+   */
+  selectedTab: string;
+  onSelectedTabChange: (value: string) => void;
   onTimeIntervalChange: (value: ChartInterval) => void;
   filters: LedgerSearchParams;
   fiscalYearEnd: FiscalYearEnd;
@@ -74,13 +81,14 @@ export function IncomeStatementContent({
   closedAccountNames,
   collapsePatterns,
   onConversionChange,
+  selectedTab,
+  onSelectedTabChange,
   onTimeIntervalChange,
   filters,
   fiscalYearEnd,
   exportReady = true,
 }: IncomeStatementContentProps) {
   const { t } = useTranslations();
-  const [selectedTab, setSelectedTab] = useState<string>("netProfit");
   const tabOptions = [
     { label: t("common.netProfit"), value: "netProfit" },
     { label: t("common.income"), value: "income" },
@@ -211,13 +219,13 @@ export function IncomeStatementContent({
         <Tabs
           defaultValue={selectedTab}
           value={selectedTab}
-          onValueChange={setSelectedTab}
+          onValueChange={onSelectedTabChange}
           className="w-full flex-col justify-start gap-6"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <ResponsiveTabTriggerList
               selectedTab={selectedTab}
-              setSelectedTab={setSelectedTab}
+              setSelectedTab={onSelectedTabChange}
               tabOptions={tabOptions}
             />
             <ClientOnly>

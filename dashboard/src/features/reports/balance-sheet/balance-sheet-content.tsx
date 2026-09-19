@@ -10,7 +10,7 @@ import type {
 import { LineChart } from "./line-chart";
 import { HierarchyVisualizationCard } from "./hierarchy-visualization-card";
 import { HierarchyListCard } from "./hierarchy-list-card";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { ChartInterval, ConversionOption } from "@/common/types/chart";
 import {
   ChartsToggleButton,
@@ -41,6 +41,13 @@ interface BalanceSheetContentProps {
   ledgerNameParam: string;
   conversion: ConversionOption;
   onConversionChange: (value: ConversionOption) => void;
+  /**
+   * Owned by the page, which outlives the pending read that replaces this
+   * component, so changing an interval or conversion regroups the selected
+   * chart instead of resetting which chart the reader is looking at.
+   */
+  selectedTab: string;
+  onSelectedTabChange: (value: string) => void;
   timeInterval: ChartInterval;
   onTimeIntervalChange: (value: ChartInterval) => void;
   invertIncomeLiabilitiesEquity: boolean;
@@ -65,6 +72,8 @@ export function BalanceSheetContent({
   ledgerNameParam,
   conversion,
   onConversionChange,
+  selectedTab,
+  onSelectedTabChange,
   timeInterval,
   onTimeIntervalChange,
   invertIncomeLiabilitiesEquity,
@@ -78,7 +87,6 @@ export function BalanceSheetContent({
   exportReady = true,
 }: BalanceSheetContentProps) {
   const { t } = useTranslations();
-  const [selectedTab, setSelectedTab] = useState<string>("netWorth");
   const tabOptions = [
     { label: t("common.netWorth"), value: "netWorth" },
     { label: t("common.assets"), value: "assets" },
@@ -195,13 +203,13 @@ export function BalanceSheetContent({
         <Tabs
           defaultValue={selectedTab}
           value={selectedTab}
-          onValueChange={setSelectedTab}
+          onValueChange={onSelectedTabChange}
           className="w-full flex-col justify-start gap-6"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <ResponsiveTabTriggerList
               selectedTab={selectedTab}
-              setSelectedTab={setSelectedTab}
+              setSelectedTab={onSelectedTabChange}
               tabOptions={tabOptions}
             />
             <ClientOnly>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -94,9 +95,16 @@ const trialBalanceData = {
   equityHierarchyData: hierarchyNode("Equity"),
 };
 
-function renderContent(onConversionChange = vi.fn()) {
-  render(
+function Harness({
+  onConversionChange,
+}: {
+  onConversionChange: (value: "at_cost" | "units" | "at_value") => void;
+}) {
+  const [selectedTab, setSelectedTab] = useState("assets");
+  return (
     <TrialBalanceContent
+      selectedTab={selectedTab}
+      onSelectedTabChange={setSelectedTab}
       trialBalanceData={
         trialBalanceData as unknown as React.ComponentProps<
           typeof TrialBalanceContent
@@ -114,8 +122,12 @@ function renderContent(onConversionChange = vi.fn()) {
       showClosedAccounts={false}
       closedAccountNames={new Set<string>()}
       collapsePatterns={[]}
-    />,
+    />
   );
+}
+
+function renderContent(onConversionChange = vi.fn()) {
+  render(<Harness onConversionChange={onConversionChange} />);
   return { onConversionChange };
 }
 
@@ -143,6 +155,8 @@ describe("TrialBalanceContent", () => {
         ledgerNameParam="books"
         conversion="at_cost"
         onConversionChange={vi.fn()}
+        selectedTab="assets"
+        onSelectedTabChange={vi.fn()}
         invertIncomeLiabilitiesEquity={false}
         showZeroBalance
         showZeroTransactions
