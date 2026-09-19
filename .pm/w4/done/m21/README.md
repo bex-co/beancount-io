@@ -1,6 +1,6 @@
 # w4 · m21 — Preserve amounts and units in the overview charts
 
-**Worker:** worker1 **Goal:** Make public overview chart amounts faithful to the ledger's direct balances and currency units. **Status:** todo (t001–t006 done)
+**Worker:** worker1 **Goal:** Make public overview chart amounts faithful to the ledger's direct balances and currency units. **Status:** done
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | [t004](./done/t004.md) | Adoption surface — **DONE** | 20m | t003 |
 | [t005](./done/t005.md) | Simplify — **DONE** | 15m | t004 |
 | [t006](./done/t006.md) | Test coverage — **DONE** | 75m | t004, t005 |
-| [t007](./t007.md) | Closeout | 10m | t006 |
+| [t007](./done/t007.md) | Closeout — **DONE** | 10m | t006 |
 
 ## Definition of done
 

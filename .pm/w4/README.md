@@ -8,7 +8,7 @@
 
 - [ ] **m22** — [Expose read-only state in Monaco readers](./m22/README.md) (6 tasks) ← promoted w4/102 with Entry Context evidence, repeated dashboard QA, 2026-09-17
 
-- [ ] **m21** — [Preserve amounts and units in overview charts](./m21/README.md) (7 tasks) ← repeated dashboard QA, 2026-09-17
+- [x] **m21** — [Preserve amounts and units in overview charts](./done/m21/README.md) (7 tasks) ← repeated dashboard QA, 2026-09-17
 
 - [x] **m20** — [Name Budget, Commodities, Statistics and Settings tables](./done/m20/README.md) (6 tasks) ← promoted w4/091 with Statistics evidence, repeated dashboard QA, 2026-09-17
 
