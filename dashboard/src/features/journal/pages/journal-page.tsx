@@ -106,18 +106,12 @@ const JournalContent = () => {
   const filterKey = useMemo(
     () =>
       JSON.stringify({
-        time: ledgerSearchParams.searchParams.time,
-        filter: ledgerSearchParams.searchParams.filter,
-        account: ledgerSearchParams.searchParams.account,
         directiveTypes: selectedDirectiveTypes,
         transactionSubtypes: selectedTransactionSubtypes,
         documentSubtypes: selectedDocumentSubtypes,
         customSubtypes: selectedCustomSubtypes,
       }),
     [
-      ledgerSearchParams.searchParams.time,
-      ledgerSearchParams.searchParams.filter,
-      ledgerSearchParams.searchParams.account,
       selectedDirectiveTypes,
       selectedTransactionSubtypes,
       selectedDocumentSubtypes,
@@ -131,8 +125,9 @@ const JournalContent = () => {
   // into an account (or a reload, or a shared link) plus browser Back returns
   // to the page the user was reading. Page moves replace the history entry, as
   // the shared ledger filters do, so Back leaves the journal rather than
-  // walking back through every page visited. The offset stays keyed to the
-  // filter identity: changing a filter still resets to the first page.
+  // walking back through every page visited. Local directive/subtype edits
+  // reset below; shared filter edits reset atomically in their provider so
+  // history and explicit links can restore both a scope and its page offset.
   // Re-coerced here: the router still surfaces raw URL values the route schema
   // omitted, so `?offset=-5` or `?offset=abc` must not reach the query.
   const searchOffset =

@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useMatch, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   LedgerSearchParamsContext,
   type LedgerSearchParams,
@@ -21,6 +21,12 @@ export const LedgerSearchParamsProvider = ({
 }) => {
   const rawSearch = useSearch({ strict: false });
   const navigate = useNavigate();
+  const isJournal =
+    useMatch({
+      from: "/ledger/$ledgerOwner/$ledgerName/journal",
+      shouldThrow: false,
+      select: () => true,
+    }) === true;
 
   const searchParams = useMemo(
     () => parseLedgerFilterSearch(rawSearch),
@@ -32,15 +38,29 @@ export const LedgerSearchParamsProvider = ({
       void navigate({
         // Stay on the current matched route; only the shared filters change.
         to: ".",
-        search: (prev) =>
-          applyLedgerFilterSearch(
+        search: (prev) => {
+          const updated = applyLedgerFilterSearch(
             prev as Record<string, unknown>,
             next,
-          ) as typeof prev,
+          );
+          const before = parseLedgerFilterSearch(prev);
+          const after = parseLedgerFilterSearch(updated);
+          if (
+            isJournal &&
+            (before.account !== after.account ||
+              before.filter !== after.filter ||
+              before.time !== after.time)
+          ) {
+            // Reset in this navigation: the pending layout can unmount Journal,
+            // so the reset cannot depend on state inside that page.
+            updated.offset = undefined;
+          }
+          return updated as typeof prev;
+        },
         replace: true,
       });
     },
-    [navigate],
+    [isJournal, navigate],
   );
 
   const value = useMemo(

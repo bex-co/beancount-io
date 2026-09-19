@@ -8,28 +8,56 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  retainSearchParams,
 } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LedgerLayout } from "@/common/components/ledger-layout";
+import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { journalActionSearchSchema } from "@/common/lib/ledger-action-search";
 import { ledgerFilterSearchSchema } from "@/common/lib/ledger-search-params";
+import { GetLedgerDocument } from "@/graphql/definitions";
 import LedgerJournalPage from "../journal-page";
+
+interface JournalRequest {
+  ledgerId: string;
+  query: {
+    offset: number;
+    limit: number;
+    time?: string;
+    account?: string;
+    filter?: string;
+    transactionSubtypes?: string[];
+  };
+}
 
 const queryState = vi.hoisted(() => ({
   total: 300,
-  variables: [] as { query: { offset: number; limit: number } }[],
+  variables: [] as JournalRequest[],
 }));
 
 vi.mock("@apollo/client/react", () => ({
-  useQuery: (
-    _document: unknown,
-    options: { variables: { query: { offset: number; limit: number } } },
-  ) => {
+  useLazyQuery: () => [vi.fn()],
+  useQuery: (document: unknown, options: { variables: JournalRequest }) => {
+    if (document === GetLedgerDocument) {
+      return {
+        data: {
+          getLedger: {
+            id: options.variables.ledgerId,
+            name: "My books",
+            options: { operatingCurrency: ["USD"] },
+          },
+        },
+        loading: false,
+        error: undefined,
+      };
+    }
     queryState.variables.push(options.variables);
     return {
       data: {
         getLedgerJournal: {
           data: Array.from({ length: 60 }, (_, index) => ({
-            id: `entry-${index}`,
+            id: `entry-${options.variables.query.offset + index}`,
           })),
           total: queryState.total,
         },
@@ -41,21 +69,23 @@ vi.mock("@apollo/client/react", () => ({
   },
 }));
 
-const EMPTY_LEDGER_SEARCH = { searchParams: {} };
-vi.mock("@/common/hooks/use-ledger-search-params", () => ({
-  useLedgerSearchParams: () => EMPTY_LEDGER_SEARCH,
+vi.mock("@/common/hooks/use-mobile", () => ({ useIsMobile: () => false }));
+vi.mock(
+  "@/common/providers/react-native-bridge-provider/react-native-bridge",
+  () => ({ isReactNative: () => false }),
+);
+vi.mock("@/common/components/ledger-layout/ledger-sidebar", () => ({
+  LedgerSidebar: () => null,
 }));
-
-vi.mock("@/common/hooks/use-local-storage-state", async () => {
-  const { useState } = await import("react");
-  return {
-    useLocalStorageState: <T,>(_key: string, initial: T) =>
-      useState<T>(initial),
-  };
-});
-
-vi.mock("@/common/hooks/use-ledger", () => ({
-  useLedger: () => ({ ledgerName: "My books" }),
+vi.mock(
+  "@/common/components/ledger-layout/ledger-layout-background-queries",
+  () => ({ LedgerLayoutBackgroundQueries: () => null }),
+);
+vi.mock("@/common/components/ledger-layout/layout-header", () => ({
+  LayoutHeader: () => <SharedFilterControls />,
+}));
+vi.mock("@/common/components/ui/sidebar", () => ({
+  SidebarProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
 vi.mock("@/common/hooks/use-ledger-permission", () => ({
@@ -70,30 +100,21 @@ vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
 }));
 
-vi.mock("@/features/journal/components/journal-filters", () => ({
-  JournalFilters: ({
-    onDirectiveTypesChange,
-  }: {
-    onDirectiveTypesChange: (types: string[]) => void;
-  }) => (
-    <button type="button" onClick={() => onDirectiveTypesChange(["BALANCE"])}>
-      change-directive-filter
-    </button>
-  ),
-}));
-
 vi.mock("@/features/journal/components/journal-table", () => ({
-  JournalTable: () => (
-    <Link
-      to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
-      params={{
-        ledgerOwner: "alice",
-        ledgerName: "books",
-        accountName: "Assets:Cash",
-      }}
-    >
-      drill-into-account
-    </Link>
+  JournalTable: ({ data }: { data: { directive: { id: string } }[] }) => (
+    <>
+      <span data-testid="first-journal-row">{data[0]?.directive.id}</span>
+      <Link
+        to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+        params={{
+          ledgerOwner: "alice",
+          ledgerName: "books",
+          accountName: "Assets:Cash",
+        }}
+      >
+        drill-into-account
+      </Link>
+    </>
   ),
 }));
 
@@ -119,10 +140,6 @@ vi.mock("@/features/journal/components/journal-pagination", () => ({
   ),
 }));
 
-vi.mock("@/features/journal/components/export-journal-button", () => ({
-  ExportJournalButton: () => null,
-}));
-
 vi.mock("@/features/journal/components/entry-context-dialog", () => ({
   EntryContextDialog: () => null,
 }));
@@ -131,18 +148,68 @@ vi.mock("@/features/journal/components/new-directive-dialog", () => ({
   NewDirectiveDialog: () => null,
 }));
 
+function SharedFilterControls() {
+  const { searchParams, setSearchParams } = useLedgerSearchParams();
+  return (
+    <div>
+      <button
+        onClick={() => setSearchParams({ ...searchParams, time: "2016" })}
+      >
+        shared-time
+      </button>
+      <button
+        onClick={() =>
+          setSearchParams({ ...searchParams, account: "Assets:Cash" })
+        }
+      >
+        shared-account
+      </button>
+      <button
+        onClick={() =>
+          setSearchParams({ ...searchParams, filter: 'payee:"Cafe"' })
+        }
+      >
+        shared-expression
+      </button>
+      <button
+        onClick={() => setSearchParams({ account: "", filter: "", time: "" })}
+      >
+        clear-all
+      </button>
+    </div>
+  );
+}
+
+let nextNavigation: Promise<void> | undefined;
+
+function holdNextNavigation() {
+  let release!: () => void;
+  nextNavigation = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  return release;
+}
+
 function buildRouter(initialEntry: string) {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
   const ledgerRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/ledger/$ledgerOwner/$ledgerName",
     validateSearch: (search) => ledgerFilterSearchSchema.parse(search),
-    component: () => <Outlet />,
+    search: {
+      middlewares: [retainSearchParams(["account", "filter", "time"])],
+    },
+    component: LedgerLayout,
   });
   const journalRoute = createRoute({
     getParentRoute: () => ledgerRoute,
     path: "/journal",
     validateSearch: (search) => journalActionSearchSchema.parse(search),
+    beforeLoad: () => {
+      const held = nextNavigation;
+      nextNavigation = undefined;
+      return held;
+    },
     component: LedgerJournalPage,
   });
   const accountRoute = createRoute({
@@ -156,6 +223,7 @@ function buildRouter(initialEntry: string) {
       ledgerRoute.addChildren([journalRoute, accountRoute]),
     ]),
     history: createMemoryHistory({ initialEntries: [initialEntry] }),
+    defaultPendingMs: Infinity,
   });
 }
 
@@ -178,6 +246,17 @@ function queriedOffset() {
 beforeEach(() => {
   queryState.total = 300;
   queryState.variables = [];
+  nextNavigation = undefined;
+  const storage = new Map<string, string>();
+  vi.mocked(localStorage.getItem).mockImplementation(
+    (key) => storage.get(key) ?? null,
+  );
+  vi.mocked(localStorage.setItem).mockImplementation((key, value) => {
+    storage.set(key, value);
+  });
+  vi.mocked(localStorage.removeItem).mockImplementation((key) => {
+    storage.delete(key);
+  });
 });
 
 afterEach(() => {
@@ -185,6 +264,86 @@ afterEach(() => {
 });
 
 describe("journal pagination in the URL", () => {
+  it.each([
+    { control: "shared-time", initial: "", expected: { time: "2016" } },
+    {
+      control: "shared-account",
+      initial: "",
+      expected: { account: "Assets:Cash" },
+    },
+    {
+      control: "shared-expression",
+      initial: "",
+      expected: { filter: 'payee:"Cafe"' },
+    },
+    {
+      control: "clear-all",
+      initial: "&time=2016&account=Assets%3ACash&filter=payee%3A%22Cafe%22",
+      expected: {},
+    },
+  ])(
+    "atomically resets page two through $control without exposing pending results or Export",
+    async ({ control, initial, expected }) => {
+      const user = userEvent.setup();
+      const router = await mountAt(
+        `/ledger/alice/books/journal?offset=60&action=new-entry&directive=note${initial}`,
+      );
+      expect(queriedOffset()).toBe(60);
+      expect(screen.getByTestId("first-journal-row")).toHaveTextContent(
+        "entry-60",
+      );
+      expect(screen.getByRole("button", { name: "Export" })).toBeVisible();
+      const firstNewRead = queryState.variables.length;
+      const release = holdNextNavigation();
+
+      try {
+        await user.click(screen.getByRole("button", { name: control }));
+        await waitFor(() => {
+          expect(router.state.isLoading).toBe(true);
+          expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "true");
+        });
+        const pendingSearch = router.state.location.search;
+        expect(
+          screen.queryByTestId("first-journal-row"),
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByRole("button", { name: "Export" }),
+        ).not.toBeInTheDocument();
+
+        await act(async () => release());
+        await waitFor(() => {
+          expect(router.state.isLoading).toBe(false);
+          expect(screen.getByTestId("offset")).toBeInTheDocument();
+        });
+        const newScope = { time: "", account: "", filter: "", ...expected };
+        const newReads = queryState.variables
+          .slice(firstNewRead)
+          .filter(
+            ({ query }) =>
+              query.time === newScope.time &&
+              query.account === newScope.account &&
+              query.filter === newScope.filter,
+          );
+        expect(newReads.length).toBeGreaterThan(0);
+        for (const { query } of newReads) expect(query.offset).toBe(0);
+        expect(pendingSearch).not.toHaveProperty("offset");
+        expect(router.state.location.search).not.toHaveProperty("offset");
+        expect(router.state.location.search).toMatchObject({
+          action: "new-entry",
+          directive: "note",
+        });
+        expect(screen.getByTestId("offset")).toHaveTextContent("0");
+        expect(screen.getByTestId("first-journal-row")).toHaveTextContent(
+          "entry-0",
+        );
+        expect(screen.getByText("1–60 / 300")).toBeVisible();
+        expect(screen.getByRole("button", { name: "Export" })).toBeVisible();
+      } finally {
+        await act(async () => release());
+      }
+    },
+  );
+
   it("restores the current page after an account drill-down and Back", async () => {
     const user = userEvent.setup();
     const router = await mountAt("/ledger/alice/books/journal");
@@ -230,9 +389,45 @@ describe("journal pagination in the URL", () => {
   });
 
   it("restores a deep page from a reloaded URL", async () => {
-    await mountAt("/ledger/alice/books/journal?offset=180");
+    await mountAt("/ledger/alice/books/journal?offset=180&time=2016");
     expect(queriedOffset()).toBe(180);
+    expect(queryState.variables.at(-1)?.query.time).toBe("2016");
     expect(screen.getByTestId("offset")).toHaveTextContent("180");
+  });
+
+  it("preserves explicit scope and offset changes through same-Journal navigation and history", async () => {
+    const router = await mountAt(
+      "/ledger/alice/books/journal?time=2015&offset=60",
+    );
+    await act(async () => {
+      await router.navigate({
+        to: "/ledger/$ledgerOwner/$ledgerName/journal",
+        params: { ledgerOwner: "alice", ledgerName: "books" },
+        search: { time: 2016, offset: 120 },
+      });
+    });
+    await waitFor(() => {
+      expect(queryState.variables.at(-1)?.query).toMatchObject({
+        time: "2016",
+        offset: 120,
+      });
+    });
+
+    await act(async () => router.history.back());
+    await waitFor(() => {
+      expect(queryState.variables.at(-1)?.query).toMatchObject({
+        time: "2015",
+        offset: 60,
+      });
+    });
+
+    await act(async () => router.history.forward());
+    await waitFor(() => {
+      expect(queryState.variables.at(-1)?.query).toMatchObject({
+        time: "2016",
+        offset: 120,
+      });
+    });
   });
 
   it("resets to the first page when a filter changes, clearing the stale offset", async () => {
@@ -240,14 +435,37 @@ describe("journal pagination in the URL", () => {
     const router = await mountAt("/ledger/alice/books/journal?offset=120");
     expect(queriedOffset()).toBe(120);
 
-    await user.click(
-      screen.getByRole("button", { name: "change-directive-filter" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Balance" }));
 
     await waitFor(() => {
       expect(queriedOffset()).toBe(0);
     });
     expect(router.state.location.search).not.toHaveProperty("offset");
+  });
+
+  it("resets pagination when a transaction subtype is selected and preserves the reset when cleared", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt("/ledger/alice/books/journal?offset=60");
+    await user.click(
+      screen.getByRole("button", { name: "Pending transactions" }),
+    );
+    await waitFor(() => {
+      expect(queryState.variables.at(-1)?.query).toMatchObject({
+        offset: 0,
+        transactionSubtypes: ["pending"],
+      });
+    });
+    expect(router.state.location.search).not.toHaveProperty("offset");
+
+    await user.click(
+      screen.getByRole("button", { name: "Pending transactions" }),
+    );
+    await waitFor(() => {
+      expect(
+        queryState.variables.at(-1)?.query.transactionSubtypes,
+      ).toBeUndefined();
+    });
+    expect(queriedOffset()).toBe(0);
   });
 
   it("coerces hostile offsets instead of querying them", async () => {

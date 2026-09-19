@@ -35,6 +35,9 @@ function FilterControls() {
       >
         set-time-2017
       </button>
+      <button type="button" onClick={() => setSearchParams(searchParams)}>
+        reapply-filters
+      </button>
       <button
         type="button"
         onClick={() =>
@@ -228,6 +231,43 @@ describe("ledger filter navigation and history", () => {
       "/ledger/open_ledger/example/journal?filter=payee%253A%2522100%2525%2522",
     );
     expect(screen.getByTestId("filter")).toHaveTextContent('payee:"100%"');
+  });
+
+  it("preserves an explicit Journal offset when reapplying normalized filters", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt(
+      "/ledger/open_ledger/example/journal?time=2016&offset=60&action=new-entry&directive=transaction",
+    );
+
+    await user.click(screen.getByText("reapply-filters"));
+
+    await waitFor(() => {
+      expect(router.state.isLoading).toBe(false);
+    });
+    expect(router.state.location.search).toMatchObject({
+      time: 2016,
+      offset: 60,
+      action: "new-entry",
+      directive: "transaction",
+    });
+  });
+
+  it("preserves unrelated search state on other routes when filters change", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt(
+      "/ledger/open_ledger/example/balance-sheet?time=2016&offset=60&q=select",
+    );
+
+    await user.click(screen.getByText("set-time-2017"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("time")).toHaveTextContent("2017-09");
+    });
+    expect(router.state.location.search).toMatchObject({
+      time: "2017-09",
+      offset: 60,
+      q: "select",
+    });
   });
 
   it("resets filters when switching ledgers", async () => {
