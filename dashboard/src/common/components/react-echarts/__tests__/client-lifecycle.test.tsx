@@ -139,3 +139,37 @@ it("resizes when the container box changes without a window resize", () => {
   expect(disconnected).toBe(1);
   vi.unstubAllGlobals();
 });
+
+it("keeps observing the container after the theme recreates the chart", () => {
+  // The chart instance is disposed and re-created on a theme change. The
+  // observer is set up once, so this checks it still drives the instance that
+  // exists now rather than a disposed one — and that it is not torn down.
+  let fire: (() => void) | undefined;
+  let disconnected = 0;
+  class SpyResizeObserver {
+    constructor(callback: () => void) {
+      fire = callback;
+    }
+    observe() {}
+    unobserve() {}
+    disconnect() {
+      disconnected += 1;
+    }
+  }
+  vi.stubGlobal("ResizeObserver", SpyResizeObserver);
+
+  const option = { series: [{ type: "line" as const, data: [1, 2] }] };
+  const view = render(<ReactEChartsClient option={option} />);
+
+  state.isDark = true;
+  view.rerender(<ReactEChartsClient option={option} />);
+  expect(state.calls).toContain("dispose");
+  expect(disconnected).toBe(0);
+
+  act(() => fire?.());
+  expect(state.chart.resize).toHaveBeenCalledOnce();
+
+  view.unmount();
+  expect(disconnected).toBe(1);
+  vi.unstubAllGlobals();
+});
