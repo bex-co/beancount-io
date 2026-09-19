@@ -265,3 +265,81 @@ describe("LedgerCollection state in the profile URL", () => {
     );
   });
 });
+
+describe("LedgerCollection navigation during a pending search write", () => {
+  /**
+   * The real race needs the ledger route to be *in flight* while the profile
+   * component is still mounted: that is when the router resolves a relative
+   * profile write against the pending destination's params.
+   */
+  function buildRaceRouter() {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const rootRoute = createRootRoute({ component: () => <Outlet /> });
+    const profileRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/ledger/$username",
+      validateSearch: (search) => userProfileSearchSchema.parse(search),
+      component: () => (
+        <LedgerCollection username="owner" repositories={repositories} />
+      ),
+    });
+    const ledgerRoute = createRoute({
+      getParentRoute: () => rootRoute,
+      path: "/ledger/$ledgerOwner/$ledgerName",
+      loader: () => held,
+      component: () => <div data-testid="ledger-page">ledger</div>,
+    });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([profileRoute, ledgerRoute]),
+      history: createMemoryHistory({ initialEntries: ["/ledger/owner"] }),
+      defaultPendingMs: Infinity,
+    });
+    return { router, release };
+  }
+
+  it("never rewrites the destination while a ledger read is in flight", async () => {
+    const user = userEvent.setup();
+    const { router, release } = buildRaceRouter();
+    await router.load();
+    render(<RouterProvider router={router} />);
+    await waitFor(() => {
+      expect(screen.getByRole("searchbox")).toBeInTheDocument();
+    });
+
+    // Type, then open the matching card before the 250ms write settles. The
+    // loader is held, so the profile stays mounted while the route is pending.
+    await user.type(screen.getByRole("searchbox"), "ledger-00");
+    await user.click(screen.getByRole("link", { name: /ledger-00/ }));
+    await waitFor(() => expect(router.state.isLoading).toBe(true));
+
+    // Let the outstanding debounce fire against that pending destination.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+
+    // The old failure interpolated the ledger route's params into the
+    // profile's $username and landed on /ledger/undefined.
+    const pending = router.state.pendingMatches?.at(-1)?.pathname ?? "";
+    expect(pending + router.state.location.pathname).not.toContain("undefined");
+
+    await act(async () => {
+      release();
+      await Promise.resolve();
+    });
+  });
+
+  it("addresses the profile explicitly, so a settled write stays on it", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt();
+
+    await user.type(screen.getByRole("searchbox"), "ledger-00");
+    await waitFor(() => {
+      expect(router.state.location.search).toMatchObject({ q: "ledger-00" });
+    });
+
+    expect(router.state.location.pathname).toBe("/ledger/owner");
+  });
+});

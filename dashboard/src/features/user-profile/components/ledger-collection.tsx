@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
 import { BookOpen, ChevronDown, Search, SearchX, X } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
@@ -37,6 +37,7 @@ export function LedgerCollection({
   // typing nor "Show more" buries the profile in history.
   const profileSearch = useSearch({ from: "/ledger/$username" });
   const navigate = useNavigate({ from: "/ledger/$username" });
+  const router = useRouter();
   // Re-coerced here because the router still surfaces raw URL values the route
   // schema omitted, so an array `?q=["x"]` or `?sort=sideways` can arrive.
   const urlQuery = normalizeListSearchText(profileSearch.q) ?? "";
@@ -49,12 +50,28 @@ export function LedgerCollection({
       max: LEDGER_COLLECTION_MAX_SHOW,
     }) ?? PAGE_SIZE;
 
+  // Addressed to this profile explicitly rather than relatively: a ledger card
+  // can already have started its own route, and `to: "."` would then resolve
+  // against that destination's params — which carry ledgerOwner/ledgerName, not
+  // username — and navigate to /ledger/undefined.
   const updateSearch = (next: Partial<UserProfileSearch>) => {
     void navigate({
-      to: ".",
+      to: "/ledger/$username",
+      params: { username },
       search: (previous) => ({ ...previous, ...next }),
       replace: true,
     });
+  };
+
+  /**
+   * True once the reader has started going somewhere else. A profile-scoped
+   * write that lands after that would drag them back here, so the debounced
+   * update checks this at fire time rather than at scheduling time.
+   */
+  const hasLeftProfile = () => {
+    const destination =
+      router.state.pendingMatches?.at(-1) ?? router.state.matches.at(-1);
+    return destination?.routeId !== "/ledger/$username";
   };
 
   // The input stays instantly responsive while the URL catches up. A URL value
@@ -70,6 +87,7 @@ export function LedgerCollection({
   useEffect(() => {
     if (query === urlQuery) return;
     const timer = setTimeout(() => {
+      if (hasLeftProfile()) return;
       updateSearch({ q: query === "" ? undefined : query });
     }, QUERY_URL_DEBOUNCE_MS);
     return () => clearTimeout(timer);

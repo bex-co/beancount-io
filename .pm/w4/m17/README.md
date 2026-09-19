@@ -1,12 +1,12 @@
 # w4 · m17 — Keep profile search updates from hijacking ledger navigation
 
-**Worker:** worker1 **Goal:** opening a newly filtered ledger reaches that ledger and Back restores the search, even before the URL debounce settles **Status:** todo
+**Worker:** worker1 **Goal:** opening a newly filtered ledger reaches that ledger and Back restores the search, even before the URL debounce settles **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Stop delayed profile updates crossing navigation boundaries | 30m | — |
+| t001 | Stop delayed profile updates crossing navigation boundaries — **DONE** | 30m | — |
 | t002 | Preserve the current search when leaving before debounce settlement | 25m | t001 |
 | t003 | Verify the public discovery adoption journey | 10m | t002 |
 | t004 | Simplify profile state and navigation ownership | 10m | t003 |

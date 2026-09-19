@@ -19,6 +19,14 @@ vi.mock("@tanstack/react-router", () => ({
     </a>
   ),
   useNavigate: () => mockNavigate,
+  // The collection checks the current destination before letting a debounced
+  // search write land, so the mock router stays on the profile route.
+  useRouter: () => ({
+    state: {
+      matches: [{ routeId: "/ledger/$username" }],
+      pendingMatches: undefined,
+    },
+  }),
   // The ledger collection reads its list state (q/sort/show) from the profile
   // route's search params.
   useSearch: () => ({}),
@@ -389,10 +397,16 @@ describe("UserProfileTabs", () => {
       );
 
       // The revealed count is profile URL state (so Back restores it), so the
-      // reveal is a replace navigation rather than local state. The rendered
-      // result of that navigation is covered in ledger-collection.test.tsx.
+      // reveal is a replace navigation rather than local state. It addresses
+      // the profile explicitly so it cannot resolve against a ledger route the
+      // reader has already started. The rendered result of that navigation is
+      // covered in ledger-collection.test.tsx.
       const navigation = mockNavigate.mock.calls.at(-1)?.[0];
-      expect(navigation).toMatchObject({ to: ".", replace: true });
+      expect(navigation).toMatchObject({
+        to: "/ledger/$username",
+        params: { username: "testuser" },
+        replace: true,
+      });
       expect(navigation.search({ tab: "overview" })).toEqual({
         tab: "overview",
         show: 24,
