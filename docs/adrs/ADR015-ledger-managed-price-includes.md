@@ -72,7 +72,7 @@ When a managed URL has no validated revision, the engine's missing-file report i
 - Directive counts for tier limits exclude managed prices, so a price feed can never push a ledger over its free-tier limit.
 - The journal and price views show managed entries with their virtual path as the file name. Editing them is refused with a precise error until the dashboard hides that action.
 - Each node has its own feed cache under the default in-process store. Moving the cache helper to Redis shares revisions across nodes with no change to this design.
-- Follow-ups outside this ADR: exposing `managedPrices` through backend-v2 on REST, GraphQL, and MCP with the dashboard freshness labels; the `bea` CLI loader; snapshots and export; the instrument catalog; and a manual refresh endpoint.
+- Follow-ups outside this ADR: exposing `managedPrices` through backend-v2 on REST, GraphQL, and MCP with the dashboard freshness labels; snapshots and export; the instrument catalog; and a manual refresh endpoint. The `bea` CLI loader mirrors this contract locally; see [ADR 018](ADR018-cli-managed-price-includes.md).
 
 ## Alternatives considered
 
