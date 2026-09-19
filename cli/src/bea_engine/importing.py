@@ -13,6 +13,7 @@ import hashlib
 import io
 import runpy
 import sys
+import unicodedata
 from contextlib import redirect_stderr, redirect_stdout
 from decimal import Decimal
 from pathlib import Path
@@ -213,6 +214,7 @@ def answer(
         entry = normalize_entry_strings(entry)
         status, reason, match = "new", None, None
         id_source: str | None = None
+        legacy_id: str | None = None
         if isinstance(entry, Transaction):
             if not any(p.account == account for p in entry.postings):
                 raise LedgerError(f"Importer row {index + 1} has no posting to its source account {account}.")
@@ -225,9 +227,11 @@ def answer(
                     entry.meta["import-id"] = native
                     id_source = "bank"
                 else:
-                    entry.meta["import-id"] = _hash_import_id(entry, account, seen_inputs)
+                    entry.meta["import-id"], legacy_id = _hash_import_ids(entry, account, seen_inputs)
                     id_source = "hash"
             ids = _identities(entry, account, keys)
+            if legacy_id is not None:
+                ids.append((account, "import-id", legacy_id))
             ids.append((account, "file", hashlib.sha256(f"{account}:{source_hash}:{index}".encode()).hexdigest()))
             hits = [(key, identities[key]) for key in ids if key in identities]
             if hits:
@@ -422,12 +426,19 @@ def _fingerprint(entry: Any, account: str) -> tuple[Any, ...]:
     amounts = tuple(
         sorted((str(p.units.number.normalize()), p.units.currency) for p in _source_postings(entry, account))
     )
+    # Ledger text loads NFC-normalized but an export's rows arrive in whatever
+    # form the bank wrote, so an accented description would otherwise compare
+    # unequal to the identical entry already in the ledger.
     return (
         entry.date,
-        " ".join((entry.payee or "").casefold().split()),
-        " ".join((entry.narration or "").casefold().split()),
+        _match_text(entry.payee),
+        _match_text(entry.narration),
         amounts,
     )
+
+
+def _match_text(value: str | None) -> str:
+    return unicodedata.normalize("NFC", " ".join((value or "").casefold().split()))
 
 
 def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, str, str]]:
@@ -483,17 +494,43 @@ def _native_import_id(meta: dict[str, Any], keys: list[str]) -> str | None:
     return None
 
 
-def _hash_import_id(entry: Any, account: str, seen: dict[str, int]) -> str:
+def _hash_base(entry: Any, account: str, *, normalized: bool) -> str:
     amounts = sorted((p.units.number, p.units.currency) for p in _source_postings(entry, account))
     if len(amounts) == 1:
         normalized_amount = f"{amounts[0][0]:.2f}"
     else:
         normalized_amount = "+".join(f"{number} {currency}" for number, currency in amounts)
     description = " ".join(str(entry.narration or entry.payee or "").upper().split())
-    base = f"{entry.date.isoformat()}|{normalized_amount}|{description}|{account}"
-    seen[base] = seen.get(base, 0) + 1
-    digest_input = base if seen[base] == 1 else f"{base}|{seen[base]}"
+    if normalized:
+        # Normalize after upper(): uppercasing NFD text can itself emit a
+        # non-canonical form, and the digest has to be stable byte-for-byte.
+        description = unicodedata.normalize("NFC", description)
+        account = unicodedata.normalize("NFC", account)
+    return f"{entry.date.isoformat()}|{normalized_amount}|{description}|{account}"
+
+
+def _digest_import_id(base: str, occurrence: int) -> str:
+    digest_input = base if occurrence == 1 else f"{base}|{occurrence}"
     return "csv:sha256:" + hashlib.sha256(digest_input.encode("utf-8")).hexdigest()[:16]
+
+
+def _hash_import_ids(entry: Any, account: str, seen: dict[str, int]) -> tuple[str, str | None]:
+    """The canonical import id, plus the pre-NFC id to also match on, if different.
+
+    The description is hashed NFC-normalized so one bank row keeps one id
+    across exports that differ only in Unicode normalization. Ledgers written
+    before that carry the un-normalized digest, so it is returned alongside as
+    a lookup-only key: matching it still recognizes the row as a duplicate,
+    while anything newly written uses the canonical id.
+    """
+    canonical_base = _hash_base(entry, account, normalized=True)
+    legacy_base = _hash_base(entry, account, normalized=False)
+    seen[canonical_base] = seen.get(canonical_base, 0) + 1
+    occurrence = seen[canonical_base]
+    canonical = _digest_import_id(canonical_base, occurrence)
+    if legacy_base == canonical_base:
+        return canonical, None
+    return canonical, _digest_import_id(legacy_base, occurrence)
 
 
 def _candidate_key(entry: Any, account: str) -> tuple[Any, ...]:

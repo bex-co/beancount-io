@@ -27,14 +27,16 @@ Hash input is the UTF-8 string:
 
 - `date` — ISO `YYYY-MM-DD`.
 - `amount` — the **ledger-sign** amount with exactly two decimals, explicit `-` for negatives, no thousands separators: `-54.20`.
-- `description` — the **raw** row description (not the cleaned payee), uppercased, runs of whitespace collapsed to one space, leading/trailing whitespace stripped. Raw, because payee-cleanup rules may improve over time and must not change hashes.
-- `source-account` — the full account name, e.g. `Assets:Bank:Checking`.
+- `description` — the **raw** row description (not the cleaned payee), uppercased, runs of whitespace collapsed to one space, leading/trailing whitespace stripped, then Unicode-normalized to **NFC**. Raw, because payee-cleanup rules may improve over time and must not change hashes; NFC, because the same description can arrive decomposed in one export and composed in the next, and the two must hash alike. Normalize *after* uppercasing — uppercasing decomposed text can itself emit a non-canonical form.
+- `source-account` — the full account name in NFC, e.g. `Assets:Bank:Checking`.
 
 Take the SHA-256 hex digest, keep the **first 16 hex chars** (64 bits — collision-safe at personal-ledger scale, short enough to read).
 
 Example: `2026-05-07|-54.20|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking` → `import-id: "csv:sha256:<first-16-of-sha256>"`.
 
 Compute it honestly (e.g. `printf '%s' '<input>' | shasum -a 256 | cut -c1-16`) — never fabricate a plausible-looking hash.
+
+**Ledgers written before NFC normalization.** Ids stored by an earlier `bea` were hashed from the un-normalized description, so an accented row can carry the older digest. ASCII descriptions are unaffected — NFC is a no-op there, and their ids are byte-identical. For the rest, `bea import` computes both digests and matches either, writing only the NFC one, so existing ledgers keep deduplicating and no re-hash pass is required.
 
 **Same-day identical rows** (two identical coffees on one card, same date/amount/description): they produce the same hash. Disambiguate by suffixing an occurrence counter to the hash input for the second and later duplicates within one file: `…|Assets:Bank:Checking|2`. This keeps N identical rows ↔ N entries while re-imports still match 1:1 (occurrence order is stable within a file).
 
