@@ -47,10 +47,10 @@ The shapes worth suspecting:
 A layer is a finding only when **all** hold:
 
 1. Grep confirms exactly one implementation and one usage pattern.
-2. **No stated reason for it exists.** Check the scoped `CLAUDE.md`,
+2. **No stated reason for it exists.** Check the scoped `AGENTS.md`,
    `docs/adrs/`, and `.pm` boards. In particular: **backend-v2 mandates an
    `I<Name>` interface beside every service/workflow class**
-   (`backend-cluster/backend-v2/CLAUDE.md`, Dependency and layer rules) — those
+   (`backend-cluster/backend-v2/AGENTS.md`, Dependency and layer rules) — those
    interfaces are a stated convention, never a finding. Same for seams that
    exist so tests can double them, when the tests actually do.
 3. No evidence of a planned second implementation.
@@ -73,7 +73,7 @@ Compose `/ship` for this one flattening. Loop within budget.
 
 ## What NOT to do
 
-- Never flatten an abstraction a `CLAUDE.md`, ADR, or working test double
+- Never flatten an abstraction a `AGENTS.md`, ADR, or working test double
   justifies — a stated convention beats this routine's taste, every time.
 - Don't rewrite convoluted logic inside a unit (`routine-logic-simplifier`) or
   move code across layers (`routine-abstraction-police`).

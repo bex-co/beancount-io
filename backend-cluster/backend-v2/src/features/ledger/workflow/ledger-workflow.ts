@@ -111,7 +111,7 @@ function rewriteIncludeLine(line: string, oldPath: string, newPath: string): str
  * locking, DTO mapping) so the resolvers become thin transport adapters.
  *
  * Dependencies are narrow injected interfaces (no `IService`); request data
- * (`userId`) is passed per method. See backend-v2/CLAUDE.md "Workflow layer".
+ * (`userId`) is passed per method. See backend-v2/AGENTS.md "Workflow layer".
  */
 export interface LegacyLedgerMetadata {
   success: boolean;

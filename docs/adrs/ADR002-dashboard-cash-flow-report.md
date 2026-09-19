@@ -15,7 +15,7 @@ Relevant existing machinery:
 
 - **Activity classification already exists client-side.** The overview Sankey pipeline (`dashboard/src/features/reports/overview/lib/account-categorizer.ts`) maps accounts into `source / operating / investing / financing / exclude` buckets — a heuristic, not GAAP, but shipped, i18n'd, and exactly the seed a cash-flow statement needs.
 - **The data surface is sufficient without backend work.** `GetLedgerOverview` returns all root hierarchies plus interval series; `getLedgerIntervalTotals` and the generic `queryShell` BQL passthrough exist. `.pm/DO_NOT_DO.md` forbids work that requires the private backend repo.
-- **The export model is one kind away.** `features/reports/export/model.ts` defines `StatementKind = "balance_sheet" | "profit_and_loss"` with CSV, Markdown, and print renderers behind `StatementExportMenu`. `reports/CLAUDE.md` currently freezes scope at two statements "unless product scope is explicitly expanded" — this ADR is that explicit expansion.
+- **The export model is one kind away.** `features/reports/export/model.ts` defines `StatementKind = "balance_sheet" | "profit_and_loss"` with CSV, Markdown, and print renderers behind `StatementExportMenu`. `reports/AGENTS.md` currently freezes scope at two statements "unless product scope is explicitly expanded" — this ADR is that explicit expansion.
 - **Account status data exists but has no report surface.** `GetLedgerAccounts(ledgerId, status)` and `GetLedgerAccountDirectives` (`openedAt`, `closedAt`, balance, entry counts) power the accounts settings UI; balance-sheet already filters closed accounts.
 - **Neither upstream fava nor `fava-slim/` has a cash-flow statement** — this is differentiating and clean-room-safe.
 
@@ -95,7 +95,7 @@ A `cashflow: operating|investing|financing` account-metadata override would fix 
 ### Negative
 
 - **Classification will be wrong for some real ledgers** (e.g. credit-card payments look financing-ish; brokerage sweeps look investing). Mitigated by disclosure notices and the status panel, but the first "your cash flow is miscategorized" report is a matter of when, not if.
-- Expands the export surface the reports CLAUDE.md deliberately froze — `reports/CLAUDE.md` and its export-scope language must be updated when this ships.
+- Expands the export surface the reports AGENTS.md deliberately froze — `reports/AGENTS.md` and its export-scope language must be updated when this ships.
 - StatementExportMenu analytics types, export locales (15 files), and renderer tests all grow by one kind.
 
 ## Open Questions
@@ -114,7 +114,7 @@ Internal:
 - `dashboard/src/features/reports/export/model.ts` — `StatementKind`, statement document builders
 - `dashboard/src/features/reports/export/printable-statement.tsx` + `statement-print.css` — print renderer and disclosure notices
 - `dashboard/src/features/ledger-data/accounts/graphql/accounts.graphql` — `GetLedgerAccountDirectives` (openedAt/closedAt/balance)
-- `dashboard/src/features/reports/CLAUDE.md` — export scope freeze this ADR explicitly expands
+- `dashboard/src/features/reports/AGENTS.md` — export scope freeze this ADR explicitly expands
 - `.pm/w4/done/m1/README.md` — statement export milestone conventions (unaudited statements, exact-decimal amounts)
 - `.pm/DO_NOT_DO.md` — no private-repo dependencies, no upstream reimplementation
 

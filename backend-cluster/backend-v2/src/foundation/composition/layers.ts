@@ -46,7 +46,7 @@ import { type IAuthorizationService } from "@/server/api/authorization";
  * Composition-root layers. Each layer is a narrow interface describing what the
  * layer above it may depend on, and is assembled from the layer(s) below it
  * (see `builder.ts`). This is the explicit dependency graph replacing the flat
- * `IService` container. See backend-v2/CLAUDE.md "Composition root".
+ * `IService` container. See backend-v2/AGENTS.md "Composition root".
  */
 
 /** Layer 1 — Database (persistence primitives). */

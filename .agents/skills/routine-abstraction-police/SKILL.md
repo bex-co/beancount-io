@@ -6,7 +6,7 @@ description: Autonomous maintenance routine that finds imports crossing a stated
   models, mobile routes bypassing screens — and fixes each violation by moving
   code or inverting the dependency, shipping via /ship. Use only when the user
   explicitly invokes /routine-abstraction-police or asks to fix layering
-  violations. Only rules stated in a CLAUDE.md count; SKIP for too-many-layers
+  violations. Only rules stated in a AGENTS.md count; SKIP for too-many-layers
   (routine-abstraction-improver) and duplicated logic (routine-dup-unifier). The
   core trigger is "this import points the wrong way across a stated boundary".
 ---
@@ -28,9 +28,9 @@ even without it: never ship red; one finding per ship; anything in a
 
 ## The one proof rule
 
-**A violation exists only against a rule stated in a `CLAUDE.md` (root or
+**A violation exists only against a rule stated in a `AGENTS.md` (root or
 scoped) or an ADR. Your own taste in layering is not a rule.** Before fixing,
-quote the rule; re-read the scoped `CLAUDE.md` of the target package for rules
+quote the rule; re-read the scoped `AGENTS.md` of the target package for rules
 beyond the seed list below. No stated rule → no finding.
 
 ## Workflow
@@ -41,17 +41,17 @@ Resolve scope per the contract.
 
 ### 2. Discover — the stated rules and their greps
 
-- **Repo-wide** (root `CLAUDE.md`): no cross-package imports — grep for
+- **Repo-wide** (root `AGENTS.md`): no cross-package imports — grep for
   relative imports escaping the package root and cross-package path aliases.
-- **dashboard** (`dashboard/CLAUDE.md`): one feature must not import another
+- **dashboard** (`dashboard/AGENTS.md`): one feature must not import another
   feature's private component/utility (cross-feature infrastructure belongs in
   `src/common/`); route files under `src/routes/` stay thin and import the
   feature page — grep `src/features/*` for imports from sibling features.
-- **backend-v2** (`backend-cluster/backend-v2/CLAUDE.md`, Dependency and layer
+- **backend-v2** (`backend-cluster/backend-v2/AGENTS.md`, Dependency and layer
   rules): resolvers/REST handlers delegate — they do not access models or
   orchestrate several services; workflows must not import GraphQL DTOs from
   `api/`; services stay transport-agnostic; models hold persistence only.
-- **mobile** (`mobile/CLAUDE.md`): `app/` route files mount screens from
+- **mobile** (`mobile/AGENTS.md`): `app/` route files mount screens from
   `src/screens/` — screen logic does not live in `app/`; `src/generated-graphql/`
   is codegen output nothing hand-edits.
 
@@ -91,7 +91,7 @@ Compose `/ship` for this one violation. Loop within budget.
   propose the rule in the summary — don't enforce it.
 - Don't remove layers (`routine-abstraction-improver`) or unify duplicates
   (`routine-dup-unifier`).
-- Never "fix" a violation by weakening the rule's `CLAUDE.md` wording.
+- Never "fix" a violation by weakening the rule's `AGENTS.md` wording.
 - Never hand-edit codegen output to satisfy a boundary — regenerate or
   restructure the source instead.
 

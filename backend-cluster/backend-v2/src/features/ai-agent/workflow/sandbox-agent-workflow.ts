@@ -15,7 +15,7 @@
  * Owns HarnessAgent construction, session resolution, the git-clone bootstrap,
  * permission-mode mapping, and turning the harness stream into a UIMessage SSE
  * response. Harness types stay contained here; the route only sees plain
- * params + a Response (backend-v2 CLAUDE.md layering).
+ * params + a Response (backend-v2 AGENTS.md layering).
  */
 
 import { HarnessAgent } from "@ai-sdk/harness/agent";

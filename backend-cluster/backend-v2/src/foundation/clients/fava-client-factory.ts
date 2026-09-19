@@ -18,7 +18,7 @@ import {
  * Provisions per-user / per-ledger Fava API clients. Extracted from
  * `ServerContainer` so workflows and services can depend on this narrow factory
  * without reaching for the full `IService` container. See
- * backend-v2/CLAUDE.md "Composition root".
+ * backend-v2/AGENTS.md "Composition root".
  */
 export interface IFavaClientFactory {
   getApiContext(userId: string): Promise<FavaApiContext>;

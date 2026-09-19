@@ -13,7 +13,7 @@ description: >-
 # MCP QA bug hunt
 
 Read [the shared QA contract](../qa-shared/contract.md) first, then
-`backend-cluster/backend-v2/CLAUDE.md`, `backend-cluster/backend-v2/docs/mcp.md`
+`backend-cluster/backend-v2/AGENTS.md`, `backend-cluster/backend-v2/docs/mcp.md`
 (the customer contract: tools, resources, prompts, envelope, failure codes),
 ADR 0007 (`docs/adrs/ADR007-backend-v2-mcp-surface.md`, the endpoint contract)
 and ADR 0008 (surface parity). Exercise the real endpoint over HTTP; unit tests

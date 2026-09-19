@@ -2,7 +2,7 @@
 
 Thanks for your interest in improving [Beancount.io](https://beancount.io/). This
 repository is a monorepo of independent packages; read this guide and the root
-[`CLAUDE.md`](./CLAUDE.md) before opening a pull request.
+[`AGENTS.md`](./AGENTS.md) before opening a pull request.
 
 ## Repository layout
 
@@ -29,7 +29,7 @@ yarn start
 ```
 
 See [`mobile/README.md`](./mobile/README.md) for full details, and each package's
-own `README.md` / `CLAUDE.md` as they are added.
+own `README.md` / `AGENTS.md` as they are added.
 
 ## Never commit secrets
 

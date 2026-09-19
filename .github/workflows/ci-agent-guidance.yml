@@ -4,10 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "CLAUDE.md"
       - "AGENTS.md"
-      - "**/CLAUDE.md"
       - "**/AGENTS.md"
+      - ".claude/settings.json"
       - ".claude/skills"
       - ".agents/skills"
       - ".agents/skills/**"
@@ -17,10 +16,9 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "CLAUDE.md"
       - "AGENTS.md"
-      - "**/CLAUDE.md"
       - "**/AGENTS.md"
+      - ".claude/settings.json"
       - ".claude/skills"
       - ".agents/skills"
       - ".agents/skills/**"

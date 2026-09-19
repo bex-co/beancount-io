@@ -233,7 +233,7 @@ Adding a managed include deliberately enables its price requests. Ordinary local
 
 Assign named accountable owners before implementation. Deliver package-scoped changes in dependency order against versioned contracts and shared conformance fixtures; do not introduce cross-package runtime imports.
 
-Discovery, history, revisions, freshness, valuation completeness, connection management, snapshots, and export must have equivalent behavior on every eligible API surface. MCP reads can use resources; writes use tools. Preserve credential scopes, ledger permissions, limits, side effects, and failure behavior under the [required API parity workflow](../../backend-cluster/backend-v2/CLAUDE.md#required-api-parity-workflow). The public text feed is an additional representation of the same data contract, not an excuse to omit GraphQL or MCP behavior. Document the anonymous mount and its policy without widening existing credential permissions.
+Discovery, history, revisions, freshness, valuation completeness, connection management, snapshots, and export must have equivalent behavior on every eligible API surface. MCP reads can use resources; writes use tools. Preserve credential scopes, ledger permissions, limits, side effects, and failure behavior under the [required API parity workflow](../../backend-cluster/backend-v2/AGENTS.md#required-api-parity-workflow). The public text feed is an additional representation of the same data contract, not an excuse to omit GraphQL or MCP behavior. Document the anonymous mount and its policy without widening existing credential permissions.
 
 ### 17. What is the rollout and how will we judge it?
 

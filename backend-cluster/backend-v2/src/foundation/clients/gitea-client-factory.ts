@@ -16,7 +16,7 @@ import {
 /**
  * Provisions per-user and admin Gitea API clients. Extracted from
  * `ServerContainer` so workflows/services can depend on this narrow factory
- * instead of the full `IService` container. See backend-v2/CLAUDE.md
+ * instead of the full `IService` container. See backend-v2/AGENTS.md
  * "Composition root".
  */
 export interface IGiteaClientFactory {

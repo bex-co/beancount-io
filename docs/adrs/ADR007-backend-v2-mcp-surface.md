@@ -139,7 +139,7 @@ The endpoint depends on two deployment facts that no code path can supply:
 - **`OAUTH_JWKS`** — declared in every production manifest (`bex.yaml`, `deploy/docker/docker-compose.yml`), not only the local stack. Absent it, D4's discovery chain dead-ends.
 - **The `api_keys` and `audit_events` tables** (migrations `0018`, `0019`) — the second credential kind and the audit hook. On the hosted target migrations run from inside a running instance (`bex ssh` → `yarn migrate:deploy`), because the pre-deploy job cannot reach the datastore across namespaces; that is a documented constraint, which makes "did they run?" a **release checklist item**, not an assumption.
 
-Both fell through the same crack: `backend-v2/CLAUDE.md` already requires a new environment variable to be added to `.env.example`, the README, the local compose file, _and_ `bex.yaml`. `OAUTH_JWKS` reached the README and `deploy/docker-mac` — and stopped there. It was in neither `.env.example` nor either production manifest, so the one deployment that actually needed it was the one place it was never written down. The checklist was right; nothing enforced it.
+Both fell through the same crack: `backend-v2/AGENTS.md` already requires a new environment variable to be added to `.env.example`, the README, the local compose file, _and_ `bex.yaml`. `OAUTH_JWKS` reached the README and `deploy/docker-mac` — and stopped there. It was in neither `.env.example` nor either production manifest, so the one deployment that actually needed it was the one place it was never written down. The checklist was right; nothing enforced it.
 
 ### D11 — A credential may reach more than one ledger, and the call says which
 
@@ -328,7 +328,7 @@ Internal:
 - `src/features/ai-agent/api/__tests__/mcp-route-methods.test.ts` — D9 property 1
 - `src/server/api/__tests__/scope-enforcement.test.ts` — D9 property 2, both dialects
 - `src/server/rest/__tests__/error-middleware.test.ts` — D9 property 3
-- `backend-cluster/backend-v2/CLAUDE.md` — the environment-variable checklist D10 makes enforceable
+- `backend-cluster/backend-v2/AGENTS.md` — the environment-variable checklist D10 makes enforceable
 - `bex.yaml`, `deploy/docker/docker-compose.yml` — production manifests
 
 External:

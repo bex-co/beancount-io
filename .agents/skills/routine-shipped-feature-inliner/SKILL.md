@@ -67,7 +67,7 @@ the way out — inline only flags already at their final value.**
 ### 5. Verify
 
 Owning package's full gate per the contract. If the flag guarded UI, verify the
-surviving path still renders (mobile: light and dark per `mobile/CLAUDE.md`).
+surviving path still renders (mobile: light and dark per `mobile/AGENTS.md`).
 
 ### 6. Ship
 

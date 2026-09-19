@@ -11,7 +11,7 @@ description: >-
 # CLI QA bug hunt
 
 Read [the shared QA contract](../qa-shared/contract.md) first, then
-`cli/CLAUDE.md` and the relevant sections of `cli/README.md` and
+`cli/AGENTS.md` and the relevant sections of `cli/README.md` and
 `cli/docs/USAGE.md`. Exercise the real `bea` executable through subprocesses;
 unit tests and source inspection support a finding but do not replace a CLI
 journey.

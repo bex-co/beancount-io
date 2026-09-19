@@ -59,14 +59,14 @@ The last tasks of every milestone are the standing closing tasks defined in [`.a
 
 Do the actual engineering, one item at a time, following `depends_on` order inside a milestone:
 
-- Follow all `CLAUDE.md` rules — root and the scoped `<package>/CLAUDE.md` for every package you touch (lockfiles are never hand-edited, changes stay scoped to one package, `cd` into the package before running its scripts, no secrets, `AGENTS.md` symlinks stay in sync with `CLAUDE.md`).
+- Follow all `AGENTS.md` rules — root and the scoped `<package>/AGENTS.md` for every package you touch (lockfiles are never hand-edited, changes stay scoped to one package, `cd` into the package before running its scripts, no secrets, `AGENTS.md` symlinks stay in sync with `AGENTS.md`).
 - Run the checks the change touches and make them pass before considering the item done:
   - `dashboard/` → `yarn format:check`, `yarn lint`, `yarn test`, `yarn build`
   - `mobile/` → `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit`
   - `cli/` → `make check-all`
   - `skills/` or `.agents/skills/` → `python3 skills/scripts/ci-check.py` (from the repo root)
-  - `backend-cluster/*`, `deploy/` → the commands in that package's scoped `CLAUDE.md`
-  - any `CLAUDE.md` / `AGENTS.md` / skill change → `python3 scripts/check-agent-guidance.py` (from the repo root)
+  - `backend-cluster/*`, `deploy/` → the commands in that package's scoped `AGENTS.md`
+  - any `AGENTS.md` / `AGENTS.md` / skill change → `python3 scripts/check-agent-guidance.py` (from the repo root)
   - before every ship → `gitleaks dir . --redact --verbose`
 
   Never mark an item complete on unverified code.

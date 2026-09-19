@@ -10,7 +10,7 @@ description: >-
 # Dashboard QA bug hunt
 
 Read [the shared QA contract](../qa-shared/contract.md) first. Read
-`dashboard/CLAUDE.md`. Use Playwright MCP to test real browser behavior.
+`dashboard/AGENTS.md`. Use Playwright MCP to test real browser behavior.
 
 Arguments: optional server URL, journey names, `wN`, `SHIP=1`, `DRY_RUN=1`.
 Default to production and report mode. A target URL changes the client under
@@ -85,7 +85,7 @@ surfaces and deepen the journeys that show failures. Report each skipped group.
 | journal       | Type, flag, date, account, payee/tag filters compose; pagination/count agree; postings expand; back/reload preserves the stated filters. Authorized synthetic edits persist exactly once.                 |
 | accounts      | Search and hierarchy expansion work; a linked account shows matching entries and balances; closed or absent accounts have honest states.                                                                  |
 | reports       | Balance Sheet, Income Statement, Trial Balance, Cash Flow, holdings/statistics and budget honor the selected period and units; drill-down retains intended context.                                       |
-| export        | CSV/Markdown and Print / Save as PDF match the filtered supported statement, dates, entity, commodity units, and sign conventions. Read `features/reports/CLAUDE.md` before interpreting financial signs. |
+| export        | CSV/Markdown and Print / Save as PDF match the filtered supported statement, dates, entity, commodity units, and sign conventions. Read `features/reports/AGENTS.md` before interpreting financial signs. |
 | files         | Tree navigation, text preview, branches, commit/diff links, and downloads work. Test create/edit/upload/delete only with authorized disposable files and check the resulting commit.                      |
 | query         | BQL executes, errors are actionable, result paging/export matches the result, and editing the query does not show stale output as new.                                                                    |
 | import        | Receipt/file/bank entrypoints and validation are usable. Actual imports and bank linking need the applicable authorization; inspect previews without booking real transactions.                           |
@@ -104,9 +104,9 @@ Reproduce once from a fresh page load before retaining a finding.
   `dashboard/src/features/<feature>/`.
 - Cross-feature infrastructure: `dashboard/src/common/`, particularly Apollo
   links, auth, filters, navigation and ledger layout.
-- Report behavior and exports: `features/reports/CLAUDE.md`; importer and
+- Report behavior and exports: `features/reports/AGENTS.md`; importer and
   ledger-data have their own nested guides. ADRs are in `docs/adrs/`.
-- Shared server causes: read `backend-cluster/backend-v2/CLAUDE.md` before tracing
+- Shared server causes: read `backend-cluster/backend-v2/AGENTS.md` before tracing
   `src/features/<domain>/api`, services, schemas, and ledger adapters. Read the
   ledger package guide if the response originates there. Keep fixes assigned to
   the package that owns the defect; do not create cross-package imports.

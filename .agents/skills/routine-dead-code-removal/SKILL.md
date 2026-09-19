@@ -71,7 +71,7 @@ so the detector stays trustworthy.
 
 - Prefer the safe fixers where they apply: `yarn lint:deadcode:fix` /
   `make deadcode-fix` — then **review the resulting diff before keeping it**
-  (root `CLAUDE.md` rule). Discard anything the proof step didn't cover.
+  (root `AGENTS.md` rule). Discard anything the proof step didn't cover.
 - Delete manually what the fixers can't reach (commented-out blocks,
   unreachable branches).
 - Delete tests and fixtures whose only purpose was exercising the removed code

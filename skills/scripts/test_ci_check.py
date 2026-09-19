@@ -44,8 +44,7 @@ class TestSkillTrees(unittest.TestCase):
         self.development = self.repo / ".agents/skills"
         self.customer.mkdir(parents=True)
         self.development.mkdir(parents=True)
-        (self.repo / "skills/CLAUDE.md").write_text("Customer skill guidance\n")
-        (self.repo / "skills/AGENTS.md").symlink_to("CLAUDE.md")
+        (self.repo / "skills/AGENTS.md").write_text("Customer skill guidance\n")
         (self.repo / ".claude").mkdir()
         (self.repo / ".claude/skills").symlink_to("../.agents/skills")
         patches = mock.patch.multiple(
@@ -87,6 +86,11 @@ class TestSkillTrees(unittest.TestCase):
         link = self.repo / ".claude/skills"
         link.unlink()
         link.symlink_to("../skills/.claude/skills")
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            ci_check.check_symlinks()
+
+    def test_resurrected_claude_md_is_rejected(self):
+        (self.repo / "skills/CLAUDE.md").write_text("Stale duplicate\n")
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             ci_check.check_symlinks()
 

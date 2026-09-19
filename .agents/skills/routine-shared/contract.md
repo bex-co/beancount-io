@@ -40,8 +40,8 @@ Run the checks the change touches and make them pass before shipping — always
 - `mobile/` → `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit`
 - `cli/` → `make check-all`
 - `skills/` or `.agents/skills/` → `python3 skills/scripts/ci-check.py` (from the repo root)
-- `backend-cluster/*`, `deploy/` → the commands in that package's scoped `CLAUDE.md`
-- any `CLAUDE.md` / `AGENTS.md` / skill change → `python3 scripts/check-agent-guidance.py` (from the repo root)
+- `backend-cluster/*`, `deploy/` → the commands in that package's scoped `AGENTS.md`
+- any `AGENTS.md` / `AGENTS.md` / skill change → `python3 scripts/check-agent-guidance.py` (from the repo root)
 - before every ship → `gitleaks dir . --redact --verbose`
 
 **If no automated check covers the changed behavior** (backend-v2, agent-box,

@@ -34,7 +34,7 @@ function ledgerApiError(operation: string, cause?: unknown): Error {
  * Params for {@link createLedger}. Deps are injected explicitly (not via
  * `IService`) so the operation is trivially testable. `favaApiClient` and
  * `stripe` are forwarded by the caller (`ctx.service.getFavaApiContext(...)`
- * and `ctx.service.stripe`) — see the service conventions in backend-v2/CLAUDE.md.
+ * and `ctx.service.stripe`) — see the service conventions in backend-v2/AGENTS.md.
  */
 export type CreateLedgerParams = {
   favaApiClient: FavaApiClient;

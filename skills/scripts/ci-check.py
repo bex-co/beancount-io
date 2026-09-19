@@ -77,8 +77,10 @@ def fail(msg: str) -> None:
 
 def check_symlinks() -> None:
     agents = SKILLS_ROOT / "AGENTS.md"
-    if not agents.is_symlink() or agents.readlink().as_posix() != "CLAUDE.md":
-        fail("skills/AGENTS.md must be a relative symlink to CLAUDE.md")
+    if agents.is_symlink() or not agents.is_file():
+        fail("skills/AGENTS.md must be a regular file, not a symlink")
+    if (SKILLS_ROOT / "CLAUDE.md").exists():
+        fail("skills/CLAUDE.md must not exist; AGENTS.md is the only instruction file")
 
     for directory in (SKILLS_DIR, DEV_SKILLS_DIR):
         if directory.is_symlink() or not directory.is_dir():

@@ -16,7 +16,7 @@ use ledger contents and independent calculations as controls.
 
 ## Scope and preflight
 
-- Read root and owning-package `CLAUDE.md`, plus nested guidance for the code you
+- Read root and owning-package `AGENTS.md`, plus nested guidance for the code you
   investigate. Record branch, HEAD, initial dirty files, target server, client
   build, account role, and chosen ledger. A local client may use production APIs.
 - Use a supplied target; otherwise use `https://beancount.io`. Use

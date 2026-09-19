@@ -10,7 +10,7 @@ description: >-
 # Mobile QA bug hunt
 
 Read [the shared QA contract](../qa-shared/contract.md) first, then
-`mobile/CLAUDE.md`, especially its production-write and simulator instructions.
+`mobile/AGENTS.md`, especially its production-write and simulator instructions.
 Use **Expo MCP on iPhone 17e** unless the user names another device. A mobile
 viewport in Playwright is not a substitute for exercising the native app.
 

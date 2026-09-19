@@ -98,7 +98,7 @@ Skills have two audiences:
 | Audience | Location | Workflows |
 | -------- | -------- | --------- |
 | Beancount users | [`skills/`](./skills/README.md), with implementations in [`skills/.claude/skills/`](./skills/.claude/skills) | The eight `beancount-*` ledger skills |
-| Repository contributors | [`.agents/skills/`](./.agents/skills), documented in [`.agents/CLAUDE.md`](./.agents/CLAUDE.md) | PM, shipping, mobile releases, QA, code maintenance, and Mermaid diagrams |
+| Repository contributors | [`.agents/skills/`](./.agents/skills), documented in [`.agents/AGENTS.md`](./.agents/AGENTS.md) | PM, shipping, mobile releases, QA, code maintenance, and Mermaid diagrams |
 
 The root `.claude/skills` links to `.agents/skills` so Claude Code and Codex share the internal development workflows.
 

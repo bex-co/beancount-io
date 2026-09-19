@@ -223,7 +223,7 @@ def main(
 
 
 # `ask` is local despite its hosted model calls — the task-verb rule in
-# cli/CLAUDE.md keeps every verb over .bean files out of `cloud`. `upgrade`
+# cli/AGENTS.md keeps every verb over .bean files out of `cloud`. `upgrade`
 # and `engine` are about the tool itself (PyPI/Homebrew / managed engine), so
 # they are neither local nor cloud.
 _LOCAL_PANEL = "Local ledger commands (work on .bean files)"

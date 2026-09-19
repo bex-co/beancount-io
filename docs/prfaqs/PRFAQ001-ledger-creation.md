@@ -240,7 +240,7 @@ Preserve stable category meanings, economic ownership, source references, and tr
 
 Use a canonical catalog and common conformance fixtures with package-local consumers; avoid cross-package runtime imports or a second accounting engine. Validate representative outputs with Beancount and the deployed ledger engine. Existing account names and history never change merely because a preset is updated.
 
-Extend eligible REST, GraphQL, and MCP creation/preview capabilities together, preserving credentials, scopes, authorization, limits, failure behavior, and retry semantics. Regenerate the OpenAPI snapshot and CLI clients. New dashboard-only configuration would recreate the current problem. Follow the repository's [API parity requirements](../../backend-cluster/backend-v2/CLAUDE.md#required-api-parity-workflow).
+Extend eligible REST, GraphQL, and MCP creation/preview capabilities together, preserving credentials, scopes, authorization, limits, failure behavior, and retry semantics. Regenerate the OpenAPI snapshot and CLI clients. New dashboard-only configuration would recreate the current problem. Follow the repository's [API parity requirements](../../backend-cluster/backend-v2/AGENTS.md#required-api-parity-workflow).
 
 Coordinate updates to tutorials and the agent-facing [beancount-init skill](../../skills/.claude/skills/beancount-init/SKILL.md), which also describes a fixed personal scaffold and fallback. They should teach the released behavior and expose the same customer decisions.
 

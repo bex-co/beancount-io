@@ -180,7 +180,7 @@ pinned contract for hosted commands. `make check-all` is the handoff gate:
 lint, deadcode, format-check, typecheck, test, spec-check, and docs-check. Do
 not hand-edit generated API clients, command stubs, `docs/REFERENCE.md`, or
 lockfiles; keep scratch files under `tmp/`.
-See the [package guide](https://github.com/bex-co/beancount-io/blob/main/cli/CLAUDE.md)
+See the [package guide](https://github.com/bex-co/beancount-io/blob/main/cli/AGENTS.md)
 for architecture boundaries and contribution rules.
 Optional Beangulp/Beanprice are enabled with `bea engine enable` (see Usage);
 the customer-facing `beancount-*` ledger skills live in `skills/` and target

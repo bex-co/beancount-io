@@ -29,4 +29,4 @@ python3 "$SKILLS_SRC/skills/scripts/beancount-skills.py" install ~/.claude/skill
 - [Installation guide](docs/installation.md): workspace-only installs, discovery checks, `verify`, updates, local edits and name conflicts, and removal.
 - [First query](docs/first-query.md): ask a synthetic ledger a question through `beancount-ask` and check the known answer. No account needed.
 
-Repository contributors use a separate set of [development skills](../.agents/CLAUDE.md) in [`.agents/skills/`](../.agents/skills). Development conventions for this customer-facing package live in [CLAUDE.md](CLAUDE.md).
+Repository contributors use a separate set of [development skills](../.agents/AGENTS.md) in [`.agents/skills/`](../.agents/skills). Development conventions for this customer-facing package live in [AGENTS.md](AGENTS.md).

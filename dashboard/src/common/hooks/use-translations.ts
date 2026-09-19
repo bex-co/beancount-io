@@ -38,7 +38,7 @@ export function useTranslations() {
             `  ✅ t("common.save")\n` +
             `  ✅ t("journal.export")\n` +
             `  ❌ t("${key}")\n\n` +
-            `See CLAUDE.md for more information.`,
+            `See AGENTS.md for more information.`,
         );
       }
 

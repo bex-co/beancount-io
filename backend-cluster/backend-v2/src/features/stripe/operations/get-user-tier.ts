@@ -12,7 +12,7 @@ import type { IStripeService } from "../service/stripe-service";
 /**
  * Dependencies for the tier operations. Injected explicitly (not via `IService`)
  * so the functions are trivially testable — see the service conventions in
- * backend-v2/CLAUDE.md. `stripe` is the shared instance (`service.stripe`),
+ * backend-v2/AGENTS.md. `stripe` is the shared instance (`service.stripe`),
  * forwarded by the caller rather than constructed here.
  */
 type TierDeps = {

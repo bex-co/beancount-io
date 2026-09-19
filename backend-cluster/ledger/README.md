@@ -12,7 +12,7 @@ service would make that service's Docker image a conveyance of GPL-licensed
 code. Instead, the engine is contained in this standalone sidecar, which
 other services talk to over plain HTTP/JSON. See `NOTICE` and
 `src/foundation/rustledger/README.md` for the containment rationale and
-`CLAUDE.md` for the hard rules.
+`AGENTS.md` for the hard rules.
 
 ## Architecture
 

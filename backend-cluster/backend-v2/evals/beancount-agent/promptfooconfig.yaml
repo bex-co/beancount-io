@@ -14,7 +14,7 @@ defaultTest:
 
 # This suite checks tool-ROUTING decisions only (which tool the model chose,
 # in what order, with what arguments) against a stubbed ToolContext — no real
-# Fava/Gitea/S3 calls, no OpenTelemetry tracing. See CLAUDE.md for why this
+# Fava/Gitea/S3 calls, no OpenTelemetry tracing. See AGENTS.md for why this
 # suite is a different shape from the other one-shot JSON eval suites.
 tests:
   - description: "balance question must not trigger a mutating tool"

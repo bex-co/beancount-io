@@ -49,7 +49,7 @@ A bug exists only when you have **both**:
 
 1. A failing test against current code for a derived input, and
 2. **Documented intent** the behavior diverges from — code comments, docs,
-   `CLAUDE.md` guidance, beancount semantics, ADRs, or the git history of the
+   `AGENTS.md` guidance, beancount semantics, ADRs, or the git history of the
    unit.
 
 Reproducible crashes found while modeling count as provable bugs (crashing is
