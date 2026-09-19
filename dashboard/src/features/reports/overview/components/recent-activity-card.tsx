@@ -278,19 +278,26 @@ export function RecentActivityCard({
                       <span className="hidden truncate text-right text-xs text-muted-foreground sm:block">
                         {summary.kind === "transfer"
                           ? t("page.overview.transactionTransfer")
-                          : summary.amounts.length === 0
-                            ? t("page.overview.transactionMultiple")
-                            : accountSummary}
+                          : accountSummary}
                       </span>
-                      <FormattedAmounts
-                        amounts={summary.amounts}
-                        showPositiveSign={summary.kind === "income"}
-                        className={
-                          summary.kind === "income"
-                            ? "text-right text-sm font-semibold text-emerald-600 dark:text-emerald-400"
-                            : "text-right text-sm font-semibold"
-                        }
-                      />
+                      {summary.amounts.length === 0 ? (
+                        // Narrow layouts hide the column that carries this
+                        // label, and an empty amount slot would just look like
+                        // a row with no value.
+                        <span className="text-right text-xs font-medium text-muted-foreground">
+                          {t("page.overview.transactionMultiple")}
+                        </span>
+                      ) : (
+                        <FormattedAmounts
+                          amounts={summary.amounts}
+                          showPositiveSign={summary.kind === "income"}
+                          className={
+                            summary.kind === "income"
+                              ? "text-right text-sm font-semibold text-emerald-600 dark:text-emerald-400"
+                              : "text-right text-sm font-semibold"
+                          }
+                        />
+                      )}
                     </button>
                   );
                 })}

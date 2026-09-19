@@ -86,6 +86,22 @@ export function summarizeTransaction({
   const expensePostings = postings.filter((posting) =>
     isAccountWithin(posting.account, expensesRoot),
   );
+  const incomeAndExpense =
+    expensePostings.length > 0 &&
+    postings.some((posting) => isAccountWithin(posting.account, incomeRoot));
+  // A payroll carries salary and its deductions; a sale carries a gain and its
+  // commission. Either side alone is a real number answering a question nobody
+  // asked — reporting a salary as its deductions reads as money going out. Say
+  // there are several postings and let the entry itself explain them.
+  if (incomeAndExpense) {
+    return {
+      kind: "mixed",
+      amounts: [],
+      accounts: uniqueAccounts(postings),
+      status: getStatus(transaction.flag),
+    };
+  }
+
   if (expensePostings.length > 0) {
     return {
       kind: "expense",
