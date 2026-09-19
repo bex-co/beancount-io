@@ -66,8 +66,6 @@ export function BudgetChartCard({
   time,
   onDelete,
 }: BudgetChartCardProps) {
-  // The visible identity of this history: the account it belongs to and the
-  // currency that separates it from another group for the same account.
   const titleId = useId();
   const currencyId = useId();
   const [isAddOpen, setIsAddOpen] = useState(false);

@@ -33,8 +33,6 @@ export function FavaOptionsSection({
   ledger: NonNullable<GetLedgerQuery["getLedger"]>;
 }) {
   const { t, i18n } = useTranslations();
-  // Both option tables share Option / Value headers, so the card's own
-  // title is what tells the two families apart.
   const titleId = useId();
   const favaOptions = ledger.favaOptions;
 

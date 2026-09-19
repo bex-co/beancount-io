@@ -47,8 +47,6 @@ function formatBalance(
  */
 function AccountLastEntriesLoadingState() {
   const { t } = useTranslations();
-  // The visible heading is this table's name: three Statistics tables sit
-  // on one page and each state renders its own copy of the pair.
   const headingId = useId();
   return (
     <div>
@@ -136,8 +134,6 @@ function AccountLastEntriesTable({
   data: GetLedgerAccountLastEntriesQuery;
 }) {
   const { t } = useTranslations();
-  // The visible heading is this table's name: three Statistics tables sit
-  // on one page and each state renders its own copy of the pair.
   const headingId = useId();
   const formatNum = useFormatNumber();
   const { ledgerOwner, ledgerName } = useParams({

@@ -27,13 +27,14 @@ import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { buildCommodityChartLabels } from "./build-commodity-chart-labels";
 import { CommodityPriceHistory } from "./commodity-price-history";
+import { commodityPairLabel } from "./commodity-pair-label";
 
 /**
  * Commodity chart component
  * Displays a line chart for a single commodity pair
  */
 function CommodityChart({ commodity }: { commodity: CommodityPairWithPrices }) {
-  const pairLabel = `${commodity.base}/${commodity.quote}`;
+  const pairLabel = commodityPairLabel(commodity);
   const { dates, chartData, formatTooltip, formatAxisTick } =
     buildCommodityChartLabels(
       commodity.prices,
@@ -207,7 +208,7 @@ export default function LedgerCommoditiesPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />
-                    {commodity.base}/{commodity.quote}
+                    {commodityPairLabel(commodity)}
                   </CardTitle>
                   <CardDescription>
                     {t("page.commodities.priceHistoryDataPoints", {

@@ -10,6 +10,7 @@ import {
 } from "@/common/components/ui/table";
 import type { CommodityPairWithPrices } from "@/graphql/definitions";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { commodityPairLabel } from "./commodity-pair-label";
 
 export function CommodityPriceHistory({
   commodity,
@@ -19,7 +20,7 @@ export function CommodityPriceHistory({
   const { t } = useTranslations();
   const [open, setOpen] = useState(false);
   const tableId = useId();
-  const pairLabel = `${commodity.base}/${commodity.quote}`;
+  const pairLabel = commodityPairLabel(commodity);
 
   return (
     <div className="mt-3 space-y-2">
@@ -37,9 +38,7 @@ export function CommodityPriceHistory({
       </Button>
       {open ? (
         <div id={tableId} className="max-h-56 overflow-auto rounded-md border">
-          {/* Every one of these has the same Date / Price columns, so
-                without the pair the base commodity is absent from the table's
-                identity. `pairLabel` is the card title's own text. */}
+          {/* `tableId` above names the disclosure's region, not the table. */}
           <Table aria-label={pairLabel}>
             <TableHeader>
               <TableRow>

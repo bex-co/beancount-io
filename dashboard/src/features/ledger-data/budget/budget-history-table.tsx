@@ -19,15 +19,11 @@ interface BudgetHistoryTableProps {
   group: BudgetGroup;
   onDelete: (group: BudgetGroup) => void;
   /**
-   * IDs of the visible nodes that identify this history — the card's account
-   * title and its currency badge. Seven of these tables sit on one page with
-   * the same Date / Interval / Amount columns, so without a name they are
-   * indistinguishable to anyone navigating by table. The card owns the ids
-   * because it owns the visible identity, and the currency is part of it:
-   * `groupBudgetEntries` keys a group by account *and* currency, so one
-   * account can appear more than once.
+   * Ids of the card's account title and currency badge. Both are needed:
+   * `groupBudgetEntries` keys a group by account *and* currency, so the
+   * account alone would name two of these tables identically.
    */
-  ariaLabelledBy?: string;
+  ariaLabelledBy: string;
 }
 
 function toIntervalEnum(interval: string): BudgetInterval | undefined {

@@ -26,8 +26,6 @@ import { useFormatNumber } from "@/common/hooks/use-format-number";
  */
 function PostingsPerAccountLoadingState() {
   const { t } = useTranslations();
-  // The visible heading is this table's name: three Statistics tables sit
-  // on one page and each state renders its own copy of the pair.
   const headingId = useId();
   return (
     <div>
@@ -111,8 +109,6 @@ function PostingsPerAccountTable({
   data: GetLedgerPostingsPerAccountQuery;
 }) {
   const { t } = useTranslations();
-  // The visible heading is this table's name: three Statistics tables sit
-  // on one page and each state renders its own copy of the pair.
   const headingId = useId();
   const formatNum = useFormatNumber();
   const rows = data.getLedgerPostingsPerAccount;

@@ -25,8 +25,6 @@ import { useFormatNumber } from "@/common/hooks/use-format-number";
  */
 function EntriesCountLoadingState() {
   const { t } = useTranslations();
-  // The visible heading is this table's name: three Statistics tables sit
-  // on one page and each state renders its own copy of the pair.
   const headingId = useId();
   return (
     <div>
@@ -114,8 +112,6 @@ function EntriesCountTable({
   data: GetLedgerEntriesCountPerTypeQuery;
 }) {
   const { t } = useTranslations();
-  // The visible heading is this table's name: three Statistics tables sit
-  // on one page and each state renders its own copy of the pair.
   const headingId = useId();
   const formatNum = useFormatNumber();
   const entries = data.getLedgerEntriesCountPerType;
