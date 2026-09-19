@@ -38,7 +38,7 @@
 - [ ] **m11** — [Mobile says what a converted balance means: units for commodities, labelled cost basis, disclosed omissions](./blocked/m11/README.md) (9 tasks) — **blocked:** implementation shipped (t001–t004); the on-screen check needs a signed-in QA session. ← promoted w4/016 with w4/027 folded in; user approved `/pm-brainstorm for w4` item 2 and its display rule, 2026-09-15
 - [x] **m12** — [Make mobile's `lint:deadcode` see unused GraphQL documents and test-only modules](./done/m12/README.md) (7 tasks) ← promoted w4/025; user approved `/pm-brainstorm for w4` item 4 and its allowlist recommendation, 2026-09-15
 
-- [ ] **m13** — [Preserve ledger pages through loading and hydration](./m13/README.md) (6 tasks) ← repeated dashboard QA, promoted w4/073, 2026-09-17
+- [x] **m13** — [Preserve ledger pages through loading and hydration](./done/m13/README.md) (6 tasks) ← repeated dashboard QA, promoted w4/073, 2026-09-17
 
 ## Dropped
 
@@ -50,7 +50,7 @@
 
 - ~~**082**~~ — Sign-in and recovery error associations — dropped 2026-09-17: promoted to [m15](./m15/README.md), preserving the evidence and adding independently reproduced registration fields; the expanded repair now exceeds one hour.
 
-- ~~**073**~~ — Journal shared-filter page reset regression — dropped 2026-09-17: superseded by [m13](./m13/README.md), which preserves the original evidence and adds the independently reproduced Accounts typing failure at the same pending boundary.
+- ~~**073**~~ — Journal shared-filter page reset regression — dropped 2026-09-17: superseded by [m13](./done/m13/README.md), which preserves the original evidence and adds the independently reproduced Accounts typing failure at the same pending boundary.
 
 - ~~**025**~~ — Seven dead GraphQL operations and a 19-case test for a hook that doesn't exist, all invisible to `lint:deadcode` — dropped 2026-09-15: promotion to w4/m12 completed ([done/m12](./done/m12/README.md)); the operations, the test-only module and the pinned strings are deleted, and `yarn lint:deadcode` now catches both shapes.
 - ~~**065**~~ — German is the only locale that leaves "YTD" untranslated — dropped 2026-09-14: not a miss but a recorded choice. `mobile/src/translations/__tests__/known-gaps.ts` lists `rangeYTD` in German's `SAME_AS_ENGLISH` entry with the reason "Range chips: M reads as Monat, and YTD is the standard term in German finance UIs", and the locale-integrity suite enforces it. Replacing it needs a native speaker's call, which the note itself deferred (SJB or JTD).
