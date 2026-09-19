@@ -36,6 +36,23 @@ function syncReadOnlyState(
 }
 
 /**
+ * A read-only editor is read-only in the DOM too.
+ *
+ * Monaco only puts the native `readonly` attribute on its textarea when
+ * `domReadOnly` is set as well, so a consumer that sets `readOnly` alone gets
+ * an input the browser still treats as writable. Defaulting it here means the
+ * next consumer cannot forget it; a caller that genuinely wants one without
+ * the other can still say so explicitly.
+ */
+function withDomReadOnly(
+  options: EditorProps["options"],
+): EditorProps["options"] {
+  if (!options || options.readOnly === undefined) return options;
+  if (options.domReadOnly !== undefined) return options;
+  return { ...options, domReadOnly: options.readOnly };
+}
+
+/**
  * Wraps @monaco-editor/react in ClientOnly to prevent SSR/hydration issues.
  * Accepts all standard EditorProps. Use the `fallback` prop to customize the
  * placeholder shown before the editor mounts (defaults to an empty div).
@@ -43,6 +60,7 @@ function syncReadOnlyState(
 export const MonacoEditor = ({
   fallback = <div />,
   onMount,
+  options,
   ...props
 }: EditorProps & { fallback?: React.ReactNode }) => {
   const handleMount: OnMount = (editor, monaco) => {
@@ -52,7 +70,11 @@ export const MonacoEditor = ({
 
   return (
     <ClientOnly fallback={fallback}>
-      <Editor {...props} onMount={handleMount} />
+      <Editor
+        {...props}
+        options={withDomReadOnly(options)}
+        onMount={handleMount}
+      />
     </ClientOnly>
   );
 };
