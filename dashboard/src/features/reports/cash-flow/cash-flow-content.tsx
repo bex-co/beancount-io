@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { DollarSign, Layers } from "lucide-react";
 import { PageHeader } from "@/common/components/page-header";
@@ -57,6 +57,13 @@ interface CashFlowContentProps {
   onConversionChange: (value: ConversionOption) => void;
   timeInterval: ChartInterval;
   onTimeIntervalChange: (value: ChartInterval) => void;
+  /**
+   * Owned by the page, which outlives the pending read that replaces this
+   * component, so changing an interval regroups the selected chart instead of
+   * resetting which chart the reader is looking at.
+   */
+  selectedTab: string;
+  onSelectedTabChange: (value: string) => void;
   filters: LedgerSearchParams;
   fiscalYearEnd: FiscalYearEnd;
   collapsePatterns: string[];
@@ -100,6 +107,8 @@ export function CashFlowContent({
   onConversionChange,
   timeInterval,
   onTimeIntervalChange,
+  selectedTab,
+  onSelectedTabChange,
   filters,
   fiscalYearEnd,
   collapsePatterns,
@@ -111,7 +120,6 @@ export function CashFlowContent({
     investing: t("page.cashFlow.investing"),
     financing: t("page.cashFlow.financing"),
   };
-  const [selectedTab, setSelectedTab] = useState<string>("netCashFlow");
   const tabOptions = [
     { label: t("page.cashFlow.netCashFlow"), value: "netCashFlow" },
     { label: t("page.cashFlow.byActivity"), value: "byActivity" },
@@ -215,13 +223,13 @@ export function CashFlowContent({
         <Tabs
           defaultValue={selectedTab}
           value={selectedTab}
-          onValueChange={setSelectedTab}
+          onValueChange={onSelectedTabChange}
           className="w-full flex-col justify-start gap-6"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <ResponsiveTabTriggerList
               selectedTab={selectedTab}
-              setSelectedTab={setSelectedTab}
+              setSelectedTab={onSelectedTabChange}
               tabOptions={tabOptions}
             />
             <ClientOnly>

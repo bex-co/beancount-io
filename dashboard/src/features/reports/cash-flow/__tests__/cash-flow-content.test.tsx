@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CashFlowContent } from "../cash-flow-content";
@@ -111,9 +112,16 @@ const closingCashAccounts: CashAccountSnapshot[] = [
   },
 ];
 
-function renderContent() {
-  return render(
+/**
+ * The page owns the chart selection so it survives a pending read, so the
+ * harness owns it here too and the tabs behave as they do in production.
+ */
+function Harness() {
+  const [selectedTab, setSelectedTab] = useState("netCashFlow");
+  return (
     <CashFlowContent
+      selectedTab={selectedTab}
+      onSelectedTabChange={setSelectedTab}
       statement={statement}
       closingCashAccounts={closingCashAccounts}
       cashAccountRows={[]}
@@ -131,8 +139,12 @@ function renderContent() {
       filters={{ time: "", account: "", filter: "" }}
       fiscalYearEnd={{ month: 12, day: 31 }}
       collapsePatterns={[]}
-    />,
+    />
   );
+}
+
+function renderContent() {
+  return render(<Harness />);
 }
 
 describe("CashFlowContent declared/inferred indicators", () => {

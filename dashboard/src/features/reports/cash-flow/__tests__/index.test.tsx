@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useQuery } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -283,5 +283,51 @@ describe("LedgerCashFlowPage", () => {
     expect(
       props.cashAccountRows.map((row: { account: string }) => row.account),
     ).toEqual(["Assets:Bank:Checking"]);
+  });
+});
+
+describe("LedgerCashFlowPage chart selection lifetime", () => {
+  /** Settled data, then a pending read, then settled data again. */
+  function settled() {
+    return { data: populatedPayload, loading: false, error: undefined };
+  }
+  function pending() {
+    // An uncached interval change: Apollo reports loading with no data, which
+    // selectSettledReportData classifies as pending.
+    return { data: undefined, loading: true, error: undefined };
+  }
+
+  it("keeps the reader's chart selected across an uncached interval read", () => {
+    vi.mocked(useQuery).mockReturnValue(settled() as never);
+    const { rerender } = render(<LedgerCashFlowPage />);
+
+    const first = captureProps.mock.calls.at(-1)![0];
+    expect(first.selectedTab).toBe("netCashFlow");
+
+    // The reader picks the other chart.
+    act(() => first.onSelectedTabChange("byActivity"));
+    rerender(<LedgerCashFlowPage />);
+    expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("byActivity");
+
+    // A new interval is chosen and its read has not settled yet: the content
+    // component is replaced, so the selection must not live inside it.
+    vi.mocked(useQuery).mockReturnValue(pending() as never);
+    rerender(<LedgerCashFlowPage />);
+    expect(screen.queryByText("cash-flow-content")).not.toBeInTheDocument();
+
+    // The read settles under the new interval.
+    vi.mocked(useQuery).mockReturnValue(settled() as never);
+    rerender(<LedgerCashFlowPage />);
+
+    expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("byActivity");
+  });
+
+  it("withholds the statement and its export while the read is pending", () => {
+    vi.mocked(useQuery).mockReturnValue(pending() as never);
+    render(<LedgerCashFlowPage />);
+
+    // The stale-data contract stays intact: no content, so no stale amounts
+    // and no export offered under the new interval's metadata.
+    expect(screen.queryByText("cash-flow-content")).not.toBeInTheDocument();
   });
 });

@@ -58,6 +58,11 @@ export default function LedgerCashFlowPage() {
     ledgerId,
     primaryCurrency,
   );
+  // Owned here rather than in the content component: a pending read replaces
+  // that component, so a selection living inside it would reset every time an
+  // uncached interval or conversion is chosen. This page outlives the read and
+  // is itself remounted per ledger, so the selection stays report-scoped.
+  const [selectedTab, setSelectedTab] = useState<string>("netCashFlow");
 
   const {
     data,
@@ -163,6 +168,8 @@ export default function LedgerCashFlowPage() {
       onConversionChange={setConversion}
       timeInterval={timeInterval}
       onTimeIntervalChange={setTimeInterval}
+      selectedTab={selectedTab}
+      onSelectedTabChange={setSelectedTab}
       filters={ledgerFilters.searchParams}
       fiscalYearEnd={ledgerData.favaOptions.fiscalYearEnd}
       collapsePatterns={getCollapsePatterns(ledgerData)}
