@@ -22,7 +22,7 @@
 
 - [ ] **m15** — [Associate authentication validation errors with their fields](./m15/README.md) (6 tasks) ← promoted w4/082, repeated dashboard QA, 2026-09-17
 
-- [ ] **m14** — [Restore truthful Catalan navigation and Journal labels](./m14/README.md) (6 tasks) ← from repeated dashboard QA, 2026-09-17
+- [x] **m14** — [Restore truthful Catalan navigation and Journal labels](./done/m14/README.md) (6 tasks) ← from repeated dashboard QA, 2026-09-17
 
 - [x] **m1** — Download Balance Sheet and P&L as CSV or print-ready PDF (9 tasks) ← from financial-report export PM research and `/pm` handoff, 2026-08-15
 - [x] **m2** — Cash flow report: statement page, charts, exports, account status (10 tasks) ← from `dashboard/docs/ADR002-cash-flow-report.md`, 2026-08-20

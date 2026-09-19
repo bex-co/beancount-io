@@ -1,6 +1,6 @@
 # w4 · m14 — Restore truthful Catalan navigation and Journal labels
 
-**Worker:** worker1 **Goal:** Catalan readers can recognize navigation, filters and journal controls without unrelated error/loading text **Status:** todo (t001–t005 done)
+**Worker:** worker1 **Goal:** Catalan readers can recognize navigation, filters and journal controls without unrelated error/loading text **Status:** done
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Verify the localized adoption surface — **DONE** | 10m | t002 |
 | t004 | Simplify the catalog changes — **DONE** | 10m | t003 |
 | t005 | Test real Catalan controls and run dashboard gates — **DONE** | 35m | t003, t004 |
-| t006 | Close out the verified Catalan repair | 10m | t005 |
+| t006 | Close out the verified Catalan repair — **DONE** | 10m | t005 |
 
 155 minutes total. Severity: major localized interface defect. Owning package: dashboard.
 
