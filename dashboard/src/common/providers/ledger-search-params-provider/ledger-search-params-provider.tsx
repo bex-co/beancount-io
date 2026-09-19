@@ -21,12 +21,22 @@ export const LedgerSearchParamsProvider = ({
 }) => {
   const rawSearch = useSearch({ strict: false });
   const navigate = useNavigate();
+  // Pages that keep a page offset in the URL. Their reset on a filter change
+  // has to happen in this navigation, because the pending layout can unmount
+  // the page and a reset owned by it would never run.
   const isJournal =
     useMatch({
       from: "/ledger/$ledgerOwner/$ledgerName/journal",
       shouldThrow: false,
       select: () => true,
     }) === true;
+  const isAccountJournal =
+    useMatch({
+      from: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+      shouldThrow: false,
+      select: () => true,
+    }) === true;
+  const isPaginatedList = isJournal || isAccountJournal;
 
   const searchParams = useMemo(
     () => parseLedgerFilterSearch(rawSearch),
@@ -46,13 +56,11 @@ export const LedgerSearchParamsProvider = ({
           const before = parseLedgerFilterSearch(prev);
           const after = parseLedgerFilterSearch(updated);
           if (
-            isJournal &&
+            isPaginatedList &&
             (before.account !== after.account ||
               before.filter !== after.filter ||
               before.time !== after.time)
           ) {
-            // Reset in this navigation: the pending layout can unmount Journal,
-            // so the reset cannot depend on state inside that page.
             updated.offset = undefined;
           }
           return updated as typeof prev;
@@ -60,7 +68,7 @@ export const LedgerSearchParamsProvider = ({
         replace: true,
       });
     },
-    [isJournal, navigate],
+    [isPaginatedList, navigate],
   );
 
   const value = useMemo(

@@ -15,6 +15,8 @@ vi.mock("@tanstack/react-router", () => ({
     ledgerName: "crypto-example",
     accountName: "Assets:Crypto:Coinbase:BTC",
   }),
+  useSearch: () => ({}),
+  useNavigate: () => vi.fn(),
 }));
 
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({

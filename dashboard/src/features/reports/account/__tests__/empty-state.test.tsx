@@ -15,6 +15,8 @@ vi.mock("@tanstack/react-router", () => ({
     ledgerName: "empty",
     accountName: "Assets:Cash",
   }),
+  useSearch: () => ({}),
+  useNavigate: () => vi.fn(),
 }));
 
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({

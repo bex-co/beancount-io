@@ -1,6 +1,6 @@
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import {
   Card,
@@ -23,6 +23,9 @@ import {
 import { DateBalanceChart } from "@/features/reports/income-statement/date-balance-chart";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useState, useEffect, useMemo, useRef } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { normalizeListSearchOffset } from "@/common/lib/list-search-params";
+import { ACCOUNT_JOURNAL_MAX_OFFSET } from "./search";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
 import { LineChart } from "@/features/reports/balance-sheet/line-chart";
 import {
@@ -92,9 +95,67 @@ export function AccountJournalTable({
   const [showMetadata, setShowMetadata] = useState(true);
   const [showPostings, setShowPostings] = useState(false);
 
-  // Pagination state
-  const [offset, setOffset] = useState(0);
+  // Pagination lives in the route's validated search params so opening a
+  // transaction's source — which unmounts this table — plus browser Back
+  // returns to the page that was being read. Page moves replace the history
+  // entry, so Back leaves the account rather than walking back through every
+  // page visited. Re-coerced here because the router still surfaces raw URL
+  // values, so `?offset=-5` or `?offset=abc` must not reach the query.
+  const accountSearch = useSearch({
+    from: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+  });
+  const navigate = useNavigate({
+    from: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+  });
   const limit = 20;
+
+  // Track filter changes to reset pagination
+  const filterKey = useMemo(
+    () =>
+      JSON.stringify({
+        time: ledgerFilters.time,
+        filter: ledgerFilters.filter,
+        account: ledgerFilters.account,
+        directiveTypes: selectedDirectiveTypes,
+        transactionSubtypes: selectedTransactionSubtypes,
+        documentSubtypes: selectedDocumentSubtypes,
+        customSubtypes: selectedCustomSubtypes,
+      }),
+    [
+      ledgerFilters.time,
+      ledgerFilters.filter,
+      ledgerFilters.account,
+      selectedDirectiveTypes,
+      selectedTransactionSubtypes,
+      selectedDocumentSubtypes,
+      selectedCustomSubtypes,
+    ],
+  );
+
+  const searchOffset =
+    normalizeListSearchOffset(
+      accountSearch.offset,
+      ACCOUNT_JOURNAL_MAX_OFFSET,
+    ) ?? 0;
+  // A filter change and its offset reset arrive in separate renders; until the
+  // reset lands, read the first page rather than the stale position.
+  const [appliedFilterKey, setAppliedFilterKey] = useState(filterKey);
+  const offset = appliedFilterKey === filterKey ? searchOffset : 0;
+
+  const replaceOffset = (newOffset: number) => {
+    void navigate({
+      to: ".",
+      search: (previous) => ({
+        ...previous,
+        offset: newOffset > 0 ? newOffset : undefined,
+      }),
+      replace: true,
+    });
+  };
+
+  const setOffset: Dispatch<SetStateAction<number>> = (value) => {
+    replaceOffset(typeof value === "function" ? value(offset) : value);
+  };
 
   // State for entry context dialog
   const [isEntryContextDialogOpen, setIsEntryContextDialogOpen] =
@@ -145,37 +206,29 @@ export function AccountJournalTable({
     fetchPolicy: "cache-and-network",
   });
 
-  // Track filter changes to reset pagination
-  const filterKey = useMemo(
-    () =>
-      JSON.stringify({
-        time: ledgerFilters.time,
-        filter: ledgerFilters.filter,
-        account: ledgerFilters.account,
-        directiveTypes: selectedDirectiveTypes,
-        transactionSubtypes: selectedTransactionSubtypes,
-        documentSubtypes: selectedDocumentSubtypes,
-        customSubtypes: selectedCustomSubtypes,
-      }),
-    [
-      ledgerFilters.time,
-      ledgerFilters.filter,
-      ledgerFilters.account,
-      selectedDirectiveTypes,
-      selectedTransactionSubtypes,
-      selectedDocumentSubtypes,
-      selectedCustomSubtypes,
-    ],
-  );
-  const previousFilterKeyRef = useRef(filterKey);
-
-  // Reset pagination when searchParams change (scheduled asynchronously to avoid cascading renders)
+  // A genuine filter change starts again at the first page.
   useEffect(() => {
-    if (previousFilterKeyRef.current !== filterKey) {
-      previousFilterKeyRef.current = filterKey;
-      queueMicrotask(() => setOffset(0));
-    }
-  }, [filterKey]);
+    if (appliedFilterKey === filterKey) return;
+    setAppliedFilterKey(filterKey);
+    if (searchOffset !== 0) replaceOffset(0);
+    // replaceOffset is re-created per render; the guard above runs it once per
+    // filter change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedFilterKey, filterKey, searchOffset]);
+
+  const requestedTotal = journalData?.getLedgerAccountJournal.total;
+
+  // A URL may ask for a page past the end (stale link, deleted entries). Once
+  // the real total is known, fall back to the last page instead of an empty
+  // journal.
+  useEffect(() => {
+    const known = typeof requestedTotal === "number" ? requestedTotal : 0;
+    if (journalLoading || known === 0 || offset === 0 || offset < known) return;
+    replaceOffset(Math.floor((known - 1) / limit) * limit);
+    // replaceOffset is re-created per render; the guard above makes this a
+    // one-shot correction.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [journalLoading, offset, requestedTotal]);
 
   if (journalLoading) {
     return (

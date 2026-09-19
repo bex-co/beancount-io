@@ -6,6 +6,13 @@ import { DirectiveType } from "@/common/types/journal";
 
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
 
+// The page offset lives in the route search params; this suite renders the
+// table on its own, so stand in for the router it would otherwise need.
+vi.mock("@tanstack/react-router", () => ({
+  useSearch: () => ({}),
+  useNavigate: () => vi.fn(),
+}));
+
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({ t: (key: string) => key }),
 }));
