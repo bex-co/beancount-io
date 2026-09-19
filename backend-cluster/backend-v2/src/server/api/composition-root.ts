@@ -63,6 +63,10 @@ import {
   setApiKeyRoutes,
   API_KEY_V1_ROUTES,
 } from "@/features/apikeys/api/api-key-rest";
+import {
+  setTokenIntrospectionRoutes,
+  TOKEN_INTROSPECTION_V1_ROUTES,
+} from "@/features/apikeys/api/token-introspection-rest";
 import { setSitemapHandler } from "@/features/sitemap/api/sitemap-handler";
 import { setWellKnownRoutes } from "@/features/well-known/api/well-known-route";
 import { setMcpRoute, setupAiAgentRoutes } from "@/features/ai-agent/api";
@@ -270,6 +274,16 @@ const REST_FRAGMENTS: readonly RestFragment[] = [
       setApiKeyRoutes(router, layers, config),
   },
   {
+    // Token introspection (ADR 0017). Gated like any other v1 route, and
+    // deliberately mounted here rather than under `/api-gateway/oauth/`, whose
+    // blanket always-public entry would make it anonymous without the census
+    // test noticing — the catch-all would already cover the path.
+    feature: "token-introspection",
+    gate: "enforced",
+    register: (router, { layers, config }) =>
+      setTokenIntrospectionRoutes(router, layers, config),
+  },
+  {
     feature: "sitemap",
     gate: "outside",
     register: (router, { layers, config }) =>
@@ -323,6 +337,7 @@ export const V1_DECLARED_ROUTES = [
   ...CONFIGURATION_V1_ROUTES,
   ...LEDGER_V1_ROUTES,
   ...API_KEY_V1_ROUTES,
+  ...TOKEN_INTROSPECTION_V1_ROUTES,
 ] as const;
 
 // ---------------------------------------------------------------------------

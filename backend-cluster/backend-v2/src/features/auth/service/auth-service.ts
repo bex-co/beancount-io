@@ -642,10 +642,11 @@ export class AuthService implements IAuthService {
    */
   private createDefaultLedger = async (token: string): Promise<void> => {
     try {
-      const userId = await this.models.jwt.verify(this.db, token);
-      if (!userId) {
+      const session = await this.models.jwt.verify(this.db, token);
+      if (!session) {
         return;
       }
+      const { userId } = session;
       const { favaApiClient } =
         await this.favaClientFactory.getApiContext(userId);
       await createLedger({

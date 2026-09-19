@@ -28,6 +28,7 @@ import { setAccountRoutes } from "@/features/auth/api/account-routes";
 import { setCliAuthRoutes } from "@/features/auth/api/cli-auth-routes";
 import { setSocialRoutes } from "@/features/gitea/user-profile/api/social-read-routes";
 import { setApiKeyRoutes } from "@/features/apikeys/api/api-key-rest";
+import { setTokenIntrospectionRoutes } from "@/features/apikeys/api/token-introspection-rest";
 import { generateV1OpenAPIDocument } from "@/server/rest/openapi-registry";
 
 /**
@@ -56,6 +57,7 @@ setAccountRoutes(router, { layers: stub, config });
 setCliAuthRoutes(router, { layers: stub, config });
 setSocialRoutes(router, { layers: stub, config });
 setApiKeyRoutes(router, stub, config);
+setTokenIntrospectionRoutes(router, stub, config);
 
 const outputPath = path.resolve(__dirname, "../docs/openapi/v1.json");
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });

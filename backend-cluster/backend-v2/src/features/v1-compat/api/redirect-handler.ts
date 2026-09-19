@@ -57,15 +57,17 @@ export function setV1CompatRedirectRoutes(
   config: AppConfig,
 ): void {
   const getOneTimeAuthUrl = async (token: string) => {
-    const userId = await layers.database.models.jwt.verify(
+    const session = await layers.database.models.jwt.verify(
       layers.database.db,
       token,
     );
-    if (!userId) {
+    if (!session) {
       throw new Error("Invalid or expired token");
     }
     const oneTimeToken =
-      await layers.database.models.magicLinkToken.regenerateToken(userId);
+      await layers.database.models.magicLinkToken.regenerateToken(
+        session.userId,
+      );
     const dashboardUrl = `${config.dashboard.url}/auth/callback?oneTimeToken=${oneTimeToken.id}`;
     return dashboardUrl;
   };
@@ -81,17 +83,17 @@ export function setV1CompatRedirectRoutes(
     if (ledgerId) {
       try {
         // Verify token and get user
-        const userId = await layers.database.models.jwt.verify(
+        const session = await layers.database.models.jwt.verify(
           layers.database.db,
           token,
         );
-        if (!userId) {
+        if (!session) {
           ctx.throw(401, "Invalid or expired token");
           return;
         }
         const user = await layers.database.models.user.getById(
           layers.database.db,
-          userId,
+          session.userId,
         );
         if (!user) {
           ctx.throw(401, "User not found");

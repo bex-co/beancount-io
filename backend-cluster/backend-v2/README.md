@@ -133,6 +133,83 @@ dashboard respectively. On the dashboard host (`APP_DOMAIN`), `/.well-known/*`
 must reach this backend so Apple and Google can fetch the native app-link
 vouchers from the same origin as `/ledger/...` links.
 
+### Validating a credential from outside
+
+There are two ways to check a credential Beancount.io issued, and they answer
+different questions. Pick deliberately.
+
+**Offline, against the published keys.** OAuth access tokens are ES256 JWTs
+carrying `iss`, `aud`, and `kid`. Their public keys are served at
+`/api-gateway/oauth/jwks` and discoverable through the RFC 8414 document above,
+so any standard validator (`jose`'s `createRemoteJWKSet`, an API gateway's JWT
+filter) can verify one with no call to us.
+
+This proves the token *was issued* and has not expired. It cannot tell you the
+grant was revoked five minutes ago, and it does not work at all for the other
+two credential kinds: session tokens are HS256 (publishing the key would publish
+the ability to mint them), and `bcio_` API keys are not JWTs and have no
+signature to check.
+
+**Online, by asking.** `POST /api-gateway/v1/token/introspect` (RFC 7662)
+answers for all three kinds, including whether the credential is live *right
+now*:
+
+```zsh
+curl -sS https://beancount.io/api-gateway/v1/token/introspect \
+  -H 'x-api-key: bcio_your_own_key' \
+  -H 'content-type: application/json' \
+  -d '{"token":"bcio_the_key_you_are_checking"}'
+```
+
+```json
+{
+  "active": true,
+  "sub": "usr_7wXzK9mN",
+  "scope": "ledger.read ledger.write",
+  "jti": "akey_7wXzK9mN",
+  "iat": 1767225600,
+  "exp": 1798761600,
+  "bio_credential_kind": "apikey",
+  "bio_assurance": "delegated",
+  "bio_ledger_scope": "alice/main-ledger"
+}
+```
+
+A credential that is not usable returns exactly this, and nothing more:
+
+```json
+{ "active": false }
+```
+
+Expired, malformed, revoked, never-issued, and belonging to another user all
+produce that identical body on purpose — a response that distinguished them
+would let a caller enumerate which credentials were once real and when each was
+revoked.
+
+Three things to know before you build against it:
+
+- **It is never anonymous.** The endpoint requires its own credential. Without
+  that rule it would turn any stolen token into "valid, user X, may write
+  ledger Y". A caller that cannot authenticate gets `401`/`403`, never
+  `{"active": false}`.
+- **You may introspect your own credentials, and only your own.** A token
+  belonging to someone else reads as inactive. So this serves a gateway or
+  agent runtime acting for the same user; it is not a multi-tenant validation
+  service.
+- **`scope` is effective capability, not the raw grant.** A session token is
+  not scope-constrained and reports all three ledger scopes. Do not read an
+  empty-looking grant as "no permissions".
+
+Fields prefixed `bio_` are ours rather than RFC 7662; everything else is the
+standard document. The same operation is on GraphQL as `Query.introspectToken`.
+It is deliberately not an MCP tool, and not advertised as `introspection_endpoint`
+in the RFC 8414 metadata — both reasons are in
+[ADR 0017](../../docs/adrs/ADR017-backend-v2-token-introspection.md).
+
+Introspection works on a deployment that has never configured OAuth: API keys
+and session tokens still resolve, and an OAuth token reports `active: false`,
+which is true there.
+
 ### Native app links
 
 Optional. When set, this server answers:

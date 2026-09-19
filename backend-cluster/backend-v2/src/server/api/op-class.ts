@@ -1305,6 +1305,16 @@ const API_KEY_VERBS: readonly VerbEntry[] = [
     rest: "DELETE /api-gateway/v1/api-keys/{id}",
     mcp: "manageApiKeys",
   },
+  {
+    // RFC 7662 token introspection (ADR 0017).
+    verb: "credentials.introspect",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_INTROSPECT,
+    gql: "Query.introspectToken",
+    rest: "POST /api-gateway/v1/token/introspect",
+    mcpExempt:
+      "The caller is a token *validator* — a gateway, a proxy, an agent runtime's auth layer — deciding whether to admit a request it is holding. An MCP client is the thing being validated, not the thing validating, and it already learns its credential is dead from the next call's 401. Adding a tool would spend the deliberately-small tool budget (ADR 0008 D5) on a question no agent's ledger work asks. This is a shape argument, not a credential one: `manageApiKeys` proves credential reads can live on MCP when an agent has a use for them.",
+  },
 ];
 
 const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [

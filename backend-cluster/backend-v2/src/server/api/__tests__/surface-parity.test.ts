@@ -176,12 +176,24 @@ describe("surface parity", () => {
     // w1/m10 closed the last eligible adapters. The frozen baseline separately
     // prevents dropping verbs or narrowing eligibility to reduce debt.
     rest: 0,
-    // w2/m27 deliberately removes the four GraphQL/REST compatibility shims
-    // from MCP (compat-only exemption, REST twins kept, ADR 0008): agents
-    // should never choose the legacy spelling when the canonical verb serves
-    // the same capability. This is a decided contract change, not new debt —
-    // raising it again still fails until this line is edited.
-    mcp: 4,
+    // Four of these are w2/m27's deliberate removal of the GraphQL/REST
+    // compatibility shims from MCP (compat-only exemption, REST twins kept,
+    // ADR 0008): agents should never choose the legacy spelling when the
+    // canonical verb serves the same capability.
+    //
+    // The fifth is `credentials.introspect` (w3/m44, ADR 0017). Its caller is a
+    // token *validator* — a gateway, a proxy, an agent runtime's auth layer —
+    // deciding whether to admit a request it is holding. An MCP client is the
+    // thing being validated, not the thing validating, and it already learns
+    // its credential is dead from the next call's 401. Spending the
+    // deliberately-small tool budget (ADR 0008 D5) on a question no agent's
+    // ledger work asks would cost selection accuracy for the tools that do.
+    // Note this is a *shape* argument, not a credential one: `manageApiKeys`
+    // shows credential reads reach MCP when an agent has a use for them.
+    //
+    // Both are decided contract changes, not new debt — raising this again
+    // still fails until this line is edited, with an argument like these.
+    mcp: 5,
   };
 
   it("tracks the in-scope gap exactly, so it cannot drift either way", () => {

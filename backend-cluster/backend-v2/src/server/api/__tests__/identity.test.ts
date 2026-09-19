@@ -65,6 +65,10 @@ beforeAll(async () => {
 
 let config: AppConfig;
 
+/** Fixed lifetime the fake session model asserts, so tests can check it back. */
+const SESSION_ISSUED_AT = 1_700_000_000;
+const SESSION_EXPIRES_AT = 1_800_000_000;
+
 /** A database layer whose JWT model accepts exactly one session token. */
 function databaseAccepting(
   validSessionToken: string | null,
@@ -75,7 +79,13 @@ function databaseAccepting(
     models: {
       jwt: {
         verify: jest.fn(async (_db: unknown, token: string) =>
-          validSessionToken && token === validSessionToken ? userId : null,
+          validSessionToken && token === validSessionToken
+            ? {
+                userId,
+                issuedAt: SESSION_ISSUED_AT,
+                expiresAt: SESSION_EXPIRES_AT,
+              }
+            : null,
         ),
       },
     } as unknown as DatabaseLayer["models"],

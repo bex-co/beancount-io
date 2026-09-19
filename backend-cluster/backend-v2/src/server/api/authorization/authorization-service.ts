@@ -226,6 +226,17 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: { methods: EVERY_CREDENTIAL, capability: "admin" },
     auditClass: "admin",
   },
+  // Introspection reads the status of a credential, which is the same kind of
+  // fact about the same object as listing one — so it reuses that relationship
+  // rather than inventing a second way to be the owner of your own keys.
+  // Every credential method is admitted at `admin` capability on purpose: the
+  // caller this endpoint exists for is a machine holding an API key, and
+  // refusing that method would leave the endpoint with no realistic caller.
+  [AUTHORIZATION_ACTIONS.USER_CREDENTIALS_INTROSPECT]: {
+    relationships: userRelationship(USER_RELATIONSHIPS.READ_CREDENTIALS),
+    credential: { methods: EVERY_CREDENTIAL, capability: "admin" },
+    auditClass: "admin",
+  },
   [AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE]: {
     relationships: userRelationship(USER_RELATIONSHIPS.WRITE_CREDENTIALS),
     credential: {

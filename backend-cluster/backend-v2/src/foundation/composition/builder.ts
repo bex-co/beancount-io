@@ -8,6 +8,7 @@ import { AssetStorageService } from "@/features/s3/service/asset-storage-service
 import { StripeService } from "@/features/stripe/service/stripe-service";
 import { SubscriptionService } from "@/features/stripe/service/subscription-service";
 import { ApiKeyService } from "@/features/apikeys/service/api-key-service";
+import { TokenIntrospectionService } from "@/features/apikeys/service/token-introspection-service";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
 import { FeatureUsageService } from "@/features/feature-usage/service/feature-usage-service";
@@ -85,6 +86,11 @@ export function buildServiceLayer(input: {
         userId,
       })) !== SubscriptionTier.FREE,
   });
+  const tokenIntrospection = new TokenIntrospectionService({
+    database: input.database,
+    config: input.config,
+    authorization,
+  });
   const assetStorage = new AssetStorageService(
     input.config.tempAssetS3,
     authorization,
@@ -120,6 +126,7 @@ export function buildServiceLayer(input: {
     stripe,
     subscriptions,
     apiKey,
+    tokenIntrospection,
     assetStorage,
     featureUsage,
     aiCfoUsage,

@@ -100,6 +100,9 @@ export type ApiScope = (typeof API_SCOPES)[number];
 
 export type OperationClass = "read" | "write" | "admin";
 
+/** The operation classes, in the order they widen. */
+const OPERATION_CLASSES = ["read", "write", "admin"] as const;
+
 const OPERATION_SCOPE: Record<OperationClass, ApiScope> = {
   read: "ledger.read",
   write: "ledger.write",
@@ -166,6 +169,26 @@ export interface Identity {
    * audit and revocation. Never the credential's secret material.
    */
   tokenId?: string;
+  /**
+   * When the credential itself was issued and when it stops working, in
+   * seconds since the Unix epoch — the same unit as `assurance.authenticatedAt`.
+   *
+   * Distinct from `assurance.authenticatedAt`, which says when the *person*
+   * last authenticated. A long-lived API key minted during one sign-in has an
+   * issue time years away from any session.
+   *
+   * Both are optional because not every identity has a credential: a
+   * `systemIdentity` is a workload with nothing to expire. `expiresAt` is also
+   * absent for an API key minted without an expiry, which never expires and is
+   * revoked instead.
+   */
+  issuedAt?: number;
+  expiresAt?: number;
+}
+
+/** `Date` → seconds since the Unix epoch, the unit every claim here uses. */
+function epochSeconds(value: Date | undefined): number | undefined {
+  return value ? Math.floor(value.getTime() / 1000) : undefined;
 }
 
 /** Resolve the effective actor while old in-process fixtures are migrated. */
@@ -225,7 +248,7 @@ function effectiveCapabilities(
     return ALL_OPERATION_CAPABILITIES;
   }
   const capabilities = new Set<OperationClass>();
-  for (const operation of ["read", "write", "admin"] as const) {
+  for (const operation of OPERATION_CLASSES) {
     if (hasRequiredScope(identity.scopes, OPERATION_SCOPE[operation])) {
       capabilities.add(operation);
     }
@@ -240,6 +263,18 @@ export interface RequestLike {
 
 export interface ResolveIdentityOptions {
   oauthResource?: OAuthResource;
+  /**
+   * Whether resolving counts as *using* the credential. Defaults to true,
+   * because it normally does — a request arrived and the credential carried it.
+   *
+   * Token introspection (ADR 0017 D8) is the case where it does not: a third
+   * party asking whether a key is live is not that key doing work, and stamping
+   * `lastUsedAt` would turn "which key is my cron job using" into "which key
+   * someone asked about". Suppressing the stamp here, rather than resolving a
+   * second way, keeps one resolution path — two that can disagree about who is
+   * authenticated is the failure ADR 0006 problem 2 records.
+   */
+  recordUsage?: boolean;
 }
 
 export function identityHasCapability(
@@ -247,6 +282,28 @@ export function identityHasCapability(
   operation: OperationClass,
 ): boolean {
   return effectiveCapabilities(identity).has(operation);
+}
+
+/**
+ * What this credential can do, said in the scope vocabulary a client knows.
+ *
+ * `identityHasCapability` asks one question of the same computation; this
+ * reports it whole, for callers that must *describe* a credential to someone
+ * who cannot see this process — token introspection (ADR 0017 D3).
+ *
+ * Deliberately derived from `effectiveCapabilities` rather than from
+ * `identity.scopes`: a session carries no scopes and full capability, so the
+ * raw set would say a signed-in user may do nothing. Ordered by `API_SCOPES` so
+ * the rendered string is stable.
+ */
+export function identityCapabilityScopes(identity: Identity): ApiScope[] {
+  const capabilities = effectiveCapabilities(identity);
+  return API_SCOPES.filter((scope) =>
+    OPERATION_CLASSES.some(
+      (operation) =>
+        capabilities.has(operation) && OPERATION_SCOPE[operation] === scope,
+    ),
+  );
 }
 
 /** Whether the credential's optional single-ledger ceiling admits this id. */
@@ -310,7 +367,11 @@ export async function resolveIdentity(
     )) ??
     // Between OAuth and session: keys are bearer-presented like OAuth tokens,
     // but are cheap to reject on their prefix before any verification work.
-    (await resolveApiKeyIdentity(token, database)) ??
+    (await resolveApiKeyIdentity(
+      token,
+      database,
+      options.recordUsage ?? true,
+    )) ??
     (await resolveSessionIdentity(token, database))
   );
 }
@@ -330,6 +391,7 @@ const lastUsedThrottle = new Map<string, number>();
 async function resolveApiKeyIdentity(
   token: string,
   database: DatabaseLayer,
+  recordUsage: boolean,
 ): Promise<Identity | undefined> {
   if (!token.startsWith(API_KEY_PLAINTEXT_PREFIX)) {
     return undefined;
@@ -345,7 +407,7 @@ async function resolveApiKeyIdentity(
     return undefined;
   }
 
-  void stampLastUsed(key.id, database);
+  if (recordUsage) void stampLastUsed(key.id, database);
 
   return {
     userId: key.userId,
@@ -356,6 +418,8 @@ async function resolveApiKeyIdentity(
     assurance: { type: "delegated" },
     ledgerScope: key.ledgerScope,
     tokenId: key.id,
+    issuedAt: epochSeconds(key.createdAt),
+    expiresAt: epochSeconds(key.expiresAt),
   };
 }
 
@@ -400,10 +464,11 @@ export async function resolveSessionIdentity(
     models: Pick<DatabaseLayer["models"], "jwt">;
   },
 ): Promise<Identity | undefined> {
-  const userId = await database.models.jwt.verify(database.db, token);
-  if (!userId) {
+  const session = await database.models.jwt.verify(database.db, token);
+  if (!session) {
     return undefined;
   }
+  const { userId } = session;
   return {
     userId,
     principal: { type: "user", id: userId },
@@ -411,6 +476,8 @@ export async function resolveSessionIdentity(
     scopes: EMPTY_SCOPES,
     capabilities: ALL_OPERATION_CAPABILITIES,
     assurance: { type: "interactive" },
+    issuedAt: session.issuedAt,
+    expiresAt: session.expiresAt,
   };
 }
 
@@ -446,6 +513,8 @@ async function resolveOAuthIdentity(
     },
     ledgerScope: oidc.ledgerId,
     tokenId: oidc.tokenId,
+    issuedAt: oidc.issuedAt,
+    expiresAt: oidc.expiresAt,
   };
 }
 
@@ -454,7 +523,7 @@ function capabilitiesFromScopes(
 ): ReadonlySet<OperationClass> {
   const scopeSet = scopes instanceof Set ? scopes : new Set(scopes);
   const capabilities = new Set<OperationClass>();
-  for (const operation of ["read", "write", "admin"] as const) {
+  for (const operation of OPERATION_CLASSES) {
     if (hasRequiredScope(scopeSet, OPERATION_SCOPE[operation])) {
       capabilities.add(operation);
     }

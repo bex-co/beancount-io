@@ -10,6 +10,7 @@ export const AUTHORIZATION_ACTIONS = {
   USER_PROFILE_UPDATE: "user.profile.update",
   USER_DELETE: "user.delete",
   USER_CREDENTIALS_LIST: "user.credentials.list",
+  USER_CREDENTIALS_INTROSPECT: "user.credentials.introspect",
   USER_CREDENTIALS_CREATE: "user.credentials.create",
   USER_CREDENTIALS_REVOKE: "user.credentials.revoke",
   USER_BILLING_STATUS_READ: "user.billing.status.read",

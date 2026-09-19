@@ -69,6 +69,18 @@ none can dissolve into stale exemption prose:
 7. **Raw-byte and browser-ceremony exclusions.** Archive bytes have no GraphQL
    twin (bytes, not fields); login/OTP/billing/Plaid-Link ceremonies stay on
    their browser surfaces with written reasons in the op-class table.
+8. **Token introspection is not an MCP tool.** `credentials.introspect`
+   (ADR 0017, w3/m44) reaches GraphQL and REST; its `mcpExempt` records why it
+   stops there. The caller is a token *validator* — a gateway, a proxy, an
+   agent runtime's auth layer — deciding whether to admit a request it is
+   holding. An MCP client is the thing being validated, not the thing
+   validating, and it already learns its credential is dead from the next
+   call's 401. Spending the deliberately-small tool budget (ADR 0008 D5) on a
+   question no agent's ledger work asks would cost selection accuracy for the
+   tools that do. This is a **shape** exception, not a credential one:
+   `manageApiKeys` shows credential reads reach MCP when an agent has a use for
+   them, so if an agent workflow ever needs this, the exception should be
+   re-argued rather than inherited.
 
 ## Target selection
 

@@ -146,6 +146,11 @@ describe("Context Types", () => {
     it("should create context with authenticated user", async () => {
       const mockToken = "valid-jwt-token";
       const mockUserId = "user-123";
+      const sessionVerification = {
+        userId: mockUserId,
+        issuedAt: 1_700_000_000,
+        expiresAt: 1_800_000_000,
+      };
 
       getTokenFromCtx.mockReturnValue(mockToken);
 
@@ -153,7 +158,7 @@ describe("Context Types", () => {
         db: {} as any,
         models: {
           jwt: {
-            verify: jest.fn().mockResolvedValue(mockUserId),
+            verify: jest.fn().mockResolvedValue(sessionVerification),
           },
           user: {
             getById: jest.fn(),
@@ -356,6 +361,11 @@ describe("Context Types", () => {
       it("should return userId when user is authenticated", async () => {
         const mockToken = "valid-jwt-token";
         const mockUserId = "user-123";
+        const sessionVerification = {
+          userId: mockUserId,
+          issuedAt: 1_700_000_000,
+          expiresAt: 1_800_000_000,
+        };
 
         getTokenFromCtx.mockReturnValue(mockToken);
 
@@ -363,7 +373,7 @@ describe("Context Types", () => {
           db: {} as any,
           models: {
             jwt: {
-              verify: jest.fn().mockResolvedValue(mockUserId),
+              verify: jest.fn().mockResolvedValue(sessionVerification),
             },
           },
         } as unknown as DatabaseLayer;

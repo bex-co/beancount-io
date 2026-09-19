@@ -142,6 +142,17 @@ export const OP_BUDGETS: Record<string, Budget> = {
   "GQL Mutation.createApiKey": { windowMs: MINUTE, max: 5 },
   "REST POST /api-gateway/v1/api-keys": { windowMs: MINUTE, max: 5 },
   "MCP manageApiKeys": { windowMs: MINUTE, max: 5 },
+  // Introspection is admin-classed for audit and credential-ceiling purposes,
+  // but the admin budget is built for operations that *change* a credential,
+  // and 30/minute would make the endpoint useless to the validator it exists
+  // for. It does not get the full read budget either: every call is a lookup
+  // against the credential stores.
+  //
+  // A flood buys an attacker nothing it does not already hold — ADR 0017 D2
+  // confines every answer to the caller's own credentials, so this cannot be
+  // used to probe somebody else's token. The budget is about load, not secrecy.
+  "GQL Query.introspectToken": { windowMs: MINUTE, max: 120 },
+  "REST POST /api-gateway/v1/token/introspect": { windowMs: MINUTE, max: 120 },
   // Archive generation and transfer are substantially more expensive than a
   // normal metadata read. The canonical and compatibility routes share one
   // counter (see `operationBucket`) so changing URL cannot double this budget.

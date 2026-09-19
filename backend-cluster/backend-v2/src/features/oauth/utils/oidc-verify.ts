@@ -93,6 +93,13 @@ export interface OidcIdentity {
   scopes: string[];
   /** The token's `jti`, for audit and revocation. Never its secret material. */
   tokenId?: string;
+  /**
+   * The token's own `iat`/`exp`, in seconds since the Unix epoch. Kept
+   * separately from `authenticatedAt` (`auth_time`), which says when the person
+   * signed in rather than when this token was minted from that session.
+   */
+  issuedAt?: number;
+  expiresAt?: number;
   /** RFC 9470 authentication assurance claims, when the grant carries them. */
   authenticatedAt?: number;
   acr?: string;
@@ -164,6 +171,8 @@ export async function resolveOidcIdentity(
       ledgerId,
       scopes: typeof payload.scope === "string" ? payload.scope.split(" ") : [],
       tokenId: typeof payload.jti === "string" ? payload.jti : undefined,
+      issuedAt: typeof payload.iat === "number" ? payload.iat : undefined,
+      expiresAt: typeof payload.exp === "number" ? payload.exp : undefined,
       authenticatedAt:
         typeof payload.auth_time === "number" ? payload.auth_time : undefined,
       acr: typeof payload.acr === "string" ? payload.acr : undefined,

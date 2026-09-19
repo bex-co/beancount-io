@@ -50,6 +50,14 @@ In production, where the issuer has no extra path segment, the three paths colla
 9. **Backend README** — `backend-cluster/backend-v2/README.md`'s "OAuth deployment contract" section is the canonical worked example of the issuer → resource → well-known path chain; update it if the derivation logic changes.
 10. **ADR0007** — `docs/adrs/ADR007-backend-v2-mcp-surface.md` D4 documents _why_ the protected-resource document is part of MCP's contract rather than a neighbouring OAuth feature. This ADR indexes the paths; ADR0007 explains that one consequence in depth. Don't duplicate its prose here.
 
+## Not here: token introspection
+
+`POST /api-gateway/v1/token/introspect` (RFC 7662, [ADR 0017](./ADR017-backend-v2-token-introspection.md)) is deliberately **not** advertised as `introspection_endpoint` in the authorization-server metadata, and adds no path to the table above.
+
+Recorded here because the absence looks like an oversight otherwise. That field names the authorization server's own introspection endpoint, which RFC 7662 §2.1 and RFC 8414 together tell a client to reach with OAuth client credentials, about OAuth tokens. Ours does neither: it authenticates through the product's identity gate and answers about three credential kinds, two of which this authorization server never issued. A discovery-driven client that found it there would send client credentials we reject. ADR 0017 D9 has the full argument; the endpoint is documented in `backend-cluster/backend-v2/README.md` instead, beside the offline JWKS path so an integrator picks between them deliberately.
+
+Nothing in the touchpoint list applies to it: it adds no `.well-known` path, changes no path-building logic, and needs no change to the dev proxy or the mobile discovery mirror.
+
 ## Decision
 
 Keep this file as the single list of every `.well-known` path in the system and the files that reference it. Adding, renaming, or removing a well-known path is not done until every touchpoint above is updated and this table reflects the result.

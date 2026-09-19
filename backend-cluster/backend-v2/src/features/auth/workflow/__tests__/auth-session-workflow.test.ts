@@ -18,6 +18,7 @@ import {
   ForbiddenError,
   NotFoundError,
 } from "@/shared/errors";
+import type { SessionJwtVerification } from "@/features/auth/data/jwt-model/types";
 
 jest.mock("@/foundation/redis/redis-counter", () => ({
   incrementInWindow: jest.fn(async () => ({ count: 1, resetInMs: 60_000 })),
@@ -63,7 +64,13 @@ function createFixture() {
     },
     jwt: {
       create: jest.fn(async () => authResponse),
-      verify: jest.fn(async () => user.id as string | null),
+      verify: jest.fn(
+        async (): Promise<SessionJwtVerification | null> => ({
+          userId: user.id as string,
+          issuedAt: 1_700_000_000,
+          expiresAt: 1_800_000_000,
+        }),
+      ),
       revoke: jest.fn(),
     },
     magicLinkToken: {

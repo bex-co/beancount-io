@@ -87,8 +87,10 @@ describe("op-class coverage", () => {
     // The counts are asserted, not just membership, because a schema that
     // silently shrank would leave this test green on a table full of stale
     // rows the reverse check would then have to catch alone.
+    // 78 since w3/m44 added `introspectToken`, the GraphQL twin of the RFC 7662
+    // introspection endpoint (ADR 0017).
     expect(graphqlOps.filter((op) => op.startsWith("GQL Query.")).length).toBe(
-      77,
+      78,
     );
     // 63 since w2/m28:t005 added `appendLedgerText`, the Beancount-text
     // dialect of `bulkEntries`, on all three surfaces.

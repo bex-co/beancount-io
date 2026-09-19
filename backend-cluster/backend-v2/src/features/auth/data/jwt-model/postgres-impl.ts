@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { eq, and, lt } from "drizzle-orm";
 import { getExpireEpoch } from "@/shared/expire-epoch";
-import { IJwtModel, UserId } from "./types";
+import { IJwtModel, SessionJwtVerification } from "./types";
 import { jwts } from "./schema";
 import { logger } from "@/shared/logger";
 import { type DbExecutor } from "@/drizzle/drizzle";
@@ -79,7 +79,10 @@ export class JwtPostgresModel implements IJwtModel {
     return undefined;
   }
 
-  public async verify(db: DbExecutor, token: string): Promise<UserId | null> {
+  public async verify(
+    db: DbExecutor,
+    token: string,
+  ): Promise<SessionJwtVerification | null> {
     const decoded = await verifyJwt(token, this.secret);
     if (!decoded) {
       jwtLogger.debug("JWT signature verification failed", {
@@ -99,7 +102,14 @@ export class JwtPostgresModel implements IJwtModel {
       return null;
     }
 
-    return found.userId;
+    // The claims, not the row: `exp` is what every other holder of this token
+    // will act on, and a row whose `expireAt` had drifted from it would make
+    // introspection describe a token nobody else sees.
+    return {
+      userId: found.userId,
+      issuedAt: decoded.iat,
+      expiresAt: decoded.exp,
+    };
   }
 
   public async deleteByUserId(db: DbExecutor, userId: string): Promise<void> {

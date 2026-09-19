@@ -135,7 +135,7 @@ describe("JwtPostgresModel", () => {
       expect(result).toBeNull();
     });
 
-    it("should return userId if JWT is valid and found in database", async () => {
+    it("should return the user and the token's own lifetime when valid and found", async () => {
       mockVerifyJwt.mockResolvedValue({
         jti: "jwt-id-123",
         sub: "user1",
@@ -147,7 +147,38 @@ describe("JwtPostgresModel", () => {
 
       const result = await model.verify(mockDb, "valid-token");
 
-      expect(result).toBe("user1");
+      expect(result).toEqual({
+        userId: "user1",
+        issuedAt: 1000000000,
+        expiresAt: 9999999999,
+      });
+    });
+
+    it("reports the claims' lifetime, not the row's, when the two disagree", async () => {
+      // A row whose `expireAt` drifted from the signed `exp` must not make us
+      // describe a token differently from every other holder of it.
+      mockVerifyJwt.mockResolvedValue({
+        jti: "jwt-id-123",
+        sub: "user1",
+        exp: 9999999999,
+        iat: 1000000000,
+      });
+
+      mockDb.limit.mockResolvedValue([
+        {
+          id: "jwt-id-123",
+          userId: "user1",
+          expireAt: new Date("2020-01-01T00:00:00Z"),
+        },
+      ]);
+
+      const result = await model.verify(mockDb, "valid-token");
+
+      expect(result).toEqual({
+        userId: "user1",
+        issuedAt: 1000000000,
+        expiresAt: 9999999999,
+      });
     });
   });
 
