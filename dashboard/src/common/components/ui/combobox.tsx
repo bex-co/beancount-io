@@ -20,6 +20,12 @@ export interface ComboboxOption {
   value: string;
   label: string;
   indent?: number; // For hierarchical display
+  /**
+   * Extra text this option can be found by, when what the reader types is not
+   * what the option says. A payee suggestion carries the FQL expression, which
+   * escapes the punctuation in the name, so the name itself goes here.
+   */
+  searchText?: string;
 }
 
 /** Native input identity/ARIA props FormControl (Radix Slot) expects to reach. */
@@ -80,7 +86,8 @@ export function Combobox({
     return options.filter(
       (option) =>
         option.label.toLowerCase().includes(search) ||
-        option.value.toLowerCase().includes(search),
+        option.value.toLowerCase().includes(search) ||
+        option.searchText?.toLowerCase().includes(search),
     );
   }, [options, inputValue]);
 

@@ -18,8 +18,14 @@ import { getIndentLevel, serializePayeeFilter } from "./utils.ts";
 import { generateAllAccountPaths } from "@/common/lib/utils/account-utils.ts";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
 
+/**
+ * A suggestion is either the literal text it offers, or a value plus the text
+ * a reader would type to find it when the two differ.
+ */
+export type SearchControlItem = string | { value: string; searchText: string };
+
 interface SearchControlComboboxProps {
-  items: string[];
+  items: SearchControlItem[];
   selected: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -46,11 +52,15 @@ export const SearchControlCombobox = ({
   const defaultPlaceholder = placeholder || t("component.combobox.placeholder");
   // Convert items to ComboboxOption format
   const options: ComboboxOption[] = useMemo(() => {
-    return items.map((item) => ({
-      value: item,
-      label: item,
-      indent: hierarchical ? getIndentLevel(item) : 0,
-    }));
+    return items.map((item) => {
+      const value = typeof item === "string" ? item : item.value;
+      return {
+        value,
+        label: value,
+        searchText: typeof item === "string" ? undefined : item.searchText,
+        indent: hierarchical ? getIndentLevel(value) : 0,
+      };
+    });
   }, [items, hierarchical]);
 
   return (
@@ -143,10 +153,15 @@ export const LedgerSearchControls = ({
   // Generate all partial account paths and sort hierarchically
   const sortedAccounts = generateAllAccountPaths(accounts);
 
-  const fql_filter_suggestions = [
+  const fql_filter_suggestions: SearchControlItem[] = [
     ...tags.map((tag) => `#${tag}`),
     ...links.map((link) => `^${link}`),
-    ...payees.map((payee) => serializePayeeFilter(payee)),
+    // The suggestion offers the escaped FQL expression, but a reader looks for
+    // the payee as it is printed in their journal, punctuation and all.
+    ...payees.map((payee) => ({
+      value: serializePayeeFilter(payee),
+      searchText: payee,
+    })),
   ];
 
   const comboboxClass = isStack ? "w-full min-w-0" : undefined;
