@@ -16,7 +16,7 @@
 
 - [ ] **m18** — [Make complete BQL cell values readable](./m18/README.md) (6 tasks) ← promoted w4/078 with PRINT evidence, repeated dashboard QA, 2026-09-17
 
-- [ ] **m17** — [Keep profile search updates from hijacking ledger navigation](./m17/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
+- [x] **m17** — [Keep profile search updates from hijacking ledger navigation](./done/m17/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
 
 - [x] **m16** — [Preserve statement chart selection through report reads](./done/m16/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
 
