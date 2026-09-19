@@ -545,11 +545,11 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Assets category in accounting",
   },
   "component.conversionSelect.atCost": {
-    message: "Representació visual de la composició dels {ledgerName} actius",
+    message: "A cost",
     description: "Conversion option for cost-based display",
   },
   "component.conversionSelect.atMarketValue": {
-    message: "A cost",
+    message: "A valor de mercat",
     description: "Conversion option for market value display",
   },
   "common.reports": {
@@ -589,7 +589,7 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Description for the request a feature menu item",
   },
   "common.balanceSheet": {
-    message: "A valor de mercat",
+    message: "Balanç",
     description: "Navigation label for balance sheet financial report",
   },
   "component.searchControls.filters": {
@@ -606,15 +606,15 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Description under the narrow filters sheet title",
   },
   "component.searchControls.clearAll": {
-    message: "Veure els canvis del compte al llarg del temps",
+    message: "Esborrar tot",
     description: "Button text to clear all filters",
   },
   "component.conversionSelect.convertedTo": {
-    message: "Esborrar tot",
+    message: "Convertit a",
     description: "Prefix for currency conversion option",
   },
   "component.intervalSelect.daily": {
-    message: "Convertit a",
+    message: "Diari",
     description: "Daily interval option",
   },
   "common.equity": {
@@ -622,7 +622,7 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Equity category in accounting",
   },
   "component.errorState.title": {
-    message: "Error en carregar les dades del compte",
+    message: "Error en carregar les dades",
     description: "Error message when data fails to load",
   },
   "common.expenses": {
@@ -630,12 +630,11 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Expenses category in accounting",
   },
   "component.searchControls.failedToLoad": {
-    message: "Error en carregar els comptes",
+    message: "Error en carregar les opcions de filtre",
     description: "Error message when filter options fail to load",
   },
   "component.searchControls.filterByTagPayee": {
-    message:
-      "Error en carregar la informació general del llibre. Si us plau, torneu-ho a intentar més tard.",
+    message: "Filtrar per etiqueta, beneficiari, ...",
     description: "Placeholder for filter input with tags and payees",
   },
   "page.reports.hierarchyListDescription": {
@@ -667,8 +666,7 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
-    message:
-      "Representació visual de la composició dels {ledgerName} ingressos",
+    message: "Compte de resultats",
     description: "Navigation label for income statement financial report",
   },
   "common.liabilities": {
@@ -676,16 +674,15 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Liabilities category in accounting",
   },
   "common.netProfit": {
-    message: "Carregant les dades generals...",
+    message: "Benefici net",
     description: "Label for net profit section",
   },
   "common.netWorth": {
-    message:
-      "Seguir el {ledgerName} benefici net en diferents monedes al llarg del temps",
+    message: "Patrimoni net",
     description: "Label for net worth section",
   },
   "component.accountCombobox.noAccountsFound": {
-    message: "No s'han trobat dades del compte per a aquest compte.",
+    message: "No s'han trobat comptes",
     description: "Message when no accounts match search",
   },
   "component.sourceFileCombobox.placeholder": {
@@ -697,8 +694,7 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Message when no ledger files match search",
   },
   "component.emptyState.title": {
-    message:
-      "No s'han trobat dades del balanç de situació per a aquest llibre.",
+    message: "No hi ha dades disponibles",
     description: "Title when no data is available",
   },
   "component.emptyState.noDataForFilters": {
@@ -706,45 +702,43 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Auto-generated from code usage",
   },
   "component.combobox.noMatchesFound": {
-    message: "No s'han trobat entrades de diari per a aquest compte.",
+    message: "No s'han trobat coincidències",
     description: "Message when search returns no results in combobox",
   },
   "common.overview": {
-    message:
-      "No s'han trobat dades del balanç de comprovació per a aquest llibre.",
+    message: "Resum general",
     description: "Navigation label for overview/dashboard page",
   },
   "component.errorState.retry": {
-    message: "Resum general",
+    message: "Si us plau, torneu-ho a intentar més tard",
     description: "Generic retry message",
   },
   "component.intervalSelect.quarterly": {
-    message: "Si us plau, torneu-ho a intentar més tard",
+    message: "Trimestral",
     description: "Quarterly interval option",
   },
   "component.accountCombobox.placeholder": {
-    message: "Error de consulta",
+    message: "Cercar comptes...",
     description: "Placeholder for account search",
   },
   "component.conversionSelect.placeholder": {
-    message: "Cercar comptes...",
+    message: "Seleccionar conversió",
     description: "Placeholder for conversion select dropdown",
   },
   "component.intervalSelect.placeholder": {
-    message: "Seleccionar conversió",
+    message: "Seleccionar període de temps",
     description: "Placeholder for interval select dropdown",
   },
   "component.searchControls.time": {
-    message: "Seleccionar període de temps",
+    message: "Temps",
     description: "Placeholder for time filter",
   },
   "common.trialBalance": {
-    message: "Temps",
+    message: "Balanç de comprovació",
     description: "Navigation label for trial balance report",
   },
   "component.combobox.placeholder": {
-    message:
-      "Visió general completa de tots els comptes amb els seus balanços a través de tots els tipus de compte",
+    message: "Escriviu per cercar...",
     description: "Placeholder for search input in filter combobox",
   },
   "component.conversionSelect.units": {
