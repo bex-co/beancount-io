@@ -8,7 +8,7 @@ import zhExport from "../export/locales/zh";
 
 const zhReportsShared = {
   "page.reports.hierarchyListDescription": {
-    message: "{ledgerName}{sectionName}的详细分解，包括美元和其他商品价值",
+    message: "{ledgerName}{sectionName}的详细分解，按账户和商品列示",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

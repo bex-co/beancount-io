@@ -9,7 +9,7 @@ import deExport from "../export/locales/de";
 const deReportsShared = {
   "page.reports.hierarchyListDescription": {
     message:
-      "Detaillierte Aufschlüsselung {ledgerName} {sectionName} mit USD- und anderen Rohstoffwerten",
+      "Detaillierte Aufschlüsselung {ledgerName} {sectionName} nach Konto und Rohstoff",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

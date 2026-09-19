@@ -637,8 +637,7 @@ const ptCommon: Record<string, TranslationEntry> = {
     description: "Placeholder for filter input with tags and payees",
   },
   "page.reports.hierarchyListDescription": {
-    message:
-      "Detalhamento de {ledgerName} {sectionName} com valores em USD e outras commodities",
+    message: "Detalhamento de {ledgerName} {sectionName} por conta e commodity",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

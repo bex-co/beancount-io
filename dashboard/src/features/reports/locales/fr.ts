@@ -9,7 +9,7 @@ import frExport from "../export/locales/fr";
 const frReportsShared = {
   "page.reports.hierarchyListDescription": {
     message:
-      "Répartition détaillée de {ledgerName} {sectionName} avec valeurs en USD et autres matières premières",
+      "Répartition détaillée de {ledgerName} {sectionName} par compte et matière première",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

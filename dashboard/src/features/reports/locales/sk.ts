@@ -8,8 +8,7 @@ import skExport from "../export/locales/sk";
 
 const skReportsShared = {
   "page.reports.hierarchyListDescription": {
-    message:
-      "Podrobný rozpis {ledgerName} {sectionName} s hodnotami v USD a iných komoditách",
+    message: "Podrobný rozpis {ledgerName} {sectionName} podľa účtu a komodity",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

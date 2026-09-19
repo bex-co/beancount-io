@@ -8,8 +8,7 @@ import ptExport from "../export/locales/pt";
 
 const ptReportsShared = {
   "page.reports.hierarchyListDescription": {
-    message:
-      "Detalhamento de {ledgerName} {sectionName} com valores em USD e outras commodities",
+    message: "Detalhamento de {ledgerName} {sectionName} por conta e commodity",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

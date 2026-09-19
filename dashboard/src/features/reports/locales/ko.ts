@@ -8,8 +8,7 @@ import koExport from "../export/locales/ko";
 
 const koReportsShared = {
   "page.reports.hierarchyListDescription": {
-    message:
-      "{ledgerName}의 {sectionName} 상세 분석 (USD 및 기타 상품 값 포함)",
+    message: "{ledgerName}의 {sectionName} 계정 및 상품별 상세 분석",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

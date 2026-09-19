@@ -637,8 +637,7 @@ const skCommon: Record<string, TranslationEntry> = {
     description: "Placeholder for filter input with tags and payees",
   },
   "page.reports.hierarchyListDescription": {
-    message:
-      "Podrobný rozpis {ledgerName} {sectionName} s hodnotami v USD a iných komoditách",
+    message: "Podrobný rozpis {ledgerName} {sectionName} podľa účtu a komodity",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

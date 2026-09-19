@@ -8,8 +8,7 @@ import faExport from "../export/locales/fa";
 
 const faReportsShared = {
   "page.reports.hierarchyListDescription": {
-    message:
-      "تجزیه تفصیلی {ledgerName} {sectionName} با مقادیر USD و سایر کالاها",
+    message: "تجزیه تفصیلی {ledgerName} {sectionName} بر اساس حساب و کالا",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

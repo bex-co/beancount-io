@@ -8,7 +8,7 @@ import jaExport from "../export/locales/ja";
 
 const jaReportsShared = {
   "page.reports.hierarchyListDescription": {
-    message: "{ledgerName}の{sectionName}の詳細内訳（USDおよびその他の商品値）",
+    message: "{ledgerName}の{sectionName}の勘定科目・商品別の詳細内訳",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

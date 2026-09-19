@@ -9,7 +9,7 @@ import nlExport from "../export/locales/nl";
 const nlReportsShared = {
   "page.reports.hierarchyListDescription": {
     message:
-      "Gedetailleerde uitsplitsing van {ledgerName} {sectionName} met USD- en andere grondstofwaarden",
+      "Gedetailleerde uitsplitsing van {ledgerName} {sectionName} per rekening en grondstof",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

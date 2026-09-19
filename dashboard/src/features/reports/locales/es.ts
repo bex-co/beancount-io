@@ -9,7 +9,7 @@ import esExport from "../export/locales/es";
 const esReportsShared = {
   "page.reports.hierarchyListDescription": {
     message:
-      "Desglose detallado de {ledgerName} {sectionName} con valores en USD y otras materias primas",
+      "Desglose detallado de {ledgerName} {sectionName} por cuenta y materia prima",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

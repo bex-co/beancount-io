@@ -9,7 +9,7 @@ import ukExport from "../export/locales/uk";
 const ukReportsShared = {
   "page.reports.hierarchyListDescription": {
     message:
-      "Детальна розбивка {ledgerName} {sectionName} зі значеннями в USD та інших товарах",
+      "Детальна розбивка {ledgerName} {sectionName} за рахунками та товарами",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

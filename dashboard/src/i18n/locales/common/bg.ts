@@ -638,7 +638,7 @@ const bgCommon: Record<string, TranslationEntry> = {
   },
   "page.reports.hierarchyListDescription": {
     message:
-      "Подробна разбивка на {ledgerName} {sectionName} със стойности в USD и други стоки",
+      "Подробна разбивка на {ledgerName} {sectionName} по сметка и стока",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

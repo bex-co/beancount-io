@@ -23,7 +23,7 @@ const enReportsShared = {
   },
   "page.reports.hierarchyListDescription": {
     message:
-      "Detailed breakdown of {ledgerName} {sectionName} with USD and other commodity values",
+      "Detailed breakdown of {ledgerName} {sectionName} by account and commodity",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.incomeVsExpenses": {

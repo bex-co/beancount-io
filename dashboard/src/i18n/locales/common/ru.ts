@@ -637,7 +637,7 @@ const ruCommon: Record<string, TranslationEntry> = {
   },
   "page.reports.hierarchyListDescription": {
     message:
-      "Подробная разбивка {ledgerName} {sectionName} со значениями в USD и других товарах",
+      "Подробная разбивка {ledgerName} {sectionName} по счетам и товарам",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {

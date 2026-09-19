@@ -9,7 +9,7 @@ import caExport from "../export/locales/ca";
 const caReportsShared = {
   "page.reports.hierarchyListDescription": {
     message:
-      "Desglossament detallat de {ledgerName} {sectionName} amb valors en USD i altres matèries primeres",
+      "Desglossament detallat de {ledgerName} {sectionName} per compte i matèria primera",
     description: "Description for hierarchy list with dynamic section name",
   },
   "page.reports.hierarchyListTitle": {
