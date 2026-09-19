@@ -37,7 +37,10 @@ export function CommodityPriceHistory({
       </Button>
       {open ? (
         <div id={tableId} className="max-h-56 overflow-auto rounded-md border">
-          <Table>
+          {/* Every one of these has the same Date / Price columns, so
+                without the pair the base commodity is absent from the table's
+                identity. `pairLabel` is the card title's own text. */}
+          <Table aria-label={pairLabel}>
             <TableHeader>
               <TableRow>
                 <TableHead>{t("page.commodities.priceHistoryDate")}</TableHead>

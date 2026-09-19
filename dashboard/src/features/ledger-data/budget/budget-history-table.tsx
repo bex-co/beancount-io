@@ -18,6 +18,16 @@ import type { BudgetGroup } from "./types";
 interface BudgetHistoryTableProps {
   group: BudgetGroup;
   onDelete: (group: BudgetGroup) => void;
+  /**
+   * IDs of the visible nodes that identify this history — the card's account
+   * title and its currency badge. Seven of these tables sit on one page with
+   * the same Date / Interval / Amount columns, so without a name they are
+   * indistinguishable to anyone navigating by table. The card owns the ids
+   * because it owns the visible identity, and the currency is part of it:
+   * `groupBudgetEntries` keys a group by account *and* currency, so one
+   * account can appear more than once.
+   */
+  ariaLabelledBy?: string;
 }
 
 function toIntervalEnum(interval: string): BudgetInterval | undefined {
@@ -28,6 +38,7 @@ function toIntervalEnum(interval: string): BudgetInterval | undefined {
 export function BudgetHistoryTable({
   group,
   onDelete,
+  ariaLabelledBy,
 }: BudgetHistoryTableProps) {
   const { t } = useTranslations();
   const { canWrite } = useLedgerPermission();
@@ -48,7 +59,7 @@ export function BudgetHistoryTable({
 
   return (
     <div className="overflow-x-auto rounded-lg border">
-      <Table>
+      <Table aria-labelledby={ariaLabelledBy}>
         <TableHeader className="bg-muted/40">
           <TableRow className="hover:bg-transparent">
             <TableHead className="min-w-28">

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { AlertCircle, Loader2, Plus } from "lucide-react";
 import type {
@@ -66,6 +66,10 @@ export function BudgetChartCard({
   time,
   onDelete,
 }: BudgetChartCardProps) {
+  // The visible identity of this history: the account it belongs to and the
+  // currency that separates it from another group for the same account.
+  const titleId = useId();
+  const currencyId = useId();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const { t } = useTranslations();
   const formatNum = useFormatNumber();
@@ -272,14 +276,18 @@ export function BudgetChartCard({
       <CardHeader className="border-b bg-muted/15 pb-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-1.5">
-            <CardTitle className="truncate font-mono text-base">
+            <CardTitle id={titleId} className="truncate font-mono text-base">
               {group.account}
             </CardTitle>
             <CardDescription className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary" className="text-xs">
                 {intervalLabel}
               </Badge>
-              <Badge variant="outline" className="font-mono text-xs">
+              <Badge
+                id={currencyId}
+                variant="outline"
+                className="font-mono text-xs"
+              >
                 {displayCurrency}
               </Badge>
             </CardDescription>
@@ -406,7 +414,11 @@ export function BudgetChartCard({
         )}
 
         <div className="mt-4">
-          <BudgetHistoryTable group={group} onDelete={onDelete} />
+          <BudgetHistoryTable
+            group={group}
+            onDelete={onDelete}
+            ariaLabelledBy={`${titleId} ${currencyId}`}
+          />
         </div>
       </CardContent>
     </Card>
