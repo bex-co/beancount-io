@@ -104,9 +104,11 @@ export default function CashFlowSankey({
 
         if (p.dataType === "edge" && p.data) {
           const { source, target, value } = p.data;
+          // The unit the transformer chose, never a literal: this ledger's
+          // amounts may be MUSD or EUR, and calling those USD misstates them.
           return `
             <strong>${source} → ${target}</strong><br/>
-            ${formatNum(Number(value))} USD
+            ${formatNum(Number(value))}${sankeyData.unit ? ` ${sankeyData.unit}` : ""}
           `;
         }
 
@@ -145,6 +147,13 @@ export default function CashFlowSankey({
     animationDuration: 800,
   };
 
+  // A Sankey adds its links together, so it can only be truthful in one unit.
+  // When the ledger holds others, say which ones are missing rather than
+  // letting the reader assume the diagram is the whole picture.
+  const omittedUnits = sankeyData.units.filter(
+    (candidate) => candidate !== sankeyData.unit,
+  );
+
   return (
     <div className="w-full">
       <ReactECharts
@@ -152,6 +161,14 @@ export default function CashFlowSankey({
         style={{ height: SANKEY_HEIGHT, width: "100%" }}
         className="w-full"
       />
+      {sankeyData.unit && omittedUnits.length > 0 && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t("page.overview.cashFlowUnitScope", {
+            unit: sankeyData.unit,
+            others: omittedUnits.join(", "),
+          })}
+        </p>
+      )}
     </div>
   );
 }

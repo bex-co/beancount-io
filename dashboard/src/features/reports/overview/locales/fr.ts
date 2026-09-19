@@ -49,6 +49,12 @@ const frOverview: Record<string, TranslationEntry> = {
     description:
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
+  "page.overview.cashFlowUnitScope": {
+    message:
+      "Les montants sont affichés en {unit}. Les soldes en {others} ne sont pas inclus.",
+    description:
+      "Note under the cash flow chart when the ledger holds balances in more than one unit. {unit} is the unit the chart is drawn in; {others} is a comma-separated list of the units it leaves out.",
+  },
   "page.overview.starButton.star": {
     message: "Étoile",
     description: "Button label to star a ledger",
