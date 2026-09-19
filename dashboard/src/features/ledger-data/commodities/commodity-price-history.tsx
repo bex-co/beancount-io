@@ -28,6 +28,10 @@ export function CommodityPriceHistory({
         type="button"
         variant="outline"
         size="sm"
+        // The label carries the full pair name, which is long enough to exceed a
+        // narrow card. Let it wrap instead of forcing the card wider than its
+        // column; `size="sm"` pins `h-8`, so the height has to come from padding.
+        className="h-auto max-w-full min-h-8 py-1.5 text-left break-words whitespace-normal"
         aria-expanded={open}
         aria-controls={tableId}
         onClick={() => setOpen((value) => !value)}

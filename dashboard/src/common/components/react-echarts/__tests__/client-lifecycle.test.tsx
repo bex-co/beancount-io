@@ -103,3 +103,39 @@ it("reapplies unchanged options and loading state when the theme recreates the c
   act(() => window.dispatchEvent(new Event("resize")));
   expect(state.chart.resize).toHaveBeenCalledOnce();
 });
+
+it("resizes when the container box changes without a window resize", () => {
+  // A sidebar widening or a grid reflow resizes the chart's box while the
+  // window stands still. Drive the observer the way the browser would.
+  const observed: Element[] = [];
+  let fire: (() => void) | undefined;
+  let disconnected = 0;
+  class SpyResizeObserver {
+    constructor(callback: () => void) {
+      fire = callback;
+    }
+    observe(target: Element) {
+      observed.push(target);
+    }
+    unobserve() {}
+    disconnect() {
+      disconnected += 1;
+    }
+  }
+  vi.stubGlobal("ResizeObserver", SpyResizeObserver);
+
+  const option = { series: [{ type: "bar" as const, data: [1, 2] }] };
+  const view = render(<ReactEChartsClient option={option} />);
+
+  // The observed element is the chart's own container, not the document.
+  expect(observed).toHaveLength(1);
+  expect(observed[0]).toBe(view.container.querySelector("div > div"));
+
+  expect(state.chart.resize).not.toHaveBeenCalled();
+  act(() => fire?.());
+  expect(state.chart.resize).toHaveBeenCalledOnce();
+
+  view.unmount();
+  expect(disconnected).toBe(1);
+  vi.unstubAllGlobals();
+});

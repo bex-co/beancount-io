@@ -81,4 +81,22 @@ describe("CommodityPriceHistory", () => {
     expect(screen.getByText("0.0227")).toBeInTheDocument();
     expect(screen.getByText("0.0230")).toBeInTheDocument();
   });
+
+  it("lets the long pair label wrap instead of pinning the button width", () => {
+    render(<CommodityPriceHistory commodity={btcUsd} />);
+    const toggle = screen.getByRole("button", {
+      name: "Show price history for BTC/USD",
+    });
+
+    // The shared Button base pins `whitespace-nowrap` and `size="sm"` pins
+    // `h-8`; tailwind-merge drops both only while this component overrides
+    // them, so their absence is what keeps a long pair from widening its card.
+    const classes = toggle.className.split(/\s+/);
+    expect(classes).toContain("whitespace-normal");
+    expect(classes).not.toContain("whitespace-nowrap");
+    expect(classes).toContain("h-auto");
+    expect(classes).not.toContain("h-8");
+    expect(classes).toContain("min-h-8");
+    expect(classes).toContain("max-w-full");
+  });
 });

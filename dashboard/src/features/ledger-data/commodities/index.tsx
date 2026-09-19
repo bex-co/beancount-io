@@ -133,7 +133,7 @@ function CommodityChart({ commodity }: { commodity: CommodityPairWithPrices }) {
   };
 
   return (
-    <div className={"h-[250px]"}>
+    <div className="h-[250px] min-w-0">
       <ReactECharts option={option} style={{ height: "100%" }} />
     </div>
   );
@@ -177,9 +177,9 @@ export default function LedgerCommoditiesPage() {
         error={error}
         data={commodities}
         loadingSlot={
-          <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {Array.from({ length: 2 }).map((_, i) => (
-              <Card key={i}>
+              <Card key={i} className="min-w-0">
                 <CardHeader>
                   <Skeleton className="h-5 w-32" />
                   <Skeleton className="h-4 w-48" />
@@ -202,9 +202,12 @@ export default function LedgerCommoditiesPage() {
         }
       >
         {(c) => (
-          <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {c.map((commodity, index) => (
-              <Card key={`${commodity.base}-${commodity.quote}-${index}`}>
+              <Card
+                key={`${commodity.base}-${commodity.quote}-${index}`}
+                className="min-w-0"
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />

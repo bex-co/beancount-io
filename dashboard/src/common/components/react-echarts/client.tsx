@@ -69,7 +69,22 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
         }
       };
       window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
+
+      // A window resize is not the only thing that changes the chart's box: a
+      // sidebar widening, a sibling collapsing or a grid reflow all resize the
+      // container while the window stands still, and the canvas would keep its
+      // stale width and spill out of its card. Observe the box itself.
+      const container = chartRef.current;
+      let observer: ResizeObserver | null = null;
+      if (container && typeof ResizeObserver !== "undefined") {
+        observer = new ResizeObserver(handleResize);
+        observer.observe(container);
+      }
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+        observer?.disconnect();
+      };
     }, []);
 
     useImperativeHandle(ref, () => ({
