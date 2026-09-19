@@ -113,10 +113,16 @@ type JournalColumnDef = {
 const DATE_COL: JournalColumnDef = {
   id: "date",
   visibility: "always",
+  // An ISO date is one token. The document sets `overflow-wrap: anywhere` so
+  // long narrations can wrap, and under `table-layout: auto` that let the
+  // browser break `2017-09-08` down to a single glyph per line — a 9px column
+  // ten lines tall. `w-*` is not a minimum for a real table cell, so the date
+  // says outright that it does not break; the shared Table already owns a
+  // horizontal scroller for whatever that costs the other columns.
   headerClassName:
-    "w-20 shrink-0 text-center text-xs font-medium text-muted-foreground sm:w-24 sm:text-sm",
+    "w-20 shrink-0 text-center text-xs font-medium whitespace-nowrap [overflow-wrap:normal] text-muted-foreground sm:w-24 sm:text-sm",
   cellClassName:
-    "w-20 shrink-0 text-center font-mono text-xs tabular-nums sm:w-24 sm:text-sm",
+    "w-20 shrink-0 text-center font-mono text-xs tabular-nums whitespace-nowrap [overflow-wrap:normal] sm:w-24 sm:text-sm",
 };
 
 const FLAG_COL: JournalColumnDef = {
