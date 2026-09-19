@@ -26,41 +26,90 @@ export type SankeyLink = {
 export type SankeyData = {
   nodes: SankeyNode[];
   links: SankeyLink[];
+  /** The one unit every `value` above is denominated in, or null when empty. */
+  unit: string | null;
+  /** Every unit the underlying accounts hold, so scope can be disclosed. */
+  units: string[];
 };
 
 /**
- * Extract numeric amount from balance object
+ * Amounts keyed by their currency unit.
+ *
+ * The ledger's balances are maps like `{ USD: 52047.35, IRAUSD: 18000 }`, and
+ * the two numbers are not commensurable: no price was supplied, so adding them
+ * produces a figure that is neither a USD total nor a conversion. Everything in
+ * this module therefore carries amounts per unit and never sums across keys.
  */
-function pickNumericAmount(
-  balance?: Record<string, unknown> | null,
-  inverse = false,
-): number {
-  if (!balance) return 0;
+export type UnitAmounts = Map<string, number>;
 
-  const value = balance["USD"] ?? Object.values(balance)[0];
-  if (value == null) return 0;
+function addAmount(into: UnitAmounts, unit: string, amount: number): void {
+  if (!Number.isFinite(amount) || amount === 0) return;
+  into.set(unit, (into.get(unit) ?? 0) + amount);
+}
 
-  const num = typeof value === "string" ? parseFloat(value) : Number(value);
-  const result = Number.isFinite(num) ? num : 0;
+/** Merge one unit map into another, unit by unit. */
+function mergeAmounts(into: UnitAmounts, from: UnitAmounts): void {
+  from.forEach((amount, unit) => addAmount(into, unit, amount));
+}
 
-  return inverse ? -result : result;
+/** Read every unit a balance carries, rather than USD-or-whatever-is-first. */
+function readBalance(
+  balance: Record<string, unknown> | null | undefined,
+  inverse: boolean,
+  into: UnitAmounts,
+): void {
+  if (!balance) return;
+  for (const [unit, raw] of Object.entries(balance)) {
+    const num = typeof raw === "string" ? parseFloat(raw) : Number(raw);
+    if (!Number.isFinite(num)) continue;
+    addAmount(into, unit, inverse ? -num : num);
+  }
+}
+
+/** True when this account carries no cash-flow activity of its own. */
+function isSkipped(account: string, accountMeta?: AccountMetaMap): boolean {
+  const meta = accountMeta?.get(account);
+  return (
+    categorizeAccount(account, meta) === "exclude" ||
+    isExcludedAccount(account, meta)
+  );
 }
 
 /**
- * Recursively aggregate balance from hierarchy node and all descendants
+ * Total a node and everything beneath it, per unit.
+ *
+ * Two things this has to get right that the scalar version did not:
+ *
+ * - **A node's own postings count.** The producer stores an account's direct
+ *   postings in `balance` and rolls them into each ancestor's
+ *   `balanceChildren`, so `balance` is read at every level and nothing is
+ *   double-counted. Summing only children dropped real money whenever a parent
+ *   had postings of its own — and it dropped them even when the child that
+ *   caused the recursion was empty.
+ * - **Every descendant resolves its own role.** The caller resolves the node it
+ *   entered through; without resolving each account below it, a Cash or
+ *   Checking leaf reaches the investing bucket purely because its parent did.
+ *   A declared activity role on such an account still keeps it, because that is
+ *   what `isExcludedAccount` already decides.
  */
 export function aggregateHierarchyBalance(
   node: HierarchyNode,
   inverse = false,
-): number {
-  if (!node.children || node.children.length === 0) {
-    return pickNumericAmount(node.balance, inverse);
+  accountMeta?: AccountMetaMap,
+): UnitAmounts {
+  const totals: UnitAmounts = new Map();
+
+  function collect(current: HierarchyNode): void {
+    readBalance(current.balance, inverse, totals);
+    for (const child of current.children ?? []) {
+      if (!child?.account) continue;
+      if (isSkipped(child.account, accountMeta)) continue;
+      collect(child);
+    }
   }
 
-  return node.children.reduce(
-    (sum, child) => sum + aggregateHierarchyBalance(child, inverse),
-    0,
-  );
+  collect(node);
+  return totals;
 }
 
 /**
@@ -71,8 +120,8 @@ function extractNodesAtDepth(
   targetDepth: number,
   inverse = false,
   accountMeta?: AccountMetaMap,
-): Map<string, number> {
-  const nodeMap = new Map<string, number>();
+): Map<string, UnitAmounts> {
+  const nodeMap = new Map<string, UnitAmounts>();
 
   // Handle undefined, null, or empty data
   if (!roots) {
@@ -92,11 +141,9 @@ function extractNodesAtDepth(
     }
 
     const accountAtDepth = extractAccountAtDepth(node.account, targetDepth);
-    const meta = accountMeta?.get(node.account);
-    const category = categorizeAccount(node.account, meta);
 
     // Skip excluded accounts
-    if (category === "exclude" || isExcludedAccount(node.account, meta)) {
+    if (isSkipped(node.account, accountMeta)) {
       return;
     }
 
@@ -106,20 +153,42 @@ function extractNodesAtDepth(
       node.children.length === 0
     ) {
       // Reached target depth or leaf node
-      const balance = aggregateHierarchyBalance(node, inverse);
+      const balance = aggregateHierarchyBalance(node, inverse, accountMeta);
+      if (balance.size === 0) return;
 
-      if (balance !== 0) {
-        const existing = nodeMap.get(accountAtDepth) || 0;
-        nodeMap.set(accountAtDepth, existing + balance);
+      const existing = nodeMap.get(accountAtDepth);
+      if (existing) {
+        mergeAmounts(existing, balance);
+      } else {
+        nodeMap.set(accountAtDepth, balance);
       }
     } else {
-      // Continue traversing
+      // An ancestor above the grouping depth can hold postings of its own, and
+      // they belong to its own depth key rather than to any child's.
+      readBalanceAtDepth(node, accountAtDepth, inverse, nodeMap);
       node.children?.forEach((child) => traverse(child, currentDepth + 1));
     }
   }
 
   rootsArray.forEach((root) => traverse(root, 1));
   return nodeMap;
+}
+
+function readBalanceAtDepth(
+  node: HierarchyNode,
+  accountAtDepth: string,
+  inverse: boolean,
+  nodeMap: Map<string, UnitAmounts>,
+): void {
+  const own: UnitAmounts = new Map();
+  readBalance(node.balance, inverse, own);
+  if (own.size === 0) return;
+  const existing = nodeMap.get(accountAtDepth);
+  if (existing) {
+    mergeAmounts(existing, own);
+  } else {
+    nodeMap.set(accountAtDepth, own);
+  }
 }
 
 interface TransformOptions {
@@ -134,6 +203,62 @@ interface TransformOptions {
    * resolves by the name heuristics, exactly as before.
    */
   accountMeta?: AccountMetaMap;
+}
+
+/**
+ * Choose the one unit this diagram speaks in.
+ *
+ * A Sankey adds its links together — into node totals, into the centre, into
+ * Savings — so it can only ever show one unit truthfully. The unit that most
+ * accounts are denominated in is the one that describes the ledger; ties go to
+ * the larger total and then to alphabetical order, so the choice is stable
+ * across renders rather than dependent on object key order.
+ */
+function chooseDisplayUnit(groups: Map<string, UnitAmounts>[]): string | null {
+  const accounts = new Map<string, number>();
+  const magnitude = new Map<string, number>();
+  for (const group of groups) {
+    group.forEach((amounts) => {
+      amounts.forEach((amount, unit) => {
+        accounts.set(unit, (accounts.get(unit) ?? 0) + 1);
+        magnitude.set(unit, (magnitude.get(unit) ?? 0) + Math.abs(amount));
+      });
+    });
+  }
+  let best: string | null = null;
+  for (const unit of accounts.keys()) {
+    if (best === null) {
+      best = unit;
+      continue;
+    }
+    const byAccounts = (accounts.get(unit) ?? 0) - (accounts.get(best) ?? 0);
+    const byMagnitude = (magnitude.get(unit) ?? 0) - (magnitude.get(best) ?? 0);
+    if (byAccounts > 0 || (byAccounts === 0 && byMagnitude > 0)) best = unit;
+    else if (byAccounts === 0 && byMagnitude === 0 && unit < best) best = unit;
+  }
+  return best;
+}
+
+/** Amounts in one unit only; accounts holding none of it drop out. */
+function projectToUnit(
+  group: Map<string, UnitAmounts>,
+  unit: string,
+): Map<string, number> {
+  const projected = new Map<string, number>();
+  group.forEach((amounts, name) => {
+    const amount = amounts.get(unit);
+    if (amount !== undefined && amount !== 0) projected.set(name, amount);
+  });
+  return projected;
+}
+
+/** Every unit any account in the diagram holds, for disclosing its scope. */
+function collectUnits(groups: Map<string, UnitAmounts>[]): string[] {
+  const units = new Set<string>();
+  for (const group of groups) {
+    group.forEach((amounts) => amounts.forEach((_, unit) => units.add(unit)));
+  }
+  return [...units].sort();
 }
 
 /**
@@ -153,13 +278,13 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
   const links: SankeyLink[] = [];
 
   // Extract nodes at target depth
-  const incomeNodes = extractNodesAtDepth(
+  const incomeAmounts = extractNodesAtDepth(
     incomeHierarchyData,
     depth,
     true,
     accountMeta,
   ); // Inverse for income
-  const expenseNodes = extractNodesAtDepth(
+  const expenseAmounts = extractNodesAtDepth(
     expensesHierarchyData,
     depth,
     false,
@@ -167,39 +292,47 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
   );
 
   // Filter assets to only include investing (exclude cash-equivalent)
-  const assetNodes = new Map<string, number>();
+  const assetAmounts = new Map<string, UnitAmounts>();
   extractNodesAtDepth(assetsHierarchyData, depth, false, accountMeta).forEach(
-    (value, key) => {
+    (amounts, key) => {
       if (!isExcludedAccount(key, accountMeta?.get(key))) {
-        assetNodes.set(key, value);
+        assetAmounts.set(key, amounts);
       }
     },
   );
 
-  const liabilityNodes = extractNodesAtDepth(
+  const liabilityAmounts = extractNodesAtDepth(
     liabilitiesHierarchyData,
     depth,
     false,
     accountMeta,
   );
 
-  // Calculate totals
-  const totalIncome = Array.from(incomeNodes.values()).reduce(
-    (sum, val) => sum + val,
-    0,
-  );
-  const totalExpenses = Array.from(expenseNodes.values()).reduce(
-    (sum, val) => sum + val,
-    0,
-  );
-  const totalInvesting = Array.from(assetNodes.values()).reduce(
-    (sum, val) => sum + val,
-    0,
-  );
-  const totalFinancing = Array.from(liabilityNodes.values()).reduce(
-    (sum, val) => sum + val,
-    0,
-  );
+  const groups = [
+    incomeAmounts,
+    expenseAmounts,
+    assetAmounts,
+    liabilityAmounts,
+  ];
+  const units = collectUnits(groups);
+  const unit = chooseDisplayUnit(groups);
+  if (!unit) {
+    return { nodes, links, unit: null, units };
+  }
+
+  const incomeNodes = projectToUnit(incomeAmounts, unit);
+  const expenseNodes = projectToUnit(expenseAmounts, unit);
+  const assetNodes = projectToUnit(assetAmounts, unit);
+  const liabilityNodes = projectToUnit(liabilityAmounts, unit);
+
+  // Calculate totals — all within the one displayed unit, so no unlike units
+  // are ever added together.
+  const sum = (values: Map<string, number>) =>
+    Array.from(values.values()).reduce((total, value) => total + value, 0);
+  const totalIncome = sum(incomeNodes);
+  const totalExpenses = sum(expenseNodes);
+  const totalInvesting = sum(assetNodes);
+  const totalFinancing = sum(liabilityNodes);
   const totalSavings =
     totalIncome - totalExpenses - totalInvesting - totalFinancing;
 
@@ -240,5 +373,5 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
     links.push({ source: "Cash Flow", target: "Savings", value: totalSavings });
   }
 
-  return { nodes, links };
+  return { nodes, links, unit, units };
 }

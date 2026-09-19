@@ -1,12 +1,12 @@
 # w4 · m21 — Preserve amounts and units in the overview charts
 
-**Worker:** worker1 **Goal:** Make public overview chart amounts faithful to the ledger's direct balances and currency units. **Status:** todo
+**Worker:** worker1 **Goal:** Make public overview chart amounts faithful to the ledger's direct balances and currency units. **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](./t001.md) | Preserve account balances, units and roles | 80m | — |
+| [t001](./done/t001.md) | Preserve account balances, units and roles — **DONE** | 80m | — |
 | [t002](./t002.md) | Render truthful unit-specific Sankey amounts | 45m | t001 |
 | [t003](./t003.md) | Keep distribution slices and percentages within one unit | 45m | t002 |
 | [t004](./t004.md) | Adoption surface | 20m | t003 |

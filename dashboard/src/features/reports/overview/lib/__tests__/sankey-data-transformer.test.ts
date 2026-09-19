@@ -13,7 +13,7 @@ describe("sankey-data-transformer", () => {
         children: [],
       };
 
-      expect(aggregateHierarchyBalance(node, true)).toBe(5000);
+      expect(aggregateHierarchyBalance(node, true).get("USD")).toBe(5000);
     });
 
     it("should sum balances from children", () => {
@@ -30,7 +30,7 @@ describe("sankey-data-transformer", () => {
         ],
       };
 
-      expect(aggregateHierarchyBalance(node, true)).toBe(6500);
+      expect(aggregateHierarchyBalance(node, true).get("USD")).toBe(6500);
     });
 
     it("should handle nested hierarchies", () => {
@@ -62,7 +62,103 @@ describe("sankey-data-transformer", () => {
         ],
       };
 
-      expect(aggregateHierarchyBalance(node)).toBe(1000);
+      expect(aggregateHierarchyBalance(node).get("USD")).toBe(1000);
+    });
+
+    it("keeps a parent's own postings alongside its children", () => {
+      // The producer stores direct postings on the account itself and rolls
+      // them into each ancestor's balanceChildren, so a parent holding both a
+      // balance and children has real money of its own. Summing only children
+      // dropped it — even, as here, when the only child is empty.
+      const node = {
+        account: "Expenses:Taxes:Y2016:US:Federal",
+        balance: { USD: 27635.92 },
+        children: [
+          {
+            account: "Expenses:Taxes:Y2016:US:Federal:PreTax401k",
+            balance: {},
+            children: [],
+          },
+        ],
+      };
+
+      expect(aggregateHierarchyBalance(node).get("USD")).toBe(27635.92);
+    });
+
+    it("keeps unlike units apart instead of adding them", () => {
+      const node = {
+        account: "Expenses:Taxes",
+        balance: null,
+        children: [
+          {
+            account: "Expenses:Taxes:Y2016:US:Federal",
+            balance: { USD: 27635.92 },
+            children: [
+              {
+                account: "Expenses:Taxes:Y2016:US:Federal:PreTax401k",
+                balance: { IRAUSD: 18000 },
+                children: [],
+              },
+            ],
+          },
+        ],
+      };
+
+      const totals = aggregateHierarchyBalance(node);
+      expect(totals.get("USD")).toBe(27635.92);
+      expect(totals.get("IRAUSD")).toBe(18000);
+    });
+
+    it("keeps every unit a single leaf holds", () => {
+      const node = {
+        account: "Assets:US:Hoogle",
+        balance: { USD: 386.22, VACHR: 25 },
+        children: [],
+      };
+
+      const totals = aggregateHierarchyBalance(node);
+      expect(totals.get("USD")).toBe(386.22);
+      expect(totals.get("VACHR")).toBe(25);
+    });
+
+    it("leaves cash descendants out of an investing ancestor", () => {
+      // Assets:US resolves to investing, but its Cash and Checking leaves are
+      // cash-equivalent and must not ride in on their parent's role.
+      const node = {
+        account: "Assets:US",
+        balance: null,
+        children: [
+          {
+            account: "Assets:US:BofA",
+            balance: null,
+            children: [
+              {
+                account: "Assets:US:BofA:Checking",
+                balance: { USD: 6377.23 },
+                children: [],
+              },
+            ],
+          },
+          {
+            account: "Assets:US:ETrade",
+            balance: null,
+            children: [
+              {
+                account: "Assets:US:ETrade:Cash",
+                balance: { USD: 386.22 },
+                children: [],
+              },
+              {
+                account: "Assets:US:ETrade:ITOT",
+                balance: { USD: 1000 },
+                children: [],
+              },
+            ],
+          },
+        ],
+      };
+
+      expect(aggregateHierarchyBalance(node).get("USD")).toBe(1000);
     });
   });
 
