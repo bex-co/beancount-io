@@ -3,12 +3,14 @@ import {
   useNavigate,
   useLocation,
   useRouterState,
+  trimPathRight,
   Outlet,
 } from "@tanstack/react-router";
 import { SidebarProvider } from "@/common/components/ui/sidebar.tsx";
 import { ErrorBoundary } from "@/common/components/error-boundary";
 import { SkipToContentLink } from "@/common/components/skip-to-content";
 import { MAIN_CONTENT_ID } from "@/common/lib/main-content";
+import { parseLedgerFilterSearch } from "@/common/lib/ledger-search-params/parse";
 import { ReportLoadingState } from "@/common/components/state-components";
 import { LedgerLayoutError } from "./ledger-layout-error";
 import { LedgerLayoutLoading } from "./ledger-layout-loading";
@@ -35,9 +37,30 @@ export function LedgerLayout() {
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const navigate = useNavigate();
   const location = useLocation();
-  // Router pending covers filter/time loader holds and ledger switches so the
-  // previous page body is never shown as settled for the destination URL.
-  const isRoutePending = useRouterState({ select: (s) => s.isLoading });
+  // Only hide an outlet whose data scope is changing. Local list/query URL
+  // edits must preserve its input focus and in-flight work. Comparing matches
+  // uses the same pathname encoding and also covers the first SSR navigation.
+  const isRoutePending = useRouterState({
+    select: (state) => {
+      if (!state.isLoading) return false;
+      const current = state.matches.at(-1);
+      const next = state.pendingMatches?.at(-1);
+      if (!current || !next) return true;
+      if (
+        current.routeId !== next.routeId ||
+        trimPathRight(current.pathname) !== trimPathRight(next.pathname)
+      ) {
+        return true;
+      }
+      const before = parseLedgerFilterSearch(current.search);
+      const after = parseLedgerFilterSearch(next.search);
+      return (
+        before.account !== after.account ||
+        before.filter !== after.filter ||
+        before.time !== after.time
+      );
+    },
+  });
 
   const { data, error, refetch, loading } = useQuery(GetLedgerDocument, {
     variables: {

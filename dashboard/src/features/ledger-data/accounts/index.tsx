@@ -309,6 +309,16 @@ export default function LedgerAccountsPage() {
   // array), and the root names come from per-ledger options the schema cannot
   // see: an unknown type means "all".
   const search = normalizeListSearchText(actionSearch.search) ?? "";
+  // Update the controlled input in the input event, before replace-navigation
+  // commits. Waiting for the URL would reset a mid-string edit's caret.
+  // A changed URL still restores the draft on Back, reload, or Clear all.
+  const [searchInput, setSearchInput] = useState({
+    fromUrl: search,
+    value: search,
+  });
+  if (searchInput.fromUrl !== search) {
+    setSearchInput({ fromUrl: search, value: search });
+  }
   const requestedType =
     normalizeListSearchText(actionSearch.type) ?? ACCOUNT_TYPE_ALL;
   const typeFilter = accountTypes.includes(requestedType)
@@ -323,8 +333,11 @@ export default function LedgerAccountsPage() {
     });
   };
 
-  const setSearch = (value: string) =>
-    setListSearch({ search: value === "" ? undefined : value });
+  const setSearch = (value: string) => {
+    const nextSearch = normalizeListSearchText(value) ?? "";
+    setSearchInput({ fromUrl: search, value: nextSearch });
+    setListSearch({ search: nextSearch || undefined });
+  };
 
   const setTypeFilter = (value: string) =>
     setListSearch({ type: value === ACCOUNT_TYPE_ALL ? undefined : value });
@@ -422,7 +435,7 @@ export default function LedgerAccountsPage() {
               ref={searchInputRef}
               aria-label={t("page.accounts.searchAccounts")}
               placeholder={t("page.accounts.searchAccounts")}
-              value={search}
+              value={searchInput.value}
               onChange={(e) => setSearch(e.target.value)}
               className="bg-background pl-9 pr-9"
             />

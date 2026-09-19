@@ -11,7 +11,8 @@ const searchParamsMock = vi.hoisted(() => ({
 
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
 
-vi.mock("@tanstack/react-router", () => ({
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@tanstack/react-router")>()),
   Link: ({
     children,
     to,

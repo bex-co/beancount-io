@@ -1,4 +1,5 @@
 import { useQuery } from "@apollo/client/react";
+import { useHydrated } from "@tanstack/react-router";
 import { GetLedgerFileDocument } from "@/graphql/definitions";
 import { base64Decode } from "@/common/lib/utils/encode";
 import { MarkdownRenderer } from "@/common/components/markdown-renderer";
@@ -16,6 +17,7 @@ interface ReadmeCardProps {
 }
 
 export function ReadmeCard({ ledgerId, path = "README.md" }: ReadmeCardProps) {
+  const hydrated = useHydrated();
   const fileNavigate = useFileNavigate();
   const { t } = useTranslations();
   const { data, loading, error } = useQuery(GetLedgerFileDocument, {
@@ -23,12 +25,11 @@ export function ReadmeCard({ ledgerId, path = "README.md" }: ReadmeCardProps) {
     fetchPolicy: "cache-first",
   });
 
-  // Silent failure — README is optional
-  if (error) return null;
-
   const displayName = path.split("/").pop() ?? path;
 
-  if (loading) {
+  // Browser prefetch can finish before hydration reaches this optional card.
+  // Preserve the server skeleton until the first client render has committed.
+  if (!hydrated || loading) {
     return (
       <Card className="gap-0 py-0">
         <div className="flex items-center justify-between px-4 py-2 border-b text-sm font-medium text-muted-foreground">
@@ -60,6 +61,9 @@ export function ReadmeCard({ ledgerId, path = "README.md" }: ReadmeCardProps) {
       </Card>
     );
   }
+
+  // Silent failure — README is optional
+  if (error) return null;
 
   const content = data?.getLedgerFile?.content;
   if (!content) return null;

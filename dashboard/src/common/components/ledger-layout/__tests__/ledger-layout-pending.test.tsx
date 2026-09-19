@@ -1,5 +1,7 @@
-import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, render, screen } from "@testing-library/react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import { LedgerLayout } from "../index";
 
@@ -12,7 +14,8 @@ const { useRouterState, useParams, useLocation, useNavigate, useQuery } =
     useQuery: vi.fn(),
   }));
 
-vi.mock("@tanstack/react-router", () => ({
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@tanstack/react-router")>()),
   useRouterState,
   useParams,
   useLocation,
@@ -60,7 +63,28 @@ vi.mock("@/common/components/ui/sidebar.tsx", () => ({
 }));
 
 describe("LedgerLayout pending outlet", () => {
+  const pathname = "/ledger/open_ledger/minimax/journal";
+  let state: {
+    isLoading: boolean;
+    location: { pathname: string; search: Record<string, unknown> };
+    matches: { pathname: string; search: Record<string, unknown> }[];
+  };
+
   beforeEach(() => {
+    state = {
+      isLoading: false,
+      location: { pathname, search: {} },
+      matches: [{ pathname, search: {} }],
+    };
+    useRouterState.mockImplementation(
+      ({
+        select,
+      }: {
+        select: (
+          s: typeof state & { pendingMatches: typeof state.matches },
+        ) => unknown;
+      }) => select({ ...state, pendingMatches: [state.location] }),
+    );
     useParams.mockReturnValue({
       ledgerOwner: "open_ledger",
       ledgerName: "minimax",
@@ -83,28 +107,83 @@ describe("LedgerLayout pending outlet", () => {
     });
   });
 
-  it("replaces the outlet with an accessible pending state while the router loads", () => {
-    useRouterState.mockImplementation(
-      ({ select }: { select: (s: { isLoading: boolean }) => unknown }) =>
-        select({ isLoading: true }),
-    );
+  afterEach(cleanup);
 
-    render(<LedgerLayout />);
+  it.each(["time", "account", "filter"])(
+    "hides the old outlet while a new %s scope loads, including the first navigation after hydration",
+    (key) => {
+      state.isLoading = true;
+      state.location.search = { [key]: "new scope" };
 
-    expect(screen.queryByTestId("ledger-outlet")).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
-    expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "true");
-  });
+      render(<LedgerLayout />);
+
+      expect(screen.queryByTestId("ledger-outlet")).not.toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
+      expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "true");
+    },
+  );
 
   it("renders the outlet once the router is idle", () => {
-    useRouterState.mockImplementation(
-      ({ select }: { select: (s: { isLoading: boolean }) => unknown }) =>
-        select({ isLoading: false }),
-    );
-
     render(<LedgerLayout />);
 
     expect(screen.getByTestId("ledger-outlet")).toBeInTheDocument();
     expect(screen.getByRole("main")).not.toHaveAttribute("aria-busy");
   });
+
+  it.each(["search", "type", "query", "groupBy"])(
+    "retains the mounted outlet while local %s state changes",
+    (key) => {
+      const { rerender } = render(<LedgerLayout />);
+      const outlet = screen.getByTestId("ledger-outlet");
+      state.isLoading = true;
+      state.location.search = { [key]: "local value" };
+      rerender(<LedgerLayout />);
+
+      expect(screen.getByTestId("ledger-outlet")).toBe(outlet);
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      expect(screen.getByRole("main")).not.toHaveAttribute("aria-busy");
+    },
+  );
+
+  it.each([
+    "/ledger/open_ledger/other/journal",
+    "/ledger/open_ledger/minimax/balance-sheet",
+  ])("hides the old outlet while navigating to %s", (destination) => {
+    state.isLoading = true;
+    state.location.pathname = destination;
+    render(<LedgerLayout />);
+    expect(screen.queryByTestId("ledger-outlet")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true");
+  });
+
+  it.each(["%20", "+"])(
+    "hydrates the existing outlet during canonicalization of a %s date range URL",
+    async (space) => {
+      const path = "/ledger/open_ledger/minimax";
+      const time = new URLSearchParams(
+        `time=2026-02-01${space}-${space}2026-03-31`,
+      ).get("time");
+      state.matches = [{ pathname: `${path}/`, search: { time } }];
+      state.location = { pathname: path, search: { time } };
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      container.innerHTML = renderToString(<LedgerLayout />);
+      const outlet = container.querySelector('[data-testid="ledger-outlet"]');
+      state.isLoading = true;
+      const onRecoverableError = vi.fn();
+      const root = hydrateRoot(container, <LedgerLayout />, {
+        onRecoverableError,
+      });
+      try {
+        await act(async () => {});
+        expect(container.querySelector('[data-testid="ledger-outlet"]')).toBe(
+          outlet,
+        );
+        expect(onRecoverableError).not.toHaveBeenCalled();
+      } finally {
+        await act(async () => root.unmount());
+        container.remove();
+      }
+    },
+  );
 });

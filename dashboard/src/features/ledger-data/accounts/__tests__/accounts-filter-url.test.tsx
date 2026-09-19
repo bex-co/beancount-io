@@ -14,11 +14,17 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  retainSearchParams,
 } from "@tanstack/react-router";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { type ReactNode } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LedgerLayout } from "@/common/components/ledger-layout";
 import { accountsActionSearchSchema } from "@/common/lib/ledger-action-search";
 import { ledgerFilterSearchSchema } from "@/common/lib/ledger-search-params";
+import { GetLedgerDocument } from "@/graphql/definitions";
 import LedgerAccountsPage from "../index";
+
+const viewport = vi.hoisted(() => ({ isMobile: false }));
 
 const accounts = [
   {
@@ -52,11 +58,41 @@ const accounts = [
 ];
 
 vi.mock("@apollo/client/react", () => ({
-  useQuery: () => ({
-    data: { getLedgerAccountDirectives: accounts },
+  useQuery: (query: unknown) => ({
+    data:
+      query === GetLedgerDocument
+        ? {
+            getLedger: {
+              id: "alice/books",
+              name: "My books",
+              options: { operatingCurrency: ["USD"] },
+            },
+          }
+        : { getLedgerAccountDirectives: accounts },
     loading: false,
     error: undefined,
   }),
+}));
+
+vi.mock("@/common/hooks/use-mobile", () => ({
+  useIsMobile: () => viewport.isMobile,
+}));
+vi.mock(
+  "@/common/providers/react-native-bridge-provider/react-native-bridge",
+  () => ({ isReactNative: () => false }),
+);
+vi.mock("@/common/components/ledger-layout/ledger-sidebar", () => ({
+  LedgerSidebar: () => null,
+}));
+vi.mock(
+  "@/common/components/ledger-layout/ledger-layout-background-queries",
+  () => ({ LedgerLayoutBackgroundQueries: () => null }),
+);
+vi.mock("@/common/components/ledger-layout/layout-header", () => ({
+  LayoutHeader: () => null,
+}));
+vi.mock("@/common/components/ui/sidebar", () => ({
+  SidebarProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
 vi.mock("@/common/hooks/use-ledger", () => ({
@@ -104,7 +140,10 @@ function buildRouter(initialEntry: string) {
     // Mirrors the real parent route: it owns the shared ledger filters and
     // drops every other key, so list-local params are the child's business.
     validateSearch: (search) => ledgerFilterSearchSchema.parse(search),
-    component: () => <Outlet />,
+    search: {
+      middlewares: [retainSearchParams(["account", "filter", "time"])],
+    },
+    component: LedgerLayout,
   });
   const accountsRoute = createRoute({
     getParentRoute: () => ledgerRoute,
@@ -162,6 +201,70 @@ afterEach(() => {
 });
 
 describe("accounts list filters in the URL", () => {
+  beforeEach(() => {
+    viewport.isMobile = false;
+  });
+
+  it.each([false, true])(
+    "retains the search input, focus and caret across each typed character (mobile=%s)",
+    async (isMobile) => {
+      viewport.isMobile = isMobile;
+      const user = userEvent.setup();
+      const router = await mountAt("/ledger/alice/books/accounts");
+      const input = searchBox() as HTMLInputElement;
+      await user.click(input);
+
+      let typed = "";
+      for (const character of "Checking") {
+        await user.keyboard(character);
+        typed += character;
+        await waitFor(() => {
+          expect(router.state.location.search).toMatchObject({ search: typed });
+        });
+        expect(searchBox()).toBe(input);
+        expect(input).toHaveFocus();
+        expect(input.selectionStart).toBe(typed.length);
+        expect(input.selectionEnd).toBe(typed.length);
+      }
+
+      expect(accountNames()).toEqual(["Assets:Bank:Checking"]);
+      await user.keyboard("{ArrowLeft}{ArrowLeft}");
+      expect(input.selectionStart).toBe(6);
+      await user.keyboard("x");
+      await waitFor(() => {
+        expect(router.state.location.search).toMatchObject({
+          search: "Checkixng",
+        });
+      });
+      expect(searchBox()).toBe(input);
+      expect(input).toHaveFocus();
+      expect(input.selectionStart).toBe(7);
+      expect(input.selectionEnd).toBe(7);
+    },
+  );
+
+  it.each([false, true])(
+    "retains the type button's focus after keyboard selection (mobile=%s)",
+    async (isMobile) => {
+      viewport.isMobile = isMobile;
+      const user = userEvent.setup();
+      const router = await mountAt("/ledger/alice/books/accounts");
+      const button = typeChip("Expenses");
+      button.focus();
+      await user.keyboard("{Enter}");
+
+      await waitFor(() => {
+        expect(router.state.location.search).toMatchObject({
+          type: "Expenses",
+        });
+      });
+      expect(typeChip("Expenses")).toBe(button);
+      expect(button).toHaveFocus();
+      expect(button).toHaveAttribute("aria-pressed", "true");
+      expect(accountNames()).toEqual(["Expenses:Cash-Advance-Fees"]);
+    },
+  );
+
   it("restores search and type after opening an account and pressing Back, then Forward", async () => {
     const user = userEvent.setup();
     const router = await mountAt(
@@ -250,6 +353,20 @@ describe("accounts list filters in the URL", () => {
       "aria-pressed",
       "true",
     );
+  });
+
+  it("keeps pasted input consistent with the bounded search URL", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt("/ledger/alice/books/accounts");
+    await user.click(searchBox());
+    await user.paste("x".repeat(105));
+    await waitFor(() => {
+      expect(router.state.location.search).toMatchObject({
+        search: "x".repeat(100),
+      });
+    });
+    expect(searchBox()).toHaveValue("x".repeat(100));
+    expect(searchBox()).toHaveFocus();
   });
 
   it("coerces hostile filter values instead of failing to render", async () => {
