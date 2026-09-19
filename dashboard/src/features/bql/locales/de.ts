@@ -35,7 +35,7 @@ const deBql: Record<string, TranslationEntry> = {
     description: "Button text to delete a query from history",
   },
   "bql.rowCount": {
-    message: "{count} Zeilen",
+    message: "Zeilen: {count}",
     description: "Row count for large query results",
   },
   "page.bql.query": {

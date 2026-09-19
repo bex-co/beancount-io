@@ -9,7 +9,7 @@ const zhStatistics: Record<string, TranslationEntry> = {
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {
-    message: "最近条目日期和余额，共 {count} 个{accounts}",
+    message: "每个账户的最近条目日期和余额（{count}）",
     description:
       "Description for account last entries section. {count} is replaced with the number of accounts, {accounts} is replaced with the translated word for accounts.",
   },

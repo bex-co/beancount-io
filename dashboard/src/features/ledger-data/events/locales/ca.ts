@@ -13,7 +13,7 @@ const caEvents: Record<string, TranslationEntry> = {
     description: "Events in the ledger",
   },
   "page.events.eventsCount": {
-    message: "{filtered} de {total} esdeveniments",
+    message: "Esdeveniments: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
   "page.events.failedToLoadEvents": {

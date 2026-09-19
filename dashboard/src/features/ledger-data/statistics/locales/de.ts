@@ -9,7 +9,7 @@ const deStatistics: Record<string, TranslationEntry> = {
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {
-    message: "Datum des letzten Eintrags und Saldo für {count} {accounts}",
+    message: "Datum des letzten Eintrags und Saldo je Konto ({count})",
     description:
       "Description for account last entries section. {count} is replaced with the number of accounts, {accounts} is replaced with the translated word for accounts.",
   },

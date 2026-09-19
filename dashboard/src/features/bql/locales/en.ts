@@ -34,7 +34,7 @@ const enBql: Record<string, TranslationEntry> = {
     description: "Button text to delete a query from history",
   },
   "bql.rowCount": {
-    message: "{count} rows",
+    message: "Rows: {count}",
     description: "Row count for large query results",
   },
   "page.bql.query": {

@@ -13,7 +13,7 @@ const zhEvents: Record<string, TranslationEntry> = {
     description: "Events in the ledger",
   },
   "page.events.eventsCount": {
-    message: "{filtered} 个事件，共 {total} 个",
+    message: "事件：{filtered} / {total}",
     description: "Count of filtered events out of total",
   },
   "page.events.failedToLoadEvents": {

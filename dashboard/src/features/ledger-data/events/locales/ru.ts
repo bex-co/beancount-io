@@ -13,7 +13,7 @@ const ruEvents: Record<string, TranslationEntry> = {
     description: "Events in the ledger",
   },
   "page.events.eventsCount": {
-    message: "{filtered} из {total} событий",
+    message: "События: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
   "page.events.failedToLoadEvents": {

@@ -9,7 +9,7 @@ const skStatistics: Record<string, TranslationEntry> = {
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {
-    message: "Dátum posledného záznamu a zostatok pre {count} {accounts}",
+    message: "Dátum posledného záznamu a zostatok na účet ({count})",
     description:
       "Description for account last entries section. {count} is replaced with the number of accounts, {accounts} is replaced with the translated word for accounts.",
   },

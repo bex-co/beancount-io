@@ -13,7 +13,7 @@ const esEvents: Record<string, TranslationEntry> = {
     description: "Events in the ledger",
   },
   "page.events.eventsCount": {
-    message: "{filtered} de {total} eventos",
+    message: "Eventos: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
   "page.events.failedToLoadEvents": {

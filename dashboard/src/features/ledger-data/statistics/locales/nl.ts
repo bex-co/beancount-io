@@ -9,7 +9,7 @@ const nlStatistics: Record<string, TranslationEntry> = {
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {
-    message: "Laatste boekingsdatum en saldo voor {count} {accounts}",
+    message: "Laatste boekingsdatum en saldo per rekening ({count})",
     description:
       "Description for account last entries section. {count} is replaced with the number of accounts, {accounts} is replaced with the translated word for accounts.",
   },

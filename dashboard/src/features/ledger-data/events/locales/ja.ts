@@ -13,7 +13,7 @@ const jaEvents: Record<string, TranslationEntry> = {
     description: "Events in the ledger",
   },
   "page.events.eventsCount": {
-    message: "{total}件中{filtered}件のイベント",
+    message: "イベント: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
   "page.events.failedToLoadEvents": {

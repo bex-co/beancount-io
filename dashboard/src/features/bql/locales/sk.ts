@@ -35,7 +35,7 @@ const skBql: Record<string, TranslationEntry> = {
     description: "Button text to delete a query from history",
   },
   "bql.rowCount": {
-    message: "{count} riadkov",
+    message: "Riadky: {count}",
     description: "Row count for large query results",
   },
   "page.bql.query": {

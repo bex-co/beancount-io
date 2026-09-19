@@ -153,7 +153,6 @@ function AccountLastEntriesTable({
       <p className="text-sm text-muted-foreground mb-4">
         {t("page.statistics.accountLastEntriesDescription", {
           count: entries.length,
-          accounts: t("journal.accounts"),
         })}
       </p>
       <div className="overflow-hidden w-full">

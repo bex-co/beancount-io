@@ -227,7 +227,8 @@ describe("AccountLastEntries", () => {
 
       // Find the description paragraph
       const description = screen.getByText(
-        /Last entry date and balance for 1 Accounts/,
+        // Count-neutral: the old wording read "for 1 Accounts".
+        /Last entry date and balance per account \(1\)/,
       );
 
       // Verify it's a p element, not a CardDescription component

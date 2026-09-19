@@ -9,7 +9,7 @@ const koStatistics: Record<string, TranslationEntry> = {
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {
-    message: "{count} {accounts}의 최종 항목 날짜 및 잔액",
+    message: "계정별 최종 항목 날짜 및 잔액 ({count})",
     description:
       "Description for account last entries section. {count} is replaced with the number of accounts, {accounts} is replaced with the translated word for accounts.",
   },

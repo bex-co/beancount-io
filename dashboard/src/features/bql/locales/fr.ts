@@ -35,7 +35,7 @@ const frBql: Record<string, TranslationEntry> = {
     description: "Button text to delete a query from history",
   },
   "bql.rowCount": {
-    message: "{count} lignes",
+    message: "Lignes : {count}",
     description: "Row count for large query results",
   },
   "page.bql.query": {

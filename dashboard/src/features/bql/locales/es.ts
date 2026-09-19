@@ -35,7 +35,7 @@ const esBql: Record<string, TranslationEntry> = {
     description: "Button text to delete a query from history",
   },
   "bql.rowCount": {
-    message: "{count} filas",
+    message: "Filas: {count}",
     description: "Row count for large query results",
   },
   "page.bql.query": {

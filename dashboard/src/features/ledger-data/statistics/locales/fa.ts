@@ -9,7 +9,7 @@ const faStatistics: Record<string, TranslationEntry> = {
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {
-    message: "تاریخ آخرین ثبت و موجودی برای {count} {accounts}",
+    message: "تاریخ آخرین ثبت و موجودی برای هر حساب ({count})",
     description:
       "Description for account last entries section. {count} is replaced with the number of accounts, {accounts} is replaced with the translated word for accounts.",
   },

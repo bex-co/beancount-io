@@ -33,7 +33,7 @@ const zhBql: Record<string, TranslationEntry> = {
     description: "Button text to delete a query from history",
   },
   "bql.rowCount": {
-    message: "{count} 行",
+    message: "行数：{count}",
     description: "Row count for large query results",
   },
   "page.bql.query": {

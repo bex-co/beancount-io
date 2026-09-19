@@ -34,7 +34,7 @@ const ukBql: Record<string, TranslationEntry> = {
     description: "Button text to delete a query from history",
   },
   "bql.rowCount": {
-    message: "{count} рядків",
+    message: "Рядків: {count}",
     description: "Row count for large query results",
   },
   "page.bql.query": {

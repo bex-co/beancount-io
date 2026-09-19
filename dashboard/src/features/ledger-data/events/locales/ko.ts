@@ -13,7 +13,7 @@ const koEvents: Record<string, TranslationEntry> = {
     description: "Events in the ledger",
   },
   "page.events.eventsCount": {
-    message: "전체 {total}개 중 {filtered}개 이벤트",
+    message: "이벤트: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
   "page.events.failedToLoadEvents": {

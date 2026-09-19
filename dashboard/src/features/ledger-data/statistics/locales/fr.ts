@@ -9,7 +9,7 @@ const frStatistics: Record<string, TranslationEntry> = {
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {
-    message: "Date de dernière écriture et solde pour {count} {accounts}",
+    message: "Date de dernière écriture et solde par compte ({count})",
     description:
       "Description for account last entries section. {count} is replaced with the number of accounts, {accounts} is replaced with the translated word for accounts.",
   },

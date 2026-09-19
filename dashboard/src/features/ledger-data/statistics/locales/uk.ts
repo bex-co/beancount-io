@@ -9,7 +9,7 @@ const ukStatistics: Record<string, TranslationEntry> = {
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {
-    message: "Дата останнього запису та баланс для {count} {accounts}",
+    message: "Дата останнього запису та баланс за рахунком ({count})",
     description:
       "Description for account last entries section. {count} is replaced with the number of accounts, {accounts} is replaced with the translated word for accounts.",
   },
