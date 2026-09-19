@@ -5,5 +5,17 @@
         "instructionFiles": "claude-md-or-agents-md"
       }
     }
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/loopx-guard.py\""
+          }
+        ]
+      }
+    ]
   }
 }

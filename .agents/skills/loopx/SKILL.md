@@ -19,6 +19,7 @@ Parse the target workstream from `$ARGUMENTS` (e.g. `w1`). If `$ARGUMENTS` is em
 2. `git status` — note pre-existing uncommitted changes. Do not sweep unrelated changes into an item's ship; if the tree is dirty with work you didn't do, surface it and ask before starting.
 3. The workstream `.pm/<wN>/README.md` exists. If not, STOP and report.
 4. Read `.pm/DO_NOT_DO.md` once. Every item you pick must respect it, and a conflict with it is a delete reason in triage.
+5. Arm the loop guard: `python3 scripts/loopx-guard.py start <wN>`. It is a `Stop` hook that refuses to let the turn end while `<wN>` still holds an actionable item, and it names the next pick when it does. Only a genuine **Exit** clears it, so this is the one mechanism that survives your own judgement that you are finished.
 
 ## The loop
 
@@ -85,7 +86,9 @@ If `/ship` surfaces a failure it cannot fix (a rebase conflict it can't resolve,
 
 ### 5. Continue
 
-Loop back to step 1 to pick the next pending item. After every ship (or block isolation), **immediately** re-scan and pick again — do not end the turn, ask the user to resume, or wait for another `/loopx` invocation while step 1 would still find an actionable item. A short progress line between items is fine; stopping because the queue is long, the session is long, or you already shipped several items is not.
+Loop back to step 1 to pick the next pending item. After every ship (or block isolation), **immediately** re-scan and pick again — do not end the turn, ask the user to resume, or wait for another `/loopx` invocation while step 1 would still find an actionable item. Stopping because the queue is long, the session is long, or you already shipped several items is not an exit.
+
+Between items, write **one sentence**: what shipped, and the id you are picking next. No tables, no per-item recaps, no "where the run stands", no tallies of milestones closed or notes drained — that is the shape of the Exit report, and writing it mid-run is how a loop talks itself into stopping. If you catch yourself composing one, you are not finishing; you are about to skip the next pick. Write the pick instead. The full report belongs only at a real Exit.
 
 ## Handling a block
 
@@ -107,13 +110,15 @@ Stop the loop and give a final summary **only** when one of these holds:
 
 **Not an exit:** "checkpoint", "budget", "long enough", "several items shipped already", or "resume with `/loopx <wN>` to pick up at NNN" while open inbox notes or actionable milestones remain. If you can name the next pick, you must pick it and continue.
 
+When one of the three exits genuinely holds, clear the guard with `python3 scripts/loopx-guard.py end`, then give the final report. Until you run that, the `Stop` hook will keep handing the turn back with the next pick — which is the intended behaviour, not a fault to work around. Never clear it to end a run that has an actionable item left.
+
 ## Guardrails
 
 - **Keep going when the next item is known.** Knowing that `226` (or any later note/milestone) is next is a reason to pick it now, not to stop and tell the user to re-invoke `/loopx`. Drain until Done, Blocked, or a hard stop above.
 - **Triage before code.** No item is implemented on the strength of its checkbox. Every pick gets an evidence-backed outcome — work on, close, block, or delete — announced before any code changes.
 - **Every item ends somewhere.** Shipped, `done/`, `blocked/`, or deleted. Leaving an item open and untouched because it looked hard is not an outcome; that is a block, and it needs a written unblock condition.
 - **One board outcome per ship.** Never batch two items into one commit; an implementation, a triage close, a block, and a deletion each land as their own shipped unit so history and rollback stay clean.
-- **Never ship red.** A failing check is a block, not a footnote. `/ship` will not stop you — the step 3 checks are the gate, so run them yourself before every ship.
+- **Never ship red.** A failing check is a block, not a footnote. `/ship` will not stop you — the step 3 checks are the gate, so run them yourself before every ship. Run the gates as their own command and read the result before you commit: chaining `&& git commit` onto the end of the gate command makes the commit run on a non-zero gate, which is exactly how a red push happens. If a gate fails, decide whether it is your change or a known flake, and say which in the item's record.
 - **`/pm` owns the board.** All `.pm/` writes go through `/pm done`, `/pm block`, `/pm unblock`, and `/pm drop`. An item is done when it sits under `done/`, blocked when it sits under `blocked/` with its condition, and deleted when `/pm drop` has removed it — not when you stop looking at it.
 - **Doubt is a block, not a delete.** Delete only on evidence you can cite; when the question is one for the user, block with that question as the unblock condition and repeat it in the summary.
 - **The board is public.** Nothing you write into `.pm/` or a commit may contain secrets, user data, or references to private repositories — block reasons, delete reasons, and triage-close evidence included.
