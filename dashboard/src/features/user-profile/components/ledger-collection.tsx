@@ -79,7 +79,11 @@ export function LedgerCollection({
   function hasLeftProfile() {
     const destination =
       router.state.pendingMatches?.at(-1) ?? router.state.matches.at(-1);
-    return destination?.routeId !== PROFILE_ROUTE;
+    if (destination?.routeId !== PROFILE_ROUTE) return true;
+    // Another profile is the same route with a different param, so the route
+    // id alone would not notice it and this profile's draft would be written
+    // onto someone else's URL.
+    return (destination.params as { username?: string }).username !== username;
   }
 
   // The input stays instantly responsive while the URL catches up. A URL value

@@ -47,9 +47,12 @@ function buildRouter(
     getParentRoute: () => rootRoute,
     path: "/ledger/$username",
     validateSearch: (search) => userProfileSearchSchema.parse(search),
-    component: () => (
-      <LedgerCollection username="owner" repositories={repositories} />
-    ),
+    component: function ProfileRoute() {
+      const { username } = profileRoute.useParams();
+      return (
+        <LedgerCollection username={username} repositories={repositories} />
+      );
+    },
   });
   const ledgerRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -354,5 +357,100 @@ describe("LedgerCollection search preserved across a fast departure", () => {
     await waitFor(() => {
       expect(screen.getByRole("searchbox")).toHaveValue("ledger-00");
     });
+  });
+});
+
+describe("LedgerCollection write ownership across departures", () => {
+  it("never writes to another profile after the reader moves on", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt();
+
+    await user.type(screen.getByRole("searchbox"), "ledger-00");
+    // Leave for a different profile entirely, without touching a card.
+    act(() => {
+      void router.navigate({
+        to: "/ledger/$username",
+        params: { username: "someone-else" },
+      });
+    });
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/ledger/someone-else");
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+
+    // The other profile's URL must not inherit this profile's draft.
+    expect(router.state.location.pathname).toBe("/ledger/someone-else");
+    expect(router.state.location.search).not.toMatchObject({ q: "ledger-00" });
+  });
+
+  it("drops an uncommitted query when leaving outside the results grid", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt();
+
+    await user.type(screen.getByRole("searchbox"), "ledger-00");
+    // A departure the grid's flush does not cover, e.g. a header or tab link.
+    act(() => {
+      void router.navigate({
+        to: "/ledger/$ledgerOwner/$ledgerName",
+        params: { ledgerOwner: "owner", ledgerName: "ledger-01" },
+      });
+    });
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/ledger/owner/ledger-01");
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+
+    // Recorded behaviour, not an endorsement: the guard correctly prevents the
+    // stale write, so the destination is intact and never /ledger/undefined,
+    // but the typed query is lost because the flush is bound to the grid.
+    // Widening that seam is tracked in w4/143.
+    expect(router.state.location.pathname).toBe("/ledger/owner/ledger-01");
+    expect(router.state.location.pathname).not.toContain("undefined");
+  });
+
+  it("commits a cleared search when the reader opens a card", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt("/ledger/owner?q=ledger-00");
+    expect(screen.getByRole("searchbox")).toHaveValue("ledger-00");
+
+    // Clear, then leave immediately — the cleared state must reach the URL.
+    await user.clear(screen.getByRole("searchbox"));
+    await user.click(screen.getAllByRole("link")[0]!);
+    await waitFor(() => {
+      expect(router.state.location.pathname).toMatch(/\/ledger\/owner\/.+/);
+    });
+
+    await act(async () => {
+      router.history.back();
+    });
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/ledger/owner");
+    });
+    expect(router.state.location.search).not.toMatchObject({ q: "ledger-00" });
+  });
+
+  it("keeps sort and show while committing a fast-typed query", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt("/ledger/owner?sort=name&show=24");
+
+    await user.type(screen.getByRole("searchbox"), "ledger-0");
+    await user.click(screen.getByRole("link", { name: /ledger-00/ }));
+    await waitFor(() => {
+      expect(router.state.location.pathname).toMatch(/\/ledger\/owner\/.+/);
+    });
+
+    await act(async () => {
+      router.history.back();
+    });
+    await waitFor(() => {
+      expect(router.state.location.search).toMatchObject({ q: "ledger-0" });
+    });
+    // The other validated list state rides along untouched.
+    expect(router.state.location.search).toMatchObject({ sort: "name" });
   });
 });

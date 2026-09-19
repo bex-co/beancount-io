@@ -20,10 +20,13 @@ vi.mock("@tanstack/react-router", () => ({
   ),
   useNavigate: () => mockNavigate,
   // The collection checks the current destination before letting a debounced
-  // search write land, so the mock router stays on the profile route.
+  // search write land, so the mock router stays on this profile — the same
+  // route id *and* the same username, since another profile shares the id.
   useRouter: () => ({
     state: {
-      matches: [{ routeId: "/ledger/$username" }],
+      matches: [
+        { routeId: "/ledger/$username", params: { username: "testuser" } },
+      ],
       pendingMatches: undefined,
     },
   }),
