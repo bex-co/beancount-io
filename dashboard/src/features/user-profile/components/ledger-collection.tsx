@@ -19,6 +19,9 @@ import {
   type UserProfileSearch,
 } from "../lib/search";
 
+/** The one route this collection reads from and writes to. */
+const PROFILE_ROUTE = "/ledger/$username" as const;
+
 /** Delay before a keystroke reaches the URL, so typing adds no history churn. */
 const QUERY_URL_DEBOUNCE_MS = 250;
 
@@ -35,8 +38,8 @@ export function LedgerCollection({
   // `tab`, so opening a ledger and pressing Back rebuilds this list. Writes
   // replace the history entry and the query write is debounced, so neither
   // typing nor "Show more" buries the profile in history.
-  const profileSearch = useSearch({ from: "/ledger/$username" });
-  const navigate = useNavigate({ from: "/ledger/$username" });
+  const profileSearch = useSearch({ from: PROFILE_ROUTE });
+  const navigate = useNavigate({ from: PROFILE_ROUTE });
   const router = useRouter();
   // Re-coerced here because the router still surfaces raw URL values the route
   // schema omitted, so an array `?q=["x"]` or `?sort=sideways` can arrive.
@@ -55,8 +58,13 @@ export function LedgerCollection({
   // against that destination's params — which carry ledgerOwner/ledgerName, not
   // username — and navigate to /ledger/undefined.
   const updateSearch = (next: Partial<UserProfileSearch>) => {
+    // Every write is gated, not just the debounced one. Sort, "Show more" and
+    // the show-reset are all reachable while a card's route is in flight, and
+    // during that window the router resolves both params and the `previous`
+    // search against the pending destination rather than this profile.
+    if (hasLeftProfile()) return;
     void navigate({
-      to: "/ledger/$username",
+      to: PROFILE_ROUTE,
       params: { username },
       search: (previous) => ({ ...previous, ...next }),
       replace: true,
@@ -64,15 +72,15 @@ export function LedgerCollection({
   };
 
   /**
-   * True once the reader has started going somewhere else. A profile-scoped
-   * write that lands after that would drag them back here, so the debounced
-   * update checks this at fire time rather than at scheduling time.
+   * True once the reader has started going somewhere else. Read at call time
+   * rather than render time, so a write scheduled while the profile was
+   * current still sees where the reader actually is.
    */
-  const hasLeftProfile = () => {
+  function hasLeftProfile() {
     const destination =
       router.state.pendingMatches?.at(-1) ?? router.state.matches.at(-1);
-    return destination?.routeId !== "/ledger/$username";
-  };
+    return destination?.routeId !== PROFILE_ROUTE;
+  }
 
   // The input stays instantly responsive while the URL catches up. A URL value
   // that no longer matches the draft came from outside (Back/Forward, a fresh
@@ -84,14 +92,30 @@ export function LedgerCollection({
     if (query !== urlQuery) setQuery(urlQuery);
   }
 
+  const pendingWrite = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /**
+   * The single definition of committing the visible draft: skip when it already
+   * matches the URL, treat an empty string as absent, and retire any timer that
+   * would repeat the write.
+   */
+  const commitQuery = () => {
+    if (pendingWrite.current) {
+      clearTimeout(pendingWrite.current);
+      pendingWrite.current = null;
+    }
+    if (query === urlQuery) return;
+    updateSearch({ q: query === "" ? undefined : query });
+  };
+
   useEffect(() => {
     if (query === urlQuery) return;
-    const timer = setTimeout(() => {
-      if (hasLeftProfile()) return;
-      updateSearch({ q: query === "" ? undefined : query });
-    }, QUERY_URL_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-    // updateSearch is re-created per render; the query/URL pair drives this.
+    pendingWrite.current = setTimeout(commitQuery, QUERY_URL_DEBOUNCE_MS);
+    return () => {
+      if (pendingWrite.current) clearTimeout(pendingWrite.current);
+      pendingWrite.current = null;
+    };
+    // commitQuery is re-created per render; the query/URL pair drives this.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, urlQuery]);
 
@@ -123,17 +147,6 @@ export function LedgerCollection({
     Math.max(filtered.length, PAGE_SIZE),
   );
   const visible = filtered.slice(0, visibleCount);
-
-  /**
-   * Write the visible query into this profile's history entry now, on the same
-   * gesture that opens a ledger. Without it a reader who types and clicks
-   * before the 250ms debounce settles comes Back to a profile that never
-   * recorded the search they could still see.
-   */
-  const flushPendingQuery = () => {
-    if (query === urlQuery) return;
-    updateSearch({ q: query === "" ? undefined : query });
-  };
 
   const clearSearch = () => {
     editQuery("");
@@ -243,9 +256,9 @@ export function LedgerCollection({
           className="grid grid-cols-1 gap-4 sm:grid-cols-2"
           // Capture phase, so the search lands in the profile entry before the
           // card's own navigation pushes the ledger entry on top of it.
-          onPointerDownCapture={flushPendingQuery}
+          onPointerDownCapture={commitQuery}
           onKeyDownCapture={(event) => {
-            if (event.key === "Enter" || event.key === " ") flushPendingQuery();
+            if (event.key === "Enter") commitQuery();
           }}
         >
           {visible.map((repo) => (

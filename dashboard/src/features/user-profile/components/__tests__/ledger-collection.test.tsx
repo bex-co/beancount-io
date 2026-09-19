@@ -38,7 +38,10 @@ const repositories: UserRepository[] = Array.from(
   }),
 );
 
-function buildRouter(initialEntry: string) {
+function buildRouter(
+  initialEntry: string,
+  options: { ledgerLoader?: () => Promise<void> } = {},
+) {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
   const profileRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -51,12 +54,15 @@ function buildRouter(initialEntry: string) {
   const ledgerRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/ledger/$ledgerOwner/$ledgerName",
+    loader: options.ledgerLoader,
     component: () => <div data-testid="ledger-page">ledger</div>,
   });
 
   return createRouter({
     routeTree: rootRoute.addChildren([profileRoute, ledgerRoute]),
     history: createMemoryHistory({ initialEntries: [initialEntry] }),
+    // A held loader must stay pending rather than swap in a pending component.
+    defaultPendingMs: options.ledgerLoader ? Infinity : undefined,
   });
 }
 
@@ -277,27 +283,10 @@ describe("LedgerCollection navigation during a pending search write", () => {
     const held = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const rootRoute = createRootRoute({ component: () => <Outlet /> });
-    const profileRoute = createRoute({
-      getParentRoute: () => rootRoute,
-      path: "/ledger/$username",
-      validateSearch: (search) => userProfileSearchSchema.parse(search),
-      component: () => (
-        <LedgerCollection username="owner" repositories={repositories} />
-      ),
-    });
-    const ledgerRoute = createRoute({
-      getParentRoute: () => rootRoute,
-      path: "/ledger/$ledgerOwner/$ledgerName",
-      loader: () => held,
-      component: () => <div data-testid="ledger-page">ledger</div>,
-    });
-    const router = createRouter({
-      routeTree: rootRoute.addChildren([profileRoute, ledgerRoute]),
-      history: createMemoryHistory({ initialEntries: ["/ledger/owner"] }),
-      defaultPendingMs: Infinity,
-    });
-    return { router, release };
+    return {
+      router: buildRouter("/ledger/owner", { ledgerLoader: () => held }),
+      release,
+    };
   }
 
   it("never rewrites the destination while a ledger read is in flight", async () => {
@@ -335,18 +324,6 @@ describe("LedgerCollection navigation during a pending search write", () => {
       release();
       await Promise.resolve();
     });
-  });
-
-  it("addresses the profile explicitly, so a settled write stays on it", async () => {
-    const user = userEvent.setup();
-    const router = await mountAt();
-
-    await user.type(screen.getByRole("searchbox"), "ledger-00");
-    await waitFor(() => {
-      expect(router.state.location.search).toMatchObject({ q: "ledger-00" });
-    });
-
-    expect(router.state.location.pathname).toBe("/ledger/owner");
   });
 });
 

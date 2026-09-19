@@ -875,7 +875,8 @@ describe("UserProfileTabs", () => {
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith({
-          to: ".",
+          to: "/ledger/$username",
+          params: { username: "testuser" },
           search: { tab: "starred" },
           replace: true,
         });
@@ -901,7 +902,8 @@ describe("UserProfileTabs", () => {
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith({
-          to: ".",
+          to: "/ledger/$username",
+          params: { username: "testuser" },
           search: { tab: "followers" },
           replace: true,
         });
@@ -927,7 +929,8 @@ describe("UserProfileTabs", () => {
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith({
-          to: ".",
+          to: "/ledger/$username",
+          params: { username: "testuser" },
           search: { tab: "following" },
           replace: true,
         });
@@ -954,7 +957,8 @@ describe("UserProfileTabs", () => {
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith({
-          to: ".",
+          to: "/ledger/$username",
+          params: { username: "testuser" },
           search: { tab: "overview" },
           replace: true,
         });
@@ -1040,7 +1044,8 @@ describe("UserProfileTabs", () => {
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith(
           expect.objectContaining({
-            to: ".",
+            to: "/ledger/$username",
+            params: { username: "testuser" },
           }),
         );
       });

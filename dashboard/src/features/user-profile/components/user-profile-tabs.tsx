@@ -99,8 +99,13 @@ export function UserProfileTabs({
   // Update URL when tab changes
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
+    // Addressed explicitly, like the collection's search write: the profile
+    // stays interactive while a ledger card's route is pending, and `to: "."`
+    // would resolve against that destination's params and land on
+    // /ledger/undefined.
     void navigate({
-      to: ".",
+      to: "/ledger/$username",
+      params: { username },
       search: {
         tab: newTab as "overview" | "starred" | "following" | "followers",
       },
