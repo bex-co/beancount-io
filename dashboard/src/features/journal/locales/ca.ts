@@ -212,115 +212,115 @@ const caJournal: Record<string, TranslationEntry> = {
     description: "Success message after exporting journal",
   },
   "journal.linked": {
-    message: "Quan afegiu algunes transaccions, apareixeran aquí.",
+    message: "V",
     description: "Label for linked document subtype filter",
   },
   "journal.linkedDocuments": {
-    message: "V",
+    message: "Documents vinculats",
     description: "Filter tooltip for linked documents",
   },
   "journal.loadingEntryContext": {
-    message: "Documents vinculats",
+    message: "Carregant el context de l'entrada...",
     description: "Loading message while fetching entry context",
   },
   "journal.metadata": {
-    message: "Carregant el context de l'entrada...",
+    message: "Metadades",
     description: "Label for metadata toggle filter",
   },
   "journal.narrationPlaceholder": {
-    message: "Metadades",
+    message: "Descripció",
     description: "Placeholder for narration field",
   },
   "journal.newEntry": {
-    message: "La descripció és obligatòria",
+    message: "Entrada nova",
     description: "Dialog title for creating new journal entry",
   },
   "journal.noCurrenciesFound": {
-    message: "Entrada nova",
+    message: "No s'han trobat monedes",
     description: "Message when no currencies match search",
   },
   "journal.noJournalEntriesFound": {
-    message: "No s'han trobat monedes",
+    message: "No s'han trobat entrades de diari per als filtres actuals.",
     description: "Message when journal has no entries matching filters",
   },
   "journal.noNarrationsFound": {
-    message: "No s'han trobat entrades de diari per als filtres actuals.",
+    message: "No s'han trobat descripcions",
     description: "Message when no narrations match search",
   },
   "journal.noPayeesFound": {
-    message: "No s'han trobat descripcions",
+    message: "No s'han trobat beneficiaris",
     description: "Message when no payees match search",
   },
   "journal.note": {
-    message: "No s'han trobat beneficiaris",
+    message: "Nota",
     description: "Note entry type",
   },
   "journal.noteContent": {
-    message: "Nota",
+    message: "Contingut de la nota",
     description: "Placeholder for note content field",
   },
   "journal.noteContentRequired": {
-    message: "Contingut de la nota",
+    message: "El contingut de la nota és obligatori",
     description: "Validation error when note content is missing",
   },
   "journal.open": {
-    message: "El contingut de la nota és obligatori",
+    message: "Obrir",
     description: "Open account entry type filter",
   },
   "journal.other": {
-    message: "Obrir",
+    message: "x",
     description: "Label for other transaction subtype filter",
   },
   "journal.otherTransactions": {
-    message: "x",
+    message: "Altres transaccions",
     description: "Filter tooltip for other transactions",
   },
   "journal.pad": {
-    message: "Altres transaccions",
+    message: "Emplenar",
     description: "Pad entry type filter",
   },
   "journal.payeeNarration": {
-    message: "Emplenar",
+    message: "Beneficiari/Descripció",
     description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
-    message: "Beneficiari/Descripció",
+    message: "Beneficiari",
     description: "Placeholder for payee field",
   },
   "journal.pending": {
-    message: "El beneficiari és obligatori",
+    message: "!",
     description: "Label for pending transaction subtype filter",
   },
   "journal.pendingTransactions": {
-    message: "!",
+    message: "Transaccions pendents",
     description: "Filter tooltip for pending transactions",
   },
   "journal.postings": {
-    message: "Entrades",
+    message: "Apunts",
     description: "Label for postings toggle filter",
   },
   "journal.price": {
-    message: "Apunt",
+    message: "Preu",
     description: "Price entry type filter",
   },
   "journal.selectAccount": {
-    message: "Preu",
+    message: "Seleccionar compte...",
     description: "Placeholder for account selection combobox",
   },
   "journal.selectCurrency": {
-    message: "Seleccionar data de balanç",
+    message: "Seleccionar moneda...",
     description: "Placeholder for currency selection combobox",
   },
   "journal.selectNarration": {
-    message: "Seleccionar moneda...",
+    message: "Seleccionar descripció...",
     description: "Placeholder for narration selection combobox",
   },
   "journal.selectPayee": {
-    message: "Seleccionar data de la nota",
+    message: "Seleccionar beneficiari...",
     description: "Placeholder for payee selection combobox",
   },
   "journal.toggleMetadata": {
-    message: "Seleccionar data de transacció",
+    message: "Alternar metadades",
     description: "Filter tooltip to show/hide metadata",
   },
   "journal.postingsAlwaysVisible": {
@@ -329,7 +329,7 @@ const caJournal: Record<string, TranslationEntry> = {
       "Indicador estàtic quan el filtre global d'apunts força totes les files obertes",
   },
   "journal.togglePostings": {
-    message: "Alternar metadades",
+    message: "Alternar apunts",
     description: "Filter tooltip to show/hide postings",
   },
   "journal.transaction": {
@@ -341,11 +341,11 @@ const caJournal: Record<string, TranslationEntry> = {
     description: "Plural form of transaction",
   },
   "journal.unitsHeader": {
-    message: "Alternar apunts",
+    message: "Unitats",
     description: "Table header for units column",
   },
   "journal.unknownDirectiveType": {
-    message: "Unitats",
+    message: "Tipus de directiva desconegut",
     description: "Message shown for unrecognized beancount directive types",
   },
   "journal.sourceModified": {
