@@ -147,9 +147,13 @@ export function RegisterForm({
           placeholder={t("auth.enterYourEmail")}
           className="w-full bg-muted"
           {...register("email")}
+          aria-invalid={errors.email ? true : undefined}
+          aria-describedby={errors.email ? "email-error" : undefined}
         />
         {errors.email && (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
+          <p id="email-error" role="alert" className="text-sm text-destructive">
+            {errors.email.message}
+          </p>
         )}
       </div>
 
@@ -197,9 +201,17 @@ export function RegisterForm({
           className="w-full bg-muted"
           maxLength={128}
           {...register("password")}
+          aria-invalid={errors.password ? true : undefined}
+          aria-describedby={errors.password ? "password-error" : undefined}
         />
         {errors.password && (
-          <p className="text-sm text-destructive">{errors.password.message}</p>
+          <p
+            id="password-error"
+            role="alert"
+            className="text-sm text-destructive"
+          >
+            {errors.password.message}
+          </p>
         )}
       </div>
 
@@ -214,9 +226,17 @@ export function RegisterForm({
           className="w-full bg-muted"
           maxLength={128}
           {...register("confirmPassword")}
+          aria-invalid={errors.confirmPassword ? true : undefined}
+          aria-describedby={
+            errors.confirmPassword ? "confirmPassword-error" : undefined
+          }
         />
         {errors.confirmPassword && (
-          <p className="text-sm text-destructive">
+          <p
+            id="confirmPassword-error"
+            role="alert"
+            className="text-sm text-destructive"
+          >
             {errors.confirmPassword.message}
           </p>
         )}
