@@ -22,6 +22,37 @@ function isAccountWithin(account: string, root: string): boolean {
   return account === root || account.startsWith(`${root}:`);
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Does this account satisfy the account filter the reader typed?
+ *
+ * The search box accepts anything, and the ledger's own filter
+ * (`foundation/rustledger/directive-filter.ts`) matches an account by a whole
+ * component **or** a case-insensitive unanchored regex, falling back to literal
+ * equality when the pattern will not compile. Summarising with a plain
+ * exact-or-subtree test disagreed with that: typing `Checking` returned the
+ * right transactions but matched none of their postings, so every row lost its
+ * amount while `Assets:US:BofA:Checking` worked.
+ *
+ * This is a deliberately small local copy of those two rules. Importing the
+ * ledger package into the browser bundle would cost far more than it saves.
+ */
+function makeAccountMatcher(filter: string): (account: string) => boolean {
+  const component = new RegExp(`(^|:)${escapeRegExp(filter)}(:|$)`);
+  let pattern: RegExp | null = null;
+  try {
+    pattern = new RegExp(filter, "i");
+  } catch {
+    pattern = null;
+  }
+  return (account: string): boolean =>
+    component.test(account) ||
+    (pattern ? pattern.test(account) : account === filter);
+}
+
 function sumPostings(
   postings: JournalPosting[],
   transform: (value: number) => number = (value) => value,
@@ -67,11 +98,12 @@ export function summarizeTransaction({
   const postings = transaction.postings ?? [];
 
   if (accountFilter) {
+    const matchesFilter = makeAccountMatcher(accountFilter);
     const selected = postings.filter((posting) =>
-      isAccountWithin(posting.account, accountFilter),
+      matchesFilter(posting.account),
     );
     const counterparties = postings.filter(
-      (posting) => !isAccountWithin(posting.account, accountFilter),
+      (posting) => !matchesFilter(posting.account),
     );
     return {
       kind: "mixed",

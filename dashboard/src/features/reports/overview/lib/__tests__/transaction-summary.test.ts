@@ -173,4 +173,111 @@ describe("summarizeTransaction", () => {
       expect(income.amounts).toEqual([{ currency: "USD", value: 1000 }]);
     });
   });
+  describe("account filters the search box accepts", () => {
+    /** The public example ledger's bank fee: Checking -4, Fees +4. */
+    const bankFee = transaction([
+      posting("Assets:US:BofA:Checking", "-4"),
+      posting("Expenses:Financial:Fees", "4"),
+    ]);
+
+    const payroll = transaction([
+      posting("Assets:US:BofA:Checking", "2550.60"),
+      posting("Income:US:Hoogle:Salary", "-4639.70"),
+      posting("Expenses:Taxes:Y2017:US:Federal", "2089.10"),
+    ]);
+
+    it("matches a bare account component, as the ledger does", () => {
+      // Typing `Checking` returns these transactions; the summary has to agree
+      // about which posting was selected, or the row loses its amount.
+      expect(
+        summarizeTransaction({
+          ...base,
+          accountFilter: "Checking",
+          transaction: bankFee,
+        }).amounts,
+      ).toEqual([{ currency: "USD", value: -4 }]);
+      expect(
+        summarizeTransaction({
+          ...base,
+          accountFilter: "Checking",
+          transaction: payroll,
+        }).amounts,
+      ).toEqual([{ currency: "USD", value: 2550.6 }]);
+    });
+
+    it("gives the full path the same answer as the component", () => {
+      const byComponent = summarizeTransaction({
+        ...base,
+        accountFilter: "Checking",
+        transaction: payroll,
+      });
+      const byFullPath = summarizeTransaction({
+        ...base,
+        accountFilter: "Assets:US:BofA:Checking",
+        transaction: payroll,
+      });
+      expect(byComponent.amounts).toEqual(byFullPath.amounts);
+    });
+
+    it("keeps an exact subtree selection", () => {
+      const nested = transaction([
+        posting("Assets:US:BofA:Checking", "-10"),
+        posting("Assets:US:BofA:Checking:Sub", "-5"),
+        posting("Expenses:Food", "15"),
+      ]);
+      // Both Checking postings, and nothing else.
+      expect(
+        summarizeTransaction({
+          ...base,
+          accountFilter: "Assets:US:BofA:Checking",
+          transaction: nested,
+        }).amounts,
+      ).toEqual([{ currency: "USD", value: -15 }]);
+    });
+
+    it("accepts a case-insensitive pattern", () => {
+      expect(
+        summarizeTransaction({
+          ...base,
+          accountFilter: "checking",
+          transaction: bankFee,
+        }).amounts,
+      ).toEqual([{ currency: "USD", value: -4 }]);
+    });
+
+    it("falls back to literal equality for a pattern that cannot compile", () => {
+      const literal = transaction([
+        posting("Assets:Weird[", "-7"),
+        posting("Expenses:Food", "7"),
+      ]);
+      expect(
+        summarizeTransaction({
+          ...base,
+          accountFilter: "Assets:Weird[",
+          transaction: literal,
+        }).amounts,
+      ).toEqual([{ currency: "USD", value: -7 }]);
+    });
+
+    it("selects nothing when no posting matches", () => {
+      expect(
+        summarizeTransaction({
+          ...base,
+          accountFilter: "Liabilities:Mortgage",
+          transaction: bankFee,
+        }).amounts,
+      ).toEqual([]);
+    });
+
+    it("never lets an unrelated posting into the total", () => {
+      // Matching every posting would net the transaction to zero.
+      const summary = summarizeTransaction({
+        ...base,
+        accountFilter: "Checking",
+        transaction: bankFee,
+      });
+      expect(summary.amounts).not.toEqual([{ currency: "USD", value: 0 }]);
+      expect(summary.accounts).toContain("Expenses:Financial:Fees");
+    });
+  });
 });
