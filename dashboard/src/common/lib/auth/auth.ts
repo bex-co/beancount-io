@@ -108,6 +108,24 @@ type RequireAuthLocation = {
 };
 
 /**
+ * A TanStack router location as a relative URL string.
+ *
+ * The delimiters are not symmetrical: `searchStr` keeps its leading `?`, but
+ * the parsed `hash` has had its `#` sliced off (router-core builds its own
+ * `href` from the raw hash and only then strips the delimiter for the exposed
+ * field) — unlike `window.location.hash`, which keeps it. Concatenating the
+ * three parts therefore glues the fragment onto the end of the query, or onto
+ * the path when there is no query, so `?time=2016#overview` arrives as
+ * `?time=2016overview`.
+ */
+export const toRelativeLocation = ({
+  pathname,
+  searchStr,
+  hash,
+}: RequireAuthLocation): string =>
+  `${pathname}${searchStr ?? ""}${hash ? `#${hash}` : ""}`;
+
+/**
  * Creates a beforeLoad function that checks authentication using the root route context.
  * The root route's beforeLoad fetches userProfile once and passes it down via context,
  * so this function avoids duplicate network requests.

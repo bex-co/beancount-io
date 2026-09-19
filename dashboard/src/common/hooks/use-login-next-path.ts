@@ -1,5 +1,8 @@
 import { useRouterState } from "@tanstack/react-router";
-import { getSafeRedirectPath } from "@/common/lib/auth/auth";
+import {
+  getSafeRedirectPath,
+  toRelativeLocation,
+} from "@/common/lib/auth/auth";
 
 /**
  * The current location as a safe relative `next` for `/auth/login`.
@@ -11,9 +14,6 @@ import { getSafeRedirectPath } from "@/common/lib/auth/auth";
  */
 export function useLoginNextPath(): string | undefined {
   return useRouterState({
-    select: (state) =>
-      getSafeRedirectPath(
-        `${state.location.pathname}${state.location.searchStr ?? ""}${state.location.hash ?? ""}`,
-      ),
+    select: (state) => getSafeRedirectPath(toRelativeLocation(state.location)),
   });
 }
