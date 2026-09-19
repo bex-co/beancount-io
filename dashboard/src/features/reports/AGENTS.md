@@ -144,11 +144,12 @@ Report directories with `loader.ts` use TanStack Router loaders for SSR-safe dat
 
 While a route loader or Apollo report read is in flight, do not present retained
 `previousData` under newly selected conversion/interval/filter metadata. The
-ledger layout shows an accessible pending state for router transitions (including
-ledger switches), and statement pages use `selectSettledReportData` so export and
-print only see a coherent completed result.
+ledger layout shows an accessible pending state when the route, ledger, or shared
+filter scope changes. Same-page list and query URL edits preserve the mounted
+page and its input focus and in-flight work. Statement pages use
+`selectSettledReportData` so export and print only see a coherent completed result.
 
-Shared ledger filters (`account`, `filter`, `time`) are validated on the ledger parent route and retained across same-ledger navigation (sidebar, Related Pages) via `retainSearchParams`. Report loaders read them from `loaderDeps` so SSR and client requests match the destination URL. Filter edits use replace navigation; Clear all removes only those three keys. Ledger switches clear them unless the destination URL supplies new values. Journal action/directive, BQL `q`, and file-edit params are not propagated to unrelated pages.
+Shared ledger filters (`account`, `filter`, `time`) are validated on the ledger parent route and retained across same-ledger navigation (sidebar, Related Pages) via `retainSearchParams`. Report loaders read them from `loaderDeps` so SSR and client requests match the destination URL. Filter edits use replace navigation; Clear all removes the shared filters. On Journal, a genuine shared-filter edit also clears `offset` in that same navigation; explicit links, reloads, history, and unchanged filters preserve their requested page. Ledger switches clear shared filters unless the destination URL supplies new values. Journal action/directive, BQL `query`, and file-edit params are not propagated to unrelated pages.
 
 On the account detail page, the chart already sends the shared `account` filter
 as GraphQL `account` alongside route `accountName`. The account journal must

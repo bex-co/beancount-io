@@ -1,6 +1,6 @@
 # w4 · m13 — Preserve ledger pages through loading and hydration
 
-**Worker:** worker1 **Goal:** Accounts accepts continuous typing, Journal resets its page and BQL retains in-flight state while report loading and initial hydration stay truthful **Status:** todo (t001–t002 done)
+**Worker:** worker1 **Goal:** Accounts accepts continuous typing, Journal resets its page and BQL retains in-flight state while report loading and initial hydration stay truthful **Status:** todo (t001–t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | t001 | Preserve page state through local URL navigation — **DONE** | 60m | — |
 | t002 | Keep Journal pagination resets correct through scope changes — **DONE** | 30m | t001 |
-| t003 | Verify adoption journeys and guidance | 10m | t002 |
+| t003 | Verify adoption journeys and guidance — **DONE** | 10m | t002 |
 | t004 | Simplify the changed navigation lifecycle | 10m | t003 |
 | t005 | Cover the real layout/router regression and run dashboard gates | 60m | t004 |
 | t006 | Close out only after all live journeys pass | 10m | t005 |
