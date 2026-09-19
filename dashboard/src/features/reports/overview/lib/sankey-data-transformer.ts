@@ -5,6 +5,13 @@ import {
 } from "./account-categorizer";
 import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import type { SerializableTreeNode } from "@/graphql/definitions";
+import {
+  type UnitAmounts,
+  chooseDisplayUnit,
+  collectUnits,
+  mergeAmounts,
+  readBalance,
+} from "./unit-amounts";
 
 type HierarchyNode = {
   account: string;
@@ -31,40 +38,6 @@ export type SankeyData = {
   /** Every unit the underlying accounts hold, so scope can be disclosed. */
   units: string[];
 };
-
-/**
- * Amounts keyed by their currency unit.
- *
- * The ledger's balances are maps like `{ USD: 52047.35, IRAUSD: 18000 }`, and
- * the two numbers are not commensurable: no price was supplied, so adding them
- * produces a figure that is neither a USD total nor a conversion. Everything in
- * this module therefore carries amounts per unit and never sums across keys.
- */
-export type UnitAmounts = Map<string, number>;
-
-function addAmount(into: UnitAmounts, unit: string, amount: number): void {
-  if (!Number.isFinite(amount) || amount === 0) return;
-  into.set(unit, (into.get(unit) ?? 0) + amount);
-}
-
-/** Merge one unit map into another, unit by unit. */
-function mergeAmounts(into: UnitAmounts, from: UnitAmounts): void {
-  from.forEach((amount, unit) => addAmount(into, unit, amount));
-}
-
-/** Read every unit a balance carries, rather than USD-or-whatever-is-first. */
-function readBalance(
-  balance: Record<string, unknown> | null | undefined,
-  inverse: boolean,
-  into: UnitAmounts,
-): void {
-  if (!balance) return;
-  for (const [unit, raw] of Object.entries(balance)) {
-    const num = typeof raw === "string" ? parseFloat(raw) : Number(raw);
-    if (!Number.isFinite(num)) continue;
-    addAmount(into, unit, inverse ? -num : num);
-  }
-}
 
 /** True when this account carries no cash-flow activity of its own. */
 function isSkipped(account: string, accountMeta?: AccountMetaMap): boolean {
@@ -205,40 +178,6 @@ interface TransformOptions {
   accountMeta?: AccountMetaMap;
 }
 
-/**
- * Choose the one unit this diagram speaks in.
- *
- * A Sankey adds its links together — into node totals, into the centre, into
- * Savings — so it can only ever show one unit truthfully. The unit that most
- * accounts are denominated in is the one that describes the ledger; ties go to
- * the larger total and then to alphabetical order, so the choice is stable
- * across renders rather than dependent on object key order.
- */
-function chooseDisplayUnit(groups: Map<string, UnitAmounts>[]): string | null {
-  const accounts = new Map<string, number>();
-  const magnitude = new Map<string, number>();
-  for (const group of groups) {
-    group.forEach((amounts) => {
-      amounts.forEach((amount, unit) => {
-        accounts.set(unit, (accounts.get(unit) ?? 0) + 1);
-        magnitude.set(unit, (magnitude.get(unit) ?? 0) + Math.abs(amount));
-      });
-    });
-  }
-  let best: string | null = null;
-  for (const unit of accounts.keys()) {
-    if (best === null) {
-      best = unit;
-      continue;
-    }
-    const byAccounts = (accounts.get(unit) ?? 0) - (accounts.get(best) ?? 0);
-    const byMagnitude = (magnitude.get(unit) ?? 0) - (magnitude.get(best) ?? 0);
-    if (byAccounts > 0 || (byAccounts === 0 && byMagnitude > 0)) best = unit;
-    else if (byAccounts === 0 && byMagnitude === 0 && unit < best) best = unit;
-  }
-  return best;
-}
-
 /** Amounts in one unit only; accounts holding none of it drop out. */
 function projectToUnit(
   group: Map<string, UnitAmounts>,
@@ -250,15 +189,6 @@ function projectToUnit(
     if (amount !== undefined && amount !== 0) projected.set(name, amount);
   });
   return projected;
-}
-
-/** Every unit any account in the diagram holds, for disclosing its scope. */
-function collectUnits(groups: Map<string, UnitAmounts>[]): string[] {
-  const units = new Set<string>();
-  for (const group of groups) {
-    group.forEach((amounts) => amounts.forEach((_, unit) => units.add(unit)));
-  }
-  return [...units].sort();
 }
 
 /**
@@ -314,8 +244,9 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
     assetAmounts,
     liabilityAmounts,
   ];
-  const units = collectUnits(groups);
-  const unit = chooseDisplayUnit(groups);
+  const allAmounts = groups.flatMap((group) => [...group.values()]);
+  const units = collectUnits(allAmounts);
+  const unit = chooseDisplayUnit(allAmounts);
   if (!unit) {
     return { nodes, links, unit: null, units };
   }

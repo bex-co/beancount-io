@@ -47,10 +47,10 @@ const bgOverview: Record<string, TranslationEntry> = {
     description:
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
-  "page.overview.cashFlowUnitScope": {
+  "page.overview.chartUnitScope": {
     message: "Сумите са показани в {unit}. Салдата в {others} не са включени.",
     description:
-      "Note under the cash flow chart when the ledger holds balances in more than one unit. {unit} is the unit the chart is drawn in; {others} is a comma-separated list of the units it leaves out.",
+      "Note under an overview chart when the ledger holds balances in more than one unit. {unit} is the unit the chart is drawn in; {others} is a comma-separated list of the units it leaves out.",
   },
   "page.overview.starButton.star": {
     message: "Звезда",

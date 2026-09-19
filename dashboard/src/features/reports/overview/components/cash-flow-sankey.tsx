@@ -163,7 +163,7 @@ export default function CashFlowSankey({
       />
       {sankeyData.unit && omittedUnits.length > 0 && (
         <p className="mt-2 text-xs text-muted-foreground">
-          {t("page.overview.cashFlowUnitScope", {
+          {t("page.overview.chartUnitScope", {
             unit: sankeyData.unit,
             others: omittedUnits.join(", "),
           })}

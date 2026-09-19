@@ -46,11 +46,11 @@ const koOverview: Record<string, TranslationEntry> = {
     description:
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
-  "page.overview.cashFlowUnitScope": {
+  "page.overview.chartUnitScope": {
     message:
       "금액은 {unit}(으)로 표시됩니다. {others} 잔액은 포함되지 않습니다.",
     description:
-      "Note under the cash flow chart when the ledger holds balances in more than one unit. {unit} is the unit the chart is drawn in; {others} is a comma-separated list of the units it leaves out.",
+      "Note under an overview chart when the ledger holds balances in more than one unit. {unit} is the unit the chart is drawn in; {others} is a comma-separated list of the units it leaves out.",
   },
   "page.overview.starButton.star": {
     message: "즐겨찾기",

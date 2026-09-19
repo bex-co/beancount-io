@@ -1,4 +1,9 @@
 import { parseConcreteTimeFilter } from "@/features/reports/export/reporting-period";
+import {
+  balanceToAmounts,
+  chooseDisplayUnit,
+  collectUnits,
+} from "./unit-amounts";
 
 export type DataSeries = Array<{
   date: string;
@@ -447,16 +452,47 @@ export function resolveMovementTimeFilter(
   return `${startDate} - ${endDate}`;
 }
 
+export type DistributionData = {
+  items: Array<{ name: string; label: string; value: number }>;
+  /** The one unit every `value` is denominated in, or null when there is none. */
+  unit: string | null;
+  /** Every unit the underlying accounts hold, so scope can be disclosed. */
+  units: string[];
+};
+
+/**
+ * Distribution slices for one unit.
+ *
+ * A pie divides each slice by the sum of all of them, so mixing units would
+ * put an unpriced vacation hour and a dollar in the same denominator and make
+ * every percentage meaningless. The unit model picks the unit the ledger is
+ * mostly kept in; balances in other units are reported through `units` so the
+ * chart can say what it is leaving out, rather than adding or hiding them.
+ */
 export function buildDistributionData(
   input?: unknown,
   inverse?: boolean,
-): Array<{ name: string; label: string; value: number }> {
-  if (!input) return [];
-  return flattenHierarchy(input)
-    .map((n) => ({
-      name: n.account,
-      label: (n.account.split(":")?.pop() ?? "Unnamed") as string,
-      value: pickNumericAmount(n.balance, inverse),
+): DistributionData {
+  if (!input) return { items: [], unit: null, units: [] };
+
+  const leaves = flattenHierarchy(input).map((node) => ({
+    name: node.account,
+    label: (node.account.split(":")?.pop() ?? "Unnamed") as string,
+    amounts: balanceToAmounts(node.balance, inverse),
+  }));
+
+  const allAmounts = leaves.map((leaf) => leaf.amounts);
+  const units = collectUnits(allAmounts);
+  const unit = chooseDisplayUnit(allAmounts);
+  if (!unit) return { items: [], unit: null, units };
+
+  const items = leaves
+    .map((leaf) => ({
+      name: leaf.name,
+      label: leaf.label,
+      value: leaf.amounts.get(unit) ?? 0,
     }))
-    .filter((d) => Number.isFinite(d.value) && d.value !== 0);
+    .filter((item) => Number.isFinite(item.value) && item.value !== 0);
+
+  return { items, unit, units };
 }
