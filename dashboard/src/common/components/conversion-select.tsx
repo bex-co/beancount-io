@@ -33,7 +33,14 @@ export function ConversionSelect({
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={className} size="sm">
+      {/* The trigger shows the selected value, so the placeholder never
+          renders once a value exists and the control is left nameless. The
+          same localized string names it. */}
+      <SelectTrigger
+        className={className}
+        size="sm"
+        aria-label={defaultPlaceholder}
+      >
         <SelectValue placeholder={defaultPlaceholder} />
       </SelectTrigger>
       <SelectContent>
