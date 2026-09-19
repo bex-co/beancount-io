@@ -9,6 +9,7 @@ import { Label } from "@/common/components/ui/label";
 import { PasswordInput } from "@/features/auth/components/password-input";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useHydrated } from "@/features/auth/lib/use-hydrated";
 
 type LoginFormData = {
   email: string;
@@ -62,8 +63,20 @@ export function LoginForm({
     mode: "onBlur",
   });
 
+  const hydrated = useHydrated();
+
   return (
-    <form className="space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
+    /* `method="post"` is defence in depth, not a working fallback: there is no
+       non-JavaScript auth endpoint. It only guarantees that if this form is
+       ever submitted natively — before hydration, or after the entry script
+       fails — the fields go in a request body rather than the URL. The submit
+       button below stays disabled until then, which also blocks Enter. */
+    <form
+      className="space-y-6"
+      method="post"
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+    >
       <div className="space-y-2">
         <Label htmlFor="email" className="text-foreground">
           {t("auth.emailAddress")}
@@ -140,7 +153,7 @@ export function LoginForm({
 
       <Button
         type="submit"
-        disabled={isSubmitting || isLoading}
+        disabled={!hydrated || isSubmitting || isLoading}
         className="w-full"
         size="lg"
       >
