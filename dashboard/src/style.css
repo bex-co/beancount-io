@@ -87,6 +87,12 @@
 }
 
 @theme inline {
+  /* Smaller than Tailwind's smallest default. The public ledger header holds a
+     sidebar trigger, a filters button and a sign-in action side by side, and
+     the longest translations (German's "Anmelden / Registrieren") overflow a
+     320px screen. Below this width those actions drop to icons. */
+  --breakpoint-xs: 22rem;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

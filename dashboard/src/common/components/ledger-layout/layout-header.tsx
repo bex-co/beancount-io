@@ -103,7 +103,7 @@ export function LayoutHeader({
                     aria-label={t("component.searchControls.filters")}
                   >
                     <ListFilter className="h-4 w-4" />
-                    <span className="ml-1.5">
+                    <span className="ml-1.5 hidden xs:inline">
                       {t("component.searchControls.filters")}
                     </span>
                     {activeFilterCount > 0 && (
@@ -138,9 +138,9 @@ export function LayoutHeader({
           <Authenticated
             fallback={
               <Button variant="outline" size="sm" asChild>
-                <Link to="/auth/login">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  {t("auth.login")}
+                <Link to="/auth/login" aria-label={t("auth.login")}>
+                  <LogIn className="h-4 w-4 xs:mr-2" />
+                  <span className="hidden xs:inline">{t("auth.login")}</span>
                 </Link>
               </Button>
             }
