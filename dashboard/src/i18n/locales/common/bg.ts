@@ -394,7 +394,7 @@ const bgCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "Преглеждайте важни събития и етапи в {ledgerName}. Проследявайте отваряне, затваряне на сметки и жизнени цикъл събития.",
+      "Преглеждайте директивите за събития, записани в {ledgerName}. Всеки запис има дата, тип и описание — например смяна на местоположение или работодател.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

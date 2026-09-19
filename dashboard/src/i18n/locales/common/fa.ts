@@ -394,7 +394,7 @@ const faCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "مشاهده رویدادها و نقاط عطف مهم در {ledgerName}. پیگیری باز و بسته شدن حساب‌ها و رویدادهای چرخه حیات.",
+      "دستورهای رویداد ثبت‌شده در {ledgerName} را ببینید. هر مورد یک تاریخ، یک نوع و یک توضیح دارد — برای نمونه تغییر محل زندگی یا کارفرما.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

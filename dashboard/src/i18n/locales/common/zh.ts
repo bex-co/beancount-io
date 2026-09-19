@@ -387,7 +387,7 @@ const zhCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "查看{ledgerName}中的重要事件和里程碑。跟踪账户开户、关户和生命周期事件。",
+      "查看 {ledgerName} 中记录的事件指令。每条记录都有日期、类型和描述，例如居住地或雇主的变更。",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

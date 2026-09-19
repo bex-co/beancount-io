@@ -393,7 +393,7 @@ const jaCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "{ledgerName}の重要なイベントとマイルストーンを表示します。口座開設、閉鎖、ライフサイクルイベントを追跡できます。",
+      "{ledgerName}に記録されたイベントディレクティブを表示します。各エントリには日付、種類、説明があります（例: 居住地や勤務先の変更）。",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

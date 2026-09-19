@@ -394,7 +394,7 @@ const ptCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "Visualize eventos e marcos importantes em {ledgerName}. Acompanhe aberturas e fechamentos de contas e eventos do ciclo de vida.",
+      "Visualize as diretivas de evento registradas em {ledgerName}. Cada entrada tem uma data, um tipo e uma descrição — por exemplo, uma mudança de local ou de empregador.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

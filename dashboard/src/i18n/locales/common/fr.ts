@@ -394,7 +394,7 @@ const frCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "Affichez les événements et jalons importants dans {ledgerName}. Suivez les ouvertures et fermetures de comptes et les événements du cycle de vie.",
+      "Consultez les directives d'événement enregistrées dans {ledgerName}. Chaque entrée comporte une date, un type et une description : un changement de lieu ou d'employeur, par exemple.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

@@ -393,7 +393,7 @@ const ruCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "Просматривайте важные события и вехи в {ledgerName}. Отслеживайте открытие, закрытие счетов и события жизненного цикла.",
+      "Просматривайте директивы событий, записанные в {ledgerName}. У каждой записи есть дата, тип и описание — например, смена места жительства или работодателя.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

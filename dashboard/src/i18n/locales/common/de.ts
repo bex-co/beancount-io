@@ -395,7 +395,7 @@ const deCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "Wichtige Ereignisse und Meilensteine in {ledgerName} anzeigen. Verfolgen Sie Kontoeröffnungen, -schließungen und Lebenszyklus-Ereignisse.",
+      "Zeigen Sie die in {ledgerName} erfassten Ereignisdirektiven an. Jeder Eintrag hat ein Datum, einen Typ und eine Beschreibung – etwa einen Wechsel des Wohnorts oder des Arbeitgebers.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

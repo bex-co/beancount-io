@@ -393,7 +393,7 @@ const koCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "{ledgerName}의 중요 이벤트와 마일스톤을 봅니다. 계좌 개설, 폐쇄, 생애주기 이벤트를 추적할 수 있습니다.",
+      "{ledgerName}에 기록된 이벤트 지시문을 봅니다. 각 항목에는 날짜, 유형, 설명이 있습니다. 예를 들어 거주지나 근무처의 변경입니다.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

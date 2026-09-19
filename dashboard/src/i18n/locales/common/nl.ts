@@ -395,7 +395,7 @@ const nlCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "Bekijk belangrijke gebeurtenissen en mijlpalen in {ledgerName}. Volg het openen en sluiten van rekeningen en levenscyclusgebeurtenissen.",
+      "Bekijk de gebeurtenisdirectieven die in {ledgerName} zijn vastgelegd. Elke regel heeft een datum, een type en een omschrijving — bijvoorbeeld een verhuizing of een nieuwe werkgever.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

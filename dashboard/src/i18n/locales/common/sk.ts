@@ -394,7 +394,7 @@ const skCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "Zobrazujte dôležité udalosti a míľniky v {ledgerName}. Sledujte otvorenie, zatvorenie účtov a udalosti životného cyklu.",
+      "Zobrazujte direktívy udalostí zaznamenané v {ledgerName}. Každý záznam má dátum, typ a popis – napríklad zmenu miesta alebo zamestnávateľa.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

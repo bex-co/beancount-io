@@ -394,7 +394,7 @@ const caCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "Visualitzeu esdeveniments i fites importants a {ledgerName}. Seguiu obertures i tancaments de comptes i esdeveniments del cicle de vida.",
+      "Visualitzeu les directives d'esdeveniment registrades a {ledgerName}. Cada entrada té una data, un tipus i una descripció: per exemple, un canvi d'ubicació o d'empresa.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

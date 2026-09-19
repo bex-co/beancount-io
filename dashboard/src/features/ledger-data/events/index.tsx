@@ -112,6 +112,12 @@ export default function LedgerEventsPage() {
     });
   }, [events, selectedEventType, searchTerm]);
 
+  const hasLedgerFilters = Boolean(
+    ledgerFilters.searchParams.time ||
+    ledgerFilters.searchParams.filter ||
+    ledgerFilters.searchParams.account,
+  );
+
   return (
     <div className="space-y-4">
       <LedgerPageSEO seoKey="ledgerEvents" />
@@ -145,7 +151,15 @@ export default function LedgerEventsPage() {
           <EmptyState
             iconName="Calendar"
             title={t("page.events.noEventsFound")}
-            description={t("page.events.noEventsFoundForLedger")}
+            // An empty read under an active topbar filter says nothing about
+            // the ledger as a whole, so it must not claim the ledger has no
+            // events. The nested local-search branch already makes the same
+            // distinction.
+            description={
+              hasLedgerFilters
+                ? t("page.events.noEventsMatchFilters")
+                : t("page.events.noEventsFoundForLedger")
+            }
           />
         }
       >

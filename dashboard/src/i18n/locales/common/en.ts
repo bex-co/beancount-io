@@ -394,7 +394,7 @@ const enCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "View important events and milestones in {ledgerName}. Track account openings, closings, and lifecycle events.",
+      "View the event directives recorded in {ledgerName}. Each entry has a date, a type and a description — a change of location or employer, for example.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

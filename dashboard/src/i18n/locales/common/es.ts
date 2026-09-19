@@ -393,7 +393,7 @@ const esCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "Visualice eventos e hitos importantes en {ledgerName}. Realice un seguimiento de aperturas y cierres de cuentas y eventos del ciclo de vida.",
+      "Visualice las directivas de evento registradas en {ledgerName}. Cada entrada tiene una fecha, un tipo y una descripción: por ejemplo, un cambio de ubicación o de empleador.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {

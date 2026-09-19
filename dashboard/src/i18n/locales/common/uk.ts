@@ -394,7 +394,7 @@ const ukCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.events": {
     message:
-      "Переглядайте важливі події та віхи в {ledgerName}. Відстежуйте відкриття, закриття рахунків та події життєвого циклу.",
+      "Переглядайте директиви подій, записані в {ledgerName}. Кожен запис має дату, тип і опис — наприклад, зміну місця проживання або роботодавця.",
     description: "Description for events page",
   },
   "common.pageDescription.files": {
