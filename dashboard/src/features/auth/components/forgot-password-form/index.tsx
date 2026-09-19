@@ -149,9 +149,19 @@ export function ForgotPasswordForm({
             placeholder={t("auth.enterYourEmail")}
             className="w-full"
             {...register("email")}
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby={
+              errors.email ? "forgot-password-email-error" : undefined
+            }
           />
           {errors.email && (
-            <p className="text-sm text-destructive">{errors.email.message}</p>
+            <p
+              id="forgot-password-email-error"
+              role="alert"
+              className="text-sm text-destructive"
+            >
+              {errors.email.message}
+            </p>
           )}
         </div>
 
