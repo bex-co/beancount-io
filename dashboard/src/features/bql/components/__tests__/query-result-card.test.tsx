@@ -580,7 +580,7 @@ describe("QueryResultCard", () => {
     expect(screen.getByText("Assets:Cash")).toBeInTheDocument();
     // Null cell should render as empty string (not "null")
     const virtualList = screen.getByTestId("virtual-list");
-    const cells = virtualList.querySelectorAll("div.truncate");
+    const cells = virtualList.querySelectorAll('[role="cell"]');
     const nullCell = Array.from(cells).find((cell) => cell.textContent === "");
     expect(nullCell).toBeTruthy();
   });

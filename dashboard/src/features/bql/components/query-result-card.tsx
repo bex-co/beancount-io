@@ -186,7 +186,14 @@ export function QueryResultCard({
                       <div
                         key={cellIndex}
                         role="cell"
-                        className={`${columnMinWidthClass} px-2 sm:px-3 py-1.5 sm:py-2 text-sm truncate`}
+                        // `truncate` used to flatten and ellipsize every cell,
+                        // which collapsed a printed directive's newlines into
+                        // one clipped line and hid its posting amounts.
+                        // pre-wrap keeps the source line structure and its
+                        // leading indentation; break-words wraps a line too
+                        // long for the column instead of cutting it off. Rows
+                        // are measured, so the row grows to fit.
+                        className={`${columnMinWidthClass} px-2 sm:px-3 py-1.5 sm:py-2 text-sm whitespace-pre-wrap break-words`}
                       >
                         {renderQueryCell(cell, bodyDtypes[cellIndex])}
                       </div>
