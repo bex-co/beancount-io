@@ -266,4 +266,42 @@ describe("EntriesCountByType", () => {
       expect(description.className).toContain("text-muted-foreground");
     });
   });
+  describe("table name", () => {
+    // Three Statistics tables share a page with near-identical columns, so the
+    // heading has to name the table itself — not merely sit above it. Both
+    // states render their own heading-and-table pair, so both are checked.
+    it("names its table once the data has settled", () => {
+      vi.mocked(apolloClient.useQuery).mockReturnValue(
+        createEntriesMockData([{ type: "Transaction", number: 3 }]),
+      );
+
+      const { container } = render(<EntriesCountByType ledgerId="test-id" />);
+
+      const table = screen.getByRole("table", {
+        name: "Entries Count by Type",
+      });
+      expect(table).toBeInTheDocument();
+      for (const id of (table.getAttribute("aria-labelledby") ?? "")
+        .split(/\s+/)
+        .filter(Boolean)) {
+        expect(container.querySelectorAll(`[id="${id}"]`)).toHaveLength(1);
+      }
+    });
+
+    it("names its skeleton table while loading", () => {
+      vi.mocked(apolloClient.useQuery).mockReturnValue(
+        mockUseQueryReturn({
+          data: undefined,
+          loading: true,
+          error: undefined,
+        }),
+      );
+
+      render(<EntriesCountByType ledgerId="test-id" />);
+
+      expect(
+        screen.getByRole("table", { name: "Entries Count by Type" }),
+      ).toBeInTheDocument();
+    });
+  });
 });
