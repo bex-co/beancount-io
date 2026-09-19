@@ -125,6 +125,40 @@ describe("requireAuth", () => {
     });
   });
 
+  it("falls back rather than forwarding an unsafe continuation", () => {
+    const guard = requireAuth("/ledger");
+    for (const href of [
+      "//evil.example/steal",
+      "https://evil.example/steal",
+      "/\\evil.example/steal",
+      "/%09/evil.example/steal",
+    ]) {
+      vi.mocked(redirect).mockClear();
+      expect(() =>
+        guard({ context: { userProfile: null }, location: { href } }),
+      ).toThrow("REDIRECT");
+      // The hostile value is dropped whole, never trimmed into something safe.
+      expect(redirect).toHaveBeenCalledWith({
+        to: "/auth/login",
+        search: { next: "/ledger" },
+      });
+    }
+  });
+
+  it("carries a fragment through to the login continuation", () => {
+    const guard = requireAuth("/ledger");
+    expect(() =>
+      guard({
+        context: { userProfile: null },
+        location: { href: "/settings/api-keys?lang=en#ssh-keys" },
+      }),
+    ).toThrow("REDIRECT");
+    expect(redirect).toHaveBeenCalledWith({
+      to: "/auth/login",
+      search: { next: "/settings/api-keys?lang=en#ssh-keys" },
+    });
+  });
+
   it("allows authenticated visitors through", () => {
     const guard = requireAuth("/settings");
     expect(() =>
