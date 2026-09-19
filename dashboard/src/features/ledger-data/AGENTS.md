@@ -45,7 +45,7 @@ is fine — commodity histories use their `base/quote` pair that way.
 
 Two things to get right: include whatever distinguishes two otherwise identical
 groups (budget histories carry the currency, because a group is keyed by
-account *and* currency), and remember that a component's loading and empty
+account _and_ currency), and remember that a component's loading and empty
 branches render their own copies of the heading — the id belongs on the heading
 that is rendered beside the table, not on the first one in the file.
 
