@@ -15,6 +15,7 @@ import {
 import { useChartsVisibility } from "../components/use-charts-visibility";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { sortUsdFirst } from "@/common/lib/utils/sort";
+import { cn } from "@/common/lib/utils/utils";
 import type { ChartInterval, ConversionOption } from "@/common/types/chart";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
 import { formatStatementAmount } from "../export/amount";
@@ -75,14 +76,16 @@ export function StatementAmounts({
   amounts,
   primaryCurrency,
   locale,
+  className,
 }: {
   amounts: Record<string, string>;
   primaryCurrency: string;
   locale: string;
+  className?: string;
 }) {
   const currencies = sortUsdFirst(Object.keys(amounts), primaryCurrency);
   return (
-    <div className="text-right tabular-nums whitespace-nowrap">
+    <div className={cn("text-right tabular-nums whitespace-nowrap", className)}>
       {currencies.map((currency) => (
         <div key={currency}>
           {formatStatementAmount(amounts[currency], locale)} {currency}

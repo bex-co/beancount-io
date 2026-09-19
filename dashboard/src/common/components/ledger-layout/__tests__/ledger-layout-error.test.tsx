@@ -4,7 +4,11 @@ import { describe, expect, it, vi } from "vitest";
 import { LedgerLayoutError } from "../ledger-layout-error";
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, ...props }: React.ComponentProps<"a">) => (
+  Link: ({
+    children,
+    activeOptions: _activeOptions,
+    ...props
+  }: React.ComponentProps<"a"> & { activeOptions?: unknown }) => (
     <a {...props}>{children}</a>
   ),
 }));

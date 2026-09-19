@@ -9,10 +9,12 @@ vi.mock("@tanstack/react-router", () => ({
     to,
     params,
     children,
+    activeOptions: _activeOptions,
     ...props
   }: React.ComponentProps<"a"> & {
     to: string;
     params?: Record<string, string>;
+    activeOptions?: unknown;
   }) => (
     <a
       href={Object.entries(params ?? {}).reduce(

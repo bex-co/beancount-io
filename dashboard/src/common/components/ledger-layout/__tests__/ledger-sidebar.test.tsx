@@ -15,8 +15,9 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({
     to,
     children,
+    activeOptions: _activeOptions,
     ...props
-  }: React.ComponentProps<"a"> & { to: string }) => (
+  }: React.ComponentProps<"a"> & { to: string; activeOptions?: unknown }) => (
     <a href={to} {...props}>
       {children}
     </a>

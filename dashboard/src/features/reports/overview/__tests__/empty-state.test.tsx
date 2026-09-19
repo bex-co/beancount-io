@@ -18,9 +18,11 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
     to,
     params,
     search,
+    activeOptions: _activeOptions,
     ...props
   }: React.ComponentProps<"a"> & {
     to: string;
+    activeOptions?: unknown;
     params?: Record<string, string>;
     search?: Record<string, unknown>;
   }) => (
