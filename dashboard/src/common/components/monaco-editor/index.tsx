@@ -1,19 +1,17 @@
+import { useMemo } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import Editor, { type EditorProps, type OnMount } from "@monaco-editor/react";
 
 /**
  * Tell assistive technology when the editor is read-only.
  *
- * Monaco has two input surfaces. The textarea fallback gets a native
- * `readonly` attribute whenever `domReadOnly` and `readOnly` are both set, so
- * it reports correctly. The native EditContext surface is a plain `div`:
- * Monaco gives it `role="textbox"` and five other ARIA attributes but never
- * `aria-readonly`, so the accessibility tree calls a read-only viewer editable
- * — the reader is told they can type into a file they cannot change.
+ * Monaco's textarea surface gets a native `readonly` attribute, but its native
+ * EditContext surface is a plain `div` that Monaco gives `role="textbox"` and
+ * five other ARIA attributes — never `aria-readonly`. Without this, a
+ * read-only viewer tells the accessibility tree it can be typed into.
  *
- * Setting the attribute here keeps both surfaces honest without disabling
- * EditContext, removing a browser API, or touching the editing permissions
- * that actually reject the keystroke.
+ * Re-applied on any configuration change, so it survives both a view-mode
+ * switch and Monaco rebuilding its input surface.
  */
 function syncReadOnlyState(
   editor: Parameters<OnMount>[0],
@@ -21,28 +19,24 @@ function syncReadOnlyState(
 ): void {
   const apply = () => {
     const readOnly = editor.getOption(monaco.editor.EditorOption.readOnly);
-    const input = editor
+    editor
       .getDomNode()
-      ?.querySelector(".native-edit-context, textarea.inputarea");
-    input?.setAttribute("aria-readonly", readOnly ? "true" : "false");
+      ?.querySelector(".native-edit-context, textarea.inputarea")
+      ?.setAttribute("aria-readonly", readOnly ? "true" : "false");
   };
 
   apply();
-  // View mode can change under the reader; the state has to follow it.
-  const subscription = editor.onDidChangeConfiguration((event) => {
-    if (event.hasChanged(monaco.editor.EditorOption.readOnly)) apply();
-  });
+  const subscription = editor.onDidChangeConfiguration(apply);
   editor.onDidDispose(() => subscription.dispose());
 }
 
 /**
  * A read-only editor is read-only in the DOM too.
  *
- * Monaco only puts the native `readonly` attribute on its textarea when
- * `domReadOnly` is set as well, so a consumer that sets `readOnly` alone gets
- * an input the browser still treats as writable. Defaulting it here means the
- * next consumer cannot forget it; a caller that genuinely wants one without
- * the other can still say so explicitly.
+ * Monaco only sets the textarea's native `readonly` when `domReadOnly` is set
+ * as well, so a consumer that sets `readOnly` alone leaves an input the
+ * browser still treats as writable. Defaulting it here means the next consumer
+ * cannot forget it; a caller that wants one without the other still can.
  */
 function withDomReadOnly(
   options: EditorProps["options"],
@@ -63,6 +57,10 @@ export const MonacoEditor = ({
   options,
   ...props
 }: EditorProps & { fallback?: React.ReactNode }) => {
+  // A fresh object every render would make the editor re-apply its options on
+  // every render, so the default is computed only when the caller's changes.
+  const editorOptions = useMemo(() => withDomReadOnly(options), [options]);
+
   const handleMount: OnMount = (editor, monaco) => {
     syncReadOnlyState(editor, monaco);
     onMount?.(editor, monaco);
@@ -70,11 +68,7 @@ export const MonacoEditor = ({
 
   return (
     <ClientOnly fallback={fallback}>
-      <Editor
-        {...props}
-        options={withDomReadOnly(options)}
-        onMount={handleMount}
-      />
+      <Editor {...props} options={editorOptions} onMount={handleMount} />
     </ClientOnly>
   );
 };
