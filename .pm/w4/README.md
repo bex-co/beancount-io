@@ -18,7 +18,7 @@
 
 - [ ] **m17** — [Keep profile search updates from hijacking ledger navigation](./m17/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
 
-- [ ] **m16** — [Preserve statement chart selection through report reads](./m16/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
+- [x] **m16** — [Preserve statement chart selection through report reads](./done/m16/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
 
 - [x] **m15** — [Associate authentication validation errors with their fields](./done/m15/README.md) (6 tasks) ← promoted w4/082, repeated dashboard QA, 2026-09-17
 
