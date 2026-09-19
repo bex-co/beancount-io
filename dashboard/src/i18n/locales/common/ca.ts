@@ -618,7 +618,7 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Daily interval option",
   },
   "common.equity": {
-    message: "Patrimoni net",
+    message: "Fons propis",
     description: "Equity category in accounting",
   },
   "component.errorState.title": {
