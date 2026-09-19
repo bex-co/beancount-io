@@ -63,12 +63,10 @@ vi.mock("react-window", () => ({
       ))}
     </div>
   ),
-  // The real hook measures rendered rows with a ResizeObserver; JSDOM reports
-  // every box as 0, so the mock stands in with the compact default.
+  // This suite replaces the List too, so it never measures anything; the hook
+  // only has to hand back the compact default.
   useDynamicRowHeight: ({ defaultRowHeight }: any) => ({
     getAverageRowHeight: () => defaultRowHeight,
-    getRowHeight: () => defaultRowHeight,
-    setRowHeight: () => {},
   }),
 }));
 

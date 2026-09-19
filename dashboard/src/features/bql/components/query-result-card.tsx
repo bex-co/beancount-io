@@ -1,8 +1,12 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { Button } from "@/common/components/ui/button";
 import { ChevronRight, Trash2 } from "lucide-react";
-import { List, useDynamicRowHeight } from "react-window";
+import {
+  List,
+  useDynamicRowHeight,
+  type RowComponentProps,
+} from "react-window";
 import { cn } from "@/common/lib/utils/utils";
 import {
   formatInventoryEntries,
@@ -19,6 +23,16 @@ import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 const ROW_HEIGHT = 36;
 const CONTAINER_HEIGHT = 600;
 const COLUMN_MIN_WIDTH_PX = 120;
+
+/**
+ * One definition of a result column, shared by the header and the body so a
+ * presentation rule can never apply to only one of them. `whitespace-pre-wrap`
+ * keeps a value's own line structure — a printed directive's newlines and the
+ * indentation of its postings — and `break-words` wraps a line too long for
+ * the column rather than clipping it.
+ */
+const COLUMN_CLASS =
+  "min-w-[120px] flex-shrink-0 flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-sm whitespace-pre-wrap break-words";
 
 interface QueryResultCardProps {
   query: string;
@@ -48,6 +62,8 @@ function renderQueryCell(
     if (entries.length <= 1) {
       return inventoryText.replace(/\r\n/g, ", ");
     }
+    // One element per unit, as Holdings renders the same data: the CRLF-joined
+    // text from the formatter is the CSV's shape, not the screen's.
     return (
       <span className="inline-flex flex-col leading-tight">
         {entries.map(({ currency, amount }) => (
@@ -67,6 +83,135 @@ function renderQueryCell(
   return String(cell ?? "");
 }
 
+type ResultTable = NonNullable<
+  NonNullable<QueryShellQuery["queryShell"]>["table"]
+>;
+
+type ResultRowProps = { rows: ResultTable["rows"]; dtypes: string[] };
+
+/**
+ * Module-level so react-window keeps one memoized row type: an inline
+ * component would be a new element type on every measurement pass and remount
+ * every rendered row.
+ */
+function ResultRow({
+  index,
+  style,
+  rows,
+  dtypes,
+}: RowComponentProps<ResultRowProps>) {
+  return (
+    <div
+      role="row"
+      aria-rowindex={index + 2}
+      style={style}
+      className="flex border-b last:border-b-0"
+    >
+      {rows[index].map((cell, cellIndex) => (
+        <div key={cellIndex} role="cell" className={COLUMN_CLASS}>
+          {renderQueryCell(cell, dtypes[cellIndex])}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The virtualized result table.
+ *
+ * Owns the row-height measurement, so a card showing an error, a text result
+ * or nothing at all allocates no observer, and a row measurement re-renders
+ * this table rather than the whole card (its summary, export button and
+ * chart).
+ */
+function QueryResultTable({ table }: { table: ResultTable }) {
+  const { t } = useTranslations();
+  const headers = useMemo(
+    () => table.types?.map((type) => type.name) ?? [],
+    [table.types],
+  );
+  const dtypes = useMemo(
+    () => table.types?.map((type) => type.dtype) ?? [],
+    [table.types],
+  );
+  const rows = useMemo(() => table.rows ?? [], [table.rows]);
+
+  // Rows are measured rather than fixed at ROW_HEIGHT: a multi-unit Inventory
+  // cell renders one line per unit, and a 36px row hid every unit past the
+  // first. Re-keying on the row count drops heights that no longer describe
+  // the rows at those indexes.
+  const rowHeight = useDynamicRowHeight({
+    defaultRowHeight: ROW_HEIGHT,
+    key: rows.length,
+  });
+
+  // Stable identity: react-window rebuilds its cached row bounds whenever this
+  // changes, which would otherwise happen on every measurement pass.
+  const rowProps = useMemo(() => ({ rows, dtypes }), [rows, dtypes]);
+
+  if (rows.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        {t("page.bql.noDataReturnedFromQuery")}
+      </div>
+    );
+  }
+
+  const contentMinWidth = Math.max(
+    headers.length * COLUMN_MIN_WIDTH_PX,
+    COLUMN_MIN_WIDTH_PX,
+  );
+
+  return (
+    <div>
+      <div className="mb-2 text-sm text-muted-foreground">
+        {t("bql.rowCount", { count: rows.length })}
+      </div>
+      {/* One horizontal scroll owner wraps header + body so columns stay aligned. */}
+      <div className="overflow-x-auto border rounded-lg">
+        <div
+          role="table"
+          aria-label={t("page.bql.queryResult")}
+          aria-rowcount={rows.length + 1}
+          style={{ minWidth: contentMinWidth }}
+        >
+          <div
+            role="row"
+            aria-rowindex={1}
+            className="flex border-b bg-muted/50 font-medium text-sm"
+          >
+            {headers.map((header) => (
+              <div key={header} role="columnheader" className={COLUMN_CLASS}>
+                {header}
+              </div>
+            ))}
+          </div>
+          <List<ResultRowProps>
+            role="rowgroup"
+            rowCount={rows.length}
+            rowHeight={rowHeight}
+            rowProps={rowProps}
+            // Declared from the same measurements the rows use: every row of a
+            // result this short is rendered, so their average times their count
+            // is the exact total, and anything taller is capped here anyway.
+            style={{
+              height: Math.min(
+                rows.length * rowHeight.getAverageRowHeight(),
+                CONTAINER_HEIGHT,
+              ),
+              width: "100%",
+              // The wrapper above is the one horizontal scroll owner; a second
+              // one here would slide the body out from under the header.
+              overflowX: "hidden",
+            }}
+            rowComponent={ResultRow}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function QueryResultCard({
   query,
   result,
@@ -78,15 +223,6 @@ export function QueryResultCard({
 }: QueryResultCardProps) {
   const { t } = useTranslations();
   const detailsRef = useRef<HTMLDetailsElement>(null);
-  // Rows are measured rather than fixed at ROW_HEIGHT. A multi-unit Inventory
-  // cell stacks one line per unit, so a 36px row clipped every unit past the
-  // first — the amounts were in the DOM and the CSV but not on screen. The
-  // cache is keyed by the result identity so heights measured for one
-  // execution never size the next one's table.
-  const rowHeight = useDynamicRowHeight({
-    defaultRowHeight: ROW_HEIGHT,
-    key: `${query}:${result?.table?.rows?.length ?? 0}`,
-  });
 
   useEffect(() => {
     if (detailsRef.current && isInitiallyOpen) {
@@ -104,108 +240,7 @@ export function QueryResultCard({
 
   const renderTableData = () => {
     if (!result?.table) return null;
-
-    const { table } = result;
-    const headers = table.types?.map((type) => type.name) || [];
-    const dtypes = table.types?.map((type) => type.dtype) || [];
-    const rows = table.rows || [];
-
-    if (rows.length === 0) {
-      return (
-        <div className="text-center py-8 text-muted-foreground">
-          {t("page.bql.noDataReturnedFromQuery")}
-        </div>
-      );
-    }
-
-    const columnMinWidthClass = "min-w-[120px] flex-shrink-0 flex-1";
-    const contentMinWidth = Math.max(
-      headers.length * COLUMN_MIN_WIDTH_PX,
-      COLUMN_MIN_WIDTH_PX,
-    );
-
-    return (
-      <div>
-        <div className="mb-2 text-sm text-muted-foreground">
-          {t("bql.rowCount", { count: rows.length })}
-        </div>
-        {/* One horizontal scroll owner wraps header + body so columns stay aligned. */}
-        <div className="overflow-x-auto border rounded-lg">
-          <div
-            role="table"
-            aria-label={t("page.bql.queryResult")}
-            aria-rowcount={rows.length + 1}
-            style={{ minWidth: contentMinWidth }}
-          >
-            <div
-              role="row"
-              aria-rowindex={1}
-              className="flex border-b bg-muted/50 font-medium text-sm"
-            >
-              {headers.map((header) => (
-                <div
-                  key={header}
-                  role="columnheader"
-                  className={`${columnMinWidthClass} px-2 sm:px-3 py-1.5 sm:py-2`}
-                >
-                  {header}
-                </div>
-              ))}
-            </div>
-            <List<{ rows: typeof rows; dtypes: string[] }>
-              role="rowgroup"
-              rowCount={rows.length}
-              rowHeight={rowHeight}
-              rowProps={{ rows, dtypes }}
-              style={{
-                // The viewport is sized from the same measurements the rows
-                // use, so a tall result is not squeezed into a 36px-per-row
-                // box and a short one leaves no empty space below it.
-                height: Math.min(
-                  rows.length * rowHeight.getAverageRowHeight(),
-                  CONTAINER_HEIGHT,
-                ),
-                width: "100%",
-                overflowX: "hidden",
-              }}
-              rowComponent={({
-                index,
-                style,
-                rows: bodyRows,
-                dtypes: bodyDtypes,
-              }) => {
-                const row = bodyRows[index];
-                return (
-                  <div
-                    role="row"
-                    aria-rowindex={index + 2}
-                    style={style}
-                    className="flex border-b last:border-b-0"
-                  >
-                    {row.map((cell, cellIndex) => (
-                      <div
-                        key={cellIndex}
-                        role="cell"
-                        // `truncate` used to flatten and ellipsize every cell,
-                        // which collapsed a printed directive's newlines into
-                        // one clipped line and hid its posting amounts.
-                        // pre-wrap keeps the source line structure and its
-                        // leading indentation; break-words wraps a line too
-                        // long for the column instead of cutting it off. Rows
-                        // are measured, so the row grows to fit.
-                        className={`${columnMinWidthClass} px-2 sm:px-3 py-1.5 sm:py-2 text-sm whitespace-pre-wrap break-words`}
-                      >
-                        {renderQueryCell(cell, bodyDtypes[cellIndex])}
-                      </div>
-                    ))}
-                  </div>
-                );
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    );
+    return <QueryResultTable table={result.table} />;
   };
 
   const renderTextData = () => {
