@@ -879,6 +879,16 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "Valor",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "Tots els imports de {account}",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "Mostra'n menys",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+{count} més",
     description: "Count of additional hidden items",

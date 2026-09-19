@@ -859,6 +859,16 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "价值",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "{account} 的所有金额",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "收起",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+{count} 更多",
     description: "Count of additional hidden items",

@@ -36,9 +36,13 @@ vi.mock("@/common/hooks/use-format-number", () => ({
 
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
-    t: (key: string, params?: Record<string, number>) => {
+    t: (key: string, params?: Record<string, string | number>) => {
       if (key === "common.noDataFound") return "No data found.";
       if (key === "common.moreCount") return `+${params?.count} more`;
+      // The English catalog's wording, so name queries mean something.
+      if (key === "common.otherBalancesLabel")
+        return `All amounts for ${params?.account}`;
+      if (key === "common.showLess") return "Show less";
       return key;
     },
   }),
@@ -243,6 +247,104 @@ describe("HierarchyList", () => {
       render(<HierarchyList data={data} primaryCurrency="USD" />);
 
       expect(screen.getByText(/\+1 more/)).toBeInTheDocument();
+    });
+
+    describe("revealing the omitted amounts", () => {
+      /** The reported Assets row: eight commodities, four of them hidden. */
+      const eightCommodities = () => [
+        createNode({
+          account: "Assets",
+          balanceChildren: {
+            USD: 6763.51,
+            GLD: 17,
+            ITOT: 95,
+            VEA: 36,
+            VHT: 39,
+            VACHR: 25,
+            RGAGX: 394.75,
+            VBMPX: 136.632,
+          },
+        }),
+      ];
+
+      it("reveals every hidden commodity, not just the count", () => {
+        render(
+          <HierarchyList data={eightCommodities()} primaryCurrency="USD" />,
+        );
+        // Advertised but unreachable before: the count was inert text.
+        expect(screen.queryByText("VHT")).not.toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole("button", { name: /Assets/ }));
+
+        for (const commodity of ["VHT", "VACHR", "RGAGX", "VBMPX"]) {
+          expect(screen.getByText(commodity)).toBeInTheDocument();
+        }
+        expect(screen.getByText("39")).toBeInTheDocument();
+        expect(screen.getByText("136.632")).toBeInTheDocument();
+      });
+
+      it("names the control after its account and reports its state", () => {
+        render(
+          <HierarchyList data={eightCommodities()} primaryCurrency="USD" />,
+        );
+        const toggle = screen.getByRole("button", { name: /Assets/ });
+        expect(toggle).toHaveAttribute("aria-expanded", "false");
+        fireEvent.click(toggle);
+        expect(toggle).toHaveAttribute("aria-expanded", "true");
+      });
+
+      it("collapses again and keeps focus on the control", () => {
+        render(
+          <HierarchyList data={eightCommodities()} primaryCurrency="USD" />,
+        );
+        const toggle = screen.getByRole("button", { name: /Assets/ });
+        fireEvent.click(toggle);
+        expect(screen.getByText("VHT")).toBeInTheDocument();
+        fireEvent.click(toggle);
+        expect(screen.queryByText("VHT")).not.toBeInTheDocument();
+        // A popover would have moved focus; revealing in place does not.
+        expect(screen.getByRole("button", { name: /Assets/ })).toBe(toggle);
+      });
+
+      it("shows inverted amounts with the sign the row uses", () => {
+        const data = [
+          createNode({
+            account: "Income",
+            inverted: true,
+            balanceChildren: {
+              USD: -100,
+              AAA: -1,
+              BBB: -2,
+              CCC: -3,
+              DDD: -4,
+            },
+          }),
+        ];
+        render(<HierarchyList data={data} primaryCurrency="USD" />);
+        fireEvent.click(screen.getByRole("button", { name: /Income/ }));
+        // Inverted, so the negative balance reads positive, as the visible
+        // three already do.
+        expect(screen.getByText("4")).toBeInTheDocument();
+      });
+
+      it("offers no control when three or fewer are hidden", () => {
+        for (const balanceChildren of [
+          { USD: 1 },
+          { USD: 1, EUR: 2 },
+          { USD: 1, EUR: 2, GBP: 3, JPY: 4 },
+        ]) {
+          const { unmount } = render(
+            <HierarchyList
+              data={[createNode({ account: "Assets", balanceChildren })]}
+              primaryCurrency="USD"
+            />,
+          );
+          expect(
+            screen.queryByRole("button", { name: /All amounts/ }),
+          ).not.toBeInTheDocument();
+          unmount();
+        }
+      });
     });
 
     it("should display dash when no other currencies", () => {

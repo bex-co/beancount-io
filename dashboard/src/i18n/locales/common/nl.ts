@@ -876,6 +876,16 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Waarde",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "Alle bedragen voor {account}",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "Minder tonen",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+{count} meer",
     description: "Count of additional hidden items",

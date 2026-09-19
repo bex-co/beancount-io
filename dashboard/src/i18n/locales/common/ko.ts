@@ -871,6 +871,16 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "가치",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "{account}의 모든 금액",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "간략히 보기",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+{count} 더 보기",
     description: "Count of additional hidden items",

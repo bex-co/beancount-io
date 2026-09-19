@@ -81,11 +81,15 @@ function OtherBalancesColumn({
   balanceData,
   primaryCurrency = "USD",
   inverted,
+  label,
 }: {
   balanceData: Record<string, unknown>;
   primaryCurrency?: string;
   inverted?: boolean;
+  /** The account or summary row this cell belongs to, for the control's name. */
+  label?: string;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const { t } = useTranslations();
   const formatNum = useFormatNumber();
   const currencyUpper = primaryCurrency?.toUpperCase();
@@ -107,9 +111,14 @@ function OtherBalancesColumn({
   );
 
   if (otherBalances.length === 0) return <Dash />;
+  // The compact form keeps wide rows readable, but the count used to be inert
+  // text: it advertised amounts with no way to see them. Revealing them in
+  // place keeps the table relationships and the reader's focus intact, which a
+  // popover over a horizontally scrolling table would not.
+  const shown = expanded ? otherBalances : otherBalances.slice(0, 3);
   return (
     <div className="space-y-1">
-      {otherBalances.slice(0, 3).map(({ commodity, value }) => (
+      {shown.map(({ commodity, value }) => (
         <div
           key={commodity}
           className="text-sm whitespace-nowrap [overflow-wrap:normal]"
@@ -121,9 +130,17 @@ function OtherBalancesColumn({
         </div>
       ))}
       {otherBalances.length > 3 && (
-        <div className="text-xs text-muted-foreground">
-          {t("common.moreCount", { count: otherBalances.length - 3 })}
-        </div>
+        <button
+          type="button"
+          onClick={() => setExpanded((open) => !open)}
+          aria-expanded={expanded}
+          aria-label={t("common.otherBalancesLabel", { account: label ?? "" })}
+          className="cursor-pointer text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          {expanded
+            ? t("common.showLess")
+            : t("common.moreCount", { count: otherBalances.length - 3 })}
+        </button>
       )}
     </div>
   );
@@ -134,10 +151,12 @@ function AmountCells({
   balanceData,
   primaryCurrency = "USD",
   inverted,
+  label,
 }: {
   balanceData: Record<string, unknown>;
   primaryCurrency?: string;
   inverted?: boolean;
+  label?: string;
 }): ReactNode {
   return (
     <>
@@ -150,6 +169,7 @@ function AmountCells({
       </td>
       <td className={cn(CELL_PAD, "w-[25%] text-right")}>
         <OtherBalancesColumn
+          label={label}
           balanceData={balanceData}
           primaryCurrency={primaryCurrency}
           inverted={inverted}
@@ -249,6 +269,7 @@ function TreeNode({
           balanceData={balanceData}
           primaryCurrency={primaryCurrency}
           inverted={node.inverted}
+          label={node.account}
         />
       </tr>
 
@@ -301,6 +322,7 @@ function SummaryRow({
         balanceData={row.balance}
         primaryCurrency={primaryCurrency}
         inverted={row.inverted}
+        label={row.label}
       />
     </tr>
   );

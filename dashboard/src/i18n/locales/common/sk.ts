@@ -874,6 +874,16 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Hodnota",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "Všetky sumy pre {account}",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "Zobraziť menej",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+{count} ďalších",
     description: "Count of additional hidden items",

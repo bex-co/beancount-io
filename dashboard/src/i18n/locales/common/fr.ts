@@ -879,6 +879,16 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Valeur",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "Tous les montants pour {account}",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "Afficher moins",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+{count} plus",
     description: "Count of additional hidden items",

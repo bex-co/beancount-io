@@ -873,6 +873,16 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "ارزش",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "همه مبالغ برای {account}",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "نمایش کمتر",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+{count} بیشتر",
     description: "Count of additional hidden items",

@@ -875,6 +875,16 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Стойност",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "Всички суми за {account}",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "Показване на по-малко",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+ още {count}",
     description: "Count of additional hidden items",

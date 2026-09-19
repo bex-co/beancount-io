@@ -883,6 +883,16 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Value",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "All amounts for {account}",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "Show less",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+{count} more",
     description: "Count of additional hidden items",

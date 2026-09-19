@@ -874,6 +874,16 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Valor",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "Todos os valores de {account}",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "Mostrar menos",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+{count} mais",
     description: "Count of additional hidden items",

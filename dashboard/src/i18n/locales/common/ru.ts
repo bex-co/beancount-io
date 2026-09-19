@@ -875,6 +875,16 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Значение",
     description: "Table heading for an option value",
   },
+  "common.otherBalancesLabel": {
+    message: "Все суммы по {account}",
+    description:
+      "Accessible name for the control that reveals every non-primary commodity amount in a statement row. {account} is the account or summary row name.",
+  },
+  "common.showLess": {
+    message: "Показать меньше",
+    description:
+      "Label that collapses a revealed list back to its compact form",
+  },
   "common.moreCount": {
     message: "+{count} ещё",
     description: "Count of additional hidden items",
