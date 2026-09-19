@@ -1,3 +1,4 @@
+import { useId } from "react";
 import {
   Card,
   CardContent,
@@ -32,6 +33,9 @@ export function FavaOptionsSection({
   ledger: NonNullable<GetLedgerQuery["getLedger"]>;
 }) {
   const { t, i18n } = useTranslations();
+  // Both option tables share Option / Value headers, so the card's own
+  // title is what tells the two families apart.
+  const titleId = useId();
   const favaOptions = ledger.favaOptions;
 
   if (!favaOptions) return null;
@@ -82,7 +86,7 @@ export function FavaOptionsSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("page.settings.favaOptions")}</CardTitle>
+        <CardTitle id={titleId}>{t("page.settings.favaOptions")}</CardTitle>
         <CardDescription>
           {t("page.settings.favaOptionsDescription")}{" "}
           <a
@@ -98,7 +102,7 @@ export function FavaOptionsSection({
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
-          <Table>
+          <Table aria-labelledby={titleId}>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-75">{t("common.option")}</TableHead>

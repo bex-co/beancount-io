@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useQuery } from "@apollo/client/react";
 import {
   Table,
@@ -24,9 +25,15 @@ import { useFormatNumber } from "@/common/hooks/use-format-number";
  */
 function EntriesCountLoadingState() {
   const { t } = useTranslations();
+  // The visible heading is this table's name: three Statistics tables sit
+  // on one page and each state renders its own copy of the pair.
+  const headingId = useId();
   return (
     <div>
-      <h3 className="flex items-center gap-2 text-lg font-semibold mb-2">
+      <h3
+        id={headingId}
+        className="flex items-center gap-2 text-lg font-semibold mb-2"
+      >
         <BarChart3 className="h-5 w-5" />
         {t("page.statistics.entriesCountByType")}
       </h3>
@@ -35,7 +42,7 @@ function EntriesCountLoadingState() {
       </p>
       <div className="overflow-hidden w-full">
         <div className="overflow-x-auto">
-          <Table>
+          <Table aria-labelledby={headingId}>
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
@@ -107,13 +114,19 @@ function EntriesCountTable({
   data: GetLedgerEntriesCountPerTypeQuery;
 }) {
   const { t } = useTranslations();
+  // The visible heading is this table's name: three Statistics tables sit
+  // on one page and each state renders its own copy of the pair.
+  const headingId = useId();
   const formatNum = useFormatNumber();
   const entries = data.getLedgerEntriesCountPerType;
   const totalCount = entries.reduce((sum, entry) => sum + entry.number, 0);
 
   return (
     <div>
-      <h3 className="flex items-center gap-2 text-lg font-semibold mb-2">
+      <h3
+        id={headingId}
+        className="flex items-center gap-2 text-lg font-semibold mb-2"
+      >
         <BarChart3 className="h-5 w-5" />
         {t("page.statistics.entriesCountByType")}
       </h3>
@@ -124,7 +137,7 @@ function EntriesCountTable({
       </p>
       <div className="overflow-hidden w-full">
         <div className="overflow-x-auto">
-          <Table>
+          <Table aria-labelledby={headingId}>
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">

@@ -1,13 +1,13 @@
 # w4 · m20 — Name Budget, Commodities, Statistics and Settings tables
 
-**Worker:** worker1 **Goal:** Let readers identify a table's account, currency pair, report purpose or option family through accessible table navigation. **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** Let readers identify a table's account, currency pair, report purpose or option family through accessible table navigation. **Status:** todo (t001–t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | [t001](./done/t001.md) | Name Budget and Commodities histories — **DONE** | 35m | — |
-| [t002](./t002.md) | Associate Statistics and Settings tables with their headings | 40m | t001 |
+| [t002](./done/t002.md) | Associate Statistics and Settings tables with their headings — **DONE** | 40m | t001 |
 | [t003](./t003.md) | Adoption surface | 15m | t002 |
 | [t004](./t004.md) | Simplify | 10m | t003 |
 | [t005](./t005.md) | Test coverage | 40m | t003, t004 |

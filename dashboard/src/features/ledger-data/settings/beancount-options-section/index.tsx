@@ -1,3 +1,4 @@
+import { useId } from "react";
 import {
   Card,
   CardContent,
@@ -31,6 +32,9 @@ export function BeancountOptionsSection({
   ledger: NonNullable<GetLedgerQuery["getLedger"]>;
 }) {
   const { t, i18n } = useTranslations();
+  // Both option tables share Option / Value headers, so the card's own
+  // title is what tells the two families apart.
+  const titleId = useId();
   const options = ledger.options;
 
   if (!options) return null;
@@ -57,7 +61,9 @@ export function BeancountOptionsSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("page.settings.beancountOptions")}</CardTitle>
+        <CardTitle id={titleId}>
+          {t("page.settings.beancountOptions")}
+        </CardTitle>
         <CardDescription>
           {t("page.settings.beancountOptionsDescription")}{" "}
           <a
@@ -73,7 +79,7 @@ export function BeancountOptionsSection({
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
-          <Table>
+          <Table aria-labelledby={titleId}>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-75">{t("common.option")}</TableHead>
