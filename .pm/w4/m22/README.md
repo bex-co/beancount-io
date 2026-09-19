@@ -1,12 +1,12 @@
 # w4 · m22 — Expose read-only state in Monaco readers
 
-**Worker:** worker1 **Goal:** Public source and entry readers expose their actual read-only state while authorized editors retain editing behavior. **Status:** todo
+**Worker:** worker1 **Goal:** Public source and entry readers expose their actual read-only state while authorized editors retain editing behavior. **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](./t001.md) | Expose read-only state through the Monaco integration | 30m | — |
+| [t001](./done/t001.md) | Expose read-only state through the Monaco integration — **DONE** | 30m | — |
 | [t002](./t002.md) | Cover Entry Context and read-only preview consumers | 25m | t001 |
 | [t003](./t003.md) | Adoption surface | 15m | t002 |
 | [t004](./t004.md) | Simplify | 10m | t003 |
