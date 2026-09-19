@@ -151,6 +151,11 @@ export function LoginForm({
         </Alert>
       )}
 
+      <noscript>
+        <p className="text-sm text-destructive" role="alert">
+          {t("auth.scriptRequired")}
+        </p>
+      </noscript>
       <Button
         type="submit"
         disabled={!hydrated || isSubmitting || isLoading}

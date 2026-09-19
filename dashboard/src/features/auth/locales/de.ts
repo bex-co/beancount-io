@@ -320,6 +320,12 @@ const deAuth: Record<string, TranslationEntry> = {
       "Diese Registrierungssitzung ist abgelaufen. Bitte starten Sie den Registrierungsprozess erneut.",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message:
+      "Für die Anmeldung wird JavaScript benötigt. Bitte aktivieren Sie es und laden Sie die Seite neu.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "Anmelden",
     description: "Button label for sign in action",

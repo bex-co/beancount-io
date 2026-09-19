@@ -319,6 +319,12 @@ const nlAuth: Record<string, TranslationEntry> = {
       "Deze registratiesessie is verlopen. Start het registratieproces opnieuw.",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message:
+      "Inloggen vereist JavaScript. Schakel het in en laad de pagina opnieuw.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "Inloggen",
     description: "Button label for sign in action",

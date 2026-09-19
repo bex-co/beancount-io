@@ -318,6 +318,12 @@ const ukAuth: Record<string, TranslationEntry> = {
       "Ця сесія реєстрації закінчилася. Будь ласка, почніть процес реєстрації знову.",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message:
+      "Для входу потрібен JavaScript. Увімкніть його та перезавантажте сторінку.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "Увійти",
     description: "Button label for sign in action",

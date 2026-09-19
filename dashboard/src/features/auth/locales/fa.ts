@@ -318,6 +318,12 @@ const faAuth: Record<string, TranslationEntry> = {
       "این جلسه ثبت‌نام منقضی شده است. لطفاً فرآیند ثبت‌نام را دوباره شروع کنید.",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message:
+      "ورود به JavaScript نیاز دارد. لطفاً آن را فعال کنید و صفحه را دوباره بارگذاری کنید.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "ورود",
     description: "Button label for sign in action",

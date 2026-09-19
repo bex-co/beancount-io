@@ -320,6 +320,12 @@ const ruAuth: Record<string, TranslationEntry> = {
       "Эта сессия регистрации истекла. Пожалуйста, начните процесс регистрации заново.",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message:
+      "Для входа нужен JavaScript. Включите его и перезагрузите страницу.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "Войти",
     description: "Button label for sign in action",

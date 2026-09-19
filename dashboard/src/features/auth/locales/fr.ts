@@ -323,6 +323,12 @@ const frAuth: Record<string, TranslationEntry> = {
       "Cette session d'inscription a expiré. Veuillez recommencer le processus d'inscription.",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message:
+      "La connexion nécessite JavaScript. Veuillez l'activer puis recharger la page.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "Se connecter",
     description: "Button label for sign in action",

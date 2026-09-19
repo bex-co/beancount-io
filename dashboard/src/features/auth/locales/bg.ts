@@ -320,6 +320,12 @@ const bgAuth: Record<string, TranslationEntry> = {
       "Тази сесия за регистрация е изтекла. Моля, започнете процеса на регистрация отново.",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message:
+      "Влизането изисква JavaScript. Включете го и презаредете страницата.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "Вход",
     description: "Button label for sign in action",

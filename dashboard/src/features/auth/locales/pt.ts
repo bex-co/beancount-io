@@ -320,6 +320,12 @@ const ptAuth: Record<string, TranslationEntry> = {
       "Esta sessão de registro expirou. Por favor, inicie o processo de registro novamente.",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message:
+      "O início de sessão precisa de JavaScript. Ative-o e recarregue a página.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "Entrar",
     description: "Button label for sign in action",

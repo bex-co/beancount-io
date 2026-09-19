@@ -239,6 +239,11 @@ const enAuth: Record<string, TranslationEntry> = {
     message: "Sending...",
     description: "Button state while sending email",
   },
+  "auth.scriptRequired": {
+    message: "Sign-in needs JavaScript. Please enable it and reload this page.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "Sign In",
     description: "Button label for sign in action",

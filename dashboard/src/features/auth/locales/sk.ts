@@ -318,6 +318,12 @@ const skAuth: Record<string, TranslationEntry> = {
       "Táto registračná relácia vypršala. Prosím začnite proces registrácie znova.",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message:
+      "Prihlásenie vyžaduje JavaScript. Zapnite ho a znova načítajte stránku.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "Prihlásiť",
     description: "Button label for sign in action",

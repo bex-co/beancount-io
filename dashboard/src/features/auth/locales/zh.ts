@@ -314,6 +314,11 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "此注册会话已过期。请重新开始注册流程。",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message: "登录需要 JavaScript。请启用后重新加载此页面。",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "登录",
     description: "Button label for sign in action",

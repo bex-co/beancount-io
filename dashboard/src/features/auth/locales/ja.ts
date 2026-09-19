@@ -238,6 +238,12 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "送信中...",
     description: "Button state while sending email",
   },
+  "auth.scriptRequired": {
+    message:
+      "サインインには JavaScript が必要です。有効にしてページを再読み込みしてください。",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "サインイン",
     description: "Button label for sign in action",

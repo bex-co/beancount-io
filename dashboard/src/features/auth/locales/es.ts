@@ -323,6 +323,12 @@ const esAuth: Record<string, TranslationEntry> = {
       "Esta sesión de registro ha expirado. Por favor, inicia el proceso de registro nuevamente.",
     description: "Alert message for expired session",
   },
+  "auth.scriptRequired": {
+    message:
+      "El inicio de sesión necesita JavaScript. Actívalo y vuelve a cargar la página.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "Iniciar sesión",
     description: "Button label for sign in action",

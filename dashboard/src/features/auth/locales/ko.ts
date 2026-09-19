@@ -235,6 +235,12 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "전송 중...",
     description: "Button state while sending email",
   },
+  "auth.scriptRequired": {
+    message:
+      "로그인하려면 JavaScript가 필요합니다. 활성화한 뒤 페이지를 새로 고쳐 주세요.",
+    description:
+      "Notice shown in place of the submit button when JavaScript is unavailable, explaining why sign-in and registration cannot be completed. Rendered inside <noscript>.",
+  },
   "auth.signIn": {
     message: "로그인",
     description: "Button label for sign in action",
