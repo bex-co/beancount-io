@@ -44,3 +44,4 @@ tmp/
 .playwright-mcp/
 
 .tmp
+*.env
