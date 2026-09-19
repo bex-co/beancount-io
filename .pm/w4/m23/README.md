@@ -1,6 +1,6 @@
 # w4 · m23 — Prevent native authentication forms from putting passwords in URLs
 
-**Worker:** worker1 **Goal:** Safe login and registration while client JavaScript loads or fails. **Status:** todo (t001–t004 done)
+**Worker:** worker1 **Goal:** Safe login and registration while client JavaScript loads or fails. **Status:** todo (t001–t005 done)
 
 **Severity:** major. **Estimate:** 125m across 6 tasks. Dashboard only; no API contract change.
 
@@ -12,7 +12,7 @@
 | t002 | Verify shared authentication consumers — **DONE** | 20m | t001 |
 | t003 | Adoption surface — **DONE** | 15m | t002 |
 | t004 | Simplify — **DONE** | 10m | t003 |
-| t005 | Test coverage | 35m | t003, t004 |
+| t005 | Test coverage — **DONE** | 35m | t003, t004 |
 | t006 | Closeout | 10m | t005 |
 
 ## Definition of done
