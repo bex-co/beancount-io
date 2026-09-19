@@ -105,8 +105,6 @@ export default function CashFlowSankey({
 
         if (p.dataType === "edge" && p.data) {
           const { source, target, value } = p.data;
-          // The unit the transformer chose, never a literal: this ledger's
-          // amounts may be MUSD or EUR, and calling those USD misstates them.
           return `
             <strong>${source} → ${target}</strong><br/>
             ${formatNum(Number(value))}${sankeyData.unit ? ` ${sankeyData.unit}` : ""}

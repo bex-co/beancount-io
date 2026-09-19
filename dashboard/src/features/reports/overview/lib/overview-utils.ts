@@ -3,6 +3,7 @@ import {
   balanceToAmounts,
   chooseDisplayUnit,
   collectUnits,
+  toFiniteAmount,
 } from "./unit-amounts";
 
 export type DataSeries = Array<{
@@ -63,18 +64,13 @@ type OverviewData = {
   expensesHierarchyData?: unknown;
 };
 
-function toFiniteNumber(value: unknown): number | null {
-  const numeric = typeof value === "string" ? Number(value) : Number(value);
-  return Number.isFinite(numeric) ? numeric : null;
-}
-
 function hasNonZeroAmount(value: unknown): boolean {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
 
   return Object.values(value).some((amount) => {
-    const numeric = toFiniteNumber(amount);
+    const numeric = toFiniteAmount(amount);
     return numeric !== null && numeric !== 0;
   });
 }
@@ -140,7 +136,7 @@ export function getBalanceAmounts(
 
   return Object.entries(balance)
     .map(([currency, value]) => {
-      const numeric = toFiniteNumber(value);
+      const numeric = toFiniteAmount(value);
       if (numeric === null) return null;
       return {
         currency,
@@ -170,18 +166,6 @@ export function getComparableAmount(
     amounts.find((amount) => amount.currency === preferredCurrency) ??
     (amounts.length === 1 ? amounts[0] : null)
   );
-}
-
-export function pickNumericAmount(
-  balance?: Record<string, unknown> | null,
-  inverse?: boolean,
-) {
-  if (!balance) return 0;
-  const record = balance as Record<string, unknown>;
-  const value = record["USD"] ?? Object.values(record)[0];
-  if (value == null) return 0;
-  const num = toFiniteNumber(value);
-  return num === null ? 0 : inverse ? -num : num;
 }
 
 function flattenHierarchy(input?: unknown): HierarchyNode[] {
@@ -460,15 +444,7 @@ export type DistributionData = {
   units: string[];
 };
 
-/**
- * Distribution slices for one unit.
- *
- * A pie divides each slice by the sum of all of them, so mixing units would
- * put an unpriced vacation hour and a dollar in the same denominator and make
- * every percentage meaningless. The unit model picks the unit the ledger is
- * mostly kept in; balances in other units are reported through `units` so the
- * chart can say what it is leaving out, rather than adding or hiding them.
- */
+/** Distribution slices for one unit; `units` reports what was left out. */
 export function buildDistributionData(
   input?: unknown,
   inverse?: boolean,

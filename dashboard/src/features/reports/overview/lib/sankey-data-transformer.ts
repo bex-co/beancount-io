@@ -51,19 +51,11 @@ function isSkipped(account: string, accountMeta?: AccountMetaMap): boolean {
 /**
  * Total a node and everything beneath it, per unit.
  *
- * Two things this has to get right that the scalar version did not:
- *
- * - **A node's own postings count.** The producer stores an account's direct
- *   postings in `balance` and rolls them into each ancestor's
- *   `balanceChildren`, so `balance` is read at every level and nothing is
- *   double-counted. Summing only children dropped real money whenever a parent
- *   had postings of its own — and it dropped them even when the child that
- *   caused the recursion was empty.
- * - **Every descendant resolves its own role.** The caller resolves the node it
- *   entered through; without resolving each account below it, a Cash or
- *   Checking leaf reaches the investing bucket purely because its parent did.
- *   A declared activity role on such an account still keeps it, because that is
- *   what `isExcludedAccount` already decides.
+ * `balance` is read at every level: the producer stores an account's direct
+ * postings there and rolls them into each ancestor's `balanceChildren`, so
+ * descending and reading as you go double-counts nothing. Each descendant
+ * resolves its own role, so a Cash leaf does not reach the investing bucket
+ * on its parent's authority.
  */
 export function aggregateHierarchyBalance(
   node: HierarchyNode,
@@ -129,16 +121,13 @@ function extractNodesAtDepth(
       const balance = aggregateHierarchyBalance(node, inverse, accountMeta);
       if (balance.size === 0) return;
 
-      const existing = nodeMap.get(accountAtDepth);
-      if (existing) {
-        mergeAmounts(existing, balance);
-      } else {
-        nodeMap.set(accountAtDepth, balance);
-      }
+      addToGroup(nodeMap, accountAtDepth, balance);
     } else {
       // An ancestor above the grouping depth can hold postings of its own, and
       // they belong to its own depth key rather than to any child's.
-      readBalanceAtDepth(node, accountAtDepth, inverse, nodeMap);
+      const own: UnitAmounts = new Map();
+      readBalance(node.balance, inverse, own);
+      addToGroup(nodeMap, accountAtDepth, own);
       node.children?.forEach((child) => traverse(child, currentDepth + 1));
     }
   }
@@ -147,21 +136,16 @@ function extractNodesAtDepth(
   return nodeMap;
 }
 
-function readBalanceAtDepth(
-  node: HierarchyNode,
-  accountAtDepth: string,
-  inverse: boolean,
-  nodeMap: Map<string, UnitAmounts>,
+/** Add amounts under a key, merging rather than replacing an existing entry. */
+function addToGroup(
+  group: Map<string, UnitAmounts>,
+  key: string,
+  amounts: UnitAmounts,
 ): void {
-  const own: UnitAmounts = new Map();
-  readBalance(node.balance, inverse, own);
-  if (own.size === 0) return;
-  const existing = nodeMap.get(accountAtDepth);
-  if (existing) {
-    mergeAmounts(existing, own);
-  } else {
-    nodeMap.set(accountAtDepth, own);
-  }
+  if (amounts.size === 0) return;
+  const existing = group.get(key);
+  if (existing) mergeAmounts(existing, amounts);
+  else group.set(key, amounts);
 }
 
 interface TransformOptions {

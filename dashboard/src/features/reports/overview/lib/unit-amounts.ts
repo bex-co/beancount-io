@@ -1,22 +1,15 @@
 /**
  * Amounts keyed by their currency unit.
  *
- * The ledger's balances are maps like `{ USD: 386.22, VACHR: 25 }`, and the two
- * numbers are not commensurable: no price was supplied, so adding them produces
- * a figure that is neither a dollar total nor a conversion. Every overview
- * chart carries amounts this way and never sums across keys.
- *
- * Charts that add their own parts together — a Sankey into node totals and
- * Savings, a pie into the denominator behind its percentages — can only be
- * truthful in one unit, so they choose one and disclose the rest.
+ * `{ USD: 386.22, VACHR: 25 }` holds two numbers that are not commensurable:
+ * no price was supplied, so adding them yields neither a dollar total nor a
+ * conversion. Charts that sum their own parts — a Sankey into node totals and
+ * Savings, a pie into the denominator behind its percentages — can therefore
+ * be truthful in only one unit, so they choose one and disclose the rest.
  */
 export type UnitAmounts = Map<string, number>;
 
-export function addAmount(
-  into: UnitAmounts,
-  unit: string,
-  amount: number,
-): void {
+function addAmount(into: UnitAmounts, unit: string, amount: number): void {
   if (!Number.isFinite(amount) || amount === 0) return;
   into.set(unit, (into.get(unit) ?? 0) + amount);
 }
@@ -24,6 +17,16 @@ export function addAmount(
 /** Merge one unit map into another, unit by unit. */
 export function mergeAmounts(into: UnitAmounts, from: UnitAmounts): void {
   from.forEach((amount, unit) => addAmount(into, unit, amount));
+}
+
+/**
+ * One rule for turning an API amount into a number: `Number`, so a malformed
+ * value becomes NaN and is skipped rather than silently truncated the way
+ * `parseFloat("12abc")` would.
+ */
+export function toFiniteAmount(value: unknown): number | null {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
 }
 
 /** Read every unit a balance carries, rather than USD-or-whatever-is-first. */
@@ -34,8 +37,8 @@ export function readBalance(
 ): void {
   if (!balance) return;
   for (const [unit, raw] of Object.entries(balance)) {
-    const num = typeof raw === "string" ? parseFloat(raw) : Number(raw);
-    if (!Number.isFinite(num)) continue;
+    const num = toFiniteAmount(raw);
+    if (num === null) continue;
     addAmount(into, unit, inverse ? -num : num);
   }
 }

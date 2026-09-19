@@ -2,7 +2,13 @@ import { ReactECharts } from "@/common/components/react-echarts";
 import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { type DataSeries, pickNumericAmount } from "../lib/overview-utils";
+import { type DataSeries } from "../lib/overview-utils";
+import {
+  balanceToAmounts,
+  chooseDisplayUnit,
+  collectUnits,
+} from "../lib/unit-amounts";
+import { ChartUnitScope } from "./chart-unit-scope";
 
 export function IncomeExpensesChart({
   income,
@@ -15,9 +21,18 @@ export function IncomeExpensesChart({
   const formatNum = useFormatNumber();
   const dates: string[] =
     (income?.length ? income : expenses)?.map((d) => d.date) ?? [];
-  const incomeValues = income?.map((d) => pickNumericAmount(d.balance)) ?? [];
-  const expensesValues =
-    expenses?.map((d) => pickNumericAmount(d.balance)) ?? [];
+  // Bars are compared against each other down a single axis, so this chart is
+  // in the same position as the others: one unit, and say what it leaves out.
+  const incomeAmounts = income?.map((d) => balanceToAmounts(d.balance)) ?? [];
+  const expenseAmounts =
+    expenses?.map((d) => balanceToAmounts(d.balance)) ?? [];
+  const allAmounts = [...incomeAmounts, ...expenseAmounts];
+  const unit = chooseDisplayUnit(allAmounts);
+  const units = collectUnits(allAmounts);
+  const inUnit = (amounts: Map<string, number>) =>
+    unit ? (amounts.get(unit) ?? 0) : 0;
+  const incomeValues = incomeAmounts.map(inUnit);
+  const expensesValues = expenseAmounts.map(inUnit);
 
   const isEmpty =
     !incomeValues.some((v) => v !== 0) && !expensesValues.some((v) => v !== 0);
@@ -73,6 +88,7 @@ export function IncomeExpensesChart({
         style={{ height: "250px", width: "100%" }}
         className="w-full"
       />
+      <ChartUnitScope unit={unit} units={units} />
     </div>
   );
 }
