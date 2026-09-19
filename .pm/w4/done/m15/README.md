@@ -1,6 +1,6 @@
 # w4 · m15 — Associate authentication validation errors with their fields
 
-**Worker:** worker1 **Goal:** readers can identify and correct invalid sign-in, recovery and registration fields through assistive technology **Status:** todo (t001–t005 done)
+**Worker:** worker1 **Goal:** readers can identify and correct invalid sign-in, recovery and registration fields through assistive technology **Status:** done
 
 Minor accessibility defects, dashboard only. Three forms show local validation errors without exposing invalid state or associating the message with the field. Reproduced browser evidence and safe no-request controls are in [FINDINGS.md](./FINDINGS.md).
 
@@ -13,7 +13,7 @@ Minor accessibility defects, dashboard only. Three forms show local validation e
 | t003 | Verify the authentication adoption surface — **DONE** | 10m | t001, t002 |
 | t004 | Simplify the validation attribute changes — **DONE** | 10m | t003 |
 | t005 | Test real validation, correction and focus behavior — **DONE** | 40m | t003, t004 |
-| t006 | Close and archive the verified repair | 10m | t005 |
+| t006 | Close and archive the verified repair — **DONE** | 10m | t005 |
 
 70 implementation minutes; 140 minutes across six tasks. This exceeds a sub-hour inbox note because three independently implemented forms and their real validation/recovery paths need coverage.
 

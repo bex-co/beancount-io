@@ -20,7 +20,7 @@
 
 - [ ] **m16** — [Preserve statement chart selection through report reads](./m16/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
 
-- [ ] **m15** — [Associate authentication validation errors with their fields](./m15/README.md) (6 tasks) ← promoted w4/082, repeated dashboard QA, 2026-09-17
+- [x] **m15** — [Associate authentication validation errors with their fields](./done/m15/README.md) (6 tasks) ← promoted w4/082, repeated dashboard QA, 2026-09-17
 
 - [x] **m14** — [Restore truthful Catalan navigation and Journal labels](./done/m14/README.md) (6 tasks) ← from repeated dashboard QA, 2026-09-17
 
@@ -48,7 +48,7 @@
 
 - ~~**078**~~ — BQL inventory clipping — dropped 2026-09-17: promoted to [m18](./m18/README.md), preserving the original evidence and adding PRINT multiline values; expanded implementation and verification exceed one hour.
 
-- ~~**082**~~ — Sign-in and recovery error associations — dropped 2026-09-17: promoted to [m15](./m15/README.md), preserving the evidence and adding independently reproduced registration fields; the expanded repair now exceeds one hour.
+- ~~**082**~~ — Sign-in and recovery error associations — dropped 2026-09-17: promoted to [m15](./done/m15/README.md), preserving the evidence and adding independently reproduced registration fields; the expanded repair now exceeds one hour.
 
 - ~~**073**~~ — Journal shared-filter page reset regression — dropped 2026-09-17: superseded by [m13](./done/m13/README.md), which preserves the original evidence and adds the independently reproduced Accounts typing failure at the same pending boundary.
 
