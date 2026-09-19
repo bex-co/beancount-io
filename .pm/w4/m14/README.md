@@ -1,6 +1,6 @@
 # w4 · m14 — Restore truthful Catalan navigation and Journal labels
 
-**Worker:** worker1 **Goal:** Catalan readers can recognize navigation, filters and journal controls without unrelated error/loading text **Status:** todo (t001–t002 done)
+**Worker:** worker1 **Goal:** Catalan readers can recognize navigation, filters and journal controls without unrelated error/loading text **Status:** todo (t001–t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | t001 | Repair Catalan shared navigation and filter messages — **DONE** | 40m | — |
 | t002 | Repair Catalan Journal message associations — **DONE** | 50m | t001 |
-| t003 | Verify the localized adoption surface | 10m | t002 |
+| t003 | Verify the localized adoption surface — **DONE** | 10m | t002 |
 | t004 | Simplify the catalog changes | 10m | t003 |
 | t005 | Test real Catalan controls and run dashboard gates | 35m | t003, t004 |
 | t006 | Close out the verified Catalan repair | 10m | t005 |
