@@ -4,7 +4,7 @@
 
 ## Milestones
 
-- [ ] **m23** — [Prevent native authentication forms from putting passwords in URLs](./m23/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-18
+- [x] **m23** — [Prevent native authentication forms from putting passwords in URLs](./done/m23/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-18
 
 - [x] **m22** — [Expose read-only state in Monaco readers](./done/m22/README.md) (6 tasks) ← promoted w4/102 with Entry Context evidence, repeated dashboard QA, 2026-09-17
 
