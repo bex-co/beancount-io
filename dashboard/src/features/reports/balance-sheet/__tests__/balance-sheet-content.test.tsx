@@ -93,6 +93,10 @@ const balanceSheetData = {
 function renderContent() {
   render(
     <BalanceSheetContent
+      // The page owns the selection, so this render is controlled as in
+      // production rather than falling back to Radix's uncontrolled mode.
+      selectedTab="netWorth"
+      onSelectedTabChange={() => {}}
       balanceSheetData={balanceSheetData}
       primaryCurrency="USD"
       reportingEntityName="Acme, Inc."

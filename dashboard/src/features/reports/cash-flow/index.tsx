@@ -58,10 +58,7 @@ export default function LedgerCashFlowPage() {
     ledgerId,
     primaryCurrency,
   );
-  // Owned here rather than in the content component: a pending read replaces
-  // that component, so a selection living inside it would reset every time an
-  // uncached interval or conversion is chosen. This page outlives the read and
-  // is itself remounted per ledger, so the selection stays report-scoped.
+  // Owned here, not in the content: the pending branch below unmounts it.
   const [selectedTab, setSelectedTab] = useState<string>("netCashFlow");
 
   const {

@@ -4,6 +4,7 @@ import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerIncomeStatementDocument } from "@/graphql/definitions";
 import type { ChartInterval } from "@/common/types/chart";
+import type { ChartMode } from "./chart-mode-select";
 import { incomeStatementQueryDefaults } from "./constants";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
@@ -50,11 +51,9 @@ export default function LedgerIncomeStatementPage() {
     ledgerId,
     primaryCurrency,
   );
-  // Owned here rather than in the content component: a pending read
-  // replaces that component, so a selection living inside it would reset
-  // every time an uncached interval or conversion is chosen. This page
-  // outlives the read and is remounted per ledger, so it stays scoped.
+  // Owned here, not in the content: the pending branch below unmounts it.
   const [selectedTab, setSelectedTab] = useState<string>("netProfit");
+  const [chartMode, setChartMode] = useState<ChartMode>("stacked");
 
   const {
     data,
@@ -123,6 +122,8 @@ export default function LedgerIncomeStatementPage() {
       onConversionChange={setConversion}
       selectedTab={selectedTab}
       onSelectedTabChange={setSelectedTab}
+      chartMode={chartMode}
+      onChartModeChange={setChartMode}
       timeInterval={timeInterval}
       onTimeIntervalChange={setTimeInterval}
       invertIncomeLiabilitiesEquity={invertIncomeLiabilitiesEquity}

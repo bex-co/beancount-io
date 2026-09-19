@@ -107,6 +107,12 @@ const sharedProps = {
     account: "Assets|Income",
     filter: "tag:reviewed",
   },
+  // The pages own these, so the components are always controlled in
+  // production; supplying them here keeps these renders faithful.
+  selectedTab: "netWorth",
+  onSelectedTabChange: () => {},
+  chartMode: "stacked" as const,
+  onChartModeChange: () => {},
   fiscalYearEnd: { month: 12, day: 31 },
   onConversionChange: vi.fn(),
   onTimeIntervalChange: vi.fn(),

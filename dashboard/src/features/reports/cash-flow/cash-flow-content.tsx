@@ -221,7 +221,6 @@ export function CashFlowContent({
         chartsVisible={chartsVisible}
       >
         <Tabs
-          defaultValue={selectedTab}
           value={selectedTab}
           onValueChange={onSelectedTabChange}
           className="w-full flex-col justify-start gap-6"

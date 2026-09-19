@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
 import { ClientOnly } from "@tanstack/react-router";
@@ -58,6 +58,9 @@ interface IncomeStatementContentProps {
    */
   selectedTab: string;
   onSelectedTabChange: (value: string) => void;
+  /** Page-owned for the same reason as selectedTab. */
+  chartMode: ChartMode;
+  onChartModeChange: (value: ChartMode) => void;
   onTimeIntervalChange: (value: ChartInterval) => void;
   filters: LedgerSearchParams;
   fiscalYearEnd: FiscalYearEnd;
@@ -83,6 +86,8 @@ export function IncomeStatementContent({
   onConversionChange,
   selectedTab,
   onSelectedTabChange,
+  chartMode,
+  onChartModeChange,
   onTimeIntervalChange,
   filters,
   fiscalYearEnd,
@@ -102,7 +107,6 @@ export function IncomeStatementContent({
       value: "expensesBreakdown",
     },
   ];
-  const [chartMode, setChartMode] = useState<ChartMode>("stacked");
   const { chartsVisible, toggleChartsVisible, chartsSectionId } =
     useChartsVisibility("incomeStatement");
 
@@ -217,7 +221,6 @@ export function IncomeStatementContent({
         chartsVisible={chartsVisible}
       >
         <Tabs
-          defaultValue={selectedTab}
           value={selectedTab}
           onValueChange={onSelectedTabChange}
           className="w-full flex-col justify-start gap-6"
@@ -233,7 +236,7 @@ export function IncomeStatementContent({
                 {(selectedTab === "income" || selectedTab === "expenses") && (
                   <ChartModeSelect
                     value={chartMode}
-                    onValueChange={setChartMode}
+                    onValueChange={onChartModeChange}
                   />
                 )}
                 <IntervalSelect

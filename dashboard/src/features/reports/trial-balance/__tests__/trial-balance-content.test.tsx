@@ -95,6 +95,10 @@ const trialBalanceData = {
   equityHierarchyData: hierarchyNode("Equity"),
 };
 
+/**
+ * The page owns the chart selection so it survives a pending read; this harness
+ * owns it too, so the narrow view picker behaves as it does in production.
+ */
 function Harness({
   onConversionChange,
 }: {

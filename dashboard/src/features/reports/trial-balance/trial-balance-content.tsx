@@ -193,11 +193,7 @@ export function TrialBalanceContent({
         chartsVisible={chartsVisible}
       >
         {/* Tabbed Interface */}
-        <Tabs
-          defaultValue={selectedTab}
-          value={selectedTab}
-          onValueChange={onSelectedTabChange}
-        >
+        <Tabs value={selectedTab} onValueChange={onSelectedTabChange}>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
             <ResponsiveTabTriggerList
               selectedTab={selectedTab}

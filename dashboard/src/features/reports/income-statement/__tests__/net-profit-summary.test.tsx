@@ -104,6 +104,11 @@ function node(
 }
 
 const sharedProps = {
+  // The page owns these, so the component is always controlled in production.
+  selectedTab: "netProfit",
+  onSelectedTabChange: () => {},
+  chartMode: "stacked" as const,
+  onChartModeChange: () => {},
   primaryCurrency: "USD",
   reportingEntityName: "Example",
   reportingEntitySource: "ledger_title" as const,

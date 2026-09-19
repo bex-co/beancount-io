@@ -322,12 +322,14 @@ describe("LedgerCashFlowPage chart selection lifetime", () => {
     expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("byActivity");
   });
 
-  it("withholds the statement and its export while the read is pending", () => {
+  it("shows the pending state instead of the statement while a read is in flight", () => {
     vi.mocked(useQuery).mockReturnValue(pending() as never);
     render(<LedgerCashFlowPage />);
 
-    // The stale-data contract stays intact: no content, so no stale amounts
-    // and no export offered under the new interval's metadata.
+    // The stale-data contract stays intact: the loading state is what renders,
+    // so no stale amounts and no export exist under the new interval's
+    // metadata — lifting the selection must not weaken that.
+    expect(screen.getByRole("status")).toBeInTheDocument();
     expect(screen.queryByText("cash-flow-content")).not.toBeInTheDocument();
   });
 });
