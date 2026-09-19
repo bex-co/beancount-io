@@ -109,9 +109,15 @@ export function RegisterForm({
             placeholder={t("auth.enterFirstName")}
             className="w-full bg-muted"
             {...register("firstName")}
+            aria-invalid={errors.firstName ? true : undefined}
+            aria-describedby={errors.firstName ? "firstName-error" : undefined}
           />
           {errors.firstName && (
-            <p className="text-sm text-destructive">
+            <p
+              id="firstName-error"
+              role="alert"
+              className="text-sm text-destructive"
+            >
               {errors.firstName.message}
             </p>
           )}
@@ -127,9 +133,15 @@ export function RegisterForm({
             placeholder={t("auth.enterLastName")}
             className="w-full bg-muted"
             {...register("lastName")}
+            aria-invalid={errors.lastName ? true : undefined}
+            aria-describedby={errors.lastName ? "lastName-error" : undefined}
           />
           {errors.lastName && (
-            <p className="text-sm text-destructive">
+            <p
+              id="lastName-error"
+              role="alert"
+              className="text-sm text-destructive"
+            >
               {errors.lastName.message}
             </p>
           )}
