@@ -12,7 +12,7 @@
 
 - [ ] **m20** — [Name Budget, Commodities, Statistics and Settings tables](./m20/README.md) (6 tasks) ← promoted w4/091 with Statistics evidence, repeated dashboard QA, 2026-09-17
 
-- [ ] **m19** — [Preserve URL fragments in login continuations](./m19/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
+- [x] **m19** — [Preserve URL fragments in login continuations](./done/m19/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-17
 
 - [x] **m18** — [Make complete BQL cell values readable](./done/m18/README.md) (6 tasks) ← promoted w4/078 with PRINT evidence, repeated dashboard QA, 2026-09-17
 
