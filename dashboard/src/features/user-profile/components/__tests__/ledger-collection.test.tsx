@@ -309,10 +309,16 @@ describe("LedgerCollection navigation during a pending search write", () => {
       expect(screen.getByRole("searchbox")).toBeInTheDocument();
     });
 
-    // Type, then open the matching card before the 250ms write settles. The
-    // loader is held, so the profile stays mounted while the route is pending.
+    // Type, then leave without touching a card, so the departure flush does
+    // not run and a debounced write really is still outstanding. The held
+    // loader keeps the profile mounted while the ledger route is pending.
     await user.type(screen.getByRole("searchbox"), "ledger-00");
-    await user.click(screen.getByRole("link", { name: /ledger-00/ }));
+    act(() => {
+      void router.navigate({
+        to: "/ledger/$ledgerOwner/$ledgerName",
+        params: { ledgerOwner: "owner", ledgerName: "ledger-00" },
+      });
+    });
     await waitFor(() => expect(router.state.isLoading).toBe(true));
 
     // Let the outstanding debounce fire against that pending destination.
@@ -341,5 +347,35 @@ describe("LedgerCollection navigation during a pending search write", () => {
     });
 
     expect(router.state.location.pathname).toBe("/ledger/owner");
+  });
+});
+
+describe("LedgerCollection search preserved across a fast departure", () => {
+  it("restores the typed query on Back even when departure beat the debounce", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt();
+
+    // Type and open a card well inside the 250ms window.
+    await user.type(screen.getByRole("searchbox"), "ledger-00");
+    expect(router.state.location.search).not.toMatchObject({ q: "ledger-00" });
+
+    await user.click(screen.getByRole("link", { name: /ledger-00/ }));
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/ledger/owner/ledger-00");
+    });
+
+    await act(async () => {
+      router.history.back();
+    });
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/ledger/owner");
+    });
+    // The search the reader could still see when they left is the one they
+    // come back to, along with its filtered result.
+    expect(router.state.location.search).toMatchObject({ q: "ledger-00" });
+    await waitFor(() => {
+      expect(screen.getByRole("searchbox")).toHaveValue("ledger-00");
+    });
   });
 });

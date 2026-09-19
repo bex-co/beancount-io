@@ -124,6 +124,17 @@ export function LedgerCollection({
   );
   const visible = filtered.slice(0, visibleCount);
 
+  /**
+   * Write the visible query into this profile's history entry now, on the same
+   * gesture that opens a ledger. Without it a reader who types and clicks
+   * before the 250ms debounce settles comes Back to a profile that never
+   * recorded the search they could still see.
+   */
+  const flushPendingQuery = () => {
+    if (query === urlQuery) return;
+    updateSearch({ q: query === "" ? undefined : query });
+  };
+
   const clearSearch = () => {
     editQuery("");
     searchInput.current?.focus();
@@ -228,7 +239,15 @@ export function LedgerCollection({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+          // Capture phase, so the search lands in the profile entry before the
+          // card's own navigation pushes the ledger entry on top of it.
+          onPointerDownCapture={flushPendingQuery}
+          onKeyDownCapture={(event) => {
+            if (event.key === "Enter" || event.key === " ") flushPendingQuery();
+          }}
+        >
           {visible.map((repo) => (
             <RepositoryListItem
               key={repo.fullName}
