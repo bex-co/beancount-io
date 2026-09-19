@@ -604,7 +604,7 @@ const ruCommon: Record<string, TranslationEntry> = {
     description: "Description under the narrow filters sheet title",
   },
   "component.searchControls.clearAll": {
-    message: "Очистить all",
+    message: "Очистить всё",
     description: "Button text to clear all filters",
   },
   "component.conversionSelect.convertedTo": {

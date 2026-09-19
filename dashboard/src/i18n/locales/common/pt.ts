@@ -605,7 +605,7 @@ const ptCommon: Record<string, TranslationEntry> = {
     description: "Description under the narrow filters sheet title",
   },
   "component.searchControls.clearAll": {
-    message: "Limpar all",
+    message: "Limpar tudo",
     description: "Button text to clear all filters",
   },
   "component.conversionSelect.convertedTo": {

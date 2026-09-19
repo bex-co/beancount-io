@@ -605,7 +605,7 @@ const frCommon: Record<string, TranslationEntry> = {
     description: "Description under the narrow filters sheet title",
   },
   "component.searchControls.clearAll": {
-    message: "Effacer all",
+    message: "Tout effacer",
     description: "Button text to clear all filters",
   },
   "component.conversionSelect.convertedTo": {

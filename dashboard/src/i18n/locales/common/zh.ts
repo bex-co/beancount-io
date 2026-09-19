@@ -595,7 +595,7 @@ const zhCommon: Record<string, TranslationEntry> = {
     description: "Description under the narrow filters sheet title",
   },
   "component.searchControls.clearAll": {
-    message: "清除 all",
+    message: "清除全部",
     description: "Button text to clear all filters",
   },
   "component.conversionSelect.convertedTo": {
