@@ -1,6 +1,6 @@
 # w4 · m23 — Prevent native authentication forms from putting passwords in URLs
 
-**Worker:** worker1 **Goal:** Safe login and registration while client JavaScript loads or fails. **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** Safe login and registration while client JavaScript loads or fails. **Status:** todo (t001–t002 done)
 
 **Severity:** major. **Estimate:** 125m across 6 tasks. Dashboard only; no API contract change.
 
@@ -9,7 +9,7 @@
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Protect login and registration before hydration — **DONE** | 35m | — |
-| t002 | Verify shared authentication consumers | 20m | t001 |
+| t002 | Verify shared authentication consumers — **DONE** | 20m | t001 |
 | t003 | Adoption surface | 15m | t002 |
 | t004 | Simplify | 10m | t003 |
 | t005 | Test coverage | 35m | t003, t004 |

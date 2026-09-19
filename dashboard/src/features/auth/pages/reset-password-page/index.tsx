@@ -320,7 +320,15 @@ export default function ResetPasswordPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+              {/* These forms are client-rendered, so nothing submits before
+                  hydration today — `method="post"` keeps it that way if that
+                  ever changes, since the native default would put every field
+                  in the URL. */}
+              <form
+                method="post"
+                className="space-y-4"
+                onSubmit={handleSubmit(onSubmit)}
+              >
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">{t("auth.newPassword")}</Label>
                   <PasswordInput

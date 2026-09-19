@@ -144,7 +144,15 @@ export function CliAuthCodeEntryView({ onSubmit }: CliAuthCodeEntryViewProps) {
 
   return (
     <DeviceAuthCard error={error}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {/* These forms are client-rendered, so nothing submits before
+          hydration today — `method="post"` keeps it that way if that
+          ever changes, since the native default would put every field
+          in the URL. */}
+      <form
+        method="post"
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-6"
+      >
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
             <Terminal className="w-8 h-8 text-primary" />
