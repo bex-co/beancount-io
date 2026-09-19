@@ -1,8 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { useQuery } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import TrialBalancePage from "../index";
+
+const { captureProps } = vi.hoisted(() => ({ captureProps: vi.fn() }));
 
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
 
@@ -25,7 +27,10 @@ vi.mock("@/common/hooks/use-ledger-search-params", () => ({
 }));
 
 vi.mock("../trial-balance-content", () => ({
-  TrialBalanceContent: () => <div>trial-balance-content</div>,
+  TrialBalanceContent: (props: Record<string, unknown>) => {
+    captureProps(props);
+    return <div>trial-balance-content</div>;
+  },
 }));
 
 function mockQuery(override: Record<string, unknown>) {
@@ -91,5 +96,44 @@ describe("TrialBalancePage", () => {
     render(<TrialBalancePage />);
 
     expect(screen.getByText("trial-balance-content")).toBeInTheDocument();
+  });
+});
+
+describe("TrialBalancePage chart selection lifetime", () => {
+  const settled = () =>
+    mockQuery({
+      data: {
+        getLedgerTrialBalance: {
+          assetsHierarchyData: null,
+          liabilitiesHierarchyData: null,
+          incomeHierarchyData: null,
+          expensesHierarchyData: null,
+          equityHierarchyData: null,
+        },
+        getLedgerAccounts: [],
+      },
+    });
+  // An uncached interval or conversion change: loading with no data, which
+  // selectSettledReportData classifies as pending.
+  const pending = () => mockQuery({ loading: true });
+
+  it("keeps the reader's chart selected across an uncached read", () => {
+    settled();
+    const { rerender } = render(<TrialBalancePage />);
+    expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("assets");
+
+    act(() => captureProps.mock.calls.at(-1)![0].onSelectedTabChange("equity"));
+    rerender(<TrialBalancePage />);
+    expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("equity");
+
+    // The content is replaced while the new read is in flight, so a selection
+    // living inside it would be lost here.
+    pending();
+    rerender(<TrialBalancePage />);
+    expect(screen.queryByText("trial-balance-content")).not.toBeInTheDocument();
+
+    settled();
+    rerender(<TrialBalancePage />);
+    expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("equity");
   });
 });
