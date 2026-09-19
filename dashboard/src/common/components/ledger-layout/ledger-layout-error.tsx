@@ -9,6 +9,7 @@ import {
   LogIn,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { Button } from "@/common/components/ui/button.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
@@ -194,7 +195,7 @@ export function LedgerLayoutError({
                   className="w-full sm:w-auto min-w-[160px]"
                   asChild
                 >
-                  <Link to="/ledger">
+                  <Link to="/ledger" {...EXACT_PAGE_LINK}>
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     {t("page.dashboard.goToDashboard")}
                   </Link>

@@ -1,4 +1,5 @@
 import { Link, useParams, useSearch } from "@tanstack/react-router";
+import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
 import { useUserProfile } from "../hooks/use-user-profile";
 import { FollowButton } from "../components/follow-button";
 import { UserProfileHeader } from "../components/user-profile-header";
@@ -92,7 +93,7 @@ export default function UserProfilePage() {
             </p>
             <div className="mt-6 flex justify-center gap-3">
               <Button variant="outline" asChild>
-                <Link to="/ledger">
+                <Link to="/ledger" {...EXACT_PAGE_LINK}>
                   <ArrowLeft aria-hidden="true" className="size-4" />
                   {t("page.dashboard.goToDashboard")}
                 </Link>

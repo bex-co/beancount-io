@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
 import {
   AlertCircle,
   ArrowLeftRight,
@@ -332,7 +333,7 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
     return (
       <SidebarMenuItem key={item.id}>
         <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
-          <Link to={item.path} onClick={handleNavigate}>
+          <Link to={item.path} onClick={handleNavigate} {...EXACT_PAGE_LINK}>
             <Icon className="h-4 w-4" />
             <span>{item.label}</span>
           </Link>
@@ -404,7 +405,11 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
                   asChild
                   isActive={currentPath === item.path}
                 >
-                  <Link to={item.path} onClick={handleNavigate}>
+                  <Link
+                    to={item.path}
+                    onClick={handleNavigate}
+                    {...EXACT_PAGE_LINK}
+                  >
                     <span>{item.label}</span>
                   </Link>
                 </SidebarMenuSubButton>

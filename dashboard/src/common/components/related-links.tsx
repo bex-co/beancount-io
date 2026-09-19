@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
 import { useTranslations } from "@/common/hooks/use-translations";
 
 interface RelatedLinksProps {
@@ -34,6 +35,7 @@ export function RelatedLinks({ links }: RelatedLinksProps) {
           <Link
             key={link.to}
             to={link.to}
+            {...EXACT_PAGE_LINK}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors underline decoration-muted-foreground/30 hover:decoration-foreground/50 underline-offset-4"
           >
             {link.label}

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
 import { Authenticated } from "@/common/components/authenticated";
 import { UserNav } from "@/common/components/user-nav";
 import { Button } from "@/common/components/ui/button";
@@ -13,6 +14,7 @@ export function UserProfileHeader() {
         <div className="flex min-w-0 items-center gap-5">
           <Link
             to="/ledger"
+            {...EXACT_PAGE_LINK}
             aria-label={t("page.dashboard.goToDashboard")}
             className="flex items-center gap-2.5 rounded-md transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
           >

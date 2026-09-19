@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "@tanstack/react-router";
+import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
 import { ChevronsUpDown, Check, Plus, LayoutGrid, User } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import {
@@ -74,6 +75,7 @@ function LedgerSwitcherButtonContent({
             to="/ledger/$username"
             params={{ username: owner ?? "" }}
             className="text-xs text-muted-foreground truncate hover:text-foreground transition-colors"
+            {...EXACT_PAGE_LINK}
           >
             {owner ?? ""}
           </Link>
@@ -211,6 +213,7 @@ function LedgerAuthenticatedSwitcher({
           to="/ledger"
           aria-label={t("page.dashboard.goToDashboard")}
           className="shrink-0 cursor-pointer"
+          {...EXACT_PAGE_LINK}
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:opacity-80 transition-opacity">
             <img src="/lgasset/logo.png" alt="" className="h-8 w-8 rounded" />
@@ -225,6 +228,7 @@ function LedgerAuthenticatedSwitcher({
               to="/ledger/$username"
               params={{ username: owner }}
               className="text-xs text-muted-foreground truncate hover:text-foreground transition-colors"
+              {...EXACT_PAGE_LINK}
             >
               {owner}
             </Link>
