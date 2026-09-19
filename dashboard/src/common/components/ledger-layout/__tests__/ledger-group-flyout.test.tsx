@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { act, render, screen, fireEvent } from "@testing-library/react";
 import { FileSpreadsheet } from "lucide-react";
 import { LedgerGroupFlyout } from "../ledger-group-flyout";
 import { SidebarProvider } from "@/common/components/ui/sidebar";
@@ -96,12 +96,12 @@ describe("LedgerGroupFlyout", () => {
     expect(screen.getByText("Balance sheet")).toBeInTheDocument();
   });
 
-  it("opens the flyout on hover", async () => {
+  it("opens the flyout when a mouse hovers the icon", async () => {
     const { container } = renderFlyout();
     const item = container.querySelector(
       '[data-slot="sidebar-menu-item"]',
     ) as HTMLElement;
-    fireEvent.pointerEnter(item);
+    fireEvent.pointerEnter(item, { pointerType: "mouse" });
     expect(await screen.findByText("Income statement")).toBeInTheDocument();
   });
 
@@ -111,5 +111,83 @@ describe("LedgerGroupFlyout", () => {
     fireEvent.click(screen.getByRole("button", { name: "Reports" }));
     fireEvent.click(await screen.findByText("Balance sheet"));
     expect(onNavigate).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * A tap emits pointerenter, then the trigger's click, then pointerleave. When
+   * the hover handlers answered touch as well, the enter opened the flyout, the
+   * click toggled it shut and the leave scheduled a close on top — one tap could
+   * never leave it open. These cases play the real event order rather than
+   * calling a click handler in isolation.
+   */
+  it("leaves the flyout open after a tap", async () => {
+    const { container } = renderFlyout();
+    const item = container.querySelector(
+      '[data-slot="sidebar-menu-item"]',
+    ) as HTMLElement;
+    const trigger = screen.getByRole("button", { name: "Reports" });
+
+    fireEvent.pointerEnter(item, { pointerType: "touch" });
+    fireEvent.pointerDown(trigger, { pointerType: "touch" });
+    fireEvent.pointerUp(trigger, { pointerType: "touch" });
+    fireEvent.click(trigger);
+    fireEvent.pointerLeave(item, { pointerType: "touch" });
+
+    expect(await screen.findByText("Income statement")).toBeInTheDocument();
+
+    // And it survives past the hover close delay.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    expect(screen.getByText("Income statement")).toBeInTheDocument();
+  });
+
+  it("navigates from a tapped flyout", async () => {
+    const onNavigate = vi.fn();
+    const { container } = renderFlyout({ onNavigate });
+    const item = container.querySelector(
+      '[data-slot="sidebar-menu-item"]',
+    ) as HTMLElement;
+    const trigger = screen.getByRole("button", { name: "Reports" });
+
+    fireEvent.pointerEnter(item, { pointerType: "touch" });
+    fireEvent.pointerDown(trigger, { pointerType: "touch" });
+    fireEvent.pointerUp(trigger, { pointerType: "touch" });
+    fireEvent.click(trigger);
+    fireEvent.pointerLeave(item, { pointerType: "touch" });
+
+    fireEvent.click(await screen.findByText("Balance sheet"));
+    expect(onNavigate).toHaveBeenCalledTimes(1);
+  });
+
+  it("still closes on mouse leave after the delay", async () => {
+    const { container } = renderFlyout();
+    const item = container.querySelector(
+      '[data-slot="sidebar-menu-item"]',
+    ) as HTMLElement;
+
+    fireEvent.pointerEnter(item, { pointerType: "mouse" });
+    expect(await screen.findByText("Income statement")).toBeInTheDocument();
+
+    fireEvent.pointerLeave(item, { pointerType: "mouse" });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    expect(screen.queryByText("Income statement")).not.toBeInTheDocument();
+  });
+
+  it("does not close a tapped flyout when a touch pointer leaves", async () => {
+    const { container } = renderFlyout();
+    const item = container.querySelector(
+      '[data-slot="sidebar-menu-item"]',
+    ) as HTMLElement;
+    fireEvent.click(screen.getByRole("button", { name: "Reports" }));
+    expect(await screen.findByText("Income statement")).toBeInTheDocument();
+
+    fireEvent.pointerLeave(item, { pointerType: "touch" });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    });
+    expect(screen.getByText("Income statement")).toBeInTheDocument();
   });
 });

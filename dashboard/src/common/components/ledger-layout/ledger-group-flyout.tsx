@@ -1,4 +1,10 @@
-import { type ElementType, useEffect, useRef, useState } from "react";
+import {
+  type ElementType,
+  type PointerEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Link } from "@tanstack/react-router";
 import {
   SidebarMenuButton,
@@ -64,6 +70,21 @@ export function LedgerGroupFlyout({
     closeTimer.current = setTimeout(() => setOpen(false), CLOSE_DELAY_MS);
   };
 
+  // Only a hovering pointer drives hover. A tap emits the same
+  // pointerenter/pointerleave pair as a mouse, so unqualified handlers opened
+  // the flyout on entry, the trigger's own click then toggled it shut, and the
+  // leave scheduled a close on top — a tap could never leave it open. Touch and
+  // keyboard activation go through the popover's own toggle instead, which
+  // already works.
+  const isHoverPointer = (event: PointerEvent<HTMLElement>) =>
+    event.pointerType === "mouse";
+  const handlePointerEnter = (event: PointerEvent<HTMLElement>) => {
+    if (isHoverPointer(event)) openNow();
+  };
+  const handlePointerLeave = (event: PointerEvent<HTMLElement>) => {
+    if (isHoverPointer(event)) scheduleClose();
+  };
+
   // Drop any pending close timer if the flyout unmounts (e.g. the sidebar
   // expands out of the icon rail) so it can't fire on an unmounted component.
   useEffect(
@@ -74,7 +95,10 @@ export function LedgerGroupFlyout({
   );
 
   return (
-    <SidebarMenuItem onPointerEnter={openNow} onPointerLeave={scheduleClose}>
+    <SidebarMenuItem
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+    >
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <SidebarMenuButton isActive={isActive} aria-label={label}>
@@ -86,8 +110,8 @@ export function LedgerGroupFlyout({
           side="right"
           align="start"
           sideOffset={8}
-          onPointerEnter={openNow}
-          onPointerLeave={scheduleClose}
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
           className="w-56 p-1"
         >
           <div className="px-2 py-1.5 text-xs font-medium text-sidebar-foreground/70">
