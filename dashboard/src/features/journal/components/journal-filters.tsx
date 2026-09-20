@@ -2,6 +2,7 @@ import { Button } from "@/common/components/ui/button";
 import { DirectiveType } from "@/common/types/journal";
 import { cn } from "@/common/lib/utils/utils";
 import { useState } from "react";
+import { filterButtonState } from "./journal-filter-button-state";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { Separator } from "@/common/components/ui/separator";
 
@@ -379,9 +380,7 @@ export function JournalFilters({
             aria-pressed={isButtonActive(button)}
             className={cn(
               "h-8 shrink-0 border text-xs",
-              isButtonActive(button)
-                ? "border-border shadow-xs"
-                : "border-transparent text-muted-foreground",
+              filterButtonState(isButtonActive(button)),
             )}
           >
             {t(button.labelKey)}
@@ -403,9 +402,7 @@ export function JournalFilters({
                   aria-pressed={isButtonActive(subButton)}
                   className={cn(
                     "h-7 min-w-7 rounded-full border px-2 font-mono text-xs",
-                    isButtonActive(subButton)
-                      ? "border-border shadow-xs"
-                      : "border-transparent text-muted-foreground",
+                    filterButtonState(isButtonActive(subButton)),
                   )}
                   disabled={isButtonDisabled(subButton)}
                 >
@@ -430,9 +427,7 @@ export function JournalFilters({
                   aria-pressed={isButtonActive(subButton)}
                   className={cn(
                     "h-7 min-w-7 rounded-full border px-2 font-mono text-xs",
-                    isButtonActive(subButton)
-                      ? "border-border shadow-xs"
-                      : "border-transparent text-muted-foreground",
+                    filterButtonState(isButtonActive(subButton)),
                   )}
                   disabled={isButtonDisabled(subButton)}
                 >
@@ -457,9 +452,7 @@ export function JournalFilters({
                   aria-pressed={isButtonActive(subButton)}
                   className={cn(
                     "h-7 min-w-7 rounded-full border px-2 font-mono text-xs",
-                    isButtonActive(subButton)
-                      ? "border-border shadow-xs"
-                      : "border-transparent text-muted-foreground",
+                    filterButtonState(isButtonActive(subButton)),
                   )}
                   disabled={isButtonDisabled(subButton)}
                 >
@@ -483,9 +476,7 @@ export function JournalFilters({
           aria-pressed={isButtonActive(button)}
           className={cn(
             "h-8 shrink-0 border text-xs",
-            isButtonActive(button)
-              ? "border-border shadow-xs"
-              : "border-transparent text-muted-foreground",
+            filterButtonState(isButtonActive(button)),
           )}
         >
           {t(button.labelKey)}
