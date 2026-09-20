@@ -9,11 +9,11 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Singular form of account, used as tab label",
   },
   "journal.accountPlaceholder": {
-    message: "Счёт (e.g., Assets:Bank:Checking)",
+    message: "Счёт (например, Assets:Bank:Checking)",
     description: "Placeholder for account field",
   },
   "journal.accountRequired": {
-    message: "Счёт is required",
+    message: "Счёт обязателен",
     description: "Validation error when account is missing",
   },
   "journal.accounts": {
@@ -41,19 +41,19 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Validation error when less than two postings exist",
   },
   "journal.balance": {
-    message: "Balance",
+    message: "Баланс",
     description: "Balance entry type",
   },
   "journal.balanceHeader": {
-    message: "Balance",
+    message: "Баланс",
     description: "Table header for balance column",
   },
   "journal.balancesAfterEntry": {
-    message: "Balances after entry",
+    message: "Балансы после записи",
     description: "Section header showing account balances after transaction",
   },
   "journal.balancesBeforeEntry": {
-    message: "Balances before entry",
+    message: "Балансы до записи",
     description: "Section header showing account balances before transaction",
   },
   "journal.budget": {
@@ -61,7 +61,7 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Label for budget custom subtype filter",
   },
   "journal.budgetEntries": {
-    message: "Budget entries",
+    message: "Записи бюджета",
     description: "Filter tooltip for budget entries",
   },
   "journal.change": {
@@ -73,7 +73,7 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Label for cleared transaction subtype filter",
   },
   "journal.clearedTransactions": {
-    message: "Очиститьed transactions",
+    message: "Проведённые транзакции",
     description: "Filter tooltip for cleared transactions",
   },
   "journal.close": {
@@ -122,11 +122,11 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Label for discovered document subtype filter",
   },
   "journal.discoveredDocuments": {
-    message: "Discovered documents",
+    message: "Обнаруженные документы",
     description: "Filter tooltip for discovered documents",
   },
   "journal.document": {
-    message: "Document",
+    message: "Документ",
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
@@ -135,15 +135,15 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Honest scope for the plaintext journal export dialog",
   },
   "journal.entryContext": {
-    message: "Запись Context",
+    message: "Контекст записи",
     description: "Dialog title for entry context",
   },
   "journal.entryCreatedSuccess": {
-    message: "Запись created successfully",
+    message: "Запись успешно создана",
     description: "Success message after creating entry",
   },
   "journal.entryLocation": {
-    message: "Location:",
+    message: "Расположение:",
     description: "Label for entry location in file",
   },
   "journal.entryLocationUnavailable": {
@@ -164,11 +164,11 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Button label to export",
   },
   "journal.exportJournal": {
-    message: "Экспорт Journal",
+    message: "Экспорт журнала",
     description: "Dialog title for exporting journal",
   },
   "journal.exporting": {
-    message: "Экспортing...",
+    message: "Экспортирование...",
     description: "Button state while exporting",
   },
   "journal.failedToCreateBalance": {
@@ -216,15 +216,15 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Label for linked document subtype filter",
   },
   "journal.linkedDocuments": {
-    message: "Linked documents",
+    message: "Связанные документы",
     description: "Filter tooltip for linked documents",
   },
   "journal.loadingEntryContext": {
-    message: "Loading entry context...",
+    message: "Загрузка контекста записи...",
     description: "Loading message while fetching entry context",
   },
   "journal.metadata": {
-    message: "Metadata",
+    message: "Метаданные",
     description: "Label for metadata toggle filter",
   },
   "journal.narrationPlaceholder": {
@@ -256,11 +256,11 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Note entry type",
   },
   "journal.noteContent": {
-    message: "Заметка content",
+    message: "Содержание заметки",
     description: "Placeholder for note content field",
   },
   "journal.noteContentRequired": {
-    message: "Заметка content is required",
+    message: "Содержание заметки обязательно",
     description: "Validation error when note content is missing",
   },
   "journal.open": {
@@ -272,11 +272,11 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Label for other transaction subtype filter",
   },
   "journal.otherTransactions": {
-    message: "Прочее transactions",
+    message: "Прочие транзакции",
     description: "Filter tooltip for other transactions",
   },
   "journal.pad": {
-    message: "Pad",
+    message: "Заполнение",
     description: "Pad entry type filter",
   },
   "journal.payeeNarration": {
@@ -284,7 +284,7 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
-    message: "Payee",
+    message: "Получатель",
     description: "Placeholder for payee field",
   },
   "journal.pending": {
@@ -292,7 +292,7 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Label for pending transaction subtype filter",
   },
   "journal.pendingTransactions": {
-    message: "Pending transactions",
+    message: "Ожидающие транзакции",
     description: "Filter tooltip for pending transactions",
   },
   "journal.postings": {
@@ -300,7 +300,7 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Label for postings toggle filter",
   },
   "journal.price": {
-    message: "Price",
+    message: "Цена",
     description: "Price entry type filter",
   },
   "journal.selectAccount": {

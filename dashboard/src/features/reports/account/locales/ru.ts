@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const ruAccountReport: Record<string, TranslationEntry> = {
   "page.accountReport.accountBalance": {
-    message: "Счёт Balance",
+    message: "Баланс счёта",
     description: "Label for account balance section",
   },
   "page.accountReport.accountBalanceDescription": {
@@ -13,7 +13,7 @@ const ruAccountReport: Record<string, TranslationEntry> = {
     description: "Description for account balance chart",
   },
   "page.accountReport.accountJournal": {
-    message: "Счёт Journal",
+    message: "Журнал счёта",
     description: "Label for account journal section",
   },
   "page.accountReport.accountJournalDescription": {
@@ -21,11 +21,11 @@ const ruAccountReport: Record<string, TranslationEntry> = {
     description: "Description prefix for account journal",
   },
   "page.accountReport.title": {
-    message: "Счёт Report",
+    message: "Отчёт по счёту",
     description: "Title for account report page",
   },
   "page.accountReport.changesOverTime": {
-    message: "Изменениеs Over Time",
+    message: "Изменения со временем",
     description: "Label for changes over time section",
   },
   "page.accountReport.changesOverTimeDescription": {
