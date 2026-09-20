@@ -420,11 +420,23 @@ const ukJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "Це перетворення створено, щоб закрити залишкове сальдо собівартості в журналі, обмеженому за часом, тож у нього немає вихідного рядка для перегляду, редагування чи видалення.",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "Beancount створив цей запис із директиви pad, тому він не має вихідного рядка для перегляду, редагування чи видалення.",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "Це початкове сальдо створено під час обмеження журналу рахунку часовим діапазоном, тож у нього немає вихідного рядка для перегляду, редагування чи видалення.",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "Опис",

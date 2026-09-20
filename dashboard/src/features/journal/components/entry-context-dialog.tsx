@@ -33,29 +33,51 @@ interface EntryContextDialogProps {
 }
 
 /**
- * A generated padding transaction (flag `P`) is synthesized by Beancount from a
- * `pad` directive, so it has no source directive to fetch, edit, or delete.
- * Narrowed to transactions — only `JournalTransaction` carries `flag`.
+ * Flags the report generates rather than reads from a source directive. `P`
+ * comes from a `pad`; `S` and `C` are produced when an account journal is
+ * clamped to a time range — the opening balance carried in, and the conversion
+ * that clears the residual cost balance. None of them exists in the ledger
+ * text, so none has a source line to fetch, edit or delete, and asking for one
+ * is what produced "The requested resource could not be found."
+ *
+ * Only these three are claimed. An unknown flag still takes the ordinary path,
+ * so a genuinely missing source is still reported as missing.
  */
+const GENERATED_FLAGS = {
+  P: "journal.generatedEntryExplanation",
+  S: "journal.generatedOpeningExplanation",
+  C: "journal.generatedConversionExplanation",
+} as const;
+
+type GeneratedFlag = keyof typeof GENERATED_FLAGS;
+
+/** Narrowed to transactions — only `JournalTransaction` carries `flag`. */
 function isGeneratedEntry(
   entry: JournalDirectiveType | null,
-): entry is JournalTransaction {
-  return entry !== null && "flag" in entry && entry.flag === "P";
+): entry is JournalTransaction & { flag: GeneratedFlag } {
+  return (
+    entry !== null &&
+    "flag" in entry &&
+    typeof entry.flag === "string" &&
+    entry.flag in GENERATED_FLAGS
+  );
 }
 
 /**
  * Read-only panel for a generated entry, built from the journal row the caller
  * already has. No source, edit, or delete actions exist for generated entries.
  */
-function GeneratedEntryPanel({ entry }: { entry: JournalTransaction }) {
+function GeneratedEntryPanel({
+  entry,
+}: {
+  entry: JournalTransaction & { flag: GeneratedFlag };
+}) {
   const { t } = useTranslations();
   const postings = entry.postings ?? [];
   return (
     <div className="space-y-4">
       <Alert>
-        <AlertDescription>
-          {t("journal.generatedEntryExplanation")}
-        </AlertDescription>
+        <AlertDescription>{t(GENERATED_FLAGS[entry.flag])}</AlertDescription>
       </Alert>
       <div className="space-y-1">
         <h3 className="text-sm font-semibold">

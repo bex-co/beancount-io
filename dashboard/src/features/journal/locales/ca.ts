@@ -420,11 +420,23 @@ const caJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "Aquesta conversió s'ha generat per liquidar el saldo de cost residual d'un llibre diari limitat en el temps, de manera que no té cap línia d'origen per veure, editar ni eliminar.",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "Beancount ha generat aquesta entrada a partir d'una directiva pad, de manera que no té cap línia d'origen per veure, editar o eliminar.",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "Aquest saldo inicial s'ha generat en limitar el llibre diari a un interval de temps, de manera que no té cap línia d'origen per veure, editar ni eliminar.",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "Descripció",

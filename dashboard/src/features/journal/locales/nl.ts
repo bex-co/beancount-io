@@ -420,11 +420,23 @@ const nlJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "Deze omrekening is gegenereerd om het resterende kostensaldo van een in tijd beperkt rekeningdagboek weg te werken en heeft daarom geen bronregel om te bekijken, bewerken of verwijderen.",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "Beancount heeft deze boeking gegenereerd op basis van een pad-richtlijn, dus er is geen bronregel om te bekijken, te bewerken of te verwijderen.",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "Dit beginsaldo is gegenereerd toen het rekeningdagboek tot een periode werd beperkt en heeft daarom geen bronregel om te bekijken, bewerken of verwijderen.",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "Omschrijving",

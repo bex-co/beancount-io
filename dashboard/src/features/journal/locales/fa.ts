@@ -420,11 +420,23 @@ const faJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "این تبدیل برای صفر کردن مانده بهای تمام‌شده باقی‌مانده در دفتر روزنامه محدودشده به زمان ساخته شده است، بنابراین خط منبعی برای دیدن، ویرایش یا حذف ندارد.",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "Beancount این ورودی را از یک دستور pad تولید کرده است، بنابراین خط منبعی برای دیدن، ویرایش یا حذف ندارد.",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "این مانده ابتدای دوره هنگام محدود کردن دفتر روزنامه به یک بازه زمانی ساخته شده است، بنابراین خط منبعی برای دیدن، ویرایش یا حذف ندارد.",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "شرح",

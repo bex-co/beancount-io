@@ -419,11 +419,23 @@ const enJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "This conversion was generated to clear the residual cost balance of a time-limited account journal, so it has no source line to view, edit, or delete.",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "Beancount generated this entry from a pad directive, so it has no source line to view, edit, or delete.",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "This opening balance was generated when the account journal was limited to a time range, so it has no source line to view, edit, or delete.",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "Narration",

@@ -420,11 +420,23 @@ const bgJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "Това преобразуване е генерирано, за да изчисти остатъчното салдо по себестойност на ограничен във времето дневник, затова няма изходен ред за преглед, редакция или изтриване.",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "Beancount генерира този запис от директива pad, затова той няма изходен ред за преглед, редактиране или изтриване.",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "Това начално салдо е генерирано при ограничаване на дневника до времеви диапазон, затова няма изходен ред за преглед, редакция или изтриване.",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "Описание",

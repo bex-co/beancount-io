@@ -415,11 +415,23 @@ const koJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "이 환산은 기간이 제한된 계정 원장의 잔여 원가 잔액을 정리하기 위해 생성되었으므로 보거나 편집하거나 삭제할 소스 줄이 없습니다.",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "이 항목은 Beancount가 pad 지시문에서 생성했으므로 보거나 편집하거나 삭제할 소스 줄이 없습니다.",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "이 기초 잔액은 계정 원장을 기간으로 제한할 때 생성되었으므로 보거나 편집하거나 삭제할 소스 줄이 없습니다.",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "내역",

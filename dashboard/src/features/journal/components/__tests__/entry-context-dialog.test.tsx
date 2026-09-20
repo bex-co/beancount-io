@@ -453,6 +453,171 @@ describe("EntryContextDialog", () => {
       ).not.toBeInTheDocument();
     });
 
+    /**
+     * Clamping an account journal to a time range also generates an opening
+     * balance (`S`) and a conversion (`C`). Neither exists in the ledger text,
+     * so asking for their source answered NOT_FOUND and the dialog dead-ended.
+     */
+    const summarizationEntry = {
+      entry_hash: "hash-summarize",
+      directive_type: "Transaction",
+      flag: "S",
+      date: "2026-01-31",
+      narration: "Opening balance for 'Assets:Brokerage:ACME' (Summarization)",
+      postings: [
+        {
+          account: "Assets:Brokerage:ACME",
+          units: { number: "150", currency: "ACME" },
+        },
+        {
+          account: "Equity:Opening-Balances",
+          units: { number: "-10230.00", currency: "USD" },
+        },
+        {
+          account: "Assets:Brokerage:ACME",
+          units: { number: "100", currency: "ACME" },
+        },
+        {
+          account: "Equity:Opening-Balances",
+          units: { number: "-8460.00", currency: "USD" },
+        },
+      ],
+    } as never;
+
+    const conversionEntry = {
+      entry_hash: "hash-conversion",
+      directive_type: "Transaction",
+      flag: "C",
+      date: "2016-12-31",
+      narration: "Conversion for -0.01663 USD",
+      postings: [
+        {
+          account: "Equity:Conversions:Current",
+          units: { number: "0.01663", currency: "USD" },
+        },
+      ],
+    } as never;
+
+    it("explains a generated opening balance without querying for a source", () => {
+      mocks.contextData = null;
+
+      render(
+        <EntryContextDialog
+          open
+          onOpenChange={vi.fn()}
+          entry={summarizationEntry}
+          ledgerId="open_ledger/stock-example"
+        />,
+      );
+
+      expect(mocks.queryOptions.every((options) => options.skip)).toBe(true);
+      expect(
+        screen.getByText("journal.generatedOpeningExplanation"),
+      ).toBeInTheDocument();
+      // Not the padding wording — an S row is not a pad.
+      expect(
+        screen.queryByText("journal.generatedEntryExplanation"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("journal.noEntryContext"),
+      ).not.toBeInTheDocument();
+      // All four supplied postings are shown.
+      expect(screen.getAllByText("Assets:Brokerage:ACME")).toHaveLength(2);
+      expect(screen.getByText("150 ACME")).toBeInTheDocument();
+      expect(screen.getByText("-10230.00 USD")).toBeInTheDocument();
+      expect(screen.getByText("100 ACME")).toBeInTheDocument();
+      expect(screen.getByText("-8460.00 USD")).toBeInTheDocument();
+    });
+
+    it("offers a writer no source, edit or delete on a generated opening balance", () => {
+      mocks.canWrite = true;
+
+      render(
+        <EntryContextDialog
+          open
+          onOpenChange={vi.fn()}
+          entry={summarizationEntry}
+          ledgerId="open_ledger/stock-example"
+        />,
+      );
+
+      expect(screen.queryByLabelText("entry-source")).not.toBeInTheDocument();
+      expect(screen.queryByText("common.save")).not.toBeInTheDocument();
+      expect(screen.queryByText("common.delete")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("journal.entryLocation"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("explains a generated conversion in its own words", () => {
+      mocks.contextData = null;
+
+      render(
+        <EntryContextDialog
+          open
+          onOpenChange={vi.fn()}
+          entry={conversionEntry}
+          ledgerId="open_ledger/example"
+        />,
+      );
+
+      expect(mocks.queryOptions.every((options) => options.skip)).toBe(true);
+      expect(
+        screen.getByText("journal.generatedConversionExplanation"),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText("journal.generatedOpeningExplanation"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByText("Equity:Conversions:Current"),
+      ).toBeInTheDocument();
+      expect(screen.getByText("0.01663 USD")).toBeInTheDocument();
+    });
+
+    it("leaves an unknown flag on the ordinary source path", () => {
+      mocks.contextData = null;
+      mocks.error = new Error("boom");
+
+      render(
+        <EntryContextDialog
+          open
+          onOpenChange={vi.fn()}
+          entry={{ ...(summarizationEntry as object), flag: "T" } as never}
+          ledgerId="open_ledger/example"
+        />,
+      );
+
+      // Only P, S and C are claimed; anything else must still be fetched, so a
+      // genuinely missing source is still reported as missing.
+      expect(mocks.queryOptions.some((options) => options.skip)).toBe(false);
+      expect(screen.getByText("error.generic")).toBeInTheDocument();
+    });
+
+    it("leaves an ordinary row with no metadata on the source path", () => {
+      mocks.contextData = null;
+
+      render(
+        <EntryContextDialog
+          open
+          onOpenChange={vi.fn()}
+          entry={
+            {
+              ...(summarizationEntry as object),
+              flag: "*",
+              meta: null,
+            } as never
+          }
+          ledgerId="open_ledger/example"
+        />,
+      );
+
+      // Missing metadata alone must not classify a row as generated.
+      expect(mocks.queryOptions.some((options) => options.skip)).toBe(false);
+      expect(
+        screen.queryByText("journal.generatedOpeningExplanation"),
+      ).not.toBeInTheDocument();
+    });
+
     it("still queries and reports errors for ordinary entries", () => {
       mocks.contextData = null;
       mocks.error = new Error("boom");

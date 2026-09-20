@@ -418,11 +418,23 @@ const zhJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "该换算是为了清除按时间限定的账户日记账中的残余成本余额而生成的，因此没有可查看、编辑或删除的源代码行。",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "Beancount 根据 pad 指令生成了这个条目，因此没有可查看、编辑或删除的源代码行。",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "该期初余额是在将账户日记账限定到某个时间范围时生成的，因此没有可查看、编辑或删除的源代码行。",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "摘要",

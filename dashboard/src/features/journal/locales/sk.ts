@@ -420,11 +420,23 @@ const skJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "Tento prepočet vznikol na vyrovnanie zvyškového nákladového zostatku časovo obmedzeného denníka, preto nemá zdrojový riadok na zobrazenie, úpravu ani vymazanie.",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "Beancount vytvoril tento záznam z direktívy pad, takže nemá žiadny zdrojový riadok na zobrazenie, úpravu ani odstránenie.",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "Tento počiatočný zostatok vznikol pri obmedzení účtovného denníka na časový rozsah, preto nemá zdrojový riadok na zobrazenie, úpravu ani vymazanie.",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "Popis",

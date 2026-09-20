@@ -420,11 +420,23 @@ const deJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "Diese Umrechnung wurde erzeugt, um den verbleibenden Kostensaldo eines zeitlich begrenzten Kontojournals auszugleichen, und hat daher keine Quellzeile zum Ansehen, Bearbeiten oder Löschen.",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "Beancount hat diesen Eintrag aus einer pad-Direktive erzeugt, daher gibt es keine Quellzeile zum Ansehen, Bearbeiten oder Löschen.",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "Dieser Anfangsbestand wurde erzeugt, als das Kontojournal auf einen Zeitraum begrenzt wurde, und hat daher keine Quellzeile zum Ansehen, Bearbeiten oder Löschen.",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "Beschreibung",

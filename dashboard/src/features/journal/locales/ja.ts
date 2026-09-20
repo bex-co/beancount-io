@@ -417,11 +417,23 @@ const jaJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "この換算は期間を絞った勘定元帳の残存原価残高を消すために生成されたため、表示・編集・削除できるソース行はありません。",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "このエントリは Beancount が pad ディレクティブから生成したため、表示・編集・削除できるソース行がありません。",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "この期首残高は勘定元帳を期間で絞り込んだときに生成されたため、表示・編集・削除できるソース行はありません。",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "摘要",

@@ -420,11 +420,23 @@ const ptJournal: Record<string, TranslationEntry> = {
     description:
       "Heading for the read-only panel shown for a generated (padding) entry",
   },
+  "journal.generatedConversionExplanation": {
+    message:
+      "Esta conversão foi gerada para zerar o saldo de custo residual de um diário limitado no tempo, portanto não tem linha de origem para ver, editar ou excluir.",
+    description:
+      "Explains that a generated conversion entry has no editable source directive",
+  },
   "journal.generatedEntryExplanation": {
     message:
       "O Beancount gerou este lançamento a partir de uma diretiva pad, por isso não há linha de origem para ver, editar ou excluir.",
     description:
       "Explains that a generated padding entry has no editable source directive",
+  },
+  "journal.generatedOpeningExplanation": {
+    message:
+      "Este saldo inicial foi gerado ao limitar o diário da conta a um intervalo de tempo, portanto não tem linha de origem para ver, editar ou excluir.",
+    description:
+      "Explains that a generated opening-balance entry has no editable source directive",
   },
   "journal.narration": {
     message: "Descrição",
