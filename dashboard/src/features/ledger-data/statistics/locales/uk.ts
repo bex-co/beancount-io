@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const ukStatistics: Record<string, TranslationEntry> = {
   "page.statistics.accountLastEntries": {
-    message: "Рахунок Last Entries",
+    message: "Останні записи рахунку",
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {
@@ -38,7 +38,7 @@ const ukStatistics: Record<string, TranslationEntry> = {
     description: "Generic error title",
   },
   "page.statistics.failedToLoadAccountEntries": {
-    message: "Не вдалося завантажити рахунок entries",
+    message: "Не вдалося завантажити записи рахунку",
     description: "Error message for account entries",
   },
   "page.statistics.failedToLoadEntriesStatistics": {
@@ -50,15 +50,15 @@ const ukStatistics: Record<string, TranslationEntry> = {
     description: "Error message for postings data",
   },
   "page.statistics.lastEntryDate": {
-    message: "Пast Entry Date",
+    message: "Дата останнього запису",
     description: "Table column header for last entry date",
   },
   "page.statistics.loadingEntryStatistics": {
-    message: "Пoading entry statistics...",
+    message: "Завантаження статистики записів...",
     description: "Loading message for entry statistics",
   },
   "page.statistics.loadingQueryResults": {
-    message: "Пoading query results...",
+    message: "Завантаження результатів запиту...",
     description: "Loading message for query results",
   },
   "page.statistics.noDataAvailableForQuery": {
@@ -88,7 +88,7 @@ const ukStatistics: Record<string, TranslationEntry> = {
     description: "Statistics about the ledger",
   },
   "page.statistics.total": {
-    message: "Комуtal",
+    message: "Усього",
     description: "Label for total count",
   },
   "page.statistics.types": {

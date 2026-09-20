@@ -13,7 +13,7 @@ const ukErrors: Record<string, TranslationEntry> = {
     description: "Table column header for error message",
   },
   "page.errors.errors": {
-    message: "Помилкаs",
+    message: "Помилки",
     description: "Errors in ledger file parsing",
   },
   "page.errors.failedToLoadErrors": {

@@ -29,7 +29,7 @@ const ukEvents: Record<string, TranslationEntry> = {
     description: "Message when filters produce no results",
   },
   "page.events.searchEvents": {
-    message: "Пошук events...",
+    message: "Пошук подій...",
     description: "Placeholder for event search input",
   },
 };

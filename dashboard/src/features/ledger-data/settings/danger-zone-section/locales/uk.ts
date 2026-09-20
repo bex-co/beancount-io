@@ -31,7 +31,7 @@ const ukDangerZoneSection: Record<string, TranslationEntry> = {
   },
   "page.settings.deleteLedgerWarning": {
     message:
-      "Вeleting a ledger is permanent and cannot be undone. All data, including transactions, documents, and history will be lost.",
+      "Видалення книги є остаточним і не може бути скасоване. Усі дані, зокрема транзакції, документи та історія, будуть втрачені.",
     description: "Warning message about ledger deletion consequences",
   },
   "page.settings.deleteLedgerConfirmationPrefix": {

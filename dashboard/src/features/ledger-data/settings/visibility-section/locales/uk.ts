@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const ukVisibilitySection: Record<string, TranslationEntry> = {
   "page.settings.publicLedger": {
-    message: "Публічний Ledger",
+    message: "Публічна книга",
     description: "Label when ledger is public",
   },
   "page.settings.publicLedgerDescription": {
@@ -46,7 +46,7 @@ const ukVisibilitySection: Record<string, TranslationEntry> = {
     description: "Description for private ledger state",
   },
   "page.settings.privateLedger": {
-    message: "Приватний Ledger",
+    message: "Приватна книга",
     description: "Label when ledger is private",
   },
   "page.settings.embedViewOnBeancount": {

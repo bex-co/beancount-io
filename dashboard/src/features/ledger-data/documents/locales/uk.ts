@@ -5,11 +5,11 @@ export interface TranslationEntry {
 
 const ukDocuments: Record<string, TranslationEntry> = {
   "page.documents.documents": {
-    message: "Вocuments",
+    message: "Документи",
     description: "Documents attached to ledger entries",
   },
   "page.documents.filename": {
-    message: "Файлname",
+    message: "Назва файлу",
     description: "Table column header for filename",
   },
   "page.documents.links": {
