@@ -11,10 +11,18 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import { untranslatedEnglishTail } from "../src/test/locale-scan";
 
 const SRC_DIR = path.join(process.cwd(), "src");
 const FEATURES_DIR = path.join(SRC_DIR, "features");
-const COMMON_DIR = path.join(SRC_DIR, "common");
+// The shared catalogs do not live under `features/`. `common` holds the
+// `common.*` and `component.*` keys, `seo` the `seo.*` ones, and both sit
+// under `i18n/locales/`. Pointing at `src/common/locales` made this script
+// crash on startup, so it had not run for either of them.
+const SHARED_LOCALE_DIRS: Record<string, string> = {
+  common: path.join(SRC_DIR, "i18n", "locales", "common"),
+  seo: path.join(SRC_DIR, "i18n", "locales", "seo"),
+};
 
 const TARGET_LOCALES = [
   "zh",
@@ -43,6 +51,14 @@ interface FeatureStats {
   total: number;
   percentage: number;
   todoCount: number;
+  /**
+   * Keys whose message still ends in verbatim English, which is what a
+   * half-finished edit of a `[TODO]` line leaves behind — `Cuenta Balance`
+   * from `[TODO] Account Balance`. A key counts as completed for the TODO
+   * column while reading like this, so without its own column the report
+   * calls the file finished.
+   */
+  halfTranslated: string[];
 }
 
 interface GlobalStats {
@@ -253,8 +269,8 @@ function countTodos(obj: Record<string, TranslationEntry>): number {
 function getFeatureDirectories(): string[] {
   const features: string[] = [];
 
-  // Add common as a "feature"
-  features.push("common");
+  // The shared catalogs are deliberately absent. See
+  // `SHARED_LOCALE_DIRS` and `getReportedFeatures`.
 
   // Scan features directory
   if (fs.existsSync(FEATURES_DIR)) {
@@ -276,10 +292,57 @@ function getFeatureDirectories(): string[] {
  * Get locale file path for a feature
  */
 function getLocaleFilePath(feature: string, locale: string): string {
-  if (feature === "common") {
-    return path.join(COMMON_DIR, "locales", `${locale}.ts`);
+  const shared = SHARED_LOCALE_DIRS[feature];
+  if (shared) {
+    return path.join(shared, `${locale}.ts`);
   }
   return path.join(FEATURES_DIR, feature, "locales", `${locale}.ts`);
+}
+
+/**
+ * The features the status report covers: everything under `features/`, plus
+ * the shared catalogs.
+ *
+ * Kept separate from `getFeatureDirectories`, which drives the steps that
+ * *write*. Those must not reach the shared catalogs: `determineFeatureFromKey`
+ * treats `common` as the home for any key it cannot attribute, so pointing the
+ * sync at it rewrites the file with every key in the codebase — 40k lines of
+ * auto-generated English, including one literal `${key}` from a template bug.
+ * That stayed hidden because the script crashed before reaching it, the path
+ * having pointed at `src/common/locales`, which does not exist.
+ */
+function getReportedFeatures(): string[] {
+  const shared = Object.entries(SHARED_LOCALE_DIRS)
+    .filter(([, dir]) => fs.existsSync(dir))
+    .map(([name]) => name);
+  return [...getFeatureDirectories(), ...shared].sort();
+}
+
+/**
+ * Keys this locale has left ending in verbatim English, compared against the
+ * same key in `en`. Uses the predicate the guard uses, so the script and
+ * `src/test/locale-stray-english.test.ts` cannot disagree about what counts.
+ */
+async function findHalfTranslated(
+  translations: Record<string, TranslationEntry>,
+  feature: string,
+  locale: string,
+): Promise<string[]> {
+  const englishPath = getLocaleFilePath(feature, "en");
+  if (!fs.existsSync(englishPath)) return [];
+  const english = await readTranslations(englishPath);
+
+  const offenders: string[] = [];
+  for (const [key, value] of Object.entries(translations)) {
+    if (!isStructuredFormat(value)) continue;
+    if (value.message.startsWith("[TODO]")) continue;
+    const source = english[key];
+    if (!isStructuredFormat(source)) continue;
+    if (untranslatedEnglishTail(value.message, source.message, locale).length) {
+      offenders.push(key);
+    }
+  }
+  return offenders;
 }
 
 /**
@@ -300,6 +363,11 @@ async function analyzeFeatureLocale(
   const completed = countCompleted(translations);
   const todoCount = countTodos(translations);
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 100;
+  const halfTranslated = await findHalfTranslated(
+    translations,
+    feature,
+    locale,
+  );
 
   return {
     feature,
@@ -308,6 +376,7 @@ async function analyzeFeatureLocale(
     total,
     percentage,
     todoCount,
+    halfTranslated,
   };
 }
 
@@ -426,6 +495,10 @@ async function addMissingKeysToEnglish(
   const addedCounts = new Map<string, number>();
 
   for (const [feature, keys] of extractedKeys.entries()) {
+    // `determineFeatureFromKey` returns `common` for any key it cannot
+    // attribute, so this loop would otherwise write every unattributed key in
+    // the codebase into the shared catalog. They are read-only here.
+    if (feature in SHARED_LOCALE_DIRS) continue;
     const enPath = getLocaleFilePath(feature, "en");
 
     // Read existing English translations
@@ -531,7 +604,9 @@ async function main() {
     );
   }
 
-  // Step 2: Analyze all features and locales
+  // Step 2: Analyze all features and locales, including the shared catalogs,
+  // which the write steps above deliberately leave alone.
+  const reportedFeatures = getReportedFeatures();
   console.log("\n" + "=".repeat(80));
   console.log("\n📊 Translation Status Report\n");
 
@@ -540,19 +615,44 @@ async function main() {
   for (const locale of TARGET_LOCALES) {
     console.log(`\n🔍 Analyzing ${locale.toUpperCase()} translations...\n`);
 
-    for (const feature of features) {
+    for (const feature of reportedFeatures) {
       const stats = await analyzeFeatureLocale(feature, locale);
       if (stats) {
         allStats.push(stats);
 
-        const status = stats.percentage === 100 ? "✅" : "📝";
+        const status =
+          stats.halfTranslated.length > 0
+            ? "⚠️ "
+            : stats.percentage === 100
+              ? "✅"
+              : "📝";
         const progressBar =
           "█".repeat(Math.floor(stats.percentage / 5)) +
           "░".repeat(20 - Math.floor(stats.percentage / 5));
 
         console.log(
-          `   ${status} ${feature.padEnd(20)} | ${String(stats.completed).padStart(3)}/${String(stats.total).padStart(3)} | ${progressBar} ${stats.percentage}%${stats.todoCount > 0 ? ` (${stats.todoCount} TODOs)` : ""}`,
+          `   ${status} ${feature.padEnd(20)} | ${String(stats.completed).padStart(3)}/${String(stats.total).padStart(3)} | ${progressBar} ${stats.percentage}%${stats.todoCount > 0 ? ` (${stats.todoCount} TODOs)` : ""}${stats.halfTranslated.length > 0 ? ` ⚠️  ${stats.halfTranslated.length} half-translated` : ""}`,
         );
+      }
+    }
+  }
+
+  // Half-translated keys, named so they can be opened and fixed. A key like
+  // this is the residue of editing a `[TODO]` line and replacing only its
+  // first word, so it counts as completed above while reading as neither
+  // language.
+  const halfTranslated = allStats.filter((s) => s.halfTranslated.length > 0);
+  if (halfTranslated.length > 0) {
+    console.log("\n" + "=".repeat(80));
+    console.log("\n⚠️  Half-translated messages\n");
+    console.log(
+      "   These end in verbatim English. They are not counted as TODOs,",
+    );
+    console.log("   so nothing else in this report flags them.\n");
+    for (const stats of halfTranslated) {
+      console.log(`   ${stats.locale} · ${stats.feature}`);
+      for (const key of stats.halfTranslated) {
+        console.log(`      ${key}`);
       }
     }
   }
