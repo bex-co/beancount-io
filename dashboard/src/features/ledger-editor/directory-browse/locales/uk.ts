@@ -7,7 +7,7 @@ const ukDirectoryBrowse: Record<
     description: "Header for clone repository dialog",
   },
   "ledgerEditor.downloadZip": {
-    message: "Вownload ZIP",
+    message: "Завантажити ZIP",
     description: "Menu item to download as ZIP",
   },
   "ledgerEditor.downloadZipBlocked": {

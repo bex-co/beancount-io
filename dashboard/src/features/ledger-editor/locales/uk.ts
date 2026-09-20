@@ -10,7 +10,7 @@ const ukLedgerEditor: Record<string, { message: string; description: string }> =
       description: "Button label to create file",
     },
     "ledgerEditor.files": {
-      message: "Файлs",
+      message: "Файли",
       description: "Ledger files management",
     },
     "ledgerEditor.uploadFiles": {

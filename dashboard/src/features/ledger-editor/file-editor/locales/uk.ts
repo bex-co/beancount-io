@@ -10,7 +10,7 @@ const ukFileEditor: Record<string, { message: string; description: string }> = {
       "Confirmation message for file deletion (contains {filename} placeholder)",
   },
   "ledgerEditor.deleteFileTitle": {
-    message: "Видалити File",
+    message: "Видалити файл",
     description: "Dialog title for file deletion",
   },
   "ledgerEditor.failedToLoadFileContent": {
@@ -40,11 +40,11 @@ const ukFileEditor: Record<string, { message: string; description: string }> = {
     description: "Menu item to fold all sections in editor",
   },
   "ledgerEditor.leaveWithoutSaving": {
-    message: "Пeave Without Saving",
+    message: "Вийти без збереження",
     description: "Button to leave page without saving changes",
   },
   "ledgerEditor.loadingFileContent": {
-    message: "Пoading file content...",
+    message: "Завантаження вмісту файлу...",
     description: "Loading message while fetching file content",
   },
   "ledgerEditor.stay": {
@@ -52,7 +52,7 @@ const ukFileEditor: Record<string, { message: string; description: string }> = {
     description: "Button to stay on current page with unsaved changes",
   },
   "ledgerEditor.toggleComment": {
-    message: "Комуggle Comment",
+    message: "Перемкнути коментар",
     description: "Menu item to toggle comment in editor",
   },
   "ledgerEditor.unfoldAll": {

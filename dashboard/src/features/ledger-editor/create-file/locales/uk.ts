@@ -1,6 +1,6 @@
 const ukCreateFile: Record<string, { message: string; description: string }> = {
   "ledgerEditor.nameYourFile": {
-    message: "Ім'я your file...",
+    message: "Назвіть свій файл...",
     description: "Placeholder for file name input",
   },
   "ledgerEditor.invalidFilePath": {
