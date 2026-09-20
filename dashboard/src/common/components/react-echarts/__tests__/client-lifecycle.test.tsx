@@ -19,6 +19,7 @@ const state = vi.hoisted(() => ({
 
 vi.mock("../runtime", () => ({
   APP_DARK_CHART_THEME: "app-dark",
+  APP_LIGHT_CHART_THEME: "app-light",
   init: (_el: HTMLElement, theme?: string) => {
     state.calls.push("init");
     state.initThemes.push(theme);
@@ -44,7 +45,7 @@ it("applies the initial options once, then updates the same instance", () => {
   const ref = createRef<EChartsRef>();
   const view = render(<ReactEChartsClient ref={ref} option={option} />);
   expect(state.calls).toEqual(["init", "setOption"]);
-  expect(state.initThemes).toEqual([undefined]);
+  expect(state.initThemes).toEqual(["app-light"]);
   const next = { series: [{ type: "bar" as const, data: [3, 4] }] };
   view.rerender(<ReactEChartsClient ref={ref} option={next} />);
   expect(state.chart.setOption).toHaveBeenLastCalledWith(next, {
@@ -74,7 +75,7 @@ it("preserves an explicit caller theme over the app appearance", () => {
 it("recreates the chart when the resolved app appearance changes", () => {
   const option = { series: [{ type: "line" as const, data: [1, 2] }] };
   const view = render(<ReactEChartsClient option={option} />);
-  expect(state.initThemes).toEqual([undefined]);
+  expect(state.initThemes).toEqual(["app-light"]);
   state.calls.length = 0;
   state.initThemes.length = 0;
   state.isDark = true;

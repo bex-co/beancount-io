@@ -1,5 +1,5 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
-import { APP_DARK_CHART_THEME, init } from "./runtime";
+import { APP_DARK_CHART_THEME, APP_LIGHT_CHART_THEME, init } from "./runtime";
 import type { ECharts } from "echarts/core";
 import { useIsMobile } from "@/common/hooks/use-mobile";
 import { useIsDarkTheme } from "@/common/providers/theme-provider";
@@ -24,7 +24,8 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
     const chartInstanceRef = useRef<ECharts | null>(null);
     const isDark = useIsDarkTheme();
     // Explicit caller theme wins; otherwise follow the resolved app appearance.
-    const resolvedTheme = theme ?? (isDark ? APP_DARK_CHART_THEME : undefined);
+    const resolvedTheme =
+      theme ?? (isDark ? APP_DARK_CHART_THEME : APP_LIGHT_CHART_THEME);
 
     useEffect(() => {
       if (!chartRef.current) return;

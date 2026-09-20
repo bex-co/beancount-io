@@ -78,7 +78,24 @@ registerTheme("app-dark", {
   },
 });
 
+/**
+ * App light appearance. ECharts' default `inactiveColor` for an unselected
+ * legend entry is a near-white grey — 1.52:1 against a white card — but these
+ * legends are operable: clicking an unselected currency enables its series.
+ * Only that colour is overridden, so every other default (palette, axis and
+ * selected label colours, transparent background) is untouched.
+ */
+registerTheme("app-light", {
+  legend: {
+    // 5.51:1 on white, and still clearly lighter than the selected #54555a.
+    inactiveColor: "#646973",
+  },
+});
+
 export { init } from "echarts/core";
 
 /** Theme name passed to `init` when the app appearance is dark. */
 export const APP_DARK_CHART_THEME = "app-dark";
+
+/** Theme name passed to `init` when the app appearance is light. */
+export const APP_LIGHT_CHART_THEME = "app-light";

@@ -12,6 +12,20 @@ const axes = {
   xAxis: { type: "category" as const, data: ["Jan", "Feb"] },
   yAxis: { type: "value" as const },
 };
+/** WCAG contrast of a hex colour against a white card. */
+function contrastOnWhite(hex: string): number {
+  const channel = (value: number) => {
+    const srgb = value / 255;
+    return srgb <= 0.03928
+      ? srgb / 12.92
+      : Math.pow((srgb + 0.055) / 1.055, 2.4);
+  };
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const luminance =
+    0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+  return 1.05 / (luminance + 0.05);
+}
+
 const cases: [string, EChartsOption][] = [
   ["bar", { ...axes, series: [{ name: "Income", type: "bar", data: [4, 7] }] }],
   [
@@ -121,6 +135,52 @@ describe("the shared chart registry", () => {
       }
     },
   );
+  it("keeps an unselected but operable legend label readable in light mode", () => {
+    // Reports start non-primary currencies unselected; clicking one enables
+    // its series, so the label is a control, not a disabled affordance.
+    const chart = init(undefined, "app-light", {
+      renderer: "svg",
+      ssr: true,
+      width: 600,
+      height: 300,
+    });
+    try {
+      chart.setOption({
+        ...axes,
+        animation: false,
+        legend: {
+          data: ["USD", "IRAUSD", "VACHR"],
+          selected: { USD: true, IRAUSD: false, VACHR: false },
+        },
+        series: [
+          { name: "USD", type: "line", data: [4, 7] },
+          { name: "IRAUSD", type: "line", data: [2, 3] },
+          { name: "VACHR", type: "line", data: [1, 2] },
+        ],
+      });
+
+      const svg = chart.renderToSVGString();
+      const labelFill = (label: string) =>
+        svg.match(new RegExp(`<text[^>]*fill="([^"]+)"[^>]*>${label}<`))?.[1] ??
+        null;
+
+      const selected = labelFill("USD");
+      const unselected = labelFill("IRAUSD");
+      expect(selected).not.toBeNull();
+      expect(unselected).not.toBeNull();
+      // Both readable...
+      expect(contrastOnWhite(selected as string)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastOnWhite(unselected as string)).toBeGreaterThanOrEqual(4.5);
+      // ...and still distinguishable from each other.
+      expect(unselected).not.toBe(selected);
+      // The near-white default this replaced would fail outright.
+      expect(contrastOnWhite("#cfd2d7")).toBeLessThan(4.5);
+      expect(labelFill("VACHR")).toBe(unselected);
+    } finally {
+      chart.dispose();
+    }
+  });
+
   it("supports inside zoom, scroll legends, and axis-pointer tooltips", () => {
     const chart = init(undefined, undefined, {
       renderer: "svg",
