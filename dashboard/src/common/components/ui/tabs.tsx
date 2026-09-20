@@ -59,6 +59,14 @@ function TabsTrigger({
         "disabled:pointer-events-none disabled:opacity-50",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         "cursor-pointer",
+        // Forced colors replaces every author colour with the user's palette:
+        // a transparent border becomes a visible one, a background fill stops
+        // distinguishing anything, and box-shadow is dropped entirely. That
+        // left every tab looking identical. System colour keywords are honoured
+        // in that mode, so the selected tab claims Highlight and the rest sink
+        // into Canvas. The focus ring is a shadow, so focus gets its own
+        // outline here to stay separately visible.
+        "forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]",
         // Default variant styles (pill-style)
         variant === "default" &&
           cn(
@@ -67,6 +75,8 @@ function TabsTrigger({
             "data-[state=active]:bg-background data-[state=active]:shadow-sm",
             "dark:data-[state=active]:text-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30",
             "transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1",
+            "forced-colors:border-[Canvas]",
+            "forced-colors:data-[state=active]:border-[Highlight] forced-colors:data-[state=active]:bg-[Highlight] forced-colors:data-[state=active]:text-[HighlightText]",
           ),
         // Underline variant styles (GitHub-style)
         variant === "underline" &&
@@ -75,6 +85,8 @@ function TabsTrigger({
             "text-muted-foreground",
             "hover:border-muted-foreground/50 hover:text-foreground",
             "data-[state=active]:border-primary data-[state=active]:text-foreground",
+            "forced-colors:border-b-[Canvas]",
+            "forced-colors:data-[state=active]:border-b-[Highlight]",
           ),
         className,
       )}
