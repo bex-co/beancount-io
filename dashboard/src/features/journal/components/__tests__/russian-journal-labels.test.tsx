@@ -4,6 +4,7 @@ import { DirectiveType } from "@/common/types/journal";
 import en from "@/i18n/locales/en";
 import ru from "@/i18n/locales/ru";
 import uk from "@/i18n/locales/uk";
+import { LOCALE_SCRIPTS, strayEnglishWords } from "@/test/locale-scan";
 import { JournalFilters } from "../journal-filters";
 
 // The shared setup mocks this hook to English; this suite renders the real
@@ -62,14 +63,6 @@ const FLAG_KEYS = [
   "journal.flagAbbrev",
 ] as const;
 
-/**
- * Latin that legitimately survives translation: brand names, Beancount
- * directive keywords, currency codes, and the literal account names used as
- * placeholder examples (account names are notation, not prose).
- */
-const ALLOWED_LATIN =
-  /\b(Beancount|Fava|Plaid|pad|option|CSV|PDF|OFX|PNG|JPG|ZIP|URL|SSH|HTTP|Git|CLI|OTP|AI|SEO|IP|JavaScript|Email|email|Mac|Windows|Linux|Cmd|Ctrl|Enter|Shift|USD|EUR|Assets|Liabilities|Income|Expenses|Equity|Bank|Checking|Food|Groceries|io|vs)\b/g;
-
 function journalSurfaceKeys(messages: Record<string, string>) {
   return Object.keys(messages).filter(
     (key) =>
@@ -95,11 +88,11 @@ describe("Russian Journal surfaces read as Russian", () => {
     const offenders: string[] = [];
     for (const key of journalSurfaceKeys(ru)) {
       const value = ru[key];
-      if (!/[А-Яа-яЁё]/.test(value)) continue;
-      const stray = value
-        .replace(ALLOWED_LATIN, "")
-        .match(/(?<![\w{$])[A-Za-z]{2,}(?![\w}])/g);
-      if (stray) offenders.push(`${key}: ${value} -> ${stray.join(", ")}`);
+      // The shared predicate, which also catches a single stray letter that
+      // this suite's original regex missed (`Документs`, `Файлs`).
+      const stray = strayEnglishWords(value, LOCALE_SCRIPTS.ru);
+      if (stray.length)
+        offenders.push(`${key}: ${value} -> ${stray.join(", ")}`);
     }
     expect(offenders).toEqual([]);
   });
