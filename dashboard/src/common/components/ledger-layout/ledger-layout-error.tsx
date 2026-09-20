@@ -143,7 +143,7 @@ export function LedgerLayoutError({
       </header>
 
       {/* Main content — vertically centered in remaining space */}
-      <div className="relative z-10 flex flex-1 items-center justify-center p-6">
+      <main className="relative z-10 flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-md space-y-10 text-center">
           {/* Icon + badge */}
           <div className="space-y-4">
@@ -213,7 +213,7 @@ export function LedgerLayoutError({
             )}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

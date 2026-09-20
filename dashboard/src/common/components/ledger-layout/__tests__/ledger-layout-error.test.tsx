@@ -65,4 +65,31 @@ describe("LedgerLayoutError", () => {
     expect(screen.getByText("Please sign in to continue.")).toBeInTheDocument();
     expect(screen.queryByText(/session has expired/i)).not.toBeInTheDocument();
   });
+
+  it("puts the failure content in the page's single main landmark", () => {
+    // Both LedgerLayout and LedgerRouteError render this shell, and it is the
+    // whole document when a ledger read fails — so it owns the main landmark.
+    const error = new Error("Network request failed");
+
+    render(
+      <LedgerLayoutError
+        error={error}
+        onBackToDashboard={vi.fn()}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    const mains = [...document.querySelectorAll("main, [role='main']")];
+    expect(mains).toHaveLength(1);
+    const main = mains[0];
+
+    expect(main.contains(screen.getByRole("heading", { level: 1 }))).toBe(true);
+    expect(
+      main.contains(screen.getByRole("button", { name: /try again/i })),
+    ).toBe(true);
+    // The shell's own header sits outside the main, as a banner should.
+    const header = document.querySelector("header");
+    expect(header).not.toBeNull();
+    expect(main.contains(header as Node)).toBe(false);
+  });
 });

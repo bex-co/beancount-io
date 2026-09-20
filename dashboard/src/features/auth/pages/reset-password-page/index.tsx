@@ -156,7 +156,7 @@ export default function ResetPasswordPage() {
           descriptionKey="seo.resetPassword.description"
           noIndex
         />
-        <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <main className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
           <div className="w-full max-w-md">
             <Card>
               <CardHeader className="space-y-1">
@@ -170,7 +170,7 @@ export default function ResetPasswordPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </main>
       </>
     );
   }
@@ -185,7 +185,7 @@ export default function ResetPasswordPage() {
           descriptionKey="seo.resetPassword.description"
           noIndex
         />
-        <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <main className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
           <div className="w-full max-w-md">
             <Card>
               <CardHeader className="space-y-1">
@@ -222,7 +222,7 @@ export default function ResetPasswordPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </main>
       </>
     );
   }
@@ -236,7 +236,7 @@ export default function ResetPasswordPage() {
           descriptionKey="seo.resetPassword.description"
           noIndex
         />
-        <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <main className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
           <div className="w-full max-w-md">
             <Card>
               <CardHeader className="space-y-1">
@@ -264,7 +264,7 @@ export default function ResetPasswordPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </main>
       </>
     );
   }
@@ -278,7 +278,7 @@ export default function ResetPasswordPage() {
           descriptionKey="seo.resetPassword.description"
           noIndex
         />
-        <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <main className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
           <div className="w-full max-w-md">
             <Card>
               <CardContent className="pt-6">
@@ -295,7 +295,7 @@ export default function ResetPasswordPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </main>
       </>
     );
   }
@@ -308,7 +308,7 @@ export default function ResetPasswordPage() {
         descriptionKey="seo.resetPassword.description"
         noIndex
       />
-      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
           <Card>
             <CardHeader className="space-y-1">
@@ -391,7 +391,7 @@ export default function ResetPasswordPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </main>
     </>
   );
 }

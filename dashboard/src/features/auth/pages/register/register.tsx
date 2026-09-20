@@ -54,7 +54,7 @@ export default function RegisterPage({
         descriptionKey="seo.signUp.description"
       />
       <div className="min-h-screen flex bg-background">
-        <div className="flex-1 flex items-center justify-center py-12 px-6 lg:px-8">
+        <main className="flex-1 flex items-center justify-center py-12 px-6 lg:px-8">
           <div className="w-full max-w-md space-y-8">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-foreground">
@@ -71,9 +71,9 @@ export default function RegisterPage({
               defaultUsername={defaultUsername}
             />
           </div>
-        </div>
+        </main>
 
-        <div className="hidden lg:flex flex-1 items-center justify-center bg-muted/30 py-12 px-4 sm:px-6 lg:px-8">
+        <aside className="hidden lg:flex flex-1 items-center justify-center bg-muted/30 py-12 px-4 sm:px-6 lg:px-8">
           <div className="w-full max-w-md space-y-8">
             {features.map((feature, index) => {
               const Icon = feature.icon;
@@ -96,7 +96,7 @@ export default function RegisterPage({
               );
             })}
           </div>
-        </div>
+        </aside>
       </div>
     </>
   );

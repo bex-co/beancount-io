@@ -13,7 +13,7 @@ export default function ForgotPasswordPage() {
         titleKey="seo.forgotPassword.title"
         descriptionKey="seo.forgotPassword.description"
       />
-      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
           <Card>
             <CardContent className="pt-6">
@@ -21,7 +21,7 @@ export default function ForgotPasswordPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </main>
     </>
   );
 }
