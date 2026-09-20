@@ -62,7 +62,9 @@ export function CodeBlock({ code, language, inline }: CodeBlockProps) {
           variant="ghost"
           size="icon"
           onClick={handleCopy}
-          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+          // Revealed on hover, and on keyboard focus — otherwise Tab lands on a
+          // fully transparent button whose focus ring is invisible too.
+          className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           aria-label={t("common.copyCode")}
         >
           {copied ? (
