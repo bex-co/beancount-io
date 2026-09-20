@@ -14,7 +14,7 @@ const ukWelcomePage: Record<string, TranslationEntry> = {
     description: "Button text to create first ledger",
   },
   "page.welcome.ledgerCreatedSuccess": {
-    message: "Пedger created successfully",
+    message: "Книгу успішно створено",
     description: "Toast notification when ledger created",
   },
 };

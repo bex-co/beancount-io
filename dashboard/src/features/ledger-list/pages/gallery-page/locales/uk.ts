@@ -9,12 +9,12 @@ const ukGalleryPage: Record<string, TranslationEntry> = {
     description: "Error message when search fails",
   },
   "page.gallery.ledgerGallery": {
-    message: "Пedger Gallery",
+    message: "Галерея книг",
     description: "Title for gallery page",
   },
   "page.gallery.ledgerGalleryDescription": {
     message:
-      "Вiscover and explore all available ledgers. Search by name to quickly find and navigate to any ledger.",
+      "Відкривайте та переглядайте всі доступні книги. Шукайте за назвою, щоб швидко знайти потрібну книгу та перейти до неї.",
     description: "Description for gallery page",
   },
   "page.gallery.noLedgersFound": {
@@ -23,7 +23,7 @@ const ukGalleryPage: Record<string, TranslationEntry> = {
   },
   "page.gallery.searchLedgersPlaceholder": {
     message:
-      "Пошук for ledgers and navigate to them. Type at least 2 characters to search.",
+      "Шукайте книги та переходьте до них. Введіть щонайменше 2 символи для пошуку.",
     description: "Placeholder for ledger search input",
   },
   "page.gallery.tryAdjustingSearchQuery": {

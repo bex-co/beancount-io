@@ -31,7 +31,7 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
       "Aria label for the home/logo button navigating to the dashboard",
   },
   "page.dashboard.deleteLedger": {
-    message: "Видалити Ledger",
+    message: "Видалити книгу",
     description: "Button tooltip or action for deleting ledger",
   },
   "page.dashboard.deleteLedgerConfirm": {
@@ -41,19 +41,19 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
       "Confirmation message for ledger deletion (contains {name} placeholder)",
   },
   "page.dashboard.deleting": {
-    message: "Вeleting...",
+    message: "Видалення...",
     description: "Button state while deleting",
   },
   "page.dashboard.descriptionOptional": {
-    message: "Вescription (Optional)",
+    message: "Опис (необов'язково)",
     description: "Description field label with optional indicator",
   },
   "page.dashboard.editLedger": {
-    message: "Редагувати Ledger",
+    message: "Редагувати книгу",
     description: "Button tooltip for editing ledger",
   },
   "page.dashboard.editLedgerSettings": {
-    message: "Редагувати Ledger Settings",
+    message: "Редагувати налаштування книги",
     description: "Dialog title for editing ledger",
   },
   "page.dashboard.enterDescription": {
@@ -65,7 +65,7 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     description: "Placeholder for ledger name input",
   },
   "page.dashboard.failedToLoadLedgers": {
-    message: "Не вдалося завантажити книгуs",
+    message: "Не вдалося завантажити книги",
     description: "Error title when ledgers fail to load",
   },
   "page.dashboard.feedError": {
@@ -73,11 +73,11 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     description: "Error message when feed fails to load",
   },
   "page.dashboard.ledgerCreatedSuccess": {
-    message: "Пedger created successfully",
+    message: "Книгу успішно створено",
     description: "Toast notification when ledger created",
   },
   "page.dashboard.ledgerDeletedSuccess": {
-    message: "Пedger deleted successfully",
+    message: "Книгу успішно видалено",
     description: "Toast notification when ledger deleted",
   },
   "page.dashboard.ledgerLimitReached": {
@@ -86,15 +86,15 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     description: "Tooltip shown when save button is disabled due to limit",
   },
   "page.dashboard.ledgerName": {
-    message: "Пedger Name",
+    message: "Назва книги",
     description: "Form label for ledger name field",
   },
   "page.dashboard.ledgerUpdatedSuccess": {
-    message: "Пedger updated successfully",
+    message: "Книгу успішно оновлено",
     description: "Toast notification when ledger updated",
   },
   "page.dashboard.loadingLedgers": {
-    message: "Пoading ledgers...",
+    message: "Завантаження книг...",
     description: "Message shown while loading ledgers",
   },
   "page.dashboard.manageLedgers": {
@@ -106,11 +106,11 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "Ім'я must be less than 100 characters",
+    message: "Назва має містити менше 100 символів",
     description: "Validation error when name exceeds limit",
   },
   "page.dashboard.nameRequired": {
-    message: "Ім'я is required",
+    message: "Назва обов'язкова",
     description: "Validation error when name is missing",
   },
   "page.dashboard.noFeedItems": {
@@ -151,7 +151,7 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     description: "Button to retry failed operation",
   },
   "page.dashboard.searchLedgers": {
-    message: "Пошук ledgers...",
+    message: "Пошук книг...",
     description: "Placeholder for ledger search input",
   },
   "page.dashboard.selectLedger": {
