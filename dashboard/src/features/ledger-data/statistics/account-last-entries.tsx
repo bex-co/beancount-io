@@ -20,15 +20,17 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
-import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { formatDecimalCell } from "@/common/lib/format/inventory-cell";
 
 /**
- * Format balance object to display string
+ * Format a balance map for display.
+ *
+ * These are unit quantities, not derived ratios, so they go through the shared
+ * lossless decimal formatting Holdings and BQL already use. Running them
+ * through `Number` and the locale number formatter silently rounded 4.00995
+ * ETH to 4.01 — a quantity the reader cannot reconcile against Holdings.
  */
-function formatBalance(
-  balance: Record<string, unknown> | null,
-  formatNum: (v: number) => string,
-): ReactNode {
+function formatBalance(balance: Record<string, unknown> | null): ReactNode {
   if (!balance) return "N/A";
 
   const entries = Object.entries(balance);
@@ -38,7 +40,7 @@ function formatBalance(
     <span
       key={currency}
       className="block"
-    >{`${formatNum(Number(amount))} ${currency}`}</span>
+    >{`${formatDecimalCell(amount)} ${currency}`}</span>
   ));
 }
 
@@ -135,7 +137,6 @@ function AccountLastEntriesTable({
 }) {
   const { t } = useTranslations();
   const headingId = useId();
-  const formatNum = useFormatNumber();
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/statistics",
   });
@@ -191,7 +192,7 @@ function AccountLastEntriesTable({
                     {formatDateISO(entry.date) || "N/A"}
                   </TableCell>
                   <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
-                    {formatBalance(entry.balance, formatNum)}
+                    {formatBalance(entry.balance)}
                   </TableCell>
                 </TableRow>
               ))}

@@ -5,10 +5,6 @@ import * as apolloClient from "@apollo/client/react";
 import type { GetLedgerAccountLastEntriesQuery } from "@/graphql/definitions";
 import type { MockQueryResult } from "@/test/mocks/apollo";
 
-vi.mock("@/common/hooks/use-format-number", () => ({
-  useFormatNumber: () => (v: number) => String(v),
-}));
-
 // Mock dependencies
 vi.mock("@tanstack/react-router", () => ({
   useParams: () => ({
@@ -341,5 +337,56 @@ describe("AccountLastEntries", () => {
         screen.getByRole("table", { name: "Account Last Entries" }),
       ).toBeInTheDocument();
     });
+  });
+});
+
+describe("AccountLastEntries balance precision", () => {
+  /**
+   * These are unit quantities. Running them through a locale number formatter
+   * rounded 4.00995 ETH to 4.01 — a quantity the reader cannot reconcile
+   * against Holdings, which shows the same account losslessly.
+   */
+  function renderBalance(balance: Record<string, string> | null) {
+    vi.mocked(apolloClient.useQuery).mockReturnValue(
+      createAccountEntriesMockData([
+        {
+          account: "Assets:Crypto:Wallet:MetaMask:ETH",
+          date: "2026-09-16",
+          balance,
+        },
+      ]),
+    );
+    return render(<AccountLastEntries ledgerId="test-id" />);
+  }
+
+  it("keeps the reproduced ETH quantity exact", () => {
+    renderBalance({ ETH: "4.00995" });
+    expect(screen.getByText("4.00995 ETH")).toBeInTheDocument();
+    expect(screen.queryByText("4.01 ETH")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["0.072", "BTC"],
+    ["0.00000001", "BTC"],
+    ["1234567.891234", "USD"],
+    ["-2.000005", "ETH"],
+  ])("keeps %s %s exact", (amount, currency) => {
+    renderBalance({ [currency]: amount });
+    expect(screen.getByText(`${amount} ${currency}`)).toBeInTheDocument();
+  });
+
+  it("labels each currency of a multi-unit balance", () => {
+    renderBalance({ ETH: "4.00995", USD: "1200.50" });
+    expect(screen.getByText("4.00995 ETH")).toBeInTheDocument();
+    expect(screen.getByText("1200.50 USD")).toBeInTheDocument();
+  });
+
+  it("tells a computed zero apart from an absent balance", () => {
+    const { unmount } = renderBalance({});
+    expect(screen.getByText("0")).toBeInTheDocument();
+    unmount();
+
+    renderBalance(null);
+    expect(screen.getByText("N/A")).toBeInTheDocument();
   });
 });
