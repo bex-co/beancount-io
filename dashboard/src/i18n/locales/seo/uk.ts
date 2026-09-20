@@ -400,7 +400,7 @@ const ukSeo: Record<string, TranslationEntry> = {
   },
   "seo.welcome.description": {
     message:
-      "Ласкаво Просимо to Beancount! Get started with plain-text accounting and financial management.",
+      "Ласкаво просимо до Beancount! Почніть вести бухгалтерський облік у текстовому форматі та керувати фінансами.",
     description: "Welcome page meta description",
   },
   "seo.welcome.title": {

@@ -589,7 +589,7 @@ const ukCommon: Record<string, TranslationEntry> = {
     description: "Description for the request a feature menu item",
   },
   "common.balanceSheet": {
-    message: "Баланс Sheet",
+    message: "Балансовий звіт",
     description: "Navigation label for balance sheet financial report",
   },
   "component.searchControls.filters": {
@@ -613,7 +613,7 @@ const ukCommon: Record<string, TranslationEntry> = {
     description: "Prefix for currency conversion option",
   },
   "component.intervalSelect.daily": {
-    message: "Вaily",
+    message: "Щодня",
     description: "Daily interval option",
   },
   "common.equity": {
@@ -621,7 +621,7 @@ const ukCommon: Record<string, TranslationEntry> = {
     description: "Equity category in accounting",
   },
   "component.errorState.title": {
-    message: "Помилка loading data",
+    message: "Помилка завантаження даних",
     description: "Error message when data fails to load",
   },
   "common.expenses": {
@@ -716,7 +716,7 @@ const ukCommon: Record<string, TranslationEntry> = {
     description: "Quarterly interval option",
   },
   "component.accountCombobox.placeholder": {
-    message: "Пошук accounts...",
+    message: "Пошук рахунків...",
     description: "Placeholder for account search",
   },
   "component.conversionSelect.placeholder": {
@@ -736,7 +736,7 @@ const ukCommon: Record<string, TranslationEntry> = {
     description: "Navigation label for trial balance report",
   },
   "component.combobox.placeholder": {
-    message: "Тип to search...",
+    message: "Введіть для пошуку...",
     description: "Placeholder for search input in filter combobox",
   },
   "component.conversionSelect.units": {
