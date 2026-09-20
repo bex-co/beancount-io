@@ -1,6 +1,6 @@
 # w4 · m24 — Repair the Ukrainian catalogs' first-word find/replace damage
 
-**Worker:** worker1 **Goal:** Ukrainian stops being the worst-rendering locale in the product — no screen shows half-translated labels like `Вocuments` or `Рахунок Journal` **Status:** todo (t001–t010, t012 done)
+**Worker:** worker1 **Goal:** Ukrainian stops being the worst-rendering locale in the product — no screen shows half-translated labels like `Вocuments` or `Рахунок Journal` **Status:** done
 
 ## Tasks (in order)
 
@@ -17,7 +17,7 @@
 | t012 | Repair the shared common and seo Ukrainian catalogs        | 20m | w4/m24/t007  | — **DONE**
 | t009 | Simplify the catalog-guard code this milestone touched     | 20m | w4/m24/t012  | — **DONE**
 | t010 | Generalise the stray-English guard to every locale         | 40m | w4/m24/t012  | — **DONE**
-| t011 | Closeout                                                   | 10m | w4/m24/t010  |
+| t011 | Closeout                                                   | 10m | w4/m24/t010  | — **DONE**
 
 ## Definition of done
 

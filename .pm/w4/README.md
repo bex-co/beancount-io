@@ -4,7 +4,7 @@
 
 ## Milestones
 
-- [ ] **m24** — [Repair the Ukrainian catalogs' first-word find/replace damage](./m24/README.md) (12 tasks) ← promoted w4/152, filed while closing w4/149, 2026-09-20
+- [x] **m24** — [Repair the Ukrainian catalogs' first-word find/replace damage](./done/m24/README.md) (12 tasks) ← promoted w4/152, filed while closing w4/149, 2026-09-20
 
 - [x] **m23** — [Prevent native authentication forms from putting passwords in URLs](./done/m23/README.md) (6 tasks) ← repeated dashboard QA, 2026-09-18
 
