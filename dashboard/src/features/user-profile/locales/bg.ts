@@ -154,6 +154,11 @@ const bgUserProfile: Record<string, TranslationEntry> = {
     message: "Покажи още",
     description: "Public profile: show more social list items",
   },
+  "userProfile.listLoadError": {
+    message: "Списъкът не можа да бъде зареден.",
+    description:
+      "Public profile: the first page of a social list failed to load",
+  },
   "userProfile.loadMoreError": {
     message: "Неуспешно зареждане на още резултати.",
     description: "Public profile: failed to load the next social page",

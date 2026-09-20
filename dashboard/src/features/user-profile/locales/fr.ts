@@ -155,6 +155,11 @@ const frUserProfile: Record<string, TranslationEntry> = {
     message: "Afficher plus",
     description: "Public profile: show more social list items",
   },
+  "userProfile.listLoadError": {
+    message: "Impossible de charger cette liste.",
+    description:
+      "Public profile: the first page of a social list failed to load",
+  },
   "userProfile.loadMoreError": {
     message: "Impossible de charger plus de résultats.",
     description: "Public profile: failed to load the next social page",

@@ -154,6 +154,11 @@ const skUserProfile: Record<string, TranslationEntry> = {
     message: "Zobraziť viac",
     description: "Public profile: show more social list items",
   },
+  "userProfile.listLoadError": {
+    message: "Tento zoznam sa nepodarilo načítať.",
+    description:
+      "Public profile: the first page of a social list failed to load",
+  },
   "userProfile.loadMoreError": {
     message: "Ďalšie výsledky sa nepodarilo načítať.",
     description: "Public profile: failed to load the next social page",

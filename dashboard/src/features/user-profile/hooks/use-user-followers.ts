@@ -34,5 +34,6 @@ export function useUserFollowers(username: string, enabled = false) {
     loadMoreError: result.loadMoreError,
     loadMore: result.loadMore,
     retryLoadMore: result.retryLoadMore,
+    refetch: result.refetch,
   };
 }

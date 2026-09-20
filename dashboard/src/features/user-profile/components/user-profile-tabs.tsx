@@ -34,6 +34,25 @@ interface UserProfileTabsProps {
   initialTab?: string;
 }
 
+/**
+ * A failed first read is not an empty list. Until it is retried the panel must
+ * say the list could not be loaded, not that the person has no followers —
+ * the profile's own counts come from a different, still-successful read.
+ */
+function SocialListError({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslations();
+  return (
+    <div className="flex flex-col items-center gap-3 py-6 sm:py-8">
+      <p role="alert" className="text-sm text-destructive">
+        {t("userProfile.listLoadError")}
+      </p>
+      <Button variant="outline" onClick={onRetry} className="h-11 px-6">
+        {t("common.tryAgain")}
+      </Button>
+    </div>
+  );
+}
+
 function SocialContinuation({
   hasMore,
   loadingMore,
@@ -124,6 +143,8 @@ export function UserProfileTabs({
     loading: followersLoading,
     loadingMore: followersLoadingMore,
     hasMore: followersHasMore,
+    error: followersError,
+    refetch: refetchFollowers,
     loadMoreError: followersLoadMoreError,
     loadMore: loadMoreFollowers,
     retryLoadMore: retryFollowers,
@@ -133,6 +154,8 @@ export function UserProfileTabs({
     loading: followingLoading,
     loadingMore: followingLoadingMore,
     hasMore: followingHasMore,
+    error: followingError,
+    refetch: refetchFollowing,
     loadMoreError: followingLoadMoreError,
     loadMore: loadMoreFollowing,
     retryLoadMore: retryFollowing,
@@ -142,6 +165,8 @@ export function UserProfileTabs({
     loading: starredLoading,
     loadingMore: starredLoadingMore,
     hasMore: starredHasMore,
+    error: starredError,
+    refetch: refetchStarred,
     loadMoreError: starredLoadMoreError,
     loadMore: loadMoreStarred,
     retryLoadMore: retryStarred,
@@ -219,7 +244,10 @@ export function UserProfileTabs({
               <Loader2 className="size-6 sm:size-8 animate-spin" />
             </div>
           )}
-          {!followersLoading && followers.length === 0 && (
+          {!followersLoading && followers.length === 0 && followersError && (
+            <SocialListError onRetry={() => void refetchFollowers()} />
+          )}
+          {!followersLoading && followers.length === 0 && !followersError && (
             <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm sm:text-base">
               {t("userProfile.noFollowers")}
             </p>
@@ -256,7 +284,10 @@ export function UserProfileTabs({
               <Loader2 className="size-6 sm:size-8 animate-spin" />
             </div>
           )}
-          {!followingLoading && following.length === 0 && (
+          {!followingLoading && following.length === 0 && followingError && (
+            <SocialListError onRetry={() => void refetchFollowing()} />
+          )}
+          {!followingLoading && following.length === 0 && !followingError && (
             <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm sm:text-base">
               {t("userProfile.noFollowing")}
             </p>
@@ -293,7 +324,10 @@ export function UserProfileTabs({
               <Loader2 className="size-6 sm:size-8 animate-spin" />
             </div>
           )}
-          {!starredLoading && starredRepos.length === 0 && (
+          {!starredLoading && starredRepos.length === 0 && starredError && (
+            <SocialListError onRetry={() => void refetchStarred()} />
+          )}
+          {!starredLoading && starredRepos.length === 0 && !starredError && (
             <p className="text-center text-muted-foreground py-6 sm:py-8 text-sm sm:text-base">
               {t("userProfile.noStarredRepos")}
             </p>

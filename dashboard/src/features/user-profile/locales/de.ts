@@ -154,6 +154,11 @@ const deUserProfile: Record<string, TranslationEntry> = {
     message: "Mehr anzeigen",
     description: "Public profile: show more social list items",
   },
+  "userProfile.listLoadError": {
+    message: "Diese Liste konnte nicht geladen werden.",
+    description:
+      "Public profile: the first page of a social list failed to load",
+  },
   "userProfile.loadMoreError": {
     message: "Weitere Ergebnisse konnten nicht geladen werden.",
     description: "Public profile: failed to load the next social page",

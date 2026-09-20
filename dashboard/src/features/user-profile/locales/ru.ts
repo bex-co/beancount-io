@@ -154,6 +154,11 @@ const ruUserProfile: Record<string, TranslationEntry> = {
     message: "Показать ещё",
     description: "Public profile: show more social list items",
   },
+  "userProfile.listLoadError": {
+    message: "Не удалось загрузить этот список.",
+    description:
+      "Public profile: the first page of a social list failed to load",
+  },
   "userProfile.loadMoreError": {
     message: "Не удалось загрузить дополнительные результаты.",
     description: "Public profile: failed to load the next social page",

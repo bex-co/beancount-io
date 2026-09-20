@@ -150,6 +150,11 @@ const jaUserProfile: Record<string, TranslationEntry> = {
     message: "もっと見る",
     description: "Public profile: show more social list items",
   },
+  "userProfile.listLoadError": {
+    message: "このリストを読み込めませんでした。",
+    description:
+      "Public profile: the first page of a social list failed to load",
+  },
   "userProfile.loadMoreError": {
     message: "続きを読み込めませんでした。",
     description: "Public profile: failed to load the next social page",

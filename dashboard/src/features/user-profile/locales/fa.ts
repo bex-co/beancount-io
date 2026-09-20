@@ -154,6 +154,11 @@ const faUserProfile: Record<string, TranslationEntry> = {
     message: "نمایش بیشتر",
     description: "Public profile: show more social list items",
   },
+  "userProfile.listLoadError": {
+    message: "این فهرست بارگیری نشد.",
+    description:
+      "Public profile: the first page of a social list failed to load",
+  },
   "userProfile.loadMoreError": {
     message: "بارگذاری نتایج بیشتر ممکن نشد.",
     description: "Public profile: failed to load the next social page",

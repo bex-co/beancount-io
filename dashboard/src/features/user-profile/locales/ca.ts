@@ -154,6 +154,11 @@ const caUserProfile: Record<string, TranslationEntry> = {
     message: "Mostra'n més",
     description: "Public profile: show more social list items",
   },
+  "userProfile.listLoadError": {
+    message: "No s'ha pogut carregar aquesta llista.",
+    description:
+      "Public profile: the first page of a social list failed to load",
+  },
   "userProfile.loadMoreError": {
     message: "No s'han pogut carregar més resultats.",
     description: "Public profile: failed to load the next social page",

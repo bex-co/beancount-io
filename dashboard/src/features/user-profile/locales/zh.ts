@@ -153,6 +153,11 @@ const zhUserProfile: Record<string, TranslationEntry> = {
     message: "显示更多",
     description: "Public profile: show more social list items",
   },
+  "userProfile.listLoadError": {
+    message: "无法加载此列表。",
+    description:
+      "Public profile: the first page of a social list failed to load",
+  },
   "userProfile.loadMoreError": {
     message: "无法加载更多结果。",
     description: "Public profile: failed to load the next social page",

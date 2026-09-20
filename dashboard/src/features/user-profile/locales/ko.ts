@@ -150,6 +150,11 @@ const koUserProfile: Record<string, TranslationEntry> = {
     message: "더 보기",
     description: "Public profile: show more social list items",
   },
+  "userProfile.listLoadError": {
+    message: "이 목록을 불러오지 못했습니다.",
+    description:
+      "Public profile: the first page of a social list failed to load",
+  },
   "userProfile.loadMoreError": {
     message: "추가 결과를 불러오지 못했습니다.",
     description: "Public profile: failed to load the next social page",
