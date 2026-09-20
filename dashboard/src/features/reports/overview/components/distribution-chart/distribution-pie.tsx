@@ -30,8 +30,12 @@ export function DistributionPie({
           name?: string;
           value?: unknown;
           percent?: number;
+          data?: { account?: string };
         };
-        const name = p.name ?? "";
+        // Slice labels stay compact so narrow slices do not overflow; the
+        // tooltip names the account, because leaf names repeat across parents
+        // — two USD balances, three BTC, two ETH on one crypto ledger.
+        const name = p.data?.account ?? p.name ?? "";
         const value = Number(p.value);
         const percent = p.percent ?? 0;
         return `${name}: ${formatNum(value)} (${percent}%)`;
@@ -51,7 +55,11 @@ export function DistributionPie({
           overflow: "truncate" as const,
           color: isDark ? "#ffffff" : undefined,
         },
-        data: items.map((d) => ({ name: d.label, value: d.value })),
+        data: items.map((d) => ({
+          name: d.label,
+          value: d.value,
+          account: d.name,
+        })),
       },
     ],
     animation: true,
