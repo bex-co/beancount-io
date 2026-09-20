@@ -9,11 +9,11 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Singular form of account, used as tab label",
   },
   "journal.accountPlaceholder": {
-    message: "Рахунок (e.g., Assets:Bank:Checking)",
+    message: "Рахунок (напр., Assets:Bank:Checking)",
     description: "Placeholder for account field",
   },
   "journal.accountRequired": {
-    message: "Рахунок is required",
+    message: "Рахунок обов'язковий",
     description: "Validation error when account is missing",
   },
   "journal.accounts": {
@@ -49,11 +49,11 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Table header for balance column",
   },
   "journal.balancesAfterEntry": {
-    message: "Балансs after entry",
+    message: "Баланси після запису",
     description: "Section header showing account balances after transaction",
   },
   "journal.balancesBeforeEntry": {
-    message: "Балансs before entry",
+    message: "Баланси до запису",
     description: "Section header showing account balances before transaction",
   },
   "journal.budget": {
@@ -61,7 +61,7 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Label for budget custom subtype filter",
   },
   "journal.budgetEntries": {
-    message: "Бudget entries",
+    message: "Записи бюджету",
     description: "Filter tooltip for budget entries",
   },
   "journal.change": {
@@ -73,7 +73,7 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Label for cleared transaction subtype filter",
   },
   "journal.clearedTransactions": {
-    message: "Очиститиed transactions",
+    message: "Проведені транзакції",
     description: "Filter tooltip for cleared transactions",
   },
   "journal.close": {
@@ -122,11 +122,11 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Label for discovered document subtype filter",
   },
   "journal.discoveredDocuments": {
-    message: "Вiscovered documents",
+    message: "Виявлені документи",
     description: "Filter tooltip for discovered documents",
   },
   "journal.document": {
-    message: "Вocument",
+    message: "Документ",
     description: "Document entry type filter",
   },
   "journal.downloadFilteredEntries": {
@@ -164,11 +164,11 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Button label to export",
   },
   "journal.exportJournal": {
-    message: "Експорт Journal",
+    message: "Експорт журналу",
     description: "Dialog title for exporting journal",
   },
   "journal.exporting": {
-    message: "Експортing...",
+    message: "Експортування...",
     description: "Button state while exporting",
   },
   "journal.failedToCreateBalance": {
@@ -208,7 +208,7 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Navigation label for journal/transaction history page",
   },
   "journal.journalExportedSuccess": {
-    message: "Журнал exported successfully",
+    message: "Журнал успішно експортовано",
     description: "Success message after exporting journal",
   },
   "journal.linked": {
@@ -216,11 +216,11 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Label for linked document subtype filter",
   },
   "journal.linkedDocuments": {
-    message: "Пinked documents",
+    message: "Пов'язані документи",
     description: "Filter tooltip for linked documents",
   },
   "journal.loadingEntryContext": {
-    message: "Пoading entry context...",
+    message: "Завантаження контексту запису...",
     description: "Loading message while fetching entry context",
   },
   "journal.metadata": {
@@ -256,11 +256,11 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Note entry type",
   },
   "journal.noteContent": {
-    message: "Примітка content",
+    message: "Вміст примітки",
     description: "Placeholder for note content field",
   },
   "journal.noteContentRequired": {
-    message: "Примітка content is required",
+    message: "Вміст примітки обов'язковий",
     description: "Validation error when note content is missing",
   },
   "journal.open": {
@@ -272,7 +272,7 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Label for other transaction subtype filter",
   },
   "journal.otherTransactions": {
-    message: "Інше transactions",
+    message: "Інші транзакції",
     description: "Filter tooltip for other transactions",
   },
   "journal.pad": {
@@ -320,7 +320,7 @@ const ukJournal: Record<string, TranslationEntry> = {
     description: "Placeholder for payee selection combobox",
   },
   "journal.toggleMetadata": {
-    message: "Комуggle metadata",
+    message: "Перемкнути метадані",
     description: "Filter tooltip to show/hide metadata",
   },
   "journal.postingsAlwaysVisible": {
@@ -329,7 +329,7 @@ const ukJournal: Record<string, TranslationEntry> = {
       "Статичний індикатор, коли глобальний фільтр проведень тримає всі рядки відкритими",
   },
   "journal.togglePostings": {
-    message: "Комуggle postings",
+    message: "Перемкнути проведення",
     description: "Filter tooltip to show/hide postings",
   },
   "journal.transaction": {
