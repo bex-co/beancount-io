@@ -87,6 +87,9 @@ const mockI18n = {
     mockI18n.language = lang;
     return Promise.resolve();
   }),
+  // Real i18next exposes this, and the app reads it for the document's and
+  // Radix's reading direction. Persian is the only right-to-left locale here.
+  dir: (lng?: string) => ((lng ?? mockI18n.language) === "fa" ? "rtl" : "ltr"),
   on: vi.fn(),
   off: vi.fn(),
   options: {
