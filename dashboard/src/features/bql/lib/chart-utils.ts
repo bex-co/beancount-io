@@ -1,5 +1,6 @@
 import type { EChartsOption } from "echarts";
 import type { QueryResultTable } from "@/graphql/definitions";
+import { CONFINED_TOOLTIP } from "@/common/lib/chart/tooltip";
 
 export interface ChartConfig {
   type: "line" | "bar";
@@ -145,6 +146,7 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
 
   const option: EChartsOption = {
     tooltip: {
+      ...CONFINED_TOOLTIP,
       trigger: "axis",
       axisPointer: {
         type: chartType === "line" ? "line" : "shadow",

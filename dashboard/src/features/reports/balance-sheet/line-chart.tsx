@@ -13,6 +13,7 @@ import { sortUsdFirst } from "@/common/lib/utils/sort";
 import { getChartColors } from "@/common/lib/chart/color";
 import type { ChartInterval } from "@/common/types/chart";
 import { formatYAxisNumber, formatDateAxis } from "@/common/lib/chart/chart";
+import { CONFINED_TOOLTIP } from "@/common/lib/chart/tooltip";
 
 interface LineChartProps {
   data: DateAndBalance[];
@@ -94,6 +95,7 @@ export function LineChart({
 
     return {
       tooltip: {
+        ...CONFINED_TOOLTIP,
         trigger: "axis",
         axisPointer: {
           type: "cross",

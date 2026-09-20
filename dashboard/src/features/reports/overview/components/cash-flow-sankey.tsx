@@ -8,6 +8,7 @@ import { getSankeyNodeColor } from "../lib/sankey-colors";
 import { ChartUnitScope } from "./chart-unit-scope";
 import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import type { SerializableTreeNode } from "@/graphql/definitions";
+import { CONFINED_TOOLTIP } from "@/common/lib/chart/tooltip";
 
 const SANKEY_HEIGHT = "400px";
 
@@ -93,6 +94,7 @@ export default function CashFlowSankey({
 
   const option = {
     tooltip: {
+      ...CONFINED_TOOLTIP,
       trigger: "item" as const,
       triggerOn: "mousemove" as const,
       formatter: (params: unknown) => {
