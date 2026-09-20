@@ -12,8 +12,16 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mocks.navigate,
   useRouter: () => ({ invalidate: mocks.invalidate }),
+  // `href` is what the router composes from the raw location — the parsed
+  // `hash` has already had its `#` sliced off, so only `href` can rebuild the
+  // destination faithfully.
   useRouterState: ({ select }: { select: (state: unknown) => unknown }) =>
-    select({ location: { pathname: "/ledger/alice/books/commits" } }),
+    select({
+      location: {
+        pathname: "/ledger/alice/books/commits",
+        href: "/ledger/alice/books/commits?time=2016#entry-7",
+      },
+    }),
 }));
 
 vi.mock("@/common/apollo/links/auth-error-link", () => ({
@@ -75,7 +83,11 @@ describe("LedgerRouteError", () => {
     });
   });
 
-  it("preserves the existing unauthenticated redirect contract", async () => {
+  it("sends the whole destination to login, not just its path", async () => {
+    // This component is the errorComponent of the ledger route whose loader
+    // already keeps path, query and fragment. Keeping only the path here meant
+    // one route had two continuation producers that disagreed, and a reader
+    // sent here lost their time filter and their anchor.
     mocks.unauthenticated = true;
     render(
       <LedgerRouteError
@@ -89,7 +101,7 @@ describe("LedgerRouteError", () => {
       expect(mocks.navigate).toHaveBeenCalledWith({
         to: "/auth/login",
         search: {
-          next: "/ledger/alice/books/commits",
+          next: "/ledger/alice/books/commits?time=2016#entry-7",
         },
       });
     });

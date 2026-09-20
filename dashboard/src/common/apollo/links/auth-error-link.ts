@@ -1,5 +1,6 @@
 import { ErrorLink } from "@apollo/client/link/error";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { getSafeRedirectPath } from "@/common/lib/auth/auth";
 
 /**
  * These mutations return UNAUTHENTICATED as an expected outcome (e.g. an
@@ -78,6 +79,25 @@ export function buildUnauthenticatedLoginHref(next: string): string {
   return `/auth/login?next=${encodeURIComponent(next)}`;
 }
 
+/**
+ * The current page as a safe relative `next` for login.
+ *
+ * This link has a native `Location`, not a parsed router one, so `hash` still
+ * carries its `#` and the three parts reassemble without gluing the fragment
+ * onto the query — the mistake the router-based producers have to avoid. The
+ * result is validated like every other `next` and replaced with the app root
+ * rather than repaired if it does not come out relative.
+ */
+export function locationAsNext(
+  location: Pick<Location, "pathname" | "search" | "hash">,
+): string {
+  return (
+    getSafeRedirectPath(
+      `${location.pathname}${location.search}${location.hash}`,
+    ) ?? "/"
+  );
+}
+
 export const authErrorLink = new ErrorLink(({ error, operation }) => {
   if (typeof window === "undefined") return;
   if (redirecting) return;
@@ -85,6 +105,7 @@ export const authErrorLink = new ErrorLink(({ error, operation }) => {
     return;
 
   redirecting = true;
-  const next = window.location.pathname + window.location.search;
-  window.location.assign(buildUnauthenticatedLoginHref(next));
+  window.location.assign(
+    buildUnauthenticatedLoginHref(locationAsNext(window.location)),
+  );
 });

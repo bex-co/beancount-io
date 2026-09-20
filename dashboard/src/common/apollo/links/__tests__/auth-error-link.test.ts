@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildUnauthenticatedLoginHref,
   shouldRedirectForUnauthenticatedError,
+  locationAsNext,
 } from "../auth-error-link";
 
 function graphQLError(code: string): CombinedGraphQLErrors {
@@ -69,5 +70,39 @@ describe("buildUnauthenticatedLoginHref", () => {
     expect(buildUnauthenticatedLoginHref(next)).toBe(
       `/auth/login?next=${encodeURIComponent(next)}`,
     );
+  });
+});
+
+describe("locationAsNext", () => {
+  const at = (pathname: string, search = "", hash = "") =>
+    locationAsNext({ pathname, search, hash });
+
+  it("keeps the query a reader had applied", () => {
+    expect(at("/ledger/alice/books/journal", "?time=2016")).toBe(
+      "/ledger/alice/books/journal?time=2016",
+    );
+  });
+
+  it("keeps the fragment, with its delimiter intact", () => {
+    // A native Location still carries the "#", unlike the router's parsed
+    // hash — reassembling those by hand is what glues a fragment onto a query.
+    expect(at("/ledger/alice/books/journal", "?time=2016", "#entry-7")).toBe(
+      "/ledger/alice/books/journal?time=2016#entry-7",
+    );
+  });
+
+  it("keeps a fragment that arrives without a query", () => {
+    expect(at("/ledger/alice/books/journal", "", "#entry-7")).toBe(
+      "/ledger/alice/books/journal#entry-7",
+    );
+  });
+
+  it("returns a bare path unchanged", () => {
+    expect(at("/settings/api-keys")).toBe("/settings/api-keys");
+  });
+
+  it("falls back to the root rather than repairing something hostile", () => {
+    expect(at("//evil.example/path")).toBe("/");
+    expect(at("/%2509/evil.example")).toBe("/");
   });
 });

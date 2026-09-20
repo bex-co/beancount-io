@@ -1,9 +1,10 @@
 import { useEffect } from "react";
-import { useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { isUnauthenticatedError } from "@/common/apollo/links/auth-error-link";
 import { LedgerLayoutError } from "./ledger-layout-error";
 import { NOINDEX_ROBOTS_CONTENT } from "@/common/lib/seo/indexability";
+import { useLoginNextPath } from "@/common/hooks/use-login-next-path";
 
 /**
  * Keeps errors thrown by the ledger route loader inside the ledger error
@@ -13,9 +14,9 @@ import { NOINDEX_ROBOTS_CONTENT } from "@/common/lib/seo/indexability";
 export function LedgerRouteError({ error, reset }: ErrorComponentProps) {
   const navigate = useNavigate();
   const router = useRouter();
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
-  });
+  // The whole destination, not just its path: a reader sent to login from
+  // here was losing their time filter and their anchor.
+  const next = useLoginNextPath();
   const unauthenticated = isUnauthenticatedError(error);
 
   useEffect(() => {
@@ -23,9 +24,9 @@ export function LedgerRouteError({ error, reset }: ErrorComponentProps) {
 
     void navigate({
       to: "/auth/login",
-      search: { next: pathname },
+      search: { next },
     });
-  }, [navigate, pathname, unauthenticated]);
+  }, [navigate, next, unauthenticated]);
 
   const handleBackToDashboard = () => {
     void navigate({ to: "/ledger" });

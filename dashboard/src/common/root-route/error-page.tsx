@@ -1,16 +1,12 @@
 import { useEffect } from "react";
-import {
-  Link,
-  useNavigate,
-  useRouter,
-  useRouterState,
-} from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Home, ArrowLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/common/components/ui/button.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { isUnauthenticatedError } from "@/common/apollo/links/auth-error-link";
+import { useLoginNextPath } from "@/common/hooks/use-login-next-path";
 
 /**
  * Global error page component
@@ -27,7 +23,9 @@ export default function ErrorPage({ error, reset }: ErrorComponentProps) {
   const { t } = useTranslations();
   const navigate = useNavigate();
   const router = useRouter();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // The whole destination, not just its path, so a query and an anchor
+  // survive the trip through login.
+  const next = useLoginNextPath();
 
   const unauthenticated = isUnauthenticatedError(error);
 
@@ -41,9 +39,9 @@ export default function ErrorPage({ error, reset }: ErrorComponentProps) {
     if (!unauthenticated) return;
     void navigate({
       to: "/auth/login",
-      search: { next: pathname },
+      search: { next },
     });
-  }, [unauthenticated, pathname, navigate]);
+  }, [unauthenticated, next, navigate]);
 
   const handleGoBack = () => {
     window.history.back();
