@@ -280,7 +280,7 @@ const ruJournal: Record<string, TranslationEntry> = {
     description: "Pad entry type filter",
   },
   "journal.payeeNarration": {
-    message: "Payee/Narration",
+    message: "Получатель/Описание",
     description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
