@@ -6,6 +6,11 @@ vi.mock("@/common/hooks/use-format-number", () => ({
   useFormatNumber: () => (v: number) => String(v),
 }));
 
+// The single-series chart formats quantities at the source's own precision.
+vi.mock("@/common/hooks/use-format-quantity", () => ({
+  useFormatQuantity: () => (v: number) => String(v),
+}));
+
 // Mock ReactECharts to avoid canvas rendering
 vi.mock("@/common/components/react-echarts", () => ({
   ReactECharts: ({ option }: { option: unknown }) => {

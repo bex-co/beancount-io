@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { ReactECharts } from "@/common/components/react-echarts";
-import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { useFormatQuantity } from "@/common/hooks/use-format-quantity";
+import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import type {
   EChartsOption,
   BarSeriesOption,
@@ -27,7 +28,7 @@ export function SingleDateBalanceChart({
   primarySeries = "USD",
   inverted,
 }: BaseChartProps) {
-  const formatNum = useFormatNumber();
+  const formatQty = useFormatQuantity();
   const chartOption = useMemo((): EChartsOption => {
     if (!data || data.length === 0) {
       return createEmptyChartOption();
@@ -73,6 +74,18 @@ export function SingleDateBalanceChart({
     // Prepare x-axis data (dates)
     const dates = data.map((item) => item.date);
 
+    // The bars carry numbers, so remember how much precision each source
+    // decimal had before it was parsed.
+    const sourceDigits = new Map<string, number>();
+    data.forEach((item) => {
+      Object.entries(item.balance).forEach(([commodity, raw]) => {
+        sourceDigits.set(
+          `${item.date}\u0000${commodity}`,
+          fractionDigitsOf(raw as string),
+        );
+      });
+    });
+
     const tooltip: TooltipComponentOption = {
       trigger: "axis",
       axisPointer: {
@@ -83,12 +96,14 @@ export function SingleDateBalanceChart({
           let result = `<div><strong>${formatDateAxis(params[0].name, interval ?? "monthly")}</strong></div>`;
           params.forEach((param) => {
             const value = param.value;
+            const digits =
+              sourceDigits.get(`${param.name}\u0000${param.seriesName}`) ?? 0;
 
             const formattedValue =
               typeof value === "number"
                 ? value >= 0
-                  ? `+${formatNum(value)}`
-                  : formatNum(value)
+                  ? `+${formatQty(value, digits)}`
+                  : formatQty(value, digits)
                 : "0";
             result += `<div style="color: ${param.color}">
               <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span>
@@ -133,7 +148,7 @@ export function SingleDateBalanceChart({
       animationDuration: 1000,
       animationEasing: "cubicOut",
     };
-  }, [data, interval, primarySeries, inverted, formatNum]);
+  }, [data, interval, primarySeries, inverted, formatQty]);
 
   return (
     <div className="w-full">

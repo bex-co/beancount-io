@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { ReactECharts } from "@/common/components/react-echarts";
-import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { useFormatQuantity } from "@/common/hooks/use-format-quantity";
+import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import type {
   EChartsOption,
@@ -34,7 +35,7 @@ export function LineChart({
   primarySeries = "USD",
   inverted,
 }: LineChartProps) {
-  const formatNum = useFormatNumber();
+  const formatQty = useFormatQuantity();
   const chartOption = useMemo((): EChartsOption => {
     if (!data || data.length === 0) {
       return {
@@ -67,6 +68,18 @@ export function LineChart({
     // Prepare x-axis data (dates)
     const dates = data.map((item) => item.date);
 
+    // The plotted points are numbers, so the tooltip can no longer see how
+    // much precision the ledger actually sent. Remember it per point.
+    const sourceDigits = new Map<string, number>();
+    data.forEach((item) => {
+      Object.entries(item.balance).forEach(([commodity, raw]) => {
+        sourceDigits.set(
+          `${item.date}\u0000${commodity}`,
+          fractionDigitsOf(raw as string),
+        );
+      });
+    });
+
     const legendSelected: Record<string, boolean> = (() => {
       const selected: Record<string, boolean> = {};
       commodities.forEach((commodity) => {
@@ -98,9 +111,12 @@ export function LineChart({
                 param.value[1] !== 0
               ) {
                 const value = param.value[1] as number;
+                const digits =
+                  sourceDigits.get(`${param.name}\u0000${param.seriesName}`) ??
+                  0;
                 tooltip += `<div style="margin: 4px 0;">
                   <span style="display: inline-block; width: 10px; height: 10px; background-color: ${param.color || "#000"}; margin-right: 8px; border-radius: 50%;"></span>
-                  ${param.seriesName || "Unknown"}: ${formatNum(value)}
+                  ${param.seriesName || "Unknown"}: ${formatQty(value, digits)}
                 </div>`;
               }
             });
@@ -155,7 +171,7 @@ export function LineChart({
       animationDuration: 1000,
       animationEasing: "cubicOut",
     };
-  }, [data, interval, primarySeries, inverted, formatNum]);
+  }, [data, interval, primarySeries, inverted, formatQty]);
 
   return (
     <div className={className}>

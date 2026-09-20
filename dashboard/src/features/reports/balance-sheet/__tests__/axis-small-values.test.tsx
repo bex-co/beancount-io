@@ -26,8 +26,8 @@ vi.mock("@/common/hooks/use-translations", () => ({
   }),
 }));
 
-vi.mock("@/common/hooks/use-format-number", () => ({
-  useFormatNumber: () => (value: number) => String(value),
+vi.mock("@/common/hooks/use-format-quantity", () => ({
+  useFormatQuantity: () => (value: number) => String(value),
 }));
 
 vi.mock("@/common/hooks/use-theme", () => ({ useIsDarkTheme: () => false }));
