@@ -92,6 +92,17 @@ export function AccountCombobox({ children }: AccountComboboxProps) {
                     onClick={() => {
                       void refetch();
                     }}
+                    onKeyDown={(event) => {
+                      // cmdk's Command root cancels every Enter that reaches
+                      // it, and a failed read leaves no item for it to select,
+                      // so the key was swallowed and this button never fired.
+                      // Stop the bubble instead of preventing anything: the
+                      // browser still performs the button's own activation, so
+                      // the retry runs exactly once. Space was never affected.
+                      if (event.key === "Enter") {
+                        event.stopPropagation();
+                      }
+                    }}
                   >
                     {t("common.tryAgain")}
                   </Button>

@@ -123,6 +123,95 @@ describe("AccountCombobox", () => {
     expect(refetch).toHaveBeenCalled();
   });
 
+  /**
+   * The retry button lives inside cmdk's Command, whose root cancels every
+   * Enter that reaches it. A failed read leaves no item for it to select, so
+   * the key was swallowed and the button never activated — Space and the
+   * pointer worked, Enter did nothing. This renders the real Command wrapper,
+   * so a regression there fails here.
+   */
+  it("retries when the focused retry button is activated with Enter", async () => {
+    const refetch = vi.fn().mockResolvedValue({});
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      loading: false,
+      error: new Error("network"),
+      refetch,
+    });
+
+    render(
+      <SidebarProvider>
+        <AccountCombobox>
+          <button>Go to Account</button>
+        </AccountCombobox>
+      </SidebarProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /go to account/i }));
+
+    const retry = await screen.findByRole("button", { name: /try again/i });
+    retry.focus();
+    expect(retry).toHaveFocus();
+
+    await user.keyboard("{Enter}");
+
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("still retries exactly once with Space", async () => {
+    const refetch = vi.fn().mockResolvedValue({});
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      loading: false,
+      error: new Error("network"),
+      refetch,
+    });
+
+    render(
+      <SidebarProvider>
+        <AccountCombobox>
+          <button>Go to Account</button>
+        </AccountCombobox>
+      </SidebarProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /go to account/i }));
+
+    const retry = await screen.findByRole("button", { name: /try again/i });
+    retry.focus();
+    await user.keyboard("{ }");
+
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the retry offered when the read fails again", async () => {
+    const refetch = vi.fn().mockResolvedValue({});
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      loading: false,
+      error: new Error("network"),
+      refetch,
+    });
+
+    render(
+      <SidebarProvider>
+        <AccountCombobox>
+          <button>Go to Account</button>
+        </AccountCombobox>
+      </SidebarProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /go to account/i }));
+
+    const retry = await screen.findByRole("button", { name: /try again/i });
+    retry.focus();
+    await user.keyboard("{Enter}");
+
+    expect(
+      screen.getByRole("button", { name: /try again/i }),
+    ).toBeInTheDocument();
+  });
+
   it("shows empty only after a successful load with no accounts", async () => {
     mockUseQuery.mockReturnValue({
       data: { getLedgerAccounts: [] },
