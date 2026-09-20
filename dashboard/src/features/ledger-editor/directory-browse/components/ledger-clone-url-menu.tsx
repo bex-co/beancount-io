@@ -18,7 +18,7 @@ import {
   type GetLedgerArchiveDownloadUrlQueryVariables,
 } from "@/graphql/definitions";
 import { GitBranch, Copy, Check, KeyRound, Download } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useId, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
@@ -33,6 +33,13 @@ interface LedgerCloneUrlMenuProps {
 interface CloneUrlInputProps {
   url: string;
   copyLabel: string;
+  /**
+   * Elements that name this field — its protocol tab and the popup heading, so
+   * the two URL boxes read as "HTTP Clone Repository" and "SSH Clone
+   * Repository". The copy button's label names the action, not the field, and
+   * the URL itself is the value rather than the name.
+   */
+  labelledBy: string;
 }
 
 /**
@@ -40,7 +47,11 @@ interface CloneUrlInputProps {
  * Displays a read-only input field with URL and a copy button
  * Manages its own copy status internally
  */
-export function CloneUrlInput({ url, copyLabel }: CloneUrlInputProps) {
+export function CloneUrlInput({
+  url,
+  copyLabel,
+  labelledBy,
+}: CloneUrlInputProps) {
   const formatError = useErrorMessage();
   const [copied, setCopied] = useState<boolean>(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null);
@@ -71,7 +82,12 @@ export function CloneUrlInput({ url, copyLabel }: CloneUrlInputProps) {
 
   return (
     <div className="flex gap-2 flex-row items-center">
-      <Input value={url} readOnly className="font-mono text-xs flex-1" />
+      <Input
+        value={url}
+        readOnly
+        aria-labelledby={labelledBy}
+        className="font-mono text-xs flex-1"
+      />
       <Button
         size="sm"
         variant="outline"
@@ -98,6 +114,9 @@ export default function LedgerCloneUrlMenu({
   ledgerId,
 }: LedgerCloneUrlMenuProps) {
   const { t } = useTranslations();
+  const headingId = useId();
+  const httpTabId = useId();
+  const sshTabId = useId();
   const formatError = useErrorMessage();
   const [activeTab, setActiveTab] = useState<string>("ssh");
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -144,11 +163,17 @@ export default function LedgerCloneUrlMenu({
           {t("ledgerEditor.gitClone")}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-96 p-0">
+      <PopoverContent
+        align="end"
+        className="w-96 p-0"
+        // Radix gives this popup role="dialog"; point it at the heading that
+        // is already on screen rather than inventing a second name.
+        aria-labelledby={headingId}
+      >
         <div className="flex flex-col">
           {/* Header */}
           <div className="px-4 py-3 border-b">
-            <h4 className="font-semibold text-sm">
+            <h4 id={headingId} className="font-semibold text-sm">
               {t("ledgerEditor.cloneRepository")}
             </h4>
           </div>
@@ -158,22 +183,24 @@ export default function LedgerCloneUrlMenu({
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="https" className="text-xs">
-                  HTTP
+                  <span id={httpTabId}>HTTP</span>
                 </TabsTrigger>
                 <TabsTrigger value="ssh" className="text-xs">
-                  SSH
+                  <span id={sshTabId}>SSH</span>
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="https">
                 <CloneUrlInput
                   url={httpUrl}
                   copyLabel={t("ledgerEditor.copyHttpCloneUrl")}
+                  labelledBy={`${httpTabId} ${headingId}`}
                 />
               </TabsContent>
               <TabsContent value="ssh">
                 <CloneUrlInput
                   url={sshUrl}
                   copyLabel={t("ledgerEditor.copySshCloneUrl")}
+                  labelledBy={`${sshTabId} ${headingId}`}
                 />
               </TabsContent>
             </Tabs>

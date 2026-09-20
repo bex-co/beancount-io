@@ -27,6 +27,7 @@ describe("CloneUrlInput accessible copy button", () => {
       <CloneUrlInput
         url="https://example.com/git/open_ledger/example.git"
         copyLabel="Copy HTTP clone URL"
+        labelledBy="http-tab clone-heading"
       />,
     );
 
@@ -47,6 +48,7 @@ describe("CloneUrlInput accessible copy button", () => {
       <CloneUrlInput
         url="git@example.com:open_ledger/example.git"
         copyLabel="Copy SSH clone URL"
+        labelledBy="ssh-tab clone-heading"
       />,
     );
 
