@@ -49,6 +49,7 @@ export function EditableCell({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const hintId = useId();
+  const errorId = useId();
   const finishingRef = useRef(false);
   const restoreFocusRef = useRef(false);
 
@@ -154,7 +155,12 @@ export function EditableCell({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             rows={2}
-            aria-describedby={hintId}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={
+              [multiline ? hintId : null, error ? errorId : null]
+                .filter(Boolean)
+                .join(" ") || undefined
+            }
             className={cn(
               "min-h-16 px-2 py-1 text-sm",
               error && "border-destructive focus-visible:ring-destructive",
@@ -171,6 +177,8 @@ export function EditableCell({
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
             className={cn(
               "h-8 px-2 py-1",
               error && "border-destructive focus-visible:ring-destructive",
@@ -186,6 +194,8 @@ export function EditableCell({
         )}
         {error && (
           <p
+            id={errorId}
+            role="alert"
             className={cn(
               "text-xs text-destructive mt-1 whitespace-nowrap",
               isRightAligned && "text-right",
@@ -215,6 +225,11 @@ export function EditableCell({
         field: placeholder || t("importer.preview.field"),
         value,
       })}
+      // The collapsed cell repeats the field's error underneath it; name it
+      // here so the reason travels with the control rather than sitting beside
+      // it as loose text.
+      aria-invalid={error ? true : undefined}
+      aria-describedby={error ? errorId : undefined}
     >
       <div
         className={cn(
@@ -236,6 +251,7 @@ export function EditableCell({
         </span>
         {error && (
           <p
+            id={errorId}
             className={cn(
               "text-xs text-destructive mt-1 whitespace-nowrap",
               isRightAligned && "text-right",

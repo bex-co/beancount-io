@@ -201,7 +201,17 @@ export function EditablePreviewRow({
       {hasErrors && (
         <TableRow className="bg-destructive/10 hover:bg-destructive/20">
           <TableCell colSpan={6} className="border-t">
-            <div className="text-xs text-destructive space-y-1">
+            {/*
+              This row restates every field error for the row as a whole. The
+              cells own the per-field association; what this adds is a live
+              region, so a correction that clears or changes the list is
+              announced rather than only redrawn.
+            */}
+            <div
+              role="status"
+              aria-live="polite"
+              className="text-xs text-destructive space-y-1"
+            >
               {Object.entries(errors).map(([field, error]) => (
                 <div key={field} className="flex items-start gap-1">
                   <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />

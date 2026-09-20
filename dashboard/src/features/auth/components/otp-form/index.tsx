@@ -141,12 +141,15 @@ export function OtpForm({
           <div className="flex justify-center">
             <InputOTP
               ref={otpInputRef}
+              id="otp"
               maxLength={4}
               pattern={REGEXP_ONLY_DIGITS}
               pasteTransformer={(value) => value.replace(/\D/g, "")}
               value={otpValue || ""}
               onChange={handleOtpChange}
               onComplete={handleOtpComplete}
+              aria-invalid={errors.otp ? true : undefined}
+              aria-describedby={errors.otp ? "otp-error" : undefined}
             >
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
@@ -157,7 +160,11 @@ export function OtpForm({
             </InputOTP>
           </div>
           {errors.otp && (
-            <p className="text-sm text-destructive text-center">
+            <p
+              id="otp-error"
+              role="alert"
+              className="text-sm text-destructive text-center"
+            >
               {errors.otp.message}
             </p>
           )}

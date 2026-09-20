@@ -53,7 +53,7 @@ const useFormField = () => {
     throw new Error("useFormField should be used within <FormField>");
   }
 
-  const { id } = itemContext;
+  const { id, hasDescription, setHasDescription } = itemContext;
 
   return {
     id,
@@ -61,12 +61,21 @@ const useFormField = () => {
     formItemId: `${id}-form-item`,
     formDescriptionId: `${id}-form-item-description`,
     formMessageId: `${id}-form-item-message`,
+    hasDescription,
+    setHasDescription,
     ...fieldState,
   };
 };
 
 type FormItemContextValue = {
   id: string;
+  /**
+   * Whether this item actually rendered a `FormDescription`. Most fields do
+   * not, and naming a description that is not on the page leaves the control
+   * pointing `aria-describedby` at nothing.
+   */
+  hasDescription: boolean;
+  setHasDescription: (present: boolean) => void;
 };
 
 const FormItemContext = React.createContext<FormItemContextValue>(
@@ -75,9 +84,14 @@ const FormItemContext = React.createContext<FormItemContextValue>(
 
 function FormItem({ className, ...props }: React.ComponentProps<"div">) {
   const id = React.useId();
+  const [hasDescription, setHasDescription] = React.useState(false);
+  const value = React.useMemo(
+    () => ({ id, hasDescription, setHasDescription }),
+    [id, hasDescription],
+  );
 
   return (
-    <FormItemContext.Provider value={{ id }}>
+    <FormItemContext.Provider value={value}>
       <div
         data-slot="form-item"
         className={cn("grid gap-2", className)}
@@ -105,18 +119,28 @@ function FormLabel({
 }
 
 function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
-  const { error, formItemId, formDescriptionId, formMessageId } =
-    useFormField();
+  const {
+    error,
+    formItemId,
+    formDescriptionId,
+    formMessageId,
+    hasDescription,
+  } = useFormField();
+
+  // Name only what is on the page: a field with no `FormDescription` used to
+  // point at an id that never existed, and every consumer inherited that.
+  const describedBy = [
+    hasDescription ? formDescriptionId : null,
+    error ? formMessageId : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Slot
       data-slot="form-control"
       id={formItemId}
-      aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
+      aria-describedby={describedBy || undefined}
       aria-invalid={!!error}
       {...props}
     />
@@ -124,7 +148,13 @@ function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
 }
 
 function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
-  const { formDescriptionId } = useFormField();
+  const { formDescriptionId, setHasDescription } = useFormField();
+
+  // Tell the control this description exists, so it can name it.
+  React.useEffect(() => {
+    setHasDescription(true);
+    return () => setHasDescription(false);
+  }, [setHasDescription]);
 
   return (
     <p
@@ -148,6 +178,9 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="form-message"
       id={formMessageId}
+      // A validation message that appears after a blur or a submit has to be
+      // announced, not just drawn. Consumers may still override the role.
+      role="alert"
       className={cn("text-destructive text-sm", className)}
       {...props}
     >

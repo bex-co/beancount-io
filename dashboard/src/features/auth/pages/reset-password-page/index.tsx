@@ -336,9 +336,17 @@ export default function ResetPasswordPage() {
                     className="w-full"
                     maxLength={128}
                     {...register("newPassword")}
+                    aria-invalid={errors.newPassword ? true : undefined}
+                    aria-describedby={
+                      errors.newPassword ? "new-password-error" : undefined
+                    }
                   />
                   {errors.newPassword && (
-                    <p className="text-sm text-destructive">
+                    <p
+                      id="new-password-error"
+                      role="alert"
+                      className="text-sm text-destructive"
+                    >
                       {errors.newPassword.message}
                     </p>
                   )}
@@ -354,9 +362,19 @@ export default function ResetPasswordPage() {
                     className="w-full"
                     maxLength={128}
                     {...register("confirmPassword")}
+                    aria-invalid={errors.confirmPassword ? true : undefined}
+                    aria-describedby={
+                      errors.confirmPassword
+                        ? "confirm-password-error"
+                        : undefined
+                    }
                   />
                   {errors.confirmPassword && (
-                    <p className="text-sm text-destructive">
+                    <p
+                      id="confirm-password-error"
+                      role="alert"
+                      className="text-sm text-destructive"
+                    >
                       {errors.confirmPassword.message}
                     </p>
                   )}
