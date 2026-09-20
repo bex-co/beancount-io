@@ -136,8 +136,15 @@ const JournalContent = () => {
   const offset = appliedFilterKey === filterKey ? searchOffset : 0;
 
   const replaceOffset = (newOffset: number) => {
+    // Addressed explicitly rather than with `to: "."`. This also runs from the
+    // new-directive dialog's success callback, after an awaited mutation, and
+    // a relative write resolves its params against whatever navigation is
+    // pending. If the reader has started toward /ledger or a profile by then,
+    // this page's params are gone from that destination and the write lands on
+    // /ledger/undefined/undefined/journal.
     void navigate({
-      to: ".",
+      to: "/ledger/$ledgerOwner/$ledgerName/journal",
+      params: { ledgerOwner, ledgerName },
       search: (previous) => ({
         ...previous,
         offset: newOffset > 0 ? newOffset : undefined,

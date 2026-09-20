@@ -31,6 +31,12 @@ interface JournalRequest {
   };
 }
 
+const latestSetOffset = vi.hoisted(() => ({
+  current: undefined as
+    | ((value: number | ((previous: number) => number)) => void)
+    | undefined,
+}));
+
 const queryState = vi.hoisted(() => ({
   total: 300,
   variables: [] as JournalRequest[],
@@ -129,6 +135,13 @@ vi.mock("@/features/journal/components/journal-pagination", () => ({
     setOffset: (value: number | ((previous: number) => number)) => void;
   }) => (
     <div>
+      {((): null => {
+        // Held so a case can drive the offset write after this page has been
+        // replaced by a pending navigation, the way the new-directive dialog's
+        // success callback does.
+        latestSetOffset.current = setOffset;
+        return null;
+      })()}
       <span data-testid="offset">{offset}</span>
       <button
         type="button"
@@ -190,6 +203,9 @@ function holdNextNavigation() {
   return release;
 }
 
+/** Resolves when a test lets the held profile navigation finish. */
+let heldProfileLoad: Promise<void> | undefined;
+
 function buildRouter(initialEntry: string) {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
   const ledgerRoute = createRoute({
@@ -217,10 +233,20 @@ function buildRouter(initialEntry: string) {
     path: "/account/$accountName",
     component: () => <div data-testid="account-page">account detail</div>,
   });
+  // A destination whose params are nothing like the journal's. Its loader can
+  // be held open, so a navigation toward it stays pending while the journal is
+  // still on screen — which is when a relative write would inherit its params.
+  const profileRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/ledger/$username",
+    loader: () => heldProfileLoad,
+    component: () => <div data-testid="profile-page">profile</div>,
+  });
 
   return createRouter({
     routeTree: rootRoute.addChildren([
       ledgerRoute.addChildren([journalRoute, accountRoute]),
+      profileRoute,
     ]),
     history: createMemoryHistory({ initialEntries: [initialEntry] }),
     defaultPendingMs: Infinity,
@@ -481,5 +507,45 @@ describe("journal pagination in the URL", () => {
       await mountAt(`/ledger/alice/books/journal?offset=${raw}`);
       expect(queriedOffset()).toBe(raw === "12.7" ? 12 : 0);
     }
+  });
+
+  it("writes the offset to this journal even while another route is pending", async () => {
+    // The offset write also runs from the new-directive dialog's success
+    // callback, after an awaited mutation. If the reader has started toward a
+    // route whose params are not this page's, a relative write inherits the
+    // pending destination's params and lands on /ledger/undefined.
+    let releaseProfile: () => void = () => {};
+    heldProfileLoad = new Promise<void>((resolve) => {
+      releaseProfile = resolve;
+    });
+
+    const router = await mountAt("/ledger/alice/books/journal");
+    const setOffset = latestSetOffset.current!;
+    expect(setOffset).toBeTypeOf("function");
+
+    // Start leaving, and leave the navigation in flight.
+    void router.navigate({
+      to: "/ledger/$username",
+      params: { username: "alice" },
+    });
+    await waitFor(() => {
+      expect(router.state.isLoading).toBe(true);
+    });
+
+    await act(async () => {
+      setOffset(50);
+    });
+
+    // The write supersedes the pending navigation, which is fine — what must
+    // not happen is it resolving against that destination's params.
+    expect(router.state.location.pathname).toBe("/ledger/alice/books/journal");
+    expect(router.state.location.search).toMatchObject({ offset: 50 });
+
+    releaseProfile();
+    await waitFor(() => {
+      expect(router.state.location.pathname).not.toContain("undefined");
+    });
+
+    heldProfileLoad = undefined;
   });
 });
