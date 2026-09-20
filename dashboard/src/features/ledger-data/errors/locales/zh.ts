@@ -9,7 +9,7 @@ const zhErrors: Record<string, TranslationEntry> = {
     description: "Empty state description for no errors",
   },
   "page.errors.errorMessage": {
-    message: "错误 Message",
+    message: "错误信息",
     description: "Table column header for error message",
   },
   "page.errors.errors": {
@@ -21,7 +21,7 @@ const zhErrors: Record<string, TranslationEntry> = {
     description: "Error title when errors fail to load",
   },
   "page.errors.line": {
-    message: "Line",
+    message: "行",
     description: "Table column header for line number",
   },
   "page.errors.noErrorsFound": {

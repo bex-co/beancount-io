@@ -21,7 +21,7 @@ const skErrors: Record<string, TranslationEntry> = {
     description: "Error title when errors fail to load",
   },
   "page.errors.line": {
-    message: "Line",
+    message: "Riadok",
     description: "Table column header for line number",
   },
   "page.errors.noErrorsFound": {

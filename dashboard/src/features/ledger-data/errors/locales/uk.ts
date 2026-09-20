@@ -9,7 +9,7 @@ const ukErrors: Record<string, TranslationEntry> = {
     description: "Empty state description for no errors",
   },
   "page.errors.errorMessage": {
-    message: "Помилка Message",
+    message: "Повідомлення про помилку",
     description: "Table column header for error message",
   },
   "page.errors.errors": {
@@ -21,7 +21,7 @@ const ukErrors: Record<string, TranslationEntry> = {
     description: "Error title when errors fail to load",
   },
   "page.errors.line": {
-    message: "Line",
+    message: "Рядок",
     description: "Table column header for line number",
   },
   "page.errors.noErrorsFound": {

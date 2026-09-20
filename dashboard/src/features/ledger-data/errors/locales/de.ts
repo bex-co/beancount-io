@@ -21,7 +21,7 @@ const deErrors: Record<string, TranslationEntry> = {
     description: "Error title when errors fail to load",
   },
   "page.errors.line": {
-    message: "Line",
+    message: "Zeile",
     description: "Table column header for line number",
   },
   "page.errors.noErrorsFound": {
