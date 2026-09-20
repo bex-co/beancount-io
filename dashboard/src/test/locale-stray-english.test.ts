@@ -117,7 +117,7 @@ describe("no locale ships a half-translated message", () => {
     expect(strayEnglishWords("Beancountについて", "ja")).toEqual([]);
   });
 
-  it.each(Object.keys(SCANNED_LOCALES) as ScannedLocale[])(
+  it.each(SCANNED)(
     "carries no deviation for %s — every scanned locale is clean",
     (locale) => {
       expect(KNOWN_DEVIATIONS[locale]).toBeUndefined();

@@ -85,18 +85,18 @@ export type ScannedLocale = keyof typeof SCANNED_LOCALES;
 
 /**
  * Locales where a capitalized word in the English tail is evidence on its own,
- * because they capitalize only proper nouns and the start of a sentence. German
- * is absent deliberately: it capitalizes every noun, so `Intelligenter Import`
- * and `Unbekannter Plan` are correct German that such a rule would flag.
+ * because they capitalize only proper nouns and sentence openings.
+ *
+ * Derived rather than listed, so it cannot drift from the roster above.
+ * English is excluded because it is the comparison basis; German because it
+ * capitalizes every noun, which makes `Intelligenter Import` and `Unbekannter
+ * Plan` correct German that such a rule would flag.
  */
-const TITLE_CASE_MEANS_ENGLISH = new Set<string>([
-  "ca",
-  "es",
-  "fr",
-  "nl",
-  "pt",
-  "sk",
-]);
+const TITLE_CASE_MEANS_ENGLISH = new Set<string>(
+  LATIN_SCRIPT_LOCALES.filter(
+    (language) => language !== "en" && language !== "de",
+  ),
+);
 
 /** Every locale the English-tail check can judge — everything but English. */
 export const EN_COMPARED_LOCALES = SUPPORTED_LANGUAGES.filter(
@@ -205,6 +205,25 @@ const ALLOWED_LATIN = [
   "email",
   "Link",
   "Mobile",
+  // Terms these languages have borrowed outright. `Criar token`, `Prejsť na
+  // dashboard`, `Copiar link`, `Redefinir layout` and `Filteren op bank` are
+  // all correct, and a scan that flags them is unusable.
+  "Import",
+  "Plan",
+  "Updates",
+  "Bank",
+  "Dashboard",
+  "Token",
+  "token",
+  "Link",
+  "link",
+  "Layout",
+  "layout",
+  "Feed",
+  "feed",
+  "Filter",
+  "filter",
+  "Commodities",
   // Product tiers, channels and the query language, used untranslated by
   // policy rather than left behind by a translator.
   "Pro",
@@ -230,6 +249,8 @@ const ALLOWED_LATIN = [
   "View",
   "on",
 ] as const;
+
+const ALLOWED = new Set<string>(ALLOWED_LATIN);
 
 const ALLOWED_PATTERN = new RegExp(
   `(?<![A-Za-z0-9_])(?:${ALLOWED_LATIN.join("|")})(?![A-Za-z0-9_])`,
@@ -272,27 +293,6 @@ export function strayEnglishWords(
   return withoutAllowed.match(LATIN_RUN) ?? [];
 }
 
-/**
- * Words that are English in form but belong in a translated message: brands
- * and, more often, terms these languages have borrowed outright. `Criar
- * token`, `Prejsť na dashboard`, `Copiar link`, `Redefinir layout` and
- * `Filteren op bank` are all correct, and a scan that flags them is unusable.
- */
-const BORROWED = new Set<string>([
-  ...ALLOWED_LATIN,
-  "Import",
-  "Plan",
-  "Updates",
-  "Bank",
-  "Dashboard",
-  "Token",
-  "Link",
-  "Layout",
-  "Feed",
-  "Filter",
-  "Commodities",
-]);
-
 const trimWord = (word: string) =>
   word.replace(/[.,!?:;)]+$/, "").replace(/^[("]+/, "");
 
@@ -317,7 +317,7 @@ function sharedEnglishTail(message: string, english: string): string[] {
   return words
     .slice(words.length - shared)
     .map(trimWord)
-    .filter((word) => word && !BORROWED.has(word));
+    .filter((word) => word && !ALLOWED.has(word));
 }
 
 /**
