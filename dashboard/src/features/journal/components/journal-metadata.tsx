@@ -1,4 +1,5 @@
 import type { JournalDirectiveType } from "@/common/types/journal";
+import { displayableMetadataEntries } from "./journal-metadata-entries";
 
 interface JournalMetadataProps {
   directive: JournalDirectiveType;
@@ -9,21 +10,9 @@ export function JournalMetadata({
   directive,
   showMetadata,
 }: JournalMetadataProps) {
-  if (
-    !showMetadata ||
-    !directive.meta ||
-    Object.keys(directive.meta).length === 0
-  )
-    return null;
+  if (!showMetadata) return null;
 
-  // Filter out internal metadata keys
-  const filteredEntries = Object.entries(directive.meta).filter(([key]) => {
-    return (
-      !key.startsWith("__") &&
-      !key.startsWith("filename") &&
-      !key.startsWith("lineno")
-    );
-  });
+  const filteredEntries = displayableMetadataEntries(directive);
 
   if (filteredEntries.length === 0) return null;
 

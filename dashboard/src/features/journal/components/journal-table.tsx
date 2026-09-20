@@ -10,6 +10,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { JournalDescription } from "./journal-description";
 import { formatAmountWithCurrency } from "./journal-description/utils";
 import { JournalMetadata } from "./journal-metadata";
+import { displayableMetadataEntries } from "./journal-metadata-entries";
 import { JournalPostings } from "./journal-postings";
 import { Button } from "@/common/components/ui/button";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -437,7 +438,14 @@ function JournalTableEntryRows({
     }
   };
 
-  const detailVisible = (isTransaction && postingsVisible) || showMetadata;
+  // A detail row exists only if something would render inside it. The global
+  // Metadata preference used to create one for every transaction, so a page of
+  // entries without metadata exposed an empty row after each one.
+  const hasVisiblePostings =
+    isTransaction && postingsVisible && (directive.postings?.length ?? 0) > 0;
+  const hasVisibleMetadata =
+    showMetadata && displayableMetadataEntries(directive).length > 0;
+  const detailVisible = hasVisiblePostings || hasVisibleMetadata;
 
   return (
     <>
