@@ -12,7 +12,7 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Label for access remaining until date",
   },
   "userSettings.accountDeleted": {
-    message: "Рахунок deleted successfully",
+    message: "Обліковий запис успішно видалено",
     description: "Success message when account is deleted",
   },
   "userSettings.addNewKey": {
@@ -69,7 +69,7 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Dialog title for changing name",
   },
   "userSettings.changeUsername": {
-    message: "Зміна Username",
+    message: "Зміна імені користувача",
     description: "Dialog title for changing username",
   },
   "userSettings.confirmCancel": {
@@ -102,15 +102,15 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Label showing current language selection",
   },
   "userSettings.customizeAppearance": {
-    message: "Власнийize how the application looks and feels",
+    message: "Налаштуйте вигляд і поведінку застосунку",
     description: "Description for appearance settings",
   },
   "userSettings.dangerZone": {
-    message: "Вanger Zone",
+    message: "Небезпечна зона",
     description: "Section title for dangerous account actions",
   },
   "userSettings.dark": {
-    message: "Вark",
+    message: "Темна",
     description: "Dark theme option",
   },
   "userSettings.deleteAccount": {
@@ -133,7 +133,7 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {
-    message: "Видалити Account?",
+    message: "Видалити обліковий запис?",
     description: "Dialog title confirming account deletion",
   },
   "userSettings.deleteAccountWarning": {
@@ -142,11 +142,11 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Warning text for account deletion",
   },
   "userSettings.deleteKey": {
-    message: "Видалити Key",
+    message: "Видалити ключ",
     description: "Button text to delete key",
   },
   "userSettings.deleteSshKey": {
-    message: "Видалити SSH Key",
+    message: "Видалити SSH ключ",
     description: "Dialog title for deleting SSH key",
   },
   "userSettings.deleteSshKeyConfirmation": {
@@ -154,7 +154,7 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Confirmation message for deleting SSH key",
   },
   "userSettings.deletingKey": {
-    message: "Вeleting...",
+    message: "Видалення...",
     description: "Button text while deleting key",
   },
   "userSettings.enterNewName": {
@@ -174,7 +174,7 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Error title when key creation fails",
   },
   "userSettings.errorLoadingSettings": {
-    message: "Помилка loading settings",
+    message: "Помилка завантаження налаштувань",
     description: "Error message when settings fail to load",
   },
   "userSettings.failedToCancelSubscription": {
@@ -269,43 +269,43 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Label for last name field",
   },
   "userSettings.lastUsed3Months": {
-    message: "Пast used within the last 3 months",
+    message: "Востаннє використано за останні 3 місяці",
     description: "Status when key was used within last 3 months",
   },
   "userSettings.lastUsed3Weeks": {
-    message: "Пast used within the last 3 weeks",
+    message: "Востаннє використано за останні 3 тижні",
     description: "Status when key was used within last 3 weeks",
   },
   "userSettings.lastUsedLongAgo": {
-    message: "Пast used more than 3 months ago",
+    message: "Востаннє використано понад 3 місяці тому",
     description: "Status when key was used long ago",
   },
   "userSettings.lastUsedWeek": {
-    message: "Пast used within the last week",
+    message: "Востаннє використано за останній тиждень",
     description: "Status when key was used within last week",
   },
   "userSettings.light": {
-    message: "Пight",
+    message: "Світла",
     description: "Light theme option",
   },
   "userSettings.loadingAccountInformation": {
-    message: "Пoading your account information...",
+    message: "Завантаження інформації вашого облікового запису...",
     description: "Loading message for account information",
   },
   "userSettings.loadingSessionInformation": {
-    message: "Пoading session information...",
+    message: "Завантаження інформації про сеанс...",
     description: "Loading message for session data",
   },
   "userSettings.loadingSshKeys": {
-    message: "Пoading your SSH keys...",
+    message: "Завантаження ваших SSH ключів...",
     description: "Loading state message for SSH keys",
   },
   "userSettings.loadingSubscriptionDetails": {
-    message: "Пoading subscription details...",
+    message: "Завантаження деталей підписки...",
     description: "Loading message for subscription info",
   },
   "userSettings.loadingThemePreferences": {
-    message: "Пoading theme preferences...",
+    message: "Завантаження налаштувань теми...",
     description: "Loading message for theme settings",
   },
   "userSettings.manageActiveSession": {
@@ -354,7 +354,7 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Button text while opening billing portal",
   },
   "userSettings.publicKey": {
-    message: "Публічний Key",
+    message: "Відкритий ключ",
     description: "Label for public key field",
   },
   "userSettings.publicKeyDescription": {
@@ -368,7 +368,7 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Placeholder for public key textarea",
   },
   "userSettings.publicKeyRequired": {
-    message: "Публічний key is required",
+    message: "Відкритий ключ обов'язковий",
     description: "Validation error for missing public key",
   },
   "userSettings.renewsOn": {
@@ -459,7 +459,7 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Fallback when plan name is not available",
   },
   "userSettings.userProfile": {
-    message: "Користувач Profile",
+    message: "Профіль користувача",
     description: "Section title for user profile settings",
   },
   "userSettings.usernameUpdatedSuccess": {
