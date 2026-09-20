@@ -33,7 +33,7 @@ const ukCollaboration: Record<string, TranslationEntry> = {
     description: "People who can access the ledger",
   },
   "collaboration.errorLoadingCollaborators": {
-    message: "Помилка Loading Collaborators",
+    message: "Помилка завантаження співробітників",
     description: "Error title when collaborators fail to load",
   },
   "collaboration.failedToAddCollaborator": {
@@ -70,12 +70,12 @@ const ukCollaboration: Record<string, TranslationEntry> = {
     description: "Button text to invite single collaborator",
   },
   "collaboration.inviteCollaborators": {
-    message: "Запросити співробітникаs",
+    message: "Запросити співробітників",
     description: "Dialog title for inviting collaborators",
   },
   "collaboration.inviteCollaboratorsDescription": {
     message:
-      "Пошук and select users to invite as collaborators to this ledger.",
+      "Знайдіть і виберіть користувачів, щоб запросити їх як співробітників до цієї книги.",
     description: "Dialog description for inviting collaborators",
   },
   "collaboration.joined": {
@@ -111,11 +111,11 @@ const ukCollaboration: Record<string, TranslationEntry> = {
     description: "Suffix for remove collaborator confirmation",
   },
   "collaboration.searchUsers": {
-    message: "Пошук Users",
+    message: "Пошук користувачів",
     description: "Label for user search input",
   },
   "collaboration.searching": {
-    message: "Пошукing...",
+    message: "Пошук...",
     description: "Loading message while searching users",
   },
   "collaboration.selectedUsers": {
@@ -127,11 +127,11 @@ const ukCollaboration: Record<string, TranslationEntry> = {
     description: "Fallback text for unknown user",
   },
   "collaboration.typeAtLeast2Characters": {
-    message: "Тип at least 2 characters to search",
+    message: "Введіть щонайменше 2 символи для пошуку",
     description: "Message prompting user to enter more characters",
   },
   "collaboration.typeToSearchUsers": {
-    message: "Тип to search users...",
+    message: "Введіть для пошуку користувачів...",
     description: "Placeholder for user search input",
   },
   "collaboration.unknownUser": {

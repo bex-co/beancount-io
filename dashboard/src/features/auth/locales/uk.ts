@@ -17,7 +17,7 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Message shown during authentication process",
   },
   "auth.backToSignIn": {
-    message: "Назад to Sign in",
+    message: "Назад до входу",
     description: "Link text to return to sign in page",
   },
   "auth.backToSignUp": {
@@ -69,7 +69,7 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Label for email input field",
   },
   "auth.emailAddress": {
-    message: "Електронна пошта address",
+    message: "Адреса електронної пошти",
     description: "Email address field label",
   },
   "auth.emailInvalid": {
@@ -77,11 +77,11 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Validation error when email format is invalid",
   },
   "auth.emailRequired": {
-    message: "Електронна пошта is required",
+    message: "Електронна пошта обов'язкова",
     description: "Validation error when email is not provided",
   },
   "auth.emailSent": {
-    message: "Електронна пошта sent!",
+    message: "Лист надіслано!",
     description: "Success title after email sent",
   },
   "auth.emailSentDescription": {
@@ -95,7 +95,7 @@ const ukAuth: Record<string, TranslationEntry> = {
   },
   "auth.enterEmailForReset": {
     message:
-      "Введіть свою електронну пошту address and we'll send you a link to reset your password",
+      "Введіть адресу своєї електронної пошти, і ми надішлемо вам посилання для скидання пароля",
     description: "Instructions on forgot password page",
   },
   "auth.enterFirstName": {
@@ -107,7 +107,7 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for last name input",
   },
   "auth.enterNewPasswordBelow": {
-    message: "Введіть новий пароль below",
+    message: "Введіть новий пароль нижче",
     description: "Instruction for reset password form",
   },
   "auth.enterOtpCode": {
@@ -163,7 +163,7 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Validation error when last name is too long",
   },
   "auth.loggingOut": {
-    message: "Пogging Out",
+    message: "Вихід",
     description: "Title shown while logging out",
   },
   "auth.loggingOutMessage": {
@@ -176,7 +176,7 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Button label for login or signup",
   },
   "auth.loginFailed": {
-    message: "Пogin failed",
+    message: "Не вдалося увійти",
     description: "Error title when login fails",
   },
   "auth.logout": {
@@ -197,16 +197,16 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Label for new password field",
   },
   "auth.newPasswordMinLength": {
-    message: "Пароль must be at least 6 characters",
+    message: "Пароль має містити щонайменше 6 символів",
     description: "Validation error for password length",
   },
   "auth.newPasswordMaxLength": {
-    message: "Пароль must be at most 128 characters",
+    message: "Пароль має містити не більше 128 символів",
     description:
       "Validation error when new password exceeds the maximum length",
   },
   "auth.newPasswordRequired": {
-    message: "Пароль is required",
+    message: "Пароль обов'язковий",
     description: "Validation error for missing new password",
   },
   "auth.otpInvalidLength": {
@@ -234,15 +234,15 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Label for password input field",
   },
   "auth.passwordMinLength": {
-    message: "Пароль must be at least 6 characters",
+    message: "Пароль має містити щонайменше 6 символів",
     description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
-    message: "Пароль must be at most 128 characters",
+    message: "Пароль має містити не більше 128 символів",
     description: "Validation error when password exceeds the maximum length",
   },
   "auth.passwordRequired": {
-    message: "Пароль is required",
+    message: "Пароль обов'язковий",
     description: "Validation error when password is not provided",
   },
   "auth.passwordResetSuccessMessage": {
@@ -250,11 +250,11 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Success message description",
   },
   "auth.passwordResetSuccessful": {
-    message: "Пароль reset successful!",
+    message: "Пароль успішно скинуто!",
     description: "Success message title",
   },
   "auth.passwordsDoNotMatch": {
-    message: "Парольs do not match",
+    message: "Паролі не збігаються",
     description: "Validation error when passwords don't match",
   },
   "auth.privacyPolicy": {
@@ -346,7 +346,7 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Link text for terms of use",
   },
   "auth.tokenExpired": {
-    message: "Комуken Expired",
+    message: "Термін дії токена минув",
     description: "Title when reset token is expired",
   },
   "auth.tokenExpiredDescription": {
@@ -368,7 +368,7 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Alert message for expired token",
   },
   "auth.username": {
-    message: "Користувачname",
+    message: "Ім'я користувача",
     description: "Username field label",
   },
   "auth.usernameLowercaseAlphanumeric": {
@@ -386,7 +386,7 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Hint text explaining that username is publicly visible",
   },
   "auth.usernameRequired": {
-    message: "Користувачname is required",
+    message: "Ім'я користувача обов'язкове",
     description: "Validation error when username is missing",
   },
   "auth.verifyEmail": {
