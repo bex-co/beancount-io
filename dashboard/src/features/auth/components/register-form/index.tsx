@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -76,6 +76,7 @@ export function RegisterForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -84,6 +85,29 @@ export function RegisterForm({
   });
 
   const usernameField = register("username");
+
+  /**
+   * Keeps a username typed before hydration.
+   *
+   * The server renders this field enabled, so a reader on a slow load can type
+   * into it while the page is still static. react-hook-form assigns
+   * `defaultValues` to the DOM node the moment the ref registers, which
+   * replaced that text with a generated `un_…` name — the reader watched their
+   * chosen public username vanish. Read the field first, let the library
+   * register, then put back anything that was already there. An untouched
+   * field is empty at that point, so the generated default still applies, and
+   * the hidden-username consent flows use the raw field and are unaffected.
+   */
+  const registerUsername = useCallback(
+    (element: HTMLInputElement | null) => {
+      const typed = element?.value ?? "";
+      usernameField.ref(element);
+      if (!element || !typed || typed === defaultUsername) return;
+      element.value = typed;
+      setValue("username", typed, { shouldDirty: true });
+    },
+    [usernameField, defaultUsername, setValue],
+  );
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = e.target.value.toLowerCase();
@@ -189,6 +213,7 @@ export function RegisterForm({
             placeholder={t("auth.enterUsername")}
             className="w-full bg-muted"
             {...usernameField}
+            ref={registerUsername}
             onChange={handleUsernameChange}
             aria-invalid={errors.username ? true : undefined}
             aria-describedby={usernameDescribedBy || undefined}
