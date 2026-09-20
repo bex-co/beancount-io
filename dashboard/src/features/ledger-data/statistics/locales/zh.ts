@@ -62,7 +62,7 @@ const zhStatistics: Record<string, TranslationEntry> = {
     description: "Loading message for query results",
   },
   "page.statistics.noDataAvailableForQuery": {
-    message: "无数据 available",
+    message: "无可用数据",
     description: "Message when no data available for query",
   },
   "page.statistics.noResultsFromQuery": {

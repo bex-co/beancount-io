@@ -47,19 +47,19 @@ const bgReports = {
   ...bgOverview,
   ...bgExport,
   "page.overview.starButton.starSuccess": {
-    message: "Леджър участва успешно",
+    message: "Книгата е добавена в любими",
     description: "Toast shown after starring a ledger",
   },
   "page.overview.starButton.starFailed": {
-    message: "Неуспешно отбелязване на книга със звезда",
+    message: "Неуспешно добавяне на книгата в любими",
     description: "Toast shown when starring a ledger fails",
   },
   "page.overview.starButton.unstarSuccess": {
-    message: "Ledger премахна успешно звездата",
+    message: "Книгата е премахната от любими",
     description: "Toast shown after unstarring a ledger",
   },
   "page.overview.starButton.unstarFailed": {
-    message: "Неуспешно премахване на звездата от счетоводната книга",
+    message: "Неуспешно премахване на книгата от любими",
     description: "Toast shown when unstarring a ledger fails",
   },
 };

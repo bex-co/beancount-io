@@ -25,7 +25,7 @@ const zhHoldings: Record<string, TranslationEntry> = {
     description: "Tab label for holdings grouped by currency",
   },
   "page.holdings.noDataReturnedFromQuery": {
-    message: "无数据 returned from query",
+    message: "查询未返回数据",
     description: "Message when query returns empty result",
   },
   "page.holdings.noQueryResultsAvailable": {

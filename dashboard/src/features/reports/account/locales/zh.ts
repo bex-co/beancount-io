@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const zhAccountReport: Record<string, TranslationEntry> = {
   "page.accountReport.accountBalance": {
-    message: "账户 Balance",
+    message: "账户余额",
     description: "Label for account balance section",
   },
   "page.accountReport.accountBalanceDescription": {
@@ -13,7 +13,7 @@ const zhAccountReport: Record<string, TranslationEntry> = {
     description: "Description for account balance chart",
   },
   "page.accountReport.accountJournal": {
-    message: "账户 Journal",
+    message: "账户日记账",
     description: "Label for account journal section",
   },
   "page.accountReport.accountJournalDescription": {
@@ -21,7 +21,7 @@ const zhAccountReport: Record<string, TranslationEntry> = {
     description: "Description prefix for account journal",
   },
   "page.accountReport.title": {
-    message: "账户 Report",
+    message: "账户报告",
     description: "Title for account report page",
   },
   "page.accountReport.changesOverTime": {
@@ -49,7 +49,7 @@ const zhAccountReport: Record<string, TranslationEntry> = {
     description: "Heading when no journal entries exist",
   },
   "page.accountReport.noJournalEntriesForAccount": {
-    message: "未找到日记账条目 for this account.",
+    message: "未找到此账户的日记账条目。",
     description: "Message when no journal entries exist for account",
   },
   "page.accountReport.period": {

@@ -49,7 +49,7 @@ const zhBql: Record<string, TranslationEntry> = {
     description: "Message when query result type is not recognized",
   },
   "page.bql.noDataReturnedFromQuery": {
-    message: "无数据 returned from query",
+    message: "查询未返回数据",
     description: "Message when a query returns no data",
   },
 };

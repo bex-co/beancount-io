@@ -399,7 +399,7 @@ const faSeo: Record<string, TranslationEntry> = {
   },
   "seo.welcome.description": {
     message:
-      "خوش آمدید to Beancount! Get started with plain-text accounting and financial management.",
+      "به Beancount خوش آمدید! حسابداری متنی و مدیریت مالی را آغاز کنید.",
     description: "Welcome page meta description",
   },
   "seo.welcome.title": {

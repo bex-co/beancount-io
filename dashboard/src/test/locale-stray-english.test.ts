@@ -26,29 +26,11 @@ const ALL = locales as unknown as Record<string, Record<string, string>>;
 const KNOWN_DEVIATIONS: Partial<
   Record<ScannedLocale, { note: string; keys: readonly string[] }>
 > = {
-  bg: {
-    note: "w4/156",
-    keys: ["seo.welcome.description", "page.overview.starButton.unstarSuccess"],
-  },
-  fa: { note: "w4/156", keys: ["seo.welcome.description"] },
-  ko: {
-    note: "w4/156",
-    keys: ["page.overview.starButton.starSuccess"],
-  },
-  zh: {
-    note: "w4/156",
-    keys: [
-      "page.accountReport.accountBalance",
-      "page.accountReport.accountJournal",
-      "page.accountReport.title",
-      "page.accountReport.noJournalEntriesForAccount",
-      "page.overview.starButton.starSuccess",
-      "page.overview.starButton.unstarSuccess",
-      "page.holdings.noDataReturnedFromQuery",
-      "page.statistics.noDataAvailableForQuery",
-      "page.bql.noDataReturnedFromQuery",
-    ],
-  },
+  // Empty, and that is the point: every scanned locale is clean as of
+  // w4/153 (Russian), w4/155 (the OAuth keys) and w4/156 (Bulgarian,
+  // Persian, Korean and Chinese). The shape stays so that a locale which
+  // cannot be repaired immediately is recorded key by key against the note
+  // that owns it, rather than hidden in the allowlist.
 };
 
 const isKnown = (locale: ScannedLocale, key: string) =>
@@ -113,8 +95,8 @@ describe("no locale ships a half-translated message", () => {
     expect(strayEnglishWords("Beancountについて", "ja")).toEqual([]);
   });
 
-  it.each(["uk", "ru", "ja"] as const)(
-    "carries no deviation for %s, which has been repaired in full",
+  it.each(Object.keys(SCANNED_LOCALES) as ScannedLocale[])(
+    "carries no deviation for %s — every scanned locale is clean",
     (locale) => {
       expect(KNOWN_DEVIATIONS[locale]).toBeUndefined();
     },

@@ -45,19 +45,19 @@ const koReports = {
   ...koOverview,
   ...koExport,
   "page.overview.starButton.starSuccess": {
-    message: "Ledger가 성공적으로 주연을 맡았습니다.",
+    message: "장부를 즐겨찾기에 추가했습니다.",
     description: "Toast shown after starring a ledger",
   },
   "page.overview.starButton.starFailed": {
-    message: "원장에 별표를 표시하지 못했습니다.",
+    message: "장부를 즐겨찾기에 추가하지 못했습니다.",
     description: "Toast shown when starring a ledger fails",
   },
   "page.overview.starButton.unstarSuccess": {
-    message: "원장의 별표가 성공적으로 제거되었습니다.",
+    message: "장부를 즐겨찾기에서 제거했습니다.",
     description: "Toast shown after unstarring a ledger",
   },
   "page.overview.starButton.unstarFailed": {
-    message: "원장의 별표를 제거하지 못했습니다.",
+    message: "장부를 즐겨찾기에서 제거하지 못했습니다.",
     description: "Toast shown when unstarring a ledger fails",
   },
 };
