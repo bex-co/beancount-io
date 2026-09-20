@@ -112,14 +112,15 @@ describe("Combobox suggestion list height", () => {
     await user.click(screen.getByRole("combobox"));
 
     const item = await screen.findByText("Assets:Crypto:Binance:BTC");
-    const list = item.closest("[cmdk-list]") as HTMLElement;
+    // The scroll region is the listbox the options live in.
+    const list = item.closest("[role='listbox']") as HTMLElement;
     const content = list.closest("[data-radix-popper-content-wrapper] > *");
 
     expect(content).not.toBeNull();
     expect((content as HTMLElement).style.maxHeight).toBe(
       "var(--radix-popover-content-available-height)",
     );
-    // The shared `command.tsx` cap stays at 300px; this consumer narrows it.
+    // The 300px cap stays; the available popover height narrows it further.
     expect(list.style.maxHeight).toBe(
       "min(300px, var(--radix-popover-content-available-height))",
     );

@@ -3,13 +3,6 @@ import { X } from "lucide-react";
 import { cn } from "@/common/lib/utils/utils.ts";
 import { Input } from "@/common/components/ui/input.tsx";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/common/components/ui/command.tsx";
-import {
   Popover,
   PopoverContent,
   PopoverAnchor,
@@ -77,6 +70,8 @@ export function Combobox({
   const skipBlurCommitRef = React.useRef(false);
   // Unique ID per instance to scope querySelector and avoid cross-instance conflicts
   const instanceId = React.useId().replace(/:/g, "");
+  const listboxId = `${instanceId}-listbox`;
+  const optionId = (index: number) => `${instanceId}-option-${index}`;
 
   // Filter options based on input value
   const filteredOptions = React.useMemo(() => {
@@ -246,6 +241,14 @@ export function Combobox({
               role="combobox"
               aria-expanded={open}
               aria-autocomplete="list"
+              aria-controls={open ? listboxId : undefined}
+              aria-activedescendant={
+                open &&
+                highlightedIndex >= 0 &&
+                highlightedIndex < filteredOptions.length
+                  ? optionId(highlightedIndex)
+                  : undefined
+              }
             />
 
             {inputValue && !disabled && (
@@ -280,19 +283,30 @@ export function Combobox({
             }
           }}
         >
-          <Command shouldFilter={false}>
-            {/*
-              `CommandList`'s shared `max-h-[300px]` is a hard cap, so the scroll
-              region must additionally shrink to the available popover height.
-              Keeping it on this consumer leaves `command.tsx` untouched.
-            */}
-            <CommandList
-              style={{
-                maxHeight:
-                  "min(300px, var(--radix-popover-content-available-height))",
-              }}
-            >
-              <CommandEmpty>
+          {/*
+            One selection model. This component already filters its own options
+            and owns its own keyboard handling, so cmdk was contributing only a
+            second, competing notion of which item is selected — which is how
+            `aria-selected` came to name a different option than the highlight
+            and than the value Enter applied. The list below is a plain
+            listbox whose selected state, ids and highlight all come from the
+            same `highlightedIndex`.
+
+            The scroll region must shrink to the available popover height as
+            well as respecting the shared 300px cap.
+          */}
+          <div
+            id={listboxId}
+            role="listbox"
+            aria-label={defaultPlaceholder}
+            className="overflow-x-hidden overflow-y-auto p-1"
+            style={{
+              maxHeight:
+                "min(300px, var(--radix-popover-content-available-height))",
+            }}
+          >
+            {filteredOptions.length === 0 ? (
+              <div className="py-6 text-center text-sm">
                 {defaultEmptyText}
                 {allowCustom && inputValue && (
                   <div className="mt-2 text-xs">
@@ -301,33 +315,34 @@ export function Combobox({
                     })}
                   </div>
                 )}
-              </CommandEmpty>
-              <CommandGroup>
-                {filteredOptions.map((option, index) => (
-                  <CommandItem
-                    key={option.value}
-                    value={option.value}
-                    onSelect={handleSelect}
-                    onMouseEnter={() => setHighlightedIndex(index)}
-                    data-combobox-item-index={`${instanceId}-${index}`}
-                    className={cn(
-                      // Cursor pointer for clickable items
-                      "cursor-pointer",
-                      // Override cmdk's default selected styling for non-highlighted items
-                      highlightedIndex >= 0 &&
-                        highlightedIndex !== index &&
-                        "data-[selected=true]:bg-transparent data-[selected=true]:text-current",
-                      // Apply our keyboard highlight styling
-                      highlightedIndex === index &&
-                        "bg-accent text-accent-foreground",
-                    )}
-                  >
-                    {option.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+              </div>
+            ) : (
+              filteredOptions.map((option, index) => (
+                <div
+                  key={option.value}
+                  id={optionId(index)}
+                  role="option"
+                  aria-selected={highlightedIndex === index}
+                  onClick={() => handleSelect(option.value)}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                  data-combobox-item-index={`${instanceId}-${index}`}
+                  className={cn(
+                    "relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none",
+                    highlightedIndex === index &&
+                      "bg-accent text-accent-foreground",
+                  )}
+                  style={
+                    option.indent
+                      ? { paddingLeft: `${8 + option.indent * 8}px` }
+                      : undefined
+                  }
+                >
+                  {option.label}
+                </div>
+              ))
+            )}
+          </div>
         </PopoverContent>
       </Popover>
     </div>
