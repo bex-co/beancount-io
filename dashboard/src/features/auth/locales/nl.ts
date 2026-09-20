@@ -115,7 +115,7 @@ const nlAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "Voer uw gebruikersnaam in (max. 16 tekens)",
+    message: "Voer uw gebruikersnaam in (max. 20 tekens)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -378,7 +378,7 @@ const nlAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "Gebruikername must be at most 16 characters",
+    message: "De gebruikersnaam mag maximaal 20 tekens bevatten",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

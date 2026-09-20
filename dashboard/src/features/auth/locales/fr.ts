@@ -116,7 +116,7 @@ const frAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "Saisissez votre nom d'utilisateur (maximum 16 caractères)",
+    message: "Saisissez votre nom d'utilisateur (maximum 20 caractères)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -384,7 +384,7 @@ const frAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "Le nom d'utilisateur doit contenir au maximum 16 caractères",
+    message: "Le nom d'utilisateur doit contenir au maximum 20 caractères",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

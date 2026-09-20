@@ -115,7 +115,7 @@ const ruAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "Введите имя пользователя (макс. 16 символов)",
+    message: "Введите имя пользователя (макс. 20 символов)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -380,7 +380,7 @@ const ruAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "Имя пользователя должно содержать не более 16 символов",
+    message: "Имя пользователя должно содержать не более 20 символов",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

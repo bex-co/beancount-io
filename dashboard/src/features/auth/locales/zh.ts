@@ -114,7 +114,7 @@ const zhAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "输入你的用户名（最多16个字符）",
+    message: "输入你的用户名（最多20个字符）",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -370,7 +370,7 @@ const zhAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "用户名最多16个字符",
+    message: "用户名最多20个字符",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

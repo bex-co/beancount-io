@@ -115,7 +115,7 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "Введіть ім'я користувача (максимум 16 символів)",
+    message: "Введіть ім'я користувача (максимум 20 символів)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -378,7 +378,7 @@ const ukAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "Користувачname must be at most 16 characters",
+    message: "Ім'я користувача має містити щонайбільше 20 символів",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

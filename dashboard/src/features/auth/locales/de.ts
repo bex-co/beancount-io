@@ -115,7 +115,7 @@ const deAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "Geben Sie Ihren Benutzernamen ein (max. 16 Zeichen)",
+    message: "Geben Sie Ihren Benutzernamen ein (max. 20 Zeichen)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -380,7 +380,7 @@ const deAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "Benutzername must be at most 16 characters",
+    message: "Der Benutzername darf höchstens 20 Zeichen lang sein",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

@@ -115,7 +115,7 @@ const skAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "Zadajte používateľské meno (max 16 znakov)",
+    message: "Zadajte používateľské meno (max 20 znakov)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -377,7 +377,7 @@ const skAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "Používateľské meno môže mať maximálne 16 znakov",
+    message: "Používateľské meno môže mať maximálne 20 znakov",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

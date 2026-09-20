@@ -115,7 +115,7 @@ const bgAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "Въведете потребителското си име (макс. 16 символа)",
+    message: "Въведете потребителското си име (макс. 20 символа)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -379,7 +379,7 @@ const bgAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "Потребителското име трябва да бъде най-много 16 символа",
+    message: "Потребителското име трябва да бъде най-много 20 символа",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

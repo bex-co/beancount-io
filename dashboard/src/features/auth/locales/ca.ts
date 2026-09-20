@@ -115,7 +115,7 @@ const caAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "Introduïu el vostre nom d'usuari (màxim 16 caràcters)",
+    message: "Introduïu el vostre nom d'usuari (màxim 20 caràcters)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -382,7 +382,7 @@ const caAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "El nom d'usuari ha de tenir com a màxim 16 caràcters",
+    message: "El nom d'usuari ha de tenir com a màxim 20 caràcters",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

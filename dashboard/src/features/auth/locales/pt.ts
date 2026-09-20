@@ -115,7 +115,7 @@ const ptAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "Digite seu nome de usuário (máx. 16 caracteres)",
+    message: "Digite seu nome de usuário (máx. 20 caracteres)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -380,7 +380,7 @@ const ptAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "Usuárioname must be at most 16 characters",
+    message: "O nome de usuário deve ter no máximo 20 caracteres",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

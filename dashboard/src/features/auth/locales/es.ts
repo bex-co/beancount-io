@@ -115,7 +115,7 @@ const esAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "Ingrese su nombre de usuario (máximo 16 caracteres)",
+    message: "Ingrese su nombre de usuario (máximo 20 caracteres)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -384,7 +384,7 @@ const esAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "Usuarioname must be at most 16 characters",
+    message: "El nombre de usuario debe tener como máximo 20 caracteres",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {

@@ -115,7 +115,7 @@ const faAuth: Record<string, TranslationEntry> = {
     description: "Label for OTP input field",
   },
   "auth.enterUsername": {
-    message: "نام کاربری خود را وارد کنید (حداکثر ۱۶ کاراکتر)",
+    message: "نام کاربری خود را وارد کنید (حداکثر ۲۰ کاراکتر)",
     description: "Placeholder for username input with character limit",
   },
   "auth.enterYourEmail": {
@@ -377,7 +377,7 @@ const faAuth: Record<string, TranslationEntry> = {
       "Validation error when username contains invalid characters (must be lowercase)",
   },
   "auth.usernameMaxLength": {
-    message: "نام کاربری باید حداکثر ۱۶ کاراکتر باشد",
+    message: "نام کاربری باید حداکثر ۲۰ کاراکتر باشد",
     description: "Validation error when username too long",
   },
   "auth.usernamePublicHint": {
