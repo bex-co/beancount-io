@@ -159,12 +159,16 @@ const UploadFilesPage = () => {
    * Handle file selection from input
    */
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files && files.length > 0) {
-      setSelectedFiles((prev) => [...prev, ...Array.from(files)]);
-    }
+    // Snapshot before the reset below. `event.target.files` is a live
+    // FileList, and clearing the input empties that same object, so reading it
+    // inside the state updater let React run the read after the reset and the
+    // selection disappeared.
+    const chosen = event.target.files ? Array.from(event.target.files) : [];
     // Allow selecting the same path again after remove/cancel.
     event.target.value = "";
+    if (chosen.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...chosen]);
+    }
   };
 
   /**
