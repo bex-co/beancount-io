@@ -5,20 +5,22 @@
  * (w4/m24) each shipped with messages like `Запись Context`, `Вocuments` or
  * `Рахунок is required` — text that is a word in neither language.
  *
- * The signal is a message written in the locale's own script that still
- * carries an English word. That only works where the locale's script is not
- * Latin: in `de` or `es` a stray English word is indistinguishable from the
- * target language by script alone, so those catalogs need a different
- * technique and are out of this scan's reach.
+ * Two signals, because one does not reach every locale:
+ *
+ * - **Script.** A message written in the locale's own script that still
+ *   carries an English word. Precise, but only where that script is not
+ *   Latin.
+ * - **English tail.** A message whose trailing words are still verbatim
+ *   English, compared against the same key in `en`. This reaches the
+ *   Latin-script locales, where script alone proves nothing.
  */
 
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/i18n/config";
 
 /**
- * Locales written in the Latin alphabet, where this technique cannot work at
- * all: a stray English word is indistinguishable from the target language by
- * script. Listed explicitly so that every supported language is accounted for
- * as either scannable or knowingly out of reach.
+ * Locales written in the Latin alphabet. The script check cannot judge them,
+ * so they are scanned by the English-tail check instead. Listed explicitly so
+ * that every supported language is accounted for by one check or the other.
  */
 const LATIN_SCRIPT_LOCALES = [
   "en",
@@ -80,6 +82,26 @@ export const UNCLASSIFIED_LOCALES = SUPPORTED_LANGUAGES.filter(
 );
 
 export type ScannedLocale = keyof typeof SCANNED_LOCALES;
+
+/**
+ * Locales where a capitalized word in the English tail is evidence on its own,
+ * because they capitalize only proper nouns and the start of a sentence. German
+ * is absent deliberately: it capitalizes every noun, so `Intelligenter Import`
+ * and `Unbekannter Plan` are correct German that such a rule would flag.
+ */
+const TITLE_CASE_MEANS_ENGLISH = new Set<string>([
+  "ca",
+  "es",
+  "fr",
+  "nl",
+  "pt",
+  "sk",
+]);
+
+/** Every locale the English-tail check can judge — everything but English. */
+export const EN_COMPARED_LOCALES = SUPPORTED_LANGUAGES.filter(
+  (language) => language !== "en",
+);
 
 /**
  * Latin that legitimately survives translation. Each entry is a term a
@@ -248,4 +270,82 @@ export function strayEnglishWords(
     },
   );
   return withoutAllowed.match(LATIN_RUN) ?? [];
+}
+
+/**
+ * Words that are English in form but belong in a translated message: brands
+ * and, more often, terms these languages have borrowed outright. `Criar
+ * token`, `Prejsť na dashboard`, `Copiar link`, `Redefinir layout` and
+ * `Filteren op bank` are all correct, and a scan that flags them is unusable.
+ */
+const BORROWED = new Set<string>([
+  ...ALLOWED_LATIN,
+  "Import",
+  "Plan",
+  "Updates",
+  "Bank",
+  "Dashboard",
+  "Token",
+  "Link",
+  "Layout",
+  "Feed",
+  "Filter",
+  "Commodities",
+]);
+
+const trimWord = (word: string) =>
+  word.replace(/[.,!?:;)]+$/, "").replace(/^[("]+/, "");
+
+/**
+ * The trailing words a message still shares verbatim with its English source.
+ * Empty when the message is entirely English, since that is a translation not
+ * yet started rather than one abandoned halfway.
+ */
+function sharedEnglishTail(message: string, english: string): string[] {
+  const words = message.split(/\s+/);
+  const englishWords = english.split(/\s+/);
+  let shared = 0;
+  while (
+    shared < words.length &&
+    shared < englishWords.length &&
+    words[words.length - 1 - shared] ===
+      englishWords[englishWords.length - 1 - shared]
+  ) {
+    shared++;
+  }
+  if (shared === 0 || shared === words.length) return [];
+  return words
+    .slice(words.length - shared)
+    .map(trimWord)
+    .filter((word) => word && !BORROWED.has(word));
+}
+
+/**
+ * The English words a message has left untranslated at its end, or an empty
+ * array when it reads as its own language.
+ *
+ * Two shapes count, and both were chosen by measuring against the shipped
+ * catalogs rather than by taste (w4/m25/t001). A tail of three or more English
+ * words is a sentence, not a borrowed term. A capitalized English word is
+ * title case carried over from the source — except in German, where every noun
+ * is capitalized.
+ *
+ * Deliberately not caught: a one- or two-word lowercase tail, such as
+ * `Outro transactions`. It has the same shape as the correct `Criar token`,
+ * and telling them apart needs per-language morphology rather than a rule.
+ */
+export function untranslatedEnglishTail(
+  message: string,
+  english: string,
+  locale: string,
+): string[] {
+  if (message === english) return [];
+  const shared = sharedEnglishTail(message, english);
+  if (shared.length === 0) return [];
+  const isSentence =
+    shared.filter((word) => /^[A-Za-z]{2,}$/.test(word)).length >= 3;
+  const isTitleCased =
+    TITLE_CASE_MEANS_ENGLISH.has(locale) &&
+    shared.some((word) => /^[A-Z][a-z]{2,}$/.test(word));
+  return isSentence || isTitleCased ? shared : [];
 }

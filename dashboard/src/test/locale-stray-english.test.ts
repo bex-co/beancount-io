@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import * as locales from "@/i18n/locales";
 import {
+  EN_COMPARED_LOCALES,
   SCANNED_LOCALES,
   UNCLASSIFIED_LOCALES,
   type ScannedLocale,
   strayEnglishWords,
+  untranslatedEnglishTail,
 } from "./locale-scan";
+import en from "@/i18n/locales/en";
 
 /**
  * A translation pass that replaces a leading token and leaves the rest in
@@ -74,6 +77,25 @@ describe("no locale ships a half-translated message", () => {
     }
     expect(stale).toEqual([]);
   });
+
+  it.each(EN_COMPARED_LOCALES)(
+    "%s leaves no English tail against the same key in en",
+    (locale) => {
+      // Reaches the Latin-script locales, where script proves nothing: `Cuenta
+      // Balance` and `Excluir Ledger` are only visible beside their English
+      // source.
+      const offenders: string[] = [];
+      for (const [key, message] of Object.entries(ALL[locale] ?? {})) {
+        const english = en[key];
+        if (english === undefined) continue;
+        const tail = untranslatedEnglishTail(message, english, locale);
+        if (tail.length) {
+          offenders.push(`${locale}/${key}: ${message} -> ${tail.join(" ")}`);
+        }
+      }
+      expect(offenders).toEqual([]);
+    },
+  );
 
   it("classifies every supported language as scannable or Latin-script", () => {
     // A new non-Latin locale added to SUPPORTED_LANGUAGES would otherwise go
