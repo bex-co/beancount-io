@@ -73,7 +73,7 @@ const esJournal: Record<string, TranslationEntry> = {
     description: "Label for cleared transaction subtype filter",
   },
   "journal.clearedTransactions": {
-    message: "Limpiared transactions",
+    message: "Transacciones confirmadas",
     description: "Filter tooltip for cleared transactions",
   },
   "journal.close": {
@@ -272,7 +272,7 @@ const esJournal: Record<string, TranslationEntry> = {
     description: "Label for other transaction subtype filter",
   },
   "journal.otherTransactions": {
-    message: "Otro transactions",
+    message: "Otras transacciones",
     description: "Filter tooltip for other transactions",
   },
   "journal.pad": {

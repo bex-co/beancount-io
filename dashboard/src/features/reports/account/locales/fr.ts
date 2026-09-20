@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const frAccountReport: Record<string, TranslationEntry> = {
   "page.accountReport.accountBalance": {
-    message: "Compte Balance",
+    message: "Solde du compte",
     description: "Label for account balance section",
   },
   "page.accountReport.accountBalanceDescription": {
@@ -13,7 +13,7 @@ const frAccountReport: Record<string, TranslationEntry> = {
     description: "Description for account balance chart",
   },
   "page.accountReport.accountJournal": {
-    message: "Compte Journal",
+    message: "Journal du compte",
     description: "Label for account journal section",
   },
   "page.accountReport.accountJournalDescription": {
@@ -21,7 +21,7 @@ const frAccountReport: Record<string, TranslationEntry> = {
     description: "Description prefix for account journal",
   },
   "page.accountReport.title": {
-    message: "Compte Report",
+    message: "Rapport du compte",
     description: "Title for account report page",
   },
   "page.accountReport.changesOverTime": {

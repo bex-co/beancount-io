@@ -388,7 +388,7 @@ const deAuth: Record<string, TranslationEntry> = {
     description: "Hint text explaining that username is publicly visible",
   },
   "auth.usernameRequired": {
-    message: "Benutzername is required",
+    message: "Benutzername ist erforderlich",
     description: "Validation error when username is missing",
   },
   "auth.verifyEmail": {

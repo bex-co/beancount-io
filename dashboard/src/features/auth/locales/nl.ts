@@ -17,7 +17,7 @@ const nlAuth: Record<string, TranslationEntry> = {
     description: "Message shown during authentication process",
   },
   "auth.backToSignIn": {
-    message: "Terug to Sign in",
+    message: "Terug naar inloggen",
     description: "Link text to return to sign in page",
   },
   "auth.backToSignUp": {
@@ -386,7 +386,7 @@ const nlAuth: Record<string, TranslationEntry> = {
     description: "Hint text explaining that username is publicly visible",
   },
   "auth.usernameRequired": {
-    message: "Gebruikername is required",
+    message: "Gebruikersnaam is verplicht",
     description: "Validation error when username is missing",
   },
   "auth.verifyEmail": {

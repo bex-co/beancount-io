@@ -106,7 +106,7 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "Naam must be less than 100 characters",
+    message: "De naam moet minder dan 100 tekens bevatten",
     description: "Validation error when name exceeds limit",
   },
   "page.dashboard.nameRequired": {

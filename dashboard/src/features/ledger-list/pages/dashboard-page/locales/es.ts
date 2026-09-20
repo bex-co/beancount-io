@@ -31,7 +31,7 @@ const esDashboardPage: Record<string, TranslationEntry> = {
       "Aria label for the home/logo button navigating to the dashboard",
   },
   "page.dashboard.deleteLedger": {
-    message: "Eliminar Ledger",
+    message: "Eliminar libro",
     description: "Button tooltip or action for deleting ledger",
   },
   "page.dashboard.deleteLedgerConfirm": {
@@ -49,11 +49,11 @@ const esDashboardPage: Record<string, TranslationEntry> = {
     description: "Description field label with optional indicator",
   },
   "page.dashboard.editLedger": {
-    message: "Editar Ledger",
+    message: "Editar libro",
     description: "Button tooltip for editing ledger",
   },
   "page.dashboard.editLedgerSettings": {
-    message: "Editar Ledger Settings",
+    message: "Editar configuración del libro",
     description: "Dialog title for editing ledger",
   },
   "page.dashboard.enterDescription": {
@@ -106,7 +106,7 @@ const esDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "Nombre must be less than 100 characters",
+    message: "El nombre debe tener menos de 100 caracteres",
     description: "Validation error when name exceeds limit",
   },
   "page.dashboard.nameRequired": {

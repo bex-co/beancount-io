@@ -31,7 +31,7 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
       "Aria label for the home/logo button navigating to the dashboard",
   },
   "page.dashboard.deleteLedger": {
-    message: "Excluir Ledger",
+    message: "Excluir livro",
     description: "Button tooltip or action for deleting ledger",
   },
   "page.dashboard.deleteLedgerConfirm": {
@@ -49,11 +49,11 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
     description: "Description field label with optional indicator",
   },
   "page.dashboard.editLedger": {
-    message: "Editar Ledger",
+    message: "Editar livro",
     description: "Button tooltip for editing ledger",
   },
   "page.dashboard.editLedgerSettings": {
-    message: "Editar Ledger Settings",
+    message: "Editar configurações do livro",
     description: "Dialog title for editing ledger",
   },
   "page.dashboard.enterDescription": {

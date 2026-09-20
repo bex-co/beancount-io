@@ -73,7 +73,7 @@ const nlJournal: Record<string, TranslationEntry> = {
     description: "Label for cleared transaction subtype filter",
   },
   "journal.clearedTransactions": {
-    message: "Wissened transactions",
+    message: "Bevestigde transacties",
     description: "Filter tooltip for cleared transactions",
   },
   "journal.close": {
@@ -272,7 +272,7 @@ const nlJournal: Record<string, TranslationEntry> = {
     description: "Label for other transaction subtype filter",
   },
   "journal.otherTransactions": {
-    message: "Overige transactions",
+    message: "Overige transacties",
     description: "Filter tooltip for other transactions",
   },
   "journal.pad": {

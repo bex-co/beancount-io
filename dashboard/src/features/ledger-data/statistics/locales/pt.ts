@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const ptStatistics: Record<string, TranslationEntry> = {
   "page.statistics.accountLastEntries": {
-    message: "Conta Last Entries",
+    message: "Últimos lançamentos da conta",
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {

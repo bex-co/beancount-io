@@ -73,7 +73,7 @@ const ptJournal: Record<string, TranslationEntry> = {
     description: "Label for cleared transaction subtype filter",
   },
   "journal.clearedTransactions": {
-    message: "Limpared transactions",
+    message: "Transações compensadas",
     description: "Filter tooltip for cleared transactions",
   },
   "journal.close": {
@@ -272,7 +272,7 @@ const ptJournal: Record<string, TranslationEntry> = {
     description: "Label for other transaction subtype filter",
   },
   "journal.otherTransactions": {
-    message: "Outro transactions",
+    message: "Outras transações",
     description: "Filter tooltip for other transactions",
   },
   "journal.pad": {

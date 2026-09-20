@@ -400,7 +400,7 @@ const caSeo: Record<string, TranslationEntry> = {
   },
   "seo.welcome.description": {
     message:
-      "Benvingut to Beancount! Get started with plain-text accounting and financial management.",
+      "Benvingut a Beancount! Comenceu amb la comptabilitat en text pla i la gestió financera.",
     description: "Welcome page meta description",
   },
   "seo.welcome.title": {

@@ -401,7 +401,7 @@ const nlSeo: Record<string, TranslationEntry> = {
   },
   "seo.welcome.description": {
     message:
-      "Welkom to Beancount! Get started with plain-text accounting and financial management.",
+      "Welkom bij Beancount! Begin met boekhouden in platte tekst en financieel beheer.",
     description: "Welcome page meta description",
   },
   "seo.welcome.title": {

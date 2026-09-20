@@ -388,7 +388,7 @@ const ptAuth: Record<string, TranslationEntry> = {
     description: "Hint text explaining that username is publicly visible",
   },
   "auth.usernameRequired": {
-    message: "Usuárioname is required",
+    message: "O nome de usuário é obrigatório",
     description: "Validation error when username is missing",
   },
   "auth.verifyEmail": {

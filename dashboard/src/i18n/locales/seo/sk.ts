@@ -395,12 +395,12 @@ const skSeo: Record<string, TranslationEntry> = {
     description: "OTP verification page meta description",
   },
   "seo.signUpOtp.title": {
-    message: "Overiť Email",
+    message: "Overiť e-mail",
     description: "OTP verification page title",
   },
   "seo.welcome.description": {
     message:
-      "Vitajte to Beancount! Get started with plain-text accounting and financial management.",
+      "Vitajte v Beancount! Začnite s účtovníctvom v obyčajnom texte a správou financií.",
     description: "Welcome page meta description",
   },
   "seo.welcome.title": {

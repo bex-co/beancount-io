@@ -392,7 +392,7 @@ const esAuth: Record<string, TranslationEntry> = {
     description: "Hint text explaining that username is publicly visible",
   },
   "auth.usernameRequired": {
-    message: "Usuarioname is required",
+    message: "El nombre de usuario es obligatorio",
     description: "Validation error when username is missing",
   },
   "auth.verifyEmail": {

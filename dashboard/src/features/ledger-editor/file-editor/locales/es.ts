@@ -10,7 +10,7 @@ const esFileEditor: Record<string, { message: string; description: string }> = {
       "Confirmation message for file deletion (contains {filename} placeholder)",
   },
   "ledgerEditor.deleteFileTitle": {
-    message: "Eliminar File",
+    message: "Eliminar archivo",
     description: "Dialog title for file deletion",
   },
   "ledgerEditor.failedToLoadFileContent": {
