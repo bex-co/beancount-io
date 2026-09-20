@@ -1,13 +1,13 @@
 # w4 · m24 — Repair the Ukrainian catalogs' first-word find/replace damage
 
-**Worker:** worker1 **Goal:** Ukrainian stops being the worst-rendering locale in the product — no screen shows half-translated labels like `Вocuments` or `Рахунок Journal` **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** Ukrainian stops being the worst-rendering locale in the product — no screen shows half-translated labels like `Вocuments` or `Рахунок Journal` **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id   | title                                                    | est | depends_on   |
 | ---- | -------------------------------------------------------- | --- | ------------ |
 | t001 | Repair the `auth` and `collaboration` catalogs             | 30m | —            | — **DONE**
-| t002 | Repair the `journal` catalog                               | 30m | w4/m24/t001  |
+| t002 | Repair the `journal` catalog                               | 30m | w4/m24/t001  | — **DONE**
 | t003 | Repair the `user-settings` catalog                         | 30m | w4/m24/t002  |
 | t004 | Repair the `ledger-list` catalogs                          | 30m | w4/m24/t003  |
 | t005 | Repair the `reports` catalogs                              | 30m | w4/m24/t004  |
