@@ -86,27 +86,27 @@ const zhUserProfile: Record<string, TranslationEntry> = {
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
-    message: "Followers",
+    message: "粉丝",
     description: "Tab label for followers list",
   },
   "userProfile.tabs.following": {
-    message: "Following",
+    message: "关注中",
     description: "Tab label for following list",
   },
   "userProfile.tabs.starred": {
-    message: "Starred",
+    message: "已加星标",
     description: "Tab label for starred repositories",
   },
   "userProfile.noFollowers": {
-    message: "No followers yet",
+    message: "暂无粉丝",
     description: "Message shown when user has no followers",
   },
   "userProfile.noFollowing": {
-    message: "Not following anyone yet",
+    message: "尚未关注任何人",
     description: "Message shown when user is not following anyone",
   },
   "userProfile.noStarredRepos": {
-    message: "No starred repositories",
+    message: "没有加星标的仓库",
     description: "Message shown when user has no starred repos",
   },
   "userProfile.community": {

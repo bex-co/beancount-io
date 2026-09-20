@@ -86,27 +86,27 @@ const esUserProfile: Record<string, TranslationEntry> = {
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
-    message: "Followers",
+    message: "Seguidores",
     description: "Tab label for followers list",
   },
   "userProfile.tabs.following": {
-    message: "Following",
+    message: "Siguiendo",
     description: "Tab label for following list",
   },
   "userProfile.tabs.starred": {
-    message: "Starred",
+    message: "Destacados",
     description: "Tab label for starred repositories",
   },
   "userProfile.noFollowers": {
-    message: "No followers yet",
+    message: "Aún no tiene seguidores",
     description: "Message shown when user has no followers",
   },
   "userProfile.noFollowing": {
-    message: "Not following anyone yet",
+    message: "Aún no sigue a nadie",
     description: "Message shown when user is not following anyone",
   },
   "userProfile.noStarredRepos": {
-    message: "No starred repositories",
+    message: "Ningún repositorio destacado",
     description: "Message shown when user has no starred repos",
   },
   "userProfile.community": {

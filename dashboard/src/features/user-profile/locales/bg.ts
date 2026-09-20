@@ -86,27 +86,27 @@ const bgUserProfile: Record<string, TranslationEntry> = {
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
-    message: "Followers",
+    message: "Последователи",
     description: "Tab label for followers list",
   },
   "userProfile.tabs.following": {
-    message: "Following",
+    message: "Следвани",
     description: "Tab label for following list",
   },
   "userProfile.tabs.starred": {
-    message: "Starred",
+    message: "Със звезда",
     description: "Tab label for starred repositories",
   },
   "userProfile.noFollowers": {
-    message: "No followers yet",
+    message: "Все още няма последователи",
     description: "Message shown when user has no followers",
   },
   "userProfile.noFollowing": {
-    message: "Not following anyone yet",
+    message: "Все още не следва никого",
     description: "Message shown when user is not following anyone",
   },
   "userProfile.noStarredRepos": {
-    message: "No starred repositories",
+    message: "Няма хранилища със звезда",
     description: "Message shown when user has no starred repos",
   },
   "userProfile.community": {

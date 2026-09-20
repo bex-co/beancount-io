@@ -86,27 +86,27 @@ const ptUserProfile: Record<string, TranslationEntry> = {
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
-    message: "Followers",
+    message: "Seguidores",
     description: "Tab label for followers list",
   },
   "userProfile.tabs.following": {
-    message: "Following",
+    message: "Seguindo",
     description: "Tab label for following list",
   },
   "userProfile.tabs.starred": {
-    message: "Starred",
+    message: "Favoritos",
     description: "Tab label for starred repositories",
   },
   "userProfile.noFollowers": {
-    message: "No followers yet",
+    message: "Ainda não tem seguidores",
     description: "Message shown when user has no followers",
   },
   "userProfile.noFollowing": {
-    message: "Not following anyone yet",
+    message: "Ainda não segue ninguém",
     description: "Message shown when user is not following anyone",
   },
   "userProfile.noStarredRepos": {
-    message: "No starred repositories",
+    message: "Nenhum repositório favorito",
     description: "Message shown when user has no starred repos",
   },
   "userProfile.community": {

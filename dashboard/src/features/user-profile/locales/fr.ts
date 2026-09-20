@@ -86,27 +86,27 @@ const frUserProfile: Record<string, TranslationEntry> = {
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
-    message: "Followers",
+    message: "Abonnés",
     description: "Tab label for followers list",
   },
   "userProfile.tabs.following": {
-    message: "Following",
+    message: "Abonnements",
     description: "Tab label for following list",
   },
   "userProfile.tabs.starred": {
-    message: "Starred",
+    message: "Favoris",
     description: "Tab label for starred repositories",
   },
   "userProfile.noFollowers": {
-    message: "No followers yet",
+    message: "Aucun abonné pour l'instant",
     description: "Message shown when user has no followers",
   },
   "userProfile.noFollowing": {
-    message: "Not following anyone yet",
+    message: "Ne suit encore personne",
     description: "Message shown when user is not following anyone",
   },
   "userProfile.noStarredRepos": {
-    message: "No starred repositories",
+    message: "Aucun dépôt en favori",
     description: "Message shown when user has no starred repos",
   },
   "userProfile.community": {
