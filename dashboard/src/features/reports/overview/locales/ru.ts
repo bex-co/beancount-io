@@ -31,7 +31,7 @@ const ruOverview: Record<string, TranslationEntry> = {
     description: "Error description for overview page",
   },
   "page.overview.liabilitiesDistribution": {
-    message: "Обязательства Distribution",
+    message: "Распределение обязательств",
     description: "Title for liabilities distribution chart",
   },
   "page.overview.liabilitiesDistributionDescription": {

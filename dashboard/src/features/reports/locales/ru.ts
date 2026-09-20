@@ -47,19 +47,19 @@ const ruReports = {
   ...ruOverview,
   ...ruExport,
   "page.overview.starButton.starSuccess": {
-    message: "Леджер успешно снялся",
+    message: "Книга добавлена в избранное",
     description: "Toast shown after starring a ledger",
   },
   "page.overview.starButton.starFailed": {
-    message: "Не удалось пометить реестр",
+    message: "Не удалось добавить книгу в избранное",
     description: "Toast shown when starring a ledger fails",
   },
   "page.overview.starButton.unstarSuccess": {
-    message: "Ledger успешно снял пометку",
+    message: "Книга удалена из избранного",
     description: "Toast shown after unstarring a ledger",
   },
   "page.overview.starButton.unstarFailed": {
-    message: "Не удалось снять пометку с бухгалтерской книги.",
+    message: "Не удалось удалить книгу из избранного",
     description: "Toast shown when unstarring a ledger fails",
   },
 };

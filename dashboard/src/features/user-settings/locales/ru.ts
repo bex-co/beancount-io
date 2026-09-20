@@ -12,7 +12,7 @@ const ruUserSettings: Record<string, TranslationEntry> = {
     description: "Label for access remaining until date",
   },
   "userSettings.accountDeleted": {
-    message: "Счёт deleted successfully",
+    message: "Учётная запись успешно удалена",
     description: "Success message when account is deleted",
   },
   "userSettings.addNewKey": {
@@ -69,7 +69,7 @@ const ruUserSettings: Record<string, TranslationEntry> = {
     description: "Dialog title for changing name",
   },
   "userSettings.changeUsername": {
-    message: "Изменить Username",
+    message: "Изменить имя пользователя",
     description: "Dialog title for changing username",
   },
   "userSettings.confirmCancel": {
@@ -129,11 +129,11 @@ const ruUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "Это действие нельзя отменить. This will permanently delete your account and remove all your data from our servers.",
+      "Это действие нельзя отменить. Учётная запись будет удалена навсегда, а все ваши данные — с наших серверов.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {
-    message: "Удалить Account?",
+    message: "Удалить учётную запись?",
     description: "Dialog title confirming account deletion",
   },
   "userSettings.deleteAccountWarning": {
@@ -142,11 +142,11 @@ const ruUserSettings: Record<string, TranslationEntry> = {
     description: "Warning text for account deletion",
   },
   "userSettings.deleteKey": {
-    message: "Удалить Key",
+    message: "Удалить ключ",
     description: "Button text to delete key",
   },
   "userSettings.deleteSshKey": {
-    message: "Удалить SSH Key",
+    message: "Удалить SSH-ключ",
     description: "Dialog title for deleting SSH key",
   },
   "userSettings.deleteSshKeyConfirmation": {
@@ -309,7 +309,7 @@ const ruUserSettings: Record<string, TranslationEntry> = {
     description: "Loading message for theme settings",
   },
   "userSettings.manageActiveSession": {
-    message: "Управление your active session",
+    message: "Управление активной сессией",
     description: "Description for session section",
   },
   "userSettings.manageBilling": {
@@ -317,7 +317,7 @@ const ruUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to manage billing portal",
   },
   "userSettings.manageSubscription": {
-    message: "Управление your subscription and billing",
+    message: "Управление подпиской и оплатой",
     description: "Description for subscription section",
   },
   "userSettings.monthly": {
@@ -459,7 +459,7 @@ const ruUserSettings: Record<string, TranslationEntry> = {
     description: "Fallback when plan name is not available",
   },
   "userSettings.userProfile": {
-    message: "Пользователь Profile",
+    message: "Профиль пользователя",
     description: "Section title for user profile settings",
   },
   "userSettings.usernameUpdatedSuccess": {

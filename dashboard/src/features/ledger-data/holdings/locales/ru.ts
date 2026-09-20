@@ -13,15 +13,15 @@ const ruHoldings: Record<string, TranslationEntry> = {
     description: "Holdings/investments view in ledger",
   },
   "page.holdings.holdingsByAccount": {
-    message: "Активы by Account",
+    message: "Активы по счетам",
     description: "Tab label for holdings grouped by account",
   },
   "page.holdings.holdingsByCostCurrency": {
-    message: "Активы by Cost Currency",
+    message: "Активы по валюте затрат",
     description: "Tab label for holdings grouped by cost currency",
   },
   "page.holdings.holdingsByCurrency": {
-    message: "Активы by Currency",
+    message: "Активы по валюте",
     description: "Tab label for holdings grouped by currency",
   },
   "page.holdings.noDataReturnedFromQuery": {
@@ -33,7 +33,7 @@ const ruHoldings: Record<string, TranslationEntry> = {
     description: "Message when no query results exist",
   },
   "page.holdings.queryResult": {
-    message: "Запрос Result",
+    message: "Результат запроса",
     description: "Section title for query result",
   },
   "page.holdings.row": {

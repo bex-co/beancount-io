@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const ruDocuments: Record<string, TranslationEntry> = {
   "page.documents.documents": {
-    message: "Документs",
+    message: "Документы",
     description: "Documents attached to ledger entries",
   },
   "page.documents.filename": {
@@ -21,7 +21,7 @@ const ruDocuments: Record<string, TranslationEntry> = {
     description: "Table column header for metadata",
   },
   "page.documents.noDocumentsFound": {
-    message: "Документы не найдены in this ledger.",
+    message: "Документы в этой книге не найдены.",
     description: "Empty state message for no documents",
   },
   "page.documents.noDocumentsFoundDescription": {

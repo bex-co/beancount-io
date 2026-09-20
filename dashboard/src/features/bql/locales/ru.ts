@@ -42,7 +42,7 @@ const ruBql: Record<string, TranslationEntry> = {
     description: "Sidebar navigation label for the BQL query page",
   },
   "page.bql.queryResult": {
-    message: "Запрос Result",
+    message: "Результат запроса",
     description: "Label for a query result section header",
   },
   "page.bql.unknownResultType": {

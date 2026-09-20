@@ -9,7 +9,7 @@ const ruEvents: Record<string, TranslationEntry> = {
     description: "Table column header for description",
   },
   "page.events.events": {
-    message: "Событиеs",
+    message: "События",
     description: "Events in the ledger",
   },
   "page.events.eventsCount": {
@@ -21,7 +21,7 @@ const ruEvents: Record<string, TranslationEntry> = {
     description: "Empty state title when no events exist",
   },
   "page.events.noEventsFoundForLedger": {
-    message: "События не найдены for this ledger.",
+    message: "События в этой книге не найдены.",
     description: "Empty state description for no events",
   },
   "page.events.noEventsMatchFilters": {

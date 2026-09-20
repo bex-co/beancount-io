@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const ruStatistics: Record<string, TranslationEntry> = {
   "page.statistics.accountLastEntries": {
-    message: "Счёт Last Entries",
+    message: "Последние записи по счёту",
     description: "Title for account last entries section",
   },
   "page.statistics.accountLastEntriesDescription": {
@@ -50,7 +50,7 @@ const ruStatistics: Record<string, TranslationEntry> = {
     description: "Error message for postings data",
   },
   "page.statistics.lastEntryDate": {
-    message: "Последняя запись Date",
+    message: "Дата последней записи",
     description: "Table column header for last entry date",
   },
   "page.statistics.loadingEntryStatistics": {

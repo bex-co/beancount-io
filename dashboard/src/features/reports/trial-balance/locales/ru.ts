@@ -13,7 +13,7 @@ const ruTrialBalance: Record<string, TranslationEntry> = {
     description: "Description for assets hierarchy visualization",
   },
   "page.trialBalance.equityHierarchy": {
-    message: "Капитал Hierarchy",
+    message: "Иерархия капитала",
     description: "Title for equity hierarchy card",
   },
   "page.trialBalance.equityHierarchyDescription": {
@@ -21,7 +21,7 @@ const ruTrialBalance: Record<string, TranslationEntry> = {
     description: "Description for equity hierarchy visualization",
   },
   "page.trialBalance.expensesHierarchy": {
-    message: "Расходы Hierarchy",
+    message: "Иерархия расходов",
     description: "Title for expenses hierarchy card",
   },
   "page.trialBalance.expensesHierarchyDescription": {
@@ -29,7 +29,7 @@ const ruTrialBalance: Record<string, TranslationEntry> = {
     description: "Description for expenses hierarchy visualization",
   },
   "page.trialBalance.incomeHierarchy": {
-    message: "Доход Hierarchy",
+    message: "Иерархия доходов",
     description: "Title for income hierarchy card",
   },
   "page.trialBalance.incomeHierarchyDescription": {
@@ -37,7 +37,7 @@ const ruTrialBalance: Record<string, TranslationEntry> = {
     description: "Description for income hierarchy visualization",
   },
   "page.trialBalance.liabilitiesHierarchy": {
-    message: "Обязательства Hierarchy",
+    message: "Иерархия обязательств",
     description: "Title for liabilities hierarchy card",
   },
   "page.trialBalance.liabilitiesHierarchyDescription": {

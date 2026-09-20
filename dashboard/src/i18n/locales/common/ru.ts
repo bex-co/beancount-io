@@ -588,7 +588,7 @@ const ruCommon: Record<string, TranslationEntry> = {
     description: "Description for the request a feature menu item",
   },
   "common.balanceSheet": {
-    message: "Баланс Sheet",
+    message: "Бухгалтерский баланс",
     description: "Navigation label for balance sheet financial report",
   },
   "component.searchControls.filters": {
@@ -663,7 +663,7 @@ const ruCommon: Record<string, TranslationEntry> = {
     description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
-    message: "Доход Statement",
+    message: "Отчёт о прибылях и убытках",
     description: "Navigation label for income statement financial report",
   },
   "common.liabilities": {

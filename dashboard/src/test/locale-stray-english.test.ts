@@ -26,42 +26,6 @@ const ALL = locales as unknown as Record<string, Record<string, string>>;
 const KNOWN_DEVIATIONS: Partial<
   Record<ScannedLocale, { note: string; keys: readonly string[] }>
 > = {
-  // The remaining Russian catalogs, outside the two w4/149 repaired.
-  ru: {
-    note: "w4/153",
-    keys: [
-      "common.balanceSheet",
-      "common.incomeStatement",
-      "seo.welcome.description",
-      "userSettings.accountDeleted",
-      "userSettings.changeUsername",
-      "userSettings.deleteAccountDialogDescription",
-      "userSettings.deleteAccountQuestion",
-      "userSettings.deleteKey",
-      "userSettings.deleteSshKey",
-      "userSettings.manageActiveSession",
-      "userSettings.manageSubscription",
-      "userSettings.userProfile",
-      "page.trialBalance.equityHierarchy",
-      "page.trialBalance.expensesHierarchy",
-      "page.trialBalance.incomeHierarchy",
-      "page.trialBalance.liabilitiesHierarchy",
-      "page.overview.liabilitiesDistribution",
-      "page.overview.starButton.unstarSuccess",
-      "page.documents.documents",
-      "page.documents.noDocumentsFound",
-      "page.errors.errors",
-      "page.events.events",
-      "page.events.noEventsFoundForLedger",
-      "page.holdings.holdingsByAccount",
-      "page.holdings.holdingsByCostCurrency",
-      "page.holdings.holdingsByCurrency",
-      "page.holdings.queryResult",
-      "page.statistics.accountLastEntries",
-      "page.statistics.lastEntryDate",
-      "page.bql.queryResult",
-    ],
-  },
   bg: {
     note: "w4/156",
     keys: ["seo.welcome.description", "page.overview.starButton.unstarSuccess"],
@@ -149,7 +113,10 @@ describe("no locale ships a half-translated message", () => {
     expect(strayEnglishWords("Beancountについて", "ja")).toEqual([]);
   });
 
-  it("carries no deviation for Ukrainian, which w4/m24 repaired", () => {
-    expect(KNOWN_DEVIATIONS.uk).toBeUndefined();
-  });
+  it.each(["uk", "ru", "ja"] as const)(
+    "carries no deviation for %s, which has been repaired in full",
+    (locale) => {
+      expect(KNOWN_DEVIATIONS[locale]).toBeUndefined();
+    },
+  );
 });

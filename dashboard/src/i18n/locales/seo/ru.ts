@@ -400,7 +400,7 @@ const ruSeo: Record<string, TranslationEntry> = {
   },
   "seo.welcome.description": {
     message:
-      "Добро Пожаловать to Beancount! Get started with plain-text accounting and financial management.",
+      "Добро пожаловать в Beancount! Начните вести учёт в текстовом формате и управлять финансами.",
     description: "Welcome page meta description",
   },
   "seo.welcome.title": {
