@@ -196,7 +196,7 @@ export function NetWorthCard({
             <div
               className={
                 change >= 0
-                  ? "flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400"
+                  ? "flex items-center gap-1 text-sm text-emerald-700 dark:text-emerald-400"
                   : "flex items-center gap-1 text-sm text-rose-600 dark:text-rose-400"
               }
             >

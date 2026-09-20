@@ -293,7 +293,7 @@ export function RecentActivityCard({
                           showPositiveSign={summary.kind === "income"}
                           className={
                             summary.kind === "income"
-                              ? "text-right text-sm font-semibold text-emerald-600 dark:text-emerald-400"
+                              ? "text-right text-sm font-semibold text-emerald-700 dark:text-emerald-400"
                               : "text-right text-sm font-semibold"
                           }
                         />
