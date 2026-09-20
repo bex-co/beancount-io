@@ -27,7 +27,7 @@ describe("Holdings Statement SQL Queries", () => {
 
     it("should select price column", () => {
       expect(holdingsStatement).toContain(
-        "first(getprice(currency, cost_currency)) as price",
+        "first(getprice(currency, cost_currency, today())) as price",
       );
     });
 
@@ -37,7 +37,7 @@ describe("Holdings Statement SQL Queries", () => {
 
     it("should select market_value column", () => {
       expect(holdingsStatement).toContain(
-        "value(sum(position)) as market_value",
+        "value(sum(position), today()) as market_value",
       );
     });
 
@@ -86,7 +86,7 @@ describe("Holdings Statement SQL Queries", () => {
 
     it("should not include price column (grouped by account)", () => {
       expect(holdingsStatementByAccount).not.toContain(
-        "first(getprice(currency, cost_currency)) as price",
+        "first(getprice(currency, cost_currency, today())) as price",
       );
     });
 
@@ -124,7 +124,7 @@ describe("Holdings Statement SQL Queries", () => {
 
     it("should select price column", () => {
       expect(holdingsStatementByCurrency).toContain(
-        "first(getprice(currency, cost_currency)) as price",
+        "first(getprice(currency, cost_currency, today())) as price",
       );
     });
 
@@ -153,7 +153,7 @@ describe("Holdings Statement SQL Queries", () => {
 
     it("should not include price (grouped by cost_currency only)", () => {
       expect(holdingsStatementByCostCurrency).not.toContain(
-        "first(getprice(currency, cost_currency)) as price",
+        "first(getprice(currency, cost_currency, today())) as price",
       );
     });
 
@@ -182,7 +182,7 @@ describe("Holdings Statement SQL Queries", () => {
         "cost(sum(position)) as book_value",
       );
       expect(holdingsStatementByCostCurrency).toContain(
-        "value(sum(position)) as market_value",
+        "value(sum(position), today()) as market_value",
       );
       expect(holdingsStatementByCostCurrency).toContain(
         "unrealized_profit_pct",
@@ -229,5 +229,71 @@ describe("Holdings Statement SQL Queries", () => {
         expect(value).toContain("units");
       });
     });
+  });
+});
+
+/**
+ * A guard, not a proof of valuation — the numbers were verified by running all
+ * four queries against the real engine. What this pins is the rule that made
+ * them wrong: `GETPRICE` defaults to the query date while `VALUE` falls
+ * through to the latest price at any date, so an undated call in one of these
+ * templates silently values a row on a different day from the price beside it.
+ */
+describe("every valuation in a Holdings query carries an explicit date", () => {
+  const STATEMENTS = {
+    holdings: holdingsStatement,
+    byAccount: holdingsStatementByAccount,
+    byCurrency: holdingsStatementByCurrency,
+    byCostCurrency: holdingsStatementByCostCurrency,
+  };
+
+  /** Every `name(...)` call in a statement, with nested parentheses intact. */
+  function callsTo(statement: string, name: string): string[] {
+    const calls: string[] = [];
+    const pattern = new RegExp(`\\b${name}\\(`, "g");
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(statement)) !== null) {
+      let depth = 0;
+      for (let i = match.index + name.length; i < statement.length; i++) {
+        if (statement[i] === "(") depth++;
+        else if (statement[i] === ")") {
+          depth--;
+          if (depth === 0) {
+            calls.push(statement.slice(match.index, i + 1));
+            break;
+          }
+        }
+      }
+    }
+    return calls;
+  }
+
+  it.each(Object.entries(STATEMENTS))(
+    "%s leaves no undated value() call",
+    (_name, statement) => {
+      const valuations = callsTo(statement, "value");
+      expect(valuations.length).toBeGreaterThan(0);
+      for (const call of valuations) {
+        expect(call).toContain("today()");
+      }
+    },
+  );
+
+  it.each(Object.entries(STATEMENTS))(
+    "%s leaves no undated getprice() call",
+    (_name, statement) => {
+      for (const call of callsTo(statement, "getprice")) {
+        expect(call).toContain("today()");
+      }
+    },
+  );
+
+  it("dates the gain numerator as well as the aggregate market value", () => {
+    for (const statement of Object.values(STATEMENTS)) {
+      expect(statement).toContain(
+        "value(sum(position), today()) as market_value",
+      );
+      expect(statement).toContain("sum(number(value(position, today())))");
+    }
   });
 });
