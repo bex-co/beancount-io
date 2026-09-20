@@ -56,6 +56,18 @@ const nlAccountReport: Record<string, TranslationEntry> = {
     message: "Geen journaalposten gevonden voor deze rekening.",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "Periode",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "Bedrag",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "Gegevens per periode",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default nlAccountReport;

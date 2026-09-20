@@ -56,6 +56,18 @@ const skAccountReport: Record<string, TranslationEntry> = {
     message: "Pre tento účet sa nenašli žiadne záznamy v denníku.",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "Obdobie",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "Suma",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "Údaje podľa období",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default skAccountReport;

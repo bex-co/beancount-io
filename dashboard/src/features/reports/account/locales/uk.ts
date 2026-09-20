@@ -56,6 +56,18 @@ const ukAccountReport: Record<string, TranslationEntry> = {
     message: "Для цього рахунку не знайдено записів журналу.",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "Період",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "Сума",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "Дані за періодами",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default ukAccountReport;

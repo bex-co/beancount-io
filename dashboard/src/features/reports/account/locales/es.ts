@@ -57,6 +57,18 @@ const esAccountReport: Record<string, TranslationEntry> = {
     message: "No se encontraron asientos del diario para esta cuenta.",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "Período",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "Importe",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "Datos por período",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default esAccountReport;

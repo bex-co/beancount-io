@@ -56,6 +56,18 @@ const bgAccountReport: Record<string, TranslationEntry> = {
     message: "Няма намерени записи в журнала за тази сметка.",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "Период",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "Сума",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "Данни по периоди",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default bgAccountReport;

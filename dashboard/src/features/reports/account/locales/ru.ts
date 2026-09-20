@@ -56,6 +56,18 @@ const ruAccountReport: Record<string, TranslationEntry> = {
     message: "Записи журнала не найдены для этого счёта.",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "Период",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "Сумма",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "Данные по периодам",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default ruAccountReport;

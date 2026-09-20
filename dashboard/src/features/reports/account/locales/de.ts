@@ -56,6 +56,18 @@ const deAccountReport: Record<string, TranslationEntry> = {
     message: "Keine Journaleinträge für dieses Konto gefunden.",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "Zeitraum",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "Betrag",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "Daten je Zeitraum",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default deAccountReport;

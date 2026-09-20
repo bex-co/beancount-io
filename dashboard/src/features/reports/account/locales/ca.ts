@@ -60,6 +60,18 @@ const caAccountReport: Record<string, TranslationEntry> = {
     message: "Sense entrades de diari",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "Període",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "Import",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "Dades per període",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default caAccountReport;

@@ -56,6 +56,18 @@ const frAccountReport: Record<string, TranslationEntry> = {
     message: "Aucune écriture de journal trouvée pour ce compte.",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "Période",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "Montant",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "Données par période",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default frAccountReport;

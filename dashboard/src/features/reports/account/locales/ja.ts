@@ -56,6 +56,18 @@ const jaAccountReport: Record<string, TranslationEntry> = {
     message: "この口座の仕訳エントリが見つかりません。",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "期間",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "金額",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "期間別データ",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default jaAccountReport;

@@ -56,6 +56,18 @@ const koAccountReport: Record<string, TranslationEntry> = {
     message: "이 계정의 분개 항목을 찾을 수 없습니다.",
     description: "Message when no journal entries exist for account",
   },
+  "page.accountReport.period": {
+    message: "기간",
+    description: "Column header for a chart period in the account period table",
+  },
+  "page.accountReport.periodAmount": {
+    message: "금액",
+    description: "Column header for the amounts of a chart period",
+  },
+  "page.accountReport.periodData": {
+    message: "기간별 데이터",
+    description: "Disclosure label for the account chart's period data table",
+  },
 };
 
 export default koAccountReport;

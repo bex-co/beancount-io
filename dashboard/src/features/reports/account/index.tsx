@@ -22,11 +22,12 @@ import {
 } from "@/graphql/definitions";
 import { DateBalanceChart } from "@/features/reports/income-statement/date-balance-chart";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useId, useMemo, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { normalizeListSearchOffset } from "@/common/lib/list-search-params";
 import { ACCOUNT_JOURNAL_MAX_OFFSET } from "./search";
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
+import { ChartPeriodTable } from "./chart-period-table";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
 import { LineChart } from "@/features/reports/balance-sheet/line-chart";
 import {
@@ -373,6 +374,8 @@ export default function AccountPage() {
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const ledgerFilters = useLedgerSearchParams();
   const [selectedTab, setSelectedTab] = useState<string>("accountBalance");
+  const accountBalanceTitleId = useId();
+  const changesOverTimeTitleId = useId();
   const tabOptions = [
     { label: t("page.accountReport.accountBalance"), value: "accountBalance" },
     {
@@ -501,7 +504,10 @@ export default function AccountPage() {
         <TabsContent value="accountBalance" className="mt-0">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle
+                id={accountBalanceTitleId}
+                className="flex items-center gap-2"
+              >
                 <DollarSign className="h-5 w-5" />
                 {t("page.accountReport.accountBalance")}
               </CardTitle>
@@ -519,11 +525,17 @@ export default function AccountPage() {
                   message={t("page.accountReport.noData")}
                 />
               ) : (
-                <LineChart
-                  data={settledReport.accountBalanceData}
-                  interval={timeInterval}
-                  primarySeries={primaryCurrency}
-                />
+                <>
+                  <LineChart
+                    data={settledReport.accountBalanceData}
+                    interval={timeInterval}
+                    primarySeries={primaryCurrency}
+                  />
+                  <ChartPeriodTable
+                    data={settledReport.accountBalanceData}
+                    labelledBy={accountBalanceTitleId}
+                  />
+                </>
               )}
             </CardContent>
           </Card>
@@ -531,7 +543,10 @@ export default function AccountPage() {
         <TabsContent value="changesOverTime" className="mt-0">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle
+                id={changesOverTimeTitleId}
+                className="flex items-center gap-2"
+              >
                 <Activity className="h-5 w-5" />
                 {t("page.accountReport.changesOverTime")}
               </CardTitle>
@@ -549,11 +564,17 @@ export default function AccountPage() {
                   message={t("page.accountReport.noData")}
                 />
               ) : (
-                <DateBalanceChart
-                  data={settledReport.intervalTotalsData}
-                  interval={timeInterval}
-                  primarySeries={primaryCurrency}
-                />
+                <>
+                  <DateBalanceChart
+                    data={settledReport.intervalTotalsData}
+                    interval={timeInterval}
+                    primarySeries={primaryCurrency}
+                  />
+                  <ChartPeriodTable
+                    data={settledReport.intervalTotalsData}
+                    labelledBy={changesOverTimeTitleId}
+                  />
+                </>
               )}
             </CardContent>
           </Card>
