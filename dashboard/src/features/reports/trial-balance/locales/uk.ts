@@ -37,7 +37,7 @@ const ukTrialBalance: Record<string, TranslationEntry> = {
     description: "Description for income hierarchy visualization",
   },
   "page.trialBalance.liabilitiesHierarchy": {
-    message: "Пiabilities Hierarchy",
+    message: "Ієрархія зобов'язань",
     description: "Title for liabilities hierarchy card",
   },
   "page.trialBalance.liabilitiesHierarchyDescription": {

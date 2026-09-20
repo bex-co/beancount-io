@@ -32,7 +32,7 @@ const ukReportsShared = {
   },
   "page.reports.incomeVsExpensesDescription": {
     message:
-      "Бar chart comparing total income and expenses for each interval in the selected period.",
+      "Стовпчаста діаграма, що порівнює загальні доходи та витрати за кожен інтервал у вибраному періоді.",
     description: "Description for income vs expenses chart",
   },
 };

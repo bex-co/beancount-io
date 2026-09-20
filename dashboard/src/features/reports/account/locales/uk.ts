@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const ukAccountReport: Record<string, TranslationEntry> = {
   "page.accountReport.accountBalance": {
-    message: "Рахунок Balance",
+    message: "Баланс рахунку",
     description: "Label for account balance section",
   },
   "page.accountReport.accountBalanceDescription": {
@@ -13,19 +13,19 @@ const ukAccountReport: Record<string, TranslationEntry> = {
     description: "Description for account balance chart",
   },
   "page.accountReport.accountJournal": {
-    message: "Рахунок Journal",
+    message: "Журнал рахунку",
     description: "Label for account journal section",
   },
   "page.accountReport.accountJournalDescription": {
-    message: "Журнал entries affecting account:",
+    message: "Записи журналу, що впливають на рахунок:",
     description: "Description prefix for account journal",
   },
   "page.accountReport.title": {
-    message: "Рахунок Report",
+    message: "Звіт по рахунку",
     description: "Title for account report page",
   },
   "page.accountReport.changesOverTime": {
-    message: "Змінаs Over Time",
+    message: "Зміни з часом",
     description: "Label for changes over time section",
   },
   "page.accountReport.changesOverTimeDescription": {
@@ -33,11 +33,11 @@ const ukAccountReport: Record<string, TranslationEntry> = {
     description: "Description for changes over time chart",
   },
   "page.accountReport.errorLoadingJournal": {
-    message: "Помилка loading journal data",
+    message: "Помилка завантаження даних журналу",
     description: "Error message for account journal data",
   },
   "page.accountReport.loading": {
-    message: "Пoading account data...",
+    message: "Завантаження даних рахунку...",
     description: "Loading message for account data",
   },
   "page.accountReport.noData": {

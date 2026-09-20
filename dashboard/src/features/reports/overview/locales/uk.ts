@@ -31,7 +31,7 @@ const ukOverview: Record<string, TranslationEntry> = {
     description: "Error description for overview page",
   },
   "page.overview.liabilitiesDistribution": {
-    message: "Пiabilities Distribution",
+    message: "Розподіл зобов'язань",
     description: "Title for liabilities distribution chart",
   },
   "page.overview.liabilitiesDistributionDescription": {
@@ -39,7 +39,7 @@ const ukOverview: Record<string, TranslationEntry> = {
     description: "Description for liabilities distribution chart",
   },
   "page.overview.loading": {
-    message: "Пoading overview data…",
+    message: "Завантаження оглядових даних…",
     description: "Loading message for overview data",
   },
   "page.overview.cashFlowRolesPending": {
