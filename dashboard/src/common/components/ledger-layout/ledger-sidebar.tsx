@@ -39,6 +39,7 @@ import {
 import { SidebarNavigation } from "@/common/components/sidebar-navigation";
 import { decodeLedgerId } from "@/common/lib/utils/encode.ts";
 import { getUpcomingEventsDays } from "@/common/lib/fava-options";
+import { countUpcomingEvents } from "@/common/lib/events/upcoming-events";
 import { useLedger } from "@/common/hooks/use-ledger.ts";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
 import { LedgerSwitcher } from "./ledger-switcher";
@@ -75,23 +76,6 @@ interface MenuGroup {
 interface LedgerSidebarProps {
   ledgerId: string;
   currentPath: string;
-}
-
-function countUpcomingEvents(
-  events: Array<{ date: string }>,
-  upcomingEventsDays: number,
-) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const endDate = new Date(today);
-  endDate.setDate(today.getDate() + upcomingEventsDays);
-
-  const todayString = today.toISOString().slice(0, 10);
-  const endDateString = endDate.toISOString().slice(0, 10);
-
-  return events.filter(
-    (event) => event.date >= todayString && event.date <= endDateString,
-  ).length;
 }
 
 /**
