@@ -1,7 +1,5 @@
-import { useId } from "react";
 import { useQuery } from "@apollo/client/react";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -20,56 +18,44 @@ import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { StatisticsSection } from "./statistics-section";
 
 /**
  * Loading state component for postings per account query
  */
 function PostingsPerAccountLoadingState() {
   const { t } = useTranslations();
-  const headingId = useId();
   return (
-    <div>
-      <h3
-        id={headingId}
-        className="flex items-center gap-2 text-lg font-semibold mb-2"
-      >
-        <Database className="h-5 w-5" />
-        {t("page.statistics.postingsPerAccount", {
-          account: t("component.searchControls.account"),
-        })}
-      </h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        {t("page.statistics.loadingQueryResults")}
-      </p>
-      <div className="overflow-hidden w-full">
-        <div className="overflow-x-auto">
-          <Table aria-labelledby={headingId}>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
-                  {t("component.searchControls.account")}
-                </TableHead>
-                <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
-                  {t("page.statistics.count")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: 8 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-3 sm:h-4 w-32 sm:w-48" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-3 sm:h-4 w-12 sm:w-16 ml-auto" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    </div>
+    <StatisticsSection
+      icon={Database}
+      title={t("page.statistics.postingsPerAccount", {
+        account: t("component.searchControls.account"),
+      })}
+      description={t("page.statistics.loadingQueryResults")}
+    >
+      <TableHeader>
+        <TableRow className="bg-muted/50">
+          <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+            {t("component.searchControls.account")}
+          </TableHead>
+          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+            {t("page.statistics.count")}
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <TableRow key={i}>
+            <TableCell>
+              <Skeleton className="h-3 sm:h-4 w-32 sm:w-48" />
+            </TableCell>
+            <TableCell>
+              <Skeleton className="h-3 sm:h-4 w-12 sm:w-16 ml-auto" />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </StatisticsSection>
   );
 }
 
@@ -109,7 +95,6 @@ function PostingsPerAccountTable({
   data: GetLedgerPostingsPerAccountQuery;
 }) {
   const { t } = useTranslations();
-  const headingId = useId();
   const formatNum = useFormatNumber();
   const rows = data.getLedgerPostingsPerAccount;
   const { ledgerOwner, ledgerName } = useParams({
@@ -139,59 +124,52 @@ function PostingsPerAccountTable({
   }
 
   return (
-    <div>
-      <h3
-        id={headingId}
-        className="flex items-center gap-2 text-lg font-semibold mb-2"
-      >
-        <Database className="h-5 w-5" />
-        {t("page.statistics.postingsPerAccount", {
-          account: t("component.searchControls.account"),
-        })}
-      </h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        {t("page.statistics.entryCountPerAccount")} ({totalRows}{" "}
-        {t("journal.accounts")})
-      </p>
-      <div className="overflow-hidden w-full">
-        <div className="overflow-x-auto">
-          <Table aria-labelledby={headingId}>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
-                  {t("component.searchControls.account")}
-                </TableHead>
-                <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
-                  {t("page.statistics.count")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow key={row.account}>
-                  <TableCell className="font-medium font-mono text-xs sm:text-sm break-all max-w-[200px] sm:max-w-none px-2 sm:px-3 py-1.5 sm:py-2">
-                    <Link
-                      to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
-                      params={{
-                        ledgerOwner,
-                        ledgerName,
-                        accountName: row.account,
-                      }}
-                      className="text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
-                    >
-                      {row.account}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
-                    {formatNum(row.count)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    </div>
+    <StatisticsSection
+      icon={Database}
+      title={t("page.statistics.postingsPerAccount", {
+        account: t("component.searchControls.account"),
+      })}
+      description={
+        <>
+          {" "}
+          {t("page.statistics.entryCountPerAccount")} ({totalRows}{" "}
+          {t("journal.accounts")})
+        </>
+      }
+    >
+      <TableHeader>
+        <TableRow className="bg-muted/50">
+          <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+            {t("component.searchControls.account")}
+          </TableHead>
+          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+            {t("page.statistics.count")}
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row.account}>
+            <TableCell className="font-medium font-mono text-xs sm:text-sm break-all max-w-[200px] sm:max-w-none px-2 sm:px-3 py-1.5 sm:py-2">
+              <Link
+                to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+                params={{
+                  ledgerOwner,
+                  ledgerName,
+                  accountName: row.account,
+                }}
+                className="text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+              >
+                {row.account}
+              </Link>
+            </TableCell>
+            <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
+              {formatNum(row.count)}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </StatisticsSection>
   );
 }
 

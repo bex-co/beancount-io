@@ -1,7 +1,5 @@
-import { useId } from "react";
 import { useQuery } from "@apollo/client/react";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -19,60 +17,48 @@ import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { StatisticsSection } from "./statistics-section";
 
 /**
  * Loading state component for entries count table
  */
 function EntriesCountLoadingState() {
   const { t } = useTranslations();
-  const headingId = useId();
   return (
-    <div>
-      <h3
-        id={headingId}
-        className="flex items-center gap-2 text-lg font-semibold mb-2"
-      >
-        <BarChart3 className="h-5 w-5" />
-        {t("page.statistics.entriesCountByType")}
-      </h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        {t("page.statistics.loadingEntryStatistics")}
-      </p>
-      <div className="overflow-hidden w-full">
-        <div className="overflow-x-auto">
-          <Table aria-labelledby={headingId}>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
-                  {t("page.statistics.entryType")}
-                </TableHead>
-                <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
-                  {t("page.statistics.count")}
-                </TableHead>
-                <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
-                  {t("page.statistics.percentage")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-3 sm:h-4 w-24 sm:w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-3 sm:h-4 w-12 sm:w-16 ml-auto" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-3 sm:h-4 w-10 sm:w-12 ml-auto" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    </div>
+    <StatisticsSection
+      icon={BarChart3}
+      title={t("page.statistics.entriesCountByType")}
+      description={t("page.statistics.loadingEntryStatistics")}
+    >
+      <TableHeader>
+        <TableRow className="bg-muted/50">
+          <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+            {t("page.statistics.entryType")}
+          </TableHead>
+          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+            {t("page.statistics.count")}
+          </TableHead>
+          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+            {t("page.statistics.percentage")}
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <TableRow key={i}>
+            <TableCell>
+              <Skeleton className="h-3 sm:h-4 w-24 sm:w-32" />
+            </TableCell>
+            <TableCell>
+              <Skeleton className="h-3 sm:h-4 w-12 sm:w-16 ml-auto" />
+            </TableCell>
+            <TableCell>
+              <Skeleton className="h-3 sm:h-4 w-10 sm:w-12 ml-auto" />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </StatisticsSection>
   );
 }
 
@@ -112,78 +98,68 @@ function EntriesCountTable({
   data: GetLedgerEntriesCountPerTypeQuery;
 }) {
   const { t } = useTranslations();
-  const headingId = useId();
   const formatNum = useFormatNumber();
   const entries = data.getLedgerEntriesCountPerType;
   const totalCount = entries.reduce((sum, entry) => sum + entry.number, 0);
 
   return (
-    <div>
-      <h3
-        id={headingId}
-        className="flex items-center gap-2 text-lg font-semibold mb-2"
-      >
-        <BarChart3 className="h-5 w-5" />
-        {t("page.statistics.entriesCountByType")}
-      </h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        {t("page.statistics.total")} {formatNum(totalCount)}{" "}
-        {t("page.statistics.entriesAcrossTypes")} {entries.length}{" "}
-        {t("page.statistics.types")}
-      </p>
-      <div className="overflow-hidden w-full">
-        <div className="overflow-x-auto">
-          <Table aria-labelledby={headingId}>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
-                  {t("page.statistics.entryType")}
-                </TableHead>
-                <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
-                  {t("page.statistics.count")}
-                </TableHead>
-                <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
-                  {t("page.statistics.percentage")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entries.map((entry) => {
-                // An all-zero period (the ledger service zero-fills every
-                // directive type) would divide by zero and render "NaN%".
-                const percentage =
-                  totalCount === 0
-                    ? null
-                    : ((entry.number / totalCount) * 100).toFixed(1);
-                return (
-                  <TableRow key={entry.type}>
-                    <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">
-                      {entry.type}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
-                      {formatNum(entry.number)}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
-                      {percentage === null ? (
-                        <span
-                          aria-label={t(
-                            "page.statistics.percentageNotApplicable",
-                          )}
-                        >
-                          —
-                        </span>
-                      ) : (
-                        `${percentage}%`
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    </div>
+    <StatisticsSection
+      icon={BarChart3}
+      title={t("page.statistics.entriesCountByType")}
+      description={
+        <>
+          {" "}
+          {t("page.statistics.total")} {formatNum(totalCount)}{" "}
+          {t("page.statistics.entriesAcrossTypes")} {entries.length}{" "}
+          {t("page.statistics.types")}
+        </>
+      }
+    >
+      <TableHeader>
+        <TableRow className="bg-muted/50">
+          <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+            {t("page.statistics.entryType")}
+          </TableHead>
+          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+            {t("page.statistics.count")}
+          </TableHead>
+          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+            {t("page.statistics.percentage")}
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {entries.map((entry) => {
+          // An all-zero period (the ledger service zero-fills every
+          // directive type) would divide by zero and render "NaN%".
+          const percentage =
+            totalCount === 0
+              ? null
+              : ((entry.number / totalCount) * 100).toFixed(1);
+          return (
+            <TableRow key={entry.type}>
+              <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">
+                {entry.type}
+              </TableCell>
+              <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
+                {formatNum(entry.number)}
+              </TableCell>
+              <TableCell className="text-right text-muted-foreground text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
+                {percentage === null ? (
+                  <span
+                    aria-label={t("page.statistics.percentageNotApplicable")}
+                  >
+                    —
+                  </span>
+                ) : (
+                  `${percentage}%`
+                )}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </StatisticsSection>
   );
 }
 
