@@ -26,6 +26,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { normalizeListSearchOffset } from "@/common/lib/list-search-params";
 import { ACCOUNT_JOURNAL_MAX_OFFSET } from "./search";
+import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
 import { LineChart } from "@/features/reports/balance-sheet/line-chart";
 import {
@@ -43,6 +44,7 @@ import {
 } from "@/features/journal/components/journal-states";
 import {
   ReportEmptyState,
+  ReportLoadingIndicator,
   ReportErrorState,
 } from "@/common/components/state-components";
 import { EntryContextDialog } from "@/features/journal/components/entry-context-dialog";
@@ -408,6 +410,18 @@ export default function AccountPage() {
   const accountReportData =
     data?.getLedgerAccountReport || previousData?.getLedgerAccountReport;
 
+  // Retained data belongs to the conversion and interval that were selected
+  // when it arrived. Presenting it under a newly chosen basis relabels real
+  // figures — the same reason the other reports withhold it — so the charts
+  // read from the settled result only. The pending state is scoped to the
+  // chart cards so the selectors stay usable and the journal below keeps its
+  // own read, filters and page.
+  const settled = selectSettledReportData(
+    isLoading,
+    data?.getLedgerAccountReport,
+  );
+  const settledReport = settled.pending ? undefined : settled.data;
+
   if (isLoading && !accountReportData) {
     return (
       <PageLoadingState
@@ -445,7 +459,9 @@ export default function AccountPage() {
     );
   }
 
-  const chartsEmpty = isAccountReportEmpty(accountReportData);
+  const chartsEmpty = settledReport
+    ? isAccountReportEmpty(settledReport)
+    : false;
 
   return (
     <div className="space-y-4">
@@ -494,7 +510,9 @@ export default function AccountPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {chartsEmpty ? (
+              {settled.pending || !settledReport ? (
+                <ReportLoadingIndicator />
+              ) : chartsEmpty ? (
                 <ReportEmptyState
                   Icon={Activity}
                   title={t("component.emptyState.title")}
@@ -502,7 +520,7 @@ export default function AccountPage() {
                 />
               ) : (
                 <LineChart
-                  data={accountReportData.accountBalanceData}
+                  data={settledReport.accountBalanceData}
                   interval={timeInterval}
                   primarySeries={primaryCurrency}
                 />
@@ -522,7 +540,9 @@ export default function AccountPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {chartsEmpty ? (
+              {settled.pending || !settledReport ? (
+                <ReportLoadingIndicator />
+              ) : chartsEmpty ? (
                 <ReportEmptyState
                   Icon={Activity}
                   title={t("component.emptyState.title")}
@@ -530,7 +550,7 @@ export default function AccountPage() {
                 />
               ) : (
                 <DateBalanceChart
-                  data={accountReportData.intervalTotalsData}
+                  data={settledReport.intervalTotalsData}
                   interval={timeInterval}
                   primarySeries={primaryCurrency}
                 />
