@@ -274,7 +274,10 @@ export function QueryResultCard({
             "group-open:rotate-90",
           )}
         />
-        <div className="flex-1 text-left">
+        {/* `min-w-0` lets this flex item shrink below the SQL's intrinsic
+            width, so a long account name wraps instead of pushing the export
+            and delete actions outside the card's hidden overflow. */}
+        <div className="min-w-0 flex-1 text-left">
           <pre className="text-sm font-mono whitespace-pre-wrap break-words">
             {query}
           </pre>
