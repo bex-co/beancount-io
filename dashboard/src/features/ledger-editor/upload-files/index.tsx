@@ -25,6 +25,8 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { toast } from "sonner";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
+import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
+import { WriteAccessRequired } from "@/features/ledger-editor/shared/components/write-access-required";
 
 // Maximum file size allowed (1MB)
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB in bytes
@@ -45,6 +47,8 @@ const UploadFilesPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslations();
   const { ledgerName: ledgerDisplayName } = useLedger();
+  // False for anonymous readers and while permissions are unresolved.
+  const { canWrite } = useLedgerPermission();
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [commitMessage, setCommitMessage] = useState("");
@@ -57,8 +61,10 @@ const UploadFilesPage = () => {
     CreateLedgerFileMutationVariables
   >(CreateLedgerFileDocument);
 
-  // Upload button should be disabled if no files selected or currently uploading
-  const isUploadDisabled = selectedFiles.length === 0 || isUploading;
+  // Upload button should be disabled if no files selected, currently
+  // uploading, or if this reader cannot write to the ledger at all.
+  const isUploadDisabled =
+    !canWrite || selectedFiles.length === 0 || isUploading;
 
   /**
    * Handle cancel button click - navigate back to files view
@@ -96,7 +102,9 @@ const UploadFilesPage = () => {
    * Handle file upload - create files one by one
    */
   const handleUpload = async () => {
-    if (isUploadDisabled) return;
+    // Fail closed: a permission change while files are staged must stop the
+    // write here too, without discarding the selection.
+    if (!canWrite || isUploadDisabled) return;
 
     setIsUploading(true);
     const message =
@@ -204,6 +212,27 @@ const UploadFilesPage = () => {
       fileInputRef.current.value = "";
     }
   };
+
+  // A reader who cannot write never gets the picker. Someone who loses access
+  // with files staged keeps the selection — the guards above stop the write.
+  if (!canWrite && selectedFiles.length === 0) {
+    return (
+      <div className="h-full flex flex-col space-y-4">
+        <LedgerPageSEO seoKey="ledgerFilesUpload" noIndex />
+        <PageHeader
+          title={t("ledgerEditor.uploadFiles")}
+          description={t("common.pageDescription.uploadFiles", {
+            ledgerName: ledgerDisplayName ?? ledgerName,
+          })}
+        />
+        <WriteAccessRequired
+          ledgerOwner={ledgerOwner}
+          ledgerName={ledgerName}
+          dirPath={dirPath}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col space-y-4">

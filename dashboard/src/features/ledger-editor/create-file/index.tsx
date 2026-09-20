@@ -30,6 +30,8 @@ import { toast } from "sonner";
 import { getFileLanguage } from "@/features/ledger-editor/shared/lib/utils";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
+import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
+import { WriteAccessRequired } from "@/features/ledger-editor/shared/components/write-access-required";
 import { createFileNameIssue } from "./validate-create-file-name";
 
 /**
@@ -50,6 +52,8 @@ const CreateFilePage = () => {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const { ledgerName: ledgerDisplayName } = useLedger();
+  // False for anonymous readers and while permissions are unresolved.
+  const { canWrite } = useLedgerPermission();
 
   const [filename, setFilename] = useState("");
   const [content, setContent] = useState("");
@@ -85,8 +89,9 @@ const CreateFilePage = () => {
         ? t("ledgerEditor.fileAlreadyExists")
         : null;
 
-  // Save button should be disabled if filename is empty/invalid or saving
-  const isSaveDisabled = nameIssue !== null || isSaving;
+  // Save button should be disabled if filename is empty/invalid or saving,
+  // or if this reader cannot write to the ledger at all.
+  const isSaveDisabled = !canWrite || nameIssue !== null || isSaving;
 
   const hasDraft = filename.trim() !== "" || content.trim() !== "";
 
@@ -125,7 +130,9 @@ const CreateFilePage = () => {
    * Handle save button click - create new file
    */
   const handleSave = async () => {
-    if (isSaveDisabled) return;
+    // Fail closed: the button is already disabled, but a permission change
+    // mid-draft must stop the write here too, without discarding the draft.
+    if (!canWrite || isSaveDisabled) return;
 
     setIsSaving(true);
     try {
@@ -158,6 +165,27 @@ const CreateFilePage = () => {
       setIsSaving(false);
     }
   };
+
+  // A reader who cannot write never gets the form. Someone who loses access
+  // while drafting keeps what they typed — the guards above stop the write.
+  if (!canWrite && !hasDraft) {
+    return (
+      <div className="h-full flex flex-col space-y-4">
+        <LedgerPageSEO seoKey="ledgerFilesCreate" noIndex />
+        <PageHeader
+          title={t("ledgerEditor.createFile")}
+          description={t("common.pageDescription.createFile", {
+            ledgerName: ledgerDisplayName ?? ledgerName,
+          })}
+        />
+        <WriteAccessRequired
+          ledgerOwner={ledgerOwner}
+          ledgerName={ledgerName}
+          dirPath={dirPath}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col space-y-4">

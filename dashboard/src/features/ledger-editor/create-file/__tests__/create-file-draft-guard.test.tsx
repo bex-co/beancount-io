@@ -47,6 +47,15 @@ vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({ ledgerName: "books" }),
 }));
 
+// Drafting is writer-only behaviour; this suite is about the draft guard.
+vi.mock("@/common/hooks/use-ledger-permission", () => ({
+  useLedgerPermission: () => ({
+    canWrite: true,
+    canRead: true,
+    isAdmin: false,
+  }),
+}));
+
 vi.mock("@/common/components/monaco-editor", () => ({
   MonacoEditor: ({
     value,
