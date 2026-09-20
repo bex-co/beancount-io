@@ -16,10 +16,6 @@ const bgEvents: Record<string, TranslationEntry> = {
     message: "Събития: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "Неуспешно зареждане на събитията",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "Няма намерени събития",
     description: "Empty state title when no events exist",

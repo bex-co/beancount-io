@@ -16,10 +16,6 @@ const caEvents: Record<string, TranslationEntry> = {
     message: "Esdeveniments: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "No s'han pogut carregar els esdeveniments",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "No Events Found",
     description: "Empty state title when no events exist",

@@ -32,10 +32,6 @@ const ptAccountReport: Record<string, TranslationEntry> = {
     message: "Visualize mudanças na conta ao longo do tempo",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "Erro ao carregar dados da conta",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "Erro ao carregar dados do diário",
     description: "Error message for account journal data",

@@ -32,10 +32,6 @@ const bgAccountReport: Record<string, TranslationEntry> = {
     message: "Преглед на промените в сметката във времето",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "Грешка при зареждане на данните за сметката",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "Грешка при зареждане на данните от журнала",
     description: "Error message for account journal data",

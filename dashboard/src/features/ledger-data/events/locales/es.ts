@@ -16,10 +16,6 @@ const esEvents: Record<string, TranslationEntry> = {
     message: "Eventos: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "Error al Cargar Eventos",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "No se Encontraron Eventos",
     description: "Empty state title when no events exist",

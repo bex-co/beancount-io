@@ -16,10 +16,6 @@ const jaEvents: Record<string, TranslationEntry> = {
     message: "イベント: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "イベントの読み込みに失敗しました",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "イベントが見つかりません",
     description: "Empty state title when no events exist",

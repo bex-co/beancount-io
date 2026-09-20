@@ -32,10 +32,6 @@ const koAccountReport: Record<string, TranslationEntry> = {
     message: "시간에 따른 계정 변화 보기",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "계정 데이터 불러오기 오류",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "분개 데이터 불러오기 오류",
     description: "Error message for account journal data",

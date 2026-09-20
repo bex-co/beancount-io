@@ -145,7 +145,6 @@ export default function LedgerEventsPage() {
             </div>
           </div>
         }
-        errorMessage={t("page.events.failedToLoadEvents")}
         isEmpty={(e) => e.length === 0}
         emptySlot={
           <EmptyState

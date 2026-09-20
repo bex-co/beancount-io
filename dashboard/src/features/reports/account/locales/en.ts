@@ -32,10 +32,6 @@ const enAccountReport: Record<string, TranslationEntry> = {
     message: "View account changes over time",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "Error loading account data",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "Error loading journal data",
     description: "Error message for account journal data",

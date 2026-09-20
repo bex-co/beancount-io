@@ -16,10 +16,6 @@ const ptEvents: Record<string, TranslationEntry> = {
     message: "Eventos: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "Falha ao Carregar Eventos",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "Nenhum Evento Encontrado",
     description: "Empty state title when no events exist",

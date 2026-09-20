@@ -16,10 +16,6 @@ const deEvents: Record<string, TranslationEntry> = {
     message: "Ereignisse: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "Ereignisse konnten nicht geladen werden",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "Keine Ereignisse gefunden",
     description: "Empty state title when no events exist",

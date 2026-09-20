@@ -32,10 +32,6 @@ const skAccountReport: Record<string, TranslationEntry> = {
     message: "Zobraziť zmeny na účte v čase",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "Chyba pri načítaní údajov účtu",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "Chyba pri načítaní dát denníka",
     description: "Error message for account journal data",

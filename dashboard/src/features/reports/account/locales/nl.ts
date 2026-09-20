@@ -32,10 +32,6 @@ const nlAccountReport: Record<string, TranslationEntry> = {
     message: "Bekijk rekeningwijzigingen over tijd",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "Fout bij laden rekeninggegevens",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "Fout bij laden journaalgegevens",
     description: "Error message for account journal data",

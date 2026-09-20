@@ -32,10 +32,6 @@ const jaAccountReport: Record<string, TranslationEntry> = {
     message: "時系列での口座の変化を表示",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "口座データの読み込みエラー",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "仕訳データの読み込みエラー",
     description: "Error message for account journal data",

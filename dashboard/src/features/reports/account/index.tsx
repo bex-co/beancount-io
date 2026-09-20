@@ -51,6 +51,7 @@ import {
 import { EntryContextDialog } from "@/features/journal/components/entry-context-dialog";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { createLedgerId } from "@/common/lib/utils/encode";
+import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { accountQueryDefaults } from "./constants";
 import { getAccountJournalWithChildren } from "@/common/lib/fava-options";
@@ -368,6 +369,7 @@ export function AccountJournalTable({
  */
 export default function AccountPage() {
   const { t } = useTranslations();
+  const formatError = useErrorMessage();
   const { ledgerOwner, ledgerName, accountName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
   });
@@ -438,7 +440,11 @@ export default function AccountPage() {
     return (
       <PageErrorState
         title={t("page.accountReport.title")}
-        subtitle={t("page.accountReport.errorLoading")}
+        // A fixed "error loading" subtitle hid the reason. The shared mapper
+        // turns a classified failure — an unparseable date in the Time filter,
+        // say — into localized correction guidance, and still falls back to a
+        // safe generic message for unknown or transport failures.
+        subtitle={formatError(error)}
       />
     );
   }

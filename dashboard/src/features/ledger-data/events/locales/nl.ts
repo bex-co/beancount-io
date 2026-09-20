@@ -16,10 +16,6 @@ const nlEvents: Record<string, TranslationEntry> = {
     message: "Gebeurtenissen: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "Gebeurtenissen laden mislukt",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "Geen gebeurtenissen gevonden",
     description: "Empty state title when no events exist",

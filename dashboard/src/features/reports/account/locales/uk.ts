@@ -32,10 +32,6 @@ const ukAccountReport: Record<string, TranslationEntry> = {
     message: "Перегляд змін рахунку з часом",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "Помилка loading account data",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "Помилка loading journal data",
     description: "Error message for account journal data",

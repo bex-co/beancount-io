@@ -16,10 +16,6 @@ const ruEvents: Record<string, TranslationEntry> = {
     message: "События: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "Не удалось загрузить события",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "События не найдены",
     description: "Empty state title when no events exist",

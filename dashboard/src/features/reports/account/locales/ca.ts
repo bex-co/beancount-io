@@ -33,11 +33,6 @@ const caAccountReport: Record<string, TranslationEntry> = {
     message: "Canvis al llarg del temps",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message:
-      "Representació visual de la composició del {ledgerName} patrimoni net",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "Error en carregar les dades",
     description: "Error message for account journal data",

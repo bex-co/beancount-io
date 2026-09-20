@@ -16,10 +16,6 @@ const koEvents: Record<string, TranslationEntry> = {
     message: "이벤트: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "이벤트 불러오기 실패",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "이벤트가 없습니다",
     description: "Empty state title when no events exist",

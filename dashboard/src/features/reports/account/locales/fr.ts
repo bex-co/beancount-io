@@ -32,10 +32,6 @@ const frAccountReport: Record<string, TranslationEntry> = {
     message: "Voir les variations du compte dans le temps",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "Erreur lors du chargement des données du compte",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "Erreur lors du chargement des données du journal",
     description: "Error message for account journal data",

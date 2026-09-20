@@ -16,10 +16,6 @@ const ukEvents: Record<string, TranslationEntry> = {
     message: "Події: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "Не вдалося завантажити події",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "Подій не знайдено",
     description: "Empty state title when no events exist",

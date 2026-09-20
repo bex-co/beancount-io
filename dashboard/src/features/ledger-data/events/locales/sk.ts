@@ -16,10 +16,6 @@ const skEvents: Record<string, TranslationEntry> = {
     message: "Udalosti: {filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "Nepodarilo sa načítať udalosti",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "Nenašli sa žiadne udalosti",
     description: "Empty state title when no events exist",

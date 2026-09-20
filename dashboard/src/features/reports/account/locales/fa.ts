@@ -32,10 +32,6 @@ const faAccountReport: Record<string, TranslationEntry> = {
     message: "مشاهده تغییرات حساب در طول زمان",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "خطا در بارگذاری داده‌های حساب",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "خطا در بارگذاری داده‌های دفتر روزنامه",
     description: "Error message for account journal data",

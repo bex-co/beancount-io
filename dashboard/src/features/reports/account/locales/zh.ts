@@ -32,10 +32,6 @@ const zhAccountReport: Record<string, TranslationEntry> = {
     message: "查看账户随时间的变化",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "加载账户数据时出错",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "加载日记账数据时出错",
     description: "Error message for account journal data",

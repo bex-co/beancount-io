@@ -16,10 +16,6 @@ const zhEvents: Record<string, TranslationEntry> = {
     message: "事件：{filtered} / {total}",
     description: "Count of filtered events out of total",
   },
-  "page.events.failedToLoadEvents": {
-    message: "加载事件失败",
-    description: "Error title when events fail to load",
-  },
   "page.events.noEventsFound": {
     message: "未找到事件",
     description: "Empty state title when no events exist",

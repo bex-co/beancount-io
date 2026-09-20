@@ -32,10 +32,6 @@ const deAccountReport: Record<string, TranslationEntry> = {
     message: "Kontoänderungen im Zeitverlauf anzeigen",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "Fehler beim Laden der Kontodaten",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "Fehler beim Laden der Journaldaten",
     description: "Error message for account journal data",

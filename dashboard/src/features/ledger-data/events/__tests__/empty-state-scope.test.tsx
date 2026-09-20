@@ -87,9 +87,8 @@ describe("Events empty state scope", () => {
     expect(
       screen.queryByText("page.events.noEventsFoundForLedger"),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByText("page.events.failedToLoadEvents"),
-    ).toBeInTheDocument();
+    // The read error is now classified rather than a fixed page message.
+    expect(screen.getByText("common.errors.generic")).toBeInTheDocument();
   });
 
   it("lists the records and shows no empty state when events exist", () => {

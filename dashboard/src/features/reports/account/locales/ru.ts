@@ -32,10 +32,6 @@ const ruAccountReport: Record<string, TranslationEntry> = {
     message: "Просмотр изменений счёта со временем",
     description: "Description for changes over time chart",
   },
-  "page.accountReport.errorLoading": {
-    message: "Ошибка загрузки данных счёта",
-    description: "Error message for account data",
-  },
   "page.accountReport.errorLoadingJournal": {
     message: "Ошибка загрузки данных журнала",
     description: "Error message for account journal data",
