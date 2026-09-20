@@ -9,6 +9,37 @@ import type { DataSeries } from "../../lib/overview-utils";
 // object instead.
 const capturedOptions: EChartsOption[] = [];
 
+const routerSearch = vi.hoisted(() => ({
+  current: {} as Record<string, unknown>,
+  listeners: new Set<() => void>(),
+}));
+
+// Chart-or-table lives in the URL, so the router mock holds it the way the URL
+// does: the card no longer owns this as component state.
+vi.mock("@tanstack/react-router", async () => {
+  const { useSyncExternalStore } = await import("react");
+  return {
+    // The selected view lives in the URL now, so the router mock has to hold
+    // it the way the URL does — and notify readers, so a selection re-renders
+    // the page exactly as a real navigation would.
+    useSearch: () =>
+      useSyncExternalStore(
+        (onChange: () => void) => {
+          routerSearch.listeners.add(onChange);
+          return () => routerSearch.listeners.delete(onChange);
+        },
+        () => routerSearch.current,
+      ),
+    useNavigate: () => (options: { search?: (previous: object) => object }) => {
+      routerSearch.current = {
+        ...routerSearch.current,
+        ...(options.search?.(routerSearch.current) ?? {}),
+      };
+      routerSearch.listeners.forEach((listener) => listener());
+    },
+  };
+});
+
 vi.mock("@/common/components/react-echarts", () => ({
   ReactECharts: ({ option }: { option: EChartsOption }) => {
     capturedOptions.push(option);
@@ -49,6 +80,8 @@ function axisLabelFormatter(option: EChartsOption): (value: string) => string {
 }
 
 beforeEach(() => {
+  routerSearch.current = {};
+  routerSearch.listeners.clear();
   capturedOptions.length = 0;
   language = "en";
 });

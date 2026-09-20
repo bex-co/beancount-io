@@ -99,21 +99,24 @@ const trialBalanceData = {
  * The page owns the chart selection so it survives a pending read; this harness
  * owns it too, so the narrow view picker behaves as it does in production.
  */
+type TrialBalanceData = React.ComponentProps<
+  typeof TrialBalanceContent
+>["trialBalanceData"];
+
 function Harness({
   onConversionChange,
+  data = trialBalanceData as unknown as TrialBalanceData,
 }: {
   onConversionChange: (value: "at_cost" | "units" | "at_value") => void;
+  /** Override the fixture for a case that needs its own hierarchy. */
+  data?: TrialBalanceData;
 }) {
   const [selectedTab, setSelectedTab] = useState("assets");
   return (
     <TrialBalanceContent
       selectedTab={selectedTab}
       onSelectedTabChange={setSelectedTab}
-      trialBalanceData={
-        trialBalanceData as unknown as React.ComponentProps<
-          typeof TrialBalanceContent
-        >["trialBalanceData"]
-      }
+      trialBalanceData={data}
       primaryCurrency="USD"
       ledgerDisplayName="Demo Books"
       ledgerOwner="demo"
@@ -139,8 +142,9 @@ describe("TrialBalanceContent", () => {
   it("passes a reconciliation summary row to the hierarchy table", () => {
     hierarchyListMock.mockClear();
     render(
-      <TrialBalanceContent
-        trialBalanceData={
+      <Harness
+        onConversionChange={vi.fn()}
+        data={
           {
             assetsHierarchyData: hierarchyNode("Assets", { USD: "100" }),
             expensesHierarchyData: hierarchyNode("Expenses", { USD: "100" }),
@@ -149,24 +153,8 @@ describe("TrialBalanceContent", () => {
               USD: "-50",
             }),
             incomeHierarchyData: hierarchyNode("Income", { USD: "-100" }),
-          } as unknown as React.ComponentProps<
-            typeof TrialBalanceContent
-          >["trialBalanceData"]
+          } as unknown as TrialBalanceData
         }
-        primaryCurrency="USD"
-        ledgerDisplayName="Demo Books"
-        ledgerOwner="demo"
-        ledgerNameParam="books"
-        conversion="at_cost"
-        onConversionChange={vi.fn()}
-        selectedTab="assets"
-        onSelectedTabChange={vi.fn()}
-        invertIncomeLiabilitiesEquity={false}
-        showZeroBalance
-        showZeroTransactions
-        showClosedAccounts={false}
-        closedAccountNames={new Set<string>()}
-        collapsePatterns={[]}
       />,
     );
 

@@ -8,9 +8,35 @@ const { captureProps } = vi.hoisted(() => ({ captureProps: vi.fn() }));
 
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
 
-vi.mock("@tanstack/react-router", () => ({
-  useParams: () => ({ ledgerOwner: "demo", ledgerName: "books" }),
+const routerSearch = vi.hoisted(() => ({
+  current: {} as Record<string, unknown>,
+  listeners: new Set<() => void>(),
 }));
+
+vi.mock("@tanstack/react-router", async () => {
+  const { useSyncExternalStore } = await import("react");
+  return {
+    useParams: () => ({ ledgerOwner: "demo", ledgerName: "books" }),
+    // The selected view lives in the URL now, so the router mock has to hold
+    // it the way the URL does — and notify readers, so a selection re-renders
+    // the page exactly as a real navigation would.
+    useSearch: () =>
+      useSyncExternalStore(
+        (onChange: () => void) => {
+          routerSearch.listeners.add(onChange);
+          return () => routerSearch.listeners.delete(onChange);
+        },
+        () => routerSearch.current,
+      ),
+    useNavigate: () => (options: { search?: (previous: object) => object }) => {
+      routerSearch.current = {
+        ...routerSearch.current,
+        ...(options.search?.(routerSearch.current) ?? {}),
+      };
+      routerSearch.listeners.forEach((listener) => listener());
+    },
+  };
+});
 
 vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({
@@ -32,6 +58,11 @@ vi.mock("../income-statement-content", () => ({
     return <div>income-statement-content</div>;
   },
 }));
+
+beforeEach(() => {
+  routerSearch.current = {};
+  routerSearch.listeners.clear();
+});
 
 describe("LedgerIncomeStatementPage", () => {
   it("shows the actionable message for an invalid-input error", () => {

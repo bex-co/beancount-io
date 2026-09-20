@@ -9,9 +9,35 @@ const { captureProps } = vi.hoisted(() => ({ captureProps: vi.fn() }));
 
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
 
-vi.mock("@tanstack/react-router", () => ({
-  useParams: () => ({ ledgerOwner: "demo", ledgerName: "books" }),
+const routerSearch = vi.hoisted(() => ({
+  current: {} as Record<string, unknown>,
+  listeners: new Set<() => void>(),
 }));
+
+vi.mock("@tanstack/react-router", async () => {
+  const { useSyncExternalStore } = await import("react");
+  return {
+    useParams: () => ({ ledgerOwner: "demo", ledgerName: "books" }),
+    // The selected view lives in the URL now, so the router mock has to hold
+    // it the way the URL does — and notify readers, so a selection re-renders
+    // the page exactly as a real navigation would.
+    useSearch: () =>
+      useSyncExternalStore(
+        (onChange: () => void) => {
+          routerSearch.listeners.add(onChange);
+          return () => routerSearch.listeners.delete(onChange);
+        },
+        () => routerSearch.current,
+      ),
+    useNavigate: () => (options: { search?: (previous: object) => object }) => {
+      routerSearch.current = {
+        ...routerSearch.current,
+        ...(options.search?.(routerSearch.current) ?? {}),
+      };
+      routerSearch.listeners.forEach((listener) => listener());
+    },
+  };
+});
 
 vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({
@@ -135,6 +161,11 @@ const populatedPayload = {
     },
   ],
 };
+
+beforeEach(() => {
+  routerSearch.current = {};
+  routerSearch.listeners.clear();
+});
 
 describe("LedgerCashFlowPage", () => {
   it("renders the empty state when the statement has no rows and no cash", () => {
@@ -296,6 +327,39 @@ describe("LedgerCashFlowPage chart selection lifetime", () => {
     // selectSettledReportData classifies as pending.
     return { data: undefined, loading: true, error: undefined };
   }
+
+  it("keeps the reader's chart selected when the layout unmounts the page", () => {
+    // The ledger layout replaces its whole Outlet while the shared
+    // account/filter/time scope is changing, so the page itself is unmounted —
+    // a boundary outside w4/m16's reach. Unmounting and mounting again is what
+    // a scope edit does to this component.
+    settled();
+    const { unmount } = render(<LedgerCashFlowPage />);
+    act(() =>
+      captureProps.mock.calls.at(-1)![0].onSelectedTabChange("byActivity"),
+    );
+    expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("byActivity");
+
+    unmount();
+    render(<LedgerCashFlowPage />);
+
+    expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("byActivity");
+  });
+
+  it("starts from the default when no view is in the URL", () => {
+    settled();
+    render(<LedgerCashFlowPage />);
+
+    expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("netCashFlow");
+  });
+
+  it("falls back to the default for a view it does not recognise", () => {
+    routerSearch.current = { view: "<injected>" };
+    settled();
+    render(<LedgerCashFlowPage />);
+
+    expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("netCashFlow");
+  });
 
   it("keeps the reader's chart selected across an uncached interval read", () => {
     vi.mocked(useQuery).mockReturnValue(settled() as never);

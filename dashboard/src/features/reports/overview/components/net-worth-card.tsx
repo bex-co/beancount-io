@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { EChartsOption } from "echarts";
 import { AreaChart, Table2, TrendingDown, TrendingUp } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
@@ -23,6 +23,11 @@ import {
   prioritizeCurrency,
 } from "../lib/overview-utils";
 import { FormattedAmounts } from "./formatted-amounts";
+import { useUrlView } from "@/common/hooks/use-url-view";
+import {
+  NET_WORTH_VIEWS,
+  DEFAULT_NET_WORTH_VIEW,
+} from "@/features/reports/overview/search";
 
 /**
  * `language` is required: with an undefined locale `Intl.DateTimeFormat` falls
@@ -58,7 +63,14 @@ export function NetWorthCard({
   const { t, i18n } = useTranslations();
   const language = i18n.language;
   const formatNumber = useFormatNumber();
-  const [view, setView] = useState<"chart" | "table">("chart");
+  // Chart or table is view preference, not scoped to the data. The overview
+  // replaces its cards with a spinner on a shared scope change, so this is
+  // held in the URL rather than in state that the unmount would discard.
+  const [view, setView] = useUrlView(
+    "/ledger/$ledgerOwner/$ledgerName/",
+    NET_WORTH_VIEWS,
+    DEFAULT_NET_WORTH_VIEW,
+  );
   const visibleData = useMemo(() => data.slice(-12), [data]);
   const latest = visibleData.at(-1);
   const previous = visibleData.at(-2);

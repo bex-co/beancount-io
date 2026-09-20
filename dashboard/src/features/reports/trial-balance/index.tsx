@@ -1,7 +1,7 @@
 import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerTrialBalanceDocument } from "@/graphql/definitions";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { createLedgerId } from "@/common/lib/utils/encode";
@@ -21,6 +21,8 @@ import {
 import { TrialBalanceContent } from "./trial-balance-content";
 import { useReportConversion } from "@/features/reports/components/use-report-conversion";
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
+import { useUrlView } from "@/common/hooks/use-url-view";
+import { TRIAL_BALANCE_VIEWS, DEFAULT_VIEW } from "./search";
 
 /**
  * Trial Balance page component
@@ -44,7 +46,14 @@ export default function TrialBalancePage() {
     primaryCurrency,
   );
   // Owned here, not in the content: the pending branch below unmounts it.
-  const [selectedTab, setSelectedTab] = useState<string>("assets");
+  // The selected chart is view preference, not scoped to the data: it
+  // lives in the URL so editing the shared time/account/filter scope —
+  // which unmounts this page at the layout boundary — does not discard it.
+  const [selectedTab, setSelectedTab] = useUrlView(
+    "/ledger/$ledgerOwner/$ledgerName/trial-balance",
+    TRIAL_BALANCE_VIEWS,
+    DEFAULT_VIEW,
+  );
 
   const {
     data,
