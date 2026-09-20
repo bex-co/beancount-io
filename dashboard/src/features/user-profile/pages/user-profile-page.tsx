@@ -214,13 +214,13 @@ export default function UserProfilePage() {
                         <FollowButton
                           username={profile.username}
                           isFollowing={isFollowing}
-                          className="h-11 flex-1 px-5 md:flex-none"
+                          className="min-h-11 min-w-0 flex-1 px-5 whitespace-normal md:flex-none"
                         />
                       )}
                       <Button
                         variant="outline"
                         onClick={() => void copyProfileLink()}
-                        className="h-11 flex-1 px-4 md:flex-none"
+                        className="min-h-11 min-w-0 flex-1 px-4 whitespace-normal md:flex-none"
                       >
                         <LinkIcon aria-hidden="true" className="size-4" />
                         {t("userProfile.copyLink")}
