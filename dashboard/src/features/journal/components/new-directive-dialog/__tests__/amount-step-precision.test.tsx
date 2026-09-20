@@ -127,6 +127,16 @@ describe("directive amount precision", () => {
       target: { value: "Assets:Current:Cash" },
     });
     fireEvent.change(amounts[1]!, { target: { value: "-0.001" } });
+
+    // The form focuses Payee on a timer after mount. Let that land before
+    // taking focus, so it cannot fire afterwards and pull focus back out of
+    // the amount — which is what made this case flaky under full-suite load.
+    await waitFor(() => {
+      expect(
+        document.querySelector("[data-transaction-payee] input"),
+      ).toHaveFocus();
+    });
+
     await user.click(amounts[1]!);
 
     expect(amounts[1]).toHaveFocus();
