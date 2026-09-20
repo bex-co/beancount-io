@@ -38,6 +38,59 @@ describe("Chart Utils", () => {
       expect(formatYAxisNumber(0)).toBe("0.0");
     });
 
+    /**
+     * The abbreviated pattern keeps one mantissa digit, so every tick below
+     * one rendered as "0.0" — a 0.04 BTC axis read as six identical zeros.
+     */
+    it("keeps the reproduced BTC ticks distinct", () => {
+      const ticks = [0, 0.01, 0.02, 0.03, 0.04, 0.044].map(formatYAxisNumber);
+
+      expect(ticks).toEqual(["0.0", "0.01", "0.02", "0.03", "0.04", "0.044"]);
+      expect(new Set(ticks).size).toBe(ticks.length);
+    });
+
+    it("keeps the reproduced fractional USD ticks distinct", () => {
+      const ticks = [0.003, 0.006, 0.009, 0.012, 0.015, 0.018].map(
+        formatYAxisNumber,
+      );
+
+      expect(ticks).toEqual([
+        "0.003",
+        "0.006",
+        "0.009",
+        "0.012",
+        "0.015",
+        "0.018",
+      ]);
+      expect(ticks.every((tick) => tick !== "0.0")).toBe(true);
+    });
+
+    it("keeps a small negative fraction signed and nonzero", () => {
+      expect(formatYAxisNumber(-0.003)).toBe("-0.003");
+      expect(formatYAxisNumber(-0.04)).toBe("-0.04");
+    });
+
+    it("reads a fractional string the same way", () => {
+      expect(formatYAxisNumber("0.003")).toBe("0.003");
+      expect(formatYAxisNumber("0.01663")).toBe("0.017");
+    });
+
+    it("falls back to exponential only below a readable magnitude", () => {
+      expect(formatYAxisNumber(0.0001)).toBe("0.0001");
+      expect(formatYAxisNumber(0.00001)).toBe("1.0e-5");
+      expect(formatYAxisNumber(-0.00001)).toBe("-1.0e-5");
+    });
+
+    it("leaves the abbreviation boundaries alone", () => {
+      // Everything from one upward keeps the behaviour it had.
+      expect(formatYAxisNumber(1)).toBe("1.0");
+      expect(formatYAxisNumber(999)).toBe("1.0k");
+      expect(formatYAxisNumber(1000)).toBe("1.0k");
+      expect(formatYAxisNumber(999999)).toBe("1.0m");
+      expect(formatYAxisNumber(1000000000)).toBe("1.0b");
+      expect(formatYAxisNumber(0)).toBe("0.0");
+    });
+
     it("should handle string numbers", () => {
       expect(formatYAxisNumber("1000")).toBe("1.0k");
       expect(formatYAxisNumber("5000000")).toBe("5.0m");
