@@ -201,18 +201,25 @@ export const TextFileView = ({
       </div>
       <div className="flex flex-col flex-1 min-h-0">
         <div className="border overflow-hidden flex-1 flex flex-col">
-          <TextEditor
-            content={editedContent}
-            filename={filename}
-            setEditedContent={handleEditorContentChange}
-            lineNumber={normalizedLineNumber}
-            readOnly={!effectiveEditMode}
-            onSave={handleSaveClick}
-            onCancel={handleCancelEdit}
-            onEditorMount={handleEditorMount}
-            errors={errors}
-          />
-          <div className="border-t p-2">
+          {/* The editor gets whatever height the metadata bar does not need,
+              and can shrink (min-h-0) when the viewport does. Without this the
+              library's own 100%-height wrapper keeps the allocation it was
+              first given, so shrinking the viewport pushes the footer out of
+              this clipped box instead of resizing the editor. */}
+          <div className="min-h-0 flex-1">
+            <TextEditor
+              content={editedContent}
+              filename={filename}
+              setEditedContent={handleEditorContentChange}
+              lineNumber={normalizedLineNumber}
+              readOnly={!effectiveEditMode}
+              onSave={handleSaveClick}
+              onCancel={handleCancelEdit}
+              onEditorMount={handleEditorMount}
+              errors={errors}
+            />
+          </div>
+          <div className="shrink-0 border-t p-2">
             <FileMetadataBar fileContent={fileContent} />
           </div>
         </div>
