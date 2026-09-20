@@ -4,7 +4,7 @@ import { DirectiveType } from "@/common/types/journal";
 import en from "@/i18n/locales/en";
 import ru from "@/i18n/locales/ru";
 import uk from "@/i18n/locales/uk";
-import { LOCALE_SCRIPTS, strayEnglishWords } from "@/test/locale-scan";
+import { FLAG_KEYS } from "@/test/locale-scan";
 import { JournalFilters } from "../journal-filters";
 
 // The shared setup mocks this hook to English; this suite renders the real
@@ -22,45 +22,16 @@ vi.mock("@/common/hooks/use-translations", async () => {
 /**
  * w4/149 reported two Russian Journal surfaces still reading English:
  * the Balance column header and the payee placeholder.
+ *
+ * Scanning Russian for stranded English words now belongs to
+ * `src/test/locale-stray-english.test.ts`, which covers every locale and
+ * exempts no key under `journal.` or `page.accountReport.`. What stays here is
+ * what is specific to this surface: the exact values w4/149 named, the
+ * en-identity sweep, and the rendered filter controls.
  */
 const REPORTED = [
   ["journal.balance", "Баланс"],
   ["journal.payeePlaceholder", "Получатель"],
-] as const;
-
-/**
- * Auditing the catalog for the reported symptom surfaced a second, worse
- * shape: entries where a find/replace translated only the first word and left
- * the rest in English. These read as broken Russian rather than as English, so
- * a byte-identical-to-en sweep never finds them.
- */
-const HALF_TRANSLATED = [
-  ["journal.accountRequired", "Счёт is required"],
-  ["journal.clearedTransactions", "Очиститьed transactions"],
-  ["journal.entryContext", "Запись Context"],
-  ["journal.entryCreatedSuccess", "Запись created successfully"],
-  ["journal.exportJournal", "Экспорт Journal"],
-  ["journal.noteContent", "Заметка content"],
-  ["journal.noteContentRequired", "Заметка content is required"],
-  ["journal.otherTransactions", "Прочее transactions"],
-  ["page.accountReport.accountBalance", "Счёт Balance"],
-  ["page.accountReport.accountJournal", "Счёт Journal"],
-  ["page.accountReport.title", "Счёт Report"],
-  ["page.accountReport.changesOverTime", "Изменениеs Over Time"],
-] as const;
-
-/**
- * Flag columns render the literal Beancount character, never prose — the same
- * rule the Catalan audit established.
- */
-const FLAG_KEYS = [
-  "journal.cleared",
-  "journal.pending",
-  "journal.other",
-  "journal.linked",
-  "journal.budget",
-  "journal.discovered",
-  "journal.flagAbbrev",
 ] as const;
 
 function journalSurfaceKeys(messages: Record<string, string>) {
@@ -75,26 +46,6 @@ afterEach(cleanup);
 describe("Russian Journal surfaces read as Russian", () => {
   it.each(REPORTED)("%s reads as %s", (key, expected) => {
     expect(ru[key]).toBe(expected);
-  });
-
-  it.each(HALF_TRANSLATED)(
-    "%s no longer stops mid-sentence at %s",
-    (key, broken) => {
-      expect(ru[key]).not.toBe(broken);
-    },
-  );
-
-  it("leaves no English word stranded inside a Russian message", () => {
-    const offenders: string[] = [];
-    for (const key of journalSurfaceKeys(ru)) {
-      const value = ru[key];
-      // The shared predicate, which also catches a single stray letter that
-      // this suite's original regex missed (`Документs`, `Файлs`).
-      const stray = strayEnglishWords(value, LOCALE_SCRIPTS.ru);
-      if (stray.length)
-        offenders.push(`${key}: ${value} -> ${stray.join(", ")}`);
-    }
-    expect(offenders).toEqual([]);
   });
 
   it("translates every prose entry that English spells differently", () => {

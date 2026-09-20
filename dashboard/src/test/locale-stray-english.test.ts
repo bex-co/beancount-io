@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import * as locales from "@/i18n/locales";
 import {
-  ADJACENCY_IS_DAMAGE,
-  LOCALE_SCRIPTS,
-  hasGluedLatin,
+  SCANNED_LOCALES,
+  UNCLASSIFIED_LOCALES,
+  type ScannedLocale,
   strayEnglishWords,
 } from "./locale-scan";
 
@@ -23,15 +23,12 @@ const ALL = locales as unknown as Record<string, Record<string, string>>;
  * nothing is hidden in the allowlist, which is only for Latin that belongs in
  * a translated string.
  */
-const KNOWN_DEVIATIONS: ReadonlyArray<{
-  note: string;
-  locale: string;
-  keys: readonly string[];
-}> = [
-  {
-    // The remaining Russian catalogs, outside the two w4/149 repaired.
+const KNOWN_DEVIATIONS: Partial<
+  Record<ScannedLocale, { note: string; keys: readonly string[] }>
+> = {
+  // The remaining Russian catalogs, outside the two w4/149 repaired.
+  ru: {
     note: "w4/153",
-    locale: "ru",
     keys: [
       "common.balanceSheet",
       "common.incomeStatement",
@@ -65,20 +62,17 @@ const KNOWN_DEVIATIONS: ReadonlyArray<{
       "page.bql.queryResult",
     ],
   },
-  {
+  bg: {
     note: "w4/156",
-    locale: "bg",
     keys: ["seo.welcome.description", "page.overview.starButton.unstarSuccess"],
   },
-  { note: "w4/156", locale: "fa", keys: ["seo.welcome.description"] },
-  {
+  fa: { note: "w4/156", keys: ["seo.welcome.description"] },
+  ko: {
     note: "w4/156",
-    locale: "ko",
     keys: ["page.overview.starButton.starSuccess"],
   },
-  {
+  zh: {
     note: "w4/156",
-    locale: "zh",
     keys: [
       "page.accountReport.accountBalance",
       "page.accountReport.accountJournal",
@@ -91,26 +85,21 @@ const KNOWN_DEVIATIONS: ReadonlyArray<{
       "page.bql.noDataReturnedFromQuery",
     ],
   },
-];
+};
 
-function deviationsFor(locale: string): Set<string> {
-  return new Set(
-    KNOWN_DEVIATIONS.filter((d) => d.locale === locale).flatMap((d) => d.keys),
-  );
-}
+const isKnown = (locale: ScannedLocale, key: string) =>
+  KNOWN_DEVIATIONS[locale]?.keys.includes(key) ?? false;
 
-const SCANNED = Object.keys(LOCALE_SCRIPTS);
+const SCANNED = Object.keys(SCANNED_LOCALES) as ScannedLocale[];
 
 describe("no locale ships a half-translated message", () => {
   it.each(SCANNED)(
     "%s leaves no English word stranded in its own script",
     (locale) => {
-      const script = LOCALE_SCRIPTS[locale]!;
-      const known = deviationsFor(locale);
       const offenders: string[] = [];
       for (const [key, message] of Object.entries(ALL[locale] ?? {})) {
-        if (known.has(key)) continue;
-        const stray = strayEnglishWords(message, script);
+        if (isKnown(locale, key)) continue;
+        const stray = strayEnglishWords(message, locale);
         if (stray.length) {
           offenders.push(`${locale}/${key}: ${message} -> ${stray.join(", ")}`);
         }
@@ -119,48 +108,48 @@ describe("no locale ships a half-translated message", () => {
     },
   );
 
-  it.each(SCANNED.filter((l) => ADJACENCY_IS_DAMAGE.has(l)))(
-    "%s never glues Latin straight onto Cyrillic",
-    (locale) => {
-      // In a space-separated script this is always damage: `Документs` and
-      // `Файлs` are words in neither language. Japanese, Korean and Chinese
-      // are excluded because they write `Beancountについて` without a space.
-      const known = deviationsFor(locale);
-      const offenders = Object.entries(ALL[locale] ?? {})
-        .filter(([key, message]) => !known.has(key) && hasGluedLatin(message))
-        .map(([key, message]) => `${locale}/${key}: ${message}`);
-      expect(offenders).toEqual([]);
-    },
-  );
-
   it("keeps every known deviation real, so the list shrinks as they are fixed", () => {
     // A key listed here that is already clean would quietly excuse a future
     // regression on that key.
     const stale: string[] = [];
-    for (const { locale, keys, note } of KNOWN_DEVIATIONS) {
-      const script = LOCALE_SCRIPTS[locale]!;
+    for (const [locale, { note, keys }] of Object.entries(KNOWN_DEVIATIONS) as [
+      ScannedLocale,
+      { note: string; keys: readonly string[] },
+    ][]) {
       for (const key of keys) {
         const message = ALL[locale]?.[key];
         if (message === undefined) {
           stale.push(`${note} ${locale}/${key}: key no longer exists`);
           continue;
         }
-        const damaged =
-          strayEnglishWords(message, script).length > 0 ||
-          (ADJACENCY_IS_DAMAGE.has(locale) && hasGluedLatin(message));
+        const damaged = strayEnglishWords(message, locale).length > 0;
         if (!damaged) stale.push(`${note} ${locale}/${key}: already clean`);
       }
     }
     expect(stale).toEqual([]);
   });
 
-  it("names a tracking note for every deviation", () => {
-    for (const { note } of KNOWN_DEVIATIONS) {
-      expect(note).toMatch(/^w\d+\/(m\d+\/)?\d+$/);
-    }
+  it("classifies every supported language as scannable or Latin-script", () => {
+    // A new non-Latin locale added to SUPPORTED_LANGUAGES would otherwise go
+    // unscanned with nothing failing.
+    expect(UNCLASSIFIED_LOCALES).toEqual([]);
   });
 
-  it("scans Ukrainian, which w4/m24 repaired, with no deviations at all", () => {
-    expect(deviationsFor("uk").size).toBe(0);
+  it("withholds an allowlisted term's exemption when it is glued to the script", () => {
+    // The exemption exists for terms standing as their own word. `Банк` and
+    // `Bank` side by side is the defect, and stripping `Bank` first would hide
+    // it — the reason the rule is inside the predicate rather than a second
+    // pass over the same catalogs.
+    expect(strayEnglishWords("Банк Bank", "uk")).toEqual([]);
+    // The Latin run is what is reported; the Cyrillic prefix is what makes it
+    // damage rather than an exempt term.
+    expect(strayEnglishWords("БанкBank", "uk")).toEqual(["Bank"]);
+    // Japanese writes brand names against its script with no space, so there
+    // the exemption still holds.
+    expect(strayEnglishWords("Beancountについて", "ja")).toEqual([]);
+  });
+
+  it("carries no deviation for Ukrainian, which w4/m24 repaired", () => {
+    expect(KNOWN_DEVIATIONS.uk).toBeUndefined();
   });
 });

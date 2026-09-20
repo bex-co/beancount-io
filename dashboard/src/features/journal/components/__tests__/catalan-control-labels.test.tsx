@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DirectiveType } from "@/common/types/journal";
 import ca from "@/i18n/locales/ca";
 import en from "@/i18n/locales/en";
+import { FLAG_KEYS } from "@/test/locale-scan";
 import { JournalFilters } from "../journal-filters";
 
 // The shared setup mocks this hook to English; this suite renders the real
@@ -63,20 +64,6 @@ const MISASSIGNED = [
     "common.overview",
     "No s'han trobat dades del balanç de comprovació per a aquest llibre.",
   ],
-] as const;
-
-/**
- * Flag columns render the literal Beancount character, never prose. A sentence
- * here is the signature of the shift that produced this milestone.
- */
-const FLAG_KEYS = [
-  "journal.cleared",
-  "journal.pending",
-  "journal.other",
-  "journal.linked",
-  "journal.budget",
-  "journal.discovered",
-  "journal.flagAbbrev",
 ] as const;
 
 function renderFilters(
