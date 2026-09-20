@@ -268,6 +268,10 @@ export function Combobox({
 
         <PopoverContent
           className="p-0"
+          // Radix gives this popup role="dialog"; without a name assistive
+          // technology announces an unnamed dialog next to a named field. The
+          // field's own placeholder is the identity a reader already has.
+          aria-label={defaultPlaceholder}
           style={{
             width: popoverWidth ? `${popoverWidth}px` : undefined,
             // Never extend past the space Radix measured between the anchor and

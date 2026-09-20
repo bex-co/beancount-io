@@ -61,6 +61,8 @@ export function AccountCombobox({ children }: AccountComboboxProps) {
       <Popover open={open} onOpenChange={onOpenChange}>
         <PopoverTrigger asChild>{children}</PopoverTrigger>
         <PopoverContent
+          // Names the role="dialog" popup itself, not just the input inside it.
+          aria-label={t("component.accountCombobox.placeholder")}
           className={isMobile ? "w-[min(18rem,calc(100vw-1rem))] p-0" : "p-0"}
           side={isMobile ? "bottom" : "right"}
           align={isMobile ? "end" : "start"}
