@@ -272,18 +272,21 @@ function getFeatureDirectories(): string[] {
   // The shared catalogs are deliberately absent. See
   // `SHARED_LOCALE_DIRS` and `getReportedFeatures`.
 
-  // Scan features directory
-  if (fs.existsSync(FEATURES_DIR)) {
-    const entries = fs.readdirSync(FEATURES_DIR, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        const localesDir = path.join(FEATURES_DIR, entry.name, "locales");
-        if (fs.existsSync(localesDir)) {
-          features.push(entry.name);
-        }
+  // Scan the features directory. It nests: `git/commits/locales` and
+  // `ledger-data/statistics/locales` are as real as `journal/locales`, and a
+  // single-level scan left both invisible to this script.
+  const walk = (dir: string, prefix: string) => {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory() || entry.name === "locales") continue;
+      const name = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (fs.existsSync(path.join(dir, entry.name, "locales"))) {
+        features.push(name);
       }
+      walk(path.join(dir, entry.name), name);
     }
-  }
+  };
+  walk(FEATURES_DIR, "");
 
   return features.sort();
 }
@@ -406,17 +409,45 @@ function generateMessageFromKey(key: string): string {
  * Based on namespace prefix (e.g., "auth.login" -> "auth")
  * Falls back to "common" for keys without clear namespace
  */
-function determineFeatureFromKey(key: string, features: string[]): string {
-  // Check if key starts with a known feature name
+/**
+ * Which catalog already holds each key, read from the English files.
+ *
+ * This is the reliable way to place a key, because the namespace does not
+ * name the directory: `aiAgent.*` lives in `ai-agent/`, `userSettings.*` in
+ * `user-settings/`, and `page.*` and `component.*` are spread across most
+ * features and the shared catalog. Matching on the namespace alone left 823
+ * of 1421 keys unplaced.
+ */
+async function buildKeyIndex(features: string[]): Promise<Map<string, string>> {
+  const index = new Map<string, string>();
   for (const feature of features) {
-    if (feature === "common") continue;
+    const englishPath = getLocaleFilePath(feature, "en");
+    if (!fs.existsSync(englishPath)) continue;
+    for (const key of Object.keys(await readTranslations(englishPath))) {
+      if (!index.has(key)) index.set(key, feature);
+    }
+  }
+  return index;
+}
+
+function determineFeatureFromKey(
+  key: string,
+  features: string[],
+  keyIndex?: Map<string, string>,
+): string | null {
+  const known = keyIndex?.get(key);
+  if (known) return known;
+
+  for (const feature of features) {
     if (key.startsWith(`${feature}.`)) {
       return feature;
     }
   }
 
-  // Default to common for unnamespaced keys or common.* keys
-  return "common";
+  // No guess. The previous fallback was `common`, which meant every key whose
+  // namespace does not match a directory — `aiAgent.*`, `page.*`, `seo.*` —
+  // was written into the shared catalog as auto-generated English.
+  return null;
 }
 
 /**
@@ -454,8 +485,14 @@ function findTypeScriptFiles(dir: string, fileList: string[] = []): string[] {
  * Extract all translation keys from source code
  * Scans .ts and .tsx files for t("key") and t('key') calls
  */
-async function extractKeysFromCode(): Promise<Map<string, Set<string>>> {
+async function extractKeysFromCode(): Promise<{
+  keysByFeature: Map<string, Set<string>>;
+  unattributed: Set<string>;
+}> {
   const keysByFeature = new Map<string, Set<string>>();
+  const unattributed = new Set<string>();
+  const allFeatures = getReportedFeatures();
+  const keyIndex = await buildKeyIndex(allFeatures);
 
   // Find all TypeScript files in src directory
   const files = findTypeScriptFiles(SRC_DIR);
@@ -471,9 +508,20 @@ async function extractKeysFromCode(): Promise<Map<string, Set<string>>> {
     for (const match of matches) {
       const key = match[1];
 
-      // Determine feature from key namespace
-      const features = getFeatureDirectories();
-      const feature = determineFeatureFromKey(key, features);
+      // The regex reads source as text, so it also matches a string that
+      // *describes* a call rather than being one — `use-translations.ts`
+      // formats its own error as `t("${key}")`. A template placeholder can
+      // never be a literal key, so the capture is not one either.
+      if (key.includes("${")) continue;
+
+      const feature = determineFeatureFromKey(key, allFeatures, keyIndex);
+
+      // A key that belongs to no feature is reported, not written. Writing it
+      // to `common` filed `aiAgent.attachFile` under the shared catalog.
+      if (feature === null) {
+        unattributed.add(key);
+        continue;
+      }
 
       if (!keysByFeature.has(feature)) {
         keysByFeature.set(feature, new Set());
@@ -482,7 +530,7 @@ async function extractKeysFromCode(): Promise<Map<string, Set<string>>> {
     }
   }
 
-  return keysByFeature;
+  return { keysByFeature, unattributed };
 }
 
 /**
@@ -548,7 +596,8 @@ async function main() {
 
   // Step 1: Extract translation keys from code
   console.log("\n🔍 Step 1: Extracting translation keys from code...\n");
-  const extractedKeys = await extractKeysFromCode();
+  const { keysByFeature: extractedKeys, unattributed } =
+    await extractKeysFromCode();
 
   // Count total keys
   let totalKeysFound = 0;
@@ -556,6 +605,19 @@ async function main() {
     totalKeysFound += keys.size;
   }
   console.log(`   Found ${totalKeysFound} unique translation keys in code\n`);
+
+  if (unattributed.size > 0) {
+    console.log(
+      `   ⚠️  ${unattributed.size} key(s) match no feature directory and were not written:\n`,
+    );
+    for (const key of Array.from(unattributed).sort()) {
+      console.log(`      ${key}`);
+    }
+    console.log(
+      "\n   These live in a shared catalog. Add them there by hand rather than",
+    );
+    console.log("   letting this script invent an English message for them.\n");
+  }
 
   // Step 2: Add missing keys to English locale files
   console.log("📝 Step 2: Adding missing keys to en.ts files...\n");
