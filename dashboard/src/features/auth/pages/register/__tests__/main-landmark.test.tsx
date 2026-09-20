@@ -35,6 +35,12 @@ vi.mock("@/features/auth/hooks/use-otp-form", () => ({
   }),
 }));
 
+// input-otp schedules a timer that outlives the test environment and then
+// touches `window`. This suite is about the page shell, not the OTP input.
+vi.mock("@/features/auth/components/otp-form", () => ({
+  OtpForm: () => <div data-testid="otp-form" />,
+}));
+
 function mains() {
   return [...document.querySelectorAll("main, [role='main']")];
 }
