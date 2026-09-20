@@ -24,7 +24,8 @@ const descriptions = {
   noMovement: "Empty state for a month without income or expenses",
   noRecentActivity: "Empty state for recent transactions",
   partialPeriod: "Short label indicating that a month is incomplete",
-  previousThreeMonthsAverage: "Label for the prior-three-month average",
+  precedingPeriodsAverage:
+    "Label for the average over up to three preceding periods in the selection",
   recentActivity: "Heading for recent journal transactions",
   recentActivityCardDescription:
     "Description inside the recent transaction card",
@@ -91,7 +92,7 @@ const messages: Record<
     noMovement: "No money movement for this period.",
     noRecentActivity: "No recent transactions match the current filters.",
     partialPeriod: "partial",
-    previousThreeMonthsAverage: "Previous 3 months average",
+    precedingPeriodsAverage: "Average of up to 3 preceding periods",
     recentActivity: "Recent activity",
     recentActivityCardDescription:
       "Newest transactions matching the current dashboard filters",
@@ -133,7 +134,7 @@ const messages: Record<
     noMovement: "Няма движение на средства за този период.",
     noRecentActivity: "Няма скорошни транзакции за текущите филтри.",
     partialPeriod: "непълен",
-    previousThreeMonthsAverage: "Средно за предходните 3 месеца",
+    precedingPeriodsAverage: "Средно за до 3 предходни периода",
     recentActivity: "Скорошна активност",
     recentActivityCardDescription:
       "Най-новите транзакции според текущите филтри",
@@ -178,7 +179,7 @@ const messages: Record<
     noRecentActivity:
       "Cap transacció recent coincideix amb els filtres actuals.",
     partialPeriod: "parcial",
-    previousThreeMonthsAverage: "Mitjana dels 3 mesos anteriors",
+    precedingPeriodsAverage: "Mitjana de fins a 3 períodes anteriors",
     recentActivity: "Activitat recent",
     recentActivityCardDescription:
       "Transaccions més recents segons els filtres actuals",
@@ -222,7 +223,7 @@ const messages: Record<
     noMovement: "Keine Geldbewegung in diesem Zeitraum.",
     noRecentActivity: "Keine aktuellen Transaktionen entsprechen den Filtern.",
     partialPeriod: "teilweise",
-    previousThreeMonthsAverage: "Durchschnitt der vorherigen 3 Monate",
+    precedingPeriodsAverage: "Durchschnitt von bis zu 3 vorherigen Zeiträumen",
     recentActivity: "Letzte Aktivitäten",
     recentActivityCardDescription:
       "Neueste Transaktionen passend zu den Dashboard-Filtern",
@@ -268,7 +269,7 @@ const messages: Record<
     noRecentActivity:
       "Ninguna transacción reciente coincide con los filtros actuales.",
     partialPeriod: "parcial",
-    previousThreeMonthsAverage: "Promedio de los 3 meses anteriores",
+    precedingPeriodsAverage: "Promedio de hasta 3 períodos anteriores",
     recentActivity: "Actividad reciente",
     recentActivityCardDescription:
       "Transacciones más recientes según los filtros actuales",
@@ -310,7 +311,7 @@ const messages: Record<
     noMovement: "در این دوره گردش پولی وجود ندارد.",
     noRecentActivity: "هیچ تراکنش اخیر با فیلترهای فعلی مطابقت ندارد.",
     partialPeriod: "ناقص",
-    previousThreeMonthsAverage: "میانگین ۳ ماه قبل",
+    precedingPeriodsAverage: "میانگین حداکثر ۳ دوره پیشین",
     recentActivity: "فعالیت اخیر",
     recentActivityCardDescription: "جدیدترین تراکنش‌های مطابق فیلترهای فعلی",
     recentActivityDescription: "فعالیت دفتر روزنامه با درنظرگرفتن ثبت‌ها",
@@ -353,7 +354,7 @@ const messages: Record<
     noRecentActivity:
       "Aucune transaction récente ne correspond aux filtres actuels.",
     partialPeriod: "partiel",
-    previousThreeMonthsAverage: "Moyenne des 3 mois précédents",
+    precedingPeriodsAverage: "Moyenne sur 3 périodes précédentes au maximum",
     recentActivity: "Activité récente",
     recentActivityCardDescription:
       "Transactions les plus récentes selon les filtres actuels",
@@ -395,7 +396,7 @@ const messages: Record<
     noMovement: "この期間の資金移動はありません。",
     noRecentActivity: "現在のフィルターに一致する最近の取引はありません。",
     partialPeriod: "途中",
-    previousThreeMonthsAverage: "過去3か月の平均",
+    precedingPeriodsAverage: "直近最大3期間の平均",
     recentActivity: "最近のアクティビティ",
     recentActivityCardDescription: "現在のフィルターに一致する最新の取引",
     recentActivityDescription: "仕訳を考慮した元帳のアクティビティ",
@@ -435,7 +436,7 @@ const messages: Record<
     noMovement: "이 기간에는 자금 이동이 없습니다.",
     noRecentActivity: "현재 필터와 일치하는 최근 거래가 없습니다.",
     partialPeriod: "진행 중",
-    previousThreeMonthsAverage: "이전 3개월 평균",
+    precedingPeriodsAverage: "이전 최대 3개 기간의 평균",
     recentActivity: "최근 활동",
     recentActivityCardDescription: "현재 필터와 일치하는 최신 거래",
     recentActivityDescription: "분개를 반영한 원장 활동",
@@ -477,7 +478,7 @@ const messages: Record<
     noMovement: "Geen geldbeweging in deze periode.",
     noRecentActivity: "Geen recente transacties passen bij de huidige filters.",
     partialPeriod: "gedeeltelijk",
-    previousThreeMonthsAverage: "Gemiddelde van de vorige 3 maanden",
+    precedingPeriodsAverage: "Gemiddelde van maximaal 3 voorgaande perioden",
     recentActivity: "Recente activiteit",
     recentActivityCardDescription:
       "Nieuwste transacties volgens de huidige filters",
@@ -522,7 +523,7 @@ const messages: Record<
     noRecentActivity:
       "Nenhuma transação recente corresponde aos filtros atuais.",
     partialPeriod: "parcial",
-    previousThreeMonthsAverage: "Média dos 3 meses anteriores",
+    precedingPeriodsAverage: "Média de até 3 períodos anteriores",
     recentActivity: "Atividade recente",
     recentActivityCardDescription:
       "Transações mais recentes segundo os filtros atuais",
@@ -567,7 +568,7 @@ const messages: Record<
     noRecentActivity:
       "Нет недавних транзакций, соответствующих текущим фильтрам.",
     partialPeriod: "неполный",
-    previousThreeMonthsAverage: "Среднее за предыдущие 3 месяца",
+    precedingPeriodsAverage: "Среднее не более чем за 3 предыдущих периода",
     recentActivity: "Последние операции",
     recentActivityCardDescription: "Новые транзакции по текущим фильтрам",
     recentActivityDescription: "Операции журнала с учётом проводок",
@@ -609,7 +610,7 @@ const messages: Record<
     noRecentActivity:
       "Aktuálnym filtrom nezodpovedajú žiadne nedávne transakcie.",
     partialPeriod: "čiastočné",
-    previousThreeMonthsAverage: "Priemer predchádzajúcich 3 mesiacov",
+    precedingPeriodsAverage: "Priemer najviac 3 predchádzajúcich období",
     recentActivity: "Nedávna aktivita",
     recentActivityCardDescription:
       "Najnovšie transakcie podľa aktuálnych filtrov",
@@ -652,7 +653,7 @@ const messages: Record<
     noMovement: "У цьому періоді руху коштів немає.",
     noRecentActivity: "Немає недавніх транзакцій за поточними фільтрами.",
     partialPeriod: "неповний",
-    previousThreeMonthsAverage: "Середнє за попередні 3 місяці",
+    precedingPeriodsAverage: "Середнє щонайбільше за 3 попередні періоди",
     recentActivity: "Остання активність",
     recentActivityCardDescription:
       "Найновіші транзакції за поточними фільтрами",
@@ -692,7 +693,7 @@ const messages: Record<
     noMovement: "此期间没有资金流动。",
     noRecentActivity: "没有符合当前筛选条件的近期交易。",
     partialPeriod: "未完整",
-    previousThreeMonthsAverage: "前 3 个月平均值",
+    precedingPeriodsAverage: "最多前 3 个期间的平均值",
     recentActivity: "近期活动",
     recentActivityCardDescription: "符合当前筛选条件的最新交易",
     recentActivityDescription: "考虑分录的账本活动",

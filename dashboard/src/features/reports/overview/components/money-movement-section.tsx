@@ -136,7 +136,7 @@ function MovementCard({
         <div className="flex items-end justify-between gap-4 border-t bg-muted/20 px-5 py-4">
           <div>
             <div className="text-xs text-muted-foreground">
-              {t("page.overview.previousThreeMonthsAverage")}
+              {t("page.overview.precedingPeriodsAverage")}
             </div>
             <FormattedAmounts
               amounts={snapshot.average}
