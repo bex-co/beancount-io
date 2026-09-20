@@ -412,9 +412,6 @@ describe("Translation Files Validation", () => {
       // For each English translation with variables
       for (const [key, enEntry] of Object.entries(enTranslations)) {
         const enVars = extractInterpolationVars(enEntry.message);
-
-        if (enVars.length === 0) continue; // Skip non-interpolated strings
-
         const enVarSet = new Set(enVars);
 
         // Check all other languages have same variables

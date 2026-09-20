@@ -29,7 +29,7 @@ const caEvents: Record<string, TranslationEntry> = {
     description: "Message when filters produce no results",
   },
   "page.events.searchEvents": {
-    message: "Historial de preus amb {count} punts de dades",
+    message: "Cerca esdeveniments...",
     description: "Placeholder for event search input",
   },
 };

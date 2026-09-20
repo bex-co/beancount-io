@@ -22,37 +22,35 @@ const caAccountReport: Record<string, TranslationEntry> = {
     description: "Description prefix for account journal",
   },
   "page.accountReport.title": {
-    message: "Compte",
+    message: "Informe del compte",
     description: "Title for account report page",
   },
   "page.accountReport.changesOverTime": {
-    message: "Balanç de situació",
+    message: "Canvis al llarg del temps",
     description: "Label for changes over time section",
   },
   "page.accountReport.changesOverTimeDescription": {
-    message: "Canvis al llarg del temps",
+    message: "Veure els canvis del compte al llarg del temps",
     description: "Description for changes over time chart",
   },
   "page.accountReport.errorLoadingJournal": {
-    message: "Error en carregar les dades",
+    message: "Error en carregar les dades del diari",
     description: "Error message for account journal data",
   },
   "page.accountReport.loading": {
-    message: "Representació visual de la composició dels {ledgerName} passius",
+    message: "Carregant les dades del compte...",
     description: "Loading message for account data",
   },
   "page.accountReport.noData": {
-    message:
-      "Seguir el {ledgerName} patrimoni net en diferents monedes al llarg del temps",
+    message: "No s'han trobat dades per a aquest compte.",
     description: "Empty state message for account data",
   },
   "page.accountReport.noJournalEntries": {
-    message:
-      "No s'han trobat dades del compte de resultats per a aquest llibre.",
+    message: "Sense entrades de diari",
     description: "Heading when no journal entries exist",
   },
   "page.accountReport.noJournalEntriesForAccount": {
-    message: "Sense entrades de diari",
+    message: "No s'han trobat entrades de diari per a aquest compte.",
     description: "Message when no journal entries exist for account",
   },
   "page.accountReport.period": {

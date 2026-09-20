@@ -28,7 +28,8 @@ const caIncomeStatement: Record<string, TranslationEntry> = {
     description: "Description for net profit chart",
   },
   "page.incomeStatement.noData": {
-    message: "Dades no disponibles",
+    message:
+      "No s'han trobat dades del compte de resultats per a aquest llibre.",
     description: "Empty state message for income statement",
   },
   "page.incomeStatement.selectChartMode": {

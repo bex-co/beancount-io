@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const caTrialBalance: Record<string, TranslationEntry> = {
   "page.trialBalance.assetsHierarchy": {
-    message: "Representació visual de la composició dels {ledgerName} actius",
+    message: "Jerarquia d'Actius",
     description: "Title for assets hierarchy card",
   },
   "page.trialBalance.assetsHierarchyDescription": {
@@ -13,7 +13,7 @@ const caTrialBalance: Record<string, TranslationEntry> = {
     description: "Description for assets hierarchy visualization",
   },
   "page.trialBalance.equityHierarchy": {
-    message: "Diari",
+    message: "Jerarquia del Patrimoni Net",
     description: "Title for equity hierarchy card",
   },
   "page.trialBalance.equityHierarchyDescription": {
@@ -22,8 +22,7 @@ const caTrialBalance: Record<string, TranslationEntry> = {
     description: "Description for equity hierarchy visualization",
   },
   "page.trialBalance.expensesHierarchy": {
-    message:
-      "Seguir les {ledgerName} despeses en diferents monedes al llarg del temps",
+    message: "Jerarquia de Despeses",
     description: "Title for expenses hierarchy card",
   },
   "page.trialBalance.expensesHierarchyDescription": {
@@ -32,8 +31,7 @@ const caTrialBalance: Record<string, TranslationEntry> = {
     description: "Description for expenses hierarchy visualization",
   },
   "page.trialBalance.incomeHierarchy": {
-    message:
-      "Seguir els {ledgerName} ingressos en diferents monedes al llarg del temps",
+    message: "Jerarquia d'Ingressos",
     description: "Title for income hierarchy card",
   },
   "page.trialBalance.incomeHierarchyDescription": {
@@ -42,7 +40,7 @@ const caTrialBalance: Record<string, TranslationEntry> = {
     description: "Description for income hierarchy visualization",
   },
   "page.trialBalance.liabilitiesHierarchy": {
-    message: "Representació visual de la composició dels {ledgerName} passius",
+    message: "Jerarquia de Passius",
     description: "Title for liabilities hierarchy card",
   },
   "page.trialBalance.liabilitiesHierarchyDescription": {
@@ -50,7 +48,8 @@ const caTrialBalance: Record<string, TranslationEntry> = {
     description: "Description for liabilities hierarchy visualization",
   },
   "page.trialBalance.noData": {
-    message: "No s'han trobat coincidències",
+    message:
+      "No s'han trobat dades del balanç de comprovació per a aquest llibre.",
     description: "Message when no trial balance data exists",
   },
   "page.trialBalance.overviewTitle": {
@@ -58,7 +57,8 @@ const caTrialBalance: Record<string, TranslationEntry> = {
     description: "Title for trial balance overview section",
   },
   "page.trialBalance.overviewDescription": {
-    message: "Balanç de comprovació",
+    message:
+      "Visió general completa de tots els comptes amb els seus saldos per a tots els tipus de compte",
     description: "Description for trial balance overview",
   },
 };

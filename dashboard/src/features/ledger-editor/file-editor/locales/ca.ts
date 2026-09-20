@@ -56,20 +56,20 @@ const caFileEditor: Record<string, { message: string; description: string }> = {
     description: "Menu item to toggle comment in editor",
   },
   "ledgerEditor.unfoldAll": {
-    message: "Plegar tot",
+    message: "Desplegar tot",
     description: "Menu item to unfold all sections in editor",
   },
   "ledgerEditor.unsavedChanges": {
-    message: "Desplegar tot",
+    message: "Canvis sense guardar",
     description: "Dialog title for unsaved changes warning",
   },
   "ledgerEditor.unsavedChangesMessage": {
-    message: "Canvis sense guardar",
+    message:
+      "Teniu canvis sense guardar. Esteu segur que voleu sortir? Els canvis es perdran.",
     description: "Warning message about losing unsaved changes",
   },
   "ledgerEditor.unsupportedFileFormat": {
-    message:
-      "Teniu canvis sense guardar. Esteu segur que voleu sortir? Els canvis es perdran.",
+    message: "Format de fitxer no compatible",
     description: "Message shown for files that cannot be displayed",
   },
 };

@@ -287,7 +287,7 @@ const zhJournal: Record<string, TranslationEntry> = {
     description: "Placeholder for payee field",
   },
   "journal.pending": {
-    message: "待处理",
+    message: "!",
     description: "Label for pending transaction subtype filter",
   },
   "journal.pendingTransactions": {

@@ -10,8 +10,7 @@ const caOverview: Record<string, TranslationEntry> = {
   ...dashboardOverviewTranslations.ca,
   ...emptyLedgerOverviewTranslations.ca,
   "page.overview.assetsDistribution": {
-    message:
-      "Seguir {ledgerName} actius en diferents monedes al llarg del temps",
+    message: "Distribució d'actius",
     description: "Title for assets distribution chart",
   },
   "page.overview.assetsDistributionDescription": {
@@ -28,12 +27,12 @@ const caOverview: Record<string, TranslationEntry> = {
     description: "Description for cash flow sankey diagram",
   },
   "page.overview.failedToLoad": {
-    message: "Error en carregar les opcions de filtre",
+    message:
+      "No s'ha pogut carregar la informació del resum del llibre. Torneu-ho a provar més tard.",
     description: "Error description for overview page",
   },
   "page.overview.liabilitiesDistribution": {
-    message:
-      "Seguir els {ledgerName} passius en diferents monedes al llarg del temps",
+    message: "Distribució de passius",
     description: "Title for liabilities distribution chart",
   },
   "page.overview.liabilitiesDistributionDescription": {
@@ -41,7 +40,7 @@ const caOverview: Record<string, TranslationEntry> = {
     description: "Description for liabilities distribution chart",
   },
   "page.overview.loading": {
-    message: "Carregant comptes...",
+    message: "Carregant les dades del resum…",
     description: "Loading message for overview data",
   },
   "page.overview.cashFlowRolesPending": {
