@@ -249,6 +249,25 @@ export function resolveReportingPeriod({
     interval,
   );
 
+  /**
+   * A selection the concrete parser cannot resolve — a relative token such as
+   * `year-1`, or a partial-period expression — is not the same as no selection
+   * at all. The backend resolved it and filtered the numbers accordingly, so
+   * falling through to the generation day would date a 2025 statement as
+   * covering activity through today. Leave the bounds unknown and keep the raw
+   * selection; the unavailable-date and internal-draft notices already say so
+   * truthfully. The genuinely unfiltered path below is unchanged.
+   */
+  if (selection !== "" && explicit === null) {
+    return {
+      startDate: null,
+      endDate: null,
+      asOfDate: null,
+      isExplicit: false,
+      selection,
+    };
+  }
+
   if (kind === "balance_sheet") {
     return {
       startDate: null,

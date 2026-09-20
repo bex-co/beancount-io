@@ -17,6 +17,7 @@ const messages: Record<string, string> = {
   "component.conversionSelect.atMarketValue": "At market value",
   "component.conversionSelect.units": "Units",
   "component.conversionSelect.convertedTo": "Converted to",
+  "component.searchControls.time": "Time",
   "reports.export.accountFilter": "Account filter",
   "reports.export.advancedFilter": "Advanced filter",
   "reports.export.allActivity": "All available ledger activity through",
@@ -599,5 +600,76 @@ describe("statement Markdown", () => {
       "Northstar-Household-profit_and_loss-2023-01-01-to-2025-10-31-USD-2026-08-16.md",
       "text/markdown;charset=utf-8",
     );
+  });
+});
+
+describe("a selection whose bounds the export cannot resolve", () => {
+  /**
+   * `year-1` is resolved by the backend, so the numbers cover 2025 — but the
+   * export cannot resolve it, and must not print the generation day as the
+   * period the statement covers.
+   */
+  function unresolved(): StatementExportDocument {
+    const document = fixture();
+    document.context.filters.time = "year-1";
+    document.context.reportingPeriod = {
+      startDate: null,
+      endDate: null,
+      asOfDate: null,
+      isExplicit: false,
+      selection: "year-1",
+    };
+    return document;
+  }
+
+  it("says the date is unavailable rather than naming today", () => {
+    const markdown = statementToMarkdown(unresolved(), { locale: "en-US", t });
+
+    expect(markdown).toContain("Reporting date unavailable");
+    // The generation date legitimately appears in the footer; what must not
+    // happen is it standing in for the period the statement covers.
+    expect(markdown).not.toContain("All available ledger activity through");
+    expect(markdown).not.toContain("For the period");
+    expect(markdown).toContain(
+      "A complete reporting period could not be determined. This statement remains an internal draft.",
+    );
+  });
+
+  it("states the raw selection in the scope, as the CSV does", () => {
+    expect(statementToMarkdown(unresolved(), { locale: "en-US", t })).toContain(
+      "**Time:** year-1",
+    );
+  });
+
+  it("leaves a balance sheet without an as-of date and marks it a draft", () => {
+    const document = balanceSheetFixture();
+    document.context.filters.time = "year-1";
+    document.context.reportingPeriod = {
+      startDate: null,
+      endDate: null,
+      asOfDate: null,
+      isExplicit: false,
+      selection: "year-1",
+    };
+    const markdown = statementToMarkdown(document, { locale: "en-US", t });
+
+    expect(markdown).toContain("Reporting date unavailable");
+    expect(markdown).toContain(
+      "An as-of date could not be determined. This statement remains an internal draft.",
+    );
+    expect(markdown).toContain("**Time:** year-1");
+  });
+
+  it("writes no invented bounds into the CSV, but keeps the selection", () => {
+    const csv = statementToCSV(unresolved());
+    const [header, firstRow] = csv.split("\n");
+    const columns = header.split(",");
+    const values = firstRow.split(",");
+    const at = (name: string) => values[columns.indexOf(name)];
+
+    expect(at("period_start")).toBe("");
+    expect(at("period_end")).toBe("");
+    expect(at("period_is_explicit")).toBe("false");
+    expect(at("time_selection")).toBe("year-1");
   });
 });

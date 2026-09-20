@@ -211,6 +211,12 @@ export function PrintableStatement({
             </dt>
             <dd>{presentationCurrency ?? (units.join(", ") || "—")}</dd>
           </div>
+          {document.context.reportingPeriod.selection && (
+            <div>
+              <dt>{t("component.searchControls.time")}</dt>
+              <dd>{document.context.reportingPeriod.selection}</dd>
+            </div>
+          )}
           {document.context.filters.account && (
             <div>
               <dt>{t("reports.export.accountFilter")}</dt>

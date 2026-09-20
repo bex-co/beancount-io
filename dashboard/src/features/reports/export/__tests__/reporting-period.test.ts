@@ -131,4 +131,81 @@ describe("statement reporting period", () => {
       isExplicit: false,
     });
   });
+
+  /**
+   * The backend substitutes relative tokens before filtering, so the numbers
+   * really do cover 2025. The export cannot resolve `year-1` itself, and must
+   * not fall back to the generation day and date a 2025 statement as covering
+   * activity through today.
+   */
+  describe("a selection the export cannot resolve", () => {
+    const REPORT_DATES = ["2025-01-31", "2025-06-30", "2025-12-31"] as const;
+
+    it.each(["year-1", "quarter-1", "month-2", "2025 - "])(
+      "leaves the period unknown for %j rather than claiming today",
+      (timeFilter) => {
+        const period = resolveReportingPeriod({
+          kind: "profit_and_loss",
+          timeFilter,
+          reportDates: [...REPORT_DATES],
+          generatedOn: "2026-09-17",
+          interval: "monthly",
+        });
+
+        expect(period.startDate).toBeNull();
+        expect(period.endDate).toBeNull();
+        expect(period.isExplicit).toBe(false);
+        // The raw selection survives (trimmed), so the export can still state
+        // the scope.
+        expect(period.selection).toBe(timeFilter.trim());
+      },
+    );
+
+    it("leaves a balance sheet without an as-of date", () => {
+      const period = resolveReportingPeriod({
+        kind: "balance_sheet",
+        timeFilter: "year-1",
+        reportDates: [...REPORT_DATES],
+        generatedOn: "2026-09-17",
+        interval: "monthly",
+      });
+
+      expect(period.asOfDate).toBeNull();
+      expect(period.isExplicit).toBe(false);
+      expect(period.selection).toBe("year-1");
+    });
+
+    it("still resolves the same selection written concretely", () => {
+      expect(
+        resolveReportingPeriod({
+          kind: "profit_and_loss",
+          timeFilter: "2025",
+          reportDates: [...REPORT_DATES],
+          generatedOn: "2026-09-17",
+          interval: "monthly",
+        }),
+      ).toEqual({
+        startDate: "2025-01-01",
+        endDate: "2025-12-31",
+        asOfDate: null,
+        isExplicit: true,
+        selection: "2025",
+      });
+    });
+
+    it("leaves the genuinely unfiltered statement untouched", () => {
+      // w1/022's guarantee: no selection still runs through the generation day.
+      const period = resolveReportingPeriod({
+        kind: "profit_and_loss",
+        timeFilter: "   ",
+        reportDates: [...REPORT_DATES],
+        generatedOn: "2026-09-17",
+        interval: "monthly",
+      });
+
+      expect(period.endDate).toBe("2026-09-17");
+      expect(period.selection).toBe("");
+      expect(period.isExplicit).toBe(false);
+    });
+  });
 });

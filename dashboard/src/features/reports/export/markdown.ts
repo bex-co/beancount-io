@@ -289,6 +289,13 @@ export function statementToMarkdown(
     `- **${escapeMarkdown(presentationCurrency ? t("reports.export.presentationCurrency") : t("reports.export.ledgerUnits"))}:** ${escapeMarkdown(presentationCurrency ?? (units.join(", ") || "—"))}`,
   ];
 
+  // The raw selection, so a reader can see the scope even when its exact
+  // bounds could not be resolved — CSV has always carried it.
+  if (period.selection) {
+    lines.push(
+      `- **${escapeMarkdown(t("component.searchControls.time"))}:** ${escapeMarkdown(period.selection)}`,
+    );
+  }
   if (document.context.filters.account) {
     lines.push(
       `- **${escapeMarkdown(t("reports.export.accountFilter"))}:** ${escapeMarkdown(document.context.filters.account)}`,
