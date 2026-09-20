@@ -877,12 +877,22 @@ describe("UserProfileTabs", () => {
       await user.click(starredTab);
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith({
-          to: "/ledger/$username",
-          params: { username: "testuser" },
-          search: { tab: "starred" },
-          replace: true,
-        });
+        expect(mockNavigate).toHaveBeenCalled();
+      });
+      const navigation = mockNavigate.mock.calls.at(-1)?.[0];
+      expect(navigation).toMatchObject({
+        to: "/ledger/$username",
+        params: { username: "testuser" },
+        replace: true,
+      });
+      // The search is an updater, not a literal: a literal drops every
+      // sibling param, so a reader who had searched or sorted the collection
+      // lost it by glancing at another tab.
+      expect(navigation.search({ q: "gov", sort: "name", show: 24 })).toEqual({
+        q: "gov",
+        sort: "name",
+        show: 24,
+        tab: "starred",
       });
     });
 
@@ -904,12 +914,22 @@ describe("UserProfileTabs", () => {
       await user.click(followersTab);
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith({
-          to: "/ledger/$username",
-          params: { username: "testuser" },
-          search: { tab: "followers" },
-          replace: true,
-        });
+        expect(mockNavigate).toHaveBeenCalled();
+      });
+      const navigation = mockNavigate.mock.calls.at(-1)?.[0];
+      expect(navigation).toMatchObject({
+        to: "/ledger/$username",
+        params: { username: "testuser" },
+        replace: true,
+      });
+      // The search is an updater, not a literal: a literal drops every
+      // sibling param, so a reader who had searched or sorted the collection
+      // lost it by glancing at another tab.
+      expect(navigation.search({ q: "gov", sort: "name", show: 24 })).toEqual({
+        q: "gov",
+        sort: "name",
+        show: 24,
+        tab: "followers",
       });
     });
 
@@ -931,12 +951,22 @@ describe("UserProfileTabs", () => {
       await user.click(followingTab);
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith({
-          to: "/ledger/$username",
-          params: { username: "testuser" },
-          search: { tab: "following" },
-          replace: true,
-        });
+        expect(mockNavigate).toHaveBeenCalled();
+      });
+      const navigation = mockNavigate.mock.calls.at(-1)?.[0];
+      expect(navigation).toMatchObject({
+        to: "/ledger/$username",
+        params: { username: "testuser" },
+        replace: true,
+      });
+      // The search is an updater, not a literal: a literal drops every
+      // sibling param, so a reader who had searched or sorted the collection
+      // lost it by glancing at another tab.
+      expect(navigation.search({ q: "gov", sort: "name", show: 24 })).toEqual({
+        q: "gov",
+        sort: "name",
+        show: 24,
+        tab: "following",
       });
     });
 
@@ -959,12 +989,22 @@ describe("UserProfileTabs", () => {
       await user.click(overviewTab);
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith({
-          to: "/ledger/$username",
-          params: { username: "testuser" },
-          search: { tab: "overview" },
-          replace: true,
-        });
+        expect(mockNavigate).toHaveBeenCalled();
+      });
+      const navigation = mockNavigate.mock.calls.at(-1)?.[0];
+      expect(navigation).toMatchObject({
+        to: "/ledger/$username",
+        params: { username: "testuser" },
+        replace: true,
+      });
+      // The search is an updater, not a literal: a literal drops every
+      // sibling param, so a reader who had searched or sorted the collection
+      // lost it by glancing at another tab.
+      expect(navigation.search({ q: "gov", sort: "name", show: 24 })).toEqual({
+        q: "gov",
+        sort: "name",
+        show: 24,
+        tab: "overview",
       });
     });
 

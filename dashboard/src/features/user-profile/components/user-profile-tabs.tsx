@@ -125,9 +125,13 @@ export function UserProfileTabs({
     void navigate({
       to: "/ledger/$username",
       params: { username },
-      search: {
+      // Merge rather than replace: a literal here drops every sibling param,
+      // so a reader who had searched or sorted the ledger collection lost it
+      // by glancing at another tab.
+      search: (previous) => ({
+        ...previous,
         tab: newTab as "overview" | "starred" | "following" | "followers",
-      },
+      }),
       replace: true,
     });
   };
