@@ -91,9 +91,18 @@ export function LedgerCollection({
   // link), so the draft follows it.
   const [query, setQuery] = useState(urlQuery);
   const lastUrlQuery = useRef(urlQuery);
+  // The value this component last wrote to the URL. `updateSearch` resolves a
+  // tick later, so without this the echo of our own write is indistinguishable
+  // from an external navigation — and adopting it would undo any edit made in
+  // between, which is exactly how a flush-then-clear loses the clear.
+  const selfWrote = useRef<string | null>(null);
   if (lastUrlQuery.current !== urlQuery) {
     lastUrlQuery.current = urlQuery;
-    if (query !== urlQuery) setQuery(urlQuery);
+    if (urlQuery === selfWrote.current) {
+      selfWrote.current = null;
+    } else if (query !== urlQuery) {
+      setQuery(urlQuery);
+    }
   }
 
   const pendingWrite = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,6 +118,7 @@ export function LedgerCollection({
       pendingWrite.current = null;
     }
     if (query === urlQuery) return;
+    selfWrote.current = query;
     updateSearch({ q: query === "" ? undefined : query });
   };
 
@@ -187,6 +197,10 @@ export function LedgerCollection({
               placeholder={t("userProfile.searchLedgers")}
               value={query}
               onChange={(event) => editQuery(event.target.value)}
+              // Leaving the field is the reader saying "done editing", and it
+              // fires during the gesture that departs — before a link
+              // activates — so the draft lands in the entry being left.
+              onBlur={commitQuery}
               className="h-11 bg-card ps-10 pe-11 shadow-none [&::-webkit-search-cancel-button]:appearance-none"
             />
             {query && (
@@ -256,15 +270,7 @@ export function LedgerCollection({
           )}
         </div>
       ) : (
-        <div
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
-          // Capture phase, so the search lands in the profile entry before the
-          // card's own navigation pushes the ledger entry on top of it.
-          onPointerDownCapture={commitQuery}
-          onKeyDownCapture={(event) => {
-            if (event.key === "Enter") commitQuery();
-          }}
-        >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {visible.map((repo) => (
             <RepositoryListItem
               key={repo.fullName}

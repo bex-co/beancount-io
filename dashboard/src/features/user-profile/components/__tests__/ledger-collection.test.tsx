@@ -386,12 +386,14 @@ describe("LedgerCollection write ownership across departures", () => {
     expect(router.state.location.search).not.toMatchObject({ q: "ledger-00" });
   });
 
-  it("drops an uncommitted query when leaving outside the results grid", async () => {
+  it("keeps an uncommitted query when leaving outside the results grid", async () => {
     const user = userEvent.setup();
     const router = await mountAt();
 
     await user.type(screen.getByRole("searchbox"), "ledger-00");
-    // A departure the grid's flush does not cover, e.g. a header or tab link.
+    // A departure the old grid-bound flush did not cover: a header or tab
+    // link, reached by tabbing out of the field rather than clicking a card.
+    await user.tab();
     act(() => {
       void router.navigate({
         to: "/ledger/$ledgerOwner/$ledgerName",
@@ -405,12 +407,40 @@ describe("LedgerCollection write ownership across departures", () => {
       await new Promise((resolve) => setTimeout(resolve, 400));
     });
 
-    // Recorded behaviour, not an endorsement: the guard correctly prevents the
-    // stale write, so the destination is intact and never /ledger/undefined,
-    // but the typed query is lost because the flush is bound to the grid.
-    // Widening that seam is tracked in w4/143.
+    // The destination is still intact — the stale-write guard has not been
+    // traded away for the flush.
     expect(router.state.location.pathname).toBe("/ledger/owner/ledger-01");
     expect(router.state.location.pathname).not.toContain("undefined");
+
+    await act(async () => {
+      router.history.back();
+    });
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/ledger/owner");
+    });
+    // ...and the query the reader typed is what they come back to.
+    expect(router.state.location.search).toMatchObject({ q: "ledger-00" });
+    await waitFor(() => {
+      expect(screen.getByRole("searchbox")).toHaveValue("ledger-00");
+    });
+  });
+
+  it("lets a clear win over the flush the same gesture triggers", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt();
+
+    // Clicking Clear blurs the field first, so the flush writes the very text
+    // the click is about to remove. The clear must still be what survives.
+    await user.type(screen.getByRole("searchbox"), "ledger-14");
+    await user.click(screen.getByRole("button", { name: "Clear search" }));
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    });
+
+    expect(screen.getByRole("searchbox")).toHaveValue("");
+    expect(router.state.location.search).not.toMatchObject({ q: "ledger-14" });
+    expect(screen.getAllByRole("link")).toHaveLength(12);
   });
 
   it("commits a cleared search when the reader opens a card", async () => {
