@@ -10,6 +10,12 @@ const ptDirectoryBrowse: Record<
     message: "Baixar ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message:
+      "Seu navegador bloqueou o download. Use o link abaixo para iniciá-lo.",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message: "Não foi possível preparar o download. Tente novamente.",
     description: "Error shown when preparing the ZIP download fails",

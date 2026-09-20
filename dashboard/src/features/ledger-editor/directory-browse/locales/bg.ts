@@ -10,6 +10,12 @@ const bgDirectoryBrowse: Record<
     message: "Изтегляне като ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message:
+      "Браузърът ви блокира изтеглянето. Използвайте връзката по-долу, за да го стартирате.",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message: "Изтеглянето не можа да бъде подготвено. Опитайте отново.",
     description: "Error shown when preparing the ZIP download fails",

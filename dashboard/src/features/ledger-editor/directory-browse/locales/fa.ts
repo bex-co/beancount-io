@@ -10,6 +10,12 @@ const faDirectoryBrowse: Record<
     message: "دانلود ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message:
+      "مرورگر شما دانلود را مسدود کرد. برای شروع آن از پیوند زیر استفاده کنید.",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message: "آماده‌سازی دانلود ممکن نشد. لطفاً دوباره تلاش کنید.",
     description: "Error shown when preparing the ZIP download fails",

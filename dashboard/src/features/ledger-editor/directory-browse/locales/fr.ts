@@ -10,6 +10,12 @@ const frDirectoryBrowse: Record<
     message: "Télécharger en ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message:
+      "Votre navigateur a bloqué le téléchargement. Utilisez le lien ci-dessous pour le lancer.",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message: "Impossible de préparer le téléchargement. Veuillez réessayer.",
     description: "Error shown when preparing the ZIP download fails",

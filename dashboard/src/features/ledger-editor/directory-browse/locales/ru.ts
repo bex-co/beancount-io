@@ -10,6 +10,12 @@ const ruDirectoryBrowse: Record<
     message: "Скачать ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message:
+      "Браузер заблокировал загрузку. Используйте ссылку ниже, чтобы начать её.",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message: "Не удалось подготовить загрузку. Попробуйте снова.",
     description: "Error shown when preparing the ZIP download fails",

@@ -121,6 +121,18 @@ export default function LedgerCloneUrlMenu({
   const [activeTab, setActiveTab] = useState<string>("ssh");
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<boolean>(false);
+  /**
+   * The archive URL, kept only when the browser refused to open it for us.
+   *
+   * Discovery is a round trip, so by the time it answers the click that
+   * started it may no longer count as a user gesture and `window.open` returns
+   * null without throwing. The lookup succeeded, so the URL is good — offer it
+   * as a plain link the reader can activate with a fresh gesture instead of
+   * silently re-enabling the button and saying nothing.
+   */
+  const [blockedDownloadUrl, setBlockedDownloadUrl] = useState<string | null>(
+    null,
+  );
   const { ledgerData } = useLedger();
 
   const { refetch: fetchArchiveUrl } = useQuery<
@@ -135,6 +147,7 @@ export default function LedgerCloneUrlMenu({
     // Archive discovery can reject (transport or server error). Without this the
     // rejection became an unhandled promise and the popover said nothing.
     setDownloadError(null);
+    setBlockedDownloadUrl(null);
     setDownloading(true);
     try {
       const result = await fetchArchiveUrl({ ledgerId });
@@ -143,7 +156,9 @@ export default function LedgerCloneUrlMenu({
         setDownloadError(t("ledgerEditor.downloadZipFailed"));
         return;
       }
-      window.open(downloadUrl, "_blank");
+      if (!window.open(downloadUrl, "_blank")) {
+        setBlockedDownloadUrl(downloadUrl);
+      }
     } catch (err) {
       console.error("Failed to prepare ZIP download:", err);
       setDownloadError(formatError(err) || t("ledgerEditor.downloadZipFailed"));
@@ -229,6 +244,21 @@ export default function LedgerCloneUrlMenu({
               <p role="alert" className="px-2 text-xs text-destructive">
                 {downloadError}
               </p>
+            )}
+            {blockedDownloadUrl && (
+              <div role="status" className="space-y-1 px-2">
+                <p className="text-xs text-muted-foreground">
+                  {t("ledgerEditor.downloadZipBlocked")}
+                </p>
+                <a
+                  href={blockedDownloadUrl}
+                  download
+                  className="flex items-center gap-2 rounded-md py-2 text-sm underline underline-offset-2 hover:bg-accent"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>{t("ledgerEditor.downloadZip")}</span>
+                </a>
+              </div>
             )}
           </div>
         </div>

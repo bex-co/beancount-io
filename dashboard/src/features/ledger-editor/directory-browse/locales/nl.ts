@@ -10,6 +10,12 @@ const nlDirectoryBrowse: Record<
     message: "ZIP downloaden",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message:
+      "Uw browser heeft de download geblokkeerd. Gebruik de onderstaande link om te starten.",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message: "Kan de download niet voorbereiden. Probeer het opnieuw.",
     description: "Error shown when preparing the ZIP download fails",

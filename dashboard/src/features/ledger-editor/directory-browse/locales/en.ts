@@ -10,6 +10,12 @@ const enDirectoryBrowse: Record<
     message: "Download ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message:
+      "Your browser blocked the download. Use the link below to start it.",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message: "Could not prepare the download. Please try again.",
     description: "Error shown when preparing the ZIP download fails",

@@ -10,6 +10,12 @@ const ukDirectoryBrowse: Record<
     message: "Вownload ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message:
+      "Браузер заблокував завантаження. Скористайтеся посиланням нижче, щоб почати.",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message: "Не вдалося підготувати завантаження. Спробуйте ще раз.",
     description: "Error shown when preparing the ZIP download fails",

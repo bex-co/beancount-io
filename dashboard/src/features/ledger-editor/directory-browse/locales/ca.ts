@@ -10,6 +10,12 @@ const caDirectoryBrowse: Record<
     message: "Descarregar ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message:
+      "El navegador ha blocat la baixada. Utilitzeu l'enllaç següent per iniciar-la.",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message: "No s'ha pogut preparar la baixada. Torna-ho a provar.",
     description: "Error shown when preparing the ZIP download fails",

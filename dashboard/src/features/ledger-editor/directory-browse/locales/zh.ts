@@ -10,6 +10,11 @@ const zhDirectoryBrowse: Record<
     message: "下载 ZIP",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message: "浏览器阻止了此次下载。请使用下方链接开始下载。",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message: "无法准备下载，请重试。",
     description: "Error shown when preparing the ZIP download fails",

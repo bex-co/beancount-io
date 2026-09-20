@@ -10,6 +10,12 @@ const deDirectoryBrowse: Record<
     message: "ZIP herunterladen",
     description: "Menu item to download as ZIP",
   },
+  "ledgerEditor.downloadZipBlocked": {
+    message:
+      "Ihr Browser hat den Download blockiert. Verwenden Sie den Link unten, um ihn zu starten.",
+    description:
+      "Shown when the browser blocks the automatic ZIP download popup",
+  },
   "ledgerEditor.downloadZipFailed": {
     message:
       "Der Download konnte nicht vorbereitet werden. Bitte erneut versuchen.",
