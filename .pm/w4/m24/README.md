@@ -1,6 +1,6 @@
 # w4 · m24 — Repair the Ukrainian catalogs' first-word find/replace damage
 
-**Worker:** worker1 **Goal:** Ukrainian stops being the worst-rendering locale in the product — no screen shows half-translated labels like `Вocuments` or `Рахунок Journal` **Status:** todo (t001–t008, t010, t012 done)
+**Worker:** worker1 **Goal:** Ukrainian stops being the worst-rendering locale in the product — no screen shows half-translated labels like `Вocuments` or `Рахунок Journal` **Status:** todo (t001–t010, t012 done)
 
 ## Tasks (in order)
 
@@ -15,7 +15,7 @@
 | t007 | Repair the `ledger-editor` catalogs                        | 20m | w4/m24/t006  | — **DONE**
 | t008 | Adoption surface: verify the repaired screens in Ukrainian | 20m | w4/m24/t007  | — **DONE**
 | t012 | Repair the shared common and seo Ukrainian catalogs        | 20m | w4/m24/t007  | — **DONE**
-| t009 | Simplify the catalog-guard code this milestone touched     | 20m | w4/m24/t012  |
+| t009 | Simplify the catalog-guard code this milestone touched     | 20m | w4/m24/t012  | — **DONE**
 | t010 | Generalise the stray-English guard to every locale         | 40m | w4/m24/t012  | — **DONE**
 | t011 | Closeout                                                   | 10m | w4/m24/t010  |
 
@@ -23,10 +23,10 @@
 
 Scanning every Ukrainian catalog file — all 47 that `find src -name uk.ts`
 returns, not the 45 matched by a `locales/uk.ts` glob — for messages that mix
-Cyrillic with a stray English word — the predicate already shipped in
-`dashboard/src/features/journal/components/__tests__/russian-journal-labels.test.tsx`,
-with its allowlist of brand names, Beancount directive keywords, currency
-codes and literal account names — returns no offenders. Flag keys still render
+Cyrillic with a stray English word — the predicate now lives in
+`dashboard/src/test/locale-scan.ts`, with its allowlist of brand names,
+Beancount directive and metadata keywords, file formats, currency codes and
+literal account names — returns no offenders. Flag keys still render
 one- or two-character literals in Ukrainian. A guard covering every locale is
 in the suite and fails when any repaired catalog is reverted. English and the
 other thirteen locales are unchanged. The dashboard gates pass.
