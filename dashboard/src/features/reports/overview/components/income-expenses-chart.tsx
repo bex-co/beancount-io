@@ -13,9 +13,12 @@ import { ChartUnitScope } from "./chart-unit-scope";
 export function IncomeExpensesChart({
   income,
   expenses,
+  primaryCurrency,
 }: {
   income: DataSeries;
   expenses: DataSeries;
+  /** The ledger's operating currency, preferred as the chart's unit. */
+  primaryCurrency?: string | null;
 }) {
   const { t } = useTranslations();
   const formatNum = useFormatNumber();
@@ -27,7 +30,7 @@ export function IncomeExpensesChart({
   const expenseAmounts =
     expenses?.map((d) => balanceToAmounts(d.balance)) ?? [];
   const allAmounts = [...incomeAmounts, ...expenseAmounts];
-  const unit = chooseDisplayUnit(allAmounts);
+  const unit = chooseDisplayUnit(allAmounts, primaryCurrency);
   const units = collectUnits(allAmounts);
   const inUnit = (amounts: Map<string, number>) =>
     unit ? (amounts.get(unit) ?? 0) : 0;

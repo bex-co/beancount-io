@@ -18,6 +18,8 @@ interface CashFlowSankeyProps {
   assetsHierarchyData?: SerializableTreeNode;
   liabilitiesHierarchyData?: SerializableTreeNode;
   depth?: 1 | 2 | 3;
+  /** The ledger's operating currency, preferred as the diagram's unit. */
+  primaryCurrency?: string | null;
   /** Open-directive metadata per account (cash-flow-role declarations). */
   accountMeta?: AccountMetaMap;
   /**
@@ -34,6 +36,7 @@ export default function CashFlowSankey({
   assetsHierarchyData,
   liabilitiesHierarchyData,
   depth = 2,
+  primaryCurrency,
   accountMeta,
   accountMetaPending = false,
 }: CashFlowSankeyProps) {
@@ -48,6 +51,7 @@ export default function CashFlowSankey({
       assetsHierarchyData,
       liabilitiesHierarchyData,
       depth,
+      preferredCurrency: primaryCurrency,
       accountMeta,
     });
   }, [
@@ -56,6 +60,7 @@ export default function CashFlowSankey({
     assetsHierarchyData,
     liabilitiesHierarchyData,
     depth,
+    primaryCurrency,
     accountMeta,
   ]);
 

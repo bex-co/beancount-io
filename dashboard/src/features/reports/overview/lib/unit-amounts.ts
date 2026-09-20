@@ -55,12 +55,20 @@ export function balanceToAmounts(
 /**
  * Choose the one unit a chart speaks in.
  *
- * The unit the most accounts are denominated in is the one that describes the
- * ledger; ties go to the larger total and then to alphabetical order, so the
- * choice is stable across renders rather than dependent on object key order.
+ * The ledger's declared operating currency wins when the accounts actually
+ * hold it — it is the same signal the net-worth and account cards already
+ * show, so the diagram agrees with the rest of the page. Otherwise the unit
+ * the most accounts are denominated in is the one that describes the ledger;
+ * ties go to the larger total and then to alphabetical order, so the choice is
+ * stable across renders rather than dependent on object key order.
+ *
+ * The fallback matters on thin ledgers: with one account on each side the
+ * count tier ties, and magnitude alone would draw the whole diagram in a large
+ * retirement account's unit.
  */
 export function chooseDisplayUnit(
   entries: Iterable<UnitAmounts>,
+  preferred?: string | null,
 ): string | null {
   const accounts = new Map<string, number>();
   const magnitude = new Map<string, number>();
@@ -70,6 +78,8 @@ export function chooseDisplayUnit(
       magnitude.set(unit, (magnitude.get(unit) ?? 0) + Math.abs(amount));
     });
   }
+
+  if (preferred && accounts.has(preferred)) return preferred;
 
   let best: string | null = null;
   for (const unit of accounts.keys()) {

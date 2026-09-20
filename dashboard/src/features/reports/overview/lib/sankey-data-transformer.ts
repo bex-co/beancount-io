@@ -160,6 +160,8 @@ interface TransformOptions {
    * resolves by the name heuristics, exactly as before.
    */
   accountMeta?: AccountMetaMap;
+  /** The ledger's operating currency, preferred when the accounts hold it. */
+  preferredCurrency?: string | null;
 }
 
 /** Amounts in one unit only; accounts holding none of it drop out. */
@@ -230,7 +232,7 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
   ];
   const allAmounts = groups.flatMap((group) => [...group.values()]);
   const units = collectUnits(allAmounts);
-  const unit = chooseDisplayUnit(allAmounts);
+  const unit = chooseDisplayUnit(allAmounts, options.preferredCurrency);
   if (!unit) {
     return { nodes, links, unit: null, units };
   }

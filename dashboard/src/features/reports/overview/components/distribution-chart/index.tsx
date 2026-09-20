@@ -15,14 +15,17 @@ export function DistributionChart({
   description,
   data,
   inverse = false,
+  primaryCurrency,
 }: {
   title: string;
   description?: string;
   data: unknown;
   inverse?: boolean;
+  /** The ledger's operating currency, preferred as the chart's unit. */
+  primaryCurrency?: string | null;
 }) {
   const { t } = useTranslations();
-  const distribution = buildDistributionData(data, inverse);
+  const distribution = buildDistributionData(data, inverse, primaryCurrency);
   const items = groupDistributionData(
     distribution.items,
     t("common.otherColumn"),

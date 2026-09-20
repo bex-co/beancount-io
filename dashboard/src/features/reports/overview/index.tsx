@@ -231,6 +231,7 @@ export default function LedgerOverviewPage() {
             <IncomeExpensesChart
               income={overview?.incomeIntervalData ?? []}
               expenses={overview?.expensesIntervalData ?? []}
+              primaryCurrency={primaryCurrency}
             />
           </CardContent>
         </Card>
@@ -254,6 +255,7 @@ export default function LedgerOverviewPage() {
               ledgerName: displayName,
             })}
             data={overview?.assetsHierarchyData}
+            primaryCurrency={primaryCurrency}
           />
           <DistributionChart
             title={t("page.overview.liabilitiesDistribution")}
@@ -261,6 +263,7 @@ export default function LedgerOverviewPage() {
               ledgerName: displayName,
             })}
             data={overview?.liabilitiesHierarchyData}
+            primaryCurrency={primaryCurrency}
             inverse
           />
         </div>
@@ -291,6 +294,7 @@ export default function LedgerOverviewPage() {
               assetsHierarchyData={overview?.assetsHierarchyData}
               liabilitiesHierarchyData={overview?.liabilitiesHierarchyData}
               accountMeta={accountMeta}
+              primaryCurrency={primaryCurrency}
               accountMetaPending={accountMetaPending}
             />
           </CardContent>

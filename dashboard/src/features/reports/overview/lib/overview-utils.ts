@@ -448,6 +448,8 @@ export type DistributionData = {
 export function buildDistributionData(
   input?: unknown,
   inverse?: boolean,
+  /** The ledger's operating currency, preferred when the accounts hold it. */
+  preferredCurrency?: string | null,
 ): DistributionData {
   if (!input) return { items: [], unit: null, units: [] };
 
@@ -459,7 +461,7 @@ export function buildDistributionData(
 
   const allAmounts = leaves.map((leaf) => leaf.amounts);
   const units = collectUnits(allAmounts);
-  const unit = chooseDisplayUnit(allAmounts);
+  const unit = chooseDisplayUnit(allAmounts, preferredCurrency);
   if (!unit) return { items: [], unit: null, units };
 
   const items = leaves

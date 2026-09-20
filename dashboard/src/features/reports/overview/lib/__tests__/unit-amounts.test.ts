@@ -126,3 +126,53 @@ describe("collectUnits and omittedUnits", () => {
     expect(omittedUnits(["USD"], "USD")).toEqual([]);
   });
 });
+
+describe("chooseDisplayUnit with a declared operating currency", () => {
+  /** One account on each side — the thin ledger where the count tier ties. */
+  const thinLedger = () => [
+    new Map([["IRAUSD", 13200]]),
+    new Map([["USD", 6903.12]]),
+  ];
+
+  it("drops the odd unit a thin ledger used to pick on magnitude alone", () => {
+    // Without a declared currency, magnitude decides and the whole diagram is
+    // drawn in a single large retirement account's unit.
+    expect(chooseDisplayUnit(thinLedger())).toBe("IRAUSD");
+    expect(chooseDisplayUnit(thinLedger(), "USD")).toBe("USD");
+  });
+
+  it("uses the declared currency even when another unit has more accounts", () => {
+    const entries = [
+      new Map([["VACHR", 1]]),
+      new Map([["VACHR", 2]]),
+      new Map([["VACHR", 3]]),
+      new Map([["EUR", 10]]),
+    ];
+
+    expect(chooseDisplayUnit(entries)).toBe("VACHR");
+    expect(chooseDisplayUnit(entries, "EUR")).toBe("EUR");
+  });
+
+  it("ignores a declared currency the accounts do not hold", () => {
+    // Preferring a unit nobody holds would draw an empty chart; the heuristic
+    // still has to answer.
+    const entries = [new Map([["USD", 100]]), new Map([["USD", 50]])];
+
+    expect(chooseDisplayUnit(entries, "JPY")).toBe("USD");
+  });
+
+  it("leaves the existing tie-breaks alone when nothing is declared", () => {
+    const entries = [new Map([["USD", 1]]), new Map([["EUR", 1]])];
+
+    // Equal counts, equal magnitude — alphabetical, as before.
+    expect(chooseDisplayUnit(entries)).toBe("EUR");
+    expect(chooseDisplayUnit(entries, null)).toBe("EUR");
+    expect(chooseDisplayUnit(entries, undefined)).toBe("EUR");
+    expect(chooseDisplayUnit(entries, "")).toBe("EUR");
+  });
+
+  it("still answers nothing for an empty ledger", () => {
+    expect(chooseDisplayUnit([], "USD")).toBeNull();
+    expect(chooseDisplayUnit([new Map()], "USD")).toBeNull();
+  });
+});
