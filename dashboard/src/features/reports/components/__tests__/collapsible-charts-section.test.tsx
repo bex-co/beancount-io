@@ -1,16 +1,23 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({ t: (key: string) => key }),
+}));
+
+/** Stands in for the cookie, so a case can start from a saved preference. */
+const savedPreference = vi.hoisted(() => ({
+  value: undefined as unknown,
 }));
 
 vi.mock("@/common/hooks/use-cookie-storage-state", async () => {
   const { useState } = await import("react");
   return {
     useCookieStorageState: (_key: string, initial: unknown) =>
-      useState(initial) as unknown,
+      useState(
+        savedPreference.value === undefined ? initial : savedPreference.value,
+      ) as unknown,
   };
 });
 
@@ -47,6 +54,63 @@ function settleCollapseAnimation() {
   const section = document.getElementById("balanceSheet-charts");
   fireEvent.transitionEnd(section!.parentElement!);
 }
+
+beforeEach(() => {
+  savedPreference.value = undefined;
+});
+
+describe("a report opened with charts saved hidden", () => {
+  /**
+   * The section is collapsed from its first render, so no grid-row transition
+   * ever runs. `hidden` used to wait on `onTransitionEnd`, which meant a saved
+   * preference could render expanded — the toggle saying "show" while the
+   * charts were on screen and their controls still in the tab order.
+   */
+  it("renders collapsed without waiting for a transition", () => {
+    savedPreference.value = false;
+    render(<Harness />);
+
+    const section = document.getElementById("balanceSheet-charts")!;
+    expect(section).toHaveAttribute("hidden");
+    expect(section).toHaveAttribute("inert");
+  });
+
+  it("agrees with what the toggle reports", () => {
+    savedPreference.value = false;
+    render(<Harness />);
+
+    expect(
+      screen.getByRole("button", { name: "common.showCharts" }),
+    ).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("keeps the collapsed controls out of the tab order", async () => {
+    savedPreference.value = false;
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    await user.click(screen.getByRole("button", { name: "before" }));
+    await user.tab();
+    expect(
+      screen.getByRole("button", { name: "common.showCharts" }),
+    ).toHaveFocus();
+    await user.tab();
+    // Straight past the collapsed section, not into it.
+    expect(screen.getByRole("button", { name: "after" })).toHaveFocus();
+  });
+
+  it("still expands on the first interaction", async () => {
+    savedPreference.value = false;
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    await user.click(screen.getByRole("button", { name: "common.showCharts" }));
+
+    const section = document.getElementById("balanceSheet-charts")!;
+    expect(section).not.toHaveAttribute("hidden");
+    expect(section).not.toHaveAttribute("inert");
+  });
+});
 
 describe("collapsible charts section", () => {
   it("announces the collapsed state and the section it controls", async () => {
