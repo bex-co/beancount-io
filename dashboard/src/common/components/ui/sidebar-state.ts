@@ -24,6 +24,12 @@ export const SIDEBAR_MAX_WIDTH_PX = 384;
 export const SIDEBAR_COLLAPSE_AT_PX = 140;
 /** Keyboard arrow-key resize increment (px). */
 export const SIDEBAR_WIDTH_STEP_PX = 16;
+/**
+ * Width of the collapsed icon rail (px). This is the pane's actual size while
+ * collapsed, so it is what the splitter reports — the remembered expanded
+ * width is a preference for restoring, not the current position.
+ */
+export const SIDEBAR_WIDTH_ICON_PX = 48;
 
 /** Shared cookie options — module-level so the reference stays stable across renders. */
 export const SIDEBAR_COOKIE_OPTIONS: Cookies.CookieAttributes = {

@@ -34,6 +34,7 @@ import {
   SIDEBAR_MAX_WIDTH_PX,
   SIDEBAR_COLLAPSE_AT_PX,
   SIDEBAR_WIDTH_STEP_PX,
+  SIDEBAR_WIDTH_ICON_PX,
   clampSidebarWidth,
   serializeSidebarWidth,
   deserializeSidebarWidth,
@@ -51,7 +52,7 @@ function findSidebarTriggerOnPage(): HTMLElement | null {
 }
 
 const SIDEBAR_WIDTH_MOBILE = "18rem";
-const SIDEBAR_WIDTH_ICON = "3rem";
+const SIDEBAR_WIDTH_ICON = `${SIDEBAR_WIDTH_ICON_PX}px`;
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
 type SidebarContextProps = {
@@ -380,7 +381,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, open, openMobile, isMobile } = useSidebar();
   const { t } = useTranslations();
 
   return (
@@ -389,6 +390,9 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon"
+      // A disclosure control with one constant name gave no way to tell the
+      // two states apart. Report whichever sidebar this trigger governs.
+      aria-expanded={isMobile ? openMobile : open}
       className={cn("size-7", className)}
       onClick={(event) => {
         onClick?.(event);
@@ -512,9 +516,13 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
       role="separator"
       aria-orientation="vertical"
       aria-label={t("common.toggleSidebar")}
-      aria-valuemin={SIDEBAR_MIN_WIDTH_PX}
+      // While collapsed the pane really is the icon rail, so that is the
+      // splitter's position; `width` stays the remembered width to restore to.
+      // The minimum moves with it, since a range that excludes its own value
+      // is incoherent.
+      aria-valuemin={open ? SIDEBAR_MIN_WIDTH_PX : SIDEBAR_WIDTH_ICON_PX}
       aria-valuemax={SIDEBAR_MAX_WIDTH_PX}
-      aria-valuenow={width}
+      aria-valuenow={open ? width : SIDEBAR_WIDTH_ICON_PX}
       tabIndex={0}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
