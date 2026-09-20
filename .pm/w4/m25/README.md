@@ -1,6 +1,6 @@
 # w4 · m25 — Reach the Latin-script locales with a half-translated guard
 
-**Worker:** worker1 **Goal:** the half-translated defect is detectable in all fourteen non-English locales, not just the seven whose script gives it away **Status:** todo (t001–t004 done)
+**Worker:** worker1 **Goal:** the half-translated defect is detectable in all fourteen non-English locales, not just the seven whose script gives it away **Status:** todo (t001–t004, t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Repair what the tuned predicate finds beyond those             | 30m | w4/m25/t002 | — **DONE**
 | t004 | Adoption surface: check the repaired screens in two locales    | 20m | w4/m25/t003 | — **DONE**
 | t005 | Simplify the scan module after the second predicate lands      | 20m | w4/m25/t004 |
-| t006 | Extend the guard to all fourteen locales and prove it fails    | 30m | w4/m25/t004 |
+| t006 | Extend the guard to all fourteen locales and prove it fails    | 30m | w4/m25/t004 | — **DONE**
 | t007 | Closeout                                                       | 10m | w4/m25/t006 |
 
 ## Definition of done
