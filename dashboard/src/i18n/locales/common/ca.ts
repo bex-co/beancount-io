@@ -374,7 +374,7 @@ const caCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "Visualitzeu i gestioneu mercaderies (divises, accions i actius) utilitzades a {ledgerName}. Seguiu tipus de canvi i històric de preus.",
+      "Consulteu les parelles de preus registrades a {ledgerName} i l'historial de canvi de cadascuna.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

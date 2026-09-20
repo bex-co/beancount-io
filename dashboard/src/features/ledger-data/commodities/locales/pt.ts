@@ -13,12 +13,15 @@ const ptCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "Nenhuma Commodity Encontrada",
-    description: "Empty state title when no commodities exist",
+    message: "Nenhum histórico de preços encontrado",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "Este livro-razão ainda não tem dados de preço de commodities.",
-    description: "Empty state description for no commodities",
+    message:
+      "Este livro não registra preços, portanto não há histórico de taxas de câmbio para exibir.",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "Histórico de preços com {count} pontos de dados",

@@ -13,12 +13,14 @@ const zhCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "未找到商品",
-    description: "Empty state title when no commodities exist",
+    message: "未找到价格历史",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "此账本尚无任何商品价格数据。",
-    description: "Empty state description for no commodities",
+    message: "该账本没有记录任何价格，因此没有可显示的汇率历史。",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "价格历史记录，包含 {count} 个数据点",

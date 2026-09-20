@@ -373,7 +373,7 @@ const esCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "Visualice y gestione materias primas (divisas, acciones y activos) utilizadas en {ledgerName}. Realice un seguimiento de tipos de cambio e historial de precios.",
+      "Consulte los pares de precios registrados en {ledgerName} y el historial de tipos de cambio de cada uno.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

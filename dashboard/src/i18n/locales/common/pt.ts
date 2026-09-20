@@ -374,7 +374,7 @@ const ptCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "Visualize e gerencie commodities (moedas, ações e ativos) usadas em {ledgerName}. Acompanhe taxas de câmbio e histórico de preços.",
+      "Veja os pares de preços registrados em {ledgerName} e o histórico de taxas de câmbio de cada um.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

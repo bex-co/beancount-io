@@ -374,7 +374,7 @@ const faCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "مشاهده و مدیریت کالاها (ارزها، سهام و دارایی‌ها) استفاده شده در {ledgerName}. پیگیری نرخ ارز و تاریخچه قیمت.",
+      "جفت‌های قیمتی ثبت‌شده در {ledgerName} و تاریخچه نرخ تبدیل هر کدام را ببینید.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

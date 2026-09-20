@@ -13,12 +13,15 @@ const jaCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "商品が見つかりません",
-    description: "Empty state title when no commodities exist",
+    message: "価格履歴が見つかりません",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "この元帳にはまだ商品価格データがありません。",
-    description: "Empty state description for no commodities",
+    message:
+      "この帳簿には価格の記録がないため、表示できる為替レートの履歴はありません。",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "{count}データポイントの価格履歴",

@@ -367,8 +367,7 @@ const zhCommon: Record<string, TranslationEntry> = {
     description: "Description for cash flow page",
   },
   "common.pageDescription.commodities": {
-    message:
-      "查看和管理{ledgerName}中使用的商品（货币、股票和资产）。跟踪汇率和价格历史。",
+    message: "查看 {ledgerName} 中记录的价格对，以及每一对的汇率历史。",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

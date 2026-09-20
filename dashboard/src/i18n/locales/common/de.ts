@@ -375,7 +375,7 @@ const deCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "Waren (Währungen, Aktien und Vermögenswerte) in {ledgerName} anzeigen und verwalten. Verfolgen Sie Wechselkurse und Preisentwicklung.",
+      "Sehen Sie die in {ledgerName} erfassten Kurspaare und die Wechselkurshistorie jedes einzelnen.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

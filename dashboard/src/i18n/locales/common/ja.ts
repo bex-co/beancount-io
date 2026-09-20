@@ -373,7 +373,7 @@ const jaCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "{ledgerName}で使用されている商品（通貨、株式、資産）を表示・管理します。為替レートと価格履歴を追跡できます。",
+      "{ledgerName}に記録された価格ペアと、それぞれの為替レート履歴を表示します。",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

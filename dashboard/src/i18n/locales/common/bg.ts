@@ -374,7 +374,7 @@ const bgCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "Преглеждайте и управлявайте стоки (валути, акции и активи), използвани в {ledgerName}. Проследявайте обменни курсове и ценова история.",
+      "Вижте валутните двойки, записани в {ledgerName}, и историята на обменния курс за всяка от тях.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

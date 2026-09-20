@@ -374,7 +374,7 @@ const ukCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "Переглядайте та керуйте товарами (валютами, акціями та активами), що використовуються в {ledgerName}. Відстежуйте обмінні курси та історію цін.",
+      "Переглядайте пари котирувань, записані в {ledgerName}, та історію обмінного курсу кожної з них.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

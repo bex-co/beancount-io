@@ -374,7 +374,7 @@ const frCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "Affichez et gérez les marchandises (devises, actions et actifs) utilisées dans {ledgerName}. Suivez les taux de change et l'historique des prix.",
+      "Consultez les paires de cours enregistrées dans {ledgerName} et l'historique de taux de change de chacune.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

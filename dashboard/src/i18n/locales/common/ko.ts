@@ -372,8 +372,7 @@ const koCommon: Record<string, TranslationEntry> = {
     description: "Description for cash flow page",
   },
   "common.pageDescription.commodities": {
-    message:
-      "{ledgerName}에서 사용된 상품(통화, 주식, 자산)을 보고 관리합니다. 환율과 가격 내역을 추적할 수 있습니다.",
+    message: "{ledgerName}에 기록된 가격 쌍과 각각의 환율 이력을 봅니다.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

@@ -13,12 +13,15 @@ const enCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "No Commodities Found",
-    description: "Empty state title when no commodities exist",
+    message: "No Price History Found",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "No commodities are available in this ledger.",
-    description: "Empty state description for no commodities",
+    message:
+      "This ledger records no commodity prices, so there is no exchange-rate history to show.",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "Price history with {count} data points",

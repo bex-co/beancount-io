@@ -13,12 +13,15 @@ const ruCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "Товары не найдены",
-    description: "Empty state title when no commodities exist",
+    message: "История цен не найдена",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "В этой главной книге пока нет данных о ценах товаров.",
-    description: "Empty state description for no commodities",
+    message:
+      "В этой книге не записаны цены, поэтому историю обменных курсов показать нечем.",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "История цен с {count} точками данных",

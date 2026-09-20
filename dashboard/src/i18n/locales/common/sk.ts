@@ -374,7 +374,7 @@ const skCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "Zobrazujte a spravujte komodity (meny, akcie a aktíva) používané v {ledgerName}. Sledujte výmenné kurzy a históriu cien.",
+      "Zobrazte cenové páry zaznamenané v {ledgerName} a históriu výmenného kurzu každého z nich.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

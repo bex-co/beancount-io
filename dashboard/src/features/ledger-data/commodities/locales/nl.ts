@@ -13,12 +13,15 @@ const nlCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "Geen grondstoffen gevonden",
-    description: "Empty state title when no commodities exist",
+    message: "Geen koershistorie gevonden",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "Dit grootboek heeft nog geen grondstoffenprijsgegevens.",
-    description: "Empty state description for no commodities",
+    message:
+      "Dit grootboek bevat geen koersen, dus er is geen wisselkoershistorie om te tonen.",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "Prijsgeschiedenis met {count} datapunten",

@@ -13,12 +13,15 @@ const caCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "Carregant esdeveniments...",
-    description: "Empty state title when no commodities exist",
+    message: "No s'ha trobat cap historial de preus",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "Carregant resultats de la consulta...",
-    description: "Empty state description for no commodities",
+    message:
+      "Aquest llibre no registra preus de cap divisa ni valor, de manera que no hi ha historial de canvi per mostrar.",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "Historial de preus amb {count} punts de dades",

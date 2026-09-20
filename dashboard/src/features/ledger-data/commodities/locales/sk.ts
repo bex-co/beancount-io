@@ -13,12 +13,15 @@ const skCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "Nenašli sa žiadne komodity",
-    description: "Empty state title when no commodities exist",
+    message: "Nenašla sa žiadna história cien",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "Táto kniha zatiaľ neobsahuje žiadne údaje o cenách komodít.",
-    description: "Empty state description for no commodities",
+    message:
+      "Táto kniha neobsahuje žiadne ceny, takže niet histórie výmenných kurzov na zobrazenie.",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "Cenová história s {count} dátovými bodmi",

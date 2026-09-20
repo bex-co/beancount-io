@@ -375,7 +375,7 @@ const nlCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "Bekijk en beheer goederen (valuta's, aandelen en activa) die worden gebruikt in {ledgerName}. Volg wisselkoersen en prijsgeschiedenis.",
+      "Bekijk de koersparen die in {ledgerName} zijn vastgelegd en de wisselkoershistorie van elk paar.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

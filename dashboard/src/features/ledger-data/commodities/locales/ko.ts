@@ -13,12 +13,14 @@ const koCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "상품을 찾을 수 없습니다",
-    description: "Empty state title when no commodities exist",
+    message: "가격 이력을 찾을 수 없습니다",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "이 장부에는 아직 상품 가격 데이터가 없습니다.",
-    description: "Empty state description for no commodities",
+    message: "이 장부에는 가격 기록이 없어 표시할 환율 이력이 없습니다.",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "{count}개 데이터 포인트가 있는 가격 기록",

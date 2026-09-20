@@ -13,12 +13,15 @@ const bgCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "Няма намерени стоки",
-    description: "Empty state title when no commodities exist",
+    message: "Няма история на цените",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "Тази книга все още няма данни за цени на стоки.",
-    description: "Empty state description for no commodities",
+    message:
+      "Този счетоводен регистър не записва цени на стоки, затова няма история на обменните курсове за показване.",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "История на цените с {count} точки",

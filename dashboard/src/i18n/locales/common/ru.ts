@@ -373,7 +373,7 @@ const ruCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "Просматривайте и управляйте товарами (валютами, акциями и активами), используемыми в {ledgerName}. Отслеживайте обменные курсы и историю цен.",
+      "Просматривайте пары котировок, записанные в {ledgerName}, и историю обменного курса каждой из них.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

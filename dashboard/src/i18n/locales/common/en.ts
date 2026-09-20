@@ -374,7 +374,7 @@ const enCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.commodities": {
     message:
-      "View and manage commodities (currencies, stocks, and assets) used in {ledgerName}. Track exchange rates and price history.",
+      "View the commodity price pairs recorded in {ledgerName}, and the exchange-rate history of each one.",
     description: "Description for commodities page",
   },
   "common.pageDescription.createFile": {

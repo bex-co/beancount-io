@@ -13,12 +13,15 @@ const deCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "Keine Währungen gefunden",
-    description: "Empty state title when no commodities exist",
+    message: "Keine Kurshistorie gefunden",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "Dieses Hauptbuch enthält noch keine Währungskursdaten.",
-    description: "Empty state description for no commodities",
+    message:
+      "Dieses Journal enthält keine Kursnotierungen, daher gibt es keine Wechselkurshistorie anzuzeigen.",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "Kursverlauf mit {count} Datenpunkten",

@@ -13,12 +13,15 @@ const faCommodities: Record<string, TranslationEntry> = {
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {
-    message: "کالا یا ارزی یافت نشد",
-    description: "Empty state title when no commodities exist",
+    message: "تاریخچه قیمتی یافت نشد",
+    description:
+      "Empty state title when the ledger records no commodity prices",
   },
   "page.commodities.noCommoditiesFoundDescription": {
-    message: "این دفتر هنوز داده‌ای از قیمت کالا یا ارز ندارد.",
-    description: "Empty state description for no commodities",
+    message:
+      "در این دفتر هیچ قیمتی ثبت نشده است، بنابراین تاریخچه‌ای از نرخ تبدیل برای نمایش وجود ندارد.",
+    description:
+      "Empty state description when the ledger records no commodity prices",
   },
   "page.commodities.priceHistoryDataPoints": {
     message: "تاریخچه قیمت با {count} نقطه داده",
