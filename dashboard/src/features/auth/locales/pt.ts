@@ -408,11 +408,11 @@ const ptAuth: Record<string, TranslationEntry> = {
     description: "Login page welcome title",
   },
   "auth.oauthSignInToContinue": {
-    message: "Sign in to continue",
+    message: "Entre para continuar",
     description: "OAuth consent page login step title",
   },
   "auth.oauthAppWantsAccess": {
-    message: "An app wants to access your Beancount ledger.",
+    message: "Um aplicativo quer acessar o seu livro do Beancount.",
     description: "OAuth consent page login step description",
   },
   "auth.oauthAllLedgers": {
@@ -425,15 +425,15 @@ const ptAuth: Record<string, TranslationEntry> = {
     description: "MCP account-wide consent explanation",
   },
   "auth.oauthChooseLedger": {
-    message: "Choose a ledger",
+    message: "Escolha um livro",
     description: "OAuth consent page ledger step title",
   },
   "auth.oauthSelectLedger": {
-    message: "Select which ledger to grant access to.",
+    message: "Escolha a qual livro conceder acesso.",
     description: "OAuth consent page ledger step description",
   },
   "auth.oauthApproveAccess": {
-    message: "Approve access",
+    message: "Aprovar acesso",
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
@@ -441,11 +441,11 @@ const ptAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {
-    message: "Create an account to continue",
+    message: "Crie uma conta para continuar",
     description: "OAuth consent page register step title",
   },
   "auth.oauthVerifyEmailToContinue": {
-    message: "Verify your email to continue",
+    message: "Verifique seu e-mail para continuar",
     description: "OAuth consent page OTP step title",
   },
   "auth.loginSessionExpiredMessage": {

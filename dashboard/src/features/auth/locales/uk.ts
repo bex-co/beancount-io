@@ -406,11 +406,11 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Login page welcome title",
   },
   "auth.oauthSignInToContinue": {
-    message: "Sign in to continue",
+    message: "Увійдіть, щоб продовжити",
     description: "OAuth consent page login step title",
   },
   "auth.oauthAppWantsAccess": {
-    message: "An app wants to access your Beancount ledger.",
+    message: "Застосунок запитує доступ до вашої книги Beancount.",
     description: "OAuth consent page login step description",
   },
   "auth.oauthAllLedgers": {
@@ -423,15 +423,15 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "MCP account-wide consent explanation",
   },
   "auth.oauthChooseLedger": {
-    message: "Choose a ledger",
+    message: "Виберіть книгу",
     description: "OAuth consent page ledger step title",
   },
   "auth.oauthSelectLedger": {
-    message: "Select which ledger to grant access to.",
+    message: "Виберіть, до якої книги надати доступ.",
     description: "OAuth consent page ledger step description",
   },
   "auth.oauthApproveAccess": {
-    message: "Approve access",
+    message: "Дозволити доступ",
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
@@ -439,11 +439,11 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {
-    message: "Create an account to continue",
+    message: "Створіть обліковий запис, щоб продовжити",
     description: "OAuth consent page register step title",
   },
   "auth.oauthVerifyEmailToContinue": {
-    message: "Verify your email to continue",
+    message: "Підтвердьте електронну пошту, щоб продовжити",
     description: "OAuth consent page OTP step title",
   },
   "auth.loginSessionExpiredMessage": {

@@ -399,11 +399,11 @@ const koAuth: Record<string, TranslationEntry> = {
     description: "Conjunction between terms and privacy links",
   },
   "auth.oauthSignInToContinue": {
-    message: "Sign in to continue",
+    message: "계속하려면 로그인하세요",
     description: "OAuth consent page login step title",
   },
   "auth.oauthAppWantsAccess": {
-    message: "An app wants to access your Beancount ledger.",
+    message: "앱이 회원님의 Beancount 장부에 접근하려고 합니다.",
     description: "OAuth consent page login step description",
   },
   "auth.oauthAllLedgers": {
@@ -416,15 +416,15 @@ const koAuth: Record<string, TranslationEntry> = {
     description: "MCP account-wide consent explanation",
   },
   "auth.oauthChooseLedger": {
-    message: "Choose a ledger",
+    message: "장부 선택",
     description: "OAuth consent page ledger step title",
   },
   "auth.oauthSelectLedger": {
-    message: "Select which ledger to grant access to.",
+    message: "접근을 허용할 장부를 선택하세요.",
     description: "OAuth consent page ledger step description",
   },
   "auth.oauthApproveAccess": {
-    message: "Approve access",
+    message: "접근 허용",
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
@@ -432,11 +432,11 @@ const koAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {
-    message: "Create an account to continue",
+    message: "계속하려면 계정을 만드세요",
     description: "OAuth consent page register step title",
   },
   "auth.oauthVerifyEmailToContinue": {
-    message: "Verify your email to continue",
+    message: "계속하려면 이메일을 인증하세요",
     description: "OAuth consent page OTP step title",
   },
   "auth.loginSessionExpiredMessage": {

@@ -405,11 +405,11 @@ const faAuth: Record<string, TranslationEntry> = {
     description: "Login page welcome title",
   },
   "auth.oauthSignInToContinue": {
-    message: "Sign in to continue",
+    message: "برای ادامه وارد شوید",
     description: "OAuth consent page login step title",
   },
   "auth.oauthAppWantsAccess": {
-    message: "An app wants to access your Beancount ledger.",
+    message: "یک برنامه می‌خواهد به دفتر Beancount شما دسترسی پیدا کند.",
     description: "OAuth consent page login step description",
   },
   "auth.oauthAllLedgers": {
@@ -422,15 +422,15 @@ const faAuth: Record<string, TranslationEntry> = {
     description: "MCP account-wide consent explanation",
   },
   "auth.oauthChooseLedger": {
-    message: "Choose a ledger",
+    message: "یک دفتر انتخاب کنید",
     description: "OAuth consent page ledger step title",
   },
   "auth.oauthSelectLedger": {
-    message: "Select which ledger to grant access to.",
+    message: "انتخاب کنید به کدام دفتر دسترسی داده شود.",
     description: "OAuth consent page ledger step description",
   },
   "auth.oauthApproveAccess": {
-    message: "Approve access",
+    message: "تأیید دسترسی",
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
@@ -438,11 +438,11 @@ const faAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {
-    message: "Create an account to continue",
+    message: "برای ادامه یک حساب کاربری بسازید",
     description: "OAuth consent page register step title",
   },
   "auth.oauthVerifyEmailToContinue": {
-    message: "Verify your email to continue",
+    message: "برای ادامه ایمیل خود را تأیید کنید",
     description: "OAuth consent page OTP step title",
   },
   "auth.loginSessionExpiredMessage": {

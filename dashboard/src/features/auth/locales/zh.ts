@@ -398,11 +398,11 @@ const zhAuth: Record<string, TranslationEntry> = {
     description: "Login page welcome title",
   },
   "auth.oauthSignInToContinue": {
-    message: "Sign in to continue",
+    message: "登录以继续",
     description: "OAuth consent page login step title",
   },
   "auth.oauthAppWantsAccess": {
-    message: "An app wants to access your Beancount ledger.",
+    message: "某个应用想要访问你的 Beancount 账本。",
     description: "OAuth consent page login step description",
   },
   "auth.oauthAllLedgers": {
@@ -415,15 +415,15 @@ const zhAuth: Record<string, TranslationEntry> = {
     description: "MCP account-wide consent explanation",
   },
   "auth.oauthChooseLedger": {
-    message: "Choose a ledger",
+    message: "选择账本",
     description: "OAuth consent page ledger step title",
   },
   "auth.oauthSelectLedger": {
-    message: "Select which ledger to grant access to.",
+    message: "选择要授予访问权限的账本。",
     description: "OAuth consent page ledger step description",
   },
   "auth.oauthApproveAccess": {
-    message: "Approve access",
+    message: "批准访问",
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
@@ -431,11 +431,11 @@ const zhAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {
-    message: "Create an account to continue",
+    message: "创建账户以继续",
     description: "OAuth consent page register step title",
   },
   "auth.oauthVerifyEmailToContinue": {
-    message: "Verify your email to continue",
+    message: "验证邮箱以继续",
     description: "OAuth consent page OTP step title",
   },
   "auth.loginSessionExpiredMessage": {

@@ -405,11 +405,11 @@ const skAuth: Record<string, TranslationEntry> = {
     description: "Login page welcome title",
   },
   "auth.oauthSignInToContinue": {
-    message: "Sign in to continue",
+    message: "Prihláste sa a pokračujte",
     description: "OAuth consent page login step title",
   },
   "auth.oauthAppWantsAccess": {
-    message: "An app wants to access your Beancount ledger.",
+    message: "Aplikácia chce získať prístup k vašej knihe Beancount.",
     description: "OAuth consent page login step description",
   },
   "auth.oauthAllLedgers": {
@@ -422,15 +422,15 @@ const skAuth: Record<string, TranslationEntry> = {
     description: "MCP account-wide consent explanation",
   },
   "auth.oauthChooseLedger": {
-    message: "Choose a ledger",
+    message: "Vyberte knihu",
     description: "OAuth consent page ledger step title",
   },
   "auth.oauthSelectLedger": {
-    message: "Select which ledger to grant access to.",
+    message: "Vyberte, ku ktorej knihe udeliť prístup.",
     description: "OAuth consent page ledger step description",
   },
   "auth.oauthApproveAccess": {
-    message: "Approve access",
+    message: "Povoliť prístup",
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
@@ -438,11 +438,11 @@ const skAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {
-    message: "Create an account to continue",
+    message: "Vytvorte si účet a pokračujte",
     description: "OAuth consent page register step title",
   },
   "auth.oauthVerifyEmailToContinue": {
-    message: "Verify your email to continue",
+    message: "Overte svoj e-mail a pokračujte",
     description: "OAuth consent page OTP step title",
   },
   "auth.loginSessionExpiredMessage": {

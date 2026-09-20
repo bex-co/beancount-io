@@ -403,11 +403,11 @@ const jaAuth: Record<string, TranslationEntry> = {
     description: "Conjunction between terms and privacy links",
   },
   "auth.oauthSignInToContinue": {
-    message: "Sign in to continue",
+    message: "続行するにはサインインしてください",
     description: "OAuth consent page login step title",
   },
   "auth.oauthAppWantsAccess": {
-    message: "An app wants to access your Beancount ledger.",
+    message: "アプリがあなたの Beancount 台帳へのアクセスを求めています。",
     description: "OAuth consent page login step description",
   },
   "auth.oauthAllLedgers": {
@@ -420,15 +420,15 @@ const jaAuth: Record<string, TranslationEntry> = {
     description: "MCP account-wide consent explanation",
   },
   "auth.oauthChooseLedger": {
-    message: "Choose a ledger",
+    message: "台帳を選択",
     description: "OAuth consent page ledger step title",
   },
   "auth.oauthSelectLedger": {
-    message: "Select which ledger to grant access to.",
+    message: "アクセスを許可する台帳を選択してください。",
     description: "OAuth consent page ledger step description",
   },
   "auth.oauthApproveAccess": {
-    message: "Approve access",
+    message: "アクセスを許可",
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
@@ -436,11 +436,11 @@ const jaAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {
-    message: "Create an account to continue",
+    message: "続行するにはアカウントを作成してください",
     description: "OAuth consent page register step title",
   },
   "auth.oauthVerifyEmailToContinue": {
-    message: "Verify your email to continue",
+    message: "続行するにはメールアドレスを確認してください",
     description: "OAuth consent page OTP step title",
   },
   "auth.loginSessionExpiredMessage": {

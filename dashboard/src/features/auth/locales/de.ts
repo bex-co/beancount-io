@@ -408,11 +408,11 @@ const deAuth: Record<string, TranslationEntry> = {
     description: "Login page welcome title",
   },
   "auth.oauthSignInToContinue": {
-    message: "Sign in to continue",
+    message: "Zum Fortfahren anmelden",
     description: "OAuth consent page login step title",
   },
   "auth.oauthAppWantsAccess": {
-    message: "An app wants to access your Beancount ledger.",
+    message: "Eine App möchte auf Ihr Beancount-Hauptbuch zugreifen.",
     description: "OAuth consent page login step description",
   },
   "auth.oauthAllLedgers": {
@@ -425,15 +425,15 @@ const deAuth: Record<string, TranslationEntry> = {
     description: "MCP account-wide consent explanation",
   },
   "auth.oauthChooseLedger": {
-    message: "Choose a ledger",
+    message: "Hauptbuch auswählen",
     description: "OAuth consent page ledger step title",
   },
   "auth.oauthSelectLedger": {
-    message: "Select which ledger to grant access to.",
+    message: "Wählen Sie, für welches Hauptbuch der Zugriff gelten soll.",
     description: "OAuth consent page ledger step description",
   },
   "auth.oauthApproveAccess": {
-    message: "Approve access",
+    message: "Zugriff erlauben",
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
@@ -441,11 +441,11 @@ const deAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {
-    message: "Create an account to continue",
+    message: "Zum Fortfahren ein Konto erstellen",
     description: "OAuth consent page register step title",
   },
   "auth.oauthVerifyEmailToContinue": {
-    message: "Verify your email to continue",
+    message: "Zum Fortfahren E-Mail bestätigen",
     description: "OAuth consent page OTP step title",
   },
   "auth.loginSessionExpiredMessage": {

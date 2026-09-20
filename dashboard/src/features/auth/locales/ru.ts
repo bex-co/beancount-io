@@ -408,11 +408,11 @@ const ruAuth: Record<string, TranslationEntry> = {
     description: "Login page welcome title",
   },
   "auth.oauthSignInToContinue": {
-    message: "Sign in to continue",
+    message: "Войдите, чтобы продолжить",
     description: "OAuth consent page login step title",
   },
   "auth.oauthAppWantsAccess": {
-    message: "An app wants to access your Beancount ledger.",
+    message: "Приложение запрашивает доступ к вашей книге Beancount.",
     description: "OAuth consent page login step description",
   },
   "auth.oauthAllLedgers": {
@@ -425,15 +425,15 @@ const ruAuth: Record<string, TranslationEntry> = {
     description: "MCP account-wide consent explanation",
   },
   "auth.oauthChooseLedger": {
-    message: "Choose a ledger",
+    message: "Выберите книгу",
     description: "OAuth consent page ledger step title",
   },
   "auth.oauthSelectLedger": {
-    message: "Select which ledger to grant access to.",
+    message: "Выберите, к какой книге предоставить доступ.",
     description: "OAuth consent page ledger step description",
   },
   "auth.oauthApproveAccess": {
-    message: "Approve access",
+    message: "Разрешить доступ",
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
@@ -441,11 +441,11 @@ const ruAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {
-    message: "Create an account to continue",
+    message: "Создайте учётную запись, чтобы продолжить",
     description: "OAuth consent page register step title",
   },
   "auth.oauthVerifyEmailToContinue": {
-    message: "Verify your email to continue",
+    message: "Подтвердите электронную почту, чтобы продолжить",
     description: "OAuth consent page OTP step title",
   },
   "auth.loginSessionExpiredMessage": {
