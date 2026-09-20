@@ -47,6 +47,7 @@ import {
   calculateBudgetForInterval,
   parseBudgetAmount,
   readSparseBalanceAmount,
+  budgetVariance,
 } from "./budget-utils";
 import type { BudgetGroup } from "./types";
 
@@ -177,7 +178,7 @@ export function BudgetChartCard({
 
   const variance = useMemo(() => {
     if (latestActual === null) return null;
-    return latestActual - comparisonBudgetValue;
+    return budgetVariance(latestActual, comparisonBudgetValue);
   }, [latestActual, comparisonBudgetValue]);
 
   const varianceStatus = useMemo(() => {

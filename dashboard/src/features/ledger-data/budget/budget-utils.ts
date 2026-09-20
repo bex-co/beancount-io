@@ -195,6 +195,37 @@ export function calculateBudgetForInterval(
 }
 
 /**
+ * The longest period the chart prorates over, in days. One leap year plus
+ * slack — the tolerance below allows one unit in the last place per day
+ * summed, and this bounds that day count.
+ */
+const MAX_PRORATION_DAYS = 512;
+
+/**
+ * Actual minus target, with the proration's own round-off treated as zero.
+ *
+ * `calculateBudgetForInterval` adds one floating-point daily fraction per day,
+ * so an exactly met budget lands a few units in the last place away from the
+ * actual: 1650/28 summed over February is 1649.999999999999, and 1650/31
+ * summed over January is 1650.0000000000005. Comparing those strictly made the
+ * same exactly met 1650 USD target read "Above target +0" in one month and
+ * "Below target -0" in the next.
+ *
+ * The tolerance scales with the numbers being compared and allows one ulp for
+ * each day summed, so it absorbs that accumulation while staying many orders
+ * of magnitude below a fractional unit of any commodity — a difference a
+ * reader could act on is never flattened.
+ */
+export function budgetVariance(actual: number, budget: number): number {
+  const difference = actual - budget;
+  const tolerance =
+    Math.max(Math.abs(actual), Math.abs(budget), 1) *
+    Number.EPSILON *
+    MAX_PRORATION_DAYS;
+  return Math.abs(difference) <= tolerance ? 0 : difference;
+}
+
+/**
  * Read a currency amount from a sparse interval inventory.
  * Ledger serialization omits zero currencies, so a missing key on a returned
  * interval means 0 — distinct from an empty series (handled by the caller).
