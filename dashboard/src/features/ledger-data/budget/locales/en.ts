@@ -155,6 +155,14 @@ const enBudget: Record<string, TranslationEntry> = {
     message: "No Data Available",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "Period",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "Period data",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetAddEntry": {
     message: "Update Budget",
     description: "Button to add a dated update to an existing budget",

@@ -129,6 +129,14 @@ const caBudget: Record<string, TranslationEntry> = {
     message: "No hi ha dades disponibles",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "Període",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "Dades per període",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetOnBudget": {
     message: "A l'objectiu",
     description: "Badge/text shown when spending matches budget",

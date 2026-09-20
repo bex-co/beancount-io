@@ -129,6 +129,14 @@ const nlBudget: Record<string, TranslationEntry> = {
     message: "Geen gegevens beschikbaar",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "Periode",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "Gegevens per periode",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetOnBudget": {
     message: "Op doel",
     description: "Badge/text shown when spending matches budget",

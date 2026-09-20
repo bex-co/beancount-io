@@ -129,6 +129,14 @@ const ptBudget: Record<string, TranslationEntry> = {
     message: "Sem dados disponíveis",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "Período",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "Dados por período",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetOnBudget": {
     message: "Dentro da meta",
     description: "Badge/text shown when spending matches budget",

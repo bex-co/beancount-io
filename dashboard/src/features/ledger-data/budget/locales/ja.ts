@@ -128,6 +128,14 @@ const jaBudget: Record<string, TranslationEntry> = {
     message: "データがありません",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "期間",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "期間別データ",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetOnBudget": {
     message: "目標通り",
     description: "Badge/text shown when spending matches budget",

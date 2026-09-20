@@ -129,6 +129,14 @@ const deBudget: Record<string, TranslationEntry> = {
     message: "Keine Daten verfügbar",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "Zeitraum",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "Daten je Zeitraum",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetOnBudget": {
     message: "Im Ziel",
     description: "Badge/text shown when spending matches budget",

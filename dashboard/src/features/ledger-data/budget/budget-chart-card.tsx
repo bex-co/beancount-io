@@ -20,6 +20,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/common/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/common/components/ui/table";
 import { ReactECharts } from "@/common/components/react-echarts";
 import { LedgerWritePermission } from "@/common/components/ledger-permission/write";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
@@ -68,6 +76,7 @@ export function BudgetChartCard({
 }: BudgetChartCardProps) {
   const titleId = useId();
   const currencyId = useId();
+  const periodsId = useId();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const { t } = useTranslations();
   const formatNum = useFormatNumber();
@@ -112,6 +121,37 @@ export function BudgetChartCard({
     balance: item.balance as Record<string, unknown>,
     accountBalances: item.accountBalances as Record<string, unknown>,
   }));
+
+  /**
+   * Every plotted period with its effective target and actual. The chart draws
+   * from this and so does the table below it, so the readable values are the
+   * ones on the canvas rather than a second calculation.
+   */
+  const periodRows = useMemo(
+    () =>
+      chartData.map((item) => ({
+        date: item.date,
+        budget:
+          calculateBudgetForInterval(
+            item.date,
+            group.interval,
+            group.budgetHistory,
+          ) * displayDirection,
+        actual:
+          readSparseBalanceAmount(
+            item.balance,
+            displayCurrency,
+            displayDirection,
+          ) ?? 0,
+      })),
+    [
+      chartData,
+      displayCurrency,
+      displayDirection,
+      group.budgetHistory,
+      group.interval,
+    ],
+  );
 
   const latestActual = useMemo(() => {
     if (chartData.length === 0) return null;
@@ -170,22 +210,10 @@ export function BudgetChartCard({
       };
     }
 
-    const dates = chartData.map((item) => item.date);
+    const dates = periodRows.map((row) => row.date);
     const colors = getChartColors();
-    const actualValues = chartData.map((item) => {
-      return (
-        readSparseBalanceAmount(
-          item.balance,
-          displayCurrency,
-          displayDirection,
-        ) ?? 0
-      );
-    });
-    const budgetValues = dates.map(
-      (date) =>
-        calculateBudgetForInterval(date, group.interval, group.budgetHistory) *
-        displayDirection,
-    );
+    const actualValues = periodRows.map((row) => row.actual);
+    const budgetValues = periodRows.map((row) => row.budget);
 
     const tooltip: TooltipComponentOption = {
       trigger: "axis",
@@ -259,12 +287,11 @@ export function BudgetChartCard({
       animationEasing: "cubicOut",
     };
   }, [
-    chartData,
-    displayCurrency,
-    displayDirection,
+    periodRows,
+    chartData.length,
     chartInterval,
-    group.interval,
-    group.budgetHistory,
+    displayCurrency,
+    group.budgetHistory.length,
     t,
     formatNum,
   ]);
@@ -409,6 +436,53 @@ export function BudgetChartCard({
             style={chartStyle}
             className="w-full"
           />
+        )}
+
+        {/* The canvas has no readable alternative, so the plotted periods are
+            also offered as text. Only for a settled, non-empty read: a failed
+            one must not look like a table of zeros. A disclosure keeps long
+            histories out of the way while staying reachable by keyboard. */}
+        {!loading && !error && periodRows.length > 0 && (
+          <details className="group/periods mt-4 rounded-lg border">
+            <summary
+              id={periodsId}
+              className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-muted-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            >
+              {t("page.budget.budgetPeriodData")}
+            </summary>
+            <div className="overflow-x-auto border-t">
+              <Table aria-labelledby={`${titleId} ${currencyId} ${periodsId}`}>
+                <TableHeader className="bg-muted/40">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="min-w-28">
+                      {t("page.budget.budgetPeriod")}
+                    </TableHead>
+                    <TableHead className="min-w-28 text-right">
+                      {t("page.budget.budget")}
+                    </TableHead>
+                    <TableHead className="min-w-28 text-right">
+                      {t("page.budget.budgetSpending")}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {periodRows.map((row) => (
+                    <TableRow key={row.date}>
+                      <TableCell className="whitespace-nowrap font-mono text-xs tabular-nums">
+                        {row.date}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-right font-mono text-sm tabular-nums">
+                        {formatNum(row.budget)} {displayCurrency}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-right font-mono text-sm tabular-nums">
+                        {formatNum(row.actual)} {displayCurrency}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </details>
         )}
 
         <div className="mt-4">

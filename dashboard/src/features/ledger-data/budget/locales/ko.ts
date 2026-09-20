@@ -128,6 +128,14 @@ const koBudget: Record<string, TranslationEntry> = {
     message: "데이터 없음",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "기간",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "기간별 데이터",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetOnBudget": {
     message: "목표 달성",
     description: "Badge/text shown when spending matches budget",

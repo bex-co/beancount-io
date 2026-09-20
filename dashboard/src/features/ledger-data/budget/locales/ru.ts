@@ -129,6 +129,14 @@ const ruBudget: Record<string, TranslationEntry> = {
     message: "Нет доступных данных",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "Период",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "Данные по периодам",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetOnBudget": {
     message: "В цели",
     description: "Badge/text shown when spending matches budget",

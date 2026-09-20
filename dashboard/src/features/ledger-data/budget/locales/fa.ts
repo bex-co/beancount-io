@@ -129,6 +129,14 @@ const faBudget: Record<string, TranslationEntry> = {
     message: "داده‌ای موجود نیست",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "دوره",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "داده‌های دوره‌ای",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetOnBudget": {
     message: "در هدف",
     description: "Badge/text shown when spending matches budget",

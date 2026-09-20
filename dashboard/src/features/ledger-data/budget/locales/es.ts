@@ -129,6 +129,14 @@ const esBudget: Record<string, TranslationEntry> = {
     message: "No hay datos disponibles",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "Período",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "Datos por período",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetOnBudget": {
     message: "En objetivo",
     description: "Badge/text shown when spending matches budget",

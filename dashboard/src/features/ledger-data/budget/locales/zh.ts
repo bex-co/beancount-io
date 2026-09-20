@@ -128,6 +128,14 @@ const zhBudget: Record<string, TranslationEntry> = {
     message: "暂无数据",
     description: "Chart empty state text when no data exists",
   },
+  "page.budget.budgetPeriod": {
+    message: "期间",
+    description: "Column header for a chart period in the budget period table",
+  },
+  "page.budget.budgetPeriodData": {
+    message: "各期间数据",
+    description: "Disclosure label for the budget chart's period data table",
+  },
   "page.budget.budgetOnBudget": {
     message: "符合目标",
     description: "Badge/text shown when spending matches budget",
