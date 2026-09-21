@@ -17,7 +17,7 @@ help:
 	@echo "  make format-check     - Check formatting without modifying files"
 	@echo "  make typecheck        - Run mypy type checks"
 	@echo "  make test             - Run tests with pytest across all cores"
-	@echo "  make live-prices      - Probe the hosted price feed; record mount status for the live test"
+	@echo "  make live-prices      - Verify authenticated hosted price workflows; record successful evidence"
 	@echo "  make codegen          - Regenerate the REST client and cloud command stubs from openapi/v1.json"
 	@echo "  make spec-check       - Fail if openapi/v1.json drifted from backend-cluster/idl's canonical spec"
 	@echo "  make spec-sync        - Refresh openapi/v1.json from the canonical spec"

@@ -1,6 +1,6 @@
 [project]
 name = "beancount-io"
-version = "0.2.0"
+version = "0.3.0"
 description = "Beancount.io CLI"
 readme = "README.md"
 license = { text = "MIT AND GPL-2.0-only" }

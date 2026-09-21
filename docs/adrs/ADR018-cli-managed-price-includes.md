@@ -4,13 +4,39 @@
 - Decision owner: CLI (`cli/`)
 - Contract mirrored: [ADR 015](ADR015-ledger-managed-price-includes.md). Implements the CLI row of [PRFAQ002](../prfaqs/PRFAQ002-include-live-price.md) FAQ 16, and its FAQ 12 requirement 5 ("controlled cache files for the local loader") and FAQ 9 compatibility boundary.
 
+## Authentication amendment — 2026-09-21
+
+[PRFAQ003](../prfaqs/PRFAQ003-cli-live-prices.md) supersedes the anonymous-feed
+assumption in the original decision. Production prices accept the existing
+cloud login as a bearer; no public anonymous mount is required. CLI 0.3.0
+relays saved login or `BEA_TOKEN` through the child environment, without
+importing frontend auth into the engine. Only HTTPS `beancount.io` (default
+port 443) with an exact `/prices/<ALIAS>` path receives it. Custom allowed
+origins and redirects never receive credentials. Local/offline loads do not
+require login. Tokens never enter argv, ledger files, cached feed metadata,
+exports or diagnostics.
+
+Explicit refresh collects every source outcome and fails with the full result
+when any source fails, even if cached prices remain usable. Strict refresh
+also fails on stale observations; offline refresh refuses before changing any
+refresh window. Ordinary reports include the exact load's `price_sources` in
+JSON and warn about observation age and refresh errors in text. This source
+freshness is separate from valuation completeness and is not calendar-aware.
+
+Deterministic fixture and real subprocess tests cover authentication scope,
+login expiry, per-source refresh failure and unchanged cached data. Installed
+artifact smokes use synthetic credentials and an HTTPS fixture transport.
+`make live-prices` explicitly tests authenticated production refresh, valuation,
+offline replay, export and manual precedence; the checked-in evidence contains
+only public source metadata. Routine unit tests never need a personal login.
+
 ## Context
 
 PRFAQ002 promises that `include "https://beancount.io/prices/BTC-USD"` values a holding at market. ADR 015 settled that contract for the hosted ledger service on 2026-09-15. The CLI has to honor the same line, and three facts about the local environment fix its design space:
 
 1. **Upstream Beancount resolves includes as filesystem paths, not as a file map.** A local Beancount 3.2.3 probe of the exact BTC-USD include, with sockets disabled, produced no entries and `File glob "https://beancount.io/prices/BTC-USD" does not match any files`. There is no in-memory file map to overlay the way `loadCachedFileMapForRepo` is overlaid hosted-side (ADR 015 section 6), so the same decision needs a different mechanism.
 2. **Every `bea` verb loads the ledger, and they must agree.** `check`, `list`, `query`, `report`, `import`, and write validation each reach Beancount through their own call site (`ledger/reader.py`, `query.py`, `importing.py`, `fava/beans/load.py`, `ledger/write.py`, `ledger/adding.py`). A report-only implementation would leave a connected book inconsistent between commands — `bea report` valuing a holding that `bea check` calls unpriced.
-3. **The CLI has no server, no request scope, and no account.** There is no shared process cache, no Redis, and no credential to relay: PRFAQ002 FAQ 10 requires local price fetching to work without a Beancount.io account. The hosted relay exception (ADR 015 section 3, amended by ADR 016 section 7) exists only because backend-v2 already holds the caller's session; locally there is nothing to relay. Concurrent `bea` invocations are separate processes that can race on the same cache directory.
+3. **The CLI has no server or request scope.** There is no shared process cache or Redis. The original design assumed anonymous feeds; the authentication amendment above reuses the existing cloud credential for managed price access. Concurrent `bea` invocations are separate processes that can race on the same cache directory.
 
 ## Decision
 
@@ -22,7 +48,7 @@ The CLI mirrors ADR 015's policy, fetch, validation, caching, and precedence rul
 
 Mirroring rather than sharing is deliberate: the two engines are a Python process and a TypeScript service with no runtime coupling, and PRFAQ002 FAQ 16 forbids cross-package runtime imports. The cost is two implementations of one contract; the mitigation is that the contract is fixed in ADR 015 and both sides are tested against equivalent fixtures.
 
-**One deliberate difference from the hosted service:** the CLI sends no credential with a price request — no cookie, no authorization header, no ledger name, nothing about the books. Ordinary local usage stays account-free.
+**Credential boundary:** only the canonical production HTTPS price request may receive the frontend-relayed bearer. No ledger name or content is sent. Ordinary local usage stays account-free.
 
 ### 2. Resolution is staged beside the source, never in place
 
@@ -104,7 +130,7 @@ When no validated revision exists, the include line is swapped for an `; managed
 - Local caches are per machine and not shared, so two machines refresh independently. This is correct for a CLI and needs no coordination.
 - Duplicate fetches are possible when `bea` runs concurrently on one ledger. Accepted: feeds are idempotent and the blob-then-head ordering keeps every reader consistent.
 - The policy and validation rules now exist twice, here and in `backend-cluster/ledger`. A change to the contract must land in both, and ADR 015 stays the single source of truth for what the rules are.
-- Verification rests on a deterministic local fixture server covering valid feeds, an invalid body, a redirect, a 404, a slow response, an oversized body, and changing and unchanged ETags. **The one hosted acceptance run remains pending**: the `beancount.io/prices` route still answers 302 to `/auth/login`, recorded in `cli/tests/managed_prices_live_status.json`, with `make live-prices` as the promotion path and a live test that trips when the route's state changes. The milestone was closed on fixture evidence by the user's decision; the live run is owed before PRFAQ002's public-release gate.
+- Verification uses deterministic local fixtures plus explicit authenticated production smoke. The original anonymous 302 record was a historical authentication requirement, not evidence of an unmounted feed; the amendment replaces that acceptance assumption. Publication remains gated by installed-artifact tests and the release workflow.
 - Out of scope here and still open in PRFAQ002 section 19: provider selection, the instrument catalog, the final canonical URL format, the `?commodity=` mapping syntax, and date-range parameters.
 
 ## Alternatives considered

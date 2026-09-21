@@ -1,5 +1,11 @@
 # PRFAQ002 — Include Live Price
 
+> CLI authentication amendment (2026-09-21): [PRFAQ003](PRFAQ003-cli-live-prices.md)
+> and [ADR018](../adrs/ADR018-cli-managed-price-includes.md) supersede this
+> proposal's anonymous-feed assumption. Managed prices reuse `bea cloud login`
+> or `BEA_TOKEN`; ordinary local ledgers and offline cache reads remain account-free.
+
+
 Status: Proposal for review; no product changes implemented
 
 Date: 2026-09-11

@@ -2,14 +2,14 @@
 
 **Worker:** worker1
 **Goal:** Validate and release authenticated CLI live prices.
-**Status:** todo
+**Status:** in progress (t001–t002 done; publication pending)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Exercise packaged and authenticated live journeys | 40m | w5/m7/t006 |
-| t002 | Align launch documentation and versioned artifacts | 40m | w5/m8/t001 |
+| t001 | Exercise packaged and authenticated live journeys — **DONE** | 40m | w5/m7/t006 |
+| t002 | Align launch documentation and versioned artifacts — **DONE** | 40m | w5/m8/t001 |
 | t003 | Publish and verify PyPI and Homebrew release | 40m | w5/m8/t002 |
 | t004 | Adoption surface | 40m | w5/m8/t003 |
 | t005 | Simplify | 40m | w5/m8/t004 |

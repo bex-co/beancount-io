@@ -10,6 +10,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import textwrap
 from decimal import Decimal
 from pathlib import Path
 
@@ -32,6 +33,104 @@ def _frontend_python(binary: Path) -> Path | None:
             return _frontend_python(nested) if nested.exists() else None
     sibling = binary.parent / ("python.exe" if os.name == "nt" else "python")
     return sibling if sibling.exists() else None
+
+
+def smoke_managed_prices(binary: Path, directory: Path, inherited_env: dict[str, str]) -> int:
+    """Exercise installed credentials, cache, failure and export; fake only HTTPS."""
+    directory.mkdir()
+    transport = directory / "transport"
+    transport.mkdir()
+    mode = directory / "mode"
+    mode.write_text("ok")
+    (transport / "sitecustomize.py").write_text(
+        textwrap.dedent("""\
+        import io
+        import os
+        from pathlib import Path
+        import urllib.request
+        import urllib.response
+        from urllib.error import HTTPError
+        class Transport:
+            def open(self, request, **kwargs):
+                assert request.full_url == 'https://beancount.io/prices/BTC-USD'
+                assert request.get_header('Authorization') == 'Bearer synthetic-installed-price-credential'
+                assert request.get_header('Cookie') is None
+                if Path(os.environ['BEA_SMOKE_PRICE_MODE']).read_text() == 'fail':
+                    raise HTTPError(request.full_url, 503, 'fixture outage', {}, None)
+                body = b'; alias: BTC-USD\\n; commodity: BTC\\n; quote: USD\\n2026-09-11 price BTC 92000 USD\\n'
+                return urllib.response.addinfourl(
+                    io.BytesIO(body), {'ETag': '"installed-r1"'}, request.full_url, 200
+                )
+        urllib.request.build_opener = lambda *args, **kwargs: Transport()
+    """)
+    )
+    env = dict(inherited_env, PYTHONPATH=str(transport), BEA_SMOKE_PRICE_MODE=str(mode))
+    for key in (
+        "BEA_TOKEN",
+        "BEA_MANAGED_PRICE_TOKEN",
+        "BEA_MANAGED_PRICE_AUTH_ERROR",
+        "MANAGED_PRICE_ORIGINS",
+        "MANAGED_PRICE_OFFLINE",
+        "MANAGED_PRICE_STRICT",
+    ):
+        env.pop(key, None)
+    config = directory / "config"
+    config.mkdir()
+    env["BEA_CONFIG_DIR"] = str(config)
+    (config / "credentials.json").write_text(
+        json.dumps({"token": "synthetic-installed-price-credential", "expireAt": "2099-01-01T00:00:00Z"})
+    )
+    ledger = directory / "main.bean"
+    original = (
+        'option "operating_currency" "USD"\n'
+        'include "https://beancount.io/prices/BTC-USD"\n'
+        "2024-01-01 open Assets:Crypto\n2024-01-01 open Equity:Opening\n"
+        '2024-01-01 * "Synthetic holding"\n'
+        "  Assets:Crypto 0.5 BTC\n  Equity:Opening -0.5 BTC\n"
+    )
+    ledger.write_text(original)
+    count = 0
+
+    def run(*args: str, file: Path = ledger, exit_code: int = 0):
+        nonlocal count
+        count += 1
+        result = subprocess.run(
+            [str(binary), "--json", "--no-input", "--file", str(file), *args],
+            env=env,
+            cwd=directory,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        assert result.returncode == exit_code, (args, result.stdout, result.stderr)
+        assert "synthetic-installed-price-credential" not in result.stdout + result.stderr
+        return json.loads(result.stdout if exit_code == 0 else result.stderr)
+
+    assert run("price", "refresh")["data"]["sources"][0]["revision"] == "installed-r1"
+    env["BEA_TOKEN"] = "synthetic-installed-price-credential"
+    (config / "credentials.json").unlink()
+    assert run("price", "refresh")["data"]["sources"][0]["error"] is None
+    data = run("balance", "Assets", "--conversion", "USD")["data"]
+    assert Decimal(data["assets"]["balance_children"]["USD"]) == 46000
+    assert data["price_sources"][0]["revision"] == "installed-r1"
+    mode.write_text("fail")
+    failed = run("price", "refresh", exit_code=1)["error"]["result"]["sources"][0]
+    assert failed["revision"] == "installed-r1" and "503" in failed["error"]
+    env.pop("BEA_TOKEN")
+    assert run("--offline", "balance", "Assets", "--conversion", "USD")["data"]["assets"] == data["assets"]
+    exported = directory / "export"
+    run("--offline", "price", "export", "--output", str(exported))
+    run("--offline", "check", file=exported / "main.bean")
+    portable = run("--offline", "balance", "Assets", "--conversion", "USD", file=exported / "main.bean")["data"]
+    assert portable["assets"] == data["assets"] and portable["price_sources"] == []
+    assert ledger.read_text() == original
+    for file in Path(env["XDG_CACHE_HOME"]).rglob("*"):
+        if file.is_file():
+            assert b"synthetic-installed-price-credential" not in file.read_bytes()
+    for file in exported.rglob("*"):
+        if file.is_file():
+            assert b"synthetic-installed-price-credential" not in file.read_bytes()
+    return count
 
 
 def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None, installed: bool = False) -> None:
@@ -670,6 +769,7 @@ def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None,
             )
             assert post.returncode == 0, (post.stdout, post.stderr)
             assert post.stdout.strip() == "", post.stdout
+    commands += smoke_managed_prices(binary, directory / "managed-prices", env)
     run("unknown-command", exit_code=2)
     run("--file", exit_code=2)
     print(f"Installed CLI smoke passed: {commands + 1} commands ({version.stdout.strip()}).")

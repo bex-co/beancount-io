@@ -1,10 +1,19 @@
 {
-  "_readme": "Probe record for the hosted price feed (w1/m29/t006). Regenerate with `make live-prices` from cli/. The suite's live test trips when the route no longer matches; a promotion commit re-runs this script and commits the result.",
+  "_readme": "Explicit authenticated CLI smoke. Run make live-prices or python scripts/live_prices.py --bea PATH. No login is required by the unit suite.",
   "url": "https://beancount.io/prices/BTC-USD",
-  "date": "2026-09-17",
-  "status": "pending",
-  "evidence": "fetch failed (redirect): redirects are not followed (HTTP 302)",
-  "revision": null,
-  "observed_at": null,
-  "fetched_at": null
+  "date": "2026-09-21T07:56:35.048071+00:00",
+  "status": "authenticated",
+  "cli_version": "0.3.0",
+  "installation": "installed",
+  "revision": "41fca376657cf3fa5b73c655806aa93d01cb2ef7931dd7513011e43e38cb9ae8",
+  "observed_at": "2026-09-21T07:56:29Z",
+  "fetched_at": "2026-09-21T07:56:28Z",
+  "checks": [
+    "authenticated-refresh",
+    "check",
+    "valuation",
+    "offline-replay",
+    "portable-export",
+    "manual-precedence"
+  ]
 }

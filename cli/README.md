@@ -119,7 +119,7 @@ Every flag, default, and help string is listed in the generated
 
 ### Managed price includes
 
-Sign in with `bea cloud login` (or set `BEA_TOKEN` for automation), choose
+In `bea` 0.3.0 and later, sign in with `bea cloud login` (or set `BEA_TOKEN` for automation), choose
 a pair at [Live Prices](https://beancount.io/live-prices), then add one line
 to value a holding in every `bea` command:
 

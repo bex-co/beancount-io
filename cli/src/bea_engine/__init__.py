@@ -4,7 +4,7 @@ from bea_engine import compat as _compat
 
 _compat.install()
 
-FALLBACK_VERSION = "0.2.0"
+FALLBACK_VERSION = "0.3.0"
 
 
 def version() -> str:

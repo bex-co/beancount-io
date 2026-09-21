@@ -1599,8 +1599,6 @@ class TestPriceExport:
 # Fixture coverage audit and hosted acceptance (t006)
 # --------------------------------------------------------------------------- #
 
-LIVE_STATUS = Path(__file__).resolve().parent / "managed_prices_live_status.json"
-
 
 class TestFeedCacheTruncation:
     def test_oversized_body_on_refresh_keeps_serving(self, feed_server: str, tmp_path: Path) -> None:
@@ -1619,48 +1617,15 @@ class TestFeedCacheTruncation:
 
 
 class TestHostedFeedLive:
-    """The one test allowed to dial past localhost (w1/m29/t006).
+    """Production probes are explicit; routine CI never needs a personal login."""
 
-    Everything else in the suite resolves against the thread-local fixture
-    server, so the suite stays green offline. This test skips when the
-    network cannot tell mounted from pending, passes when the probe matches
-    the checked-in record, and fails with promotion instructions when the
-    route's state changed.
-    """
-
-    def test_hosted_feed_matches_recorded_status(self, tmp_path: Path) -> None:
-        record = json.loads(LIVE_STATUS.read_text())
-        url = record["url"]
-        assert record["status"] in ("pending", "mounted"), "re-run make live-prices"
-        result = fetch_managed_price_feed(url, timeout_seconds=10)
-        if result.kind == "failed" and result.reason in (
-            "network",
-            "timeout",
-            "too-large",
-            "not-utf8",
-        ):
-            pytest.skip(f"network cannot verify the hosted route: {result.message}")
-        if record["status"] == "pending":
-            assert result.kind == "failed" and result.reason in ("redirect", "http"), (
-                f"the hosted route looks mounted ({result.kind}); run make live-prices "
-                "from cli/ and commit the promotion"
-            )
-            return
-        assert isinstance(result, FetchedFeed), (
-            f"the hosted route no longer serves a feed ({result.kind}); run make live-prices "
-            "from cli/ and commit the new record"
-        )
-        validation = check_feed_identity(validate_managed_price_text(result.text), "BTC-USD", None)
-        assert isinstance(validation, ValidFeed), validation
-        resolved = resolve_feed(url, "BTC-USD", root=tmp_path / "cache")
-        assert resolved.blob is not None
-        assert resolved.blob.revision
-        assert resolved.blob.feed.prices
-        print(
-            f"live revision={resolved.blob.revision} "
-            f"observed_at={resolved.blob.feed.latest_observed_at} "
-            f"fetched_at={resolved.blob.fetched_at}"
-        )
+    @pytest.mark.skipif(os.environ.get("BEA_LIVE_PRICE_TESTS") != "1", reason="explicit live probe only")
+    def test_anonymous_feed_requires_login(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("BEA_MANAGED_PRICE_TOKEN", raising=False)
+        monkeypatch.delenv("BEA_MANAGED_PRICE_AUTH_ERROR", raising=False)
+        result = fetch_managed_price_feed("https://beancount.io/prices/BTC-USD")
+        assert isinstance(result, FetchFailed)
+        assert result.reason == "auth"
 
 
 class TestAuthenticatedPrices:
@@ -1924,3 +1889,27 @@ def test_authenticated_price_crosses_real_helper_process(tmp_path: Path, credent
     for file in (tmp_path / "cache").rglob("*"):
         if file.is_file():
             assert b"synthetic-process-credential" not in file.read_bytes()
+
+
+@pytest.mark.parametrize(
+    ("failure", "reason"), [(TimeoutError("body stalled"), "timeout"), (OSError("connection reset"), "network")]
+)
+def test_body_read_failure_preserves_cached_feed(tmp_path: Path, failure: OSError, reason: str) -> None:
+    from io import BytesIO
+    from unittest.mock import Mock
+    from urllib.response import addinfourl
+
+    url = "https://beancount.io/prices/BTC-USD"
+    opener = Mock()
+    opener.open.return_value = addinfourl(BytesIO(b"2026-09-11 price BTC 92000 USD\n"), {"ETag": '"r1"'}, url, 200)
+    first = resolve_feed(url, "BTC-USD", root=tmp_path, opener=opener, now=1000)
+    assert first.blob is not None
+    response = Mock()
+    response.__enter__ = Mock(return_value=response)
+    response.__exit__ = Mock(return_value=False)
+    response.read.side_effect = failure
+    opener.open.return_value = response
+    failed = resolve_feed(url, "BTC-USD", root=tmp_path, opener=opener, now=1301)
+    assert failed.blob is not None and failed.blob.text == first.blob.text
+    assert failed.head.revision == "r1"
+    assert f"fetch failed ({reason})" in (failed.head.last_error or "")

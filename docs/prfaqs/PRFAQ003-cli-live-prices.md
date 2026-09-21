@@ -1,6 +1,6 @@
 # PRFAQ003 — Live Prices in the bea CLI
 
-Status: Launch proposal for review. Authenticated HTTP access has been verified; the CLI credential integration and packaged release are not yet verified as shipped.
+Status: CLI 0.3.0 release candidate. Credential integration, report provenance and authenticated production workflows are verified; package publication and post-publication installation checks remain the release gate.
 
 Date: 2026-09-20 (America/Los_Angeles)
 
@@ -34,7 +34,7 @@ include "https://beancount.io/prices/BTC-USD"
 
 The ledger stays on the customer's machine. Price requests send the requested instrument pair and authentication credential to Beancount.io; they do not upload transactions, account names, holdings, or ledger files. No separate market-data provider key is required for the supported catalog.
 
-Live prices is available in the newly published `bea` release through PyPI and Homebrew. The release notes identify the minimum supported version and link to the current catalog and setup guide.
+Live prices is available in `bea` 0.3.0 and later through PyPI and Homebrew. The release notes identify the minimum supported version and link to the current catalog and setup guide.
 
 ## Customer FAQ
 
@@ -136,6 +136,16 @@ Source status includes revision, freshness, observation time, refresh timing, an
 
 ### 9. What did we verify, and what remains unshipped?
 
+Implementation update (2026-09-21): `3c86426b` adds scoped credential relay,
+accurate refresh failure results and ordinary report provenance. The CLI suite
+passed 1506 tests; the expanded managed-price suite passed 166 tests. The
+explicit production smoke verifies authenticated refresh, check, valuation,
+offline replay, portable export and manual price precedence. Release candidate
+0.3.0 adds the same authentication/cache/export journey to installed-artifact
+smokes. The table below records the original evidence baseline, not current
+implementation gaps; final publication evidence will be recorded on closeout.
+
+
 | Area | Evidence from this review | Launch implication |
 | --- | --- | --- |
 | Public discovery | Anonymous `GET /prices/options.json` returned 200; the live-prices page generates includes from that catalog. | Reuse the existing discovery experience for the first release. |
@@ -193,7 +203,7 @@ The catalog defines which pairs are selectable; launch examples must also pass a
 | Machine contract | JSON status and refresh expose source outcomes, normal stdout contains no progress text, and noninteractive failure never opens a browser. |
 | Release and discovery | Pass `make check-all` and package release checks, update the frontend/helper version pins together, publish both channels, and verify the public installation instructions name a version containing the change. |
 
-The live authenticated smoke test uses a designated test account supplied through protected credentials. It never commits a personal token or depends on the developer's current login. The general test suite uses synthetic feeds and credentials; the release smoke establishes actual production compatibility.
+The live authenticated smoke test uses a designated test account supplied through protected credentials. It never commits a token. Interactive verification may explicitly reuse an authorized cloud login; unattended runs supply a protected test credential instead of relying on a developer login. The general test suite uses synthetic feeds and credentials; the release smoke establishes actual production compatibility.
 
 ### 14. How do we roll it out and measure success?
 

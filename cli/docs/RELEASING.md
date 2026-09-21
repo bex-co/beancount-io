@@ -93,6 +93,22 @@ push validates the CLI but does not publish it. Only `cli-vX.Y.Z` tags publish
 to production. Preserve the version and artifacts when retrying a partially
 published release; publish fixes under a new version.
 
+## Authenticated live-price acceptance
+
+The installed smoke includes synthetic saved-login and BEA_TOKEN requests,
+cached service failure, offline valuation and portable export. It uses no
+production credential. For explicit production verification, use a protected
+test token or an authorized cloud login and run:
+
+```bash norun
+make live-prices
+python3 scripts/live_prices.py --bea /absolute/path/to/installed/bea
+```
+
+Only a successful full journey updates `tests/managed_prices_live_status.json`.
+This is an explicit network gate, separate from the deterministic unit suite.
+`BEA_LIVE_PRICE_TESTS=1` additionally opts into the anonymous login-boundary test.
+
 ## 0.2.0 migration
 
 Install `bea` once. Its helper sources ship in the same package; upstream
