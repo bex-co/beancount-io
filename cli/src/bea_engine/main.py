@@ -522,7 +522,7 @@ def price_status(
 
         loaded = managed_load.load_with_sources(_ledger(file))
         answer.data = {
-            "sources": [_source_json(source) for source in loaded.sources],
+            "sources": [managed_load.source_json(source) for source in loaded.sources],
             "errors": [format_error(error) for error in loaded.errors],
         }
 
@@ -550,12 +550,17 @@ def price_refresh(
             source.url: source.revision
             for source in managed_load.load_with_sources(root, offline=True, strict=False).sources
         }
+        if managed_load._env_flag(managed_load.OFFLINE_ENV):
+            raise protocol.UsageError("price refresh requires network access; remove --offline.")
         for url in before:
             zero_next_refresh(url)
-        loaded = managed_load.load_with_sources(root)
+        # Collect every source outcome even in strict mode. The frontend fails
+        # explicit refreshes with the full result instead of losing later sources.
+        loaded = managed_load.load_with_sources(root, strict=False)
         after = {source.url: source for source in loaded.sources}
         answer.data = {
-            "sources": [_source_json(source) for source in loaded.sources],
+            "strict_prices": managed_load._env_flag(managed_load.STRICT_ENV),
+            "sources": [managed_load.source_json(source) for source in loaded.sources],
             "changed": [
                 {
                     "url": url,
@@ -593,32 +598,9 @@ def price_export(
         answer.data = {
             "output": str(exported.output),
             "files": list(exported.files),
-            "sources": [_source_json(source) for source in exported.sources],
+            "sources": [managed_load.source_json(source) for source in exported.sources],
             "errors": [format_error(error) for error in exported.errors],
         }
-
-
-def _source_json(source: Any) -> dict[str, Any]:
-    """One managed source as the status record ADR 015 section 8 describes."""
-    return {
-        "url": source.url,
-        "alias": source.alias,
-        "included_from": [
-            {"file": include.file, "line": include.line, "target": include.target} for include in source.included_from
-        ],
-        "commodity": source.commodity,
-        "quote": source.quote,
-        "source": source.source,
-        "revision": source.revision,
-        "etag": source.etag,
-        "observed_at": source.observed_at,
-        "fetched_at": source.fetched_at,
-        "next_refresh_at": source.next_refresh_at,
-        "freshness": source.freshness,
-        "error": source.error,
-        "shadowed_count": source.shadowed_count,
-        "effective_dates": list(source.effective_dates),
-    }
 
 
 def _ledger(file: Path) -> Path:

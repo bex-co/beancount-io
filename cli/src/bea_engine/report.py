@@ -338,6 +338,7 @@ def _metadata(filtered: Any, conversion: str, ledger_errors: list[str], interval
         "balance_signs": "beancount",
         "ledger_valid": not filtered.ledger.load_errors,
         "ledger_errors": ledger_errors,
+        "price_sources": filtered.ledger.options.get("bea_managed_price_sources", []),
     }
     if interval:
         data["interval"] = interval

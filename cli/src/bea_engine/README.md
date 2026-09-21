@@ -173,3 +173,19 @@ This distribution uses Beancount (GPL-2.0-only) and carries the vendored Fava
 subset, so it ships and retains `NOTICE.fava` alongside this code. The frontend
 keeps its MIT license and its optional Apache-licensed AI SDKs, which are
 deliberately absent from the engine's dependencies.
+
+## Managed price context
+
+The frontend reads cloud credentials and passes `BEA_MANAGED_PRICE_TOKEN` or
+a token-free `BEA_MANAGED_PRICE_AUTH_ERROR` state in the child environment.
+The helper does not import frontend credentials or settings. The fetcher sends
+the bearer only to exact HTTPS `beancount.io/prices/<ALIAS>` requests and
+refuses redirects; custom allowlisted origins receive no bearer. Offline loads
+do not fetch, and missing login never affects ledgers without managed includes.
+
+`price-refresh` resolves every source with strict enforcement deferred to the
+frontend, returning `sources`, `changed`, `errors`, and `strict_prices`. The
+frontend returns a validation error with `result.sources` and `result.changed`
+if any source fails, or a strict refresh remains stale. Offline refresh is a
+usage error before any refresh-window mutation. Reports carry `price_sources`
+from the same load through the internal `bea_managed_price_sources` option.

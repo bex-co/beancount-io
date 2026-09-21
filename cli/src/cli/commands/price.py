@@ -14,7 +14,7 @@ import typer
 
 from cli import context, output
 from cli.engine import launch
-from cli.errors import UsageError, refuse_json
+from cli.errors import LedgerError, UsageError, refuse_json
 
 
 def price(ctx: typer.Context) -> None:
@@ -84,6 +84,23 @@ def _refresh(extra: list[str]) -> None:
     file = current.entry_file()
     data = _answer(["price-refresh", "--file", str(file)])
     sources: list[dict[str, Any]] = data["sources"]
+    failed = [
+        source
+        for source in sources
+        if source["error"]
+        or source["freshness"] == "unavailable"
+        or (data.get("strict_prices") and source["freshness"] == "stale")
+    ]
+    if failed:
+        raise LedgerError(
+            "Price refresh failed for " + ", ".join(source["alias"] for source in failed) + ".",
+            details=[
+                f"{source['alias']}: {source['error'] or source['freshness']}; "
+                f"serving revision {source['revision'] or 'none'}"
+                for source in sources
+            ],
+            result={"sources": sources, "changed": data["changed"]},
+        )
     if current.json_output:
         output.emit({"sources": sources, "changed": data["changed"]}, target=output.file_target(file))
         return

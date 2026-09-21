@@ -443,6 +443,29 @@ def _remap_error(error: Any, back: dict[str, str]) -> Any:
         return error
 
 
+def source_json(source: ManagedSource) -> dict[str, Any]:
+    """One managed source as the status record ADR 015 section 8 describes."""
+    return {
+        "url": source.url,
+        "alias": source.alias,
+        "included_from": [
+            {"file": include.file, "line": include.line, "target": include.target} for include in source.included_from
+        ],
+        "commodity": source.commodity,
+        "quote": source.quote,
+        "source": source.source,
+        "revision": source.revision,
+        "etag": source.etag,
+        "observed_at": source.observed_at,
+        "fetched_at": source.fetched_at,
+        "next_refresh_at": source.next_refresh_at,
+        "freshness": source.freshness,
+        "error": source.error,
+        "shadowed_count": source.shadowed_count,
+        "effective_dates": list(source.effective_dates),
+    }
+
+
 def load_file(
     entry: Path | str,
     *,
@@ -461,6 +484,8 @@ def load_file(
     loaded = load_with_sources(
         Path(entry), offline=offline, strict=strict, origins=origins, root=root, now=now, opener=opener
     )
+    if loaded.sources:
+        loaded.options["bea_managed_price_sources"] = [source_json(source) for source in loaded.sources]
     return loaded.entries, loaded.errors, loaded.options
 
 

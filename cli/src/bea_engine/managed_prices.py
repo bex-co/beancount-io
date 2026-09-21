@@ -11,14 +11,14 @@ resolution, and status views build on these and live in later m29 tasks.
 The mirror is line-by-line where the contract fixes behavior: the same
 origin and alias rules, the same five-second timeout, 1 MiB body cap, and
 sixteen-URL load cap, the same price-only grammar, and the same refusal
-reasons. One deliberate difference: the CLI sends no credential with a price
-request. The hosted relay exception (ADR 015 section 3, amended by ADR 016
-section 7) exists because backend-v2 already holds the caller's session;
-ordinary local use stays account-free, so there is nothing to relay.
+reasons. The frontend may relay a cloud credential for the exact production
+HTTPS price origin; additional allowed origins never receive that credential.
+Local and offline ledger use remains independent of login.
 """
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -172,7 +172,9 @@ class FetchFailed:
     """A fetch that produced no body, with a machine-readable reason."""
 
     kind: Literal["failed"] = "failed"
-    reason: Literal["timeout", "network", "redirect", "http", "too-large", "not-utf8"] = "network"
+    reason: Literal[
+        "timeout", "network", "redirect", "http", "too-large", "not-utf8", "auth", "forbidden", "not-found", "provider"
+    ] = "network"
     message: str = ""
 
 
@@ -215,11 +217,22 @@ def fetch_managed_price_feed(
 ) -> NotModified | FetchedFeed | FetchFailed:
     """GET a feed with a timeout, no redirects, and an incremental byte cap.
 
-    The request carries the URL, a static user agent, and nothing about the
-    ledger itself: no authorization header and no cookie. An unchanged feed
-    answers 304 against `etag` without a body.
+    A frontend-supplied bearer is sent only to the canonical HTTPS price
+    endpoint. No cookie or ledger identity is sent and redirects are refused.
+    An unchanged feed answers 304 against `etag` without a body.
     """
     request = Request(url, method="GET", headers={"Accept": "text/plain", "User-Agent": _USER_AGENT})
+    trusted = isinstance(parse_managed_price_url(url, DEFAULT_ORIGINS), AllowedUrl)
+    token = os.environ.get("BEA_MANAGED_PRICE_TOKEN", "") if trusted else ""
+    auth_state = os.environ.get("BEA_MANAGED_PRICE_AUTH_ERROR") if trusted else None
+    if auth_state or (
+        token and (not token.isascii() or any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in token))
+    ):
+        return FetchFailed(
+            reason="auth", message="Login expired or invalid. Run bea cloud login, or replace BEA_TOKEN."
+        )
+    if token:
+        request.add_header("Authorization", f"Bearer {token}")
     if etag:
         request.add_header("If-None-Match", etag)
     dial = opener or build_opener(_RefuseRedirect)
@@ -228,9 +241,36 @@ def fetch_managed_price_feed(
     except HTTPError as error:
         if error.code == 304:
             return NotModified()
+        if trusted and (
+            error.code == 401
+            or (
+                300 <= error.code < 400
+                and error.headers.get("Location", "").split("?")[0]
+                in {"/auth/login", "https://beancount.io/auth/login"}
+            )
+        ):
+            message = "Credential rejected" if token else "Not logged in"
+            return FetchFailed(reason="auth", message=f"{message}. Run bea cloud login, or set/replace BEA_TOKEN.")
+        if error.code == 403:
+            return FetchFailed(
+                reason="forbidden",
+                message="HTTP 403: this account cannot access the price source. Check account access.",
+            )
+        if error.code == 404:
+            return FetchFailed(
+                reason="not-found",
+                message="HTTP 404: unknown price source. Choose an available pair at https://beancount.io/live-prices.",
+            )
+        if error.code >= 500:
+            return FetchFailed(
+                reason="provider",
+                message=f"HTTP {error.code}: price service unavailable. Retry later; cached prices remain usable.",
+            )
         if 300 <= error.code < 400:
             return FetchFailed(reason="redirect", message=f"redirects are not followed (HTTP {error.code})")
         retry_after = error.headers.get("Retry-After") if error.headers else None
+        if retry_after and not retry_after.isdigit():
+            retry_after = None
         return FetchFailed(
             reason="http",
             message=f"HTTP {error.code} (retry after {retry_after})" if retry_after else f"HTTP {error.code}",
@@ -239,11 +279,16 @@ def fetch_managed_price_feed(
         reason = getattr(error, "reason", error)
         if isinstance(reason, TimeoutError) or "timed out" in str(reason):
             return FetchFailed(reason="timeout", message=f"timed out after {timeout_seconds} seconds")
-        return FetchFailed(reason="network", message=str(reason))
+        return FetchFailed(reason="network", message="Could not reach the price service")
     # Only 200 arrives here: any other status raises HTTPError above, and the
     # redirect handler turns 3xx into that error instead of following it.
-    with response:
-        body = _read_capped(response, max_body_bytes)
+    try:
+        with response:
+            body = _read_capped(response, max_body_bytes)
+    except TimeoutError:
+        return FetchFailed(reason="timeout", message=f"timed out after {timeout_seconds} seconds")
+    except OSError:
+        return FetchFailed(reason="network", message="Could not read the price response")
     if body is None:
         return FetchFailed(reason="too-large", message=f"body exceeds {max_body_bytes} bytes")
     try:

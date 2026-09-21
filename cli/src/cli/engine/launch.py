@@ -60,8 +60,9 @@ from pathlib import Path
 from typing import Any, Literal
 
 from cli import context, output
+from cli.auth.credentials import load_credentials
 from cli.engine import paths, provision
-from cli.errors import BY_CATEGORY, BeaError, UsageError
+from cli.errors import BY_CATEGORY, AuthError, BeaError, UsageError
 
 
 def run_engine_argv(argv: Sequence[str]) -> int:
@@ -451,6 +452,19 @@ def _helper_env(source_root: Path | None = None) -> dict[str, str] | None:
         env["MANAGED_PRICE_OFFLINE"] = "1"
     if current.strict_prices:
         env["MANAGED_PRICE_STRICT"] = "1"
+    # Credentials cross only in the child environment, never argv or requests
+    # describing the ledger. Missing/invalid login must not break local books.
+    env.pop("BEA_MANAGED_PRICE_TOKEN", None)
+    env.pop("BEA_MANAGED_PRICE_AUTH_ERROR", None)
+    if env.get("MANAGED_PRICE_OFFLINE", "").strip().lower() not in {"1", "true", "yes", "on"}:
+        try:
+            credential = load_credentials()
+            if credential is not None and credential.is_expired():
+                env["BEA_MANAGED_PRICE_AUTH_ERROR"] = "expired"
+            elif credential is not None:
+                env["BEA_MANAGED_PRICE_TOKEN"] = credential.token
+        except AuthError:
+            env["BEA_MANAGED_PRICE_AUTH_ERROR"] = "invalid"
     return env
 
 

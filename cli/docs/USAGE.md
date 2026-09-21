@@ -920,9 +920,13 @@ include "https://beancount.io/prices/BTC-USD"
 the same resolved prices. The URL is a registered price request, not a
 general remote include: only allowlisted origins and exact
 `/prices/<ALIAS>` paths resolve, redirects are refused, and the request
-carries no credential, ledger name, or private content. Ordinary ledgers
-keep working with no network dependency, and resolving a public feed needs
-no Beancount.io account.
+carries no ledger name or ledger content. Sign in with `bea cloud login` or
+set `BEA_TOKEN` before fetching Beancount.io prices. The frontend relays the
+credential to the helper in its environment; only the exact HTTPS
+`beancount.io/prices/<ALIAS>` endpoint receives a bearer header. Additional
+allowlisted origins and redirects never receive it. Offline reads and ordinary
+ledgers do not require login. Select supported pairs at
+[Live Prices](https://beancount.io/live-prices).
 
 A price you declare yourself wins: a ledger-authored price for the same date
 and pair shadows the managed point, and the shadowed count is reported. Feed
@@ -938,7 +942,20 @@ bea --strict-prices check   # fail when a source is stale or unavailable
 
 Freshness is computed at read time from the latest observation: `recent`
 within ten minutes, `stale` beyond it, `unavailable` when no revision ever
-validated. A failed refresh never replaces the last good revision. `status`
+validated. This measures observation age, not exchange trading hours.
+A failed refresh never replaces the last good revision. Explicit `price refresh`
+exits 1 if any source fails (including when a cached revision can still serve).
+Text errors describe every source; JSON errors carry all `sources` and `changed`
+records under `error.result`. `--strict-prices` also rejects stale refresh results.
+`--offline price refresh` exits 2 without fetching or changing refresh windows.
+Ordinary `balance` and `report` text warns about stale or unavailable sources
+and failed refreshes. JSON includes `price_sources` with the revision,
+observation timestamp, freshness and error from the same load that calculated
+the report. Freshness does not change the separate missing-price valuation
+rules; use `--strict-prices` to reject stale sources.
+Missing/rejected login points to `bea cloud login` or `BEA_TOKEN`; 403 means
+account access is denied, 404 means an unknown source, and 5xx means the service
+is unavailable. `status`
 and `refresh` take no arguments; anything else after `bea price` still
 forwards to `bean-price`, so name a quotes job file `status` by path
 (`./status`) if you ever have one.

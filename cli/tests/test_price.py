@@ -401,8 +401,8 @@ class TestManagedPriceFetch:
         result = fetch_managed_price_feed(f"{feed_server}/prices/NOPE")
 
         assert isinstance(result, FetchFailed)
-        assert result.reason == "http"
-        assert result.message == "HTTP 404"
+        assert result.reason == "not-found"
+        assert "HTTP 404: unknown price source" in result.message
 
     def test_rate_limit_carries_retry_after(self, feed_server: str) -> None:
         result = fetch_managed_price_feed(f"{feed_server}/prices/RATE-LIMITED")
@@ -706,7 +706,7 @@ class TestFeedCache:
         assert resolved.blob.text == first.blob.text
         assert resolved.blob.revision == "r1"
         assert resolved.head.revision == "r1"
-        assert resolved.head.last_error == "fetch failed (http): HTTP 404"
+        assert "fetch failed (not-found): HTTP 404" in (resolved.head.last_error or "")
         assert resolved.head.next_refresh_at == now + 301 + 60
 
     def test_invalid_body_keeps_serving(self, feed_server: str, tmp_path: Path) -> None:
@@ -775,7 +775,7 @@ class TestFeedCache:
 
         assert resolved.blob is None
         assert resolved.head.revision is None
-        assert resolved.head.last_error == "fetch failed (http): HTTP 404"
+        assert "fetch failed (not-found): HTTP 404" in (resolved.head.last_error or "")
 
     def test_offline_serves_cached_without_fetch(self, feed_server: str, tmp_path: Path) -> None:
         now = time.time()
@@ -1661,3 +1661,266 @@ class TestHostedFeedLive:
             f"observed_at={resolved.blob.feed.latest_observed_at} "
             f"fetched_at={resolved.blob.fetched_at}"
         )
+
+
+class TestAuthenticatedPrices:
+    @pytest.mark.parametrize(
+        ("url", "authorized"),
+        [
+            ("https://beancount.io/prices/BTC-USD", True),
+            ("https://beancount.io:443/prices/BTC-USD", True),
+            ("http://beancount.io/prices/BTC-USD", False),
+            ("https://beancount.io:444/prices/BTC-USD", False),
+            ("https://beancount.io.evil.example/prices/BTC-USD", False),
+            ("https://other.example/prices/BTC-USD", False),
+            ("https://beancount.io/api-gateway/ledger", False),
+            ("https://beancount.io/prices/BTC-USD?x=1", False),
+            ("https://user@beancount.io/prices/BTC-USD", False),
+        ],
+    )
+    def test_bearer_scope(self, monkeypatch: pytest.MonkeyPatch, url: str, authorized: bool) -> None:
+        from io import BytesIO
+        from unittest.mock import Mock
+        from urllib.response import addinfourl
+
+        monkeypatch.setenv("BEA_MANAGED_PRICE_TOKEN", "synthetic-price-credential")
+        opener = Mock()
+        opener.open.return_value = addinfourl(BytesIO(b"2026-09-11 price BTC 92000 USD\n"), {}, url, 200)
+        result = fetch_managed_price_feed(url, opener=opener)
+        assert isinstance(result, FetchedFeed)
+        request = opener.open.call_args.args[0]
+        assert request.get_header("Authorization") == ("Bearer synthetic-price-credential" if authorized else None)
+        assert request.get_header("Cookie") is None
+
+    @pytest.mark.parametrize(
+        ("code", "reason"),
+        [(401, "auth"), (403, "forbidden"), (404, "not-found"), (503, "provider"), (302, "redirect")],
+    )
+    def test_failures_never_echo_server_body_or_token(
+        self, monkeypatch: pytest.MonkeyPatch, code: int, reason: str
+    ) -> None:
+        from email.message import Message
+        from io import BytesIO
+        from unittest.mock import Mock
+        from urllib.error import HTTPError
+
+        secret = "synthetic-price-credential"
+        monkeypatch.setenv("BEA_MANAGED_PRICE_TOKEN", secret)
+        url = "https://beancount.io/prices/BTC-USD"
+        headers = Message()
+        headers["Location"] = "https://other.example/"
+        opener = Mock()
+        opener.open.side_effect = HTTPError(url, code, secret, headers, BytesIO(secret.encode()))
+        result = fetch_managed_price_feed(url, opener=opener)
+        assert isinstance(result, FetchFailed)
+        assert result.reason == reason
+        assert secret not in result.message
+        assert opener.open.call_count == 1
+
+    def test_missing_login_redirect_has_actionable_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from email.message import Message
+        from unittest.mock import Mock
+        from urllib.error import HTTPError
+
+        monkeypatch.delenv("BEA_MANAGED_PRICE_TOKEN", raising=False)
+        url = "https://beancount.io/prices/BTC-USD"
+        headers = Message()
+        headers["Location"] = "/auth/login"
+        opener = Mock()
+        opener.open.side_effect = HTTPError(url, 302, "", headers, None)
+        result = fetch_managed_price_feed(url, opener=opener)
+        assert isinstance(result, FetchFailed)
+        assert result.reason == "auth"
+        assert "Not logged in" in result.message
+        assert "bea cloud login" in result.message
+
+    def test_child_uses_saved_login_and_environment_precedence(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        from cli.auth.credentials import save_credentials
+        from cli.engine.launch import _helper_env
+
+        monkeypatch.setenv("BEA_CONFIG_DIR", str(tmp_path / "config"))
+        monkeypatch.delenv("BEA_TOKEN", raising=False)
+        monkeypatch.delenv("MANAGED_PRICE_OFFLINE", raising=False)
+        save_credentials("synthetic-saved-price-credential", "2099-01-01T00:00:00Z")
+        child = _helper_env(SOURCE_ROOT)
+        assert child is not None
+        assert child["BEA_MANAGED_PRICE_TOKEN"] == "synthetic-saved-price-credential"
+        monkeypatch.setenv("BEA_TOKEN", "synthetic-environment-credential")
+        child = _helper_env(SOURCE_ROOT)
+        assert child is not None
+        assert child["BEA_MANAGED_PRICE_TOKEN"] == "synthetic-environment-credential"
+        monkeypatch.setenv("MANAGED_PRICE_OFFLINE", "1")
+        child = _helper_env(SOURCE_ROOT)
+        assert child is not None
+        assert "BEA_MANAGED_PRICE_TOKEN" not in child
+
+    def test_expired_login_does_not_break_local_ledger(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        from unittest.mock import Mock
+
+        from cli.auth.credentials import save_credentials
+        from cli.engine.launch import _helper_env
+
+        monkeypatch.setenv("BEA_CONFIG_DIR", str(tmp_path / "config"))
+        monkeypatch.delenv("BEA_TOKEN", raising=False)
+        save_credentials("synthetic-expired-credential", "2000-01-01T00:00:00Z")
+        child = _helper_env(SOURCE_ROOT)
+        assert child is not None
+        assert "BEA_MANAGED_PRICE_TOKEN" not in child
+        assert child["BEA_MANAGED_PRICE_AUTH_ERROR"] == "expired"
+        monkeypatch.setenv("BEA_MANAGED_PRICE_AUTH_ERROR", child["BEA_MANAGED_PRICE_AUTH_ERROR"])
+        opener = Mock()
+        result = fetch_managed_price_feed("https://beancount.io/prices/BTC-USD", opener=opener)
+        assert isinstance(result, FetchFailed)
+        assert result.reason == "auth"
+        opener.open.assert_not_called()
+        ledger = tmp_path / "main.bean"
+        ledger.write_text("2024-01-01 open Assets:Cash\n")
+        assert not load_with_sources(ledger).errors
+
+
+class TestPriceRefreshFailures:
+    @pytest.mark.parametrize("json_mode", [False, True])
+    def test_cached_failure_exits_nonzero_with_results(self, feed_server: str, tmp_path: Path, json_mode: bool) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        assert _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh").returncode == 0
+        _FeedHandler.routes["/prices/BTC-USD"] = {"status": 503, "body": b"outage"}
+        args = ["--json"] if json_mode else []
+        result = _run_bea(tmp_path, feed_server, *args, "--file", str(ledger), "price", "refresh")
+        assert result.returncode == 1
+        assert "unchanged at" not in result.stdout
+        if json_mode:
+            assert not result.stdout
+            error = json.loads(result.stderr)["error"]
+            source = error["result"]["sources"][0]
+            assert source["revision"] == "r1"
+            assert "503" in source["error"]
+            assert error["result"]["changed"] == []
+        else:
+            assert "503" in result.stderr
+            assert "serving revision r1" in result.stderr
+        cached = _run_bea(tmp_path, feed_server, "--offline", "--file", str(ledger), "price", "status")
+        assert cached.returncode == 0
+        assert "r1" in cached.stdout
+
+    def test_offline_refresh_refuses_without_cache_writes(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        result = _run_bea(tmp_path, feed_server, "--offline", "--file", str(ledger), "price", "refresh")
+        assert result.returncode == 2
+        assert _FeedHandler.hits == []
+        assert not (tmp_path / "cache" / "bea" / "managed-prices").exists()
+
+    def test_mixed_refresh_preserves_successful_source_result(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server, f'include "{feed_server}/prices/NOPE"\n')
+        result = _run_bea(tmp_path, feed_server, "--json", "--file", str(ledger), "price", "refresh")
+        assert result.returncode == 1
+        data = json.loads(result.stderr)["error"]["result"]
+        sources = {source["alias"]: source for source in data["sources"]}
+        assert sources["BTC-USD"]["revision"] == "r1"
+        assert sources["BTC-USD"]["error"] is None
+        assert sources["NOPE"]["freshness"] == "unavailable"
+        assert "404" in sources["NOPE"]["error"]
+        assert data["changed"][0]["alias"] == "BTC-USD"
+
+
+class TestReportPriceProvenance:
+    @pytest.mark.parametrize(
+        "command",
+        [
+            ("balance",),
+            ("report", "overview"),
+            ("report", "balance-sheet"),
+            ("report", "income-statement"),
+            ("report", "trial-balance"),
+        ],
+    )
+    def test_json_carries_same_loaded_revision(
+        self, feed_server: str, tmp_path: Path, command: tuple[str, ...]
+    ) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        result = _run_bea(tmp_path, feed_server, "--json", "--file", str(ledger), *command)
+        assert result.returncode == 0, result.stderr
+        source = json.loads(result.stdout)["data"]["price_sources"][0]
+        assert source["revision"] == "r1"
+        assert source["observed_at"] == "2026-09-11T00:00:00Z"
+        assert source["freshness"] == "stale"
+        assert source["error"] is None
+        assert _FeedHandler.hits == ["/prices/BTC-USD"]
+        assert "effective_path" not in source
+
+    def test_failed_refresh_visible_in_next_report_without_refetch(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        assert _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh").returncode == 0
+        _FeedHandler.routes["/prices/BTC-USD"] = {"status": 503, "body": b"outage"}
+        assert _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh").returncode == 1
+        hits = list(_FeedHandler.hits)
+        result = _run_bea(tmp_path, feed_server, "--offline", "--file", str(ledger), "balance")
+        assert result.returncode == 0, result.stderr
+        assert "Price source BTC-USD: stale" in result.stderr
+        assert "revision r1" in result.stderr
+        assert "503" in result.stderr
+        assert _FeedHandler.hits == hits
+        strict = _run_bea(tmp_path, feed_server, "--offline", "--strict-prices", "--file", str(ledger), "balance")
+        assert strict.returncode == 1
+
+    def test_plain_ledger_has_empty_price_sources(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = tmp_path / "main.bean"
+        ledger.write_text('option "operating_currency" "USD"\n2024-01-01 open Assets:Cash\n')
+        result = _run_bea(tmp_path, feed_server, "--json", "--file", str(ledger), "balance")
+        assert result.returncode == 0, result.stderr
+        assert json.loads(result.stdout)["data"]["price_sources"] == []
+        assert _FeedHandler.hits == []
+
+
+@pytest.mark.parametrize("credential_source", ["file", "environment"])
+def test_authenticated_price_crosses_real_helper_process(tmp_path: Path, credential_source: str) -> None:
+    """Fake only HTTPS; run the real frontend, credential loader and engine."""
+    transport = tmp_path / "transport"
+    transport.mkdir()
+    (transport / "sitecustomize.py").write_text(
+        textwrap.dedent("""\
+        import io
+        import urllib.request
+        import urllib.response
+        original = urllib.request.build_opener
+        class Transport:
+            def open(self, request, **kwargs):
+                assert request.full_url == 'https://beancount.io/prices/BTC-USD'
+                assert request.get_header('Authorization') == 'Bearer synthetic-process-credential'
+                assert request.get_header('Cookie') is None
+                body = b'; alias: BTC-USD\\n; commodity: BTC\\n; quote: USD\\n2026-09-11 price BTC 92000 USD\\n'
+                return urllib.response.addinfourl(
+                    io.BytesIO(body), {'ETag': '"authenticated-r1"'}, request.full_url, 200
+                )
+        urllib.request.build_opener = lambda *args, **kwargs: Transport()
+    """)
+    )
+    config = tmp_path / "config"
+    config.mkdir()
+    if credential_source == "file":
+        (config / "credentials.json").write_text(
+            json.dumps({"token": "synthetic-process-credential", "expireAt": "2099-01-01T00:00:00Z"})
+        )
+    ledger = tmp_path / "main.bean"
+    original = 'include "https://beancount.io/prices/BTC-USD"\n2024-01-01 open Assets:Crypto\n'
+    ledger.write_text(original)
+    env = _cli_env(tmp_path, "https://beancount.io")
+    env["MANAGED_PRICE_ORIGINS"] = "https://beancount.io"
+    env["PYTHONPATH"] = os.pathsep.join((str(SOURCE_ROOT), str(transport)))
+    if credential_source == "environment":
+        env["BEA_TOKEN"] = "synthetic-process-credential"
+    result = subprocess.run(
+        [sys.executable, "-m", "cli.main", "--json", "--file", str(ledger), "price", "refresh"],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["data"]["sources"][0]["revision"] == "authenticated-r1"
+    assert ledger.read_text() == original
+    assert "synthetic-process-credential" not in result.stdout + result.stderr
+    for file in (tmp_path / "cache").rglob("*"):
+        if file.is_file():
+            assert b"synthetic-process-credential" not in file.read_bytes()

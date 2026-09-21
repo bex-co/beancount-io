@@ -135,6 +135,13 @@ def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False)
     # explains itself where it is printed.
     convention = "Account balances use Beancount signs (credits negative)"
     typer.echo(f"{convention}; profit is positive for a gain." if profit_line else f"{convention}.")
+    for source in metadata.get("price_sources", []):
+        if source["freshness"] != "recent" or source["error"]:
+            detail = f"; {source['error']}" if source["error"] else ""
+            output.note(
+                f"Price source {source['alias']}: {source['freshness']}; "
+                f"observed {source['observed_at'] or 'unknown'}; revision {source['revision'] or 'none'}{detail}."
+            )
     if metadata.get("account_filter_empty"):
         output.note(f"No accounts match {metadata['account_filter']}.")
     if metadata["missing_prices"]:

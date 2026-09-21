@@ -2,18 +2,18 @@
 
 **Worker:** worker1
 **Goal:** Expose live-price provenance in ordinary reports.
-**Status:** todo
+**Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Carry source metadata from the report load | 40m | w5/m6/t007 |
-| t002 | Render freshness and failures for humans and agents | 40m | w5/m7/t001 |
-| t003 | Adoption surface | 40m | w5/m7/t002 |
-| t004 | Simplify | 40m | w5/m7/t003 |
-| t005 | Test coverage | 40m | w5/m7/t004 |
-| t006 | Closeout | 40m | w5/m7/t005 |
+| t001 | Carry source metadata from the report load— **DONE** | 40m | w5/m6/t007 |
+| t002 | Render freshness and failures for humans and agents— **DONE** | 40m | w5/m7/t001 |
+| t003 | Adoption surface— **DONE** | 40m | w5/m7/t002 |
+| t004 | Simplify— **DONE** | 40m | w5/m7/t003 |
+| t005 | Test coverage— **DONE** | 40m | w5/m7/t004 |
+| t006 | Closeout— **DONE** | 40m | w5/m7/t005 |
 
 ## Definition of done
 
@@ -26,3 +26,7 @@ Ordinary balance and report output exposes stale observations and refresh failur
 - **Expected outcome:** A CLI user can assess source freshness directly from the report they use.
 - **Why now:** Depends on the preceding milestone; completes the launch contract before claiming public availability.
 - **Adoption surface:** Included because commands and documentation are user- and agent-facing.
+
+## Verification
+
+All five ordinary report commands expose the same source revision in JSON. Cached 503 failures and observation age are visible in text; offline reads make no additional request and strict reads reject stale sources. See completed task evidence and `cli/tests/test_price.py`.
