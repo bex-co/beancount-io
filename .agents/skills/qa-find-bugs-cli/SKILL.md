@@ -31,7 +31,9 @@ disposable local fixture writes needed to reproduce bugs.
 - Discover commands and flags from `bea --help` and subcommand help before
   scripting them. Global options precede the command, for example
   `uv run bea --json --file /absolute/path/main.bean list transaction`.
-- Create a unique run directory under `cli/tmp/qa-<date>/`. Set absolute
+- Create a unique run directory under the gitignored repo-root `.tmp/qa-<date>/`
+  and run every command with that as the cwd, so no fixture, export, or import
+  artifact lands in `cli/` or the repo root. Set absolute
   `BEA_CONFIG_DIR` and `XDG_CACHE_HOME` paths inside it in the **child process**
   environment and set `BEA_NO_UPDATE_NOTIFIER=1`. Remove inherited `BEA_FILE`
   and `BEA_TOKEN` from local-test children. Do not repurpose `HOME` or alter the

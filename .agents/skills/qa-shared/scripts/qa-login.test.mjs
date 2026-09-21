@@ -107,7 +107,7 @@ test("upstream rejection never echoes a response containing credentials", async 
 });
 
 test("an explicit package file selects its own account without ambient fallback", async (t) => {
-  const scratch = new URL("../../../tmp/", import.meta.url);
+  const scratch = new URL("../../../../.tmp/", import.meta.url);
   await mkdir(scratch, { recursive: true });
   const directory = await mkdtemp(
     fileURLToPath(new URL("qa-env-test-", scratch)),

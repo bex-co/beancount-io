@@ -57,8 +57,9 @@ selected server before signing in or writing anything.
 
 - Use `automation_tap` with `{projectRoot, platform:"ios", testID}` or `{x,y}`,
   `automation_find_view`, `automation_take_screenshot`, and `collect_app_logs`.
-  Keep screenshots under `mobile/tmp/qa-<date>/`; decode image content to a file,
-  not a base64 dump in the transcript. Bound individual log captures to 10s.
+  Keep screenshots under the gitignored repo-root `.tmp/qa-<date>/`; decode
+  image content to a file, not a base64 dump in the transcript. Bound
+  individual log captures to 10s.
 - Prefer `testID` and inspected view bounds. Taps use logical points. Expo MCP
   resizes screenshots, so **do not blindly divide its image coordinates by 3**.
   Determine the native dimensions and capture scale, or use view bounds.
