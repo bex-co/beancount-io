@@ -1,13 +1,13 @@
 {
   "_readme": "Explicit authenticated CLI smoke. Run make live-prices or python scripts/live_prices.py --bea PATH. No login is required by the unit suite.",
   "url": "https://beancount.io/prices/BTC-USD",
-  "date": "2026-09-21T07:56:35.048071+00:00",
+  "date": "2026-09-21T08:05:50.378113+00:00",
   "status": "authenticated",
   "cli_version": "0.3.0",
   "installation": "installed",
-  "revision": "41fca376657cf3fa5b73c655806aa93d01cb2ef7931dd7513011e43e38cb9ae8",
-  "observed_at": "2026-09-21T07:56:29Z",
-  "fetched_at": "2026-09-21T07:56:28Z",
+  "revision": "317809a9f1856cb0e029f5776308e07d3d4792265bedf453a37c9b9ffc338972",
+  "observed_at": "2026-09-21T08:05:48Z",
+  "fetched_at": "2026-09-21T08:05:48Z",
   "checks": [
     "authenticated-refresh",
     "check",

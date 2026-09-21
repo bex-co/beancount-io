@@ -1,6 +1,6 @@
 # PRFAQ003 — Live Prices in the bea CLI
 
-Status: CLI 0.3.0 release candidate. Credential integration, report provenance and authenticated production workflows are verified; package publication and post-publication installation checks remain the release gate.
+Status: CLI support released in [bea 0.3.0](https://github.com/bex-co/beancount-io/releases/tag/cli-v0.3.0) on 2026-09-21. Authenticated production workflows, packaged installation and both public distribution channels are verified. Marketing copy remains a proposal; no adoption measurements are implied.
 
 Date: 2026-09-20 (America/Los_Angeles)
 
@@ -11,6 +11,14 @@ Evidence baseline: repository commit `04f274d2`, the local `cli-v0.2.0` tag, and
 **Recommendation:** Ship the existing managed-price loader with reuse of the customer's CLI login. Let the live-prices page supply the include lines, so customers can reach a useful local valuation without a new setup command or quote-provider account.
 
 This proposal builds on [PRFAQ002](PRFAQ002-include-live-price.md), [ADR015](../adrs/ADR015-ledger-managed-price-includes.md), and [ADR016](../adrs/ADR016-backend-cluster-forwarded-request-context.md). For this CLI launch, it replaces PRFAQ002 FAQ 10's proposed anonymous-access prerequisite with an explicit Beancount.io login requirement. It does not require making the price feeds public.
+
+## Release evidence — 2026-09-21
+
+- Implementation: `3c86426b`; release: `c80a49fd` / `cli-v0.3.0`.
+- [Release workflow](https://github.com/bex-co/beancount-io/actions/runs/35575551718): all 21 jobs passed, including all 12 wheel/sdist combinations across Linux, macOS and Windows with Python 3.12/3.14, two Homebrew rehearsals, publication, and five post-publication installation jobs.
+- [PyPI 0.3.0](https://pypi.org/project/beancount-io/0.3.0/) wheel and sdist hashes match the validated GitHub artifacts. The public Homebrew tap points to the same 0.3.0 sdist.
+- The exact GitHub-built wheel passed the authenticated production refresh, check, valuation, offline replay, export and manual-price-precedence journey. The [smoke record](../../cli/tests/managed_prices_live_status.json) stores only public feed metadata.
+- Deterministic installed smokes cover saved login, `BEA_TOKEN`, cached service failure and offline export without production credentials. Local package checks passed, and final price regressions passed 167 tests with one explicit anonymous-network probe skipped by default.
 
 ## Press release
 
@@ -143,7 +151,7 @@ explicit production smoke verifies authenticated refresh, check, valuation,
 offline replay, portable export and manual price precedence. Release candidate
 0.3.0 adds the same authentication/cache/export journey to installed-artifact
 smokes. The table below records the original evidence baseline, not current
-implementation gaps; final publication evidence will be recorded on closeout.
+implementation gaps; the final publication evidence is recorded below.
 
 
 | Area | Evidence from this review | Launch implication |
