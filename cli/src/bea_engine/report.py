@@ -13,7 +13,7 @@ from __future__ import annotations
 import dataclasses
 import re
 import unicodedata
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -74,15 +74,15 @@ def _balances(
     sections = {
         name: getattr(data, f"{name}_hierarchy") for name in ("assets", "liabilities", "equity", "income", "expenses")
     }
-    terms = [fold_account(term or "") for term in accounts]
-    if not terms:
+    if not accounts:
         pruned = {name: tree for name, tree in sections.items()}
     else:
         closed: set[str] = set()
         for entry in filtered.entries:
             if isinstance(entry, Close):
                 closed.add(entry.account)
-        pruned = {name: _prune_tree(tree, terms, closed) for name, tree in sections.items()}
+        matches = _substring_match(accounts)
+        pruned = {name: _prune_tree(tree, matches, closed) for name, tree in sections.items()}
     # Valuation covers only the accounts being shown: an unrelated unpriced
     # holding must not make a USD checking balance fail.
     metadata = (
@@ -501,16 +501,45 @@ def _display_precision(filtered: Any) -> dict[str, int]:
     return precision
 
 
+def _substring_match(accounts: Iterable[str]) -> Callable[[str], bool]:
+    """`bea balance`'s documented matcher: a case-folded substring of the account name."""
+    terms = [fold_account(term or "") for term in accounts]
+    return lambda account: any(term in fold_account(account) for term in terms)
+
+
+def _report_filter_match(account: str) -> Callable[[str], bool]:
+    """`bea report --account`'s documented matcher: a parent account or a regular expression.
+
+    This has to be the matcher Fava's `AccountFilter` already applied to the
+    entries (`has_component` OR a case-insensitive regex `search`). Pruning the
+    statement trees by substring instead — which is what `bea balance`
+    documents — silently disagreed with it for every true regex: entries for
+    `Expenses:(Dining|Groceries)` survived the entry filter, then every tree
+    node was pruned because the pattern is a substring of no account name, and
+    the report answered with empty totals and exit 0.
+    """
+    from beancount.core.account import has_component
+
+    from fava.core.filters import Match
+
+    matches_pattern = Match(account)
+    return lambda name: has_component(name, account) or matches_pattern(name)
+
+
 def _prune_sections(sections: dict[str, Any], account: str | None) -> dict[str, Any]:
-    """When `--account` is set, keep matching subtrees the way `bea balance` does."""
+    """When `--account` is set, keep the subtrees the entry filter already kept."""
     if not account:
         return sections
-    terms = [fold_account(account)]
-    return {name: _prune_tree(tree, terms) for name, tree in sections.items()}
+    matches = _report_filter_match(account)
+    return {name: _prune_tree(tree, matches) for name, tree in sections.items()}
 
 
-def _prune_tree(node: Any, terms: list[str], closed: set[str] | None = None) -> Any | None:
-    """Keep nodes matching any term plus their ancestors for structure.
+def _prune_tree(node: Any, matches: Callable[[str], bool], closed: set[str] | None = None) -> Any | None:
+    """Keep matching nodes plus their ancestors for structure.
+
+    `matches` is the caller's account matcher, because `bea balance` and `bea
+    report` document different ones — substrings there, parent-or-regex here —
+    and a shared matcher can only honor one of them.
 
     In a filtered view, closed accounts drop out unless a still-open
     descendant was kept; ancestors stay for structure. Every retained node's
@@ -519,12 +548,11 @@ def _prune_tree(node: Any, terms: list[str], closed: set[str] | None = None) -> 
     """
     kept = []
     for child in node.children:
-        pruned = _prune_tree(child, terms, closed)
+        pruned = _prune_tree(child, matches, closed)
         if pruned is not None:
             kept.append(pruned)
     is_closed = bool(closed) and node.account in (closed or ())
-    matches = not is_closed and any(term in fold_account(node.account) for term in terms)
-    if not (matches or kept):
+    if not ((not is_closed and matches(node.account)) or kept):
         return None
     return dataclasses.replace(
         node,
