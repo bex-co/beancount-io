@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import json
 import os
+import select
 import signal
 import subprocess
 import sys
@@ -489,9 +490,40 @@ def _spawn(command: list[str], env: dict[str, str] | None) -> int:
     else:
         inherited = subprocess.run(command, env=env, check=False)
         returncode = inherited.returncode
+        if returncode > 0 and _downstream_pipe_closed():
+            # The child wrote to the same closed pipe we would have. Upstream is
+            # Python too, so it never sees SIGPIPE either and reports its own
+            # broken stdout as a plain failure — off the 128+N convention the
+            # exit table promises for `bea format … | head`.
+            return 128 + signal.SIGPIPE
     if returncode < 0:
         return _died_on_signal(-returncode, command)
     return returncode
+
+
+def _downstream_pipe_closed() -> bool:
+    """Whether our stdout is a pipe whose reader has gone away.
+
+    Polling the descriptor is the only way to tell a child that failed on a
+    closed pipe from one that failed on its own account: both come back with a
+    plain non-zero status, and a zero-length write raises nothing. A reader that
+    hung up leaves the write end readable as POLLHUP (POLLERR on Linux) with
+    POLLOUT gone.
+    """
+    poll = getattr(select, "poll", None)
+    if poll is None:  # Windows.
+        return False
+    try:
+        descriptor = sys.stdout.fileno()
+    except (OSError, ValueError, AttributeError):
+        return False
+    poller = poll()
+    poller.register(descriptor, select.POLLOUT)
+    try:
+        events = poller.poll(0)
+    except OSError:
+        return False
+    return any(event & (select.POLLERR | select.POLLHUP) for _, event in events)
 
 
 def _signals(*names: str) -> frozenset[int]:

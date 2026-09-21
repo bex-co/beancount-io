@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, NoReturn
 
 import typer
 from typer.core import TyperGroup
@@ -30,6 +31,37 @@ from cli.commands.upgrade import current_channel, upgrade
 from cli.completion import install as install_completion_callback
 from cli.completion import show as show_completion_callback
 from cli.native_help import native_help
+
+
+def _settle_stdout() -> None:
+    """Push the last of stdout out while a closed reader is still catchable.
+
+    Piped stdout is block-buffered, so `bea list … | head` usually succeeds at
+    every write and only fails when CPython flushes on the way out. That flush
+    happens after every handler here has been unwound: it prints `Exception
+    ignored on flushing sys.stdout` and replaces the exit code with 120. Doing
+    the flush inside the guard turns that into a `BrokenPipeError` we can still
+    answer for.
+    """
+    sys.stdout.flush()
+
+
+def _exit_on_broken_pipe() -> NoReturn:
+    """Leave the way a Unix filter does when its reader goes away: 141, silent.
+
+    `USAGE.md` promises `bea … | head` exits 141 without a message, but Python
+    ignores SIGPIPE, so the frontend's own writes raise `BrokenPipeError` and
+    landed in the generic handler as a reported failure. Exiting is not enough
+    on its own — stdout is still broken and still holds buffered bytes, so the
+    shutdown flush would fail in turn and force 120. Pointing the file
+    descriptor at devnull gives that flush somewhere harmless to go.
+    """
+    try:
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+    except (OSError, ValueError):  # No real fd to rescue (a captured stream).
+        pass
+    sys.exit(141)
 
 
 class _GuardedGroup(TyperGroup):
@@ -82,12 +114,19 @@ class _GuardedGroup(TyperGroup):
     def invoke(self, ctx: Any) -> Any:
         try:
             result = super().invoke(ctx)
+            _settle_stdout()
+        except BrokenPipeError:
+            _exit_on_broken_pipe()
         except typer.Exit as exc:
             # Native-delegated commands (check/format/query/…) finish with
             # `raise typer.Exit(status)` so upstream's exit code is preserved.
             # A successful Exit must still run the courtesy update notice that
             # the normal return path prints — otherwise `bea check` goes silent
             # about upgrades after ADR014.
+            try:
+                _settle_stdout()
+            except BrokenPipeError:
+                _exit_on_broken_pipe()
             output.flush_warnings()
             if (exc.exit_code or 0) == 0:
                 update.print_notice()
