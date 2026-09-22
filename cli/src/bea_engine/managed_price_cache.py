@@ -296,8 +296,11 @@ def _enforce_strict(url: str, resolved: ResolvedFeed, at: float, stale_seconds: 
     if not strict:
         return
     if resolved.blob is None:
-        cause = resolved.head.last_error or "no cached revision"
-        raise LedgerError(f"managed price source {url} is unavailable in strict mode: {cause}.")
+        # The cause may be a bare phrase ("no cached revision") or a finished
+        # sentence with its own remedy ("… set/replace BEA_TOKEN."), so add the
+        # full stop only when one is missing.
+        cause = (resolved.head.last_error or "no cached revision").rstrip()
+        raise LedgerError(f"managed price source {url} is unavailable in strict mode: {cause}".rstrip(".") + ".")
     if freshness(resolved.blob, at, stale_seconds) == "stale":
         stamp = resolved.blob.feed.latest_observed_at or "unknown observation time"
         raise LedgerError(

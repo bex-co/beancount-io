@@ -1699,6 +1699,106 @@ class TestAuthenticatedPrices:
         assert "Not logged in" in result.message
         assert "bea cloud login" in result.message
 
+    @pytest.mark.parametrize(
+        "location",
+        [
+            # What the deployment actually sends a signed-out caller. Note the
+            # `http://`: matching the raw header against a set of literal
+            # spellings listed only the `https://` form, so the single most
+            # likely failure of the feature reported "redirects are not
+            # followed (HTTP 302)" instead of saying to sign in (w3/386→387).
+            pytest.param("http://beancount.io/auth/login?next=%2Fprices%2FBTC-USD", id="production-http-with-next"),
+            pytest.param("https://beancount.io/auth/login?next=%2Fprices%2FBTC-USD", id="https-with-next"),
+            pytest.param("https://beancount.io/auth/login", id="https-bare"),
+            pytest.param("/auth/login?next=%2Fprices%2FBTC-USD", id="relative-with-next"),
+            pytest.param("/auth/login/", id="relative-trailing-slash"),
+        ],
+    )
+    def test_every_login_redirect_spelling_is_diagnosed_as_auth(
+        self, monkeypatch: pytest.MonkeyPatch, location: str
+    ) -> None:
+        from email.message import Message
+        from unittest.mock import Mock
+        from urllib.error import HTTPError
+
+        monkeypatch.delenv("BEA_MANAGED_PRICE_TOKEN", raising=False)
+        url = "https://beancount.io/prices/BTC-USD"
+        headers = Message()
+        headers["Location"] = location
+        opener = Mock()
+        opener.open.side_effect = HTTPError(url, 302, "", headers, None)
+
+        result = fetch_managed_price_feed(url, opener=opener)
+
+        assert isinstance(result, FetchFailed)
+        assert result.reason == "auth", f"{location!r} is a login wall, not a transport hop"
+        assert "Not logged in" in result.message
+        assert "redirects are not followed" not in result.message
+
+    def test_a_rejected_token_is_named_apart_from_being_signed_out(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Both are auth, but the remedy differs, so the two must not read alike."""
+        from email.message import Message
+        from unittest.mock import Mock
+        from urllib.error import HTTPError
+
+        monkeypatch.setenv("BEA_MANAGED_PRICE_TOKEN", "synthetic-rejected-credential")
+        url = "https://beancount.io/prices/BTC-USD"
+        headers = Message()
+        headers["Location"] = "http://beancount.io/auth/login?next=%2Fprices%2FBTC-USD"
+        opener = Mock()
+        opener.open.side_effect = HTTPError(url, 302, "", headers, None)
+
+        result = fetch_managed_price_feed(url, opener=opener)
+
+        assert isinstance(result, FetchFailed)
+        assert result.reason == "auth"
+        assert "Credential rejected" in result.message
+        assert "BEA_TOKEN" in result.message
+
+    @pytest.mark.parametrize(
+        "location",
+        [
+            pytest.param("https://elsewhere.example.com/auth/login", id="login-path-on-another-host"),
+            pytest.param("https://beancount.io/somewhere-else", id="same-host-other-path"),
+            pytest.param("/prices/BTC-USD/v2", id="relative-other-path"),
+            pytest.param("", id="no-location-header"),
+        ],
+    )
+    def test_a_redirect_that_is_not_the_login_wall_keeps_transport_wording(
+        self, monkeypatch: pytest.MonkeyPatch, location: str
+    ) -> None:
+        """An unexpected hop is a transport surprise and must not claim to be auth."""
+        from email.message import Message
+        from unittest.mock import Mock
+        from urllib.error import HTTPError
+
+        monkeypatch.delenv("BEA_MANAGED_PRICE_TOKEN", raising=False)
+        url = "https://beancount.io/prices/BTC-USD"
+        headers = Message()
+        if location:
+            headers["Location"] = location
+        opener = Mock()
+        opener.open.side_effect = HTTPError(url, 302, "", headers, None)
+
+        result = fetch_managed_price_feed(url, opener=opener)
+
+        assert isinstance(result, FetchFailed)
+        assert result.reason == "redirect"
+        assert "redirects are not followed (HTTP 302)" in result.message
+
+    def test_strict_mode_does_not_double_the_full_stop(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """The cause may already end in a sentence; the wrapper must not add a second period."""
+        from types import SimpleNamespace
+
+        from bea_engine.managed_price_cache import _enforce_strict
+
+        head = SimpleNamespace(last_error="fetch failed (auth): Not logged in. Run bea cloud login.")
+        resolved = SimpleNamespace(blob=None, head=head)
+        with pytest.raises(LedgerError) as raised:
+            _enforce_strict("https://beancount.io/prices/BTC-USD", resolved, 0.0, 0, True)
+        assert ".." not in str(raised.value)
+        assert str(raised.value).endswith("bea cloud login.")
+
     def test_child_uses_saved_login_and_environment_precedence(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:

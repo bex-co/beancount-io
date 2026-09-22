@@ -207,6 +207,32 @@ def _read_capped(fp: BinaryIO, limit: int) -> bytes | None:
         chunks.append(chunk)
 
 
+#: Where the deployment sends callers who are not signed in.
+_LOGIN_PATH = "/auth/login"
+
+
+def _is_login_redirect(location: str, url: str) -> bool:
+    """Whether a refused 3xx is the login wall rather than an unexpected hop.
+
+    Matching the raw `Location` against a set of literal spellings was too
+    exact to do its job: the endpoint answers a signed-out request with
+    `http://…/auth/login?next=…`, only the `https://` spelling was listed, and
+    the single most likely failure of the whole feature fell through to
+    "redirects are not followed (HTTP 302)" — a transport detail that never
+    mentions authentication.
+
+    Comparing the parsed path, and the host only when the target carries one,
+    means scheme, query and a trailing slash cannot hide a login wall. This
+    decides the wording only: the redirect is refused either way, and a hop to
+    anywhere else keeps the transport message, because that genuinely is an
+    unexpected redirect rather than a sign-in prompt.
+    """
+    target = urlsplit(location)
+    if target.path.rstrip("/") != _LOGIN_PATH:
+        return False
+    return not target.netloc or target.hostname == urlsplit(url).hostname
+
+
 def fetch_managed_price_feed(
     url: str,
     *,
@@ -243,11 +269,7 @@ def fetch_managed_price_feed(
             return NotModified()
         if trusted and (
             error.code == 401
-            or (
-                300 <= error.code < 400
-                and error.headers.get("Location", "").split("?")[0]
-                in {"/auth/login", "https://beancount.io/auth/login"}
-            )
+            or (300 <= error.code < 400 and _is_login_redirect(error.headers.get("Location", ""), url))
         ):
             message = "Credential rejected" if token else "Not logged in"
             return FetchFailed(reason="auth", message=f"{message}. Run bea cloud login, or set/replace BEA_TOKEN.")
