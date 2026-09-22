@@ -307,7 +307,16 @@ def answer(
         validation_warnings = ledger_write.validate_append(
             file, texts, allow_errors=allow_errors, into=into, snapshot=snapshot
         )
-    except EngineError as exc:
+    except LedgerError as exc:
+        # Only a validation failure belongs in the preview as text. Catching
+        # every EngineError here flattened the class away, so a concurrent edit
+        # — a ConflictError carrying category "conflict" and exit 4 — came back
+        # as "Import would leave the ledger invalid" at exit 1, with "retry"
+        # demoted to a details line. Worse, it was a coin flip: the same race
+        # caught at the `append` call below propagates intact, so identical
+        # commands reported the same situation two different ways and a retry
+        # wrapper keyed on exit 4 worked about half the time. An auth or usage
+        # failure from the same call loses its category the same way.
         validation_errors = exc.details or [str(exc)]
 
     preview: dict[str, Any] = {
