@@ -560,9 +560,18 @@ def export_portable(
         except ValueError:
             external += 1
             destinations[path] = target / "_shared" / f"{external:02d}-{path.name}"
+    # Allocated against the copied files, not independently of them. A ledger
+    # may legitimately keep its own `prices/BTC-USD.beancount` beside a managed
+    # `BTC-USD` feed; the two maps used to be built in isolation, so the feed
+    # wrote straight over the copy — the manual price vanished and the snapshot
+    # included one file twice. The copies keep their relative paths, because
+    # that is what makes the export portable, so the generated file is the one
+    # that moves.
+    taken = set(destinations.values())
     feed_files: dict[str, Path] = {}
     for source in loaded.sources:
-        feed_files[source.url] = target / "prices" / f"{source.alias}.beancount"
+        feed_files[source.url] = _free_feed_path(target / "prices", source.alias, taken)
+        taken.add(feed_files[source.url])
     by_target = {
         include.target: feed_files[source.url] for source in loaded.sources for include in source.included_from
     }
@@ -581,6 +590,21 @@ def export_portable(
     return PortableExport(
         output=target, files=tuple(sorted(written)), sources=loaded.sources, errors=list(loaded.errors)
     )
+
+
+def _free_feed_path(directory: Path, alias: str, taken: set[Path]) -> Path:
+    """Where a generated feed goes, never over a path something else owns.
+
+    Deterministic, so re-exporting the same tree produces the same names: the
+    plain `<alias>.beancount` when it is free, then `-managed`, then numbered.
+    """
+    candidate = directory / f"{alias}.beancount"
+    suffix = 0
+    while candidate in taken:
+        suffix += 1
+        stem = f"{alias}-managed" if suffix == 1 else f"{alias}-managed-{suffix}"
+        candidate = directory / f"{stem}.beancount"
+    return candidate
 
 
 def _rewrite_export_includes(
