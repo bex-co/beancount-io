@@ -559,7 +559,9 @@ def test_csv_missing_required_field_exits_2(book: Path, isolated_config: Path) -
 def test_csv_bad_row_reports_line_and_column(book: Path, isolated_config: Path) -> None:
     result = csv_result(book, CSV_HEADER + CSV_ROW.replace("-5.25", "five"))
     assert result.exit_code == 2
-    assert "Row 2" in result.stderr and "'Amount'" in result.stderr
+    # The sole data row is Row 1; "line 2" is its physical line, labelled as
+    # such so the two numbers cannot be read as one (w3/385).
+    assert "Row 1 (line 2)" in result.stderr and "'Amount'" in result.stderr
 
 
 def test_csv_unknown_field_exits_2(book: Path, isolated_config: Path) -> None:
@@ -1142,7 +1144,7 @@ class TestCsvBankAmountSpellings:
         preview = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
         assert preview.exit_code == 2, preview.output
         assert "not a finite number" in preview.stderr
-        assert "Row 2" in preview.stderr
+        assert "Row 1 (line 2)" in preview.stderr
         applied = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking", "--apply")
         assert applied.exit_code == 2, applied.output
         assert book.read_bytes() == before
@@ -1154,7 +1156,7 @@ class TestCsvBankAmountSpellings:
         result = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking")
         assert result.exit_code == 2, result.output
         assert "abc" in result.stderr
-        assert "Row 2" in result.stderr
+        assert "Row 1 (line 2)" in result.stderr
         assert "Accepted" in result.stderr
 
     def test_comma_decimal_lookalike_refused_in_us_column(self, book: Path, isolated_config: Path) -> None:

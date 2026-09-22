@@ -226,7 +226,9 @@ def test_csv_exponents_name_the_row_and_column_before_any_write(
     assert result.returncode == 2, result.stderr
     error = json.loads(result.stderr)["error"]
     assert error["category"] == "usage"
-    assert "Row 3" in error["message"] and repr(column) in error["message"]
+    # Data row 2 of the CSV, on physical line 3 — one vocabulary, both
+    # numbers, neither mistakable for the other (w3/385).
+    assert "Row 2 (line 3)" in error["message"] and repr(column) in error["message"]
     assert "decimal notation" in error["message"]
     assert ledger.read_bytes() == before
 

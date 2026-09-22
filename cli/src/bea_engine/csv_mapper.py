@@ -89,31 +89,32 @@ def _resolve_decimal_comma(cells: list[tuple[int, str]]) -> bool:
     """Decide from every amount cell whether the column uses comma decimals.
 
     Refuses columns that mix point and comma decimals — no row may resolve
-    the ambiguity alone.
+    the ambiguity alone. Cells arrive keyed by the preview's row number, so
+    the refusal names rows the same way the rest of the command does.
     """
     first_us: tuple[int, str] | None = None
     first_eu: tuple[int, str] | None = None
     only_weak_eu = False
-    for line, value in cells:
+    for row_number, value in cells:
         if not value.strip():
             continue
         _sign, core, _negate = _split_amount_sign(value)
         vote = _separator_vote(core)
         if vote == "us" and first_us is None:
-            first_us = (line, value.strip())
+            first_us = (row_number, value.strip())
         elif vote == "eu" and first_eu is None:
-            first_eu = (line, value.strip())
+            first_eu = (row_number, value.strip())
         elif vote == "eu-weak":
             only_weak_eu = True
         if first_us is not None and first_eu is not None:
             earlier, later = (first_us, "point decimals"), (first_eu, "comma decimals")
             if earlier[0][0] > later[0][0]:
                 earlier, later = later, earlier
-            (early_line, early_cell), early_kind = earlier
-            (late_line, late_cell), late_kind = later
+            (early_row, early_cell), early_kind = earlier
+            (late_row, late_cell), late_kind = later
             raise UsageError(
-                f"The amount columns mix decimal conventions: row {early_line} uses {early_kind} "
-                f"({early_cell!r}) but row {late_line} uses {late_kind} ({late_cell!r}). "
+                f"The amount columns mix decimal conventions: row {early_row} uses {early_kind} "
+                f"({early_cell!r}) but row {late_row} uses {late_kind} ({late_cell!r}). "
                 "Use one convention per column."
             )
     if first_eu is not None:
@@ -121,43 +122,60 @@ def _resolve_decimal_comma(cells: list[tuple[int, str]]) -> bool:
     return first_us is None and only_weak_eu
 
 
-def _unparseable_amount(line: int, column: str, value: str) -> UsageError:
-    return UsageError(f"Row {line}: cannot parse amount {value!r} in column {column!r}. {_ACCEPTED_AMOUNTS}")
+def _at(row_number: int, line: int) -> str:
+    """How every CSV diagnostic names one record.
+
+    One row vocabulary for the whole command. `Row` is the preview's `ROW`
+    column — data rows, 1-based, blank rows not counted — so "fix row N" sends
+    the reader to the record the preview table shows. The physical file line
+    rides along in parentheses, labelled, because it is what helps when hand-
+    editing the CSV.
+
+    These used to be the same word for two different numbers: the errors
+    reconstructed the file line and called it `Row`, so `Row 5` in an error and
+    `Row 5` in the table were different records, and the gap grew with every
+    blank row above the failure.
+    """
+    return f"Row {row_number} (line {line})"
 
 
-def _comma_decimal_to_point(line: int, column: str, value: str, text: str) -> str:
+def _unparseable_amount(where: str, column: str, value: str) -> UsageError:
+    return UsageError(f"{where}: cannot parse amount {value!r} in column {column!r}. {_ACCEPTED_AMOUNTS}")
+
+
+def _comma_decimal_to_point(where: str, column: str, value: str, text: str) -> str:
     whole, comma, fraction = text.partition(",")
     if "," in fraction:
-        raise _unparseable_amount(line, column, value)
+        raise _unparseable_amount(where, column, value)
     if "." in whole:
         if not _EU_GROUPING.fullmatch(whole):
-            raise _unparseable_amount(line, column, value)
+            raise _unparseable_amount(where, column, value)
         whole = whole.replace(".", "")
     elif whole and not whole.isdigit():
-        raise _unparseable_amount(line, column, value)
+        raise _unparseable_amount(where, column, value)
     if comma and (not fraction or not fraction.isdigit()):
-        raise _unparseable_amount(line, column, value)
+        raise _unparseable_amount(where, column, value)
     return f"{whole or '0'}.{fraction}" if comma else whole
 
 
-def _parse_amount_cell(line: int, column: str, value: str, *, decimal_comma: bool) -> Decimal:
+def _parse_amount_cell(where: str, column: str, value: str, *, decimal_comma: bool) -> Decimal:
     """Parse one bank amount cell under the column's resolved convention."""
     sign, core, negate = _split_amount_sign(value)
     if _NON_FINITE_AMOUNT.fullmatch(core):
-        raise UsageError(f"Row {line}: amount {value!r} in column {column!r} is not a finite number.")
+        raise UsageError(f"{where}: amount {value!r} in column {column!r} is not a finite number.")
     text = _THOUSAND_SEPARATOR_FILLER.sub("", core)
     if decimal_comma:
-        text = _comma_decimal_to_point(line, column, value, text)
+        text = _comma_decimal_to_point(where, column, value, text)
     else:
         if "." not in text and _COMMA_DECIMAL_TAIL.search(text):
-            raise _unparseable_amount(line, column, value)
+            raise _unparseable_amount(where, column, value)
         text = text.replace(",", "")
     try:
         number = Decimal(require_decimal_notation(sign + text))
     except ValueError as exc:
-        raise UsageError(f"Row {line}, column {column!r}: {exc}") from None
+        raise UsageError(f"{where}, column {column!r}: {exc}") from None
     except InvalidOperation:
-        raise _unparseable_amount(line, column, value) from None
+        raise _unparseable_amount(where, column, value) from None
     return -number if negate else number
 
 
@@ -619,12 +637,12 @@ class CsvImporter:
     def account(self, filepath: str) -> str:
         return self._account
 
-    def _cell(self, row: dict[str, str], line: int, field: str) -> str:
+    def _cell(self, row: dict[str, str], where: str, field: str) -> str:
         column = self._mapping.column(field)
         if column is None:
             return ""
         if column not in row:
-            raise UsageError(f"Row {line}: the mapping names column {column!r} for {field}, which the CSV lacks.")
+            raise UsageError(f"{where}: the mapping names column {column!r} for {field}, which the CSV lacks.")
         return row[column].strip()
 
     def _check_columns(self, source: Path, headers: list[str], category_header: str | None) -> None:
@@ -642,8 +660,8 @@ class CsvImporter:
                     "is ambiguous. Rename the duplicates so each mapped column is unique. Nothing was written."
                 )
 
-    def _parse_decimal(self, line: int, column: str, value: str) -> Decimal:
-        return _parse_amount_cell(line, column, value, decimal_comma=self._decimal_comma)
+    def _parse_decimal(self, where: str, column: str, value: str) -> Decimal:
+        return _parse_amount_cell(where, column, value, decimal_comma=self._decimal_comma)
 
     def _is_blank_row(self, row: dict[str, str], headers: set[str]) -> bool:
         """Whether every mapped cell in the row is empty or whitespace."""
@@ -663,55 +681,60 @@ class CsvImporter:
             self._check_columns(source, headers, category_header)
             materialized = list(records)
             amount_columns = [columns[field] for field in ("amount", "debit", "credit") if field in columns]
-            self._decimal_comma = _resolve_decimal_comma(
-                [
-                    (index + 2, row.get(header, ""))
-                    for index, row in enumerate(materialized)
-                    for header in amount_columns
-                ]
-            )
             blank_headers = set(columns.values())
             if category_header is not None:
                 blank_headers.add(category_header)
+            # Number the data rows once, up front, and hand both numbers down.
+            # Diagnostics quote the ordinal — the same one the preview's `ROW`
+            # column shows — while `line` stays the physical file line, which
+            # entry metadata genuinely needs. Deriving the two separately is
+            # what let them drift: the errors reconstructed the file line and
+            # labelled it `Row`, so the gap grew with every blank row skipped.
+            numbered: list[tuple[int, int, dict[str, str]]] = []
             for index, row in enumerate(materialized):
-                line = index + 2
                 if self._is_blank_row(row, blank_headers):
                     self.skipped_blank_rows += 1
                     continue
+                numbered.append((len(numbered) + 1, index + 2, row))
+            # Blank cells never voted on the decimal convention anyway, so
+            # skipping blank rows here changes only which number it names.
+            self._decimal_comma = _resolve_decimal_comma(
+                [(number, row.get(header, "")) for number, _line, row in numbered for header in amount_columns]
+            )
+            for row_number, line, row in numbered:
+                where = _at(row_number, line)
                 date_column = columns["date"]
                 try:
-                    day = datetime.strptime(self._cell(row, line, "date"), self._date_format).date()
+                    day = datetime.strptime(self._cell(row, where, "date"), self._date_format).date()
                 except ValueError:
                     raise UsageError(
-                        f"Row {line}: cannot parse date {self._cell(row, line, 'date')!r} "
+                        f"{where}: cannot parse date {self._cell(row, where, 'date')!r} "
                         f"in column {date_column!r} with format {self._date_format!r}."
                     ) from None
                 if "amount" in columns:
                     amount_column = columns["amount"]
-                    number = self._parse_decimal(line, amount_column, self._cell(row, line, "amount"))
+                    number = self._parse_decimal(where, amount_column, self._cell(row, where, "amount"))
                 else:
-                    debit = self._cell(row, line, "debit")
-                    credit = self._cell(row, line, "credit")
+                    debit = self._cell(row, where, "debit")
+                    credit = self._cell(row, where, "credit")
                     if bool(debit) == bool(credit):
-                        raise UsageError(
-                            f"Row {line}: fill exactly one of {columns['debit']!r} or {columns['credit']!r}."
-                        )
+                        raise UsageError(f"{where}: fill exactly one of {columns['debit']!r} or {columns['credit']!r}.")
                     side = "credit" if credit else "debit"
-                    number = self._parse_decimal(line, columns[side], credit or debit)
+                    number = self._parse_decimal(where, columns[side], credit or debit)
                     number = number if credit else -number
                 if self._mapping.sign == "ledger":
                     number = -number
-                currency = self._cell(row, line, "currency") or self._currency
+                currency = self._cell(row, where, "currency") or self._currency
                 if not currency:
-                    raise UsageError(f"Row {line}: no currency column and the ledger has no single operating currency.")
+                    raise UsageError(f"{where}: no currency column and the ledger has no single operating currency.")
                 # An unmapped or blank payee is absent, not empty: a bare `""`
                 # payee would be printed into every entry the mapping writes.
-                payee = self._cell(row, line, "payee") or None
-                narration = self._cell(row, line, "narration")
-                counter, flag, rule = self._categorize(row, line, payee, narration, category_header)
+                payee = self._cell(row, where, "payee") or None
+                narration = self._cell(row, where, "narration")
+                counter, flag, rule = self._categorize(row, where, payee, narration, category_header)
                 meta = new_metadata(filepath, line)
                 meta["_csv_rule"] = rule
-                native_id = self._cell(row, line, "id")
+                native_id = self._cell(row, where, "id")
                 if native_id:
                     meta["bank_id"] = native_id
                 postings = [
@@ -724,7 +747,7 @@ class CsvImporter:
     def _categorize(
         self,
         row: dict[str, str],
-        line: int,
+        where: str,
         payee: str | None,
         narration: str,
         category_header: str | None,
@@ -746,7 +769,7 @@ class CsvImporter:
                 return rule.account, "*", rule.pattern
         if category_header is not None:
             if category_header not in row:
-                raise UsageError(f"Row {line}: the CSV lacks category column {category_header!r}.")
+                raise UsageError(f"{where}: the CSV lacks category column {category_header!r}.")
             category = row[category_header].strip()
             if category and is_valid(category):
                 return category, "*", category

@@ -93,8 +93,11 @@ and then infers the mapping like `auto`. Without the key, a non-UTF-8 file
 fails before anything is read: the error names the byte offset and, when the
 file decodes as cp1252, says so with the override to pass. A file no
 candidate decodes lists the encodings tried instead. Unknown fields, missing columns, bad dates, and bad amounts fail
-with the row number and column name. Rows whose mapped cells are all empty or
-whitespace are skipped instead, and the preview counts them. A mapped column that appears more than
+with the row number and column name, as `Row 2 (line 5)`: the row is the one
+the preview's `ROW` column shows, and the physical file line follows it for
+hand-editing. Rows whose mapped cells are all empty or
+whitespace are skipped instead, and the preview counts them — which is why the
+two numbers differ. A mapped column that appears more than
 once in the header, or a quote left open at the end of the file, fails before
 anything is written. Misuse exits **2**.
 
