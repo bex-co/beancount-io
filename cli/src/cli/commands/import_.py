@@ -657,6 +657,9 @@ def import_entries(
         if preview["skipped_blank"]:
             noun = "row" if preview["skipped_blank"] == 1 else "rows"
             summary += f", {preview['skipped_blank']} blank {noun} skipped"
+        if preview["conflicts"]:
+            noun = "conflict" if preview["conflicts"] == 1 else "conflicts"
+            summary += f", {preview['conflicts']} {noun}"
         if preview["blocked"]:
             summary += f", {preview['blocked']} blocked"
         typer.echo(summary)

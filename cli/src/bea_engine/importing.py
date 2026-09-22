@@ -318,6 +318,11 @@ def answer(
         "written": 0,
         "duplicates": sum(row["status"] == "duplicate" for row in rows),
         "possible_duplicates": sum(row["status"] == "possible_duplicate" for row in rows),
+        # Conflicts were tracked only as the boolean that gates exit 4, so the
+        # one status that forces a human to look was the one counted nowhere:
+        # an all-conflict preview tallied as `0 ready, 0 … 0 …` and read as an
+        # empty file to anything skimming the summary.
+        "conflicts": sum(row["status"] == "conflict" for row in rows),
         "blocked": sum(row["status"] == "blocked" for row in rows),
         "skipped_blank": skipped_blank,
         "validation_errors": validation_errors,
