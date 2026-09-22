@@ -127,7 +127,14 @@ class TestList:
         assert completed.returncode == 0, completed.stderr
         data = envelope(completed)["data"]
         assert data["items"] == [
-            {"date": "2024-02-03", "currency": "BTC", "amount": {"number": "62000.00", "currency": "USD"}}
+            {
+                "date": "2024-02-03",
+                "currency": "BTC",
+                "amount": {"number": "62000.00", "currency": "USD"},
+                # Empty because this fixture carries none, but present: every
+                # listed directive kind reports `meta` (w3/289, w3/393).
+                "meta": {},
+            }
         ]
         assert data["truncated"] is False and data["errors"] == []
 

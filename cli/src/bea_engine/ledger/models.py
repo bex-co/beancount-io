@@ -222,6 +222,7 @@ class CloseDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
     date: LedgerDate
     account: str
+    meta: dict[str, Any] = Field(default_factory=dict)
     generated: bool = Field(default=False, exclude=True)
 
 
@@ -231,6 +232,7 @@ class BalanceDirective(BaseModel):
     account: str
     amount: Amount
     tolerance: Decimal | None = None
+    meta: dict[str, Any] = Field(default_factory=dict)
     generated: bool = Field(default=False, exclude=True)
 
 
@@ -239,6 +241,7 @@ class PadDirective(BaseModel):
     date: LedgerDate
     account: str
     source_account: str
+    meta: dict[str, Any] = Field(default_factory=dict)
     generated: bool = Field(default=False, exclude=True)
 
 
@@ -265,6 +268,7 @@ class PriceDirective(BaseModel):
     date: LedgerDate
     currency: str
     amount: Amount
+    meta: dict[str, Any] = Field(default_factory=dict)
     generated: bool = Field(default=False, exclude=True)
 
 

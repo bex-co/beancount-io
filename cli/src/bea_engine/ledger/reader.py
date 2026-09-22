@@ -281,6 +281,7 @@ def list_prices(
                 date=entry.date,
                 currency=entry.currency,
                 amount=_to_amount(entry.amount),
+                meta=metadata_to_json(entry.meta),
                 generated=entry_generated(entry, "price"),
             )
         )
@@ -310,6 +311,7 @@ def list_balances(
                 account=entry.account,
                 amount=_to_amount(entry.amount),
                 tolerance=entry.tolerance,
+                meta=metadata_to_json(entry.meta),
                 generated=entry_generated(entry, "balance"),
             )
         )
@@ -366,7 +368,12 @@ def list_closes(
         if account and fold_account(account) not in fold_account(entry.account):
             continue
         results.append(
-            CloseDirective(date=entry.date, account=entry.account, generated=entry_generated(entry, "close"))
+            CloseDirective(
+                date=entry.date,
+                account=entry.account,
+                meta=metadata_to_json(entry.meta),
+                generated=entry_generated(entry, "close"),
+            )
         )
         if len(results) >= limit:
             break
@@ -560,6 +567,7 @@ def list_pads(
                 date=entry.date,
                 account=entry.account,
                 source_account=entry.source_account,
+                meta=metadata_to_json(entry.meta),
                 generated=entry_generated(entry, "pad"),
             )
         )
