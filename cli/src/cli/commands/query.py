@@ -65,29 +65,52 @@ def _refuse_one_shot_output(query_string: str) -> None:
 
 
 def _split_statements(query_string: str) -> list[str]:
-    """Split a one-shot query on top-level semicolons, honoring quotes."""
+    """Split a one-shot query on top-level semicolons, honoring quotes and comments.
+
+    Only a `;` that is really a statement separator counts. A comment's
+    punctuation is not executable BQL, and skipping that rule failed in both
+    directions: a `;` inside `/* … */` split a valid single query and got it
+    refused as two, while an apostrophe inside a comment opened a string that
+    swallowed the real separator — so two statements were forwarded, the engine
+    ran only the first, and the caller got exit 0 and half an answer.
+
+    BQL escapes a quote by doubling it and comments with `/* */`. It has no
+    line-comment form — `--`, `#` and a bare `;` are all syntax errors, probed
+    against the parser rather than assumed — so only these two rules exist to
+    honor. The engine twin
+    (`bea_engine.query._code_mask`) applies the same rules for a different
+    purpose; the frontend may not import the engine, so the rules are restated
+    rather than shared, and `tests/test_query_statement_comments.py` pins that
+    the two agree.
+    """
     statements: list[str] = []
     current: list[str] = []
-    quote: str | None = None
-    escaped = False
-    for char in query_string:
-        if escaped:
-            current.append(char)
-            escaped = False
-        elif quote is not None and char == "\\":
-            current.append(char)
-            escaped = True
-        elif quote is not None and char == quote:
-            current.append(char)
-            quote = None
-        elif quote is None and char in "\"'":
-            current.append(char)
-            quote = char
-        elif quote is None and char == ";":
+    index = 0
+    length = len(query_string)
+    while index < length:
+        char = query_string[index]
+        if char in "\"'":
+            end = index + 1
+            while end < length:
+                if query_string[end] == char:
+                    if end + 1 < length and query_string[end + 1] == char:  # A doubled quote is content.
+                        end += 2
+                        continue
+                    end += 1
+                    break
+                end += 1
+        elif query_string.startswith("/*", index):
+            end = query_string.find("*/", index + 2)
+            end = length if end == -1 else end + 2
+        elif char == ";":
             statements.append("".join(current))
             current = []
+            index += 1
+            continue
         else:
-            current.append(char)
+            end = index + 1
+        current.append(query_string[index:end])
+        index = end
     statements.append("".join(current))
     return [part for part in (piece.strip() for piece in statements) if part]
 

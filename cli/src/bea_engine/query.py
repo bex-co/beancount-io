@@ -56,8 +56,9 @@ def _code_mask(text: str) -> str:
 
     Blanking a literal whole — quotes included — also means an already-quoted
     relation is invisible here, which is the right answer: it needs no
-    rewriting. BQL escapes a quote by doubling it, and accepts `--` line and
-    `/* */` block comments.
+    rewriting. BQL escapes a quote by doubling it and comments with `/* */`;
+    it has no line-comment form, so `--`, `#` and a bare `;` are syntax errors
+    rather than text to skip (probed against the parser, not assumed).
     """
     out: list[str] = []
     index = 0
@@ -74,11 +75,6 @@ def _code_mask(text: str) -> str:
                     end += 1
                     break
                 end += 1
-            out.append(" " * (end - index))
-            index = end
-        elif text.startswith("--", index):
-            end = text.find("\n", index)
-            end = length if end == -1 else end
             out.append(" " * (end - index))
             index = end
         elif text.startswith("/*", index):

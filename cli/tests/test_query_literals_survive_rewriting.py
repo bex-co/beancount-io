@@ -67,8 +67,8 @@ class TestRewrite:
             pytest.param("SELECT narration WHERE narration = 'transfer from accounts'", id="single-quoted"),
             pytest.param('SELECT "from balances today" AS phrase', id="double-quoted"),
             pytest.param("SELECT 'it''s from accounts' AS x", id="doubled-quote-escape"),
-            pytest.param("SELECT 1 -- from accounts", id="line-comment"),
             pytest.param("SELECT /* from balances */ 1", id="block-comment"),
+            pytest.param("SELECT /* from accounts */ 'x' AS y", id="block-comment-and-literal"),
             pytest.param("SELECT 'unterminated from accounts", id="unterminated-literal"),
         ],
     )
@@ -86,7 +86,7 @@ class TestRewrite:
         [
             "SELECT 'a' FROM accounts",
             'SELECT "b" FROM balances',
-            "SELECT 1 -- trailing\nFROM accounts",
+            "SELECT /* trailing */ 1 FROM accounts",
             "SELECT 'it''s' FROM accounts",
         ],
     )
