@@ -210,6 +210,15 @@ class CsvRule:
             expression = re.compile(match, re.IGNORECASE)
         except re.error as exc:
             raise UsageError(f"Rule {index + 1} has an invalid regex {match!r}: {exc}.") from exc
+        # A rule naming an unopenable account used to surface as every matching
+        # row being "not open" — a name no `open` directive can ever create.
+        # Refuse it here, where the rule number says which line to fix.
+        from bea_engine.ledger.text import parse_account
+
+        try:
+            account = parse_account(account)
+        except UsageError as exc:
+            raise UsageError(f"Rule {index + 1}: {exc}") from None
         return CsvRule(pattern=match, account=account, expression=expression)
 
 

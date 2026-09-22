@@ -12,6 +12,7 @@ import difflib
 import hashlib
 import io
 import runpy
+import shlex
 import sys
 import unicodedata
 from contextlib import redirect_stderr, redirect_stdout
@@ -116,7 +117,10 @@ def answer(
                 "--csv needs --account ACCOUNT for the source account, for example --account Assets:Checking."
             )
         mapping = parse_mapping(csv_mapping)
-        default_account = default_account or "Expenses:Uncategorized"
+        # Before the preview, not after: an invalid name would otherwise block
+        # every row with the wrong diagnosis instead of failing on the typo.
+        csv_account = _valid_account(csv_account, "--account")
+        default_account = _valid_account(default_account or "Expenses:Uncategorized", "--default-account")
         resolved_date_format = date_format or "%Y-%m-%d"
         resolved_delimiter = parse_delimiter(delimiter) if delimiter is not None else None
         resolved_encoding = parse_encoding(encoding) if encoding is not None else "utf-8"
@@ -464,6 +468,24 @@ def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, st
     return identities
 
 
+def _valid_account(name: str, option: str) -> str:
+    """Validate an account name the way the loader will, saying which option named it.
+
+    Import used to skip this check entirely. An unopenable name — a space, a
+    lowercase root, an illegal character — is trivially absent from the set of
+    opened accounts, so every row came back `blocked` with "is not open" and a
+    `bea add open` remedy that `add` itself refuses. A name no `open` directive
+    could ever make valid is a usage error, not an unopened account, and this
+    is the validator `add` has always used for it.
+    """
+    from bea_engine.ledger.text import parse_account
+
+    try:
+        return parse_account(name)
+    except UsageError as exc:
+        raise UsageError(f"{option}: {exc}") from None
+
+
 def _blocked_reason(entry: Any, open_currencies: dict[str, set[str] | None]) -> str | None:
     """Why a transaction cannot be written, or None when its accounts allow it.
 
@@ -475,7 +497,11 @@ def _blocked_reason(entry: Any, open_currencies: dict[str, set[str] | None]) -> 
         remedies = []
         for name in missing:
             currency = next(p.units.currency for p in entry.postings if p.account == name)
-            remedies.append(f"bea add open --account {name} --date {entry.date.isoformat()} -c {currency}")
+            # Quoted so the line survives a paste into a shell. Valid account
+            # names hold no spaces, so this is belt-and-braces now that invalid
+            # names are refused up front — but a suggestion that only sometimes
+            # pastes cleanly is worse than one that always does.
+            remedies.append(f"bea add open --account {shlex.quote(name)} --date {entry.date.isoformat()} -c {currency}")
         quoted = ", ".join(f"'{name}'" for name in missing)
         noun = "Account" if len(missing) == 1 else "Accounts"
         verb = "is" if len(missing) == 1 else "are"
