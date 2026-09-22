@@ -15,6 +15,7 @@ upstream itself chose, so the tree is numbered like the postings it is a tree of
 
 from __future__ import annotations
 
+import sys
 from typing import Any
 
 
@@ -41,8 +42,28 @@ def _invoke(upstream: Any, op: str, argv: list[str]) -> int:
     try:
         upstream.doctor.main(args=[op, *argv], prog_name="bean-doctor")
     except SystemExit as exit_status:
-        return int(exit_status.code or 0)
+        return _status(exit_status.code)
     return 0
+
+
+def _status(code: object) -> int:
+    """What CPython itself would do with this `SystemExit` code.
+
+    `SystemExit.code` is not always int-or-None: `bean-doctor linked` validates
+    the location itself and raises `SystemExit("Invalid line number or link
+    format for location.")` — a *string* code, which CPython prints to stderr
+    before exiting 1. Running upstream in-process instead of as a child put
+    that string through `int()`, and the `ValueError` reached the engine's rich
+    traceback handler: 118 lines of bea internals in place of upstream's one
+    sentence. Reproducing CPython's rule here is exactly the passthrough the
+    docstring above promises.
+    """
+    if code is None:
+        return 0
+    if isinstance(code, int):
+        return code
+    print(code, file=sys.stderr)
+    return 1
 
 
 def _context_of(entries: Any, options_map: Any) -> Any:
