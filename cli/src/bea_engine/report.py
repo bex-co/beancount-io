@@ -578,6 +578,13 @@ def _prune_tree(node: Any, matches: Callable[[str], bool], closed: set[str] | No
     descendant was kept; ancestors stay for structure. Every retained node's
     subtree total is recomputed from what was kept, so a parent never reports
     the balance of a sibling the filter excluded.
+
+    An ancestor kept *only* for structure contributes nothing of its own.
+    Rolling its direct postings into the total was what made `bea balance Fund`
+    answer 125.00 USD for a fund holding 25.00: the extra 100.00 was the
+    parent's own posting, and the parent is on screen only to show where the
+    fund sits. Its `balance` and `has_txns` are emptied to match, so a consumer
+    reading the node directly is told the same thing as the rollup.
     """
     kept = []
     for child in node.children:
@@ -585,10 +592,14 @@ def _prune_tree(node: Any, matches: Callable[[str], bool], closed: set[str] | No
         if pruned is not None:
             kept.append(pruned)
     is_closed = bool(closed) and node.account in (closed or ())
-    if not ((not is_closed and matches(node.account)) or kept):
+    in_scope = not is_closed and matches(node.account)
+    if not (in_scope or kept):
         return None
+    own = node.balance if in_scope else type(node.balance)()
     return dataclasses.replace(
         node,
+        balance=own,
+        has_txns=node.has_txns if in_scope else False,
         children=kept,
-        balance_children=_sum(node.balance, *(child.balance_children for child in kept)),
+        balance_children=_sum(own, *(child.balance_children for child in kept)),
     )
