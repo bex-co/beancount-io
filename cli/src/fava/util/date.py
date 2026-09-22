@@ -138,8 +138,14 @@ class _IntervalQuarter(Interval):
         return f"{date.year}-Q{(date.month - 1) // 3 + 1}"
 
     def get_prev(self, date: datetime.date) -> datetime.date:
+        # `>=`, not `>`: the contract is "the start of the interval this date
+        # falls in", so a date that already *is* a quarter start must return
+        # itself. With `>`, April 1 answered January 1 — the previous
+        # quarter's start — which made `_flow_ranges` read a whole Q4 as a
+        # clipped fragment and drop it from an empty final quarter. Every
+        # other interval's `get_prev` is idempotent on its own period starts.
         for i in [10, 7, 4]:
-            if date.month > i:
+            if date.month >= i:
                 return datetime.date(date.year, i, 1)
         return datetime.date(date.year, 1, 1)
 
