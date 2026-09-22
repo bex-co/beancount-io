@@ -108,10 +108,13 @@ def text_answer(
     """
     import io
 
-    # The destination opens only after the ledger has loaded: opening it first
-    # would truncate a `-o` that names the ledger under read before the load
-    # sees a byte of it. The shell renders into the buffer until then, and the
-    # stream is swapped once the destination is known safe.
+    # The shell renders into a buffer and the destination is opened only once
+    # the whole query has succeeded. Opening it before the load would truncate
+    # a `-o` naming the ledger under read before the load saw a byte of it;
+    # opening it before the *query*, which is what this used to do, truncated
+    # whatever the last good export was the moment the query failed — against
+    # `USAGE.md`'s "a failed query or write preserves an existing export" — and
+    # left a partial file behind if a query failed mid-render.
     buffer = io.StringIO()
     # `show_errors=False`: the load errors travel in the envelope, and
     # upstream printing them to stderr too would report each one twice.
@@ -121,16 +124,16 @@ def text_answer(
     # `count(*)` to `c`. Interactive users can still `.set narrow true`.
     shell.settings.narrow = False
     errors = _gate([format_error(error, ledger_file=file) for error in shell.context.errors], allow_errors)
-    destination = None
     if output is not None:
+        # Still before the query: refusing to write over the ledger being read
+        # is a refusal, and a refusal has to happen before any work is done.
         _refuse_alias(output, file, shell.context)
-        destination = output.open("w")
-        shell.outfile = destination
-    try:
-        _executed(shell.context, query_string, shell.onecmd, errors)
-    finally:
-        if destination is not None:
-            destination.close()
+    _executed(shell.context, query_string, shell.onecmd, errors)
+    if output is not None:
+        with output.open("w") as destination:
+            destination.write(buffer.getvalue())
+        # The export is the result; the frontend has nothing left to print.
+        return {"text": "", "errors": errors}
     return {"text": buffer.getvalue(), "errors": errors}
 
 
