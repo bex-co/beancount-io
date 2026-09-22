@@ -266,18 +266,33 @@ def _gate(errors: list[str], allow_errors: bool) -> list[str]:
 
 
 def interactive(
-    file: Path, *, format: str = "text", output: Path | None = None, numberify: bool = False, show_errors: bool = True
+    file: Path,
+    *,
+    format: str = "text",
+    output: Path | None = None,
+    numberify: bool = False,
+    show_errors: bool = True,
+    allow_errors: bool = False,
 ) -> None:
     """Upstream's interactive shell, on this process's terminal.
 
     `bea` runs this command with the streams inherited, so stdin really is the
     customer's terminal: readline, the pager and Ctrl-C behave as they do under
     `bean-query` itself.
+
+    A strict read refuses the session before the prompt appears, the same way
+    it refuses a one-shot query: every answer this session gives would come
+    from the same partially-loaded ledger. `--strict` used to be dropped here,
+    so the shell answered leniently — and `--no-errors`, which is only meant to
+    quieten the startup banner, then hid the one remaining sign that the ledger
+    was invalid.
     """
     import warnings
 
     warnings.filterwarnings("always")
     shell = build_shell(file, sys.stdout, interactive=True, format=format, numberify=numberify, show_errors=show_errors)
+    # After build_shell, which is what loads the ledger, and before cmdloop.
+    _gate([format_error(error, ledger_file=file) for error in shell.context.errors], allow_errors)
     destination = None
     if output is not None:
         _refuse_alias(output, file, shell.context)

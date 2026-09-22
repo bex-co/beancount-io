@@ -203,7 +203,14 @@ def query(
         elif ctx.no_input:
             raise UsageError("A query is required with --no-input. Pass it as an argument or on stdin.")
         else:
-            raise typer.Exit(launch.run_engine_argv(["shell", "--file", str(file), *rendering]))
+            # The read policy is frontend-resolved and must reach the shell:
+            # a strict session answering from a ledger that does not load is
+            # exactly what `--strict` exists to refuse, and suppressing the
+            # banner with `--no-errors` must not also suppress the check.
+            shell_argv = ["shell", "--file", str(file), *rendering]
+            if allow_errors or not ctx.strict_reads():
+                shell_argv.append("--allow-errors")
+            raise typer.Exit(launch.run_engine_argv(shell_argv))
     if not query_string.strip():
         raise UsageError("A query is required as an argument or on stdin.")
     _refuse_one_shot_output(query_string)

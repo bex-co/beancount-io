@@ -456,6 +456,9 @@ def shell(
         bool, typer.Option("--numberify", "-m", help="Split amounts into per-currency columns.")
     ] = False,
     no_errors: Annotated[bool, typer.Option("--no-errors", "-q", help="Do not report load errors on startup.")] = False,
+    allow_errors: Annotated[
+        bool, typer.Option("--allow-errors", help="Open the shell even when the ledger does not load cleanly.")
+    ] = False,
 ) -> None:
     """Open the interactive query shell on this terminal.
 
@@ -470,13 +473,24 @@ def shell(
 
     try:
         ledger = _ledger(file)
+        # Inside the handler as well: a strict read refuses the session itself,
+        # and that refusal is an ordinary message, not a crash.
+        bql.interactive(
+            ledger,
+            format=format,
+            output=output,
+            numberify=numberify,
+            show_errors=not no_errors,
+            allow_errors=allow_errors,
+        )
     except protocol.EngineError as exc:
         # No envelope to put it in, so it reads like any other program's
         # complaint. `bea` resolves the ledger before it gets here, so this is
         # for someone running the helper directly.
         print(f"error: {exc}", file=sys.stderr)
+        for detail in exc.details or ():
+            print(f"  {detail}", file=sys.stderr)
         raise SystemExit(exc.exit_code) from None
-    bql.interactive(ledger, format=format, output=output, numberify=numberify, show_errors=not no_errors)
 
 
 @app.command(
