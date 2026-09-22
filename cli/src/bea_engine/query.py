@@ -26,6 +26,7 @@ they live here and not in `bea`:
 from __future__ import annotations
 
 import difflib
+import os
 import re
 import sys
 import unicodedata
@@ -187,8 +188,20 @@ def text_answer(
         _refuse_alias(output, file, shell.context)
     _executed(shell.context, query_string, shell.onecmd, errors)
     if output is not None:
-        with output.open("w") as destination:
-            destination.write(buffer.getvalue())
+        # Rendered whole, then swapped in. Opening the destination itself
+        # truncated it before the bytes were safely down, so a write that
+        # failed partway — a full disk, a size limit — left a fragment of the
+        # new result where the last good export had been. w3/380 moved this
+        # past the *query*; the write itself still had to become atomic.
+        #
+        # `candidate_file` is the engine's own sibling-temp primitive: same
+        # directory, so the replace is atomic, with fsync and cleanup already
+        # handled. The frontend has its own `cli.utils.atomic_write` for the
+        # JSON path, which is why that path already preserved.
+        from bea_engine.ledger.write import candidate_file
+
+        with candidate_file(output, buffer.getvalue()) as candidate:
+            os.replace(candidate, output)
         # The export is the result; the frontend has nothing left to print.
         return {"text": "", "errors": errors}
     return {"text": buffer.getvalue(), "errors": errors}
