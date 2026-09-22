@@ -99,7 +99,13 @@ hand-editing. Rows whose mapped cells are all empty or
 whitespace are skipped instead, and the preview counts them — which is why the
 two numbers differ. A mapped column that appears more than
 once in the header, or a quote left open at the end of the file, fails before
-anything is written. Misuse exits **2**.
+anything is written. So does a row carrying more fields than the header
+declares — usually an unquoted separator inside a value, as in
+`2026-01-02,-1,234.56,Coffee` under a three-column header. That row is
+ambiguous rather than merely wrong (bad quoting, or the wrong delimiter), so
+it is refused naming the file, line and field counts instead of being
+truncated to fit, which silently shifted the remaining cells. Surplus cells
+that are *empty* are tolerated: a trailing separator loses no data. Misuse exits **2**.
 
 Rows that would post to an account the ledger never opened — or a currency
 the open directive disallows — are shown `blocked`, not ready: the row names

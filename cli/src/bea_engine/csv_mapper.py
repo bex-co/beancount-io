@@ -515,6 +515,35 @@ def parse_delimiter(value: str) -> str:
     raise UsageError(f"Bad --delimiter {value!r}: use ',', ';', '|', or 'tab'.")
 
 
+def _refuse_surplus_fields(source: Path, line: int, headers: list[str], record: list[str]) -> None:
+    """Refuse a row carrying more fields than the header declares.
+
+    Keying the row by enumerating the headers silently dropped everything past
+    the last one, and the surviving cells then shifted: an unquoted thousands
+    separator turned `2026-01-02,-1,234.56,Coffee` into `-1 USD` with the
+    narration `234.56`, which imports, balances, and passes `bea check`. The
+    row is structurally ambiguous — it could be a quoting mistake or the wrong
+    delimiter — so it is refused rather than guessed at, before anything is
+    written.
+
+    Surplus cells that are *empty* are tolerated and dropped: a trailing
+    delimiter is common and carries no data to lose. Only content is refused,
+    which keeps this to the reported defect rather than a change of
+    short-row/optional-field policy.
+    """
+    if len(record) <= len(headers) or not any(cell.strip() for cell in record[len(headers) :]):
+        return
+    surplus = ", ".join(repr(cell) for cell in record[len(headers) :][:3])
+    raise UsageError(
+        f"Line {line} of {source.name} has {len(record)} fields but the header declares {len(headers)}: {surplus}.",
+        details=[
+            'A value containing the delimiter must be quoted, as in "-1,234.56".',
+            "If the file uses a different separator, name it with --delimiter.",
+            "Nothing was imported; no row was guessed at.",
+        ],
+    )
+
+
 @contextmanager
 def open_records(
     source: Path, *, delimiter: str | None = None, encoding: str = "utf-8"
@@ -542,6 +571,7 @@ def open_records(
         def rows() -> Iterator[dict[str, str]]:
             try:
                 for record in reader:
+                    _refuse_surplus_fields(source, reader.line_num, headers, record)
                     yield {name: record[i] if i < len(record) else "" for i, name in enumerate(headers)}
             except csv.Error as exc:
                 raise _malformed(source, reader.line_num, exc) from None
