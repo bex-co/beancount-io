@@ -199,13 +199,18 @@ def text_answer(
 
 
 def _loaded_files(root: Path, context: Any) -> list[Path]:
-    """The root ledger plus every file the loaded entries were read from.
+    """Every file this query reads, so none of them may be a destination.
 
-    The true include closure, straight from the loader rather than from
-    re-reading `include` lines: anything in this set is a file the query
-    reads, so none of them may be a query destination.
+    The loader records its whole include closure in `options["include"]`, which
+    is the only complete answer: a child holding nothing but `option` lines,
+    comments or further includes produces no entries at all, so deriving
+    membership from `entries[].meta.filename` silently left it unprotected and
+    `.output` truncated it. Entry filenames are still folded in as a
+    belt-and-braces fallback for a connection that carries no options.
     """
     files = [root]
+    includes = (getattr(context, "options", None) or {}).get("include") or ()
+    files.extend(Path(name) for name in includes if name)
     table = context.tables.get("entries")
     entries = getattr(table, "entries", None) or ()
     for entry in entries:
