@@ -547,8 +547,8 @@ def _refuse_surplus_fields(source: Path, line: int, headers: list[str], record: 
 @contextmanager
 def open_records(
     source: Path, *, delimiter: str | None = None, encoding: str = "utf-8"
-) -> Iterator[tuple[list[str], Iterator[dict[str, str]]]]:
-    """The stripped header row and one dict per data row, keyed by those names.
+) -> Iterator[tuple[list[str], Iterator[tuple[int, dict[str, str]]]]]:
+    """The stripped header row, and each data row with the line it starts on.
 
     This is the one reader every CSV path shares, so discovery, date inference,
     and extraction agree on what a column is called: names are stripped (and
@@ -568,11 +568,18 @@ def open_records(
             raise _decode_usage_error(source, exc, encoding) from None
         headers = [cell.strip() for cell in first or []]
 
-        def rows() -> Iterator[dict[str, str]]:
+        def rows() -> Iterator[tuple[int, dict[str, str]]]:
+            # `line_num` counts lines *consumed*, so after the header it names
+            # the header's own line and after each record the record's last
+            # line. A record therefore starts one past wherever the reader was
+            # before it — which is the only way to get this right once a
+            # quoted cell contains newlines and a record stops being a line.
+            start = reader.line_num + 1
             try:
                 for record in reader:
-                    _refuse_surplus_fields(source, reader.line_num, headers, record)
-                    yield {name: record[i] if i < len(record) else "" for i, name in enumerate(headers)}
+                    _refuse_surplus_fields(source, start, headers, record)
+                    yield start, {name: record[i] if i < len(record) else "" for i, name in enumerate(headers)}
+                    start = reader.line_num + 1
             except csv.Error as exc:
                 raise _malformed(source, reader.line_num, exc) from None
             except UnicodeDecodeError as exc:
@@ -595,7 +602,7 @@ def infer_date_format(
         with open_records(source, delimiter=delimiter, encoding=encoding) as (headers, rows):
             if column not in headers:
                 return None, False
-            for row in rows:
+            for _line, row in rows:
                 value = row[column].strip()
                 if value:
                     values.append(value)
@@ -725,16 +732,19 @@ class CsvImporter:
                 blank_headers.add(category_header)
             # Number the data rows once, up front, and hand both numbers down.
             # Diagnostics quote the ordinal — the same one the preview's `ROW`
-            # column shows — while `line` stays the physical file line, which
+            # column shows — while `line` is the physical file line, which
             # entry metadata genuinely needs. Deriving the two separately is
             # what let them drift: the errors reconstructed the file line and
             # labelled it `Row`, so the gap grew with every blank row skipped.
+            # The line comes from the reader rather than the record's position,
+            # because a quoted cell may contain newlines and then a record is
+            # no longer a line.
             numbered: list[tuple[int, int, dict[str, str]]] = []
-            for index, row in enumerate(materialized):
+            for line, row in materialized:
                 if self._is_blank_row(row, blank_headers):
                     self.skipped_blank_rows += 1
                     continue
-                numbered.append((len(numbered) + 1, index + 2, row))
+                numbered.append((len(numbered) + 1, line, row))
             # Blank cells never voted on the decimal convention anyway, so
             # skipping blank rows here changes only which number it names.
             self._decimal_comma = _resolve_decimal_comma(
