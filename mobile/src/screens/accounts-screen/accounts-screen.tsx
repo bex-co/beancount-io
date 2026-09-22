@@ -1,6 +1,6 @@
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useMemo, useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
@@ -141,19 +141,13 @@ const AccountsScreenImpl = (): JSX.Element => {
     <View style={styles.container}>
       <LedgerDrawerHeader
         title={t("accounts")}
-        right={
-          canWrite && (
-            <TouchableOpacity
-              testID="open-account-button"
-              onPress={handleOpenAccount}
-              hitSlop={8}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={t("openAccount")}
-            >
-              <Ionicons name="add" size={26} color={theme.black} />
-            </TouchableOpacity>
-          )
+        action={
+          canWrite && {
+            accessibilityLabel: t("openAccount"),
+            onPress: handleOpenAccount,
+            icon: <Ionicons name="add" size={26} color={theme.black} />,
+            testID: "open-account-button",
+          }
         }
       />
       {showStale ? <StaleDataBanner /> : null}

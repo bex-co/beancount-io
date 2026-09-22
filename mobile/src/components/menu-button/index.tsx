@@ -1,3 +1,4 @@
+import { iconActionSize } from "@/common/theme/spacing";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Dimensions,
@@ -38,11 +39,8 @@ const getStyles = (theme: ColorTheme) =>
     trigger: {
       alignItems: "center",
       justifyContent: "center",
-      minWidth: 44,
-      minHeight: 44,
-      // No negative margin: the icon sits at the header's 16px gutter like every
-      // other header action (e.g. the Transactions tab's add button), so the glyph
-      // stays symmetric with the left-side icons and lines up across tabs.
+      width: iconActionSize,
+      height: iconActionSize,
     },
     triggerPressed: {
       opacity: 0.6,

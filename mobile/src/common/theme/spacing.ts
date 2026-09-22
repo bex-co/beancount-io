@@ -43,3 +43,6 @@ export const rowPaddingVertical = space.md; // 12
 
 /** Vertical padding for a section / column header sitting between rows. */
 export const sectionHeaderPaddingVertical = space.sm; // 8
+
+/** Square target shared by tab-header actions and menu triggers. */
+export const iconActionSize = 44;

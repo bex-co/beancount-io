@@ -514,24 +514,19 @@ export function LedgerFileBrowserScreen(): JSX.Element {
     <View style={styles.container}>
       <LedgerDrawerHeader
         title={t("files")}
-        right={
-          canWrite && (
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel={t("ledgerCreateFile")}
-              accessibilityState={{ disabled: creating }}
-              activeOpacity={0.7}
-              hitSlop={8}
-              disabled={creating}
-              onPress={() => setCreateModalVisible(true)}
-            >
+        action={
+          canWrite && {
+            accessibilityLabel: t("ledgerCreateFile"),
+            onPress: () => setCreateModalVisible(true),
+            icon: (
               <Ionicons
                 name="add-circle-outline"
                 size={26}
                 color={creating ? theme.black40 : theme.primary}
               />
-            </TouchableOpacity>
-          )
+            ),
+            disabled: creating,
+          }
         }
       />
 

@@ -181,6 +181,17 @@ const currentTheme = useReactiveVar(themeVar);
 
 Screens live in `src/screens/<name>/` and are mounted from a route file under `app/`. Use `SafeAreaView` for spacing.
 
+Tab screens use `LedgerDrawerHeader` and its `action` descriptor; do not supply
+custom header buttons or per-screen height overrides. The header owns equal
+side slots, a 50pt default bar with 44pt action targets inside it, and a shared
+Dynamic Type height rule, including
+read-only and no-action states. Menu triggers share the `iconActionSize` token.
+When changing shared header/menu geometry, verify all five tabs (Home,
+Transactions, Accounts, Reports, Files), absent/disabled actions, large text,
+and both themes. Run the rendered-component contract tests in
+`src/components/ledger-drawer/__tests__/header-layout.test.ts`; these inspect
+layout props and do not replace native visual verification.
+
 ## Configuration files
 
 - `app.json` — Expo config; **app version lives here** (and in `package.json`).

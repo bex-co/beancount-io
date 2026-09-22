@@ -6,7 +6,6 @@ import {
   SectionList,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -250,18 +249,12 @@ const TransactionList = () => {
     <View style={styles.container}>
       <LedgerDrawerHeader
         title={t("transactions")}
-        right={
-          canWrite && (
-            <TouchableOpacity
-              onPress={handleQuickAdd}
-              hitSlop={8}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={t("quickAdd")}
-            >
-              <Ionicons name="add" size={26} color={theme.black90} />
-            </TouchableOpacity>
-          )
+        action={
+          canWrite && {
+            accessibilityLabel: t("quickAdd"),
+            onPress: handleQuickAdd,
+            icon: <Ionicons name="add" size={26} color={theme.black90} />,
+          }
         }
       />
       <SectionList
