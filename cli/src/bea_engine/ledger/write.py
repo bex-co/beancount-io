@@ -149,6 +149,34 @@ class LedgerSnapshot:
 #: live one and this can only ever catch a file whose owner is gone.
 _ABANDONED_CANDIDATE_SECONDS = 3600
 
+#: Candidate files, and the pickle-cache sidecars Beancount writes beside them.
+#: The sidecar name *prepends* a dot to the file it caches, so a candidate
+#: already named `.bea-xxxx.tmp` gets `..bea-xxxx.tmp.picklecache` — two
+#: leading dots, which a `.bea-*` glob cannot reach.
+_CANDIDATE_GLOBS = (".bea-*", "..bea-*")
+
+
+def pickle_cache_of(candidate: Path) -> Path:
+    """Where Beancount will write the cache sidecar for a staged file.
+
+    Validating a write means loading the staged candidate, and a load slow
+    enough to cross Beancount's one-second threshold writes a pickle cache
+    beside it. That sidecar belongs to a file that is about to be renamed away,
+    so it is always garbage — a full-size copy of the ledger, left in the
+    user's own books directory.
+
+    Both cleanups here used to rebuild the name by hand and both dropped the
+    dot `PICKLE_CACHE_FILENAME` prepends, so neither ever matched a real file
+    and every write to a large ledger leaked one. Asking upstream's own
+    resolver is what stops that from drifting a third time — and it picks up
+    `BEANCOUNT_LOAD_CACHE_FILENAME`, which `loader.initialize` honours and a
+    hand-written template would have ignored.
+    """
+    from beancount.loader import PICKLE_CACHE_FILENAME, get_cache_filename
+
+    pattern = os.getenv("BEANCOUNT_LOAD_CACHE_FILENAME") or PICKLE_CACHE_FILENAME
+    return Path(get_cache_filename(pattern, str(candidate)))
+
 
 def sweep_abandoned_candidates(directory: Path) -> None:
     """Remove staging files an interrupted write could not remove itself.
@@ -168,7 +196,7 @@ def sweep_abandoned_candidates(directory: Path) -> None:
     """
     cutoff = time.time() - _ABANDONED_CANDIDATE_SECONDS
     try:
-        stale = list(directory.glob(".bea-*"))
+        stale = [path for pattern in _CANDIDATE_GLOBS for path in directory.glob(pattern)]
     except OSError:
         return
     for path in stale:
@@ -228,7 +256,7 @@ def candidate_file(file: Path, content: str) -> Iterator[Path]:
         yield candidate
     finally:
         candidate.unlink(missing_ok=True)
-        Path(str(candidate) + ".picklecache").unlink(missing_ok=True)
+        pickle_cache_of(candidate).unlink(missing_ok=True)
 
 
 def _balance_recovery_hints(
