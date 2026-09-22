@@ -47,7 +47,7 @@ def ask(
     # The missing extra is checked before the credential: without it the
     # command cannot run at all, and "log in first" would be misleading advice.
     try:
-        from cli.ask.agent import BqlDeps, make_agent
+        from cli.ask.agent import BqlDeps, make_agent, translated_failures
     except ImportError as exc:
         raise UsageError(_MISSING_EXTRA) from exc
 
@@ -74,7 +74,7 @@ def ask(
         from rich.markdown import Markdown
 
         console = Console()
-        with console.status("[dim]Thinking…[/dim]", spinner="dots"):
+        with console.status("[dim]Thinking…[/dim]", spinner="dots"), translated_failures():
             result = agent.run_sync(question, deps=deps)
         console.print(Markdown(result.output))
     else:

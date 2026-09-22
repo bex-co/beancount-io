@@ -186,7 +186,7 @@ def print_welcome() -> None:
 
 
 def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | None = None) -> None:
-    from cli.ask.agent import WritePermission
+    from cli.ask.agent import WritePermission, translated_failures
 
     hint = random.choice(_PLACEHOLDER_HINTS)
     first_turn = [True]
@@ -224,7 +224,8 @@ def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | 
         active_status[0] = status
         status.start()
         try:
-            result = agent.run_sync(user_input, deps=deps, message_history=messages)
+            with translated_failures():
+                result = agent.run_sync(user_input, deps=deps, message_history=messages)
         finally:
             status.stop()
             active_status[0] = None

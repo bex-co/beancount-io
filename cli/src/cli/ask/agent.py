@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from pydantic_ai import Agent, ModelRetry, RunContext
+from pydantic_ai.exceptions import ModelHTTPError
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
 from cli.ask.skills import AgentSkill, build_skills_index_prompt
 from cli.engine import launch
-from cli.errors import BeaError, LedgerError
+from cli.errors import BeaError, LedgerError, error_from_status
 
 _SYSTEM_PROMPT = """You are a helpful Beancount accounting assistant.
 Use the run_bql_query tool to retrieve data from the user's ledger, then answer their question.
@@ -76,6 +78,47 @@ class BqlDeps:
     write_permission: WritePermission = field(default_factory=WritePermission)
     skills: dict[str, AgentSkill] = field(default_factory=dict)
     into: Path | None = None
+
+
+@contextmanager
+def translated_failures() -> Iterator[None]:
+    """Report the proxy's HTTP failures the way every other command reports them.
+
+    `ask` reaches the service over the OpenAI protocol through the AI SDK
+    rather than through `cli.api.client`, so it never met the status table in
+    `error_from_status` that the exit table is written against. A rejected
+    credential — expired, revoked, wrong environment — therefore exited 1 with
+    the SDK's own `status_code: …, model_name: …, body: …` string: a script
+    branching on exit 3 to re-login never fired, and the user read the proxy's
+    internal model name instead of a remedy.
+
+    Routing through that same table is what keeps `ask` and `cloud` from
+    drifting: 401/403 become `AuthError` with the BEA_TOKEN-aware remedy, and
+    rate limits and 5xx get their documented sentences too.
+    """
+    try:
+        yield
+    except ModelHTTPError as exc:
+        raise error_from_status(exc.status_code, _server_message(exc.body)) from exc
+
+
+def _server_message(body: object) -> str | None:
+    """The server's own sentence, lifted out of the SDK's envelope.
+
+    Returning None lets `error_from_status` fall back to `HTTP <status>`, which
+    is still better than quoting SDK internals at the user.
+    """
+    payload = body
+    if isinstance(body, str):
+        try:
+            payload = json.loads(body)
+        except ValueError:
+            return body.strip() or None
+    if isinstance(payload, Mapping):
+        message = payload.get("message")
+        if isinstance(message, str) and message.strip():
+            return message.strip()
+    return None
 
 
 def make_agent(
