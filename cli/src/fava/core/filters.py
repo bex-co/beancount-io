@@ -435,6 +435,29 @@ class AdvancedFilter(EntryFilter):
         return [entry for entry in entries if include(entry)]
 
 
+def account_predicate(value: str | None) -> Callable[[str], bool]:
+    """Whether one account name satisfies an `--account` filter.
+
+    The single definition of what that filter means: a parent account
+    (`has_component`) or a case-insensitive regular expression, which is what
+    `AccountFilter` applies to entries below and what the report tree prune
+    and the interval series must agree with.
+
+    `AccountFilter` keeps whole entries — a transaction touching the account
+    comes through with all its postings, which is right at that layer. Anything
+    that then aggregates *postings* has to narrow again, or a filtered report
+    contradicts itself: the counterparty legs land in the series while the
+    headline tree correctly excludes them.
+
+    An absent or empty filter matches everything, so callers can apply this
+    unconditionally.
+    """
+    if not value:
+        return lambda _name: True
+    matches_pattern = Match(value)
+    return lambda name: account.has_component(name, value) or matches_pattern(name)
+
+
 class AccountFilter(EntryFilter):
     """Filter by account.
 

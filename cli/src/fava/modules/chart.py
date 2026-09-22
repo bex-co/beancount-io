@@ -13,6 +13,7 @@ from ..beans.account import account_tester
 from ..beans.flags import FLAG_UNREALIZED
 from ..beans.helpers import slice_entry_dates
 from ..core.conversion import cost_or_value
+from ..core.filters import account_predicate
 from ..core.inventory import CounterInventory
 from ..core.tree import Tree
 from ..util import listify
@@ -164,6 +165,10 @@ class ChartModule:
             that interval.
         """
         prices = filtered.ledger.prices
+        # The entry filter keeps whole transactions, so a filtered report would
+        # otherwise total the counterparty legs here while its headline tree
+        # correctly excludes them — one report, two answers for one account.
+        in_scope = account_predicate(filtered.account)
 
         intervals = _flow_ranges(filtered, interval)
 
@@ -175,7 +180,7 @@ class ChartModule:
             )
             for entry in entries:
                 for posting in getattr(entry, "postings", []):
-                    if posting.account.startswith(accounts):
+                    if posting.account.startswith(accounts) and in_scope(posting.account):
                         account_inventories[posting.account].add_position(
                             posting,
                         )
@@ -222,6 +227,7 @@ class ChartModule:
         )
 
         is_child_account = account_tester(account_name, with_children=True)
+        in_scope = account_predicate(filtered.account)
 
         txn = next(transactions, None)
         inventory = CounterInventory()
@@ -230,7 +236,7 @@ class ChartModule:
         for date_range in filtered.interval_ranges(interval):
             while txn and txn.date < date_range.end:
                 for posting in txn.postings:
-                    if is_child_account(posting.account):
+                    if is_child_account(posting.account) and in_scope(posting.account):
                         inventory.add_position(posting)
                 txn = next(transactions, None)
             yield DateAndBalance(
@@ -323,6 +329,8 @@ class ChartModule:
             filtered.ledger.options["name_liabilities"],
         )
 
+        in_scope = account_predicate(filtered.account)
+
         txn = next(transactions, None)
         inventory = CounterInventory()
 
@@ -330,7 +338,7 @@ class ChartModule:
         for date_range in filtered.interval_ranges(interval):
             while txn and txn.date < date_range.end:
                 for posting in txn.postings:
-                    if posting.account.startswith(types):
+                    if posting.account.startswith(types) and in_scope(posting.account):
                         inventory.add_position(posting)
                 txn = next(transactions, None)
             yield DateAndBalance(

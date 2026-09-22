@@ -849,7 +849,9 @@ Each report states its period, as-of date, account filter, and valuation.
 Invalid intervals, dates, reversed ranges, and malformed account filters exit
 **2**. `--account` takes a parent account (`Expenses:Food`) or a regular
 expression (`'Expenses:(Food|Rent)'`); it selects transactions involving
-matching accounts and retains all their postings. As in `list`, an empty or
+matching accounts, then reports only the postings to those accounts — totals,
+trees, and the interval breakdown all describe the accounts you asked for, not
+the counterparties they happened to face. As in `list`, an empty or
 whitespace-only `--account`, `--time`, or `--conversion` — or a blank `bea
 balance` argument — is refused (exit 2) naming the flag rather than silently
 falling back to the unfiltered default.

@@ -194,12 +194,44 @@ def _income_statement(
     }
 
 
+def _scoped_earnings(filtered: Any, conversion: str, unfiltered: Any) -> Any:
+    """Current earnings over the accounts `--account` actually selected.
+
+    `balance_sheet` sums the income and expenses hierarchies before this module
+    prunes anything, so a filtered balance sheet reported the whole period's
+    P&L beside a net worth that had been narrowed — and disagreed with the
+    income statement run under the same filter. Recomputed from the pruned
+    trees so the two reports answer alike.
+
+    Returned untouched when no filter is set, so an unfiltered balance sheet is
+    byte-identical to before.
+    """
+    if not filtered.account:
+        return unfiltered
+    from fava.modules.chart import ChartModule
+
+    chart = ChartModule()
+    options = filtered.ledger.options
+    trees = _prune_sections(
+        {key: chart.hierarchy(filtered, options[key], conversion) for key in ("name_income", "name_expenses")},
+        filtered.account,
+    )
+    earnings = type(unfiltered)()
+    for tree in trees.values():
+        if tree is None:
+            continue
+        for currency, amount in tree.balance_children.items():
+            earnings.add(currency, amount)
+    return earnings
+
+
 def _balance_sheet(
     filtered: Any, conversion: str, interval: str, allow_errors: bool, ledger_errors: list[str]
 ) -> dict[str, Any]:
     from fava.modules.financial_statements import FinancialStatementsModule
 
     data = FinancialStatementsModule().balance_sheet(filtered, _interval(interval), conversion)
+    earnings = _scoped_earnings(filtered, conversion, data.current_earnings)
     sections = _prune_sections(
         {
             "assets": data.assets_hierarchy,
@@ -210,7 +242,7 @@ def _balance_sheet(
     )
     trees = (sections["assets"], sections["liabilities"], sections["equity"])
     balances = [(filtered.end_date, balance) for tree in trees if tree is not None for balance in _tree_balances(tree)]
-    balances.append((filtered.end_date, data.current_earnings))
+    balances.append((filtered.end_date, earnings))
     balances.extend((point.date, point.balance) for point in data.net_worth_data)
     valuation = _valuation(conversion, balances, allow_errors, filtered.ledger.prices, ledger_errors)
     metadata = _metadata(filtered, conversion, ledger_errors, interval) | valuation
@@ -225,9 +257,9 @@ def _balance_sheet(
         "assets": _tree_json(trees[0]) if trees[0] is not None else None,
         "liabilities": _tree_json(trees[1]) if trees[1] is not None else None,
         "equity": _tree_json(trees[2]) if trees[2] is not None else None,
-        "current_earnings": data.current_earnings,
+        "current_earnings": earnings,
         "current_earnings_signs": "negative_for_gain",
-        "net_profit": _negated(data.current_earnings),
+        "net_profit": _negated(earnings),
         "valuation_adjustment": data.valuation_adjustment if reconciled else None,
         "equity_total": data.equity_total if reconciled else None,
         "equity_reconciled": reconciled,
@@ -517,13 +549,14 @@ def _report_filter_match(account: str) -> Callable[[str], bool]:
     `Expenses:(Dining|Groceries)` survived the entry filter, then every tree
     node was pruned because the pattern is a substring of no account name, and
     the report answered with empty totals and exit 0.
+
+    Delegated rather than restated, because the interval series now narrow by
+    the same rule: three copies of "what `--account` means" is how a report
+    starts contradicting itself again.
     """
-    from beancount.core.account import has_component
+    from fava.core.filters import account_predicate
 
-    from fava.core.filters import Match
-
-    matches_pattern = Match(account)
-    return lambda name: has_component(name, account) or matches_pattern(name)
+    return account_predicate(account)
 
 
 def _prune_sections(sections: dict[str, Any], account: str | None) -> dict[str, Any]:
