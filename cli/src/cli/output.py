@@ -13,6 +13,7 @@ import glob
 import json
 import re
 import sys
+import unicodedata
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, NoReturn
@@ -95,21 +96,43 @@ def error(exc: BaseException | str) -> NoReturn:
     raise typer.Exit(exit_code)
 
 
+def display_width(text: str) -> int:
+    """How many terminal columns this text occupies.
+
+    `len()` counts code points, which is not what a terminal lays out: an East
+    Asian Wide or Fullwidth character takes two columns, and a combining mark
+    takes none because it renders onto the character before it. Padding a
+    Japanese payee by character count left every column to its right shifted —
+    worst in the import preview, where the amount slid out from under its own
+    header while the user was deciding whether to commit the write.
+
+    Precomposed accented Latin (`Ünïcödé`) is one column per character and was
+    always fine, which is what makes the rule precise: the issue is display
+    width, not "non-ASCII".
+    """
+    return sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in text)
+
+
+def _pad(text: str, width: int) -> str:
+    """`str.ljust` measured in columns rather than code points."""
+    return text + " " * max(0, width - display_width(text))
+
+
 def table(headers: list[str], rows: list[list[str]]) -> None:
     """Render a table for a person. Silent in JSON mode, where stdout is the envelope alone."""
     if _json_mode():
         return
     headers = [single_line(header) for header in headers]
     rows = [[single_line(cell) for cell in row] for row in rows]
-    widths = [len(h) for h in headers]
+    widths = [display_width(h) for h in headers]
     for row in rows:
         for i, cell in enumerate(row):
-            widths[i] = max(widths[i], len(cell))
+            widths[i] = max(widths[i], display_width(cell))
     sep = "  "
-    typer.echo(sep.join(h.ljust(widths[i]) for i, h in enumerate(headers)))
+    typer.echo(sep.join(_pad(h, widths[i]) for i, h in enumerate(headers)))
     typer.echo(sep.join("-" * widths[i] for i in range(len(headers))))
     for row in rows:
-        typer.echo(sep.join(cell.ljust(widths[i]) for i, cell in enumerate(row)))
+        typer.echo(sep.join(_pad(cell, widths[i]) for i, cell in enumerate(row)))
 
 
 def file_target(path: Path) -> dict[str, Any]:
