@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -9,7 +10,7 @@ from pathlib import Path
 import typer
 
 from cli.engine import launch
-from cli.errors import BeaError, LedgerError, refuse_json
+from cli.errors import BeaError, ConflictError, LedgerError, refuse_json
 from cli.native_help import native_help
 
 doctor_app = typer.Typer(
@@ -192,11 +193,52 @@ def _forward_print_options(ctx: typer.Context) -> None:
     raise typer.Exit(code)
 
 
+def _roundtrip_artifacts(ledger: str) -> list[Path]:
+    """The two scratch files upstream's `roundtrip` writes beside the ledger.
+
+    Derived exactly as `beancount.scripts.doctor.roundtrip` does —
+    `os.path.splitext` then `<base>.roundtrip1<ext>` — because the refusal
+    below is only worth as much as its agreement with upstream.
+    """
+    base, extension = os.path.splitext(ledger)
+    return [Path(f"{base}.roundtrip{index}{extension}") for index in (1, 2)]
+
+
+def _refuse_roundtrip_collisions(ledger: str) -> None:
+    """Refuse when the diagnostic's scratch names already belong to someone.
+
+    Upstream opens both with `w` and removes them in a `finally`, unconditionally.
+    So a file already at one of those paths is overwritten and then deleted —
+    a read-only diagnostic that reported `Entries are the same. Congratulations.`
+    while destroying a ledger include sitting beside the file it was checking.
+
+    `bea` cannot make upstream pick other names, so it refuses rather than let
+    that happen, and refuses before *either* forwarding branch can run.
+
+    `lexists`, not `exists`: a dangling symlink is not an absent file here,
+    because opening it for write would create its target and the cleanup would
+    then remove it.
+    """
+    taken = [path for path in _roundtrip_artifacts(ledger) if os.path.lexists(path)]
+    if not taken:
+        return
+    named = ", ".join(str(path) for path in taken)
+    raise ConflictError(
+        f"doctor roundtrip would overwrite and then delete {named}; nothing was run.",
+        details=[
+            "Upstream writes its comparison to those exact names and removes them afterwards.",
+            "Move or rename them, then run the diagnostic again.",
+        ],
+    )
+
+
 def _forward_roundtrip(ctx: typer.Context) -> None:
     """Compare entry sets, without congratulations on unparseable input."""
     _refuse_json()
     args = list(ctx.args)
     positionals = _positionals(args)
+    if positionals:
+        _refuse_roundtrip_collisions(positionals[0])
     errors = _syntax_errors_of(positionals[0]) if positionals else []
     if not errors:
         raise typer.Exit(launch.run_native("bean-doctor", ["roundtrip", *args]))
