@@ -49,7 +49,10 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 
 ## Inbox
 
-No open inbox notes. The four mobile QA findings filed on 2026-09-16 were drained the same day: [031](./done/031.md), [032](./done/032.md), and [034](./done/034.md) shipped with regression coverage, and [033](./blocked/033.md) is blocked.
+- [035](./035.md) — MCP tool argument validation bypasses the structured error envelope.
+- [036](./036.md) — Invalid MCP resource URI parameters escape as internal errors without codes or hints.
+
+The four mobile QA findings filed on 2026-09-16 were drained the same day: [031](./done/031.md), [032](./done/032.md), and [034](./done/034.md) shipped with regression coverage, and [033](./blocked/033.md) is blocked.
 
 ## Blocked
 
