@@ -42,6 +42,21 @@ def _is_currency_symbol(text: str) -> bool:
     return len(text) == 1 and unicodedata.category(text) == "Sc"
 
 
+def _negated(number: Decimal) -> Decimal:
+    """The same amount with the opposite sign, and not one digit different.
+
+    Unary minus is arithmetic: it applies the active decimal context and
+    rounds to its precision, 28 significant digits by default. A bank amount
+    is parsed exactly from its source text, so negating it — for parentheses,
+    a trailing minus, a debit column, `sign=ledger`, or the generated
+    counterposting — silently rewrote a wider value before it was written to
+    the ledger, where `check` then confirmed the rounded figure as valid.
+
+    `copy_negate` flips the sign and copies the coefficient untouched.
+    """
+    return number.copy_negate()
+
+
 def _split_amount_sign(value: str) -> tuple[str, str, bool]:
     """Split the sign, currency symbols, and parentheses off an amount cell.
 
@@ -176,7 +191,7 @@ def _parse_amount_cell(where: str, column: str, value: str, *, decimal_comma: bo
         raise UsageError(f"{where}, column {column!r}: {exc}") from None
     except InvalidOperation:
         raise _unparseable_amount(where, column, value) from None
-    return -number if negate else number
+    return _negated(number) if negate else number
 
 
 @dataclass(frozen=True)
@@ -770,9 +785,9 @@ class CsvImporter:
                         raise UsageError(f"{where}: fill exactly one of {columns['debit']!r} or {columns['credit']!r}.")
                     side = "credit" if credit else "debit"
                     number = self._parse_decimal(where, columns[side], credit or debit)
-                    number = number if credit else -number
+                    number = number if credit else _negated(number)
                 if self._mapping.sign == "ledger":
-                    number = -number
+                    number = _negated(number)
                 currency = self._cell(row, where, "currency") or self._currency
                 if not currency:
                     raise UsageError(f"{where}: no currency column and the ledger has no single operating currency.")
@@ -788,7 +803,7 @@ class CsvImporter:
                     meta["bank_id"] = native_id
                 postings = [
                     Posting(self._account, Amount(number, currency), None, None, None, None),
-                    Posting(counter, Amount(-number, currency), None, None, None, None),
+                    Posting(counter, Amount(_negated(number), currency), None, None, None, None),
                 ]
                 rows.append(Transaction(meta, day, flag, payee, narration, frozenset(), frozenset(), postings))
         return rows
