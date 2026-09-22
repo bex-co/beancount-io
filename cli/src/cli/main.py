@@ -64,6 +64,30 @@ def _exit_on_broken_pipe() -> NoReturn:
     sys.exit(141)
 
 
+def _exit_on_interrupt() -> NoReturn:
+    """Leave the way a shell expects after Ctrl-C: 130, silent.
+
+    The sibling of `_exit_on_broken_pipe`. `USAGE.md` carves out exactly two
+    signals that mean the run was ended on purpose — Ctrl-C exits 130 and a
+    closed pipe exits 141, both without a message — and a script needs that to
+    tell a deliberate stop from a genuine failure. A mid-computation Ctrl-C and
+    `bea query`'s interactive shell already complied; a Typer prompt did not,
+    because `click` turns the `KeyboardInterrupt` into `Abort` and its own
+    top-level handler prints `Aborted!` and exits 1.
+
+    Silent means silent: no warning flush on the way out, because the contract
+    promises no message. Nothing is half-written either — a prompt aborts
+    before any command does work.
+
+    `Abort` covers an EOF at a prompt as well, which `click` raises the same
+    way and does not let us tell apart. That is the same "the user ended it"
+    case, and no `bea` prompt uses `abort=True`, so an `Abort` reaching here
+    is always an interrupted prompt rather than a declined confirmation — a
+    declined confirmation returns `False` and the caller reports it.
+    """
+    sys.exit(130)
+
+
 class _GuardedGroup(TyperGroup):
     """Turn anything a command raises into the documented category and exit code.
 
@@ -131,9 +155,8 @@ class _GuardedGroup(TyperGroup):
             if (exc.exit_code or 0) == 0:
                 update.print_notice()
             raise
-        except typer.Abort:
-            output.flush_warnings()
-            raise
+        except (typer.Abort, KeyboardInterrupt):
+            _exit_on_interrupt()
         except Exception as e:
             output.error(e)
         # After the command's own output, and only on the way out cleanly: a
