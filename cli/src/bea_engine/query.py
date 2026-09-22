@@ -321,6 +321,27 @@ def build_shell(
             self.execute(query.query_string, default_close_date=query.date)
 
         def onecmd(self, line: str) -> Any:
+            try:
+                return self._dispatch(line)
+            except protocol.EngineError as exc:
+                # A mistake typed at the prompt is ordinary input, not a crash.
+                # Upstream's `cmdloop` catches everything and renders anything
+                # it does not recognize with `traceback.format_exc()`, so
+                # `.run` naming no stored query printed a Python stack — and
+                # threw away the `details` line listing the queries that do
+                # exist, which the one-shot form shows. `--debug` is the
+                # documented way to ask for a traceback.
+                #
+                # One-shot execution must still propagate: its exit code and
+                # its JSON error envelope are built from this exception.
+                if not self.interactive:
+                    raise
+                protocol.note(str(exc))
+                for detail in exc.details or ():
+                    protocol.note(detail)
+                return False
+
+        def _dispatch(self, line: str) -> Any:
             # Ledger text loads NFC-normalized, so interactive input is too; a
             # pasted NFD literal would otherwise miss the identical NFC row.
             line = unicodedata.normalize("NFC", line)
