@@ -12,10 +12,26 @@ import typer
 
 from cli.errors import UsageError
 
+#: The engine twin (`bea_engine.ledger.text.CONTROL_CHARACTERS`) carries the
+#: same pattern and the full reasoning; neither side may import the other.
+CONTROL_CHARACTERS = re.compile(r"[\x00-\x09\x0b\x0c\x0e-\x1f\x7f-\x9f]")
+
 
 def single_line(text: str) -> str:
-    """Keep text readable as one ledger field or table cell, preserving other whitespace."""
-    return re.sub(r"[\r\n]+", " ", text)
+    """Keep text readable as one table cell, and inert as one terminal line.
+
+    Runs of CR/LF become a space; every other control character is escaped to a
+    visible `\\xNN`. Table cells carry untrusted text — an imported bank
+    description is the obvious case — and `output.table` writes them straight
+    to the terminal, where a raw `\\x1b[1A\\x1b[2K` would erase the row above
+    and make the import preview disagree with the file it is previewing.
+
+    Escaping rather than deleting keeps the oddity visible, and escaping tabs
+    along with the rest is what makes a cell occupy exactly one grid column
+    span. The engine twin (`bea_engine.ledger.text.single_line`) must agree,
+    and a test pins that it does.
+    """
+    return CONTROL_CHARACTERS.sub(lambda m: f"\\x{ord(m.group()):02x}", re.sub(r"[\r\n]+", " ", text))
 
 
 UTF8_BOM = b"\xef\xbb\xbf"

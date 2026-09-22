@@ -557,9 +557,16 @@ file fails there with exit **1** and the formatter's own message.
 Payees, narrations, string metadata, and the string fields of `note`, `event`,
 and `custom` are written on one line: runs of CR/LF line breaks become spaces
 in single adds, bulk JSON, and imports, so a pasted multi-line value can never
-write a directive that breaks the file. Quotes and backslashes retain their
-contents. Human tables also flatten line breaks from existing entries without
-modifying the ledger.
+write a directive that breaks the file. Every other control character —
+`ESC`, the rest of the C0 range including tab, `DEL`, and C1 — is replaced by
+a visible `\xNN` rather than passed through, so text from an untrusted source
+such as an imported bank export cannot drive your terminal. That matters most
+in the `import` preview, which is the surface `--apply` is gated on: a
+description carrying a cursor-movement sequence could otherwise redraw over the
+rows above it and show you something other than what would be written. The
+escaped form is what gets stored, so the oddity stays visible on later reads.
+Quotes and backslashes retain their contents. Human tables also flatten line
+breaks from existing entries without modifying the ledger.
 
 Examples below assume their accounts were opened and their dates, balances,
 and document paths are valid for your ledger. Every add command, and `import`,

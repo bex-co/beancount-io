@@ -10,15 +10,34 @@ from pathlib import Path
 
 from bea_engine import protocol
 
+#: Control characters that must never reach a ledger file or a terminal:
+#: the C0 range apart from CR and LF (which become spaces just below), DEL,
+#: and the C1 range. ESC is the one that matters — a crafted bank description
+#: carrying `\x1b[1A\x1b[2K` erases the row printed above it, so an import
+#: preview can show something other than what `--apply` will write.
+CONTROL_CHARACTERS = re.compile(r"[\x00-\x09\x0b\x0c\x0e-\x1f\x7f-\x9f]")
+
 
 def single_line(text: str) -> str:
-    """Keep text readable as one ledger field, preserving other whitespace.
+    """Keep text readable as one ledger field, and inert as one terminal line.
+
+    Runs of CR/LF become a space, so a pasted multi-line value cannot write a
+    directive that breaks the file. Every other control character is escaped to
+    a visible `\\xNN` rather than deleted: the text came from somewhere — a bank
+    export, a paste — and silently dropping bytes would hide that it contained
+    something odd, while leaving them in lets untrusted input drive the
+    reviewer's terminal.
+
+    Tabs are escaped along with the rest. This function's job is to make a
+    value occupy exactly one line of layout, and a tab is layout control: it
+    shifts a table cell to the next tab stop as surely as a cursor sequence
+    would.
 
     The frontend has its own copy for table cells (`cli.utils.single_line`).
-    Neither side can import the other, and this one is here because it is part
-    of what gets written to the ledger, not part of how anything is displayed.
+    Neither side can import the other, so the two must be kept in step; a test
+    pins that they agree.
     """
-    return re.sub(r"[\r\n]+", " ", text)
+    return CONTROL_CHARACTERS.sub(lambda m: f"\\x{ord(m.group()):02x}", re.sub(r"[\r\n]+", " ", text))
 
 
 def fold_account(name: str) -> str:
