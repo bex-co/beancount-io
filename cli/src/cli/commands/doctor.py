@@ -37,11 +37,42 @@ _OPS = (
 )
 
 
+#: Native options on these operations that consume the following argument.
+#: Upstream's `region` has exactly one and neither `context` nor `linked` has
+#: any; there are no boolean flags, and `--name=value` carries its own value.
+#: Taken from `beancount.scripts.doctor`, which the frontend may not import —
+#: `tests/test_doctor_option_placement.py` pins that this still matches it.
+_VALUE_OPTIONS = frozenset({"--conversion"})
+
+
+def _operand_indices(args: list[str]) -> list[int]:
+    """Where the native operands sit in a forwarded argv.
+
+    Options may appear anywhere Click accepts them, so operands cannot be read
+    by position. Skipping only arguments that start with `-` left an option's
+    *value* looking like an operand: `doctor region BOOKS --conversion cost
+    LOC` read `--conversion` as the location, so the location kept no
+    resolution, and named `cost` as the region in the empty-scope message.
+    """
+    indices: list[int] = []
+    index = 0
+    length = len(args)
+    while index < length:
+        value = args[index]
+        if value == "--":  # Everything after it is an operand by definition.
+            indices.extend(range(index + 1, length))
+            break
+        if value.startswith("-"):
+            index += 2 if value in _VALUE_OPTIONS else 1
+            continue
+        indices.append(index)
+        index += 1
+    return indices
+
+
 def _positionals(args: list[str]) -> list[str]:
-    """The operands bean-doctor will see: past `--`, skipping flags."""
-    if "--" in args:
-        args = args[args.index("--") + 1 :]
-    return [arg for arg in args if not arg.startswith("-")]
+    """The operands bean-doctor will see, in order."""
+    return [args[index] for index in _operand_indices(args)]
 
 
 # `context` and `linked` take `FILENAME LOCATION`; `region` takes
@@ -64,21 +95,24 @@ def _located_against_ledger(op: str, args: list[str]) -> list[str]:
     """
     if op not in _LOCATED_OPS:
         return args
-    # Read by shape, not by position: options and their values sit anywhere in
-    # the forwarded argv, and only the ledger argument names a file that exists.
-    for index, value in enumerate(args[:-1]):
-        if value.startswith("-") or not Path(value).expanduser().is_file():
-            continue
-        ledger, position = Path(value).expanduser(), index + 1
-        head, sep, rest = args[position].partition(":")
-        if not sep or not head or head.isdigit() or Path(head).is_absolute() or Path(head).exists():
-            return args
-        candidate = ledger.parent / head
-        if not candidate.exists():
-            return args
-        args = list(args)
-        args[position] = f"{candidate}{sep}{rest}"
+    # These operations take exactly `FILENAME LOCATION`, so read the operands
+    # rather than assuming the location follows the ledger: an option between
+    # them is valid Click and used to defeat this entirely.
+    operands = _operand_indices(args)
+    if len(operands) < 2:
         return args
+    ledger = Path(args[operands[0]]).expanduser()
+    if not ledger.is_file():
+        return args
+    position = operands[1]
+    head, sep, rest = args[position].partition(":")
+    if not sep or not head or head.isdigit() or Path(head).is_absolute() or Path(head).exists():
+        return args
+    candidate = ledger.parent / head
+    if not candidate.exists():
+        return args
+    args = list(args)
+    args[position] = f"{candidate}{sep}{rest}"
     return args
 
 
