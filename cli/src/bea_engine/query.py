@@ -44,9 +44,70 @@ LEDGER_DSN = "beancount:"
 _RESERVED_TABLE_FROM = re.compile(r'(?i)\b(FROM|JOIN)\s+(?<!")(accounts|balances)\b(?!")')
 
 
+def _code_mask(text: str) -> str:
+    """The query with every string literal and comment blanked to spaces.
+
+    Exactly as long as the input, so a match found in the mask has the offsets
+    of the real thing. That is what lets the relation rewrite below see only
+    code: searching the raw text rewrote the insides of literals, so a
+    narration search for `transfer from accounts` became `transfer from
+    "accounts"` and matched nothing, and a double-quoted literal with more
+    words after `balances` became a syntax error.
+
+    Blanking a literal whole — quotes included — also means an already-quoted
+    relation is invisible here, which is the right answer: it needs no
+    rewriting. BQL escapes a quote by doubling it, and accepts `--` line and
+    `/* */` block comments.
+    """
+    out: list[str] = []
+    index = 0
+    length = len(text)
+    while index < length:
+        char = text[index]
+        if char in "'\"":
+            end = index + 1
+            while end < length:
+                if text[end] == char:
+                    if end + 1 < length and text[end + 1] == char:  # A doubled quote is content.
+                        end += 2
+                        continue
+                    end += 1
+                    break
+                end += 1
+            out.append(" " * (end - index))
+            index = end
+        elif text.startswith("--", index):
+            end = text.find("\n", index)
+            end = length if end == -1 else end
+            out.append(" " * (end - index))
+            index = end
+        elif text.startswith("/*", index):
+            end = text.find("*/", index + 2)
+            end = length if end == -1 else end + 2
+            out.append(" " * (end - index))
+            index = end
+        else:
+            out.append(char)
+            index += 1
+    return "".join(out)
+
+
 def _quote_reserved_tables(query_string: str) -> str:
-    """Rewrite `FROM accounts|balances` to the quoted form discovery documents."""
-    return _RESERVED_TABLE_FROM.sub(r'\1 "\2"', query_string)
+    """Rewrite `FROM accounts|balances` to the quoted form discovery documents.
+
+    Matched against the code mask and spliced back by offset, so the user's own
+    text — literals, comments — is returned byte-for-byte.
+    """
+    masked = _code_mask(query_string)
+    pieces: list[str] = []
+    cursor = 0
+    for match in _RESERVED_TABLE_FROM.finditer(masked):
+        start, end = match.span(2)
+        pieces.append(query_string[cursor:start])
+        pieces.append(f'"{query_string[start:end]}"')
+        cursor = end
+    pieces.append(query_string[cursor:])
+    return "".join(pieces)
 
 
 def load(file: Path) -> dict[str, Any]:
