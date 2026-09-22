@@ -535,7 +535,17 @@ def export_portable(
         )
     target = (output or entry.parent / f"{entry.stem}-export").expanduser()
     snapshot = LedgerSnapshot.capture(entry.resolve())
-    resolved_target = target.resolve() if target.exists() else target.absolute()
+    # `resolve()` for a destination that does not exist yet, too: `absolute()`
+    # leaves `..` in place, so `books/not-created/..` compared unequal to
+    # `books` and slipped past the guard below — then `mkdir(parents=True)`
+    # created the missing component and the writes followed `..` straight back
+    # into the ledger, rewriting the customer's own `main.bean`.
+    #
+    # `resolve()` is the right tool rather than stripping `..` textually: it
+    # resolves symlinks in the ancestors that do exist *and* normalizes the
+    # rest, so a destination reached through a symlinked parent is compared as
+    # the directory it truly names.
+    resolved_target = target.resolve()
     for path in snapshot.contents:
         if resolved_target == path.parent.resolve():
             raise UsageError(
