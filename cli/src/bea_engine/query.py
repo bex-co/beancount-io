@@ -320,6 +320,28 @@ def build_shell(
                 )
             self.execute(query.query_string, default_close_date=query.date)
 
+        def execute(self, query: Any, **kwargs: Any) -> Any:
+            """Prepare BQL here, where every entry path actually arrives.
+
+            `_executed` wraps the *outer* request, which for `.run accounts` is
+            the dot command rather than the stored SQL — so a stored or
+            interactively typed query skipped both reserved-table quoting and
+            the empty-window refusal. The same text then answered differently
+            depending on how it was submitted: `FROM accounts` counted three
+            accounts directly and four postings through `.run`, and a zero-day
+            window returned `(no rows)` instead of saying it spans no days.
+
+            Upstream funnels every statement through here — dot commands go to
+            `do_*` instead — so this is the one place that sees BQL and only
+            BQL. Preparation is idempotent (the quoting pattern skips names
+            already quoted), which is what lets the outer wrapper stay as it is
+            for the JSON path, which never builds a shell.
+            """
+            if isinstance(query, str):
+                query = _quote_reserved_tables(unicodedata.normalize("NFC", query))
+                _refuse_empty_window(query, [])
+            return super().execute(query, **kwargs)
+
         def onecmd(self, line: str) -> Any:
             try:
                 return self._dispatch(line)
