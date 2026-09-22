@@ -327,6 +327,19 @@ def _load(
             ledger_errors=ledger_errors,
         ) from exc
     except (ValueError, OverflowError, FilterError) as exc:
+        boundary = _unreportable_boundary(entries)
+        if time is None and boundary is not None:
+            # Not a filter problem at all: there is no filter. Name the fact
+            # that cannot be bounded, and the option that gets an answer.
+            raise protocol.UsageError(
+                f"This ledger's latest dated entry is {boundary.isoformat()}, and a report has to look one "
+                f"day past the period it covers — which {date.max.isoformat()} has no room for.",
+                details=[
+                    f"Name the period explicitly and it reports fine, as in --time {boundary.year}.",
+                    "`bea check`, `bea list` and `bea query` read this ledger without a period and are unaffected.",
+                ],
+                ledger_errors=ledger_errors,
+            ) from exc
         raise protocol.UsageError(
             f"Invalid time filter {time!r}. Use month, year, YYYY, YYYY-MM, "
             f"or a date range such as '2026-01 - 2026-06'. {exc}",
@@ -334,6 +347,30 @@ def _load(
         ) from exc
     currencies = options["operating_currency"]
     return filtered, conversion or (currencies[0] if len(currencies) == 1 else "units"), ledger_errors
+
+
+def _unreportable_boundary(entries: Any) -> date | None:
+    """The dated fact whose period a report cannot bound, if the ledger has one.
+
+    A report's period is exclusive at the end, so building one adds a day to
+    the last dated entry. `datetime.date` has no day after 9999-12-31, so a
+    ledger reaching that boundary cannot be given a period at all — and the
+    overflow used to surface as `Invalid time filter None`, naming an option
+    the caller never passed and no ledger fact at all.
+
+    Open, Close and Commodity are skipped for the same reason the period
+    bounds skip them: they declare an account rather than date activity.
+
+    Returning None means the failure was something else, and the caller falls
+    back to its ordinary filter diagnostic rather than inventing a date story.
+    """
+    from beancount.core.data import Close, Commodity, Open
+
+    for entry in reversed(entries or ()):
+        if isinstance(entry, Open | Close | Commodity):
+            continue
+        return entry.date if entry.date >= date.max else None
+    return None
 
 
 def _interval(value: str) -> Any:
