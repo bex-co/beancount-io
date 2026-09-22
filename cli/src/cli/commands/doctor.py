@@ -240,11 +240,29 @@ def _forward_roundtrip(ctx: typer.Context) -> None:
     if positionals:
         _refuse_roundtrip_collisions(positionals[0])
     errors = _syntax_errors_of(positionals[0]) if positionals else []
-    if not errors:
-        raise typer.Exit(launch.run_native("bean-doctor", ["roundtrip", *args]))
     completed = launch.capture_native("bean-doctor", ["roundtrip", *args])
-    _replay_without_congratulations(completed)
-    raise LedgerError(f"doctor roundtrip cannot compare {positionals[0]}: {errors[0]}")
+    if errors:
+        _replay_without_congratulations(completed)
+        raise LedgerError(f"doctor roundtrip cannot compare {positionals[0]}: {errors[0]}")
+    # Captured rather than streamed so the verdict can be read: upstream logs
+    # `Entries differ!` and returns 0 regardless, so a real failed comparison
+    # exited 0 and nothing automated could tell it from a clean one.
+    _replayed(completed)
+    if _entries_differ(completed.stderr):
+        raise LedgerError(
+            f"doctor roundtrip found that {positionals[0]} does not survive a print/parse cycle (see above).",
+        )
+    raise typer.Exit(0)
+
+
+def _entries_differ(stderr: str) -> bool:
+    """Whether upstream's comparison reported a mismatch.
+
+    Read from stderr alone, and never stdout: upstream logs its verdict but
+    *prints* the differing entries, so a narration quoting this very phrase
+    would otherwise be mistaken for the diagnostic's own conclusion.
+    """
+    return any("Entries differ!" in line for line in stderr.splitlines())
 
 
 def _replay_without_congratulations(completed: subprocess.CompletedProcess[str]) -> None:
