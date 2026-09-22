@@ -63,7 +63,19 @@ def load_file(file_path: Path) -> tuple[list[Any], list[Any]]:
     return list(entries), list(errors)
 
 
-_DATE_TOKEN = re.compile(r"^\s*\d{4}-\d{2}-\d{2}\s+(\S+)")
+#: A directive line starts with its date, then the word naming the directive.
+#: Beancount's lexer takes `-` or `/` as the separator — in any mix — and does
+#: not require the month or day to be padded, so `2026/1/2` declares a
+#: directive exactly as `2026-01-02` does. Matching only the ISO spelling made
+#: every entry in a slash-dated ledger look synthesized: real transactions
+#: were reported `generated` and disappeared from `--on-disk` entirely.
+#:
+#: The separator and digit counts are deliberately loose rather than a guess
+#: at the lexer's exact grammar (it is compiled, so there is no pattern to
+#: reuse). Being permissive is the safe direction here: what actually
+#: distinguishes a synthesized entry is the directive word after the date, and
+#: that check is unchanged.
+_DATE_TOKEN = re.compile(r"^\s*\d{4}[-/]\d+[-/]\d+\s+(\S+)")
 
 # A transaction line carries a flag where the other directives carry their
 # own word: `txn`, `*`, the lexer's FLAG characters, or one capital letter.
