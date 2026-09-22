@@ -62,6 +62,8 @@
 
 - [x] **m44** — One introspection endpoint for all three credential kinds (10 tasks) ← direct user request, 2026-09-18
 
+- [x] **m45** — Keep generated import identities exact across amounts and currencies (6 tasks) ← continuous CLI QA, 2026-09-21
+
 ## Blocked
 
 Blocked milestones and inbox notes live under [`blocked/`](./blocked/) with their reason and **Unblock:** condition; they keep their IDs and return to the open tree when work can resume.

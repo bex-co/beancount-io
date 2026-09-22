@@ -284,12 +284,21 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   becomes `bank:`, `fitid` becomes `ofx:`). A row without one is written with
   `import-id: "csv:sha256:<16 hex>"` hashed from
   `date|amount|description|account` per the convention: the ISO date, the
-  source amount with exactly two decimals, the narration (or payee when
+  exact source amount with its commodity and trailing zeros stripped
+  (`-54.2 USD`), the narration (or payee when
   narration is empty) uppercased with whitespace collapsed, and the source
   account. Identical rows within one file take an occurrence suffix, so
   re-importing the same file skips every row. Keep this metadata when editing
   entries. New writes no longer carry the pre-release `bea_import_id` key, but
   existing entries with it still match on re-import.
+- Ids written before the amount was exact (it was rounded to two decimals with
+  no commodity) or before the description was NFC-normalized are still
+  recognized: import offers every older spelling as a lookup-only key, matches
+  it, and writes only the current one, so no re-hash pass is needed. An older
+  *amount* digest also has to agree with the whole source row before it counts
+  as a match, because that form was lossy enough to give two different rows one
+  digest — a disagreement is ignored rather than reported as a conflict. A
+  reused **native** bank ID whose data changed is still a conflict.
 - Date, normalized payee, and signed source amount/currency identify a *possible*
   duplicate even when bank IDs or narration differ. This does not prove
   duplication: two real purchases can have identical details. `--apply` requires

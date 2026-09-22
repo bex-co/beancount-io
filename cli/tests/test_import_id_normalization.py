@@ -106,11 +106,23 @@ def test_the_other_normalization_does_not_import_again(tmp_path: Path) -> None:
     assert row["include"] is False
 
 
-def test_ascii_import_ids_are_unchanged(tmp_path: Path) -> None:
-    """NFC is a no-op on ASCII, so existing ids must stay byte-identical."""
+def test_an_ascii_id_is_the_documented_digest(tmp_path: Path) -> None:
+    """The id is exactly what the published normalization says it is.
+
+    This pinned a literal before, as the "ASCII ids are byte-identical across
+    the NFC change" guarantee. w3/m45 changed the amount field — `-28.40`
+    became `-28.4 USD` so that sub-cent amounts and commodities stay distinct
+    — so the digest moved on purpose. Computing it from the documented base
+    keeps the test saying what the format *is* rather than what it once
+    hashed to; ledgers holding the older digest still dedupe, which
+    `test_an_id_written_before_the_exact_amount_form_still_dedupes` covers.
+    """
+    import hashlib
+
     row = _only_row(_import(_books(tmp_path), _export(tmp_path, "ascii.csv", "Cafe X"), tmp_path))
 
-    assert _import_id(row) == "csv:sha256:feb28befc4acd45e"
+    base = b"2026-08-10|-28.4 USD|CAFE X|Assets:Checking"
+    assert _import_id(row) == "csv:sha256:" + hashlib.sha256(base).hexdigest()[:16]
 
 
 def test_an_id_written_before_normalization_still_dedupes(tmp_path: Path) -> None:

@@ -218,11 +218,11 @@ def answer(
         entry = normalize_entry_strings(entry)
         status, reason, match = "new", None, None
         id_source: str | None = None
-        legacy_id: str | None = None
         if isinstance(entry, Transaction):
             if not any(p.account == account for p in entry.postings):
                 raise LedgerError(f"Importer row {index + 1} has no posting to its source account {account}.")
             fingerprint = _fingerprint(entry, account)
+            legacy_ids: list[str] = []
             if entry.meta.get("import-id"):
                 id_source = "importer"
             else:
@@ -231,16 +231,30 @@ def answer(
                     entry.meta["import-id"] = native
                     id_source = "bank"
                 else:
-                    entry.meta["import-id"], legacy_id = _hash_import_ids(entry, account, seen_inputs)
+                    entry.meta["import-id"], legacy_ids = _hash_import_ids(entry, account, seen_inputs)
                     id_source = "hash"
             ids = _identities(entry, account, keys)
-            if legacy_id is not None:
-                ids.append((account, "import-id", legacy_id))
+            legacy_keys = [(account, "import-id", value) for value in legacy_ids]
+            ids.extend(legacy_keys)
+            lookup_only = set(legacy_keys)
             ids.append((account, "file", hashlib.sha256(f"{account}:{source_hash}:{index}".encode()).hexdigest()))
-            hits = [(key, identities[key]) for key in ids if key in identities]
+            # An older generated id is lookup-only *and* content-checked: that
+            # format was lossy enough to hand two genuinely different rows one
+            # digest, so a hit on it means "already imported" only when the
+            # whole source row agrees. Dropping the rest here, rather than
+            # letting them reach the conflict test, is what keeps a reused
+            # native id with changed data a conflict.
+            hits = [
+                (key, found, found_print)
+                for key in ids
+                if (found := identities.get(key)) is not None
+                # Fingerprint first so it is bound for every kept hit — the
+                # conflict test below reuses it instead of recomputing.
+                and ((found_print := _fingerprint(found, account)) == fingerprint or key not in lookup_only)
+            ]
             if hits:
-                (_, kind, matched_value), match = hits[0]
-                if any(_fingerprint(m, account) != fingerprint for _, m in hits):
+                (_, kind, matched_value), match, _ = hits[0]
+                if any(found_print != fingerprint for _, _, found_print in hits):
                     status, reason, conflicts = (
                         "conflict",
                         "Stable ID matches an entry with different transaction data.",
@@ -441,9 +455,12 @@ def _source_postings(entry: Any, account: str) -> list[Any]:
 def _fingerprint(entry: Any, account: str) -> tuple[Any, ...]:
     if any(not _has_explicit_units(p) for p in entry.postings if p.account == account):
         raise LedgerError(f"The importer must supply explicit source amounts for {account} before duplicate matching.")
-    amounts = tuple(
-        sorted((str(p.units.number.normalize()), p.units.currency) for p in _source_postings(entry, account))
-    )
+    # The same rendering the generated id uses, so "is this the same amount"
+    # has one answer in this module. `str(number.normalize())` would say
+    # `1E+2` where the id says `100`; both sides of a comparison are built the
+    # same way, so that was consistent rather than wrong — but two spellings of
+    # one rule is how they drift apart.
+    amounts = tuple(sorted(_exact_amount(p.units.number, p.units.currency) for p in _source_postings(entry, account)))
     # Ledger text loads NFC-normalized but an export's rows arrive in whatever
     # form the bank wrote, so an accented description would otherwise compare
     # unequal to the identical entry already in the ledger.
@@ -534,19 +551,40 @@ def _native_import_id(meta: dict[str, Any], keys: list[str]) -> str | None:
     return None
 
 
-def _hash_base(entry: Any, account: str, *, normalized: bool) -> str:
-    amounts = sorted((p.units.number, p.units.currency) for p in _source_postings(entry, account))
+def _exact_amount(number: Decimal, currency: str) -> str:
+    """One source amount, rendered so equal values render identically.
+
+    `normalize()` collapses the spellings of one value — `1.50`, `1.5` and
+    `1.500` are the same amount and must hash the same — and `:f` keeps the
+    result out of scientific notation, which `normalize()` otherwise produces
+    for trailing zeros before the point (`100` becomes `1E+2`).
+
+    The currency is part of the identity. Without it, `1 ETH` and `1 BTC` on
+    one date with one description shared a digest.
+    """
+    return f"{number.normalize():f} {currency}"
+
+
+def _amounts_exact(amounts: list[tuple[Decimal, str]]) -> str:
+    """The current rendering: every source amount, exact, with its commodity."""
+    return "+".join(_exact_amount(number, currency) for number, currency in amounts)
+
+
+def _amounts_two_decimal(amounts: list[tuple[Decimal, str]]) -> str:
+    """The pre-exactness rendering, kept only to recognize ids already written.
+
+    A lone amount was printed to two decimals with no commodity at all, so
+    `-0.001 ETH` and `-0.002 ETH` both became `-0.00` and reordering an export
+    swapped which row owned which digest.
+    """
     if len(amounts) == 1:
-        normalized_amount = f"{amounts[0][0]:.2f}"
-    else:
-        normalized_amount = "+".join(f"{number} {currency}" for number, currency in amounts)
-    description = " ".join(str(entry.narration or entry.payee or "").upper().split())
-    if normalized:
-        # Normalize after upper(): uppercasing NFD text can itself emit a
-        # non-canonical form, and the digest has to be stable byte-for-byte.
-        description = unicodedata.normalize("NFC", description)
-        account = unicodedata.normalize("NFC", account)
-    return f"{entry.date.isoformat()}|{normalized_amount}|{description}|{account}"
+        return f"{amounts[0][0]:.2f}"
+    return "+".join(f"{number} {currency}" for number, currency in amounts)
+
+
+def _hash_base(date: str, amount: str, description: str, account: str) -> str:
+    """The string a generated import id is the digest of."""
+    return f"{date}|{amount}|{description}|{account}"
 
 
 def _digest_import_id(base: str, occurrence: int) -> str:
@@ -554,23 +592,49 @@ def _digest_import_id(base: str, occurrence: int) -> str:
     return "csv:sha256:" + hashlib.sha256(digest_input.encode("utf-8")).hexdigest()[:16]
 
 
-def _hash_import_ids(entry: Any, account: str, seen: dict[str, int]) -> tuple[str, str | None]:
-    """The canonical import id, plus the pre-NFC id to also match on, if different.
+def _hash_import_ids(entry: Any, account: str, seen: dict[str, int]) -> tuple[str, list[str]]:
+    """The canonical import id, plus every older spelling to also match on.
 
-    The description is hashed NFC-normalized so one bank row keeps one id
-    across exports that differ only in Unicode normalization. Ledgers written
-    before that carry the un-normalized digest, so it is returned alongside as
-    a lookup-only key: matching it still recognizes the row as a duplicate,
-    while anything newly written uses the canonical id.
+    The canonical digest hashes the exact amount with its commodity, and hashes
+    the description NFC-normalized, so one bank row keeps one id across exports
+    that differ only in Unicode normalization or in how many decimal places
+    they print.
+
+    Older releases wrote different digests, so those are returned alongside as
+    lookup-only keys and no re-hash pass is needed. They are listed newest
+    first, and only formats that a released `bea` actually wrote are listed:
+    NFC normalization shipped before exact amounts, so a ledger may predate
+    exactness, or predate both, but there is no exact-amount/un-normalized
+    combination in the wild to look for.
+
+    Occurrence numbering stays keyed on the canonical base, so N identical rows
+    keep their 1..N suffixes and every older spelling of row K is that format's
+    digest at occurrence K.
     """
-    canonical_base = _hash_base(entry, account, normalized=True)
-    legacy_base = _hash_base(entry, account, normalized=False)
+    amounts = sorted((p.units.number, p.units.currency) for p in _source_postings(entry, account))
+    raw_description = " ".join(str(entry.narration or entry.payee or "").upper().split())
+    # Normalize after upper(): uppercasing NFD text can itself emit a
+    # non-canonical form, and the digest has to be stable byte-for-byte.
+    description = unicodedata.normalize("NFC", raw_description)
+    nfc_account = unicodedata.normalize("NFC", account)
+    date = entry.date.isoformat()
+
+    canonical_base = _hash_base(date, _amounts_exact(amounts), description, nfc_account)
     seen[canonical_base] = seen.get(canonical_base, 0) + 1
     occurrence = seen[canonical_base]
-    canonical = _digest_import_id(canonical_base, occurrence)
-    if legacy_base == canonical_base:
-        return canonical, None
-    return canonical, _digest_import_id(legacy_base, occurrence)
+
+    two_decimal = _amounts_two_decimal(amounts)
+    known = {canonical_base}
+    older: list[str] = []
+    for base in (
+        _hash_base(date, two_decimal, description, nfc_account),  # before exact amounts
+        _hash_base(date, two_decimal, raw_description, account),  # and before NFC
+    ):
+        if base in known:
+            continue
+        known.add(base)
+        older.append(_digest_import_id(base, occurrence))
+    return _digest_import_id(canonical_base, occurrence), older
 
 
 def _candidate_key(entry: Any, account: str) -> tuple[Any, ...]:

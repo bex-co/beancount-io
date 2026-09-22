@@ -26,17 +26,19 @@ Hash input is the UTF-8 string:
 ```
 
 - `date` — ISO `YYYY-MM-DD`.
-- `amount` — the **ledger-sign** amount with exactly two decimals, explicit `-` for negatives, no thousands separators: `-54.20`.
+- `amount` — the **ledger-sign** amount followed by a space and its commodity: `-54.20 USD`. Write the exact value with trailing zeros stripped and no thousands separators, so the spellings of one amount (`-54.2`, `-54.20`, `-54.200`) all render `-54.2 USD`, and never in scientific notation (`100`, not `1E+2`). Rounding to two decimals and omitting the commodity — what this said before — gave `-0.001 ETH` and `-0.002 ETH` the same input, and likewise `-1 ETH` and `-1 BTC`, so reordering an export swapped which row owned which id and the rows came back as conflicts. A transaction with several source postings joins them with `+` in sorted order: `-1 BTC+-1 ETH`.
 - `description` — the **raw** row description (not the cleaned payee), uppercased, runs of whitespace collapsed to one space, leading/trailing whitespace stripped, then Unicode-normalized to **NFC**. Raw, because payee-cleanup rules may improve over time and must not change hashes; NFC, because the same description can arrive decomposed in one export and composed in the next, and the two must hash alike. Normalize *after* uppercasing — uppercasing decomposed text can itself emit a non-canonical form.
 - `source-account` — the full account name in NFC, e.g. `Assets:Bank:Checking`.
 
 Take the SHA-256 hex digest, keep the **first 16 hex chars** (64 bits — collision-safe at personal-ledger scale, short enough to read).
 
-Example: `2026-05-07|-54.20|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking` → `import-id: "csv:sha256:<first-16-of-sha256>"`.
+Example: `2026-05-07|-54.2 USD|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking` → `import-id: "csv:sha256:<first-16-of-sha256>"`.
 
 Compute it honestly (e.g. `printf '%s' '<input>' | shasum -a 256 | cut -c1-16`) — never fabricate a plausible-looking hash.
 
-**Ledgers written before NFC normalization.** Ids stored by an earlier `bea` were hashed from the un-normalized description, so an accented row can carry the older digest. ASCII descriptions are unaffected — NFC is a no-op there, and their ids are byte-identical. For the rest, `bea import` computes both digests and matches either, writing only the NFC one, so existing ledgers keep deduplicating and no re-hash pass is required.
+**Ledgers written before exact amounts or before NFC normalization.** Ids stored by an earlier `bea` were hashed from the un-normalized description, or from the two-decimal amount without its commodity, or both. There are therefore two independent axes a ledger may predate, and `bea import` offers every older combination as a **lookup-only** key: it matches them, writes only the canonical one, and needs no re-hash pass.
+
+An older amount digest is additionally **content-checked** before it counts as a match. That form was lossy — it could hand two genuinely different rows the same digest — so a hit on one means *already imported* only when the whole source row agrees; otherwise the hit is ignored rather than reported as a conflict. A reused **native** bank id whose data changed is still a conflict, and still requires review.
 
 **Same-day identical rows** (two identical coffees on one card, same date/amount/description): they produce the same hash. Disambiguate by suffixing an occurrence counter to the hash input for the second and later duplicates within one file: `…|Assets:Bank:Checking|2`. This keeps N identical rows ↔ N entries while re-imports still match 1:1 (occurrence order is stable within a file).
 

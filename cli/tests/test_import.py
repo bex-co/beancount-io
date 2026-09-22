@@ -266,7 +266,7 @@ def test_import_writes_skill_shaped_import_ids(book: Path) -> None:
     assert book.read_text().count("bea_import_id") == 0
     assert _import_ids(book)[-2:] == [
         "bank:bank-001",
-        "csv:sha256:" + hashlib.sha256(b"2026-08-04|-5.25|COFFEE|Assets:Checking").hexdigest()[:16],
+        "csv:sha256:" + hashlib.sha256(b"2026-08-04|-5.25 USD|COFFEE|Assets:Checking").hexdigest()[:16],
     ]
 
 
@@ -306,7 +306,10 @@ def test_hash_matches_the_skill_worked_example(tmp_path: Path) -> None:
         "Date,Payee,Narration,Amount\n2026-05-07,Store,Trader Joes #123 Seattle WA,-54.20\n",
     )
     assert run(book, source, "--apply", config=config).exit_code == 0
-    assert _import_ids(book) == ["csv:sha256:12802942bbda86f9"]
+    # The worked example from the skill reference, recomputed for the exact
+    # amount form: `-54.20` is written `-54.2 USD` (w3/m45).
+    base = b"2026-05-07|-54.2 USD|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking"
+    assert _import_ids(book) == ["csv:sha256:" + hashlib.sha256(base).hexdigest()[:16]]
 
 
 def test_identical_same_day_rows_take_occurrence_suffixes(book: Path) -> None:
@@ -314,7 +317,7 @@ def test_identical_same_day_rows_take_occurrence_suffixes(book: Path) -> None:
     source = book.parent / "bank.csv"
     source.write_text(HEADER + row + row)
     assert run(book, source, "--apply", "--duplicates", "include").exit_code == 0
-    base = "2026-08-02|-5.25|COFFEE|Assets:Checking"
+    base = "2026-08-02|-5.25 USD|COFFEE|Assets:Checking"
     first = "csv:sha256:" + hashlib.sha256(base.encode()).hexdigest()[:16]
     second = "csv:sha256:" + hashlib.sha256(f"{base}|2".encode()).hexdigest()[:16]
     assert first != second
@@ -326,7 +329,7 @@ def test_identical_same_day_rows_take_occurrence_suffixes(book: Path) -> None:
 
 def test_handwritten_skill_entry_is_an_exact_duplicate(book: Path) -> None:
     # A hand-written skill-style entry carrying only the content hash matches.
-    identifier = "csv:sha256:" + hashlib.sha256(b"2026-08-02|-5.25|COFFEE|Assets:Checking").hexdigest()[:16]
+    identifier = "csv:sha256:" + hashlib.sha256(b"2026-08-02|-5.25 USD|COFFEE|Assets:Checking").hexdigest()[:16]
     book.write_text(
         book.read_text() + f'\n2026-08-02 * "Cafe" "Coffee"\n  import-id: "{identifier}"\n'
         "  Assets:Checking  -5.25 USD\n  Expenses:Dining   5.25 USD\n"
