@@ -31,6 +31,7 @@ import {
 import { serverUrlOverrideVar } from "@/common/vars/server-url";
 import { Button } from "@/components/button";
 import { PressableScale } from "@/components/pressable-scale";
+import { createConnectionTestGate } from "./connection-test-gate";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -160,6 +161,7 @@ export function ServerSettingsScreen(): JSX.Element {
   const [connection, setConnection] = useState<ServerConnectionResult>();
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [testGate] = useState(createConnectionTestGate);
 
   const validate = useCallback(() => {
     const validation = validateServerUrl(url);
@@ -176,12 +178,16 @@ export function ServerSettingsScreen(): JSX.Element {
       setConnection(undefined);
       return;
     }
+    const token = testGate.start();
     setTesting(true);
     setConnection(undefined);
     const result = await testServerConnection(validation.url);
+    // The draft changed (or a newer test began) while this one ran: its
+    // result belongs to a URL no longer on screen.
+    if (!testGate.isCurrent(token)) return;
     setTesting(false);
     setConnection(result);
-  }, [testing, validate]);
+  }, [testing, testGate, validate]);
 
   const onSave = useCallback(async () => {
     if (saving) {
@@ -205,9 +211,11 @@ export function ServerSettingsScreen(): JSX.Element {
     await restoreDefaultServerUrl();
     setUrl(defaultRuntimeServerUrl());
     setValidationError(undefined);
+    testGate.invalidate();
+    setTesting(false);
     setConnection(undefined);
     setSaving(false);
-  }, [saving]);
+  }, [saving, testGate]);
 
   const connectionIsSuccess = connection?.kind === "connected";
   const connectionIsError = connection !== undefined && !connectionIsSuccess;
@@ -236,6 +244,8 @@ export function ServerSettingsScreen(): JSX.Element {
               onChangeText={(value) => {
                 setUrl(value);
                 setValidationError(undefined);
+                testGate.invalidate();
+                setTesting(false);
                 setConnection(undefined);
               }}
               placeholder="https://ledger.example.com/"
