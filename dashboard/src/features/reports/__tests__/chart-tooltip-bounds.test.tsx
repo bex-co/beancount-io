@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LineChart } from "@/features/reports/balance-sheet/line-chart";
 import CashFlowSankey from "@/features/reports/overview/components/cash-flow-sankey";
 import { parseQueryChart } from "@/features/bql/lib/chart-utils";
+import LedgerCommoditiesPage from "@/features/ledger-data/commodities";
 import type { QueryResultTable } from "@/graphql/definitions";
 
 /**
@@ -36,6 +37,45 @@ vi.mock("@/common/hooks/use-ledger", () => ({
 }));
 
 vi.mock("@/common/hooks/use-theme", () => ({ useIsDarkTheme: () => false }));
+
+vi.mock("@tanstack/react-router", () => ({
+  useParams: () => ({
+    ledgerOwner: "open_ledger",
+    ledgerName: "crypto-example",
+  }),
+  Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+}));
+
+vi.mock("@/common/hooks/use-ledger-permission", () => ({
+  useLedgerPermission: () => ({ canWrite: false }),
+}));
+
+vi.mock("@/common/components/seo/ledger-page-seo", () => ({
+  LedgerPageSEO: () => null,
+}));
+
+vi.mock("@/features/ledger-data/commodities/managed-price-sources", () => ({
+  ManagedPriceSources: () => null,
+}));
+
+vi.mock("@apollo/client/react", () => ({
+  useQuery: () => ({
+    loading: false,
+    error: undefined,
+    data: {
+      getLedgerCommodities: [
+        {
+          base: "UNIV2ETHUSDC",
+          quote: "USD",
+          prices: [
+            { date: "2025-09-05", value: "998.00" },
+            { date: "2025-10-05", value: "1002.00" },
+          ],
+        },
+      ],
+    },
+  }),
+}));
 
 beforeEach(() => {
   captured.length = 0;
@@ -111,6 +151,22 @@ describe("cash flow sankey", () => {
     );
 
     expectBounded(tooltipOf(captured.at(-1)));
+  });
+});
+
+describe("commodity price chart", () => {
+  it("bounds its tooltip and keeps its axis formatter", () => {
+    render(<LedgerCommoditiesPage />);
+
+    const tooltip = tooltipOf(captured.at(-1)) as BoundedTooltip & {
+      trigger?: string;
+      formatter?: (params: unknown) => string;
+    };
+    expectBounded(tooltip);
+    expect(tooltip.trigger).toBe("axis");
+    expect(tooltip.formatter?.([{ name: "2025-10-05" }])).toContain(
+      "UNIV2ETHUSDC/USD",
+    );
   });
 });
 

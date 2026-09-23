@@ -18,6 +18,7 @@ import type { CommodityPairWithPrices } from "@/graphql/definitions";
 import { getPrimaryColor, opacity } from "@/common/lib/chart/color";
 import { formatDateISO } from "@/common/lib/format/format-date-iso";
 import { formatDateAxis } from "@/common/lib/chart/chart";
+import { CONFINED_TOOLTIP } from "@/common/lib/chart/tooltip";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { EmptyState } from "@/common/components/empty-state";
@@ -45,6 +46,7 @@ function CommodityChart({ commodity }: { commodity: CommodityPairWithPrices }) {
     );
 
   const tooltip: TooltipComponentOption = {
+    ...CONFINED_TOOLTIP,
     trigger: "axis" as const,
     formatter: function (params) {
       const data = Array.isArray(params) ? params[0] : params;
