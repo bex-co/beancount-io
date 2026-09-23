@@ -74,6 +74,14 @@ When a managed URL has no validated revision, the engine's missing-file report i
 - Each node has its own feed cache under the default in-process store. Moving the cache helper to Redis shares revisions across nodes with no change to this design.
 - Follow-ups outside this ADR: exposing `managedPrices` through backend-v2 on REST, GraphQL, and MCP with the dashboard freshness labels; snapshots and export; the instrument catalog; and a manual refresh endpoint. The `bea` CLI loader mirrors this contract locally; see [ADR 018](ADR018-cli-managed-price-includes.md).
 
+**Amended 2026-09-23 (w2/m32).** Two of the follow-ups above have shipped: the status surface and the manual refresh.
+
+- **Status.** The ledger service returns the section 8 records at `GET /reports/{owner}/{repo}/managed-prices` without parsing the ledger, minus the engine-only `effectiveDates`. backend-v2 exposes them under `ledger.reports.read` as `GET /api-gateway/v1/ledgers/{owner}/{name}/managed-prices`, the GraphQL query `getLedgerManagedPrices`, and the MCP resource `beancount://{owner}/{name}/managed-prices`.
+- **Refresh.** Section 5's manual refresh is `POST …/managed-prices/refresh`, the mutation `refreshLedgerManagedPrices`, and the MCP tool `refreshManagedPrices`. Under the feed lock it zeroes each included URL's head `nextRefreshAt`, keeping the revision and last error, then returns the re-resolved status. It is gated on `ledger.entries.write`, not a read: the fetch it spends is shared by every ledger on the node, so read-only and anonymous viewers of a public ledger cannot trigger it.
+- **Dashboard.** The commodities page shows each source's freshness, timestamps, last error and a Refresh prices action. The journal entry panel no longer offers Edit or Delete on managed entries, which retires the "until the dashboard hides that action" caveat above.
+
+Snapshots and export, and the instrument catalog, remain open.
+
 ## Alternatives considered
 
 - **Bake prices into the SHA-keyed file map.** Rejected: the cache invalidates only on push, so an untouched ledger would show stale prices for hours.

@@ -170,21 +170,22 @@ This is compatible with the optional GET stream in the
 Call `tools/list` for the deployed input and output schemas. Arguments below are
 the principal inputs; inspect the schema before constructing a call.
 
-| Tool                    | Inputs and behavior                                                                                                                          | Capability |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `runBqlQuery`           | `{ "query": "BALANCES" }`; returns formatted query output as a string.                                                                       | Read       |
-| `runBqlQueryStructured` | `{ "query": "BALANCES" }`; returns typed column metadata and rows, or a structured text result, matching REST JSON and GraphQL `queryShell`. | Read       |
-| `listLedgers`           | Optional `page`, `limit`; a pinned credential returns its one ledger. Start here, then `getLedgerContext`.                                  | Read       |
-| `checkLedger`           | `{}`; bean-check errors with file and line, entry counts, and the latest commit, in one call. Call after any write.                         | Read       |
-| `getLedgerContext`      | Optional `payeeLimit`; attributes, open accounts, currencies, payees, years, and source files with counts.                                   | Read       |
-| `getEntryContext`       | `entryHash`; the source context around one entry — read before editing it.                                                                   | Read       |
-| `listLedgerFiles`       | Optional `dir_path`; lists one directory level, directories first.                                                                           | Read       |
-| `readLedgerFiles`       | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                           | Read       |
-| `appendLedgerText`      | `text`, optional `path`, `dry_run`, `allowInvalid`; appends Beancount directive text, routed by type and date and inserted in date order.    | Write      |
-| `editLedgerFiles`       | `description`, `files`, optional `dry_run`; batches create/update/replace/delete operations into one commit.                                 | Write      |
-| `manageApiKeys`         | `operation: list / create / revoke`, operation-specific arguments. `create` returns plaintext once; requires OAuth on MCP and a paid plan.    | Admin      |
-| `manageBankImport`      | `operation: sync / submit / discard`, operation-specific arguments, optional `dry_run`.                                                      | Write      |
-| `manageBankConnection`  | `operation: reconcile / map_account / set_currency / refresh / unlink`, operation-specific arguments.                                        | Admin      |
+| Tool                    | Inputs and behavior                                                                                                                                                       | Capability |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `runBqlQuery`           | `{ "query": "BALANCES" }`; returns formatted query output as a string.                                                                                                    | Read       |
+| `runBqlQueryStructured` | `{ "query": "BALANCES" }`; returns typed column metadata and rows, or a structured text result, matching REST JSON and GraphQL `queryShell`.                              | Read       |
+| `listLedgers`           | Optional `page`, `limit`; a pinned credential returns its one ledger. Start here, then `getLedgerContext`.                                                                | Read       |
+| `checkLedger`           | `{}`; bean-check errors with file and line, entry counts, and the latest commit, in one call. Call after any write.                                                       | Read       |
+| `getLedgerContext`      | Optional `payeeLimit`; attributes, open accounts, currencies, payees, years, and source files with counts.                                                                | Read       |
+| `getEntryContext`       | `entryHash`; the source context around one entry — read before editing it.                                                                                                | Read       |
+| `listLedgerFiles`       | Optional `dir_path`; lists one directory level, directories first.                                                                                                        | Read       |
+| `readLedgerFiles`       | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                                                        | Read       |
+| `appendLedgerText`      | `text`, optional `path`, `dry_run`, `allowInvalid`; appends Beancount directive text, routed by type and date and inserted in date order.                                 | Write      |
+| `refreshManagedPrices`  | Optional `ledger`; re-fetches every managed price include (`include "https://beancount.io/prices/BTC-USD"`) now and returns each source's status. Never edits the ledger. | Write      |
+| `editLedgerFiles`       | `description`, `files`, optional `dry_run`; batches create/update/replace/delete operations into one commit.                                                              | Write      |
+| `manageApiKeys`         | `operation: list / create / revoke`, operation-specific arguments. `create` returns plaintext once; requires OAuth on MCP and a paid plan.                                | Admin      |
+| `manageBankImport`      | `operation: sync / submit / discard`, operation-specific arguments, optional `dry_run`.                                                                                   | Write      |
+| `manageBankConnection`  | `operation: reconcile / map_account / set_currency / refresh / unlink`, operation-specific arguments.                                                                     | Admin      |
 
 The implementation is listed in
 [`mcp-tools.ts`](../src/features/ai-agent/api/mcp-tools.ts).
@@ -443,8 +444,8 @@ lists the accounting and bank suffixes; replace the braces with your ledger and 
 
 | Family                                  | URI suffixes                                                                                                                                              |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Vocabulary (10)                         | `payees`, `narrations`, `currencies`, `tags`, `links`, `years`, `commodities`, `events`, `errors`, `attributes`                                           |
-| Analysis without required arguments (6) | `trial-balance`, `interval-totals`, `account-last-entries`, `entries-count`, `postings-per-account`, `account-directives`                                                         |
+| Vocabulary (11)                         | `payees`, `narrations`, `currencies`, `tags`, `links`, `years`, `commodities`, `events`, `errors`, `attributes`, `managed-prices`                         |
+| Analysis without required arguments (6) | `trial-balance`, `interval-totals`, `account-last-entries`, `entries-count`, `postings-per-account`, `account-directives`                                 |
 | Analysis with required arguments (5)    | `account-report/{accountName}`, `payee-transactions/{payee}`, `narration-transactions/{narration}`, `payee-accounts/{payee}`, `entry-context/{entryHash}` |
 | Bank connections and accounts (4)       | `banks`, `banks/{itemId}`, `banks/{itemId}/accounts`, `bank-accounts`                                                                                     |
 | Bank staging and suggestions (3)        | `bank-transactions/unsynced{?accountId}`, `bank-transactions/suggested-categories{?accountId}`, `banks/{itemId}/suggested-mapping`                        |
@@ -558,12 +559,12 @@ Four prompts bring the `beancount-*` ledger playbooks to agents that cannot read
 call it tells the agent to make is authorized when that tool or resource runs,
 with the credential's scopes and ledger restriction.
 
-| Prompt | Arguments (all optional) | What it asks the agent to do |
-| --- | --- | --- |
-| `spending-report` | `period` (`2026-08`, `last quarter`), `question`, `ledger` | Answer spending questions without writing, showing the BQL behind every figure |
-| `close-month` | `month` (`YYYY-MM`), `ledger` | Walk a month-end close and report unverified accounts and unpinned assertions instead of claiming a finished close |
-| `reconcile-account` | `account`, `period`, `statement` (CSV or pasted text), `ledger` | Classify every difference against one statement, then append missing entries and a balance assertion after confirmation |
-| `categorize-imports` | `item_id`, `ledger` | Categorize staged bank transactions into existing accounts, flag duplicates, and submit after confirmation. Listing linked banks needs `ledger.admin`; otherwise pass `item_id` or work with what is already staged |
+| Prompt               | Arguments (all optional)                                        | What it asks the agent to do                                                                                                                                                                                        |
+| -------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spending-report`    | `period` (`2026-08`, `last quarter`), `question`, `ledger`      | Answer spending questions without writing, showing the BQL behind every figure                                                                                                                                      |
+| `close-month`        | `month` (`YYYY-MM`), `ledger`                                   | Walk a month-end close and report unverified accounts and unpinned assertions instead of claiming a finished close                                                                                                  |
+| `reconcile-account`  | `account`, `period`, `statement` (CSV or pasted text), `ledger` | Classify every difference against one statement, then append missing entries and a balance assertion after confirmation                                                                                             |
+| `categorize-imports` | `item_id`, `ledger`                                             | Categorize staged bank transactions into existing accounts, flag duplicates, and submit after confirmation. Listing linked banks needs `ledger.admin`; otherwise pass `item_id` or work with what is already staged |
 
 `month` must be `YYYY-MM` and `ledger` must be `owner/name`; a malformed value is
 refused rather than folded into the playbook. A credential restricted to one
@@ -721,22 +722,22 @@ encoding — also answers `BAD_USER_INPUT` (`-32602`), with a hint naming what t
 template accepts. A URI under another scheme is not this server's to answer
 and still returns the SDK's own refusal.
 
-| `error.code`             | JSON-RPC | What it means and what to do                                                                                |
-| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------ |
-| `BAD_USER_INPUT`         | `-32602` | An argument is wrong. `tools/list` publishes each tool's input schema.                                        |
-| `VALIDATION_FAILED`      | `-32602` | A field failed a business rule. The message names the field path.                                             |
-| `UNBALANCED`             | `-32602` | Postings do not sum to zero. Add a posting, elide an amount, or pass `allowInvalid: true`.                     |
-| `NOT_FOUND`              | `-32002` | No such ledger, file, entry, or revision. `listLedgers` and `listLedgerFiles` say what exists.                 |
-| `FORBIDDEN`              | `-32003` | The credential lacks authority, or a pinned credential named another ledger. Read the ledger's `metadata`.     |
-| `UNAUTHENTICATED`        | `-32003` | The credential expired or was revoked. Re-run the OAuth flow, or use a live API key.                          |
-| `PREMIUM_REQUIRED`       | `-32003` | The operation needs a paid plan on the credential's account.                                                  |
-| `RESOURCE_LIMIT_REACHED` | `-32003` | A plan limit is reached. Remove something or upgrade.                                                         |
-| `OPERATION_NOT_ALLOWED`  | `-32003` | The ledger's current state forbids it.                                                                        |
-| `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`.          |
-| `RATE_LIMITED`           | `-32000` | Over budget. Wait `retryAfter` seconds; batch writes rather than looping.                                      |
-| `SERVICE_UNAVAILABLE`    | `-32000` | A dependency is down. Retry with backoff; the request is not the problem.                                     |
-| `CONFIGURATION_ERROR`    | `-32000` | The deployment is missing configuration. Nothing about the request will fix it.                               |
-| `INTERNAL_SERVER_ERROR`  | `-32000` | Server-side failure. Retry once; changing the request will not help.                                          |
+| `error.code`             | JSON-RPC | What it means and what to do                                                                               |
+| ------------------------ | -------- | ---------------------------------------------------------------------------------------------------------- |
+| `BAD_USER_INPUT`         | `-32602` | An argument is wrong. `tools/list` publishes each tool's input schema.                                     |
+| `VALIDATION_FAILED`      | `-32602` | A field failed a business rule. The message names the field path.                                          |
+| `UNBALANCED`             | `-32602` | Postings do not sum to zero. Add a posting, elide an amount, or pass `allowInvalid: true`.                 |
+| `NOT_FOUND`              | `-32002` | No such ledger, file, entry, or revision. `listLedgers` and `listLedgerFiles` say what exists.             |
+| `FORBIDDEN`              | `-32003` | The credential lacks authority, or a pinned credential named another ledger. Read the ledger's `metadata`. |
+| `UNAUTHENTICATED`        | `-32003` | The credential expired or was revoked. Re-run the OAuth flow, or use a live API key.                       |
+| `PREMIUM_REQUIRED`       | `-32003` | The operation needs a paid plan on the credential's account.                                               |
+| `RESOURCE_LIMIT_REACHED` | `-32003` | A plan limit is reached. Remove something or upgrade.                                                      |
+| `OPERATION_NOT_ALLOWED`  | `-32003` | The ledger's current state forbids it.                                                                     |
+| `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`.      |
+| `RATE_LIMITED`           | `-32000` | Over budget. Wait `retryAfter` seconds; batch writes rather than looping.                                  |
+| `SERVICE_UNAVAILABLE`    | `-32000` | A dependency is down. Retry with backoff; the request is not the problem.                                  |
+| `CONFIGURATION_ERROR`    | `-32000` | The deployment is missing configuration. Nothing about the request will fix it.                            |
+| `INTERNAL_SERVER_ERROR`  | `-32000` | Server-side failure. Retry once; changing the request will not help.                                       |
 
 | Symptom                                           | Meaning and next step                                                                                                              |
 | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
