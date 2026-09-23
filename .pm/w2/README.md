@@ -35,7 +35,7 @@
 - [x] **m28** — MCP results and failures an agent can act on (9 tasks) ← from MCP field audit 2026-09-08 (JSON-wrapped tables, four error dialects, 429 mid-session); user routed to w2 — sequenced after m27
 - [ ] **m30** — [AI reliability hardening: ADR 0011 follow-ups](./blocked/m30/README.md) (11 tasks) ← from the 2026-09-07 receipt-parse outage diagnosis + ADR 0011 tier-3 discussion; user routed to w2 as one milestone 2026-09-09 — **blocked:** t006 Haiku eval needs an operator-supplied ANTHROPIC_API_KEY
 - [x] **m31** — Include Live Price: managed price includes in the ledger service (11 tasks) ← from PRFAQ002 + ADR 015; user request 2026-09-15 to design, board, and implement the ledger layer
-- [ ] **m32** — [Managed price status on every client surface](./m32/README.md) (9 tasks) ← promoted [w2/026](./done/026.md) 2026-09-23; ADR 015 follow-up to m31
+- [x] **m32** — [Managed price status on every client surface](./done/m32/README.md) (9 tasks) ← promoted [w2/026](./done/026.md) 2026-09-23; ADR 015 follow-up to m31
 
 ## Cross-queue promotions and follow-ups
 
