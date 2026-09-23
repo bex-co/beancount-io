@@ -150,6 +150,23 @@ const skUserProfile: Record<string, TranslationEntry> = {
     message: "Zobrazených {shown} z {total} kníh",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message:
+      "Načítaných je tu len prvých {count} kníh. Tento profil môže mať ďalšie.",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "Žiadna z {count} načítaných kníh nezodpovedá vyhľadávaniu. Tento profil môže mať ďalšie knihy, ktoré tu nie sú načítané.",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "Zobrazených {shown} z {total} načítaných kníh",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "Zobraziť viac",
     description: "Public profile: show more social list items",

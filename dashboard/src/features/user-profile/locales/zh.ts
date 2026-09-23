@@ -149,6 +149,22 @@ const zhUserProfile: Record<string, TranslationEntry> = {
     message: "显示 {total} 本账簿中的 {shown} 本",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message: "此处仅加载了前 {count} 本账簿，该用户可能还有更多账簿。",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "已加载的 {count} 本账簿中没有匹配项。该用户可能还有未在此处加载的账簿。",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "显示已加载的 {total} 本账簿中的 {shown} 本",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "显示更多",
     description: "Public profile: show more social list items",

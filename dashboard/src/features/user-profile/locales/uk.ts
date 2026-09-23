@@ -150,6 +150,23 @@ const ukUserProfile: Record<string, TranslationEntry> = {
     message: "Показано {shown} із {total} книг",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message:
+      "Тут завантажено лише перші {count} книг. У цього профілю може бути більше.",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "Жодна з {count} завантажених книг не відповідає запиту. У цього профілю можуть бути інші книги, які тут не завантажено.",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "Показано {shown} із {total} завантажених книг",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "Показати ще",
     description: "Public profile: show more social list items",

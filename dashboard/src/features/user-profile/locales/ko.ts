@@ -146,6 +146,23 @@ const koUserProfile: Record<string, TranslationEntry> = {
     message: "장부 {total}개 중 {shown}개 표시",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message:
+      "여기에는 처음 {count}개의 장부만 불러와집니다. 이 프로필에는 장부가 더 있을 수 있습니다.",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "불러온 장부 {count}개 중 검색과 일치하는 장부가 없습니다. 이 프로필에는 여기에 불러오지 않은 장부가 더 있을 수 있습니다.",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "불러온 장부 {total}개 중 {shown}개 표시",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "더 보기",
     description: "Public profile: show more social list items",

@@ -150,6 +150,23 @@ const nlUserProfile: Record<string, TranslationEntry> = {
     message: "{shown} van {total} boekhoudingen weergegeven",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message:
+      "Hier worden alleen de eerste {count} boekhoudingen geladen. Dit profiel kan er meer hebben.",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "Geen van de {count} geladen boekhoudingen komt overeen met je zoekopdracht. Dit profiel kan meer boekhoudingen hebben die hier niet zijn geladen.",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "{shown} van {total} geladen boekhoudingen weergegeven",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "Meer tonen",
     description: "Public profile: show more social list items",

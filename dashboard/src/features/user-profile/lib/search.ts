@@ -23,6 +23,13 @@ export const LEDGER_COLLECTION_PAGE_SIZE = 12;
  */
 export const LEDGER_COLLECTION_MAX_SHOW = 600;
 
+/**
+ * The profile API returns at most this many repositories (see the public
+ * profile route's documented 20/50 limits). A list that reaches it is a
+ * preview: the profile may own more ledgers than it contains.
+ */
+export const PROFILE_LEDGER_PREVIEW_LIMIT = 50;
+
 export const LEDGER_COLLECTION_SORTS = ["updated", "name"] as const;
 
 export type LedgerCollectionSort = (typeof LEDGER_COLLECTION_SORTS)[number];

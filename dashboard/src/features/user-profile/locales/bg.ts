@@ -150,6 +150,23 @@ const bgUserProfile: Record<string, TranslationEntry> = {
     message: "Показани са {shown} от {total} книги",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message:
+      "Тук са заредени само първите {count} книги. Този профил може да има още.",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "Нито една от заредените {count} книги не съответства на търсенето. Този профил може да има още книги, които не са заредени тук.",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "Показани са {shown} от {total} заредени книги",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "Покажи още",
     description: "Public profile: show more social list items",

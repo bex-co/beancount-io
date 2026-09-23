@@ -150,6 +150,23 @@ const caUserProfile: Record<string, TranslationEntry> = {
     message: "Es mostren {shown} de {total} llibres",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message:
+      "Aquí només es carreguen els primers {count} llibres. Aquest perfil en pot tenir més.",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "Cap dels {count} llibres carregats coincideix amb la cerca. Aquest perfil pot tenir més llibres que no es carreguen aquí.",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "Es mostren {shown} de {total} llibres carregats",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "Mostra'n més",
     description: "Public profile: show more social list items",

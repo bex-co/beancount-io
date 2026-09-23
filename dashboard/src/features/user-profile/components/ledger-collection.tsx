@@ -15,6 +15,7 @@ import {
   isLedgerCollectionSort,
   LEDGER_COLLECTION_MAX_SHOW,
   LEDGER_COLLECTION_PAGE_SIZE as PAGE_SIZE,
+  PROFILE_LEDGER_PREVIEW_LIMIT,
   type LedgerCollectionSort,
   type UserProfileSearch,
 } from "../lib/search";
@@ -162,13 +163,21 @@ export function LedgerCollection({
   );
   const visible = filtered.slice(0, visibleCount);
 
+  // At the server's cap the list is a preview, not the whole inventory, so the
+  // count, the empty search, and the result status all say "loaded".
+  const isPreview = repositories.length >= PROFILE_LEDGER_PREVIEW_LIMIT;
+
   const clearSearch = () => {
     editQuery("");
     searchInput.current?.focus();
   };
 
   return (
-    <section aria-labelledby="ledger-collection-heading" className="min-w-0">
+    <section
+      aria-labelledby="ledger-collection-heading"
+      aria-describedby={isPreview ? "ledger-collection-preview" : undefined}
+      className="min-w-0"
+    >
       <div className="mb-6">
         <h2
           id="ledger-collection-heading"
@@ -182,6 +191,14 @@ export function LedgerCollection({
         <p className="mt-1.5 text-sm text-muted-foreground">
           {t("userProfile.browseDescription")}
         </p>
+        {isPreview && (
+          <p
+            id="ledger-collection-preview"
+            className="mt-1.5 text-sm text-muted-foreground"
+          >
+            {t("userProfile.previewNotice", { count: repositories.length })}
+          </p>
+        )}
       </div>
       {repositories.length > 0 && (
         <div className="mb-5 flex flex-col gap-3 sm:flex-row">
@@ -257,11 +274,13 @@ export function LedgerCollection({
             />
           )}
           <p className="text-sm text-muted-foreground">
-            {t(
-              repositories.length === 0
-                ? "userProfile.noRepositories"
-                : "userProfile.noMatches",
-            )}
+            {repositories.length === 0
+              ? t("userProfile.noRepositories")
+              : isPreview
+                ? t("userProfile.noMatchesInPreview", {
+                    count: repositories.length,
+                  })
+                : t("userProfile.noMatches")}
           </p>
           {query && (
             <Button variant="outline" onClick={clearSearch} className="mt-4">
@@ -283,10 +302,15 @@ export function LedgerCollection({
       {repositories.length > 0 && (
         <div className="mt-6 flex flex-col items-center gap-4">
           <p role="status" className="text-xs text-muted-foreground">
-            {t("userProfile.results", {
-              shown: visible.length,
-              total: filtered.length,
-            })}
+            {t(
+              isPreview
+                ? "userProfile.resultsInPreview"
+                : "userProfile.results",
+              {
+                shown: visible.length,
+                total: filtered.length,
+              },
+            )}
           </p>
           {visible.length < filtered.length && (
             <Button

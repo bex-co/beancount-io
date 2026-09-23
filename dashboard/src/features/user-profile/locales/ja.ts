@@ -146,6 +146,23 @@ const jaUserProfile: Record<string, TranslationEntry> = {
     message: "{total} 件中 {shown} 件の帳簿を表示",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message:
+      "ここには最初の {count} 件の帳簿のみ読み込まれています。このプロフィールには他にも帳簿がある可能性があります。",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "読み込まれた {count} 件の帳簿に一致するものはありません。このプロフィールには、ここに読み込まれていない帳簿がある可能性があります。",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "読み込まれた {total} 件中 {shown} 件の帳簿を表示",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "もっと見る",
     description: "Public profile: show more social list items",

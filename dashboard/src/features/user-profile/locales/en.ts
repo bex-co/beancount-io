@@ -149,6 +149,23 @@ const enUserProfile: Record<string, TranslationEntry> = {
     message: "Showing {shown} of {total} ledgers",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message:
+      "Only the first {count} ledgers are loaded here. This profile may have more.",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "None of the {count} loaded ledgers match your search. This profile may have more ledgers that are not loaded here.",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "Showing {shown} of {total} loaded ledgers",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "Show more",
     description: "Public profile: show more social list items",

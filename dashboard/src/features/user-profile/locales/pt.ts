@@ -150,6 +150,23 @@ const ptUserProfile: Record<string, TranslationEntry> = {
     message: "Mostrando {shown} de {total} livros",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message:
+      "Apenas os primeiros {count} livros são carregados aqui. Este perfil pode ter mais.",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "Nenhum dos {count} livros carregados corresponde à sua pesquisa. Este perfil pode ter mais livros que não são carregados aqui.",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "Mostrando {shown} de {total} livros carregados",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "Mostrar mais",
     description: "Public profile: show more social list items",

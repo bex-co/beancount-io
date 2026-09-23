@@ -25,23 +25,28 @@ vi.mock("@/common/hooks/use-translations", async () => {
   };
 });
 
-const repositories: UserRepository[] = Array.from(
-  { length: 15 },
-  (_, index) => ({
+function makeRepositories(length: number): UserRepository[] {
+  return Array.from({ length }, (_, index) => ({
     __typename: "UserRepository",
     name: `ledger-${String(index).padStart(2, "0")}`,
     fullName: `owner/ledger-${String(index).padStart(2, "0")}`,
     description: index === 0 ? "Household budget" : null,
     isPrivate: index === 0,
     createdAt: "2026-01-01T00:00:00Z",
-    updatedAt: `2026-01-${String(index + 1).padStart(2, "0")}T00:00:00Z`,
-  }),
-);
+    updatedAt: new Date(Date.UTC(2026, 0, index + 1)).toISOString(),
+  }));
+}
+
+const repositories = makeRepositories(15);
 
 function buildRouter(
   initialEntry: string,
-  options: { ledgerLoader?: () => Promise<void> } = {},
+  options: {
+    ledgerLoader?: () => Promise<void>;
+    repositories?: UserRepository[];
+  } = {},
 ) {
+  const profileRepositories = options.repositories ?? repositories;
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
   const profileRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -50,7 +55,10 @@ function buildRouter(
     component: function ProfileRoute() {
       const { username } = profileRoute.useParams();
       return (
-        <LedgerCollection username={username} repositories={repositories} />
+        <LedgerCollection
+          username={username}
+          repositories={profileRepositories}
+        />
       );
     },
   });
@@ -69,9 +77,14 @@ function buildRouter(
   });
 }
 
-async function mountAt(initialEntry = "/ledger/owner") {
+async function mountAt(
+  initialEntry = "/ledger/owner",
+  profileRepositories?: UserRepository[],
+) {
   cleanup();
-  const router = buildRouter(initialEntry);
+  const router = buildRouter(initialEntry, {
+    repositories: profileRepositories,
+  });
   await router.load();
   render(<RouterProvider router={router} />);
   await waitFor(() => {
@@ -162,6 +175,62 @@ describe("LedgerCollection discovery", () => {
     );
     expect(screen.getAllByRole("link")).toHaveLength(12);
     expect(screen.getByRole("searchbox")).toHaveFocus();
+  });
+});
+
+describe("LedgerCollection at the profile API's preview limit", () => {
+  const capped = makeRepositories(50);
+
+  it("says a capped list is a loaded preview, not the whole inventory", async () => {
+    const user = userEvent.setup();
+    await mountAt("/ledger/owner", capped);
+    expect(
+      screen.getByRole("region", { name: /Ledgers/ }),
+    ).toHaveAccessibleDescription(
+      "Only the first 50 ledgers are loaded here. This profile may have more.",
+    );
+    for (let page = 0; page < 4; page++) {
+      await user.click(
+        screen.getByRole("button", { name: "Show more ledgers" }),
+      );
+    }
+    await waitFor(() => {
+      expect(screen.getAllByRole("link")).toHaveLength(50);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Showing 50 of 50 loaded ledgers",
+    );
+    // No fabricated overall total, and no claim that a 51st ledger exists.
+    expect(screen.queryByText(/\b51\b/)).not.toBeInTheDocument();
+  });
+
+  it("scopes a no-match search to the loaded preview", async () => {
+    const user = userEvent.setup();
+    await mountAt("/ledger/owner?q=stock-example", capped);
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "None of the 50 loaded ledgers match your search. This profile may have more ledgers that are not loaded here.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/No ledgers match your search/),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Showing 0 of 0 loaded ledgers",
+    );
+    await user.click(
+      screen.getAllByRole("button", { name: "Clear search" })[1],
+    );
+    expect(screen.getAllByRole("link")).toHaveLength(12);
+  });
+
+  it("keeps complete-inventory wording below the limit", async () => {
+    await mountAt("/ledger/owner", makeRepositories(49));
+    expect(screen.queryByText(/loaded/)).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Showing 12 of 49 ledgers",
+    );
   });
 });
 

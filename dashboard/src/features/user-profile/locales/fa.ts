@@ -150,6 +150,23 @@ const faUserProfile: Record<string, TranslationEntry> = {
     message: "نمایش {shown} از {total} دفتر",
     description: "Public profile: results",
   },
+  "userProfile.previewNotice": {
+    message:
+      "فقط {count} دفتر نخست در اینجا بارگذاری شده است. این نمایه ممکن است دفترهای بیشتری داشته باشد.",
+    description:
+      "Public profile: shown when the ledger list reached the server's preview limit; {count} is the number loaded",
+  },
+  "userProfile.noMatchesInPreview": {
+    message:
+      "هیچ‌یک از {count} دفتر بارگذاری‌شده با جست‌وجوی شما مطابقت ندارد. این نمایه ممکن است دفترهای دیگری داشته باشد که اینجا بارگذاری نشده‌اند.",
+    description:
+      "Public profile: no search match within a capped preview; {count} is the number loaded",
+  },
+  "userProfile.resultsInPreview": {
+    message: "نمایش {shown} از {total} دفتر بارگذاری‌شده",
+    description:
+      "Public profile: result count within a capped preview of loaded ledgers",
+  },
   "userProfile.showMore": {
     message: "نمایش بیشتر",
     description: "Public profile: show more social list items",
