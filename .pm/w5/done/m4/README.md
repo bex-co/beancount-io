@@ -29,7 +29,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** Approved `/pm-brainstorm for w5` proposal and [w2/009](../../../w2/009.md), the MCP field audit of 2026-09-08; routed to available w5 capacity by `$pm for w5 for them all` on 2026-09-12.
+- **Source:** Approved `/pm-brainstorm for w5` proposal and [w2/009](../../../w2/blocked/009.md), the MCP field audit of 2026-09-08; routed to available w5 capacity by `$pm for w5 for them all` on 2026-09-12.
 - **Goal linkage:** **A1 — Agent-native accounting** and **A2 — Frictionless onboarding**: contributors can reproduce failures experienced by coding agents during ordinary ledger onboarding and assess whether a change improves completion.
 - **Expected outcome:** One documented command produces per-journey correctness and file-effect results plus calls, latency, and available usage data. The fresh baseline becomes the comparison point for m5 and future MCP inventory changes.
 - **Rescoped 2026-09-15:** blocked on choosing a separate local benchmark stack; the user decided real-client MCP evaluation uses the hosted endpoint instead (`.pm/DO_NOT_DO.md`: no duplicate stacks for MCP testing).
