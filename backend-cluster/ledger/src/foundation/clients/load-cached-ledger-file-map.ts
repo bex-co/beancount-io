@@ -175,6 +175,11 @@ export interface CachedLoadOptions extends LoadLedgerOptions {
    * trigger a feed fetch; both managed fields come back empty.
    */
   committedOnly?: boolean;
+  /**
+   * Make every managed feed due before resolving it (the manual refresh,
+   * ADR 015 §5). Ignored with `committedOnly`.
+   */
+  refreshManagedPrices?: boolean;
   /** Injection seams for the overlay (clock, fetch, config); tests only. */
   managedPrices?: Partial<Omit<ManagedPriceFeedDeps, "cache">>;
 }
@@ -193,12 +198,17 @@ async function withManagedPrices(
     return { ...loaded, managedPrices: [], managedPricePaths: [] };
   }
   const overrides = options.managedPrices;
-  const overlay = await overlayManagedPrices(loaded.files, loaded.sourceFiles, {
-    cache: cacheHelper,
-    config: overrides?.config ?? config.managedPrices,
-    now: overrides?.now,
-    fetchImpl: overrides?.fetchImpl,
-  });
+  const overlay = await overlayManagedPrices(
+    loaded.files,
+    loaded.sourceFiles,
+    {
+      cache: cacheHelper,
+      config: overrides?.config ?? config.managedPrices,
+      now: overrides?.now,
+      fetchImpl: overrides?.fetchImpl,
+    },
+    { refresh: options.refreshManagedPrices },
+  );
   return {
     ...loaded,
     files: overlay.files,

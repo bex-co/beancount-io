@@ -8,6 +8,7 @@ import { OperationNotAllowedError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import { parseManagedPriceUrl } from "./managed-price-policy";
 import {
+  requestManagedPriceRefresh,
   resolveManagedPriceFeed,
   type ManagedPriceFeedDeps,
 } from "./managed-price-cache";
@@ -267,6 +268,7 @@ export async function overlayManagedPrices(
   files: FileMap,
   sourceFiles: readonly string[],
   deps: ManagedPriceFeedDeps,
+  options: { refresh?: boolean } = {},
 ): Promise<ManagedPriceOverlay> {
   const sources = collectManagedIncludes(
     files,
@@ -279,10 +281,13 @@ export async function overlayManagedPrices(
   }
 
   const now = deps.now ?? Date.now;
+  // A manual refresh (ADR 015 §5) makes each feed due just before resolving
+  // it, so the same load re-fetches it.
   const resolved = await Promise.all(
-    sources.map((source) =>
-      resolveManagedPriceFeed(source.url, source.alias, deps),
-    ),
+    sources.map(async (source) => {
+      if (options.refresh) await requestManagedPriceRefresh(source.url, deps.cache);
+      return resolveManagedPriceFeed(source.url, source.alias, deps);
+    }),
   );
   const ledgerPairs = resolved.some((feed) => feed.blob !== null)
     ? collectLedgerPricePairs(files, sourceFiles)

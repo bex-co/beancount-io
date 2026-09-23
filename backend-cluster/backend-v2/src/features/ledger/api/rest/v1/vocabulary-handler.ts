@@ -46,7 +46,7 @@ const stringList = z.array(z.string());
 const nullableString = z.string().nullable();
 
 /** ADR 015 §8's status record, as the ledger service returns it. */
-const managedPriceSourceSchema = z.object({
+export const managedPriceSourceSchema = z.object({
   url: z.string(),
   alias: z.string(),
   includedFrom: z.array(

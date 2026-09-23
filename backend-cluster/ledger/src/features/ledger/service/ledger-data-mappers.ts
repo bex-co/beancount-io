@@ -39,18 +39,6 @@ export function toAttributesPublic(
  * the error is classified (w2/013). The engine's own `hint` rides along for
  * the same reason.
  */
-/**
- * The client-facing status record: everything but `effectiveDates`, which is
- * the engine-side matcher's input (one date per feed point), not status.
- */
-export function toManagedPricesPublic(
-  sources: ManagedPriceSource[],
-): ManagedPriceSourcePublic[] {
-  return sources.map(
-    ({ effectiveDates: _effectiveDates, ...status }) => status,
-  );
-}
-
 export function toBeancountErrorsPublic(
   errors: BeancountError[],
 ): BeancountErrorPublic[] {
@@ -63,6 +51,18 @@ export function toBeancountErrorsPublic(
     code: error.code ?? null,
     hint: error.hint ?? null,
   }));
+}
+
+/**
+ * The client-facing status record: everything but `effectiveDates`, which is
+ * the engine-side matcher's input (one date per feed point), not status.
+ */
+export function toManagedPricesPublic(
+  sources: ManagedPriceSource[],
+): ManagedPriceSourcePublic[] {
+  return sources.map(
+    ({ effectiveDates: _effectiveDates, ...status }) => status,
+  );
 }
 
 // Fava's `EntriesByType` namedtuple field order (fava-slim group_entries.py).

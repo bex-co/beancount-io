@@ -1264,7 +1264,8 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.renameLedgerFile",
     rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/rename-file",
     mcp: "renameLedgerFile",
-  },  {
+  },
+  {
     verb: "Mutation.refreshLedgerManagedPrices",
     class: "write" as const,
     gql: "Mutation.refreshLedgerManagedPrices",

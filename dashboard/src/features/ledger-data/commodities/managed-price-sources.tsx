@@ -19,6 +19,7 @@ import {
   RefreshLedgerManagedPricesDocument,
   type ManagedPriceSourceFieldsFragment,
 } from "@/graphql/definitions";
+import { commodityPairLabel } from "./commodity-pair-label";
 
 type Freshness = "recent" | "stale" | "unavailable";
 
@@ -51,7 +52,7 @@ function ManagedPriceSourceRow({
   const badge = FRESHNESS_BADGE[freshnessOf(source)];
   const pair =
     source.commodity && source.quote
-      ? `${source.commodity}/${source.quote}`
+      ? commodityPairLabel({ base: source.commodity, quote: source.quote })
       : source.alias;
   const observed = formatDateTime(source.observedAt);
   const nextRefresh = formatDateTime(source.nextRefreshAt);
@@ -109,9 +110,18 @@ export function ManagedPriceSources({
     RefreshLedgerManagedPricesDocument,
     {
       variables: { ledgerId },
+      // The mutation returns the status records themselves; the records carry
+      // no id, so write them into the status query rather than refetch it.
+      update: (cache, { data: result }) => {
+        if (!result) return;
+        cache.writeQuery({
+          query: GetLedgerManagedPricesDocument,
+          variables: { ledgerId },
+          data: { getLedgerManagedPrices: result.refreshLedgerManagedPrices },
+        });
+      },
       // A new revision changes the prices the charts plot, not just the status.
       refetchQueries: [
-        { query: GetLedgerManagedPricesDocument, variables: { ledgerId } },
         { query: GetLedgerCommoditiesDocument, variables: { ledgerId } },
       ],
       awaitRefetchQueries: true,

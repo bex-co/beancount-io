@@ -10,7 +10,4 @@ export {
   overlayManagedPrices,
   type ManagedPriceSource,
 } from "./managed-price-overlay";
-export {
-  requestManagedPriceRefresh,
-  type ManagedPriceFeedDeps,
-} from "./managed-price-cache";
+export { type ManagedPriceFeedDeps } from "./managed-price-cache";

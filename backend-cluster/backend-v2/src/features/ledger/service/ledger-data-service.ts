@@ -257,9 +257,7 @@ export class LedgerDataService
     params: BaseParams,
   ): Promise<ManagedPriceSourcePublic[]> {
     const { ledgerId, identity } = params;
-    // Write capability, not read: a refresh spends an upstream fetch shared by
-    // every ledger on the node, so an anonymous or read-only viewer of a
-    // public ledger must not be able to trigger one.
+    // Write capability, not read — why is on its op-class entry.
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,

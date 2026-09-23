@@ -102,6 +102,9 @@ describe("LedgerDataService.refreshManagedPrices", () => {
     await service.refreshManagedPrices(params);
     expect(counts.tree).toBe(before.tree);
     expect(counts.contents).toBe(before.contents);
+    // One load: a single HEAD lookup, not one to name the feeds and another
+    // to re-resolve them.
+    expect(counts.commits - before.commits).toBe(1);
   });
 
   it("keeps the last validated revision when the forced re-fetch fails", async () => {

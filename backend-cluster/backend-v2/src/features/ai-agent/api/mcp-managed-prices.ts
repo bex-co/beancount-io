@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { managedPriceSourceSchema } from "@/features/ledger/api/rest/v1/vocabulary-handler";
 import { mcpOutputSchema, toolOutputSchema } from "../tools/types";
 import {
   resolveMcpLedger,
@@ -17,12 +18,8 @@ export const refreshManagedPricesOutput = mcpOutputSchema(
   toolOutputSchema(
     z.object({
       sources: z.array(
-        z
-          .object({
-            alias: z.string(),
-            freshness: z.enum(["recent", "stale", "unavailable"]),
-            error: z.string().nullable(),
-          })
+        managedPriceSourceSchema
+          .pick({ alias: true, freshness: true, error: true })
           .passthrough(),
       ),
     }),

@@ -207,7 +207,7 @@ function EntryContextMain({
         <span className="text-sm font-medium ">
           {t("journal.entryLocation")}
         </span>
-        {managedSource && locationLabel ? (
+        {managedSource ? (
           <code className="font-mono text-sm">{locationLabel}</code>
         ) : location && locationLabel ? (
           <button

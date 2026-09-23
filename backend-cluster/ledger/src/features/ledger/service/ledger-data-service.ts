@@ -19,7 +19,6 @@ import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-fact
 import {
   assertNotManagedPricePath,
   managedPriceDirectiveMatcher,
-  requestManagedPriceRefresh,
   type ManagedPriceSource,
 } from "@/foundation/managed-prices";
 import {
@@ -402,7 +401,8 @@ export class LedgerDataService implements ILedgerDataService {
   private async loadManagedPrices(
     ledgerId: string,
     userId: string | undefined,
-  ): Promise<ManagedPriceSource[]> {
+    refresh = false,
+  ): Promise<ManagedPriceSourcePublic[]> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const client = await this.giteaClientFactory.getPublicApiClient(
       ledgerId,
@@ -413,35 +413,21 @@ export class LedgerDataService implements ILedgerDataService {
       this.cacheHelper,
       ledgerOwner,
       ledgerName,
+      { refreshManagedPrices: refresh },
     );
-    return managedPrices;
+    return toManagedPricesPublic(managedPrices);
   }
 
   async getManagedPrices(
     params: BaseParams,
   ): Promise<ManagedPriceSourcePublic[]> {
-    const { ledgerId, userId } = params;
-    return toManagedPricesPublic(
-      await this.loadManagedPrices(ledgerId, userId),
-    );
+    return this.loadManagedPrices(params.ledgerId, params.userId);
   }
 
   async refreshManagedPrices(
     params: BaseParams,
   ): Promise<ManagedPriceSourcePublic[]> {
-    const { ledgerId, userId } = params;
-    // The first load names the URLs (and may itself refresh a feed that was
-    // already due); zeroing their heads makes the second load re-fetch each.
-    const before = await this.loadManagedPrices(ledgerId, userId);
-    if (before.length === 0) return [];
-    await Promise.all(
-      before.map(({ url }) =>
-        requestManagedPriceRefresh(url, this.cacheHelper),
-      ),
-    );
-    return toManagedPricesPublic(
-      await this.loadManagedPrices(ledgerId, userId),
-    );
+    return this.loadManagedPrices(params.ledgerId, params.userId, true);
   }
 
   async checkProjectedErrors(

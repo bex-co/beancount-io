@@ -116,7 +116,6 @@ describe("ManagedPriceSources", () => {
           },
         },
       },
-      statusMock([source({ freshness: "recent" })]),
       {
         request: {
           query: GetLedgerCommoditiesDocument,
