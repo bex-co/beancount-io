@@ -41,7 +41,13 @@ const NO_NODES: HierarchyListNode[] = [];
 
 const ROW_CLASS = "border-b border-border hover:bg-muted/50";
 const CELL_PAD = "py-2 px-3 align-middle";
-const indentStyle = (level: number) => ({ paddingLeft: `${level * 20 + 8}px` });
+/**
+ * Depth indents from the leading edge: `paddingLeft` indented nothing in RTL
+ * (Persian), where it padded the trailing side and every depth ended flush.
+ */
+const indentStyle = (level: number) => ({
+  paddingInlineStart: `${level * 20 + 8}px`,
+});
 /** Keeps rows without an expander aligned with rows that have one. */
 const ExpanderSpacer = () => (
   <div className="w-6 shrink-0" aria-hidden="true" />
@@ -213,7 +219,7 @@ function TreeNode({
       >
         <th
           scope="row"
-          className={cn(CELL_PAD, "w-1/2 font-normal text-left")}
+          className={cn(CELL_PAD, "w-1/2 font-normal text-start")}
           style={indentStyle(level)}
         >
           <div className="flex items-center gap-2 min-w-0">
@@ -308,7 +314,7 @@ function SummaryRow({
     <tr className={cn(ROW_CLASS, row.bold && "font-semibold")}>
       <th
         scope="row"
-        className={cn(CELL_PAD, "w-1/2 font-inherit text-left")}
+        className={cn(CELL_PAD, "w-1/2 font-inherit text-start")}
         style={indentStyle(0)}
       >
         <div className="flex items-center gap-2 min-w-0">
@@ -476,7 +482,7 @@ export function HierarchyList({
                 "border-b border-border bg-muted font-semibold text-sm text-muted-foreground",
               )}
             >
-              <th scope="col" className={cn(CELL_PAD, "w-1/2 text-left")}>
+              <th scope="col" className={cn(CELL_PAD, "w-1/2 text-start")}>
                 {t("common.accountColumn")}
               </th>
               <th scope="col" className={cn(CELL_PAD, "w-[25%] text-right")}>

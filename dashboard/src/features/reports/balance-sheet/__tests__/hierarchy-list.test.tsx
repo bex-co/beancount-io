@@ -72,6 +72,48 @@ describe("HierarchyList", () => {
     vi.clearAllMocks();
   });
 
+  describe("Depth indentation", () => {
+    it("indents each level from the leading edge, so RTL shows the tree too", () => {
+      const dividends = createNode({
+        account: "Income:US:ETrade:Dividends",
+        balanceChildren: { USD: -10 },
+      });
+      const etrade = createNode({
+        account: "Income:US:ETrade",
+        balanceChildren: { USD: -10 },
+        children: [toChild(dividends)],
+      });
+      const us = createNode({
+        account: "Income:US",
+        balanceChildren: { USD: -10 },
+        children: [toChild(etrade)],
+      });
+      const income = createNode({
+        account: "Income",
+        balanceChildren: { USD: -10 },
+        children: [toChild(us)],
+      });
+
+      render(<HierarchyList data={[income]} />);
+
+      const headers = screen
+        .getAllByRole("rowheader")
+        .filter((cell) =>
+          /Income|US|ETrade|Dividends/.test(cell.textContent ?? ""),
+        )
+        .slice(0, 4);
+      // A physical `padding-left` pads the trailing side under dir="rtl",
+      // which is how Persian rendered every depth flush (w4/177).
+      expect(headers.map((cell) => cell.getAttribute("style") ?? "")).toEqual([
+        "padding-inline-start: 8px;",
+        "padding-inline-start: 28px;",
+        "padding-inline-start: 48px;",
+        "padding-inline-start: 68px;",
+      ]);
+      for (const cell of headers) expect(cell).toHaveClass("text-start");
+    });
+  });
+
   describe("Empty state", () => {
     it("should render empty message when data is empty array", () => {
       render(<HierarchyList data={[]} />);
