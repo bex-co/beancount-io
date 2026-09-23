@@ -614,40 +614,46 @@ def open_records(
 
 
 def infer_date_format(
-    source: Path, column: str, limit: int = 200, *, delimiter: str | None = None, encoding: str = "utf-8"
+    source: Path, column: str, *, delimiter: str | None = None, encoding: str = "utf-8"
 ) -> tuple[str | None, bool]:
     """The one date format that parses this column, and whether others also did.
 
     Day-first and month-first columns are indistinguishable until a row carries
     a day past the twelfth, so the caller is told when the choice was a guess
     instead of silently booking half a year into the wrong month.
+
+    The whole column is read: the deciding day can arrive at any row, and a
+    sample that stopped at 200 chose month-first for an export whose 201st date
+    was `13/04/2024`, then refused that valid date. Candidates are narrowed as
+    the rows stream, so no value is kept.
     """
-    values: list[str] = []
+    working = list(_DATE_FORMATS)
+    seen = False
     try:
         with open_records(source, delimiter=delimiter, encoding=encoding) as (headers, rows):
             if column not in headers:
                 return None, False
             for _line, row in rows:
                 value = row[column].strip()
-                if value:
-                    values.append(value)
-                if len(values) >= limit:
-                    break
+                if not value:
+                    continue
+                seen = True
+                working = [candidate for candidate in working if _parses(value, candidate)]
+                if not working:
+                    return None, False
     except (OSError, UnicodeDecodeError, UsageError):
         return None, False
-    if not values:
-        return None, False
-    working = []
-    for candidate in _DATE_FORMATS:
-        try:
-            for value in values:
-                datetime.strptime(value, candidate)
-        except ValueError:
-            continue
-        working.append(candidate)
-    if not working:
+    if not seen:
         return None, False
     return working[0], len(working) > 1
+
+
+def _parses(value: str, date_format: str) -> bool:
+    try:
+        datetime.strptime(value, date_format)
+    except ValueError:
+        return False
+    return True
 
 
 def header_signature(headers: list[str] | None) -> str | None:
