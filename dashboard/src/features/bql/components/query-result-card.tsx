@@ -17,7 +17,7 @@ import { QueryResultChart } from "./query-result-chart";
 import { QueryResultExport } from "./query-result-export";
 import type { QueryShellQuery } from "@/graphql/definitions";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { getErrorMessageKey } from "@/common/lib/errors/error-message";
+import { getQueryErrorFeedback } from "../lib/query-error";
 
 /** Height of an ordinary one-line row, and the starting guess for measurement. */
 const ROW_HEIGHT = 36;
@@ -223,6 +223,7 @@ export function QueryResultCard({
 }: QueryResultCardProps) {
   const { t } = useTranslations();
   const detailsRef = useRef<HTMLDetailsElement>(null);
+  const errorFeedback = error ? getQueryErrorFeedback(error) : null;
 
   useEffect(() => {
     if (detailsRef.current && isInitiallyOpen) {
@@ -308,9 +309,11 @@ export function QueryResultCard({
           </div>
         )}
 
-        {error && (
+        {errorFeedback && (
           <Alert variant="destructive">
-            <AlertDescription>{t(getErrorMessageKey(error))}</AlertDescription>
+            <AlertDescription>
+              {t(errorFeedback.key, errorFeedback.params)}
+            </AlertDescription>
           </Alert>
         )}
 

@@ -38,6 +38,12 @@ const skBql: Record<string, TranslationEntry> = {
     message: "Riadky: {count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message:
+      "Neznámy stĺpec „{column}“. Skontrolujte jeho pravopis podľa stĺpcov, ktoré môže tento dotaz vybrať.",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "Dotaz",
     description: "Sidebar navigation label for the BQL query page",

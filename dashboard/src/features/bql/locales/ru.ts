@@ -37,6 +37,12 @@ const ruBql: Record<string, TranslationEntry> = {
     message: "Строк: {count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message:
+      "Неизвестный столбец «{column}». Проверьте его написание по списку столбцов, которые может выбрать этот запрос.",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "Запрос",
     description: "Sidebar navigation label for the BQL query page",

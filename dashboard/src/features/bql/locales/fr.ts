@@ -38,6 +38,12 @@ const frBql: Record<string, TranslationEntry> = {
     message: "Lignes : {count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message:
+      "Colonne inconnue « {column} ». Vérifiez son orthographe parmi les colonnes que cette requête peut sélectionner.",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "Requête",
     description: "Sidebar navigation label for the BQL query page",

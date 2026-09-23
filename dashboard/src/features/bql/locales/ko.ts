@@ -33,6 +33,12 @@ const koBql: Record<string, TranslationEntry> = {
     message: "행: {count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message:
+      "알 수 없는 열 “{column}”입니다. 이 쿼리에서 선택할 수 있는 열과 철자를 비교해 확인하세요.",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "쿼리",
     description: "Sidebar navigation label for the BQL query page",

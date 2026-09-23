@@ -1,3 +1,4 @@
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import {
   render,
   screen,
@@ -34,7 +35,8 @@ vi.mock("../lib/chart-utils", () => ({
 // Mock translations
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
-    t: (key: string) => key,
+    t: (key: string, params?: Record<string, string>) =>
+      params?.column ? `${key}:${params.column}` : key,
   }),
 }));
 
@@ -154,6 +156,29 @@ describe("QueryResultCard", () => {
 
     expect(screen.getByText("page.bql.queryResult:")).toBeInTheDocument();
     expect(screen.getByText("Query executed successfully")).toBeInTheDocument();
+  });
+
+  it("names the unknown column instead of generic bad-input feedback", () => {
+    const error = new CombinedGraphQLErrors({
+      errors: [
+        {
+          message:
+            "Invalid BQL query: Query execution error: column 'nonexistent_column' not found",
+          extensions: { code: "BAD_USER_INPUT" },
+        },
+      ],
+    });
+
+    render(<QueryResultCard {...defaultProps} error={error} />);
+    fireEvent.click(document.querySelector("summary")!);
+
+    expect(
+      screen.getByText("bql.errors.unknownColumn:nonexistent_column"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("common.errors.badUserInput"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("virtual-list")).not.toBeInTheDocument();
   });
 
   it("should render localized error message in error state", () => {

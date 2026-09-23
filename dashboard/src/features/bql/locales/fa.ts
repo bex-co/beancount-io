@@ -38,6 +38,12 @@ const faBql: Record<string, TranslationEntry> = {
     message: "ردیف‌ها: {count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message:
+      "ستون ناشناخته «{column}». املای آن را با ستون‌هایی که این پرس‌وجو می‌تواند انتخاب کند بررسی کنید.",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "پرس‌وجو",
     description: "Sidebar navigation label for the BQL query page",

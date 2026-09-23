@@ -38,6 +38,12 @@ const deBql: Record<string, TranslationEntry> = {
     message: "Zeilen: {count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message:
+      "Unbekannte Spalte „{column}“. Prüfen Sie die Schreibweise anhand der Spalten, die diese Abfrage auswählen kann.",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "Abfrage",
     description: "Sidebar navigation label for the BQL query page",

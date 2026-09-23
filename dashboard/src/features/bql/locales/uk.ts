@@ -37,6 +37,12 @@ const ukBql: Record<string, TranslationEntry> = {
     message: "Рядків: {count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message:
+      "Невідомий стовпець «{column}». Перевірте його написання за списком стовпців, які може вибрати цей запит.",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "Запит",
     description: "Sidebar navigation label for the BQL query page",

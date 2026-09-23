@@ -38,6 +38,12 @@ const bgBql: Record<string, TranslationEntry> = {
     message: "Редове: {count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message:
+      "Непозната колона „{column}“. Проверете изписването ѝ спрямо колоните, които тази заявка може да избере.",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "Заявка",
     description: "Sidebar navigation label for the BQL query page",

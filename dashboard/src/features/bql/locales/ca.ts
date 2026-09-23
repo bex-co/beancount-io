@@ -38,6 +38,12 @@ const caBql: Record<string, TranslationEntry> = {
     message: "Files: {count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message:
+      "Columna desconeguda «{column}». Comproveu-ne l’ortografia amb les columnes que aquesta consulta pot seleccionar.",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "Consulta",
     description: "Sidebar navigation label for the BQL query page",

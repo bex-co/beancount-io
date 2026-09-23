@@ -38,6 +38,12 @@ const nlBql: Record<string, TranslationEntry> = {
     message: "Rijen: {count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message:
+      "Onbekende kolom ‘{column}’. Controleer de spelling aan de hand van de kolommen die deze query kan selecteren.",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "Query",
     description: "Sidebar navigation label for the BQL query page",

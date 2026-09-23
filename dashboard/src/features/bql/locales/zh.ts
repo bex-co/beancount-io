@@ -36,6 +36,11 @@ const zhBql: Record<string, TranslationEntry> = {
     message: "行数：{count}",
     description: "Row count for large query results",
   },
+  "bql.errors.unknownColumn": {
+    message: "未知列“{column}”。请对照此查询可选择的列检查其拼写。",
+    description:
+      "Query error naming a column the query referenced that does not exist; {column} is the identifier from the query",
+  },
   "page.bql.query": {
     message: "查询",
     description: "Sidebar navigation label for the BQL query page",
