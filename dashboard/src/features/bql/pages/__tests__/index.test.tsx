@@ -125,6 +125,9 @@ vi.mock("@/common/components/monaco-editor", () => ({
         KeyMod: { CtrlCmd: number };
         KeyCode: { Enter: number };
         languages: {
+          getLanguages: () => Array<{ id: string }>;
+          register: () => void;
+          setMonarchTokensProvider: () => void;
           setLanguageConfiguration: () => void;
           registerCompletionItemProvider: () => void;
           CompletionItemKind: { Snippet: number };
@@ -148,6 +151,9 @@ vi.mock("@/common/components/monaco-editor", () => ({
         KeyMod: { CtrlCmd: monacoHarness.KeyModCtrlCmd },
         KeyCode: { Enter: monacoHarness.KeyCodeEnter },
         languages: {
+          getLanguages: () => [],
+          register: vi.fn(),
+          setMonarchTokensProvider: vi.fn(),
           setLanguageConfiguration: vi.fn(),
           registerCompletionItemProvider: vi.fn(),
           CompletionItemKind: { Snippet: 27 },

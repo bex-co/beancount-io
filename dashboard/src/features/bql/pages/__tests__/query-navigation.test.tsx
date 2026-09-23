@@ -79,6 +79,9 @@ vi.mock("@/common/components/monaco-editor", () => ({
         KeyMod: { CtrlCmd: number };
         KeyCode: { Enter: number };
         languages: {
+          getLanguages: () => Array<{ id: string }>;
+          register: () => void;
+          setMonarchTokensProvider: () => { dispose: () => void };
           setLanguageConfiguration: () => { dispose: () => void };
           registerCompletionItemProvider: () => { dispose: () => void };
         };
@@ -106,6 +109,9 @@ vi.mock("@/common/components/monaco-editor", () => ({
           KeyMod: { CtrlCmd: 2048 },
           KeyCode: { Enter: 3 },
           languages: {
+            getLanguages: () => [],
+            register: vi.fn(),
+            setMonarchTokensProvider: () => ({ dispose: vi.fn() }),
             setLanguageConfiguration: () => ({ dispose: vi.fn() }),
             registerCompletionItemProvider: () => ({ dispose: vi.fn() }),
           },

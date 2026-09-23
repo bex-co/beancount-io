@@ -16,6 +16,7 @@ import { createLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useQueryHistory } from "../hooks/use-query-history";
 import { QueryResultCard } from "../components/query-result-card";
+import { BQL_LANGUAGE_ID, registerBqlLanguage } from "../lib/bql-language";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { track } from "@/common/analytics";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
@@ -238,7 +239,7 @@ export default function LedgerQueryPage() {
           <div className="border border-input rounded-md overflow-hidden">
             <Editor
               height="200px"
-              defaultLanguage="sql"
+              defaultLanguage={BQL_LANGUAGE_ID}
               value={queryText}
               onChange={(value) => setQueryText(value || "")}
               onMount={(editor, monaco: typeof monacoType) => {
@@ -252,65 +253,46 @@ export default function LedgerQueryPage() {
                   },
                 );
 
-                // Configure Beancount/SQL syntax highlighting
-                const languageConfig =
-                  monaco.languages.setLanguageConfiguration("sql", {
-                    comments: {
-                      lineComment: "--",
-                      blockComment: ["/*", "*/"],
-                    },
-                    brackets: [
-                      ["{", "}"],
-                      ["[", "]"],
-                      ["(", ")"],
-                    ],
-                    autoClosingPairs: [
-                      { open: "{", close: "}" },
-                      { open: "[", close: "]" },
-                      { open: "(", close: ")" },
-                      { open: '"', close: '"' },
-                      { open: "'", close: "'" },
-                    ],
-                    surroundingPairs: [
-                      { open: "{", close: "}" },
-                      { open: "[", close: "]" },
-                      { open: "(", close: ")" },
-                      { open: '"', close: '"' },
-                      { open: "'", close: "'" },
-                    ],
-                  });
+                // BQL's own language: block comments only, so the comment
+                // shortcut never emits the `--` the engine rejects.
+                const languageDisposables = registerBqlLanguage(monaco);
 
                 // Add Beancount-specific keywords
                 const completionProvider =
-                  monaco.languages.registerCompletionItemProvider("sql", {
-                    provideCompletionItems: (model, position) => {
-                      const word = model.getWordUntilPosition(position);
-                      const lineContent = model.getLineContent(
-                        position.lineNumber,
-                      );
-                      if (!shouldOfferBqlQuerySnippets(lineContent, word)) {
-                        return { suggestions: [] };
-                      }
-                      const range = bqlQuerySnippetRange(
-                        position.lineNumber,
-                        word,
-                      );
-                      const suggestions = BQL_QUERY_SNIPPETS.map((snippet) => ({
-                        label: snippet.label,
-                        kind: monaco.languages.CompletionItemKind.Snippet,
-                        insertText: snippet.insertText,
-                        documentation: snippet.documentation,
-                        range,
-                      }));
-                      return { suggestions };
+                  monaco.languages.registerCompletionItemProvider(
+                    BQL_LANGUAGE_ID,
+                    {
+                      provideCompletionItems: (model, position) => {
+                        const word = model.getWordUntilPosition(position);
+                        const lineContent = model.getLineContent(
+                          position.lineNumber,
+                        );
+                        if (!shouldOfferBqlQuerySnippets(lineContent, word)) {
+                          return { suggestions: [] };
+                        }
+                        const range = bqlQuerySnippetRange(
+                          position.lineNumber,
+                          word,
+                        );
+                        const suggestions = BQL_QUERY_SNIPPETS.map(
+                          (snippet) => ({
+                            label: snippet.label,
+                            kind: monaco.languages.CompletionItemKind.Snippet,
+                            insertText: snippet.insertText,
+                            documentation: snippet.documentation,
+                            range,
+                          }),
+                        );
+                        return { suggestions };
+                      },
                     },
-                  });
+                  );
 
                 for (const disposable of monacoDisposablesRef.current) {
                   disposable.dispose();
                 }
                 monacoDisposablesRef.current = [
-                  languageConfig,
+                  ...languageDisposables,
                   completionProvider,
                 ].filter(Boolean) as monacoType.IDisposable[];
 
