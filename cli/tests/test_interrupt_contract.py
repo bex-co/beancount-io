@@ -53,13 +53,17 @@ def _interrupt_at(tmp_path: Path, argv: list[str], *, expect: str, timeout: floa
         os.chdir(tmp_path)
         os.execve(str(BEA), [str(BEA), *argv], _child_env(tmp_path))
     screen = ""
-    sent = False
+    sent_at: float | None = None
     started = time.time()
     try:
         while True:
-            if not sent and expect in screen:
+            # `click` echoes the prompt text before it enters the blocking read,
+            # so a SIGINT landing in that gap can be handled before the read
+            # starts and leave it waiting forever. Press Ctrl-C again, as a user
+            # would, until the process leaves.
+            if expect in screen and (sent_at is None or time.time() - sent_at > 1.0):
                 os.write(fd, CTRL_C)
-                sent = True
+                sent_at = time.time()
             ready, _, _ = select.select([fd], [], [], 0.2)
             if ready:
                 try:
