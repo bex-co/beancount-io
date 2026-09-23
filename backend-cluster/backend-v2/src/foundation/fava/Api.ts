@@ -663,6 +663,11 @@ export interface ContextPublic {
    * Source code slice of the entry
    */
   slice: string;
+  /**
+   * Managed Source
+   * The feed URL when the entry comes from a managed price include (ADR 015), else null. The entry is read-only.
+   */
+  managed_source?: string | null;
 }
 
 /**

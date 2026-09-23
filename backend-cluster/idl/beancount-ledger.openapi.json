@@ -8615,6 +8615,18 @@
             "type": "string",
             "title": "Slice",
             "description": "Source code slice of the entry"
+          },
+          "managed_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Managed Source",
+            "description": "The feed URL when the entry comes from a managed price include (ADR 015), else null. The entry is read-only."
           }
         },
         "type": "object",

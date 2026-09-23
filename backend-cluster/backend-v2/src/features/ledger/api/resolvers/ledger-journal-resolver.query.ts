@@ -46,6 +46,13 @@ class EntryContext {
 
   @Field(() => String)
   slice: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "The feed URL when the entry comes from a managed price include; such an entry is read-only.",
+  })
+  managed_source: string | null;
 }
 
 @InputType()

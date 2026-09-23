@@ -181,6 +181,33 @@ describe("LedgerJournalService", () => {
       expect(mockGetContext).toHaveBeenCalledWith("testowner", "testledger", "hash-abc");
     });
 
+    it("passes through the managed price source, defaulting to null", async () => {
+      const context = (managed_source?: string | null) => ({
+        data: {
+          success: true,
+          data: { entry: {}, sha256sum: "s", slice: "x", managed_source },
+        },
+      });
+      mockGetContext.mockResolvedValueOnce(
+        context("https://beancount.io/prices/BTC-USD"),
+      );
+      const managed = await service.getContext({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        entryHash: "h",
+      });
+      expect(managed.managed_source).toBe("https://beancount.io/prices/BTC-USD");
+
+      // An older ledger service omits the field: read as "not managed".
+      mockGetContext.mockResolvedValueOnce(context(undefined));
+      const plain = await service.getContext({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        entryHash: "h",
+      });
+      expect(plain.managed_source).toBeNull();
+    });
+
     it("throws InternalServerError on failure", async () => {
       mockGetContext.mockResolvedValue({ data: { success: false } });
 

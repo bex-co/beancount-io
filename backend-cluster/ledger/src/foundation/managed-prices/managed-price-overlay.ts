@@ -172,6 +172,27 @@ export function assertNotManagedPricePath(
   );
 }
 
+/**
+ * The feed URL behind a virtual file key, or null for a repository file. Keys
+ * are rebuilt from each include exactly as the overlay wrote them, so a
+ * client never has to reverse-engineer the key's shape.
+ */
+export function managedPriceSourceFor(
+  path: string,
+  sources: readonly ManagedPriceSource[],
+): string | null {
+  for (const source of sources) {
+    if (
+      source.includedFrom.some(
+        (include) => resolveIncludeTarget(include.file, include.target) === path,
+      )
+    ) {
+      return source.url;
+    }
+  }
+  return null;
+}
+
 /** Freshness from observation age, recomputed on every read (never stored). */
 export function managedPriceFreshness(
   observedAt: string | null,

@@ -51,7 +51,10 @@ import {
   type GiteaCommitClient,
   type LoadedLedgerWithManagedPrices,
 } from "@/foundation/clients/load-cached-ledger-file-map";
-import { assertNotManagedPricePath } from "@/foundation/managed-prices";
+import {
+  assertNotManagedPricePath,
+  managedPriceSourceFor,
+} from "@/foundation/managed-prices";
 import {
   commitLedgerFiles,
   type GiteaFileCommitClient,
@@ -225,6 +228,12 @@ export type EntryContextResult = {
   balances_after?: Record<string, string[]> | null;
   sha256sum: string;
   slice: string;
+  /**
+   * The feed URL when the entry comes from a managed price include (ADR 015),
+   * else null. Such an entry lives in a read-only virtual file: clients offer
+   * no edit, delete, or open-file action for it.
+   */
+  managed_source: string | null;
 };
 
 /**
@@ -604,10 +613,8 @@ export class LedgerJournalService implements ILedgerJournalService {
     entryHash: string;
   }): Promise<EntryContextResult> {
     const { ledgerId, userId, entryHash } = params;
-    const { files, entryPoint, repoPaths } = await this.loadFileMap(
-      ledgerId,
-      userId,
-    );
+    const { files, entryPoint, repoPaths, managedPrices } =
+      await this.loadFileMap(ledgerId, userId);
     const { directives } = await parseLedgerFiles(files, entryPoint, {
       repoPaths,
     });
@@ -634,6 +641,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       balances_after: balances?.after ?? null,
       sha256sum: found.sha256,
       slice: found.slice,
+      managed_source: managedPriceSourceFor(found.file, managedPrices),
     };
   }
 

@@ -45,10 +45,7 @@ import { useIsMobile } from "@/common/hooks/use-mobile";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
-import {
-  managedPriceSourceUrl,
-  readEntrySourceLocation,
-} from "@/features/journal/lib/entry-source-location";
+import { readEntrySourceLocation } from "@/features/journal/lib/entry-source-location";
 
 export interface EntryContextPanelProps {
   entryHash: string;
@@ -125,9 +122,7 @@ function EntryContextMain({
     : null;
   // A price from a managed feed is not in the ledger's files: the ledger
   // refuses to edit or delete it, so the panel offers neither.
-  const managedSource = location
-    ? managedPriceSourceUrl(location.filename)
-    : null;
+  const managedSource = data?.managed_source ?? null;
   const editable = canWrite && managedSource === null;
 
   useEffect(() => {

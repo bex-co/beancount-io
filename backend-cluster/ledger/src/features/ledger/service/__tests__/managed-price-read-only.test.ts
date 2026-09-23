@@ -121,3 +121,54 @@ describe("source-slice writes against a managed price feed", () => {
     expect(commitMock).not.toHaveBeenCalled();
   });
 });
+
+describe("entry context for a managed price entry", () => {
+  const source = (file: string) => ({
+    url: "https://beancount.io/prices/BTC-USD",
+    includedFrom: [
+      { file, line: 1, target: "https://beancount.io/prices/BTC-USD" },
+    ],
+  });
+
+  it("names the feed, so clients need not parse the virtual path", async () => {
+    loadMock.mockResolvedValue({
+      ...(await loadMock()),
+      managedPrices: [source("main.bean")],
+    });
+    const context = await service().getContext({
+      ledgerId: "alice/main",
+      userId: undefined,
+      entryHash: HASH,
+    });
+    expect(context.managed_source).toBe("https://beancount.io/prices/BTC-USD");
+  });
+
+  it("matches a feed included from a nested file by its resolved key", async () => {
+    const nested = "books/https:/beancount.io/prices/BTC-USD";
+    loadMock.mockResolvedValue({
+      ...(await loadMock()),
+      managedPrices: [source("books/2026.bean")],
+    });
+    findMock.mockResolvedValue({ ...(await findMock()), file: nested });
+    const context = await service().getContext({
+      ledgerId: "alice/main",
+      userId: undefined,
+      entryHash: HASH,
+    });
+    expect(context.managed_source).toBe("https://beancount.io/prices/BTC-USD");
+  });
+
+  it("is null for an entry in a repository file", async () => {
+    loadMock.mockResolvedValue({
+      ...(await loadMock()),
+      managedPrices: [source("main.bean")],
+    });
+    findMock.mockResolvedValue({ ...(await findMock()), file: "main.bean" });
+    const context = await service().getContext({
+      ledgerId: "alice/main",
+      userId: undefined,
+      entryHash: HASH,
+    });
+    expect(context.managed_source).toBeNull();
+  });
+});

@@ -28,6 +28,11 @@ export type EntryContextResult = {
   balances_after?: Record<string, string[]> | null;
   sha256sum: string;
   slice: string;
+  /**
+   * The feed URL when the entry comes from a managed price include (ADR 015),
+   * else null: the entry is read-only, with no source file to open.
+   */
+  managed_source: string | null;
 };
 
 export type PlaintextJournalResult = { content: string };
@@ -211,6 +216,7 @@ export class LedgerJournalService
       balances_after: ctx.balances_after,
       sha256sum: ctx.sha256sum,
       slice: ctx.slice,
+      managed_source: ctx.managed_source ?? null,
     };
   }
 

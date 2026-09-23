@@ -7,6 +7,7 @@
 export {
   assertNotManagedPricePath,
   managedPriceDirectiveMatcher,
+  managedPriceSourceFor,
   overlayManagedPrices,
   type ManagedPriceSource,
 } from "./managed-price-overlay";

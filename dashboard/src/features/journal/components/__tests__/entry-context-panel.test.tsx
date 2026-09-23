@@ -256,6 +256,7 @@ describe("EntryContextPanel", () => {
         sha256sum: "feed123",
         balances_before: null,
         balances_after: null,
+        managed_source: "https://beancount.io/prices/BTC-USD",
       };
     });
 
@@ -286,10 +287,22 @@ describe("EntryContextPanel", () => {
       expect(mocks.fileNavigate).not.toHaveBeenCalled();
     });
 
+    it("trusts the server's answer, not the shape of the path", () => {
+      // A path that merely looks like a virtual key is still an ordinary file
+      // when the ledger does not name a managed source for it.
+      mocks.contextData = { ...mocks.contextData, managed_source: null };
+      render(
+        <EntryContextPanel entryHash="hash-1" ledgerId="open_ledger/example" />,
+      );
+
+      expect(screen.getByText("common.delete")).toBeInTheDocument();
+    });
+
     it("leaves an ordinary price entry in a repository file editable", () => {
       mocks.contextData = {
         ...mocks.contextData,
         entry: { meta: { filename: "prices/btc.bean", lineno: 3 } },
+        managed_source: null,
       };
       render(
         <EntryContextPanel entryHash="hash-1" ledgerId="open_ledger/example" />,
