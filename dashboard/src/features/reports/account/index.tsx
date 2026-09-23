@@ -25,7 +25,12 @@ import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useState, useEffect, useId, useMemo, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { normalizeListSearchOffset } from "@/common/lib/list-search-params";
-import { ACCOUNT_JOURNAL_MAX_OFFSET } from "./search";
+import {
+  ACCOUNT_JOURNAL_MAX_OFFSET,
+  ACCOUNT_VIEWS,
+  DEFAULT_ACCOUNT_VIEW,
+} from "./search";
+import { useUrlView } from "@/common/hooks/use-url-view";
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 import { ChartPeriodTable } from "./chart-period-table";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
@@ -375,7 +380,12 @@ export default function AccountPage() {
   });
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const ledgerFilters = useLedgerSearchParams();
-  const [selectedTab, setSelectedTab] = useState<string>("accountBalance");
+  // In the URL, not page state: a shared scope edit unmounts this page.
+  const [selectedTab, setSelectedTab] = useUrlView(
+    "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+    ACCOUNT_VIEWS,
+    DEFAULT_ACCOUNT_VIEW,
+  );
   const accountBalanceTitleId = useId();
   const changesOverTimeTitleId = useId();
   const tabOptions = [
