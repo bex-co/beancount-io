@@ -7,6 +7,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { SidebarProvider } from "@/common/components/ui/sidebar.tsx";
+import { SIDEBAR_ROW_DIRECTION } from "@/common/components/ui/sidebar-row";
 import { ErrorBoundary } from "@/common/components/error-boundary";
 import { SkipToContentLink } from "@/common/components/skip-to-content";
 import { MAIN_CONTENT_ID } from "@/common/lib/main-content";
@@ -109,7 +110,12 @@ export function LedgerLayout() {
       <LedgerSearchParamsProvider>
         <LedgerLayoutBackgroundQueries ledgerId={ledgerId} />
         <SidebarProvider>
-          <div className="flex h-(--visual-viewport-height,100vh) w-full">
+          <div
+            className={cn(
+              "flex h-(--visual-viewport-height,100vh) w-full",
+              SIDEBAR_ROW_DIRECTION,
+            )}
+          >
             <SkipToContentLink />
             <LedgerSidebar
               ledgerId={ledgerId}

@@ -12,6 +12,8 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/common/components/ui/sidebar.tsx";
+import { SIDEBAR_ROW_DIRECTION } from "@/common/components/ui/sidebar-row";
+import { cn } from "@/common/lib/utils/utils";
 import { SkipToContentLink } from "@/common/components/skip-to-content";
 import { MAIN_CONTENT_ID } from "@/common/lib/main-content";
 import { SidebarNavigation } from "@/common/components/sidebar-navigation";
@@ -84,7 +86,12 @@ function LoadingHeader() {
 export function LedgerLayoutLoading() {
   return (
     <SidebarProvider>
-      <div className="flex h-[var(--visual-viewport-height,100vh)] w-full">
+      <div
+        className={cn(
+          "flex h-[var(--visual-viewport-height,100vh)] w-full",
+          SIDEBAR_ROW_DIRECTION,
+        )}
+      >
         <SkipToContentLink />
         <LedgerSidebarSkeleton />
         <SidebarInset

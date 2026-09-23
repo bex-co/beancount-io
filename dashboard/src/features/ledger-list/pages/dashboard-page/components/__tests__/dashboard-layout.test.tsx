@@ -49,6 +49,14 @@ describe("DashboardLayout shell accessibility", () => {
     });
   });
 
+  it("keeps the sidebar gap on the fixed pane's side in RTL (w4/178)", () => {
+    render(<DashboardLayout />);
+    // The pane is fixed to the physical left; an unreversed RTL row put its
+    // gap on the right and slid the content underneath the pane.
+    const row = document.getElementById(MAIN_CONTENT_ID)?.parentElement;
+    expect(row).toHaveClass("flex", "rtl:flex-row-reverse");
+  });
+
   it("renders a skip link and a distinct Dashboard navigation landmark", () => {
     render(
       <DashboardLayout>
