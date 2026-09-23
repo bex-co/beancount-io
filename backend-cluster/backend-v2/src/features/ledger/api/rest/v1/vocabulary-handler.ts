@@ -43,12 +43,36 @@ interface VocabularyRead {
 
 const stringList = z.array(z.string());
 
+const nullableString = z.string().nullable();
+
+/** ADR 015 §8's status record, as the ledger service returns it. */
+const managedPriceSourceSchema = z.object({
+  url: z.string(),
+  alias: z.string(),
+  includedFrom: z.array(
+    z.object({ file: z.string(), line: z.number().int(), target: z.string() }),
+  ),
+  commodity: nullableString,
+  quote: nullableString,
+  source: nullableString,
+  revision: nullableString,
+  etag: nullableString,
+  observedAt: nullableString,
+  fetchedAt: nullableString,
+  nextRefreshAt: nullableString,
+  freshness: z.enum(["recent", "stale", "unavailable"]),
+  error: nullableString,
+  shadowedCount: z.number().int(),
+});
+
+const managedPriceStatusSchema = z.array(managedPriceSourceSchema);
+
 /**
- * Kept as data rather than ten hand-written route blocks.
+ * Kept as data rather than hand-written route blocks.
  *
- * The ten differ only in a path segment and which service method they call, so
- * writing them out longhand would be ten chances to make nine of them agree and
- * one of them not. The MCP side reads the same list, which is what makes "the
+ * They differ only in a path segment and which service method they call, so
+ * writing them out longhand would be one chance per route to make all but one
+ * of them agree. The MCP side reads the same list, which is what makes "the
  * two surfaces call one service" structural instead of a promise.
  */
 export const VOCABULARY_READS: readonly VocabularyRead[] = [
@@ -104,6 +128,14 @@ export const VOCABULARY_READS: readonly VocabularyRead[] = [
       "Commodity pairs held in the ledger, with the prices recorded for them.",
     schema: z.array(z.unknown()),
     fetch: (data, p) => data.getCommodities(p),
+  },
+  {
+    segment: "managed-prices",
+    summary: "List managed price sources and their freshness",
+    description:
+      'One record per managed price include (`include "https://beancount.io/prices/BTC-USD"`): the feed\'s commodity pair and source, the revision serving, when it was observed and fetched, when it next refreshes, and `freshness` — `recent` within ten minutes of the latest observation, `stale` beyond it, `unavailable` when no revision has validated (then `error` says why). Check it before trusting a valuation built on a managed feed. Empty when the ledger has no managed include.',
+    schema: managedPriceStatusSchema,
+    fetch: (data, p) => data.getManagedPrices(p),
   },
   {
     segment: "events",

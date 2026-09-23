@@ -18,6 +18,7 @@ import type {
   PostingsPerAccountPublic,
   AccountReportPublic,
   DateAndBalanceWithAccountBalancePublic,
+  ManagedPriceSourcePublic,
 } from "@/foundation/fava";
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 
@@ -49,6 +50,13 @@ export interface ILedgerDataService {
   getPayeeAccounts(params: BaseParams & { payee: string }): Promise<string[]>;
 
   getErrors(params: BaseParams): Promise<BeancountErrorPublic[]>;
+
+  /**
+   * Status of every managed price include the ledger names (ADR 015 §8):
+   * feed identity, revision, observed/next-refresh times, freshness and the
+   * last refresh error. Empty for a ledger with no managed include.
+   */
+  getManagedPrices(params: BaseParams): Promise<ManagedPriceSourcePublic[]>;
 
   getCurrencies(params: BaseParams): Promise<string[]>;
 
@@ -221,6 +229,20 @@ export class LedgerDataService
     return unwrapFavaResponse(
       favaApiClient.reports.getLedgerErrors(ledgerOwner, ledgerName),
       "get ledger errors",
+    );
+  }
+
+  async getManagedPrices(
+    params: BaseParams,
+  ): Promise<ManagedPriceSourcePublic[]> {
+    const { ledgerId, identity } = params;
+    const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
+      ledgerId,
+      identity,
+    );
+    return unwrapFavaResponse(
+      favaApiClient.reports.getLedgerManagedPrices(ledgerOwner, ledgerName),
+      "get ledger managed prices",
     );
   }
 

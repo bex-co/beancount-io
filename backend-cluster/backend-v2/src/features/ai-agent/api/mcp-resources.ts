@@ -140,25 +140,33 @@ function resolveLedgerId(
   return resolveMcpLedger(toolCtx, requested || undefined);
 }
 
+/** `payee-accounts` → `ledgerPayeeAccounts`: the path segment, camel-cased. */
+function ledgerResourceName(segment: string): string {
+  return `ledger${segment
+    .split("-")
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join("")}`;
+}
+
 /**
  * The ledger-vocabulary reads, as templates.
  *
  * Built from the *same* `VOCABULARY_READS` list the v1 REST routes are built
  * from, so the two surfaces cannot answer differently: there is one list, one
- * service call per entry, and two adapters. Writing the ten out again here
- * would be ten chances for the surfaces to drift, and the drift would be
+ * service call per entry, and two adapters. Writing them out again here
+ * would be one chance per read for the surfaces to drift, and the drift would be
  * invisible because each side has its own tests (ADR 0008 D5).
  */
 /**
  * The vocabulary reads enumerated in `resources/list` (w2/m27:t004): the ones
  * every audit agent looked for first. The rest stay template-only — a concrete
- * URI for each of ten vocabularies on every ledger would be listing noise.
+ * URI for every vocabulary on every ledger would be listing noise.
  */
 const LISTED_VOCABULARY: ReadonlySet<string> = new Set(["errors", "payees"]);
 
 const vocabularyResources: readonly McpResourceDescriptor[] =
   VOCABULARY_READS.map((read) => ({
-    name: `ledger${read.segment[0].toUpperCase()}${read.segment.slice(1)}`,
+    name: ledgerResourceName(read.segment),
     title: read.summary,
     description: read.description,
     mimeType: "application/json",
@@ -191,10 +199,7 @@ const vocabularyResources: readonly McpResourceDescriptor[] =
  */
 const analysisResources: readonly McpResourceDescriptor[] = ANALYSIS_READS.map(
   (read) => ({
-    name: `ledger${read.segment
-      .split("-")
-      .map((part) => part[0].toUpperCase() + part.slice(1))
-      .join("")}`,
+    name: ledgerResourceName(read.segment),
     title: read.summary,
     description: read.description,
     mimeType: "application/json",

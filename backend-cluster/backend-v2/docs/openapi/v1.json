@@ -12060,6 +12060,247 @@
         }
       }
     },
+    "/api-gateway/v1/ledgers/{owner}/{name}/managed-prices": {
+      "get": {
+        "summary": "List managed price sources and their freshness",
+        "description": "One record per managed price include (`include \"https://beancount.io/prices/BTC-USD\"`): the feed's commodity pair and source, the revision serving, when it was observed and fetched, when it next refreshes, and `freshness` — `recent` within ten minutes of the latest observation, `stale` beyond it, `unavailable` when no revision has validated (then `error` says why). Check it before trusting a valuation built on a managed feed. Empty when the ledger has no managed include.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Ledger owner's username",
+              "example": "alice"
+            },
+            "required": true,
+            "description": "Ledger owner's username",
+            "name": "owner",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Ledger (repository) name",
+              "example": "main-ledger"
+            },
+            "required": true,
+            "description": "Ledger (repository) name",
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List managed price sources and their freshness",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      },
+                      "alias": {
+                        "type": "string"
+                      },
+                      "includedFrom": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "file": {
+                              "type": "string"
+                            },
+                            "line": {
+                              "type": "integer"
+                            },
+                            "target": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "file",
+                            "line",
+                            "target"
+                          ]
+                        }
+                      },
+                      "commodity": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "quote": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "source": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "revision": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "etag": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "observedAt": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "fetchedAt": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "nextRefreshAt": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "freshness": {
+                        "type": "string",
+                        "enum": [
+                          "recent",
+                          "stale",
+                          "unavailable"
+                        ]
+                      },
+                      "error": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "shadowedCount": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "url",
+                      "alias",
+                      "includedFrom",
+                      "commodity",
+                      "quote",
+                      "source",
+                      "revision",
+                      "etag",
+                      "observedAt",
+                      "fetchedAt",
+                      "nextRefreshAt",
+                      "freshness",
+                      "error",
+                      "shadowedCount"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The action needs a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the permission this business action requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with the resource's current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed; the request may be retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api-gateway/v1/ledgers/{owner}/{name}/events": {
       "get": {
         "summary": "List event directives",

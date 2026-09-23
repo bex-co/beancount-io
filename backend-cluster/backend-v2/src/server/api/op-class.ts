@@ -758,6 +758,7 @@ const LEDGER_READ_ACTION_BY_VERB = {
   "Query.getLedgerNarrationTransactions":
     AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerErrors": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerManagedPrices": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerCurrencies": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerTags": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerYears": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
@@ -925,6 +926,15 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/errors",
       mcp: "checkLedger",
       mcpResource: "ledgerErrors",
+    },
+    {
+      verb: "Query.getLedgerManagedPrices",
+      class: "read",
+      gql: "Query.getLedgerManagedPrices",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/managed-prices",
+      mcpResource: "ledgerManagedPrices",
+      mcpExempt:
+        "Reachable as the `ledgerManagedPrices` resource rather than a tool: price-source status is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerCurrencies",

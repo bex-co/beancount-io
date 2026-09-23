@@ -4,6 +4,7 @@ import {
   ArgsType,
   Ctx,
   Field,
+  Int,
   ObjectType,
   Query,
   Resolver,
@@ -118,6 +119,68 @@ class BeancountError {
 
   @Field(() => String)
   message: string;
+}
+
+@ObjectType({
+  description: "One include line that names a managed price URL.",
+})
+class ManagedPriceInclude {
+  @Field(() => String)
+  file: string;
+
+  @Field(() => Int)
+  line: number;
+
+  @Field(() => String, { description: "The include target as written." })
+  target: string;
+}
+
+@ObjectType({
+  description:
+    "Status of one managed price include (ADR 015). `freshness` is `recent` within ten minutes of the latest observation, `stale` beyond it, and `unavailable` when no revision has validated.",
+})
+class ManagedPriceSource {
+  @Field(() => String)
+  url: string;
+
+  @Field(() => String)
+  alias: string;
+
+  @Field(() => [ManagedPriceInclude])
+  includedFrom: ManagedPriceInclude[];
+
+  @Field(() => String, { nullable: true })
+  commodity: string | null;
+
+  @Field(() => String, { nullable: true })
+  quote: string | null;
+
+  @Field(() => String, { nullable: true })
+  source: string | null;
+
+  @Field(() => String, { nullable: true })
+  revision: string | null;
+
+  @Field(() => String, { nullable: true })
+  etag: string | null;
+
+  @Field(() => String, { nullable: true })
+  observedAt: string | null;
+
+  @Field(() => String, { nullable: true })
+  fetchedAt: string | null;
+
+  @Field(() => String, { nullable: true })
+  nextRefreshAt: string | null;
+
+  @Field(() => String)
+  freshness: "recent" | "stale" | "unavailable";
+
+  @Field(() => String, { nullable: true })
+  error: string | null;
+
+  @Field(() => Int)
+  shadowedCount: number;
 }
 
 @ObjectType()
@@ -375,6 +438,21 @@ export class LedgerDataQueryResolver {
       ledgerId,
       identity: ctx.identity,
       payee: args.payee,
+    });
+  }
+
+  @AllowAnonymous()
+  @Query(() => [ManagedPriceSource], {
+    description:
+      "Status of every managed price include the ledger names: feed pair and source, serving revision, observed/fetched/next-refresh times, freshness and the last refresh error. Empty when the ledger has none.",
+  })
+  async getLedgerManagedPrices(
+    @Arg("ledgerId", () => String) ledgerId: string,
+    @Ctx() ctx: IContext,
+  ): Promise<ManagedPriceSource[]> {
+    return this.dataService.getManagedPrices({
+      ledgerId,
+      identity: ctx.identity,
     });
   }
 

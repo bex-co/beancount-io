@@ -21,6 +21,7 @@ const mockReports = {
   getLedgerNarrationTransactions: jest.fn(),
   getLedgerPayeeAccounts: jest.fn(),
   getLedgerErrors: jest.fn(),
+  getLedgerManagedPrices: jest.fn(),
   getLedgerCurrencies: jest.fn(),
   getLedgerTags: jest.fn(),
   getLedgerYears: jest.fn(),
@@ -147,6 +148,38 @@ describe("LedgerDataService", () => {
     const result = await service.getErrors({ ledgerId: LEDGER_ID, identity: IDENTITY });
 
     expect(result).toEqual(errors);
+  });
+
+  it("getManagedPrices — authorizes a report read, then returns the ledger's status records", async () => {
+    const status = [
+      {
+        url: "https://beancount.io/prices/BTC-USD",
+        alias: "BTC-USD",
+        freshness: "unavailable",
+        error: "fetch failed (status): 404",
+      },
+    ];
+    mockReports.getLedgerManagedPrices.mockResolvedValue(ok(status));
+
+    const result = await service.getManagedPrices({ ledgerId: LEDGER_ID, identity: IDENTITY });
+
+    expect(result).toEqual(status);
+    expect(mockReports.getLedgerManagedPrices).toHaveBeenCalledWith("testowner", "testledger");
+    expect(authorizeLedger).toHaveBeenCalledWith(
+      IDENTITY,
+      LEDGER_ID,
+      "ledger.reports.read",
+      expect.anything(),
+    );
+  });
+
+  it("getManagedPrices — a denied read never reaches the ledger service", async () => {
+    (authorizeLedger as jest.Mock).mockRejectedValue(new Error("denied"));
+
+    await expect(
+      service.getManagedPrices({ ledgerId: LEDGER_ID, identity: IDENTITY }),
+    ).rejects.toThrow("denied");
+    expect(mockReports.getLedgerManagedPrices).not.toHaveBeenCalled();
   });
 
   it("getCurrencies — returns string array", async () => {

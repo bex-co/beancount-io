@@ -3420,6 +3420,65 @@ export interface ProjectedFileOverlay {
   content?: string | null;
 }
 
+/**
+ * ManagedPriceIncludePublic
+ * One include line that names a managed price URL.
+ */
+export interface ManagedPriceIncludePublic {
+  /** File */
+  file: string;
+  /** Line */
+  line: number;
+  /** Target */
+  target: string;
+}
+
+/**
+ * ManagedPriceSourcePublic
+ * Status of one managed price include (ADR 015 section 8). Freshness: recent within ten minutes of the latest observedAt, stale beyond it, unavailable when no revision validated.
+ */
+export interface ManagedPriceSourcePublic {
+  /** Url */
+  url: string;
+  /** Alias */
+  alias: string;
+  /** Includedfrom */
+  includedFrom: ManagedPriceIncludePublic[];
+  /** Commodity */
+  commodity: string | null;
+  /** Quote */
+  quote: string | null;
+  /** Source */
+  source: string | null;
+  /** Revision */
+  revision: string | null;
+  /** Etag */
+  etag: string | null;
+  /** Observedat */
+  observedAt: string | null;
+  /** Fetchedat */
+  fetchedAt: string | null;
+  /** Nextrefreshat */
+  nextRefreshAt: string | null;
+  /** Freshness */
+  freshness: "recent" | "stale" | "unavailable";
+  /** Error */
+  error: string | null;
+  /** Shadowedcount */
+  shadowedCount: number;
+}
+
+/** SuccessResponse[list[ManagedPriceSourcePublic]] */
+export interface SuccessResponseListManagedPriceSourcePublic {
+  /**
+   * Success
+   * @default true
+   */
+  success?: boolean;
+  /** Data */
+  data: ManagedPriceSourcePublic[];
+}
+
 export type QueryParamsType = Record<string | number, any>;
 export type ResponseFormat = keyof Omit<Body, "body" | "bodyUsed">;
 
@@ -5290,6 +5349,50 @@ export class Api<
         format: "json",
         ...params,
       }),
+
+    /**
+     * @description Status of every managed price include the ledger names (ADR 015 section 8): feed identity, revision, observed/fetched/next-refresh times, freshness computed at read time, and the last refresh error. Loads the file map and feed cache only; never parses the ledger.
+     *
+     * @tags reports
+     * @name GetLedgerManagedPrices
+     * @summary Get Ledger Managed Prices
+     * @request GET:/reports/{owner}/{repo_name}/managed-prices
+     * @secure
+     */
+    getLedgerManagedPrices: (
+      owner: string,
+      repoName: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<SuccessResponseListManagedPriceSourcePublic, ErrorResponse>({
+        path: `/reports/${owner}/${repoName}/managed-prices`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Make every managed price feed the ledger names due now (ADR 015 section 5) and return the re-resolved status. Never reads the repository again or writes a commit; a failed re-fetch keeps serving the last validated revision and reports the error.
+     *
+     * @tags reports
+     * @name RefreshLedgerManagedPrices
+     * @summary Refresh Ledger Managed Prices
+     * @request POST:/reports/{owner}/{repo_name}/managed-prices/refresh
+     * @secure
+     */
+    refreshLedgerManagedPrices: (
+      owner: string,
+      repoName: string,
+      params: RequestParams = {},
+    ) =>
+      this.request<SuccessResponseListManagedPriceSourcePublic, ErrorResponse>({
+        path: `/reports/${owner}/${repoName}/managed-prices/refresh`,
+        method: "POST",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
   };
   keys = {
     /**
@@ -5760,7 +5863,7 @@ export class Api<
         account: string;
         /**
          * Filter Account
-         * Optional shared report-stream AccountFilter (distinct from the required target `account`).
+         * Optional shared report-stream AccountFilter (distinct from the required target `account`). Restricts which entries enter the journal stream before advanced filter, time clamp, and target running balances.
          */
         filter_account?: string | null;
         /** Filter */

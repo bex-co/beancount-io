@@ -29,6 +29,11 @@ const fakeLedgerData = () => ({
     .fn()
     .mockResolvedValue([{ type: "location", value: "Berlin" }]),
   getErrors: jest.fn().mockResolvedValue([]),
+  getManagedPrices: jest
+    .fn()
+    .mockResolvedValue([
+      { alias: "BTC-USD", freshness: "stale", error: null, shadowedCount: 1 },
+    ]),
   getAttributes: jest.fn().mockResolvedValue({ accounts: ["Assets:Cash"] }),
 });
 
@@ -63,7 +68,8 @@ async function connect(toolCtx: McpRequestContext) {
 }
 
 /**
- * w3/m6 — the ten ledger-vocabulary reads on REST and MCP.
+ * w3/m6 — the ledger-vocabulary reads on REST and MCP (ten ported there, plus
+ * w2/m32's managed price status).
  *
  * The property worth testing is not "the resource returns data" but that both
  * surfaces resolve through the *same* service call. A two-surface port is where
@@ -71,8 +77,8 @@ async function connect(toolCtx: McpRequestContext) {
  * nothing compares them.
  */
 describe("ledger vocabulary reads", () => {
-  it("ports exactly ten reads", () => {
-    expect(VOCABULARY_READS).toHaveLength(10);
+  it("ports exactly eleven reads", () => {
+    expect(VOCABULARY_READS).toHaveLength(11);
   });
 
   it.each(VOCABULARY_READS.map((r) => [r.segment, r] as const))(
