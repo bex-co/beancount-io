@@ -296,3 +296,50 @@ def test_json_mode_still_escapes_them_its_own_way(tmp_path: Path) -> None:
     assert preview.returncode == 0, preview.stderr
     assert "\x1b" not in preview.stdout
     assert json.loads(preview.stdout)["data"]["rows"], "the preview still carries its rows"
+
+
+# A BQL table renders existing ledger text through beanquery, not
+# `output.table`, so a narration already in the books reached the terminal raw
+# (w4/173). Written straight to the file here: the ledger predates the import
+# sanitizer, which is exactly the case the query path must survive.
+RAW_NARRATION = "FAKE\x1b[2J\x1b[HCONTROL"
+
+
+def _books_with_raw_narration(tmp_path: Path) -> Path:
+    ledger = tmp_path / "raw.bean"
+    ledger.write_text(
+        "2024-01-01 open Assets:Cash USD\n"
+        "2024-01-01 open Expenses:Food USD\n"
+        f'2024-03-01 * "{RAW_NARRATION}"\n'
+        "  Expenses:Food 1.2345 USD\n"
+        "  Assets:Cash\n",
+        encoding="utf-8",
+    )
+    return ledger
+
+
+def test_a_one_shot_query_table_emits_nothing_executable(tmp_path: Path) -> None:
+    ledger = _books_with_raw_narration(tmp_path)
+    before = ledger.read_bytes()
+
+    emitted = _on_a_terminal(tmp_path, ["--file", str(ledger), "query", "SELECT narration, number"])
+
+    _assert_inert(emitted)
+    assert b"\x1b" not in emitted
+    assert b"FAKE\\x1b[2J\\x1b[HCONTROL" in emitted
+    assert b"1.2345" in emitted
+    assert ledger.read_bytes() == before
+
+
+def test_query_json_keeps_the_exact_value(tmp_path: Path) -> None:
+    ledger = _books_with_raw_narration(tmp_path)
+    result = subprocess.run(
+        [sys.executable, "-m", "cli.main", "--json", "--file", str(ledger), "query", "SELECT narration"],
+        env=_child_env(tmp_path),
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["data"]["rows"][0] == [RAW_NARRATION]

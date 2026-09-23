@@ -487,6 +487,8 @@ def build_shell(
                     # Upstream CSV reuses text DecimalRenderer padding. Emit
                     # unpadded machine cells so spreadsheets and Decimal() parse.
                     return _render_csv(description, rows, out)
+                if self.settings.format == "text":
+                    rows = [tuple(_inert_cell(value) for value in row) for row in rows]
                 renderer = FORMATS[self.settings.format]
                 return renderer(description, rows, out, dcontext=dcontext, **self.settings.todict())
 
@@ -505,6 +507,25 @@ def build_shell(
     # select` crashes formatting a missing docstring.
     PreciseShell.on_Select.__doc__ = BQLShell.on_Select.__doc__
     return PreciseShell(LEDGER_DSN, stream, interactive, True, format, numberify, show_errors)
+
+
+def _inert_cell(value: Any) -> Any:
+    """A text-table cell whose control characters print as visible `\\xNN`.
+
+    Ledger strings are untrusted: a narration carrying `\\x1b[2J` cleared the
+    reader's terminal, because the table goes straight to a TTY (Click only
+    strips such sequences on a pipe). Line breaks stay, so a multi-line value
+    keeps its shape; JSON, CSV and `beancount` output keep the exact value.
+    """
+    from bea_engine.ledger.text import CONTROL_CHARACTERS
+
+    if isinstance(value, str):
+        return CONTROL_CHARACTERS.sub(lambda m: f"\\x{ord(m.group()):02x}", value)
+    if isinstance(value, frozenset | set):
+        return type(value)(_inert_cell(item) for item in value)
+    if isinstance(value, tuple) and not hasattr(value, "_fields"):
+        return tuple(_inert_cell(item) for item in value)
+    return value
 
 
 def _require_entries(description: Any, rows: Any) -> None:
