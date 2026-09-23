@@ -125,6 +125,9 @@ async function fixture(
   return {
     reports,
     authorizeOrThrow,
+    setAnonymous: () => rest.setIdentity(undefined),
+    restUrl: (segment: string) =>
+      `${rest.url}/api-gateway/v1/ledgers/alice/main/${segment}`,
     rest: () =>
       fetch(`${rest.url}/api-gateway/v1/ledgers/alice/main/managed-prices`),
     gql: () =>
@@ -319,6 +322,36 @@ describe("managed price refresh parity", () => {
     try {
       expect((await f.refreshRest()).status).toBe(200);
       expect(f.reports.refreshLedgerManagedPrices).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+describe("managed prices for an anonymous caller", () => {
+  it("treats the status read like other vocabulary reads and refuses the refresh", async () => {
+    // The real PDP, so the anonymous principal is judged by the catalog.
+    const f = await fixture({ realPdp: true });
+    try {
+      f.setAnonymous();
+      // v1 REST requires an identity for every vocabulary read; the status
+      // read answers an anonymous caller exactly as `errors` does.
+      expect((await f.rest()).status).toBe(
+        (await fetch(f.restUrl("errors"))).status,
+      );
+      expect([401, 403]).toContain((await f.refreshRest()).status);
+      const g = await graphql({
+        schema,
+        source: `mutation { refreshLedgerManagedPrices(ledgerId: "${LEDGER}") { url } }`,
+        contextValue: {
+          identity: undefined,
+          getCurrentIdentity: () => {
+            throw new Error("Authentication required");
+          },
+        },
+      });
+      expect(g.errors).toBeDefined();
+      expect(f.reports.refreshLedgerManagedPrices).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }
