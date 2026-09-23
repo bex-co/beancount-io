@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/common/components/ui/card";
-import type { ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
@@ -42,7 +42,10 @@ import { NetWorthCard } from "./components/net-worth-card";
 import { AccountBalancesCard } from "./components/account-balances-card";
 import { MoneyMovementSection } from "./components/money-movement-section";
 import { RecentActivityCard } from "./components/recent-activity-card";
-import { DashboardCustomizer } from "./components/dashboard-customizer";
+import {
+  CustomizeButton,
+  DashboardCustomizer,
+} from "./components/dashboard-customizer";
 import {
   type DashboardWidgetId,
   useDashboardLayout,
@@ -64,6 +67,9 @@ export default function LedgerOverviewPage() {
 
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const { layout, setVisible, move, reset } = useDashboardLayout(ledgerId);
+  // One customization panel for both entry points; see DashboardCustomizer.
+  const [customizing, setCustomizing] = useState(false);
+  const customizeOpener = useRef<HTMLElement | null>(null);
   const ledgerFilters = useLedgerSearchParams();
   const { primaryCurrency, ledgerName: ledgerDisplayName } = useLedger();
   const { isAdmin, canWrite } = useLedgerPermission();
@@ -401,6 +407,13 @@ export default function LedgerOverviewPage() {
                 setVisible={setVisible}
                 move={move}
                 reset={reset}
+                open={customizing}
+                onOpenChange={(open) => {
+                  // Opened by its own header trigger: Radix returns focus there.
+                  if (open) customizeOpener.current = null;
+                  setCustomizing(open);
+                }}
+                returnFocus={customizeOpener}
               />
             </div>
           </div>
@@ -435,11 +448,12 @@ export default function LedgerOverviewPage() {
             <p className="text-sm text-muted-foreground">
               {t("page.overview.allWidgetsHidden")}
             </p>
-            <DashboardCustomizer
-              layout={layout}
-              setVisible={setVisible}
-              move={move}
-              reset={reset}
+            <CustomizeButton
+              aria-haspopup="dialog"
+              onClick={(event) => {
+                customizeOpener.current = event.currentTarget;
+                setCustomizing(true);
+              }}
             />
           </CardContent>
         </Card>

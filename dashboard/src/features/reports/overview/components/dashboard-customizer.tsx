@@ -1,3 +1,4 @@
+import type { ComponentProps, RefObject } from "react";
 import { ArrowDown, ArrowUp, RotateCcw, Settings2 } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
 import { Label } from "@/common/components/ui/label";
@@ -30,29 +31,61 @@ function useWidgetLabels(): Record<DashboardWidgetId, string> {
   };
 }
 
+/** A button that opens the customizer; the header's one is its own trigger. */
+export function CustomizeButton(props: ComponentProps<typeof Button>) {
+  const { t } = useTranslations();
+  return (
+    <Button variant="outline" size="sm" className="rounded-full" {...props}>
+      <Settings2 className="size-4" />
+      {t("page.overview.customize")}
+    </Button>
+  );
+}
+
+/**
+ * The one customization panel, rendered with the always-present header
+ * trigger. Its open state belongs to the page so other entry points (the
+ * all-hidden prompt) open this same panel: a panel owned by the prompt was
+ * unmounted — and closed — the moment its first switch brought a module back.
+ *
+ * On close, focus returns to `returnFocus` when that element is still on the
+ * page, and to the header trigger otherwise.
+ */
 export function DashboardCustomizer({
   layout,
   setVisible,
   move,
   reset,
+  open,
+  onOpenChange,
+  returnFocus,
 }: {
   layout: DashboardLayout;
   setVisible: (id: DashboardWidgetId, visible: boolean) => void;
   move: (id: DashboardWidgetId, direction: -1 | 1) => void;
   reset: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  returnFocus?: RefObject<HTMLElement | null>;
 }) {
-  const { t } = useTranslations();
   const labels = useWidgetLabels();
+  const { t } = useTranslations();
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="rounded-full">
-          <Settings2 className="size-4" />
-          {t("page.overview.customize")}
-        </Button>
+        <CustomizeButton />
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent
+        className="sm:max-w-md"
+        onCloseAutoFocus={(event) => {
+          const opener = returnFocus?.current;
+          if (opener?.isConnected) {
+            event.preventDefault();
+            opener.focus();
+          }
+        }}
+      >
         <SheetHeader className="border-b pr-12">
           <SheetTitle>{t("page.overview.customize")}</SheetTitle>
           <SheetDescription>
