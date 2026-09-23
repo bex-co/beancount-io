@@ -1,11 +1,18 @@
-import { Dimensions, View, StyleSheet, Image, Text } from "react-native";
+import {
+  Dimensions,
+  View,
+  StyleSheet,
+  Image,
+  Text,
+  useWindowDimensions,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks";
-import { useTheme } from "@/common/theme";
+import { prefersStackedLayout, useTheme } from "@/common/theme";
 import { Button } from "@/components";
 import { PressableScale } from "@/components/pressable-scale";
 import {
@@ -50,11 +57,17 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 20,
       gap: 12,
     },
+    // No fixed height: each Button already has a 44pt minimum and grows with
+    // its label, and a fixed row height clipped both labels at enlarged text.
     buttonContainer: {
-      height: 44,
       flexDirection: "row",
       justifyContent: "space-around",
       gap: 10,
+    },
+    // At accessibility text sizes the two half-width buttons would break
+    // "Sign In" mid-phrase, so the actions stack full width instead.
+    buttonContainerStacked: {
+      flexDirection: "column",
     },
     flex: {
       flex: 1,
@@ -91,6 +104,11 @@ export function WelcomeScreen(): JSX.Element {
   const theme = useTheme().colorTheme;
   const { pendingFlow, failure, start } = useNativeSignIn();
   const busy = pendingFlow !== null;
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
+  // Stacked buttons stretch to the column width; `flex: 1` would instead
+  // divide the column's height between them.
+  const buttonStyle = stacked ? undefined : styles.flex;
 
   return (
     <View style={styles.container}>
@@ -108,10 +126,15 @@ export function WelcomeScreen(): JSX.Element {
       </SafeAreaView>
       <Image source={require("@/assets/images/icon.png")} style={styles.icon} />
       <View style={styles.footer}>
-        <View style={styles.buttonContainer}>
+        <View
+          style={[
+            styles.buttonContainer,
+            stacked && styles.buttonContainerStacked,
+          ]}
+        >
           <Button
             type="outline"
-            style={styles.flex}
+            style={buttonStyle}
             testID="welcome-sign-in"
             loading={pendingFlow === "sign_in"}
             disabled={busy}
@@ -121,7 +144,7 @@ export function WelcomeScreen(): JSX.Element {
           </Button>
           <Button
             type="primary"
-            style={styles.flex}
+            style={buttonStyle}
             testID="welcome-sign-up"
             loading={pendingFlow === "sign_up"}
             disabled={busy}
