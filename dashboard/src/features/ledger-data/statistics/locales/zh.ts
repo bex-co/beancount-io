@@ -17,17 +17,19 @@ const zhStatistics: Record<string, TranslationEntry> = {
     message: "数量",
     description: "Count column or label",
   },
-  "page.statistics.entriesAcrossTypes": {
-    message: "个条目，涵盖",
-    description: "Text between total and types count",
-  },
   "page.statistics.entriesCountByType": {
     message: "按类型统计条目数",
     description: "Title for entries count by type section",
   },
-  "page.statistics.entryCountPerAccount": {
-    message: "每个账户的过账数",
-    description: "Summary of postings count per account",
+  "page.statistics.postingsPerAccountSummary": {
+    message: "每个账户的过账数（{count}）",
+    description:
+      "Postings per Account summary; {count} is the number of accounts listed",
+  },
+  "page.statistics.entriesByTypeSummary": {
+    message: "条目：{entries} · 类型：{types}",
+    description:
+      "Entries Count by Type summary; {entries} is the total entry count, {types} the number of entry types",
   },
   "page.statistics.entryType": {
     message: "条目类型",
@@ -86,14 +88,6 @@ const zhStatistics: Record<string, TranslationEntry> = {
   "page.statistics.statistics": {
     message: "统计",
     description: "Statistics about the ledger",
-  },
-  "page.statistics.total": {
-    message: "总计",
-    description: "Label for total count",
-  },
-  "page.statistics.types": {
-    message: "类型",
-    description: "Label for types count",
   },
 };
 

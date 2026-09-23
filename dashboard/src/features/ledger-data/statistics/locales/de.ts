@@ -17,17 +17,19 @@ const deStatistics: Record<string, TranslationEntry> = {
     message: "Anzahl",
     description: "Count column or label",
   },
-  "page.statistics.entriesAcrossTypes": {
-    message: "Einträge über",
-    description: "Text between total and types count",
-  },
   "page.statistics.entriesCountByType": {
     message: "Anzahl der Einträge nach Typ",
     description: "Title for entries count by type section",
   },
-  "page.statistics.entryCountPerAccount": {
-    message: "Anzahl der Buchungen pro Konto",
-    description: "Summary of postings count per account",
+  "page.statistics.postingsPerAccountSummary": {
+    message: "Anzahl der Buchungen pro Konto ({count})",
+    description:
+      "Postings per Account summary; {count} is the number of accounts listed",
+  },
+  "page.statistics.entriesByTypeSummary": {
+    message: "Einträge: {entries} · Typen: {types}",
+    description:
+      "Entries Count by Type summary; {entries} is the total entry count, {types} the number of entry types",
   },
   "page.statistics.entryType": {
     message: "Eintragstyp",
@@ -86,14 +88,6 @@ const deStatistics: Record<string, TranslationEntry> = {
   "page.statistics.statistics": {
     message: "Statistiken",
     description: "Statistics about the ledger",
-  },
-  "page.statistics.total": {
-    message: "Gesamt",
-    description: "Label for total count",
-  },
-  "page.statistics.types": {
-    message: "Typen",
-    description: "Label for types count",
   },
 };
 

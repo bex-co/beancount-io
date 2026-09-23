@@ -17,17 +17,19 @@ const bgStatistics: Record<string, TranslationEntry> = {
     message: "Брой",
     description: "Count column or label",
   },
-  "page.statistics.entriesAcrossTypes": {
-    message: "записа в",
-    description: "Text between total and types count",
-  },
   "page.statistics.entriesCountByType": {
     message: "Брой записи по тип",
     description: "Title for entries count by type section",
   },
-  "page.statistics.entryCountPerAccount": {
-    message: "Брой проводки на сметка",
-    description: "Summary of postings count per account",
+  "page.statistics.postingsPerAccountSummary": {
+    message: "Брой проводки на сметка ({count})",
+    description:
+      "Postings per Account summary; {count} is the number of accounts listed",
+  },
+  "page.statistics.entriesByTypeSummary": {
+    message: "Записи: {entries} · Типове: {types}",
+    description:
+      "Entries Count by Type summary; {entries} is the total entry count, {types} the number of entry types",
   },
   "page.statistics.entryType": {
     message: "Тип запис",
@@ -86,14 +88,6 @@ const bgStatistics: Record<string, TranslationEntry> = {
   "page.statistics.statistics": {
     message: "Статистика",
     description: "Statistics about the ledger",
-  },
-  "page.statistics.total": {
-    message: "Общо",
-    description: "Label for total count",
-  },
-  "page.statistics.types": {
-    message: "типа",
-    description: "Label for types count",
   },
 };
 

@@ -16,10 +16,6 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "حساب الزامی است",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "حساب‌ها",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "افزودن ثبت روزنامه جدید",
     description: "Aria label for add new journal entry button",

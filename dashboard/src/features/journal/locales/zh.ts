@@ -16,10 +16,6 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "账户为必填项",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "账户",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "添加新日记账条目",
     description: "Aria label for add new journal entry button",

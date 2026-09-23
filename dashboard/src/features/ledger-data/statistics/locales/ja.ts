@@ -17,17 +17,19 @@ const jaStatistics: Record<string, TranslationEntry> = {
     message: "件数",
     description: "Count column or label",
   },
-  "page.statistics.entriesAcrossTypes": {
-    message: "種類にわたるエントリ",
-    description: "Text between total and types count",
-  },
   "page.statistics.entriesCountByType": {
     message: "タイプ別エントリ数",
     description: "Title for entries count by type section",
   },
-  "page.statistics.entryCountPerAccount": {
-    message: "口座ごとのポスティング数",
-    description: "Summary of postings count per account",
+  "page.statistics.postingsPerAccountSummary": {
+    message: "口座ごとのポスティング数（{count}）",
+    description:
+      "Postings per Account summary; {count} is the number of accounts listed",
+  },
+  "page.statistics.entriesByTypeSummary": {
+    message: "エントリ: {entries}・種類: {types}",
+    description:
+      "Entries Count by Type summary; {entries} is the total entry count, {types} the number of entry types",
   },
   "page.statistics.entryType": {
     message: "エントリタイプ",
@@ -86,14 +88,6 @@ const jaStatistics: Record<string, TranslationEntry> = {
   "page.statistics.statistics": {
     message: "統計",
     description: "Statistics about the ledger",
-  },
-  "page.statistics.total": {
-    message: "合計",
-    description: "Label for total count",
-  },
-  "page.statistics.types": {
-    message: "タイプ",
-    description: "Label for types count",
   },
 };
 

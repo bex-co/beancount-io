@@ -106,14 +106,10 @@ function EntriesCountTable({
     <StatisticsSection
       icon={BarChart3}
       title={t("page.statistics.entriesCountByType")}
-      description={
-        <>
-          {" "}
-          {t("page.statistics.total")} {formatNum(totalCount)}{" "}
-          {t("page.statistics.entriesAcrossTypes")} {entries.length}{" "}
-          {t("page.statistics.types")}
-        </>
-      }
+      description={t("page.statistics.entriesByTypeSummary", {
+        entries: formatNum(totalCount),
+        types: entries.length,
+      })}
     >
       <TableHeader>
         <TableRow className="bg-muted/50">

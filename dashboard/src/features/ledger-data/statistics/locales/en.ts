@@ -17,17 +17,19 @@ const enStatistics: Record<string, TranslationEntry> = {
     message: "Count",
     description: "Count column or label",
   },
-  "page.statistics.entriesAcrossTypes": {
-    message: "entries across",
-    description: "Text between total and types count",
-  },
   "page.statistics.entriesCountByType": {
     message: "Entries Count by Type",
     description: "Title for entries count by type section",
   },
-  "page.statistics.entryCountPerAccount": {
-    message: "Postings count per account",
-    description: "Summary of postings count per account",
+  "page.statistics.postingsPerAccountSummary": {
+    message: "Postings count per account ({count})",
+    description:
+      "Postings per Account summary; {count} is the number of accounts listed",
+  },
+  "page.statistics.entriesByTypeSummary": {
+    message: "Entries: {entries} · Types: {types}",
+    description:
+      "Entries Count by Type summary; {entries} is the total entry count, {types} the number of entry types",
   },
   "page.statistics.entryType": {
     message: "Entry Type",
@@ -86,14 +88,6 @@ const enStatistics: Record<string, TranslationEntry> = {
   "page.statistics.statistics": {
     message: "Statistics",
     description: "Statistics about the ledger",
-  },
-  "page.statistics.total": {
-    message: "Total",
-    description: "Label for total count",
-  },
-  "page.statistics.types": {
-    message: "types",
-    description: "Label for types count",
   },
 };
 

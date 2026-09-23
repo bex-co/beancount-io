@@ -13,10 +13,6 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "계정은 필수입니다",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "계정",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "새 저널 항목 추가",
     description: "Aria label for add new journal entry button",

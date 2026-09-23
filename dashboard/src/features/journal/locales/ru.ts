@@ -16,10 +16,6 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Счёт обязателен",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "Счета",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "Добавить новую запись в журнал",
     description: "Aria label for add new journal entry button",

@@ -16,10 +16,6 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "Konto ist erforderlich",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "Konten",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "Neuen Journaleintrag hinzufügen",
     description: "Aria label for add new journal entry button",

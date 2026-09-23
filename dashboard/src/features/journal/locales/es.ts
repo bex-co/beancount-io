@@ -16,10 +16,6 @@ const esJournal: Record<string, TranslationEntry> = {
     message: "Cuenta is required",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "Cuentas",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "Agregar nueva entrada al diario",
     description: "Aria label for add new journal entry button",

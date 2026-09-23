@@ -126,9 +126,7 @@ describe("EntriesCountByType", () => {
       const markers = screen.getAllByLabelText("Not applicable");
       expect(markers).toHaveLength(ALL_TYPES.length);
       markers.forEach((marker) => expect(marker).toHaveTextContent("—"));
-      expect(
-        screen.getByText(/Total 0 entries across 12 types/),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Entries: 0 · Types: 12")).toBeInTheDocument();
     });
 
     it("renders no rows and no NaN for an empty entries array", () => {
@@ -140,9 +138,7 @@ describe("EntriesCountByType", () => {
 
       expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
       expect(screen.queryAllByLabelText("Not applicable")).toHaveLength(0);
-      expect(
-        screen.getByText(/Total 0 entries across 0 types/),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Entries: 0 · Types: 0")).toBeInTheDocument();
     });
 
     it("switches from the marker to real percentages when counts arrive", () => {
@@ -204,7 +200,7 @@ describe("EntriesCountByType", () => {
 
       render(<EntriesCountByType ledgerId="test-id" />);
 
-      const description = screen.getByText(/Total 100 entries across 1 types/);
+      const description = screen.getByText("Entries: 100 · Types: 1");
       expect(description.tagName).toBe("P");
       expect(description.className).toContain("text-sm");
       expect(description.className).toContain("text-muted-foreground");

@@ -16,10 +16,6 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "Conta é obrigatória",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "Contas",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "Adicionar novo lançamento no diário",
     description: "Aria label for add new journal entry button",

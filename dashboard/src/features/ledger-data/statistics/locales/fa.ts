@@ -17,17 +17,19 @@ const faStatistics: Record<string, TranslationEntry> = {
     message: "تعداد",
     description: "Count column or label",
   },
-  "page.statistics.entriesAcrossTypes": {
-    message: "ثبت در",
-    description: "Text between total and types count",
-  },
   "page.statistics.entriesCountByType": {
     message: "تعداد ثبت‌ها بر اساس نوع",
     description: "Title for entries count by type section",
   },
-  "page.statistics.entryCountPerAccount": {
-    message: "تعداد سندها در هر حساب",
-    description: "Summary of postings count per account",
+  "page.statistics.postingsPerAccountSummary": {
+    message: "تعداد سندها در هر حساب ({count})",
+    description:
+      "Postings per Account summary; {count} is the number of accounts listed",
+  },
+  "page.statistics.entriesByTypeSummary": {
+    message: "ثبت‌ها: {entries} · انواع: {types}",
+    description:
+      "Entries Count by Type summary; {entries} is the total entry count, {types} the number of entry types",
   },
   "page.statistics.entryType": {
     message: "نوع ثبت",
@@ -86,14 +88,6 @@ const faStatistics: Record<string, TranslationEntry> = {
   "page.statistics.statistics": {
     message: "آمار",
     description: "Statistics about the ledger",
-  },
-  "page.statistics.total": {
-    message: "مجموع",
-    description: "Label for total count",
-  },
-  "page.statistics.types": {
-    message: "نوع",
-    description: "Label for types count",
   },
 };
 

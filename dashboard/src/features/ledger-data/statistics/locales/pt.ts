@@ -17,17 +17,19 @@ const ptStatistics: Record<string, TranslationEntry> = {
     message: "Contagem",
     description: "Count column or label",
   },
-  "page.statistics.entriesAcrossTypes": {
-    message: "lançamentos em",
-    description: "Text between total and types count",
-  },
   "page.statistics.entriesCountByType": {
     message: "Contagem de Lançamentos por Tipo",
     description: "Title for entries count by type section",
   },
-  "page.statistics.entryCountPerAccount": {
-    message: "Contagem de lançamentos por conta",
-    description: "Summary of postings count per account",
+  "page.statistics.postingsPerAccountSummary": {
+    message: "Contagem de lançamentos por conta ({count})",
+    description:
+      "Postings per Account summary; {count} is the number of accounts listed",
+  },
+  "page.statistics.entriesByTypeSummary": {
+    message: "Lançamentos: {entries} · Tipos: {types}",
+    description:
+      "Entries Count by Type summary; {entries} is the total entry count, {types} the number of entry types",
   },
   "page.statistics.entryType": {
     message: "Tipo de Lançamento",
@@ -86,14 +88,6 @@ const ptStatistics: Record<string, TranslationEntry> = {
   "page.statistics.statistics": {
     message: "Estatísticas",
     description: "Statistics about the ledger",
-  },
-  "page.statistics.total": {
-    message: "Total",
-    description: "Label for total count",
-  },
-  "page.statistics.types": {
-    message: "tipos",
-    description: "Label for types count",
   },
 };
 

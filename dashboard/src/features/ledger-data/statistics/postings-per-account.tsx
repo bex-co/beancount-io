@@ -129,13 +129,9 @@ function PostingsPerAccountTable({
       title={t("page.statistics.postingsPerAccount", {
         account: t("component.searchControls.account"),
       })}
-      description={
-        <>
-          {" "}
-          {t("page.statistics.entryCountPerAccount")} ({totalRows}{" "}
-          {t("journal.accounts")})
-        </>
-      }
+      description={t("page.statistics.postingsPerAccountSummary", {
+        count: totalRows,
+      })}
     >
       <TableHeader>
         <TableRow className="bg-muted/50">

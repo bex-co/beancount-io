@@ -17,17 +17,19 @@ const koStatistics: Record<string, TranslationEntry> = {
     message: "수량",
     description: "Count column or label",
   },
-  "page.statistics.entriesAcrossTypes": {
-    message: "유형에 걸친 항목",
-    description: "Text between total and types count",
-  },
   "page.statistics.entriesCountByType": {
     message: "유형별 항목 수",
     description: "Title for entries count by type section",
   },
-  "page.statistics.entryCountPerAccount": {
-    message: "계정별 게시 수",
-    description: "Summary of postings count per account",
+  "page.statistics.postingsPerAccountSummary": {
+    message: "계정별 게시 수 ({count})",
+    description:
+      "Postings per Account summary; {count} is the number of accounts listed",
+  },
+  "page.statistics.entriesByTypeSummary": {
+    message: "항목: {entries} · 유형: {types}",
+    description:
+      "Entries Count by Type summary; {entries} is the total entry count, {types} the number of entry types",
   },
   "page.statistics.entryType": {
     message: "항목 유형",
@@ -86,14 +88,6 @@ const koStatistics: Record<string, TranslationEntry> = {
   "page.statistics.statistics": {
     message: "통계",
     description: "Statistics about the ledger",
-  },
-  "page.statistics.total": {
-    message: "합계",
-    description: "Label for total count",
-  },
-  "page.statistics.types": {
-    message: "유형",
-    description: "Label for types count",
   },
 };
 

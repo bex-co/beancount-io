@@ -17,17 +17,19 @@ const skStatistics: Record<string, TranslationEntry> = {
     message: "Počet",
     description: "Count column or label",
   },
-  "page.statistics.entriesAcrossTypes": {
-    message: "záznamov v",
-    description: "Text between total and types count",
-  },
   "page.statistics.entriesCountByType": {
     message: "Počet záznamov podľa typu",
     description: "Title for entries count by type section",
   },
-  "page.statistics.entryCountPerAccount": {
-    message: "Počet zápisov na účet",
-    description: "Summary of postings count per account",
+  "page.statistics.postingsPerAccountSummary": {
+    message: "Počet zápisov na účet ({count})",
+    description:
+      "Postings per Account summary; {count} is the number of accounts listed",
+  },
+  "page.statistics.entriesByTypeSummary": {
+    message: "Záznamy: {entries} · Typy: {types}",
+    description:
+      "Entries Count by Type summary; {entries} is the total entry count, {types} the number of entry types",
   },
   "page.statistics.entryType": {
     message: "Typ záznamu",
@@ -86,14 +88,6 @@ const skStatistics: Record<string, TranslationEntry> = {
   "page.statistics.statistics": {
     message: "Štatistiky",
     description: "Page title for statistics",
-  },
-  "page.statistics.total": {
-    message: "Celkom",
-    description: "Label for total count",
-  },
-  "page.statistics.types": {
-    message: "typoch",
-    description: "Label for types count",
   },
 };
 

@@ -16,10 +16,6 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "El compte és obligatori",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "Comptes",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "Afegir una entrada de diari nova",
     description: "Aria label for add new journal entry button",

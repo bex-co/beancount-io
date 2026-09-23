@@ -13,10 +13,6 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "勘定科目は必須です",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "勘定科目",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "新しいジャーナルエントリを追加",
     description: "Aria label for add new journal entry button",

@@ -16,10 +16,6 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Rekening is required",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "Accounts",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "Nieuwe journaalpost toevoegen",
     description: "Aria label for add new journal entry button",

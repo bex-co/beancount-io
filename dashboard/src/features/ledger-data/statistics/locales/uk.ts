@@ -17,17 +17,19 @@ const ukStatistics: Record<string, TranslationEntry> = {
     message: "Кількість",
     description: "Count column or label",
   },
-  "page.statistics.entriesAcrossTypes": {
-    message: "записів у",
-    description: "Text between total and types count",
-  },
   "page.statistics.entriesCountByType": {
     message: "Кількість записів за типом",
     description: "Title for entries count by type section",
   },
-  "page.statistics.entryCountPerAccount": {
-    message: "Кількість проводок на рахунок",
-    description: "Summary of postings count per account",
+  "page.statistics.postingsPerAccountSummary": {
+    message: "Кількість проводок на рахунок ({count})",
+    description:
+      "Postings per Account summary; {count} is the number of accounts listed",
+  },
+  "page.statistics.entriesByTypeSummary": {
+    message: "Записи: {entries} · Типи: {types}",
+    description:
+      "Entries Count by Type summary; {entries} is the total entry count, {types} the number of entry types",
   },
   "page.statistics.entryType": {
     message: "Тип запису",
@@ -86,14 +88,6 @@ const ukStatistics: Record<string, TranslationEntry> = {
   "page.statistics.statistics": {
     message: "Статистика",
     description: "Statistics about the ledger",
-  },
-  "page.statistics.total": {
-    message: "Усього",
-    description: "Label for total count",
-  },
-  "page.statistics.types": {
-    message: "типи",
-    description: "Label for types count",
   },
 };
 

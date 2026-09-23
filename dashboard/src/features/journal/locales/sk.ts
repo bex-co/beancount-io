@@ -16,10 +16,6 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Účet je povinný",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "Účty",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "Pridať nový záznam do denníka",
     description: "Aria label for add new journal entry button",

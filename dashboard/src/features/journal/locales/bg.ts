@@ -16,10 +16,6 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Сметката е задължителна",
     description: "Validation error when account is missing",
   },
-  "journal.accounts": {
-    message: "Сметки",
-    description: "Plural form of account",
-  },
   "journal.addNewJournalEntry": {
     message: "Добавяне на нов запис в журнала",
     description: "Aria label for add new journal entry button",
