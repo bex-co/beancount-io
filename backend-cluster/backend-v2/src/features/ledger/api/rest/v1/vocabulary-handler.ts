@@ -65,7 +65,7 @@ const managedPriceSourceSchema = z.object({
   shadowedCount: z.number().int(),
 });
 
-const managedPriceStatusSchema = z.array(managedPriceSourceSchema);
+export const managedPriceStatusSchema = z.array(managedPriceSourceSchema);
 
 /**
  * Kept as data rather than hand-written route blocks.

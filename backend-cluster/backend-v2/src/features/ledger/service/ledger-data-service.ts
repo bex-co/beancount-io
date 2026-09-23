@@ -58,6 +58,13 @@ export interface ILedgerDataService {
    */
   getManagedPrices(params: BaseParams): Promise<ManagedPriceSourcePublic[]>;
 
+  /**
+   * Make every managed price feed the ledger names due now and return the
+   * re-resolved status (ADR 015 §5). Never touches the repository; a failed
+   * re-fetch keeps the last validated revision and reports its error.
+   */
+  refreshManagedPrices(params: BaseParams): Promise<ManagedPriceSourcePublic[]>;
+
   getCurrencies(params: BaseParams): Promise<string[]>;
 
   getSourceFiles(params: BaseParams): Promise<string[]>;
@@ -102,11 +109,11 @@ export class LedgerDataService
     identity: Identity | undefined,
     action:
       | typeof AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ
-      | typeof AUTHORIZATION_ACTIONS.LEDGER_FILES_READ = AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+      | typeof AUTHORIZATION_ACTIONS.LEDGER_FILES_READ
+      | typeof AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE = AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   ) {
-    // Every verb on this service is a read, so "read" is the only rel it ever
-    // needs — the seam still runs on every call (ADR 0006 D4), it just never
-    // has to ask for more.
+    // Every verb but the managed price refresh is a read. The seam runs on
+    // every call (ADR 0006 D4); the refresh alone asks for write capability.
     await authorizeLedger(identity, ledgerId, action, this.authDeps);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
@@ -243,6 +250,24 @@ export class LedgerDataService
     return unwrapFavaResponse(
       favaApiClient.reports.getLedgerManagedPrices(ledgerOwner, ledgerName),
       "get ledger managed prices",
+    );
+  }
+
+  async refreshManagedPrices(
+    params: BaseParams,
+  ): Promise<ManagedPriceSourcePublic[]> {
+    const { ledgerId, identity } = params;
+    // Write capability, not read: a refresh spends an upstream fetch shared by
+    // every ledger on the node, so an anonymous or read-only viewer of a
+    // public ledger must not be able to trigger one.
+    const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
+      ledgerId,
+      identity,
+      AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
+    );
+    return unwrapFavaResponse(
+      favaApiClient.reports.refreshLedgerManagedPrices(ledgerOwner, ledgerName),
+      "refresh ledger managed prices",
     );
   }
 

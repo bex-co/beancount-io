@@ -13,6 +13,7 @@ import { LedgerQueryResolver } from "@/features/ledger/api/resolvers/ledger-reso
 import { LedgerMutationResolver } from "@/features/ledger/api/resolvers/ledger-resolver.mutation";
 import { LedgerFinanceQueryResolver } from "@/features/ledger/api/resolvers/ledger-finance-resolver.query";
 import { LedgerDataQueryResolver } from "@/features/ledger/api/resolvers/ledger-data-resolver.query";
+import { LedgerDataMutationResolver } from "@/features/ledger/api/resolvers/ledger-data-resolver.mutation";
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { SubscriptionResolver } from "@/features/stripe/api/subscription-resolver";
 import { LedgerPublicKeyQueryResolver } from "@/features/ledger/api/resolvers/ledger-public-key-resolver.query";
@@ -71,6 +72,7 @@ export const resolvers: Resolvers = [
   LedgerMutationResolver,
   LedgerFinanceQueryResolver,
   LedgerDataQueryResolver,
+  LedgerDataMutationResolver,
   AccountResolver,
   AuthResolver,
   CliAuthResolver,
@@ -179,6 +181,10 @@ export function buildResolverContainer(
       new LedgerFinanceQueryResolver(services.ledgerFinance),
     ],
     [LedgerDataQueryResolver, new LedgerDataQueryResolver(services.ledgerData)],
+    [
+      LedgerDataMutationResolver,
+      new LedgerDataMutationResolver(services.ledgerData),
+    ],
     [
       LedgerShellQueryResolver,
       new LedgerShellQueryResolver(services.ledgerShell),

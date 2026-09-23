@@ -139,7 +139,7 @@ class ManagedPriceInclude {
   description:
     "Status of one managed price include (ADR 015). `freshness` is `recent` within ten minutes of the latest observation, `stale` beyond it, and `unavailable` when no revision has validated.",
 })
-class ManagedPriceSource {
+export class ManagedPriceSource {
   @Field(() => String)
   url: string;
 

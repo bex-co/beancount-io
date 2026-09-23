@@ -94,10 +94,11 @@ describe("op-class coverage", () => {
       79,
     );
     // 63 since w2/m28:t005 added `appendLedgerText`, the Beancount-text
-    // dialect of `bulkEntries`, on all three surfaces.
+    // dialect of `bulkEntries`, on all three surfaces; 64 since w2/m32 added
+    // `refreshLedgerManagedPrices`.
     expect(
       graphqlOps.filter((op) => op.startsWith("GQL Mutation.")).length,
-    ).toBe(63);
+    ).toBe(64);
   });
 
   it("gives every GraphQL root field exactly one explicit access mode", () => {
@@ -221,7 +222,9 @@ describe("op-class coverage", () => {
     // editLedgerFiles, which is how entries landed out of date order. A write
     // verb has to be a tool — a resource cannot take an action — and this one
     // earns its selection slot by replacing a worse use of an existing slot.
-    expect(tools).toHaveLength(26);
+    // w2/m32 adds the 27th, refreshManagedPrices: the one action on managed
+    // price feeds (ADR 015 §5). Its status read stays a resource.
+    expect(tools).toHaveLength(27);
 
     // Resources are counted apart on purpose. They do not compete for tool
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can

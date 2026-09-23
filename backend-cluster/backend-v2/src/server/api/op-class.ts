@@ -1176,6 +1176,12 @@ const LEDGER_WRITE_ACTION_BY_VERB = {
   // canonical action, so the dialect is never the authorization ceiling.
   "Mutation.appendLedgerText": AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
   "Mutation.renameLedgerFile": AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+  // Not a content write, but it spends an upstream fetch shared across every
+  // ledger on the node (ADR 015 §5), so it takes the ledger's write
+  // capability: read-only and anonymous viewers of a public ledger cannot
+  // trigger one.
+  "Mutation.refreshLedgerManagedPrices":
+    AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
 } as const satisfies Readonly<Record<string, AuthorizationAction>>;
 
 const ledgerWriteActionForVerb = (verb: string): AuthorizationAction => {
@@ -1258,6 +1264,12 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.renameLedgerFile",
     rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/rename-file",
     mcp: "renameLedgerFile",
+  },  {
+    verb: "Mutation.refreshLedgerManagedPrices",
+    class: "write" as const,
+    gql: "Mutation.refreshLedgerManagedPrices",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/managed-prices/refresh",
+    mcp: "refreshManagedPrices",
   },
 ].map((entry) => ({
   ...entry,

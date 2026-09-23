@@ -32,6 +32,11 @@ import {
   executeLedgerStar,
 } from "./mcp-ledger-star";
 import {
+  executeRefreshManagedPrices,
+  refreshManagedPricesInput,
+  refreshManagedPricesOutput,
+} from "./mcp-managed-prices";
+import {
   pullRequestToolInput,
   pullRequestToolOutput,
   executePullRequestTool,
@@ -555,6 +560,18 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     inputSchema: ledgerStarInput,
     outputSchema: ledgerStarOutput,
     execute: executeLedgerStar,
+  },
+  {
+    name: "refreshManagedPrices",
+    title: "Refresh Managed Price Feeds",
+    // Re-fetches public market data: idempotent in effect, and open-world
+    // because it reaches the feed's origin.
+    annotations: { ...IDEMPOTENT_WRITE, openWorldHint: true },
+    description:
+      "Re-fetch the ledger's managed price feeds now and return each source's status (the ledgerManagedPrices records). Use when a source is stale or unavailable. Never edits the ledger. ledger is required unless pinned.",
+    inputSchema: refreshManagedPricesInput,
+    outputSchema: refreshManagedPricesOutput,
+    execute: executeRefreshManagedPrices,
   },
   // Eight bank-import verbs behind one `operation` discriminator (ADR 0008 D3).
   // A family, not a bag: same subject, same authorization class, and an agent

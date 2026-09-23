@@ -7,6 +7,7 @@ import { fileParseRoute } from "@/features/llm/api/file-parse-route";
 import { suggestCategoriesRoute } from "@/features/llm/api/suggest-categories-route";
 import { TEMP_ASSET_ROUTES } from "@/features/s3/api/temp-asset-routes";
 import { STAR_ROUTES } from "./star-handler";
+import { REFRESH_MANAGED_PRICES_ROUTE } from "./managed-prices-handler";
 import { ASSET_URL_ROUTES } from "./asset-url-handler";
 import { PULL_REQUEST_ROUTES } from "@/features/gitea/pull-request/api/pull-request-routes";
 import { LEDGER_LIFECYCLE_ROUTES } from "./lifecycle-handler";
@@ -65,6 +66,7 @@ const V1_SCOPED_ROUTES: Parameters<typeof registerV1Routes>[2] = [
   legacyEntryRoute,
   ...SOURCE_SLICE_ROUTES,
   ...VOCABULARY_ROUTES,
+  REFRESH_MANAGED_PRICES_ROUTE,
   ...ANALYSIS_ROUTES,
   ...BANK_ROUTES,
   ...ARCHIVE_DOWNLOAD_ROUTES,

@@ -6,11 +6,13 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerDataQueryResolver } from "@/features/ledger/api/resolvers/ledger-data-resolver.query";
+import { LedgerDataMutationResolver } from "@/features/ledger/api/resolvers/ledger-data-resolver.mutation";
 import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import { ForbiddenError } from "@/shared/errors";
+import { AuthorizationService } from "@/server/api/authorization";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
@@ -58,33 +60,52 @@ const STATUS = [
 const FIELDS =
   "url alias includedFrom { file line target } commodity quote source revision etag observedAt fetchedAt nextRefreshAt freshness error shadowedCount";
 
-let currentResolver: LedgerDataQueryResolver;
+let currentResolvers: Map<unknown, unknown>;
 let schema: Awaited<ReturnType<typeof buildSchema>>;
 beforeAll(async () => {
   schema = await buildSchema({
-    resolvers: [LedgerDataQueryResolver],
-    container: { get: () => currentResolver },
+    resolvers: [LedgerDataQueryResolver, LedgerDataMutationResolver],
+    container: { get: (cls) => currentResolvers.get(cls) },
     globalMiddlewares: [graphqlScopeMiddleware("enforce")],
     validate: true,
   });
 });
 
-async function fixture(options: { deny?: boolean; caller?: Identity } = {}) {
+const REFRESHED = [{ ...STATUS[0], revision: "e2", freshness: "recent" }];
+
+async function fixture(
+  options: {
+    deny?: boolean | string;
+    caller?: Identity;
+    /** Use the real PDP (relationships always hold) instead of the fake. */
+    realPdp?: boolean;
+  } = {},
+) {
   const caller = options.caller ?? reader;
   const reports = {
     getLedgerManagedPrices: jest.fn(async () => ({
       data: { success: true, data: STATUS },
     })),
+    refreshLedgerManagedPrices: jest.fn(async () => ({
+      data: { success: true, data: REFRESHED },
+    })),
   };
-  const authorizeOrThrow = jest.fn(async () => {
-    if (options.deny)
+  // `deny: true` refuses everything; a string refuses only that action.
+  const authorizeOrThrow = jest.fn(async ({ action }: { action: string }) => {
+    if (options.deny === true || options.deny === action)
       throw new ForbiddenError("You do not have access to this ledger");
   });
+  const authorization = options.realPdp
+    ? new AuthorizationService({ check: async () => true })
+    : { authorizeOrThrow };
   const service = new LedgerDataService(
     { getPublicApiClient: async () => ({ reports }) } as never,
-    { authorizeOrThrow } as never,
+    authorization as never,
   );
-  currentResolver = new LedgerDataQueryResolver(service);
+  currentResolvers = new Map<unknown, unknown>([
+    [LedgerDataQueryResolver, new LedgerDataQueryResolver(service)],
+    [LedgerDataMutationResolver, new LedgerDataMutationResolver(service)],
+  ]);
   const rest = await startV1TestServer(
     { services: { ledgerData: service } } as unknown as AppLayers,
     config,
@@ -114,6 +135,23 @@ async function fixture(options: { deny?: boolean; caller?: Identity } = {}) {
       }),
     mcp: () =>
       client.readResource({ uri: "beancount://alice/main/managed-prices" }),
+    refreshRest: () =>
+      fetch(
+        `${rest.url}/api-gateway/v1/ledgers/alice/main/managed-prices/refresh`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: "{}",
+        },
+      ),
+    refreshGql: () =>
+      graphql({
+        schema,
+        source: `mutation { refreshLedgerManagedPrices(ledgerId: "${LEDGER}") { ${FIELDS} } }`,
+        contextValue: { identity: caller, getCurrentIdentity: () => caller },
+      }),
+    refreshMcp: () =>
+      client.callTool({ name: "refreshManagedPrices", arguments: {} }),
     close: async () => {
       await client.close();
       await server.close();
@@ -192,6 +230,97 @@ describe("managed price status parity", () => {
     } finally {
       await client.close();
       await server.close();
+    }
+  });
+});
+
+describe("managed price refresh parity", () => {
+  const writer: Identity = { ...reader, scopes: new Set(["ledger.write"]) };
+
+  it("refreshes through the same service call on REST, GraphQL and MCP", async () => {
+    const f = await fixture({ caller: writer });
+    try {
+      const r = await f.refreshRest();
+      const g = await f.refreshGql();
+      const m = (await f.refreshMcp()) as {
+        isError?: boolean;
+        structuredContent?: { ok: boolean; result: { sources: unknown } };
+      };
+      expect(r.status).toBe(200);
+      expect(g.errors).toBeUndefined();
+      expect(m.isError).toBeFalsy();
+      for (const result of [
+        await r.json(),
+        g.data!.refreshLedgerManagedPrices,
+        m.structuredContent!.result.sources,
+      ])
+        expect(result).toEqual(REFRESHED);
+      expect(f.reports.refreshLedgerManagedPrices).toHaveBeenCalledTimes(3);
+      expect(f.reports.refreshLedgerManagedPrices).toHaveBeenCalledWith(
+        "alice",
+        "main",
+      );
+      const actions = (
+        f.authorizeOrThrow.mock.calls as unknown as [{ action: string }][]
+      ).map(([request]) => request.action);
+      expect(actions).toEqual([
+        "ledger.entries.write",
+        "ledger.entries.write",
+        "ledger.entries.write",
+      ]);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses a caller who can read but not write, before any ledger call", async () => {
+    const f = await fixture({ caller: writer, deny: "ledger.entries.write" });
+    try {
+      // The same caller can still read the status…
+      expect((await f.rest()).status).toBe(200);
+      // …but every surface refuses the refresh.
+      expect((await f.refreshRest()).status).toBe(403);
+      const g = await f.refreshGql();
+      expect(g.errors?.[0]?.message).toMatch(/do not have access/i);
+      const m = (await f.refreshMcp()) as { isError?: boolean };
+      expect(m.isError).toBe(true);
+      expect(f.reports.refreshLedgerManagedPrices).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it.each([
+    ["an OAuth token without ledger.write", reader],
+    [
+      "an API key granted only ledger.read",
+      { ...reader, method: "apikey" as const },
+    ],
+  ])(
+    "the real PDP refuses %s on every surface, before any ledger call",
+    async (_label, caller) => {
+      const f = await fixture({ caller: caller as Identity, realPdp: true });
+      try {
+        expect((await f.refreshRest()).status).toBe(403);
+        expect((await f.refreshGql()).errors).toBeDefined();
+        const m = (await f.refreshMcp()) as { isError?: boolean };
+        expect(m.isError).toBe(true);
+        expect(f.reports.refreshLedgerManagedPrices).not.toHaveBeenCalled();
+        // The same credential still reads the status.
+        expect((await f.rest()).status).toBe(200);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("the real PDP admits a credential that carries ledger.write", async () => {
+    const f = await fixture({ caller: writer, realPdp: true });
+    try {
+      expect((await f.refreshRest()).status).toBe(200);
+      expect(f.reports.refreshLedgerManagedPrices).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
     }
   });
 });

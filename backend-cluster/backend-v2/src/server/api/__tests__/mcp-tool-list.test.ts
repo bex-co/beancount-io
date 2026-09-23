@@ -74,9 +74,14 @@ describe("MCP tool list", () => {
     // `expiresAt`. w2/m27:t005 believed it had deleted that regex; what it had
     // actually done was publish the whole schema as `properties: {}`, so the
     // savings it recorded were the bug.
+    //
+    // 64 KB since w2/m32 added `refreshManagedPrices` (1.5 KB): a refresh is
+    // an action, so it cannot be a resource. Its output schema types only the
+    // three fields an agent acts on and defers the rest to the resource
+    // template, which is what kept the growth to 1.5 KB instead of 2.6 KB.
     const { tools } = await listTools();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(63 * 1024);
+    expect(bytes).toBeLessThan(64 * 1024);
   });
 
   it("publishes all four annotations on every tool", async () => {
