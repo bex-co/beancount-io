@@ -11,7 +11,7 @@
  * they fail the moment rows are pinned to a fixed height again.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryResultCard } from "../query-result-card";
 
 vi.mock("../query-result-chart", () => ({
@@ -287,5 +287,71 @@ describe("BQL result table geometry", () => {
     });
     // Row indexes stay semantic for the whole result, not just the window.
     expect(screen.getByRole("table").getAttribute("aria-rowcount")).toBe("401");
+  });
+});
+
+describe("BQL result End navigation (w4/183)", () => {
+  // Rows below the fold are measured only after End brings them into view, so
+  // the extent grows after the browser's own End scroll has finished. Measured
+  // in Chromium: without the pin, one End left the final row entirely below
+  // the viewport. JSDOM has no layout, so the growing extent is stubbed.
+  function withExtent(rowgroup: HTMLElement) {
+    let extent = 3635;
+    Object.defineProperty(rowgroup, "scrollHeight", {
+      configurable: true,
+      get: () => extent,
+    });
+    return (next: number) => {
+      extent = next;
+    };
+  }
+
+  const rows = Array.from({ length: 100 }, (_, i) => [
+    i % 9 === 0 ? EIGHT_UNITS : { USD: String(i) },
+  ]);
+  const result = tableResult(
+    [{ name: "sum_position", dtype: "Inventory" }],
+    rows,
+  );
+
+  it("keeps End on the final row as later measurements grow the extent", async () => {
+    const { rerender } = renderCard(result);
+    const rowgroup = await screen.findByRole("rowgroup");
+    const grow = withExtent(rowgroup);
+
+    fireEvent.keyDown(rowgroup, { key: "End" });
+    grow(3669);
+    // A measurement pass re-renders the table, as ResizeObserver does.
+    rerender(
+      <QueryResultCard
+        query="select"
+        result={result}
+        isInitiallyOpen
+        onExecute={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+    expect(rowgroup.scrollTop).toBe(3669);
+  });
+
+  it("hands scrolling back to the reader after they move", async () => {
+    const { rerender } = renderCard(result);
+    const rowgroup = await screen.findByRole("rowgroup");
+    const grow = withExtent(rowgroup);
+
+    fireEvent.keyDown(rowgroup, { key: "End" });
+    fireEvent.wheel(rowgroup);
+    rowgroup.scrollTop = 1000;
+    grow(3669);
+    rerender(
+      <QueryResultCard
+        query="select"
+        result={result}
+        isInitiallyOpen
+        onExecute={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+    expect(rowgroup.scrollTop).toBe(1000);
   });
 });

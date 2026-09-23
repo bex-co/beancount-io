@@ -67,6 +67,7 @@ vi.mock("react-window", () => ({
   ),
   // This suite replaces the List too, so it never measures anything; the hook
   // only has to hand back the compact default.
+  useListRef: () => ({ current: null }),
   useDynamicRowHeight: ({ defaultRowHeight }: any) => ({
     getAverageRowHeight: () => defaultRowHeight,
   }),

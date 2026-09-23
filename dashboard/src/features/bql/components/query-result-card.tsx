@@ -1,10 +1,18 @@
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { Button } from "@/common/components/ui/button";
 import { ChevronRight, Trash2 } from "lucide-react";
 import {
   List,
   useDynamicRowHeight,
+  useListRef,
   type RowComponentProps,
 } from "react-window";
 import { cn } from "@/common/lib/utils/utils";
@@ -116,6 +124,10 @@ function ResultRow({
   );
 }
 
+function scrollToBottom(element: HTMLElement | null | undefined) {
+  if (element) element.scrollTop = element.scrollHeight;
+}
+
 /**
  * The virtualized result table.
  *
@@ -148,6 +160,31 @@ function QueryResultTable({ table }: { table: ResultTable }) {
   // Stable identity: react-window rebuilds its cached row bounds whenever this
   // changes, which would otherwise happen on every measurement pass.
   const rowProps = useMemo(() => ({ rows, dtypes }), [rows, dtypes]);
+
+  // End jumps to the bottom of the extent the browser knows at that moment,
+  // but the rows it brings into view are measured afterwards: multi-line
+  // inventory cells grow the extent and left the final row just below the
+  // viewport. So End pins the scroll to the bottom until the reader does
+  // anything else, and each measurement pass (which re-renders this table)
+  // re-applies it.
+  const listRef = useListRef(null);
+  const pinnedToEnd = useRef(false);
+  useLayoutEffect(() => {
+    if (pinnedToEnd.current) scrollToBottom(listRef.current?.element);
+  });
+  const releaseEnd = () => {
+    pinnedToEnd.current = false;
+  };
+  const trackEnd = (event: KeyboardEvent<HTMLDivElement>) => {
+    pinnedToEnd.current = event.key === "End";
+    if (pinnedToEnd.current) {
+      // After the browser's own End scroll, so the first measurement pass
+      // it triggers finds the pin set.
+      requestAnimationFrame(() => {
+        if (pinnedToEnd.current) scrollToBottom(listRef.current?.element);
+      });
+    }
+  };
 
   if (rows.length === 0) {
     return (
@@ -188,6 +225,11 @@ function QueryResultTable({ table }: { table: ResultTable }) {
           </div>
           <List<ResultRowProps>
             role="rowgroup"
+            listRef={listRef}
+            onKeyDown={trackEnd}
+            onWheel={releaseEnd}
+            onTouchStart={releaseEnd}
+            onPointerDown={releaseEnd}
             rowCount={rows.length}
             rowHeight={rowHeight}
             rowProps={rowProps}
