@@ -105,9 +105,27 @@ async function fetchJson(url: string, fetcher: Fetch, signal?: AbortSignal) {
     );
   }
   if (!response.ok) throw incompatible("OAuth metadata is unavailable");
-  const body: unknown = await response.json();
+  // A server answered, so a body that is not JSON (a proxy's HTML fallback
+  // under 200) is a server problem, never a rejected sign-in.
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    throw incompatible("OAuth metadata is not JSON");
+  }
   if (!isObject(body)) throw incompatible("OAuth metadata is invalid");
   return body;
+}
+
+/** An advertised endpoint that is missing, malformed, or off-issuer is the server's fault. */
+function discoveredEndpoint(endpoint: unknown, issuer: string): string {
+  try {
+    return oauthEndpointWithinIssuer(endpoint, issuer);
+  } catch (error: unknown) {
+    throw incompatible(
+      error instanceof Error ? error.message : "OAuth endpoint is invalid",
+    );
+  }
 }
 
 /** Discover and validate the exact OAuth contract for the selected server. */
@@ -197,15 +215,12 @@ export async function discoverOAuthServer(
     serverUrl,
     resource,
     issuer: expectedIssuer,
-    authorizationEndpoint: oauthEndpointWithinIssuer(
+    authorizationEndpoint: discoveredEndpoint(
       metadata.authorization_endpoint,
       expectedIssuer,
     ),
-    tokenEndpoint: oauthEndpointWithinIssuer(
-      metadata.token_endpoint,
-      expectedIssuer,
-    ),
-    revocationEndpoint: oauthEndpointWithinIssuer(
+    tokenEndpoint: discoveredEndpoint(metadata.token_endpoint, expectedIssuer),
+    revocationEndpoint: discoveredEndpoint(
       metadata.revocation_endpoint,
       expectedIssuer,
     ),

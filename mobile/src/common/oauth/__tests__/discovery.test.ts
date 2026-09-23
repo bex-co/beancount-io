@@ -143,4 +143,58 @@ describe("OAuth discovery", () => {
       ),
     ).toBe("incompatible");
   });
+
+  it("classifies a non-JSON body from either metadata document as an incompatible server", async () => {
+    // A reverse proxy serving its HTML landing page under 200 (w2/029).
+    const html = {
+      ok: true,
+      json: async () => {
+        throw new SyntaxError("Unexpected token '<'");
+      },
+    } as unknown as Response;
+    for (const failingDocument of [
+      "oauth-protected-resource",
+      "oauth-authorization-server",
+    ]) {
+      const base = successfulFetch([]);
+      const fetcher = (async (input: RequestInfo | URL) =>
+        String(input).includes(failingDocument)
+          ? html
+          : base(input)) as typeof fetch;
+      let caught: unknown;
+      try {
+        await discoverOAuthServer(serverUrl, fetcher);
+      } catch (error: unknown) {
+        caught = error;
+      }
+      expect(caught instanceof OAuthDiscoveryError).toBe(true);
+      expect((caught as OAuthDiscoveryError).kind).toBe("incompatible");
+    }
+  });
+
+  it("classifies a missing, malformed, or off-issuer endpoint as an incompatible server", async () => {
+    for (const endpoint of [
+      undefined,
+      "not a url",
+      "https://attacker.example/token",
+    ]) {
+      const base = successfulFetch([]);
+      const fetcher = (async (input: RequestInfo | URL) => {
+        const original = await base(input);
+        if (!String(input).includes("oauth-authorization-server"))
+          return original;
+        const metadata = (await original.json()) as Record<string, unknown>;
+        metadata.token_endpoint = endpoint;
+        return response(metadata);
+      }) as typeof fetch;
+      let caught: unknown;
+      try {
+        await discoverOAuthServer(serverUrl, fetcher);
+      } catch (error: unknown) {
+        caught = error;
+      }
+      expect(caught instanceof OAuthDiscoveryError).toBe(true);
+      expect((caught as OAuthDiscoveryError).kind).toBe("incompatible");
+    }
+  });
 });
