@@ -30,7 +30,11 @@ _MAPPING_FIELDS = frozenset(
 _THOUSAND_SEPARATOR_FILLER = re.compile(r"[\s'\u2019]")
 _NON_FINITE_AMOUNT = re.compile(r"[+-]?(?:nan|inf(?:inity)?)\Z", re.IGNORECASE)
 _EU_GROUPING = re.compile(r"\d{1,3}(?:\.\d{3})+")
-_COMMA_DECIMAL_TAIL = re.compile(r",\d{2}$")
+# One comma followed by any digit count but three: never a thousands group
+# (`-0,5`, `-0,50`, `-0,1234`), so it can only be a decimal comma.
+_COMMA_DECIMAL_TAIL = re.compile(r"\A[^,]*,(?:\d{1,2}|\d{4,})\Z")
+# The comma groupings point-decimal exports use: 1,234,567 and Indian 12,34,567.
+_COMMA_GROUPING = re.compile(r"\d{1,3}(?:,\d{3})+|\d{1,2}(?:,\d{2})*,\d{3}")
 _ACCEPTED_AMOUNTS = (
     "Accepted: plain decimals (1000.50), $/€ symbols, thousands separators, "
     "(parentheses) or trailing-minus negatives; comma decimals like 1.000,00 "
@@ -95,7 +99,7 @@ def _separator_vote(core: str) -> str | None:
     """Vote on a cell's decimal convention: 'us', 'eu', 'eu-weak', or None."""
     if "." in core and "," in core:
         return "eu" if core.rfind(",") > core.rfind(".") else "us"
-    if "," in core and _COMMA_DECIMAL_TAIL.search(core):
+    if _COMMA_DECIMAL_TAIL.match(core):
         return "eu-weak"
     return None
 
@@ -182,7 +186,13 @@ def _parse_amount_cell(where: str, column: str, value: str, *, decimal_comma: bo
     if decimal_comma:
         text = _comma_decimal_to_point(where, column, value, text)
     else:
-        if "." not in text and _COMMA_DECIMAL_TAIL.search(text):
+        # Commas are only stripped once they are proven to be grouping: a
+        # comma that is not a well-formed group (`0,5` in a point column) is
+        # a decimal mark, and deleting it would multiply the amount.
+        whole = text.partition(".")[0]
+        if "," in whole and not _COMMA_GROUPING.fullmatch(whole):
+            raise _unparseable_amount(where, column, value)
+        if "," in text.partition(".")[2]:
             raise _unparseable_amount(where, column, value)
         text = text.replace(",", "")
     try:
