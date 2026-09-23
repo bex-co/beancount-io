@@ -554,9 +554,15 @@ def export_portable(
             )
     destinations: dict[Path, Path] = {}
     external = 0
+    # Classified by the file each path truly names. Snapshot paths keep a
+    # lexical `..` (`books/../shared/accounts.bean`), which `relative_to`
+    # accepted as `../shared/accounts.bean`: the copy was written beside the
+    # export instead of in it, over whatever lived there, and the include kept
+    # pointing outside the snapshot.
+    home = snapshot.root.parent.resolve()
     for path in snapshot.contents:
         try:
-            destinations[path] = target / path.relative_to(snapshot.root.parent)
+            destinations[path] = target / path.resolve().relative_to(home)
         except ValueError:
             external += 1
             destinations[path] = target / "_shared" / f"{external:02d}-{path.name}"
@@ -575,6 +581,11 @@ def export_portable(
     by_target = {
         include.target: feed_files[source.url] for source in loaded.sources for include in source.included_from
     }
+    # Checked as a whole plan before the first write: an export writes inside
+    # the directory it was given, or nowhere.
+    for dest in [*destinations.values(), *feed_files.values()]:
+        if not dest.resolve().is_relative_to(resolved_target):
+            raise UsageError(f"Cannot export: {dest} would land outside {target}. Nothing was written.")
     written: list[str] = []
     for path, original in snapshot.contents.items():
         dest = destinations[path]
