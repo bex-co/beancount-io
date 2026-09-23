@@ -456,6 +456,12 @@ const faJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "این قیمت از منبع مدیریت‌شده {source} می‌آید. به‌طور خودکار به‌روز می‌شود و اینجا قابل ویرایش یا حذف نیست؛ برای جایگزینی، ورودی قیمت خودتان را برای این تاریخ اضافه کنید.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default faJournal;

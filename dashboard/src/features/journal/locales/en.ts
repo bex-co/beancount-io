@@ -455,6 +455,12 @@ const enJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "This price comes from the managed feed {source}. It updates automatically and cannot be edited or deleted here; add your own price entry for this date to override it.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default enJournal;

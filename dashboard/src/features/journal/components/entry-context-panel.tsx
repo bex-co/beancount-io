@@ -45,7 +45,10 @@ import { useIsMobile } from "@/common/hooks/use-mobile";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
-import { readEntrySourceLocation } from "@/features/journal/lib/entry-source-location";
+import {
+  managedPriceSourceUrl,
+  readEntrySourceLocation,
+} from "@/features/journal/lib/entry-source-location";
 
 export interface EntryContextPanelProps {
   entryHash: string;
@@ -120,6 +123,12 @@ function EntryContextMain({
   const locationLabel = location
     ? `${location.filename}:${location.lineno}`
     : null;
+  // A price from a managed feed is not in the ledger's files: the ledger
+  // refuses to edit or delete it, so the panel offers neither.
+  const managedSource = location
+    ? managedPriceSourceUrl(location.filename)
+    : null;
+  const editable = canWrite && managedSource === null;
 
   useEffect(() => {
     if (data?.slice) {
@@ -135,7 +144,7 @@ function EntryContextMain({
   }, [sourceText, originalSource]);
 
   const handleSave = async () => {
-    if (!canWrite || !entryHash || !hasChanges || isSaving) return;
+    if (!editable || !entryHash || !hasChanges || isSaving) return;
     setIsSaving(true);
     try {
       await onSave(entryHash, sourceText, data.sha256sum);
@@ -149,7 +158,7 @@ function EntryContextMain({
   };
 
   const handleConfirmDelete = async () => {
-    if (!canWrite || !entryHash || !data?.sha256sum || isDeleting) {
+    if (!editable || !entryHash || !data?.sha256sum || isDeleting) {
       return;
     }
     setIsDeleting(true);
@@ -185,11 +194,22 @@ function EntryContextMain({
 
   return (
     <div className="space-y-4">
+      {managedSource && (
+        <Alert>
+          <AlertDescription>
+            {t("journal.managedPriceEntryExplanation", {
+              source: managedSource,
+            })}
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="flex items-center space-x-2">
         <span className="text-sm font-medium ">
           {t("journal.entryLocation")}
         </span>
-        {location && locationLabel ? (
+        {managedSource && locationLabel ? (
+          <code className="font-mono text-sm">{locationLabel}</code>
+        ) : location && locationLabel ? (
           <button
             type="button"
             className="font-mono text-sm rounded underline cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -298,7 +318,7 @@ function EntryContextMain({
               language="beancount"
               value={sourceText}
               onChange={(value) => {
-                if (!canWrite) return;
+                if (!editable) return;
                 setSourceText(value || "");
               }}
               theme={isDark ? "vs-dark" : "light"}
@@ -310,11 +330,11 @@ function EntryContextMain({
                 scrollBeyondLastLine: false,
                 wordWrap: "on",
                 lineNumbers: "on",
-                readOnly: !canWrite,
+                readOnly: !editable,
               }}
             />
           </div>
-          {canWrite && hasChanges && (
+          {editable && hasChanges && (
             <div className="p-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20">
               {t("journal.sourceModified")}
             </div>
@@ -322,7 +342,7 @@ function EntryContextMain({
         </CardContent>
       </Card>
 
-      {canWrite ? (
+      {editable ? (
         <div className="flex gap-2 justify-end">
           <Button
             ref={deleteButtonRef}

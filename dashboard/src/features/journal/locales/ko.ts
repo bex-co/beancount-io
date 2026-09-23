@@ -451,6 +451,12 @@ const koJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "이 가격은 관리형 피드 {source}에서 가져온 것입니다. 자동으로 업데이트되며 여기서 편집하거나 삭제할 수 없습니다. 덮어쓰려면 이 날짜에 직접 가격 항목을 추가하세요.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default koJournal;

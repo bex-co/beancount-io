@@ -456,6 +456,12 @@ const deJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "Dieser Preis stammt aus der verwalteten Quelle {source}. Er wird automatisch aktualisiert und kann hier weder bearbeitet noch gelöscht werden; füge für dieses Datum einen eigenen Preiseintrag hinzu, um ihn zu überschreiben.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default deJournal;

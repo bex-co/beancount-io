@@ -454,6 +454,12 @@ const zhJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "此价格来自托管数据源 {source}。它会自动更新，无法在此编辑或删除；如需覆盖，请为该日期添加你自己的价格条目。",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default zhJournal;

@@ -453,6 +453,12 @@ const jaJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "この価格は管理されたフィード {source} からのものです。自動的に更新され、ここで編集や削除はできません。上書きするには、この日付の価格エントリをご自身で追加してください。",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default jaJournal;

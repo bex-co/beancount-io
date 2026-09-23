@@ -456,6 +456,12 @@ const caJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "Aquest preu prové de la font gestionada {source}. S'actualitza automàticament i no es pot editar ni suprimir aquí; afegiu la vostra pròpia entrada de preu per a aquesta data per substituir-lo.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default caJournal;

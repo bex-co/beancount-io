@@ -245,4 +245,63 @@ describe("EntryContextPanel", () => {
       expect(onDeleted).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("a price from a managed feed", () => {
+    beforeEach(() => {
+      mocks.contextData = {
+        entry: {
+          meta: { filename: "https:/beancount.io/prices/BTC-USD", lineno: 7 },
+        },
+        slice: "2026-09-15 price BTC 76000 USD\n",
+        sha256sum: "feed123",
+        balances_before: null,
+        balances_after: null,
+      };
+    });
+
+    it("offers a writer no edit, save, or delete, and names the feed", () => {
+      render(
+        <EntryContextPanel entryHash="hash-1" ledgerId="open_ledger/example" />,
+      );
+
+      expect(screen.getByLabelText("entry-source")).toHaveAttribute("readonly");
+      expect(screen.queryByText("common.delete")).not.toBeInTheDocument();
+      expect(screen.queryByText("common.save")).not.toBeInTheDocument();
+      expect(
+        screen.getByText("journal.managedPriceEntryExplanation"),
+      ).toBeInTheDocument();
+    });
+
+    it("shows the virtual location without offering to open it as a file", () => {
+      render(
+        <EntryContextPanel entryHash="hash-1" ledgerId="open_ledger/example" />,
+      );
+
+      expect(
+        screen.getByText("https:/beancount.io/prices/BTC-USD:7"),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "journal.openEntrySource" }),
+      ).not.toBeInTheDocument();
+      expect(mocks.fileNavigate).not.toHaveBeenCalled();
+    });
+
+    it("leaves an ordinary price entry in a repository file editable", () => {
+      mocks.contextData = {
+        ...mocks.contextData,
+        entry: { meta: { filename: "prices/btc.bean", lineno: 3 } },
+      };
+      render(
+        <EntryContextPanel entryHash="hash-1" ledgerId="open_ledger/example" />,
+      );
+
+      expect(screen.getByLabelText("entry-source")).not.toHaveAttribute(
+        "readonly",
+      );
+      expect(screen.getByText("common.delete")).toBeInTheDocument();
+      expect(
+        screen.queryByText("journal.managedPriceEntryExplanation"),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

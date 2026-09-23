@@ -456,6 +456,12 @@ const bgJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "Тази цена идва от управлявания източник {source}. Обновява се автоматично и не може да се редактира или изтрива тук; добавете собствен запис за цена за тази дата, за да я замените.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default bgJournal;

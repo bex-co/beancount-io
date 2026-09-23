@@ -456,6 +456,12 @@ const nlJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "Deze prijs komt uit de beheerde bron {source}. Hij wordt automatisch bijgewerkt en kan hier niet worden bewerkt of verwijderd; voeg voor deze datum een eigen prijsboeking toe om hem te overschrijven.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default nlJournal;

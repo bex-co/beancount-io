@@ -456,6 +456,12 @@ const ukJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "Ця ціна надходить із керованого джерела {source}. Вона оновлюється автоматично й не може бути змінена чи видалена тут; щоб замінити її, додайте власний запис ціни на цю дату.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default ukJournal;

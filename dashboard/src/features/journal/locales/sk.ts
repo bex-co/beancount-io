@@ -456,6 +456,12 @@ const skJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "Táto cena pochádza zo spravovaného zdroja {source}. Aktualizuje sa automaticky a nedá sa tu upraviť ani odstrániť; ak ju chcete nahradiť, pridajte vlastný cenový záznam pre tento dátum.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default skJournal;

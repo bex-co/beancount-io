@@ -456,6 +456,12 @@ const esJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "Este precio proviene de la fuente gestionada {source}. Se actualiza automáticamente y no se puede editar ni eliminar aquí; añade tu propia entrada de precio para esta fecha para reemplazarlo.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default esJournal;

@@ -456,6 +456,12 @@ const ruJournal: Record<string, TranslationEntry> = {
     description:
       "Entry page description; {ledgerName} is the ledger display name",
   },
+  "journal.managedPriceEntryExplanation": {
+    message:
+      "Эта цена получена из управляемого источника {source}. Она обновляется автоматически и не может быть изменена или удалена здесь; чтобы заменить её, добавьте собственную запись цены на эту дату.",
+    description:
+      "Shown on a price entry that comes from a managed price include. {source} is the feed URL.",
+  },
 };
 
 export default ruJournal;
