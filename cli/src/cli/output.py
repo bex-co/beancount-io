@@ -248,6 +248,17 @@ def refuse_ledger_alias(destination: Path, ledger: Path) -> None:
             )
 
 
+def refuse_input_alias(destination: Path, source: Path) -> None:
+    """Refuse an output destination that is a single input file under read.
+
+    `refuse_ledger_alias` for inputs without includes, such as a CSV table.
+    """
+    if _same_file(destination, source):
+        raise UsageError(
+            f"--output {destination} would overwrite the file it reads ({source}); choose a different destination."
+        )
+
+
 def check_output_destination(destination: Path, flag: str = "--output") -> None:
     """Refuse an output destination that cannot become a fresh file.
 

@@ -48,6 +48,27 @@ def _check_source_scheme(source: str) -> None:
         raise UsageError(f"--source scheme '{scheme}' is not supported; use {supported}, or a bare path.")
 
 
+def _refuse_source_alias(source: str, destination: Path) -> None:
+    """Refuse `--output` onto the local file a native `--source` reads.
+
+    Native Beanquery opens the output itself, so the guard `--file` runs never
+    ran here: `--source main.bean --output main.bean` replaced the books with a
+    text table and exited 0. The file is resolved the way upstream does — a
+    bare path, or the path of a `beancount:` / `csv:` URI; `memory:` and
+    `test:` name no file — and a Beancount ledger is checked with its includes.
+    """
+    from urllib.parse import urlparse
+
+    parts = urlparse(source)
+    scheme = parts.scheme.casefold() if len(parts.scheme) > 1 else ""
+    if scheme == "":
+        output.refuse_ledger_alias(destination, Path(source))
+    elif scheme == "beancount" and parts.path:
+        output.refuse_ledger_alias(destination, Path(parts.path))
+    elif scheme == "csv" and parts.path:
+        output.refuse_input_alias(destination, Path(parts.path))
+
+
 def _refuse_one_shot_output(query_string: str) -> None:
     """Refuse a one-shot `.output`, which writes nothing and reports success.
 
@@ -208,6 +229,8 @@ def query(
         if ctx.json_output or ctx.strict:
             raise UsageError("--source uses native Beanquery output; --json and --strict require a local --file.")
         _check_source_scheme(source)
+        if output_file is not None:
+            _refuse_source_alias(source, Path(output_file))
         native_args = [*rendering, source]
         if query_string is not None:
             native_args.append(query_string)
