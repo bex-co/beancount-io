@@ -544,11 +544,7 @@ def _transaction(
     if elided > 1:
         raise protocol.UsageError("Only one posting may omit its amount; supply amounts for the other postings.")
     if elided == 1 and _inferred_leg_is_zero(normalized):
-        raise protocol.UsageError(
-            "Refusing a zero-net transaction with an inferred balancing posting; "
-            "Beancount drops that leg from list/query. Supply an explicit amount "
-            "(for example 'Assets:Cash 0 USD') or use nonzero postings. Nothing was written."
-        )
+        raise protocol.UsageError(f"{_ZERO_NET_INFERRED} Nothing was written.")
     entry = entry._replace(postings=normalized, meta=write.metadata_for_write(entry.meta))
     rendered = writer.format_entry(entry)
     # The `@@` stash served the render; the JSON answer must not carry it.
@@ -562,6 +558,38 @@ def _transaction(
         "warnings": warnings,
         "target": str(write.destination(file, into)),
     }
+
+
+_ZERO_NET_INFERRED = (
+    "Refusing a zero-net transaction with an inferred balancing posting; "
+    "Beancount drops that leg from list/query. Supply an explicit amount "
+    "(for example 'Assets:Cash 0 USD') or use nonzero postings."
+)
+
+
+def _directive_infers_zero(directive: Any) -> bool:
+    """`_inferred_leg_is_zero` for a bulk row, which arrives as a model.
+
+    The row is judged on the text it would be written as, parsed the way the
+    ledger will read it; a `price_total` rides along as the exact `@@` total.
+    """
+    from beancount.core.amount import Amount as BcAmount
+    from beancount.core.data import Transaction
+    from beancount.parser import parser
+
+    if sum(1 for posting in directive.postings if posting.units is None) != 1:
+        return False
+    entries, errors, _ = parser.parse_string(writer.format_transaction(directive))
+    if errors or len(entries) != 1 or not isinstance(entries[0], Transaction):
+        return False  # Ledger validation reports what is wrong with it.
+    parsed = []
+    if len(entries[0].postings) != len(directive.postings):
+        return False
+    for posting, source in zip(entries[0].postings, directive.postings, strict=True):
+        total = source.price_total
+        meta = {writer.TOTAL_PRICE_META: BcAmount(total.number, total.currency)} if total else {}
+        parsed.append(posting._replace(meta=meta))
+    return _inferred_leg_is_zero(parsed)
 
 
 def _inferred_leg_is_zero(postings: list[Any]) -> bool:
@@ -754,9 +782,20 @@ def _transactions(
             "Use bea add transactions --help for a complete row."
         )
 
+    # The single add's lost-leg refusal holds for every row too: a zero
+    # inferred posting would be written, then dropped by every read.
+    kept: list[tuple[int, Any]] = []
+    for index, directive in valid:
+        if _directive_infers_zero(directive):
+            rejected.append(f"Row {index + 1}: {_ZERO_NET_INFERRED}")
+            rejected_rows.append(index)
+        else:
+            kept.append((index, directive))
+    valid = kept
+
     if rejected and not partial:
         raise protocol.LedgerError(
-            f"{len(rejected_rows)} of {len(rows)} row(s) failed schema validation; nothing was written. "
+            f"{len(rejected_rows)} of {len(rows)} row(s) failed validation; nothing was written. "
             f"Fix them, or pass --partial to try appending schema-valid rows "
             f"(ledger validation may still reject some of the {len(valid)}).",
             details=rejected,
