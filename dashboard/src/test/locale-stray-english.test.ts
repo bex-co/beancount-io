@@ -124,3 +124,44 @@ describe("no locale ships a half-translated message", () => {
     },
   );
 });
+
+/**
+ * The shared-tail check above deliberately ignores a message that is entirely
+ * English, because a one-word label such as `Status` is often correct in
+ * another language too. Table column headers are where that gap bit: German
+ * Events shipped `Datum`, `Type`, `Description` (w4/169). So German headers
+ * are compared whole, against a short list of words German UIs really do use.
+ */
+type StructuredCatalog = Record<
+  string,
+  { message: string; description?: string }
+>;
+
+const FEATURE_CATALOGS = import.meta.glob<{ default: StructuredCatalog }>(
+  "/src/**/locales/{en,de}.ts",
+  { eager: true },
+);
+
+/** English headers German keeps: loanwords and the journal's literal flag. */
+const GERMAN_SHARED_HEADERS = new Set(["F", "Status", "Links", "Meta", "Tags"]);
+
+describe("German table column headers", () => {
+  it("are translated unless German uses the same word", () => {
+    const untranslated: string[] = [];
+    for (const [path, catalog] of Object.entries(FEATURE_CATALOGS)) {
+      if (!path.endsWith("/en.ts")) continue;
+      const german =
+        FEATURE_CATALOGS[path.replace(/en\.ts$/, "de.ts")]?.default;
+      for (const [key, { message, description }] of Object.entries(
+        catalog.default,
+      )) {
+        if (!/column header/i.test(description ?? "")) continue;
+        if (GERMAN_SHARED_HEADERS.has(message)) continue;
+        if (german?.[key]?.message === message) {
+          untranslated.push(`${path} ${key}: ${message}`);
+        }
+      }
+    }
+    expect(untranslated).toEqual([]);
+  });
+});

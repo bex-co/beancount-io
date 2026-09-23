@@ -132,7 +132,7 @@ const deAccounts: Record<string, TranslationEntry> = {
     description: "Table column header for account status (Open/Closed)",
   },
   "page.accounts.type": {
-    message: "Type",
+    message: "Typ",
     description: "Table column header for type",
   },
   "page.accounts.accountClosedToast": {
