@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import time
 from collections.abc import Callable
 from contextlib import ExitStack
@@ -585,14 +586,15 @@ def export_portable(
     # already one of the ledger's own files — through a symlink, or a hard
     # link no path comparison can see — would be written straight through
     # into the books, so identity is compared, not spelling.
-    planned = [*destinations.values(), *feed_files.values()]
+    attachments = _export_attachments(loaded, snapshot.contents, destinations, target, home)
+    planned = [*destinations.values(), *feed_files.values(), *attachments.values()]
     for dest in planned:
         if not dest.exists():
             continue
-        for ledger_file in snapshot.contents:
+        for ledger_file in [*snapshot.contents, *attachments]:
             if os.path.samefile(dest, ledger_file):
                 raise UsageError(
-                    f"Cannot export: {dest} is the ledger file {ledger_file} (a link to it), "
+                    f"Cannot export: {dest} is the source file {ledger_file} (a link to it), "
                     "which the export would overwrite. Choose an empty or dedicated directory. "
                     "Nothing was written."
                 )
@@ -606,6 +608,10 @@ def export_portable(
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(_rewrite_export_includes(original, path, snapshot.patterns, destinations, by_target))
         written.append(str(dest))
+    for document, dest in attachments.items():
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(document, dest)
+        written.append(str(dest))
     at = time.time() if now is None else now
     for source in loaded.sources:
         dest = feed_files[source.url]
@@ -615,6 +621,63 @@ def export_portable(
     return PortableExport(
         output=target, files=tuple(sorted(written)), sources=loaded.sources, errors=list(loaded.errors)
     )
+
+
+def _export_attachments(
+    loaded: LoadedLedger,
+    contents: dict[Path, bytes],
+    destinations: dict[Path, Path],
+    target: Path,
+    home: Path,
+) -> dict[Path, Path]:
+    """Where each `document` the ledger names goes in the export.
+
+    Beancount checks that a document exists, so an export that copied only the
+    ledger text failed stock `bean-check` for a source that passed it. A file
+    under the root's directory is copied to the same relative place, which
+    keeps every relative `document` path — and a relative `documents` option —
+    resolving as before. What cannot travel that way is refused before
+    anything is written rather than left pointing back at this machine: a
+    file outside that tree, an absolute path in the directive, or a directive
+    in an included file that the export relocates.
+    """
+    from beancount.core.data import Document
+
+    from bea_engine.protocol import UsageError
+
+    ledger_files = {path.resolve(): path for path in contents}
+    unsupported: list[str] = []
+    for option_dir in loaded.options.get("documents") or []:
+        if os.path.isabs(option_dir):
+            unsupported.append(f'option "documents" "{option_dir}" (absolute)')
+    attachments: dict[Path, Path] = {}
+    for entry in loaded.entries:
+        if not isinstance(entry, Document):
+            continue
+        document = Path(entry.filename).resolve()
+        try:
+            dest = target / document.relative_to(home)
+        except ValueError:
+            unsupported.append(f"{document} (outside {home})")
+            continue
+        ledger = ledger_files.get(Path(entry.meta.get("filename", "")).resolve())
+        line = int(entry.meta.get("lineno") or 0)
+        if ledger is not None and line > 0:
+            lines = contents[ledger].decode("utf-8", "replace").splitlines()
+            text = lines[line - 1] if line <= len(lines) else ""
+            quoted = text.split('"')[1] if text.count('"') >= 2 else ""
+            moved = os.path.relpath(dest, destinations[ledger].parent) != os.path.relpath(document, ledger.parent)
+            if os.path.isabs(quoted) or moved:
+                unsupported.append(f"{document} (named by {ledger.name}:{line})")
+                continue
+        attachments[document] = dest
+    if unsupported:
+        raise UsageError(
+            "Cannot export: these document attachments would not travel with the export: "
+            + "; ".join(unsupported)
+            + ". Keep documents beside the ledger and name them by relative path. Nothing was written."
+        )
+    return attachments
 
 
 def _free_feed_path(directory: Path, alias: str, taken: set[Path]) -> Path:
