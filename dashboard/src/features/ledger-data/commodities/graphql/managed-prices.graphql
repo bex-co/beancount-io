@@ -1,0 +1,23 @@
+fragment ManagedPriceSourceFields on ManagedPriceSource {
+  url
+  alias
+  commodity
+  quote
+  source
+  observedAt
+  nextRefreshAt
+  freshness
+  error
+}
+
+query GetLedgerManagedPrices($ledgerId: String!) {
+  getLedgerManagedPrices(ledgerId: $ledgerId) {
+    ...ManagedPriceSourceFields
+  }
+}
+
+mutation RefreshLedgerManagedPrices($ledgerId: String!) {
+  refreshLedgerManagedPrices(ledgerId: $ledgerId) {
+    ...ManagedPriceSourceFields
+  }
+}

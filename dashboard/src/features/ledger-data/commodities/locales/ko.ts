@@ -43,6 +43,62 @@ const koCommodities: Record<string, TranslationEntry> = {
     message: "가격 ({quote})",
     description: "호가 통화 가격 열 머리글",
   },
+  "page.commodities.managedSources": {
+    message: "관리형 가격 소스",
+    description:
+      "Title of the panel listing managed price feeds the ledger includes",
+  },
+  "page.commodities.managedSourcesDescription": {
+    message:
+      "이 원장이 관리형 피드에서 가져오는 가격입니다. 몇 분마다 새로 고쳐지며, 직접 입력한 가격 항목이 우선합니다.",
+    description: "Description of the managed price sources panel",
+  },
+  "page.commodities.freshness.recent": {
+    message: "최신",
+    description:
+      "Freshness badge: the managed feed was observed within the last ten minutes",
+  },
+  "page.commodities.freshness.stale": {
+    message: "오래됨",
+    description:
+      "Freshness badge: the managed feed's latest price is older than ten minutes",
+  },
+  "page.commodities.freshness.unavailable": {
+    message: "사용 불가",
+    description:
+      "Freshness badge: no valid price has been received from the managed feed",
+  },
+  "page.commodities.observedAt": {
+    message: "관측 {time}",
+    description:
+      "When the feed's latest price was observed. {time} is a formatted date and time.",
+  },
+  "page.commodities.nextRefreshAt": {
+    message: "다음 새로 고침 {time}",
+    description:
+      "When the feed will next be re-fetched. {time} is a formatted date and time.",
+  },
+  "page.commodities.neverObserved": {
+    message: "아직 받은 가격이 없습니다",
+    description: "Shown when a managed feed has never delivered a valid price",
+  },
+  "page.commodities.lastError": {
+    message: "마지막 오류: {error}",
+    description:
+      "Why the last refresh of a managed feed failed. {error} is the technical cause.",
+  },
+  "page.commodities.refreshPrices": {
+    message: "가격 새로 고침",
+    description: "Button that re-fetches the ledger's managed price feeds now",
+  },
+  "page.commodities.refreshingPrices": {
+    message: "새로 고치는 중…",
+    description: "Refresh button label while the refresh is in progress",
+  },
+  "page.commodities.refreshPricesFailed": {
+    message: "가격을 새로 고칠 수 없습니다",
+    description: "Toast shown when refreshing managed prices fails",
+  },
 };
 
 export default koCommodities;

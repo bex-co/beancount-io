@@ -23,11 +23,13 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { EmptyState } from "@/common/components/empty-state";
 import { QueryView } from "@/common/components/query-view";
 import { useLedger } from "@/common/hooks/use-ledger";
+import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { buildCommodityChartLabels } from "./build-commodity-chart-labels";
 import { CommodityPriceHistory } from "./commodity-price-history";
 import { commodityPairLabel } from "./commodity-pair-label";
+import { ManagedPriceSources } from "./managed-price-sources";
 
 /**
  * Commodity chart component
@@ -150,6 +152,7 @@ export default function LedgerCommoditiesPage() {
   });
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const { ledgerName: ledgerDisplayName } = useLedger();
+  const { canWrite } = useLedgerPermission();
   const {
     data,
     loading: isLoading,
@@ -172,6 +175,7 @@ export default function LedgerCommoditiesPage() {
           ledgerName: ledgerDisplayName ?? ledgerName,
         })}
       />
+      <ManagedPriceSources ledgerId={ledgerId} canWrite={canWrite} />
       <QueryView
         loading={isLoading}
         error={error}

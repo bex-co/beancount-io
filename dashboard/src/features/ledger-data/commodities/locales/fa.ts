@@ -44,6 +44,62 @@ const faCommodities: Record<string, TranslationEntry> = {
     message: "قیمت ({quote})",
     description: "عنوان ستون قیمت‌ها به ارز مظنه",
   },
+  "page.commodities.managedSources": {
+    message: "منابع قیمت مدیریت‌شده",
+    description:
+      "Title of the panel listing managed price feeds the ledger includes",
+  },
+  "page.commodities.managedSourcesDescription": {
+    message:
+      "قیمت‌هایی که این دفتر از یک منبع مدیریت‌شده دریافت می‌کند. هر چند دقیقه به‌روزرسانی می‌شوند؛ ورودی‌های قیمت خودتان اولویت دارند.",
+    description: "Description of the managed price sources panel",
+  },
+  "page.commodities.freshness.recent": {
+    message: "به‌روز",
+    description:
+      "Freshness badge: the managed feed was observed within the last ten minutes",
+  },
+  "page.commodities.freshness.stale": {
+    message: "قدیمی",
+    description:
+      "Freshness badge: the managed feed's latest price is older than ten minutes",
+  },
+  "page.commodities.freshness.unavailable": {
+    message: "در دسترس نیست",
+    description:
+      "Freshness badge: no valid price has been received from the managed feed",
+  },
+  "page.commodities.observedAt": {
+    message: "مشاهده‌شده {time}",
+    description:
+      "When the feed's latest price was observed. {time} is a formatted date and time.",
+  },
+  "page.commodities.nextRefreshAt": {
+    message: "به‌روزرسانی بعدی {time}",
+    description:
+      "When the feed will next be re-fetched. {time} is a formatted date and time.",
+  },
+  "page.commodities.neverObserved": {
+    message: "هنوز قیمتی دریافت نشده است",
+    description: "Shown when a managed feed has never delivered a valid price",
+  },
+  "page.commodities.lastError": {
+    message: "آخرین خطا: {error}",
+    description:
+      "Why the last refresh of a managed feed failed. {error} is the technical cause.",
+  },
+  "page.commodities.refreshPrices": {
+    message: "به‌روزرسانی قیمت‌ها",
+    description: "Button that re-fetches the ledger's managed price feeds now",
+  },
+  "page.commodities.refreshingPrices": {
+    message: "در حال به‌روزرسانی…",
+    description: "Refresh button label while the refresh is in progress",
+  },
+  "page.commodities.refreshPricesFailed": {
+    message: "به‌روزرسانی قیمت‌ها ممکن نشد",
+    description: "Toast shown when refreshing managed prices fails",
+  },
 };
 
 export default faCommodities;
