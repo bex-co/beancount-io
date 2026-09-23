@@ -49,7 +49,7 @@ export type AccountJournalQueryInput = {
   directiveTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
-  /** Shared report-stream AccountFilter (URL ?account=). */
+  /** Optional shared report-stream AccountFilter (URL ?account=). Distinct from the required target `account`. */
   filterAccount?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
@@ -130,6 +130,30 @@ export type ApiKeyType = {
   name: Scalars['String']['output'];
   revokedAt: Maybe<Scalars['DateTimeISO']['output']>;
   scopes: Array<Scalars['String']['output']>;
+};
+
+export type AppendDirectiveTextResponse = {
+  __typename: 'AppendDirectiveTextResponse';
+  /** Files whose directives were not in date order, so these were appended at the end */
+  appendedUnsorted: Array<Scalars['String']['output']>;
+  /** Directives parsed out of the text */
+  count: Scalars['Float']['output'];
+  /** Unified diff per touched file; populated on dry runs only */
+  diff: Array<DirectiveTextDiff>;
+  dryRun: Scalars['Boolean']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
+  message: Scalars['String']['output'];
+  newErrors: Array<DirectiveTextError>;
+  success: Scalars['Boolean']['output'];
+  wrote: Array<AppendedDirective>;
+};
+
+export type AppendedDirective = {
+  __typename: 'AppendedDirective';
+  /** 1-based line the directive landed on */
+  line: Scalars['Float']['output'];
+  path: Scalars['String']['output'];
 };
 
 export type BalanceSheetData = {
@@ -320,9 +344,15 @@ export type CreateOneTimeTokenResponse = {
 export type CreatePrFromPatchInput = {
   baseBranch?: Scalars['String']['input'];
   changes: Array<FileChangeInput>;
-  description?: InputMaybe<Scalars['String']['input']>;
+  /** Commit message for the pull request branch's file changes; must not be empty */
+  clearCommitMessage: Scalars['String']['input'];
+  /** Must not be empty — describe what the pull request changes and why */
+  description: Scalars['String']['input'];
+  /** Skip the diff-less verification and open the pull request even when the branch does not differ from base */
+  fastForward?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerName: Scalars['String']['input'];
   ledgerOwner: Scalars['String']['input'];
+  /** Must not be empty */
   title: Scalars['String']['input'];
 };
 
@@ -372,7 +402,7 @@ export type DeleteMultiSourceSlicesInput = {
 
 export type DeleteMultiSourceSlicesResponse = {
   __typename: 'DeleteMultiSourceSlicesResponse';
-  deletedHashes: Array<Scalars['String']['output']>;
+  deletedCount: Scalars['Int']['output'];
   message: Scalars['String']['output'];
 };
 
@@ -395,6 +425,18 @@ export type DeleteSourceSliceResponse = {
 export type DenyCliAuthSessionResponse = {
   __typename: 'DenyCliAuthSessionResponse';
   success: Scalars['Boolean']['output'];
+};
+
+export type DirectiveTextDiff = {
+  __typename: 'DirectiveTextDiff';
+  diff: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+};
+
+export type DirectiveTextError = {
+  __typename: 'DirectiveTextError';
+  message: Scalars['String']['output'];
+  source: Maybe<Scalars['String']['output']>;
 };
 
 export type Document = {
@@ -562,6 +604,25 @@ export type IntervalTotalItem = {
   accountBalances: Scalars['JSONObject']['output'];
   balance: Scalars['JSONObject']['output'];
   date: Scalars['String']['output'];
+};
+
+export type IntrospectionType = {
+  __typename: 'IntrospectionType';
+  /** Whether the credential is usable right now. False covers expired, malformed, revoked, never-issued, and belonging to another user — deliberately indistinguishable, and the only field set when false. */
+  active: Scalars['Boolean']['output'];
+  /** `interactive`, `delegated`, or `workload` */
+  bio_assurance: Maybe<Scalars['String']['output']>;
+  /** `session`, `oauth`, or `apikey` */
+  bio_credential_kind: Maybe<Scalars['String']['output']>;
+  /** The one ledger this credential may touch, if it is confined */
+  bio_ledger_scope: Maybe<Scalars['String']['output']>;
+  client_id: Maybe<Scalars['String']['output']>;
+  exp: Maybe<Scalars['Float']['output']>;
+  iat: Maybe<Scalars['Float']['output']>;
+  jti: Maybe<Scalars['String']['output']>;
+  /** Effective capability in the ledger scope vocabulary, space-delimited — not the raw grant. A session token is not scope-constrained and reports all three. */
+  scope: Maybe<Scalars['String']['output']>;
+  sub: Maybe<Scalars['String']['output']>;
 };
 
 export type JournalEntriesResponse = {
@@ -852,7 +913,8 @@ export type LedgerPostingInput = {
   account: Scalars['String']['input'];
   flag?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<LedgerAmountInput>;
-  units: LedgerAmountInput;
+  /** Posting amount; omit on at most one posting per transaction to elide it */
+  units?: InputMaybe<LedgerAmountInput>;
 };
 
 export type LedgerPriceInput = {
@@ -883,6 +945,34 @@ export type LogoutResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+/** One include line that names a managed price URL. */
+export type ManagedPriceInclude = {
+  __typename: 'ManagedPriceInclude';
+  file: Scalars['String']['output'];
+  line: Scalars['Int']['output'];
+  /** The include target as written. */
+  target: Scalars['String']['output'];
+};
+
+/** Status of one managed price include (ADR 015). `freshness` is `recent` within ten minutes of the latest observation, `stale` beyond it, and `unavailable` when no revision has validated. */
+export type ManagedPriceSource = {
+  __typename: 'ManagedPriceSource';
+  alias: Scalars['String']['output'];
+  commodity: Maybe<Scalars['String']['output']>;
+  error: Maybe<Scalars['String']['output']>;
+  etag: Maybe<Scalars['String']['output']>;
+  fetchedAt: Maybe<Scalars['String']['output']>;
+  freshness: Scalars['String']['output'];
+  includedFrom: Array<ManagedPriceInclude>;
+  nextRefreshAt: Maybe<Scalars['String']['output']>;
+  observedAt: Maybe<Scalars['String']['output']>;
+  quote: Maybe<Scalars['String']['output']>;
+  revision: Maybe<Scalars['String']['output']>;
+  shadowedCount: Scalars['Int']['output'];
+  source: Maybe<Scalars['String']['output']>;
+  url: Scalars['String']['output'];
+};
+
 export type MintedApiKeyType = {
   __typename: 'MintedApiKeyType';
   key: ApiKeyType;
@@ -894,6 +984,8 @@ export type Mutation = {
   __typename: 'Mutation';
   addEntries: AddEntryResponse;
   addOrUpdateLedgerCollaborator: AddCollaboratorResponse;
+  /** Append Beancount directive text to a ledger, routed by type and date and inserted in date order */
+  appendLedgerText: AppendDirectiveTextResponse;
   approvePullRequest: PullRequestResult;
   /** Add one or more entries to a specific ledger (atomic) */
   bulkEntries: AddLedgerEntryResponse;
@@ -956,6 +1048,8 @@ export type Mutation = {
   parseReceipt: ReceiptParseResult;
   /** Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select. */
   reconcilePlaidAccounts: PlaidAccountReconcileResult;
+  /** Make every managed price feed the ledger includes due now, re-fetch each, and return the same records as getLedgerManagedPrices. Never touches the repository; a failed re-fetch keeps the last validated revision and reports its error. Requires write capability on the ledger. */
+  refreshLedgerManagedPrices: Array<ManagedPriceSource>;
   /** Refresh Plaid Item status from Plaid API (useful after reauthentication) */
   refreshPlaidItemStatus: PlaidItemType;
   /** Refresh authentication token - issues a new token and revokes the current one */
@@ -1020,6 +1114,15 @@ export type MutationAddOrUpdateLedgerCollaboratorArgs = {
 };
 
 
+export type MutationAppendLedgerTextArgs = {
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  ledgerId: Scalars['String']['input'];
+  path?: InputMaybe<Scalars['String']['input']>;
+  text: Scalars['String']['input'];
+};
+
+
 export type MutationApprovePullRequestArgs = {
   ledgerName: Scalars['String']['input'];
   ledgerOwner: Scalars['String']['input'];
@@ -1028,6 +1131,7 @@ export type MutationApprovePullRequestArgs = {
 
 
 export type MutationBulkEntriesArgs = {
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
   entries: Array<AddEntryInput>;
   ledgerId: Scalars['String']['input'];
 };
@@ -1204,6 +1308,11 @@ export type MutationReconcilePlaidAccountsArgs = {
 };
 
 
+export type MutationRefreshLedgerManagedPricesArgs = {
+  ledgerId: Scalars['String']['input'];
+};
+
+
 export type MutationRefreshPlaidItemStatusArgs = {
   itemId: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
@@ -1222,6 +1331,7 @@ export type MutationRenameLedgerFileArgs = {
   message?: InputMaybe<Scalars['String']['input']>;
   newPath: Scalars['String']['input'];
   oldPath: Scalars['String']['input'];
+  updateIncludes?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -1624,6 +1734,10 @@ export type PullRequestDetails = {
 
 export type PullRequestResult = {
   __typename: 'PullRequestResult';
+  /** The created PR's actual base ref, read back — never a default */
+  baseBranch: Maybe<Scalars['String']['output']>;
+  /** The created PR's actual head ref, read back — never a default */
+  headBranch: Maybe<Scalars['String']['output']>;
   message: Maybe<Scalars['String']['output']>;
   prNumber: Maybe<Scalars['Int']['output']>;
   prUrl: Maybe<Scalars['String']['output']>;
@@ -1696,6 +1810,8 @@ export type Query = {
   getLedgerJournal: JournalResponse;
   /** Get the links of a specific ledger */
   getLedgerLinks: Array<Scalars['String']['output']>;
+  /** Status of every managed price include the ledger names: feed pair and source, serving revision, observed/fetched/next-refresh times, freshness and the last refresh error. Empty when the ledger has none. */
+  getLedgerManagedPrices: Array<ManagedPriceSource>;
   /** Get the transactions for a narration */
   getLedgerNarrationTransactions: Transaction;
   getLedgerNarrations: Array<Scalars['String']['output']>;
@@ -1744,6 +1860,8 @@ export type Query = {
   /** is the server healthy? */
   health: Scalars['String']['output'];
   homeCharts: HomeChartsResponse;
+  /** Check whether a credential is live — an OAuth access token, a `bcio_` API key, or a session token. You may introspect your own credentials; anyone else's reads as inactive, exactly as an invalid one does. */
+  introspectToken: IntrospectionType;
   /** Get journal entries with enhanced search, filtering, and pagination */
   journalEntries: JournalEntriesResponse;
   /** Get a specific ledger */
@@ -1784,7 +1902,7 @@ export type QueryAccountHierarchyArgs = {
 
 
 export type QueryFeatureFlagsArgs = {
-  userId: Scalars['String']['input'];
+  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1985,6 +2103,11 @@ export type QueryGetLedgerLinksArgs = {
 };
 
 
+export type QueryGetLedgerManagedPricesArgs = {
+  ledgerId: Scalars['String']['input'];
+};
+
+
 export type QueryGetLedgerNarrationTransactionsArgs = {
   ledgerId: Scalars['String']['input'];
   narration: Scalars['String']['input'];
@@ -2139,6 +2262,12 @@ export type QueryHomeChartsArgs = {
 };
 
 
+export type QueryIntrospectTokenArgs = {
+  token: Scalars['String']['input'];
+  tokenTypeHint?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryJournalEntriesArgs = {
   accountFilter?: InputMaybe<Scalars['String']['input']>;
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2158,7 +2287,7 @@ export type QueryJournalEntriesArgs = {
 
 export type QueryLedgerMetaArgs = {
   ledgerId?: InputMaybe<Scalars['String']['input']>;
-  userId: Scalars['String']['input'];
+  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -2308,6 +2437,7 @@ export type RenameLedgerFileResponse = {
   __typename: 'RenameLedgerFileResponse';
   newPath: Scalars['String']['output'];
   oldPath: Scalars['String']['output'];
+  updatedIncludes: Array<Scalars['String']['output']>;
 };
 
 /** The email report status (deprecated) */
@@ -2489,6 +2619,8 @@ export type UpdateSourceSliceResponse = {
   __typename: 'UpdateSourceSliceResponse';
   entryHash: Scalars['String']['output'];
   message: Scalars['String']['output'];
+  /** The entry's public ID after the commit — use it for the next edit, not entryHash. */
+  newEntryHash: Scalars['String']['output'];
   newSha256sum: Scalars['String']['output'];
 };
 
@@ -2601,7 +2733,7 @@ export type DeleteMultipleLedgerEntrySourceSlicesMutationVariables = Exact<{
 }>;
 
 
-export type DeleteMultipleLedgerEntrySourceSlicesMutation = { deleteMultipleLedgerEntrySourceSlices: { __typename: 'DeleteMultiSourceSlicesResponse', message: string, deletedHashes: Array<string> } };
+export type DeleteMultipleLedgerEntrySourceSlicesMutation = { deleteMultipleLedgerEntrySourceSlices: { __typename: 'DeleteMultiSourceSlicesResponse', message: string, deletedCount: number } };
 
 export type GetLedgerIntervalTotalsQueryVariables = Exact<{
   accountName: Scalars['String']['input'];
@@ -3596,7 +3728,7 @@ export type GetUserStarredReposQuery = { getUserStarredRepos: { __typename: 'Rep
 
 export const ApiKeyFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ApiKeyFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"ApiKeyType"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"keyPrefix"}},{"kind":"Field","name":{"kind":"Name","value":"scopes"}},{"kind":"Field","name":{"kind":"Name","value":"ledgerScope"}},{"kind":"Field","name":{"kind":"Name","value":"lastUsedAt"}},{"kind":"Field","name":{"kind":"Name","value":"expiresAt"}},{"kind":"Field","name":{"kind":"Name","value":"revokedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}}]} as unknown as DocumentNode<ApiKeyFieldsFragment, unknown>;
 export const GetLedgerAccountDirectivesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetLedgerAccountDirectives"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getLedgerAccountDirectives"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"account"}},{"kind":"Field","name":{"kind":"Name","value":"openedAt"}},{"kind":"Field","name":{"kind":"Name","value":"closedAt"}},{"kind":"Field","name":{"kind":"Name","value":"balance"}},{"kind":"Field","name":{"kind":"Name","value":"entryCount"}},{"kind":"Field","name":{"kind":"Name","value":"entryHash"}},{"kind":"Field","name":{"kind":"Name","value":"closeEntryHash"}}]}}]}}]} as unknown as DocumentNode<GetLedgerAccountDirectivesQuery, GetLedgerAccountDirectivesQueryVariables>;
-export const DeleteMultipleLedgerEntrySourceSlicesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteMultipleLedgerEntrySourceSlices"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteMultiSourceSlicesInput"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteMultipleLedgerEntrySourceSlices"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}},{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"deletedHashes"}}]}}]}}]} as unknown as DocumentNode<DeleteMultipleLedgerEntrySourceSlicesMutation, DeleteMultipleLedgerEntrySourceSlicesMutationVariables>;
+export const DeleteMultipleLedgerEntrySourceSlicesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteMultipleLedgerEntrySourceSlices"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"DeleteMultiSourceSlicesInput"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteMultipleLedgerEntrySourceSlices"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}},{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"deletedCount"}}]}}]}}]} as unknown as DocumentNode<DeleteMultipleLedgerEntrySourceSlicesMutation, DeleteMultipleLedgerEntrySourceSlicesMutationVariables>;
 export const GetLedgerIntervalTotalsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetLedgerIntervalTotals"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"accountName"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"interval"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"conversion"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"time"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filter"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"account"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getLedgerIntervalTotals"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"accountName"},"value":{"kind":"Variable","name":{"kind":"Name","value":"accountName"}}},{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}},{"kind":"Argument","name":{"kind":"Name","value":"interval"},"value":{"kind":"Variable","name":{"kind":"Name","value":"interval"}}},{"kind":"Argument","name":{"kind":"Name","value":"conversion"},"value":{"kind":"Variable","name":{"kind":"Name","value":"conversion"}}},{"kind":"Argument","name":{"kind":"Name","value":"time"},"value":{"kind":"Variable","name":{"kind":"Name","value":"time"}}},{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filter"}}},{"kind":"Argument","name":{"kind":"Name","value":"account"},"value":{"kind":"Variable","name":{"kind":"Name","value":"account"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"balance"}},{"kind":"Field","name":{"kind":"Name","value":"accountBalances"}}]}}]}}]} as unknown as DocumentNode<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>;
 export const GetLedgerCommoditiesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetLedgerCommodities"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getLedgerCommodities"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"base"}},{"kind":"Field","name":{"kind":"Name","value":"quote"}},{"kind":"Field","name":{"kind":"Name","value":"prices"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]} as unknown as DocumentNode<GetLedgerCommoditiesQuery, GetLedgerCommoditiesQueryVariables>;
 export const GetLedgerDocumentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetLedgerDocuments"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"time"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filter"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"account"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getLedgerDocuments"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}},{"kind":"Argument","name":{"kind":"Name","value":"time"},"value":{"kind":"Variable","name":{"kind":"Name","value":"time"}}},{"kind":"Argument","name":{"kind":"Name","value":"filter"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filter"}}},{"kind":"Argument","name":{"kind":"Name","value":"account"},"value":{"kind":"Variable","name":{"kind":"Name","value":"account"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"meta"}},{"kind":"Field","name":{"kind":"Name","value":"links"}},{"kind":"Field","name":{"kind":"Name","value":"filename"}},{"kind":"Field","name":{"kind":"Name","value":"date"}},{"kind":"Field","name":{"kind":"Name","value":"account"}}]}}]}}]} as unknown as DocumentNode<GetLedgerDocumentsQuery, GetLedgerDocumentsQueryVariables>;

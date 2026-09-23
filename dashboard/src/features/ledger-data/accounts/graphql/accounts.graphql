@@ -16,6 +16,6 @@ mutation DeleteMultipleLedgerEntrySourceSlices(
 ) {
   deleteMultipleLedgerEntrySourceSlices(input: $input, ledgerId: $ledgerId) {
     message
-    deletedHashes
+    deletedCount
   }
 }
