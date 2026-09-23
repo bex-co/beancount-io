@@ -46,6 +46,30 @@ export function setReportsHandler(router: Router): void {
     );
   });
 
+  // operationId: getLedgerManagedPrices — managed price include status
+  // (ADR 015 §8). Loads the file map and feed cache only; no parse.
+  router.get(`${base}/managed-prices`, authMiddleware, async (ctx) => {
+    const { data } = servicesForRequest(ctx);
+    ctx.body = successResponse(
+      await data.getManagedPrices({
+        ledgerId: ledgerIdOf(ctx),
+        userId: undefined,
+      }),
+    );
+  });
+
+  // operationId: refreshLedgerManagedPrices — make every managed feed the
+  // ledger names due now and return the re-resolved status (ADR 015 §5).
+  router.post(`${base}/managed-prices/refresh`, authMiddleware, async (ctx) => {
+    const { data } = servicesForRequest(ctx);
+    ctx.body = successResponse(
+      await data.refreshManagedPrices({
+        ledgerId: ledgerIdOf(ctx),
+        userId: undefined,
+      }),
+    );
+  });
+
   // operationId: checkProjectedErrors — POST /reports/{o}/{r}/check
   // bean-check over projected file contents (base64 text; null deletes),
   // parsed without committing. Powers dry-run previews (w2/m26).

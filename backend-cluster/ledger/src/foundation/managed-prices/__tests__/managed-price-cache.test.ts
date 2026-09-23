@@ -2,6 +2,7 @@ import { asyncContext } from "@/shared/async-context";
 import { CACHE_KEYS } from "@/shared/cache";
 import {
   managedPriceUrlHash,
+  requestManagedPriceRefresh,
   resolveManagedPriceFeed,
   type PriceFeedHead,
 } from "../managed-price-cache";
@@ -317,5 +318,66 @@ describe("resolveManagedPriceFeed", () => {
     const result = await resolve(deps);
     expect(result.blob?.revision).toMatch(/^[0-9a-f]{64}$/u);
     expect(result.blob?.etag).toBeNull();
+  });
+});
+
+describe("requestManagedPriceRefresh", () => {
+  const headOf = (cache: ReturnType<typeof feedDeps>["cache"]) =>
+    cache.get<PriceFeedHead>(CACHE_KEYS.ledger.priceFeedHead(HASH));
+
+  it("makes a fresh feed due now, so the next load re-fetches inside the window", async () => {
+    const { deps, cache, calls } = feedDeps([
+      feedResponse(T1, '"e1"'),
+      feedResponse(T2, '"e2"'),
+    ]);
+    await resolve(deps);
+    await requestManagedPriceRefresh(URL_A, cache);
+    await expect(headOf(cache)).resolves.toEqual({
+      revision: "e1",
+      nextRefreshAt: 0,
+      lastError: null,
+    });
+    // No clock advance: without the refresh this load would be a cache hit.
+    const next = await resolve(deps);
+    expect(calls).toHaveLength(2);
+    expect(calls[1].init.headers).toMatchObject({ "if-none-match": '"e1"' });
+    expect(next.blob).toMatchObject({ revision: "e2", text: T2 });
+  });
+
+  it("keeps serving the last validated revision when the forced re-fetch fails", async () => {
+    const { deps, cache, clock } = feedDeps([
+      feedResponse(T1, '"e1"'),
+      feedResponse("slow down", null, 429),
+    ]);
+    await resolve(deps);
+    await requestManagedPriceRefresh(URL_A, cache);
+    const degraded = await resolve(deps);
+    expect(degraded.blob).toMatchObject({ revision: "e1", text: T1 });
+    expect(degraded.head).toEqual({
+      revision: "e1",
+      nextRefreshAt: clock.now() + TEST_CONFIG.retryMs,
+      lastError: expect.stringContaining("429"),
+    });
+    await expect(
+      cache.get(CACHE_KEYS.ledger.priceFeedBlob(HASH, "e1")),
+    ).resolves.toMatchObject({ revision: "e1" });
+  });
+
+  it("keeps the recorded error until a re-fetch actually clears it", async () => {
+    const { deps, cache } = feedDeps([feedResponse("gone", null, 404)]);
+    await resolve(deps);
+    const failed = await headOf(cache);
+    expect(failed?.lastError).toEqual(expect.any(String));
+    await requestManagedPriceRefresh(URL_A, cache);
+    await expect(headOf(cache)).resolves.toEqual({
+      ...failed,
+      nextRefreshAt: 0,
+    });
+  });
+
+  it("writes nothing for a feed that was never fetched", async () => {
+    const { cache } = feedDeps([]);
+    await requestManagedPriceRefresh(URL_A, cache);
+    await expect(headOf(cache)).resolves.toBeUndefined();
   });
 });

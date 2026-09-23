@@ -13,11 +13,13 @@ import type {
   PostingsPerAccountPublic,
   AccountReportPublic,
   DateAndBalanceWithAccountBalancePublic,
+  ManagedPriceSourcePublic,
 } from "@/foundation/ledger-api-types";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import {
   assertNotManagedPricePath,
   managedPriceDirectiveMatcher,
+  requestManagedPriceRefresh,
   type ManagedPriceSource,
 } from "@/foundation/managed-prices";
 import {
@@ -62,6 +64,7 @@ import {
   toDocumentsPublic,
   toEntriesCountPerTypePublic,
   toEventsPublic,
+  toManagedPricesPublic,
   toPostingsPerAccountPublic,
 } from "./ledger-data-mappers";
 
@@ -103,6 +106,15 @@ interface ILedgerDataService {
   getPayeeAccounts(params: BaseParams & { payee: string }): Promise<string[]>;
 
   getErrors(params: BaseParams): Promise<BeancountErrorPublic[]>;
+
+  /** Status of every managed price include the ledger names (ADR 015 §8). */
+  getManagedPrices(params: BaseParams): Promise<ManagedPriceSourcePublic[]>;
+
+  /**
+   * Make every managed price feed the ledger names due now (ADR 015 §5) and
+   * return the status after re-resolving them. Never touches the repository.
+   */
+  refreshManagedPrices(params: BaseParams): Promise<ManagedPriceSourcePublic[]>;
 
   /**
    * bean-check over projected file contents: the current repo file map with
@@ -381,6 +393,55 @@ export class LedgerDataService implements ILedgerDataService {
     const { ledgerId, userId } = params;
     const snapshot = await this.loadSnapshot(ledgerId, userId);
     return toBeancountErrorsPublic(snapshot.errors);
+  }
+
+  /**
+   * The managed price overlay without a parse: status needs only the feed
+   * cache, so reading it never costs an engine run.
+   */
+  private async loadManagedPrices(
+    ledgerId: string,
+    userId: string | undefined,
+  ): Promise<ManagedPriceSource[]> {
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    const client = await this.giteaClientFactory.getPublicApiClient(
+      ledgerId,
+      userId,
+    );
+    const { managedPrices } = await loadCachedFileMapForRepo(
+      client as GiteaCommitClient,
+      this.cacheHelper,
+      ledgerOwner,
+      ledgerName,
+    );
+    return managedPrices;
+  }
+
+  async getManagedPrices(
+    params: BaseParams,
+  ): Promise<ManagedPriceSourcePublic[]> {
+    const { ledgerId, userId } = params;
+    return toManagedPricesPublic(
+      await this.loadManagedPrices(ledgerId, userId),
+    );
+  }
+
+  async refreshManagedPrices(
+    params: BaseParams,
+  ): Promise<ManagedPriceSourcePublic[]> {
+    const { ledgerId, userId } = params;
+    // The first load names the URLs (and may itself refresh a feed that was
+    // already due); zeroing their heads makes the second load re-fetch each.
+    const before = await this.loadManagedPrices(ledgerId, userId);
+    if (before.length === 0) return [];
+    await Promise.all(
+      before.map(({ url }) =>
+        requestManagedPriceRefresh(url, this.cacheHelper),
+      ),
+    );
+    return toManagedPricesPublic(
+      await this.loadManagedPrices(ledgerId, userId),
+    );
   }
 
   async checkProjectedErrors(

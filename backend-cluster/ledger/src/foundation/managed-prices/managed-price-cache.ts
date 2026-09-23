@@ -151,6 +151,27 @@ function servable(
 }
 
 /**
+ * Manual refresh (ADR 015 section 5): zero the head's `nextRefreshAt` so the
+ * next load re-fetches `url`. The revision and last error stay, so a failed
+ * re-fetch keeps serving the last validated bytes exactly as a scheduled
+ * refresh would. A URL with no head has never been fetched and is already due,
+ * so there is nothing to write. Taken under the feed's lock so it cannot
+ * interleave with an in-flight fetch writing the same head.
+ */
+export async function requestManagedPriceRefresh(
+  url: string,
+  cache: CacheHelper,
+): Promise<void> {
+  const urlHash = managedPriceUrlHash(url);
+  const headKey = CACHE_KEYS.ledger.priceFeedHead(urlHash);
+  await lock.acquire(`${FEED_LOCK_PREFIX}${urlHash}`, async () => {
+    const head = await cache.get<PriceFeedHead>(headKey);
+    if (!head || head.nextRefreshAt === 0) return;
+    await cache.set(headKey, { ...head, nextRefreshAt: 0 }, TTL.HOUR_24);
+  });
+}
+
+/**
  * Serve the feed at `url` from the cache, refreshing it when its window has
  * elapsed. Never throws for a feed problem: every failure is recorded on the
  * head and the caller receives whatever revision last validated.

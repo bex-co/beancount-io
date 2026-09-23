@@ -10,8 +10,10 @@ import type {
   DocumentPublic,
   EntriesCountPerTypePublic,
   EventPublic,
+  ManagedPriceSourcePublic,
   PostingsPerAccountPublic,
 } from "@/foundation/ledger-api-types";
+import type { ManagedPriceSource } from "@/foundation/managed-prices";
 
 /** Map engine {@link LedgerAttributes} → the fava `AttributesPublic` DTO. */
 export function toAttributesPublic(
@@ -37,6 +39,18 @@ export function toAttributesPublic(
  * the error is classified (w2/013). The engine's own `hint` rides along for
  * the same reason.
  */
+/**
+ * The client-facing status record: everything but `effectiveDates`, which is
+ * the engine-side matcher's input (one date per feed point), not status.
+ */
+export function toManagedPricesPublic(
+  sources: ManagedPriceSource[],
+): ManagedPriceSourcePublic[] {
+  return sources.map(
+    ({ effectiveDates: _effectiveDates, ...status }) => status,
+  );
+}
+
 export function toBeancountErrorsPublic(
   errors: BeancountError[],
 ): BeancountErrorPublic[] {

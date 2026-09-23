@@ -1,6 +1,7 @@
 import { createCache } from "cache-manager";
 import type { ManagedPricesConfig } from "@/config";
 import { createCacheHelper, type CacheHelper } from "@/shared/cache";
+import type { GiteaCommitClient } from "@/foundation/clients/load-cached-ledger-file-map";
 import type { ManagedPriceFeedDeps } from "../managed-price-cache";
 
 /** The same in-memory store production uses by default (`build-cache.ts`). */
@@ -99,4 +100,49 @@ export function feedText(
     lines.push("");
   }
   return `${lines.join("\n")}\n`;
+}
+
+export const SHA = "0123456789abcdef0123456789abcdef01234567";
+
+/**
+ * A Gitea client serving one commit with `main.bean` that includes the feed.
+ * `getTree` and `repoGetContents` are counted so a price refresh can be shown
+ * to cost no repository round trip.
+ */
+export function giteaClient(files: Record<string, string>) {
+  const counts = { commits: 0, tree: 0, contents: 0 };
+  const client = {
+    repos: {
+      repoGetAllCommits: async () => {
+        counts.commits += 1;
+        return { data: [{ sha: SHA }] };
+      },
+      getTree: async () => {
+        counts.tree += 1;
+        return {
+          data: {
+            sha: SHA,
+            truncated: false,
+            tree: Object.entries(files).map(([path, content]) => ({
+              path,
+              type: "blob",
+              size: Buffer.byteLength(content),
+            })),
+          },
+        };
+      },
+      repoGetContents: async (_o: string, _r: string, filepath: string) => {
+        counts.contents += 1;
+        return {
+          data: {
+            type: "file",
+            path: filepath,
+            content: Buffer.from(files[filepath], "utf8").toString("base64"),
+            encoding: "base64",
+          },
+        };
+      },
+    },
+  } as unknown as GiteaCommitClient;
+  return { client, counts };
 }

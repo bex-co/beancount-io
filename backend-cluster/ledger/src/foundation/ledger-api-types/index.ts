@@ -323,6 +323,43 @@ export interface BcioOptionsPublic {
   document_file: string | null;
 }
 
+/** One include line that names a managed price URL. */
+export interface ManagedPriceIncludePublic {
+  /** Repository file holding the include. */
+  file: string;
+  /** 1-based line of the include in that file. */
+  line: number;
+  /** The include target exactly as written. */
+  target: string;
+}
+
+/**
+ * ManagedPriceSourcePublic
+ * Status of one managed price include resolved for this load (ADR 015 §8).
+ * Freshness is computed when read: `recent` within ten minutes of the latest
+ * `observedAt`, `stale` beyond it, `unavailable` when no revision validated.
+ */
+export interface ManagedPriceSourcePublic {
+  url: string;
+  alias: string;
+  includedFrom: ManagedPriceIncludePublic[];
+  commodity: string | null;
+  quote: string | null;
+  /** The feed's `price-source`, e.g. the upstream provider. */
+  source: string | null;
+  revision: string | null;
+  etag: string | null;
+  /** ISO timestamps. */
+  observedAt: string | null;
+  fetchedAt: string | null;
+  nextRefreshAt: string | null;
+  freshness: "recent" | "stale" | "unavailable";
+  /** Why the last refresh failed; cleared by the next success. */
+  error: string | null;
+  /** Feed points replaced by a price the ledger itself declares. */
+  shadowedCount: number;
+}
+
 /**
  * BeancountErrorPublic
  * Public schema for BeancountError.

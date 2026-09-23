@@ -7122,6 +7122,126 @@
           }
         }
       }
+    },
+    "/reports/{owner}/{repo_name}/managed-prices": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Get Ledger Managed Prices",
+        "description": "Status of every managed price include the ledger names (ADR 015 section 8): feed identity, revision, observed/fetched/next-refresh times, freshness computed at read time, and the last refresh error. Loads the file map and feed cache only; never parses the ledger.",
+        "operationId": "getLedgerManagedPrices",
+        "security": [
+          {
+            "HTTPBasic": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Owner"
+            }
+          },
+          {
+            "name": "repo_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Repo Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_list_ManagedPriceSourcePublic__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/{owner}/{repo_name}/managed-prices/refresh": {
+      "post": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Refresh Ledger Managed Prices",
+        "description": "Make every managed price feed the ledger names due now (ADR 015 section 5) and return the re-resolved status. Never reads the repository again or writes a commit; a failed re-fetch keeps serving the last validated revision and reports the error.",
+        "operationId": "refreshLedgerManagedPrices",
+        "security": [
+          {
+            "HTTPBasic": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Owner"
+            }
+          },
+          {
+            "name": "repo_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Repo Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_list_ManagedPriceSourcePublic__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -14435,6 +14555,204 @@
           "path"
         ],
         "title": "ProjectedFileOverlay"
+      },
+      "ManagedPriceIncludePublic": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "line": {
+            "type": "integer",
+            "title": "Line"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "line",
+          "target"
+        ],
+        "title": "ManagedPriceIncludePublic",
+        "description": "One include line that names a managed price URL."
+      },
+      "ManagedPriceSourcePublic": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "alias": {
+            "type": "string",
+            "title": "Alias"
+          },
+          "includedFrom": {
+            "items": {
+              "$ref": "#/components/schemas/ManagedPriceIncludePublic"
+            },
+            "type": "array",
+            "title": "Includedfrom"
+          },
+          "commodity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commodity"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "etag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Etag"
+          },
+          "observedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observedat"
+          },
+          "fetchedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetchedat"
+          },
+          "nextRefreshAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextrefreshat"
+          },
+          "freshness": {
+            "type": "string",
+            "enum": [
+              "recent",
+              "stale",
+              "unavailable"
+            ],
+            "title": "Freshness"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "shadowedCount": {
+            "type": "integer",
+            "title": "Shadowedcount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "alias",
+          "includedFrom",
+          "commodity",
+          "quote",
+          "source",
+          "revision",
+          "etag",
+          "observedAt",
+          "fetchedAt",
+          "nextRefreshAt",
+          "freshness",
+          "error",
+          "shadowedCount"
+        ],
+        "title": "ManagedPriceSourcePublic",
+        "description": "Status of one managed price include (ADR 015 section 8). Freshness: recent within ten minutes of the latest observedAt, stale beyond it, unavailable when no revision validated."
+      },
+      "SuccessResponse_list_ManagedPriceSourcePublic__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ManagedPriceSourcePublic"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[list[ManagedPriceSourcePublic]]"
       }
     },
     "securitySchemes": {

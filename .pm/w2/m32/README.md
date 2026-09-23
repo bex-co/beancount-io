@@ -1,12 +1,12 @@
 # w2 · m32 — Managed price status on every client surface
 
-**Worker:** worker2 **Goal:** the per-source status the ledger service already computes for managed price includes (ADR 015 §8) reaches REST, GraphQL, MCP and the dashboard with one shape, users can refresh a managed feed on demand, and the dashboard stops offering an edit the ledger refuses **Status:** todo
+**Worker:** worker2 **Goal:** the per-source status the ledger service already computes for managed price includes (ADR 015 §8) reaches REST, GraphQL, MCP and the dashboard with one shape, users can refresh a managed feed on demand, and the dashboard stops offering an edit the ledger refuses **Status:** in progress (t001 done)
 
 ## Tasks (in order)
 
 | id   | title                                                                  | est | depends_on |
 | ---- | ---------------------------------------------------------------------- | --- | ---------- |
-| t001 | Ledger service: managed price status and refresh endpoints + IDL        | 60m | —          |
+| t001 | Ledger service: managed price status and refresh endpoints + IDL — **DONE** | 60m | —          |
 | t002 | backend-v2: managed price status on REST, GraphQL and MCP (parity)      | 60m | t001       |
 | t003 | backend-v2: "Refresh prices" action on REST, GraphQL and MCP            | 45m | t001, t002 |
 | t004 | Dashboard: freshness labels and Refresh prices in the price view        | 60m | t002, t003 |
