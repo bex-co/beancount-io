@@ -135,6 +135,11 @@ def format_beans(
         for ledger_file in files:
             output.refuse_ledger_alias(output_file, ledger_file)
 
+    # Upstream decodes the file itself and dies with a raw traceback on a
+    # stray byte, so the encoding is checked here first: the same path, offset,
+    # and re-save hint `--check` gives, before the destination is touched.
+    for ledger_file in files:
+        _text(ledger_file)
     status = launch.run_native("bean-format", [*alignment, *_destination(output_file), *(str(f) for f in files)])
     if status != 0:
         raise typer.Exit(status)
