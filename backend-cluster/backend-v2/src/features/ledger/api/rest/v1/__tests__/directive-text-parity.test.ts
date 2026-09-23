@@ -383,6 +383,42 @@ describe("appending Beancount text through the real adapters", () => {
   );
 
   it.each(["rest", "gql", "mcp"] as const)(
+    "previews a write that would break the ledger, with its new errors, via %s",
+    async (surface) => {
+      const f = await fixture();
+      f.state.projectedErrors = [
+        { message: "Account Expenses:Food was never opened" },
+      ];
+      try {
+        const result = await f.call(surface, { text: TXN, dryRun: true });
+        expect(result.ok).toBe(true);
+        const data = result.ok ? (result.data as Record<string, never>) : {};
+        expect(data.dryRun ?? data.dry_run).toBe(true);
+        expect(
+          (data.diff as { path: string; diff: string }[])[0].diff,
+        ).toContain('+2026-02-05 * "Cafe" "Coffee"');
+        const newErrors =
+          (data.validation as { newErrors: { message: string }[] })
+            ?.newErrors ?? (data.newErrors as { message: string }[]);
+        expect(newErrors).toEqual([
+          expect.objectContaining({
+            message: expect.stringContaining("never opened"),
+          }),
+        ]);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+        expect(f.state.files.get("main.bean")).toBe(EXISTING);
+
+        // The same call without the preview is still refused.
+        const commit = await f.call(surface, { text: TXN });
+        expect(commit.ok).toBe(false);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(["rest", "gql", "mcp"] as const)(
     "refuses text that is not Beancount directives via %s",
     async (surface) => {
       const f = await fixture();

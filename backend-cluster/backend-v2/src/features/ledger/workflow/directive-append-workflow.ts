@@ -155,7 +155,11 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
     ]);
     const newErrors = diffBeanCheckErrors(baseline, projected);
 
-    if (newErrors.length > 0 && !allowInvalid) {
+    // Only a commit is refused: a preview exists to show what the write would
+    // break, so it returns the diff and `newErrors` instead (w1/037). The
+    // alternative taught agents to preview with `allowInvalid` and then commit
+    // the same call — recording exactly what this refusal guards against.
+    if (newErrors.length > 0 && !allowInvalid && !dryRun) {
       throw unbalancedOrValidationError(newErrors);
     }
 

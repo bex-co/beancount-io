@@ -49,7 +49,7 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 
 ## Inbox
 
-- [037](./037.md) — Directive-text dry runs refuse on new bean-check errors instead of previewing them.
+No open notes. The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
 
 The four mobile QA findings filed on 2026-09-16 were drained the same day: [031](./done/031.md), [032](./done/032.md), and [034](./done/034.md) shipped with regression coverage, and [033](./blocked/033.md) is blocked.
 
