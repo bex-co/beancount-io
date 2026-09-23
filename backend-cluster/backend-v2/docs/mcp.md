@@ -691,7 +691,11 @@ every tool:
 ```
 
 Branch on `error.code`; `error.hint` names the next call to make. `retryAfter`
-is present only for `RATE_LIMITED`. Check `isError` first — HTTP 200 does not
+is present only for `RATE_LIMITED`. Arguments that do not match a tool's
+published input schema are refused the same way, before any work runs:
+`BAD_USER_INPUT` with a message of the form `path: reason`, where `path` names
+the field (`files.0.start_line` for a nested one). An unknown tool name answers
+`NOT_FOUND`. Check `isError` first — HTTP 200 does not
 mean the tool succeeded.
 
 Each tool advertises an object `outputSchema`: `ok` is required, with optional

@@ -177,12 +177,20 @@ function captureMcpHandlers(
   services?: Record<string, unknown>,
 ): Map<string, McpHandler> {
   const handlers = new Map<string, McpHandler>();
+  const registerTool = McpServer.prototype.registerTool;
+  // Captures each handler but still registers it: assembly then answers
+  // `tools/call` itself, which the server allows only once it has tools.
   const spy = jest
     .spyOn(McpServer.prototype, "registerTool")
-    .mockImplementation(((name: string, _cfg: unknown, cb: McpHandler) => {
+    .mockImplementation(function (
+      this: McpServer,
+      name: string,
+      cfg: unknown,
+      cb: McpHandler,
+    ) {
       handlers.set(name, cb);
-      return {} as never;
-    }) as never);
+      return registerTool.call(this, name, cfg as never, cb as never);
+    } as never);
   try {
     assembleMcpRegistry(
       {

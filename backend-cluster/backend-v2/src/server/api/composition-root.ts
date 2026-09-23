@@ -23,6 +23,7 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { UriTemplate } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
+import { CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import type {
   CallToolResult,
   ReadResourceResult,
@@ -451,7 +452,16 @@ export function assembleMcpRegistry(
     { instructions: buildInstructions(toolCtx.identity) },
   );
 
+  const toolHandlers = new Map<
+    string,
+    {
+      descriptor: (typeof MCP_TOOLS)[number];
+      handle: ReturnType<typeof makeMcpToolHandler>;
+    }
+  >();
   for (const descriptor of MCP_TOOLS) {
+    const handle = makeMcpToolHandler(toolCtx, descriptor, config);
+    toolHandlers.set(descriptor.name, { descriptor, handle });
     server.registerTool(
       descriptor.name,
       {
@@ -461,13 +471,72 @@ export function assembleMcpRegistry(
         outputSchema: descriptor.outputSchema,
         annotations: descriptor.annotations,
       },
-      makeMcpToolHandler(
-        toolCtx,
-        descriptor,
-        config,
-      ) as unknown as ToolCallback<ZodTypeAny>,
+      handle as unknown as ToolCallback<ZodTypeAny>,
     );
   }
+
+  // `tools/list` still publishes each schema registered above, but `tools/call`
+  // is answered here. The SDK's own dispatcher validates arguments before any
+  // handler of ours runs and refuses in bare prose — no `structuredContent`,
+  // no code, no hint — through a helper it keeps private (w1/035). Validating
+  // against the same descriptor schema here, and refusing in the one envelope,
+  // is what lets a malformed argument read like every other refusal on this
+  // surface. Invalid input is still refused before the gate or any domain work.
+  server.server.setRequestHandler(
+    CallToolRequestSchema,
+    async (request): Promise<CallToolResult> => {
+      const { name } = request.params;
+      const entry = toolHandlers.get(name);
+      if (!entry) {
+        return toolFailureResult(
+          name,
+          envelopeFromThrown(
+            new NotFoundError(
+              "Tool",
+              name,
+              "No tool by that name. Call `tools/list` for the inventory.",
+            ),
+          ),
+        );
+      }
+      const parsed = await entry.descriptor.inputSchema.safeParseAsync(
+        request.params.arguments ?? {},
+      );
+      if (!parsed.success) {
+        // A Zod error's message is its issue array, which `envelopeFromThrown`
+        // reduces to `path: reason` per wrong field, nested paths included.
+        const envelope = envelopeFromThrown(parsed.error);
+        mcpLogger.info("MCP tool arguments refused", {
+          tool: name,
+          error: envelope.message,
+        });
+        return toolFailureResult(name, envelope);
+      }
+      const result = await entry.handle(parsed.data as never);
+      // The output check the SDK dispatcher ran: a success must match the
+      // schema `tools/list` published for it.
+      if (!result.isError) {
+        const output = entry.descriptor.outputSchema.safeParse(
+          result.structuredContent,
+        );
+        if (!output.success) {
+          mcpLogger.error("MCP tool output failed its schema", {
+            tool: name,
+            error: output.error.message,
+          });
+          return toolFailureResult(
+            name,
+            envelopeFromThrown(
+              new Error(
+                `Tool ${name} returned a result that does not match its published output schema.`,
+              ),
+            ),
+          );
+        }
+      }
+      return result;
+    },
+  );
 
   // One enumeration per request, shared by every template's list callback:
   // resources/list fans out to each template, and without the memo each one

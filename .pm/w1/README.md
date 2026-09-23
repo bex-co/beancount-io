@@ -49,7 +49,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 
 ## Inbox
 
-- [035](./035.md) — MCP tool argument validation bypasses the structured error envelope.
 - [036](./036.md) — Invalid MCP resource URI parameters escape as internal errors without codes or hints.
 - [037](./037.md) — Directive-text dry runs refuse on new bean-check errors instead of previewing them.
 
