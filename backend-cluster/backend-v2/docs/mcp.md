@@ -715,7 +715,10 @@ The same codes reach resource reads and prompt fetches, as the JSON-RPC error's
 handler runs: a `beancount://` URI matching no template answers `NOT_FOUND`
 (`-32002`) with a hint naming `resources/templates/list`, and a malformed
 `month` or `ledger` argument to a prompt answers `BAD_USER_INPUT` (`-32602`)
-naming the argument. A URI under another scheme is not this server's to answer
+naming the argument. A resource URI that matches a template but is malformed —
+an unknown or repeated query parameter, a `#` fragment, or invalid percent
+encoding — also answers `BAD_USER_INPUT` (`-32602`), with a hint naming what the
+template accepts. A URI under another scheme is not this server's to answer
 and still returns the SDK's own refusal.
 
 | `error.code`             | JSON-RPC | What it means and what to do                                                                                |

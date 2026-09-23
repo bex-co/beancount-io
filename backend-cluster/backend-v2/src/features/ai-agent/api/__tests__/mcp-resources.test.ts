@@ -9,7 +9,7 @@ import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { MCP_TOOLS } from "../mcp-tools";
 import type { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { RESOURCE_SCHEME } from "../mcp-resources";
-import { JSON_RPC_NOT_FOUND } from "../mcp-errors";
+import { JSON_RPC_INVALID_PARAMS, JSON_RPC_NOT_FOUND } from "../mcp-errors";
 import { ForbiddenError } from "@/shared/errors";
 import type { AppConfig } from "@/config/config";
 import type { ToolContext } from "../../tools/types";
@@ -314,6 +314,81 @@ describe("resource path encoding", () => {
         client.readResource({ uri: "beancount://alice/main/files/%ZZ" }),
       ).rejects.toThrow(/encoding/);
       expect(getFilesContent).not.toHaveBeenCalled();
+    } finally {
+      await close();
+    }
+  });
+});
+
+/**
+ * w1/036. The SDK matches a URI before any read callback runs, so a malformed
+ * one refused during matching could not be translated downstream: it arrived
+ * as `-32603` with no `data`, which tells an agent to retry rather than to fix
+ * the request.
+ */
+describe("a malformed resource URI", () => {
+  const TRIAL = `${RESOURCE_SCHEME}://alice/main/trial-balance`;
+
+  it.each([
+    [`${TRIAL}?unknown=1`, "Unknown or repeated resource parameter: unknown"],
+    [
+      `${TRIAL}?time=2026&time=2025`,
+      "Unknown or repeated resource parameter: time",
+    ],
+    [
+      `${FILE_URI}?unknown=1`,
+      "Unknown or repeated resource parameter: unknown",
+    ],
+    [
+      `${RESOURCE_SCHEME}://alice/main/errors#qa`,
+      "Resource fragments are not supported",
+    ],
+    [
+      `${RESOURCE_SCHEME}://alice/main/files/%E0%A4`,
+      "Invalid URI encoding in resource path",
+    ],
+  ])("refuses %s as a coded, hinted BAD_USER_INPUT", async (uri, message) => {
+    const getFilesContent = contentOf("main.beancount", "");
+    const { client, close } = await connect(ctx(getFilesContent));
+    try {
+      const { resourceTemplates } = await client.listResourceTemplates();
+      expect(
+        resourceTemplates.some((t) =>
+          t.uriTemplate.startsWith(
+            `${RESOURCE_SCHEME}://{owner}/{name}/trial-balance{?`,
+          ),
+        ),
+      ).toBe(true);
+      const error = await client
+        .readResource({ uri })
+        .then(() => undefined)
+        .catch((caught: unknown) => caught as McpError);
+      expect(error?.code).toBe(JSON_RPC_INVALID_PARAMS);
+      expect(error?.data).toMatchObject({
+        code: "BAD_USER_INPUT",
+        message,
+        hint: expect.stringMatching(/\S/),
+      });
+      // One prefix — the client's own.
+      expect(error?.message).toBe(
+        `MCP error ${JSON_RPC_INVALID_PARAMS}: ${message}`,
+      );
+      expect(getFilesContent).not.toHaveBeenCalled();
+    } finally {
+      await close();
+    }
+  });
+
+  it("names the parameters a template does accept", async () => {
+    const { client, close } = await connect(
+      ctx(contentOf("main.beancount", "")),
+    );
+    try {
+      const error = await client
+        .readResource({ uri: `${TRIAL}?unknown=1` })
+        .then(() => undefined)
+        .catch((caught: unknown) => caught as McpError);
+      expect((error?.data as { hint: string }).hint).toContain("`time`");
     } finally {
       await close();
     }

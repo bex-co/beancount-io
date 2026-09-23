@@ -3,6 +3,22 @@ import {
   type Variables,
 } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
 import { BadUserInputError } from "@/shared/errors";
+import { envelopeFromThrown, McpRequestFailure } from "./mcp-errors";
+
+/**
+ * A malformed URI, refused in the MCP envelope rather than as a domain error.
+ *
+ * The SDK matches a URI before any read callback of ours runs, so nothing
+ * downstream can translate a throw from here: a plain `BadUserInputError`
+ * carries no numeric code and the SDK serialized it as `-32603` with no
+ * `data` (w1/036). The transport-shaped failure goes out as `-32602` with
+ * `BAD_USER_INPUT` and the hint.
+ */
+function refuseUri(message: string, hint: string): never {
+  throw new McpRequestFailure(
+    envelopeFromThrown(new BadUserInputError(message, undefined, hint)),
+  );
+}
 
 /**
  * The SDK expands RFC 6570 query expressions but cannot match them. Keep its
@@ -32,14 +48,23 @@ export class QueryResourceTemplate extends UriTemplate {
           : decodeURIComponent(value);
       }
     } catch {
-      throw new BadUserInputError("Invalid URI encoding in resource path");
+      refuseUri(
+        "Invalid URI encoding in resource path",
+        "Percent-encode each path segment as UTF-8 (`encodeURIComponent`) and read it again.",
+      );
     }
     if (url.hash)
-      throw new BadUserInputError("Resource fragments are not supported");
+      refuseUri(
+        "Resource fragments are not supported",
+        "Drop the `#` fragment; a resource URI takes a path and an optional query only.",
+      );
     for (const [name, value] of url.searchParams) {
       if (!this.queryNames.includes(name) || name in variables) {
-        throw new BadUserInputError(
+        refuseUri(
           `Unknown or repeated resource parameter: ${name}`,
+          this.queryNames.length
+            ? `This resource accepts ${this.queryNames.map((q) => `\`${q}\``).join(", ")}, each at most once; \`resources/templates/list\` publishes every template.`
+            : "This resource takes no query parameters; `resources/templates/list` publishes every template.",
         );
       }
       variables[name] = value;
@@ -54,4 +79,3 @@ export function queryTemplate(
 ): QueryResourceTemplate {
   return new QueryResourceTemplate(path, queryNames);
 }
-
