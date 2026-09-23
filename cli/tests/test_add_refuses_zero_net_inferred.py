@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = """option "operating_currency" "USD"
 2020-01-01 open Assets:Cash USD
@@ -96,3 +98,61 @@ def test_add_refuses_zero_net_inferred_balancing_posting(tmp_path: Path) -> None
         "Assets:Cash",
     )
     assert inferred.returncode == 0, inferred.stderr or inferred.stdout
+
+
+# Weights, not units, decide whether the inferred leg is zero (w4/165): a sale
+# and a repurchase cancel in HOOL but leave a gain in USD to infer.
+BROKER = """2024-01-01 open Assets:Broker HOOL
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Income:Gains USD
+2024-01-02 * "Buy"
+  Assets:Broker 1 HOOL {50 USD}
+  Assets:Cash -50 USD
+"""
+
+
+def _add(tmp_path: Path, ledger: Path, *postings: str) -> subprocess.CompletedProcess[str]:
+    args = ["--json", "--file", str(ledger), "add", "transaction", "Trade", "--date", "2024-03-01"]
+    for posting in postings:
+        args += ["-p", posting]
+    return _bea(tmp_path, *args)
+
+
+def _gains(tmp_path: Path, ledger: Path) -> list[list[str]]:
+    import json
+
+    result = _bea(tmp_path, "--json", "--file", str(ledger), "query", "SELECT number WHERE account = 'Income:Gains'")
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)["data"]["rows"]
+
+
+@pytest.mark.parametrize(
+    ("postings", "gain"),
+    [
+        (("Assets:Broker -1 HOOL {50 USD} @ 60 USD", "Assets:Broker 1 HOOL {60 USD}"), "-10"),
+        (("Assets:Broker -1 HOOL {50 USD} @@ 60 USD", "Assets:Broker 1 HOOL @@ 70 USD"), "-20"),
+        (("Assets:Broker -1 HOOL {50 USD}", "Assets:Broker 1 HOOL {45 # 15 USD}"), "-10"),
+    ],
+    ids=["sale-and-repurchase", "total-prices", "per-and-total-cost"],
+)
+def test_a_nonzero_weight_is_inferred_even_when_units_cancel(
+    tmp_path: Path, postings: tuple[str, str], gain: str
+) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(BROKER)
+    added = _add(tmp_path, ledger, *postings, "Income:Gains")
+    assert added.returncode == 0, added.stderr
+    assert _gains(tmp_path, ledger) == [[gain]]
+    assert _bea(tmp_path, "--file", str(ledger), "check").returncode == 0
+
+
+def test_a_zero_weight_across_costs_is_still_refused(tmp_path: Path) -> None:
+    # Units never cancel here (HOOL against USD), yet the weights do:
+    # -1 x 50 USD at cost plus 50 USD is zero, so the inferred leg would vanish.
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(BROKER)
+    before = ledger.read_bytes()
+    zero = _add(tmp_path, ledger, "Assets:Broker -1 HOOL {50 USD}", "Assets:Cash 50 USD", "Income:Gains")
+    assert zero.returncode == 2, zero.stdout
+    assert "zero-net" in zero.stderr
+    assert ledger.read_bytes() == before

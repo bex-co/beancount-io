@@ -543,22 +543,12 @@ def _transaction(
         normalized.append(posting._replace(units=units, meta=meta))
     if elided > 1:
         raise protocol.UsageError("Only one posting may omit its amount; supply amounts for the other postings.")
-    if elided == 1:
-        from collections import defaultdict
-        from decimal import Decimal
-
-        totals: dict[str, Decimal] = defaultdict(lambda: Decimal(0))
-        for posting in normalized:
-            units = posting.units
-            if units is MISSING or units.number is MISSING:
-                continue
-            totals[str(units.currency)] += units.number
-        if totals and all(number == 0 for number in totals.values()):
-            raise protocol.UsageError(
-                "Refusing a zero-net transaction with an inferred balancing posting; "
-                "Beancount drops that leg from list/query. Supply an explicit amount "
-                "(for example 'Assets:Cash 0 USD') or use nonzero postings. Nothing was written."
-            )
+    if elided == 1 and _inferred_leg_is_zero(normalized):
+        raise protocol.UsageError(
+            "Refusing a zero-net transaction with an inferred balancing posting; "
+            "Beancount drops that leg from list/query. Supply an explicit amount "
+            "(for example 'Assets:Cash 0 USD') or use nonzero postings. Nothing was written."
+        )
     entry = entry._replace(postings=normalized, meta=write.metadata_for_write(entry.meta))
     rendered = writer.format_entry(entry)
     # The `@@` stash served the render; the JSON answer must not carry it.
@@ -572,6 +562,48 @@ def _transaction(
         "warnings": warnings,
         "target": str(write.destination(file, into)),
     }
+
+
+def _inferred_leg_is_zero(postings: list[Any]) -> bool:
+    """Whether the one amount-less posting would be inferred as zero.
+
+    Beancount balances a transaction by *weight* — a posting's cost when it
+    has one, else its price, else its units — and an inferred leg of zero
+    weight is dropped on read. Summing raw units instead cancelled a sale
+    against a repurchase (`-1 HOOL {50 USD} @ 60 USD`, `1 HOOL {60 USD}`)
+    whose weights leave a 10 USD gain to infer.
+
+    A weight that is only known after booking — an empty `{}` reducing an
+    existing lot — makes the answer unknowable here, so the guard stands
+    aside and ordinary ledger validation decides.
+    """
+    from collections import defaultdict
+
+    from beancount.core.number import MISSING
+
+    weights: dict[str, Decimal] = defaultdict(lambda: Decimal(0))
+    for posting in postings:
+        units = posting.units
+        if units is MISSING or units.number is MISSING:
+            continue
+        cost, price = posting.cost, posting.price
+        if cost is not None:
+            per = None if cost.number_per is MISSING else cost.number_per
+            if cost.currency is MISSING or (per is None and cost.number_total is None):
+                return False
+            weight = units.number * (per or 0)
+            if cost.number_total is not None:
+                weight += cost.number_total.copy_sign(units.number)
+            weights[cost.currency] += weight
+        elif price is not None:
+            total = posting.meta.get(writer.TOTAL_PRICE_META) if posting.meta else None
+            if total is not None:
+                weights[total.currency] += total.number.copy_sign(units.number)
+            else:
+                weights[price.currency] += units.number * price.number
+        else:
+            weights[units.currency] += units.number
+    return bool(weights) and all(weight == 0 for weight in weights.values())
 
 
 def _total_price(posting_text: str) -> Any | None:
