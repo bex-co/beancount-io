@@ -154,3 +154,28 @@ def test_a_new_subdirectory_inside_the_tree_is_still_allowed(tmp_path: Path, boo
 
     assert done.returncode == 0, done.stderr
     assert _source_digests(books) == before
+
+
+# A destination file that *is* a source file — a symlink or a hard link to it —
+# was written straight through into the books (w4/172). Hard links share an
+# inode under an unrelated path, so identity is compared, not spelling.
+
+
+@pytest.mark.parametrize("link", ["symlink", "hardlink"])
+def test_a_destination_linked_to_a_source_file_is_refused(tmp_path: Path, books: Path, link: str) -> None:
+    out = tmp_path / "output"
+    out.mkdir()
+    alias = out / "main.bean"
+    if link == "symlink":
+        alias.symlink_to(books)
+    else:
+        os.link(books, alias)
+    before = {path: path.read_bytes() for path in books.parent.rglob("*.bean")}
+
+    result = _bea(tmp_path, "--json", "--file", str(books), "price", "export", "--output", str(out))
+
+    assert result.returncode == 2, result.stdout
+    assert str(books) in result.stderr
+    assert "Nothing was written" in result.stderr
+    assert {path: path.read_bytes() for path in books.parent.rglob("*.bean")} == before
+    assert sorted(p.name for p in out.iterdir()) == ["main.bean"]

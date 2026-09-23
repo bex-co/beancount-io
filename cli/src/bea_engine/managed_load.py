@@ -581,9 +581,23 @@ def export_portable(
     by_target = {
         include.target: feed_files[source.url] for source in loaded.sources for include in source.included_from
     }
-    # Checked as a whole plan before the first write: an export writes inside
-    # the directory it was given, or nowhere.
-    for dest in [*destinations.values(), *feed_files.values()]:
+    # Checked as a whole plan before the first write. A destination that is
+    # already one of the ledger's own files — through a symlink, or a hard
+    # link no path comparison can see — would be written straight through
+    # into the books, so identity is compared, not spelling.
+    planned = [*destinations.values(), *feed_files.values()]
+    for dest in planned:
+        if not dest.exists():
+            continue
+        for ledger_file in snapshot.contents:
+            if os.path.samefile(dest, ledger_file):
+                raise UsageError(
+                    f"Cannot export: {dest} is the ledger file {ledger_file} (a link to it), "
+                    "which the export would overwrite. Choose an empty or dedicated directory. "
+                    "Nothing was written."
+                )
+    # And an export writes inside the directory it was given, or nowhere.
+    for dest in planned:
         if not dest.resolve().is_relative_to(resolved_target):
             raise UsageError(f"Cannot export: {dest} would land outside {target}. Nothing was written.")
     written: list[str] = []
