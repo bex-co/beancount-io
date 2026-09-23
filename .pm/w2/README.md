@@ -33,7 +33,7 @@
 - [x] **m26** — MCP write path that cannot lose or silently break a ledger (10 tasks) ← from MCP field audit 2026-09-08 (rename data loss, silent unbalanced writes, empty dry run, broken PR path); user routed to w2
 - [x] **m27** — MCP discoverability: the server explains itself to agents (9 tasks) ← from MCP field audit 2026-09-08 (three Claude Code sessions found no ledgers/errors/resources); user routed to w2 — sequenced after m26
 - [x] **m28** — MCP results and failures an agent can act on (9 tasks) ← from MCP field audit 2026-09-08 (JSON-wrapped tables, four error dialects, 429 mid-session); user routed to w2 — sequenced after m27
-- [ ] **m30** — AI reliability hardening: ADR 0011 follow-ups (11 tasks) ← from the 2026-09-07 receipt-parse outage diagnosis + ADR 0011 tier-3 discussion; user routed to w2 as one milestone 2026-09-09
+- [ ] **m30** — [AI reliability hardening: ADR 0011 follow-ups](./blocked/m30/README.md) (11 tasks) ← from the 2026-09-07 receipt-parse outage diagnosis + ADR 0011 tier-3 discussion; user routed to w2 as one milestone 2026-09-09 — **blocked:** t006 Haiku eval needs an operator-supplied ANTHROPIC_API_KEY
 - [x] **m31** — Include Live Price: managed price includes in the ledger service (11 tasks) ← from PRFAQ002 + ADR 015; user request 2026-09-15 to design, board, and implement the ledger layer
 
 ## Cross-queue promotions and follow-ups
