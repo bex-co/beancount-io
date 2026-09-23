@@ -164,8 +164,16 @@ export function BudgetChartCard({
     );
   }, [chartData, displayCurrency, displayDirection]);
 
-  const comparisonBudgetValue = useMemo(() => {
-    if (chartData.length === 0) return displayBudgetValue;
+  // Under "Last year" the header claims that period's target, which only the
+  // period's own read can supply. While that read is pending or has failed,
+  // the latest configured budget is not an answer — it showed 200 USD for a
+  // year whose target was 0 — so the value stays unknown instead.
+  const periodTarget = time === "year-1";
+  const comparisonBudgetValue = useMemo((): number | null => {
+    if (periodTarget && (loading || error)) return null;
+    if (chartData.length === 0) {
+      return periodTarget ? null : displayBudgetValue;
+    }
     const last = chartData[chartData.length - 1];
     return Math.abs(
       calculateBudgetForInterval(
@@ -174,10 +182,18 @@ export function BudgetChartCard({
         group.budgetHistory,
       ),
     );
-  }, [chartData, displayBudgetValue, group.interval, group.budgetHistory]);
+  }, [
+    chartData,
+    displayBudgetValue,
+    group.interval,
+    group.budgetHistory,
+    periodTarget,
+    loading,
+    error,
+  ]);
 
   const variance = useMemo(() => {
-    if (latestActual === null) return null;
+    if (latestActual === null || comparisonBudgetValue === null) return null;
     return budgetVariance(latestActual, comparisonBudgetValue);
   }, [latestActual, comparisonBudgetValue]);
 
@@ -195,7 +211,9 @@ export function BudgetChartCard({
       : varianceStatus === "above");
 
   const progressPercent =
-    latestActual !== null && comparisonBudgetValue > 0
+    latestActual !== null &&
+    comparisonBudgetValue !== null &&
+    comparisonBudgetValue > 0
       ? Math.max(0, (latestActual / comparisonBudgetValue) * 100)
       : null;
 
@@ -339,12 +357,14 @@ export function BudgetChartCard({
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">
-              {time === "year-1"
+              {periodTarget
                 ? t("page.budget.budget")
                 : t("page.budget.budgetCurrentBudget")}
             </p>
             <p className="font-mono text-lg font-semibold tabular-nums">
-              {formatNum(comparisonBudgetValue)} {displayCurrency}
+              {comparisonBudgetValue === null
+                ? "—"
+                : `${formatNum(comparisonBudgetValue)} ${displayCurrency}`}
             </p>
           </div>
           {latestActual !== null && variance !== null && (

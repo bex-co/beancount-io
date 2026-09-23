@@ -73,10 +73,11 @@ function mockRead(override: Record<string, unknown>) {
   } as never);
 }
 
-function renderDining() {
+function renderDining(time?: string) {
   const [group] = groupBudgetEntries(DINING, "2026-03-31");
   return render(
     <BudgetChartCard
+      time={time}
       group={group}
       ledgerId="l1"
       conversion="AT_COST"
@@ -221,5 +222,44 @@ describe("budget period data", () => {
         .map((c) => c.textContent?.trim()),
     ).toEqual(["2026-01-31", money(budget[0]), money(actual[0])]);
     expect(budget[0]).toBeGreaterThan(0);
+  });
+});
+
+describe("the header target for a dated period (w4/184)", () => {
+  // The Dining target starts 2026-01-01, so last year had none: 0 USD. The
+  // latest configured 200 USD must not stand in while that read is unknown.
+  const LAST_YEAR = [
+    { date: "2025-11-30", balance: {}, accountBalances: {} },
+    { date: "2025-12-31", balance: {}, accountBalances: {} },
+  ];
+  const headerTarget = () =>
+    screen.getByText("Budget", { selector: "p" }).nextElementSibling
+      ?.textContent;
+
+  it("shows no target while last year's read is pending", () => {
+    mockRead({ loading: true });
+    renderDining("year-1");
+    expect(headerTarget()).toBe("—");
+  });
+
+  it("shows no target when last year's read fails", () => {
+    mockRead({ error: new Error("unavailable") });
+    renderDining("year-1");
+    expect(headerTarget()).toBe("—");
+  });
+
+  it("shows the period's own target once its read settles", () => {
+    mockRead({ data: { getLedgerIntervalTotals: LAST_YEAR } });
+    renderDining("year-1");
+    expect(headerTarget()).toBe(money(0));
+  });
+
+  it("keeps the current budget while an all-time read is pending", () => {
+    mockRead({ loading: true });
+    renderDining();
+    expect(
+      screen.getByText("Current budget", { selector: "p" }).nextElementSibling
+        ?.textContent,
+    ).toBe(money(200));
   });
 });
