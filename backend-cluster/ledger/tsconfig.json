@@ -20,7 +20,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*.ts", "server.ts", "scripts/**/*.*", "parity/**/*.ts"],
   "exclude": ["node_modules/**", "dist/**"],

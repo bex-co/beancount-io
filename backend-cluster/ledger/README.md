@@ -40,8 +40,13 @@ the report service does not apply a chart display limit to financial data.
 
 ## Getting started
 
-Requires Node.js 20+ and a running Gitea instance. See `.env.example` for the
-expected environment variables.
+Requires Node.js 20.19+, 22.13+, or 24+ and a running Gitea instance. See
+`.env.example` for the expected environment variables.
+
+TypeScript stays on 6.0.x: TypeScript 7 is outside the current ts-jest and
+typescript-eslint supported ranges and fails Yarn 4.17's TypeScript patch.
+The `ignoreDeprecations: "6.0"` setting preserves the CommonJS loader and
+`baseUrl` aliases used by ts-node until that toolchain can migrate together.
 
 ```bash
 yarn install
