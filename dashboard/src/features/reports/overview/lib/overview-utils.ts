@@ -357,7 +357,7 @@ function pad2(value: number): string {
   return String(value).padStart(2, "0");
 }
 
-function toLocalISODate(value: Date): string {
+export function toLocalISODate(value: Date): string {
   return `${value.getFullYear()}-${pad2(value.getMonth() + 1)}-${pad2(value.getDate())}`;
 }
 

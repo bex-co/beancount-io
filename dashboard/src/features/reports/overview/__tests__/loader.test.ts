@@ -4,6 +4,7 @@ import {
   GetLedgerAccountMetaDocument,
   GetLedgerFileDocument,
   GetLedgerOverviewDocument,
+  GetLedgerOverviewValuationDocument,
 } from "@/graphql/definitions";
 import { overviewLoader } from "../loader";
 
@@ -29,16 +30,19 @@ function pending() {
   return new Promise<never>(() => {});
 }
 
+// The two reads the page renders from: flows at cost, balances at market.
+const PRIMARY = [GetLedgerOverviewDocument, GetLedgerOverviewValuationDocument];
+
 describe("overviewLoader", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  it("resolves once the overview is cached even while README and metadata are still loading", async () => {
+  it("resolves once both primary reads are cached even while README and metadata are still loading", async () => {
     vi.stubEnv("SSR", false);
     const query = vi.fn((options: QueryOptions) =>
-      options.query === GetLedgerOverviewDocument
-        ? Promise.resolve({ data: { getLedgerOverview: {} } })
+      PRIMARY.includes(options.query as never)
+        ? Promise.resolve({ data: {} })
         : pending(),
     );
 
@@ -66,9 +70,35 @@ describe("overviewLoader", () => {
             conversion: "at_cost",
           },
         },
+        {
+          // No conversion variable: the document values balances at market.
+          query: GetLedgerOverviewValuationDocument,
+          variables: {
+            ledgerId: "open_ledger/example",
+            account: "Assets:Checking",
+            filter: "",
+            time: "2025",
+            interval: "monthly",
+          },
+        },
       ]),
     );
-    expect(requested).toHaveLength(3);
+    expect(requested).toHaveLength(4);
+  });
+
+  it("waits for the market read, so no balance renders at cost first", async () => {
+    vi.stubEnv("SSR", false);
+    const query = vi.fn((options: QueryOptions) =>
+      options.query === GetLedgerOverviewDocument
+        ? Promise.resolve({ data: {} })
+        : pending(),
+    );
+
+    const settled = vi.fn();
+    void overviewLoader(loaderInput(query)).then(settled);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(settled).not.toHaveBeenCalled();
   });
 
   it("starts the optional panels before awaiting the overview", async () => {
@@ -76,7 +106,7 @@ describe("overviewLoader", () => {
     const order: unknown[] = [];
     const query = vi.fn((options: QueryOptions) => {
       order.push(options.query);
-      return options.query === GetLedgerOverviewDocument
+      return PRIMARY.includes(options.query as never)
         ? Promise.resolve({ data: {} })
         : pending();
     });
@@ -84,12 +114,13 @@ describe("overviewLoader", () => {
     await overviewLoader(loaderInput(query));
 
     expect(order.indexOf(GetLedgerOverviewDocument)).toBe(2);
+    expect(order.indexOf(GetLedgerOverviewValuationDocument)).toBe(3);
   });
 
   it("leaves an overview failure to the page's own error state", async () => {
     vi.stubEnv("SSR", false);
     const query = vi.fn((options: QueryOptions) =>
-      options.query === GetLedgerOverviewDocument
+      PRIMARY.includes(options.query as never)
         ? Promise.reject(new Error("ledger failed to load"))
         : pending(),
     );
@@ -97,16 +128,31 @@ describe("overviewLoader", () => {
     await expect(overviewLoader(loaderInput(query))).resolves.toBeUndefined();
   });
 
+  it("leaves a market-read failure to the balance modules", async () => {
+    vi.stubEnv("SSR", false);
+    const query = vi.fn((options: QueryOptions) => {
+      if (options.query === GetLedgerOverviewDocument) {
+        return Promise.resolve({ data: {} });
+      }
+      return options.query === GetLedgerOverviewValuationDocument
+        ? Promise.reject(new Error("prices failed to load"))
+        : pending();
+    });
+
+    await expect(overviewLoader(loaderInput(query))).resolves.toBeUndefined();
+  });
+
   it("does not start README or metadata during SSR", async () => {
     vi.stubEnv("SSR", true);
-    const query = vi.fn(() => Promise.resolve({ data: {} }));
+    const query = vi.fn((_options: QueryOptions) =>
+      Promise.resolve({ data: {} }),
+    );
 
     await overviewLoader(loaderInput(query));
 
-    expect(query).toHaveBeenCalledTimes(1);
-    expect(query.mock.calls[0][0]).toMatchObject({
-      query: GetLedgerOverviewDocument,
-    });
+    // A server render still carries both primary reads.
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query.mock.calls.map(([options]) => options.query)).toEqual(PRIMARY);
   });
 
   it("uses destination loader deps rather than a global URL snapshot", async () => {
@@ -117,12 +163,14 @@ describe("overviewLoader", () => {
 
     await overviewLoader(input);
 
-    const overviewCall = query.mock.calls.find(
-      ([options]) => options.query === GetLedgerOverviewDocument,
-    );
-    expect(overviewCall?.[0].variables).toMatchObject({
-      filter: "payee:Rent",
-      time: "2025-10",
-    });
+    for (const document of PRIMARY) {
+      const call = query.mock.calls.find(
+        ([options]) => options.query === document,
+      );
+      expect(call?.[0].variables).toMatchObject({
+        filter: "payee:Rent",
+        time: "2025-10",
+      });
+    }
   });
 });

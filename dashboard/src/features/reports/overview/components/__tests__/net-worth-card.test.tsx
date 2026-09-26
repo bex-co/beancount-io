@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import type { EChartsOption, LineSeriesOption } from "echarts";
 import { NetWorthCard } from "../net-worth-card";
 import type { DataSeries } from "../../lib/overview-utils";
+import type { NetWorthValuation } from "../../lib/net-worth-valuation";
 
 // ECharts renders to canvas, which jsdom cannot assert on: capture the option
 // object instead.
@@ -19,6 +20,26 @@ const routerSearch = vi.hoisted(() => ({
 vi.mock("@tanstack/react-router", async () => {
   const { useSyncExternalStore } = await import("react");
   return {
+    Link: ({
+      to,
+      params,
+      children,
+      ...props
+    }: {
+      to: string;
+      params: Record<string, string>;
+      children: React.ReactNode;
+    }) => (
+      <a
+        href={Object.entries(params).reduce(
+          (href, [key, value]) => href.replace(`$${key}`, value),
+          to,
+        )}
+        {...props}
+      >
+        {children}
+      </a>
+    ),
     // The selected view lives in the URL now, so the router mock has to hold
     // it the way the URL does — and notify readers, so a selection re-renders
     // the page exactly as a real navigation would.
@@ -55,7 +76,9 @@ let language = "en";
 
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
-    t: (key: string) => key,
+    // Parameters are appended so assertions can see what was interpolated.
+    t: (key: string, params?: Record<string, unknown>) =>
+      params ? `${key} ${JSON.stringify(params)}` : key,
     i18n: { language },
   }),
 }));
@@ -96,7 +119,15 @@ const singleMonth: DataSeries = [{ date: "2026-01-31", balance: { USD: 100 } }];
 
 describe("NetWorthCard chart series", () => {
   it("shows a visible marker for a single-point series", () => {
-    render(<NetWorthCard data={singleMonth} primaryCurrency="USD" />);
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={singleMonth}
+        primaryCurrency="USD"
+      />,
+    );
 
     const series = lineSeries(lastOption());
     expect(series).toHaveLength(1);
@@ -107,7 +138,15 @@ describe("NetWorthCard chart series", () => {
   });
 
   it("keeps symbols off for a multi-point series", () => {
-    render(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={multiMonth}
+        primaryCurrency="USD"
+      />,
+    );
 
     const series = lineSeries(lastOption());
     expect(series[0].data).toEqual([100, 150, 120]);
@@ -123,7 +162,15 @@ describe("NetWorthCard chart series", () => {
       { date: "2026-03-31", balance: { USD: 120 } },
     ];
 
-    render(<NetWorthCard data={data} primaryCurrency="EUR" />);
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={data}
+        primaryCurrency="EUR"
+      />,
+    );
 
     const series = lineSeries(lastOption());
     const eur = series.find((item) => item.name === "EUR");
@@ -132,14 +179,30 @@ describe("NetWorthCard chart series", () => {
   });
 
   it("renders the empty state without a chart", () => {
-    render(<NetWorthCard data={[]} primaryCurrency="USD" />);
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={[]}
+        primaryCurrency="USD"
+      />,
+    );
 
     expect(screen.queryByTestId("echarts-mock")).not.toBeInTheDocument();
     expect(screen.getByText("common.noDataFound")).toBeInTheDocument();
   });
 
   it("keeps the currency tooltip formatter", () => {
-    render(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={multiMonth}
+        primaryCurrency="USD"
+      />,
+    );
 
     const tooltip = lastOption().tooltip as {
       trigger: string;
@@ -152,18 +215,40 @@ describe("NetWorthCard chart series", () => {
 
 describe("NetWorthCard localization", () => {
   it("formats the x-axis in the active language", () => {
-    render(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={multiMonth}
+        primaryCurrency="USD"
+      />,
+    );
     expect(axisLabelFormatter(lastOption())("2026-02-28")).toBe("Feb");
   });
 
   it("re-renders the axis formatter when the language changes", () => {
     const { rerender } = render(
-      <NetWorthCard data={multiMonth} primaryCurrency="USD" />,
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={multiMonth}
+        primaryCurrency="USD"
+      />,
     );
     const englishOption = lastOption();
 
     language = "fr";
-    rerender(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+    rerender(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={multiMonth}
+        primaryCurrency="USD"
+      />,
+    );
     const frenchOption = lastOption();
 
     expect(frenchOption).not.toBe(englishOption);
@@ -172,7 +257,15 @@ describe("NetWorthCard localization", () => {
 
   it("formats table-view month labels in the active language", async () => {
     language = "fr";
-    render(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={multiMonth}
+        primaryCurrency="USD"
+      />,
+    );
 
     await userEvent.click(
       screen.getByRole("button", { name: "page.overview.tableView" }),
@@ -185,6 +278,9 @@ describe("NetWorthCard localization", () => {
   it("falls back to the raw date in the table for an unparseable date", async () => {
     render(
       <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
         data={[{ date: "not-a-date", balance: { USD: 1 } }]}
         primaryCurrency="USD"
       />,
@@ -207,7 +303,15 @@ describe("NetWorthCard view toggle semantics", () => {
   }
 
   it("exposes the chart as the pressed view before any interaction", () => {
-    render(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={multiMonth}
+        primaryCurrency="USD"
+      />,
+    );
 
     const { chart, table } = toggles();
     expect(chart).toHaveAttribute("aria-pressed", "true");
@@ -215,7 +319,15 @@ describe("NetWorthCard view toggle semantics", () => {
   });
 
   it("moves the pressed state onto the table and back on click", async () => {
-    render(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={multiMonth}
+        primaryCurrency="USD"
+      />,
+    );
 
     await userEvent.click(toggles().table);
     expect(toggles().table).toHaveAttribute("aria-pressed", "true");
@@ -227,7 +339,15 @@ describe("NetWorthCard view toggle semantics", () => {
   });
 
   it("keeps keyboard activation, focus and the rendered amounts intact", async () => {
-    render(<NetWorthCard data={multiMonth} primaryCurrency="USD" />);
+    render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={null}
+        data={multiMonth}
+        primaryCurrency="USD"
+      />,
+    );
 
     toggles().table.focus();
     await userEvent.keyboard("{Enter}");
@@ -237,5 +357,133 @@ describe("NetWorthCard view toggle semantics", () => {
     // The table view really rendered: the last month's balance is on screen.
     expect(screen.getByText("Mar 2026")).toBeInTheDocument();
     expect(screen.getAllByText(/120/).length).toBeGreaterThan(0);
+  });
+});
+
+describe("NetWorthCard valuation status (w4/m27)", () => {
+  const holding = (
+    currency: string,
+    overrides: Partial<NetWorthValuation["holdings"][number]> = {},
+  ): NetWorthValuation["holdings"][number] => ({
+    currency,
+    units: 1,
+    basis: "market",
+    priceDate: "2026-09-26",
+    stale: false,
+    managed: false,
+    ...overrides,
+  });
+
+  function renderWith(valuation: NetWorthValuation | null) {
+    return render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={valuation}
+        data={multiMonth}
+        primaryCurrency="USD"
+      />,
+    );
+  }
+
+  function statusButton() {
+    return screen.getByRole("button", {
+      name: /page\.overview\.valuedAtMarket/,
+    });
+  }
+
+  it("says only that the figure is at market when every price is current", () => {
+    renderWith({
+      holdings: [holding("BTC", { managed: true }), holding("STETH")],
+      staleSince: null,
+      costBasis: 100,
+      unrealized: 0,
+    });
+
+    expect(statusButton()).toHaveTextContent(
+      /^page\.overview\.valuedAtMarket$/,
+    );
+    expect(screen.queryByText(/costBasis/)).not.toBeInTheDocument();
+  });
+
+  it("counts stale prices by their oldest date, plus holdings at cost and left out", () => {
+    renderWith({
+      holdings: [
+        holding("GLD", { stale: true, priceDate: "2017-09-08" }),
+        holding("RGAGX", { stale: true, priceDate: "2017-09-08" }),
+        holding("STARTUP", { basis: "cost", priceDate: null }),
+        holding("VACHR", { basis: "notInTotal", priceDate: null, units: -13 }),
+      ],
+      staleSince: "2017-09-08",
+      costBasis: 106826.05,
+      unrealized: 10823.44,
+    });
+
+    const text = statusButton().textContent ?? "";
+    expect(text).toContain(
+      'page.overview.pricesNotUpdated {"date":"Sep 8, 2017","count":2}',
+    );
+    expect(text).toContain('page.overview.atCostCount {"count":1}');
+    expect(text).toContain('page.overview.notInTotalCount {"count":1}');
+    expect(screen.getByText(/page\.overview\.costBasis/).textContent).toContain(
+      "+10823.44 USD",
+    );
+  });
+
+  it("opens the per-holding detail with dates, tags and the Commodities link", async () => {
+    renderWith({
+      holdings: [
+        holding("BTC", { managed: true, units: 0.332 }),
+        holding("GLD", { stale: true, priceDate: "2017-09-08" }),
+        holding("VACHR", { basis: "notInTotal", priceDate: null, units: -13 }),
+      ],
+      staleSince: "2017-09-08",
+      costBasis: 1,
+      unrealized: 1,
+    });
+
+    await userEvent.click(statusButton());
+
+    expect(
+      await screen.findByText("page.overview.valuationDetails"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("0.332 BTC")).toBeInTheDocument();
+    expect(
+      screen.getByText('page.overview.holdingPrice {"date":"Sep 26, 2026"}'),
+    ).toBeInTheDocument();
+    expect(screen.getByText("page.overview.livePrice")).toBeInTheDocument();
+    expect(
+      screen.getByText('page.overview.holdingPrice {"date":"Sep 8, 2017"}'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("page.overview.priceNotUpdated"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("page.overview.noPrice")).toBeInTheDocument();
+    expect(screen.getByText("page.overview.notInTotalTag")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "page.overview.updatePrices" }),
+    ).toHaveAttribute("href", "/ledger/owner/book/commodities");
+  });
+
+  it("opens the detail from the keyboard", async () => {
+    renderWith({
+      holdings: [holding("BTC")],
+      staleSince: null,
+      costBasis: null,
+      unrealized: null,
+    });
+
+    statusButton().focus();
+    await userEvent.keyboard("{Enter}");
+    expect(
+      await screen.findByText("page.overview.valuationDetails"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows no status line without a valuation", () => {
+    renderWith(null);
+    expect(
+      screen.queryByRole("button", { name: /valuedAtMarket/ }),
+    ).not.toBeInTheDocument();
   });
 });

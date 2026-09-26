@@ -1,7 +1,20 @@
 import { useMemo } from "react";
 import type { EChartsOption } from "echarts";
-import { AreaChart, Table2, TrendingDown, TrendingUp } from "lucide-react";
+import {
+  AlertTriangle,
+  AreaChart,
+  Table2,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import { Button } from "@/common/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/common/components/ui/popover";
+import { Link } from "@tanstack/react-router";
+import { cn } from "@/common/lib/utils/utils.ts";
 import {
   Card,
   CardAction,
@@ -22,6 +35,7 @@ import {
   getComparableAmount,
   prioritizeCurrency,
 } from "../lib/overview-utils";
+import type { NetWorthValuation } from "../lib/net-worth-valuation";
 import { FormattedAmounts } from "./formatted-amounts";
 import { useUrlView } from "@/common/hooks/use-url-view";
 import {
@@ -42,6 +56,161 @@ function formatMonth(date: string, language: string): string {
   }).format(parsed);
 }
 
+/** `YYYY-MM-DD` as a medium date in the app language, e.g. "Sep 8, 2017". */
+function formatPriceDate(date: string, language: string): string {
+  const parsed = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return new Intl.DateTimeFormat(language, { dateStyle: "medium" }).format(
+    parsed,
+  );
+}
+
+/**
+ * What the figure above it is (w4/m26, w4/m27): one quiet status line —
+ * "At market value", plus counts only when something needs attention — that
+ * opens the per-holding detail, then the cost basis with the unrealized
+ * difference. Rendered right after the figure, so a screen reader reads it
+ * with the figure.
+ */
+function NetWorthValuationNote({
+  valuation,
+  currency,
+  language,
+  ledgerOwner,
+  ledgerName,
+}: {
+  valuation: NetWorthValuation;
+  currency: string;
+  language: string;
+  ledgerOwner: string;
+  ledgerName: string;
+}) {
+  const { t } = useTranslations();
+  const formatNumber = useFormatNumber();
+  const { holdings, staleSince, costBasis, unrealized } = valuation;
+  const staleCount = holdings.filter((holding) => holding.stale).length;
+  const atCostCount = holdings.filter((h) => h.basis === "cost").length;
+  const notInTotalCount = holdings.filter(
+    (h) => h.basis === "notInTotal",
+  ).length;
+  // Only a cent or more is a difference worth a line.
+  const showCostBasis =
+    costBasis !== null &&
+    unrealized !== null &&
+    Math.round(unrealized * 100) !== 0;
+
+  const parts = [t("page.overview.valuedAtMarket")];
+  if (staleSince !== null) {
+    parts.push(
+      t("page.overview.pricesNotUpdated", {
+        date: formatPriceDate(staleSince, language),
+        count: staleCount,
+      }),
+    );
+  }
+  if (atCostCount > 0) {
+    parts.push(t("page.overview.atCostCount", { count: atCostCount }));
+  }
+  if (notInTotalCount > 0) {
+    parts.push(t("page.overview.notInTotalCount", { count: notInTotalCount }));
+  }
+
+  return (
+    <div className="mt-2 space-y-1 text-xs text-muted-foreground sm:text-sm">
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-label={`${parts.join(" · ")}. ${t("page.overview.valuationDetails")}`}
+            className={cn(
+              "-mx-1 flex items-start gap-1.5 rounded px-1 text-left underline decoration-dotted underline-offset-4 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+              staleSince !== null && "text-amber-700 dark:text-amber-400",
+            )}
+          >
+            {staleSince !== null && (
+              <AlertTriangle
+                aria-hidden="true"
+                className="mt-0.5 size-3.5 shrink-0"
+              />
+            )}
+            <span>{parts.join(" · ")}</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="w-[min(22rem,calc(100vw-2rem))] p-0"
+        >
+          <p className="border-b px-4 py-3 text-sm font-medium">
+            {t("page.overview.valuationDetails")}
+          </p>
+          <ul className="max-h-72 divide-y overflow-y-auto text-sm">
+            {holdings.map((holding) => (
+              <li
+                key={holding.currency}
+                className="flex items-start justify-between gap-3 px-4 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">{holding.currency}</p>
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    {formatNumber(holding.units)} {holding.currency}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right text-xs">
+                  <p
+                    className={cn(
+                      "tabular-nums",
+                      holding.stale
+                        ? "text-amber-700 dark:text-amber-400"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {holding.priceDate === null
+                      ? t("page.overview.noPrice")
+                      : t("page.overview.holdingPrice", {
+                          date: formatPriceDate(holding.priceDate, language),
+                        })}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {[
+                      holding.stale && t("page.overview.priceNotUpdated"),
+                      holding.managed && t("page.overview.livePrice"),
+                      holding.basis === "cost" && t("page.overview.atCostTag"),
+                      holding.basis === "notInTotal" &&
+                        t("page.overview.notInTotalTag"),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="border-t px-4 py-3 text-sm">
+            <Link
+              to="/ledger/$ledgerOwner/$ledgerName/commodities"
+              params={{ ledgerOwner, ledgerName }}
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {t("page.overview.updatePrices")}
+            </Link>
+          </div>
+        </PopoverContent>
+      </Popover>
+      {showCostBasis && (
+        <p className="tabular-nums">
+          {t("page.overview.costBasis", {
+            amount: `${formatNumber(costBasis)} ${currency}`,
+          })}
+          {" · "}
+          {t("page.overview.unrealized", {
+            amount: `${unrealized > 0 ? "+" : ""}${formatNumber(unrealized)} ${currency}`,
+          })}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /**
  * A series with a single finite point draws no line segment, so it needs a
  * visible marker or the chart looks empty.
@@ -55,10 +224,18 @@ function isSinglePointSeries(data: ReadonlyArray<number | null>): boolean {
 
 export function NetWorthCard({
   data,
+  valuation,
   primaryCurrency,
+  ledgerOwner,
+  ledgerName,
 }: {
+  /** Net worth at market value (`at_value`), one point per month. */
   data: DataSeries;
+  /** What the latest point discloses; null when it holds nothing to value. */
+  valuation: NetWorthValuation | null;
   primaryCurrency: string;
+  ledgerOwner: string;
+  ledgerName: string;
 }) {
   const { t, i18n } = useTranslations();
   const language = i18n.language;
@@ -227,6 +404,15 @@ export function NetWorthCard({
             </div>
           )}
         </div>
+        {valuation && (
+          <NetWorthValuationNote
+            valuation={valuation}
+            currency={primaryCurrency}
+            language={language}
+            ledgerOwner={ledgerOwner}
+            ledgerName={ledgerName}
+          />
+        )}
 
         {visibleData.length === 0 ? (
           <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">

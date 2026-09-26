@@ -1,0 +1,68 @@
+# Balances at market value for the overview's balance modules (Net Worth,
+# Account balances, the distribution charts), plus what the Net Worth card
+# needs to say what that figure is: the units it holds, the ledger's price
+# dates, and which commodities a managed feed prices (w4/m27). Flows stay on GetLedgerOverview at cost; see w4/m26.
+query GetLedgerOverviewValuation(
+  $ledgerId: String!
+  $account: String
+  $filter: String
+  $time: String
+  $interval: String
+) {
+  market: getLedgerBalanceSheet(
+    ledgerId: $ledgerId
+    conversion: "at_value"
+    account: $account
+    filter: $filter
+    time: $time
+    interval: $interval
+  ) {
+    netWorthData {
+      date
+      balance
+    }
+    assetsHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+    liabilitiesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+  }
+  held: getLedgerBalanceSheet(
+    ledgerId: $ledgerId
+    conversion: "units"
+    account: $account
+    filter: $filter
+    time: $time
+    interval: $interval
+  ) {
+    netWorthData {
+      date
+      balance
+    }
+  }
+  getLedgerCommodities(ledgerId: $ledgerId) {
+    base
+    quote
+    prices {
+      date
+    }
+  }
+  getLedgerManagedPrices(ledgerId: $ledgerId) {
+    commodity
+    quote
+    freshness
+  }
+}

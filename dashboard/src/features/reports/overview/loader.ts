@@ -5,6 +5,7 @@ import {
   GetLedgerAccountMetaDocument,
   GetLedgerFileDocument,
   GetLedgerOverviewDocument,
+  GetLedgerOverviewValuationDocument,
 } from "@/graphql/definitions";
 import { overviewQueryDefaults } from "./constants";
 
@@ -29,19 +30,36 @@ export const overviewLoader: RouteLoader<
     variables: { ledgerId },
   });
 
-  // The page renders its own error state from this same query, so a failure
-  // here must not become a route error.
-  await context.client
-    .query({
-      query: GetLedgerOverviewDocument,
-      variables: {
-        ledgerId,
-        account,
-        filter,
-        time,
-        interval: overviewQueryDefaults.interval,
-        conversion: overviewQueryDefaults.conversion,
-      },
-    })
-    .catch(() => undefined);
+  // Both reads are primary content: the flows at cost, and the balances at
+  // market value. Awaiting both means a server render already has the market
+  // figures, so nothing is drawn at cost and then replaced. The page renders
+  // its own error states from these same queries, so a failure here must not
+  // become a route error.
+  await Promise.all([
+    context.client
+      .query({
+        query: GetLedgerOverviewDocument,
+        variables: {
+          ledgerId,
+          account,
+          filter,
+          time,
+          interval: overviewQueryDefaults.interval,
+          conversion: overviewQueryDefaults.conversion,
+        },
+      })
+      .catch(() => undefined),
+    context.client
+      .query({
+        query: GetLedgerOverviewValuationDocument,
+        variables: {
+          ledgerId,
+          account,
+          filter,
+          time,
+          interval: overviewQueryDefaults.interval,
+        },
+      })
+      .catch(() => undefined),
+  ]);
 };

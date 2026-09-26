@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/common/components/ui/card";
-import { useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
@@ -18,7 +18,10 @@ import {
   SearchCode,
 } from "lucide-react";
 import { useQuery } from "@apollo/client/react";
-import { GetLedgerOverviewDocument } from "@/graphql/definitions";
+import {
+  GetLedgerOverviewDocument,
+  GetLedgerOverviewValuationDocument,
+} from "@/graphql/definitions";
 import { Link, useParams } from "@tanstack/react-router";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { createLedgerId } from "@/common/lib/utils/encode";
@@ -52,7 +55,8 @@ import {
 } from "./hooks/use-dashboard-layout";
 import { useAccountMeta } from "./hooks/use-account-meta";
 import { ReportEmptyState } from "@/common/components/state-components";
-import { hasOverviewActivity } from "./lib/overview-utils";
+import { hasOverviewActivity, toLocalISODate } from "./lib/overview-utils";
+import { describeLatestNetWorth } from "./lib/net-worth-valuation";
 import { EmptyLedgerSetup } from "./components/empty-ledger-setup";
 
 /**
@@ -78,9 +82,10 @@ export default function LedgerOverviewPage() {
   const invertIncomeLiabilitiesEquity =
     getInvertIncomeLiabilitiesEquity(ledgerData);
 
+  // Flows (money movement, income vs expenses, cash flow) at cost.
   const {
     data,
-    loading: isLoading,
+    loading: overviewLoading,
     error,
   } = useQuery(GetLedgerOverviewDocument, {
     variables: {
@@ -92,12 +97,44 @@ export default function LedgerOverviewPage() {
     },
     fetchPolicy: "cache-first",
   });
+  // Balances (net worth, account balances, distribution) at market value.
+  const {
+    data: valuationData,
+    loading: valuationLoading,
+    error: valuationError,
+  } = useQuery(GetLedgerOverviewValuationDocument, {
+    variables: {
+      ledgerId: ledgerId,
+      account: ledgerFilters.searchParams.account,
+      filter: ledgerFilters.searchParams.filter,
+      time: ledgerFilters.searchParams.time,
+      interval: overviewQueryDefaults.interval,
+    },
+    fetchPolicy: "cache-first",
+  });
 
   const { accountMeta, pending: accountMetaPending } = useAccountMeta(ledgerId);
 
+  const market = valuationData?.market;
+  const costNetWorth = data?.getLedgerOverview?.netWorthData;
+  const netWorthValuation = useMemo(
+    () =>
+      describeLatestNetWorth({
+        market: market?.netWorthData ?? [],
+        cost: costNetWorth ?? [],
+        units: valuationData?.held?.netWorthData ?? [],
+        currency: primaryCurrency,
+        today: toLocalISODate(new Date()),
+        pricePairs: valuationData?.getLedgerCommodities ?? [],
+        managedSources: valuationData?.getLedgerManagedPrices ?? [],
+      }),
+    [market, costNetWorth, valuationData, primaryCurrency],
+  );
+
   // Do not keep a prior period's overview cards while a replacement read is in
-  // flight — the URL/filters already name the new scope.
-  if (isLoading) {
+  // flight — the URL/filters already name the new scope. Both reads gate the
+  // page, so a balance is never drawn at cost and then redrawn at market.
+  if (overviewLoading || valuationLoading) {
     return (
       <div className="space-y-6 md:space-y-8">
         <Card>
@@ -154,6 +191,15 @@ export default function LedgerOverviewPage() {
     ledgerFilters.searchParams.filter ||
     ledgerFilters.searchParams.time,
   );
+  // The flows still load without the market read; the balance modules say
+  // they could not, rather than fall back to a figure at cost.
+  const balancesError = valuationError ? (
+    <Alert variant="destructive">
+      <AlertDescription>
+        {t(getErrorMessageKey(valuationError))}
+      </AlertDescription>
+    </Alert>
+  ) : null;
   const widgets: Record<DashboardWidgetId, ReactNode> = {
     "financial-position": (
       <section
@@ -171,20 +217,25 @@ export default function LedgerOverviewPage() {
             {t("page.overview.financialPositionDescription")}
           </p>
         </div>
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(19rem,0.8fr)]">
-          <NetWorthCard
-            data={overview?.netWorthData ?? []}
-            primaryCurrency={primaryCurrency}
-          />
-          <AccountBalancesCard
-            assets={overview?.assetsHierarchyData}
-            liabilities={overview?.liabilitiesHierarchyData}
-            primaryCurrency={primaryCurrency}
-            invertLiabilities={invertIncomeLiabilitiesEquity}
-            ledgerOwner={ledgerOwner}
-            ledgerName={ledgerName}
-          />
-        </div>
+        {balancesError ?? (
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(19rem,0.8fr)]">
+            <NetWorthCard
+              data={market?.netWorthData ?? []}
+              valuation={netWorthValuation}
+              primaryCurrency={primaryCurrency}
+              ledgerOwner={ledgerOwner}
+              ledgerName={ledgerName}
+            />
+            <AccountBalancesCard
+              assets={market?.assetsHierarchyData}
+              liabilities={market?.liabilitiesHierarchyData}
+              primaryCurrency={primaryCurrency}
+              invertLiabilities={invertIncomeLiabilitiesEquity}
+              ledgerOwner={ledgerOwner}
+              ledgerName={ledgerName}
+            />
+          </div>
+        )}
       </section>
     ),
     "money-movement": (
@@ -254,25 +305,30 @@ export default function LedgerOverviewPage() {
         >
           {t("common.balanceSheet")}
         </h2>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <DistributionChart
-            title={t("page.overview.assetsDistribution")}
-            description={t("page.overview.assetsDistributionDescription", {
-              ledgerName: displayName,
-            })}
-            data={overview?.assetsHierarchyData}
-            primaryCurrency={primaryCurrency}
-          />
-          <DistributionChart
-            title={t("page.overview.liabilitiesDistribution")}
-            description={t("page.overview.liabilitiesDistributionDescription", {
-              ledgerName: displayName,
-            })}
-            data={overview?.liabilitiesHierarchyData}
-            primaryCurrency={primaryCurrency}
-            inverse
-          />
-        </div>
+        {balancesError ?? (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <DistributionChart
+              title={t("page.overview.assetsDistribution")}
+              description={t("page.overview.assetsDistributionDescription", {
+                ledgerName: displayName,
+              })}
+              data={market?.assetsHierarchyData}
+              primaryCurrency={primaryCurrency}
+            />
+            <DistributionChart
+              title={t("page.overview.liabilitiesDistribution")}
+              description={t(
+                "page.overview.liabilitiesDistributionDescription",
+                {
+                  ledgerName: displayName,
+                },
+              )}
+              data={market?.liabilitiesHierarchyData}
+              primaryCurrency={primaryCurrency}
+              inverse
+            />
+          </div>
+        )}
       </section>
     ),
     "cash-flow": (
