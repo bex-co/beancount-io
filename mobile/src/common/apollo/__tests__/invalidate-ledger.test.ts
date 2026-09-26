@@ -136,6 +136,8 @@ describe("invalidate-ledger", () => {
         "getLedgerAccountJournal",
         "getLedgerIncomeStatement",
         "getLedgerIntervalTotals",
+        // The price dates Home and Accounts disclose beside market values.
+        "getLedgerCommodities",
         "ledgerMeta",
         "getLedgerErrors",
         "listCommits",

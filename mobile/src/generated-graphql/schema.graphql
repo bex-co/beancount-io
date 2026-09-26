@@ -28,6 +28,10 @@ input AccountJournalQueryInput {
   directiveTypes: [String!]
   documentSubtypes: [String!]
   filter: String
+  """
+  Optional shared report-stream AccountFilter (URL ?account=). Distinct from the required target `account`.
+  """
+  filterAccount: String
   limit: Float = 20
   offset: Float = 0
   time: String
@@ -410,6 +414,10 @@ type EntryContext {
   balances_after: JSONObject
   balances_before: JSONObject
   entry: JSONObject!
+  """
+  The feed URL when the entry comes from a managed price include; such an entry is read-only.
+  """
+  managed_source: String
   sha256sum: String!
   slice: String!
 }
@@ -540,6 +548,28 @@ type IntervalTotalItem {
   accountBalances: JSONObject!
   balance: JSONObject!
   date: String!
+}
+
+type IntrospectionType {
+  """
+  Whether the credential is usable right now. False covers expired, malformed, revoked, never-issued, and belonging to another user — deliberately indistinguishable, and the only field set when false.
+  """
+  active: Boolean!
+  """`interactive`, `delegated`, or `workload`"""
+  bio_assurance: String
+  """`session`, `oauth`, or `apikey`"""
+  bio_credential_kind: String
+  """The one ledger this credential may touch, if it is confined"""
+  bio_ledger_scope: String
+  client_id: String
+  exp: Float
+  iat: Float
+  jti: String
+  """
+  Effective capability in the ledger scope vocabulary, space-delimited — not the raw grant. A session token is not scope-constrained and reports all three.
+  """
+  scope: String
+  sub: String
 }
 
 """
@@ -855,6 +885,34 @@ type LogoutResponse {
   success: Boolean!
 }
 
+"""One include line that names a managed price URL."""
+type ManagedPriceInclude {
+  file: String!
+  line: Int!
+  """The include target as written."""
+  target: String!
+}
+
+"""
+Status of one managed price include (ADR 015). `freshness` is `recent` within ten minutes of the latest observation, `stale` beyond it, and `unavailable` when no revision has validated.
+"""
+type ManagedPriceSource {
+  alias: String!
+  commodity: String
+  error: String
+  etag: String
+  fetchedAt: String
+  freshness: String!
+  includedFrom: [ManagedPriceInclude!]!
+  nextRefreshAt: String
+  observedAt: String
+  quote: String
+  revision: String
+  shadowedCount: Int!
+  source: String
+  url: String!
+}
+
 type MintedApiKeyType {
   key: ApiKeyType!
   """The key itself. Returned by this mutation and never retrievable again."""
@@ -995,6 +1053,10 @@ type Mutation {
   Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select.
   """
   reconcilePlaidAccounts(itemId: String!, ledgerId: String!): PlaidAccountReconcileResult!
+  """
+  Make every managed price feed the ledger includes due now, re-fetch each, and return the same records as getLedgerManagedPrices. Never touches the repository; a failed re-fetch keeps the last validated revision and reports its error. Requires write capability on the ledger.
+  """
+  refreshLedgerManagedPrices(ledgerId: String!): [ManagedPriceSource!]!
   """
   Refresh Plaid Item status from Plaid API (useful after reauthentication)
   """
@@ -1400,6 +1462,10 @@ type Query {
   getLedgerJournal(ledgerId: String!, query: JournalQueryInput): JournalResponse!
   """Get the links of a specific ledger"""
   getLedgerLinks(ledgerId: String!): [String!]!
+  """
+  Status of every managed price include the ledger names: feed pair and source, serving revision, observed/fetched/next-refresh times, freshness and the last refresh error. Empty when the ledger has none.
+  """
+  getLedgerManagedPrices(ledgerId: String!): [ManagedPriceSource!]!
   """Get the transactions for a narration"""
   getLedgerNarrationTransactions(ledgerId: String!, narration: String!): Transaction!
   getLedgerNarrations(ledgerId: String!): [String!]!
@@ -1472,6 +1538,10 @@ type Query {
   """is the server healthy?"""
   health: String!
   homeCharts(ledgerId: String, userId: String!): HomeChartsResponse!
+  """
+  Check whether a credential is live — an OAuth access token, a `bcio_` API key, or a session token. You may introspect your own credentials; anyone else's reads as inactive, exactly as an invalid one does.
+  """
+  introspectToken(token: String!, tokenTypeHint: String): IntrospectionType!
   """Get journal entries with enhanced search, filtering, and pagination"""
   journalEntries(
     """Account regex filter (e.g., 'Assets:*' or 'Expenses:Food:*')"""

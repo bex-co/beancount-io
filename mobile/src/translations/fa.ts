@@ -175,13 +175,35 @@ export const fa: typeof en = {
   amountEmptyError: "لطفاً مبلغ را وارد کنید",
   accountEmptyError: "حساب مبدأ و مقصد را انتخاب کنید",
   accounts: "حساب‌ها",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "حساب",
-  balanceAtCost: "مانده به بهای تمام‌شده",
   atCost: "{{amount}} به بهای تمام‌شده",
   notInTotal: "در جمع لحاظ نشده: {{amounts}}",
-  valuedAtCost: "به بهای تمام‌شده",
+  atMarket: "{{amount}} به ارزش بازار",
+  atMarketValue: "به ارزش بازار",
+  pricesNotUpdatedSince: {
+    one: "{{count}} قیمت از {{date}} به‌روز نشده",
+    other: "{{count}} قیمت از {{date}} به‌روز نشده",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} به بهای تمام‌شده (بدون قیمت)",
+    other: "{{count}} به بهای تمام‌شده (بدون قیمت)",
+  },
+  notInTotalCount: {
+    one: "{{count}} خارج از جمع",
+    other: "{{count}} خارج از جمع",
+  },
+  valuationDetailsTitle: "دارایی‌ها و قیمت‌ها",
+  valuationDetailsHint: "تاریخ آخرین قیمت هر دارایی را نشان می‌دهد",
+  valuationNoPrice: "بدون قیمت",
+  valuationNotUpdated: "به‌روز نشده",
+  valuationAtCostTag: "به بهای تمام‌شده",
+  valuationNotInTotalTag: "خارج از جمع",
+  valuationPriceDate: "قیمت {{date}}",
+  valuationLivePrice: "قیمت زنده",
+  updatePricesOnWeb: "به‌روزرسانی قیمت‌ها در وب",
+  costBasisLine: "بهای تمام‌شده {{cost}} · سود/زیان تحقق‌نیافته {{gain}}",
   liabilities: "بدهی‌ها",
   equity: "حقوق صاحبان سهام",
   noDataCharts: "برای نمایش نمودارها سریع اضافه کنید",

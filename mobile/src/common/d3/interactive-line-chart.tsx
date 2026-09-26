@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Svg, {
   Path,
@@ -40,7 +41,7 @@ import {
   shouldTickHaptic,
   shownScrubIndex,
 } from "./scrub";
-import { LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
+import { directionalIcon, LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
 import { ChartErrorBoundary } from "./chart-chrome";
 import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
 import { changePercent } from "./change-percent";
@@ -64,6 +65,20 @@ type InteractiveLineChartProps = {
    * heading isn't duplicated.
    */
   label?: string;
+  /**
+   * Makes the heading a button that opens what it summarizes (Home's status
+   * line opens the holdings behind it). The heading then carries a chevron.
+   */
+  onLabelPress?: () => void;
+  /** Screen-reader hint for `onLabelPress`. */
+  labelAccessibilityHint?: string;
+  /**
+   * Static line under the change row about the resting figure (e.g. Home's
+   * "Cost $106,826.05 · Unrealized +$10,823.44"). Hidden, not removed, while
+   * scrubbing: it describes the latest value, not the month under the finger,
+   * and keeping its space holds the header still.
+   */
+  footnote?: string;
   labels: string[];
   numbers: number[];
   /**
@@ -265,6 +280,18 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black80,
       textAlign: LEADING_TEXT_ALIGN,
     },
+    // Chevron trails the last line of a wrapped status line.
+    labelButton: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+    },
+    labelPressable: {
+      flexShrink: 1,
+    },
+    labelChevron: {
+      marginStart: 2,
+      marginBottom: 2,
+    },
     headline: {
       fontSize: fontSizes.display,
       fontWeight: fontWeights.medium,
@@ -286,6 +313,16 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.black80,
+    },
+    // Same muted color as the caption above the value: context for the
+    // figure, not a second figure. `AmountText` sets the leading alignment.
+    footnote: {
+      marginTop: 2,
+      fontSize: fontSizes.md,
+      color: theme.black80,
+    },
+    footnoteHidden: {
+      opacity: 0,
     },
     chartContainer: {
       position: "relative",
@@ -310,6 +347,7 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 type ScrubHeaderProps = {
+  footnote?: string;
   labels: string[];
   numbers: number[];
   baseline?: number;
@@ -339,6 +377,7 @@ type ScrubHeaderProps = {
  * re-renders and the pixels come out the same.
  */
 function ScrubHeader({
+  footnote,
   labels,
   numbers,
   baseline: windowBaseline,
@@ -416,12 +455,22 @@ function ScrubHeader({
           <Text style={styles.scrubLabel}>{`· ${scrubLabel}`}</Text>
         )}
       </View>
+      {footnote !== undefined && (
+        <AmountText
+          style={[styles.footnote, scrubbing && styles.footnoteHidden]}
+        >
+          {footnote}
+        </AmountText>
+      )}
     </>
   );
 }
 
 function InteractiveLineChart({
   label,
+  onLabelPress,
+  labelAccessibilityHint,
+  footnote,
   labels,
   numbers,
   baseline: windowBaseline,
@@ -677,8 +726,30 @@ function InteractiveLineChart({
               : undefined
           }
         >
-          {label !== undefined && <Text style={styles.label}>{label}</Text>}
+          {label !== undefined &&
+            (onLabelPress ? (
+              <Pressable
+                onPress={onLabelPress}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                accessibilityHint={labelAccessibilityHint}
+                style={styles.labelButton}
+              >
+                <Text style={[styles.label, styles.labelPressable]}>
+                  {label}
+                </Text>
+                <Ionicons
+                  name={directionalIcon("chevron-forward")}
+                  size={14}
+                  color={theme.black80}
+                  style={styles.labelChevron}
+                />
+              </Pressable>
+            ) : (
+              <Text style={styles.label}>{label}</Text>
+            ))}
           <ScrubHeader
+            footnote={footnote}
             labels={labels}
             numbers={numbers}
             baseline={windowBaseline}

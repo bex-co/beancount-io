@@ -177,13 +177,35 @@ export const ru: typeof en = {
   amountEmptyError: "Пожалуйста, введите сумму",
   accountEmptyError: "Выберите счёт списания и счёт зачисления",
   accounts: "Счета",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Счёт",
-  balanceAtCost: "Остаток по себестоимости",
   atCost: "{{amount}} по себестоимости",
   notInTotal: "Не входит в итог: {{amounts}}",
-  valuedAtCost: "По себестоимости",
+  atMarket: "{{amount}} по рыночной стоимости",
+  atMarketValue: "По рыночной стоимости",
+  pricesNotUpdatedSince: {
+    one: "{{count}} цена не обновлялась с {{date}}",
+    other: "{{count}} цен не обновлялись с {{date}}",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} по себестоимости (без цены)",
+    other: "{{count}} по себестоимости (без цены)",
+  },
+  notInTotalCount: {
+    one: "{{count}} не в итоге",
+    other: "{{count}} не в итоге",
+  },
+  valuationDetailsTitle: "Активы и цены",
+  valuationDetailsHint: "Показывает дату последней цены каждого актива",
+  valuationNoPrice: "Нет цены",
+  valuationNotUpdated: "Не обновлялась",
+  valuationAtCostTag: "По себестоимости",
+  valuationNotInTotalTag: "Не в итоге",
+  valuationPriceDate: "Цена от {{date}}",
+  valuationLivePrice: "Живая цена",
+  updatePricesOnWeb: "Обновить цены в веб-версии",
+  costBasisLine: "Себестоимость {{cost}} · Нереализованный результат {{gain}}",
   liabilities: "Обязательства",
   equity: "Собственный капитал",
   noDataCharts: "Быстро добавьте для отображения графиков",

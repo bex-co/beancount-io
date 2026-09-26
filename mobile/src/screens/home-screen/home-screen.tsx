@@ -5,14 +5,26 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useBalanceSheet } from "@/screens/home-screen/hooks/use-balance-sheet";
+import { useBalanceSheetBasis } from "@/screens/home-screen/hooks/use-balance-sheet-basis";
+import { useLedgerPrices } from "@/common/hooks/use-ledger-prices";
 import {
   selectAssetsSeries,
-  selectLatestNotInTotal,
   selectLiabilitiesSeries,
   selectNetWorthSeries,
+  selectSeriesValuation,
+  type SheetSeries,
 } from "@/screens/home-screen/selectors/select-balance-sheet-series";
-import { notInTotalNotes } from "@/common/balance-display";
-import { AccountChartsCard } from "@/screens/home-screen/components/account-charts-card";
+import {
+  costBasisLine,
+  valuationStatus,
+  type Valuation,
+} from "@/common/valuation";
+import { ValuationSheet } from "@/components/valuation-sheet";
+import { getFormatDate } from "@/common/format-util";
+import {
+  AccountChartsCard,
+  type ChartKey,
+} from "@/screens/home-screen/components/account-charts-card";
 import { RecentTransactionsCard } from "@/screens/home-screen/components/recent-transactions-card";
 import { SpendingCard } from "@/screens/home-screen/components/spending-card";
 import { BudgetCard } from "@/screens/home-screen/components/budget-card";
@@ -44,7 +56,7 @@ const getStyles = (theme: ColorTheme) =>
 
 const HomeScreenImpl = (): JSX.Element => {
   const { userId } = useSession();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const router = useRouter();
@@ -78,40 +90,100 @@ const HomeScreenImpl = (): JSX.Element => {
     () => selectLiabilitiesSeries(currency, balanceSheet),
     [currency, balanceSheet],
   );
-  // Every figure on the card is at cost. Each caption says so, and names any
-  // holding its total leaves out instead of letting net worth omit it silently.
-  const chartCaptions = useMemo(() => {
-    const sheet = balanceSheet?.getLedgerBalanceSheet;
-    const caption = (points: Parameters<typeof selectLatestNotInTotal>[1]) =>
-      [
-        t("valuedAtCost"),
-        ...notInTotalNotes(selectLatestNotInTotal(currency, points), t),
-      ].join(" · ");
-    return {
-      netWorth: caption(sheet?.netWorthData),
-      assets: caption(sheet?.assetsData),
-      liabilities: caption(sheet?.liabilitiesData),
+  // Every figure on the card is at market. The same curves at cost and in
+  // units, and the ledger's price dates, are what let each caption say so:
+  // which basis, how old its prices, which holdings stayed at cost or out.
+  const {
+    data: balanceSheetBasis,
+    loading: basisLoading,
+    refetch: basisRefetch,
+    error: basisError,
+  } = useBalanceSheetBasis(ledgerId);
+  const {
+    prices,
+    managed,
+    data: pricesData,
+    loading: pricesLoading,
+    refetch: pricesRefetch,
+    error: pricesError,
+  } = useLedgerPrices(ledgerId);
+  const today = useMemo(() => getFormatDate(new Date()), []);
+  const { valuations, chartCaptions, chartFootnotes } = useMemo(() => {
+    const valuationOf = (series: SheetSeries) =>
+      selectSeriesValuation(
+        currency,
+        series,
+        balanceSheet,
+        balanceSheetBasis,
+        prices,
+        today,
+        managed,
+      );
+    const pages: Record<ChartKey, Valuation> = {
+      netWorth: valuationOf("netWorthData"),
+      assets: valuationOf("assetsData"),
+      liabilities: valuationOf("liabilitiesData"),
     };
-  }, [t, currency, balanceSheet]);
+    // One status line per page; none for a page whose total values no
+    // holding, since a cash balance has no basis to state.
+    const caption = (key: ChartKey) =>
+      valuationStatus(pages[key], t, locale) ?? undefined;
+    return {
+      valuations: pages,
+      chartCaptions: {
+        netWorth: caption("netWorth"),
+        assets: caption("assets"),
+        liabilities: caption("liabilities"),
+      },
+      chartFootnotes: {
+        netWorth: costBasisLine(pages.netWorth, currency, t) ?? undefined,
+      },
+    };
+  }, [
+    t,
+    locale,
+    currency,
+    balanceSheet,
+    balanceSheetBasis,
+    prices,
+    managed,
+    today,
+  ]);
+  // The page whose holdings the detail sheet shows; null while it is closed.
+  const [detailPage, setDetailPage] = useState<ChartKey | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshSignal, setRefreshSignal] = useState(0);
   // Skeleton only on first load. Folding `refreshing` in here meant every
   // pull-to-refresh tore a perfectly good chart down to a pulsing tile — the
   // inverse of the rule the rest of the app follows, where current content
   // stays visible under the RefreshControl spinner.
-  const isLoading = balanceSheetLoading && !balanceSheet;
+  //
+  // The basis and price reads hold the skeleton too, so a caption never lands
+  // after its figure and pushes it down. A failed one releases it: the figure
+  // then says only what it can still tell.
+  const isLoading =
+    (balanceSheetLoading && !balanceSheet) ||
+    (basisLoading && !balanceSheetBasis && !basisError) ||
+    (pricesLoading && !pricesData && !pricesError);
   // First-load failure (error, no cache) keeps the chart skeleton; cached
   // data with a failed refetch shows the numbers + stale banner instead.
   const chartError = Boolean(balanceSheetError) && !balanceSheet;
   const showStale = isShowingStaleDataFromQueries([
     { data: balanceSheet, error: balanceSheetError },
+    { data: balanceSheetBasis, error: basisError },
+    { data: pricesData, error: pricesError },
     { data: ledgerMeta, error: ledgerMetaError },
   ]);
   const onRefresh = async () => {
     setRefreshing(true);
     setRefreshSignal((signal) => signal + 1);
     try {
-      await Promise.all([ledgerMetaRefetch(), balanceSheetRefetch()]);
+      await Promise.all([
+        ledgerMetaRefetch(),
+        balanceSheetRefetch(),
+        basisRefetch(),
+        pricesRefetch(),
+      ]);
     } finally {
       setRefreshing(false);
     }
@@ -168,8 +240,16 @@ const HomeScreenImpl = (): JSX.Element => {
           assetsSeries={assetsSeries}
           liabilitiesSeries={liabilitiesSeries}
           captions={chartCaptions}
+          footnotes={chartFootnotes}
+          onCaptionPress={setDetailPage}
           loading={isLoading}
           error={chartError}
+        />
+        <ValuationSheet
+          visible={detailPage !== null}
+          valuation={detailPage === null ? null : valuations[detailPage]}
+          ledgerId={ledgerId}
+          onClose={() => setDetailPage(null)}
         />
 
         <RecentTransactionsCard

@@ -177,13 +177,35 @@ export const sk: typeof en = {
   amountEmptyError: "Prosím zadajte sumu",
   accountEmptyError: "Vyberte zdrojový a cieľový účet",
   accounts: "Účty",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Účet",
-  balanceAtCost: "Zostatok v obstarávacej cene",
   atCost: "{{amount}} v obstarávacej cene",
   notInTotal: "Nie je v súčte: {{amounts}}",
-  valuedAtCost: "V obstarávacej cene",
+  atMarket: "{{amount}} v trhovej hodnote",
+  atMarketValue: "V trhovej hodnote",
+  pricesNotUpdatedSince: {
+    one: "{{count}} cena neaktualizovaná od {{date}}",
+    other: "{{count}} cien neaktualizovaných od {{date}}",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} v obstarávacej cene (bez ceny)",
+    other: "{{count}} v obstarávacej cene (bez ceny)",
+  },
+  notInTotalCount: {
+    one: "{{count}} mimo súčtu",
+    other: "{{count}} mimo súčtu",
+  },
+  valuationDetailsTitle: "Aktíva a ceny",
+  valuationDetailsHint: "Zobrazí dátum poslednej ceny každého aktíva",
+  valuationNoPrice: "Bez ceny",
+  valuationNotUpdated: "Neaktualizované",
+  valuationAtCostTag: "V obstarávacej cene",
+  valuationNotInTotalTag: "Mimo súčtu",
+  valuationPriceDate: "Cena z {{date}}",
+  valuationLivePrice: "Živá cena",
+  updatePricesOnWeb: "Aktualizovať ceny na webe",
+  costBasisLine: "Obstarávacia cena {{cost}} · Nerealizovaný výsledok {{gain}}",
   liabilities: "Záväzky",
   equity: "Vlastné imanie",
   noDataCharts: "Rýchlo pridajte pre zobrazenie grafov",

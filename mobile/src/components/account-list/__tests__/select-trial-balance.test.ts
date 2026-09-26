@@ -1,4 +1,5 @@
 import {
+  selectTrialBalanceAccount,
   selectTrialBalanceCategories,
   selectTrialBalanceDisplays,
 } from "../select-trial-balance";
@@ -382,46 +383,172 @@ const exampleAtCost = exampleAssets(
   { VACHR: "-13" },
   { USD: "49049.66613", VACHR: "-13" },
 );
+// The same accounts at market: RGAGX at its 2017-09-08 close of 81.09.
+const exampleMarket = exampleAssets(
+  { USD: "48471.38532" },
+  { VACHR: "-13" },
+  { USD: "48471.38532", VACHR: "-13" },
+);
 const exampleUnits = exampleAssets(
   { RGAGX: "597.748" },
   { VACHR: "-13" },
   { RGAGX: "597.748", VACHR: "-13" },
 );
+const EXAMPLE_PRICES = [
+  { base: "RGAGX", quote: "USD", prices: [{ date: "2017-09-08" }] },
+];
+const TODAY = "2026-09-26";
 
 describe("selectTrialBalanceDisplays", () => {
   it("keys the category by its row key and accounts by their full name", () => {
     const displays = selectTrialBalanceDisplays(
       "USD",
-      exampleAtCost,
+      exampleMarket,
       exampleUnits,
+      EXAMPLE_PRICES,
+      TODAY,
     );
-    expect(displays.get("assets")).toEqual({
-      kind: "money",
-      value: 49049.66613,
-      notInTotal: [{ currency: "VACHR", number: -13, scale: 0 }],
-    });
+    const assets = displays.get("assets");
+    expect(assets?.kind === "money" && assets.value).toBe(48471.38532);
+    expect(assets?.kind === "money" && assets.notInTotal).toEqual([
+      { currency: "VACHR", number: -13, scale: 0 },
+    ]);
     expect(displays.get("Assets:Vanguard:RGAGX")).toEqual({
       kind: "units",
       units: { currency: "RGAGX", number: 597.748, scale: 3 },
-      cost: 49049.66613,
+      value: { amount: 48471.38532, basis: "market" },
     });
     expect(displays.get("Assets:Hoogle:Vacation")).toEqual({
       kind: "units",
       units: { currency: "VACHR", number: -13, scale: 0 },
-      cost: null,
+      value: null,
     });
   });
 
+  it("gives a root what Home's matching page discloses", () => {
+    const assets = selectTrialBalanceDisplays(
+      "USD",
+      exampleMarket,
+      exampleUnits,
+      EXAMPLE_PRICES,
+      TODAY,
+    ).get("assets");
+    const valuation = assets?.kind === "money" ? assets.valuation : undefined;
+    expect(valuation?.priced.map((holding) => holding.currency)).toEqual([
+      "RGAGX",
+    ]);
+    expect(valuation?.priced[0]?.priceDate).toBe("2017-09-08");
+    // The tree values at the latest price, so staleness is measured to today.
+    expect(valuation?.priced[0]?.stale).toBe(true);
+    expect(valuation?.cost).toBe(null);
+  });
+
+  it("reads a commodity the ledger has no price for at cost", () => {
+    const displays = selectTrialBalanceDisplays(
+      "USD",
+      exampleAtCost,
+      exampleUnits,
+      [],
+      TODAY,
+    );
+    expect(displays.get("Assets:Vanguard:RGAGX")).toEqual({
+      kind: "units",
+      units: { currency: "RGAGX", number: 597.748, scale: 3 },
+      value: { amount: 49049.66613, basis: "cost" },
+    });
+    const assets = displays.get("assets");
+    expect(assets?.kind === "money" && assets.valuation?.atCostNoPrice).toEqual(
+      [{ currency: "RGAGX", number: 597.748, scale: 3 }],
+    );
+  });
+
+  it("leaves the basis unknown while the prices are", () => {
+    const displays = selectTrialBalanceDisplays(
+      "USD",
+      exampleMarket,
+      exampleUnits,
+      undefined,
+      TODAY,
+    );
+    const rgagx = displays.get("Assets:Vanguard:RGAGX");
+    expect(rgagx?.kind === "units" && rgagx.value?.basis).toBe(null);
+  });
+
+  it("gives only the roots a valuation, not the parents beneath them", () => {
+    const tree = (fund: Record<string, string>, cash: Record<string, string>) =>
+      createTrialBalance({
+        assets: {
+          account: "Assets",
+          total: { ...fund, ...cash },
+          children: [
+            {
+              account: "Assets:Vanguard",
+              balanceChildren: { ...fund, ...cash },
+              children: [
+                { account: "Assets:Vanguard:RGAGX", balanceChildren: fund },
+                { account: "Assets:Vanguard:Cash", balanceChildren: cash },
+              ],
+            },
+          ],
+        },
+      });
+    const displays = selectTrialBalanceDisplays(
+      "USD",
+      tree({ USD: "48471.38532" }, {}),
+      tree({ RGAGX: "597.748" }, { USD: "5" }),
+      EXAMPLE_PRICES,
+      TODAY,
+    );
+    const parent = displays.get("Assets:Vanguard");
+    expect(parent?.kind).toBe("money");
+    expect(parent?.kind === "money" && parent.valuation).toBe(undefined);
+    const root = displays.get("assets");
+    expect(root?.kind === "money" && root.valuation?.valuesHoldings).toBe(true);
+  });
+
   it("still reads an unconverted commodity in units before the units read lands", () => {
-    const displays = selectTrialBalanceDisplays("USD", exampleAtCost);
+    const displays = selectTrialBalanceDisplays(
+      "USD",
+      exampleMarket,
+      undefined,
+      EXAMPLE_PRICES,
+      TODAY,
+    );
     expect(displays.get("Assets:Hoogle:Vacation")?.kind).toBe("units");
     expect(displays.get("Assets:Vanguard:RGAGX")?.kind).toBe("money");
   });
 
-  it("is empty without the at-cost read", () => {
+  it("is empty without the valued read", () => {
     expect(
-      selectTrialBalanceDisplays("USD", undefined, exampleUnits).size,
+      selectTrialBalanceDisplays(
+        "USD",
+        undefined,
+        exampleUnits,
+        EXAMPLE_PRICES,
+        TODAY,
+      ).size,
     ).toBe(0);
+  });
+});
+
+describe("selectTrialBalanceAccount", () => {
+  it("finds an account's balance anywhere in the five trees", () => {
+    expect(
+      selectTrialBalanceAccount(exampleMarket, "Assets:Vanguard:RGAGX"),
+    ).toEqual({ USD: "48471.38532" });
+    expect(selectTrialBalanceAccount(exampleMarket, "Assets")).toEqual({
+      USD: "48471.38532",
+      VACHR: "-13",
+    });
+  });
+
+  it("finds nothing for an unknown account or a read that has not landed", () => {
+    expect(selectTrialBalanceAccount(exampleMarket, "Assets:Nope")).toBe(
+      undefined,
+    );
+    expect(selectTrialBalanceAccount(undefined, "Assets:Vanguard:RGAGX")).toBe(
+      undefined,
+    );
   });
 });
 

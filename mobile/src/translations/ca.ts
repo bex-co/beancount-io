@@ -180,13 +180,35 @@ export const ca: typeof en = {
   amountEmptyError: "Si us plau, introdueix l'import",
   accountEmptyError: "Tria el compte d'origen i el de destí",
   accounts: "Comptes",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Compte",
-  balanceAtCost: "Saldo a cost",
   atCost: "{{amount}} a cost",
   notInTotal: "No inclòs al total: {{amounts}}",
-  valuedAtCost: "A cost",
+  atMarket: "{{amount}} a valor de mercat",
+  atMarketValue: "A valor de mercat",
+  pricesNotUpdatedSince: {
+    one: "{{count}} preu sense actualitzar des del {{date}}",
+    other: "{{count}} preus sense actualitzar des del {{date}}",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} a cost (sense preu)",
+    other: "{{count}} a cost (sense preu)",
+  },
+  notInTotalCount: {
+    one: "{{count}} fora del total",
+    other: "{{count}} fora del total",
+  },
+  valuationDetailsTitle: "Actius i preus",
+  valuationDetailsHint: "Mostra la data de l'últim preu de cada actiu",
+  valuationNoPrice: "Sense preu",
+  valuationNotUpdated: "Sense actualitzar",
+  valuationAtCostTag: "A cost",
+  valuationNotInTotalTag: "Fora del total",
+  valuationPriceDate: "Preu {{date}}",
+  valuationLivePrice: "Preu en directe",
+  updatePricesOnWeb: "Actualitza els preus al web",
+  costBasisLine: "Cost {{cost}} · Resultat no realitzat {{gain}}",
   liabilities: "Passius",
   equity: "Patrimoni net",
   noDataCharts: "Afegir ràpid per mostrar gràfics",

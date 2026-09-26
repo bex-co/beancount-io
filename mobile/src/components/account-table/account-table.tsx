@@ -23,11 +23,8 @@ import {
 } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
-import {
-  balanceNotes,
-  formatHolding,
-  type BalanceDisplay,
-} from "@/common/balance-display";
+import { formatHolding, type BalanceDisplay } from "@/common/balance-display";
+import { balanceNotes } from "@/common/valuation";
 import { AmountText } from "@/components/amount-text";
 import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
@@ -238,7 +235,7 @@ const AccountTableRow = memo(function AccountTableRow({
 }: AccountTableRowProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const isCategory = row.depth === 0;
   const disclosure = rowDisclosure(row, label, t);
 
@@ -317,7 +314,7 @@ const AccountTableRow = memo(function AccountTableRow({
           : formatSignedMoneyWithCurrency(row.value, currency)}
       </AmountText>
       {display
-        ? balanceNotes(display, currency, t).map((note) => (
+        ? balanceNotes(display, currency, t, locale).map((note) => (
             <Text key={note} style={styles.amountNote}>
               {note}
             </Text>
@@ -502,7 +499,9 @@ export function AccountTable({
       ListHeaderComponent={
         <View style={styles.columnHeader}>
           <Text style={styles.columnLabel}>{t("account")}</Text>
-          <Text style={styles.columnLabelRight}>{t("balanceAtCost")}</Text>
+          {/* The basis is each root's to state: roots that value holdings
+              say so with their price date, cash-only ones say nothing. */}
+          <Text style={styles.columnLabelRight}>{t("balance")}</Text>
         </View>
       }
       ListEmptyComponent={<Text style={styles.empty}>{t("noAccounts")}</Text>}

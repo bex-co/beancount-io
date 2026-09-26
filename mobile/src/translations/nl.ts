@@ -177,13 +177,35 @@ export const nl: typeof en = {
   amountEmptyError: "Voer het bedrag in",
   accountEmptyError: "Kies het account waarvan en waarnaar",
   accounts: "Accounts",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Account",
-  balanceAtCost: "Saldo tegen kostprijs",
   atCost: "{{amount}} tegen kostprijs",
   notInTotal: "Niet in totaal: {{amounts}}",
-  valuedAtCost: "Tegen kostprijs",
+  atMarket: "{{amount}} tegen marktwaarde",
+  atMarketValue: "Tegen marktwaarde",
+  pricesNotUpdatedSince: {
+    one: "{{count}} prijs niet bijgewerkt sinds {{date}}",
+    other: "{{count}} prijzen niet bijgewerkt sinds {{date}}",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} tegen kostprijs (geen prijs)",
+    other: "{{count}} tegen kostprijs (geen prijs)",
+  },
+  notInTotalCount: {
+    one: "{{count}} niet in totaal",
+    other: "{{count}} niet in totaal",
+  },
+  valuationDetailsTitle: "Bezittingen en prijzen",
+  valuationDetailsHint: "Toont de datum van de laatste prijs per bezit",
+  valuationNoPrice: "Geen prijs",
+  valuationNotUpdated: "Niet bijgewerkt",
+  valuationAtCostTag: "Tegen kostprijs",
+  valuationNotInTotalTag: "Niet in totaal",
+  valuationPriceDate: "Prijs {{date}}",
+  valuationLivePrice: "Live prijs",
+  updatePricesOnWeb: "Prijzen bijwerken op het web",
+  costBasisLine: "Kostprijs {{cost}} · Ongerealiseerd resultaat {{gain}}",
   liabilities: "Passiva",
   equity: "Eigen vermogen",
   noDataCharts: "Snel toevoegen om grafieken te tonen",

@@ -1,22 +1,50 @@
-import { BalanceSheetQuery } from "@/generated-graphql/graphql";
 import {
-  DateBalancePoint,
+  BalanceSheetBasisQuery,
+  BalanceSheetQuery,
+} from "@/generated-graphql/graphql";
+import {
   SeriesPoint,
   latestBalance,
   pointsToMonthlySeries,
 } from "../../../common/series-util";
-import { notInTotalOf, type Holding } from "../../../common/balance-display";
+import {
+  selectValuation,
+  type ManagedSource,
+  type PricePair,
+  type Valuation,
+} from "../../../common/valuation";
+
+/** Home's three curves, named the way both balance-sheet reads name them. */
+export type SheetSeries = "netWorthData" | "assetsData" | "liabilitiesData";
 
 /**
- * Holdings the latest point of a series leaves out of its operating-currency
- * total — commodities with no cost, which the at-cost total cannot express.
- * Home names them rather than presenting a net worth that silently omits them.
+ * What the latest point of one Home curve discloses (see `selectValuation`):
+ * its market figure, measured against the same point at cost and in units, and
+ * dated by the ledger's prices at the point's own date. Home names what a
+ * total holds rather than presenting a net worth whose basis the reader has to
+ * guess.
  */
-export function selectLatestNotInTotal(
+export function selectSeriesValuation(
   currency: string,
-  points: ReadonlyArray<DateBalancePoint | null | undefined> | null | undefined,
-): Holding[] {
-  return notInTotalOf(latestBalance(points), currency);
+  series: SheetSeries,
+  market: BalanceSheetQuery | undefined,
+  basis: BalanceSheetBasisQuery | undefined,
+  prices: readonly PricePair[] | undefined,
+  today: string,
+  managed?: readonly ManagedSource[],
+): Valuation {
+  const points = market?.getLedgerBalanceSheet?.[series];
+  const latest = points?.[points.length - 1];
+  return selectValuation({
+    market: latest?.balance,
+    cost: latestBalance(basis?.cost?.[series]),
+    units: latestBalance(basis?.units?.[series]),
+    currency,
+    date: latest?.date,
+    today,
+    prices,
+    managed,
+  });
 }
 
 /**

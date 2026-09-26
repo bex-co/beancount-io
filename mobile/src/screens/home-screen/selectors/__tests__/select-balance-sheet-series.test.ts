@@ -1,10 +1,13 @@
 import {
   selectNetWorthSeries,
   selectAssetsSeries,
-  selectLatestNotInTotal,
   selectLiabilitiesSeries,
+  selectSeriesValuation,
 } from "../select-balance-sheet-series";
-import { BalanceSheetQuery } from "@/generated-graphql/graphql";
+import {
+  BalanceSheetBasisQuery,
+  BalanceSheetQuery,
+} from "@/generated-graphql/graphql";
 
 type Point = { date: string; balance: Record<string, number | string> };
 
@@ -107,34 +110,87 @@ describe("selectLiabilitiesSeries", () => {
   });
 });
 
-describe("selectLatestNotInTotal", () => {
-  it("names the holdings the latest point leaves out of its total", () => {
-    const netWorthData: Point[] = [
-      { date: "2017-08-31", balance: { USD: "100" } },
-      { date: "2017-09-30", balance: { USD: "106826.04944", VACHR: "-13" } },
-    ];
-    expect(selectLatestNotInTotal("USD", netWorthData)).toEqual([
+describe("selectSeriesValuation", () => {
+  // The latest two net-worth points of `open_ledger/example`, as the API
+  // returned them on 2026-09-26, in all three reads.
+  const market = createBalanceSheet({
+    netWorthData: [
+      { date: "2017-08-31", balance: { USD: "115457.9812", VACHR: "-18" } },
+      { date: "2017-09-30", balance: { USD: "117649.48828", VACHR: "-13" } },
+    ],
+  });
+  const basis = {
+    cost: {
+      netWorthData: [
+        { date: "2017-09-30", balance: { USD: "106826.04944", VACHR: "-13" } },
+      ],
+      assetsData: [],
+      liabilitiesData: [],
+    },
+    units: {
+      netWorthData: [
+        {
+          date: "2017-09-30",
+          balance: { USD: "906.58", VACHR: "-13", RGAGX: "597.748" },
+        },
+      ],
+      assetsData: [],
+      liabilitiesData: [],
+    },
+  } as unknown as BalanceSheetBasisQuery;
+  const prices = [
+    { base: "RGAGX", quote: "USD", prices: [{ date: "2017-09-08" }] },
+  ];
+
+  it("measures the latest market point against the same point at cost", () => {
+    const valuation = selectSeriesValuation(
+      "USD",
+      "netWorthData",
+      market,
+      basis,
+      prices,
+      "2026-09-26",
+    );
+    expect(valuation.market).toBe(117649.48828);
+    expect(valuation.cost).toBe(106826.04944);
+    expect(valuation.priced.map((holding) => holding.currency)).toEqual([
+      "RGAGX",
+    ]);
+    expect(valuation.priced[0]?.priceDate).toBe("2017-09-08");
+    // Dated against its own 2017-09-30 point, not only against today.
+    expect(valuation.priced[0]?.stale).toBe(true);
+    expect(valuation.notInTotal).toEqual([
       { currency: "VACHR", number: -13, scale: 0 },
     ]);
-    // The charted figure is still the at-cost total, unchanged.
-    const series = selectNetWorthSeries(
+  });
+
+  it("knows no cost and no holdings until the basis read lands", () => {
+    const valuation = selectSeriesValuation(
       "USD",
-      createBalanceSheet({ netWorthData }),
+      "netWorthData",
+      market,
+      undefined,
+      prices,
+      "2026-09-26",
     );
-    expect(series[series.length - 1].value).toBe(106826.04944);
+    expect(valuation.cost).toBe(null);
+    expect(valuation.valuesHoldings).toBe(false);
+    // What the total leaves out is read from the market figure alone.
+    expect(valuation.notInTotal.length).toBe(1);
   });
 
-  it("reads only the latest point, not an older omission", () => {
-    expect(
-      selectLatestNotInTotal("USD", [
-        { date: "2017-08-31", balance: { USD: "100", VACHR: "-8" } },
-        { date: "2017-09-30", balance: { USD: "120" } },
-      ]),
-    ).toEqual([]);
-  });
-
-  it("is empty without points", () => {
-    expect(selectLatestNotInTotal("USD", [])).toEqual([]);
-    expect(selectLatestNotInTotal("USD", undefined)).toEqual([]);
+  it("reads a curve with no points as an empty total", () => {
+    const valuation = selectSeriesValuation(
+      "USD",
+      "liabilitiesData",
+      market,
+      basis,
+      prices,
+      "2026-09-26",
+    );
+    expect(valuation.market).toBe(0);
+    expect(valuation.cost).toBe(null);
+    expect(valuation.valuesHoldings).toBe(false);
+    expect(valuation.notInTotal).toEqual([]);
   });
 });

@@ -18,6 +18,8 @@ import { selectTrialBalanceDisplays } from "@/components/account-list/select-tri
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
+import { useLedgerPrices } from "@/common/hooks/use-ledger-prices";
+import { getFormatDate } from "@/common/format-util";
 import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 
 // Skeleton rows sized to the loaded table's rhythm: each tile plus its vertical
@@ -81,8 +83,8 @@ const AccountsScreenImpl = (): JSX.Element => {
   } = useLedgerMeta(userId, ledgerId);
   const currency = getPrimaryCurrency(currencies);
 
-  // Commodity holdings are valued, so they count toward Assets rather than being
-  // dropped for lack of a cash balance.
+  // Commodity holdings are valued at market, as on Home, so they count toward
+  // Assets rather than being dropped for lack of a cash balance.
   const {
     data: accountData,
     loading: accountsLoading,
@@ -90,7 +92,7 @@ const AccountsScreenImpl = (): JSX.Element => {
     error: accountsError,
   } = useTrialBalance(ledgerId);
   // The same trial balance in units: what a commodity account holds, which the
-  // at-cost read has already converted away (see `selectBalanceDisplay`).
+  // market read has already converted away (see `selectBalanceDisplay`).
   const {
     data: unitsData,
     loading: unitsLoading,
@@ -103,9 +105,28 @@ const AccountsScreenImpl = (): JSX.Element => {
       selectTrialBalanceCategories(currency, accountData, ledgerMeta?.accounts),
     [currency, accountData, ledgerMeta?.accounts],
   );
+  // Which commodities had a price: a row's value reads "at market" or "at
+  // cost", and each root dates its prices the way Home's pages do.
+  const {
+    prices,
+    managed,
+    data: pricesData,
+    loading: pricesLoading,
+    refetch: pricesRefetch,
+    error: pricesError,
+  } = useLedgerPrices(ledgerId);
+  const today = useMemo(() => getFormatDate(new Date()), []);
   const displays = useMemo(
-    () => selectTrialBalanceDisplays(currency, accountData, unitsData),
-    [currency, accountData, unitsData],
+    () =>
+      selectTrialBalanceDisplays(
+        currency,
+        accountData,
+        unitsData,
+        prices,
+        today,
+        managed,
+      ),
+    [currency, accountData, unitsData, prices, today, managed],
   );
 
   const handleOpenAccount = useCallback(() => {
@@ -120,20 +141,24 @@ const AccountsScreenImpl = (): JSX.Element => {
         ledgerMetaRefetch(),
         accountsRefetch(),
         unitsRefetch(),
+        pricesRefetch(),
       ]);
     } finally {
       setRefreshing(false);
     }
   };
 
-  // Held until the units read lands too, so a commodity row does not first
-  // render as money and then switch. A failed units read still shows the table.
+  // Held until the units and price reads land too, so a commodity row does not
+  // first render as money, or without its basis, and then switch. A failed read
+  // still shows the table.
   const accountsPending =
     (accountsLoading && !accountData) ||
-    (unitsLoading && !unitsData && !unitsError);
+    (unitsLoading && !unitsData && !unitsError) ||
+    (pricesLoading && !pricesData && !pricesError);
   const showStale = isShowingStaleDataFromQueries([
     { data: accountData, error: accountsError },
     { data: unitsData, error: unitsError },
+    { data: pricesData, error: pricesError },
     { data: ledgerMeta, error: ledgerMetaError },
   ]);
 

@@ -182,13 +182,35 @@ export const de: typeof en = {
   amountEmptyError: "Bitte geben Sie den Betrag ein",
   accountEmptyError: "Bitte wählen Sie das Quell- und das Zielkonto",
   accounts: "Konten",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Konto",
-  balanceAtCost: "Saldo zu Anschaffungskosten",
   atCost: "{{amount}} zu Anschaffungskosten",
   notInTotal: "Nicht in der Summe: {{amounts}}",
-  valuedAtCost: "Zu Anschaffungskosten",
+  atMarket: "{{amount}} zum Marktwert",
+  atMarketValue: "Zum Marktwert",
+  pricesNotUpdatedSince: {
+    one: "{{count}} Preis seit {{date}} nicht aktualisiert",
+    other: "{{count}} Preise seit {{date}} nicht aktualisiert",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} zu Anschaffungskosten (ohne Preis)",
+    other: "{{count}} zu Anschaffungskosten (ohne Preis)",
+  },
+  notInTotalCount: {
+    one: "{{count}} nicht in der Summe",
+    other: "{{count}} nicht in der Summe",
+  },
+  valuationDetailsTitle: "Bestände und Preise",
+  valuationDetailsHint: "Zeigt das Datum des letzten Preises jedes Bestands",
+  valuationNoPrice: "Kein Preis",
+  valuationNotUpdated: "Nicht aktualisiert",
+  valuationAtCostTag: "Zu Anschaffungskosten",
+  valuationNotInTotalTag: "Nicht in der Summe",
+  valuationPriceDate: "Preis vom {{date}}",
+  valuationLivePrice: "Live-Preis",
+  updatePricesOnWeb: "Preise im Web aktualisieren",
+  costBasisLine: "Anschaffungskosten {{cost}} · Unrealisierte G/V {{gain}}",
   liabilities: "Verbindlichkeiten",
   equity: "Eigenkapital",
   noDataCharts: "Schnell hinzufügen, um Diagramme anzuzeigen",

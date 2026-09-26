@@ -178,13 +178,35 @@ export const fr: typeof en = {
   amountEmptyError: "Veuillez saisir le montant",
   accountEmptyError: "Choisissez le compte de départ et le compte d'arrivée",
   accounts: "Comptes",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Compte",
-  balanceAtCost: "Solde au coût",
   atCost: "{{amount}} au coût",
   notInTotal: "Hors total : {{amounts}}",
-  valuedAtCost: "Au coût",
+  atMarket: "{{amount}} à la valeur de marché",
+  atMarketValue: "À la valeur de marché",
+  pricesNotUpdatedSince: {
+    one: "{{count}} prix non mis à jour depuis le {{date}}",
+    other: "{{count}} prix non mis à jour depuis le {{date}}",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} au coût (sans prix)",
+    other: "{{count}} au coût (sans prix)",
+  },
+  notInTotalCount: {
+    one: "{{count}} hors total",
+    other: "{{count}} hors total",
+  },
+  valuationDetailsTitle: "Avoirs et prix",
+  valuationDetailsHint: "Affiche la date du dernier prix de chaque avoir",
+  valuationNoPrice: "Sans prix",
+  valuationNotUpdated: "Non mis à jour",
+  valuationAtCostTag: "Au coût",
+  valuationNotInTotalTag: "Hors total",
+  valuationPriceDate: "Prix du {{date}}",
+  valuationLivePrice: "Prix en direct",
+  updatePricesOnWeb: "Mettre à jour les prix sur le web",
+  costBasisLine: "Coût {{cost}} · Résultat latent {{gain}}",
   liabilities: "Passifs",
   equity: "Capitaux propres",
   noDataCharts: "Ajoutez rapidement pour afficher les graphiques",

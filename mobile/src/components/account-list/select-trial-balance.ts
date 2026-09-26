@@ -6,6 +6,12 @@ import {
   selectBalanceDisplay,
 } from "../../common/balance-display";
 import {
+  selectValuation,
+  valueBasisOf,
+  type ManagedSource,
+  type PricePair,
+} from "../../common/valuation";
+import {
   AccountCategory,
   CATEGORY_KEYS,
   CategoryKey,
@@ -74,8 +80,10 @@ function treeNodes(
  * The trial balance converts every commodity into the requested currency first.
  *
  * Balances are shown exactly as the ledger holds them — Liabilities, Equity and
- * Income negative — so the five sum to zero and the tab agrees with the web
- * dashboard. A category the ledger doesn't use (zero total, no rows) is omitted.
+ * Income negative. Holdings are valued at market, the same basis as Home, so
+ * the five sum to zero only when market and cost agree; the difference is the
+ * unrealized gain no account books. A category the ledger doesn't use (zero
+ * total, no rows) is omitted.
  */
 export function selectTrialBalanceCategories(
   currency: string,
@@ -107,26 +115,52 @@ export function selectTrialBalanceCategories(
 }
 
 /**
+ * One account's balance in the trial balance — what its Accounts row shows —
+ * or undefined when the account is not in it (or the read has not landed).
+ */
+export function selectTrialBalanceAccount(
+  data: TrialBalanceQuery | undefined,
+  account: string,
+): BalanceMap {
+  for (const key of CATEGORY_KEYS) {
+    const root = rootOf(data, key);
+    const node = root
+      ? treeNodes(root).find((candidate) => candidate.account === account)
+      : undefined;
+    if (node) return node.balanceChildren;
+  }
+  return undefined;
+}
+
+/**
  * How each Accounts row's balance reads (see `selectBalanceDisplay`), keyed the
  * way `flattenRows` keys rows: the category key for a root ("assets"), the full
- * account beneath it. `units` is a `units` read of the same trial balance; until
- * it lands, commodities held at cost stay money figures.
+ * account beneath it. `valued` is the market read the rows show; `units` is a
+ * `units` read of the same trial balance — until it lands, commodities held at
+ * cost stay money figures. `prices` says which basis each commodity's value was
+ * read at, and each root, like a Home page, carries what it discloses about its
+ * basis (see `selectValuation`). The tree values at the latest price, so no
+ * date bounds the price lookup.
  *
  * A folded chain row takes its deepest account, whose balance the whole chain
  * shares, so looking that account up gives the row's figure.
  */
 export function selectTrialBalanceDisplays(
   currency: string,
-  atCost?: TrialBalanceQuery,
-  units?: TrialBalanceQuery,
+  valued: TrialBalanceQuery | undefined,
+  units: TrialBalanceQuery | undefined,
+  prices: readonly PricePair[] | undefined,
+  today: string,
+  managed?: readonly ManagedSource[],
 ): Map<string, BalanceDisplay> {
   const displays = new Map<string, BalanceDisplay>();
-  if (!currency || !atCost?.getLedgerTrialBalance) {
+  if (!currency || !valued?.getLedgerTrialBalance) {
     return displays;
   }
+  const basisOf = valueBasisOf(prices, currency);
 
   for (const key of CATEGORY_KEYS) {
-    const root = rootOf(atCost, key);
+    const root = rootOf(valued, key);
     if (!root) continue;
     const unitsRoot = rootOf(units, key);
     const rowKey = (node: TrialBalanceNode, top: TrialBalanceNode) =>
@@ -141,13 +175,27 @@ export function selectTrialBalanceDisplays(
     );
     for (const node of treeNodes(root)) {
       const row = rowKey(node, root);
+      const display = selectBalanceDisplay(
+        node.balanceChildren,
+        unitsByRow.get(row),
+        currency,
+        basisOf,
+      );
       displays.set(
         row,
-        selectBalanceDisplay(
-          node.balanceChildren,
-          unitsByRow.get(row),
-          currency,
-        ),
+        node === root && display.kind === "money"
+          ? {
+              ...display,
+              valuation: selectValuation({
+                market: node.balanceChildren,
+                units: unitsByRow.get(row),
+                currency,
+                today,
+                prices,
+                managed,
+              }),
+            }
+          : display,
       );
     }
   }

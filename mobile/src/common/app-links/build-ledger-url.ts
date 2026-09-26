@@ -9,6 +9,7 @@ export type BuildLedgerUrlInput =
   | { kind: "income-statement"; ledgerFullName: string }
   | { kind: "balance-sheet"; ledgerFullName: string }
   | { kind: "budget"; ledgerFullName: string }
+  | { kind: "commodities"; ledgerFullName: string }
   | { kind: "entry"; ledgerFullName: string; entryHash: string };
 
 function encodePathSegment(value: string): string {
@@ -54,6 +55,8 @@ export function buildLedgerUrl(
       return `${base}/balance-sheet`;
     case "budget":
       return `${base}/budget`;
+    case "commodities":
+      return `${base}/commodities`;
     case "entry":
       return `${base}/entry/${encodePathSegment(input.entryHash)}`;
   }

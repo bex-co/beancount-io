@@ -180,13 +180,35 @@ export const pt: typeof en = {
   amountEmptyError: "Por favor, insira o valor",
   accountEmptyError: "Escolha a conta de origem e a de destino",
   accounts: "Contas",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Conta",
-  balanceAtCost: "Saldo ao custo",
   atCost: "{{amount}} ao custo",
   notInTotal: "Fora do total: {{amounts}}",
-  valuedAtCost: "Ao custo",
+  atMarket: "{{amount}} a valor de mercado",
+  atMarketValue: "A valor de mercado",
+  pricesNotUpdatedSince: {
+    one: "{{count}} preço não atualizado desde {{date}}",
+    other: "{{count}} preços não atualizados desde {{date}}",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} ao custo (sem preço)",
+    other: "{{count}} ao custo (sem preço)",
+  },
+  notInTotalCount: {
+    one: "{{count}} fora do total",
+    other: "{{count}} fora do total",
+  },
+  valuationDetailsTitle: "Ativos e preços",
+  valuationDetailsHint: "Mostra a data do último preço de cada ativo",
+  valuationNoPrice: "Sem preço",
+  valuationNotUpdated: "Não atualizado",
+  valuationAtCostTag: "Ao custo",
+  valuationNotInTotalTag: "Fora do total",
+  valuationPriceDate: "Preço de {{date}}",
+  valuationLivePrice: "Preço ao vivo",
+  updatePricesOnWeb: "Atualizar preços na web",
+  costBasisLine: "Custo {{cost}} · Resultado não realizado {{gain}}",
   liabilities: "Passivos",
   equity: "Patrimônio líquido",
   noDataCharts: "Adicionar rápido para mostrar gráficos",

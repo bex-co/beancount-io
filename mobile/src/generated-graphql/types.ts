@@ -40,6 +40,8 @@ export type AccountJournalQueryInput = {
   directiveTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
+  /** Optional shared report-stream AccountFilter (URL ?account=). Distinct from the required target `account`. */
+  filterAccount?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
   time?: InputMaybe<Scalars['String']['input']>;
@@ -449,6 +451,8 @@ export type EntryContext = {
   balances_after?: Maybe<Scalars['JSONObject']['output']>;
   balances_before?: Maybe<Scalars['JSONObject']['output']>;
   entry: Scalars['JSONObject']['output'];
+  /** The feed URL when the entry comes from a managed price include; such an entry is read-only. */
+  managed_source?: Maybe<Scalars['String']['output']>;
   sha256sum: Scalars['String']['output'];
   slice: Scalars['String']['output'];
 };
@@ -593,6 +597,25 @@ export type IntervalTotalItem = {
   accountBalances: Scalars['JSONObject']['output'];
   balance: Scalars['JSONObject']['output'];
   date: Scalars['String']['output'];
+};
+
+export type IntrospectionType = {
+  __typename?: 'IntrospectionType';
+  /** Whether the credential is usable right now. False covers expired, malformed, revoked, never-issued, and belonging to another user — deliberately indistinguishable, and the only field set when false. */
+  active: Scalars['Boolean']['output'];
+  /** `interactive`, `delegated`, or `workload` */
+  bio_assurance?: Maybe<Scalars['String']['output']>;
+  /** `session`, `oauth`, or `apikey` */
+  bio_credential_kind?: Maybe<Scalars['String']['output']>;
+  /** The one ledger this credential may touch, if it is confined */
+  bio_ledger_scope?: Maybe<Scalars['String']['output']>;
+  client_id?: Maybe<Scalars['String']['output']>;
+  exp?: Maybe<Scalars['Float']['output']>;
+  iat?: Maybe<Scalars['Float']['output']>;
+  jti?: Maybe<Scalars['String']['output']>;
+  /** Effective capability in the ledger scope vocabulary, space-delimited — not the raw grant. A session token is not scope-constrained and reports all three. */
+  scope?: Maybe<Scalars['String']['output']>;
+  sub?: Maybe<Scalars['String']['output']>;
 };
 
 export type JournalEntriesResponse = {
@@ -915,6 +938,34 @@ export type LogoutResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+/** One include line that names a managed price URL. */
+export type ManagedPriceInclude = {
+  __typename?: 'ManagedPriceInclude';
+  file: Scalars['String']['output'];
+  line: Scalars['Int']['output'];
+  /** The include target as written. */
+  target: Scalars['String']['output'];
+};
+
+/** Status of one managed price include (ADR 015). `freshness` is `recent` within ten minutes of the latest observation, `stale` beyond it, and `unavailable` when no revision has validated. */
+export type ManagedPriceSource = {
+  __typename?: 'ManagedPriceSource';
+  alias: Scalars['String']['output'];
+  commodity?: Maybe<Scalars['String']['output']>;
+  error?: Maybe<Scalars['String']['output']>;
+  etag?: Maybe<Scalars['String']['output']>;
+  fetchedAt?: Maybe<Scalars['String']['output']>;
+  freshness: Scalars['String']['output'];
+  includedFrom: Array<ManagedPriceInclude>;
+  nextRefreshAt?: Maybe<Scalars['String']['output']>;
+  observedAt?: Maybe<Scalars['String']['output']>;
+  quote?: Maybe<Scalars['String']['output']>;
+  revision?: Maybe<Scalars['String']['output']>;
+  shadowedCount: Scalars['Int']['output'];
+  source?: Maybe<Scalars['String']['output']>;
+  url: Scalars['String']['output'];
+};
+
 export type MintedApiKeyType = {
   __typename?: 'MintedApiKeyType';
   key: ApiKeyType;
@@ -990,6 +1041,8 @@ export type Mutation = {
   parseReceipt: ReceiptParseResult;
   /** Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select. */
   reconcilePlaidAccounts: PlaidAccountReconcileResult;
+  /** Make every managed price feed the ledger includes due now, re-fetch each, and return the same records as getLedgerManagedPrices. Never touches the repository; a failed re-fetch keeps the last validated revision and reports its error. Requires write capability on the ledger. */
+  refreshLedgerManagedPrices: Array<ManagedPriceSource>;
   /** Refresh Plaid Item status from Plaid API (useful after reauthentication) */
   refreshPlaidItemStatus: PlaidItemType;
   /** Refresh authentication token - issues a new token and revokes the current one */
@@ -1244,6 +1297,11 @@ export type MutationParseReceiptArgs = {
 
 export type MutationReconcilePlaidAccountsArgs = {
   itemId: Scalars['String']['input'];
+  ledgerId: Scalars['String']['input'];
+};
+
+
+export type MutationRefreshLedgerManagedPricesArgs = {
   ledgerId: Scalars['String']['input'];
 };
 
@@ -1745,6 +1803,8 @@ export type Query = {
   getLedgerJournal: JournalResponse;
   /** Get the links of a specific ledger */
   getLedgerLinks: Array<Scalars['String']['output']>;
+  /** Status of every managed price include the ledger names: feed pair and source, serving revision, observed/fetched/next-refresh times, freshness and the last refresh error. Empty when the ledger has none. */
+  getLedgerManagedPrices: Array<ManagedPriceSource>;
   /** Get the transactions for a narration */
   getLedgerNarrationTransactions: Transaction;
   getLedgerNarrations: Array<Scalars['String']['output']>;
@@ -1793,6 +1853,8 @@ export type Query = {
   /** is the server healthy? */
   health: Scalars['String']['output'];
   homeCharts: HomeChartsResponse;
+  /** Check whether a credential is live — an OAuth access token, a `bcio_` API key, or a session token. You may introspect your own credentials; anyone else's reads as inactive, exactly as an invalid one does. */
+  introspectToken: IntrospectionType;
   /** Get journal entries with enhanced search, filtering, and pagination */
   journalEntries: JournalEntriesResponse;
   /** Get a specific ledger */
@@ -2034,6 +2096,11 @@ export type QueryGetLedgerLinksArgs = {
 };
 
 
+export type QueryGetLedgerManagedPricesArgs = {
+  ledgerId: Scalars['String']['input'];
+};
+
+
 export type QueryGetLedgerNarrationTransactionsArgs = {
   ledgerId: Scalars['String']['input'];
   narration: Scalars['String']['input'];
@@ -2185,6 +2252,12 @@ export type QueryGetUserStarredReposArgs = {
 export type QueryHomeChartsArgs = {
   ledgerId?: InputMaybe<Scalars['String']['input']>;
   userId: Scalars['String']['input'];
+};
+
+
+export type QueryIntrospectTokenArgs = {
+  token: Scalars['String']['input'];
+  tokenTypeHint?: InputMaybe<Scalars['String']['input']>;
 };
 
 

@@ -176,13 +176,35 @@ export const uk: typeof en = {
   amountEmptyError: "Будь ласка, введіть суму",
   accountEmptyError: "Оберіть рахунок списання та рахунок зарахування",
   accounts: "Рахунки",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Рахунок",
-  balanceAtCost: "Залишок за собівартістю",
   atCost: "{{amount}} за собівартістю",
   notInTotal: "Не входить до підсумку: {{amounts}}",
-  valuedAtCost: "За собівартістю",
+  atMarket: "{{amount}} за ринковою вартістю",
+  atMarketValue: "За ринковою вартістю",
+  pricesNotUpdatedSince: {
+    one: "{{count}} ціна не оновлювалася з {{date}}",
+    other: "{{count}} цін не оновлювалися з {{date}}",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} за собівартістю (без ціни)",
+    other: "{{count}} за собівартістю (без ціни)",
+  },
+  notInTotalCount: {
+    one: "{{count}} не в підсумку",
+    other: "{{count}} не в підсумку",
+  },
+  valuationDetailsTitle: "Активи та ціни",
+  valuationDetailsHint: "Показує дату останньої ціни кожного активу",
+  valuationNoPrice: "Немає ціни",
+  valuationNotUpdated: "Не оновлювалася",
+  valuationAtCostTag: "За собівартістю",
+  valuationNotInTotalTag: "Не в підсумку",
+  valuationPriceDate: "Ціна від {{date}}",
+  valuationLivePrice: "Жива ціна",
+  updatePricesOnWeb: "Оновити ціни у вебверсії",
+  costBasisLine: "Собівартість {{cost}} · Нереалізований результат {{gain}}",
   liabilities: "Зобов'язання",
   equity: "Власний капітал",
   noDataCharts: "Швидко додайте для показу графіків",

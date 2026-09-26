@@ -1,23 +1,53 @@
 import {
   amountIn,
-  balanceNotes,
+  holdingsOf,
   notInTotalOf,
   selectBalanceDisplay,
 } from "../balance-display";
 
-/** Echoes the key and its params, so a note's wording and inputs are both visible. */
-const t = (key: string, params?: Record<string, unknown>) =>
-  params ? `${key}(${JSON.stringify(params)})` : key;
-
 describe("selectBalanceDisplay", () => {
-  it("reads a commodity held at cost in its units, carrying the cost", () => {
-    // Assets:US:Vanguard:RGAGX in the Beancount example ledger.
+  it("reads a commodity held at cost in its units, carrying its value", () => {
+    // Assets:US:Vanguard:RGAGX in the Beancount example ledger, at market.
     expect(
-      selectBalanceDisplay({ USD: "49049.66613" }, { RGAGX: "597.748" }, "USD"),
+      selectBalanceDisplay(
+        { USD: "48471.38532" },
+        { RGAGX: "597.748" },
+        "USD",
+        () => "market",
+      ),
     ).toEqual({
       kind: "units",
       units: { currency: "RGAGX", number: 597.748, scale: 3 },
-      cost: 49049.66613,
+      value: { amount: 48471.38532, basis: "market" },
+    });
+  });
+
+  it("asks for the basis of the one commodity the row holds", () => {
+    const asked: string[] = [];
+    const display = selectBalanceDisplay(
+      { USD: "1000" },
+      { STARTUP: "1000" },
+      "USD",
+      (commodity) => {
+        asked.push(commodity);
+        return "cost";
+      },
+    );
+    expect(asked).toEqual(["STARTUP"]);
+    expect(display).toEqual({
+      kind: "units",
+      units: { currency: "STARTUP", number: 1000, scale: 0 },
+      value: { amount: 1000, basis: "cost" },
+    });
+  });
+
+  it("leaves the basis unknown while the ledger's prices are", () => {
+    expect(
+      selectBalanceDisplay({ USD: "48471.38532" }, { RGAGX: "597.748" }, "USD"),
+    ).toEqual({
+      kind: "units",
+      units: { currency: "RGAGX", number: 597.748, scale: 3 },
+      value: { amount: 48471.38532, basis: null },
     });
   });
 
@@ -26,10 +56,10 @@ describe("selectBalanceDisplay", () => {
     const expected = {
       kind: "units",
       units: { currency: "VACHR", number: -13, scale: 0 },
-      cost: null,
+      value: null,
     };
     expect(selectBalanceDisplay(vacation, vacation, "USD")).toEqual(expected);
-    // The at-cost read alone is enough: the units read may not have landed.
+    // The valued read alone is enough: the units read may not have landed.
     expect(selectBalanceDisplay(vacation, undefined, "USD")).toEqual(expected);
   });
 
@@ -113,6 +143,16 @@ describe("notInTotalOf", () => {
   });
 });
 
+describe("holdingsOf", () => {
+  it("lists non-zero entries in the order the API returned them", () => {
+    expect(holdingsOf({ USD: "906.58", VACHR: "-13", GLD: "0" })).toEqual([
+      { currency: "USD", number: 906.58, scale: 2 },
+      { currency: "VACHR", number: -13, scale: 0 },
+    ]);
+    expect(holdingsOf(undefined)).toEqual([]);
+  });
+});
+
 describe("amountIn", () => {
   it("reads one currency strictly, with its recorded scale", () => {
     expect(amountIn({ RGAGX: "597.748", USD: "5" }, "RGAGX")).toEqual({
@@ -124,55 +164,5 @@ describe("amountIn", () => {
   it("reads a missing currency as zero, without the USD fallback", () => {
     expect(amountIn({ USD: "5" }, "RGAGX")).toEqual({ number: 0, scale: 0 });
     expect(amountIn(undefined, "USD")).toEqual({ number: 0, scale: 0 });
-  });
-});
-
-describe("balanceNotes", () => {
-  it("states the cost behind a units figure", () => {
-    expect(
-      balanceNotes(
-        {
-          kind: "units",
-          units: { currency: "RGAGX", number: 597.748, scale: 3 },
-          cost: 49049.66613,
-        },
-        "USD",
-        t,
-      ),
-    ).toEqual(['atCost({"amount":"$49,049.67"})']);
-  });
-
-  it("says nothing more about a units figure with no cost", () => {
-    expect(
-      balanceNotes(
-        {
-          kind: "units",
-          units: { currency: "VACHR", number: -13, scale: 0 },
-          cost: null,
-        },
-        "USD",
-        t,
-      ),
-    ).toEqual([]);
-  });
-
-  it("names what a money total leaves out, and nothing when it leaves out nothing", () => {
-    expect(
-      balanceNotes(
-        {
-          kind: "money",
-          value: 1,
-          notInTotal: [
-            { currency: "VACHR", number: -13, scale: 0 },
-            { currency: "IRAUSD", number: 18000, scale: 0 },
-          ],
-        },
-        "USD",
-        t,
-      ),
-    ).toEqual(['notInTotal({"amounts":"-13 VACHR, 18,000 IRAUSD"})']);
-    expect(
-      balanceNotes({ kind: "money", value: 1, notInTotal: [] }, "USD", t),
-    ).toEqual([]);
   });
 });

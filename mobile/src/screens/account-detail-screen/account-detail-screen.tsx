@@ -20,12 +20,16 @@ import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useAccountReport } from "@/screens/accounts-screen/hooks/use-account-report";
+import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
+import { selectTrialBalanceAccount } from "@/components/account-list/select-trial-balance";
 import {
   ACCOUNT_JOURNAL_PAGE_SIZE,
   useAccountJournal,
 } from "@/screens/accounts-screen/hooks/use-account-journal";
 import { BALANCE_CONVERSION } from "@/common/balance-util";
-import { balanceNotes } from "@/common/balance-display";
+import { balanceNotes } from "@/common/valuation";
+import { useLedgerPrices } from "@/common/hooks/use-ledger-prices";
+import { getFormatDate } from "@/common/format-util";
 import { formatUnits } from "@/common/number-utils";
 import {
   selectAccountBalanceDisplay,
@@ -141,7 +145,8 @@ const AccountDetailScreenImpl = ({
   } = useAccountReport(ledgerId, account);
   // The same report in units says what the account holds, and that decides how
   // every figure on this screen reads: one commodity reads in its units, with
-  // its cost; anything else stays money at cost (see `selectBalanceDisplay`).
+  // its value at market or at cost; anything else stays a money total at
+  // market (see `selectBalanceDisplay`). The journal keeps each posting at cost.
   const {
     data: unitsReportData,
     loading: unitsReportLoading,
@@ -151,9 +156,45 @@ const AccountDetailScreenImpl = ({
   // First loads only: a refetch keeps showing what is already there.
   const reportPending = reportLoading && !reportData;
   const unitsReportPending = unitsReportLoading && !unitsReportData;
+  // Which commodities had a price, so the header can say which basis it read.
+  const {
+    prices,
+    managed,
+    data: pricesData,
+    loading: pricesLoading,
+    refetch: pricesRefetch,
+  } = useLedgerPrices(ledgerId);
+  // The Accounts tab's own market read — already cached, since that tab stays
+  // mounted — so a commodity's value here is the figure its row shows.
+  const {
+    data: accountsData,
+    loading: accountsLoading,
+    refetch: accountsRefetch,
+  } = useTrialBalance(ledgerId);
+  const valuationPending =
+    (pricesLoading && !pricesData) || (accountsLoading && !accountsData);
+  const today = useMemo(() => getFormatDate(new Date()), []);
   const display = useMemo(
-    () => selectAccountBalanceDisplay(currency, reportData, unitsReportData),
-    [currency, reportData, unitsReportData],
+    () =>
+      selectAccountBalanceDisplay(
+        currency,
+        reportData,
+        unitsReportData,
+        prices,
+        today,
+        selectTrialBalanceAccount(accountsData, account),
+        managed,
+      ),
+    [
+      currency,
+      reportData,
+      unitsReportData,
+      prices,
+      today,
+      accountsData,
+      account,
+      managed,
+    ],
   );
   const units = display.kind === "units" ? display.units : null;
   const unitsCurrency = units?.currency;
@@ -192,8 +233,8 @@ const AccountDetailScreenImpl = ({
     [unitsCurrency, unitsScale],
   );
   const chartLabel = [
-    t(units ? "balance" : "balanceAtCost"),
-    ...balanceNotes(display, currency, t),
+    t("balance"),
+    ...balanceNotes(display, currency, t, locale),
   ].join(" · ");
 
   const [lastJournalPage, setLastJournalPage] = useState<{
@@ -305,6 +346,8 @@ const AccountDetailScreenImpl = ({
         reportRefetch(),
         unitsReportRefetch(),
         journalRefetch(),
+        pricesRefetch(),
+        accountsRefetch(),
       ]);
     } finally {
       setRefreshing(false);
@@ -355,7 +398,7 @@ const AccountDetailScreenImpl = ({
             // Skeleton only on first load: a pull-to-refresh keeps the chart
             // visible under the RefreshControl spinner rather than collapsing
             // it back to a tile.
-            loading={reportPending || unitsReportPending}
+            loading={reportPending || unitsReportPending || valuationPending}
             error={Boolean(unitsCurrency ? unitsReportError : reportError)}
           />
         </View>
@@ -371,6 +414,7 @@ const AccountDetailScreenImpl = ({
       balanceSeries,
       reportPending,
       unitsReportPending,
+      valuationPending,
       reportError,
       unitsReportError,
       styles.sectionTitle,

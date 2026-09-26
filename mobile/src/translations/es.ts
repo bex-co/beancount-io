@@ -178,13 +178,35 @@ export const es: typeof en = {
   amountEmptyError: "Por favor ingrese el monto",
   accountEmptyError: "Elige la cuenta de origen y la de destino",
   accounts: "Cuentas",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Cuenta",
-  balanceAtCost: "Saldo al costo",
   atCost: "{{amount}} al costo",
   notInTotal: "No incluido en el total: {{amounts}}",
-  valuedAtCost: "Al costo",
+  atMarket: "{{amount}} a valor de mercado",
+  atMarketValue: "A valor de mercado",
+  pricesNotUpdatedSince: {
+    one: "{{count}} precio sin actualizar desde el {{date}}",
+    other: "{{count}} precios sin actualizar desde el {{date}}",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} al costo (sin precio)",
+    other: "{{count}} al costo (sin precio)",
+  },
+  notInTotalCount: {
+    one: "{{count}} fuera del total",
+    other: "{{count}} fuera del total",
+  },
+  valuationDetailsTitle: "Activos y precios",
+  valuationDetailsHint: "Muestra la fecha del último precio de cada activo",
+  valuationNoPrice: "Sin precio",
+  valuationNotUpdated: "Sin actualizar",
+  valuationAtCostTag: "Al costo",
+  valuationNotInTotalTag: "Fuera del total",
+  valuationPriceDate: "Precio del {{date}}",
+  valuationLivePrice: "Precio en vivo",
+  updatePricesOnWeb: "Actualizar precios en la web",
+  costBasisLine: "Costo {{cost}} · Resultado no realizado {{gain}}",
   liabilities: "Pasivos",
   equity: "Patrimonio",
   noDataCharts: "Agregue datos rápidamente para mostrar gráficos",

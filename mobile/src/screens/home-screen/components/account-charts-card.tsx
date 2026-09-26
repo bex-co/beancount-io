@@ -22,14 +22,14 @@ import {
 import { chartPageHeight } from "./chart-page-height";
 
 /** The card's three pages, each named by its tab's translation key. */
-type ChartKey = "netWorth" | "assets" | "liabilities";
+export type ChartKey = "netWorth" | "assets" | "liabilities";
 
 const CHART_HEIGHT = 170;
 // PagerView needs a bounded height, and every page is the same shape: the
-// chart's header (basis caption + value + change) plus the plot. This is the
-// floor and the pre-measurement default — the header is text-driven, so the
-// live height comes from `chartPageHeight` once a page reports its header's
-// layout.
+// chart's header (basis caption + value + change, and Net Worth's cost basis)
+// plus the plot. This is the floor and the pre-measurement default — the header
+// is text-driven, so the live height comes from `chartPageHeight` once a page
+// reports its header's layout.
 const PAGE_HEIGHT = 260;
 /** Height the range pills add below the pager — the skeleton covers it too. */
 const PILLS_HEIGHT = 40;
@@ -72,10 +72,15 @@ type AccountChartsCardProps = {
   assetsSeries: SeriesPoint[];
   liabilitiesSeries: SeriesPoint[];
   /**
-   * Caption above each page's figure: the basis it is valued at, and any
-   * holdings its total leaves out. Every figure on the card is at cost.
+   * Caption above each page's figure: the basis it is valued at and the date
+   * of its prices, and any holdings its total values at cost or leaves out.
+   * Absent for a page whose total values no holding.
    */
-  captions: Record<ChartKey, string>;
+  captions: Record<ChartKey, string | undefined>;
+  /** Line under a page's figure: its cost basis beside the market value. */
+  footnotes: Partial<Record<ChartKey, string>>;
+  /** Opens the holdings behind a page's caption; captions stay text without it. */
+  onCaptionPress?: (key: ChartKey) => void;
   loading: boolean;
   error: boolean;
 };
@@ -93,6 +98,8 @@ export function AccountChartsCard({
   assetsSeries,
   liabilitiesSeries,
   captions,
+  footnotes,
+  onCaptionPress,
   loading,
   error,
 }: AccountChartsCardProps): JSX.Element {
@@ -179,6 +186,9 @@ export function AccountChartsCard({
       <InteractiveLineChartD3
         key={key}
         label={captions[key]}
+        onLabelPress={onCaptionPress ? () => onCaptionPress(key) : undefined}
+        labelAccessibilityHint={t("valuationDetailsHint")}
+        footnote={footnotes[key]}
         labels={chart.labels}
         numbers={chart.numbers}
         baseline={balanceSeriesBaseline(series, range)}

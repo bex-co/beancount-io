@@ -178,13 +178,35 @@ export const bg: typeof en = {
   amountEmptyError: "Моля въведете сумата",
   accountEmptyError: "Изберете сметка източник и сметка получател",
   accounts: "Сметки",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Сметка",
-  balanceAtCost: "Салдо по себестойност",
   atCost: "{{amount}} по себестойност",
   notInTotal: "Не е включено в общата сума: {{amounts}}",
-  valuedAtCost: "По себестойност",
+  atMarket: "{{amount}} по пазарна стойност",
+  atMarketValue: "По пазарна стойност",
+  pricesNotUpdatedSince: {
+    one: "{{count}} цена не е обновявана от {{date}}",
+    other: "{{count}} цени не са обновявани от {{date}}",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} по себестойност (без цена)",
+    other: "{{count}} по себестойност (без цена)",
+  },
+  notInTotalCount: {
+    one: "{{count}} не е в сумата",
+    other: "{{count}} не са в сумата",
+  },
+  valuationDetailsTitle: "Активи и цени",
+  valuationDetailsHint: "Показва датата на последната цена за всеки актив",
+  valuationNoPrice: "Без цена",
+  valuationNotUpdated: "Не е обновена",
+  valuationAtCostTag: "По себестойност",
+  valuationNotInTotalTag: "Не е в сумата",
+  valuationPriceDate: "Цена {{date}}",
+  valuationLivePrice: "Цена на живо",
+  updatePricesOnWeb: "Обновете цените в уеб",
+  costBasisLine: "Себестойност {{cost}} · Нереализиран резултат {{gain}}",
   liabilities: "Пасиви",
   equity: "Собствен капитал",
   noDataCharts: "Бързо добавяне за показване на графики",

@@ -173,13 +173,35 @@ export const en = {
   amountEmptyError: "Please input the amount",
   accountEmptyError: "Please select the from and to accounts",
   accounts: "Accounts",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "Account",
-  balanceAtCost: "Balance at cost",
   atCost: "{{amount}} at cost",
   notInTotal: "Not in total: {{amounts}}",
-  valuedAtCost: "At cost",
+  atMarket: "{{amount}} at market",
+  atMarketValue: "At market value",
+  pricesNotUpdatedSince: {
+    one: "{{count}} price not updated since {{date}}",
+    other: "{{count}} prices not updated since {{date}}",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} at cost (no price)",
+    other: "{{count}} at cost (no price)",
+  },
+  notInTotalCount: {
+    one: "{{count}} not in total",
+    other: "{{count}} not in total",
+  },
+  valuationDetailsTitle: "Holdings and prices",
+  valuationDetailsHint: "Shows each holding's latest price date",
+  valuationNoPrice: "No price",
+  valuationNotUpdated: "Not updated",
+  valuationAtCostTag: "At cost",
+  valuationNotInTotalTag: "Not in total",
+  valuationPriceDate: "Price {{date}}",
+  valuationLivePrice: "Live price",
+  updatePricesOnWeb: "Update prices on the web",
+  costBasisLine: "Cost {{cost}} · Unrealized {{gain}}",
   liabilities: "Liabilities",
   equity: "Equity",
   noDataCharts: "Quick add to show charts",

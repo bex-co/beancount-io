@@ -1,0 +1,40 @@
+query BalanceSheetBasis(
+  $ledgerId: String!
+  $costConversion: String!
+  $unitsConversion: String!
+) {
+  cost: getLedgerBalanceSheet(
+    ledgerId: $ledgerId
+    conversion: $costConversion
+  ) {
+    netWorthData {
+      date
+      balance
+    }
+    assetsData {
+      date
+      balance
+    }
+    liabilitiesData {
+      date
+      balance
+    }
+  }
+  units: getLedgerBalanceSheet(
+    ledgerId: $ledgerId
+    conversion: $unitsConversion
+  ) {
+    netWorthData {
+      date
+      balance
+    }
+    assetsData {
+      date
+      balance
+    }
+    liabilitiesData {
+      date
+      balance
+    }
+  }
+}

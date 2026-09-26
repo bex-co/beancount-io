@@ -50,6 +50,10 @@ const ENTRIES_FIELDS = [
   "getLedgerAccountJournal",
   "getLedgerIncomeStatement",
   "getLedgerIntervalTotals",
+  // Price dates behind the market-valued balances above; an entry write can
+  // add a `price` directive.
+  "getLedgerCommodities",
+  "getLedgerManagedPrices",
   "ledgerMeta",
   // Every write is a git commit, so the notifications history moves too.
   "listCommits",

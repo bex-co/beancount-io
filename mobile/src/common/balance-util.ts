@@ -1,5 +1,6 @@
 /**
- * How every balance query should value commodity holdings.
+ * How flows and history value commodity holdings: the Reports income
+ * statement, and every journal and running balance.
  *
  * This is a **fava conversion keyword** ("at_cost", "at_value", "units"), not a
  * currency code — a trap, because the schema defaults most of these queries to
@@ -8,14 +9,26 @@
  * (`{USD: 2677.28, ITOT: 113, GLD: 11, …}`), so reading `.USD` off them yields
  * only the cash: a ledger worth $96,156.71 reported $2,677.28.
  *
- * `at_cost` values each holding at what was paid for it and is what the web
- * dashboard shows; it's also the default the account-journal input already uses,
- * which is why journal running balances were right while the charts beside them
- * were not. Commodities with no cost in the ledger's currency (vacation hours,
- * placeholder IRA units) stay unconverted under their own key and are ignored by
+ * `at_cost` values each holding at what was paid for it, which is what a
+ * posting recorded and what the web dashboard's reports default to.
+ * Commodities with no cost in the ledger's currency (vacation hours, placeholder
+ * IRA units) stay unconverted under their own key and are ignored by
  * `resolveCurrencyBalance` — matching the dashboard.
  */
 export const BALANCE_CONVERSION = "at_cost";
+
+/**
+ * How balances value commodity holdings: Home, the Accounts tab, and account
+ * detail's header and chart (w4/m26).
+ *
+ * `at_value` values a holding at the latest price on or before the figure's
+ * date, in its cost currency, and at its cost when the ledger has no such
+ * price; a holding with no cost stays in its units, exactly as under
+ * `at_cost`. A cash-only ledger therefore reads the same either way. What each
+ * figure then says about its basis — price date, holdings still at cost — is
+ * `valuation.ts`.
+ */
+export const VALUATION_CONVERSION = "at_value";
 
 /**
  * The key a balance map's figure in `currency` is read from: the currency

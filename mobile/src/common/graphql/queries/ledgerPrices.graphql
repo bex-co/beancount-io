@@ -1,0 +1,9 @@
+query LedgerPrices($ledgerId: String!) {
+  getLedgerCommodities(ledgerId: $ledgerId) {
+    base
+    quote
+    prices {
+      date
+    }
+  }
+}

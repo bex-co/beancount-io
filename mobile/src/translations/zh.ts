@@ -164,13 +164,35 @@ export const zh: typeof en = {
   amountEmptyError: "请输入金额",
   accountEmptyError: "请选择转出和转入账户",
   accounts: "账户",
-  // Column headers for the Accounts tab's balance table. Separate from the
-  // journal's `balance` key, which names the beancount directive.
+  // Column header for the Accounts tab's account column. The balance column
+  // reuses `balance`; each root row states its own valuation basis.
   account: "账户",
-  balanceAtCost: "按成本计的余额",
   atCost: "成本 {{amount}}",
   notInTotal: "未计入合计：{{amounts}}",
-  valuedAtCost: "按成本计",
+  atMarket: "市值 {{amount}}",
+  atMarketValue: "按市值计",
+  pricesNotUpdatedSince: {
+    one: "{{count}} 个价格自 {{date}} 起未更新",
+    other: "{{count}} 个价格自 {{date}} 起未更新",
+  },
+  atCostNoPriceCount: {
+    one: "{{count}} 项按成本（无价格）",
+    other: "{{count}} 项按成本（无价格）",
+  },
+  notInTotalCount: {
+    one: "{{count}} 项未计入合计",
+    other: "{{count}} 项未计入合计",
+  },
+  valuationDetailsTitle: "持仓与价格",
+  valuationDetailsHint: "显示每项持仓的最新价格日期",
+  valuationNoPrice: "无价格",
+  valuationNotUpdated: "未更新",
+  valuationAtCostTag: "按成本",
+  valuationNotInTotalTag: "未计入合计",
+  valuationPriceDate: "价格 {{date}}",
+  valuationLivePrice: "实时价格",
+  updatePricesOnWeb: "在网页上更新价格",
+  costBasisLine: "成本 {{cost}} · 浮动盈亏 {{gain}}",
   liabilities: "负债",
   equity: "权益",
   noDataCharts: "添加数据以显示图例",
