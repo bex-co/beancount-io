@@ -1,9 +1,19 @@
 # ADR 0007: The MCP surface — one stateless endpoint, and the rules that keep it honest
 
-- Status: Accepted — repository implementation includes D11 (multi-ledger); D10 production migration and post-deploy conformance verification remain unconfirmed. See [Implementation review](#implementation-review-2026-09-27). Cross-surface parity moved to its own record, [ADR 0008](./ADR008-backend-v2-surface-parity.md).
+- Status: Rejected (2026-09-27) — the ledger-pinning policy in D3/D11 is rejected in favor of access to all authorized ledgers for simplicity. See [Rejection rationale](#rejection-rationale-2026-09-27). Cross-surface parity remains in [ADR 0008](./ADR008-backend-v2-surface-parity.md).
 - Date: 2026-08-24
 - Decision owners: Backend (route, registry, transport, error translation), Deploy (routing, secrets, migrations)
 - Scope: `POST /api-gateway/mcp` — the Model Context Protocol endpoint an external agent connects to. What its address is, which HTTP methods it answers, which credentials reach it, how a refusal is phrased, and which deployment facts are part of its contract rather than tribal knowledge. Extends ADR 0006, which established the three-surface model; this ADR is about the third surface specifically.
+
+## Rejection rationale (2026-09-27)
+
+An MCP connection should access **all ledgers the authenticated user is authorized to use**, subject to its granted operation scopes. Connection setup and consent should not require choosing one ledger or a subset. One connection that follows the user's ledger access is simpler to configure and maintain.
+
+This rejects D3's required ledger pin and D11's policy of keeping pins as the default with all-ledger access as an opt-in. Ledger-specific calls still identify their target through a `ledger` argument or resource URI; `listLedgers` provides discovery. Each operation still checks scopes and ledger permissions, including revocation, on every call.
+
+The independent transport, OAuth resource separation, error handling, and schema rules remain valid. The original decisions and diagrams below are retained as history; their ledger-pinning rules no longer describe the intended policy.
+
+**Implementation follow-up:** the current consent flow still offers ledger selection, and target resolution still enforces existing credential pins. This documentation change does not implement the new policy. Removing the MCP ledger-selection flow and handling existing pinned credentials remain implementation work.
 
 ## Context
 
@@ -68,7 +78,7 @@ Both refusals are decided _before_ the tool context is built, so an unusable cre
 
 MCP and the application API intentionally remain separate OAuth resources. MCP tokens carry `{issuer}/api-gateway/mcp`; Mobile tokens for GraphQL and REST carry the historical `{issuer}/v1` audience. The latter is a protocol identifier, not an HTTP endpoint. An earlier migration direction proposed converging MCP on the application audience, but that would let a credential minted for one trust boundary be replayed at the other. The split is therefore permanent, while `{issuer}/v1` remains stable for released native clients and their persisted refresh grants despite its version-shaped name.
 
-> **Superseded in part by [D11](#d11--a-credential-may-reach-more-than-one-ledger-and-the-call-says-which).** The second bullet stays true for a pinned credential and stops being the only mode: D11 gives the ledger tools an optional `ledger` argument, so an unpinned credential is refused only when it names no ledger. The session-is-not-a-credential rule is untouched.
+> **Historical amendment:** [D11](#d11--a-credential-may-reach-more-than-one-ledger-and-the-call-says-which) added an optional `ledger` argument and allowed unpinned credentials when a call names its target. Both D3's required pin and D11's default pin were subsequently [rejected on 2026-09-27](#rejection-rationale-2026-09-27). The session-is-not-a-credential rule remains valid.
 
 ### D4 — A `401` must hand back a pointer that resolves
 
@@ -142,6 +152,8 @@ The endpoint depends on two deployment facts that no code path can supply:
 Both fell through the same crack: `backend-v2/AGENTS.md` already requires a new environment variable to be added to `.env.example`, the README, the local compose file, _and_ `bex.yaml`. `OAUTH_JWKS` reached the README and `deploy/docker-mac` — and stopped there. It was in neither `.env.example` nor either production manifest, so the one deployment that actually needed it was the one place it was never written down. The checklist was right; nothing enforced it.
 
 ### D11 — A credential may reach more than one ledger, and the call says which
+
+> **Ledger-pinning policy rejected on 2026-09-27.** The following describes the earlier design and its tradeoffs. See [Rejection rationale](#rejection-rationale-2026-09-27) for the intended all-ledger policy.
 
 D3's pin is kept as the default and stops being the only mode. The four ledger tools take an optional `ledger` argument (`owner/name`), resolved in this order:
 
@@ -279,8 +291,8 @@ A deploy is not "MCP-ready" until all seven hold. `yarn mcp:conformance <base-ur
 ## Implementation review (2026-09-27)
 
 - **D1's canonical address is established.** [Client documentation](../../backend-cluster/backend-v2/docs/mcp.md) uses `/api-gateway/mcp`, and [ADR 019's 2026-09-25 probe](./ADR019-backend-v2-mcp-host-compatibility.md#what-a-probe-found-2026-09-25) records the public endpoint and its working discovery chain. The optional `/mcp` alias is not required for completion.
-- **D11 is implemented.** [MCP tools](../../backend-cluster/backend-v2/src/features/ai-agent/api/mcp-tools.ts) expose `listLedgers` and optional per-call ledger selection; [target resolution](../../backend-cluster/backend-v2/src/features/ai-agent/api/mcp-context.ts) preserves pins and refuses an omitted unpinned target. This shipped with [w1/m10](../../.pm/w1/done/m10/README.md).
-- **D10 deployment closeout is not verified by this review.** The migrations and conformance script are present, but a source review and passing local tests do not establish that the production database has both tables or that authenticated production conformance passes. Keep this ADR open until that evidence is recorded.
+- **D11's earlier design is implemented.** [MCP tools](../../backend-cluster/backend-v2/src/features/ai-agent/api/mcp-tools.ts) expose `listLedgers` and optional per-call ledger selection; [target resolution](../../backend-cluster/backend-v2/src/features/ai-agent/api/mcp-context.ts) preserves pins and refuses an omitted unpinned target. This shipped with [w1/m10](../../.pm/w1/done/m10/README.md), before the ledger-pinning policy was rejected above.
+- **D10 deployment closeout is not verified by this review.** The migrations and conformance script are present, but a source review and passing local tests do not establish that the production database has both tables or that authenticated production conformance passes. This remains a deployment verification item, separate from the rejection of ledger pinning.
 
 The dated implementation account below is historical, including its statements that D11 is unimplemented and production API keys do not work; neither is a current finding from this review.
 

@@ -100,7 +100,7 @@ Tools also declare OpenAI's per-tool `securitySchemes`: OAuth 2 with the scope t
 - Cursor's three-URI registration is accepted.
 - Loopback redirects match on any port, as RFC 8252 §7.3 requires of the authorization server. VS Code's fallback port works, and so do Claude Code's port-less CIMD redirects (D6).
 - Hosted apps' `https` redirects register exactly as before.
-- Every authorization by such a client shows our consent page, even when a grant already exists. This is oidc-provider's `native_client_prompt` check (`lib/helpers/interaction_policy/prompts/consent.js:11–22`), RFC 8252 §8.6's rule for redirects another app could claim. Our consent page is where the ledger restriction is chosen anyway; a returning user sees one screen per re-authorization.
+- Every authorization by such a client shows our consent page, even when a grant already exists. This is oidc-provider's `native_client_prompt` check (`lib/helpers/interaction_policy/prompts/consent.js:11–22`), RFC 8252 §8.6's rule for redirects another app could claim. Consent should identify the client and requested operation scopes, with access to all authorized ledgers as [decided on 2026-09-27](./ADR007-backend-v2-mcp-surface.md#rejection-rationale-2026-09-27); a returning user sees one screen per re-authorization.
 - Newly refused: `http://` redirects to a non-loopback host, and `https` redirects to a loopback address. Neither is a legitimate host redirect in production.
 
 **This deviates from one MCP requirement, on purpose.** The specification's security section says every redirect URI MUST be `localhost` or HTTPS, and `cursor://…` is neither. We admit it for three reasons. RFC 8252 §7.1 and OAuth 2.1 allow private-use schemes for native apps, and the specification's own client-registration section anticipates "native-style redirect URIs". The risk such a scheme adds — another app claiming it — is exactly what `native_client_prompt` and D4 answer. And refusing it does not make Cursor compliant; it makes Cursor fail before consent, invisibly. oidc-provider still refuses `javascript:`, `data:`, and its other forbidden schemes.
@@ -263,9 +263,10 @@ Nothing has landed. D3, D4, and D6 land in that order, each depending on the one
 
 ## Open Questions
 
+Ledger scope was settled on 2026-09-27: [MCP connections should access all authorized ledgers](./ADR007-backend-v2-mcp-surface.md#rejection-rationale-2026-09-27), without choosing one ledger or a subset. The current consent selector predates that decision; removing it and handling existing pinned credentials remain implementation work.
+
 - **Is Codex a fair stand-in for a tools-only host** in `yarn mcp:agent-eval`? ChatGPT cannot be driven by the harness, and D7's deferred bridge needs transcripts from a host that never reads resources.
 - **Does ChatGPT surface MCP resources to the model at all?** OpenAI's documentation describes integrations as tool-driven and resources as carriers for UI, but nobody has examined a transcript.
-- **Should third-party hosts default to a pinned credential?** The consent page offers one ledger or all ledgers with neither preselected, while ADR 0007 D11 keeps a pin as the recommendation for anything unattended. A host that holds a refresh token for up to a year is the case D11's warning is about.
 - **Which directory comes first** — Claude's, ChatGPT's, or Muse's — is a product question this record leaves open.
 
 ## References
@@ -280,7 +281,7 @@ Internal:
 - `src/server/start-server.ts` — which OAuth routes bypass the app's body parser
 - `scripts/mcp-conformance.ts` — the read-only deployment checks D8 extends
 - oidc-provider 9.12.0 — `lib/consts/client_attributes.js`, `lib/helpers/client_schema.js`, `lib/models/client.js`, `lib/helpers/interaction_policy/prompts/consent.js`, `lib/helpers/features.js`, `lib/helpers/fetch_request.js`
-- [ADR 0007](./ADR007-backend-v2-mcp-surface.md) — transport contract; D1 (address), D4 (discovery), D11 (ledger pins)
+- [ADR 0007](./ADR007-backend-v2-mcp-surface.md) — transport contract; D1 (address), D4 (discovery), and the 2026-09-27 rejection of ledger pinning
 - [ADR 0008](./ADR008-backend-v2-surface-parity.md) — resources versus tools, and its 2026-09-09 amendment
 - [ADR 0009](./ADR009-backend-v2-well-known-paths.md) — well-known paths; D6 adds a metadata field, not a path
 
