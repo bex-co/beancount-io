@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import ts from "typescript";
+import { PLURAL_SUFFIX } from "@/i18n/plural";
 
 /**
  * Translation entry interface matching the actual structure
@@ -15,8 +16,6 @@ function isIncompleteTranslation(message: string): boolean {
   return message.trimStart().startsWith(TODO_MARKER);
 }
 
-const PLURAL_SUFFIX_PATTERN = /_(zero|one|two|few|many|other)$/;
-
 /**
  * A plural variant (`key_few`) folded to its family's base key, so languages
  * that use different CLDR categories compare equal. Which categories each
@@ -26,7 +25,7 @@ function familyKeys(keys: Iterable<string>): Set<string> {
   const all = new Set(keys);
   return new Set(
     [...all].map((key) => {
-      const base = key.replace(PLURAL_SUFFIX_PATTERN, "");
+      const base = key.replace(PLURAL_SUFFIX, "");
       return base !== key && all.has(`${base}_other`) ? base : key;
     }),
   );
@@ -105,7 +104,7 @@ function isReferencedTranslationKey(
 
   // i18next selects CLDR plural variants from a base-key call such as
   // t("items", { count }), so the suffixed locale entries are also in use.
-  const baseKey = key.replace(PLURAL_SUFFIX_PATTERN, "");
+  const baseKey = key.replace(PLURAL_SUFFIX, "");
   return baseKey !== key && referencedKeys.has(baseKey);
 }
 

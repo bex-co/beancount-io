@@ -1,4 +1,4 @@
-import { expandPlural, type PluralForms } from "@/i18n/plural";
+import { PLURAL_SUFFIX } from "@/i18n/plural";
 
 export interface DashboardTranslationEntry {
   message: string;
@@ -92,19 +92,21 @@ type DashboardLanguage =
 
 /** Keys whose message is a count, written once per plural category. */
 type PluralKey = "atCostCount" | "notInTotalCount" | "pricesNotUpdated";
-
-type DashboardMessages = {
-  [K in DashboardTranslationKey]: K extends PluralKey ? PluralForms : string;
-};
+type PluralCategory = "one" | "two" | "few" | "many";
 
 /**
- * Plural keys carry the categories each language uses (`Intl.PluralRules`);
- * `dashboard-translations.test.ts` fails on a missing or extra one.
+ * Plural keys are flat `key_<category>` entries, as i18next resolves them from
+ * `{ count }`, carrying exactly the categories each language uses
+ * (`Intl.PluralRules`); `src/i18n/__tests__/plural.test.ts` fails on a missing
+ * or extra one. Every other key keeps strict parity across languages.
  */
-export const dashboardOverviewMessages: Record<
-  DashboardLanguage,
-  DashboardMessages
-> = {
+type DashboardMessages = {
+  [K in Exclude<DashboardTranslationKey, PluralKey>]: string;
+} & { [K in PluralKey as `${K}_other`]: string } & {
+  [K in PluralKey as `${K}_${PluralCategory}`]?: string;
+};
+
+const messages: Record<DashboardLanguage, DashboardMessages> = {
   en: {
     accountsDescription: "Current asset and liability account balances",
     allWidgetsHidden:
@@ -146,24 +148,18 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Transfer",
     unknownTransaction: "Untitled transaction",
     unrealized: "Unrealized {amount}",
-    atCostCount: {
-      one: "{count} at cost (no price)",
-      other: "{count} at cost (no price)",
-    },
+    atCostCount_one: "{count} at cost (no price)",
+    atCostCount_other: "{count} at cost (no price)",
     holdingPrice: "Price {date}",
     livePrice: "Live price",
     noPrice: "No price",
-    notInTotalCount: {
-      one: "{count} not in total",
-      other: "{count} not in total",
-    },
+    notInTotalCount_one: "{count} not in total",
+    notInTotalCount_other: "{count} not in total",
     notInTotalTag: "Not in total",
     atCostTag: "At cost",
     priceNotUpdated: "Not updated",
-    pricesNotUpdated: {
-      one: "{count} price not updated since {date}",
-      other: "{count} prices not updated since {date}",
-    },
+    pricesNotUpdated_one: "{count} price not updated since {date}",
+    pricesNotUpdated_other: "{count} prices not updated since {date}",
     updatePrices: "Update prices",
     valuationDetails: "Valuation details",
     valuedAtMarket: "At market value",
@@ -212,24 +208,18 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Прехвърляне",
     unknownTransaction: "Транзакция без заглавие",
     unrealized: "Нереализирана разлика {amount}",
-    atCostCount: {
-      one: "{count} по цена на придобиване (без цена)",
-      other: "{count} по цена на придобиване (без цена)",
-    },
+    atCostCount_one: "{count} по цена на придобиване (без цена)",
+    atCostCount_other: "{count} по цена на придобиване (без цена)",
     holdingPrice: "Цена {date}",
     livePrice: "Цена на живо",
     noPrice: "Няма цена",
-    notInTotalCount: {
-      one: "{count} извън общата сума",
-      other: "{count} извън общата сума",
-    },
+    notInTotalCount_one: "{count} извън общата сума",
+    notInTotalCount_other: "{count} извън общата сума",
     notInTotalTag: "Не е в общата сума",
     atCostTag: "По цена на придобиване",
     priceNotUpdated: "Не е обновена",
-    pricesNotUpdated: {
-      one: "{count} цена не е обновявана от {date}",
-      other: "{count} цени не са обновявани от {date}",
-    },
+    pricesNotUpdated_one: "{count} цена не е обновявана от {date}",
+    pricesNotUpdated_other: "{count} цени не са обновявани от {date}",
     updatePrices: "Обнови цените",
     valuationDetails: "Подробности за оценката",
     valuedAtMarket: "По пазарна стойност",
@@ -280,27 +270,21 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Transferència",
     unknownTransaction: "Transacció sense títol",
     unrealized: "Resultat no realitzat {amount}",
-    atCostCount: {
-      one: "{count} al cost (sense preu)",
-      many: "{count} al cost (sense preu)",
-      other: "{count} al cost (sense preu)",
-    },
+    atCostCount_one: "{count} al cost (sense preu)",
+    atCostCount_many: "{count} al cost (sense preu)",
+    atCostCount_other: "{count} al cost (sense preu)",
     holdingPrice: "Preu {date}",
     livePrice: "Preu en directe",
     noPrice: "Sense preu",
-    notInTotalCount: {
-      one: "{count} fora del total",
-      many: "{count} fora del total",
-      other: "{count} fora del total",
-    },
+    notInTotalCount_one: "{count} fora del total",
+    notInTotalCount_many: "{count} fora del total",
+    notInTotalCount_other: "{count} fora del total",
     notInTotalTag: "Fora del total",
     atCostTag: "A cost",
     priceNotUpdated: "No actualitzat",
-    pricesNotUpdated: {
-      one: "{count} preu sense actualitzar des del {date}",
-      many: "{count} preus sense actualitzar des del {date}",
-      other: "{count} preus sense actualitzar des del {date}",
-    },
+    pricesNotUpdated_one: "{count} preu sense actualitzar des del {date}",
+    pricesNotUpdated_many: "{count} preus sense actualitzar des del {date}",
+    pricesNotUpdated_other: "{count} preus sense actualitzar des del {date}",
     updatePrices: "Actualitza els preus",
     valuationDetails: "Detalls de la valoració",
     valuedAtMarket: "A valor de mercat",
@@ -350,24 +334,18 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Umbuchung",
     unknownTransaction: "Transaktion ohne Titel",
     unrealized: "Nicht realisiert {amount}",
-    atCostCount: {
-      one: "{count} zu Anschaffungskosten (kein Preis)",
-      other: "{count} zu Anschaffungskosten (kein Preis)",
-    },
+    atCostCount_one: "{count} zu Anschaffungskosten (kein Preis)",
+    atCostCount_other: "{count} zu Anschaffungskosten (kein Preis)",
     holdingPrice: "Preis {date}",
     livePrice: "Live-Preis",
     noPrice: "Kein Preis",
-    notInTotalCount: {
-      one: "{count} nicht in der Summe",
-      other: "{count} nicht in der Summe",
-    },
+    notInTotalCount_one: "{count} nicht in der Summe",
+    notInTotalCount_other: "{count} nicht in der Summe",
     notInTotalTag: "Nicht in der Summe",
     atCostTag: "Zu Anschaffungskosten",
     priceNotUpdated: "Nicht aktualisiert",
-    pricesNotUpdated: {
-      one: "{count} Preis seit {date} nicht aktualisiert",
-      other: "{count} Preise seit {date} nicht aktualisiert",
-    },
+    pricesNotUpdated_one: "{count} Preis seit {date} nicht aktualisiert",
+    pricesNotUpdated_other: "{count} Preise seit {date} nicht aktualisiert",
     updatePrices: "Preise aktualisieren",
     valuationDetails: "Bewertungsdetails",
     valuedAtMarket: "Zum Marktwert",
@@ -418,27 +396,21 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Transferencia",
     unknownTransaction: "Transacción sin título",
     unrealized: "No realizado {amount}",
-    atCostCount: {
-      one: "{count} al costo (sin precio)",
-      many: "{count} al costo (sin precio)",
-      other: "{count} al costo (sin precio)",
-    },
+    atCostCount_one: "{count} al costo (sin precio)",
+    atCostCount_many: "{count} al costo (sin precio)",
+    atCostCount_other: "{count} al costo (sin precio)",
     holdingPrice: "Precio {date}",
     livePrice: "Precio en vivo",
     noPrice: "Sin precio",
-    notInTotalCount: {
-      one: "{count} fuera del total",
-      many: "{count} fuera del total",
-      other: "{count} fuera del total",
-    },
+    notInTotalCount_one: "{count} fuera del total",
+    notInTotalCount_many: "{count} fuera del total",
+    notInTotalCount_other: "{count} fuera del total",
     notInTotalTag: "Fuera del total",
     atCostTag: "Al costo",
     priceNotUpdated: "Sin actualizar",
-    pricesNotUpdated: {
-      one: "{count} precio sin actualizar desde el {date}",
-      many: "{count} precios sin actualizar desde el {date}",
-      other: "{count} precios sin actualizar desde el {date}",
-    },
+    pricesNotUpdated_one: "{count} precio sin actualizar desde el {date}",
+    pricesNotUpdated_many: "{count} precios sin actualizar desde el {date}",
+    pricesNotUpdated_other: "{count} precios sin actualizar desde el {date}",
     updatePrices: "Actualizar precios",
     valuationDetails: "Detalles de la valoración",
     valuedAtMarket: "A valor de mercado",
@@ -485,24 +457,18 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "انتقال",
     unknownTransaction: "تراکنش بدون عنوان",
     unrealized: "سود و زیان تحقق‌نیافته {amount}",
-    atCostCount: {
-      one: "{count} به بهای تمام‌شده (بدون قیمت)",
-      other: "{count} به بهای تمام‌شده (بدون قیمت)",
-    },
+    atCostCount_one: "{count} به بهای تمام‌شده (بدون قیمت)",
+    atCostCount_other: "{count} به بهای تمام‌شده (بدون قیمت)",
     holdingPrice: "قیمت {date}",
     livePrice: "قیمت زنده",
     noPrice: "بدون قیمت",
-    notInTotalCount: {
-      one: "{count} خارج از جمع کل",
-      other: "{count} خارج از جمع کل",
-    },
+    notInTotalCount_one: "{count} خارج از جمع کل",
+    notInTotalCount_other: "{count} خارج از جمع کل",
     notInTotalTag: "خارج از جمع",
     atCostTag: "به بهای تمام شده",
     priceNotUpdated: "به‌روز نشده",
-    pricesNotUpdated: {
-      one: "{count} قیمت از {date} به‌روز نشده است",
-      other: "{count} قیمت از {date} به‌روز نشده است",
-    },
+    pricesNotUpdated_one: "{count} قیمت از {date} به‌روز نشده است",
+    pricesNotUpdated_other: "{count} قیمت از {date} به‌روز نشده است",
     updatePrices: "به‌روزرسانی قیمت‌ها",
     valuationDetails: "جزئیات ارزش‌گذاری",
     valuedAtMarket: "به ارزش بازار",
@@ -553,27 +519,21 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Virement",
     unknownTransaction: "Transaction sans titre",
     unrealized: "Résultat latent {amount}",
-    atCostCount: {
-      one: "{count} au coût (sans prix)",
-      many: "{count} au coût (sans prix)",
-      other: "{count} au coût (sans prix)",
-    },
+    atCostCount_one: "{count} au coût (sans prix)",
+    atCostCount_many: "{count} au coût (sans prix)",
+    atCostCount_other: "{count} au coût (sans prix)",
     holdingPrice: "Prix {date}",
     livePrice: "Prix en direct",
     noPrice: "Sans prix",
-    notInTotalCount: {
-      one: "{count} hors total",
-      many: "{count} hors total",
-      other: "{count} hors total",
-    },
+    notInTotalCount_one: "{count} hors total",
+    notInTotalCount_many: "{count} hors total",
+    notInTotalCount_other: "{count} hors total",
     notInTotalTag: "Hors total",
     atCostTag: "Au coût",
     priceNotUpdated: "Non mis à jour",
-    pricesNotUpdated: {
-      one: "{count} prix non mis à jour depuis le {date}",
-      many: "{count} prix non mis à jour depuis le {date}",
-      other: "{count} prix non mis à jour depuis le {date}",
-    },
+    pricesNotUpdated_one: "{count} prix non mis à jour depuis le {date}",
+    pricesNotUpdated_many: "{count} prix non mis à jour depuis le {date}",
+    pricesNotUpdated_other: "{count} prix non mis à jour depuis le {date}",
     updatePrices: "Mettre à jour les prix",
     valuationDetails: "Détails de la valorisation",
     valuedAtMarket: "À la valeur de marché",
@@ -619,21 +579,15 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "振替",
     unknownTransaction: "無題の取引",
     unrealized: "含み損益 {amount}",
-    atCostCount: {
-      other: "取得原価（価格なし）{count} 件",
-    },
+    atCostCount_other: "取得原価（価格なし）{count} 件",
     holdingPrice: "価格 {date}",
     livePrice: "ライブ価格",
     noPrice: "価格なし",
-    notInTotalCount: {
-      other: "合計対象外 {count} 件",
-    },
+    notInTotalCount_other: "合計対象外 {count} 件",
     notInTotalTag: "合計に含まれない",
     atCostTag: "取得原価",
     priceNotUpdated: "未更新",
-    pricesNotUpdated: {
-      other: "{date} 以降、{count} 件の価格が未更新",
-    },
+    pricesNotUpdated_other: "{date} 以降、{count} 件の価格が未更新",
     updatePrices: "価格を更新",
     valuationDetails: "評価の詳細",
     valuedAtMarket: "市場価値で評価",
@@ -679,21 +633,15 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "이체",
     unknownTransaction: "제목 없는 거래",
     unrealized: "평가 손익 {amount}",
-    atCostCount: {
-      other: "원가 기준(가격 없음) {count}개",
-    },
+    atCostCount_other: "원가 기준(가격 없음) {count}개",
     holdingPrice: "가격 {date}",
     livePrice: "실시간 가격",
     noPrice: "가격 없음",
-    notInTotalCount: {
-      other: "합계 제외 {count}개",
-    },
+    notInTotalCount_other: "합계 제외 {count}개",
     notInTotalTag: "합계에서 제외",
     atCostTag: "원가 기준",
     priceNotUpdated: "업데이트 안 됨",
-    pricesNotUpdated: {
-      other: "{date} 이후 가격 {count}개 미갱신",
-    },
+    pricesNotUpdated_other: "{date} 이후 가격 {count}개 미갱신",
     updatePrices: "가격 업데이트",
     valuationDetails: "평가 세부 정보",
     valuedAtMarket: "시장 가치 기준",
@@ -742,24 +690,18 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Overboeking",
     unknownTransaction: "Transactie zonder titel",
     unrealized: "Ongerealiseerd {amount}",
-    atCostCount: {
-      one: "{count} tegen kostprijs (geen prijs)",
-      other: "{count} tegen kostprijs (geen prijs)",
-    },
+    atCostCount_one: "{count} tegen kostprijs (geen prijs)",
+    atCostCount_other: "{count} tegen kostprijs (geen prijs)",
     holdingPrice: "Prijs {date}",
     livePrice: "Live prijs",
     noPrice: "Geen prijs",
-    notInTotalCount: {
-      one: "{count} niet in totaal",
-      other: "{count} niet in totaal",
-    },
+    notInTotalCount_one: "{count} niet in totaal",
+    notInTotalCount_other: "{count} niet in totaal",
     notInTotalTag: "Niet in totaal",
     atCostTag: "Tegen kostprijs",
     priceNotUpdated: "Niet bijgewerkt",
-    pricesNotUpdated: {
-      one: "{count} prijs niet bijgewerkt sinds {date}",
-      other: "{count} prijzen niet bijgewerkt sinds {date}",
-    },
+    pricesNotUpdated_one: "{count} prijs niet bijgewerkt sinds {date}",
+    pricesNotUpdated_other: "{count} prijzen niet bijgewerkt sinds {date}",
     updatePrices: "Prijzen bijwerken",
     valuationDetails: "Waarderingsdetails",
     valuedAtMarket: "Tegen marktwaarde",
@@ -811,27 +753,21 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Transferência",
     unknownTransaction: "Transação sem título",
     unrealized: "Não realizado {amount}",
-    atCostCount: {
-      one: "{count} ao custo (sem preço)",
-      many: "{count} ao custo (sem preço)",
-      other: "{count} ao custo (sem preço)",
-    },
+    atCostCount_one: "{count} ao custo (sem preço)",
+    atCostCount_many: "{count} ao custo (sem preço)",
+    atCostCount_other: "{count} ao custo (sem preço)",
     holdingPrice: "Preço {date}",
     livePrice: "Preço ao vivo",
     noPrice: "Sem preço",
-    notInTotalCount: {
-      one: "{count} fora do total",
-      many: "{count} fora do total",
-      other: "{count} fora do total",
-    },
+    notInTotalCount_one: "{count} fora do total",
+    notInTotalCount_many: "{count} fora do total",
+    notInTotalCount_other: "{count} fora do total",
     notInTotalTag: "Fora do total",
     atCostTag: "Ao custo",
     priceNotUpdated: "Não atualizado",
-    pricesNotUpdated: {
-      one: "{count} preço sem atualização desde {date}",
-      many: "{count} preços sem atualização desde {date}",
-      other: "{count} preços sem atualização desde {date}",
-    },
+    pricesNotUpdated_one: "{count} preço sem atualização desde {date}",
+    pricesNotUpdated_many: "{count} preços sem atualização desde {date}",
+    pricesNotUpdated_other: "{count} preços sem atualização desde {date}",
     updatePrices: "Atualizar preços",
     valuationDetails: "Detalhes da avaliação",
     valuedAtMarket: "Ao valor de mercado",
@@ -880,30 +816,24 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Перевод",
     unknownTransaction: "Транзакция без названия",
     unrealized: "Нереализованный результат {amount}",
-    atCostCount: {
-      one: "{count} по себестоимости (нет цены)",
-      few: "{count} по себестоимости (нет цены)",
-      many: "{count} по себестоимости (нет цены)",
-      other: "{count} по себестоимости (нет цены)",
-    },
+    atCostCount_one: "{count} по себестоимости (нет цены)",
+    atCostCount_few: "{count} по себестоимости (нет цены)",
+    atCostCount_many: "{count} по себестоимости (нет цены)",
+    atCostCount_other: "{count} по себестоимости (нет цены)",
     holdingPrice: "Цена {date}",
     livePrice: "Живая цена",
     noPrice: "Нет цены",
-    notInTotalCount: {
-      one: "{count} вне итога",
-      few: "{count} вне итога",
-      many: "{count} вне итога",
-      other: "{count} вне итога",
-    },
+    notInTotalCount_one: "{count} вне итога",
+    notInTotalCount_few: "{count} вне итога",
+    notInTotalCount_many: "{count} вне итога",
+    notInTotalCount_other: "{count} вне итога",
     notInTotalTag: "Не в итоге",
     atCostTag: "По себестоимости",
     priceNotUpdated: "Не обновлена",
-    pricesNotUpdated: {
-      one: "{count} цена не обновлялась с {date}",
-      few: "{count} цены не обновлялись с {date}",
-      many: "{count} цен не обновлялись с {date}",
-      other: "{count} цены не обновлялись с {date}",
-    },
+    pricesNotUpdated_one: "{count} цена не обновлялась с {date}",
+    pricesNotUpdated_few: "{count} цены не обновлялись с {date}",
+    pricesNotUpdated_many: "{count} цен не обновлялись с {date}",
+    pricesNotUpdated_other: "{count} цены не обновлялись с {date}",
     updatePrices: "Обновить цены",
     valuationDetails: "Детали оценки",
     valuedAtMarket: "По рыночной стоимости",
@@ -952,30 +882,24 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Prevod",
     unknownTransaction: "Transakcia bez názvu",
     unrealized: "Nerealizovaný výsledok {amount}",
-    atCostCount: {
-      one: "{count} v obstarávacej cene (bez ceny)",
-      few: "{count} v obstarávacej cene (bez ceny)",
-      many: "{count} v obstarávacej cene (bez ceny)",
-      other: "{count} v obstarávacej cene (bez ceny)",
-    },
+    atCostCount_one: "{count} v obstarávacej cene (bez ceny)",
+    atCostCount_few: "{count} v obstarávacej cene (bez ceny)",
+    atCostCount_many: "{count} v obstarávacej cene (bez ceny)",
+    atCostCount_other: "{count} v obstarávacej cene (bez ceny)",
     holdingPrice: "Cena {date}",
     livePrice: "Živá cena",
     noPrice: "Bez ceny",
-    notInTotalCount: {
-      one: "{count} mimo súčtu",
-      few: "{count} mimo súčtu",
-      many: "{count} mimo súčtu",
-      other: "{count} mimo súčtu",
-    },
+    notInTotalCount_one: "{count} mimo súčtu",
+    notInTotalCount_few: "{count} mimo súčtu",
+    notInTotalCount_many: "{count} mimo súčtu",
+    notInTotalCount_other: "{count} mimo súčtu",
     notInTotalTag: "Mimo súčtu",
     atCostTag: "V obstarávacej cene",
     priceNotUpdated: "Neaktualizovaná",
-    pricesNotUpdated: {
-      one: "{count} cena neaktualizovaná od {date}",
-      few: "{count} ceny neaktualizované od {date}",
-      many: "{count} ceny neaktualizované od {date}",
-      other: "{count} cien neaktualizovaných od {date}",
-    },
+    pricesNotUpdated_one: "{count} cena neaktualizovaná od {date}",
+    pricesNotUpdated_few: "{count} ceny neaktualizované od {date}",
+    pricesNotUpdated_many: "{count} ceny neaktualizované od {date}",
+    pricesNotUpdated_other: "{count} cien neaktualizovaných od {date}",
     updatePrices: "Aktualizovať ceny",
     valuationDetails: "Podrobnosti ocenenia",
     valuedAtMarket: "V trhovej hodnote",
@@ -1024,30 +948,24 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "Переказ",
     unknownTransaction: "Транзакція без назви",
     unrealized: "Нереалізований результат {amount}",
-    atCostCount: {
-      one: "{count} за собівартістю (без ціни)",
-      few: "{count} за собівартістю (без ціни)",
-      many: "{count} за собівартістю (без ціни)",
-      other: "{count} за собівартістю (без ціни)",
-    },
+    atCostCount_one: "{count} за собівартістю (без ціни)",
+    atCostCount_few: "{count} за собівартістю (без ціни)",
+    atCostCount_many: "{count} за собівартістю (без ціни)",
+    atCostCount_other: "{count} за собівартістю (без ціни)",
     holdingPrice: "Ціна {date}",
     livePrice: "Жива ціна",
     noPrice: "Немає ціни",
-    notInTotalCount: {
-      one: "{count} поза підсумком",
-      few: "{count} поза підсумком",
-      many: "{count} поза підсумком",
-      other: "{count} поза підсумком",
-    },
+    notInTotalCount_one: "{count} поза підсумком",
+    notInTotalCount_few: "{count} поза підсумком",
+    notInTotalCount_many: "{count} поза підсумком",
+    notInTotalCount_other: "{count} поза підсумком",
     notInTotalTag: "Не в підсумку",
     atCostTag: "За собівартістю",
     priceNotUpdated: "Не оновлено",
-    pricesNotUpdated: {
-      one: "{count} ціна не оновлювалася з {date}",
-      few: "{count} ціни не оновлювалися з {date}",
-      many: "{count} цін не оновлювалися з {date}",
-      other: "{count} ціни не оновлювалися з {date}",
-    },
+    pricesNotUpdated_one: "{count} ціна не оновлювалася з {date}",
+    pricesNotUpdated_few: "{count} ціни не оновлювалися з {date}",
+    pricesNotUpdated_many: "{count} цін не оновлювалися з {date}",
+    pricesNotUpdated_other: "{count} ціни не оновлювалися з {date}",
     updatePrices: "Оновити ціни",
     valuationDetails: "Деталі оцінки",
     valuedAtMarket: "За ринковою вартістю",
@@ -1092,21 +1010,15 @@ export const dashboardOverviewMessages: Record<
     transactionTransfer: "转账",
     unknownTransaction: "未命名交易",
     unrealized: "浮动盈亏 {amount}",
-    atCostCount: {
-      other: "{count} 项按成本（无价格）",
-    },
+    atCostCount_other: "{count} 项按成本（无价格）",
     holdingPrice: "价格 {date}",
     livePrice: "实时价格",
     noPrice: "无价格",
-    notInTotalCount: {
-      other: "{count} 项未计入合计",
-    },
+    notInTotalCount_other: "{count} 项未计入合计",
     notInTotalTag: "未计入合计",
     atCostTag: "按成本",
     priceNotUpdated: "未更新",
-    pricesNotUpdated: {
-      other: "{count} 个价格自 {date} 起未更新",
-    },
+    pricesNotUpdated_other: "{count} 个价格自 {date} 起未更新",
     updatePrices: "更新价格",
     valuationDetails: "估值明细",
     valuedAtMarket: "按市值",
@@ -1119,15 +1031,18 @@ function buildDashboardTranslations(
   language: DashboardLanguage,
 ): Record<string, DashboardTranslationEntry> {
   return Object.fromEntries(
-    (Object.keys(descriptions) as DashboardTranslationKey[]).flatMap((key) => {
-      const message = dashboardOverviewMessages[language][key];
-      const description = descriptions[key];
-      return typeof message === "string"
-        ? [[`page.overview.${key}`, { message, description }]]
-        : Object.entries(expandPlural(`page.overview.${key}`, message)).map(
-            ([pluralKey, form]) => [pluralKey, { message: form, description }],
-          );
-    }),
+    Object.entries(messages[language] as Record<string, string>).map(
+      ([key, message]) => [
+        `page.overview.${key}`,
+        {
+          message,
+          description:
+            descriptions[
+              key.replace(PLURAL_SUFFIX, "") as DashboardTranslationKey
+            ],
+        },
+      ],
+    ),
   );
 }
 

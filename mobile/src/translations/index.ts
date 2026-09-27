@@ -13,7 +13,7 @@ import { pt } from "@/translations/pt";
 import { ru } from "@/translations/ru";
 import { sk } from "@/translations/sk";
 import { uk } from "@/translations/uk";
-import { pluralKeys } from "@/common/plural";
+import { registerPluralizers } from "@/common/plural";
 
 /**
  * The one place the locale set is written down at runtime. Bundled code can't
@@ -56,13 +56,7 @@ const getLocale = () => {
 
 export const i18n = new I18n(translations);
 i18n.enableFallback = true;
-// Each locale pluralises by its own CLDR rules (Russian 2 цены / 5 цен,
-// Chinese without a `one` form), not by i18n-js's English-only default.
-for (const locale of SUPPORTED_LOCALES) {
-  i18n.pluralization.register(locale, (_i18n, count) =>
-    pluralKeys(locale, count),
-  );
-}
+registerPluralizers(i18n, SUPPORTED_LOCALES);
 
 export const setLocale = (locale: string) => {
   i18n.locale = locale;

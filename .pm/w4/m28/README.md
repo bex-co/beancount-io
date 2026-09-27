@@ -1,6 +1,6 @@
 # w4 · m28 — Locale-aware plurals on both clients
 
-**Worker:** worker1 **Goal:** both clients pluralise counts by each language's own rules (`Intl.PluralRules`), and m27's count strings read as natural sentences in every shipped language. **Status:** in progress (t001–t004 done)
+**Worker:** worker1 **Goal:** both clients pluralise counts by each language's own rules (`Intl.PluralRules`), and m27's count strings read as natural sentences in every shipped language. **Status:** in progress (t001–t005 done)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | t002 | Mobile: i18n-js pluralization from `Intl.PluralRules`, with a check — **DONE** | 45m | —          |
 | t003 | Rewrite m27's count strings as natural plural sentences — **DONE** | 45m | t001, t002 |
 | t004 | Adoption surface — **DONE** | 15m | t003       |
-| t005 | Simplify                                                                | 20m | t004       |
+| t005 | Simplify — **DONE** | 20m | t004       |
 | t006 | Test coverage                                                           | 30m | t004       |
 | t007 | Closeout                                                                | 10m | t005, t006 |
 

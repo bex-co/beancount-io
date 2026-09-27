@@ -49,6 +49,41 @@ export function pluralKeys(locale: string, count: number): string[] {
   return category === "other" ? ["other"] : [category, "other"];
 }
 
+/** The form of `forms` that `count` takes in `locale`, else its `other`. */
+export function pluralForm(
+  locale: string,
+  forms: { other: string } & Partial<Record<PluralCategory, string>>,
+  count: number,
+): string {
+  const [category] = pluralKeys(locale, count);
+  return forms[category as PluralCategory] ?? forms.other;
+}
+
+/** The slice of an i18n-js instance a pluralizer registers on. */
+type Pluralizable = {
+  pluralization: {
+    register: (
+      locale: string,
+      pluralizer: (i18n: unknown, count: number) => string[],
+    ) => void;
+  };
+};
+
+/**
+ * Registers each locale's own CLDR pluralizer (Russian 2 цены / 5 цен, Chinese
+ * without a `one` form) in place of i18n-js's English-only default.
+ */
+export function registerPluralizers(
+  i18n: Pluralizable,
+  locales: readonly string[],
+): void {
+  for (const locale of locales) {
+    i18n.pluralization.register(locale, (_i18n, count) =>
+      pluralKeys(locale, count),
+    );
+  }
+}
+
 /** Every category `locale` distinguishes, as the catalog must provide them. */
 function pluralCategoriesOf(locale: string): PluralCategory[] {
   const rules = rulesFor(locale);

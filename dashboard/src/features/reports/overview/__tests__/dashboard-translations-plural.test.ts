@@ -1,11 +1,8 @@
 import { createInstance } from "i18next";
 import { describe, expect, it } from "vitest";
-import { findPluralIssues } from "@/i18n/plural";
+import { findFlatPluralIssues } from "@/i18n/plural";
 import { extractMessages } from "@/i18n/utils";
-import {
-  dashboardOverviewMessages,
-  dashboardOverviewTranslations,
-} from "../dashboard-translations";
+import { dashboardOverviewTranslations } from "../dashboard-translations";
 
 async function translatorFor(language: "en" | "ru" | "zh") {
   const i18n = createInstance();
@@ -27,7 +24,11 @@ async function translatorFor(language: "en" | "ru" | "zh") {
 
 describe("overview count messages", () => {
   it("carry exactly the plural categories each language uses", () => {
-    expect(findPluralIssues(dashboardOverviewMessages)).toEqual([]);
+    const issues = Object.entries(dashboardOverviewTranslations).flatMap(
+      ([language, entries]) =>
+        findFlatPluralIssues(language, extractMessages(entries)),
+    );
+    expect(issues).toEqual([]);
   });
 
   it("read as natural sentences for 1, 2 and 5", async () => {

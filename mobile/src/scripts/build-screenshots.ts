@@ -25,7 +25,7 @@ import { pt } from "../translations/pt";
 import { ru } from "../translations/ru";
 import { sk } from "../translations/sk";
 import { uk } from "../translations/uk";
-import { pluralCategory } from "../common/plural";
+import { pluralForm } from "../common/plural";
 import type { PluralForms } from "../common/translation-types";
 
 const root = process.cwd();
@@ -329,9 +329,10 @@ function sourceLabels(
         color: "#ee675d",
         pointSize: 36,
         // The locale's own form for 1 — Chinese has no `one`, only `other`.
-        text: (
-          translations.ledgerEditorErrorCount[pluralCategory(storeLocale, 1)] ??
-          translations.ledgerEditorErrorCount.other
+        text: pluralForm(
+          storeLocale,
+          translations.ledgerEditorErrorCount,
+          1,
         ).replace("{{count}}", "1"),
       },
     ];

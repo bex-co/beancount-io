@@ -8,6 +8,7 @@ import {
   pluralCategory,
   pluralCategoryMismatches,
   pluralKeys,
+  registerPluralizers,
 } from "../../common/plural";
 import {
   declaredKeys,
@@ -82,11 +83,7 @@ describe("shipped catalogs", () => {
 
 describe("rendering counts", () => {
   const i18n = new I18n({ en, ru, zh });
-  for (const locale of ["en", "ru", "zh"]) {
-    i18n.pluralization.register(locale, (_i18n, count) =>
-      pluralKeys(locale, count),
-    );
-  }
+  registerPluralizers(i18n, ["en", "ru", "zh"]);
   const render = (locale: string, count: number) =>
     i18n.t("pricesNotUpdatedSince", { locale, count, date: "Sep 8, 2017" });
 
