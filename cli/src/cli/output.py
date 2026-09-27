@@ -23,7 +23,7 @@ import typer
 
 from cli import context
 from cli.config import package_version
-from cli.errors import LedgerError, UsageError, to_bea_error
+from cli.errors import BeaError, LedgerError, UsageError, to_bea_error
 from cli.utils import atomic_write, single_line
 
 
@@ -88,13 +88,35 @@ def error(exc: BaseException | str) -> NoReturn:
             payload["traceback"] = trace
         print(json.dumps({"error": payload}), file=sys.stderr)
     else:
-        print(f"Error: {err}", file=sys.stderr)
-        for detail in err.details:
-            print(f"  {detail}", file=sys.stderr)
-        if trace:
-            print(trace, file=sys.stderr, end="")
+        _print_failure(err, trace)
 
     raise typer.Exit(exit_code)
+
+
+def failure(exc: BaseException | str) -> None:
+    """Report a failure that costs one step, not the run — `ask`'s per-turn errors.
+
+    An interactive session has to outlive a failed turn: the same words `error`
+    would have printed, on the same stream, without the `typer.Exit` that would
+    take the conversation with it. Text only, because the surfaces that recover
+    this way have no JSON mode.
+    """
+    err = to_bea_error(exc)
+    trace = None
+    if context.current().debug and isinstance(exc, BaseException):
+        import traceback
+
+        trace = err.traceback or "".join(traceback.format_exception(exc))
+    _print_failure(err, trace)
+
+
+def _print_failure(err: BeaError, trace: str | None) -> None:
+    """The one text rendering of an error, shared by the fatal and recoverable paths."""
+    print(f"Error: {err}", file=sys.stderr)
+    for detail in err.details:
+        print(f"  {detail}", file=sys.stderr)
+    if trace:
+        print(trace, file=sys.stderr, end="")
 
 
 def display_width(text: str) -> int:

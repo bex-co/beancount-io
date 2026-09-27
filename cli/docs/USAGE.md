@@ -1085,11 +1085,27 @@ Without the extra the command exits **2** with the install command. It also need
 
 Interactive write requests are validated before confirmation, then appended
 atomically only if the root ledger and included files still match the preview.
-Use `ask --into FILE` for an included destination. The write tool accepts dated
-directives; configure plugins, options and includes separately. Noninteractive
+The confirmation names the file the write will actually change — with
+`--into FILE` that is the included destination, not the root ledger — and shows
+the directive with any control character escaped to a visible `\xNN`, so what is
+on screen is what will be written. Raw directive text carrying a control
+character is refused rather than rewritten, so no AI-proposed write can leave one
+in a ledger file. Use `ask --into FILE` for an included destination. The write
+tool accepts dated directives; configure plugins, options and includes
+separately. Noninteractive
 sessions do not write ledger entries. AI write permission is separate from
 global `--yes`: one-answer and non-interactive mode cannot obtain it and never
 apply AI-proposed writes.
+
+In a session, one turn is one unit of failure. Ctrl-C clears the line you are
+typing, or abandons the turn in flight, and returns to the prompt with the
+conversation intact; Ctrl-D (or `/exit`) ends the session. A failed turn — a
+server error, a question the assistant cannot complete — prints the failure and
+returns to the prompt with the earlier history still loaded. A rejected
+credential is the one exception: it ends the session with exit **3**, because
+every later turn would fail the same way. Each question also has a fixed budget
+of hosted requests and ledger queries; a model that keeps querying without
+answering stops there, reports that nothing was written, and costs no more.
 
 Ask discovers project skills as `NAME/SKILL.md` files in `.agents/skills/`
 under the working directory (regardless of `--file`) and user skills in

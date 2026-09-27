@@ -47,7 +47,7 @@ def ask(
     # The missing extra is checked before the credential: without it the
     # command cannot run at all, and "log in first" would be misleading advice.
     try:
-        from cli.ask.agent import BqlDeps, make_agent, translated_failures
+        from cli.ask.agent import BqlDeps, make_agent, translated_failures, usage_limits
     except ImportError as exc:
         raise UsageError(_MISSING_EXTRA) from exc
 
@@ -73,10 +73,15 @@ def ask(
         from rich.console import Console
         from rich.markdown import Markdown
 
+        from cli.utils import inert_text
+
         console = Console()
         with console.status("[dim]Thinking…[/dim]", spinner="dots"), translated_failures():
-            result = agent.run_sync(question, deps=deps)
-        console.print(Markdown(result.output))
+            result = agent.run_sync(question, deps=deps, usage_limits=usage_limits())
+        # The answer is model-controlled text on its way to a terminal, so it
+        # obeys the same invariant as every other untrusted string the CLI
+        # prints (w3/392): no control character reaches the screen raw.
+        console.print(Markdown(inert_text(result.output)))
     else:
         from cli.ask.repl import print_welcome, run_repl
 

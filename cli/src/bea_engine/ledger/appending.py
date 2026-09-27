@@ -19,6 +19,7 @@ from typing import Any
 
 from bea_engine import protocol
 from bea_engine.ledger import write as ledger_write
+from bea_engine.ledger.text import refuse_control_characters
 from bea_engine.query import format_error
 
 _CONFIG_KINDS = frozenset({"INCLUDE", "PLUGIN", "OPTION", "PUSHTAG", "POPTAG", "PUSHMETA", "POPMETA"})
@@ -53,6 +54,7 @@ def _parse_directives(text: str) -> list[Any]:
     """Dated ledger entries only — options, plugins and includes are refused here."""
     from beancount.parser import lexer, parser
 
+    refuse_control_characters(text, what="the directive text")
     if any(kind in _CONFIG_KINDS for kind, *_ in lexer.lex_iter_string(text)):  # type: ignore[no-untyped-call]
         raise protocol.UsageError(
             "Write rejected: provide dated ledger directives only; configure options, plugins and includes separately."

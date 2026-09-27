@@ -40,6 +40,32 @@ def single_line(text: str) -> str:
     return CONTROL_CHARACTERS.sub(lambda m: f"\\x{ord(m.group()):02x}", re.sub(r"[\r\n]+", " ", text))
 
 
+def refuse_control_characters(text: str, *, what: str) -> None:
+    """Refuse raw directive text that carries a control character.
+
+    The field-by-field writers escape their input through `single_line`, so no
+    control byte can reach a ledger file through `bea add`. Raw text — what
+    `bea ask` hands the append path — has no fields to escape: it *is* the file
+    content, and escaping it would silently rewrite the very bytes the user was
+    shown and asked to approve. So this path refuses instead, which keeps the
+    invariant ("no C0/C1 in a ledger file") without ever writing something
+    other than what was consented to.
+
+    Tabs, LF and CR are the exceptions: they are the whitespace a ledger is
+    allowed to be indented and broken with. Everything else `CONTROL_CHARACTERS`
+    covers — ESC above all — is rejected, naming the offending byte and offset
+    so the caller can see what was in its input.
+    """
+    offender = next((m for m in CONTROL_CHARACTERS.finditer(text) if m.group() != "\t"), None)
+    if offender is None:
+        return
+    raise protocol.UsageError(
+        f"Write rejected: {what} contains the control character "
+        f"\\x{ord(offender.group()):02x} at offset {offender.start()}; nothing was written. "
+        "Ledger text may only use ordinary characters, tabs and newlines."
+    )
+
+
 def fold_account(name: str) -> str:
     """The key two account names must share to match in a filter.
 

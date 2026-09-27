@@ -3,7 +3,6 @@ from __future__ import annotations
 import random
 import shutil
 from collections.abc import Callable
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from prompt_toolkit import PromptSession
@@ -21,7 +20,10 @@ if TYPE_CHECKING:
 
     from cli.ask.agent import BqlDeps
 
+from cli import output
 from cli.config import history_path
+from cli.errors import AuthError
+from cli.utils import inert_text
 
 _STYLE = Style.from_dict(
     {
@@ -154,20 +156,36 @@ def _ask_write_permission() -> str:
     return app.run()
 
 
-def make_confirm_fn(file: Path, active_status: list[Any]) -> Callable[[str], str]:
-    """Return a callback that stops the spinner, shows the panel, and runs arrow-key selection."""
+def make_confirm_fn(active_status: list[Any]) -> Callable[[str, str, list[str]], str]:
+    """Return a callback that stops the spinner, shows the panel, and runs arrow-key selection.
 
-    def confirm(directive: str) -> str:
+    Everything on the panel comes from the engine's dry run of the write that is
+    about to happen — the destination it resolved, the text it parsed — and every
+    model-controlled byte on it goes through `inert_text` first. The panel is the
+    only gate between AI-proposed text and the user's books, so it must show
+    exactly what will be written, and nothing it shows may move the cursor.
+
+    The destination is a body line rather than the frame title because Rich trims
+    a title to the frame width without an ellipsis: at 100 columns an absolute
+    path was silently cut mid-name, so the one fact the user is consenting to was
+    unreadable.
+    """
+
+    def confirm(directive: str, target: str, warnings: list[str]) -> str:
         if s := active_status[0]:
             s.stop()
         console.print()
         content = Text()
         content.append("Allow the AI to append this directive to your ledger?\n\n", style="dim")
-        content.append(directive, style="green")
+        content.append("File: ", style="dim")
+        content.append(f"{inert_text(target)}\n\n", style="bold")
+        content.append(inert_text(directive), style="green")
+        for warning in warnings:
+            content.append(f"\n\nWarning: {inert_text(warning)}", style="yellow")
         console.print(
             Panel(
                 content,
-                title=f"[yellow]Write to {file}[/yellow]",
+                title="[yellow]Confirm AI write[/yellow]",
                 border_style="yellow",
                 padding=(0, 1),
             )
@@ -186,13 +204,13 @@ def print_welcome() -> None:
 
 
 def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | None = None) -> None:
-    from cli.ask.agent import WritePermission, translated_failures
+    from cli.ask.agent import WritePermission, translated_failures, usage_limits
 
     hint = random.choice(_PLACEHOLDER_HINTS)
     first_turn = [True]
     active_status: list[Any] = [None]
 
-    deps.write_permission = WritePermission(confirm_fn=make_confirm_fn(deps.file, active_status))
+    deps.write_permission = WritePermission(confirm_fn=make_confirm_fn(active_status))
 
     kb = KeyBindings()
 
@@ -208,7 +226,13 @@ def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | 
         try:
             ph = FormattedText([("class:placeholder", f" {hint}")]) if first_turn[0] else FormattedText([])
             user_input = session.prompt(default=default_input or "" if first_turn[0] else "", placeholder=ph).strip()
-        except (KeyboardInterrupt, EOFError):
+        except KeyboardInterrupt:
+            # What the session's own help and toolbar promise: Ctrl-C clears the
+            # line (prompt-toolkit has already discarded the buffer) and Ctrl-D
+            # exits. Sharing one handler made the key people press to abandon a
+            # half-typed question throw the whole conversation away.
+            continue
+        except EOFError:
             console.print("\n[dim]Goodbye.[/dim]")
             break
         if not user_input:
@@ -224,14 +248,40 @@ def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | 
         active_status[0] = status
         status.start()
         try:
-            with translated_failures():
-                result = agent.run_sync(user_input, deps=deps, message_history=messages)
-        finally:
-            status.stop()
-            active_status[0] = None
+            # The spinner is stopped before any arm below prints: a live display
+            # left running would overwrite the line it is reporting on.
+            try:
+                with translated_failures():
+                    result = agent.run_sync(
+                        user_input,
+                        deps=deps,
+                        message_history=messages,
+                        usage_limits=usage_limits(),
+                    )
+            finally:
+                status.stop()
+                active_status[0] = None
+        except KeyboardInterrupt:
+            # A turn costs one Ctrl-C, not the session. `messages` is left as it
+            # was before the turn, so the next question still carries the history.
+            console.print("\n[dim](cancelled)[/dim]")
+            continue
+        except AuthError as exc:
+            # The one failure worth ending on: the credential is rejected, so
+            # every later turn would fail the same way and the remedy is outside
+            # the session. Raising keeps the documented exit code 3.
+            console.print()
+            raise exc
+        except Exception as exc:
+            # Anything else costs this turn only — a 5xx from the proxy, a tool
+            # the model cannot get right, the per-question budget. Before this,
+            # one such failure ended the process and discarded the conversation.
+            console.print()
+            output.failure(exc)
+            continue
         messages = list(result.all_messages())
         console.print()
-        console.print(Markdown(result.output))
+        console.print(Markdown(inert_text(result.output)))
 
 
 def _print_help() -> None:

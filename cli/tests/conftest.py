@@ -1,10 +1,14 @@
 import asyncio
 import json
+import os
+import pty
+import select
+import signal
 import subprocess
 import sys
 import threading
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -181,3 +185,208 @@ def tmp_bean_file(tmp_path: Path) -> Path:
     f = tmp_path / "main.bean"
     f.write_text("")
     return f
+
+
+# ---------------------------------------------------------------------------
+# `bea ask` against a local stub model, driven on a real terminal
+# ---------------------------------------------------------------------------
+#
+# The model's side of an `ask` run is a **simulation**: these fixtures answer the
+# OpenAI protocol from localhost, so nothing here is a statement about the hosted
+# AI service — what they pin is how `bea` reacts. A real PTY is required for the
+# rendering assertions, because a piped capture strips control sequences and
+# under-reports exactly the bytes at issue (w3/392's wrinkle), and because the
+# interactive session's prompt never appears without a terminal.
+
+
+def model_tool_call(name: str, arguments: dict[str, object], call_id: str = "call_1") -> dict[str, object]:
+    """One tool call, in the shape the OpenAI chat-completions protocol returns it."""
+    return {
+        "index": 0,
+        "finish_reason": "tool_calls",
+        "message": {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": call_id,
+                    "type": "function",
+                    "function": {"name": name, "arguments": json.dumps(arguments)},
+                }
+            ],
+        },
+    }
+
+
+def model_answer(text: str) -> dict[str, object]:
+    """A final assistant answer, same protocol shape."""
+    return {"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": text}}
+
+
+@dataclass
+class StubModel:
+    """A model that answers from localhost: what it replies, and what it was asked.
+
+    `reply` is called with the 1-based request number and returns either a
+    `model_answer`/`model_tool_call` choice or an HTTP status to fail with.
+    """
+
+    url: str = ""
+    reply: Callable[[int], dict[str, object] | int] = field(default=lambda n: model_answer("stub answer"))
+    requests: list[dict[str, object]] = field(default_factory=list)
+
+    @property
+    def count(self) -> int:
+        return len(self.requests)
+
+    def prompts(self, index: int) -> list[str]:
+        """The user/assistant/tool content of one request, for history assertions."""
+        messages = self.requests[index].get("messages") or []
+        return [str(message.get("content")) for message in messages]  # type: ignore[union-attr]
+
+
+class _ModelHandler(BaseHTTPRequestHandler):
+    # HTTP/1.0 semantics on purpose: one connection per request. Keeping the
+    # connection alive let the client find it stale and transparently retry a
+    # turn, which would make "how many requests did one question cost" — the
+    # thing the usage ceiling is about — unmeasurable.
+    protocol_version = "HTTP/1.0"
+
+    def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler's spelling
+        stub: StubModel = self.server.stub  # type: ignore[attr-defined]
+        body = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+        try:
+            stub.requests.append(json.loads(body))
+        except ValueError:
+            stub.requests.append({})
+        outcome = stub.reply(len(stub.requests))
+        if isinstance(outcome, int):
+            self._send(outcome, {"message": "Upstream model provider failed."})
+            return
+        self._send(
+            200,
+            {
+                "id": "chatcmpl-stub",
+                "object": "chat.completion",
+                "created": 0,
+                "model": "gpt-4o",
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+                "choices": [outcome],
+            },
+        )
+
+    def _send(self, status: int, payload: dict[str, object]) -> None:
+        encoded = json.dumps(payload).encode()
+        try:
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(encoded)))
+            self.end_headers()
+            self.wfile.write(encoded)
+        except (BrokenPipeError, ConnectionResetError):
+            # An interrupted turn hangs up mid-answer on purpose; that is the
+            # behavior under test, not a failure worth a socketserver traceback.
+            pass
+
+    def log_message(self, *args: object) -> None:
+        """Silence the access log, which would otherwise land in test output."""
+
+
+@pytest.fixture
+def stub_model() -> Iterator[StubModel]:
+    """A local model server for `bea ask`, reachable through `BEA_API_URL`."""
+    stub = StubModel()
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _ModelHandler)
+    server.stub = stub  # type: ignore[attr-defined]
+    stub.url = f"http://127.0.0.1:{server.server_address[1]}"
+    threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True).start()
+    try:
+        yield stub
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+@dataclass
+class TerminalRun:
+    """One `bea` run on a PTY: its exit status and every byte it emitted."""
+
+    status: int
+    emitted: bytes
+
+    @property
+    def screen(self) -> str:
+        return self.emitted.decode("utf-8", "replace")
+
+
+#: The session's prompt arrow, as the terminal receives it.
+PROMPT_ARROW = "\u276f".encode()
+
+#: Keystrokes an `ask` script can send, by name.
+KEYS = {"CTRL_C": b"\x03", "CTRL_D": b"\x04", "ENTER": b"\r"}
+
+
+@pytest.fixture
+def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., TerminalRun]:
+    """Run `bea ask` on a PTY against `stub_model`, typing a script of keystrokes.
+
+    A script entry is either literal text to type or `@NAME` from `KEYS`. Each is
+    sent once the child has been quiet for a moment, which is what makes the
+    interactive steps (a prompt, then an approval panel) land in order.
+    """
+
+    def run(argv: list[str], script: list[str], *, timeout: float = 120.0) -> TerminalRun:
+        env = {k: v for k, v in os.environ.items() if not k.startswith("BEA_")}
+        env.update(
+            BEA_CONFIG_DIR=str(tmp_path / "config"),
+            XDG_CACHE_HOME=str(tmp_path / "cache"),
+            XDG_DATA_HOME=str(tmp_path / "data"),
+            XDG_CONFIG_HOME=str(tmp_path / "xdg-config"),
+            BEA_NO_UPDATE_NOTIFIER="1",
+            BEA_API_URL=stub_model.url,
+            BEA_TOKEN="stub-token",
+            PYTHONPATH=str(CLI_ROOT / "src"),
+            TERM="dumb",
+            NO_COLOR="1",
+            COLUMNS="100",
+            LINES="40",
+        )
+        pid, fd = pty.fork()
+        if pid == 0:  # pragma: no cover - replaced by exec in the child
+            os.chdir(tmp_path)
+            os.execve(sys.executable, [sys.executable, "-m", "cli.main", *argv], env)
+        emitted = b""
+        step = 0
+        started = last = time.time()
+        try:
+            while True:
+                ready, _, _ = select.select([fd], [], [], 0.2)
+                if ready:
+                    try:
+                        chunk = os.read(fd, 65536)
+                    except OSError:  # The PTY closes when the child exits.
+                        chunk = b""
+                    if chunk:
+                        emitted += chunk
+                        last = time.time()
+                finished, status = os.waitpid(pid, os.WNOHANG)
+                if finished:
+                    return TerminalRun(os.waitstatus_to_exitcode(status), emitted)
+                # Nothing is typed until the session's own prompt is on screen:
+                # a keystroke sent while the child is still importing is eaten by
+                # the terminal, and a Ctrl-C then lands on startup instead of on
+                # the prompt under test.
+                ready_to_type = step > 0 or PROMPT_ARROW in emitted
+                if step < len(script) and ready_to_type and time.time() - last > 1.5:
+                    key = script[step]
+                    os.write(fd, KEYS[key[1:]] if key.startswith("@") else key.encode())
+                    step += 1
+                    last = time.time()
+                if time.time() - started > timeout:
+                    os.kill(pid, signal.SIGKILL)
+                    os.waitpid(pid, 0)
+                    raise AssertionError(f"bea {argv} never exited; screen was {emitted!r}")
+        finally:
+            os.close(fd)
+
+    return run

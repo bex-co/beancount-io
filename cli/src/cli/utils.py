@@ -31,7 +31,29 @@ def single_line(text: str) -> str:
     span. The engine twin (`bea_engine.ledger.text.single_line`) must agree,
     and a test pins that it does.
     """
-    return CONTROL_CHARACTERS.sub(lambda m: f"\\x{ord(m.group()):02x}", re.sub(r"[\r\n]+", " ", text))
+    return _escape_controls(re.sub(r"[\r\n]+", " ", text))
+
+
+def inert_text(text: str) -> str:
+    """The same neutralization for text that is allowed to span several lines.
+
+    A proposed directive and a model's answer are multi-line by nature, so
+    `single_line` would destroy them — but they carry exactly the same hazard
+    that `single_line` exists for, and more sharply: the `ask` approval panel is
+    the only gate between AI-proposed text and the user's books, so the text
+    being approved must not be able to repaint the panel asking about it.
+
+    Line breaks are kept (CRLF and lone CR normalized to LF, so a stray CR
+    cannot return the cursor to the start of the line it was just shown on);
+    every other control character becomes a visible `\\xNN`, as `single_line`
+    does, for the same reason — the oddity stays legible instead of vanishing.
+    """
+    return _escape_controls(re.sub(r"\r\n?", "\n", text))
+
+
+def _escape_controls(text: str) -> str:
+    """Every control character as a visible `\\xNN`. The one place that mapping lives."""
+    return CONTROL_CHARACTERS.sub(lambda m: f"\\x{ord(m.group()):02x}", text)
 
 
 UTF8_BOM = b"\xef\xbb\xbf"

@@ -7,9 +7,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from pydantic_ai import Agent, ModelRetry, RunContext
-from pydantic_ai.exceptions import ModelHTTPError
+from pydantic_ai.exceptions import AgentRunError, ModelHTTPError, UsageLimitExceeded
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
+from pydantic_ai.usage import UsageLimits
 
 from cli.ask.skills import AgentSkill, build_skills_index_prompt
 from cli.engine import launch
@@ -65,11 +66,28 @@ Beancount directive syntax for write_directive:
 Always use correct indentation (two spaces for postings). Use today's date if not specified."""
 
 
+#: What one question may spend. `ask` is the only command that costs money per
+#: call, so the ceiling is the CLI's own choice rather than the AI SDK's default
+#: of 50 requests: a ledger question needs a handful of queries, and a model that
+#: keeps calling tools without answering is looping, not working. Every request
+#: carries the whole growing history, so the tail of a loop is also the expensive
+#: part. Tripping this is reported in the CLI's own words by `translated_failures`.
+REQUEST_LIMIT = 12
+TOOL_CALLS_LIMIT = 10
+
+
+def usage_limits() -> UsageLimits:
+    """The per-question budget, built the same way for the REPL and for `--print`."""
+    return UsageLimits(request_limit=REQUEST_LIMIT, tool_calls_limit=TOOL_CALLS_LIMIT)
+
+
 @dataclass
 class WritePermission:
     approve_all: bool = False
     deny_all: bool = False
-    confirm_fn: Callable[[str], str] | None = None
+    #: Called with the directive text and the append destination the engine's
+    #: dry run resolved — never the root ledger, which `--into` makes wrong.
+    confirm_fn: Callable[[str, str, list[str]], str] | None = None
 
 
 @dataclass
@@ -95,11 +113,32 @@ def translated_failures() -> Iterator[None]:
     Routing through that same table is what keeps `ask` and `cloud` from
     drifting: 401/403 become `AuthError` with the BEA_TOKEN-aware remedy, and
     rate limits and 5xx get their documented sentences too.
+
+    The AI SDK's own run failures are translated here for the same reason. Left
+    alone they fell past this context manager into the catch-all in `main.py`,
+    which printed them verbatim: the user read a third-party limit name
+    (`request_limit`), a knob `bea` does not expose (the tool retry count), and a
+    link to another project's documentation. Every arm below says what happened,
+    that nothing was written, and what to try instead — and none of them quotes
+    the SDK's sentence, because that sentence is the defect.
     """
     try:
         yield
     except ModelHTTPError as exc:
         raise error_from_status(exc.status_code, _server_message(exc.body)) from exc
+    except UsageLimitExceeded as exc:
+        raise BeaError(
+            f"The assistant kept querying without reaching an answer and stopped at this question's "
+            f"budget ({REQUEST_LIMIT} model requests, {TOOL_CALLS_LIMIT} ledger queries); "
+            "nothing was written to your ledger. "
+            "Ask a narrower question, or run the query yourself with 'bea query'."
+        ) from exc
+    except AgentRunError as exc:
+        raise BeaError(
+            f"The assistant could not complete this question ({type(exc).__name__}); "
+            "nothing was written to your ledger. Rephrase the question and retry, "
+            "or run the query yourself with 'bea query'."
+        ) from exc
 
 
 def _server_message(body: object) -> str | None:
@@ -167,7 +206,11 @@ def make_agent(
         if not perm.approve_all:
             if perm.confirm_fn is None:
                 return "Write skipped (non-interactive mode does not support writes)."
-            answer = perm.confirm_fn(directive)
+            # The dry run resolved where the text actually goes — with `--into`
+            # that is an included file, not `deps.file`. The consent panel has to
+            # name that file, so the preview's own answer is what it is built from.
+            warnings = [str(warning) for warning in preview.get("warnings") or []]
+            answer = perm.confirm_fn(directive, str(preview["target"]), warnings)
             if answer == "a":
                 perm.approve_all = True
             elif answer == "d":
@@ -179,6 +222,7 @@ def make_agent(
             result = launch.helper_json(
                 [*argv, "--token", json.dumps(preview["token"])],
                 stdin=directive,
+                writes=True,
             )
         except BeaError as exc:
             return _write_rejection(exc)
