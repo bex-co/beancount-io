@@ -122,6 +122,7 @@ def _refresh(extra: list[str]) -> None:
 def _export(args: list[str]) -> None:
     output_dir: str | None = None
     allow_errors = False
+    force = False
     pending = list(args)
     while pending:
         arg = pending.pop(0)
@@ -135,8 +136,10 @@ def _export(args: list[str]) -> None:
                 raise UsageError("bea price export --output needs a directory.")
         elif arg == "--allow-errors":
             allow_errors = True
+        elif arg == "--force":
+            force = True
         else:
-            raise UsageError(f"bea price export takes only --output and --allow-errors; got: {arg}.")
+            raise UsageError(f"bea price export takes only --output, --allow-errors and --force; got: {arg}.")
     current = context.current()
     file = current.entry_file()
     argv = ["price-export", "--file", str(file)]
@@ -144,12 +147,22 @@ def _export(args: list[str]) -> None:
         argv += ["--output", output_dir]
     if allow_errors:
         argv.append("--allow-errors")
+    if force:
+        argv.append("--force")
     data = _answer(argv)
     if current.json_output:
         output.emit(
-            {"output": data["output"], "files": data["files"], "sources": data["sources"]},
+            {
+                "output": data["output"],
+                "files": data["files"],
+                "overwritten": data.get("overwritten") or [],
+                "sources": data["sources"],
+            },
             target={**output.file_target(file), "into": data["output"]},
         )
         return
     files: list[str] = data["files"]
     output.success(f"Exported {len(files)} file{'s' if len(files) != 1 else ''} to {data['output']}.")
+    overwritten: list[str] = data.get("overwritten") or []
+    if overwritten:
+        output.note(f"Overwrote {len(overwritten)} existing file(s) (--force): " + ", ".join(overwritten))

@@ -50,3 +50,29 @@ def test_treeify_success_path_renders_tree(tmp_path: Path) -> None:
     result = _bea(tmp_path, "treeify", stdin=ALIGNED)
     assert result.returncode == 0, result.stderr
     assert "`-- Assets" in result.stdout
+
+
+def test_treeify_refuses_an_existing_ledger_file_unless_forced(tmp_path: Path) -> None:
+    """A ledger file treeify was never given is not replaced without `--force` (w3/m48)."""
+    foreign = tmp_path / "somebody-else.bean"
+    foreign.write_text('option "title" "OTHER LEDGER"\n')
+
+    refused = _bea(tmp_path, "treeify", "-o", "somebody-else.bean", stdin=ALIGNED)
+
+    assert refused.returncode == 2, refused.stderr
+    assert "Already exists" in refused.stderr
+    assert "--force" in refused.stderr
+    assert foreign.read_text() == 'option "title" "OTHER LEDGER"\n'
+
+    forced = _bea(tmp_path, "treeify", "-o", "somebody-else.bean", "--force", stdin=ALIGNED)
+
+    assert forced.returncode == 0, forced.stderr
+    assert "`-- Assets" in foreign.read_text()
+
+
+def test_treeify_writes_a_fresh_destination(tmp_path: Path) -> None:
+    """The legitimate use is untouched: a path that is nobody's file is written."""
+    result = _bea(tmp_path, "treeify", "-o", "fresh.bean", stdin=ALIGNED)
+
+    assert result.returncode == 0, result.stderr
+    assert "`-- Assets" in (tmp_path / "fresh.bean").read_text()

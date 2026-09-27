@@ -10,6 +10,7 @@ import typer
 
 from cli.engine import launch
 from cli.errors import ConflictError, UsageError, refuse_json
+from cli.output import forwarded_option
 
 _FORCE = "--force"
 
@@ -21,32 +22,11 @@ def _split_output(args: list[str]) -> tuple[list[str], Path | None, bool]:
     `-o`/`--output` stays, since upstream is what writes it. Only an existing
     destination needs refusing — a fresh path is upstream's normal case.
     """
-    forwarded: list[str] = []
-    output: Path | None = None
-    force = False
-    index = 0
-    while index < len(args):
-        arg = args[index]
-        if arg == "--":
-            forwarded.extend(args[index:])
-            break
-        if arg == _FORCE:
-            force = True
-            index += 1
-            continue
-        if arg in ("-o", "--output"):
-            if index + 1 < len(args):
-                output = Path(args[index + 1])
-                forwarded.extend(args[index : index + 2])
-                index += 2
-                continue
-        elif arg.startswith("--output="):
-            output = Path(arg.split("=", 1)[1])
-        elif arg.startswith("-o") and len(arg) > 2:
-            output = Path(arg[2:])
-        forwarded.append(arg)
-        index += 1
-    return forwarded, output, force
+    stop = args.index("--") if "--" in args else len(args)
+    force = _FORCE in args[:stop]
+    forwarded = [arg for index, arg in enumerate(args) if arg != _FORCE or index > stop]
+    value = forwarded_option(forwarded, "-o", "--output")
+    return forwarded, None if value is None else Path(value), force
 
 
 def example(ctx: typer.Context) -> None:

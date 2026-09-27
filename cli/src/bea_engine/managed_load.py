@@ -498,6 +498,7 @@ class PortableExport:
     files: tuple[str, ...]
     sources: tuple[ManagedSource, ...]
     errors: list[Any]
+    overwritten: tuple[str, ...] = ()
 
 
 def export_portable(
@@ -505,6 +506,7 @@ def export_portable(
     output: Path | None = None,
     *,
     allow_errors: bool = False,
+    force: bool = False,
     offline: bool | None = None,
     strict: bool | None = None,
     origins: tuple[str, ...] | None = None,
@@ -602,6 +604,18 @@ def export_portable(
     for dest in planned:
         if not dest.resolve().is_relative_to(resolved_target):
             raise UsageError(f"Cannot export: {dest} would land outside {target}. Nothing was written.")
+    # A file already at a planned destination is a file the export was never
+    # given: the directory the user picked may be somebody else's ledger, and
+    # replacing it reported success. Re-exporting into a previous snapshot is
+    # the deliberate case, so `--force` is the way past it.
+    existing = [dest for dest in planned if dest.exists() or dest.is_symlink()]
+    if existing and not force:
+        first = min(existing, key=lambda dest: str(dest))
+        more = f" ({len(existing)} files in all)" if len(existing) > 1 else ""
+        raise UsageError(
+            f"Cannot export into {target}: it already holds {first}, which the export would overwrite{more}. "
+            "Choose an empty or dedicated directory, or pass --force to overwrite. Nothing was written."
+        )
     written: list[str] = []
     for path, original in snapshot.contents.items():
         dest = destinations[path]
@@ -619,7 +633,11 @@ def export_portable(
         dest.write_text(_export_feed_text(source, at), encoding="utf-8")
         written.append(str(dest))
     return PortableExport(
-        output=target, files=tuple(sorted(written)), sources=loaded.sources, errors=list(loaded.errors)
+        output=target,
+        files=tuple(sorted(written)),
+        sources=loaded.sources,
+        errors=list(loaded.errors),
+        overwritten=tuple(sorted(str(dest) for dest in existing)),
     )
 
 

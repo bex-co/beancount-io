@@ -630,21 +630,27 @@ def price_export(
         bool,
         typer.Option("--allow-errors", help="Export unavailable sources with their marker alone."),
     ] = False,
+    force: Annotated[
+        bool,
+        typer.Option("--force", help="Overwrite files already at the export's destinations."),
+    ] = False,
 ) -> None:
     """Snapshot the ledger with local price files and relative includes.
 
-    Answers `{"output": ..., "files": [...], "sources": [...], "errors": [...]}`.
+    Answers `{"output": ..., "files": [...], "overwritten": [...], "sources": [...], "errors": [...]}`.
     An unavailable source refuses the export naming it unless `--allow-errors`
-    carries the marker alone.
+    carries the marker alone; a destination that already holds a file refuses it
+    unless `--force`.
     """
     with protocol.answering("price-export") as answer:
         from bea_engine import managed_load
         from bea_engine.query import format_error
 
-        exported = managed_load.export_portable(_ledger(file), output, allow_errors=allow_errors)
+        exported = managed_load.export_portable(_ledger(file), output, allow_errors=allow_errors, force=force)
         answer.data = {
             "output": str(exported.output),
             "files": list(exported.files),
+            "overwritten": list(exported.overwritten),
             "sources": [managed_load.source_json(source) for source in exported.sources],
             "errors": [format_error(error) for error in exported.errors],
         }

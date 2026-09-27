@@ -14,6 +14,7 @@ import json
 import re
 import sys
 import unicodedata
+from collections.abc import Sequence
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, NoReturn
@@ -256,6 +257,72 @@ def refuse_input_alias(destination: Path, source: Path) -> None:
     if _same_file(destination, source):
         raise UsageError(
             f"--output {destination} would overwrite the file it reads ({source}); choose a different destination."
+        )
+
+
+_LEDGER_SUFFIXES = (".bean", ".beancount")
+
+
+def forwarded_option(args: Sequence[str], short: str, long: str) -> str | None:
+    """The value a forwarded option carries, in every spelling its parser accepts.
+
+    A native command takes its arguments as one passthrough list, so an option
+    `bea` must inspect before forwarding has to be found the way the downstream
+    parser finds it: `-o X`, `-oX`, `--output X`, `--output=X`. Assuming one
+    shape is how an aliasing `-omain.bean` slips past a guard. Anything after
+    `--` is a positional argument, not an option. The last spelling wins, which
+    is what the parser downstream does too.
+    """
+    value: str | None = None
+    index = 0
+    while index < len(args):
+        arg = args[index]
+        if arg == "--":
+            break
+        if arg in (short, long):
+            if index + 1 < len(args):
+                value = args[index + 1]
+                index += 2
+                continue
+        elif arg.startswith(f"{long}="):
+            value = arg.split("=", 1)[1]
+        elif arg.startswith(short) and len(arg) > len(short):
+            value = arg[len(short) :]
+        index += 1
+    return value or None
+
+
+def guard_forwarded_output(
+    args: Sequence[str],
+    ledgers: Sequence[Path],
+    *,
+    refuse_existing_ledger_file: bool = False,
+    force: bool = False,
+) -> None:
+    """Apply the output-destination rule to a `-o/--output` that is about to be forwarded.
+
+    One rule for every command that writes where it was told: a destination
+    that is a ledger under read — root or any include, through symlinks and
+    hard links — is refused, and a command that names a ledger file it was
+    never given refuses to replace it without `--force`. Called before the
+    native writer is launched, so a refusal leaves the destination
+    byte-identical.
+    """
+    value = forwarded_option(args, "-o", "--output")
+    if value is None:
+        return
+    destination = Path(value).expanduser()
+    for ledger in ledgers:
+        refuse_ledger_alias(destination, ledger)
+    if (
+        refuse_existing_ledger_file
+        and not force
+        and destination.suffix.lower() in _LEDGER_SUFFIXES
+        and (destination.exists() or destination.is_symlink())
+    ):
+        raise UsageError(
+            f"Already exists: {destination}. Pass --force to overwrite it; "
+            "without it, an existing ledger file is never replaced."
         )
 
 

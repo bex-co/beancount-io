@@ -131,6 +131,30 @@ $ echo $?
 2
 ```
 
+### Output destinations
+
+One rule covers every command that takes an output destination — `query -o`,
+`format -o`, `ingest extract -o`, `treeify -o`, `price export --output`,
+`example -o`: **a `bea` command never replaces a file it was not given.** A
+destination is refused with exit **2**, before anything is written, when it
+
+- is the ledger under read — the root file or anything it includes, in any
+  spelling (`-o X`, `-oX`, `--output X`, `--output=X`), through a symlink or a
+  hard link — including the `-e/--existing` ledger `ingest extract` reads, or
+- would replace a file that did not come from this command: an existing
+  `.bean`/`.beancount` file for `treeify -o`, and any pre-existing file at a
+  path `price export` would write inside the destination directory.
+
+A refusal names the colliding path and leaves the destination byte-identical,
+its file list included. `--force` is the only way past the second case
+(`treeify -o`, `price export`, `example -o`); nothing gets past the first.
+The exceptions are both narrow: `ingest archive -o DIR` files source documents
+into a directory tree rather than writing a ledger, so it keeps upstream's own
+collision handling (exit 1 naming the document), and `example -o` reports its
+existing destination as a conflict with exit **4**, the code it has always
+documented. `query -o` and `format -o` overwrite an ordinary existing export
+file by the usual CLI convention; only ledger files are protected there.
+
 ## Exit codes
 
 | Code | Category | Meaning |
@@ -286,7 +310,10 @@ A location that already resolves, and an absolute one, are passed through
 untouched.
 
 `bea treeify` exits 2 when its input has no hierarchical column to render,
-naming what it looked for — piping plain text is not a tree. `bea ingest`
+naming what it looked for — piping plain text is not a tree. Its `-o`
+destination follows [Output destinations](#output-destinations): the ledger
+under read is refused, and an existing `.bean`/`.beancount` file needs
+`--force`. `bea ingest`
 needs a script that calls `beangulp.Ingest(...)()`; a `CONFIG = [...]`
 import module is refused with exit 2 and pointed at `bea import --config`,
 which is the command that shape belongs to.
@@ -368,11 +395,10 @@ writes the standard JSON envelope to the file with no duplicate stdout output.
 in JSON as well as text. JSON exports replace the destination only after a successful
 query; a failed query or write preserves an existing export.
 
-An `-o` destination that is the ledger under read — the root file or anything
-it includes, under any spelling, symlink, or hard link — is refused with exit
-2 before anything is written, in one-shots and in the interactive shell's
-`.output` alike. The same guard covers `format -o`, and `example -o` refuses
-an existing file unless `--force` is passed.
+An `-o` destination that is the ledger under read is refused with exit 2 before
+anything is written, in one-shots and in the interactive shell's `.output`
+alike — see [Output destinations](#output-destinations) for the one rule every
+command with an output destination follows.
 
 `--format beancount` prints directives, so the query has to return entries:
 `bea query PRINT -f beancount` (or `SELECT entry`) renders them through upstream's
@@ -997,11 +1023,17 @@ include is rewritten relative. `document` attachments under the root's
 directory are copied to the same relative place; one outside that tree, or
 named by an absolute path, refuses the export before anything is written. An
 unavailable source refuses the export unless `--allow-errors` carries its
-marker alone.
+marker alone. The destination follows
+[Output destinations](#output-destinations): a file already at any path the
+export would write refuses it with exit 2, naming the collision and writing
+nothing, and `--force` is the opt-in that overwrites — which is what
+re-exporting into a previous snapshot needs. Under `--json` the answer's
+`overwritten` list names every path `--force` replaced.
 
 ```bash
 bea price export                    # <ledger>-export/ beside the ledger
 bea price export --output audit     # a chosen directory instead
+bea price export --force            # refresh a snapshot this ledger already exported
 ```
 
 A managed URL include resolves only in `bea` (and Beancount.io hosted

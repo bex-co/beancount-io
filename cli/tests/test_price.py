@@ -1490,8 +1490,9 @@ class TestPriceExport:
         text = feed.read_text()
         assert f'custom "bea-managed-source" "BTC-USD" "{feed_server}/prices/BTC-USD" "r1"' in text
         assert "2026-09-10 price BTC 112000.00 USD" in text
-        # Re-exporting is deterministic: the same bytes, not a growing tree.
-        again = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "export")
+        # Re-exporting is deterministic: the same bytes, not a growing tree. It
+        # takes `--force`, since the snapshot the last run wrote is still there.
+        again = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "export", "--force")
         assert again.returncode == 0, again.stderr
         assert feed.read_text() == text
 
