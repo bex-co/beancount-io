@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useScrollToTop } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import {
@@ -292,6 +292,9 @@ function FileRow({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function LedgerFileBrowserScreen(): JSX.Element {
+  const listRef = useRef<FlatList<DirEntry>>(null);
+  useScrollToTop(listRef);
+
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -556,6 +559,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
       ) : (
         <FadeInView fill>
           <FlatList
+            ref={listRef}
             data={sorted}
             contentContainerStyle={styles.listContent}
             contentInsetAdjustmentBehavior="automatic"

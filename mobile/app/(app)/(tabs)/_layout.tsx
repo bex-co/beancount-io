@@ -78,31 +78,53 @@ type TabNavigatorProps = {
  * older iOS releases receive their native translucent tab bar automatically.
  * Deliberately leave background, blur, shadow, sizing, and typography unset so
  * custom appearance values cannot cover or fight the system material.
+ * Each tab's vertical scroll container uses useScrollToTop. Disable native
+ * scroll discovery so wrapped lists and horizontal controls have one target.
  */
 function NativeTabNavigator({ theme, titles }: TabNavigatorProps): JSX.Element {
   const contentStyle = { backgroundColor: theme.white } as const;
 
   return (
     <NativeTabs tintColor={theme.primary} minimizeBehavior="onScrollDown">
-      <NativeTabs.Trigger name="index" contentStyle={contentStyle}>
+      <NativeTabs.Trigger
+        name="index"
+        contentStyle={contentStyle}
+        disableScrollToTop
+      >
         <NativeTabs.Trigger.Label>{titles.home}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={nativeTabIcons.index} />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="accounts" contentStyle={contentStyle}>
+      <NativeTabs.Trigger
+        name="accounts"
+        contentStyle={contentStyle}
+        disableScrollToTop
+      >
         <NativeTabs.Trigger.Label>{titles.accounts}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={nativeTabIcons.accounts} />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="transactions" contentStyle={contentStyle}>
+      <NativeTabs.Trigger
+        name="transactions"
+        contentStyle={contentStyle}
+        disableScrollToTop
+      >
         <NativeTabs.Trigger.Label>
           {titles.transactions}
         </NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={nativeTabIcons.transactions} />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="reports" contentStyle={contentStyle}>
+      <NativeTabs.Trigger
+        name="reports"
+        contentStyle={contentStyle}
+        disableScrollToTop
+      >
         <NativeTabs.Trigger.Label>{titles.reports}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={nativeTabIcons.reports} />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="ledger" contentStyle={contentStyle}>
+      <NativeTabs.Trigger
+        name="ledger"
+        contentStyle={contentStyle}
+        disableScrollToTop
+      >
         <NativeTabs.Trigger.Label>{titles.files}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={nativeTabIcons.ledger} />
       </NativeTabs.Trigger>

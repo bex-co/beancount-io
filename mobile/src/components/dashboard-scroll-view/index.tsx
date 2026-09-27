@@ -1,4 +1,5 @@
-import { ReactNode } from "react";
+import { ReactNode, useRef } from "react";
+import { useScrollToTop } from "expo-router";
 import {
   RefreshControl,
   type RefreshControlProps,
@@ -63,6 +64,9 @@ export function DashboardScrollView({
   contentContainerStyle,
   children,
 }: Props): JSX.Element {
+  const scrollRef = useRef<ScrollView>(null);
+  useScrollToTop(scrollRef);
+
   // The resolved theme, not `themeVar` — that holds the *setting*, which can be
   // "system", and comparing it to "dark" gave every system-theme user the light
   // indicator on a dark screen.
@@ -70,6 +74,7 @@ export function DashboardScrollView({
 
   return (
     <ScrollView
+      ref={scrollRef}
       showsVerticalScrollIndicator={false}
       alwaysBounceVertical
       // Native iOS tabs float above content. UIKit uses this inset to let the

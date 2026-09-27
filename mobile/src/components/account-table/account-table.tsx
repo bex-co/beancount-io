@@ -1,4 +1,5 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { useScrollToTop } from "expo-router";
 import {
   FlatList,
   StyleSheet,
@@ -455,6 +456,9 @@ export function AccountTable({
   onRefresh,
   onPressAccount,
 }: AccountTableProps): JSX.Element {
+  const listRef = useRef<FlatList<TableRow>>(null);
+  useScrollToTop(listRef);
+
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const { fontScale } = useWindowDimensions();
@@ -489,6 +493,7 @@ export function AccountTable({
 
   return (
     <FlatList
+      ref={listRef}
       style={styles.list}
       contentContainerStyle={styles.listContent}
       contentInsetAdjustmentBehavior="automatic"

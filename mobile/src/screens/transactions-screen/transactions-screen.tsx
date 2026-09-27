@@ -1,6 +1,6 @@
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
-import { useMemo, useCallback, useState } from "react";
-import { useRouter } from "expo-router";
+import { useMemo, useCallback, useRef, useState } from "react";
+import { useRouter, useScrollToTop } from "expo-router";
 import {
   ActivityIndicator,
   SectionList,
@@ -90,6 +90,10 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 const TransactionList = () => {
+  const listRef =
+    useRef<SectionList<JournalDirectiveType, JournalSection>>(null);
+  useScrollToTop(listRef);
+
   const ledgerId = useLedgerGuard();
   const { canWrite } = useLedgerAccess();
   const router = useRouter();
@@ -258,6 +262,7 @@ const TransactionList = () => {
         }
       />
       <SectionList
+        ref={listRef}
         ListHeaderComponent={
           <TransactionsHeader
             searchQuery={searchQuery}
