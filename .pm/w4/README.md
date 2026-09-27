@@ -4,7 +4,7 @@
 
 ## Milestones
 
-- [ ] **m27** — [Say which prices are stale, and only when they are](./m27/README.md) (7 tasks) ← user design review of m26's headline, 2026-09-26
+- [x] **m27** — [Say which prices are stale, and only when they are](./done/m27/README.md) (7 tasks) ← user design review of m26's headline, 2026-09-26
 
 - [x] **m26** — [Value Home and Accounts at market value, and say so on web and mobile](./done/m26/README.md) (10 tasks) ← user decision 2026-09-26 in a PM review of the Home net-worth basis; supersedes m11's display rules 1–2 and folds in w4/027 and w4/068
 

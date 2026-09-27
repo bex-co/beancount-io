@@ -1,10 +1,10 @@
 # w4 · m27 — Say which prices are stale, and only when they are
 
-**Worker:** worker1 **Goal:** Net Worth's headline stays quiet when every price is current. It names stale prices by count and oldest date, judged per holding by how that holding is normally priced, and the detail (each holding's price date, what is valued at cost or left out, and how to update) sits one tap away. **Status:** in progress (t001–t005 done)
+**Worker:** worker1 **Goal:** Net Worth's headline stays quiet when every price is current. It names stale prices by count and oldest date, judged per holding by how that holding is normally priced, and the detail (each holding's price date, what is valued at cost or left out, and how to update) sits one tap away. **Status:** done
 
 ## Display rule
 
-The user decided this on 2026-09-26 after a design review of [m26](../done/m26/README.md). It replaces m26's rule 4, which put a price date on every headline. The review found two problems. On `open_ledger/crypto-example`, the oldest price date across all holdings made BTC, priced 9/26, read as "as of Sep 15". And listing tickers in the headline would outweigh the figure itself.
+The user decided this on 2026-09-26 after a design review of [m26](../m26/README.md). It replaces m26's rule 4, which put a price date on every headline. The review found two problems. On `open_ledger/crypto-example`, the oldest price date across all holdings made BTC, priced 9/26, read as "as of Sep 15". And listing tickers in the headline would outweigh the figure itself.
 
 1. **Headline status line, at most one line.** The line always starts with `At market value`, and three optional items can follow it:
    - `N prices not updated since <oldest stale date>`, with the warning icon, only when some holding is stale;
@@ -29,8 +29,8 @@ Out of scope for now: a holding's share of net worth in the warning (it needs pr
 | t003 | Verify on the example, crypto-example and cash-only ledgers — **DONE** | 30m | t001, t002 |
 | t004 | Adoption surface — **DONE** | 15m | t003       |
 | t005 | Simplify — **DONE** | 20m | t004       |
-| t006 | Test coverage                                                      | 30m | t004       |
-| t007 | Closeout                                                           | 10m | t005, t006 |
+| t006 | Test coverage — **DONE** | 30m | t004       |
+| t007 | Closeout — **DONE** | 10m | t005, t006 |
 
 ## Definition of done
 
