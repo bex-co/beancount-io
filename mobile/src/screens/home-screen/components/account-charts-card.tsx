@@ -26,11 +26,12 @@ export type ChartKey = "netWorth" | "assets" | "liabilities";
 
 const CHART_HEIGHT = 170;
 // PagerView needs a bounded height, and every page is the same shape: the
-// chart's header (basis caption + value + change, and Net Worth's cost basis)
-// plus the plot. This is the floor and the pre-measurement default — the header
-// is text-driven, so the live height comes from `chartPageHeight` once a page
-// reports its header's layout.
-const PAGE_HEIGHT = 260;
+// chart's header (value + change, and Net Worth's cost basis) plus the plot.
+// The status line sits above the pager, not in it (see `header` below). This is
+// the floor and the pre-measurement default — the header is text-driven, so
+// the live height comes from `chartPageHeight` once a page reports its
+// header's layout.
+const PAGE_HEIGHT = 240;
 /** Height the range pills add below the pager — the skeleton covers it too. */
 const PILLS_HEIGHT = 40;
 /** Widths of the skeleton's tab pills — uneven, so it reads as labels. */
@@ -63,6 +64,23 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.md,
     fontWeight: fontWeights.medium,
     marginEnd: space.xxs,
+  },
+  // Same inset and type as the chart's own header, which it sits directly
+  // above; the chevron trails the last line of a wrapped status.
+  caption: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    paddingHorizontal: 16,
+    marginBottom: 2,
+  },
+  captionText: {
+    flexShrink: 1,
+    fontSize: fontSizes.md,
+    fontWeight: fontWeights.medium,
+  },
+  captionChevron: {
+    marginStart: 2,
+    marginBottom: 2,
   },
 });
 
@@ -107,6 +125,10 @@ export function AccountChartsCard({
   const theme = useTheme().colorTheme;
   const router = useRouter();
   const [range, setRange] = useState<TimeRange>("6M");
+  const [activeIndex, setActiveIndex] = useState(0);
+  // Tallest status line any page has shown, so switching tabs never moves the
+  // pager: the line sits above it, outside the measured page header.
+  const [captionHeight, setCaptionHeight] = useState(0);
   // Tallest header any page has reported. Max, not last: the three pages carry
   // different amounts and only one is measured at a time, so the pager has to be
   // tall enough for whichever is showing.
@@ -185,9 +207,6 @@ export function AccountChartsCard({
     return (
       <InteractiveLineChartD3
         key={key}
-        label={captions[key]}
-        onLabelPress={onCaptionPress ? () => onCaptionPress(key) : undefined}
-        labelAccessibilityHint={t("valuationDetailsHint")}
         footnote={footnotes[key]}
         labels={chart.labels}
         numbers={chart.numbers}
@@ -199,6 +218,8 @@ export function AccountChartsCard({
     );
   });
 
+  const activeCaption = captions[charts[activeIndex].key];
+
   return (
     <DashboardCard bleed>
       {/* Crossfades in over the skeleton, which is sized to this same block. */}
@@ -208,6 +229,41 @@ export function AccountChartsCard({
           pages={pages}
           height={pageHeight}
           trailing={seeAll}
+          onPageChange={setActiveIndex}
+          header={
+            <View style={{ minHeight: captionHeight }}>
+              {activeCaption !== undefined && (
+                <PressableScale
+                  style={styles.caption}
+                  onPress={
+                    onCaptionPress
+                      ? () => onCaptionPress(charts[activeIndex].key)
+                      : undefined
+                  }
+                  disabled={!onCaptionPress}
+                  accessibilityRole="button"
+                  accessibilityLabel={activeCaption}
+                  accessibilityHint={t("valuationDetailsHint")}
+                  onLayout={(event) => {
+                    const height = event.nativeEvent.layout.height;
+                    setCaptionHeight((previous) => Math.max(previous, height));
+                  }}
+                >
+                  <Text style={[styles.captionText, { color: theme.black80 }]}>
+                    {activeCaption}
+                  </Text>
+                  {onCaptionPress && (
+                    <Ionicons
+                      name={directionalIcon("chevron-forward")}
+                      size={14}
+                      color={theme.black80}
+                      style={styles.captionChevron}
+                    />
+                  )}
+                </PressableScale>
+              )}
+            </View>
+          }
         />
         {/* Outside the pager: one row of pills driving whichever curve is
             shown, so switching tabs keeps the selected range. */}

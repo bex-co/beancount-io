@@ -1,6 +1,6 @@
 # w4 · m27 — Say which prices are stale, and only when they are
 
-**Worker:** worker1 **Goal:** Net Worth's headline stays quiet when every price is current. It names stale prices by count and oldest date, judged per holding by how that holding is normally priced, and the detail (each holding's price date, what is valued at cost or left out, and how to update) sits one tap away. **Status:** in progress (t001, t002 done; t003 web half observed)
+**Worker:** worker1 **Goal:** Net Worth's headline stays quiet when every price is current. It names stale prices by count and oldest date, judged per holding by how that holding is normally priced, and the detail (each holding's price date, what is valued at cost or left out, and how to update) sits one tap away. **Status:** in progress (t001–t003 done)
 
 ## Display rule
 
@@ -26,7 +26,7 @@ Out of scope for now: a holding's share of net worth in the warning (it needs pr
 | ---- | ------------------------------------------------------------------ | --- | ---------- |
 | t001 | Mobile: per-holding staleness, compact status, detail sheet — **DONE** | 60m | —          |
 | t002 | Web: per-holding staleness, compact status, detail popover — **DONE** | 60m | —          |
-| t003 | Verify on the example, crypto-example and cash-only ledgers        | 30m | t001, t002 |
+| t003 | Verify on the example, crypto-example and cash-only ledgers — **DONE** | 30m | t001, t002 |
 | t004 | Adoption surface                                                   | 15m | t003       |
 | t005 | Simplify                                                           | 20m | t004       |
 | t006 | Test coverage                                                      | 30m | t004       |
@@ -58,6 +58,15 @@ Out of scope for now: a holding's share of net worth in the warning (it needs pr
 - **`open_ledger/minimax`:** no status line.
 - **Console:** one hydration warning, from `QuickAskInput`'s input attributes. It is unrelated to this change.
 
-**Mobile:** the selectors and unit tests reproduce these outcomes, including example's `6 prices not updated since Sep 8, 2017 · 1 not in total`. The on-screen check is pending, because the user stopped all Metro processes and a new check needs their go-ahead to borrow the simulator.
+**Mobile**, observed 2026-09-26 in this checkout's bundle on the simulator's signed-in Expo Go session (iPhone 17 Pro, iOS 26.5, app language Chinese). The session's active ledger and theme were restored afterwards.
+
+- **`open_ledger/example`, Home, light theme:** `按市值计 · 6 个价格自 2017年9月8日 起未更新 · 1 项未计入合计`, then `$117,649.49`, then `成本 $106,826.05 · 浮动盈亏 +$10,823.44`. Tapping the line opens the sheet, which lists the six funds at `价格 2017年9月8日 ⚠ 未更新`, `-13 VACHR` at `未计入合计`, and the button `在网页上更新价格`.
+- **`open_ledger/example`, Accounts:** the Assets root carries the same compact status line.
+- **`open_ledger/crypto-example`, Home, dark theme:** only `按市值计 ›`, then `$194,558.92` (live prices move) and a cost line. The sheet lists nine holdings at `实时价格 · 2026年9月26日`, and AETH, CUSDC, STETH and WETH at `价格 2026年9月15日` with no marker.
+- **Fixed during this check:**
+  - **The sheet did not open.** A press inside the chart pager's pages never reached the status line; only the chart's native scrub gesture works there. The status line now renders in a new `header` slot of `SegmentedPages`, above the pager, and `InteractiveLineChart` is back to a plain text label.
+  - **Page height floor:** the pager's floor returned to 240, since the status line no longer sits inside the page.
+  - **Close label:** the sheet's close button used the `close` key, which is the Beancount `close` directive (`关户` in Chinese), so it now uses `done`.
+- **Gates after the fixes:** `yarn format:check`, `yarn lint`, `yarn typecheck`, and `yarn test:unit` (1930) pass.
 
 **Recorded deviation:** the dashboard's overview translation module has no plural forms, so web reads `Prices not updated since <date>: N` and `Not in total: N`, while mobile reads `N prices not updated since <date>` and `N not in total`.

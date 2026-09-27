@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Svg, {
   Path,
@@ -41,7 +40,7 @@ import {
   shouldTickHaptic,
   shownScrubIndex,
 } from "./scrub";
-import { directionalIcon, LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
+import { LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
 import { ChartErrorBoundary } from "./chart-chrome";
 import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
 import { changePercent } from "./change-percent";
@@ -65,13 +64,6 @@ type InteractiveLineChartProps = {
    * heading isn't duplicated.
    */
   label?: string;
-  /**
-   * Makes the heading a button that opens what it summarizes (Home's status
-   * line opens the holdings behind it). The heading then carries a chevron.
-   */
-  onLabelPress?: () => void;
-  /** Screen-reader hint for `onLabelPress`. */
-  labelAccessibilityHint?: string;
   /**
    * Static line under the change row about the resting figure (e.g. Home's
    * "Cost $106,826.05 · Unrealized +$10,823.44"). Hidden, not removed, while
@@ -280,18 +272,6 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black80,
       textAlign: LEADING_TEXT_ALIGN,
     },
-    // Chevron trails the last line of a wrapped status line.
-    labelButton: {
-      flexDirection: "row",
-      alignItems: "flex-end",
-    },
-    labelPressable: {
-      flexShrink: 1,
-    },
-    labelChevron: {
-      marginStart: 2,
-      marginBottom: 2,
-    },
     headline: {
       fontSize: fontSizes.display,
       fontWeight: fontWeights.medium,
@@ -468,8 +448,6 @@ function ScrubHeader({
 
 function InteractiveLineChart({
   label,
-  onLabelPress,
-  labelAccessibilityHint,
   footnote,
   labels,
   numbers,
@@ -726,28 +704,7 @@ function InteractiveLineChart({
               : undefined
           }
         >
-          {label !== undefined &&
-            (onLabelPress ? (
-              <Pressable
-                onPress={onLabelPress}
-                accessibilityRole="button"
-                accessibilityLabel={label}
-                accessibilityHint={labelAccessibilityHint}
-                style={styles.labelButton}
-              >
-                <Text style={[styles.label, styles.labelPressable]}>
-                  {label}
-                </Text>
-                <Ionicons
-                  name={directionalIcon("chevron-forward")}
-                  size={14}
-                  color={theme.black80}
-                  style={styles.labelChevron}
-                />
-              </Pressable>
-            ) : (
-              <Text style={styles.label}>{label}</Text>
-            ))}
+          {label !== undefined && <Text style={styles.label}>{label}</Text>}
           <ScrubHeader
             footnote={footnote}
             labels={labels}

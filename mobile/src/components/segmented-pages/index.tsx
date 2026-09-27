@@ -105,6 +105,12 @@ type SegmentedPagesProps = {
    * account-charts "See all"). Stays visible while the tabs scroll.
    */
   trailing?: ReactNode;
+  /**
+   * Rendered between the tab row and the pager, outside both. Controls that
+   * must receive taps belong here: the pager's pages only pass through the
+   * chart's native scrub gesture, not presses.
+   */
+  header?: ReactNode;
 };
 
 /**
@@ -120,6 +126,7 @@ export function SegmentedPages({
   initialIndex = 0,
   onPageChange,
   trailing,
+  header,
 }: SegmentedPagesProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -224,6 +231,7 @@ export function SegmentedPages({
           <View style={styles.trailing}>{trailing}</View>
         ) : null}
       </View>
+      {header}
       <PagerView
         ref={pagerRef}
         style={[styles.pager, { height }]}

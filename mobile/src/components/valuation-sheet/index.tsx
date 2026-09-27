@@ -164,7 +164,7 @@ export function ValuationSheet({
         style={styles.overlay}
         onPress={onClose}
         accessibilityRole="button"
-        accessibilityLabel={t("close")}
+        accessibilityLabel={t("done")}
       >
         <Pressable
           style={[styles.sheet, { paddingBottom: insets.bottom }]}
@@ -181,9 +181,9 @@ export function ValuationSheet({
               onPress={onClose}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel={t("close")}
+              accessibilityLabel={t("done")}
             >
-              <Text style={styles.close}>{t("close")}</Text>
+              <Text style={styles.close}>{t("done")}</Text>
             </Pressable>
           </View>
           <ScrollView>
