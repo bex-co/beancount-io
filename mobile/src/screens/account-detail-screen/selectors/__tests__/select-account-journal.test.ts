@@ -439,6 +439,42 @@ describe("account-journal rows in a commodity's units", () => {
     expect(near(row.units?.cost, 150.0202)).toBe(true);
   });
 
+  it("costs a sale across lots bought at different prices, lot by lot", () => {
+    // Selling 3 shares reduces two lots: 2 bought at 80 USD, 1 at 90 USD.
+    // Averaging the lots would give 255; the at-cost journal gives 250.
+    const [row] = selectAccountJournalRows(
+      "USD",
+      [
+        item(
+          {
+            entry_hash: "s",
+            postings: [
+              {
+                account: RGAGX,
+                units: { number: "-2", currency: "RGAGX" },
+                cost: { number: "80", currency: "USD" },
+              },
+              {
+                account: RGAGX,
+                units: { number: "-1", currency: "RGAGX" },
+                cost: { number: "90", currency: "USD" },
+              },
+              {
+                account: "Assets:US:Vanguard:Cash",
+                units: { number: "285", currency: "USD" },
+              },
+            ],
+          },
+          { RGAGX: "-3" },
+          { RGAGX: "594.748" },
+        ),
+      ],
+      { account: RGAGX, currency: "RGAGX" },
+    );
+    expect([row.change, row.balance]).toEqual([-3, 594.748]);
+    expect(near(row.units?.cost, -250)).toBe(true);
+  });
+
   it("gives no cost to a commodity whose postings carry none", () => {
     const [row] = selectAccountJournalRows(
       "USD",
