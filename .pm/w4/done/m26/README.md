@@ -4,7 +4,7 @@
 
 ## Valuation rule
 
-The user decided this on 2026-09-26 in a PM review of the Home net-worth basis. For balances, it replaces rules 1 and 2 of [w4/m11](../../blocked/m11/README.md#display-rule). m11's rules 3–5 still hold: commodity accounts lead with units, nothing non-empty reads as zero, and totals name what they leave out.
+The user decided this on 2026-09-26 in a PM review of the Home net-worth basis. For balances, it replaces rules 1 and 2 of [w4/m11](../../m11/README.md#display-rule). m11's rules 3–5 still hold: commodity accounts lead with units, nothing non-empty reads as zero, and totals name what they leave out.
 
 1. **Balances are valued at market.** These read `conversion: "at_value"`: on web Home, Net Worth, Account balances and the assets and liabilities distribution charts; on mobile, Home, the Accounts tab, and the account detail header and chart.
 2. **Flows and history stay at cost.** Web Home's Money movement, Income vs Expenses and Cash flow keep the existing `at_cost` overview read. Mobile Reports, every journal and every running balance keep `at_cost` (or `units`). Every web report page keeps its `At Cost` default and its selector.
@@ -70,7 +70,7 @@ Carried from [w4/027](../../README.md#dropped), which was dropped into this mile
 
 - **`puncsky/example`, 2026-09-13, HEAD `038faeeb`:** Home read `$106,723.05`, which is exactly `sum(cost(position))` over Assets and Liabilities. Assets `sum(value(position))` is `USD 125,669.83828`, so net worth at the ledger's own latest prices is `$117,546.49`: `$10,823.44`, or 10.1%, above the figure shown.
 - **Prices in that ledger:** `#prices` holds 141 points each for `GLD`, `ITOT`, `RGAGX`, `VBMPX`, `VEA` and `VHT`, from 2015-01-02 to 2017-09-08. `VACHR` and `IRAUSD` carry no price and no cost.
-- **`open_ledger/example`, 2026-09-15 ([m11 implementation evidence](../../blocked/m11/README.md#implementation-evidence)):** Home read `$106,826.05` at cost, with the note `Not in total: -13 VACHR`.
+- **`open_ledger/example`, 2026-09-15 ([m11 implementation evidence](../../m11/README.md#implementation-evidence)):** Home read `$106,826.05` at cost, with the note `Not in total: -13 VACHR`.
 - **Current code:** web Home hard-codes `conversion: "at_cost"` in `dashboard/src/features/reports/overview/constants.ts`, and its Net Worth card describes itself only as "Assets plus liabilities over the last 12 months". Mobile hard-codes `BALANCE_CONVERSION = "at_cost"` in `mobile/src/common/balance-util.ts`.
 
 ## Verification record

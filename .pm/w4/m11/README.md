@@ -1,22 +1,14 @@
 # w4 · m11 — Mobile says what a converted balance means: units for commodities, labelled cost basis, disclosed omissions
 
-**Worker:** worker1 **Goal:** every balance the mobile app shows for a ledger that holds commodities says what it is — a commodity account shows its recorded units, a converted total says it is at cost, and a holding that cannot be converted is named instead of reading `$0.00` or vanishing from Net Worth **Status:** blocked — see [Blocked](#blocked) (t001–t004 done; t005 needs a signed-in app session)
+**Worker:** worker1 **Goal:** every balance the mobile app shows for a ledger that holds commodities says what it is — a commodity account shows its recorded units, a converted total says it is at cost, and a holding that cannot be converted is named instead of reading `$0.00` or vanishing from Net Worth **Status:** in progress (t001–t004 done)
 
 ## Blocked
 
-**Blocked 2026-09-15 by `/loop-worker w4` after the implementation shipped.** t001–t004 are done and shipped in `mobile/`. The `/simplify` pass (t007's work) and the new tests (t008's work) shipped with them, but both tasks stay open because they depend on t006. `yarn typecheck`, `yarn lint` (with dead-code detection), `yarn format:check`, and `yarn test:unit` (1820 tests) pass. The display rule was checked against live public API data for `open_ledger/example` and `open_ledger/crypto-example` through the shipped selectors; see [Implementation evidence](#implementation-evidence).
-
-What remains needs a signed-in app. t005 checks the rule on screen, and the worker could not run it: the development build is signed out, a `beancount:///ledger/open_ledger/example` link stays on the welcome screen while signed out, and there is no `mobile/.env` holding the QA account the mobile QA workflow signs in with. t006 (showcase and store images) follows from what t005 shows.
-
-**Unblock:** put `QA_EMAIL` and `QA_PASSWORD` in the gitignored `mobile/.env`, or sign the development build in. Then move this directory back to `.pm/w4/m11/` and continue from t005, then t006, t007, t008, and t009. The workstream checkbox stays unchecked until closeout.
-
-The evidence notes [w4/016](../016.md) and w4/027, and the follow-up idea w4/068, moved into `blocked/` beside this milestone. On 2026-09-26, w4/027 and w4/068 were dropped into [w4/m26](../../done/m26/README.md) (see the [tombstones](../../README.md#dropped)).
-
-**Superseded in part, 2026-09-26.** The user moved balances to market value in [w4/m26](../../done/m26/README.md#valuation-rule). Its valuation rule replaces rules 1 and 2 below for Home, the Accounts tree, and the account detail header and chart, and it changes rule 3's secondary figure from "cost" to "market, or cost when the commodity has no price". Rules 4 and 5 and the Transactions scale rule still stand. t005 therefore checks rules 3–5 here and m26's rule in [m26/t006](../../done/m26/done/t006.md), in the same signed-in session. The definition-of-done bullets that say "at cost" and `sum(cost(position))` are read against m26's `at market` and `sum(value(position))`.
+**Unblocked 2026-09-26.** A signed-in app session is available: the simulator's Expo Go session runs this checkout's bundle. It is the same path w4/m26 and w4/m27 used for their on-screen checks. The work continues from t005.
 
 ## Display rule
 
-Decided 2026-09-15, when the user approved `/pm-brainstorm for w4` item 2. It resolves the open question that blocked [w4/016](../016.md) and w4/027. Every task applies it to the Accounts tree, the account detail header, journal rows, the running balance, and Home's Net Worth together, so the screens keep agreeing.
+Decided 2026-09-15, when the user approved `/pm-brainstorm for w4` item 2. It resolves the open question that blocked [w4/016](../blocked/016.md) and w4/027. Every task applies it to the Accounts tree, the account detail header, journal rows, the running balance, and Home's Net Worth together, so the screens keep agreeing.
 
 1. **Totals stay at cost.** `BALANCE_CONVERSION` stays `"at_cost"`. Operating-currency totals do not change, and the Accounts tree and Home keep agreeing to the cent.
 2. **Converted totals state their basis.** Home's Net Worth and the Accounts totals carry an "at cost" label.
@@ -24,7 +16,7 @@ Decided 2026-09-15, when the user approved `/pm-brainstorm for w4` item 2. It re
 4. **A non-empty account never reads as zero.** A commodity with no cost currency (`-8 VACHR`) shows its units and stays distinguishable from a genuinely empty account.
 5. **Totals disclose what they leave out.** A parent, a root, or Net Worth whose holdings include commodities it cannot express in the operating currency names them, reusing the merchant header's one-line-per-currency shape (`merchant-detail-screen.tsx`, `totalsByCurrency`).
 
-Not part of this rule: a cost / market value / units toggle (w4/068, dropped 2026-09-26 in favour of [w4/m26](../../done/m26/README.md)); converting the Transactions list, which keeps its recorded scale (`w3/done/109`); any change to the ledger itself.
+Not part of this rule: a cost / market value / units toggle (w4/068, dropped 2026-09-26 in favour of [w4/m26](../done/m26/README.md)); converting the Transactions list, which keeps its recorded scale (`w3/done/109`); any change to the ledger itself.
 
 ## Tasks (in order)
 
@@ -51,7 +43,7 @@ Not part of this rule: a cost / market value / units toggle (w4/068, dropped 202
 
 ## Source + Goal linkage
 
-- **Source:** promoted from [w4/016](../016.md) (native QA, 2026-09-13, major) with w4/027 folded in (the valuation-basis decision). Both were blocked on a display decision, which the user made by approving `/pm-brainstorm for w4` item 2 on 2026-09-15. w4/016 stays in the open tree as evidence until closeout, following the `w3/038` precedent. w4/027 was dropped into [w4/m26](../../done/m26/README.md) on 2026-09-26, when the user reversed its valuation decision.
+- **Source:** promoted from [w4/016](../blocked/016.md) (native QA, 2026-09-13, major) with w4/027 folded in (the valuation-basis decision). Both were blocked on a display decision, which the user made by approving `/pm-brainstorm for w4` item 2 on 2026-09-15. w4/016 stays in the open tree as evidence until closeout, following the `w3/038` precedent. w4/027 was dropped into [w4/m26](../done/m26/README.md) on 2026-09-26, when the user reversed its valuation decision.
 - **Goal linkage:** **A2 — Frictionless onboarding:** a newcomer's first look at their balances and net worth is truthful, instead of a number 10% below their brokerage with no explanation, or a real holding shown as `$0.00`. **A3 — Community & distribution:** the public example ledgers, including `open_ledger/crypto-example`, are the app's showcase, and today they misrepresent what they hold.
 - **Expected outcome:** a mobile user holding investments, crypto, or non-money commodities can read every account and total without cross-checking BQL. Each figure says whether it is units or cost, and nothing non-empty reads as zero.
 - **Why now:** showing a real balance as `$0.00` and silently dropping it from Net Worth is a correctness defect, not polish. Triage already traced the cause to the client's own `BALANCE_CONVERSION = "at_cost"` request, so the change is mobile-only, and the display decision was the only blocker. The merchant header already renders one line per currency, so the shape exists in the app.
@@ -59,7 +51,7 @@ Not part of this rule: a cost / market value / units toggle (w4/068, dropped 202
 
 ## Evidence
 
-Reproductions, BQL results, and the screenshot index live in [w4/016](../016.md), and w4/027's valuation evidence now lives in [w4/m26](../../done/m26/README.md#evidence). In short, from the Beancount example ledger at HEAD `038faeeb`:
+Reproductions, BQL results, and the screenshot index live in [w4/016](../blocked/016.md), and w4/027's valuation evidence now lives in [w4/m26](../done/m26/README.md#evidence). In short, from the Beancount example ledger at HEAD `038faeeb`:
 
 - `RGAGX` holds `597.748 RGAGX` and is shown only as `$49,049.67`, which is exactly `sum(cost(position))`.
 - `Hoogle:Vacation` holds `-8 VACHR` and is shown as `$0.00`, the same as the genuinely empty `Federal:PreTax401k`.
