@@ -1,6 +1,6 @@
 # ADR 002: Cash Flow Report — statement page, charts, exports, and account status
 
-- Status: Accepted (shipped as w4/m2)
+- Status: Done (shipped as w4/m2; implementation reviewed 2026-09-27)
 - Date: 2026-08-20
 - Decision owners: Dashboard (client only — no backend changes)
 - Scope: a new cash-flow report page (`/ledger/$ledgerOwner/$ledgerName/cash-flow`) with charts, a three-activity statement, CSV/Markdown/print exports, and a cash-account status panel — what it contains, where its data comes from, and how the export model expands to a third statement kind.

@@ -1,6 +1,6 @@
 # ADR: `.well-known` paths — one index for every one of them
 
-- Status: Accepted
+- Status: Done (path index and implementation reviewed 2026-09-27)
 - Date: 2026-08-25
 - Decision owners: Backend (`backend-cluster/backend-v2`)
 - Scope: every `/.well-known/*` path served by, proxied to, or referenced about Beancount.io. What exists today, who serves it, and every file that has to change together when a path is added or moved.

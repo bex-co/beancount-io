@@ -1,9 +1,9 @@
 # ADR 003: Cash-Flow Classification Declared in the Ledger (`cash-flow-role`)
 
-- Status: Accepted
+- Status: Done (shipped as w4/m3; implementation reviewed 2026-09-27)
 - Date: 2026-08-25
 - Decision owners: Dashboard (resolver + consumers), Backend (expose `open` metadata via GraphQL)
-- Scope: a single metadata key on `open` directives that overrides the cash-flow report's heuristic classification — its values, precedence, validation, and consumers. Working-backwards source: [PRFAQ — Declare Your Cash-Flow Classification in the Ledger](./PRFAQ-cash-flow-ledger-classification.md) (its appendix is the normative spec). Implementing milestone: `.pm/w4/m3/`. Extends [ADR002](./ADR002-cash-flow-report.md), which shipped the report with heuristic-only classification.
+- Scope: a single metadata key on `open` directives that overrides the cash-flow report's heuristic classification — its values, precedence, validation, and consumers. Working-backwards source: [PRFAQ — Declare Your Cash-Flow Classification in the Ledger](../../dashboard/docs/PRFAQ-cash-flow-ledger-classification.md) (its appendix is the normative spec). Implementing milestone: [w4/m3 (done)](../../.pm/w4/done/m3/README.md). Extends [ADR002](./ADR002-dashboard-cash-flow-report.md), which shipped the report with heuristic-only classification.
 
 ## Context
 
@@ -88,4 +88,4 @@ Internal:
 - `docs/adrs/ADR002-dashboard-cash-flow-report.md` — the heuristic-only report this ADR extends (see its "User-tagged classification via account metadata" deferred alternative)
 - `dashboard/src/features/reports/cash-flow/lib/role-resolver.ts` — the shared resolver (`resolveCashFlowRole`)
 - `dashboard/src/features/reports/cash-flow/config.ts` — the published fallback heuristics (`CASH_FLOW_ACTIVITY_BY_ROOT` + `CASH_EQUIVALENT_PATTERNS`)
-- `.pm/w4/m3/` — implementing milestone
+- `.pm/w4/done/m3/` — completed implementing milestone

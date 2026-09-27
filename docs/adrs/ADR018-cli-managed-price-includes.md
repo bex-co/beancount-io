@@ -1,6 +1,6 @@
 # ADR 018: Managed price includes in the `bea` CLI
 
-- Status: Accepted (2026-09-19), documenting the design shipped as `.pm` milestone w1/m29 (commits `4ed7e101`…`358ba4dc`).
+- Status: Done (implementation and authentication amendment reviewed 2026-09-27). Accepted 2026-09-19, documenting the design shipped as `.pm` milestone w1/m29 (commits `4ed7e101`…`358ba4dc`).
 - Decision owner: CLI (`cli/`)
 - Contract mirrored: [ADR 015](ADR015-ledger-managed-price-includes.md). Implements the CLI row of [PRFAQ002](../prfaqs/PRFAQ002-include-live-price.md) FAQ 16, and its FAQ 12 requirement 5 ("controlled cache files for the local loader") and FAQ 9 compatibility boundary.
 

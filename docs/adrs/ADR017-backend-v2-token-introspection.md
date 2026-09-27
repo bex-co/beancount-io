@@ -1,6 +1,6 @@
 # ADR: Token introspection — one endpoint for three credential kinds
 
-- Status: Accepted
+- Status: Done (REST and GraphQL implementation reviewed 2026-09-27; the documented MCP exception is preserved)
 - Date: 2026-09-18
 - Decision owners: Backend (`backend-cluster/backend-v2`)
 - Scope: the contract of the token introspection endpoint — what `active` means for each credential kind, who may call it, what the response says, and what it deliberately does not try to be.

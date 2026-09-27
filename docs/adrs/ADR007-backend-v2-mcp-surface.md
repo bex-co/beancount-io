@@ -1,6 +1,6 @@
 # ADR 0007: The MCP surface — one stateless endpoint, and the rules that keep it honest
 
-- Status: Accepted. D3 and D5 were already in force; D2, D6, D7, D8 and D9 have landed and D10 is partly completed; D1 and the remainder of D10 need access to a deployment rather than a change to this repo; **D11 (multi-ledger) is accepted and unimplemented** (see [Implementation status](#implementation-status-2026-08-24)). Cross-surface parity moved to its own record, [ADR 0008](./ADR008-backend-v2-surface-parity.md).
+- Status: Accepted — repository implementation includes D11 (multi-ledger); D10 production migration and post-deploy conformance verification remain unconfirmed. See [Implementation review](#implementation-review-2026-09-27). Cross-surface parity moved to its own record, [ADR 0008](./ADR008-backend-v2-surface-parity.md).
 - Date: 2026-08-24
 - Decision owners: Backend (route, registry, transport, error translation), Deploy (routing, secrets, migrations)
 - Scope: `POST /api-gateway/mcp` — the Model Context Protocol endpoint an external agent connects to. What its address is, which HTTP methods it answers, which credentials reach it, how a refusal is phrased, and which deployment facts are part of its contract rather than tribal knowledge. Extends ADR 0006, which established the three-surface model; this ADR is about the third surface specifically.
@@ -275,6 +275,14 @@ A deploy is not "MCP-ready" until all seven hold. `yarn mcp:conformance <base-ur
 5. A ledger-scoped key with `ledger.read` only receives `isError: true` for `editLedgerFiles`.
 6. An unexpected internal error returns `"Internal server error"`, with the detail in logs only.
 7. The public URL advertised to users is one of the addresses above, verified by requesting it.
+
+## Implementation review (2026-09-27)
+
+- **D1's canonical address is established.** [Client documentation](../../backend-cluster/backend-v2/docs/mcp.md) uses `/api-gateway/mcp`, and [ADR 019's 2026-09-25 probe](./ADR019-backend-v2-mcp-host-compatibility.md#what-a-probe-found-2026-09-25) records the public endpoint and its working discovery chain. The optional `/mcp` alias is not required for completion.
+- **D11 is implemented.** [MCP tools](../../backend-cluster/backend-v2/src/features/ai-agent/api/mcp-tools.ts) expose `listLedgers` and optional per-call ledger selection; [target resolution](../../backend-cluster/backend-v2/src/features/ai-agent/api/mcp-context.ts) preserves pins and refuses an omitted unpinned target. This shipped with [w1/m10](../../.pm/w1/done/m10/README.md).
+- **D10 deployment closeout is not verified by this review.** The migrations and conformance script are present, but a source review and passing local tests do not establish that the production database has both tables or that authenticated production conformance passes. Keep this ADR open until that evidence is recorded.
+
+The dated implementation account below is historical, including its statements that D11 is unimplemented and production API keys do not work; neither is a current finding from this review.
 
 ## Implementation status (2026-08-24)
 

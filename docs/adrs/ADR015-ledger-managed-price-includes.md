@@ -1,6 +1,6 @@
 # ADR 015: Managed price includes in the ledger service
 
-- Status: Accepted (2026-09-15); section 3 amended 2026-09-16 (relayed caller credential, ADR 016 section 7). Implements the ledger-layer scope of `docs/prfaqs/PRFAQ002-include-live-price.md` (FAQ 16, "Ledger service" row).
+- Status: Done (implementation reviewed 2026-09-27). Accepted 2026-09-15; section 3 amended 2026-09-16 (relayed caller credential, ADR 016 section 7). Implements the ledger-layer scope of `docs/prfaqs/PRFAQ002-include-live-price.md` (FAQ 16, "Ledger service" row).
 - Decision owner: Ledger service (`backend-cluster/ledger`)
 
 ## Context

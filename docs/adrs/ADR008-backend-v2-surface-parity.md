@@ -1,9 +1,15 @@
 # ADR 0008: Reaching GraphQL / REST / MCP parity
 
-- Status: Accepted, unimplemented. The target is every verb on all three surfaces; this record says how to get there, what the one structural boundary is, and how the guard changes from excusing gaps to closing them.
+- Status: Done — implemented in w1/m10, with subsequent documented MCP exceptions; implementation reviewed 2026-09-27. See [Completion review](#completion-review-2026-09-27).
 - Date: 2026-08-25
 - Decision owners: Backend (the verb table, the three surfaces, the drift guards)
 - Scope: how the 143 verbs in `src/server/api/op-class.ts`'s `VERB_TABLE` reach all three surfaces. Extends ADR 0006 D3 (one decision, three dialects) and D9 test 1 (parity is a test). MCP's transport contract stays in [ADR 0007](./ADR007-backend-v2-mcp-surface.md).
+
+## Completion review (2026-09-27)
+
+The porting work shipped in [w1/m10](../../.pm/w1/done/m10/README.md). The [current parity contract](../../backend-cluster/backend-v2/docs/api-parity.md) records the adapters, behavior checks, and named exceptions. The original gap counts, family sequencing, and SDK filter limitation below describe earlier implementation stages: MCP analysis resources now accept optional query parameters, covered by `analysis-parity.test.ts`.
+
+The [surface-parity guard](../../backend-cluster/backend-v2/src/server/api/__tests__/surface-parity.test.ts) currently records `{ gql: 0, rest: 0, mcp: 5 }`. Those five are the four legacy compatibility shims deliberately removed from MCP in the 2026-09-09 amendment and token introspection's documented exception ([ADR 017](./ADR017-backend-v2-token-introspection.md)); they are not unfinished ports. The parity, frozen-baseline, and runtime operation-coverage tests passed during this review. This completion does not include the new host-compatibility work proposed in [ADR 019](./ADR019-backend-v2-mcp-host-compatibility.md).
 
 ## Context
 
