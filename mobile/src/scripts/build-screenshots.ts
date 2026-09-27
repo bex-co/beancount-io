@@ -51,6 +51,10 @@ type DemoTranslations = {
   liabilities: string;
   recentTransactions: string;
   seeAll: string;
+  atMarketValue: string;
+  pricesNotUpdatedSince: PluralForms;
+  notInTotalCount: PluralForms;
+  costBasisLine: string;
   save: string;
   income: string;
   expenses: string;
@@ -158,6 +162,29 @@ function navigationLabels(
     background: "#171a14",
     color: key === selected ? "#5fc535" : "#aeb0a2",
     pointSize: 27,
+    text: translations[key] as string,
+  }));
+}
+
+// Home's capture uses the floating tab bar; Reports still has the docked one.
+function floatingNavigationLabels(
+  translations: DemoTranslations,
+): OverlayLabel[] {
+  const labels: Array<[keyof DemoTranslations, number, number, string]> = [
+    ["home", 112, 146, "#4c5043"],
+    ["accounts", 300, 172, "#272b23"],
+    ["transactions", 482, 260, "#262a22"],
+    ["reports", 748, 190, "#262a22"],
+    ["files", 948, 170, "#262a22"],
+  ];
+  return labels.map(([key, x, width, background]) => ({
+    x,
+    y: 2484,
+    width,
+    height: 52,
+    background,
+    color: key === "home" ? "#7fe24f" : "#f7f9f2",
+    pointSize: 34,
     text: translations[key] as string,
   }));
 }
@@ -274,17 +301,80 @@ function sourceLabels(
       {
         x: 615,
         y: 397,
-        width: 330,
+        width: 280,
         height: 78,
         background: card,
         color: secondary,
         pointSize: 32,
         text: translations.liabilities,
       },
-      ...rangeLabels(translations, 1255, card, "#60c533"),
+      {
+        x: 900,
+        y: 397,
+        width: 170,
+        height: 78,
+        background: card,
+        color: "#5fc535",
+        pointSize: 34,
+        text: translations.seeAll,
+      },
+      // The demo ledger's valuation status, split where the app wraps it.
+      {
+        x: 82,
+        y: 510,
+        width: 990,
+        height: 50,
+        align: "left",
+        background: card,
+        color: secondary,
+        pointSize: 36,
+        text: `${translations.atMarketValue} · ${pluralForm(
+          storeLocale,
+          translations.pricesNotUpdatedSince,
+          6,
+        )
+          .replace("{{count}}", "6")
+          .replace(
+            "{{date}}",
+            new Intl.DateTimeFormat(storeLocale, {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              timeZone: "UTC",
+            }).format(new Date(Date.UTC(2017, 8, 8))),
+          )}`,
+      },
+      {
+        x: 82,
+        y: 560,
+        width: 990,
+        height: 48,
+        align: "left",
+        background: card,
+        color: secondary,
+        pointSize: 36,
+        text: pluralForm(storeLocale, translations.notInTotalCount, 1).replace(
+          "{{count}}",
+          "1",
+        ),
+      },
+      {
+        x: 82,
+        y: 762,
+        width: 1000,
+        height: 56,
+        align: "left",
+        background: card,
+        color: secondary,
+        pointSize: 36,
+        text: translations.costBasisLine
+          .replace("{{cost}}", "$106,826.05")
+          .replace("{{gain}}", "+$10,823.44"),
+      },
+      ...rangeLabels(translations, 1355, card, "#60c533"),
       {
         x: 95,
-        y: 1435,
+        y: 1533,
         width: 655,
         height: 115,
         align: "left",
@@ -295,7 +385,7 @@ function sourceLabels(
       },
       {
         x: 840,
-        y: 1435,
+        y: 1533,
         width: 230,
         height: 115,
         background: card,
@@ -303,7 +393,7 @@ function sourceLabels(
         pointSize: 34,
         text: translations.seeAll,
       },
-      ...navigationLabels(translations, "home"),
+      ...floatingNavigationLabels(translations),
     ];
   }
 

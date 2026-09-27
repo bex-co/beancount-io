@@ -4,6 +4,7 @@ import {
   loadScreenshotManifest,
   pinScreenshotReviewDisplayTypes,
   ScreenshotReviewEntry,
+  withoutPlayReviewEntries,
 } from "./store-metadata";
 
 const [reviewDirectory] = process.argv.slice(2);
@@ -16,8 +17,13 @@ const manifestPath = path.join(reviewDirectory, "manifest.json");
 const review = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as {
   entries: ScreenshotReviewEntry[];
 };
-const declaredDisplayTypes = loadScreenshotManifest(root).displayTypes.map(
+const screenshotManifest = loadScreenshotManifest(root);
+const declaredDisplayTypes = screenshotManifest.displayTypes.map(
   (display) => display.name,
+);
+review.entries = withoutPlayReviewEntries(
+  review.entries,
+  screenshotManifest.playDisplayTypes.map((display) => display.name),
 );
 const errors = pinScreenshotReviewDisplayTypes(
   review.entries,

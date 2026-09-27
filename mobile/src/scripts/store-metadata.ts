@@ -380,6 +380,16 @@ export function pinScreenshotReviewDisplayTypes(
   return errors;
 }
 
+// Play artwork shares metadata/screenshots/ with the Apple sets, so the upstream
+// review manifest lists it too. Apple planning must never see those entries.
+export function withoutPlayReviewEntries<T extends { device: string }>(
+  entries: T[],
+  playDisplayTypes: readonly string[],
+): T[] {
+  const play = new Set(playDisplayTypes);
+  return entries.filter((entry) => !play.has(entry.device));
+}
+
 export function runtimeLocaleForStore(
   manifest: StoreLocaleManifest,
   storeLocale: string,

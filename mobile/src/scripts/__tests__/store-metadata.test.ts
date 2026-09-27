@@ -18,6 +18,7 @@ import {
   validateLocaleManifest,
   validateReleaseGate,
   validateScreenshotManifest,
+  withoutPlayReviewEntries,
   validateStoreStagingReceipt,
   writeStoreStagingReceipt,
 } from "../store-metadata";
@@ -172,6 +173,20 @@ describe("localized screenshot contract", () => {
         ["APP_IPHONE_65"],
       ).length > 0,
     ).toBeTruthy();
+  });
+
+  it("keeps Play artwork out of the Apple screenshot review", () => {
+    const entries = [
+      { key: "en-US|APP_IPHONE_65|01-overview", device: "APP_IPHONE_65" },
+      { key: "bg|phoneScreenshots|01-overview", device: "phoneScreenshots" },
+      { key: "bg|featureGraphic|feature", device: "featureGraphic" },
+    ];
+    expect(
+      withoutPlayReviewEntries(entries, [
+        "phoneScreenshots",
+        "featureGraphic",
+      ]).map((entry) => entry.key),
+    ).toEqual(["en-US|APP_IPHONE_65|01-overview"]);
   });
 });
 
