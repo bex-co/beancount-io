@@ -25,3 +25,15 @@ export const withoutToast = (
   messages: ToastMessage[],
   id: string,
 ): ToastMessage[] => messages.filter((message) => message.id !== id);
+
+/**
+ * The toast context a component reads, or an error when none is mounted. The
+ * context defaults to null so a component rendered outside `ToastProvider`
+ * fails loudly instead of receiving a `showToast` that silently does nothing.
+ */
+export function requireToastContext<T>(context: T | null): T {
+  if (context === null) {
+    throw new Error("useToast must be used within a ToastProvider");
+  }
+  return context;
+}

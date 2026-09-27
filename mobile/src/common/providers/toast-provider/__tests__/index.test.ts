@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import {
   DEFAULT_TOAST_DURATION,
+  requireToastContext,
   toastDuration,
   withToast,
   withoutToast,
@@ -49,5 +50,20 @@ describe("toast queue", () => {
     expect(source.includes("withToast(prev, { id, ...message })")).toBe(true);
     expect(source.includes("withoutToast(prev, id)")).toBe(true);
     expect(source.includes("toastDuration(message)")).toBe(true);
+  });
+});
+
+describe("toast context", () => {
+  it("throws for a component rendered outside ToastProvider", () => {
+    // The context defaults to null; a silent no-op showToast hid missing
+    // providers before (w4/029).
+    expect(() => requireToastContext(null)).toThrow(
+      "useToast must be used within a ToastProvider",
+    );
+  });
+
+  it("returns the provider's value when one is mounted", () => {
+    const value = { showToast: () => () => undefined };
+    expect(requireToastContext(value)).toBe(value);
   });
 });

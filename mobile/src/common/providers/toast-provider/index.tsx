@@ -16,6 +16,7 @@ const getMessageId = () => {
 };
 
 import {
+  requireToastContext,
   toastDuration,
   withToast,
   withoutToast,
@@ -27,17 +28,9 @@ interface ToastContextType {
   showToast: (message: Omit<ToastMessage, "id">) => () => void;
 }
 
-const ToastContext = createContext<ToastContextType>({
-  showToast: () => () => {},
-});
+const ToastContext = createContext<ToastContextType | null>(null);
 
-export const useToast = () => {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error("useToast must be used within a ToastProvider");
-  }
-  return context;
-};
+export const useToast = () => requireToastContext(useContext(ToastContext));
 
 interface ToastProviderProps {
   children: ReactNode;
@@ -62,7 +55,12 @@ const Message = ({ message }: { message: ToastMessage }) => {
       entering={FadeIn.duration(300)}
       exiting={FadeOut.duration(300)}
     >
-      <View style={styles.message}>
+      <View
+        style={styles.message}
+        testID="toast-message"
+        accessibilityRole="alert"
+        accessibilityLiveRegion="polite"
+      >
         <MessageIcon type={message.type} />
         {message.type !== "text" ? <View style={styles.space} /> : null}
         <Text style={styles.messageText}>{message.message}</Text>
