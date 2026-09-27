@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "appId": "1527950512",
+  "version": "1.20260926.49",
+  "verifiedState": "PREPARE_FOR_SUBMISSION",
+  "storeLocales": [
+    "en-US",
+    "zh-Hans",
+    "ca",
+    "de-DE",
+    "es-ES",
+    "es-MX",
+    "fr-FR",
+    "fr-CA",
+    "nl-NL",
+    "pt-BR",
+    "pt-PT",
+    "ru",
+    "sk",
+    "uk"
+  ],
+  "displayTypes": ["APP_IPHONE_65", "APP_IPAD_PRO_3GEN_129"],
+  "screenshotsPerSet": 3,
+  "inputDigest": "sha256:8c0e176e48e8149fd7038a017338f2f8abad22f497b4902a38b8af33a71b0169"
+}

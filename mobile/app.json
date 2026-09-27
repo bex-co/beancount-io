@@ -1,6 +1,6 @@
 {
   "expo": {
-    "version": "1.20260912.48",
+    "version": "1.20260926.49",
     "name": "Beancount",
     "scheme": ["beancount", "io.beancount.ios", "io.beancount.android"],
     "slug": "beancount",
@@ -46,10 +46,10 @@
         "NSFaceIDUsageDescription": false,
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "48"
+      "buildNumber": "49"
     },
     "android": {
-      "versionCode": 48,
+      "versionCode": 49,
       "package": "io.beancount.android",
       "permissions": ["com.google.android.gms.permission.AD_ID"],
       "adaptiveIcon": {
