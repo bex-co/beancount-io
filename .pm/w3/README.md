@@ -66,6 +66,8 @@
 
 - [ ] **m46** — [Harden REST v1 ledger path params (validate + encode + fail-closed)](./m46/README.md) (7 tasks) ← continuous CLI QA, 2026-09-26
 
+- [x] **m47** — Make `bea format --in-place` a locked, atomic write (6 tasks) ← continuous CLI QA, 2026-09-26; consolidates notes 434 + 435
+
 - [x] **m48** — Refuse output destinations that would destroy files the command was not given (6 tasks) ← continuous CLI QA, 2026-09-26; consolidates notes 431 + 436
 
 - [x] **m49** — Write the money the user asked for (8 tasks) ← continuous CLI QA, 2026-09-25/26; consolidates notes 414 + 416 + 421 + 424 + 430
@@ -75,6 +77,11 @@
 - [x] **m51** — Answer from bounded, unambiguous query results (9 tasks) ← continuous CLI QA, 2026-09-26; consolidates notes 447 + 455 + 448 + the CLI half of 446
 
 ## Dropped
+
+- ~~**439**~~ — `--offline` with no cached revision reports the cause as `None` — dropped 2026-09-26: not a separate defect. Same six lines of `cli/src/bea_engine/managed_load.py` (~399–405) as [433](./433.md), which now carries both symptoms and the full record; one fix covers both.
+- ~~**453**~~ — One server-side failure ends the whole `bea ask` session — dropped 2026-09-26: not a separate defect. Same five lines of `cli/src/cli/ask/repl.py` (225–233) as [449](./done/449.md), which now carries both triggers and the full record; both notes already said they belonged in one pass.
+
+## Blocked
 
 Blocked milestones and inbox notes live under [`blocked/`](./blocked/) with their reason and **Unblock:** condition; they keep their IDs and return to the open tree when work can resume.
 
