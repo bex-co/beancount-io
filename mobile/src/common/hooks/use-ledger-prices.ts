@@ -1,5 +1,7 @@
-import { useLedgerPricesQuery } from "@/generated-graphql/graphql";
-import { useLedgerManagedPrices } from "./use-ledger-managed-prices";
+import {
+  useLedgerManagedPricesQuery,
+  useLedgerPricesQuery,
+} from "@/generated-graphql/graphql";
 
 /**
  * Cache-first: the price history is the largest read on Home, Accounts and
@@ -21,12 +23,16 @@ export const useLedgerPrices = (ledgerId: string) => {
   });
   // Which of those prices come from a managed feed, judged on the feed's own
   // terms. Never gates the screen: without it every price is judged by the
-  // ledger's own cadence.
-  const managed = useLedgerManagedPrices(ledgerId);
+  // ledger's own cadence. Same fetch policy, and evicted with it on writes.
+  const managed = useLedgerManagedPricesQuery({
+    variables: { ledgerId },
+    skip: !ledgerId,
+    fetchPolicy: LEDGER_PRICES_FETCH_POLICY,
+  });
   return {
     loading,
     prices: data?.getLedgerCommodities,
-    managed: managed.managed,
+    managed: managed.data?.getLedgerManagedPrices,
     data,
     error,
     refetch: () => Promise.all([refetch(), managed.refetch()]),

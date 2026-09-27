@@ -62,17 +62,63 @@ const DEFAULT_CADENCE_DAYS = 7;
 /** Price points a cadence is measured over. */
 const CADENCE_WINDOW = 10;
 
-function pairMatches(pair: PricePair, commodity: string, currency: string) {
+/** `base`/`quote` names `commodity` against `currency`, in either direction. */
+function pairMatches(
+  base: string,
+  quote: string,
+  commodity: string,
+  currency: string,
+) {
   return (
-    (pair.base === commodity && pair.quote === currency) ||
-    (pair.base === currency && pair.quote === commodity)
+    (base === commodity && quote === currency) ||
+    (base === currency && quote === commodity)
   );
 }
 
 /**
- * The distinct dates of every price for `commodity` against `currency`, in
- * either direction, on or before `onOrBefore` (any date when omitted),
- * ascending.
+ * Every price date per commodity against `currency` (either direction), sorted
+ * and de-duplicated. Built once per `pairs` array and currency: the Accounts
+ * tree asks for one commodity per row, and scanning every pair each time made
+ * that rows × prices.
+ */
+const dateIndexCache = new WeakMap<
+  readonly PricePair[],
+  Map<string, Map<string, string[]>>
+>();
+
+function dateIndex(
+  pairs: readonly PricePair[],
+  currency: string,
+): Map<string, string[]> {
+  let byCurrency = dateIndexCache.get(pairs);
+  if (!byCurrency) {
+    byCurrency = new Map();
+    dateIndexCache.set(pairs, byCurrency);
+  }
+  let index = byCurrency.get(currency);
+  if (!index) {
+    const sets = new Map<string, Set<string>>();
+    for (const pair of pairs) {
+      const commodity = pair.quote === currency ? pair.base : pair.quote;
+      if (!pairMatches(pair.base, pair.quote, commodity, currency)) continue;
+      let dates = sets.get(commodity);
+      if (!dates) {
+        dates = new Set();
+        sets.set(commodity, dates);
+      }
+      for (const { date } of pair.prices) dates.add(date);
+    }
+    index = new Map(
+      [...sets].map(([commodity, dates]) => [commodity, [...dates].sort()]),
+    );
+    byCurrency.set(currency, index);
+  }
+  return index;
+}
+
+/**
+ * The dates of every price for `commodity` against `currency`, in either
+ * direction, on or before `onOrBefore` (any date when omitted), ascending.
  */
 function priceDates(
   pairs: readonly PricePair[],
@@ -80,14 +126,10 @@ function priceDates(
   currency: string,
   onOrBefore?: string,
 ): string[] {
-  const dates = new Set<string>();
-  for (const pair of pairs) {
-    if (!pairMatches(pair, commodity, currency)) continue;
-    for (const { date } of pair.prices) {
-      if (onOrBefore === undefined || date <= onOrBefore) dates.add(date);
-    }
-  }
-  return [...dates].sort();
+  const dates = dateIndex(pairs, currency).get(commodity) ?? [];
+  return onOrBefore === undefined
+    ? dates
+    : dates.filter((date) => date <= onOrBefore);
 }
 
 /**
@@ -254,11 +296,13 @@ export function selectValuation({
         continue;
       }
       const source =
-        managed?.find(
-          (entry) =>
-            (entry.commodity === holding.currency &&
-              entry.quote === currency) ||
-            (entry.commodity === currency && entry.quote === holding.currency),
+        managed?.find((entry) =>
+          pairMatches(
+            entry.commodity ?? "",
+            entry.quote ?? "",
+            holding.currency,
+            currency,
+          ),
         ) ?? null;
       priced.push({
         ...holding,

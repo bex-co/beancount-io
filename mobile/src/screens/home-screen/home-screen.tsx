@@ -246,7 +246,6 @@ const HomeScreenImpl = (): JSX.Element => {
           error={chartError}
         />
         <ValuationSheet
-          visible={detailPage !== null}
           valuation={detailPage === null ? null : valuations[detailPage]}
           ledgerId={ledgerId}
           onClose={() => setDetailPage(null)}

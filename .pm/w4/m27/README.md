@@ -1,6 +1,6 @@
 # w4 · m27 — Say which prices are stale, and only when they are
 
-**Worker:** worker1 **Goal:** Net Worth's headline stays quiet when every price is current. It names stale prices by count and oldest date, judged per holding by how that holding is normally priced, and the detail (each holding's price date, what is valued at cost or left out, and how to update) sits one tap away. **Status:** in progress (t001–t004 done)
+**Worker:** worker1 **Goal:** Net Worth's headline stays quiet when every price is current. It names stale prices by count and oldest date, judged per holding by how that holding is normally priced, and the detail (each holding's price date, what is valued at cost or left out, and how to update) sits one tap away. **Status:** in progress (t001–t005 done)
 
 ## Display rule
 
@@ -28,7 +28,7 @@ Out of scope for now: a holding's share of net worth in the warning (it needs pr
 | t002 | Web: per-holding staleness, compact status, detail popover — **DONE** | 60m | —          |
 | t003 | Verify on the example, crypto-example and cash-only ledgers — **DONE** | 30m | t001, t002 |
 | t004 | Adoption surface — **DONE** | 15m | t003       |
-| t005 | Simplify                                                           | 20m | t004       |
+| t005 | Simplify — **DONE** | 20m | t004       |
 | t006 | Test coverage                                                      | 30m | t004       |
 | t007 | Closeout                                                           | 10m | t005, t006 |
 

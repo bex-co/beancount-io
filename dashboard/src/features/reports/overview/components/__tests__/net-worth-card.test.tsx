@@ -72,6 +72,10 @@ vi.mock("@/common/hooks/use-format-number", () => ({
   useFormatNumber: () => (v: number) => String(v),
 }));
 
+vi.mock("@/common/hooks/use-format-quantity", () => ({
+  useFormatQuantity: () => (v: number, digits: number) => v.toFixed(digits),
+}));
+
 let language = "en";
 
 vi.mock("@/common/hooks/use-translations", () => ({

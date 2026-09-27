@@ -102,12 +102,11 @@ type Entry = {
  * them, the ledger's Commodities page on the web.
  */
 export function ValuationSheet({
-  visible,
   valuation,
   ledgerId,
   onClose,
 }: {
-  visible: boolean;
+  /** The holdings to show; null while the sheet is closed. */
   valuation: Valuation | null;
   ledgerId: string;
   onClose: () => void;
@@ -154,12 +153,7 @@ export function ValuationSheet({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <Pressable
         style={styles.overlay}
         onPress={onClose}

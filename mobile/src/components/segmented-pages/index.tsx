@@ -106,11 +106,11 @@ type SegmentedPagesProps = {
    */
   trailing?: ReactNode;
   /**
-   * Rendered between the tab row and the pager, outside both. Controls that
-   * must receive taps belong here: the pager's pages only pass through the
-   * chart's native scrub gesture, not presses.
+   * Rendered between the tab row and the pager, outside both, for the page
+   * that is showing. Home's status line lives here because a press on it
+   * inside a chart page never fired, while the chart's scrub still did.
    */
-  header?: ReactNode;
+  header?: (activeIndex: number) => ReactNode;
 };
 
 /**
@@ -231,7 +231,7 @@ export function SegmentedPages({
           <View style={styles.trailing}>{trailing}</View>
         ) : null}
       </View>
-      {header}
+      {header?.(activeIndex)}
       <PagerView
         ref={pagerRef}
         style={[styles.pager, { height }]}

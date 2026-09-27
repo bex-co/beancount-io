@@ -90,15 +90,15 @@ type AccountChartsCardProps = {
   assetsSeries: SeriesPoint[];
   liabilitiesSeries: SeriesPoint[];
   /**
-   * Caption above each page's figure: the basis it is valued at and the date
-   * of its prices, and any holdings its total values at cost or leaves out.
-   * Absent for a page whose total values no holding.
+   * Status line above each page's figure: its basis, plus how many prices are
+   * behind and how many holdings sit at cost or outside the total. Absent for
+   * a page whose total values no holding.
    */
   captions: Record<ChartKey, string | undefined>;
   /** Line under a page's figure: its cost basis beside the market value. */
   footnotes: Partial<Record<ChartKey, string>>;
-  /** Opens the holdings behind a page's caption; captions stay text without it. */
-  onCaptionPress?: (key: ChartKey) => void;
+  /** Opens the holdings behind a page's status line. */
+  onCaptionPress: (key: ChartKey) => void;
   loading: boolean;
   error: boolean;
 };
@@ -125,7 +125,6 @@ export function AccountChartsCard({
   const theme = useTheme().colorTheme;
   const router = useRouter();
   const [range, setRange] = useState<TimeRange>("6M");
-  const [activeIndex, setActiveIndex] = useState(0);
   // Tallest status line any page has shown, so switching tabs never moves the
   // pager: the line sits above it, outside the measured page header.
   const [captionHeight, setCaptionHeight] = useState(0);
@@ -218,8 +217,6 @@ export function AccountChartsCard({
     );
   });
 
-  const activeCaption = captions[charts[activeIndex].key];
-
   return (
     <DashboardCard bleed>
       {/* Crossfades in over the skeleton, which is sized to this same block. */}
@@ -229,20 +226,14 @@ export function AccountChartsCard({
           pages={pages}
           height={pageHeight}
           trailing={seeAll}
-          onPageChange={setActiveIndex}
-          header={
+          header={(activeIndex) => (
             <View style={{ minHeight: captionHeight }}>
-              {activeCaption !== undefined && (
+              {captions[charts[activeIndex].key] !== undefined && (
                 <PressableScale
                   style={styles.caption}
-                  onPress={
-                    onCaptionPress
-                      ? () => onCaptionPress(charts[activeIndex].key)
-                      : undefined
-                  }
-                  disabled={!onCaptionPress}
+                  onPress={() => onCaptionPress(charts[activeIndex].key)}
                   accessibilityRole="button"
-                  accessibilityLabel={activeCaption}
+                  accessibilityLabel={captions[charts[activeIndex].key]}
                   accessibilityHint={t("valuationDetailsHint")}
                   onLayout={(event) => {
                     const height = event.nativeEvent.layout.height;
@@ -250,20 +241,18 @@ export function AccountChartsCard({
                   }}
                 >
                   <Text style={[styles.captionText, { color: theme.black80 }]}>
-                    {activeCaption}
+                    {captions[charts[activeIndex].key]}
                   </Text>
-                  {onCaptionPress && (
-                    <Ionicons
-                      name={directionalIcon("chevron-forward")}
-                      size={14}
-                      color={theme.black80}
-                      style={styles.captionChevron}
-                    />
-                  )}
+                  <Ionicons
+                    name={directionalIcon("chevron-forward")}
+                    size={14}
+                    color={theme.black80}
+                    style={styles.captionChevron}
+                  />
                 </PressableScale>
               )}
             </View>
-          }
+          )}
         />
         {/* Outside the pager: one row of pills driving whichever curve is
             shown, so switching tabs keeps the selected range. */}
