@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as locales from "../locales";
 import { findFlatPluralIssues, pluralCategories } from "../plural";
+import { PLURAL_BASE_KEYS } from "../plural-keys";
 
 describe("pluralCategories", () => {
   it("follows Intl.PluralRules per language", () => {
@@ -48,5 +49,15 @@ describe("shipped locales", () => {
       findFlatPluralIssues(language, resources),
     );
     expect(issues).toEqual([]);
+  });
+
+  it("are exactly the keys PLURAL_BASE_KEYS types as requiring count", () => {
+    // Keeps the compile-time list in `plural-keys.ts` in step with the
+    // catalogs: a new plural message must be listed to get its `count` check.
+    const bases = Object.keys(locales.en)
+      .filter((key) => key.endsWith("_other"))
+      .map((key) => key.slice(0, -"_other".length))
+      .sort();
+    expect(bases).toEqual([...PLURAL_BASE_KEYS].sort());
   });
 });

@@ -1,5 +1,17 @@
 import { useTranslation } from "react-i18next";
 import type en from "@/i18n/locales/en";
+import type { PluralBaseKey } from "@/i18n/plural-keys";
+
+type TranslationParams = Record<string, string | number>;
+
+/**
+ * A plural key (`PLURAL_BASE_KEYS`) must be given `{ count }`, from which
+ * i18next picks the language's form; every other key takes optional params.
+ * A key typed as plain `string` (built at runtime) keeps optional params.
+ */
+type TranslateArgs<K extends string> = K extends PluralBaseKey
+  ? [params: TranslationParams & { count: number }]
+  : [params?: TranslationParams];
 
 /**
  * Custom hook for type-safe translations
@@ -21,9 +33,9 @@ import type en from "@/i18n/locales/en";
 export function useTranslations() {
   const { t: i18nT, i18n } = useTranslation();
 
-  const t = (
-    key: keyof typeof en,
-    params?: Record<string, string | number>,
+  const t = <K extends keyof typeof en>(
+    key: K,
+    ...[params]: TranslateArgs<K>
   ): string => {
     // Development-only validation
     if (import.meta.env.DEV) {
