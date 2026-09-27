@@ -1,6 +1,6 @@
 # w4 · m28 — Locale-aware plurals on both clients
 
-**Worker:** worker1 **Goal:** both clients pluralise counts by each language's own rules (`Intl.PluralRules`), and m27's count strings read as natural sentences in every shipped language. **Status:** in progress (t001–t006, t008 done)
+**Worker:** worker1 **Goal:** both clients pluralise counts by each language's own rules (`Intl.PluralRules`), and m27's count strings read as natural sentences in every shipped language. **Status:** done
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Simplify — **DONE** | 20m | t004       |
 | t006 | Test coverage — **DONE** | 30m | t004       |
 | t008 | Dashboard: make the type-check require `count` for plural keys — **DONE** | 45m | t001       |
-| t007 | Closeout                                                                | 10m | t005, t006, t008 |
+| t007 | Closeout — **DONE** | 10m | t005, t006, t008 |
 
 ## Definition of done
 
@@ -25,7 +25,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** promoted from w4/187 (see its [tombstone](../README.md#dropped)), which was filed from m27's recorded wording deviation.
+- **Source:** promoted from w4/187 (see its [tombstone](../../README.md#dropped)), which was filed from m27's recorded wording deviation.
 - **Goal linkage:** **A2 — Frictionless onboarding:** readers of every shipped language see grammatical counts on Home, instead of `Prices not updated since …: 6` on web or wrong forms for 2–4 in Slavic languages on mobile.
 - **Expected outcome:** any future count string on either client can be written as a natural sentence once and pluralise correctly in all 15 dashboard and 13 mobile languages.
 - **Why now:** m27 just shipped the first count strings on Home and had to work around the missing support, so every later count string would repeat that workaround.
