@@ -1,6 +1,6 @@
 # w4 · m11 — Mobile says what a converted balance means: units for commodities, labelled cost basis, disclosed omissions
 
-**Worker:** worker1 **Goal:** every balance the mobile app shows for a ledger that holds commodities says what it is — a commodity account shows its recorded units, a converted total says it is at cost, and a holding that cannot be converted is named instead of reading `$0.00` or vanishing from Net Worth **Status:** in progress (t001–t004 done)
+**Worker:** worker1 **Goal:** every balance the mobile app shows for a ledger that holds commodities says what it is — a commodity account shows its recorded units, a converted total says it is at cost, and a holding that cannot be converted is named instead of reading `$0.00` or vanishing from Net Worth **Status:** in progress (t001–t005 done)
 
 ## Blocked
 
@@ -26,7 +26,7 @@ Not part of this rule: a cost / market value / units toggle (w4/068, dropped 202
 | t002 | Show commodity units and disclose unconverted holdings in the Accounts tree — **DONE** | 50m | t001       |
 | t003 | Apply the rule to the account detail header, journal rows, and running balance — **DONE** | 60m | t001       |
 | t004 | Label the cost basis and name excluded holdings on Home's Net Worth and the Accounts totals — **DONE** | 40m | t002       |
-| t005 | Verify the rule on the public example ledgers against BQL                                           | 40m | t003, t004 |
+| t005 | Verify the rule on the public example ledgers against BQL — **DONE** | 40m | t003, t004 |
 | t006 | Adoption surface                                                                                    | 25m | t005       |
 | t007 | Simplify                                                                                            | 25m | t006       |
 | t008 | Test coverage                                                                                       | 45m | t006       |
