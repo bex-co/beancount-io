@@ -165,6 +165,8 @@ const { t } = useTranslations();
 
 When adding a string, add the key to the English file under `src/translations/` (the base). Other locales extend and override as needed.
 
+A count is a plural object, not `Label: {{count}}`. Give each locale exactly the categories `Intl.PluralRules` lists for it: `{ one, other }` in English, `{ one, few, many, other }` in Russian, Ukrainian and Slovak, and `{ other }` alone in Chinese. Then call `t(key, { count })`. `src/common/plural.ts` registers the per-locale rule with i18n-js, and `src/translations/__tests__/plural.test.ts` fails on a missing or extra category.
+
 ### Reactive variables for global state
 
 ```ts
