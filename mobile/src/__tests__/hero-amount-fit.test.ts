@@ -19,7 +19,7 @@ const HERO_SITES = [
   },
   {
     file: "common/d3/interactive-line-chart.tsx",
-    tag: "<AnimatedAmount",
+    tag: "<RollingAmount",
     usage: "style={styles.headline}",
   },
 ];

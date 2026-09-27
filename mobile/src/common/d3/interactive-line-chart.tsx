@@ -24,7 +24,7 @@ import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner"
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { durations, fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { easeStandard } from "@/common/theme/motion-easing";
-import { AmountText, AnimatedAmount } from "@/components/amount-text";
+import { AmountText, RollingAmount } from "@/components/amount-text";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
@@ -34,7 +34,9 @@ import { useEntranceProgress } from "./use-entrance-progress";
 import { lerp, lerpSeries, resampleSeries, sameSeries } from "./series-morph";
 import {
   SCRUB_IDLE,
+  type HeadlineMotion,
   activeScrubIndex,
+  headlineMotion,
   scrubIndexForX,
   scrubbedValue,
   shouldTickHaptic,
@@ -369,23 +371,38 @@ function ScrubHeader({
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
 
-  const [index, setIndex] = useState(SCRUB_IDLE);
+  const [{ index, motion }, setHeadline] = useState<{
+    index: number;
+    motion: HeadlineMotion;
+  }>({ index: SCRUB_IDLE, motion: "count" });
+  const moveTo = useCallback((current: number) => {
+    setHeadline((prev) => ({
+      index: current,
+      motion: headlineMotion(prev.index, current),
+    }));
+  }, []);
   useAnimatedReaction(
     () => scrub.value,
     (current, previous) => {
       if (current !== previous) {
-        scheduleOnRN(setIndex, current);
+        scheduleOnRN(moveTo, current);
       }
     },
   );
+  // A landing is one change, not a mode: once the figure is back on the latest
+  // value, a later data change rolls again.
+  useEffect(() => {
+    if (motion === "land") {
+      setHeadline((prev) => ({ ...prev, motion: "count" }));
+    }
+  }, [motion]);
 
   const count = numbers.length;
   const shownIndex = shownScrubIndex(index, count);
   const shownValue = scrubbedValue(numbers, index);
   const scrubbing = index !== SCRUB_IDLE && count > 0;
 
-  // Same formatter the resting frame uses, so the counting frames and the final
-  // one differ only in the number.
+  // One formatter for the headline and the change row.
   // `formatValue` stands in for the money formatter on a figure in units.
   const format = useCallback(
     (value: number, includePlus?: boolean) =>
@@ -420,12 +437,13 @@ function ScrubHeader({
 
   return (
     <>
-      <AnimatedAmount
+      <RollingAmount
         value={shownValue}
         format={formatHeadline}
-        // Bypassed while a finger is down: a scrubbed figure has to land on
-        // the exact point under the touch, and a tween there reads as lag.
-        animate={!scrubbing}
+        // Rolls in at rest, rolls briefly from point to point under a finger,
+        // and lands at once on release (see `headlineMotion`).
+        animate={motion !== "land"}
+        duration={motion === "track" ? durations.fast : durations.chart}
         style={styles.headline}
         {...HERO_AMOUNT_FIT}
       />

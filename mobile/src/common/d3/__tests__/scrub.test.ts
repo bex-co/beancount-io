@@ -1,6 +1,7 @@
 import {
   SCRUB_IDLE,
   activeScrubIndex,
+  headlineMotion,
   scrubIndexForX,
   scrubbedValue,
   shouldTickHaptic,
@@ -131,4 +132,17 @@ test("a reaction's first run does not tick", () => {
   // which is not something the user did.
   expect(shouldTickHaptic(null, 3)).toBeFalsy();
   expect(shouldTickHaptic(null, SCRUB_IDLE)).toBeFalsy();
+});
+
+test("the headline tweens between scrubbed points", () => {
+  expect(headlineMotion(SCRUB_IDLE, 2)).toBe("track");
+  expect(headlineMotion(2, 3)).toBe("track");
+});
+
+test("the headline lands at once when the finger lifts", () => {
+  expect(headlineMotion(3, SCRUB_IDLE)).toBe("land");
+});
+
+test("the headline counts at rest", () => {
+  expect(headlineMotion(SCRUB_IDLE, SCRUB_IDLE)).toBe("count");
 });

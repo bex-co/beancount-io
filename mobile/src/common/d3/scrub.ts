@@ -127,3 +127,26 @@ export function shouldTickHaptic(
   }
   return previous !== current;
 }
+
+/**
+ * How the headline figure should move to the value for `current`.
+ *
+ * - `"count"` — at rest: the full chart-length roll, for the entrance and for
+ *   a data change.
+ * - `"track"` — a finger is down: a short tween from point to point, quick
+ *   enough to keep up with the finger but still reading as motion.
+ * - `"land"` — the finger just lifted: jump straight back to the latest value.
+ *   Rolling across that gap replays the whole scrub in reverse, which is noise
+ *   at the moment the user stopped asking for anything.
+ */
+export type HeadlineMotion = "count" | "track" | "land";
+
+export function headlineMotion(
+  previous: number,
+  current: number,
+): HeadlineMotion {
+  if (current !== SCRUB_IDLE) {
+    return "track";
+  }
+  return previous === SCRUB_IDLE ? "count" : "land";
+}

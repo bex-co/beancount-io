@@ -1,2 +1,2 @@
 export { AmountText } from "./amount-text";
-export { AnimatedAmount } from "./animated-amount";
+export { RollingAmount } from "./rolling-amount";
