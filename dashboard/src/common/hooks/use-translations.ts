@@ -43,7 +43,19 @@ export function useTranslations() {
       }
 
       // Warn if key doesn't exist (TypeScript should catch this, but just in case)
-      if (!i18n.exists(key, { lng: "en" })) {
+      // A count key exists only as its plural variants (`key_one`,
+      // `key_other`, …), which i18next resolves from `count`.
+      const count = params?.count;
+      if (i18n.exists(`${key}_other`, { lng: "en" }) && count === undefined) {
+        console.error(
+          `❌ TRANSLATION ERROR: "${key}" is a plural message; pass { count }.`,
+        );
+      } else if (
+        !i18n.exists(key, {
+          lng: "en",
+          ...(typeof count === "number" ? { count } : {}),
+        })
+      ) {
         console.warn(
           `⚠️  Translation key not found: "${key}"\n` +
             `Add this key to the appropriate locale file.`,

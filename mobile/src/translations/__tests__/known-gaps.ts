@@ -61,7 +61,6 @@ export const SAME_AS_ENGLISH: Record<
         "document",
         "total",
         "budgetInterval",
-        "ledgerEditorErrorCount",
         "merchantsCadenceIrregular",
       ],
     },
@@ -144,7 +143,6 @@ export const SAME_AS_ENGLISH: Record<
         "total",
         "notificationsBell",
         "notificationsTitle",
-        "merchantsTransactionCount",
       ],
     },
     {

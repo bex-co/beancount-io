@@ -279,10 +279,6 @@ const jaImporter: Record<string, TranslationEntry> = {
     description:
       "Button text to import transactions with count (base key for pluralization)",
   },
-  "importer.configure.importButton_one": {
-    message: "{count}件のトランザクションをインポート",
-    description: "Button text to import single transaction with count",
-  },
   "importer.configure.importButton_other": {
     message: "{count}件のトランザクションをインポート",
     description: "Button text to import multiple transactions with count",
@@ -372,11 +368,6 @@ const jaImporter: Record<string, TranslationEntry> = {
     description:
       "Alert message for transactions missing target accounts (base key for pluralization)",
   },
-  "importer.accountMapping.missingAccountAlert_one": {
-    message:
-      "{count}件のトランザクションにターゲット口座が不足しています。インポート前に選択されたすべての行にターゲット口座を割り当ててください。",
-    description: "Alert message for single transaction missing target account",
-  },
   "importer.accountMapping.missingAccountAlert_other": {
     message:
       "{count}件のトランザクションにターゲット口座が不足しています。インポート前に選択されたすべての行にターゲット口座を割り当ててください。",
@@ -391,10 +382,6 @@ const jaImporter: Record<string, TranslationEntry> = {
     message: "{count}件のトランザクションを正常にカテゴリ分類しました",
     description:
       "Toast description for AI categorization (base key for pluralization)",
-  },
-  "importer.accountMapping.aiSuccessDescription_one": {
-    message: "{count}件のトランザクションを正常にカテゴリ分類しました",
-    description: "Toast description for single transaction categorization",
   },
   "importer.accountMapping.aiSuccessDescription_other": {
     message: "{count}件のトランザクションを正常にカテゴリ分類しました",
@@ -425,10 +412,6 @@ const jaImporter: Record<string, TranslationEntry> = {
     description:
       "Success message for transactions with count (base key for pluralization)",
   },
-  "importer.finish.successMessage_one": {
-    message: "{count}件のトランザクションを正常にインポートしました",
-    description: "Success message for single transaction with count",
-  },
   "importer.finish.successMessage_other": {
     message: "{count}件のトランザクションを正常にインポートしました",
     description: "Success message for multiple transactions with count",
@@ -437,10 +420,6 @@ const jaImporter: Record<string, TranslationEntry> = {
     message: "{count}件のトランザクションのインポートに失敗しました",
     description:
       "Partial failure message for transactions (base key for pluralization)",
-  },
-  "importer.finish.partialFailure_one": {
-    message: "{count}件のトランザクションのインポートに失敗しました",
-    description: "Partial failure message for single transaction",
   },
   "importer.finish.partialFailure_other": {
     message: "{count}件のトランザクションのインポートに失敗しました",

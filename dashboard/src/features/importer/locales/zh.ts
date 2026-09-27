@@ -272,10 +272,6 @@ const zhImporter: Record<string, TranslationEntry> = {
     description:
       "Button text to import transactions with count (base key for pluralization)",
   },
-  "importer.configure.importButton_one": {
-    message: "导入{count}笔交易",
-    description: "Button text to import single transaction with count",
-  },
   "importer.configure.importButton_other": {
     message: "导入{count}笔交易",
     description: "Button text to import multiple transactions with count",
@@ -365,11 +361,6 @@ const zhImporter: Record<string, TranslationEntry> = {
     description:
       "Alert message for transactions missing target accounts (base key for pluralization)",
   },
-  "importer.accountMapping.missingAccountAlert_one": {
-    message:
-      "{count}笔交易缺少目标账户。请在导入之前为所有选定的行分配目标账户。",
-    description: "Alert message for single transaction missing target account",
-  },
   "importer.accountMapping.missingAccountAlert_other": {
     message:
       "{count}笔交易缺少目标账户。请在导入之前为所有选定的行分配目标账户。",
@@ -384,10 +375,6 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "成功分类了{count}笔交易",
     description:
       "Toast description for AI categorization (base key for pluralization)",
-  },
-  "importer.accountMapping.aiSuccessDescription_one": {
-    message: "成功分类了{count}笔交易",
-    description: "Toast description for single transaction categorization",
   },
   "importer.accountMapping.aiSuccessDescription_other": {
     message: "成功分类了{count}笔交易",
@@ -418,10 +405,6 @@ const zhImporter: Record<string, TranslationEntry> = {
     description:
       "Success message for transactions with count (base key for pluralization)",
   },
-  "importer.finish.successMessage_one": {
-    message: "成功导入了{count}笔交易",
-    description: "Success message for single transaction with count",
-  },
   "importer.finish.successMessage_other": {
     message: "成功导入了{count}笔交易",
     description: "Success message for multiple transactions with count",
@@ -430,10 +413,6 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "{count}笔交易导入失败",
     description:
       "Partial failure message for transactions (base key for pluralization)",
-  },
-  "importer.finish.partialFailure_one": {
-    message: "{count}笔交易导入失败",
-    description: "Partial failure message for single transaction",
   },
   "importer.finish.partialFailure_other": {
     message: "{count}笔交易导入失败",

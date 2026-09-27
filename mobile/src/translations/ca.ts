@@ -1,6 +1,7 @@
 import { en } from "./en";
+import type { Translations } from "../common/translation-types";
 
-export const ca: typeof en = {
+export const ca: Translations = {
   ...en,
   discoveryTitle: "Explora els llibres",
   discoveryTab_yours: "Els teus llibres",
@@ -47,10 +48,12 @@ export const ca: typeof en = {
     "Qualsevol persona amb l’enllaç pot consultar aquest llibre.",
   merchantsSearchPlaceholder: {
     one: "Cerca {{count}} comerciant…",
+    many: "Cerca {{count}} comerciants…",
     other: "Cerca {{count}} comerciants…",
   },
   merchantsTransactionCount: {
     one: "{{count}} transacció",
+    many: "{{count}} transaccions",
     other: "{{count}} transaccions",
   },
   merchantsEmptyTitle: "Encara no hi ha comerciants",
@@ -189,14 +192,17 @@ export const ca: typeof en = {
   atMarketValue: "A valor de mercat",
   pricesNotUpdatedSince: {
     one: "{{count}} preu sense actualitzar des del {{date}}",
+    many: "{{count}} preus sense actualitzar des del {{date}}",
     other: "{{count}} preus sense actualitzar des del {{date}}",
   },
   atCostNoPriceCount: {
     one: "{{count}} a cost (sense preu)",
+    many: "{{count}} a cost (sense preu)",
     other: "{{count}} a cost (sense preu)",
   },
   notInTotalCount: {
     one: "{{count}} fora del total",
+    many: "{{count}} fora del total",
     other: "{{count}} fora del total",
   },
   valuationDetailsTitle: "Actius i preus",
@@ -457,6 +463,7 @@ export const ca: typeof en = {
   keyboardAccessoryDismiss: "Amaga el teclat",
   ledgerEditorErrorCount: {
     one: "{{count}} error",
+    many: "{{count}} errors",
     other: "{{count}} errors",
   },
   // budget — dated spending/income targets per account, stored as
@@ -469,6 +476,7 @@ export const ca: typeof en = {
   budgetOnTarget: "A l'objectiu",
   budgetHistoryCount: {
     one: "{{count}} entrada",
+    many: "{{count}} entrades",
     other: "{{count}} entrades",
   },
   budgetNoBudgetsFound: "No s'ha trobat cap pressupost",

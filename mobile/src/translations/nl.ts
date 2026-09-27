@@ -1,6 +1,7 @@
 import { en } from "./en";
+import type { Translations } from "../common/translation-types";
 
-export const nl: typeof en = {
+export const nl: Translations = {
   ...en,
   discoveryTitle: "Boekhoudingen bekijken",
   discoveryTab_yours: "Je boeken",

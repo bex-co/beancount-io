@@ -285,9 +285,17 @@ const ruImporter: Record<string, TranslationEntry> = {
     message: "Импортировать {count} транзакцию",
     description: "Button text to import single transaction with count",
   },
-  "importer.configure.importButton_other": {
+  "importer.configure.importButton_few": {
+    message: "Импортировать {count} транзакции",
+    description: "Button text to import 2\u20134 transactions with count",
+  },
+  "importer.configure.importButton_many": {
     message: "Импортировать {count} транзакций",
     description: "Button text to import multiple transactions with count",
+  },
+  "importer.configure.importButton_other": {
+    message: "Импортировать {count} транзакции",
+    description: "Button text to import fractional transactions with count",
   },
   "importer.configure.sourceAccountRequired": {
     message: "Исходный счет обязателен",
@@ -379,11 +387,23 @@ const ruImporter: Record<string, TranslationEntry> = {
       "{count} транзакция не имеет целевого счета. Пожалуйста, назначьте целевые счета для всех выбранных строк перед импортом.",
     description: "Alert message for single transaction missing target account",
   },
-  "importer.accountMapping.missingAccountAlert_other": {
+  "importer.accountMapping.missingAccountAlert_few": {
+    message:
+      "{count} транзакции не имеют целевых счетов. Пожалуйста, назначьте целевые счета для всех выбранных строк перед импортом.",
+    description:
+      "Alert message for 2\u20134 transactions missing target accounts",
+  },
+  "importer.accountMapping.missingAccountAlert_many": {
     message:
       "{count} транзакций не имеют целевых счетов. Пожалуйста, назначьте целевые счета для всех выбранных строк перед импортом.",
     description:
       "Alert message for multiple transactions missing target accounts",
+  },
+  "importer.accountMapping.missingAccountAlert_other": {
+    message:
+      "{count} транзакции не имеют целевых счетов. Пожалуйста, назначьте целевые счета для всех выбранных строк перед импортом.",
+    description:
+      "Alert message for fractional transactions missing target accounts",
   },
   "importer.accountMapping.aiSuccess": {
     message: "Категоризация ИИ завершена!",
@@ -398,9 +418,17 @@ const ruImporter: Record<string, TranslationEntry> = {
     message: "{count} транзакция успешно категоризирована",
     description: "Toast description for single transaction categorization",
   },
-  "importer.accountMapping.aiSuccessDescription_other": {
+  "importer.accountMapping.aiSuccessDescription_few": {
+    message: "{count} транзакции успешно категоризированы",
+    description: "Toast description for 2\u20134 transactions categorization",
+  },
+  "importer.accountMapping.aiSuccessDescription_many": {
     message: "{count} транзакций успешно категоризированы",
     description: "Toast description for multiple transactions categorization",
+  },
+  "importer.accountMapping.aiSuccessDescription_other": {
+    message: "{count} транзакции успешно категоризированы",
+    description: "Toast description for fractional transactions categorization",
   },
   "importer.accountMapping.aiFailed": {
     message: "Категоризация ИИ не удалась",
@@ -432,9 +460,17 @@ const ruImporter: Record<string, TranslationEntry> = {
     message: "{count} транзакция успешно импортирована",
     description: "Success message for single transaction with count",
   },
-  "importer.finish.successMessage_other": {
+  "importer.finish.successMessage_few": {
+    message: "{count} транзакции успешно импортированы",
+    description: "Success message for 2\u20134 transactions with count",
+  },
+  "importer.finish.successMessage_many": {
     message: "{count} транзакций успешно импортированы",
     description: "Success message for multiple transactions with count",
+  },
+  "importer.finish.successMessage_other": {
+    message: "{count} транзакции успешно импортированы",
+    description: "Success message for fractional transactions with count",
   },
   "importer.finish.partialFailure": {
     message: "{count} транзакций не удалось импортировать",
@@ -445,9 +481,17 @@ const ruImporter: Record<string, TranslationEntry> = {
     message: "{count} транзакция не удалось импортировать",
     description: "Partial failure message for single transaction",
   },
-  "importer.finish.partialFailure_other": {
+  "importer.finish.partialFailure_few": {
+    message: "{count} транзакции не удалось импортировать",
+    description: "Partial failure message for 2\u20134 transactions",
+  },
+  "importer.finish.partialFailure_many": {
     message: "{count} транзакций не удалось импортировать",
     description: "Partial failure message for multiple transactions",
+  },
+  "importer.finish.partialFailure_other": {
+    message: "{count} транзакции не удалось импортировать",
+    description: "Partial failure message for fractional transactions",
   },
   "importer.finish.viewJournal": {
     message: "Посмотреть журнал",

@@ -1,6 +1,7 @@
 import { en } from "./en";
+import type { Translations } from "../common/translation-types";
 
-export const fr: typeof en = {
+export const fr: Translations = {
   ...en,
   discoveryTitle: "Parcourir les livres",
   discoveryTab_yours: "Vos livres",
@@ -47,10 +48,12 @@ export const fr: typeof en = {
     "Toute personne disposant du lien peut consulter ce livre.",
   merchantsSearchPlaceholder: {
     one: "Rechercher {{count}} commerçant…",
+    many: "Rechercher {{count}} commerçants…",
     other: "Rechercher {{count}} commerçants…",
   },
   merchantsTransactionCount: {
     one: "{{count}} transaction",
+    many: "{{count}} transactions",
     other: "{{count}} transactions",
   },
   merchantsEmptyTitle: "Aucun commerçant pour l'instant",
@@ -187,14 +190,17 @@ export const fr: typeof en = {
   atMarketValue: "À la valeur de marché",
   pricesNotUpdatedSince: {
     one: "{{count}} prix non mis à jour depuis le {{date}}",
+    many: "{{count}} prix non mis à jour depuis le {{date}}",
     other: "{{count}} prix non mis à jour depuis le {{date}}",
   },
   atCostNoPriceCount: {
     one: "{{count}} au coût (sans prix)",
+    many: "{{count}} au coût (sans prix)",
     other: "{{count}} au coût (sans prix)",
   },
   notInTotalCount: {
     one: "{{count}} hors total",
+    many: "{{count}} hors total",
     other: "{{count}} hors total",
   },
   valuationDetailsTitle: "Avoirs et prix",
@@ -457,6 +463,7 @@ export const fr: typeof en = {
   keyboardAccessoryDismiss: "Masquer le clavier",
   ledgerEditorErrorCount: {
     one: "{{count}} erreur",
+    many: "{{count}} erreurs",
     other: "{{count}} erreurs",
   },
   // budget — dated spending/income targets per account, stored as
@@ -469,6 +476,7 @@ export const fr: typeof en = {
   budgetOnTarget: "Objectif atteint",
   budgetHistoryCount: {
     one: "{{count}} entrée",
+    many: "{{count}} entrées",
     other: "{{count}} entrées",
   },
   budgetNoBudgetsFound: "Aucun budget trouvé",

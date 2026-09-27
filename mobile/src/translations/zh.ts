@@ -1,6 +1,7 @@
 import { en } from "./en";
+import type { Translations } from "../common/translation-types";
 
-export const zh: typeof en = {
+export const zh: Translations = {
   ...en,
   discoveryTitle: "浏览账本",
   discoveryTab_yours: "你的账本",
@@ -40,11 +41,9 @@ export const zh: typeof en = {
   drawerPrivateLinkHint: "接收者需要访问权限才能打开此链接。",
   drawerPublicLinkHint: "任何持有链接的人都可以查看此账本。",
   merchantsSearchPlaceholder: {
-    one: "搜索 {{count}} 个商户…",
     other: "搜索 {{count}} 个商户…",
   },
   merchantsTransactionCount: {
-    one: "{{count}} 笔交易",
     other: "{{count}} 笔交易",
   },
   merchantsEmptyTitle: "还没有商户",
@@ -172,15 +171,12 @@ export const zh: typeof en = {
   atMarket: "市值 {{amount}}",
   atMarketValue: "按市值计",
   pricesNotUpdatedSince: {
-    one: "{{count}} 个价格自 {{date}} 起未更新",
     other: "{{count}} 个价格自 {{date}} 起未更新",
   },
   atCostNoPriceCount: {
-    one: "{{count}} 项按成本（无价格）",
     other: "{{count}} 项按成本（无价格）",
   },
   notInTotalCount: {
-    one: "{{count}} 项未计入合计",
     other: "{{count}} 项未计入合计",
   },
   valuationDetailsTitle: "持仓与价格",
@@ -423,7 +419,6 @@ export const zh: typeof en = {
   keyboardAccessoryInsert: "插入 {{symbol}}",
   keyboardAccessoryDismiss: "隐藏键盘",
   ledgerEditorErrorCount: {
-    one: "{{count}} 个错误",
     other: "{{count}} 个错误",
   },
   // budget — dated spending/income targets per account, stored as
@@ -435,7 +430,6 @@ export const zh: typeof en = {
   budgetBelowTarget: "低于目标",
   budgetOnTarget: "符合目标",
   budgetHistoryCount: {
-    one: "{{count}} 条记录",
     other: "{{count}} 条记录",
   },
   budgetNoBudgetsFound: "未找到预算",

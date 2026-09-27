@@ -25,6 +25,8 @@ import { pt } from "../translations/pt";
 import { ru } from "../translations/ru";
 import { sk } from "../translations/sk";
 import { uk } from "../translations/uk";
+import { pluralCategory } from "../common/plural";
+import type { PluralForms } from "../common/translation-types";
 
 const root = process.cwd();
 const localeManifest = loadStoreLocaleManifest(root);
@@ -38,7 +40,7 @@ const localizedSourceRoot = path.join(
   "tmp/screenshots-localized-sources",
 );
 
-type DemoTranslations = Record<string, unknown> & {
+type DemoTranslations = {
   home: string;
   accounts: string;
   transactions: string;
@@ -59,7 +61,7 @@ type DemoTranslations = Record<string, unknown> & {
   rangeYTD: string;
   range1Y: string;
   rangeAll: string;
-  ledgerEditorErrorCount: { one: string };
+  ledgerEditorErrorCount: PluralForms;
 };
 
 const translationsByRuntimeLocale: Record<string, DemoTranslations> = {
@@ -326,7 +328,11 @@ function sourceLabels(
         background: header,
         color: "#ee675d",
         pointSize: 36,
-        text: translations.ledgerEditorErrorCount.one.replace("{{count}}", "1"),
+        // The locale's own form for 1 — Chinese has no `one`, only `other`.
+        text: (
+          translations.ledgerEditorErrorCount[pluralCategory(storeLocale, 1)] ??
+          translations.ledgerEditorErrorCount.other
+        ).replace("{{count}}", "1"),
       },
     ];
   }

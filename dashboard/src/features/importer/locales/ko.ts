@@ -277,10 +277,6 @@ const koImporter: Record<string, TranslationEntry> = {
     description:
       "Button text to import transactions with count (base key for pluralization)",
   },
-  "importer.configure.importButton_one": {
-    message: "거래 {count}건 가져오기",
-    description: "Button text to import single transaction with count",
-  },
   "importer.configure.importButton_other": {
     message: "거래 {count}건 가져오기",
     description: "Button text to import multiple transactions with count",
@@ -370,11 +366,6 @@ const koImporter: Record<string, TranslationEntry> = {
     description:
       "Alert message for transactions missing target accounts (base key for pluralization)",
   },
-  "importer.accountMapping.missingAccountAlert_one": {
-    message:
-      "{count}건의 거래에 대상 계정이 없습니다. 가져오기 전에 선택한 모든 행에 대상 계정을 할당해 주세요.",
-    description: "Alert message for single transaction missing target account",
-  },
   "importer.accountMapping.missingAccountAlert_other": {
     message:
       "{count}건의 거래에 대상 계정이 없습니다. 가져오기 전에 선택한 모든 행에 대상 계정을 할당해 주세요.",
@@ -389,10 +380,6 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "{count}건의 거래를 성공적으로 분류했습니다",
     description:
       "Toast description for AI categorization (base key for pluralization)",
-  },
-  "importer.accountMapping.aiSuccessDescription_one": {
-    message: "{count}건의 거래를 성공적으로 분류했습니다",
-    description: "Toast description for single transaction categorization",
   },
   "importer.accountMapping.aiSuccessDescription_other": {
     message: "{count}건의 거래를 성공적으로 분류했습니다",
@@ -423,10 +410,6 @@ const koImporter: Record<string, TranslationEntry> = {
     description:
       "Success message for transactions with count (base key for pluralization)",
   },
-  "importer.finish.successMessage_one": {
-    message: "{count}건의 거래를 성공적으로 가져왔습니다",
-    description: "Success message for single transaction with count",
-  },
   "importer.finish.successMessage_other": {
     message: "{count}건의 거래를 성공적으로 가져왔습니다",
     description: "Success message for multiple transactions with count",
@@ -435,10 +418,6 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "{count}건의 거래 가져오기에 실패했습니다",
     description:
       "Partial failure message for transactions (base key for pluralization)",
-  },
-  "importer.finish.partialFailure_one": {
-    message: "{count}건의 거래 가져오기에 실패했습니다",
-    description: "Partial failure message for single transaction",
   },
   "importer.finish.partialFailure_other": {
     message: "{count}건의 거래 가져오기에 실패했습니다",

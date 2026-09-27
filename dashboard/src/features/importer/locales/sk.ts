@@ -283,6 +283,14 @@ const skImporter: Record<string, TranslationEntry> = {
     message: "Importovať {count} transakciu",
     description: "Button text to import single transaction with count",
   },
+  "importer.configure.importButton_few": {
+    message: "Importovať {count} transakcie",
+    description: "Button text to import 2\u20134 transactions with count",
+  },
+  "importer.configure.importButton_many": {
+    message: "Importovať {count} transakcie",
+    description: "Button text to import fractional transactions with count",
+  },
   "importer.configure.importButton_other": {
     message: "Importovať {count} transakcií",
     description: "Button text to import multiple transactions with count",
@@ -377,6 +385,18 @@ const skImporter: Record<string, TranslationEntry> = {
       "{count} transakcii chýba cieľový účet. Prosím, priraďte cieľové účty všetkým vybraným riadkom pred importom.",
     description: "Alert message for single transaction missing target account",
   },
+  "importer.accountMapping.missingAccountAlert_few": {
+    message:
+      "{count} transakciám chýbajú cieľové účty. Prosím, priraďte cieľové účty všetkým vybraným riadkom pred importom.",
+    description:
+      "Alert message for 2\u20134 transactions missing target accounts",
+  },
+  "importer.accountMapping.missingAccountAlert_many": {
+    message:
+      "{count} transakciám chýbajú cieľové účty. Prosím, priraďte cieľové účty všetkým vybraným riadkom pred importom.",
+    description:
+      "Alert message for fractional transactions missing target accounts",
+  },
   "importer.accountMapping.missingAccountAlert_other": {
     message:
       "{count} transakciám chýbajú cieľové účty. Prosím, priraďte cieľové účty všetkým vybraným riadkom pred importom.",
@@ -395,6 +415,14 @@ const skImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiSuccessDescription_one": {
     message: "Úspešne kategorizovaná {count} transakcia",
     description: "Toast description for single transaction categorization",
+  },
+  "importer.accountMapping.aiSuccessDescription_few": {
+    message: "Úspešne kategorizované {count} transakcie",
+    description: "Toast description for 2\u20134 transactions categorization",
+  },
+  "importer.accountMapping.aiSuccessDescription_many": {
+    message: "Úspešne kategorizované {count} transakcie",
+    description: "Toast description for fractional transactions categorization",
   },
   "importer.accountMapping.aiSuccessDescription_other": {
     message: "Úspešne kategorizovaných {count} transakcií",
@@ -429,6 +457,14 @@ const skImporter: Record<string, TranslationEntry> = {
     message: "Úspešne importovaná {count} transakcia",
     description: "Success message for single transaction with count",
   },
+  "importer.finish.successMessage_few": {
+    message: "Úspešne importované {count} transakcie",
+    description: "Success message for 2\u20134 transactions with count",
+  },
+  "importer.finish.successMessage_many": {
+    message: "Úspešne importované {count} transakcie",
+    description: "Success message for fractional transactions with count",
+  },
   "importer.finish.successMessage_other": {
     message: "Úspešne importovaných {count} transakcií",
     description: "Success message for multiple transactions with count",
@@ -441,6 +477,14 @@ const skImporter: Record<string, TranslationEntry> = {
   "importer.finish.partialFailure_one": {
     message: "{count} transakciu sa nepodarilo importovať",
     description: "Partial failure message for single transaction",
+  },
+  "importer.finish.partialFailure_few": {
+    message: "{count} transakcie sa nepodarilo importovať",
+    description: "Partial failure message for 2\u20134 transactions",
+  },
+  "importer.finish.partialFailure_many": {
+    message: "{count} transakcie sa nepodarilo importovať",
+    description: "Partial failure message for fractional transactions",
   },
   "importer.finish.partialFailure_other": {
     message: "{count} transakcií sa nepodarilo importovať",

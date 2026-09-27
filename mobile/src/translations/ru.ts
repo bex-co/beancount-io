@@ -1,6 +1,7 @@
 import { en } from "./en";
+import type { Translations } from "../common/translation-types";
 
-export const ru: typeof en = {
+export const ru: Translations = {
   ...en,
   discoveryTitle: "Обзор книг",
   discoveryTab_yours: "Ваши книги",
@@ -47,11 +48,15 @@ export const ru: typeof en = {
     "Любой, у кого есть ссылка, может просматривать эту книгу.",
   merchantsSearchPlaceholder: {
     one: "Поиск по {{count}} получателю…",
+    few: "Поиск по {{count}} получателям…",
+    many: "Поиск по {{count}} получателям…",
     other: "Поиск по {{count}} получателям…",
   },
   merchantsTransactionCount: {
     one: "{{count}} транзакция",
-    other: "{{count}} транзакций",
+    few: "{{count}} транзакции",
+    many: "{{count}} транзакций",
+    other: "{{count}} транзакции",
   },
   merchantsEmptyTitle: "Пока нет получателей",
   merchantsEmptyMessage:
@@ -186,14 +191,20 @@ export const ru: typeof en = {
   atMarketValue: "По рыночной стоимости",
   pricesNotUpdatedSince: {
     one: "{{count}} цена не обновлялась с {{date}}",
-    other: "{{count}} цен не обновлялись с {{date}}",
+    few: "{{count}} цены не обновлялись с {{date}}",
+    many: "{{count}} цен не обновлялись с {{date}}",
+    other: "{{count}} цены не обновлялись с {{date}}",
   },
   atCostNoPriceCount: {
     one: "{{count}} по себестоимости (без цены)",
+    few: "{{count}} по себестоимости (без цены)",
+    many: "{{count}} по себестоимости (без цены)",
     other: "{{count}} по себестоимости (без цены)",
   },
   notInTotalCount: {
     one: "{{count}} не в итоге",
+    few: "{{count}} не в итоге",
+    many: "{{count}} не в итоге",
     other: "{{count}} не в итоге",
   },
   valuationDetailsTitle: "Активы и цены",
@@ -451,8 +462,10 @@ export const ru: typeof en = {
   keyboardAccessoryInsert: "Вставить {{symbol}}",
   keyboardAccessoryDismiss: "Скрыть клавиатуру",
   ledgerEditorErrorCount: {
-    one: "Ошибка: {{count}}",
-    other: "Ошибок: {{count}}",
+    one: "{{count}} ошибка",
+    few: "{{count}} ошибки",
+    many: "{{count}} ошибок",
+    other: "{{count}} ошибки",
   },
   // budget — dated spending/income targets per account, stored as
   // `custom "budget"` directives. Copy mirrors the dashboard's page.budget.*
@@ -464,7 +477,9 @@ export const ru: typeof en = {
   budgetOnTarget: "В цели",
   budgetHistoryCount: {
     one: "{{count}} запись",
-    other: "{{count}} записей",
+    few: "{{count}} записи",
+    many: "{{count}} записей",
+    other: "{{count}} записи",
   },
   budgetNoBudgetsFound: "Бюджеты не найдены",
   budgetNoBudgetsFoundDescription:

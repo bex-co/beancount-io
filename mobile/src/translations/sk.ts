@@ -1,6 +1,7 @@
 import { en } from "./en";
+import type { Translations } from "../common/translation-types";
 
-export const sk: typeof en = {
+export const sk: Translations = {
   ...en,
   discoveryTitle: "Prehľad kníh",
   discoveryTab_yours: "Vaše knihy",
@@ -46,10 +47,14 @@ export const sk: typeof en = {
   drawerPublicLinkHint: "Ktokoľvek s odkazom si môže prezerať túto knihu.",
   merchantsSearchPlaceholder: {
     one: "Hľadať {{count}} obchodníka…",
+    few: "Hľadať {{count}} obchodníkov…",
+    many: "Hľadať {{count}} obchodníka…",
     other: "Hľadať {{count}} obchodníkov…",
   },
   merchantsTransactionCount: {
     one: "{{count}} transakcia",
+    few: "{{count}} transakcie",
+    many: "{{count}} transakcie",
     other: "{{count}} transakcií",
   },
   merchantsEmptyTitle: "Zatiaľ žiadni obchodníci",
@@ -186,14 +191,20 @@ export const sk: typeof en = {
   atMarketValue: "V trhovej hodnote",
   pricesNotUpdatedSince: {
     one: "{{count}} cena neaktualizovaná od {{date}}",
+    few: "{{count}} ceny neaktualizované od {{date}}",
+    many: "{{count}} ceny neaktualizovanej od {{date}}",
     other: "{{count}} cien neaktualizovaných od {{date}}",
   },
   atCostNoPriceCount: {
     one: "{{count}} v obstarávacej cene (bez ceny)",
+    few: "{{count}} v obstarávacej cene (bez ceny)",
+    many: "{{count}} v obstarávacej cene (bez ceny)",
     other: "{{count}} v obstarávacej cene (bez ceny)",
   },
   notInTotalCount: {
     one: "{{count}} mimo súčtu",
+    few: "{{count}} mimo súčtu",
+    many: "{{count}} mimo súčtu",
     other: "{{count}} mimo súčtu",
   },
   valuationDetailsTitle: "Aktíva a ceny",
@@ -451,8 +462,10 @@ export const sk: typeof en = {
   keyboardAccessoryInsert: "Vložiť {{symbol}}",
   keyboardAccessoryDismiss: "Skryť klávesnicu",
   ledgerEditorErrorCount: {
-    one: "Chyba: {{count}}",
-    other: "Chýb: {{count}}",
+    one: "{{count}} chyba",
+    few: "{{count}} chyby",
+    many: "{{count}} chyby",
+    other: "{{count}} chýb",
   },
   // budget — dated spending/income targets per account, stored as
   // `custom "budget"` directives. Copy mirrors the dashboard's page.budget.*
@@ -464,6 +477,8 @@ export const sk: typeof en = {
   budgetOnTarget: "V cieli",
   budgetHistoryCount: {
     one: "{{count}} záznam",
+    few: "{{count}} záznamy",
+    many: "{{count}} záznamu",
     other: "{{count}} záznamov",
   },
   budgetNoBudgetsFound: "Žiadne rozpočty nenájdené",

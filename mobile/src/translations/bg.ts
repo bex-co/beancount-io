@@ -1,6 +1,7 @@
 import { en } from "./en";
+import type { Translations } from "../common/translation-types";
 
-export const bg: typeof en = {
+export const bg: Translations = {
   ...en,
   discoveryTitle: "Преглед на книги",
   discoveryTab_yours: "Вашите книги",

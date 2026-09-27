@@ -1,14 +1,14 @@
 # w4 · m28 — Locale-aware plurals on both clients
 
-**Worker:** worker1 **Goal:** both clients pluralise counts by each language's own rules (`Intl.PluralRules`), and m27's count strings read as natural sentences in every shipped language. **Status:** todo
+**Worker:** worker1 **Goal:** both clients pluralise counts by each language's own rules (`Intl.PluralRules`), and m27's count strings read as natural sentences in every shipped language. **Status:** in progress (t001–t003 done)
 
 ## Tasks (in order)
 
 | id   | title                                                                   | est | depends_on |
 | ---- | ----------------------------------------------------------------------- | --- | ---------- |
-| t001 | Dashboard: typed plural keys resolved by i18next, with a parity check   | 60m | —          |
-| t002 | Mobile: i18n-js pluralization from `Intl.PluralRules`, with a check     | 45m | —          |
-| t003 | Rewrite m27's count strings as natural plural sentences                 | 45m | t001, t002 |
+| t001 | Dashboard: typed plural keys resolved by i18next, with a parity check — **DONE** | 60m | —          |
+| t002 | Mobile: i18n-js pluralization from `Intl.PluralRules`, with a check — **DONE** | 45m | —          |
+| t003 | Rewrite m27's count strings as natural plural sentences — **DONE** | 45m | t001, t002 |
 | t004 | Adoption surface                                                        | 15m | t003       |
 | t005 | Simplify                                                                | 20m | t004       |
 | t006 | Test coverage                                                           | 30m | t004       |

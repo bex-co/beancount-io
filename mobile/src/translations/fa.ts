@@ -1,6 +1,7 @@
 import { en } from "./en";
+import type { Translations } from "../common/translation-types";
 
-export const fa: typeof en = {
+export const fa: Translations = {
   ...en,
   discoveryTitle: "مرور دفترها",
   discoveryTab_yours: "دفترهای شما",

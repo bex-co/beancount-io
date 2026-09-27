@@ -17,6 +17,26 @@ function isIncompleteTranslation(message: string): boolean {
 
 const PLURAL_SUFFIX_PATTERN = /_(zero|one|two|few|many|other)$/;
 
+/**
+ * A plural variant (`key_few`) folded to its family's base key, so languages
+ * that use different CLDR categories compare equal. Which categories each
+ * language must carry is checked by `src/i18n/__tests__/plural.test.ts`.
+ */
+function familyKeys(keys: Iterable<string>): Set<string> {
+  const all = new Set(keys);
+  return new Set(
+    [...all].map((key) => {
+      const base = key.replace(PLURAL_SUFFIX_PATTERN, "");
+      return base !== key && all.has(`${base}_other`) ? base : key;
+    }),
+  );
+}
+
+/** `key` names a message, or a plural family called with `{ count }`. */
+function isKnownKey(key: string, validKeys: Set<string>): boolean {
+  return validKeys.has(key) || validKeys.has(`${key}_other`);
+}
+
 function isProductionSourceFile(filePath: string): boolean {
   return !(
     filePath.includes("__tests__") ||
@@ -50,7 +70,7 @@ function collectReferencedTranslationKeys(
     );
 
     const visit = (node: ts.Node): void => {
-      if (ts.isStringLiteralLike(node) && validKeys.has(node.text)) {
+      if (ts.isStringLiteralLike(node) && isKnownKey(node.text, validKeys)) {
         referencedKeys.add(node.text);
       }
 
@@ -371,13 +391,13 @@ describe("Translation Files Validation", () => {
         throw new Error("English translations not found");
       }
 
-      const enKeys = new Set(Object.keys(enTranslations));
+      const enKeys = familyKeys(Object.keys(enTranslations));
 
       // Check all other languages have the same keys
       for (const [lang, translations] of locales) {
         if (lang === "en") continue;
 
-        const langKeys = new Set(Object.keys(translations));
+        const langKeys = familyKeys(Object.keys(translations));
 
         // Find missing keys (in English but not in this language)
         const missing = [...enKeys].filter((key) => !langKeys.has(key));
@@ -678,7 +698,7 @@ describe("Translation Files Validation", () => {
             }
 
             // Check 3: Key must exist in locale files
-            if (!validKeys.has(key)) {
+            if (!isKnownKey(key, validKeys)) {
               errors.push(
                 `${relativePath}:\n` +
                   `  ⚠️  t("${key}") key not found in locale files\n` +

@@ -289,6 +289,10 @@ const ptImporter: Record<string, TranslationEntry> = {
     message: "Importar {count} transações",
     description: "Button text to import multiple transactions with count",
   },
+  "importer.configure.importButton_many": {
+    message: "Importar {count} transações",
+    description: "Button text to import multiple transactions with count",
+  },
   "importer.configure.sourceAccountRequired": {
     message: "A conta de origem é obrigatória",
     description: "Validation error for missing source account",
@@ -385,6 +389,12 @@ const ptImporter: Record<string, TranslationEntry> = {
     description:
       "Alert message for multiple transactions missing target accounts",
   },
+  "importer.accountMapping.missingAccountAlert_many": {
+    message:
+      "{count} transações não têm contas de destino. Por favor, atribua contas de destino a todas as linhas selecionadas antes de importar.",
+    description:
+      "Alert message for multiple transactions missing target accounts",
+  },
   "importer.accountMapping.aiSuccess": {
     message: "Categorização por IA concluída!",
     description: "Toast title for successful AI categorization",
@@ -399,6 +409,10 @@ const ptImporter: Record<string, TranslationEntry> = {
     description: "Toast description for single transaction categorization",
   },
   "importer.accountMapping.aiSuccessDescription_other": {
+    message: "{count} transações categorizadas com sucesso",
+    description: "Toast description for multiple transactions categorization",
+  },
+  "importer.accountMapping.aiSuccessDescription_many": {
     message: "{count} transações categorizadas com sucesso",
     description: "Toast description for multiple transactions categorization",
   },
@@ -436,6 +450,10 @@ const ptImporter: Record<string, TranslationEntry> = {
     message: "{count} transações importadas com sucesso",
     description: "Success message for multiple transactions with count",
   },
+  "importer.finish.successMessage_many": {
+    message: "{count} transações importadas com sucesso",
+    description: "Success message for multiple transactions with count",
+  },
   "importer.finish.partialFailure": {
     message: "{count} transações falharam ao importar",
     description:
@@ -446,6 +464,10 @@ const ptImporter: Record<string, TranslationEntry> = {
     description: "Partial failure message for single transaction",
   },
   "importer.finish.partialFailure_other": {
+    message: "{count} transações falharam ao importar",
+    description: "Partial failure message for multiple transactions",
+  },
+  "importer.finish.partialFailure_many": {
     message: "{count} transações falharam ao importar",
     description: "Partial failure message for multiple transactions",
   },

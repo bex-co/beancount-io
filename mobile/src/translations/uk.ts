@@ -1,6 +1,7 @@
 import { en } from "./en";
+import type { Translations } from "../common/translation-types";
 
-export const uk: typeof en = {
+export const uk: Translations = {
   ...en,
   discoveryTitle: "Огляд книг",
   discoveryTab_yours: "Ваші книги",
@@ -46,11 +47,15 @@ export const uk: typeof en = {
   drawerPublicLinkHint: "Будь-хто з посиланням може переглядати цю книгу.",
   merchantsSearchPlaceholder: {
     one: "Пошук серед {{count}} отримувача…",
+    few: "Пошук серед {{count}} отримувачів…",
+    many: "Пошук серед {{count}} отримувачів…",
     other: "Пошук серед {{count}} отримувачів…",
   },
   merchantsTransactionCount: {
     one: "{{count}} транзакція",
-    other: "{{count}} транзакцій",
+    few: "{{count}} транзакції",
+    many: "{{count}} транзакцій",
+    other: "{{count}} транзакції",
   },
   merchantsEmptyTitle: "Поки немає отримувачів",
   merchantsEmptyMessage:
@@ -185,14 +190,20 @@ export const uk: typeof en = {
   atMarketValue: "За ринковою вартістю",
   pricesNotUpdatedSince: {
     one: "{{count}} ціна не оновлювалася з {{date}}",
-    other: "{{count}} цін не оновлювалися з {{date}}",
+    few: "{{count}} ціни не оновлювалися з {{date}}",
+    many: "{{count}} цін не оновлювалися з {{date}}",
+    other: "{{count}} ціни не оновлювалися з {{date}}",
   },
   atCostNoPriceCount: {
     one: "{{count}} за собівартістю (без ціни)",
+    few: "{{count}} за собівартістю (без ціни)",
+    many: "{{count}} за собівартістю (без ціни)",
     other: "{{count}} за собівартістю (без ціни)",
   },
   notInTotalCount: {
     one: "{{count}} не в підсумку",
+    few: "{{count}} не в підсумку",
+    many: "{{count}} не в підсумку",
     other: "{{count}} не в підсумку",
   },
   valuationDetailsTitle: "Активи та ціни",
@@ -448,8 +459,10 @@ export const uk: typeof en = {
   keyboardAccessoryInsert: "Вставити {{symbol}}",
   keyboardAccessoryDismiss: "Сховати клавіатуру",
   ledgerEditorErrorCount: {
-    one: "Помилка: {{count}}",
-    other: "Помилок: {{count}}",
+    one: "{{count}} помилка",
+    few: "{{count}} помилки",
+    many: "{{count}} помилок",
+    other: "{{count}} помилки",
   },
   // budget — dated spending/income targets per account, stored as
   // `custom "budget"` directives. Copy mirrors the dashboard's page.budget.*
@@ -461,7 +474,9 @@ export const uk: typeof en = {
   budgetOnTarget: "В цілі",
   budgetHistoryCount: {
     one: "{{count}} запис",
-    other: "{{count}} записів",
+    few: "{{count}} записи",
+    many: "{{count}} записів",
+    other: "{{count}} запису",
   },
   budgetNoBudgetsFound: "Бюджети не знайдено",
   budgetNoBudgetsFoundDescription:
