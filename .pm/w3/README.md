@@ -74,6 +74,8 @@
 
 - [x] **m51** — Answer from bounded, unambiguous query results (9 tasks) ← continuous CLI QA, 2026-09-26; consolidates notes 447 + 455 + 448 + the CLI half of 446
 
+## Dropped
+
 Blocked milestones and inbox notes live under [`blocked/`](./blocked/) with their reason and **Unblock:** condition; they keep their IDs and return to the open tree when work can resume.
 
 - [ ] **m1** / **m2** — see milestone lines above (in-app budget verification).

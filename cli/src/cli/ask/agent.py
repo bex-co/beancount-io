@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from pydantic_ai import Agent, ModelRetry, RunContext
-from pydantic_ai.exceptions import AgentRunError, ModelHTTPError, UsageLimitExceeded
+from pydantic_ai.exceptions import AgentRunError, ModelAPIError, ModelHTTPError, UsageLimitExceeded
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
+from pydantic_ai.settings import ModelSettings
 from pydantic_ai.usage import UsageLimits
 
+from cli.ask.results import format_result
 from cli.ask.skills import AgentSkill, build_skills_index_prompt
 from cli.engine import launch
 from cli.errors import BeaError, LedgerError, error_from_status
@@ -22,9 +25,13 @@ Use the write_directive tool to append beancount directives to the ledger file w
 
 BQL (Beancount Query Language) is SQL-like but NOT standard SQL. Key rules:
 
-The default table is postings — one row per posting.
+The default table is postings — one row per posting, so a transaction with two
+postings is two rows. `FROM #entries` selects whole entries instead (one row per
+directive, with a `type` column); `#postings`, `accounts`, `balances` and
+`prices` are the other relations. Counting the default table counts postings.
 Columns: date, account, number, currency, position, payee, narration, tags, flag.
 Use SELECT DISTINCT to deduplicate (e.g. one row per account or per transaction).
+`count(DISTINCT x)` is not valid in this dialect — count a subquery instead.
 tags and links hold a whole set per entry, so DISTINCT and GROUP BY cannot take
 them. Wrap them first: joinstr(tags) is a string and behaves like any other
 column, and 'grocery' IN tags tests one tag. Do not rely on the order of tags
@@ -47,9 +54,33 @@ Common examples:
     SELECT DISTINCT joinstr(tags)
   Entries carrying one tag:
     SELECT date, narration WHERE 'grocery' IN tags
+  How many transactions there are (count entries, not postings):
+    SELECT count(*) FROM #entries WHERE type = 'transaction'
+    -- bare `SELECT count(*)` answers a different question: it counts postings.
+  Largest / top N — "largest" means ORDER BY ... DESC:
+    SELECT date, payee, narration, number WHERE account ~ '^Expenses' ORDER BY number DESC LIMIT 1
+    -- ascending order would report the smallest; say DESC when asked for the biggest.
+  Net worth, or any balance as of a date (filter by account type, never the whole ledger):
+    SELECT sum(position) FROM CLOSE ON 2024-03-01 WHERE account ~ '^(Assets|Liabilities)'
+    SELECT account, sum(position) WHERE account ~ '^(Assets|Liabilities)' AND date <= 2024-03-01 GROUP BY account
+  Holdings in one currency (filter by account, because the currency's legs net to zero ledger-wide):
+    SELECT account, sum(position) WHERE currency = 'EUR' AND account ~ '^(Assets|Liabilities)' GROUP BY account
+
+Every transaction balances, so an unfiltered sum(position) — over the whole
+ledger, or filtered only by date or by currency — is zero by construction. A
+result of 0 means the matched postings cancelled out, not that the ledger is
+empty: re-run it restricted to the accounts the question is about before
+concluding anything. Each result tells you how many rows it has; "0 row(s)"
+means nothing matched, and a cell reading 0 is a real zero.
 
 Other functions: year(date), month(date), root(account), leaf(account), units(position), cost(position)
-FROM OPEN ON <date> / FROM CLOSE [ON <date>] / FROM CLEAR are temporal modifiers, not table names.
+FROM also takes temporal modifiers instead of a relation: FROM OPEN ON <date> /
+FROM CLOSE [ON <date>] / FROM CLEAR. Use the run_bql_query tool for SELECT
+(and BALANCES / JOURNAL); it does not run PRINT or dot commands.
+
+Prefer aggregates to enumeration: a result is truncated past a few hundred rows,
+and a total, a GROUP BY or a date range answers most questions. When a result
+says it was truncated, say so in your answer.
 
 If a query fails, read the error carefully, fix the syntax, and retry.
 
@@ -75,10 +106,23 @@ Always use correct indentation (two spaces for postings). Use today's date if no
 REQUEST_LIMIT = 12
 TOOL_CALLS_LIMIT = 10
 
+#: What one answer may be long enough to say. A request that names no output cap
+#: reserves the model's whole default allowance, and the hosted proxy budgets
+#: against what a request reserves: at the edge of an account's window the
+#: uncapped request is the first one refused, while a modestly capped one still
+#: fits (w3/446). An answer here is prose about a ledger — a few paragraphs, or a
+#: short table — so this is generous for the job and small against a window.
+MAX_OUTPUT_TOKENS = 1500
+
 
 def usage_limits() -> UsageLimits:
     """The per-question budget, built the same way for the REPL and for `--print`."""
     return UsageLimits(request_limit=REQUEST_LIMIT, tool_calls_limit=TOOL_CALLS_LIMIT)
+
+
+def model_settings() -> ModelSettings:
+    """The request settings every `ask` call carries, chiefly the output cap."""
+    return ModelSettings(max_tokens=MAX_OUTPUT_TOKENS)
 
 
 @dataclass
@@ -125,7 +169,18 @@ def translated_failures() -> Iterator[None]:
     try:
         yield
     except ModelHTTPError as exc:
+        quota = _quota_refusal(exc.body)
+        if quota is not None:
+            raise BeaError(quota) from exc
         raise error_from_status(exc.status_code, _server_message(exc.body)) from exc
+    except ModelAPIError as exc:
+        # A connection-level failure: the AI SDK wraps the HTTP client's error
+        # rather than answering with a status, so it never reached the status
+        # table above and `ask` said the SDK's bare `Connection error.` where
+        # `bea cloud status` says `Could not reach the server (ConnectError).`
+        # `USAGE.md` promises those read the same, so the same translation the
+        # rest of the CLI uses is applied to whatever the SDK was hiding.
+        raise _unreachable(exc) from exc
     except UsageLimitExceeded as exc:
         raise BeaError(
             f"The assistant kept querying without reaching an answer and stopped at this question's "
@@ -139,6 +194,51 @@ def translated_failures() -> Iterator[None]:
             "nothing was written to your ledger. Rephrase the question and retry, "
             "or run the query yourself with 'bea query'."
         ) from exc
+
+
+def _unreachable(exc: BaseException) -> BeaError:
+    """The CLI's own network sentence, built from whatever the SDK wrapped.
+
+    The HTTP client's exception class is the only part of a connection failure
+    worth showing (its message is often empty, and can carry a credential), so
+    the cause chain is walked for it and `to_bea_error` words the result — the
+    same call `cli.api.client` makes, hence the same sentence.
+    """
+    import httpx
+
+    from cli.errors import to_bea_error
+
+    cause: BaseException | None = exc
+    seen: set[int] = set()
+    while cause is not None and id(cause) not in seen:
+        seen.add(id(cause))
+        if isinstance(cause, httpx.TransportError):
+            return to_bea_error(cause)
+        cause = cause.__cause__ or cause.__context__
+    return BeaError(f"Could not reach the server ({type(exc).__name__}).")
+
+
+def _quota_refusal(body: object) -> str | None:
+    """The account's AI budget, refused: which quota, and when it comes back.
+
+    The proxy answers a quota rejection with its own code and, when it knows it,
+    the moment the window reopens. Both are worth more to the reader than the
+    status line, and the code survives however deeply the envelope nests it —
+    which is why this looks at the whole body rather than at one key.
+    """
+    text = body if isinstance(body, str) else json.dumps(body, default=str)
+    if "QUOTA_EXCEEDED" not in text:
+        return None
+    # The escape-tolerant form on purpose: the code and the reset time may sit
+    # inside a JSON document that is itself the value of a JSON string, so the
+    # quotes around them may be escaped once (w3/445 is the same envelope).
+    until = re.search(r'blockedUntil\\?"\s*:\s*\\?"([^"\\]+)', text)
+    when = f" It resets at {until.group(1)}." if until else ""
+    return (
+        "This account's hosted AI quota is used up, so the question was refused; "
+        f"nothing was written to your ledger.{when} "
+        "Run the query yourself with 'bea query' in the meantime."
+    )
 
 
 def _server_message(body: object) -> str | None:
@@ -173,22 +273,26 @@ def make_agent(
     system_prompt = _SYSTEM_PROMPT
     if skills:
         system_prompt = system_prompt + build_skills_index_prompt(skills)
-    agent: Agent[BqlDeps, str] = Agent(model, deps_type=BqlDeps, system_prompt=system_prompt)
+    agent: Agent[BqlDeps, str] = Agent(
+        model,
+        deps_type=BqlDeps,
+        system_prompt=system_prompt,
+        model_settings=model_settings(),
+    )
 
     @agent.tool(retries=2)
     def run_bql_query(ctx: RunContext[BqlDeps], query: str) -> str:
-        """Run a BQL (Beancount Query Language) query against the user's Beancount ledger."""
+        """Run a BQL SELECT (Beancount Query Language) against the user's Beancount ledger."""
         try:
-            data = launch.helper_json(["query", "--file", str(ctx.deps.file.resolve()), query, "--format", "text"])
+            # Rows and columns, not the rendered table: the row count, a visible
+            # zero and a bounded result all need the typed shape (`ask.results`).
+            data = launch.helper_json(["query", "--file", str(ctx.deps.file.resolve()), query, "--format", "json"])
         except LedgerError as exc:
             detail = "; ".join(exc.details) if exc.details else str(exc)
             raise ModelRetry("Ledger is invalid: " + detail) from exc
         except BeaError as exc:
             raise ModelRetry(f"BQL error: {exc}. Fix the query and retry.") from exc
-        text = str(data.get("text", ""))
-        if not text.strip():
-            return "(empty result set)"
-        return text
+        return format_result(query, data)
 
     @agent.tool()
     def write_directive(ctx: RunContext[BqlDeps], directive: str) -> str:

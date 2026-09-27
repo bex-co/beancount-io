@@ -1106,6 +1106,18 @@ credential is the one exception: it ends the session with exit **3**, because
 every later turn would fail the same way. Each question also has a fixed budget
 of hosted requests and ledger queries; a model that keeps querying without
 answering stops there, reports that nothing was written, and costs no more.
+Each answer also carries an explicit output cap rather than reserving the
+model's default allowance.
+
+A query's result reaches the assistant as rows with a row count, the relation
+they came from, and a zero written as `0` — a total that nets to zero is a zero,
+not missing data. Results are bounded: past a few hundred rows, or roughly
+12,000 characters, the result is truncated and the answer says so. Enumerating a
+large ledger therefore returns a truncated list instead of failing; ask for a
+total, a `GROUP BY` or a date range to see everything that matters. The BQL tool
+runs `SELECT` (and `BALANCES` / `JOURNAL`); `PRINT` and dot commands remain
+available in `bea query`. A proxy that cannot be reached reads the same in `ask`
+as anywhere else — `Could not reach the server (…)`.
 
 Ask discovers project skills as `NAME/SKILL.md` files in `.agents/skills/`
 under the working directory (regardless of `--file`) and user skills in
