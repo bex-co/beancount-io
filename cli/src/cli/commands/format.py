@@ -7,6 +7,13 @@ for — expanding a directory into the ledger files under it, and reporting what
 would change without writing it (`--check` for a pre-commit hook, `--dry-run`
 for a look first).
 
+Rewriting a file is `bea-engine format --in-place` rather than upstream's own
+`--in-place`, because upstream truncates the file it was given. The engine runs
+the same alignment on the bytes it read and replaces each target atomically
+under the ledger lock, which is what makes `-i` safe to run beside another
+`bea` write or to interrupt (w3/434, w3/435). Both are child processes either
+way; only the writing moved.
+
 **Breaking change (ADR014).** Formatting used to rewrite the files it was given.
 It now writes to stdout, like `bean-format`, and rewriting is `--in-place`.
 Upstream's default is the safe one: a command that both reads a path and
@@ -25,7 +32,7 @@ import typer
 from cli import context, output
 from cli.engine import launch
 from cli.errors import BeaError, LedgerError, UsageError
-from cli.utils import UTF8_BOM, decode_error_message
+from cli.utils import decode_error_message
 
 SUFFIXES = {".bean", ".beancount"}
 STDIN = "-"
@@ -157,38 +164,17 @@ def _format_in_place(
     # Unparseable files are skipped, not "formatted": upstream would echo them
     # back with a newline appended and call that a rewrite.
     formattable = [file for file in files if str(file) not in failed]
-    before = {file: _raw(file) for file in formattable}
-    for file in formattable:
-        _strip_bom(file)
-    completed = (
-        launch.capture_native("bean-format", [*alignment, "--in-place", *(str(f) for f in formattable)])
-        if formattable
-        else None
-    )
-    # Read back even after failure: upstream can rewrite earlier files before
-    # encountering one it cannot write. Never invite a retry without that result.
-    if completed is not None and completed.returncode == 0:
-        for file in formattable:
-            # Byte comparison, not text: upstream rewrites through Python's
-            # default text mode, so on Windows it hands back CRLF for every
-            # line it wrote. `--check` reads a carriage return as unformatted,
-            # so without normalizing here `-i` would never converge there.
-            fixed = _canonical_posting_indent(_text(file)).encode("utf-8")
-            if fixed != _raw(file):
-                file.write_bytes(fixed)
-    changed = [str(file) for file in formattable if _raw(file) != before[file]]
+    try:
+        changed = _changed(formattable, alignment, in_place=True)
+    except BeaError as exc:
+        # Report even after a failure: the engine rewrites file by file and can
+        # meet one it cannot write after replacing earlier ones. Never invite a
+        # retry without saying which files are already done.
+        partial = [str(name) for name in (exc.result or {}).get("formatted", [])]
+        exc.details = [f"formatted: {name}" for name in partial] + exc.details
+        exc.result = _result(files, partial, failed, missing) | {"in_place": True}
+        raise
     result = _result(files, changed, failed, missing) | {"in_place": True}
-    if completed is not None and completed.returncode != 0:
-        diagnostic = (completed.stderr or "").strip()
-        # An uncaught upstream exception ends with its type, reason, and path;
-        # the stack itself belongs only in the --debug traceback field.
-        reason = diagnostic.splitlines()[-1] if diagnostic else "No diagnostic was returned."
-        raise LedgerError(
-            f"bean-format could not finish in-place formatting (exit {completed.returncode}): {reason}",
-            details=[f"formatted: {name}" for name in changed],
-            result=result,
-            traceback=diagnostic or None,
-        )
     if failed or missing:
         raise LedgerError(
             _problems_message(len(changed), failed, missing) + " Nothing was written to the failed files.",
@@ -216,7 +202,7 @@ def _report(
 ) -> None:
     """Which files upstream would rewrite, without rewriting any of them."""
     ctx = context.current()
-    changed = [str(f) for f in files if str(f) not in failed and _would_change(f, alignment)]
+    changed = _changed([file for file in files if str(file) not in failed], alignment, in_place=False)
     result = _result(files, changed, failed, missing) | {"check": check, "dry_run": dry_run}
 
     if check and (changed or failed or missing):
@@ -293,86 +279,20 @@ def _remedy(named: list[Path], alignment: list[str]) -> str:
     return shlex.join(["bea", "format", "-i", *(str(path.expanduser().resolve()) for path in named), *alignment])
 
 
-def _would_change(file: Path, alignment: list[str]) -> bool:
-    """Whether upstream's output for `file` differs from what is on disk.
+def _changed(files: list[Path], alignment: list[str], *, in_place: bool) -> list[str]:
+    """Which of `files` alignment would rewrite — or, with `in_place`, did rewrite.
 
-    Captured rather than streamed, because the answer is a comparison and not
-    something to print. A formatter that fails is reported as a failure instead
-    of being read as "already formatted".
+    One engine call answers both, so the report and the rewrite can never
+    disagree about what would change. The rewrite itself belongs there too:
+    `bea-engine format --in-place` takes the same ledger lock every other writer
+    takes and replaces each file atomically from a staged candidate, which is
+    what upstream's own `--in-place` cannot do (w3/434, w3/435).
     """
-    try:
-        raw = file.read_bytes()
-    except OSError:
-        pass
-    else:
-        # Upstream cannot parse a BOM at all and always emits LF, so a marked
-        # file or any carriage return means `-i` would rewrite the bytes.
-        # Answered here so `--check` names the remedy instead of failing on
-        # upstream's parse error, and stays coherent with what `-i` reports.
-        if raw.startswith(UTF8_BOM) or b"\r" in raw:
-            return True
-    completed = launch.capture_native("bean-format", [*alignment, str(file)])
-    if completed.returncode != 0:
-        raise BeaError(
-            f"bean-format could not read {file} (exit {completed.returncode}).",
-            details=[line for line in (completed.stderr or "").splitlines() if line.strip()][-20:],
-        )
-    return _canonical_posting_indent(completed.stdout) != _canonical_posting_indent(_text(file))
-
-
-def _canonical_posting_indent(text: str) -> str:
-    """Normalize tab / single-space posting indents to the usual two spaces.
-
-    Upstream bean-format turns tabs into one ASCII space and then treats that
-    as already formatted. Agents and docs use two spaces; rewrite leftover
-    odd indents so --check stays honest.
-    """
-    import re
-
-    lines: list[str] = []
-    for line in text.splitlines(keepends=True):
-        match = re.match(r"^([ \t]+)(.*)$", line)
-        if match and match.group(1) != "  ":
-            rest = match.group(2)
-            if rest and not re.match(r"^\d{4}-\d{2}-\d{2}\b", rest):
-                ending = "\n" if line.endswith("\n") else ""
-                body = line[: -len(ending)] if ending else line
-                lines.append("  " + body.lstrip(" \t") + ending)
-                continue
-        lines.append(line)
-    return "".join(lines)
-
-
-def _strip_bom(file: Path) -> None:
-    """Remove a leading UTF-8 BOM from the file on disk, leaving all other bytes.
-
-    The mark is an encoding declaration, not content: every other byte stays
-    verbatim, so this converges a Windows-saved ledger without reformatting it.
-    """
-    try:
-        raw = file.read_bytes()
-    except OSError:
-        return
-    if not raw.startswith(UTF8_BOM):
-        return
-    try:
-        file.write_bytes(raw[len(UTF8_BOM) :])
-    except OSError:
-        # A file that cannot be rewritten is upstream's failure to report,
-        # not a crash here: bean-format still cannot parse the kept mark.
-        return
-
-
-def _raw(file: Path) -> bytes:
-    """The file's bytes, for comparing what `-i` actually rewrote.
-
-    A BOM strip or a CRLF-to-LF normalization changes no alignment, so a
-    text comparison would report the file untouched while its bytes changed.
-    """
-    try:
-        return file.read_bytes()
-    except OSError as exc:
-        raise LedgerError(f"Could not read {file}: {exc.strerror or exc}.") from exc
+    if not files:
+        return []
+    flag = ["--in-place"] if in_place else []
+    data = launch.helper_json(["format", *flag, *alignment, *(str(file) for file in files)], writes=in_place)
+    return [str(name) for name in data.get("changed", [])]
 
 
 def _text(file: Path) -> str:

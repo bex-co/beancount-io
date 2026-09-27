@@ -327,14 +327,16 @@ def test_in_place_format_failure_reports_partial_changes(
         )
     finally:
         readonly.chmod(0o644)
-    assert result.returncode == 1
+    # A read-only file is the filesystem refusing, which is exit 3 for every
+    # writer here now that `format -i` replaces the file itself (w3/m47).
+    assert result.returncode == 3
     assert result.stdout == ""
     assert str(readonly) in result.stderr
     assert ("Traceback (most recent call last)" in result.stderr) is debug
     changed = [str(files[0])] if recursive else []
     if json_output:
         error = json.loads(result.stderr)["error"]
-        assert error["category"] == "validation"
+        assert error["category"] == "auth"
         assert error["result"]["formatted"] == changed
         assert error["result"]["in_place"] is True
         assert ("traceback" in error) is debug

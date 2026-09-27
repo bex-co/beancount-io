@@ -64,7 +64,9 @@
 
 - [x] **m45** — Keep generated import identities exact across amounts and currencies (6 tasks) ← continuous CLI QA, 2026-09-21
 
-## Blocked
+- [ ] **m46** — [Harden REST v1 ledger path params (validate + encode + fail-closed)](./m46/README.md) (7 tasks) ← continuous CLI QA, 2026-09-26
+
+- [x] **m48** — Refuse output destinations that would destroy files the command was not given (6 tasks) ← continuous CLI QA, 2026-09-26; consolidates notes 431 + 436
 
 Blocked milestones and inbox notes live under [`blocked/`](./blocked/) with their reason and **Unblock:** condition; they keep their IDs and return to the open tree when work can resume.
 

@@ -74,6 +74,8 @@ doing money arithmetic, and a float would silently round.
 | `list --file PATH --type TYPE`      | `{"items": [...], "truncated": false, "errors": []}`       |
 | `add --file PATH --type TYPE --request JSON` | `{"written": 1, "directive": {...}, "warnings": [], "target": "..."}` |
 | `append --file PATH --text TEXT`    | raw directive text: dry-run token or `{"written", "target"}` |
+| `syntax PATH...`                    | `{"files": {path: [errors]}}`, per-file syntax errors       |
+| `format PATH... [--in-place]`       | `{"changed": [path, ...]}` — locked, atomic in-place writes |
 | `shell --file PATH`                 | nothing — the one streaming command (see below)            |
 | `report --file PATH --kind KIND`    | one financial report (trees, series, valuation metadata)   |
 | `balance --file PATH [ACCOUNT...]`  | filtered balances or the trial balance                     |

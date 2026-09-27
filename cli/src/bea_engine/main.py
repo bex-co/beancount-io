@@ -63,6 +63,39 @@ def syntax(
         answer.data = {"files": {str(path): text.syntax_errors(path) for path in files}}
 
 
+@app.command("format")
+def format_files(
+    files: Annotated[list[Path], typer.Argument(help="Ledger files to align.")],
+    in_place: Annotated[
+        bool, typer.Option("--in-place", "-i", help="Rewrite each file instead of only reporting it.")
+    ] = False,
+    prefix_width: Annotated[int | None, typer.Option("--prefix-width", "-w", help="Force fixed prefix width.")] = None,
+    num_width: Annotated[int | None, typer.Option("--num-width", "-W", help="Force fixed numbers width.")] = None,
+    currency_column: Annotated[
+        int | None, typer.Option("--currency-column", "-c", help="Align currencies to this column.")
+    ] = None,
+) -> None:
+    """Align postings the way `bean-format` does, in memory.
+
+    Answers `{"changed": [path, ...]}`: the files alignment would rewrite, or
+    with `--in-place` the ones it did rewrite. Rewriting takes the same ledger
+    lock every other writer takes and replaces each file atomically from a
+    staged candidate, so an interrupted run leaves every target either
+    byte-identical or completely formatted. A failure that had already rewritten
+    earlier files carries them as `result.formatted`.
+    """
+    with protocol.answering("format") as answer:
+        from bea_engine.ledger import formatting
+
+        answer.data = formatting.format_files(
+            files,
+            in_place=in_place,
+            prefix_width=prefix_width,
+            num_width=num_width,
+            currency_column=currency_column,
+        )
+
+
 @app.command()
 def query(
     query_string: Annotated[str, typer.Argument(help="The BQL statement, dot command or stored query to run.")],

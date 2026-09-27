@@ -100,7 +100,7 @@ def test_init_reprompts_without_losing_valid_answers(tmp_path: Path, monkeypatch
 
 @pytest.mark.parametrize(
     ("operation", "expected_exit"),
-    [("format", 1), ("import", 3)],
+    [("format", 3), ("import", 3)],
 )
 def test_readonly_ledger_refuses_other_writes(book: Path, operation: str, expected_exit: int) -> None:
     args = ["format", str(book), "--in-place"]

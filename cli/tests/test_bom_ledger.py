@@ -9,10 +9,10 @@ import pytest
 from typer.testing import CliRunner
 
 from bea_engine import compat
+from bea_engine.ledger import formatting
 from bea_engine.ledger.text import decode_error_message as engine_decode_error_message
+from bea_engine.protocol import UsageError as EngineUsageError
 from cli.commands.check import _closure_needs_compat
-from cli.commands.format import _raw, _strip_bom, _would_change
-from cli.errors import BeaError, LedgerError
 from cli.main import app
 from cli.utils import decode_error_message as cli_decode_error_message
 from cli.utils import has_bom
@@ -168,31 +168,21 @@ def test_closure_probe_skips_a_member_that_vanished(tmp_path: Path) -> None:
     assert has_bom(tmp_path / "missing.bean") is False
 
 
-def test_strip_bom_ignores_a_missing_file(tmp_path: Path) -> None:
-    assert _strip_bom(tmp_path / "missing.bean") is None
-
-
-def test_strip_bom_keeps_an_unwritable_mark_for_upstream(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_the_mark_is_dropped_in_memory_rather_than_written_back(tmp_path: Path) -> None:
+    """The BOM strip is part of the one aligned result, not a write of its own."""
     file = tmp_path / "main.bean"
-    file.write_bytes(BOM + ENTRY.encode("utf-8"))
+    file.write_bytes(BOM + SUB.encode("utf-8"))
 
-    def _deny(self: Path, data: bytes) -> int:
-        raise OSError("read-only filesystem")
+    raw, text = formatting._read(file)
 
-    monkeypatch.setattr(Path, "write_bytes", _deny)
-
-    assert _strip_bom(file) is None
-    assert file.read_bytes().startswith(BOM)
+    assert raw.startswith(BOM)
+    assert not text.startswith(formatting.BOM_CHARACTER)
+    assert file.read_bytes() == raw
 
 
-def test_raw_reports_an_unreadable_file(tmp_path: Path) -> None:
-    with pytest.raises(LedgerError, match="Could not read"):
-        _raw(tmp_path / "missing.bean")
-
-
-def test_would_change_falls_through_to_upstream_when_unreadable(tmp_path: Path) -> None:
-    with pytest.raises(BeaError, match="bean-format could not read"):
-        _would_change(tmp_path / "missing.bean", [])
+def test_an_unreadable_file_is_a_usage_failure_naming_it(tmp_path: Path) -> None:
+    with pytest.raises(EngineUsageError, match="Could not read"):
+        formatting._read(tmp_path / "missing.bean")
 
 
 def test_decode_failures_report_path_offset_and_remedy(tmp_path: Path) -> None:

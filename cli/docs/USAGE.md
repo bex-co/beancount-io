@@ -311,6 +311,19 @@ convergence path instead — it rewrites the file to LF, strips a UTF-8 BOM, and
 reports the file as formatted even when alignment alone did not change — so
 `--check` fails on a BOM-marked or carriage-return file until `-i` has run.
 
+`-i` is a write like any other here, with the same guarantee: each target ends
+up either exactly as it was or completely formatted, never partially written.
+The aligned text is produced in memory and staged into a hidden `.bea-*.tmp`
+copy beside the file, which then replaces it in one atomic step, so a Ctrl-C
+(exit **130**), a crash, or a power loss mid-run cannot empty or truncate a
+ledger, and no staging copy is left behind. Each target is also locked for the
+whole pass, so `format -i` is serialized against every other `bea` write —
+`add`, `add transactions`, `import --apply`, `ask` — and against another
+`format -i`: a concurrent append either lands before the formatting reads the
+file or waits for it, and can no longer be discarded by it. Two `format -i` runs
+on the same ledger both finish, and the second reports nothing to do.
+`--check` and `--dry-run` take no lock because they write nothing.
+
 A ledger saved with a UTF-8 BOM loads like any other: the mark is skipped on
 read, kept by appends, and removed only by `format -i`. Account names, search
 terms, and BQL literals compare NFC-normalized, so NFC and NFD spellings of
@@ -558,9 +571,9 @@ formatted file stays formatted after an add; when a new amount or account is
 wider than any before it, a later `bea format` realigns only the older lines.
 Writes respect the destination file's permissions: a read-only file produces
 exit **3**, even when its directory permits replacement. This also applies to
-import. A read-only root can still validate a writable `--into` file.
-`bea format -i` is upstream's formatter writing the file itself, so a read-only
-file fails there with exit **1** and the formatter's own message.
+import and to `bea format -i`, which replaces the file itself rather than
+handing it to upstream's formatter. A read-only root can still validate a
+writable `--into` file.
 
 Payees, narrations, string metadata, and the string fields of `note`, `event`,
 and `custom` are written on one line: runs of CR/LF line breaks become spaces
