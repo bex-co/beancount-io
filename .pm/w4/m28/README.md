@@ -1,6 +1,6 @@
 # w4 · m28 — Locale-aware plurals on both clients
 
-**Worker:** worker1 **Goal:** both clients pluralise counts by each language's own rules (`Intl.PluralRules`), and m27's count strings read as natural sentences in every shipped language. **Status:** in progress (t001–t005 done)
+**Worker:** worker1 **Goal:** both clients pluralise counts by each language's own rules (`Intl.PluralRules`), and m27's count strings read as natural sentences in every shipped language. **Status:** in progress (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,8 +11,9 @@
 | t003 | Rewrite m27's count strings as natural plural sentences — **DONE** | 45m | t001, t002 |
 | t004 | Adoption surface — **DONE** | 15m | t003       |
 | t005 | Simplify — **DONE** | 20m | t004       |
-| t006 | Test coverage                                                           | 30m | t004       |
-| t007 | Closeout                                                                | 10m | t005, t006 |
+| t006 | Test coverage — **DONE** | 30m | t004       |
+| t008 | Dashboard: make the type-check require `count` for plural keys         | 45m | t001       |
+| t007 | Closeout                                                                | 10m | t005, t006, t008 |
 
 ## Definition of done
 

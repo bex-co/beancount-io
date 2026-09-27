@@ -4,7 +4,7 @@
 
 ## Milestones
 
-- [ ] **m28** — [Locale-aware plurals on both clients](./m28/README.md) (7 tasks) ← promoted w4/187, filed from m27's wording deviation, 2026-09-26
+- [ ] **m28** — [Locale-aware plurals on both clients](./m28/README.md) (8 tasks) ← promoted w4/187, filed from m27's wording deviation, 2026-09-26
 
 - [x] **m27** — [Say which prices are stale, and only when they are](./done/m27/README.md) (7 tasks) ← user design review of m26's headline, 2026-09-26
 
@@ -51,6 +51,8 @@
 - [x] **m13** — [Preserve ledger pages through loading and hydration](./done/m13/README.md) (6 tasks) ← repeated dashboard QA, promoted w4/073, 2026-09-17
 
 ## Dropped
+
+- ~~**188**~~ — Type-check `count` for dashboard plural keys — dropped 2026-09-26: folded into [m28](./m28/README.md) as t008, since m28's definition of done already requires it.
 
 - ~~**187**~~ — Locale-aware plurals on both clients — dropped 2026-09-26: promoted to [m28](./m28/README.md), preserving the note's scope; the work spans two packages and exceeds one hour.
 
