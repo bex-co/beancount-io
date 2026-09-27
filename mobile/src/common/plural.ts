@@ -87,10 +87,20 @@ export function registerPluralizers(
 /** Every category `locale` distinguishes, as the catalog must provide them. */
 function pluralCategoriesOf(locale: string): PluralCategory[] {
   const rules = rulesFor(locale);
-  return rules
-    ? (rules.resolvedOptions().pluralCategories as PluralCategory[])
-    : ["one", "other"];
+  if (!rules) return ["one", "other"];
+  // Canonical order: ICU versions list the categories in different orders.
+  const categories = rules.resolvedOptions().pluralCategories as string[];
+  return CANONICAL_ORDER.filter((category) => categories.includes(category));
 }
+
+const CANONICAL_ORDER: PluralCategory[] = [
+  "zero",
+  "one",
+  "two",
+  "few",
+  "many",
+  "other",
+];
 
 export type PluralCategoryMismatch = {
   key: string;

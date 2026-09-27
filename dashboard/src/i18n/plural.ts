@@ -25,8 +25,11 @@ export const PLURAL_SUFFIX = new RegExp(`_(${PLURAL_CATEGORIES.join("|")})$`);
 
 /** The cardinal categories `language` distinguishes, per `Intl.PluralRules`. */
 export function pluralCategories(language: string): PluralCategory[] {
-  return new Intl.PluralRules(language).resolvedOptions()
+  // Canonical order: ICU versions list the categories in different orders
+  // (Node 22 puts `few` and `many` before `one`), and callers compare lists.
+  const categories = new Intl.PluralRules(language).resolvedOptions()
     .pluralCategories as PluralCategory[];
+  return PLURAL_CATEGORIES.filter((category) => categories.includes(category));
 }
 
 type PluralIssue = {

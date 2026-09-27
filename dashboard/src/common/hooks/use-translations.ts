@@ -58,7 +58,11 @@ export function useTranslations() {
       // A count key exists only as its plural variants (`key_one`,
       // `key_other`, …), which i18next resolves from `count`.
       const count = params?.count;
-      if (i18n.exists(`${key}_other`, { lng: "en" }) && count === undefined) {
+      if (
+        count === undefined &&
+        !i18n.exists(key, { lng: "en" }) &&
+        i18n.exists(`${key}_other`, { lng: "en" })
+      ) {
         console.error(
           `❌ TRANSLATION ERROR: "${key}" is a plural message; pass { count }.`,
         );
