@@ -376,6 +376,34 @@ def emit(
         atomic_write(destination, serialized)
 
 
+def _cost_spec_jsonable(cost: Any) -> dict[str, Any]:
+    """A parsed cost constraint, reported field by field.
+
+    A CostSpec is not an Amount: it carries a per-unit number, a total number,
+    and a `MISSING` sentinel — a class, which `json.dumps` cannot encode — in
+    any field the caller left open. Encoding it by the Amount shape crashed on
+    `{}`/`{EUR}` (the sentinel currency reached the encoder) and reported
+    `number: 0` for a total-only cost `{{250 USD}}`, which no longer describes
+    the same lot when it is fed back in. Every field is reported explicitly:
+    unspecified parts are null, and the total keeps its own key.
+
+    The engine's `bea_engine.protocol._jsonable` holds the same walk; the two
+    must agree, or `bea add --json` would change shape depending on which side
+    built the envelope.
+    """
+    total = cost.number_total if isinstance(cost.number_total, Decimal) else None
+    per = cost.number_per if isinstance(cost.number_per, Decimal) else None
+    if total is not None and per is not None and not per:
+        per = None
+    return {
+        "number": jsonable(per),
+        "number_total": jsonable(total),
+        "currency": cost.currency if isinstance(cost.currency, str) else None,
+        "date": jsonable(cost.date),
+        "label": cost.label if isinstance(cost.label, str) else None,
+    }
+
+
 def jsonable(value: Any) -> Any:
     """Convert accounting values to JSON without losing precision.
 
@@ -404,13 +432,10 @@ def jsonable(value: Any) -> Any:
     # Named shapes before structural ones: beancount's Amount and Position are
     # tuples, and rendering them as bare arrays would drop the field names a
     # consumer needs.
+    if hasattr(value, "number_per") and hasattr(value, "number_total"):
+        return _cost_spec_jsonable(value)
     number = getattr(value, "number", None)
     currency = getattr(value, "currency", None)
-    if number is None and currency is not None:
-        # Beancount CostSpec uses number_per / number_total, not number.
-        number = getattr(value, "number_per", None)
-        if number is None:
-            number = getattr(value, "number_total", None)
     if number is not None and currency is not None:
         amount = {"number": jsonable(number), "currency": jsonable(currency)}
         if hasattr(value, "date") and hasattr(value, "label"):

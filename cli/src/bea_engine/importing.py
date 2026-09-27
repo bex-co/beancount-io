@@ -132,7 +132,7 @@ def answer(
             date_format=resolved_date_format,
             rules=load_rules(Path(rules_file)) if rules_file is not None else None,
             default_account=default_account,
-            currency=operating[0] if len(operating) == 1 else None,
+            currency=_row_currency(existing, csv_account, operating),
             delimiter=resolved_delimiter,
             encoding=resolved_encoding,
         )
@@ -550,6 +550,30 @@ def _valid_account(name: str, option: str) -> str:
         raise UsageError(f"{option}: {exc}") from None
 
 
+def _row_currency(existing: list[Any], account: str, operating: list[str]) -> str | None:
+    """The commodity an imported row posts when no currency column names one.
+
+    The source account decides before the ledger does: an account opened for a
+    single currency *is* the commodity its statement is denominated in, and
+    reaching for the ledger's single `operating_currency` instead booked every
+    euro line of a euro account as dollars — exit 0, green `bea check`, wrong
+    money. The operating currency stays the fallback for an account opened for
+    any commodity; `None` leaves the row to the currency column or a refusal.
+    """
+    from beancount.core.data import Open
+
+    opened: set[str] | None = set()
+    for entry in existing:
+        if isinstance(entry, Open) and entry.account == account:
+            if not entry.currencies:
+                opened = None
+                break
+            opened = (opened or set()) | set(entry.currencies)
+    if opened is not None and len(opened) == 1:
+        return next(iter(opened))
+    return operating[0] if len(operating) == 1 else None
+
+
 def _blocked_reason(entry: Any, open_currencies: dict[str, set[str] | None]) -> str | None:
     """Why a transaction cannot be written, or None when its accounts allow it.
 
@@ -574,9 +598,13 @@ def _blocked_reason(entry: Any, open_currencies: dict[str, set[str] | None]) -> 
         allowed = open_currencies.get(posting.account)
         if allowed is not None and posting.units.currency not in allowed:
             choices = ", ".join(sorted(allowed))
+            instead = choices if len(allowed) == 1 else f"one of {choices}"
+            # Widening the open directive is the last remedy offered, not the
+            # first: following it relabels foreign money as the wrong commodity.
             return (
                 f"Cannot post {posting.units.currency} to '{posting.account}' "
-                f"(open for {choices} only). Add {posting.units.currency} to its open directive."
+                f"(open for {choices} only). Post {instead} instead — name the row's commodity with "
+                f"--csv currency=CODE — or add {posting.units.currency} to its open directive."
             )
     return None
 

@@ -46,6 +46,48 @@ def _is_currency_symbol(text: str) -> bool:
     return len(text) == 1 and unicodedata.category(text) == "Sc"
 
 
+# Symbols that name exactly one commodity. `$` (dollars of a dozen countries)
+# and `¥` (JPY and CNY) are deliberately absent: they say nothing a row can be
+# refused over, and every existing `$` column must keep importing unchanged.
+_UNAMBIGUOUS_SYMBOLS = {
+    "€": "EUR",
+    "£": "GBP",
+    "₹": "INR",
+    "₽": "RUB",
+    "₩": "KRW",
+    "₪": "ILS",
+    "₺": "TRY",
+    "₫": "VND",
+    "₴": "UAH",
+    "฿": "THB",
+    "₱": "PHP",
+    "₦": "NGN",
+}
+
+_CURRENCY_CODE = re.compile(r"[A-Z][A-Z0-9'._-]*[A-Z0-9]|[A-Z]")
+
+
+def _is_currency_code(text: str) -> bool:
+    """Whether the text is a Beancount commodity name, so it can be a constant."""
+    return bool(_CURRENCY_CODE.fullmatch(text))
+
+
+def _cell_symbol_currency(value: str) -> tuple[str, str] | None:
+    """The commodity an amount cell's own symbol names, with the symbol.
+
+    A cell is written by the bank, and `4,50 €` says euros no matter what the
+    mapping or the ledger says. The symbol is still stripped before parsing —
+    the number is the number — but it is no longer thrown away unread: a symbol
+    that contradicts the currency the row would be posted in is a refusal, not a
+    relabelling of the money.
+    """
+    for character in value:
+        currency = _UNAMBIGUOUS_SYMBOLS.get(character)
+        if currency is not None:
+            return character, currency
+    return None
+
+
 def _negated(number: Decimal) -> Decimal:
     """The same amount with the opposite sign, and not one digit different.
 
@@ -703,6 +745,9 @@ class CsvImporter:
         self._rules = rules or []
         self._default_account = default_account
         self._currency = currency
+        # Set by _check_columns when the currency mapping names a commodity
+        # rather than a column the file has.
+        self._constant_currency: str | None = None
         self._decimal_comma = False
         self.skipped_blank_rows = 0
         # Category values that were not account names, for the caller to report once.
@@ -726,6 +771,13 @@ class CsvImporter:
         """Every column this run reads must exist exactly once, or a row could silently take the wrong cell."""
         counts = Counter(headers)
         wanted = dict(self._mapping.columns)
+        # `currency=EUR` on a file with no `EUR` column is a constant, not a
+        # typo: a foreign-currency export that names its commodity nowhere used
+        # to be importable only by editing the bank's own file.
+        constant = wanted.get("currency")
+        if constant is not None and counts[constant] == 0 and _is_currency_code(constant):
+            self._constant_currency = constant
+            del wanted["currency"]
         if category_header is not None:
             wanted.setdefault("category", category_header)
         for role, column in wanted.items():
@@ -739,6 +791,86 @@ class CsvImporter:
 
     def _parse_decimal(self, where: str, column: str, value: str) -> Decimal:
         return _parse_amount_cell(where, column, value, decimal_comma=self._decimal_comma)
+
+    def _pair_number(self, row: dict[str, str], where: str) -> Decimal:
+        """The signed amount of a row mapped as a debit/credit pair.
+
+        A debit is money leaving the source account and a credit money arriving,
+        whichever sign the bank printed on the cell: many exports print the
+        outflow column negative already, and negating that a second time booked
+        every outflow as income. So the direction comes from the column and only
+        the magnitude from the cell.
+
+        A cell that parses to zero is an empty cell for the "exactly one" rule —
+        banks routinely zero-fill the unused side — and a row whose two cells are
+        both zero is a zero amount, exactly as the single-amount path treats
+        `0.00`.
+        """
+        columns = self._mapping.columns
+        parsed: list[tuple[str, Decimal]] = []
+        for side in ("debit", "credit"):
+            text = self._cell(row, where, side)
+            if text.strip():
+                parsed.append((side, self._parse_decimal(where, columns[side], text)))
+        nonzero = [(side, number) for side, number in parsed if number]
+        if not parsed or len(nonzero) > 1:
+            raise UsageError(f"{where}: fill exactly one of {columns['debit']!r} or {columns['credit']!r}.")
+        if not nonzero:
+            return parsed[0][1].copy_abs()
+        side, number = nonzero[0]
+        magnitude = number.copy_abs()
+        return magnitude if side == "credit" else _negated(magnitude)
+
+    def _check_cell_symbols(self, row: dict[str, str], where: str, currency: str, amount_columns: list[str]) -> None:
+        """Refuse a row whose own currency symbol is not the currency it would post.
+
+        The symbols are stripped to parse the number; reading them back is what
+        keeps a `4,50 €` cell from being written as `-4.50 USD` under a USD
+        ledger, with exit 0 and a green `bea check` over the wrong commodity.
+        """
+        for column in amount_columns:
+            found = _cell_symbol_currency(row.get(column, ""))
+            if found is None:
+                continue
+            symbol, symbol_currency = found
+            if symbol_currency != currency:
+                raise UsageError(
+                    f"{where}: column {column!r} carries {symbol!r} ({symbol_currency}), but the row would post "
+                    f"{currency}. Name the commodity with --csv currency={symbol_currency}, or open the source "
+                    f"account for {symbol_currency}. Nothing was written."
+                )
+
+    def _check_pair_signs(self, numbered: list[tuple[int, int, dict[str, str]]]) -> None:
+        """Refuse a debit or credit column whose rows disagree about the sign.
+
+        One sign throughout means the column's own sign carries no information
+        and the magnitude rule in `_pair_number` is safe. A column holding both
+        `-5` and `7` does not: one of the two spellings means the opposite
+        direction, and no row can say which. Naming the column and the two rows
+        lets the caller map it as `amount=` — where the sign *is* the direction —
+        or split it, instead of having half the export booked backwards.
+        """
+        columns = self._mapping.columns
+        for side in ("debit", "credit"):
+            column = columns.get(side)
+            if column is None:
+                continue
+            first: dict[bool, int] = {}
+            for row_number, line, row in numbered:
+                text = row.get(column, "")
+                if not text.strip():
+                    continue
+                number = self._parse_decimal(_at(row_number, line), column, text)
+                if number:
+                    first.setdefault(number < 0, row_number)
+                if len(first) == 2:
+                    negative, positive = first[True], first[False]
+                    raise UsageError(
+                        f"Column {column!r} mixes signs: row {negative} is negative and row {positive} "
+                        f"is positive, so no row says which direction the sign means. A {side} column posts "
+                        f"by magnitude and must use one sign; map the column with amount= if its sign "
+                        f"carries the direction."
+                    )
 
     def _is_blank_row(self, row: dict[str, str], headers: set[str]) -> bool:
         """Whether every mapped cell in the row is empty or whitespace."""
@@ -758,7 +890,7 @@ class CsvImporter:
             self._check_columns(source, headers, category_header)
             materialized = list(records)
             amount_columns = [columns[field] for field in ("amount", "debit", "credit") if field in columns]
-            blank_headers = set(columns.values())
+            blank_headers = {column for column in columns.values() if column != self._constant_currency}
             if category_header is not None:
                 blank_headers.add(category_header)
             # Number the data rows once, up front, and hand both numbers down.
@@ -781,6 +913,8 @@ class CsvImporter:
             self._decimal_comma = _resolve_decimal_comma(
                 [(number, row.get(header, "")) for number, _line, row in numbered for header in amount_columns]
             )
+            if "amount" not in columns:
+                self._check_pair_signs(numbered)
             for row_number, line, row in numbered:
                 where = _at(row_number, line)
                 date_column = columns["date"]
@@ -795,18 +929,16 @@ class CsvImporter:
                     amount_column = columns["amount"]
                     number = self._parse_decimal(where, amount_column, self._cell(row, where, "amount"))
                 else:
-                    debit = self._cell(row, where, "debit")
-                    credit = self._cell(row, where, "credit")
-                    if bool(debit) == bool(credit):
-                        raise UsageError(f"{where}: fill exactly one of {columns['debit']!r} or {columns['credit']!r}.")
-                    side = "credit" if credit else "debit"
-                    number = self._parse_decimal(where, columns[side], credit or debit)
-                    number = number if credit else _negated(number)
+                    number = self._pair_number(row, where)
                 if self._mapping.sign == "ledger":
                     number = _negated(number)
-                currency = self._cell(row, where, "currency") or self._currency
+                currency = self._constant_currency or self._cell(row, where, "currency") or self._currency
                 if not currency:
-                    raise UsageError(f"{where}: no currency column and the ledger has no single operating currency.")
+                    raise UsageError(
+                        f"{where}: no currency column and the ledger has no single operating currency. "
+                        "Name the commodity with --csv currency=CODE, or open the source account for one currency."
+                    )
+                self._check_cell_symbols(row, where, currency, amount_columns)
                 # An unmapped or blank payee is absent, not empty: a bare `""`
                 # payee would be printed into every entry the mapping writes.
                 payee = self._cell(row, where, "payee") or None

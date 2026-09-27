@@ -59,8 +59,18 @@ class Amount(BaseModel):
 
 
 class Cost(BaseModel):
-    number: AmountNumber
-    currency: str
+    """A lot's cost constraint: any of a per-unit number, a total, a currency.
+
+    Every field is optional because Beancount's own cost syntax is: `{}` selects
+    a lot without constraining it, `{EUR}` constrains only the commodity, and
+    `{{250.00 USD}}` states a total with no per-unit figure. A required number
+    and currency meant the answer `bea add transaction` gives for such a posting
+    could not be fed back in, though `USAGE.md` promises that round trip.
+    """
+
+    number: AmountNumber | None = None
+    number_total: AmountNumber | None = None
+    currency: str | None = None
     date: datetime.date | None = None
     label: str | None = None
 

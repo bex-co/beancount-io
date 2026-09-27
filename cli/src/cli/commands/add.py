@@ -122,7 +122,7 @@ def _write(
         argv.append("--allow-errors")
     if strict_read:
         argv.append("--strict-read")
-    return file, launch.helper_json(argv, stdin=json.dumps(request))
+    return file, launch.helper_json(argv, stdin=json.dumps(request), writes=True)
 
 
 def _already_recorded(name: str, source: dict[str, Any]) -> None:

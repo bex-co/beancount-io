@@ -139,6 +139,46 @@ def _write(envelope: dict[str, Any]) -> None:
     print(json.dumps(_jsonable(envelope)))
 
 
+def jsonable(value: Any) -> Any:
+    """The envelope's own conversion, for a command that must encode before it writes.
+
+    `answering()` encodes the answer after the command body has returned, so a
+    value it cannot encode fails *after* the file has already been replaced —
+    exit 1 with no envelope, and a caller that retries appends the directive a
+    second time. A write command converts its answer with this first, so an
+    unencodable answer is a refusal with nothing written.
+    """
+    return _jsonable(value)
+
+
+def _cost_spec_jsonable(cost: Any) -> dict[str, Any]:
+    """A parsed cost constraint, reported field by field.
+
+    A CostSpec is not an Amount: it carries a per-unit number, a total number,
+    and a `MISSING` sentinel — a class, which `json.dumps` cannot encode — in
+    any field the caller left open. Encoding it by the Amount shape crashed on
+    `{}`/`{EUR}` (the sentinel currency reached the encoder) and reported
+    `number: 0` for a total-only cost `{{250 USD}}`, which no longer describes
+    the same lot when it is fed back in. Every field is reported explicitly:
+    unspecified parts are null, and the total keeps its own key.
+    """
+    from decimal import Decimal
+
+    total = cost.number_total if isinstance(cost.number_total, Decimal) else None
+    per = cost.number_per if isinstance(cost.number_per, Decimal) else None
+    # `{{250 USD}}` parses as per-unit zero plus a total; that zero is the
+    # grammar's spelling of "no per-unit component", not a cost of nothing.
+    if total is not None and per is not None and not per:
+        per = None
+    return {
+        "number": _jsonable(per),
+        "number_total": _jsonable(total),
+        "currency": cost.currency if isinstance(cost.currency, str) else None,
+        "date": _jsonable(cost.date),
+        "label": cost.label if isinstance(cost.label, str) else None,
+    }
+
+
 def _jsonable(value: Any) -> Any:
     """Serialize a command's result the way the frontend's `cli.output.jsonable` does.
 
@@ -174,13 +214,10 @@ def _jsonable(value: Any) -> Any:
         return str(value)
     if isinstance(value, type) and value.__module__ == "beancount.core.number" and value.__name__ == "MISSING":
         return None
+    if hasattr(value, "number_per") and hasattr(value, "number_total"):
+        return _cost_spec_jsonable(value)
     number = getattr(value, "number", None)
     currency = getattr(value, "currency", None)
-    if number is None and currency is not None:
-        # Beancount CostSpec uses number_per / number_total, not number.
-        number = getattr(value, "number_per", None)
-        if number is None:
-            number = getattr(value, "number_total", None)
     if number is not None and currency is not None:
         amount: dict[str, Any] = {"number": _jsonable(number), "currency": _jsonable(currency)}
         if hasattr(value, "date") and hasattr(value, "label"):

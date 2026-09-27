@@ -752,6 +752,11 @@ bea add custom \
   --value "date:2026-04-30"
 ```
 
+A negative value is written in parentheses (`custom "budget" 5 (-2)`), because
+Beancount's grammar reads `5 -2` as one subtracted value. Every `custom` line is
+parsed back before it is written and refused if it would reload as different
+values, so what `bea list custom` reports is what was asked for.
+
 ### Bulk transactions from JSON
 
 ```bash
@@ -805,7 +810,12 @@ bea add transaction "Buy AAPL" --date 2026-08-02 \
 
 Per-unit and total prices (`@`, `@@`) and total costs (`{{...}}`) are supported.
 A `@@` total is written back with `@@` and its exact total, never divided
-into a repeating unit price. JSON remains useful for batches and metadata.
+into a repeating unit price. A cost is written whole: a total cost keeps its
+total (`{# 250.00 USD}`), a currency-only or date-only lot selector keeps its
+constraint (`{EUR}`, `{2026-03-01}`) instead of relaxing to `{}`, and the JSON
+answer reports the same constraint — `number`, `number_total`, `currency`,
+`date` and `label`, with `null` for the parts you left open — so it can be fed
+straight back to `bea add transactions`. JSON remains useful for batches and metadata.
 Open `Assets:Brokerage` in AAPL and `Assets:Cash` in USD before applying this purchase:
 
 ```json

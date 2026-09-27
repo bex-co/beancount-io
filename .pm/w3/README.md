@@ -70,6 +70,8 @@
 
 - [x] **m49** — Write the money the user asked for (8 tasks) ← continuous CLI QA, 2026-09-25/26; consolidates notes 414 + 416 + 421 + 424 + 430
 
+- [x] **m50** — Make the `ask` consent surface honest and its session survivable (9 tasks) ← continuous CLI QA, 2026-09-26; consolidates notes 451 + 452 + 449 (which absorbed 453) + 454
+
 Blocked milestones and inbox notes live under [`blocked/`](./blocked/) with their reason and **Unblock:** condition; they keep their IDs and return to the open tree when work can resume.
 
 - [ ] **m1** / **m2** — see milestone lines above (in-app budget verification).

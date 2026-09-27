@@ -69,8 +69,14 @@ reference:
 `narration`, which keeps the payee field free for the merchant that
 payee-based reporting groups by. `id` and `currency` are optional. Amounts
 take either `amount=Column` or the `debit=A,credit=B` pair (exactly one of the
-two): with the pair, exactly one cell per row must be filled, debits post
-negative. Amount, debit, and credit cells must use decimal notation (`1000`,
+two). With the pair, the *column* decides the direction and the cell supplies
+only the magnitude: a debit posts negative and a credit positive however the
+bank signed the cell, so a `Money Out` column printed `-4.50` still posts
+`-4.50`. A column that mixes non-zero signs is refused naming the column and
+the two disagreeing rows — map it as `amount=` instead, where the sign *is* the
+direction. Exactly one cell per row must be filled, and a cell that parses to
+zero counts as empty, so the `Debit=30.00,Credit=0.00` shape banks zero-fill
+imports as `-30.00`. Amount, debit, and credit cells must use decimal notation (`1000`,
 not `1e3`); a notation error names the row and column before anything is written.
 Cells may carry currency symbols (`$4.50`, `4,50 €`), thousands separators,
 accounting parentheses or a trailing minus for negatives, and comma decimals —
@@ -80,8 +86,16 @@ mixing `1,000.00` with `1.000,00` is refused rather than guessed. `NaN` and
 never write them. A failed parse names the cell, the row, and the accepted
 spellings.
 Amounts default to bank sign (outflows negative); add `sign=ledger`
-when the export uses the opposite convention. The currency defaults to the
-ledger's single operating currency. `--account` names the source account and
+when the export uses the opposite convention. A row's commodity is resolved in
+this order: the `currency=` column, then the source account's own currency when
+its `open` directive names exactly one, then the ledger's single
+`operating_currency`; with none of the three, the row is refused. `currency=`
+also takes a commodity name the file has no column for — `--csv
+…,currency=EUR` — for an export that never states its own currency. A cell
+carrying a symbol that names exactly one commodity (`€`, `£`, `₹`, …) and
+contradicts the resolved currency is refused naming the row and the symbol,
+rather than relabelled; `$` and `¥` name several commodities each and are
+accepted as before. `--account` names the source account and
 is required. The file may start with a BOM; header cells are stripped before
 matching. Field separators are detected from the header among comma,
 semicolon, tab, and pipe; pass `--delimiter ','`, `--delimiter ';'`, or
@@ -111,7 +125,9 @@ Rows that would post to an account the ledger never opened — or a currency
 the open directive disallows — are shown `blocked`, not ready: the row names
 the missing account and the `bea add open` line that fixes it, stays in the
 diff so the proposal stays visible, and `--apply` refuses with exit **4**
-while any row is blocked.
+while any row is blocked. A currency mismatch offers the currency setting
+first and widening the `open` directive last: widening it would book the
+foreign amounts as the wrong commodity.
 
 ### Reading the header row
 

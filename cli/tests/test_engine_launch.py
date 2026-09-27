@@ -95,6 +95,21 @@ class TestHelperJson:
         assert "did not answer" in str(raised.value)
         assert "exit 9" in str(raised.value)
 
+    def test_a_writer_that_answers_nothing_reports_an_unknown_outcome(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A write whose envelope never arrived may already have happened (w3/414).
+
+        Reporting it as a plain failure invited the retry that appended the
+        directive a second time; exit 4 is the documented "outcome unknown".
+        """
+        monkeypatch.setattr(launch, "helper_command", lambda: ([sys.executable, "-c", "import sys; sys.exit(9)"], None))
+
+        with pytest.raises(BeaError) as raised:
+            launch.helper_json(["add", "--file", "main.bean"], writes=True)
+
+        assert raised.value.exit_code == 4
+        assert raised.value.category == "conflict"
+        assert "outcome is unknown" in str(raised.value)
+
 
 class TestRunEngineArgv:
     def test_it_returns_the_engines_exit_code(self, ledger: Path, broken_ledger: Path) -> None:

@@ -614,7 +614,7 @@ def import_entries(
             argv += ["--importer", importer_name]
 
     try:
-        preview = launch.helper_json(argv)
+        preview = launch.helper_json(argv, writes="--apply" in argv)
     except BeaError as exc:
         # Extraction finished far enough to build a preview (conflict / invalid
         # apply). Surface the engine's notes the same way a successful preview does.

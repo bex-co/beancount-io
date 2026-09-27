@@ -6,7 +6,7 @@ import datetime
 import re
 import unicodedata
 from collections.abc import Callable
-from decimal import Decimal
+from decimal import Context, Decimal
 from pathlib import Path
 from typing import Any, NamedTuple
 
@@ -27,7 +27,7 @@ from beancount.core.data import (
     Price,
     Transaction,
 )
-from beancount.core.position import CostSpec
+from beancount.core.position import CostSpec, cost_to_str
 from beancount.parser.printer import EntryPrinter
 from beancount.utils import misc_utils
 
@@ -76,10 +76,15 @@ metadata names there are lowercase without leading underscores.
 
 
 class _TotalPricePrinter(EntryPrinter):
-    """Upstream's printer, rendering stashed `@@` totals back as totals."""
+    """Upstream's printer, rendering stashed `@@` totals and whole cost specs."""
 
     def render_posting_strings(self, posting: Any) -> tuple[str, str, str]:
         flag_account, position_str, weight_str = super().render_posting_strings(posting)  # type: ignore[no-untyped-call]
+        if isinstance(posting.cost, CostSpec):
+            dropped = cost_to_str(posting.cost, self.dformat, True)  # type: ignore[no-untyped-call]
+            faithful = _cost_spec_text(posting.cost, self.dformat)
+            if faithful != dropped:
+                position_str = position_str.replace(f"{{{dropped}}}", f"{{{faithful}}}", 1)
         total = (posting.meta or {}).get(TOTAL_PRICE_META)
         if total is None:
             return flag_account, position_str, weight_str
@@ -102,6 +107,67 @@ class _FixedPointDecimal(Decimal):
 
 def _fixed_point(value: Any) -> Any:
     return _FixedPointDecimal(value) if isinstance(value, Decimal) else value
+
+
+class _CustomValueDecimal(Decimal):
+    """A `custom` value that prints fixed-point, and parenthesized when negative.
+
+    Custom values are printed space-separated, and Beancount's grammar reads
+    `NUMBER - NUMBER` as a subtraction: `custom "budget" 5 -2` reloads as the
+    single value `3`. A parenthesized value is its own value (`5 (-2)` reloads
+    as `5` and `-2`), so a negative number is always written in parentheses —
+    unambiguous wherever it sits, and byte-identical to before for positives.
+
+    `__format__` is overridden as well as `__str__` because an Amount value
+    renders through the display formatter (`'{:f}'.format(number)`), not `str`.
+    """
+
+    def __str__(self) -> str:
+        text = Decimal.__format__(self, "f")
+        return f"({text})" if self.is_signed() and text != "-0" else text
+
+    def __format__(self, spec: str, context: Context | None = None, /) -> str:
+        del spec, context  # Every custom value is written at its own exact precision.
+        return self.__str__()
+
+
+def _custom_value(value: Any) -> Any:
+    """One custom value, rendered so the written line reloads as the same value."""
+    if isinstance(value, BcAmount) and isinstance(value.number, Decimal):
+        return value._replace(number=_CustomValueDecimal(value.number))
+    return _CustomValueDecimal(value) if isinstance(value, Decimal) else value
+
+
+def _cost_spec_text(cost: Any, dformat: Any) -> str:
+    """A CostSpec rendered without losing what upstream's printer drops.
+
+    `beancount.core.position.cost_to_str` prints a cost's currency only
+    alongside a number, so a currency-only constraint (`{EUR}`) renders as the
+    empty `{}` — a different lot selector, silently accepted by validation. A
+    zero per-unit number beside a total is the parser's own spelling of
+    `{{total CUR}}` and is left out, so the rendering says what was meant.
+    """
+    parts: list[str] = []
+    amounts: list[str] = []
+    total = cost.number_total if isinstance(cost.number_total, Decimal) else None
+    per = cost.number_per if isinstance(cost.number_per, Decimal) else None
+    if total is not None and per is not None and not per:
+        per = None
+    if per is not None:
+        amounts.append(dformat.format(per))
+    if total is not None:
+        amounts.extend(("#", dformat.format(total)))
+    if isinstance(cost.currency, str):
+        amounts.append(cost.currency)
+    if amounts:
+        parts.append(" ".join(amounts))
+    if cost.date:
+        parts.append(cost.date.isoformat())
+    if cost.label:
+        parts.append(f'"{cost.label}"')
+    if cost.merge:
+        parts.append("*")
+    return ", ".join(parts)
 
 
 def _fixed_point_metadata(meta: dict[str, Any] | None) -> dict[str, Any]:
@@ -198,7 +264,7 @@ def format_entry(entry: Any) -> str:
     if isinstance(entry, Custom):
         entry = entry._replace(
             values=[
-                _ValueType(escape_string(v.value) if v.dtype is str else _fixed_point(v.value), v.dtype)
+                _ValueType(escape_string(v.value) if v.dtype is str else _custom_value(v.value), v.dtype)
                 for v in entry.values
             ]
         )
@@ -247,7 +313,7 @@ def format_transaction(directive: TransactionHeader) -> str:
             Posting(
                 account=p.account,
                 units=BcAmount(p.units.number, p.units.currency) if p.units else None,
-                cost=CostSpec(p.cost.number, None, p.cost.currency, p.cost.date, p.cost.label, False)
+                cost=CostSpec(p.cost.number, p.cost.number_total, p.cost.currency, p.cost.date, p.cost.label, False)
                 if p.cost
                 else None,
                 price=price,
@@ -400,4 +466,54 @@ def write_custom(
         elif isinstance(v, CustomDirectiveValueDate):
             values.append(_ValueType(value=v.value, dtype=datetime.date))
     entry = Custom(meta={}, date=directive.date, type=directive.type, values=values)
-    return _append(file_path, format_entry(entry), allow_errors=allow_errors, into=into)
+    text = format_entry(entry)
+    _require_custom_roundtrip(values, text)
+    return _append(file_path, text, allow_errors=allow_errors, into=into)
+
+
+def _custom_value_key(value: Any, dtype: Any) -> tuple[str, str]:
+    """One custom value as the pair that identifies it across a write and a read."""
+    if dtype is beancount_account.TYPE:
+        return ("account", str(value))
+    if isinstance(value, bool):
+        return ("boolean", "true" if value else "false")
+    if isinstance(value, str):
+        # Writes flatten CR/LF, so compare against the line that was written.
+        return ("text", single_line(value))
+    if isinstance(value, BcAmount):
+        return ("amount", f"{value.number:f} {value.currency}")
+    if isinstance(value, Decimal):
+        return ("number", format(value, "f"))
+    if isinstance(value, datetime.date):
+        return ("date", value.isoformat())
+    return ("other", str(value))
+
+
+def _require_custom_roundtrip(values: list[_ValueType], text: str) -> None:
+    """Refuse a `custom` line that Beancount would read back as other values.
+
+    Custom values are free-form and space-separated, so the printer's output is
+    not self-evidently the input: `5` then `-2` used to render as `5 -2`, which
+    the grammar reads as the single value `3`. Parsing the rendered line back is
+    the only check that covers every spelling, including ones nobody has met
+    yet, and it costs one parse per written directive.
+    """
+    from beancount.parser import parser
+
+    entries, errors, _ = parser.parse_string(text)
+    reloaded = entries[0].values if len(entries) == 1 and isinstance(entries[0], Custom) and not errors else None
+    if reloaded is None:
+        raise protocol.UsageError(
+            f"The custom directive would not reload as written; nothing was written. Rendered: {text.strip()!r}",
+            details=[error.message for error in errors],
+        )
+    wanted = [_custom_value_key(v.value, v.dtype) for v in values]
+    got = [_custom_value_key(v.value, v.dtype) for v in reloaded]
+    if wanted != got:
+        raise protocol.UsageError(
+            f"The custom directive would reload as different values; nothing was written. Rendered: {text.strip()!r}",
+            details=[
+                f"requested: {', '.join(f'{kind}:{shown}' for kind, shown in wanted)}",
+                f"reloads as: {', '.join(f'{kind}:{shown}' for kind, shown in got)}",
+            ],
+        )

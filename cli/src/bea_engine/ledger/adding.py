@@ -550,10 +550,14 @@ def _transaction(
     # The `@@` stash served the render; the JSON answer must not carry it.
     # Normalized posting metas hold nothing else, so they go back to empty.
     entry = entry._replace(postings=[posting._replace(meta={}) for posting in entry.postings])
+    # Encode the answer before the write, never after: the envelope is built
+    # once this function returns, and a value it could not encode used to fail
+    # with the directive already appended, so every retry appended another copy.
+    directive = protocol.jsonable(entry._replace(meta=metadata_to_json(entry.meta)))
     warnings = write.append(file, [rendered], allow_errors=allow_errors, into=into, snapshot=snapshot)
     return {
         "written": 1,
-        "directive": entry._replace(meta=metadata_to_json(entry.meta)),
+        "directive": directive,
         "entry": rendered,
         "warnings": warnings,
         "target": str(write.destination(file, into)),

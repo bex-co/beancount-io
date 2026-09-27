@@ -63,7 +63,7 @@ from typing import Any, Literal
 from cli import context, output
 from cli.auth.credentials import load_credentials
 from cli.engine import paths, provision
-from cli.errors import BY_CATEGORY, AuthError, BeaError, UsageError
+from cli.errors import BY_CATEGORY, AuthError, BeaError, ConflictError, UsageError
 
 
 def run_engine_argv(argv: Sequence[str]) -> int:
@@ -268,12 +268,17 @@ def _candidate_bin_dirs() -> list[Path]:
     return directories
 
 
-def helper_json(args: Sequence[str], *, stdin: str | None = None) -> dict[str, Any]:
+def helper_json(args: Sequence[str], *, stdin: str | None = None, writes: bool = False) -> dict[str, Any]:
     """Run a helper command and return its result, raising what it reports instead.
 
     The frontend renders: this hands back `data` from the envelope and turns a
     failure into the matching `cli.errors` exception, so a command reads like
     the in-process call it replaced.
+
+    `writes` says the command may change a file. An engine that dies without an
+    envelope then leaves an unknown outcome — the write may already have
+    happened — so it is reported as `conflict`/4 rather than a plain failure,
+    which invites a retry that would append the directive a second time.
 
     `stdin` carries a request the argument list cannot hold — a batch of
     transactions for `bea-engine add --request -`. Nothing is read back from
@@ -283,7 +288,7 @@ def helper_json(args: Sequence[str], *, stdin: str | None = None) -> dict[str, A
     command, env = helper_command()
     completed = _run_helper([*command, *args], env, stdin)
 
-    envelope = _parse(completed, args)
+    envelope = _parse(completed, args, writes=writes)
     if not envelope.get("ok"):
         failure = envelope.get("error") or {}
         category = str(failure.get("category", "validation"))
@@ -383,7 +388,7 @@ def _forwarding_teardown(child: subprocess.Popen[str]) -> Iterator[None]:
                 pass
 
 
-def _parse(completed: subprocess.CompletedProcess[str], args: Sequence[str]) -> dict[str, Any]:
+def _parse(completed: subprocess.CompletedProcess[str], args: Sequence[str], *, writes: bool = False) -> dict[str, Any]:
     """Read the one JSON object the protocol promises on stdout."""
     try:
         envelope = json.loads(completed.stdout)
@@ -392,6 +397,15 @@ def _parse(completed: subprocess.CompletedProcess[str], args: Sequence[str]) -> 
         # not the program we think it is. Its own output is the only evidence,
         # so it becomes the details rather than being swallowed.
         printed = [line for line in (completed.stderr or completed.stdout).splitlines() if line.strip()][-20:]
+        if writes:
+            # A writer that produced no envelope may or may not have written.
+            # Exit 4 says exactly that, and stops a caller from retrying a
+            # command whose first attempt may already have changed the file.
+            raise ConflictError(
+                f"The Beancount engine did not answer 'bea-engine {' '.join(args)}' "
+                f"(exit {completed.returncode}); the outcome is unknown. Inspect the file before retrying.",
+                details=printed,
+            ) from None
         if completed.returncode < 0:
             # Killed by a signal: the child printed nothing to carry the
             # explanation, so name the signal and what usually causes it.

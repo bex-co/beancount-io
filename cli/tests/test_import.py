@@ -1105,8 +1105,7 @@ class TestCsvBankAmountSpellings:
             ('"$1,000.00"', "1000.00 USD"),
             ("(4.50)", "-4.50 USD"),
             ("4.50-", "-4.50 USD"),
-            ("€12.50", "12.50 USD"),
-            ("4.50€", "4.50 USD"),
+            ("$12.50", "12.50 USD"),
             ('"1,00,000"', "100000 USD"),
             ("1\u2009000.00", "1000.00 USD"),
         ],
@@ -1834,3 +1833,127 @@ class TestImportFixtureSet:
         assert result.exit_code == 2
         assert "narration (Description, Memo)" in result.stderr
         assert book.read_bytes() == before
+
+
+class TestCsvDebitCreditSigns:
+    """A debit posts negative by magnitude, and a zero cell is an empty cell (w3/424)."""
+
+    MAPPING = "date=Date,debit=Money Out,credit=Money In,narration=Description"
+
+    def _posted(self, book: Path) -> list[str]:
+        entries, errors, _ = loader.load_file(book)
+        assert not errors, errors
+        return [str(e.postings[0].units) for e in entries if isinstance(e, Transaction)]
+
+    def test_a_debit_cell_that_carries_its_own_minus_still_posts_out(self, book: Path, isolated_config: Path) -> None:
+        body = "Date,Description,Money Out,Money In\n2026-08-02,Coffee,-4.50,\n2026-08-03,Salary,,1000.00\n"
+
+        result = csv_result(book, body, "--apply", mapping=self.MAPPING)
+
+        assert result.exit_code == 0, result.output
+        # Negating a cell that was already negative booked the outflow as income.
+        assert sorted(self._posted(book)) == ["-4.50 USD", "1000.00 USD"]
+
+    def test_a_positive_debit_cell_still_posts_out(self, book: Path, isolated_config: Path) -> None:
+        body = "Date,Description,Money Out,Money In\n2026-08-02,Coffee,20.00,\n"
+
+        result = csv_result(book, body, "--apply", mapping=self.MAPPING)
+
+        assert result.exit_code == 0, result.output
+        assert self._posted(book) == ["-20.00 USD"]
+
+    def test_a_zero_filled_companion_cell_is_treated_as_empty(self, book: Path, isolated_config: Path) -> None:
+        body = "Date,Description,Money Out,Money In\n2026-08-02,Shop,30.00,0.00\n"
+
+        result = csv_result(book, body, "--apply", mapping=self.MAPPING)
+
+        assert result.exit_code == 0, result.output
+        assert self._posted(book) == ["-30.00 USD"]
+
+    def test_two_nonzero_cells_are_still_refused(self, book: Path, isolated_config: Path) -> None:
+        body = "Date,Description,Money Out,Money In\n2026-08-02,Shop,30.00,5.00\n"
+        before = book.read_bytes()
+
+        result = csv_result(book, body, mapping=self.MAPPING)
+
+        assert result.exit_code == 2, result.output
+        assert "fill exactly one of 'Money Out' or 'Money In'" in result.stderr
+        assert book.read_bytes() == before
+
+    def test_a_debit_column_mixing_signs_is_refused_naming_the_column(self, book: Path, isolated_config: Path) -> None:
+        body = "Date,Description,Money Out,Money In\n2026-08-02,A,-5,\n2026-08-03,B,7,\n"
+        before = book.read_bytes()
+
+        result = csv_result(book, body, mapping=self.MAPPING)
+
+        assert result.exit_code == 2, result.output
+        assert "Column 'Money Out' mixes signs" in result.stderr
+        assert "row 1" in result.stderr and "row 2" in result.stderr
+        assert book.read_bytes() == before
+
+
+class TestCsvRowCurrency:
+    """An imported row's commodity comes from the account, not the ledger (w3/421)."""
+
+    MAPPING = "date=Date,amount=Amount,narration=Description"
+
+    def _units(self, book: Path, account: str) -> list[str]:
+        entries, errors, _ = loader.load_file(book)
+        assert not errors, errors
+        return [str(p.units) for e in entries if isinstance(e, Transaction) for p in e.postings if p.account == account]
+
+    def _euro_account(self, book: Path) -> None:
+        """A euro source account, plus a counter account any commodity may reach."""
+        book.write_text(book.read_text() + "2026-08-01 open Assets:EurBank EUR\n2026-08-01 open Expenses:Foreign\n")
+
+    def test_an_account_opened_for_one_currency_books_that_currency(self, book: Path, isolated_config: Path) -> None:
+        self._euro_account(book)
+        body = "Date,Description,Amount\n2026-08-02,Cafe Paris,-4.50\n"
+
+        result = csv_result(
+            book,
+            body,
+            "--default-account",
+            "Expenses:Foreign",
+            "--apply",
+            mapping=self.MAPPING,
+            account="Assets:EurBank",
+        )
+
+        assert result.exit_code == 0, result.output
+        assert self._units(book, "Assets:EurBank") == ["-4.50 EUR"]
+
+    def test_a_euro_symbol_posted_to_a_dollar_account_is_refused(self, book: Path, isolated_config: Path) -> None:
+        body = 'Date,Description,Amount\n2026-08-02,Cafe Paris,"-4,50 €"\n'
+        before = book.read_bytes()
+
+        result = csv_result(book, body, mapping=self.MAPPING)
+
+        assert result.exit_code == 2, result.output
+        assert "Row 1" in result.stderr and "(EUR)" in result.stderr and "currency=EUR" in result.stderr
+        assert book.read_bytes() == before
+
+    def test_a_constant_currency_needs_no_column_in_the_bank_file(self, book: Path, isolated_config: Path) -> None:
+        self._euro_account(book)
+        body = 'Date,Description,Amount\n2026-08-02,Cafe Paris,"-4,50 €"\n2026-08-03,London Pub,"-12,00"\n'
+
+        result = csv_result(
+            book,
+            body,
+            "--default-account",
+            "Expenses:Foreign",
+            "--apply",
+            mapping=f"{self.MAPPING},currency=EUR",
+            account="Assets:EurBank",
+        )
+
+        assert result.exit_code == 0, result.output
+        assert self._units(book, "Assets:EurBank") == ["-4.50 EUR", "-12.00 EUR"]
+
+    def test_an_ambiguous_dollar_symbol_is_unchanged(self, book: Path, isolated_config: Path) -> None:
+        body = "Date,Description,Amount\n2026-08-02,Cafe,$4.50\n"
+
+        result = csv_result(book, body, "--apply", mapping=self.MAPPING)
+
+        assert result.exit_code == 0, result.output
+        assert self._units(book, "Assets:Checking") == ["4.50 USD"]
