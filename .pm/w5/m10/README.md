@@ -1,6 +1,6 @@
 # w5 · m10 — Migrate an export and continue importing without duplicate transfers
 
-**Worker:** worker1 **Goal:** a newcomer migrates synthetic export history through installed skills and continues importing without duplicating either side of an internal transfer **Status:** in progress (t001–t004 done)
+**Worker:** worker1 **Goal:** a newcomer migrates synthetic export history through installed skills and continues importing without duplicating either side of an internal transfer **Status:** in progress (t001–t005 done)
 
 **Estimate:** 4h implementation; 6h including standing closing tasks (9 tasks). Priority 2 after inbox 019, with no hard dependency on it.
 
@@ -12,7 +12,7 @@
 | t002 | Add read-only migration checkpoints — **DONE** | 60m | w5/m10/t001 |
 | t003 | Write the installed-suite migration walkthrough — **DONE** | 45m | w5/m10/t001 |
 | t004 | Rehearse the migration journey through Claude Code — **DONE** | 45m | w5/m10/t002, w5/m10/t003 |
-| t005 | Rehearse through Codex and publish comparable results | 45m | w5/m10/t004 |
+| t005 | Rehearse through Codex and publish comparable results — **DONE** | 45m | w5/m10/t004 |
 | t006 | Adoption surface | 30m | w5/m10/t005 |
 | t007 | Simplify | 30m | w5/m10/t006 |
 | t008 | Test coverage | 45m | w5/m10/t006, w5/m10/t007 |
