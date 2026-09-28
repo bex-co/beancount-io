@@ -435,6 +435,14 @@ failing `--check` returns the scan result in `error.result`: `scanned`, the
 `formatted` paths that would change, the `failed` files with their syntax
 errors, the `missing` includes, `check`, and `dry_run`.
 
+### GitHub Actions for a ledger repository
+
+Copy the [ledger-check workflow](examples/ledger-check.yml) into your ledger
+repository to run both checks on pushes and pull requests. The
+[setup and rehearsal notes](examples/ledger-check.md) explain the pinned released
+CLI, ledger-path setting, and expected failures. The workflow checks local files
+without a Beancount.io login and never formats or commits them automatically.
+
 ## Listing directives
 
 `bea list <type>` reads a local `.bean` file. The eleven types are `transaction`, `open`, `close`, `balance`, `pad`, `note`, `event`, `price`, `commodity`, `document`, and `custom`.
