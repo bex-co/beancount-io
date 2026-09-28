@@ -162,7 +162,7 @@ Start with the [first-month tutorial](./cli/docs/TUTORIAL.md), then use the [CLI
 
 ### Coding agent skills (local ledger)
 
-Give Claude Code or Codex the eight `beancount-*` ledger workflows. [Install the skills](./skills/docs/installation.md) with a sparse Git clone and one `install` command, then ask a sample ledger a first question with the [first-query walkthrough](./skills/docs/first-query.md).
+Give Claude Code or Codex the eight `beancount-*` ledger workflows. [Install the skills](./skills/docs/installation.md) with a sparse Git clone and one `install` command, then ask a sample ledger a first question with the [first-query walkthrough](./skills/docs/first-query.md). Continue through import, reconciliation, and an approved close with the [first-month guide](./skills/docs/first-month.md).
 
 ### Coding agent (MCP)
 

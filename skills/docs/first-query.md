@@ -64,3 +64,7 @@ shasum -a 256 -c ledger.sha256   # ledger.beancount: OK
 ## Tested with
 
 On 2026-09-14 on macOS, Claude Code 2.1.270 (workspace install) and Codex 0.154.0 (user and workspace installs, `--sandbox read-only`) each listed exactly these eight skills and returned the figures above through `beancount-ask`. The ledger checksum was unchanged. Not yet tested: Claude Code with a user-level install, Linux, and Windows.
+
+## Continue through a first month
+
+The [first-month guide](first-month.md) starts from a fresh ledger and walks through approved imports, duplicate checks, reconciliation, read-only analysis, and a confirmed close. It includes synthetic statements, decline branches, and an independent checkpoint verifier. [Real-client rehearsals](first-month-rehearsal.md) record results and interventions for both Claude Code and Codex.

@@ -25,8 +25,8 @@ skills/
         SKILL.md
         references/           Statement-format + matching guidance loaded on demand
         evals/                Statement+ledger fixtures per mismatch class
-  docs/                       Customer installation guide and first-query walkthrough
-  scripts/                    CI checks, beancount-skills.py (install/verify/uninstall), their tests
+  docs/                       Installation, first-query and first-month guides, fixtures, rehearsal evidence
+  scripts/                    CI checks, suite installer, first-month checkpoint verifier, and tests
   tmp/                        Scratch space — gitignored, safe for experiments
 ```
 
@@ -39,6 +39,8 @@ The `bea` primitives are `init` (new ledgers), `add open` (new accounts), `add t
 The shared execution contract lives in `.claude/skills/beancount-init/references/bea-cli.md`; explicit developer fallbacks and the no-bea init template live beside it in `compatibility.md`. Every ledger command selects the root with `--file`; every directive write selects the approved destination with `--into`. Use decimal strings in batch JSON, preserve source IDs, and distinguish per-command atomicity from multi-command workflows. `add transactions` does not deduplicate, so inspect current entries before retrying a successful batch after a later failure.
 
 CSV details live in `.claude/skills/beancount-import/references/bea-import.md`: pass confirmed sign, account, mapping, date format, durable rules path and destination on every run. The CLI does not remember sign and remembers only the rules path. Its same-date duplicate detector does not replace the suite's ±3-day manual-entry review; mixed keep/skip decisions require a reviewed batch preserving the original source IDs.
+
+The installed-suite [first-month guide](docs/first-month.md) composes init → import → reconcile → ask → close on one synthetic ledger. Its read-only `scripts/verify-first-month.py` checks exact ledger and Git effects against `docs/examples/first-month/expectations.json`; [real-client evidence](docs/first-month-rehearsal.md) remains separate from deterministic tests.
 
 ## Skills
 
