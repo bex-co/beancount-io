@@ -56,7 +56,14 @@ Dedup runs **before** categorization (Suggest). Skipped rows must not consume ca
 
 ## `bea import` behavior
 
-`bea import` implements the same two layers: exact `import-id` matches are
-auto-skipped (a re-import previews zero new rows), and same-date/payee/amount
-near-matches surface as possible duplicates that need an explicit
-`--duplicates skip/include` decision before `--apply` writes anything.
+`bea import` auto-skips exact `import-id` matches and reports possible
+duplicates with the same date, normalized payee and source amount/currency.
+It **does not implement** the ±3-day, similar-description pass above. Run that
+additional review even when the CLI reports zero possible duplicates; see
+`references/bea-import.md` for the query and write procedure.
+
+The CLI's `--duplicates skip/include` applies to every possible duplicate in
+one invocation. Mixed decisions or a user-skipped fuzzy match require an
+approved JSON batch preserving the previewed IDs, rather than applying the
+original CSV with one global decision. `bea add transactions` validates that
+batch but does not deduplicate it. Re-read existing IDs before any retry.

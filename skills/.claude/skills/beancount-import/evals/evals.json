@@ -6,7 +6,7 @@
       "id": 1,
       "name": "signed-csv-basic",
       "prompt": "Import ./export.csv into my ledger at ./ledger.beancount. It's my Chase checking account (Assets:Bank:Checking).",
-      "expected_output": "Four rows staged, categorized from ledger history: TRADER JOES -> Expenses:Food:Groceries (high, prior entries), SHELL OIL -> Expenses:Transport (medium, 1 prior), PAYROLL ACME -> Income:Salary (medium, 1 prior), CITY PARKING -> Expenses:Uncategorized (low, no prior). A review table with per-row confidence and reason is shown; after explicit yes, entries are appended date-sorted with import-id metadata, Expenses:Uncategorized is opened, and bean-check passes.",
+      "expected_output": "Four rows staged, categorized from ledger history: TRADER JOES -> Expenses:Food:Groceries (high, prior entries), SHELL OIL -> Expenses:Transport (medium, 1 prior), PAYROLL ACME -> Income:Salary (medium, 1 prior), CITY PARKING -> Expenses:Uncategorized (low, no prior). A review table with per-row confidence and reason is shown; after explicit yes, entries are appended date-sorted with import-id metadata, Expenses:Uncategorized is opened, and bea check passes.",
       "files": [
         "evals/files/eval1_ledger.beancount",
         "evals/files/eval1_export.csv"
@@ -20,14 +20,14 @@
         "Every written entry carries import-id metadata of the form csv:sha256:<16 hex chars>",
         "Entries are inserted in date order and the source-account posting equals the row amount exactly",
         "Nothing is written before the user confirms",
-        "After appending, bean-check passes"
+        "After appending, bea check passes"
       ]
     },
     {
       "id": 2,
       "name": "debit-credit-split-columns",
       "prompt": "Here's my bank export ./export.csv — import it into ./ledger.beancount (account Assets:Bank:Checking).",
-      "expected_output": "The skill detects the Debit/Credit split-column layout, confirms the convention once (debit = money out on this asset account), then stages WHOLE FOODS -63.75 (Expenses:Food:Groceries from prior) and ACME CORP PAYROLL +2500.00 (Income:Salary from prior). After confirmation both entries land with import-ids and bean-check passes; the confirmed mapping is persisted to the config block.",
+      "expected_output": "The skill detects the Debit/Credit split-column layout, confirms the convention once (debit = money out on this asset account), then stages WHOLE FOODS -63.75 (Expenses:Food:Groceries from prior) and ACME CORP PAYROLL +2500.00 (Income:Salary from prior). After confirmation both entries land with import-ids and bea check passes; the confirmed mapping is persisted to the config block.",
       "files": [
         "evals/files/eval2_ledger.beancount",
         "evals/files/eval2_export.csv"
@@ -38,14 +38,14 @@
         "ACME CORP PAYROLL becomes a +2500.00 USD posting with counter-account Income:Salary",
         "The confirmed column mapping and sign convention are persisted in a ;; beancount-import config block",
         "Both written entries carry csv:sha256 import-id metadata",
-        "After appending, bean-check passes"
+        "After appending, bea check passes"
       ]
     },
     {
       "id": 3,
       "name": "ofx-with-fitid",
       "prompt": "Import ./export.ofx into ./ledger.beancount — it's my checking account Assets:Bank:Checking.",
-      "expected_output": "Three STMTTRN blocks parsed: dates from DTPOSTED, signed TRNAMT amounts, payees from NAME. Each written entry's import-id uses the native FITID (ofx:9101 etc.), NOT a hash. Categorization from history as usual; bean-check passes after append.",
+      "expected_output": "Three STMTTRN blocks parsed: dates from DTPOSTED, signed TRNAMT amounts, payees from NAME. Each written entry's import-id uses the native FITID (ofx:9101 etc.), NOT a hash. Categorization from history as usual; bea check passes after append.",
       "files": [
         "evals/files/eval3_ledger.beancount",
         "evals/files/eval3_export.ofx"
@@ -55,14 +55,14 @@
         "Each written entry's import-id is ofx:<FITID> (9101, 9102, 9103) — the native ID is preferred over any hash",
         "TRADER JOES maps to Expenses:Food:Groceries from prior history; the unknown merchant goes to Expenses:Uncategorized",
         "Amounts keep the sign from TRNAMT (verified against a recognizable row, not blindly trusted)",
-        "After appending, bean-check passes"
+        "After appending, bea check passes"
       ]
     },
     {
       "id": 4,
       "name": "overlapping-reimport-partial",
       "prompt": "Import ./export.ofx into ./ledger.beancount (Assets:Bank:Checking). I think I may have imported part of this before.",
-      "expected_output": "The ledger already contains entries with import-id ofx:9001 and ofx:9002; the export has 9001-9004. Layer-1 exact dedup drops 9001/9002 (reported as 'already imported: 2'); only 9003 and 9004 are staged, reviewed, and written. bean-check passes.",
+      "expected_output": "The ledger already contains entries with import-id ofx:9001 and ofx:9002; the export has 9001-9004. Layer-1 exact dedup drops 9001/9002 (reported as 'already imported: 2'); only 9003 and 9004 are staged, reviewed, and written. bea check passes.",
       "files": [
         "evals/files/eval4_ledger.beancount",
         "evals/files/eval4_export.ofx"
@@ -72,14 +72,14 @@
         "Exactly 2 new transactions (FITIDs 9003, 9004) are proposed and written, no more",
         "The skipped rows are not re-categorized and do not appear as full rows in the review table",
         "The written entries carry import-id ofx:9003 and ofx:9004",
-        "After appending, bean-check passes"
+        "After appending, bea check passes"
       ]
     },
     {
       "id": 5,
       "name": "pending-rows-flag",
       "prompt": "Import ./export.csv into ./ledger.beancount, account Assets:Bank:Checking.",
-      "expected_output": "The Status column marks one row Pending: it is imported with flag ! while Posted rows get *. The user is warned that the pending row may re-export later with different details and surface as a suspected duplicate. bean-check passes.",
+      "expected_output": "The Status column marks one row Pending: it is imported with flag ! while Posted rows get *. The user is warned that the pending row may re-export later with different details and surface as a suspected duplicate. bea check passes.",
       "files": [
         "evals/files/eval5_ledger.beancount",
         "evals/files/eval5_export.csv"
@@ -88,7 +88,7 @@
         "The Pending row is written with flag ! and the Posted rows with flag *",
         "The user is told the pending transaction may change on settlement and how that will be handled (suspected-duplicate review)",
         "All written entries carry import-id metadata",
-        "After appending, bean-check passes"
+        "After appending, bea check passes"
       ]
     },
     {
@@ -133,7 +133,7 @@
       ],
       "expectations": [
         "The skill detects that the requested append target does not exist and refuses to auto-create it",
-        "The refusal explains the include risk (entries in a file nothing includes are silently invisible to bean-check and fava)",
+        "The refusal explains the include risk (entries in a file nothing includes are silently invisible to bea check and fava)",
         "The skill offers concrete next steps (create + include the file first, or choose an existing target)",
         "No file is created and no ledger file is modified"
       ]
@@ -142,7 +142,7 @@
       "id": 9,
       "name": "idempotent-full-reimport",
       "prompt": "Import ./export.ofx into ./ledger.beancount (Assets:Bank:Checking). I might have already done this one.",
-      "expected_output": "Every FITID in the export (9001-9004) already exists as import-id metadata in the ledger. The summary reports 4 already imported, 0 to import; zero new entries are added; the ledger is unchanged and bean-check still passes.",
+      "expected_output": "Every FITID in the export (9001-9004) already exists as import-id metadata in the ledger. The summary reports 4 already imported, 0 to import; zero new entries are added; the ledger is unchanged and bea check still passes.",
       "files": [
         "evals/files/eval9_ledger.beancount",
         "evals/files/eval4_export.ofx"
@@ -164,9 +164,42 @@
         "evals/files/eval1_export.csv"
       ],
       "expectations": [
-        "Both imports run through `bea import --csv` (preview then --apply), not hand-rolled staging",
+        "Preview both imports through bea with the same explicit sign, mapping, account, durable rules path and destination; apply only the first, confirmed nonempty batch",
         "The second import drops all rows by exact import-id match and reports them as already imported",
         "Zero entries are appended after the first write, and no review table or yes/no prompt is presented for the empty batch"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "positive-purchase-repeat-preserves-sign-and-rules",
+      "prompt": "Import ./export.csv into ./ledger.beancount for Assets:Bank:Checking. This export uses positive numbers for purchases; use sign=ledger and the existing groceries category. After I approve the preview, import it, delete any temporary preview files, and check the same export again. bea is installed.",
+      "files": [
+        "evals/files/eval1_ledger.beancount",
+        "evals/files/eval11_export.csv"
+      ],
+      "expected_output": "The first preview and apply post -54.20 USD to checking and +54.20 USD to Expenses:Food:Groceries. Rules are kept in the ledger repository after approval. The repeat explicitly retains sign=ledger and reports one already imported row and zero new rows, with no opposite-sign transaction.",
+      "expectations": [
+        "Every preview and apply explicitly passes the confirmed sign=ledger, source account, rules path and target",
+        "Rules used for the repeat still exist after temporary preview files are removed",
+        "Exactly one new transaction is written; its checking amount is -54.20 USD and its category is Expenses:Food:Groceries",
+        "The repeat is a no-op and does not propose +54.20 USD as a new checking transaction",
+        "The root ledger passes bea check"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "csv-fuzzy-review-beyond-cli-duplicates",
+      "prompt": "Import ./export.csv into ./ledger.beancount for Assets:Bank:Checking. It is an April 2026 export with negative amounts for purchases. bea is installed. Please check for transactions I may have recorded manually.",
+      "files": [
+        "evals/files/eval1_ledger.beancount",
+        "evals/files/eval12_export.csv"
+      ],
+      "expected_output": "The 2026-04-22 TRADER JOES #089 -18.55 row is presented as a suspected duplicate of the manual 2026-04-20 entry, even if bea reports zero possible duplicates. The user chooses keep/skip. A skip never applies that row from the original CSV.",
+      "expectations": [
+        "Reads the root ledger over the export range extended by three days on both sides",
+        "Identifies the manual entry two days earlier as a suspected duplicate and asks for a decision",
+        "Does not treat a zero possible_duplicates CLI count as proof that there are no fuzzy matches",
+        "On skip, writes no duplicate transaction; any other accepted rows use the reviewed batch with original source IDs"
       ]
     }
   ]

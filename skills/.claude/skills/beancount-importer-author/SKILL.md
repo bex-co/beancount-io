@@ -1,6 +1,6 @@
 ---
 name: beancount-importer-author
-description: Write or repair a beangulp importer (the beancount v3 import framework) for a bank/card export format, tested against a sample file until its own harness passes. Use this skill whenever the user wants a reusable Python importer — "write an importer for my Chase CSV", "make this source a real importer", "my importer broke, the bank changed the format", "codify this import so I don't need the agent every week" — or when beancount-import suggests graduating a repeatedly-imported source. The skill drafts the importer (csvbase for CSVs, raw beangulp.Importer otherwise), generates golden files, and iterates until `test` is green; wiring into the user's import script is confirm-gated. SKIP when the user just wants this one file's transactions in the ledger (beancount-import), wants to reconcile (beancount-reconcile), or is migrating full app history (beancount-migrate). The core trigger is "make/fix the reusable importer for this source".
+description: Write or repair a reusable Beangulp importer from a sample bank export, with reviewed golden files and a passing test harness. Use when a source needs a tested Python importer or its format changed. Wire the confirmed runner through bea ingest; keep generate/test in the authoring project. Skip one-off imports, reconciliation, finance-app migration and ledger writes.
 ---
 
 # beancount-importer-author
@@ -15,6 +15,10 @@ This skill exists because importers are the most-complained-about chore in beanc
 
 **Does not:** import transactions into the ledger (that's running the importer, or `beancount-import`); categorize (beangulp extraction posts the source leg; categorization stays with `smart_importer` or `beancount-import` — don't hardcode guessed counter-accounts); scrape banks; edit the ledger.
 
+## Prefer `bea` for the wired importer
+
+Read beancount-init's `references/bea-cli.md` before running ledger commands: it defines explicit root/destination paths, JSON batches, checks, and safe retries. Without `bea`, use beancount-init's `references/compatibility.md`.
+
 Read `references/beangulp-api.md` before writing any code. Prefer enabling
 Beangulp in the managed engine when `bea` is installed:
 
@@ -26,7 +30,9 @@ bea engine status
 Do **not** `pip install beangulp` into the agent/frontend process or into bea's
 frontend environment. Authoring still needs a project that can `import beangulp`
 for the golden harness — use a local uv/venv in the ledger repo (developer
-path), or run identify/extract through `bea ingest` after wiring. **Verify the
+path). `bea ingest` exposes identify/extract/archive, **not generate/test**,
+so it does not replace the golden harness. Match the authoring Beangulp
+version to the managed engine and verify the wired runner through `bea ingest`. **Verify the
 installed API before trusting it or this reference**:
 `python -c "import beangulp, inspect; help(beangulp.Importer)"` inside that
 project venv — beangulp's API has sharp edges and versions differ.
@@ -64,10 +70,13 @@ python importers/<source>.py test importers/tests/<source>       # must be green
 
 The golden-file eyeball is the human gate: generated goldens encode whatever the importer *does*, right or wrong — confirm a few rows against the raw sample before blessing them. Iterate draft ↔ test until green. **A red harness is never handed over as done** — if it can't be made green, say exactly what's unresolved.
 
-Also sanity-run `extract` and verify output with `bea check` (or `bean-check`
-without `bea`) when the user wants end-to-end proof. After wiring, prefer
-`bea ingest identify|extract|archive --config ingest.py …` over invoking
-upstream scripts by hand.
+After wiring, run `bea --file "$ledger" ingest identify --config "$runner" SAMPLE`
+and `bea --file "$ledger" ingest extract --config "$runner" SAMPLE`, where
+`runner` is the actual file just wired (`import.py` in this skill's default
+layout). Do not point at a nonexistent `ingest.py`. Extraction usually has
+only the source posting, so its raw output alone is not a balanced ledger.
+For an end-to-end check, categorize and validate a complete scratch ledger
+through `bea --file "$scratch_ledger" check`; leave the user's ledger alone.
 
 ### 4. Wire
 

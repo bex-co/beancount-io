@@ -6,11 +6,14 @@
       "id": 1,
       "name": "full-close-four-findings",
       "prompt": "Close June 2026 for me. Ledger ./ledger.beancount; my checking statement is ./statement.csv. I don't have the Amex statement handy.",
-      "expected_output": "The close runs all phases: checking reconciles via the beancount-reconcile flow (finds the missing 2026-06-25 CITY PARKING -12.00, appends it after confirm, assertion 2026-07-01 balance 7874.60 passes), Amex is reported unverified, the NETFLIX recurring gap (Apr+May present, June absent) is surfaced as a question, the ! flag on 2026-06-21 is listed. The close report shows Income 3000.00 / Expenses 203.60, bean-check PASS, and a confirm-gated commit with subject 'close: 2026-06 — 1 reconciled, 1 unverified' and the report in the body.",
-      "files": ["evals/files/eval1_ledger.beancount", "evals/files/eval1_statement.csv"],
+      "expected_output": "The close runs all phases: checking reconciles via the beancount-reconcile flow (finds the missing 2026-06-25 CITY PARKING -12.00, appends it after confirm, assertion 2026-07-01 balance 7874.60 passes), Amex is reported unverified, the NETFLIX recurring gap (Apr+May present, June absent) is surfaced as a question, the ! flag on 2026-06-21 is listed. The close report shows Income 3000.00 / Expenses 203.60, bea check PASS, and a confirm-gated commit with subject 'close: 2026-06 — 1 reconciled, 1 unverified' and the report in the body.",
+      "files": [
+        "evals/files/eval1_ledger.beancount",
+        "evals/files/eval1_statement.csv"
+      ],
       "expectations": [
         "The missing CITY PARKING -12.00 row is found via reconciliation and appended only after confirmation",
-        "A balance assertion for Assets:Bank:Checking at 7874.60 USD dated 2026-07-01 (day-after rule) passes bean-check",
+        "A balance assertion for Assets:Bank:Checking at 7874.60 USD dated 2026-07-01 (day-after rule) passes bea check",
         "Liabilities:CreditCard:Amex is reported as unverified — not silently passed, not blocked on",
         "The NETFLIX gap (present Apr and May at steady amount, absent June) is surfaced as a finding/question, and NO NETFLIX entry is fabricated",
         "The 2026-06-21 ! WHOLE FOODS entry is listed in the flag sweep",
@@ -24,7 +27,10 @@
       "name": "unverified-account-surfaced",
       "prompt": "Run my June 2026 close on ./ledger.beancount. I only have the checking statement (./statement.csv); skip Amex.",
       "expected_output": "Amex appears in the close report with status 'unverified (no statement)' and its period activity noted; the close completes without pretending Amex was checked, and without demanding the statement as a blocker.",
-      "files": ["evals/files/eval1_ledger.beancount", "evals/files/eval1_statement.csv"],
+      "files": [
+        "evals/files/eval1_ledger.beancount",
+        "evals/files/eval1_statement.csv"
+      ],
       "expectations": [
         "Amex is enumerated as an active account (it has June postings)",
         "The report marks Amex unverified rather than omitting it or marking it reconciled",
@@ -36,7 +42,10 @@
       "name": "recurring-gap-not-fabricated",
       "prompt": "Close June 2026: ./ledger.beancount, checking statement ./statement.csv. By the way, I did NOT cancel Netflix.",
       "expected_output": "The NETFLIX gap is surfaced; since the user says it wasn't cancelled, the skill concludes the June charge is missing from the ledger's data and routes the fix to importing the card's June export (beancount-import) or manual entry by the user — it does NOT invent a NETFLIX transaction itself.",
-      "files": ["evals/files/eval1_ledger.beancount", "evals/files/eval1_statement.csv"],
+      "files": [
+        "evals/files/eval1_ledger.beancount",
+        "evals/files/eval1_statement.csv"
+      ],
       "expectations": [
         "The NETFLIX Apr/May-present-June-absent pattern is detected and raised",
         "Given 'not cancelled', the skill identifies the charge as missing data and names the import/manual route",
@@ -49,7 +58,10 @@
       "name": "flag-sweep-carried",
       "prompt": "Close June 2026 (./ledger.beancount, statement ./statement.csv). Leave the flagged Whole Foods entry as is for now — I'll check the receipt later.",
       "expected_output": "The ! entry is listed in the sweep and, per the user's choice, carried — counted in the report ('Flags carried: 1') rather than resolved or dropped. The close completes.",
-      "files": ["evals/files/eval1_ledger.beancount", "evals/files/eval1_statement.csv"],
+      "files": [
+        "evals/files/eval1_ledger.beancount",
+        "evals/files/eval1_statement.csv"
+      ],
       "expectations": [
         "The 2026-06-21 ! entry is found and presented in the flag sweep",
         "The user's carry decision is respected: the entry is not edited and its flag is not changed",
@@ -60,11 +72,13 @@
       "id": 5,
       "name": "red-bean-check-blocks-commit",
       "prompt": "Close June 2026 on ./ledger.beancount.",
-      "expected_output": "bean-check fails at Scope (the 2026-07-01 assertion expects 9000.00 but the account holds 8000.00). The skill surfaces the exact failure, explains the close cannot proceed to a commit on a red ledger, and offers to help diagnose (missing entries vs wrong assertion). No commit is proposed; nothing is fabricated to force the assertion.",
-      "files": ["evals/files/eval5_ledger.beancount"],
+      "expected_output": "bea check fails at Scope (the 2026-07-01 assertion expects 9000.00 but the account holds 8000.00). The skill surfaces the exact failure, explains the close cannot proceed to a commit on a red ledger, and offers to help diagnose (missing entries vs wrong assertion). No commit is proposed; nothing is fabricated to force the assertion.",
+      "files": [
+        "evals/files/eval5_ledger.beancount"
+      ],
       "expectations": [
-        "The failing assertion (expected 9000.00, actual 8000.00, delta 1000.00) is surfaced with bean-check's exact output",
-        "No commit is proposed while bean-check is red",
+        "The failing assertion (expected 9000.00, actual 8000.00, delta 1000.00) is surfaced with bea check's exact output",
+        "No commit is proposed while bea check is red",
         "No entry is invented and the assertion is not edited/deleted to force a pass; the resolution is routed to the user with candidate causes"
       ]
     },
@@ -73,7 +87,10 @@
       "name": "decline-leaves-tree-clean",
       "prompt": "Close June 2026 (./ledger.beancount, statement ./statement.csv). Go through everything but when you get to the commit, don't commit — I want to review first.",
       "expected_output": "All phases run, the report is produced, and per the user's standing instruction no commit is made. The working tree retains the reconciliation appends (which the user confirmed during the reconcile phase) as uncommitted changes; git log shows no new commit; the report remains available in the conversation.",
-      "files": ["evals/files/eval1_ledger.beancount", "evals/files/eval1_statement.csv"],
+      "files": [
+        "evals/files/eval1_ledger.beancount",
+        "evals/files/eval1_statement.csv"
+      ],
       "expectations": [
         "No new git commit exists after the run",
         "The confirmed reconciliation appends remain in the working tree (the decline applies to the commit, not to already-confirmed ledger changes)",

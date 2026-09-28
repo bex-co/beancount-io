@@ -1,15 +1,6 @@
 ---
 name: beancount-init
-description: >-
-  Scaffold a brand-new personal ledger in the current working directory.
-  With `bea` installed, creates and validates `main.bean` through `bea init`
-  and `bea check` — no separate Beancount install. Optional Fava browser
-  setup (uv + Makefile) is a separate workflow when the user asks for it.
-  Without `bea`, writes the same fourteen-account template. Trigger on
-  /beancount-init, "set up a new beancount repo", "scaffold a beancount
-  ledger", "start a new ledger", "bootstrap fava", or "initialize a
-  beancount project". Do NOT trigger for questions about an existing ledger
-  or for editing transactions.
+description: Scaffold a new Beancount ledger with bea init and validation, with optional Fava browser setup when requested. Use for setting up a new ledger or initializing a bookkeeping repository. Skip importing history (beancount-migrate), bank exports, or edits to a populated ledger.
 ---
 
 # beancount-init
@@ -21,26 +12,12 @@ has its own runtime — it is not a prerequisite for `bea` ledger work.
 Run the steps in order. Stop if a preflight check fails — partial scaffolding
 is worse than no scaffolding.
 
-## Prefer `bea`; Fava and no-`bea` are explicit side paths
+## Prefer `bea`
 
-Check once with `command -v bea`. When `bea` is installed:
-
-- Create the starter with `bea init` and validate with `bea check`.
-- Do **not** `pip install beancount`, `uv add beancount`, or set `BEA_ENGINE` /
-  manual engine venvs. The managed engine provisions on first use.
-- If provisioning or `bea check` fails: fix network/`uv` availability and
-  retry `bea check` (or `bea upgrade`). Do **not** silently fall back to a
-  global `bean-check` while `bea` is installed.
-
-Without `bea`, write the template below (developer / no-bea fallback). Suggest
-installing `bea` (`brew install bex-co/tap/bea` or
-`uv tool install beancount-io`) rather than a second Beancount CLI. If the
-user already has a developer `bean-check`, they may use it to validate the
-template — that is an independent developer environment, not the customer path.
-
-Fava setup runs only when the user asks for a browser UI (`make start`,
-"bootstrap fava", "with Fava"). It needs `uv` and installs Fava into a local
-project venv; it does not replace `bea` for check/query/import.
+Read `references/bea-cli.md` for the shared command contract. Create and
+validate the ledger through `bea init` and `bea check`. If `bea` is absent,
+use the explicit template and developer path in `references/compatibility.md`.
+Fava is a separate, optional browser runtime; run Step 4 only when requested.
 
 ## Step 1 — Preflight
 
@@ -63,70 +40,35 @@ When FAVA is yes, verify `uv` with `command -v uv`. If missing, stop and tell
 them to install it (`brew install uv` on macOS, or
 `curl -LsSf https://astral.sh/uv/install.sh | sh`).
 
-## Step 2 — Capture today's date
+## Step 2 — Resolve the opening date
 
-Run `date +%Y-%m-%d` and call the result `TODAY` (open-date for all root accounts).
+Use the historical start date supplied by the user or beancount-migrate when
+present. It must be on/before the earliest entry, including any opening-balance
+transaction. Otherwise run `date +%Y-%m-%d` and use today. Call it `OPEN_DATE`.
+Do not scaffold with today's opens and then rewrite them for old history.
 
 ## Step 3 — Write `main.bean`
 
-When BEA is yes, substitute CURRENCY, TODAY, and OPENING:
+When BEA is yes, set `directory` to the current directory, `currency` to
+CURRENCY, and `open_date` to OPEN_DATE:
 
+<!-- recipe: init -->
+```sh
+bea --json --no-input init "$directory" --currency "$currency" --date "$open_date"
 ```
-bea --no-input init . --currency CURRENCY --date TODAY \
-  --opening-balance "Assets:Checking OPENING"    # only when OPENING is non-empty
-bea --file ./main.bean check
-```
+
+Add `--opening-balance "Assets:Checking OPENING"` to that command only when
+OPENING is non-empty. Then bind `ledger` to the new root's absolute path and
+run the check recipe in `references/bea-cli.md`.
 
 `bea init .` writes `./main.bean`. Do not write any template on this path — the
 file equals `bea init` byte-for-byte. Skip to Step 4 when FAVA is yes; otherwise
 Step 5.
 
-When BEA is no, write the same fourteen-account template `bea init` writes,
-substituting `{{TODAY}}`, `{{CURRENCY}}`, and the `{{TAIL}}` block:
-
-```
-option "title" "Personal ledger"
-option "operating_currency" "{{CURRENCY}}"
-
-; Add more accounts with bea add open. Amounts on credit accounts are negative.
-; bea import books rows it cannot categorize to Expenses:Uncategorized with flag '!'.
-{{TODAY}} open Assets:Checking {{CURRENCY}}
-{{TODAY}} open Assets:Savings {{CURRENCY}}
-{{TODAY}} open Assets:Cash {{CURRENCY}}
-{{TODAY}} open Liabilities:CreditCard {{CURRENCY}}
-{{TODAY}} open Income:Salary {{CURRENCY}}
-{{TODAY}} open Income:Interest {{CURRENCY}}
-{{TODAY}} open Expenses:Groceries {{CURRENCY}}
-{{TODAY}} open Expenses:Dining {{CURRENCY}}
-{{TODAY}} open Expenses:Rent {{CURRENCY}}
-{{TODAY}} open Expenses:Transport {{CURRENCY}}
-{{TODAY}} open Expenses:Utilities {{CURRENCY}}
-{{TODAY}} open Expenses:Fees {{CURRENCY}}
-{{TODAY}} open Expenses:Uncategorized {{CURRENCY}}
-{{TODAY}} open Equity:OpeningBalances {{CURRENCY}}
-
-{{TAIL}}
-```
-
-When OPENING is non-empty, `{{TAIL}}` is the live opening transaction (amount
-exactly as the user wrote it — `100` stays `100`):
-
-```
-{{TODAY}} * "Opening balances"
-  Assets:Checking          100 {{CURRENCY}}
-  Equity:OpeningBalances  -100 {{CURRENCY}}
-```
-
-When OPENING is empty, `{{TAIL}}` is the commented example:
-
-```
-; Record opening balances with a transaction against Equity:OpeningBalances.
-; {{TODAY}} * "Opening balance"
-;   Assets:Checking          1000.00 {{CURRENCY}}
-;   Equity:OpeningBalances  -1000.00 {{CURRENCY}}
-```
-
-The equity account is always `Equity:OpeningBalances`.
+When BEA is no, use the fourteen-account template in
+`references/compatibility.md`, with the same currency, open date and optional
+opening balance. Validate through the explicit developer path there; report
+an unvalidated result if no checker is available.
 
 ## Step 4 — Optional Fava browser setup
 

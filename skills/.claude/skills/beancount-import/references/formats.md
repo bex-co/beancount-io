@@ -26,7 +26,7 @@ After sign interpretation, map to the **ledger's** convention for the source acc
 
 **Payee cleanup:** strip trailing store numbers/reference codes for the *payee* field but keep the raw description as the narration when they differ meaningfully: `payee "TRADER JOES"`, narration `"TRADER JOES #123 SEATTLE WA"`. When in doubt keep the raw string as payee — dedup hashes use the raw description (see dedup.md), not the cleaned payee.
 
-**With `bea`:** the confirmed mapping becomes the `--csv` column list (`date=`, `amount=` or `debit=`+`credit=`, `payee=`, `narration=`, `id=`), the sign decision becomes `sign=bank|ledger` (plus `--date-format` when not ISO), and per-payee categories become `[[rule]]` entries — no config block needed, since `bea` remembers the mapping per ledger.
+**With `bea`:** follow `references/bea-import.md`. Record the confirmed `--csv` mapping, sign decision, date format, account, durable rules path and destination in the source config. Pass them explicitly on every preview and apply: `bea` does not remember `sign`, and it remembers only the rules file's path. `sign=bank` preserves the source signs; `sign=ledger` negates them. Check the resulting postings against an actual purchase/payment before approval. Use a normalized JSON batch when a type column or pending status cannot be expressed by the mapper.
 
 ## OFX / QFX
 

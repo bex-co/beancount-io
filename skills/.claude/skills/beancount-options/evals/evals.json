@@ -5,8 +5,10 @@
       "id": 1,
       "name": "csp-open-from-blank",
       "prompt": "I just sold to open 1 AAPL 150 put expiring june 20 2026 for $1.50 on robinhood. Fees were 65 cents. Trade date is today (2026-05-02). Please record it in my beancount file at ./ledger.beancount.",
-      "expected_output": "A correct STO transaction is appended to ledger.beancount, including any new account opens needed (Options, OptionPremium, Fees). Cost basis on the short option leg is per CONTRACT (150.00 USD), not per share. Cash leg = net premium (149.35 USD = 150 gross - 0.65 fees). Explicit Expenses:Trading:Fees posting (0.65 USD). The file passes bean-check.",
-      "files": ["evals/files/eval1_ledger.beancount"],
+      "expected_output": "A correct STO transaction is appended to ledger.beancount, including any new account opens needed (Options, OptionPremium, Fees). Cost basis on the short option leg is per CONTRACT (150.00 USD), not per share. Cash leg = net premium (149.35 USD = 150 gross - 0.65 fees). Explicit Expenses:Trading:Fees posting (0.65 USD). The file passes bea check.",
+      "files": [
+        "evals/files/eval1_ledger.beancount"
+      ],
       "expectations": [
         "The ledger.beancount file contains a new transaction dated 2026-05-02 for the AAPL 150 put STO",
         "The new transaction has a posting with -1 unit of an AAPL put options commodity at cost basis {150.00 USD} (per-contract, NOT per-share)",
@@ -15,15 +17,18 @@
         "The new transaction has a ^link tag identifying the position",
         "The commodity symbol used for the AAPL 150 put encodes the underlying (AAPL), type (PUT or CALL), expiry date (2026-06-20), and strike (150)",
         "If new accounts (Assets:Brokerage:Robinhood:Options, Income:Trading:OptionPremium, Expenses:Trading:Fees) did not exist in the original ledger, corresponding open directives are added before the new transaction",
-        "The ledger.beancount file passes bean-check (all transactions balance, no errors)"
+        "The ledger.beancount file passes bea check (all transactions balance, no errors)",
+        "With bea installed, every directive write uses the discovered root through --file and the reviewed destination through --into; final check targets the root"
       ]
     },
     {
       "id": 2,
       "name": "assignment-of-existing-csp",
       "prompt": "Got assigned on my SPY 480 put today (2026-05-02). 100 shares of SPY hit my account at strike $480. The put I sold was on 2026-04-01 for $2.10 premium with $0.65 fees — already in my ledger. It's on robinhood. Today's assignment had no fees. Please record the assignment in ./ledger.beancount.",
-      "expected_output": "An assignment transaction is appended that closes the SPY 480 put short position at $0 and creates a long SPY stock position with cost basis of $477.90 per share (strike $480 - premium $2.10/share). No Income:Trading:OptionPremium posting on this transaction (premium is folded into stock basis). Cash leg is -$48000.00. The transaction's ^link matches the original STO's link. The file passes bean-check.",
-      "files": ["evals/files/eval2_ledger.beancount"],
+      "expected_output": "An assignment transaction is appended that closes the SPY 480 put short position at $0 and creates a long SPY stock position with cost basis of $477.90 per share (strike $480 - premium $2.10/share). No Income:Trading:OptionPremium posting on this transaction (premium is folded into stock basis). Cash leg is -$48000.00. The transaction's ^link matches the original STO's link. The file passes bea check.",
+      "files": [
+        "evals/files/eval2_ledger.beancount"
+      ],
       "expectations": [
         "A new transaction dated 2026-05-02 is appended that records the assignment",
         "The transaction closes the SPY 480 put position via a posting with +1 SPY_PUT_20260501_00480000 at {210.00 USD} @ 0.00 USD (using per-contract basis)",
@@ -31,7 +36,7 @@
         "The transaction's cash leg is -48000.00 USD (strike × 100 shares)",
         "The transaction does NOT include a posting to Income:Trading:OptionPremium",
         "The transaction's ^link tag matches the original opening transaction's ^link (^spy-480p-20260501)",
-        "The ledger.beancount file passes bean-check (all transactions balance, no errors)",
+        "The ledger.beancount file passes bea check (all transactions balance, no errors)",
         "The stock cost basis correctly reflects the premium adjustment (NOT just $480 per share)"
       ]
     },
@@ -39,8 +44,10 @@
       "id": 3,
       "name": "roll-of-existing-csp",
       "prompt": "Rolled my AAPL 150 put on robinhood today (2026-05-02). Bought back the AAPL 150 put expiring june 20 2026 for $0.40 (originally sold 2026-04-01 for $1.50, already in ledger) and sold to open the july 18 2026 AAPL 145 put for $0.85. Fees were $0.65 on each leg. Please record both in ./ledger.beancount.",
-      "expected_output": "Two separate transactions appended: (1) BTC of the existing AAPL 150 put using {150.00 USD} @ 40.00 USD per-contract close syntax with auto-balanced Income:Trading:OptionPremium, (2) STO of the new AAPL 145 put 7/18 with cost basis {85.00 USD} (its own gross premium × 100, NOT the net of the roll). Each has its own ^link. The file passes bean-check.",
-      "files": ["evals/files/eval3_ledger.beancount"],
+      "expected_output": "Two separate transactions appended: (1) BTC of the existing AAPL 150 put using {150.00 USD} @ 40.00 USD per-contract close syntax with auto-balanced Income:Trading:OptionPremium, (2) STO of the new AAPL 145 put 7/18 with cost basis {85.00 USD} (its own gross premium × 100, NOT the net of the roll). Each has its own ^link. The file passes bea check.",
+      "files": [
+        "evals/files/eval3_ledger.beancount"
+      ],
       "expectations": [
         "Exactly two new transactions are appended dated 2026-05-02 (a close and a new open)",
         "The close transaction has a posting with +1 AAPL_PUT_20260620_00150000 at {150.00 USD} @ 40.00 USD (per-contract basis and disposal price)",
@@ -53,15 +60,17 @@
         "The new STO transaction's cash leg is 84.35 USD (premium received minus fees)",
         "The two transactions are NOT combined into a single transaction with all four postings",
         "The new STO's cost basis is 85.00 USD per contract (its own STO price × 100), NOT 45.00 (the net credit × 100)",
-        "The ledger.beancount file passes bean-check (all transactions balance, no errors)"
+        "The ledger.beancount file passes bea check (all transactions balance, no errors)"
       ]
     },
     {
       "id": 4,
       "name": "vertical-spread-open",
       "prompt": "I opened a bull put spread on SPY today (2026-05-02) on robinhood. Sold to open the june 20 2026 SPY 480 put for $2.10 and bought to open the june 20 2026 SPY 475 put for $1.00. Fees were $1.30 total. Please record it in ./ledger.beancount.",
-      "expected_output": "One transaction with both legs as separate postings sharing one ^link. Per-leg cost basis: short 480P at {210.00 USD}, long 475P at {100.00 USD}. Cash leg = net credit minus fees = $108.70. Explicit Expenses:Trading:Fees of $1.30. File passes bean-check.",
-      "files": ["evals/files/eval4_ledger.beancount"],
+      "expected_output": "One transaction with both legs as separate postings sharing one ^link. Per-leg cost basis: short 480P at {210.00 USD}, long 475P at {100.00 USD}. Cash leg = net credit minus fees = $108.70. Explicit Expenses:Trading:Fees of $1.30. File passes bea check.",
+      "files": [
+        "evals/files/eval4_ledger.beancount"
+      ],
       "expectations": [
         "A single new transaction dated 2026-05-02 is appended (NOT two separate transactions)",
         "The transaction has a posting with -1 SPY_PUT_20260620_00480000 at {210.00 USD} (per-contract basis = $2.10 × 100)",
@@ -70,7 +79,7 @@
         "The transaction has an explicit Expenses:Trading:Fees posting of 1.30 USD",
         "The transaction has a single ^link tag shared by both legs",
         "Both option commodity symbols encode the underlying (SPY), type (PUT), expiry (2026-06-20), and respective strikes",
-        "The ledger.beancount file passes bean-check (all transactions balance, no errors)",
+        "The ledger.beancount file passes bea check (all transactions balance, no errors)",
         "Each leg's cost basis is its OWN gross premium × 100, NOT a share of the net credit"
       ]
     },
@@ -78,15 +87,17 @@
       "id": 5,
       "name": "expiration-worthless",
       "prompt": "My AAPL 150 put expired worthless on 2026-05-01 (last friday). The put I sold was on 2026-04-01 for $1.50 premium with $0.65 fees — already in my ledger on robinhood. Please record the expiration in ./ledger.beancount. Today's date is 2026-05-02.",
-      "expected_output": "An expiration transaction is appended dated 2026-05-01 that closes the existing AAPL 150 put at $0 and recognizes the full premium as Income:Trading:OptionPremium. Uses {150.00 USD} @ 0.00 USD per-contract basis syntax. No cash leg (no money changes hands at expiration). Auto-balanced income line. Same ^link as original STO. File passes bean-check.",
-      "files": ["evals/files/eval5_ledger.beancount"],
+      "expected_output": "An expiration transaction is appended dated 2026-05-01 that closes the existing AAPL 150 put at $0 and recognizes the full premium as Income:Trading:OptionPremium. Uses {150.00 USD} @ 0.00 USD per-contract basis syntax. No cash leg (no money changes hands at expiration). Auto-balanced income line. Same ^link as original STO. File passes bea check.",
+      "files": [
+        "evals/files/eval5_ledger.beancount"
+      ],
       "expectations": [
         "A new transaction dated 2026-05-01 (the expiration date, NOT today's 2026-05-02) is appended that records the expiration",
         "The transaction has a posting with +1 AAPL_PUT_20260501_00150000 at {150.00 USD} @ 0.00 USD (per-contract basis closing at zero)",
         "The transaction has NO cash leg (nothing changes hands at expiration)",
         "The transaction includes a posting to Income:Trading:OptionPremium (auto-balanced or with explicit -150.00 USD amount)",
         "The transaction shares the original ^link (^aapl-150p-20260501)",
-        "The ledger.beancount file passes bean-check (all transactions balance, no errors)",
+        "The ledger.beancount file passes bea check (all transactions balance, no errors)",
         "The realized income (auto-balanced or explicit) equals the full original premium of 150.00 USD"
       ]
     },
@@ -94,8 +105,10 @@
       "id": 6,
       "name": "covered-call-assigned",
       "prompt": "My SPY 500 call got assigned on 2026-05-01 — 100 SPY left my account at the strike. I sold that call on 2026-04-01 for $1.50 premium with $0.65 fees (already in my ledger). The 100 SPY shares were bought 2026-01-15 with basis $470/share (already in ledger). On Robinhood. Today's date is 2026-05-02. Record the assignment in ./ledger.beancount.",
-      "expected_output": "An assignment transaction dated 2026-05-01 that closes the short call at $0, sells 100 SPY at effective price = strike + premium per share = $501.50/share, and lets Income:Trading:CapitalGains auto-balance to the realized gain. NO Income:Trading:OptionPremium posting on this transaction (premium folds into stock disposal price). File passes bean-check.",
-      "files": ["evals/files/eval6_ledger.beancount"],
+      "expected_output": "An assignment transaction dated 2026-05-01 that closes the short call at $0, sells 100 SPY at effective price = strike + premium per share = $501.50/share, and lets Income:Trading:CapitalGains auto-balance to the realized gain. NO Income:Trading:OptionPremium posting on this transaction (premium folds into stock disposal price). File passes bea check.",
+      "files": [
+        "evals/files/eval6_ledger.beancount"
+      ],
       "expectations": [
         "A new transaction dated 2026-05-01 (the expiration/assignment date, NOT today's 2026-05-02) is appended",
         "The transaction has a posting with +1 SPY_CALL_20260501_00500000 at {150.00 USD} @ 0.00 USD (closing the short call)",
@@ -104,7 +117,7 @@
         "The transaction does NOT include a posting to Income:Trading:OptionPremium",
         "The transaction includes Income:Trading:CapitalGains (auto-balanced or with the correct explicit amount)",
         "The transaction's ^link tag matches the original opening transaction's ^link (^spy-500c-20260501)",
-        "The ledger.beancount file passes bean-check (all transactions balance, no errors)",
+        "The ledger.beancount file passes bea check (all transactions balance, no errors)",
         "The stock disposal price reflects the premium (501.50, NOT just 500)"
       ]
     },
@@ -112,8 +125,10 @@
       "id": 7,
       "name": "long-put-exercise",
       "prompt": "My long AAPL 140 put I bought as protection got exercised on 2026-05-01 (expiry day). Sold my 100 AAPL shares at strike $140. The put cost me $1.50 with $0.65 fee on 2026-04-01 (already in ledger). Stock basis $145 from buy on 2026-01-15 (already in ledger). On Robinhood. Today's date is 2026-05-02. Record the exercise in ./ledger.beancount.",
-      "expected_output": "An exercise transaction dated 2026-05-01 that closes the long put at $0, sells 100 AAPL at effective price = strike − premium per share = $138.50/share, and lets Income:Trading:CapitalGains auto-balance to the realized loss. NO Income:Trading:OptionPremium posting (premium folds into stock disposal price). File passes bean-check.",
-      "files": ["evals/files/eval7_ledger.beancount"],
+      "expected_output": "An exercise transaction dated 2026-05-01 that closes the long put at $0, sells 100 AAPL at effective price = strike − premium per share = $138.50/share, and lets Income:Trading:CapitalGains auto-balance to the realized loss. NO Income:Trading:OptionPremium posting (premium folds into stock disposal price). File passes bea check.",
+      "files": [
+        "evals/files/eval7_ledger.beancount"
+      ],
       "expectations": [
         "A new transaction dated 2026-05-01 is appended that records the exercise",
         "The transaction has a posting with -1 AAPL_PUT_20260501_00140000 at {150.00 USD} @ 0.00 USD (closing the long put)",
@@ -122,7 +137,7 @@
         "The transaction does NOT include a posting to Income:Trading:OptionPremium",
         "The transaction includes Income:Trading:CapitalGains (auto-balanced or with the correct explicit amount)",
         "The transaction's ^link tag matches the original opening transaction's ^link (^aapl-140p-20260501-long)",
-        "The ledger.beancount file passes bean-check (all transactions balance, no errors)",
+        "The ledger.beancount file passes bea check (all transactions balance, no errors)",
         "The stock disposal price reflects the premium reduction (138.50, NOT just 140)"
       ]
     }

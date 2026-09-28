@@ -1,6 +1,6 @@
 ---
 name: beancount-migrate
-description: Migrate transaction history from a personal-finance app export (Mint, Monarch, QuickBooks Online, Copilot, Bench handoff, or any category-tagged CSV export) into a new beancount ledger. Use this skill whenever the user has a full-history export from a finance app and wants out — "migrate me from Mint", "Monarch export to beancount", "my bookkeeping service shut down, here's the CSV", "convert my QuickBooks history to plain text". The skill proposes an account hierarchy from the export's categories, converts all history with transfer deduplication and opening balances, verifies counts and balances against the source, and optionally starts Fava when requested. SKIP when the user wants to import an ongoing bank export into an existing ledger (beancount-import), reconcile against a statement (beancount-reconcile), start fresh with no history (beancount-init alone), or record individual transactions. The core trigger is "here is my old app's full export — turn it into a beancount ledger".
+description: Migrate full transaction history from Mint, Monarch, QuickBooks Online or another category-tagged finance-app export into a fresh Beancount ledger. Confirm account/category mappings, pair transfers, preserve source IDs, write through bea and reconcile source counts and balances. Skip ongoing bank imports, populated-ledger merges and investment lot reconstruction.
 ---
 
 # beancount-migrate
@@ -9,19 +9,17 @@ Turn a finance-app export into a complete, verified beancount ledger — mapped 
 
 This skill exists because every app shutdown (Mint, Bench, …) strands users with one CSV and no way to trust a conversion: categories don't map 1:1 to double-entry accounts, transfers appear twice (once per account), and a silently dropped row is invisible until a balance is wrong months later. The skill converts *with receipts*: every count and balance is reconciled against the source, and everything unmappable is surfaced, never guessed.
 
-## Prefer `bea`; fall back without it
+## Prefer `bea`
 
-Check once with `command -v bea`. Prefer scaffolding via `beancount-init`'s
-bea path, writing confirmed batches with `bea add` where practical, and
-verifying with `bea check`. Do not `pip install beancount` or configure
-private engine paths. Without `bea`, follow init's template fallback and a
-developer `bean-check` if present; suggest installing `bea` as the primary fix.
-Optional Fava (`make start`) is only for users who want the browser UI — not
-required to finish a migration.
+Read beancount-init's `references/bea-cli.md` before running ledger commands: it defines explicit root/destination paths, JSON batches, checks, and safe retries. Without `bea`, use beancount-init's `references/compatibility.md`.
+
+Compose beancount-init, then write approved accounts, transaction batches and
+endpoint assertions through `bea`. Fava is optional. Mapping, transfer pairing,
+source identities, and the migration report remain this skill's work.
 
 ## Scope — what this skill does and does not touch
 
-**Does:** convert one export (possibly covering many source accounts) into a fresh ledger; propose and confirm the account hierarchy before converting; pair transfers; construct opening balances; emit a migration report; run `bea check` (or `bean-check` without `bea`).
+**Does:** convert one export (possibly covering many source accounts) into a fresh ledger; propose and confirm the account hierarchy before converting; pair transfers; construct opening balances; emit a migration report; run the root-ledger `bea check`.
 
 **Does not:** talk to any app's API (exports only); backfill investment lots/prices (holdings rows are surfaced as follow-up work, not converted); merge into an existing populated ledger (offer `beancount-import` for that); invent category mappings the user didn't confirm.
 
@@ -39,7 +37,7 @@ Also ask up front for each source account's **current balance** (from the old ap
 
 ### 2. Scaffold
 
-If the working directory has no ledger, scaffold one via the **beancount-init** skill's flow (prefer `bea init` + `bea check`; Fava/uv/Makefile only when the user wants the browser) — do not duplicate that logic here. Then **backdate the scaffold's today-dated `open` directives** to on/before the earliest migrated entry (migrated history posting to an account opened later fails the check with "reference to inactive account"). If a populated ledger already exists, stop: this skill targets fresh starts; offer `beancount-import` instead.
+If there is no ledger, compose **beancount-init** with an explicit historical open date: the day before the earliest source row, so account opens also cover the opening-balance transactions. Run `bea --no-input init . --currency CURRENCY --date OPEN_DATE` through that flow. Do not initialize with today's date and patch the opens afterward. If a populated ledger already exists, offer beancount-import instead; this skill targets fresh starts.
 
 ### 3. Map
 
@@ -56,8 +54,10 @@ Present all three tables together as one review; the user edits them in place an
 - One transaction per non-transfer row: source-account posting at the row amount (ledger sign), counter-account from the confirmed category mapping.
 - **Transfer pairs** (same amount, opposite direction, ≤3 days apart, transfer-mapped categories, different source accounts) merge into **one** two-posting transaction. Unpaired transfer rows go to a `transfers to review` list, converted against `Equity:Transfers-Review` so totals still tie.
 - Every entry carries `import-id` metadata per the `beancount-import` convention (`references/dedup.md` there): native row ID if the export has one, else `<source>:sha256:<16-hex>` with the same normalization. A merged transfer pair covers **two** source rows — record one row's id as `import-id` and the other as `import-id-2` so a later `beancount-import` of either account exact-matches its side and doesn't double-book the transfer.
-- **Opening balances**: per account, `opening = stated current balance − Σ(converted rows)`, dated the day before the earliest row, posted against `Equity:Opening-Balances`. Then a `balance` assertion **dated the day after the last row** (beancount checks balances at start-of-date) pins the endpoint at the stated current balance.
-- Write `open` directives for every mapped account, dated on or before the earliest entry.
+- **Opening balances**: prefer a stated opening when available; otherwise derive `opening = stated current balance − Σ(converted rows)` and label it as derived. Date it the day before the earliest row and post against the existing opening-equity account (`bea init` creates `Equity:OpeningBalances`). An endpoint assertion **dated the day after the last row** pins the stated ending balance; with a derived opening this is a consistency check, not independent evidence that source rows are complete.
+- Open each missing mapped account with `bea --file "$ledger" --json --no-input add open --date "$open_date" --account "$account" --into "$open_target"`; do not duplicate accounts already opened by init.
+- Build one approved JSON batch containing the opening transactions and converted history, including both IDs on merged transfers. Write it with `bea --file "$ledger" --json --no-input add transactions --from "$batch" --into "$target"`.
+- Then write each passing endpoint assertion with `bea --file "$ledger" --json --no-input add balance --date "$assertion_date" --account "$account" --amount "$amount" --into "$target"`. These are separate commands; a failed assertion does not undo the history batch. Inspect the ledger before resuming to avoid duplicating it.
 
 ### 5. Verify
 
@@ -65,9 +65,9 @@ Run the checks; a migration that can't show its math didn't happen:
 
 - **Row count**: source rows = non-transfer transactions written + 2×(transfer pairs merged) + skipped rows (each listed with a reason) — a merged pair is 2 source rows but 1 transaction, so count it on the pairs side, not the transactions side.
 - **Balances**: per account, opening + Σ(rows) must equal the stated current balance — this is what the appended `balance` assertion enforces via `bea check`.
-- **`bea check`** on the ledger (`bean-check` only without `bea`). Any failure: surface the exact output, do not report success.
+- **`bea --file "$ledger" --json --no-input check`** on the root ledger. Any failure: surface the exact output, do not report success.
 
-If a stated balance and the computed sum disagree, the `balance` assertion will fail — **surface the delta and its likely causes** (rows missing from the export, pending transactions, wrong stated balance); never adjust numbers to force a pass, never delete the assertion to hide it. Offer the residual as an explicit `Equity:Migration-Residual` posting **only** if the user explicitly accepts the discrepancy.
+If a stated opening plus the movements disagrees with the stated ending, the attempted `balance` assertion is refused before it is written — **surface the delta and its likely causes** (rows missing from the export, pending transactions, wrong stated balance); never adjust numbers to force a pass, never delete the assertion to hide it. Offer the residual as an explicit `Equity:Migration-Residual` posting **only** if the user explicitly accepts the discrepancy.
 
 ### 6. Report
 

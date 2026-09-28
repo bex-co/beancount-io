@@ -1,13 +1,13 @@
 ---
 name: beancount-ask
-description: Answer questions about a beancount ledger with BQL queries — spending, trends, net worth, burn rate, subscriptions, anomalies. Use this skill whenever the user asks an analytical/reporting question about their ledger — "how much did I spend on groceries last month", "what's my net worth", "what subscriptions am I paying for", "did anything unusual happen in May", "what's my monthly burn" — or asks for a spending report/summary. Every figure in an answer comes from a bea --json query run the user can see and re-run (bean-query only when bea is unavailable); the skill is strictly read-only. SKIP when the user wants to record transactions (beancount-options / beancount-import), reconcile against a statement (beancount-reconcile), migrate from another app (beancount-migrate), edit the ledger in any way, or asks how beancount/BQL works in general (that's a docs question, not a query over their data). The core trigger is "answer this question from my ledger's data".
+description: Answer questions about a local Beancount ledger using shown, reproducible bea queries and reports for spending, trends, net worth, subscriptions and anomalies. Strictly read-only; figures come from executed queries. Skip recording transactions, reconciliation, migration, ledger edits, and general Beancount or BQL documentation questions.
 ---
 
 # beancount-ask
 
 Answer ledger questions with **shown, re-runnable BQL** — never with model arithmetic.
 
-This skill exists because a fluent-but-unverifiable answer about money is worse than no answer: the entire credibility of plain-text accounting is that every number is reproducible. So the contract is: every figure cited comes from a shown query execution, the query is shown with the answer, and the ledger is never modified. Prefer `bea` for reads when installed, fall back to bean-* only when `bea` is absent — stated once here, not repeated below.
+This skill exists because a fluent-but-unverifiable answer about money is worse than no answer: the entire credibility of plain-text accounting is that every number is reproducible. So the contract is: every figure cited comes from a shown query execution, the query is shown with the answer, and the ledger is never modified. Prefer `bea` for reads. Read beancount-init's `references/bea-cli.md` before running ledger commands: it defines explicit root/destination paths, JSON batches, checks, and safe retries. Without `bea`, use beancount-init's `references/compatibility.md`.
 
 ## Scope
 
@@ -21,12 +21,23 @@ This skill exists because a fluent-but-unverifiable answer about money is worse 
 
 Find the main ledger file (same procedure as the sibling skills: `fd -e beancount -e bean .`, main = the file with `option`/`include` directives). Confirm which file when ambiguous.
 
-Tooling, in order of preference:
+Bind the discovered root as `ledger` and use the shared read recipes:
 
-1. `bea --file <ledger> --json query "<BQL>"` — when `bea` is installed (managed engine runs Beanquery). Drop `--json` when reading the table yourself. `bea --file <ledger> --json balance` gives the pruned trial-balance subtree, and `bea list transaction --search/--tag/--link` finds entries without BQL. Do not `pip install beanquery` or configure private engine paths while `bea` is present; if the engine fails, repair/retry provisioning rather than switching to a global `bean-query`.
-2. Without `bea`: `bean-query <ledger> "<BQL>"` if a developer environment already provides it; otherwise suggest installing `bea`.
-3. For polished statements (income statement, balance sheet trees), `bea --file <ledger> report income-statement` beats raw BQL — say so rather than rebuilding them in BQL.
-4. Optional quotes: `bea price …` needs `bea engine enable beanprice` first; recording a known quote uses `bea add price` without that feature. For market values with zero setup, a managed include (`include "https://beancount.io/prices/BTC-USD"`) resolves inside every `bea` load — `bea price status` shows its freshness — but upstream tools cannot fetch the URL, so hand them `bea price export`'s local includes instead.
+```sh
+bea --file "$ledger" --json --no-input query "$query"
+bea --file "$ledger" --json --no-input balance
+bea --file "$ledger" --json --no-input report income-statement --time "$month"
+```
+
+For entry searches, use root-scoped `list transaction --search/--tag/--link`;
+check truncation before treating a listing as complete. Use `report` for
+polished statements. Keep query execution here rather than delegating the
+question to another LLM via `bea ask`.
+
+For market values, existing managed price includes resolve during a `bea`
+load; `bea --file "$ledger" price status` reports freshness. Missing quotes
+or includes require a separate write workflow; this skill does not run
+`add price`, price refresh/export, or edit includes to answer a question.
 
 ### 2. Translate the question
 

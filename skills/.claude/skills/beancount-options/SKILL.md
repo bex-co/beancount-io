@@ -1,6 +1,6 @@
 ---
 name: beancount-options
-description: Convert natural-language descriptions of specific options trades into beancount transactions and append them to the user's ledger. Use this skill whenever the user describes an options event that happened (sold/bought a call or put, opened/closed/rolled a position, got assigned/exercised, an option expired) and wants it recorded in beancount. Triggers on multi-leg strategies (verticals, condors, butterflies, straddles, calendars, diagonals, collars, the wheel), single-leg trades (cash-secured puts, covered calls, naked options, long calls/puts), and any options trade described in plain English or pasted from a broker confirmation. Also triggers on jargon like STO/BTC/STC/BTO, "I rolled", "got assigned", "expired worthless". SKIP when the user is asking for explanations of how options work, calculations like greeks/IV/breakevens, tax planning advice, P&L reports or summaries, broker statement CSV imports, or live analytics/dashboards — those are different workflows. The core trigger is "record this specific trade I made or that happened to me".
+description: Record a described options trade or lifecycle event as validated Beancount transactions through bea, after review and confirmation. Use for single-leg or multi-leg opens, closes, rolls, assignment, exercise and expiration, including pasted broker confirmations. Skip options education, pricing/greeks, tax planning, analytics, and broker statement imports.
 ---
 
 # beancount-options
@@ -9,13 +9,15 @@ Turn natural-language options descriptions into correct beancount transactions.
 
 This skill exists because options accounting in beancount has subtle mechanics that are easy to get wrong by hand: short-position cost basis lives in negative-quantity holdings, premium becomes part of stock cost basis on assignment, multi-leg trades need link grouping, and the four close paths (close, expire, assign, exercise) produce different P&L treatment. The skill takes a description, infers the strategy and outcome, generates the correct transaction(s), and — only after explicit confirmation — appends them to the user's ledger.
 
-## Prefer `bea`; fall back to hand-append
+## Prefer `bea`
 
-Check once with `command -v bea`. When installed, write confirmed entries with
-`bea add transactions --from -` (open accounts first with `bea add open`) and
-verify with `bea check`. Do not `pip install beancount` or silently fall back
-to a global `bean-check` while `bea` is installed. Without `bea`, append text
-and use a developer `bean-check` if present; otherwise suggest installing `bea`.
+Read beancount-init's `references/bea-cli.md` before running ledger commands: it defines explicit root/destination paths, JSON batches, checks, and safe retries. Without `bea`, use beancount-init's `references/compatibility.md`.
+
+Write approved account opens and transactions through `bea`. Preserve cost
+basis, inferred postings, tags and links. Use structured JSON batches for
+explicit lots and the shared native `add transaction --posting` recipe for
+`{}` lot selection or total-cost syntax. Keep the strategy-specific reasoning
+and confirmation below.
 
 ## When to use this skill
 
@@ -29,7 +31,7 @@ Don't use for: pricing/greeks analysis, position sizing, market-data lookup, or 
 
 ## Workflow
 
-Five phases, in order: **Discover → Parse → Generate → Append → Verify**.
+Five phases, in order: **Discover → Parse → Generate → Confirm + Write → Verify**.
 
 ### 1. Discover
 
@@ -105,9 +107,9 @@ Universal generation rules — apply unless a reference file overrides:
 - **Assignment**: option closes at $0; resulting stock opens with cost basis adjusted for the original premium. No income line for the option itself. See `references/assignment.md`.
 - **Exercise** (long option you exercised): mirror of assignment — premium adjusts stock basis, no separate option income. See `references/exercise.md`.
 - **Expiration**: identical to a close at $0 premium.
-- **`{}` disposal requires the held lot**: a `-100 AAPL {}` posting matches an existing stock lot in that account. If the shares aren't booked in the ledger yet, book (or ask about) the purchase first — otherwise `bean-check` fails with the unintuitive `Too many missing numbers for currency group 'USD'`.
+- **`{}` disposal requires the held lot**: a `-100 AAPL {}` posting matches an existing stock lot in that account. If the shares aren't booked in the ledger yet, book (or ask about) the purchase first — otherwise `bea check` fails with the unintuitive `Too many missing numbers for currency group 'USD'`.
 
-### 4. Append
+### 4. Confirm + Write
 
 Show the user, then ask:
 
@@ -128,25 +130,29 @@ Proposed transaction:
 Append to ./transactions/2026.beancount? (yes/no)
 ```
 
-On yes: append. On no: ask what to change and regenerate. **Never write before explicit confirmation.** This is the user's source of financial truth — getting it wrong silently is hard to detect later.
+On yes, open the approved new accounts with the shared `add open` recipe,
+then write the confirmed batch:
 
-When appending:
-- Most beancount files are date-sorted; insert in the right spot.
-- Preserve trailing newlines and blank-line separators between transactions.
-- If new `open` directives are needed, place them after existing opens, near the top of the file.
+```sh
+bea --file "$ledger" --json --no-input add transactions --from "$batch" --into "$target"
+```
+
+Use the proposed destination, including for year-bucketed files; validate
+through the root ledger. Native lot-selection transactions use the shared
+`add transaction --posting` recipe with the same root and destination.
+Update only the reviewed config comment block.
+On no, revise the proposal. Never write before confirmation. If a command
+fails, inspect earlier successful writes before retrying the batch.
 
 ### 5. Verify
 
-After appending, verify with `bea check` when `bea` is installed:
+Verify the root ledger after writing:
 
-```bash
-bea check                               # when bea is installed
-bean-check ./ledger.beancount           # no-bea / developer fallback only
+```sh
+bea --file "$ledger" --json --no-input check
 ```
 
-Prefer writing through `bea add transactions --from -` (and `bea add open`
-for new accounts) when `bea` is present — same confirm gate, validated write.
-Without `bea`, append text then run `bean-check` if available.
+Use beancount-init's `references/compatibility.md` only when `bea` is absent.
 
 If the check reports **any** errors (transaction does not balance, lot booking
 failure, undeclared account, etc.), do NOT report success. Instead:
@@ -156,7 +162,7 @@ failure, undeclared account, etc.), do NOT report success. Instead:
 
 This step exists because the cost-basis arithmetic is subtle, especially for assignment, exercise, and multi-leg trades. Catching an error now is much cheaper than discovering it later during 1099-B reconciliation.
 
-If neither tool is available, suggest installing `bea` and at minimum compute the per-transaction posting weights manually to verify each new transaction sums to zero.
+If no checker is available, report the result as unvalidated and suggest installing `bea`; manual posting weights do not establish correct lot booking.
 
 ## Universal mechanics
 

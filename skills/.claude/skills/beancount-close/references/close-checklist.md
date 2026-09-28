@@ -17,7 +17,7 @@ plus a period-posting check (`WHERE date >= <start> AND date < <end>`). Equity/I
 
 Per account with a statement: run the **beancount-reconcile** skill's full flow (Discover → Normalize → Match → Propose → Verify), one account per pass, its confirm gate intact. Statuses:
 
-- **tied** — reconcile appended its period-end assertion and bean-check passes.
+- **tied** — reconcile wrote its period-end assertion and `bea --file "$ledger" check` passes against the root.
 - **partial** — reconcile reported suspects/mismatches and (correctly) withheld the assertion; carry its residual into the close report.
 - **unverified** — no statement available. Listed, never silently passed. (Cash accounts are perpetually unverified — note "cash, no statement source" so the line doesn't read as an error.)
 
@@ -55,4 +55,4 @@ Income statement for the period, via the beancount-ask recipes (sum over `^Incom
 - Stage only the files the close touched (ledger + any statement archive the user keeps in-repo).
 - Subject: `close: <YYYY-MM> — <n> reconciled, <m> unverified` — greppable close history.
 - Body: the close report verbatim.
-- Refuse to propose the commit while bean-check is red; on user decline, leave the tree untouched — a declined close commit must be losslessly resumable.
+- Refuse to propose the commit while the root-ledger check is red; on user decline, leave the tree untouched — a declined close commit must be losslessly resumable.

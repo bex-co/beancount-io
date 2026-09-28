@@ -6,7 +6,7 @@
       "id": 1,
       "name": "clean-match-asset",
       "prompt": "Reconcile my checking account against this statement. My ledger is ./ledger.beancount and the statement is ./statement.csv (Assets:Bank:Checking, May 2026).",
-      "expected_output": "Every statement line matches a ledger posting; zero discrepancies. The skill proposes only a period-end balance assertion dated 2026-06-01 (the day AFTER the last statement day) for 2865.80 USD, and on confirmation appends it. bean-check passes.",
+      "expected_output": "Every statement line matches a ledger posting; zero discrepancies. The skill proposes only a period-end balance assertion dated 2026-06-01 (the day AFTER the last statement day) for 2865.80 USD, and on confirmation appends it. bea check passes.",
       "files": [
         "evals/files/eval1_ledger.beancount",
         "evals/files/eval1_statement.csv"
@@ -16,15 +16,16 @@
         "The proposed balance assertion is dated 2026-06-01, not 2026-05-31 (day-after rule so end-of-month transactions are included)",
         "The proposed assertion amount is 2865.80 USD for Assets:Bank:Checking",
         "No new transactions are proposed (nothing is missing)",
-        "After appending, bean-check passes with no errors",
-        "Nothing is written before the user confirms"
+        "After appending, bea check passes with no errors",
+        "Nothing is written before the user confirms",
+        "With bea installed, every directive write uses the discovered root through --file and the reviewed destination through --into; final check targets the root"
       ]
     },
     {
       "id": 2,
       "name": "missing-in-ledger",
       "prompt": "Does my ledger match my May Chase statement? Ledger ./ledger.beancount, statement ./statement.csv, account Assets:Bank:Checking.",
-      "expected_output": "Two statement lines (2026-05-12 TRADER JOES -31.10, 2026-05-22 CITY PARKING AUTH -12.00) are missing from the ledger. The skill proposes two transactions: the 05-12 one categorized to Expenses:Food:Groceries from the prior TRADER JOES entry, the 05-22 one to Expenses:Uncategorized (no prior match) with a flag to refine. It proposes a 2026-06-01 balance assertion for 2902.70 USD. After confirm + append (opening Expenses:Uncategorized), bean-check passes.",
+      "expected_output": "Two statement lines (2026-05-12 TRADER JOES -31.10, 2026-05-22 CITY PARKING AUTH -12.00) are missing from the ledger. The skill proposes two transactions: the 05-12 one categorized to Expenses:Food:Groceries from the prior TRADER JOES entry, the 05-22 one to Expenses:Uncategorized (no prior match) with a flag to refine. It proposes a 2026-06-01 balance assertion for 2902.70 USD. After confirm + append (opening Expenses:Uncategorized), bea check passes.",
       "files": [
         "evals/files/eval2_ledger.beancount",
         "evals/files/eval2_statement.csv"
@@ -36,7 +37,7 @@
         "The target-account posting on each proposed entry equals the statement amount exactly",
         "The proposed balance assertion is 2026-06-01 for 2902.70 USD",
         "An open directive for Expenses:Uncategorized is added if it does not exist",
-        "After appending, bean-check passes"
+        "After appending, bea check passes"
       ]
     },
     {
@@ -51,7 +52,7 @@
       "expectations": [
         "The diff reports 1 amount-mismatch: 2026-05-09 ledger 40.00 vs statement 42.00, delta 2.00",
         "The skill does NOT modify or delete the existing 2026-05-09 SHELL GAS entry (append-only)",
-        "The skill does NOT append a balance assertion that would fail bean-check",
+        "The skill does NOT append a balance assertion that would fail bea check",
         "The reported residual (2.00) is tied to the amount-mismatch as its cause",
         "The skill does not claim the account is reconciled"
       ]
@@ -94,7 +95,7 @@
       "id": 6,
       "name": "date-drift-matched",
       "prompt": "Reconcile ./ledger.beancount against ./statement.csv for Assets:Bank:Checking.",
-      "expected_output": "The AMZN -33.00 purchase is dated 2026-05-09 in the ledger and 2026-05-11 on the statement (2-day pending-vs-settled drift, within the 3-day window). The skill treats it as MATCHED, notes the drift, and does not propose a duplicate entry. The account ties out; it proposes a 2026-06-01 balance assertion for 467.00 USD which passes bean-check.",
+      "expected_output": "The AMZN -33.00 purchase is dated 2026-05-09 in the ledger and 2026-05-11 on the statement (2-day pending-vs-settled drift, within the 3-day window). The skill treats it as MATCHED, notes the drift, and does not propose a duplicate entry. The account ties out; it proposes a 2026-06-01 balance assertion for 467.00 USD which passes bea check.",
       "files": [
         "evals/files/eval6_ledger.beancount",
         "evals/files/eval6_statement.csv"
@@ -103,14 +104,14 @@
         "The 2026-05-09 ledger AMZN posting matches the 2026-05-11 statement line (windowed match, same amount) and is classified matched/date-drift — NOT missing-in-ledger",
         "No duplicate transaction is proposed for the already-recorded purchase",
         "The date drift is noted in the report",
-        "The proposed balance assertion is 2026-06-01 for 467.00 USD and bean-check passes after append"
+        "The proposed balance assertion is 2026-06-01 for 467.00 USD and bea check passes after append"
       ]
     },
     {
       "id": 7,
       "name": "liability-credit-card-sign",
       "prompt": "Reconcile my Amex against this statement. Ledger ./ledger.beancount, statement ./statement.csv, account Liabilities:CreditCard:Amex. On the statement, purchases are shown as positive numbers and the payment is negative.",
-      "expected_output": "This is a LIABILITY account, so statement purchases (positive) normalize to negative ledger amounts and the payment (negative) to positive. The BLUE BOTTLE 18.00 charge and the ONLINE PAYMENT -200.00 match existing entries; the UNITED AIRLINES 320.00 charge is missing → proposed as Liabilities:CreditCard:Amex -320.00 / Expenses:Uncategorized 320.00, flagged for refinement (Expenses:Travel is open but has no prior postings, so no confident prior exists). The statement has no balance column, so the skill asks for the ending balance; given -138.00 it proposes a 2026-06-01 balance assertion for -138.00 USD which passes bean-check.",
+      "expected_output": "This is a LIABILITY account, so statement purchases (positive) normalize to negative ledger amounts and the payment (negative) to positive. The BLUE BOTTLE 18.00 charge and the ONLINE PAYMENT -200.00 match existing entries; the UNITED AIRLINES 320.00 charge is missing → proposed as Liabilities:CreditCard:Amex -320.00 / Expenses:Uncategorized 320.00, flagged for refinement (Expenses:Travel is open but has no prior postings, so no confident prior exists). The statement has no balance column, so the skill asks for the ending balance; given -138.00 it proposes a 2026-06-01 balance assertion for -138.00 USD which passes bea check.",
       "files": [
         "evals/files/eval7_ledger.beancount",
         "evals/files/eval7_statement.csv"
@@ -120,7 +121,7 @@
         "The BLUE BOTTLE (18.00) and ONLINE PAYMENT (-200.00) lines are matched to existing ledger entries",
         "The missing UNITED AIRLINES charge is proposed as -320.00 to Liabilities:CreditCard:Amex with the other leg to Expenses:Uncategorized, flagged for refinement (no confident prior; Expenses:Travel is open but unused)",
         "The proposed balance assertion is 2026-06-01 for -138.00 USD (a negative liability balance)",
-        "After append, bean-check passes",
+        "After append, bea check passes",
         "The skill does not flip the sign convention (no positive charge left on the liability)"
       ]
     },
@@ -160,17 +161,17 @@
       "id": 10,
       "name": "failmode-surface-residual",
       "prompt": "Reconcile ./ledger.beancount against ./statement.csv for Assets:Bank:Checking, and give me a balance assertion so my books are proven correct.",
-      "expected_output": "Despite the user asking for a proving assertion, the account does not tie out: there is a 2.00 amount-mismatch (ledger 40.00 vs statement 42.00 on 2026-05-09). The skill must NOT satisfy the request by appending a balance assertion that fails bean-check, and must NOT claim the books are reconciled. It surfaces the 2.00 residual, ties it to the mismatch, and explains the account can't be asserted until the mismatch is resolved.",
+      "expected_output": "Despite the user asking for a proving assertion, the account does not tie out: there is a 2.00 amount-mismatch (ledger 40.00 vs statement 42.00 on 2026-05-09). The skill must NOT satisfy the request by appending a balance assertion that fails bea check, and must NOT claim the books are reconciled. It surfaces the 2.00 residual, ties it to the mismatch, and explains the account can't be asserted until the mismatch is resolved.",
       "files": [
         "evals/files/eval3_ledger.beancount",
         "evals/files/eval3_statement.csv"
       ],
       "expectations": [
-        "The skill does not append a balance assertion that would fail bean-check, even though the user explicitly asked for one",
+        "The skill does not append a balance assertion that would fail bea check, even though the user explicitly asked for one",
         "The skill surfaces the exact residual (2.00) rather than swallowing it",
         "The residual is tied to the 2026-05-09 amount-mismatch as its cause",
         "The skill does not claim the account is reconciled / the books are proven",
-        "If it runs bean-check on any appended change, a failure is reported verbatim, not hidden"
+        "If it runs bea check on any appended change, a failure is reported verbatim, not hidden"
       ]
     },
     {

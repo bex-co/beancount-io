@@ -1,6 +1,6 @@
 ---
 name: beancount-close
-description: Run a month-end close ritual over a beancount ledger — reconcile every active account, verify balance assertions, check recurring-entry completeness, sweep flagged entries, and commit the month's P&L/balance-sheet summary. Use this skill whenever the user wants to close out a period — "close the month", "run my June close", "do my month-end", "wrap up May's books". The skill walks a fixed checklist, delegates account-level reconciliation to beancount-reconcile, surfaces everything unverifiable, and only commits after the user confirms the close report. SKIP when the user wants to reconcile a single account (beancount-reconcile directly), import an export (beancount-import), ask an ad-hoc question (beancount-ask), or record individual transactions. The core trigger is "close the books for this period".
+description: Close an accounting period in a Beancount ledger by reconciling each active account through beancount-reconcile, checking assertions and recurring gaps, reviewing flags, then proposing a commit with the period reports. Use for month-end close or wrapping up the books. Surface incomplete work and require a passing check before a confirmed commit; never push.
 ---
 
 # beancount-close
@@ -9,15 +9,13 @@ Close one month with a fixed, honest checklist — every account either ties out
 
 This skill exists because trustworthy books come from ritual, not heroics: the same checks, every month, with nothing silently skipped. Each phase reports its status before the next begins; the final commit encodes the close report so `git log` reads as a close history.
 
-## Prefer `bea`; fall back to bean-*
+## Prefer `bea`
 
-Check once with `command -v bea`. When the `bea` CLI is installed, verify
-with `bea check` and generate the committed summary with
-`bea report income-statement --time <month>`; without it, use `bean-check`
-and `bean-query` only if already available, otherwise suggest installing
-`bea`. Do not `pip install beancount` or silently replace a broken managed
-engine with a global bean-* tool while `bea` is installed. One rule, stated
-once — the phases below name the `bea` form first and the fallback second.
+Read beancount-init's `references/bea-cli.md` before running ledger commands: it defines explicit root/destination paths, JSON batches, checks, and safe retries. Without `bea`, use beancount-init's `references/compatibility.md`.
+
+Check the root ledger and generate the committed summary with root-scoped
+`report income-statement` and `report balance-sheet`, both using the resolved
+month. Reconciliation writes still belong to beancount-reconcile.
 
 ## Scope
 
@@ -33,7 +31,7 @@ Seven phases: **Scope → Reconcile → Assert → Recurring → Flags → Repor
 
 ### 1. Scope
 
-Resolve the period (user's words or last complete month — state it). Find the ledger (same discovery as sibling skills). Enumerate **active accounts**: any Assets/Liabilities account with postings in the period or a nonzero balance. Run `bea check` first (`bean-check` without `bea`) — a ledger that starts red must be fixed (surface the errors) before a close can mean anything.
+Resolve the period (user's words or last complete month — state it). Find the ledger (same discovery as sibling skills). Enumerate **active accounts**: any Assets/Liabilities account with postings in the period or a nonzero balance. Run `bea --file "$ledger" --json --no-input check` first — a ledger that starts red must be fixed (surface the errors) before a close can mean anything.
 
 ### 2. Reconcile
 
@@ -53,7 +51,10 @@ List every `!`-flagged entry dated in or before the period. Each is either resol
 
 ### 6. Report
 
-Generate the period's numbers with `bea report income-statement --time <month>` (`bean-query` without `bea`; reuse the `beancount-ask` recipes — income statement by account, monthly totals) and assemble the close report:
+Generate the period's numbers with the shared report recipes, using
+`--file "$ledger" --json --no-input` and `--time "$month"` on both
+`report income-statement` and `report balance-sheet`. Use beancount-ask's BQL
+recipes for any additional figures. Assemble the close report:
 
 ```
 Close: 2026-06 (2026-06-01 … 2026-06-30)
@@ -66,7 +67,7 @@ check: PASS (`bea check`)
 
 ### 7. Commit
 
-Only when the check passes. Show what will be staged (the ledger files the close touched) and the commit message — subject `close: <period> — <n> reconciled, <m> unverified`, body = the close report. **Commit only on explicit yes.** On no: leave the working tree exactly as it is, report stays in the conversation. Never push.
+Re-run `bea --file "$ledger" --json --no-input check` after all reconciliation writes. Only when it passes, show what will be staged (the ledger files the close touched) and the commit message — subject `close: <period> — <n> reconciled, <m> unverified`, body = the close report. **Commit only on explicit yes.** On no: leave the working tree exactly as it is, report stays in the conversation. Never push.
 
 ## What NOT to do
 

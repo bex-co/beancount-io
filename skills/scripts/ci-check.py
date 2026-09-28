@@ -45,6 +45,7 @@ BEA_FIRST_SKILLS = (
     "beancount-ask",
     "beancount-options",
     "beancount-migrate",
+    "beancount-importer-author",
 )
 
 RAW_APPEND = re.compile(
@@ -322,7 +323,7 @@ def check_bea_first() -> None:
 
 def check_no_redundant_installs() -> None:
     """Customer skill text must not push a second Beancount CLI install."""
-    for path in sorted(SKILLS_DIR.glob("*/SKILL.md")):
+    for path in sorted(SKILLS_DIR.rglob("*.md")):
         rel = path.relative_to(REPO_ROOT).as_posix()
         text = path.read_text(encoding="utf-8")
         for lineno, line in enumerate(text.splitlines(), 1):
@@ -339,7 +340,7 @@ def check_no_redundant_installs() -> None:
                 line,
             ):
                 fail(f"{rel}:{lineno} documents a private engine path for agents to configure")
-        print(f"OK one-install guidance {path.parent.name}")
+        print(f"OK one-install guidance {path.relative_to(SKILLS_DIR)}")
 
 
 def main() -> None:

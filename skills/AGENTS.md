@@ -36,6 +36,10 @@ Most stateful `beancount-*` skills have `references/` and `evals/`; small skills
 
 The `bea` primitives are `init` (new ledgers), `add open` (new accounts), `add transactions --from -` (validated batch writes), `add balance` with `--pad-from` (assertions and opening adjustments), `import --csv` with `--rules` (bank exports), `check` (validation), `--json query` / `--json balance` / `list transaction --search` (reads), and `report income-statement --time <month>` (period summaries). Read-only skills do not pretend to have a write/confirmation phase.
 
+The shared execution contract lives in `.claude/skills/beancount-init/references/bea-cli.md`; explicit developer fallbacks and the no-bea init template live beside it in `compatibility.md`. Every ledger command selects the root with `--file`; every directive write selects the approved destination with `--into`. Use decimal strings in batch JSON, preserve source IDs, and distinguish per-command atomicity from multi-command workflows. `add transactions` does not deduplicate, so inspect current entries before retrying a successful batch after a later failure.
+
+CSV details live in `.claude/skills/beancount-import/references/bea-import.md`: pass confirmed sign, account, mapping, date format, durable rules path and destination on every run. The CLI does not remember sign and remembers only the rules path. Its same-date duplicate detector does not replace the suite's ±3-day manual-entry review; mixed keep/skip decisions require a reviewed batch preserving the original source IDs.
+
 ## Skills
 
 | Skill                             | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -65,7 +69,7 @@ Each customer-facing skill lives at `.claude/skills/beancount-<name>/` within th
 Shared contracts for the `beancount-*` suite (apply each one only to skills that use that behavior, and point to its canonical definition rather than restating it):
 
 - **Ledger discovery**: `fd -e beancount -e bean .` (fallback `find`); the "main" file has `option`/`plugin`/`include` directives or the most `open`s. Confirm when ambiguous.
-- **Config blocks**: persisted state lives in `;; <skill-name> config` comment blocks at the top of the main file. Shapes differ deliberately — `beancount-import`'s is **per-source** (stanza per export source; `sign: negative=outflow` is format-speak), `beancount-reconcile`'s is **per-account** (`sign: asset|liability` is account-type-speak; the two encodings describe the same convention). Blocks coexist; skills may read each other's (importer-author reads import's as its spec).
+- **Config blocks**: persisted state lives in `;; <skill-name> config` comment blocks at the top of the main file. Shapes differ deliberately — `beancount-import`'s is **per-source**, including sources handled by the CSV mapper (retain the confirmed sign and durable rules path), and `beancount-reconcile`'s is **per-account**. Import's `negative=outflow` describes an export format; reconcile's `asset|liability` describes account type. Blocks coexist; importer-author reads import's block as its spec. Edit only the reviewed comment block after confirmation; directive writes still go through `bea`.
 - **`import-id` metadata**: the dedup convention for every entry that originates from an external source — canonical grammar and hash normalization in `.claude/skills/beancount-import/references/dedup.md` (migrate's `mint:`/`monarch:`/`qbo:` prefixes and importer-author's generated importers follow it; `bea import` writes and matches the same convention, so CLI and skill imports deduplicate each other).
 - **Categorization fallback**: suggestions come only from accounts already opened; no confident prior → `Expenses:Uncategorized`, visibly flagged. Never invent an account.
 - **Balance-assertion date**: assert the day **after** the period end (beancount checks at start-of-date) — canonical explanation in `.claude/skills/beancount-reconcile/SKILL.md`.
@@ -82,11 +86,11 @@ Before opening a skills PR, run the structural suite locally:
 cd cli && uv sync --all-groups && cd ..
 python3 skills/scripts/ci-check.py
 python3 skills/scripts/test_ci_check.py
-python3 skills/scripts/test_beancount_skills.py   # installer lifecycle + first-query walkthrough
+python3 skills/scripts/test_beancount_skills.py   # installer, first query, executable bea recipes
 python3 scripts/check-agent-guidance.py
 ```
 
-This checks both customer and development skill trees: SKILL.md frontmatter, `evals.json` validity and fixture paths, Python syntax, the separate skill directories and Claude Code link, `bea check` with global `bean-*` scrubbed from PATH, and a deliberate oracle `uv run --project cli bean-check` on every `*ledger.beancount` (with known failure-mode fixtures listed in the script). One-install guidance is gated (no `pip install beancount` recovery instructions).
+This checks both customer and development skill trees: SKILL.md frontmatter, `evals.json` validity and fixture paths, Python syntax, the separate skill directories and Claude Code link, `bea check` with global `bean-*` scrubbed from PATH, and a deliberate oracle `uv run --project cli bean-check` on every `*ledger.beancount` (with known failure-mode fixtures listed in the script). One-install guidance is gated across customer entrypoints and supporting Markdown. Behavioral tests execute marked command recipes from the shared references against isolated ledgers, covering CSV sign/rules on repeat imports, the wider duplicate-query window, included-file destinations, failed batches/assertions, and historical initialization.
 
 ### Iterating on a skill
 

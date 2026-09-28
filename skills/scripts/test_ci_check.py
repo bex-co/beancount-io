@@ -189,6 +189,17 @@ class TestOracleAndIsolation(unittest.TestCase):
                 with self.assertRaises(SystemExit):
                     ci_check.check_no_redundant_installs()
 
+    def test_redundant_install_in_a_supporting_reference_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            skills_dir = repo / "skills/.claude/skills"
+            reference = skills_dir / "beancount-init/references/compatibility.md"
+            reference.parent.mkdir(parents=True)
+            reference.write_text("If missing, pip install beanquery.\n")
+            with mock.patch.multiple(ci_check, REPO_ROOT=repo, SKILLS_DIR=skills_dir):
+                with self.assertRaises(SystemExit):
+                    ci_check.check_no_redundant_installs()
+
 
 class TestRawAppendMatcher(unittest.TestCase):
     def flagged(self, line: str) -> bool:

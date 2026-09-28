@@ -91,4 +91,4 @@ After generating an assignment transaction, verify:
 - For covered calls: stock disposal price = strike + premium per share; `Income:Trading:CapitalGains` auto-balances
 - No `Income:Trading:OptionPremium` posting on assignment
 - Link matches the original opening transaction's link
-- Run `bea check` on the file (or `bean-check` without `bea`) — should pass with no errors
+- Run `bea --file "$ledger" check` against the root — should pass with no errors. The no-bea path is in beancount-init's `references/compatibility.md`.

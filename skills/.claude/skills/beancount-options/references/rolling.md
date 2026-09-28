@@ -80,4 +80,4 @@ After generating a roll, verify:
 - New open has a fresh `^link`
 - New open's cost basis = its own STO premium × 100 (NOT the net of the roll)
 - Net cash across both transactions matches the broker's reported net credit/debit
-- Run `bean-check` — both transactions should balance
+- Run `bea --file "$ledger" check` against the root — both transactions should balance. The no-bea path is in beancount-init's `references/compatibility.md`.

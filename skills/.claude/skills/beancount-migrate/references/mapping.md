@@ -36,12 +36,12 @@ Exports carry flows, not balances, so anchor both ends per account:
 
 1. Ask the user for the **current balance** (from the old app's account screen or the real bank). Also ask for the **balance at the start of the export period** if they know it (or read it from the export when it states one).
 2. `opening = current − Σ(converted rows for that account)`. **But when a stated opening exists, use it as-is instead** — then the endpoint assertion is a genuine check of the conversion (rows missing from the export, pending transactions, wrong stated balance make it fail by exactly the delta), not a tautology. Never nudge either number to force a pass; a real delta is a report finding.
-3. Emit the opening entry dated the **day before the earliest row**:
+3. Initialize with opens dated on/before the **day before the earliest row**, then include the opening entry in the confirmed `bea` batch. Reuse the existing opening-equity account; `bea init` creates `Equity:OpeningBalances`:
 
 ```
 2023-01-04 * "Opening balance (migrated)"
   Assets:Bank:Checking     212.55 USD
-  Equity:Opening-Balances
+  Equity:OpeningBalances
 ```
 
 4. Pin the endpoint with an assertion dated the **day after the last row** (beancount checks balances at the start of the date — same day-after rule as beancount-reconcile):

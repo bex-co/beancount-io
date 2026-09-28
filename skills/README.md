@@ -4,6 +4,8 @@ Skills for Beancount users working with a ledger through a coding agent. The eig
 
 Install **`bea`** once ([Homebrew](https://github.com/bex-co/homebrew-tap) or `uv tool install beancount-io`). Skills use that single install for check, query, report, import, and writes — they do not ask you to `pip install beancount`. Optional Beangulp/Beanprice features: `bea engine enable beangulp|beanprice`. Fava's browser UI is optional and separate from `bea` ledger operations.
 
+The suite shares [command recipes](.claude/skills/beancount-init/references/bea-cli.md) that select the root ledger and approved write destination explicitly. CSV imports preserve confirmed signs and durable categorization rules on every run, and add a three-day duplicate review for manual entries. [Compatibility paths](.claude/skills/beancount-init/references/compatibility.md) cover existing developer tools and the separate Fava/Beangulp authoring runtimes.
+
 | Skill | Use it to |
 | ----- | --------- |
 | [beancount-init](.claude/skills/beancount-init/SKILL.md) | Create a ledger with `bea init` (optional Fava browser setup). |

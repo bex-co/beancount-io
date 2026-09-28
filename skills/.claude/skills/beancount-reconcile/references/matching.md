@@ -7,8 +7,7 @@ Diff the normalized statement lines (from `statement-formats.md`) against the le
 - **Statement lines**: `{date, amount (ledger sign), description}` for the period.
 - **Ledger postings**: every posting to the target account with a date in `[period_start, period_end]`. Get them from the ledger directly, or via:
 ```bash
-  bea --file ./ledger.beancount query "SELECT date, position, narration WHERE account = 'Assets:Bank:Checking' AND date >= 2026-05-01 AND date <= 2026-05-31 ORDER BY date"
-  # without bea: bean-query ./ledger.beancount "…"
+  bea --file "$ledger" --json --no-input query "SELECT date, position, narration WHERE account = 'Assets:Bank:Checking' AND date >= 2026-05-01 AND date <= 2026-05-31 ORDER BY date"
 ```
 - **Anchor**: the prior `balance` assertion for the account (from Discover). Reconcile forward from it; you do not need to re-match anything before it.
 
@@ -62,4 +61,4 @@ The same real transaction appears twice in the ledger (double-entered import, or
 
 ## Why the classes matter for the assertion
 
-The Propose phase appends the missing-in-ledger transactions and a period-end `balance` assertion. If any suspect, amount-mismatch, or duplicate remains unresolved, the ledger balance won't equal the statement's ending balance, and `bean-check` will fail the assertion by exactly the net of the unresolved items. That residual is the deterministic proof that a reported item is real — not noise. Tie each unresolved report line to its contribution to the residual when you can.
+The Propose phase writes the missing-in-ledger transactions and, only when the account ties out, a period-end `balance` assertion. If any suspect, amount-mismatch, or duplicate remains unresolved, a strict `bea add balance` refuses the failing assertion before writing it. Report the residual instead; earlier successful transaction writes remain in place. Tie each unresolved report line to its contribution to the residual when you can. Use beancount-init's `references/compatibility.md` only when `bea` is absent.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Behavioral tests for the customer-suite installer and the first-query walkthrough.
+"""Behavioral tests for the installer, first query, and shared bea recipes.
 
 Stdlib unittest only (the skills CI has no pytest): run with
 `python3 skills/scripts/test_beancount_skills.py` from the repository root.
@@ -14,6 +14,7 @@ import importlib.util
 import io
 import json
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -22,6 +23,7 @@ import unittest
 from collections import defaultdict
 from decimal import Decimal
 from pathlib import Path
+from string import Template
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
 SKILLS_ROOT = SCRIPTS_DIR.parent
@@ -178,9 +180,10 @@ class TestVerify(Workspace):
         before = snapshot(self.dest)
         code, _, err = run("verify", self.dest)
         self.assertEqual(code, 1)
-        self.assertIn(
-            "FAIL beancount-close/references/close-checklist.md is missing (beancount-close/SKILL.md:28 needs it)",
+        self.assertRegex(
             err,
+            r"FAIL beancount-close/references/close-checklist\.md is missing "
+            r"\(beancount-close/SKILL\.md:\d+ needs it\)",
         )
         self.assertEqual(err.count("close-checklist.md is missing"), 1)
         self.assertEqual(snapshot(self.dest), before)
@@ -192,6 +195,15 @@ class TestVerify(Workspace):
         self.assertEqual(code, 1)
         self.assertIn("FAIL beancount-import/references/dedup.md is missing", err)
         self.assertNotIn("beancount-importer-author/references/dedup.md", err)
+
+    def test_shared_cli_reference_is_required_by_installed_workflows(self):
+        self.copy_suite(self.dest)
+        (self.dest / "beancount-init" / "references" / "bea-cli.md").unlink()
+        code, _, err = run("verify", self.dest)
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL beancount-init/references/bea-cli.md is missing", err)
+        self.assertIn("beancount-reconcile/SKILL.md:", err)
+        self.assertNotIn("FAIL beancount-reconcile/references/bea-cli.md", err)
 
     def test_missing_composed_sibling_is_reported_by_the_skill_that_needs_it(self):
         self.copy_suite(self.dest)
@@ -259,7 +271,11 @@ class TestGitUpdatePath(Workspace):
 
     def git(self, cwd: Path, *args: str) -> subprocess.CompletedProcess:
         return subprocess.run(
-            ["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", *args],
+            [
+                "git", "-c", "user.name=Test", "-c", "user.email=test@example.com",
+                # Personal hooks must not rewrite synthetic fixture commits.
+                "-c", f"core.hooksPath={self.root / 'empty-hooks'}", *args,
+            ],
             cwd=cwd,
             capture_output=True,
             text=True,
@@ -400,6 +416,229 @@ class TestFirstQueryWalkthrough(unittest.TestCase):
         answer = {account: Decimal(total[0]["units"]["number"]) for account, total in rows}
         self.assertEqual(answer, self.expected)
         self.assertEqual(rows[0][0], "Expenses:Food:Groceries")
+
+
+class TestBeaRecipes(unittest.TestCase):
+    """Execute the shipped Markdown recipes against isolated synthetic books."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.ci_check = load("ci_check", "ci-check.py")
+        cls.bea = cls.ci_check.find_bea()
+        # Keep the executable available even if its directory also has bean-*.
+        cls.bea[0] = shutil.which(cls.bea[0]) or cls.bea[0]
+        cls.documents = "\n".join(
+            (SUITE / path).read_text(encoding="utf-8")
+            for path in (
+                "beancount-init/SKILL.md",
+                "beancount-init/references/bea-cli.md",
+                "beancount-import/references/bea-import.md",
+            )
+        )
+
+    def setUp(self):
+        temporary = scratch_dir()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.books = self.root / "books with spaces"
+        self.books.mkdir()
+        self.ledger = self.books / "household.beancount"
+        self.target = self.books / "transactions" / "2026.bean"
+        self.target.parent.mkdir()
+        self.target.write_text("; Approved transaction destination\n")
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2023-01-01 open Assets:Checking USD\n"
+            "2023-01-01 open Expenses:Dining USD\n"
+            "2023-01-01 open Equity:OpeningBalances USD\n"
+            'include "transactions/2026.bean"\n'
+        )
+        # A valid decoy catches accidental reliance on cwd discovery.
+        self.decoy = self.root / "main.bean"
+        self.decoy.write_bytes(self.ledger.read_bytes().replace(b'include "transactions/2026.bean"\n', b""))
+        self.decoy_before = self.decoy.read_bytes()
+        self.env = self.ci_check.env_without_global_bean_tools({
+            "BEA_CONFIG_DIR": str(self.root / "bea-config"),
+            "XDG_CONFIG_HOME": str(self.root / "xdg-config"),
+            "XDG_CACHE_HOME": str(self.root / "xdg-cache"),
+        })
+        for name in ("BEA_FILE", "BEA_TOKEN", "BEA_ENGINE_PYTHON", "BEA_ENGINE_DIR"):
+            self.env.pop(name, None)
+        self.values = {
+            "ledger": str(self.ledger),
+            "target": "transactions/2026.bean",
+            "open_target": self.ledger.name,
+            "open_date": "2023-01-01",
+            "account": "Assets:Checking",
+            "batch": str(self.root / "confirmed.json"),
+            "assertion_date": "2026-06-01",
+            "amount": "-12.50 USD",
+        }
+
+    def block(self, name: str, language: str = "sh") -> str:
+        match = re.search(
+            rf"<!-- recipe: {re.escape(name)} -->\n```{language}\n(.*?)\n```",
+            self.documents,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(match, f"Missing executable recipe {name}")
+        return match.group(1)
+
+    def recipe(self, name: str, *, succeeds: bool = True):
+        tokens = shlex.split(self.block(name))
+        self.assertEqual(tokens[0], "bea")
+        args = [Template(token).substitute(self.values) for token in tokens[1:]]
+        result = subprocess.run(
+            [*self.bea, *args], cwd=self.root, env=self.env,
+            capture_output=True, text=True, timeout=90,
+        )
+        self.assertEqual(self.decoy.read_bytes(), self.decoy_before)
+        if succeeds:
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return json.loads(result.stdout)["data"]
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        return result
+
+    def batch(self, rows=None):
+        rows = json.loads(self.block("batch-json", "json")) if rows is None else rows
+        Path(self.values["batch"]).write_text(json.dumps(rows))
+        return rows
+
+    def csv(self, text: str, mapping: str):
+        export = self.root / "export.csv"
+        export.write_text(text)
+        rules = self.books / "import-rules" / "checking.toml"
+        rules.parent.mkdir()
+        rules.write_text('[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Dining"\n')
+        self.values.update({
+            "export": str(export), "mapping": mapping, "rules": str(rules),
+            "date_format": "%Y-%m-%d", "duplicates": "review",
+        })
+
+    def test_csv_preview_apply_repeat_keeps_sign_rules_and_destination(self):
+        self.csv(
+            "Date,Description,Amount\n2026-05-07,Coffee,12.50\n",
+            "date=Date,amount=Amount,narration=Description,sign=ledger",
+        )
+        before = (self.ledger.read_bytes(), self.target.read_bytes())
+        durable = self.values["rules"]
+        draft = self.root / "draft-rules.toml"
+        shutil.copyfile(durable, draft)
+        Path(durable).unlink()
+        self.values["rules"] = str(draft)
+        preview = self.recipe("csv-preview")
+        self.assertEqual(preview["rows"][0]["amount"], "-12.50 USD")
+        self.assertEqual((self.ledger.read_bytes(), self.target.read_bytes()), before)
+        # Confirmation makes the rules durable; transient preview files can go.
+        self.values["rules"] = durable
+        shutil.copyfile(draft, durable)
+        draft.unlink()
+        self.recipe("csv-preview")
+        applied = self.recipe("csv-apply")
+        self.assertEqual(applied["written"], 1)
+        self.assertEqual(self.ledger.read_bytes(), before[0])
+        self.assertIn("Expenses:Dining", self.target.read_text())
+        self.assertNotIn("Expenses:Uncategorized", self.target.read_text())
+        written = self.target.read_bytes()
+        repeat = self.recipe("csv-preview")
+        self.assertEqual((repeat["ready"], repeat["duplicates"]), (0, 1))
+        self.assertEqual(self.target.read_bytes(), written)
+        self.recipe("check")
+
+    def test_duplicate_window_reads_manual_entry_cli_does_not_flag(self):
+        self.target.write_text(
+            '2026-05-05 * "Coffee" "Manual card purchase"\n'
+            "  Assets:Checking -12.50 USD\n  Expenses:Dining 12.50 USD\n"
+            '\n2026-05-08 * "Imported Grocer" "Already recorded"\n'
+            '  import-id: "ofx:other"\n  import-id-2: "bank:other"\n'
+            "  Assets:Checking -5 USD\n  Expenses:Dining 5 USD\n"
+        )
+        self.csv(
+            "Date,Payee,Amount\n2026-05-07,Coffee,-12.50\n",
+            "date=Date,amount=Amount,payee=Payee,sign=bank",
+        )
+        before = self.target.read_bytes()
+        preview = self.recipe("csv-preview")
+        self.assertEqual(preview["possible_duplicates"], 0)
+        self.values.update(window_start="2026-05-04", window_end="2026-05-10")
+        rows = self.recipe("duplicate-window")["rows"]
+        self.assertEqual(len(rows), 2)
+        self.assertEqual(rows[0][:3], ["2026-05-05", "Coffee", "Manual card purchase"])
+        self.assertEqual(rows[0][4:], [None, None])
+        self.assertEqual(rows[1][4:], ["ofx:other", "bank:other"])
+        self.assertEqual(self.target.read_bytes(), before)
+
+    def test_batch_preserves_metadata_in_target_and_rejects_invalid_batch_atomically(self):
+        rows = self.batch()
+        before = (self.ledger.read_bytes(), self.target.read_bytes())
+        invalid = {**rows[0], "date": "2026-05-08", "postings": [rows[0]["postings"][0]]}
+        self.batch([*rows, invalid])
+        self.recipe("batch", succeeds=False)
+        self.assertEqual((self.ledger.read_bytes(), self.target.read_bytes()), before)
+        self.batch(rows)
+        self.recipe("batch")
+        self.assertEqual(self.ledger.read_bytes(), before[0])
+        self.assertIn('import-id: "ofx:2026050701"', self.target.read_text())
+        self.recipe("balance")
+        self.assertIn("2026-06-01 balance Assets:Checking", self.target.read_text())
+        self.recipe("check")
+
+    def test_failed_assertion_leaves_prior_batch_and_resume_does_not_replay_it(self):
+        self.batch()
+        self.recipe("batch")
+        written = self.target.read_bytes()
+        self.values["amount"] = "-99 USD"
+        self.recipe("balance", succeeds=False)
+        self.assertEqual(self.target.read_bytes(), written)
+        self.values["amount"] = "-12.50 USD"
+        self.recipe("balance")
+        self.assertEqual(self.target.read_text().count('import-id: "ofx:2026050701"'), 1)
+        self.recipe("check")
+
+    def test_option_batch_and_native_expiry_preserve_lot_booking_and_links(self):
+        before = self.target.read_bytes()
+        for account in ("Assets:Brokerage:Options", "Expenses:Trading:Fees", "Income:Trading:OptionPremium"):
+            self.values["account"] = account
+            self.recipe("open")
+        self.assertEqual(self.target.read_bytes(), before)
+        self.batch(json.loads(self.block("option-batch-json", "json")))
+        self.recipe("batch")
+        self.values.update(
+            trade_date="2026-06-20", narration="Expire put", trade_link="option-1",
+            option_posting="Assets:Brokerage:Options 1 AAPL_PUT_20260620_00150000 {} @ 0 USD",
+            income_account="Income:Trading:OptionPremium",
+        )
+        self.recipe("option-expiry")
+        self.assertIn("{150.00 USD}", self.target.read_text())
+        self.assertIn("{} @ 0 USD", self.target.read_text())
+        self.assertEqual(self.target.read_text().count("^option-1"), 2)
+        self.recipe("check")
+
+    def test_historical_init_open_batch_and_assertion_need_no_date_rewrite(self):
+        directory = self.root / "migration"
+        self.values.update(directory=str(directory), currency="USD", open_date="2022-12-31")
+        self.recipe("init")
+        ledger = directory / "main.bean"
+        self.assertIn("2022-12-31 open Assets:Checking USD", ledger.read_text())
+        self.values.update(ledger=str(ledger), target="main.bean", open_target="main.bean", account="Assets:Bank:History")
+        self.recipe("open")
+        self.batch([{
+            "date": "2022-12-31", "narration": "Opening balance (migrated)",
+            "postings": [
+                {"account": "Assets:Bank:History", "amount": "100 USD"},
+                {"account": "Equity:OpeningBalances"},
+            ],
+        }, {
+            "date": "2023-01-01", "narration": "Migrated purchase", "meta": {"import-id": "bank:history-1"},
+            "postings": [
+                {"account": "Assets:Bank:History", "amount": "-12.50 USD"},
+                {"account": "Expenses:Dining"},
+            ],
+        }])
+        self.recipe("batch")
+        self.values.update(assertion_date="2023-01-02", amount="87.50 USD")
+        self.recipe("balance")
+        self.recipe("check")
 
 
 if __name__ == "__main__":
