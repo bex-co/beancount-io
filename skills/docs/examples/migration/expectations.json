@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "currency": "USD",
+  "export": "monarch-export.csv",
+  "open_date": "2026-03-04",
+  "assertion_date": "2026-03-16",
+  "account_mapping": {
+    "Chase Checking": "Assets:Checking",
+    "Ally Savings": "Assets:Savings"
+  },
+  "category_mapping": {
+    "Paycheck": "Income:Salary",
+    "Groceries": "Expenses:Groceries",
+    "Interest": "Income:Interest",
+    "Transfer": "transfer pair"
+  },
+  "csv_mapping": "date=Date,narration=Description,amount=Amount,sign=bank",
+  "date_format": "%Y-%m-%d",
+  "source_rows": [
+    {
+      "row": 1,
+      "account": "Assets:Checking",
+      "amount": "2500.00",
+      "import_id": "monarch:sha256:957422234a9fc7b5",
+      "disposition": "transaction",
+      "transaction": "paycheck"
+    },
+    {
+      "row": 2,
+      "account": "Assets:Checking",
+      "amount": "-54.20",
+      "import_id": "monarch:sha256:9b811ad4dd24f37f",
+      "disposition": "transaction",
+      "transaction": "groceries"
+    },
+    {
+      "row": 3,
+      "account": "Assets:Checking",
+      "amount": "-500.00",
+      "import_id": "monarch:sha256:89784d830e9af8e2",
+      "disposition": "transfer pair",
+      "transaction": "transfer"
+    },
+    {
+      "row": 4,
+      "account": "Assets:Savings",
+      "amount": "500.00",
+      "import_id": "monarch:sha256:0218b42481730d49",
+      "disposition": "transfer pair",
+      "transaction": "transfer"
+    },
+    {
+      "row": 5,
+      "account": "Assets:Savings",
+      "amount": "1.25",
+      "import_id": "monarch:sha256:33fe274b8cc7a957",
+      "disposition": "transaction",
+      "transaction": "interest"
+    }
+  ],
+  "openings": {
+    "Assets:Checking": {
+      "amount": "500.00",
+      "kind": "independent"
+    },
+    "Assets:Savings": {
+      "amount": "1000.00",
+      "kind": "derived"
+    }
+  },
+  "anchors": {
+    "Assets:Checking": "2445.80",
+    "Assets:Savings": "1501.25"
+  },
+  "conflicting_anchors": {
+    "Assets:Checking": "2455.80",
+    "Assets:Savings": "1501.25"
+  },
+  "conflict_residuals": {
+    "Assets:Checking": "10.00"
+  },
+  "transactions": {
+    "opening-checking": {
+      "date": "2026-03-04",
+      "import_ids": [],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "number": "500.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Equity:OpeningBalances",
+          "number": "-500.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "opening-savings": {
+      "date": "2026-03-04",
+      "import_ids": [],
+      "postings": [
+        {
+          "account": "Assets:Savings",
+          "number": "1000.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Equity:OpeningBalances",
+          "number": "-1000.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "paycheck": {
+      "date": "2026-03-05",
+      "import_ids": [
+        "monarch:sha256:957422234a9fc7b5"
+      ],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "number": "2500.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Income:Salary",
+          "number": "-2500.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "groceries": {
+      "date": "2026-03-08",
+      "import_ids": [
+        "monarch:sha256:9b811ad4dd24f37f"
+      ],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "number": "-54.20",
+          "currency": "USD"
+        },
+        {
+          "account": "Expenses:Groceries",
+          "number": "54.20",
+          "currency": "USD"
+        }
+      ]
+    },
+    "transfer": {
+      "date": "2026-03-10",
+      "import_ids": [
+        "monarch:sha256:89784d830e9af8e2",
+        "monarch:sha256:0218b42481730d49"
+      ],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "number": "-500.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Assets:Savings",
+          "number": "500.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "interest": {
+      "date": "2026-03-15",
+      "import_ids": [
+        "monarch:sha256:33fe274b8cc7a957"
+      ],
+      "postings": [
+        {
+          "account": "Assets:Savings",
+          "number": "1.25",
+          "currency": "USD"
+        },
+        {
+          "account": "Income:Interest",
+          "number": "-1.25",
+          "currency": "USD"
+        }
+      ]
+    },
+    "april-groceries": {
+      "date": "2026-04-03",
+      "import_ids": [
+        "csv:sha256:765112df24194e91"
+      ],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "number": "-61.10",
+          "currency": "USD"
+        },
+        {
+          "account": "Expenses:Groceries",
+          "number": "61.10",
+          "currency": "USD"
+        }
+      ]
+    }
+  },
+  "imports": {
+    "checking-overlap.csv": {
+      "account": "Assets:Checking",
+      "overlap_rows": 2,
+      "new_transactions": []
+    },
+    "savings-overlap.csv": {
+      "account": "Assets:Savings",
+      "overlap_rows": 2,
+      "new_transactions": []
+    },
+    "checking-april.csv": {
+      "account": "Assets:Checking",
+      "overlap_rows": 1,
+      "new_transactions": [
+        "april-groceries"
+      ]
+    }
+  },
+  "checkpoints": {
+    "initialized": {
+      "transactions": [],
+      "assertions": []
+    },
+    "migrated": {
+      "transactions": [
+        "opening-checking",
+        "opening-savings",
+        "paycheck",
+        "groceries",
+        "transfer",
+        "interest"
+      ],
+      "assertions": [
+        {
+          "account": "Assets:Checking",
+          "number": "2445.80"
+        },
+        {
+          "account": "Assets:Savings",
+          "number": "1501.25"
+        }
+      ]
+    },
+    "imported_new": {
+      "transactions": [
+        "opening-checking",
+        "opening-savings",
+        "paycheck",
+        "groceries",
+        "transfer",
+        "interest",
+        "april-groceries"
+      ],
+      "assertions": [
+        {
+          "account": "Assets:Checking",
+          "number": "2445.80"
+        },
+        {
+          "account": "Assets:Savings",
+          "number": "1501.25"
+        }
+      ]
+    },
+    "conflicting_balance": {
+      "transactions": [
+        "opening-checking",
+        "opening-savings",
+        "paycheck",
+        "groceries",
+        "transfer",
+        "interest"
+      ],
+      "assertions": [
+        {
+          "account": "Assets:Savings",
+          "number": "1501.25"
+        }
+      ]
+    }
+  },
+  "branches": {
+    "declined_conversion": {
+      "ledger_matches": "initialized",
+      "unchanged": true
+    },
+    "checking_overlap": {
+      "ledger_matches": "migrated",
+      "unchanged": true
+    },
+    "savings_overlap": {
+      "ledger_matches": "migrated",
+      "unchanged": true
+    },
+    "reimported_new": {
+      "ledger_matches": "imported_new",
+      "unchanged": true
+    }
+  }
+}

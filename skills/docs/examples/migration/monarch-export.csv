@@ -1,0 +1,6 @@
+"Date","Merchant","Category","Account","Original Statement","Notes","Amount","Tags"
+"2026-03-05","Paycheck","Paycheck","Chase Checking","ACME CORP PAYROLL","","2500.00",""
+"2026-03-08","Trader Joes","Groceries","Chase Checking","TRADER JOES #123 SEATTLE WA","","-54.20",""
+"2026-03-10","Transfer","Transfer","Chase Checking","TRANSFER TO SAVINGS","","-500.00",""
+"2026-03-10","Transfer","Transfer","Ally Savings","TRANSFER FROM CHECKING","","500.00",""
+"2026-03-15","Ally Bank","Interest","Ally Savings","INTEREST PAYMENT","","1.25",""
