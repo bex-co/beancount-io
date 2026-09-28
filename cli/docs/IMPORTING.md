@@ -282,8 +282,8 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   `--id-key id` is accepted as an alias for `bank_id`, the canonical key the
   `--csv` path writes, so it never silently disables bank-ID dedupe.
   IDs must be stable and unique within that account. An exact match is skipped;
-  reused IDs with different dates, payees, narration, or source amounts are
-  conflicts requiring review. The preview's `ID` column names each row's
+  reused native IDs with different dates, payees, narration, or source amounts
+  are conflicts requiring review (generated ids: see below). The preview's `ID` column names each row's
   identifier source: `bank` for a bank column, `hash` for a content hash, or
   `importer` for an `import-id` the importer supplied.
 - A row with a native ID is written with `import-id: "<kind>:<id>"` (`bank_id`
@@ -297,6 +297,14 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   re-importing the same file skips every row. Keep this metadata when editing
   entries. New writes no longer carry the pre-release `bea_import_id` key, but
   existing entries with it still match on re-import.
+- A generated id matches by its digest under any documented prefix, so a bank
+  export overlapping history that `beancount-migrate` wrote as
+  `monarch:sha256:…` (or `mint:`/`qbo:`) is skipped rather than written
+  again. For each side of a merged transfer, the digest is found through
+  `import-id` or `import-id-2`. The digest already binds the date, amount,
+  description, and account, so a generated-id hit is a duplicate when its date
+  and source amounts agree, even if migration or cleanup changed the payee or
+  narration.
 - Ids written before the amount was exact (it was rounded to two decimals with
   no commodity) or before the description was NFC-normalized are still
   recognized: import offers every older spelling as a lookup-only key, matches

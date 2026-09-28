@@ -11,6 +11,7 @@ import copy
 import difflib
 import hashlib
 import io
+import re
 import runpy
 import shlex
 import sys
@@ -235,6 +236,7 @@ def answer(
                     id_source = "hash"
             ids = _identities(entry, account, keys)
             legacy_keys = [(account, "import-id", value) for value in legacy_ids]
+            legacy_keys += [(account, "digest", value.rsplit(":", 1)[1]) for value in legacy_ids]
             ids.extend(legacy_keys)
             lookup_only = set(legacy_keys)
             ids.append((account, "file", hashlib.sha256(f"{account}:{source_hash}:{index}".encode()).hexdigest()))
@@ -245,16 +247,14 @@ def answer(
             # letting them reach the conflict test, is what keeps a reused
             # native id with changed data a conflict.
             hits = [
-                (key, found, found_print)
+                (key, found, same)
                 for key in ids
                 if (found := identities.get(key)) is not None
-                # Fingerprint first so it is bound for every kept hit — the
-                # conflict test below reuses it instead of recomputing.
-                and ((found_print := _fingerprint(found, account)) == fingerprint or key not in lookup_only)
+                and ((same := _same_row(key, found, account, fingerprint)) or key not in lookup_only)
             ]
             if hits:
                 (_, kind, matched_value), match, _ = hits[0]
-                if any(found_print != fingerprint for _, _, found_print in hits):
+                if not all(same for _, _, same in hits):
                     status, reason, conflicts = (
                         "conflict",
                         "Stable ID matches an entry with different transaction data.",
@@ -262,6 +262,16 @@ def answer(
                     )
                 elif kind == "file":
                     status, reason = "duplicate", "Previously imported source row matches."
+                elif kind == "digest":
+                    stored = next(
+                        (
+                            str(value)
+                            for value in (match.meta.get("import-id"), match.meta.get("import-id-2"))
+                            if str(value or "").endswith(f":sha256:{matched_value}")
+                        ),
+                        f"sha256:{matched_value}",
+                    )
+                    status, reason = "duplicate", f"import-id {stored} is already in the ledger."
                 else:
                     status, reason = "duplicate", f"import-id {matched_value} is already in the ledger."
             elif _candidate_key(entry, account) in fingerprints:
@@ -491,7 +501,35 @@ def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, st
         identities.append((account, "import-id", str(meta["import-id-2"])))
     if meta.get("bea_import_id"):
         identities.append((account, "file", str(meta["bea_import_id"])))
+    # beancount-migrate writes the same digest under its source's prefix
+    # (`monarch:sha256:…`), so a later bank import of that row must find it.
+    for value in (meta.get("import-id"), meta.get("import-id-2")):
+        if (match := _GENERATED_ID.fullmatch(str(value or ""))) is not None:
+            identities.append((account, "digest", match.group(1)))
     return identities
+
+
+# The generated-id prefixes skills/.../beancount-import/references/dedup.md
+# defines: `bea import` writes `csv:`, beancount-migrate writes the others.
+_GENERATED_ID = re.compile(r"(?:csv|mint|monarch|qbo):sha256:([0-9a-f]{16})")
+
+
+def _same_row(key: tuple[str, str, str], found: Any, account: str, fingerprint: tuple[Any, ...]) -> bool:
+    """Whether an id hit names the same source row rather than changed data.
+
+    A generated id is a digest of date, exact amount, raw description and
+    account, so its hit already proves the description; payee and narration
+    are presentation that migration and cleanup rules legitimately change, and
+    a merged transfer's one narration cannot equal both of its source rows.
+    Date and source amounts are still compared, since the older lossy digest
+    form is looked up through the same keys. Every other id — a native bank
+    id above all — must match the whole fingerprint, or it is a conflict.
+    """
+    found_print = _fingerprint(found, account)
+    kind, value = key[1], key[2]
+    if kind == "digest" or (kind == "import-id" and _GENERATED_ID.fullmatch(value)):
+        return (found_print[0], found_print[3]) == (fingerprint[0], fingerprint[3])
+    return found_print == fingerprint
 
 
 def _valid_account(name: str, option: str) -> str:
