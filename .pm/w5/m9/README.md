@@ -1,6 +1,6 @@
 # w5 · m9 — Complete a first month through the installed ledger skills
 
-**Worker:** worker1 **Goal:** a newcomer uses the installed customer skills to take one synthetic ledger from initialization through import, reconciliation, and a confirmed monthly close **Status:** in progress (t001 done)
+**Worker:** worker1 **Goal:** a newcomer uses the installed customer skills to take one synthetic ledger from initialization through import, reconciliation, and a confirmed monthly close **Status:** in progress (t001, t002 done)
 
 **Estimate:** 3h implementation; 5h including standing closing tasks (8 tasks). Priority 2 in the approved proposal, after inbox 016 and before inbox 017; that order does not impose a hard dependency.
 
@@ -9,7 +9,7 @@
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Package a coherent synthetic first month and checkpoints — **DONE** | 45m | — |
-| t002 | Add a read-only checkpoint verifier | 45m | w5/m9/t001 |
+| t002 | Add a read-only checkpoint verifier — **DONE** | 45m | w5/m9/t001 |
 | t003 | Write the guided first-month prompts and decisions | 45m | w5/m9/t001 |
 | t004 | Publish reproducible rehearsals for both installed agents | 45m | w5/m9/t002, w5/m9/t003 |
 | t005 | Adoption surface | 30m | w5/m9/t004 |
