@@ -46,6 +46,7 @@ export BOOKS="$RUN/books"
 export MIGRATION_INPUTS="$RUN/inputs"
 export VERIFY="$SKILLS_SRC/skills/scripts/verify-migration.py"
 export BEA="$(command -v bea)"
+export BEA_CONFIG_DIR="$RUN/bea-config"
 export GIT_OPTIONAL_LOCKS=0
 export GIT_AUTHOR_NAME="Synthetic Ledger User" GIT_COMMITTER_NAME="Synthetic Ledger User"
 export GIT_AUTHOR_EMAIL="synthetic@example.invalid" GIT_COMMITTER_EMAIL="synthetic@example.invalid"
@@ -61,6 +62,9 @@ git -C "$BOOKS" add .gitignore && git -C "$BOOKS" commit -q -m "Empty synthetic 
 "$BEA" --version
 cd "$BOOKS"
 ```
+
+`BEA_CONFIG_DIR` keeps this run's remembered CSV mappings, which `bea import`
+saves even on a preview, out of your own bea configuration.
 
 Start `claude` or `codex` from this terminal so it inherits these variables.
 Use one agent per run and a new `RUN` for the other. Keep transcripts under
@@ -234,4 +238,4 @@ The verifier checks files, Git state, and ledger contents. It cannot judge
 whether a transcript explained the numbers honestly; review that yourself.
 This journey covers one Monarch export with cash accounts. Mint and
 QuickBooks exports, populated-ledger merges, and investment lots are outside
-it.
+it. See the [rehearsal record](migration-rehearsal.md) for observed runs.
