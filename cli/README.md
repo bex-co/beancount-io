@@ -53,6 +53,32 @@ matching engine. If a first-use or upgrade provision fails, retry a local
 command such as `bea check` once the network is available — do not
 `pip install beancount`.
 
+### Which `bea` is running?
+
+A shell can resolve a different `bea` than you expect. This happens when an
+older install sits earlier on `PATH`, or when a coding agent runs commands in a
+login shell that rebuilds `PATH`. Diagnose from the shell that actually runs the
+command. For an agent, that means asking it to run these steps, not running
+them in your own terminal.
+
+```bash norun
+# Needs an installed bea; reads only, except the last line's check.
+type -a bea              # every bea on PATH, in resolution order
+bea --version            # the version this shell selects
+bea engine status        # the engine it would use: managed, first-use, override, checkout
+BEA=/absolute/path/to/the/bea/you/verified
+"$BEA" --version && "$BEA" --file main.bean check
+```
+
+- **An old executable** shows an older `--version`, or a different first path
+  in `type -a`. Call the verified absolute path, as in the last line, or fix
+  `PATH` in the shell's startup files. For an agent session, give it that
+  absolute path to use for every command.
+- **An unprovisioned engine** shows the expected version, but
+  `engine status` reports `not provisioned; provisions on first use`. That is
+  not a version problem: the first local command, such as `bea check`, sets
+  the engine up once the network is available.
+
 The default installation omits AI dependencies. For `bea ask`, install the
 extra (or run it without replacing your `bea`):
 
