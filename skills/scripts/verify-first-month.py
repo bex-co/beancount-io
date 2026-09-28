@@ -57,17 +57,13 @@ def git(workspace, *args):
     return run(['git', '-C', str(workspace), *args], workspace)
 
 
-def digest(content):
-    return hashlib.sha256(content).hexdigest()
-
-
 def file_identity(path):
     info = path.lstat()
     mode = stat.S_IMODE(info.st_mode)
     if stat.S_ISLNK(info.st_mode):
         return {'type': 'symlink', 'target': os.readlink(path), 'mode': mode}
     require(stat.S_ISREG(info.st_mode), f'Unsupported file type: {path}')
-    return {'type': 'file', 'sha256': digest(path.read_bytes()), 'mode': mode}
+    return {'type': 'file', 'sha256': hashlib.sha256(path.read_bytes()).hexdigest(), 'mode': mode}
 
 
 def capture(workspace, ledger):
