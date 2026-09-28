@@ -14,6 +14,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -73,6 +74,29 @@ class MigrationFixtureTests(unittest.TestCase):
         april = self.expected['transactions']['april-groceries']
         self.assertEqual(april['import_ids'], [digest('csv', new['Date'], new['Amount'], new['Description'],
                                                       'Assets:Checking')])
+
+
+class MigrationGuideTests(unittest.TestCase):
+    """The guide's commands and approvals agree with the fixture it walks through."""
+
+    def setUp(self):
+        self.guide = (SCRIPTS.parent / 'docs/migration.md').read_text()
+        self.expected = json.loads(verify.EXPECTATIONS.read_text())
+
+    def test_every_checkpoint_is_run_by_the_guide(self):
+        named = set(re.findall(r'--checkpoint (\w+)', self.guide))
+        self.assertEqual(named, set(self.expected['checkpoints']) | set(self.expected['branches']))
+
+    def test_copied_inputs_exist_and_approvals_state_the_fixture_amounts(self):
+        for name in re.search(r'for f in ([^;]+);', self.guide).group(1).split():
+            self.assertTrue((FIXTURES / name).is_file(), name)
+        approve = re.search(r'<!-- prompt: map-approve -->\n```text\n(.*?)\n```', self.guide, re.S).group(1)
+        for account, amount in self.expected['anchors'].items():
+            self.assertIn(f'{amount} USD', approve, account)
+        for account, opening in self.expected['openings'].items():
+            self.assertIn(f"{opening['amount']} USD {opening['kind']}", approve, account)
+        self.assertIn(self.expected['assertion_date'], approve)
+        self.assertIn(self.expected['csv_mapping'].replace(',sign=bank', ''), self.guide)
 
 
 class VerifyMigrationTests(unittest.TestCase):
@@ -198,6 +222,17 @@ class VerifyMigrationTests(unittest.TestCase):
         self.write('conflicting_balance', extra='\n2026-03-15 * "Migration residual"\n'
                    '  Assets:Checking  10.00 USD\n  Equity:OpeningBalances  -10.00 USD\n')
         self.assert_fails('conflicting_balance', 'Transactions differ from the checkpoint')
+
+    def test_asserting_the_conflicting_account_anyway_fails(self):
+        wanted = self.expected['checkpoints']['migrated']['assertions']
+        self.write('conflicting_balance', assertions=wanted)
+        self.assert_fails('conflicting_balance', 'Balance assertions differ')
+
+    def test_costed_posting_fails_the_cash_scenario(self):
+        self.write('migrated')
+        text = self.ledger.read_text()
+        self.ledger.write_text(text.replace('Expenses:Groceries  54.20 USD', 'Expenses:Groceries  54.20 USD @ 1 USD', 1))
+        self.assert_fails('migrated', 'Unexpected cost, price, or posting flag')
 
     def test_unchanged_branch_requires_before_and_detects_any_write(self):
         self.write('migrated')

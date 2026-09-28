@@ -1,6 +1,6 @@
 # w5 · m10 — Migrate an export and continue importing without duplicate transfers
 
-**Worker:** worker1 **Goal:** a newcomer migrates synthetic export history through installed skills and continues importing without duplicating either side of an internal transfer **Status:** in progress (t001–t007 done)
+**Worker:** worker1 **Goal:** a newcomer migrates synthetic export history through installed skills and continues importing without duplicating either side of an internal transfer **Status:** in progress (t001–t008 done)
 
 **Estimate:** 4h implementation; 6h including standing closing tasks (9 tasks). Priority 2 after inbox 019, with no hard dependency on it.
 
@@ -15,7 +15,7 @@
 | t005 | Rehearse through Codex and publish comparable results — **DONE** | 45m | w5/m10/t004 |
 | t006 | Adoption surface — **DONE** | 30m | w5/m10/t005 |
 | t007 | Simplify — **DONE** | 30m | w5/m10/t006 |
-| t008 | Test coverage | 45m | w5/m10/t006, w5/m10/t007 |
+| t008 | Test coverage — **DONE** | 45m | w5/m10/t006, w5/m10/t007 |
 | t009 | Closeout | 15m | w5/m10/t007, w5/m10/t008 |
 
 ## Definition of done

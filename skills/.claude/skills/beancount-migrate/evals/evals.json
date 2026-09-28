@@ -1,6 +1,6 @@
 {
   "skill_name": "beancount-migrate",
-  "notes": "Each eval runs in an empty scratch dir with the fixture export copied in as ./export.csv. Validate with `bea check` when bea is installed; oracle/CI uses `uv run --project cli bean-check` separately. Do not `pip install beancount` as the customer path. eval1-3 are per-source happy paths (Mint, Monarch, QBO); eval4-6 are failure-mode checks (balance delta surfaced, unmapped category never guessed, no conversion before mapping confirm). Fixture arithmetic: eval1 Chase flows sum +1935.81 (opening 1000.00 -> stated 2935.81), Amex flows +370.76 in ledger sign (opening -500.00 -> stated -129.24); eval2 Checking +1945.80 (opening 500.00 -> 2445.80), Savings +501.25 (opening 1000.00 -> 1501.25).",
+  "notes": "Each eval runs in an empty scratch dir with the fixture export copied in as ./export.csv. Validate with `bea check` when bea is installed; oracle/CI uses `uv run --project cli bean-check` separately. Do not `pip install beancount` as the customer path. eval1-3 are per-source happy paths (Mint, Monarch, QBO); eval4-6 are failure-mode checks; eval7 checks the identities later bank imports depend on (docs/examples/migration) (balance delta surfaced, unmapped category never guessed, no conversion before mapping confirm). Fixture arithmetic: eval1 Chase flows sum +1935.81 (opening 1000.00 -> stated 2935.81), Amex flows +370.76 in ledger sign (opening -500.00 -> stated -129.24); eval2 Checking +1945.80 (opening 500.00 -> 2445.80), Savings +501.25 (opening 1000.00 -> 1501.25).",
   "evals": [
     {
       "id": 1,
@@ -96,6 +96,22 @@
         "Both mapping tables (accounts, categories) are presented before any transaction is converted",
         "No transaction entries exist on disk at the point the mapping confirmation is requested",
         "After confirmation, conversion proceeds and bea check passes"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "migrated-ids-survive-later-imports",
+      "prompt": "Migrate my Monarch export ./export.csv to a new beancount ledger. Chase Checking opened March at 500.00 per my February statement and ended at 2445.80 per the March statement; Ally Savings shows 1501.25 today and I have no older statement. I'll keep importing each bank's own CSV afterwards, so make sure those imports won't duplicate anything.",
+      "expected_output": "Same data as eval2 with the balances of docs/examples/migration/balances.md. Each non-transfer row carries import-id monarch:sha256:<first 16 hex of sha256('<date>|<exact amount> USD|<Original Statement>|<account>')>. The merged 2026-03-10 transfer carries the checking row's id as import-id and the savings row's id as import-id-2, so a later bank CSV of either account matches its side. Checking's 500.00 opening is labelled independent; savings' 1000.00 opening is derived and its 2026-03-16 assertion is described as a consistency check only.",
+      "files": [
+        "evals/files/eval2_monarch.csv"
+      ],
+      "expectations": [
+        "The merged transfer keeps both source identities: import-id monarch:sha256:89784d830e9af8e2 (checking) and import-id-2 monarch:sha256:0218b42481730d49 (savings)",
+        "Non-transfer ids are monarch:sha256:957422234a9fc7b5, 9b811ad4dd24f37f and 33fe274b8cc7a957 — computed, not invented",
+        "Row accounting reads 5 = 3 transactions + 2 x 1 merged pair + 0 skipped",
+        "Checking's opening is labelled independent; savings' opening 1000.00 is labelled derived and its assertion is not claimed as evidence of a complete export",
+        "Both endpoint assertions are dated 2026-03-16 and bea check passes"
       ]
     }
   ]
