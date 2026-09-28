@@ -31,5 +31,6 @@ python3 "$SKILLS_SRC/skills/scripts/beancount-skills.py" install ~/.claude/skill
 - [Installation guide](docs/installation.md): workspace-only installs, discovery checks, `verify`, updates, local edits and name conflicts, and removal.
 - [First query](docs/first-query.md): ask a synthetic ledger a question through `beancount-ask` and check the known answer. No account needed.
 - [First month](docs/first-month.md): initialize, import, reconcile, ask, and close one synthetic month with explicit approvals and independent ledger/Git checkpoints. See the [real-client rehearsal results](docs/first-month-rehearsal.md).
+- [Migrate, then keep importing](docs/migration.md): convert a synthetic Monarch export with approved mappings and balance anchors, then import overlapping bank exports without double-booking either side of a transfer. See the [real-client rehearsal results](docs/migration-rehearsal.md).
 
 Repository contributors use a separate set of [development skills](../.agents/AGENTS.md) in [`.agents/skills/`](../.agents/skills). Development conventions for this customer-facing package live in [AGENTS.md](AGENTS.md).
