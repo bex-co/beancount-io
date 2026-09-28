@@ -109,6 +109,34 @@ Only a successful full journey updates `tests/managed_prices_live_status.json`.
 This is an explicit network gate, separate from the deterministic unit suite.
 `BEA_LIVE_PRICE_TESTS=1` additionally opts into the anonymous login-boundary test.
 
+## 0.3.1 release notes
+
+This section is the GitHub Release body for `cli-v0.3.1`; apply it with
+`gh release edit cli-v0.3.1 --notes-file <this section>` after the workflow
+creates the release.
+
+`bea` 0.3.1 is a bug-fix release. It needs no ledger changes.
+
+- **Imports recognize migrated history.** `bea import` now matches entries that
+  `beancount-migrate` wrote as `monarch:`, `mint:` or `qbo:sha256:` IDs, including
+  the second side of a merged transfer (`import-id-2`). Overlapping bank exports
+  therefore skip already-migrated rows instead of writing them again or reporting
+  conflicts. A reused native bank ID whose data changed is still a conflict.
+- **Option expiries with empty lot costs return valid JSON.** A native expiry of
+  a lot without a recorded cost now writes once and reports parseable `--json`
+  output.
+- **Generated import IDs are exact.** New IDs hash the exact amount and its
+  commodity, so rows that differ only past two decimals, or by commodity, keep
+  separate identities. IDs written by earlier versions still match on re-import.
+- **Many smaller fixes** in CSV import (whole-column date inference,
+  decimal-comma precision, over-wide rows, exact sign changes), queries and
+  exports (atomic writes, statement counting, control characters shown
+  visibly), `doctor`, `format`, `add`, portable price exports, and exit codes
+  for interrupts and closed pipes.
+
+Upgrade with `brew upgrade bex-co/tap/bea` or `uv tool upgrade beancount-io`,
+or install with `uv tool install beancount-io==0.3.1`.
+
 ## 0.2.0 migration
 
 Install `bea` once. Its helper sources ship in the same package; upstream
