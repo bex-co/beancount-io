@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "period": "2026-08",
+  "start": "2026-08-01",
+  "end": "2026-08-31",
+  "assertion_date": "2026-09-01",
+  "currency": "USD",
+  "account": "Assets:Checking",
+  "csv_mapping": "date=Date,payee=Payee,narration=Narration,amount=Amount,id=ID,sign=bank",
+  "date_format": "%Y-%m-%d",
+  "transactions": {
+    "opening": {
+      "date": "2026-08-01",
+      "flag": "*",
+      "payee": null,
+      "narration": "Opening balances",
+      "import_id": null,
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "number": "1000.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Equity:OpeningBalances",
+          "number": "-1000.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "salary": {
+      "date": "2026-08-05",
+      "flag": "*",
+      "payee": "Synthetic Employer",
+      "narration": "August salary",
+      "import_id": "bank:august-salary",
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "number": "2000.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Income:Salary",
+          "number": "-2000.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "groceries": {
+      "date": "2026-08-10",
+      "flag": "*",
+      "payee": "Synthetic Market",
+      "narration": "Groceries",
+      "import_id": "bank:august-groceries",
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "number": "-50.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Expenses:Groceries",
+          "number": "50.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "coffee": {
+      "date": "2026-08-15",
+      "flag": "*",
+      "payee": "Synthetic Cafe",
+      "narration": "Coffee",
+      "import_id": "bank:august-coffee",
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "number": "-5.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Expenses:Dining",
+          "number": "5.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "fee": {
+      "date": "2026-08-31",
+      "flag": "*",
+      "payee": "Synthetic Bank",
+      "narration": "Monthly service fee",
+      "import_id": "bank:august-fee",
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "number": "-3.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Expenses:Fees",
+          "number": "3.00",
+          "currency": "USD"
+        }
+      ]
+    }
+  },
+  "checkpoints": {
+    "initialized": {
+      "transaction_keys": [
+        "opening"
+      ],
+      "transaction_count": 1,
+      "balance": "1000.00",
+      "income": "0.00",
+      "expenses": "0.00",
+      "net_income": "0.00",
+      "assertions": []
+    },
+    "imported": {
+      "transaction_keys": [
+        "opening",
+        "salary",
+        "groceries",
+        "coffee"
+      ],
+      "transaction_count": 4,
+      "balance": "2945.00",
+      "income": "2000.00",
+      "expenses": "55.00",
+      "net_income": "1945.00",
+      "assertions": []
+    },
+    "reimported": {
+      "transaction_keys": [
+        "opening",
+        "salary",
+        "groceries",
+        "coffee"
+      ],
+      "transaction_count": 4,
+      "balance": "2945.00",
+      "income": "2000.00",
+      "expenses": "55.00",
+      "net_income": "1945.00",
+      "assertions": []
+    },
+    "reconciled": {
+      "transaction_keys": [
+        "opening",
+        "salary",
+        "groceries",
+        "coffee",
+        "fee"
+      ],
+      "transaction_count": 5,
+      "balance": "2942.00",
+      "income": "2000.00",
+      "expenses": "58.00",
+      "net_income": "1942.00",
+      "assertions": [
+        {
+          "date": "2026-09-01",
+          "account": "Assets:Checking",
+          "number": "2942.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "asked": {
+      "transaction_keys": [
+        "opening",
+        "salary",
+        "groceries",
+        "coffee",
+        "fee"
+      ],
+      "transaction_count": 5,
+      "balance": "2942.00",
+      "income": "2000.00",
+      "expenses": "58.00",
+      "net_income": "1942.00",
+      "assertions": [
+        {
+          "date": "2026-09-01",
+          "account": "Assets:Checking",
+          "number": "2942.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "closed": {
+      "transaction_keys": [
+        "opening",
+        "salary",
+        "groceries",
+        "coffee",
+        "fee"
+      ],
+      "transaction_count": 5,
+      "balance": "2942.00",
+      "income": "2000.00",
+      "expenses": "58.00",
+      "net_income": "1942.00",
+      "assertions": [
+        {
+          "date": "2026-09-01",
+          "account": "Assets:Checking",
+          "number": "2942.00",
+          "currency": "USD"
+        }
+      ]
+    }
+  },
+  "branches": {
+    "declined_import": {
+      "from": "initialized",
+      "ledger_matches": "initialized",
+      "ledger_bytes_unchanged": true,
+      "git_index_and_head_unchanged": true
+    },
+    "declined_reconcile": {
+      "from": "imported",
+      "ledger_matches": "imported",
+      "ledger_bytes_unchanged": true,
+      "git_index_and_head_unchanged": true
+    },
+    "declined_commit": {
+      "from": "asked",
+      "ledger_matches": "asked",
+      "ledger_bytes_unchanged": true,
+      "git_index_and_head_unchanged": true
+    },
+    "unresolved_statement": {
+      "from": "imported",
+      "ledger_matches": "imported",
+      "statement": "statement-unresolved.md",
+      "claimed_balance": "2941.00",
+      "unexplained_difference": "4.00",
+      "reconciliation_status": "partial",
+      "assertion_status": "unpinned",
+      "ledger_bytes_unchanged": true,
+      "git_index_and_head_unchanged": true
+    },
+    "missing_statement": {
+      "from": "imported",
+      "ledger_matches": "imported",
+      "reconciliation_status": "unverified",
+      "assertion_status": "unpinned",
+      "ledger_bytes_unchanged": true,
+      "git_index_and_head_unchanged": true
+    }
+  },
+  "close": {
+    "approved_paths": [
+      "main.bean"
+    ],
+    "commit_count_delta": 1,
+    "subject": "close: 2026-08 \u2014 1 reconciled, 0 unverified",
+    "push": false,
+    "flags_carried": 0,
+    "recurring_gaps": 0,
+    "recurring_history": "No prior months supplied; recurring completeness cannot be established."
+  }
+}

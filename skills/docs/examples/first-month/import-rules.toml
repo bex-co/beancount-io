@@ -1,0 +1,11 @@
+[[rule]]
+match = "^Synthetic Employer$"
+account = "Income:Salary"
+
+[[rule]]
+match = "^Synthetic Market$"
+account = "Expenses:Groceries"
+
+[[rule]]
+match = "^Synthetic Cafe$"
+account = "Expenses:Dining"
