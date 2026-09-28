@@ -19,7 +19,6 @@
 
 ## Inbox
 
-- [016 — Make the root CLI quickstart work from an empty directory](./016.md) (~30m) — priority 1 in the approved 2026-09-27 proposal.
 - [017 — Publish a copyable ledger-check workflow for GitHub Actions](./017.md) (~60m) — priority 3 in the approved 2026-09-27 proposal.
 
 ## Blocked inbox
@@ -30,7 +29,7 @@
 
 Blocked milestones live under `blocked/` with their reason and unblock condition in a `## Blocked` section; they keep their task IDs and return to `wN/mN/` when work can resume.
 
-Current actionable priority is **016 → 017**. This is execution priority, not a hard dependency: both remaining inbox items can proceed independently of each other and of blocked m5 and 015. The installed first-month milestone m9 is complete. w5 has capacity for this work as a general-purpose adoption queue; it does not acquire a permanent skills or CLI specialty.
+The remaining actionable inbox item is **017**, independent of blocked m5 and 015. The installed first-month milestone m9 is complete. w5 has capacity for this work as a general-purpose adoption queue; it does not acquire a permanent skills or CLI specialty.
 
 The earlier sequence was m3 → m4 → m5. Real-client MCP journeys run against the hosted endpoint, not a duplicate stack. m3 and m4 have no dependency on each other; m5/t001 depends on m4/t009. The customer skill installation work in m3 builds on w1/m21's completed accounting-engine integration. The larger Plaid sandbox journey remains an explicit deferred follow-up in w2/009. m5 verifies and repairs the four prompts already shipped by w2/008; it does not recreate their registration or bodies.
 
