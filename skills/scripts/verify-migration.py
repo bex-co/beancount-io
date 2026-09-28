@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-from decimal import Decimal, InvalidOperation
+from decimal import InvalidOperation
 import importlib.util
 import json
 from pathlib import Path
@@ -42,12 +42,7 @@ def import_ids(entry):
     return tuple(str(meta[key]) for key in ('import-id', 'import-id-2') if meta.get(key) not in (None, ''))
 
 
-def postings(entry, *, expected=False):
-    rows = []
-    for posting in entry['postings']:
-        units = posting if expected else posting['units']
-        rows.append((posting['account'], number(units['number']), units['currency']))
-    return tuple(sorted(rows))
+postings = first_month.posting_signature
 
 
 def verify_rows(transactions, expected):
@@ -55,13 +50,13 @@ def verify_rows(transactions, expected):
     for key, wanted in expected['transactions'].items():
         if len(wanted['import_ids']) < 2:
             continue
+        pair = set(wanted['import_ids'])
         for entry in transactions:
             ids = set(import_ids(entry))
-            require(not ids & set(wanted['import_ids']) or ids == set(wanted['import_ids']),
+            require(not ids & pair or ids == pair,
                     f'Merged transfer {key} lacks one of its source identities (import-id / import-id-2).')
     seen = Counter(value for entry in transactions for value in import_ids(entry))
-    known = {row['import_id'] for row in expected['source_rows']}
-    known |= {i for t in expected['transactions'].values() for i in t['import_ids']}
+    known = {i for t in expected['transactions'].values() for i in t['import_ids']}
     for row in expected['source_rows']:
         count = seen[row['import_id']]
         require(count > 0, f"Source row {row['row']} ({row['import_id']}) is missing.")
@@ -111,24 +106,20 @@ def main(argv=None):
         return first_month.main(['snapshot', '--workspace', str(args.workspace), '--ledger', args.ledger,
                                  '--output', str(args.output)])
     try:
-        workspace = args.workspace.resolve(strict=True)
-        ledger_path = workspace / args.ledger
-        require(not Path(args.ledger).is_absolute() and '..' not in Path(args.ledger).parts,
-                'Ledger must be a relative path inside the workspace.')
-        require(ledger_path.resolve(strict=True).is_relative_to(workspace) and not ledger_path.is_symlink(),
-                'Ledger must be a regular workspace file, not an external path or symlink.')
+        workspace = first_month.resolve_workspace(args.workspace, args.ledger)
         expected = json.loads(EXPECTATIONS.read_text())
         name = args.checkpoint
         require(name in expected['checkpoints'] or name in expected['branches'], f'Unknown checkpoint: {name}.')
-        branch = expected['branches'].get(name, {})
-        require(not branch.get('unchanged') or args.before is not None,
+        # Every branch is a read-only or declined action: it must leave the workspace as it was.
+        is_branch = name in expected['branches']
+        require(not is_branch or args.before is not None,
                 f'{name} requires --before from immediately before the action.')
         before = first_month.read_snapshot(args.before, workspace, args.ledger) if args.before else None
         current = capture(workspace, args.ledger)
         try:
-            key = branch.get('ledger_matches', name)
+            key = expected['branches'][name] if is_branch else name
             verify_ledger(args.bea, workspace, args.ledger, expected, expected['checkpoints'][key])
-            if branch.get('unchanged'):
+            if is_branch:
                 unchanged(before, current)
         finally:
             unchanged(current, capture(workspace, args.ledger))

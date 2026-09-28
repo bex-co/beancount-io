@@ -287,21 +287,9 @@
     }
   },
   "branches": {
-    "declined_conversion": {
-      "ledger_matches": "initialized",
-      "unchanged": true
-    },
-    "checking_overlap": {
-      "ledger_matches": "migrated",
-      "unchanged": true
-    },
-    "savings_overlap": {
-      "ledger_matches": "migrated",
-      "unchanged": true
-    },
-    "reimported_new": {
-      "ledger_matches": "imported_new",
-      "unchanged": true
-    }
+    "declined_conversion": "initialized",
+    "checking_overlap": "migrated",
+    "savings_overlap": "migrated",
+    "reimported_new": "imported_new"
   }
 }

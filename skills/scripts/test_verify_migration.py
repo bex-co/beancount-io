@@ -117,7 +117,8 @@ class VerifyMigrationTests(unittest.TestCase):
     def write(self, checkpoint, *, transactions=None, assertions=None, extra=''):
         state = self.expected['checkpoints'][checkpoint]
         accounts = sorted({p['account'] for t in self.expected['transactions'].values() for p in t['postings']})
-        lines = ['option "operating_currency" "USD"', *(f'2026-03-04 open {a} USD' for a in accounts), '']
+        opened = self.expected['open_date']
+        lines = ['option "operating_currency" "USD"', *(f'{opened} open {a} USD' for a in accounts), '']
         for key in state['transactions'] if transactions is None else transactions:
             t = self.expected['transactions'][key]
             lines.append(f'{t["date"]} * "{key}"')
@@ -146,7 +147,8 @@ class VerifyMigrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn(message, result.stderr)
 
-    def bea_import(self, export, account):
+    def bea_import(self, export):
+        account = self.expected['imports'][export]['account']
         result = subprocess.run(
             [BEA, '--file', str(self.ledger), '--json', '--no-input', 'import', str(FIXTURES / export),
              '--csv', self.expected['csv_mapping'], '--account', account, '--date-format',
@@ -209,22 +211,23 @@ class VerifyMigrationTests(unittest.TestCase):
         self.write('migrated')
         self.commit()
         before = self.snapshot()
-        for export, account, name in (('checking-overlap.csv', 'Assets:Checking', 'checking_overlap'),
-                                      ('savings-overlap.csv', 'Assets:Savings', 'savings_overlap')):
-            data = self.bea_import(export, account)
-            self.assertEqual((data['written'], data['duplicates']), (0, 2), export)
+        for export, name in (('checking-overlap.csv', 'checking_overlap'), ('savings-overlap.csv', 'savings_overlap')):
+            wanted = self.expected['imports'][export]
+            data = self.bea_import(export)
+            self.assertEqual((data['written'], data['duplicates']),
+                             (len(wanted['new_transactions']), wanted['overlap_rows']), export)
             result = self.check(name, '--before', str(before))
             self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_new_activity_is_imported_exactly_once(self):
         self.write('migrated')
         self.commit()
-        self.assertEqual(self.bea_import('checking-april.csv', 'Assets:Checking')['written'], 1)
+        self.assertEqual(self.bea_import('checking-april.csv')['written'], 1)
         result = self.check('imported_new')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.commit()
         before = self.snapshot()
-        self.assertEqual(self.bea_import('checking-april.csv', 'Assets:Checking')['written'], 0)
+        self.assertEqual(self.bea_import('checking-april.csv')['written'], 0)
         result = self.check('reimported_new', '--before', str(before))
         self.assertEqual(result.returncode, 0, result.stderr)
 

@@ -133,7 +133,8 @@ def number(value):
     return result
 
 
-def transaction_signature(entry, *, expected=False):
+def posting_signature(entry, *, expected=False):
+    """Sorted (account, amount, currency) postings of a plain cash transaction."""
     postings = []
     for posting in entry['postings']:
         require(not any(posting.get(k) for k in ('cost', 'price', 'price_total', 'flag')),
@@ -141,9 +142,24 @@ def transaction_signature(entry, *, expected=False):
         units = posting if expected else posting['units']
         postings.append((posting['account'], number(units['number']), units['currency']))
     require(not entry.get('tags') and not entry.get('links'), 'Unexpected transaction tags or links.')
+    return tuple(sorted(postings))
+
+
+def transaction_signature(entry, *, expected=False):
     return (entry['date'], entry['flag'], entry['payee'], entry['narration'],
             entry['import_id'] if expected else entry['meta'].get('import-id'),
-            tuple(sorted(postings)))
+            posting_signature(entry, expected=expected))
+
+
+def resolve_workspace(workspace, ledger):
+    """The workspace root, after requiring the ledger to be a regular file inside it."""
+    workspace = workspace.resolve(strict=True)
+    ledger_path = workspace / ledger
+    require(not Path(ledger).is_absolute() and '..' not in Path(ledger).parts,
+            'Ledger must be a relative path inside the workspace.')
+    require(ledger_path.resolve(strict=True).is_relative_to(workspace) and not ledger_path.is_symlink(),
+            'Ledger must be a regular workspace file, not an external path or symlink.')
+    return workspace
 
 
 def verify_ledger(bea, workspace, ledger, expected, checkpoint):
@@ -209,12 +225,7 @@ def main(argv=None):
     verify.add_argument('--bea', default='bea')
     args = parser.parse_args(argv)
     try:
-        workspace = args.workspace.resolve(strict=True)
-        ledger_path = workspace / args.ledger
-        require(not Path(args.ledger).is_absolute() and '..' not in Path(args.ledger).parts,
-                'Ledger must be a relative path inside the workspace.')
-        require(ledger_path.resolve(strict=True).is_relative_to(workspace) and not ledger_path.is_symlink(),
-                'Ledger must be a regular workspace file, not an external path or symlink.')
+        workspace = resolve_workspace(args.workspace, args.ledger)
         current = capture(workspace, args.ledger)
         if args.command == 'snapshot':
             output = outside_workspace(args.output, workspace)
