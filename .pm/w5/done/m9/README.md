@@ -1,6 +1,6 @@
 # w5 · m9 — Complete a first month through the installed ledger skills
 
-**Worker:** worker1 **Goal:** a newcomer uses the installed customer skills to take one synthetic ledger from initialization through import, reconciliation, and a confirmed monthly close **Status:** in progress (t001, t002, t003, t004, t005, t006, t007 done)
+**Worker:** worker1 **Goal:** a newcomer uses the installed customer skills to take one synthetic ledger from initialization through import, reconciliation, and a confirmed monthly close **Status:** done
 
 **Estimate:** 3h implementation; 5h including standing closing tasks (8 tasks). Priority 2 in the approved proposal, after inbox 016 and before inbox 017; that order does not impose a hard dependency.
 
@@ -15,7 +15,7 @@
 | t005 | Adoption surface — **DONE** | 30m | w5/m9/t004 |
 | t006 | Simplify — **DONE** | 30m | w5/m9/t005 |
 | t007 | Test coverage — **DONE** | 45m | w5/m9/t005, w5/m9/t006 |
-| t008 | Closeout | 15m | w5/m9/t006, w5/m9/t007 |
+| t008 | Closeout — **DONE** | 15m | w5/m9/t006, w5/m9/t007 |
 
 ## Definition of done
 
@@ -29,7 +29,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm for w5`, all three proposals approved with `$pm all for w5` on 2026-09-27; [w5/m3's installed-suite and first-query baseline](../done/m3/README.md), [the current first-query guide](../../../skills/docs/first-query.md), and [the CLI first-month tutorial](../../../cli/docs/TUTORIAL.md).
+- **Source:** `/pm-brainstorm for w5`, all three proposals approved with `$pm all for w5` on 2026-09-27; [w5/m3's installed-suite and first-query baseline](../m3/README.md), [the current first-query guide](../../../../skills/docs/first-query.md), and [the CLI first-month tutorial](../../../../cli/docs/TUTORIAL.md).
 - **Goal linkage:** **A1 — Agent-native accounting** and **A2 — Frictionless onboarding**. People adopting accounting through an agent can progress from a read-only example to a repeatable monthly workflow through the existing customer skills.
 - **Expected outcome:** both installed agents complete a documented monthly journey with verified ledger effects. Record completion rate, elapsed time to a reconciled month, and interventions as rehearsal signals; do not present these as production adoption metrics.
 - **Why now:** installation, individual skills, the CLI tutorial, and executable command recipes have shipped. The remaining asset connects these on one ledger. w5 has capacity while its hosted MCP milestone remains blocked, and this local journey has no dependency on that deployment or bank setup.

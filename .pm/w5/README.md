@@ -15,7 +15,7 @@
 - [x] **m7** — [Expose live-price provenance in ordinary reports](./done/m7/README.md) (6 tasks) ← PRFAQ003 launch gaps; requested 2026-09-21
 - [x] **m8** — [Validate and release authenticated CLI live prices](./done/m8/README.md) (7 tasks) ← PRFAQ003 launch gaps; requested 2026-09-21
 
-- [ ] **m9** — [Complete a first month through the installed ledger skills](./m9/README.md) (8 tasks, ~5h) ← `/pm-brainstorm for w5`, all three proposals approved with `$pm all for w5` on 2026-09-27
+- [x] **m9** — [Complete a first month through the installed ledger skills](./done/m9/README.md) (8 tasks, ~5h) ← `/pm-brainstorm for w5`, all three proposals approved with `$pm all for w5` on 2026-09-27
 
 ## Inbox
 
@@ -30,7 +30,7 @@
 
 Blocked milestones live under `blocked/` with their reason and unblock condition in a `## Blocked` section; they keep their task IDs and return to `wN/mN/` when work can resume.
 
-Current actionable priority is **016 → m9 → 017**. This is execution priority, not a hard dependency: each item can proceed independently of the others and of blocked m5 and 015. w5 has capacity for this work as a general-purpose adoption queue; it does not acquire a permanent skills or CLI specialty.
+Current actionable priority is **016 → 017**. This is execution priority, not a hard dependency: both remaining inbox items can proceed independently of each other and of blocked m5 and 015. The installed first-month milestone m9 is complete. w5 has capacity for this work as a general-purpose adoption queue; it does not acquire a permanent skills or CLI specialty.
 
 The earlier sequence was m3 → m4 → m5. Real-client MCP journeys run against the hosted endpoint, not a duplicate stack. m3 and m4 have no dependency on each other; m5/t001 depends on m4/t009. The customer skill installation work in m3 builds on w1/m21's completed accounting-engine integration. The larger Plaid sandbox journey remains an explicit deferred follow-up in w2/009. m5 verifies and repairs the four prompts already shipped by w2/008; it does not recreate their registration or bodies.
 
