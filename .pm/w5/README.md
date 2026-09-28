@@ -17,9 +17,11 @@
 
 - [x] **m9** — [Complete a first month through the installed ledger skills](./done/m9/README.md) (8 tasks, ~5h) ← `/pm-brainstorm for w5`, all three proposals approved with `$pm all for w5` on 2026-09-27
 
+- [ ] **m10** — [Migrate an export and continue importing without duplicate transfers](./m10/README.md) (9 tasks, ~6h) ← `/pm-brainstorm for w5`, both proposals approved with `$pm for both to w5` on 2026-09-28
+
 ## Inbox
 
-No open inbox items.
+- [019 — Make reconciliation previews use reproducible arithmetic](./019.md) (~1h) — priority 1; demonstrated first-month rehearsal correction.
 
 ## Blocked inbox
 
@@ -29,7 +31,7 @@ No open inbox items.
 
 Blocked milestones live under `blocked/` with their reason and unblock condition in a `## Blocked` section; they keep their task IDs and return to `wN/mN/` when work can resume.
 
-No actionable items remain as of 2026-09-27: m9 and inbox 016–018 are complete. m5 and 015 retain their recorded external unblock conditions. w5 remains a general-purpose adoption queue.
+As of 2026-09-28, execute inbox 019 first, then m10; this priority order is not a hard dependency. m9 and inbox 016–018 are complete. m5 and 015 retain their recorded external unblock conditions. w5 remains a general-purpose adoption queue.
 
 The earlier sequence was m3 → m4 → m5. Real-client MCP journeys run against the hosted endpoint, not a duplicate stack. m3 and m4 have no dependency on each other; m5/t001 depends on m4/t009. The customer skill installation work in m3 builds on w1/m21's completed accounting-engine integration. The larger Plaid sandbox journey remains an explicit deferred follow-up in w2/009. m5 verifies and repairs the four prompts already shipped by w2/008; it does not recreate their registration or bodies.
 
