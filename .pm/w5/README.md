@@ -23,7 +23,6 @@
 
 ## Inbox
 
-- [021 — Correct bea ask skill loading and disablement instructions](./021.md) (~45m) — priority 2.
 - [022 — Document how to diagnose an agent invoking the wrong bea executable](./022.md) (~45m) — priority 3.
 
 ## Blocked inbox
