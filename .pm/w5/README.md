@@ -23,7 +23,7 @@
 
 ## Inbox
 
-- [022 — Document how to diagnose an agent invoking the wrong bea executable](./022.md) (~45m) — priority 3.
+No open inbox items.
 
 ## Blocked inbox
 
