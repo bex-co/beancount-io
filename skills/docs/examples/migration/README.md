@@ -1,7 +1,9 @@
 # Migration sample data
 
 All names, amounts, and IDs here are synthetic. Copy these files into a separate
-run-owned workspace; never rehearse against personal books.
+run-owned workspace; never rehearse against personal books. The
+[migration guide](../../migration.md) walks through them with the installed
+customer skills, and `scripts/verify-migration.py` checks each checkpoint.
 
 | File | Purpose |
 | --- | --- |
