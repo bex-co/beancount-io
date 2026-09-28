@@ -53,6 +53,16 @@ prompts and the skill's accounting confirmation are separate: granting tool
 access does not approve a proposed ledger mutation. The agent must still wait
 for the corresponding confirmation below. Never use blanket future approval.
 
+Send this runtime instruction at the start of **every** session, including the
+fresh unresolved/missing-statement sessions. Some agents launch login shells
+that reset `PATH`; the exported absolute `BEA` path keeps the selected version
+consistent.
+
+<!-- prompt: runtime -->
+```text
+For every bea command, use the executable at the inherited BEA environment variable; login shells may resolve a different bea on PATH. Verify "$BEA" --version before continuing. Use this runtime for all ledger writes, checks, and queries in this session.
+```
+
 ## Initialize and record the baseline
 
 <!-- prompt: init -->
