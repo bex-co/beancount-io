@@ -1,6 +1,6 @@
 # w5 · m11 — Publish the CLI fixes required by the migration journey
 
-**Worker:** worker1 **Goal:** users installing from PyPI or Homebrew receive the migrated-history deduplication and empty-lot-cost response fixes **Status:** in progress (t001 done)
+**Worker:** worker1 **Goal:** users installing from PyPI or Homebrew receive the migrated-history deduplication and empty-lot-cost response fixes **Status:** in progress (t001–t002 done)
 
 **Estimate:** 3h15m implementation; 5h including standing closing tasks (8 tasks). Priority 1 in the approved proposal.
 
@@ -9,7 +9,7 @@
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Prepare the release version and user-facing change record — **DONE** | 45m | — |
-| t002 | Cover migration identities and empty lot costs in installed smoke checks | 60m | w5/m11/t001 |
+| t002 | Cover migration identities and empty lot costs in installed smoke checks — **DONE** | 60m | w5/m11/t001 |
 | t003 | Validate the exact release artifacts through existing installation gates | 45m | w5/m11/t002 |
 | t004 | Publish and verify the CLI on PyPI and Homebrew | 45m | w5/m11/t003 |
 | t005 | Adoption surface | 25m | w5/m11/t004 |

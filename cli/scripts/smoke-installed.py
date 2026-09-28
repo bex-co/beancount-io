@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import os
 import re
@@ -133,6 +134,94 @@ def smoke_managed_prices(binary: Path, directory: Path, inherited_env: dict[str,
     return count
 
 
+def smoke_migrated_history_and_lot_costs(run, directory: Path) -> None:
+    """Imports skip history beancount-migrate wrote, and empty lot costs return JSON (w5/020, w5/018)."""
+
+    def migrated_id(date: str, amount: str, description: str, account: str) -> str:
+        # The documented beancount-import hash input, computed here rather than by the CLI.
+        base = f"{date}|{amount} USD|{description}|{account}"
+        return "monarch:sha256:" + hashlib.sha256(base.encode()).hexdigest()[:16]
+
+    books = directory / "migrated"
+    books.mkdir()
+    ledger = books / "main.bean"
+    ledger.write_text(
+        'option "operating_currency" "USD"\n'
+        + "".join(
+            f"2026-03-04 open {name} USD\n"
+            for name in ("Assets:Checking", "Assets:Savings", "Expenses:Groceries", "Equity:OpeningBalances")
+        )
+        + '\n2026-03-08 * "Trader Joes" "TRADER JOES #123"\n'
+        f'  import-id: "{migrated_id("2026-03-08", "-54.2", "TRADER JOES #123", "Assets:Checking")}"\n'
+        "  Assets:Checking  -54.20 USD\n  Expenses:Groceries\n"
+        '\n2026-03-10 * "Transfer" "TRANSFER TO SAVINGS"\n'
+        f'  import-id: "{migrated_id("2026-03-10", "-500", "TRANSFER TO SAVINGS", "Assets:Checking")}"\n'
+        f'  import-id-2: "{migrated_id("2026-03-10", "500", "TRANSFER FROM CHECKING", "Assets:Savings")}"\n'
+        "  Assets:Checking  -500.00 USD\n  Assets:Savings  500.00 USD\n"
+    )
+
+    def bank_import(account: str, rows: str) -> dict:
+        export = books / "export.csv"
+        export.write_text("Date,Description,Amount\n" + rows)
+        return run(
+            "--file",
+            str(ledger),
+            "import",
+            str(export),
+            "--csv",
+            "date=Date,narration=Description,amount=Amount,sign=bank",
+            "--account",
+            account,
+            "--date-format",
+            "%Y-%m-%d",
+            "--default-account",
+            "Expenses:Groceries",
+            "--apply",
+        )["data"]
+
+    migrated = ledger.read_bytes()
+    for account, rows in (
+        ("Assets:Checking", "2026-03-08,TRADER JOES #123,-54.20\n2026-03-10,TRANSFER TO SAVINGS,-500.00\n"),
+        ("Assets:Savings", "2026-03-10,TRANSFER FROM CHECKING,500.00\n"),
+    ):
+        data = bank_import(account, rows)
+        assert (data["written"], data["conflicts"]) == (0, 0), data
+        assert ledger.read_bytes() == migrated, account
+    april = "2026-03-10,TRANSFER TO SAVINGS,-500.00\n2026-04-03,TRADER JOES #123,-61.10\n"
+    assert bank_import("Assets:Checking", april)["written"] == 1
+    after_new = ledger.read_bytes()
+    assert bank_import("Assets:Checking", april)["written"] == 0
+    assert ledger.read_bytes() == after_new and after_new.count(b"-61.10 USD") == 1
+
+    options = directory / "options.bean"
+    options.write_text(
+        'option "operating_currency" "USD"\n'
+        "2026-01-01 open Assets:Cash USD\n"
+        "2026-01-01 open Assets:Brokerage:Options OPTION\n"
+        "2026-01-01 open Income:Trading:OptionPremium USD\n"
+        '2026-06-01 * "Sell option"\n'
+        "  Assets:Brokerage:Options -1 OPTION {150 USD}\n"
+        "  Assets:Cash 150 USD\n"
+    )
+    added = run(
+        "--file",
+        str(options),
+        "add",
+        "transaction",
+        "--date",
+        "2026-06-20",
+        "--narration",
+        "Expire option",
+        "-p",
+        "Assets:Brokerage:Options 1 OPTION {} @ 0 USD",
+        "-p",
+        "Income:Trading:OptionPremium",
+    )["data"]
+    assert added["written"] == 1 and added["directive"]["postings"][0]["cost"]["number"] is None, added
+    assert options.read_text().count('"Expire option"') == 1
+    assert run("--file", str(options), "check")["data"]["valid"] is True
+
+
 def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None, installed: bool = False) -> None:
     directory = directory.resolve()
     env = dict(
@@ -196,6 +285,7 @@ def smoke(binary: Path, directory: Path, *, frontend_python: Path | None = None,
             "-p",
             f"Assets:Checking {-Decimal(number)} USD",
         )
+    smoke_migrated_history_and_lot_costs(run, directory)
     result = run(*target, "query", "SELECT sum(number) WHERE account = 'Expenses:Dining'")
     assert Decimal(result["data"]["rows"][0][0]) == 25
     result = run(*target, "report", "income-statement", "--time", "2026-08")
