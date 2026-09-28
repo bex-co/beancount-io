@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 import os
 import shutil
 import sys
@@ -128,3 +129,21 @@ def test_jsonable_keeps_lot_dates_and_labels_on_costs() -> None:
         "label": None,
     }
     assert sorted(lot["cost"]["label"] for lot in jsonable(inventory)) == ["first", "second"]
+
+
+@pytest.mark.parametrize("surface", ["engine", "frontend"])
+def test_jsonable_empty_cost_spec_is_json_safe(surface: str) -> None:
+    from beancount.core.number import MISSING
+    from beancount.core.position import CostSpec
+
+    from bea_engine.protocol import _jsonable
+    from cli.output import jsonable
+
+    serialize = _jsonable if surface == "engine" else jsonable
+    cost = CostSpec(MISSING, None, MISSING, None, None, False)
+    assert json.loads(json.dumps(serialize(cost))) == {
+        "number": None,
+        "currency": None,
+        "date": None,
+        "label": None,
+    }

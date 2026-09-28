@@ -345,7 +345,7 @@ def jsonable(value: Any) -> Any:
         if number is None:
             number = getattr(value, "number_total", None)
     if number is not None and currency is not None:
-        amount = {"number": jsonable(number), "currency": currency}
+        amount = {"number": jsonable(number), "currency": jsonable(currency)}
         if hasattr(value, "date") and hasattr(value, "label"):
             # A Cost is an Amount plus the lot's acquisition date and label —
             # the two fields that tell one lot from another. Dropping them

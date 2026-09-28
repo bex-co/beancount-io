@@ -78,6 +78,62 @@ def test_add_transaction_cost_round_trips_to_bulk(tmp_path: Path) -> None:
     assert "{10.00 USD}" in ledger.read_text() or "{10 USD}" in ledger.read_text()
 
 
+def test_native_option_expiry_with_empty_cost_returns_json_after_one_write(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(
+        'option "operating_currency" "USD"\n'
+        "2026-01-01 open Assets:Cash USD\n"
+        "2026-01-01 open Assets:Brokerage:Options OPTION\n"
+        "2026-01-01 open Income:Trading:OptionPremium USD\n"
+        '2026-06-01 * "Sell option"\n'
+        "  Assets:Brokerage:Options -1 OPTION {150 USD}\n"
+        "  Assets:Cash 150 USD\n"
+    )
+    added = _bea(
+        tmp_path,
+        "--json",
+        "--file",
+        str(ledger),
+        "add",
+        "transaction",
+        "--date",
+        "2026-06-20",
+        "--narration",
+        "Expire option",
+        "--link",
+        "option-expiry",
+        "--posting",
+        "Assets:Brokerage:Options 1 OPTION {} @ 0 USD",
+        "--posting",
+        "Income:Trading:OptionPremium",
+    )
+    assert added.returncode == 0, added.stderr
+    result = json.loads(added.stdout)
+    assert result["data"]["written"] == 1
+    assert result["data"]["directive"]["postings"][0]["cost"] == {
+        "number": None,
+        "currency": None,
+        "date": None,
+        "label": None,
+    }
+    assert ledger.read_text().count('"Expire option"') == 1
+    assert ledger.read_text().count("^option-expiry") == 1
+
+    checked = _bea(tmp_path, "--json", "--file", str(ledger), "check")
+    assert checked.returncode == 0, checked.stderr
+    assert json.loads(checked.stdout)["data"]["valid"] is True
+    listed = _bea(tmp_path, "--json", "--file", str(ledger), "list", "transaction")
+    assert listed.returncode == 0, listed.stderr
+    transactions = json.loads(listed.stdout)["data"]
+    assert len(transactions) == 2
+    expiry = next(entry for entry in transactions if entry["narration"] == "Expire option")
+    assert expiry["postings"][0]["cost"]["number"] == "150"
+    assert expiry["postings"][1]["units"] == {"number": "-150", "currency": "USD"}
+    report = _bea(tmp_path, "--json", "--file", str(ledger), "report", "income-statement", "--time", "2026-06")
+    assert report.returncode == 0, report.stderr
+    assert json.loads(report.stdout)["data"]["net_profit"] == {"USD": "150"}
+
+
 def _bulk(tmp_path: Path, ledger: Path, postings: list[dict]) -> subprocess.CompletedProcess[str]:
     rows = tmp_path / "rows.json"
     rows.write_text(json.dumps([{"date": "2024-03-02", "narration": "bulk", "postings": postings}]))
