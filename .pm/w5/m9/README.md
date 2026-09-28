@@ -1,6 +1,6 @@
 # w5 · m9 — Complete a first month through the installed ledger skills
 
-**Worker:** worker1 **Goal:** a newcomer uses the installed customer skills to take one synthetic ledger from initialization through import, reconciliation, and a confirmed monthly close **Status:** in progress (t001, t002, t003, t004, t005, t006 done)
+**Worker:** worker1 **Goal:** a newcomer uses the installed customer skills to take one synthetic ledger from initialization through import, reconciliation, and a confirmed monthly close **Status:** in progress (t001, t002, t003, t004, t005, t006, t007 done)
 
 **Estimate:** 3h implementation; 5h including standing closing tasks (8 tasks). Priority 2 in the approved proposal, after inbox 016 and before inbox 017; that order does not impose a hard dependency.
 
@@ -14,7 +14,7 @@
 | t004 | Publish reproducible rehearsals for both installed agents — **DONE** | 45m | w5/m9/t002, w5/m9/t003 |
 | t005 | Adoption surface — **DONE** | 30m | w5/m9/t004 |
 | t006 | Simplify — **DONE** | 30m | w5/m9/t005 |
-| t007 | Test coverage | 45m | w5/m9/t005, w5/m9/t006 |
+| t007 | Test coverage — **DONE** | 45m | w5/m9/t005, w5/m9/t006 |
 | t008 | Closeout | 15m | w5/m9/t006, w5/m9/t007 |
 
 ## Definition of done

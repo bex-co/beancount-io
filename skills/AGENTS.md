@@ -88,11 +88,11 @@ Before opening a skills PR, run the structural suite locally:
 cd cli && uv sync --all-groups && cd ..
 python3 skills/scripts/ci-check.py
 python3 skills/scripts/test_ci_check.py
-python3 skills/scripts/test_beancount_skills.py   # installer, first query, executable bea recipes
+python3 skills/scripts/test_beancount_skills.py   # installer, first query/month, executable bea recipes
 python3 scripts/check-agent-guidance.py
 ```
 
-This checks both customer and development skill trees: SKILL.md frontmatter, `evals.json` validity and fixture paths, Python syntax, the separate skill directories and Claude Code link, `bea check` with global `bean-*` scrubbed from PATH, and a deliberate oracle `uv run --project cli bean-check` on every `*ledger.beancount` (with known failure-mode fixtures listed in the script). One-install guidance is gated across customer entrypoints and supporting Markdown. Behavioral tests execute marked command recipes from the shared references against isolated ledgers, covering CSV sign/rules on repeat imports, the wider duplicate-query window, included-file destinations, failed batches/assertions, and historical initialization.
+This checks both customer and development skill trees: SKILL.md frontmatter, `evals.json` validity and fixture paths, Python syntax, the separate skill directories and Claude Code link, `bea check` with global `bean-*` scrubbed from PATH, and a deliberate oracle `uv run --project cli bean-check` on every `*ledger.beancount` (with known failure-mode fixtures listed in the script). One-install guidance is gated across customer entrypoints and supporting Markdown. Behavioral tests execute marked command recipes from the shared references against isolated ledgers, covering CSV sign/rules on repeat imports, the wider duplicate-query window, included-file destinations, failed batches/assertions, and historical initialization. The same test entrypoint loads the first-month verifier tests and its deterministic journey; no paid client calls run in CI.
 
 ### Iterating on a skill
 

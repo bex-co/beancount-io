@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Behavioral tests for the installer, first query, and shared bea recipes.
+"""Behavioral tests for installation, shared bea recipes, and customer journeys.
 
 Stdlib unittest only (the skills CI has no pytest): run with
 `python3 skills/scripts/test_beancount_skills.py` from the repository root.
@@ -639,6 +639,13 @@ class TestBeaRecipes(unittest.TestCase):
         self.values.update(assertion_date="2023-01-02", amount="87.50 USD")
         self.recipe("balance")
         self.recipe("check")
+
+
+def load_tests(loader, tests, pattern):
+    """Keep the focused first-month checks in the existing skills CI entrypoint."""
+    first_month = load("test_verify_first_month", "test_verify_first_month.py")
+    tests.addTests(loader.loadTestsFromModule(first_month))
+    return tests
 
 
 if __name__ == "__main__":
