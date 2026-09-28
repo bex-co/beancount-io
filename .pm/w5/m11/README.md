@@ -1,6 +1,6 @@
 # w5 · m11 — Publish the CLI fixes required by the migration journey
 
-**Worker:** worker1 **Goal:** users installing from PyPI or Homebrew receive the migrated-history deduplication and empty-lot-cost response fixes **Status:** in progress (t001–t002 done)
+**Worker:** worker1 **Goal:** users installing from PyPI or Homebrew receive the migrated-history deduplication and empty-lot-cost response fixes **Status:** in progress (t001–t003 done)
 
 **Estimate:** 3h15m implementation; 5h including standing closing tasks (8 tasks). Priority 1 in the approved proposal.
 
@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | t001 | Prepare the release version and user-facing change record — **DONE** | 45m | — |
 | t002 | Cover migration identities and empty lot costs in installed smoke checks — **DONE** | 60m | w5/m11/t001 |
-| t003 | Validate the exact release artifacts through existing installation gates | 45m | w5/m11/t002 |
+| t003 | Validate the exact release artifacts through existing installation gates — **DONE** | 45m | w5/m11/t002 |
 | t004 | Publish and verify the CLI on PyPI and Homebrew | 45m | w5/m11/t003 |
 | t005 | Adoption surface | 25m | w5/m11/t004 |
 | t006 | Simplify | 20m | w5/m11/t005 |
@@ -43,3 +43,16 @@
 - Required implementation and artifact tests run before t004 publishes. Standing review tasks retain the canonical board order; any subsequent runtime fix needs a new version, not a replacement artifact.
 - m10 stays blocked until its recorded release prerequisite is actually satisfied. After publication, resume its four overlap/new-import checkpoints in both clients using a public install and complete its own closeout. Do not copy those tasks into m11 or remove its caveat prematurely.
 - Inbox 021 and 022 are independent. m5 and 015 retain their existing external blockers.
+
+## Release evidence
+
+### Candidate validation (t003), 2026-09-28
+
+- **Candidate:** `cli/` at `152ace62`, version `0.3.1`. It contains `7302b907` (w5/020) and `06b2aa51` (w5/018). Later commits before the tag change only `.pm/`.
+- **Local gates on macOS 26.5.1 arm64:**
+  - `make check-all` passed: 2068 passed, one existing conditional skip.
+  - `make release-artifacts` built the wheel (sha256 `93a66aea2541e99de4a2ef60bfbb5079cf80fe4dea12649a82535e79cab81c76`) and the sdist (sha256 `9b1b68235b62db114dd0017e85c06af872282f50675790d55f376ddbddfdaa49`).
+  - `scripts/test-install.py` passed on the wheel (uv tool) and the sdist (pip), each running the 94-command installed smoke. That smoke now includes the migrated-history and empty-lot-cost checks.
+  - `scripts/test-homebrew.sh` passed on the sdist.
+- **CI:** the `CI (cli)` run `36442659256` on `152ace62` passed. It covered the unit suite and the full installation matrix: wheel and sdist on ubuntu, macOS and Windows with Python 3.12 and 3.14, plus Homebrew on macOS and ubuntu.
+- **Tag build:** the release workflow rebuilds artifacts from the tag and re-runs the same gates, so the published hashes are recorded after t004.
