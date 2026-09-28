@@ -87,7 +87,7 @@ Review your finances, add transactions, scan receipts, and edit ledger files fro
 | --------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [`dashboard/`](./dashboard)             | Active web client           | Ledgers, journal, reports, Monaco editor, imports, collaboration, and an AI assistant. React 19 + TanStack Start + Apollo.                                                                                                                                                                                                                                                     |
 | [`mobile/`](./mobile)                   | Active iOS & Android client | Native transaction entry, account views, budgets, receipt capture, ledger editing, light/dark themes, 13 locales, and runtime selection of a compatible self-hosted server. Expo + React Native + Apollo.                                                                                                                                                                      |
-| [`cli/`](./cli)                         | `0.1.0`                     | One-install `bea` CLI: directives, check/format/query, reports, cloud, and local-ledger ask. Frontend never loads Beancount — a managed engine (Homebrew at install, PyPI on first use) runs natives and the helper. Python + Typer. |
+| [`cli/`](./cli)                         | [CLI releases](https://github.com/bex-co/beancount-io/releases?q=bea) | One-install `bea` CLI: directives, check/format/query, reports, cloud, and local-ledger ask. Frontend never loads Beancount — a managed engine (Homebrew at install, PyPI on first use) runs natives and the helper. Python + Typer. |
 | [`skills/`](./skills)                   | Active skills               | The agent-native accounting loop: scaffold a ledger with one `bea` install (optional Fava), import bank exports with dedup, author tested beangulp importers (`bea engine enable beangulp`), reconcile against statements, migrate from Mint/Monarch/QuickBooks, query your finances in plain language, run a month-end close, and record options trades — all confirm-gated and check-verified through `bea`.                                              |
 | [`backend-cluster/`](./backend-cluster) | Active backend              | The services behind the Beancount.io API: `backend-v2` (GraphQL/REST gateway), `ledger` (rustledger-WASM ledger service), `idl` (OpenAPI specs + generated clients), and `agent-box` (Cloudflare Worker control plane for the Ask-AI sandbox). Run locally via [`deploy/docker-mac/`](./deploy/docker-mac) or self-host on one server via [`deploy/docker/`](./deploy/docker). |
 
@@ -139,16 +139,30 @@ Expo will guide you to iOS, Android, or a connected device. See the [mobile deve
 The `beancount-io` package installs one command, `bea`. You do not install
 Beancount yourself — Homebrew provisions a separate engine venv at install
 time; PyPI installs provision it on first local use. Install from the
-Homebrew tap or from PyPI:
+Homebrew tap or from PyPI (choose one):
 
 ```zsh
 brew install bex-co/tap/bea      # macOS and Linuxbrew
 uv tool install beancount-io     # anywhere with uv and Python 3.12+
-
-bea check                        # in a directory containing main.bean
-bea format -i main.bean          # rewrite; default prints to stdout
-bea upgrade                      # update through whichever manager installed it
 ```
+
+From a directory without a `books` subdirectory, create a ledger and record a
+purchase:
+
+```zsh
+bea --no-input init books --currency USD --date 2026-08-01 \
+  --opening-balance "Assets:Checking 1000"
+cd books
+bea add transaction "Coffee" --date 2026-08-02 \
+  --posting "Expenses:Dining 12.50" --posting "Assets:Checking"
+bea check
+bea format -i main.bean
+bea list transaction --limit 10
+bea report balance-sheet
+```
+
+Checking now holds **987.50 USD**. `bea upgrade` updates through the package
+manager that installed it.
 
 Or from this checkout:
 
