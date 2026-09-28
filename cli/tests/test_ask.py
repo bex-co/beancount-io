@@ -223,6 +223,25 @@ class TestAgentSkills:
         skills = load_skills(cwd=tmp_path)
         assert not any(s.name == "empty-skill" for s in skills)
 
+    def test_documented_disable_moves_the_skill_out_rather_than_renaming_it(
+        self, tmp_path: Path, bea_config_dir: Path
+    ) -> None:
+        # docs/agent-skills.md: a rename inside the scanned directory stays
+        # discovered (w5/021); moving the directory out and back is the control.
+        skills_root = tmp_path / ".agents" / "skills"
+        self._make_skill_dir(skills_root, "test-skill")
+        renamed = skills_root / "test-skill.bak"
+        (skills_root / "test-skill").rename(renamed)
+        assert [s.name for s in load_skills(cwd=tmp_path)] == ["test-skill"]
+
+        parked = tmp_path / "disabled-skills" / "test-skill"
+        parked.parent.mkdir()
+        renamed.rename(parked)
+        assert load_skills(cwd=tmp_path) == []
+
+        parked.rename(skills_root / "test-skill")
+        assert [s.name for s in load_skills(cwd=tmp_path)] == ["test-skill"]
+
     def test_load_skills_project_takes_precedence(self, tmp_path: Path, bea_config_dir: Path) -> None:
         project_root = tmp_path / ".agents" / "skills"
         self._make_skill_dir(project_root, "shared", body="Project version.")

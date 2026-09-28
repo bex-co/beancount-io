@@ -1,6 +1,10 @@
 # Agent Skills
 
-Agent Skills let you extend the `bea ask` command with custom instructions and domain knowledge. Skills are plain Markdown files that are loaded at runtime and injected into the AI agent's system prompt.
+Agent Skills let you extend the `bea ask` command with custom instructions and domain knowledge. Skills are plain Markdown files, discovered locally when `bea ask` starts.
+
+Discovery and use are separate steps. The system prompt receives only an index: each discovered skill's `name` and `description`. The model decides whether a skill fits the question and then loads that skill's body on demand through the `get_skill_body` tool. A discovered skill is available to the model, but the model is not obliged to apply it.
+
+`bea ask` itself needs the optional `[ask]` extra (`uv tool install 'beancount-io[ask]'`) and hosted credentials (`bea cloud login` or `BEA_TOKEN`). Discovery does not: the inspection in [Check discovery without a model call](#check-discovery-without-a-model-call) runs locally with a base install.
 
 ## Skill locations
 
@@ -8,10 +12,10 @@ Skills are discovered from two directories, in priority order:
 
 | Location | Scope |
 |---|---|
-| `<ledger-dir>/.agents/skills/` | Project-level — applies to one ledger |
-| `~/.config/bea/skills/` | User-level — applies to all ledgers |
+| `./.agents/skills/` | Project-level: relative to the directory you run `bea ask` from, not the ledger's directory |
+| `<config>/skills/` | User-level: `<config>` is `$BEA_CONFIG_DIR`, else `$XDG_CONFIG_HOME/bea`, else `~/.config/bea` |
 
-When the same skill `name` exists in both places, the project-level version wins.
+Every immediate subdirectory that contains a `SKILL.md` with a `name` and `description` is discovered. The subdirectory's own name does not matter to discovery, so renaming `test-skill` to `test-skill.bak` does **not** disable it. When the same skill `name` exists in both places, the project-level version wins. Malformed files are skipped silently.
 
 ## Creating a skill
 
@@ -59,53 +63,57 @@ When the user asks for a spending summary or monthly report:
 4. Always specify the currency next to each amount.
 ```
 
-## Testing that a skill is loaded
+## Check discovery without a model call
 
-The quickest way is to create a skill with a distinctive instruction and verify the agent follows it in `--print` mode.
+This is the deterministic test: it lists exactly what `bea ask` would index, with no API call and no model involved. Run it from the directory you run `bea ask` from. Use the interpreter of the environment that holds `bea`; for a `uv tool` install it is `$(uv tool dir)/beancount-io/bin/python`, and from a CLI checkout `uv run python` works too.
 
-**1. Create a test skill**
+```bash
+python -c "
+from cli.ask.skills import load_skills
+for s in load_skills():
+    print(f'{s.name}\t{s.path}')
+"
+```
+
+**1. Create a fixture skill**
 
 ```bash
 mkdir -p .agents/skills/test-skill
 cat > .agents/skills/test-skill/SKILL.md << 'EOF'
 ---
 name: test-skill
-description: Test skill to verify skill loading works.
+description: Test skill to verify skill discovery.
 ---
 
-IMPORTANT: Whenever the user asks any question, start your response with the exact phrase "SKILL LOADED".
+When the user asks any question, begin the answer with the phrase "SKILL LOADED".
 EOF
 ```
 
-**2. Run a quick query**
+Run the inspection: `test-skill` is listed with its path.
+
+**2. Disable it by moving it out of the scanned directory**
 
 ```bash
-uv run bea ask "what accounts do I have?" --print
+mkdir -p ../disabled-skills
+mv .agents/skills/test-skill ../disabled-skills/
 ```
 
-If the response starts with `SKILL LOADED`, the skill was picked up and injected into the system prompt correctly.
+Run the inspection again: `test-skill` is gone. Renaming it inside `.agents/skills/` would leave it discovered.
 
-**3. Confirm it's absent without the skill**
+**3. Restore it**
 
 ```bash
-mv .agents/skills/test-skill .agents/skills/test-skill.bak
-uv run bea ask "what accounts do I have?" --print
-mv .agents/skills/test-skill.bak .agents/skills/test-skill
+mv ../disabled-skills/test-skill .agents/skills/
 ```
 
-The phrase should not appear this time.
+The inspection lists it again. Remove the fixture when you are done. Repeat the same steps under `<config>/skills/` to check a user-level skill, and give both copies the same `name` to see the project-level copy win.
 
-For user-level skills, use the same approach but place the skill under `~/.config/bea/skills/test-skill/SKILL.md` and verify project-level overrides it if both have the same `name`.
+## Observe a skill in use (optional, calls the model)
 
-**Debug loading without hitting the API**
+With the `[ask]` extra and a login, you can watch the model apply a discovered skill:
 
 ```bash
-uv run python -c "
-from cli.ask.skills import load_skills
-for s in load_skills():
-    print(f'Loaded: {s.name} — {s.description}')
-    print(f'Body preview: {s.body[:80]!r}')
-"
+bea ask "what accounts do I have?" --print
 ```
 
-This bypasses the LLM entirely and shows exactly which skills were found and parsed.
+Whether the answer begins with the fixture's phrase depends on the model choosing to load and follow that skill. A matching answer shows the skill was used. A missing phrase does **not** show that discovery failed: use the local inspection above for that.
