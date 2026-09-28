@@ -70,6 +70,39 @@ Both runs discovered all eight installed customer skills: `beancount-ask`,
 counted as interventions; extra corrective instructions are. Elapsed time
 includes operator review, verifier commands, and separate statement branches.
 
+## Reconciliation preview replay
+
+After the preview correction above, beancount-reconcile began requiring
+preview balances and residuals to come from one executed `bea query`. The query's
+decimal arithmetic is shown, and prose must copy its operands and results. The
+reconcile checkpoint was then replayed on 2026-09-28 from source baseline
+`d140098b` plus that instruction change. The replay used `beancount-io==0.3.0`,
+Claude Code `2.1.283` (`claude-opus-5-5`), and Codex CLI `0.157.1`. Codex ran
+with its default model because user config was ignored; the event stream did
+not report the model name. Each client had separate synthetic workspaces,
+seeded from reconcile evals 12 and 13 with the imported August ledger, and the
+installed customer suite.
+
+| Branch | Claude Code | Codex |
+| --- | --- | --- |
+| preview, then decline (2942.00 statement) | PASS, 63s | PASS, 90s |
+| unresolved (2941.00 claimed) | PASS, 42s | PASS, 66s |
+| corrective interventions | 0 | 0 |
+
+Both previews quoted the executed read `ledger 2945.00, projected 2942.00,
+residual 0.00` and stated `2945.00 − 3.00 = 2942.00` before proposing the
+2026-09-01 assertion for 2942.00 USD. In both, declining left file hashes
+(including untracked files), HEAD, and index bytes unchanged. Both unresolved
+branches reported the executed residual `-4.00`: the ledger holds 4.00 USD more
+than the claimed balance. Neither proposed an assertion, fee, or pad, and both
+left the workspace unchanged. Each client routed the fee to
+`Expenses:Uncategorized`, flagged for refinement, because the ledger has no
+earlier Synthetic Bank entry. That follows the skill's categorization rule.
+Times are wall-clock per branch, including agent tool calls, with near-instant
+operator review. This is one supervised replay per client of one checkpoint.
+It shows that the observed error did not recur here. It does not establish
+general arithmetic reliability.
+
 ## What the checkpoints establish
 
 The initialized ledger contains one 1000 USD opening transaction. The import adds

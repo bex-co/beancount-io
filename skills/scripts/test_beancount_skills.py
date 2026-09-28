@@ -433,6 +433,7 @@ class TestBeaRecipes(unittest.TestCase):
                 "beancount-init/SKILL.md",
                 "beancount-init/references/bea-cli.md",
                 "beancount-import/references/bea-import.md",
+                "beancount-reconcile/SKILL.md",
             )
         )
 
@@ -639,6 +640,30 @@ class TestBeaRecipes(unittest.TestCase):
         self.values.update(assertion_date="2023-01-02", amount="87.50 USD")
         self.recipe("balance")
         self.recipe("check")
+
+    def test_tie_out_computes_preview_balance_and_signed_residual_read_only(self):
+        # The first-month rehearsal's imported August ledger, plus postings the
+        # tie-out must exclude: another currency and activity after the period.
+        fixture = SUITE / "beancount-reconcile" / "evals" / "files" / "eval12_ledger.beancount"
+        ledger = self.books / "main.bean"
+        ledger.write_text(
+            re.sub(r"^(\S+ open \S+) USD$", r"\1 USD,EUR", fixture.read_text(), flags=re.M)
+            + '2026-08-20 * "Foreign"\n  Assets:Checking 7.00 EUR\n  Equity:OpeningBalances\n'
+            + '2026-09-01 * "Next period"\n  Assets:Checking -9.00 USD\n  Expenses:Fees\n'
+        )
+        before = ledger.read_bytes()
+        self.values.update(
+            ledger=str(ledger), account="Assets:Checking", currency="USD",
+            assertion_date="2026-09-01", statement_ending="2942.00", proposed_net="-3.00",
+        )
+        self.assertEqual(self.recipe("tie-out")["rows"], [["2945.00", "2942.00", "0.00"]])
+        # Unresolved statement: nothing proposed, ledger 4.00 above the claim.
+        self.values.update(statement_ending="2941.00", proposed_net="0.00")
+        self.assertEqual(self.recipe("tie-out")["rows"], [["2945.00", "2945.00", "-4.00"]])
+        # Several proposed entries: the net is a parenthesized decimal sum.
+        self.values.update(statement_ending="2940.00", proposed_net="(-3.00 + -1.00)")
+        self.assertEqual(self.recipe("tie-out")["rows"], [["2945.00", "2941.00", "-1.00"]])
+        self.assertEqual(ledger.read_bytes(), before)
 
 
 def load_tests(loader, tests, pattern):

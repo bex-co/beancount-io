@@ -1,0 +1,28 @@
+;; fixture — beancount-reconcile eval12/13 (first-month rehearsal: imported August, fee not yet recorded)
+option "operating_currency" "USD"
+
+2026-08-01 open Assets:Checking USD
+2026-08-01 open Income:Salary USD
+2026-08-01 open Expenses:Groceries USD
+2026-08-01 open Expenses:Dining USD
+2026-08-01 open Expenses:Fees USD
+2026-08-01 open Equity:OpeningBalances USD
+
+2026-08-01 * "Opening balance"
+  Assets:Checking          1000.00 USD
+  Equity:OpeningBalances
+
+2026-08-05 * "Synthetic Employer" "August salary"
+  import-id: "bank:august-salary"
+  Assets:Checking          2000.00 USD
+  Income:Salary
+
+2026-08-10 * "Synthetic Market" "Groceries"
+  import-id: "bank:august-groceries"
+  Assets:Checking           -50.00 USD
+  Expenses:Groceries
+
+2026-08-15 * "Synthetic Cafe" "Coffee"
+  import-id: "bank:august-coffee"
+  Assets:Checking            -5.00 USD
+  Expenses:Dining

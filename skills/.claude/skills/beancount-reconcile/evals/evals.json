@@ -1,6 +1,6 @@
 {
   "skill_name": "beancount-reconcile",
-  "notes": "Each eval maps the fixture ledger to ./ledger.beancount and the fixture statement to ./statement.csv in a scratch dir. Expectations are graded against the skill's reported diff and any appended entries. Validate with `bea check` when bea is installed; oracle/CI uses `uv run --project cli bean-check` separately. Do not `pip install beancount` as the customer path. eval1-7 cover the happy path and each mismatch class; eval8-10 are failure-mode checks.",
+  "notes": "Each eval maps the fixture ledger to ./ledger.beancount and the fixture statement to ./statement.csv in a scratch dir. Expectations are graded against the skill's reported diff and any appended entries. Validate with `bea check` when bea is installed; oracle/CI uses `uv run --project cli bean-check` separately. Do not `pip install beancount` as the customer path. eval1-7 cover the happy path and each mismatch class; eval8-10 are failure-mode checks; eval12-13 replay the first-month rehearsal's reconcile preview (reproducible tie-out arithmetic and a signed unresolved residual).",
   "evals": [
     {
       "id": 1,
@@ -184,6 +184,39 @@
         "The period-end assertion uses `bea add balance` dated the day after the statement's last day",
         "No ledger text is appended by hand on the bea path",
         "Verification runs `bea check` and passes"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "reproducible-preview-arithmetic",
+      "prompt": "Reconcile Assets:Checking in ./ledger.beancount against ./statement.csv (August 2026, ending balance 2942.00 USD). Show me the full proposal with the numbers behind it, then wait for my answer before writing anything.",
+      "expected_output": "Regression for the first-month rehearsal, where the preview's prose arithmetic was wrong although the ledger values were right. The three imported rows match; the 2026-08-31 Synthetic Bank -3.00 fee is missing-in-ledger and proposed; with no prior Synthetic Bank entry its other leg goes to Expenses:Uncategorized, flagged for refinement (Expenses:Fees only if the user chooses it). The proposal shows the executed `bea query` tie-out (ledger 2945.00, projected 2942.00, residual 0.00) and states 2945.00 - 3.00 = 2942.00, then proposes a 2026-09-01 balance assertion for 2942.00 USD and waits. Declining leaves ./ledger.beancount byte-for-byte unchanged.",
+      "files": [
+        "evals/files/eval12_ledger.beancount",
+        "evals/files/eval12_statement.csv"
+      ],
+      "expectations": [
+        "The proposal shows the executed query (or equivalent bea read with decimal arithmetic) and its output rows: ledger 2945.00, projected 2942.00, residual 0.00",
+        "Every arithmetic expression in the prose agrees with that output; the preview states 2945.00 - 3.00 = 2942.00 and contains no other incorrect expression",
+        "Exactly one missing-in-ledger line is proposed: 2026-08-31 -3.00 to Assets:Checking, with the other leg to Expenses:Uncategorized flagged for refinement (no prior Synthetic Bank categorization), not silently guessed",
+        "The proposed assertion is 2026-09-01 balance Assets:Checking 2942.00 USD",
+        "Nothing is written before an explicit yes; declining leaves ./ledger.beancount unchanged"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "signed-residual-unresolved",
+      "prompt": "Reconcile Assets:Checking in ./ledger.beancount against ./statement.csv for August 2026. The statement's closing balance is 2941.00 USD. I cannot explain any difference and do not approve corrective entries, padding, or assertions.",
+      "expected_output": "All three statement lines match and nothing is missing, but the executed tie-out gives ledger 2945.00, projected 2945.00, residual -4.00: the ledger holds 4.00 USD more than the statement claims. The skill reports that signed residual as unexplained, proposes no assertion, fee, pad, or adjustment, writes nothing, and does not claim the account is reconciled.",
+      "files": [
+        "evals/files/eval12_ledger.beancount",
+        "evals/files/eval13_statement.csv"
+      ],
+      "expectations": [
+        "The residual comes from an executed read and is reported as -4.00 USD (statement minus ledger), or equivalently as the ledger being 4.00 USD above the statement; the sign is not flipped",
+        "No passing-looking balance assertion is proposed for 2941.00 or 2945.00 USD",
+        "No fee, pad, or adjustment transaction is invented to absorb the difference",
+        "./ledger.beancount is unchanged and the account is not described as reconciled"
       ]
     }
   ]

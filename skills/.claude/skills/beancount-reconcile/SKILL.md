@@ -100,10 +100,25 @@ Present, in this exact order:
 2. **Diff report** — a section per class with counts, listing each line and the proposed action.
 3. **New `open` directives** — only if a proposed entry needs an account that doesn't exist yet.
 4. **Proposed transactions** — for each missing-in-ledger line, one transaction, formatted exactly as it will appear. Attach `import-id` per beancount-import's `references/dedup.md` and preserve pending/uncertain `!` flags in the JSON batch. The target-account posting is the statement amount (in ledger sign); the other leg is categorized from the ledger's own payee history (see below). Format the entry, don't just describe it.
-5. **Proposed balance assertion** — but only when the account will actually tie out. Before proposing it, compute the **tie-out**: `prior asserted balance + sum of every matched statement movement + the missing-in-ledger entries you're about to add`. Compare it to the statement's ending balance.
-   - **Ties out** (no unresolved suspects, mismatches, or duplicates): propose the `balance` assertion at the statement's ending balance, dated the **day after** the statement's last day (see "Balance-assertion date" below).
-   - **Does not tie out**: do **not** propose a passing-looking assertion, and never append a failing one — a permanently-failing `balance` directive would break the user's `bea check` on every future run. Instead show the **residual** (the difference and its sign) and tie it to the unresolved items: the residual equals the net of the reported suspects/mismatches/duplicates. Tell the user to resolve those (by hand — this skill won't edit existing entries) and re-run. Offer, only if they explicitly ask, to append the assertion as a commented-out `; 2026-06-01 balance …` tripwire.
-6. A clear **yes/no** prompt.
+5. **Tie-out calculation** — the query that produced the numbers and its output (see "Reproducible tie-out arithmetic" below). The ledger balance, projected balance and **residual** (`statement ending − projected ledger`, signed) come from that output, not from prose arithmetic.
+6. **Proposed balance assertion** — only when the executed residual is exactly zero and no suspects, mismatches, or duplicates remain.
+   - **Ties out**: propose the `balance` assertion at the statement's ending balance, dated the **day after** the statement's last day (see "Balance-assertion date" below).
+   - **Does not tie out**: do **not** propose a passing-looking assertion, and never append a failing one — a permanently-failing `balance` directive would break the user's `bea check` on every future run. Instead show the signed **residual** and tie it to the unresolved items: the residual equals the net of the reported suspects/mismatches/duplicates, or is unexplained when there are none. Never invent a fee, pad, or adjustment to absorb it. Tell the user to resolve those (by hand — this skill won't edit existing entries) and re-run. Offer, only if they explicitly ask, to append the assertion as a commented-out `; 2026-06-01 balance …` tripwire.
+7. A clear **yes/no** prompt.
+
+#### Reproducible tie-out arithmetic
+
+Every balance, sum, and residual in the proposal must be reproducible by the user. Mental or prose arithmetic has produced wrong expressions next to correct ledger values, so compute with the ledger engine's decimal arithmetic in one read and quote its output:
+
+<!-- recipe: tie-out -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT sum(number) AS ledger, sum(number) + $proposed_net AS projected, $statement_ending - (sum(number) + $proposed_net) AS residual WHERE account = '$account' AND currency = '$currency' AND date < $assertion_date"
+```
+
+- `$proposed_net` is the signed sum of the proposed missing-in-ledger target postings, written as decimal literals (e.g. `-3.00`, or `(-54.20 + -12.00)`); use `0.00` when nothing is proposed. `$assertion_date` is the day after the statement's last day.
+- Show the command and its `rows` in the proposal. Any arithmetic you restate in prose — e.g. `2945.00 − 3.00 = 2942.00` — must copy the operands and result from that output. If the query returns no row or null, the account has no postings before that date; state that rather than assuming zero silently.
+- If a figure you wrote disagrees with the output, correct it before asking for approval. After any revision, rerun the query; never carry numbers over from an earlier draft.
+- The residual's sign is part of the result: negative means the ledger would hold more than the statement says; positive means less.
 
 Categorizing the other leg of a missing entry:
 
@@ -137,9 +152,17 @@ Proposed transactions:
   Assets:Bank:Checking      -12.00 USD
   Expenses:Uncategorized     12.00 USD      ; no prior match — please refine
 
+Tie-out (bea query, executed):
+  SELECT sum(number) AS ledger, sum(number) + (-54.20 + -12.00) AS projected,
+         1203.80 - (sum(number) + (-54.20 + -12.00)) AS residual
+  WHERE account = 'Assets:Bank:Checking' AND currency = 'USD' AND date < 2026-06-01
+  → ledger 1297.00, projected 1230.80, residual -27.00
+  1297.00 − 66.20 = 1230.80; 1203.80 − 1230.80 = −27.00 (ledger 27.00 above statement)
+
 Statement ending balance: 1,203.80 USD, as of end of 2026-05-31.
-Balance assertion: withheld until the reported suspect and amount mismatch
-are resolved. Show the remaining residual from the queried ledger.
+Balance assertion: withheld. The −27.00 residual equals the net of the
+reported suspect (−25.00: refund in ledger only) and amount mismatch
+(−2.00: ledger gas 40.00 vs statement 42.00).
 
 Append these to ./ledger.beancount? (yes/no)
 ```
