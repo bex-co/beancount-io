@@ -1,6 +1,6 @@
 # w5 · m11 — Publish the CLI fixes required by the migration journey
 
-**Worker:** worker1 **Goal:** users installing from PyPI or Homebrew receive the migrated-history deduplication and empty-lot-cost response fixes **Status:** in progress (t001–t003 done)
+**Worker:** worker1 **Goal:** users installing from PyPI or Homebrew receive the migrated-history deduplication and empty-lot-cost response fixes **Status:** in progress (t001–t004 done)
 
 **Estimate:** 3h15m implementation; 5h including standing closing tasks (8 tasks). Priority 1 in the approved proposal.
 
@@ -11,7 +11,7 @@
 | t001 | Prepare the release version and user-facing change record — **DONE** | 45m | — |
 | t002 | Cover migration identities and empty lot costs in installed smoke checks — **DONE** | 60m | w5/m11/t001 |
 | t003 | Validate the exact release artifacts through existing installation gates — **DONE** | 45m | w5/m11/t002 |
-| t004 | Publish and verify the CLI on PyPI and Homebrew | 45m | w5/m11/t003 |
+| t004 | Publish and verify the CLI on PyPI and Homebrew — **DONE** | 45m | w5/m11/t003 |
 | t005 | Adoption surface | 25m | w5/m11/t004 |
 | t006 | Simplify | 20m | w5/m11/t005 |
 | t007 | Test coverage | 45m | w5/m11/t005, w5/m11/t006 |
@@ -56,3 +56,13 @@
   - `scripts/test-homebrew.sh` passed on the sdist.
 - **CI:** the `CI (cli)` run `36442659256` on `152ace62` passed. It covered the unit suite and the full installation matrix: wheel and sdist on ubuntu, macOS and Windows with Python 3.12 and 3.14, plus Homebrew on macOS and ubuntu.
 - **Tag build:** the release workflow rebuilds artifacts from the tag and re-runs the same gates, so the published hashes are recorded after t004.
+
+### Publication (t004), 2026-09-28
+
+- **Tag:** `cli-v0.3.1` on `7d5d4acf` (`main`). Its `cli/` tree is identical to the validated `152ace62`.
+- **Workflow:** `Release (cli)` run `36445445618` succeeded. It ran build and validate, the full installation matrix, and publish to both channels. The post-publication checks ("Verify published PyPI install" on ubuntu, macOS and Windows; "Verify published Homebrew install" on macOS and ubuntu) all passed.
+- **PyPI:** `beancount-io` 0.3.1 serves the wheel (sha256 `93a66aea…c81c76`) and the sdist (sha256 `9b1b6823…fdaa49`). Both are byte-identical to the t003 candidates.
+- **Homebrew:** `bex-co/homebrew-tap` `Formula/bea.rb` declares version `0.3.1` and pins that PyPI sdist by the same sha256.
+- **Independent check:** a clean `uv tool install beancount-io==0.3.1` from public PyPI in an isolated tool directory reported `bea 0.3.1` and passed the 94-command installed smoke, including the migrated-history and empty-lot-cost checks. Homebrew public installs were verified by the workflow's published-install jobs; this machine's existing `bea` keg was not modified.
+- **Release notes:** the GitHub Release at `cli-v0.3.1` carries the practical-fix notes from `cli/docs/RELEASING.md`.
+- **m10:** `beancount-io` 0.3.1 is the published release that satisfies m10's recorded prerequisite. m10's own published-install rehearsals, guide caveat update, and closeout remain in m10.
