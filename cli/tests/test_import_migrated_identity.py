@@ -188,3 +188,29 @@ def test_reused_native_bank_id_with_changed_payee_is_still_a_conflict(tmp_path: 
 
     assert done.returncode == 0, done.stderr
     assert _statuses(json.loads(done.stdout)["data"]) == ["conflict"]
+
+
+def test_migration_written_with_the_older_two_decimal_digest_still_matches(tmp_path: Path) -> None:
+    # Before exact amounts, dedup.md hashed `-54.20` with no commodity; a
+    # migration done then still owns its rows after an upgrade.
+    older = hashlib.sha256(f"2026-03-08|-54.20|TRADER JOES #123 SEATTLE WA|{CHECKING}".encode()).hexdigest()[:16]
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(MIGRATED.replace(f"monarch:sha256:{GROCERY}", f"monarch:sha256:{older}"))
+    before = ledger.read_bytes()
+
+    data = _import(tmp_path, ledger, "2026-03-08,TRADER JOES #123 SEATTLE WA,-54.20\n", CHECKING, "--apply")
+
+    assert _statuses(data) == ["duplicate"] and data["written"] == 0
+    assert ledger.read_bytes() == before
+
+
+def test_every_documented_migration_prefix_matches(tmp_path: Path) -> None:
+    for prefix in ("mint", "qbo"):
+        ledger = tmp_path / f"{prefix}.bean"
+        ledger.write_text(MIGRATED.replace("monarch:sha256:", f"{prefix}:sha256:"))
+        before = ledger.read_bytes()
+
+        data = _import(tmp_path, ledger, "2026-03-10,TRANSFER FROM CHECKING,500.00\n", SAVINGS, "--apply")
+
+        assert _statuses(data) == ["duplicate"], prefix
+        assert ledger.read_bytes() == before, prefix
