@@ -56,8 +56,6 @@
 
 - [191 — Make Starter ledgers start without sample money](./191.md) — 45–60m; new Starter ledgers retain account scaffolding without the example transaction. A2; backend-v2.
 
-- [190 — Remove the stale CLI version from the root README](./190.md) — ~20m; use Active CLI and link to current CLI releases. Independent of m29.
-
 ## Dropped
 
 - ~~**016**~~ — Commodity accounts are shown as an unlabelled USD cost basis — and a commodity with no cost renders as $0.00 — dropped 2026-09-26: promotion to [m11](./done/m11/README.md) completed; the milestone's verification record carries the outcome, and w4/m26 superseded its valuation basis.
