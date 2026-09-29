@@ -53,6 +53,45 @@ async function withTimeout<T>(
   ]);
 }
 
+/** Thrown by HTTP probes so the warning can carry the upstream status. */
+class HealthProbeHttpError extends Error {
+  constructor(readonly status: number) {
+    super(`HTTP ${status}`);
+  }
+}
+
+const MAX_LOGGED_REASON_LENGTH = 200;
+
+/**
+ * Compact log fields for a failed probe: a bounded single-line reason plus an
+ * error code or HTTP status when one is known. Never the error object itself —
+ * stacks, causes, and request/response dumps stay out of the routine warning.
+ */
+function describeHealthFailure(error: unknown): {
+  reason: string;
+  code?: string;
+  status?: number;
+} {
+  const message = error instanceof Error ? error.message : String(error);
+  const line = message.replace(/\s+/g, " ").trim() || "unknown error";
+  const reason =
+    line.length > MAX_LOGGED_REASON_LENGTH
+      ? `${line.slice(0, MAX_LOGGED_REASON_LENGTH)}…`
+      : line;
+  if (error instanceof HealthProbeHttpError) {
+    return { reason, status: error.status };
+  }
+  // Node network errors carry `code`; fetch wraps them in `cause`.
+  const code =
+    errorCode(error) ?? errorCode((error as { cause?: unknown })?.cause);
+  return code ? { reason, code } : { reason };
+}
+
+function errorCode(error: unknown): string | undefined {
+  const code = (error as { code?: unknown } | null | undefined)?.code;
+  return typeof code === "string" && code.length <= 64 ? code : undefined;
+}
+
 async function checkService(
   name: string,
   fn: () => Promise<void>,
@@ -64,7 +103,8 @@ async function checkService(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     healthLogger.warn(`Health check failed for ${name}`, {
-      error: errorMessage,
+      service: name,
+      ...describeHealthFailure(error),
     });
     return {
       status: "unhealthy",
@@ -99,12 +139,12 @@ export function setHealthzHandler(
       }),
       checkService("ledger", async () => {
         const res = await fetch(`${config.favaApi.baseUrl}/healthz`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new HealthProbeHttpError(res.status);
       }),
       checkService("gitea", async () => {
         const url = `${config.gitea.internalBaseUrl}/api/healthz`;
         const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new HealthProbeHttpError(res.status);
       }),
     ]);
 
@@ -127,9 +167,10 @@ export function setHealthzHandler(
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      healthLogger.warn("Failed to read AI health check cache", {
-        error: errorMessage,
-      });
+      healthLogger.warn(
+        "Failed to read AI health check cache",
+        describeHealthFailure(error),
+      );
       aiFeature = { status: "unchecked", latency_ms: 0, error: errorMessage };
     }
 
