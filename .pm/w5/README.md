@@ -19,7 +19,7 @@
 
 - [ ] **m10** — [Migrate an export and continue importing without duplicate transfers](./blocked/m10/README.md) (9 tasks, ~6h) ← `/pm-brainstorm for w5`, both proposals approved with `$pm for both to w5` on 2026-09-28 — **blocked:** closeout needs a published CLI release with w5/020 (`7302b907`); t001–t008 shipped
 
-- [ ] **m11** — [Publish the CLI fixes required by the migration journey](./m11/README.md) (8 tasks, ~5h) ← `/pm-brainstorm more for w5`, all three proposals approved with `$pm all for w5` on 2026-09-28
+- [x] **m11** — [Publish the CLI fixes required by the migration journey](./done/m11/README.md) (8 tasks, ~5h) ← `/pm-brainstorm more for w5`, all three proposals approved with `$pm all for w5` on 2026-09-28
 
 ## Inbox
 
@@ -33,7 +33,7 @@ No open inbox items.
 
 Blocked milestones live under `blocked/` with their reason and unblock condition in a `## Blocked` section; they keep their task IDs and return to `wN/mN/` when work can resume.
 
-As of 2026-09-28, execute m11 first, then inbox 021 and 022; the inbox notes have no hard dependency on the release. Inbox 019 and 020 are complete; m10 remains blocked until the actual CLI release prerequisite is met, then resumes its own published-install client verification and closeout. m9 and inbox 016–018 are complete. m5 and 015 retain their recorded external unblock conditions. w5 remains a general-purpose adoption queue.
+As of 2026-09-28, m11 and inbox 019–022 are complete. `beancount-io` 0.3.1 (tag `cli-v0.3.1`) is published to PyPI and Homebrew, which meets m10's release prerequisite; m10 resumes its own published-install client verification and closeout. m9 and inbox 016–018 are complete. m5 and 015 retain their recorded external unblock conditions. w5 remains a general-purpose adoption queue.
 
 The earlier sequence was m3 → m4 → m5. Real-client MCP journeys run against the hosted endpoint, not a duplicate stack. m3 and m4 have no dependency on each other; m5/t001 depends on m4/t009. The customer skill installation work in m3 builds on w1/m21's completed accounting-engine integration. The larger Plaid sandbox journey remains an explicit deferred follow-up in w2/009. m5 verifies and repairs the four prompts already shipped by w2/008; it does not recreate their registration or bodies.
 
