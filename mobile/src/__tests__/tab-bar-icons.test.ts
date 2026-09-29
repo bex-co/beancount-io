@@ -7,10 +7,10 @@ const layoutPath = path.join(
   __dirname,
   "..",
   "..",
-  "app",
-  "(app)",
-  "(tabs)",
-  "_layout.tsx",
+  "src",
+  "components",
+  "ledger-tabs",
+  "index.tsx",
 );
 const layout = fs.readFileSync(layoutPath, "utf8");
 

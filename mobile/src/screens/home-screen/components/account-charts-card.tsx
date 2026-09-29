@@ -20,6 +20,7 @@ import {
   seriesToChartArray,
 } from "@/common/series-util";
 import { chartPageHeight } from "./chart-page-height";
+import { useGuest } from "@/common/guest/guest-context";
 
 /** The card's three pages, each named by its tab's translation key. */
 export type ChartKey = "netWorth" | "assets" | "liabilities";
@@ -124,6 +125,7 @@ export function AccountChartsCard({
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
   const router = useRouter();
+  const guest = useGuest();
   const [range, setRange] = useState<TimeRange>("6M");
   // Tallest status line any page has shown, so switching tabs never moves the
   // pager: the line sits above it, outside the measured page header.
@@ -147,7 +149,11 @@ export function AccountChartsCard({
   const seeAll = (
     <PressableScale
       style={styles.seeAll}
-      onPress={() => router.navigate({ pathname: "/accounts" })}
+      onPress={() =>
+        guest
+          ? guest.navigate("accounts")
+          : router.navigate({ pathname: "/accounts" })
+      }
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={t("seeAll")}

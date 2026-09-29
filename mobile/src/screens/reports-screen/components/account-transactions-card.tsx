@@ -20,6 +20,7 @@ import { TimeRange } from "@/common/series-util";
 import { selectAccountTransactions } from "../selectors/select-account-transactions";
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { selectCardLoadState } from "@/common/apollo/card-load-state";
+import { useGuest } from "@/common/guest/guest-context";
 
 // Pull enough recent transactions to cover the selected range client-side.
 // Matches the interim approach in spending-card.tsx (no account-filter query).
@@ -75,6 +76,7 @@ export function AccountTransactionsCard({
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const router = useRouter();
+  const guest = useGuest();
 
   const { data, loading, error, refetch } = useGetLedgerJournalQuery({
     variables: {
@@ -91,7 +93,7 @@ export function AccountTransactionsCard({
   // Keep this card in sync with the report's pull-to-refresh.
   useEffect(() => {
     if (refreshing) {
-      refetch();
+      void refetch().catch(() => undefined);
     }
   }, [refreshing, refetch]);
 
@@ -114,7 +116,9 @@ export function AccountTransactionsCard({
         hasData: data !== undefined,
         error: error,
       }) === "failed" ? (
-        <CardLoadFailure onRetry={() => void refetch()} />
+        <CardLoadFailure
+          onRetry={() => void refetch().catch(() => undefined)}
+        />
       ) : loading && entries.length === 0 ? (
         <LoadingTile height={160} mx={16} />
       ) : (
@@ -128,7 +132,8 @@ export function AccountTransactionsCard({
                 entry={entry}
                 onPress={
                   isJournalTransaction(entry)
-                    ? () => openTransactionDetail(router, entry)
+                    ? () =>
+                        openTransactionDetail(router, entry, undefined, guest)
                     : undefined
                 }
               />

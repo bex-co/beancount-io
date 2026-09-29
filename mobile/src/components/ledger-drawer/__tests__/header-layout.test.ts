@@ -14,6 +14,9 @@ type Node = {
   children: Node[];
 };
 let fontScale = 1;
+let guest: { ledgerId: string } | null = null;
+let drawerOpens = 0;
+let notificationReads = 0;
 const react = {
   createElement(type: any, props: any, ...children: any[]) {
     return typeof type === "function"
@@ -59,11 +62,24 @@ function loadComponent(file: string): any {
       if (id.startsWith("@/common/hooks/use-translations"))
         return { useTranslations: () => ({ t: (key: string) => key }) };
       if (id.endsWith("use-ledger-errors"))
-        return { useLedgerErrors: () => ({ count: 0 }) };
+        return {
+          useLedgerErrors: () => {
+            notificationReads += 1;
+            return { count: 0 };
+          },
+        };
+      if (id === "@/common/guest/guest-context")
+        return { useGuest: () => guest };
       if (id.startsWith("@/common/hooks"))
         return { useThemeStyle: (fn: any) => fn({}) };
       if (id === "./ledger-drawer-context")
-        return { useLedgerDrawer: () => ({ openDrawer() {} }) };
+        return {
+          useLedgerDrawer: () => ({
+            openDrawer() {
+              drawerOpens += 1;
+            },
+          }),
+        };
       if (id === "../menu-button")
         return loadComponent(
           path.join(__dirname, "../../menu-button/index.tsx"),
@@ -88,6 +104,19 @@ const buttons = (node: Node): Node[] => [
 ];
 
 describe("tab header layout contract", () => {
+  it("opens the shared drawer without mounting account notifications", () => {
+    guest = { ledgerId: "open_ledger/example" };
+    drawerOpens = 0;
+    notificationReads = 0;
+    const tree: Node = LedgerDrawerHeader({ title: "Reports" });
+    const controls = buttons(tree);
+    expect(controls.length).toBe(1);
+    expect(controls[0].props.accessibilityLabel).toBe("openLedgerDrawer");
+    controls[0].props.onPress();
+    expect(drawerOpens).toBe(1);
+    expect(notificationReads).toBe(0);
+    guest = null;
+  });
   for (const [scale, expectedHeight] of [
     [1, 50],
     [1.4, 58],

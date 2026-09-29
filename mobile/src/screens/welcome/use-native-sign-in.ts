@@ -20,25 +20,33 @@ export type NativeSignIn = {
  * launcher already refuses to open a second browser; the guard here only keeps
  * a second tap from moving the spinner to the wrong button.
  */
-export function useNativeSignIn(): NativeSignIn {
+export function useNativeSignIn({
+  onStart,
+  onSettled,
+}: { onStart?: () => void; onSettled?: () => void } = {}): NativeSignIn {
   const [pendingFlow, setPendingFlow] = useState<NativeSignInFlow | null>(null);
   const [failure, setFailure] = useState<NativeSignIn["failure"]>(null);
   const running = useRef(false);
 
-  const start = useCallback((flow: NativeSignInFlow) => {
-    if (running.current) return;
-    running.current = true;
-    setPendingFlow(flow);
-    setFailure(null);
+  const start = useCallback(
+    (flow: NativeSignInFlow) => {
+      if (running.current) return;
+      running.current = true;
+      onStart?.();
+      setPendingFlow(flow);
+      setFailure(null);
 
-    void runNativeSignIn(flow, startNativeAuthorization).then((outcome) => {
-      running.current = false;
-      setPendingFlow(null);
-      if (outcome !== "completed" && outcome !== "cancelled") {
-        setFailure({ flow, reason: outcome });
-      }
-    });
-  }, []);
+      void runNativeSignIn(flow, startNativeAuthorization).then((outcome) => {
+        running.current = false;
+        setPendingFlow(null);
+        onSettled?.();
+        if (outcome !== "completed" && outcome !== "cancelled") {
+          setFailure({ flow, reason: outcome });
+        }
+      });
+    },
+    [onStart, onSettled],
+  );
 
   return { pendingFlow, failure, start };
 }

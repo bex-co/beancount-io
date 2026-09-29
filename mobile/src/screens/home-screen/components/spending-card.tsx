@@ -17,6 +17,7 @@ import {
 import { selectSpendingCompare } from "@/screens/home-screen/selectors/select-spending-compare";
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { selectCardLoadState } from "@/common/apollo/card-load-state";
+import { useGuest } from "@/common/guest/guest-context";
 
 // Pull enough recent transactions to cover this + last month client-side.
 // TODO: replace with a proper expenses-only monthly series once the backend
@@ -55,10 +56,15 @@ export function SpendingCard({
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const router = useRouter();
+  const guest = useGuest();
 
   // `navigate` rather than `push`: Reports is a tab, so this switches to it and
   // leaves Home on its own stack with its scroll position intact.
   const openReports = () => {
+    if (guest) {
+      guest.navigate("reports");
+      return;
+    }
     router.navigate({ pathname: "/reports" });
   };
 
@@ -77,7 +83,7 @@ export function SpendingCard({
 
   useEffect(() => {
     if (refreshSignal > 0 && ledgerId) {
-      refetch();
+      void refetch().catch(() => undefined);
     }
   }, [refreshSignal, ledgerId, refetch]);
 
@@ -98,7 +104,9 @@ export function SpendingCard({
         hasData: data !== undefined,
         error: error,
       }) === "failed" ? (
-        <CardLoadFailure onRetry={() => void refetch()} />
+        <CardLoadFailure
+          onRetry={() => void refetch().catch(() => undefined)}
+        />
       ) : loading && entries.length === 0 ? (
         <LoadingTile height={BAR_CHART_HEIGHT} mx={16} />
       ) : (

@@ -1,3 +1,4 @@
+import { useGuest } from "@/common/guest/guest-context";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -13,12 +14,11 @@ import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useSession } from "@/common/hooks/use-session";
 import { getPrimaryCurrency } from "@/common/currency-util";
 import { BalanceChartCard } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
-import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
+import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { useAccountReport } from "@/screens/accounts-screen/hooks/use-account-report";
 import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
 import { selectTrialBalanceAccount } from "@/components/account-list/select-trial-balance";
@@ -122,19 +122,17 @@ const AccountDetailScreenImpl = ({
 }: {
   account: string;
 }): JSX.Element => {
-  const { userId } = useSession();
   const ledgerId = useLedgerGuard();
   const router = useRouter();
+  const guest = useGuest();
   const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
   // `.name` is the *resolved* theme — `themeVar` itself can hold "system", so
   // comparing that to "dark" gave every system-theme user the light indicator.
   const { colorTheme: theme, name: themeName } = useTheme();
 
-  const { currencies, refetch: ledgerMetaRefetch } = useLedgerMeta(
-    userId,
-    ledgerId,
-  );
+  const { currencies, refetch: ledgerMetaRefetch } =
+    useLedgerReadContext(ledgerId);
   const currency = getPrimaryCurrency(currencies);
 
   const {
@@ -360,13 +358,13 @@ const AccountDetailScreenImpl = ({
         JournalDirectiveType | undefined;
       const onPress =
         entry && isJournalTransaction(entry)
-          ? () => openTransactionDetail(router, entry, account)
+          ? () => openTransactionDetail(router, entry, account, guest)
           : undefined;
       return (
         <AccountEntryRow row={item} currency={currency} onPress={onPress} />
       );
     },
-    [currency, itemsByKey, router, account],
+    [currency, itemsByKey, router, account, guest],
   );
 
   const renderSectionHeader = useCallback(

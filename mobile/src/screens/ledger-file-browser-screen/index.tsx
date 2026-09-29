@@ -1,3 +1,4 @@
+import { useGuest } from "@/common/guest/guest-context";
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client";
@@ -299,6 +300,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const ledgerId = useLedgerGuard();
+  const guest = useGuest();
   const { canWrite } = useLedgerAccess();
   const toast = useToast();
   const client = useApolloClient();
@@ -407,7 +409,9 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         // listing behind them repaints as soon as the refetch lands.
         void invalidateLedgerData(client, "file");
         router.push({
-          pathname: "/(app)/ledger-file-editor",
+          pathname: guest
+            ? "/examples/ledger-file-editor"
+            : "/(app)/ledger-file-editor",
           params: { path: createdPath },
         });
       } catch (createError: unknown) {
@@ -423,6 +427,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
     },
     [
       client,
+      guest,
       canWrite,
       createLedgerFile,
       currentPath,
@@ -501,7 +506,9 @@ export function LedgerFileBrowserScreen(): JSX.Element {
       updatePathStack((stack) => pushPathStack(stack, entry.path));
     } else if (isEditableTextFile(entry.name)) {
       router.push({
-        pathname: "/(app)/ledger-file-editor",
+        pathname: guest
+          ? "/examples/ledger-file-editor"
+          : "/(app)/ledger-file-editor",
         params: { path: entry.path },
       });
     }

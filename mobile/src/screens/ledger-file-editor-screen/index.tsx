@@ -1,3 +1,4 @@
+import { useGuest } from "@/common/guest/guest-context";
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -31,8 +32,7 @@ import {
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { haptics } from "@/common/haptics";
 import { useThemeStyle } from "@/common/hooks";
-import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
-import { useSession } from "@/common/hooks/use-session";
+import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
 import { useLedgerGuard } from "@/components/ledger-guard";
@@ -291,6 +291,7 @@ function ErrorBanner({
  */
 export function LedgerFileEditorScreen(): JSX.Element {
   const ledgerId = useLedgerGuard();
+  const guest = useGuest();
   const { path, initialLine } = useLocalSearchParams<{
     path?: string;
     initialLine?: string;
@@ -299,7 +300,11 @@ export function LedgerFileEditorScreen(): JSX.Element {
   // Opened by URL without a file there is nothing to edit; the Files tab lists
   // what can be opened.
   if (!path) {
-    return <Redirect href="/(app)/(tabs)/ledger" />;
+    return (
+      <Redirect
+        href={guest ? "/examples/(tabs)/ledger" : "/(app)/(tabs)/ledger"}
+      />
+    );
   }
 
   return (
@@ -327,9 +332,9 @@ function LedgerFileEditorSession({
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
+  const guest = useGuest();
   const { canWrite } = useLedgerAccess();
-  const { userId } = useSession();
-  const { currencies: operatingCurrencies } = useLedgerMeta(userId, ledgerId);
+  const { currencies: operatingCurrencies } = useLedgerReadContext(ledgerId);
 
   const beancount = isBeancountFile(path);
 
@@ -566,7 +571,7 @@ function LedgerFileEditorSession({
 
   const fileName = path.split("/").pop() ?? path;
 
-  const { errors: allErrors } = useLedgerErrors();
+  const { errors: allErrors } = useLedgerErrors(ledgerId);
   const fileErrors: FileError[] = filterFileErrors(allErrors, path).map(
     (e) => ({ message: e.message, lineno: e.lineno }),
   );
@@ -669,7 +674,9 @@ function LedgerFileEditorSession({
                 onPress={() => {
                   // Always land on Files for this labeled recovery action —
                   // history existence does not mean the prior screen is Files.
-                  router.replace("/(app)/(tabs)/ledger");
+                  router.replace(
+                    guest ? "/examples/(tabs)/ledger" : "/(app)/(tabs)/ledger",
+                  );
                 }}
               >
                 <Text style={styles.unavailableAction}>

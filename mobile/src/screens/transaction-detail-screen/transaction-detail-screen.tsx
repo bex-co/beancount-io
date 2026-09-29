@@ -1,3 +1,4 @@
+import { useGuest } from "@/common/guest/guest-context";
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useMemo } from "react";
 import {
@@ -59,7 +60,6 @@ import {
   shareLedgerUrl,
 } from "@/common/app-links/ledger-url-actions";
 import { getServerUrl } from "@/common/vars/server-url";
-import { ledgerVar } from "@/common/vars";
 import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
 
 const getStyles = (theme: ColorTheme) =>
@@ -260,14 +260,16 @@ const TransactionDetailImpl = ({
   const ledgerId = useLedgerGuard();
   const { canWrite } = useLedgerAccess();
   const router = useRouter();
+  const guest = useGuest();
   const { t, locale } = useTranslations();
   const toast = useToast();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
 
   const confirmWrite = useLedgerWrite();
-  const stashed = useReactiveVar(selectedTransactionVar);
-  const selectedLedgerId = useReactiveVar(ledgerVar);
+  const stashed = useReactiveVar(
+    guest?.selectedTransaction ?? selectedTransactionVar,
+  );
   const client = useApolloClient();
   const stashedEntry = stashed?.entry_hash === entryHash ? stashed : null;
   const shouldLoadContext = !stashedEntry || hasEditableSource(stashedEntry);
@@ -346,11 +348,11 @@ const TransactionDetailImpl = ({
       // `ledger` binds the pushed entry to this ledger, so a later ledger
       // switch cannot revive it under a different one.
       router.push({
-        pathname: "/account-detail",
+        pathname: guest ? "/examples/account-detail" : "/account-detail",
         params: { account, ledger: ledgerId },
       });
     },
-    [router, originAccount, ledgerId],
+    [router, originAccount, ledgerId, guest],
   );
 
   // A generated entry (flag `P`, `S`, …) is synthesized by a report or plugin,
@@ -359,11 +361,11 @@ const TransactionDetailImpl = ({
   const isGenerated = entry !== null && !hasEditableSource(entry);
 
   const entryLinkUrl =
-    entryHash && !isGenerated && (selectedLedgerId || ledgerId)
+    entryHash && !isGenerated && ledgerId
       ? buildLedgerUrl(
           {
             kind: "entry",
-            ledgerFullName: selectedLedgerId || ledgerId,
+            ledgerFullName: ledgerId,
             entryHash,
           },
           getServerUrl(),

@@ -1,0 +1,17 @@
+query LedgerReadContext($ledgerId: String!) {
+  getLedger(ledgerId: $ledgerId) {
+    id
+    private
+    attributes {
+      accounts
+    }
+    options {
+      nameAssets
+      nameExpenses
+      nameIncome
+      nameLiabilities
+      nameEquity
+      operatingCurrency
+    }
+  }
+}

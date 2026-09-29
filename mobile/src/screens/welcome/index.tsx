@@ -1,6 +1,6 @@
 import {
-  Dimensions,
   View,
+  ScrollView,
   StyleSheet,
   Image,
   Text,
@@ -15,18 +15,25 @@ import { useThemeStyle } from "@/common/hooks";
 import { prefersStackedLayout, useTheme } from "@/common/theme";
 import { Button } from "@/components";
 import { PressableScale } from "@/components/pressable-scale";
+import { startGuestVisit } from "@/common/guest/guest-state";
+import { getServerUrl, serverUrlOverrideVar } from "@/common/vars/server-url";
+import { useReactiveVar } from "@apollo/client";
+import { isOfficialServerUrl } from "@/common/server-url-validation";
 import {
   useNativeSignIn,
   type NativeSignIn,
 } from "@/screens/welcome/use-native-sign-in";
 
-const { height } = Dimensions.get("window");
-
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     container: {
-      height,
+      flex: 1,
       backgroundColor: theme.white,
+    },
+    content: { flexGrow: 1 },
+    artwork: {
+      flex: 1,
+      minHeight: 188,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -35,10 +42,6 @@ const getStyles = (theme: ColorTheme) =>
       width: 144,
     },
     serverButtonArea: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
       alignItems: "flex-end",
       paddingHorizontal: 12,
     },
@@ -50,11 +53,8 @@ const getStyles = (theme: ColorTheme) =>
       justifyContent: "center",
     },
     footer: {
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 60,
       paddingHorizontal: 20,
+      paddingBottom: 28,
       gap: 12,
     },
     // No fixed height: each Button already has a 44pt minimum and grows with
@@ -99,6 +99,8 @@ function failureMessageKey(
 }
 
 export function WelcomeScreen(): JSX.Element {
+  useReactiveVar(serverUrlOverrideVar);
+  const showExamples = isOfficialServerUrl(getServerUrl());
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
@@ -111,8 +113,8 @@ export function WelcomeScreen(): JSX.Element {
   const buttonStyle = stacked ? undefined : styles.flex;
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView edges={["top"]} style={styles.serverButtonArea}>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.serverButtonArea}>
         <PressableScale
           style={styles.serverButton}
           accessibilityRole="button"
@@ -123,40 +125,62 @@ export function WelcomeScreen(): JSX.Element {
         >
           <Ionicons name="settings-outline" size={24} color={theme.text01} />
         </PressableScale>
-      </SafeAreaView>
-      <Image source={require("@/assets/images/icon.png")} style={styles.icon} />
-      <View style={styles.footer}>
-        <View
-          style={[
-            styles.buttonContainer,
-            stacked && styles.buttonContainerStacked,
-          ]}
-        >
-          <Button
-            type="outline"
-            style={buttonStyle}
-            testID="welcome-sign-in"
-            loading={pendingFlow === "sign_in"}
-            disabled={busy}
-            onPress={() => start("sign_in")}
-          >
-            {t("signIn")}
-          </Button>
-          <Button
-            type="primary"
-            style={buttonStyle}
-            testID="welcome-sign-up"
-            loading={pendingFlow === "sign_up"}
-            disabled={busy}
-            onPress={() => start("sign_up")}
-          >
-            {t("signUp")}
-          </Button>
-        </View>
-        {failure && (
-          <Text style={styles.error}>{t(failureMessageKey(failure))}</Text>
-        )}
       </View>
-    </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.artwork}>
+          <Image
+            source={require("@/assets/images/icon.png")}
+            style={styles.icon}
+          />
+        </View>
+        <View style={styles.footer}>
+          {showExamples ? (
+            <Button
+              type="outline"
+              testID="welcome-try-example"
+              disabled={busy}
+              onPress={() => {
+                const serverUrl = getServerUrl();
+                if (!isOfficialServerUrl(serverUrl)) return;
+                startGuestVisit(serverUrl);
+                router.push("/examples");
+              }}
+            >
+              {t("guestTryExample")}
+            </Button>
+          ) : null}
+          <View
+            style={[
+              styles.buttonContainer,
+              stacked && styles.buttonContainerStacked,
+            ]}
+          >
+            <Button
+              type="outline"
+              style={buttonStyle}
+              testID="welcome-sign-in"
+              loading={pendingFlow === "sign_in"}
+              disabled={busy}
+              onPress={() => start("sign_in")}
+            >
+              {t("signIn")}
+            </Button>
+            <Button
+              type="primary"
+              style={buttonStyle}
+              testID="welcome-sign-up"
+              loading={pendingFlow === "sign_up"}
+              disabled={busy}
+              onPress={() => start("sign_up")}
+            >
+              {t("signUp")}
+            </Button>
+          </View>
+          {failure && (
+            <Text style={styles.error}>{t(failureMessageKey(failure))}</Text>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

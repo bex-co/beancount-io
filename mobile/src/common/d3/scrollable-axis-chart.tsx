@@ -24,6 +24,7 @@ type ScrollableAxisChartProps = {
   yScale: (value: number) => number;
   /** Currency code; ticks show its symbol, or the code when it has none. */
   currency: string;
+  axisWidth?: number;
   /** Screen-reader text alternative for the chart series. */
   accessibilityLabel?: string;
   /** `LegendItem`s for the row under the plot. */
@@ -49,6 +50,7 @@ export function ScrollableAxisChart({
   yTicks,
   yScale,
   currency,
+  axisWidth = LEFT_PADDING,
   accessibilityLabel,
   legend,
   children,
@@ -66,11 +68,11 @@ export function ScrollableAxisChart({
       <View accessible accessibilityLabel={accessibilityLabel}>
         <View style={styles.row}>
           {/* Fixed y-axis so tick labels stay put while the plot scrolls. */}
-          <Svg width={LEFT_PADDING} height={chartHeight}>
+          <Svg width={axisWidth} height={chartHeight}>
             {yTicks.map((tick: number, i: number) => (
               <SvgText
                 key={`y-${i}`}
-                x={LEFT_PADDING - 4}
+                x={axisWidth - 4}
                 y={yScale(tick) + 5}
                 fontSize={AXIS_FONT_SIZE}
                 fill={theme.text01}

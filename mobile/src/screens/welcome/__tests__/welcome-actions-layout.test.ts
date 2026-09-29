@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import vm from "vm";
 import ts from "typescript";
+import * as serverUrls from "../../../common/server-url-validation";
 import * as dynamicType from "../../../common/theme/dynamic-type";
 
 // Executes the real WelcomeScreen body. Only native hosts, the shared Button
@@ -13,6 +14,9 @@ type Node = {
   children: (Node | string)[];
 };
 let fontScale = 1;
+let guestServer = "";
+let serverUrl = "https://beancount.io/";
+let destination = "";
 let signIn: Record<string, unknown> = {
   pendingFlow: null,
   failure: null,
@@ -39,13 +43,35 @@ function loadWelcome(): any {
         return {
           Dimensions: { get: () => ({ height: 844, width: 390 }) },
           View: "View",
+          ScrollView: "ScrollView",
           Text: "Text",
           Image: "Image",
           StyleSheet: { create: (styles: unknown) => styles },
           useWindowDimensions: () => ({ fontScale }),
         };
       if (id === "@expo/vector-icons") return { Ionicons: "Icon" };
-      if (id === "expo-router") return { router: { push() {} } };
+      if (id === "expo-router")
+        return {
+          router: {
+            push(path: string) {
+              destination = path;
+            },
+          },
+        };
+      if (id === "@/common/guest/guest-state")
+        return {
+          startGuestVisit(server: string) {
+            guestServer = server;
+          },
+        };
+      if (id === "@/common/vars/server-url")
+        return {
+          getServerUrl: () => serverUrl,
+          serverUrlOverrideVar: () => serverUrl,
+        };
+      if (id === "@apollo/client")
+        return { useReactiveVar: (read: () => unknown) => read() };
+      if (id === "@/common/server-url-validation") return serverUrls;
       if (id === "react-native-safe-area-context")
         return { SafeAreaView: "SafeAreaView" };
       if (id === "@/common/hooks/use-translations")
@@ -79,17 +105,78 @@ const find = (node: Node, match: (n: Node) => boolean): Node[] => [
 ];
 function render() {
   const tree: Node = WelcomeScreen();
-  const buttons = find(tree, (n) => n.type === "Button");
+  const buttons = find(
+    tree,
+    (n) =>
+      n.props.testID === "welcome-sign-in" ||
+      n.props.testID === "welcome-sign-up",
+  );
   const row = find(tree, (n) =>
-    n.children.some((c) => typeof c === "object" && c.type === "Button"),
+    n.children.some(
+      (c) => typeof c === "object" && c.props.testID === "welcome-sign-in",
+    ),
   )[0];
   return { tree, buttons, row };
 }
 
 describe("Welcome actions at every text size", () => {
+  it("enters examples on the selected server without starting sign-in", () => {
+    let signedIn = false;
+    signIn = {
+      pendingFlow: null,
+      failure: null,
+      start() {
+        signedIn = true;
+      },
+    };
+    const { tree } = render();
+    const example = find(
+      tree,
+      (n) => n.props.testID === "welcome-try-example",
+    )[0];
+    expect(example.children).toEqual(["guestTryExample"]);
+    example.props.onPress();
+    expect(guestServer).toBe("https://beancount.io/");
+    expect(destination).toBe("/examples");
+    expect(signedIn).toBe(false);
+  });
   afterEach(() => {
+    serverUrl = "https://beancount.io/";
+    guestServer = "";
+    destination = "";
     fontScale = 1;
     signIn = { pendingFlow: null, failure: null, start() {} };
+  });
+
+  it("updates preview visibility when the effective endpoint changes", () => {
+    for (const [url, visible] of [
+      ["https://beancount.io", true],
+      ["https://BEANCOUNT.io:443/", true],
+      ["https://books.example/", false],
+      ["http://localhost:8000/", false],
+      ["https://beancount.io/custom/", false],
+      ["https://beancount.io:8443/", false],
+      ["https://beancount.io.attacker.example/", false],
+      ["https://beancount.io/", true],
+    ] as const) {
+      serverUrl = url;
+      const { tree, buttons } = render();
+      expect(
+        find(tree, (n) => n.props.testID === "welcome-try-example").length,
+      ).toBe(visible ? 1 : 0);
+      expect(buttons.length).toBe(2);
+    }
+  });
+
+  it("ignores a stale preview press after the server changes", () => {
+    const example = find(
+      render().tree,
+      (n) => n.props.testID === "welcome-try-example",
+    )[0];
+    serverUrl = "https://books.example/";
+    example.props.onPress();
+    expect(guestServer).toBe("");
+    expect(destination).toBe("");
   });
 
   for (const scale of [1, 1.235, 1.3, 2, 3.12]) {
@@ -148,8 +235,7 @@ describe("Welcome actions at every text size", () => {
     };
     const { tree, row } = render();
     const footer = find(tree, (n) => n.children.includes(row))[0];
-    const error = footer.children[1] as Node;
-    expect(footer.children[0]).toBe(row);
+    const error = footer.children[footer.children.indexOf(row) + 1] as Node;
     expect(error.type).toBe("Text");
     expect(error.children).toEqual(["signInFailed"]);
   });

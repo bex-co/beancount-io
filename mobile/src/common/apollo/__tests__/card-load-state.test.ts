@@ -53,7 +53,7 @@ describe("empty states behind a failed query", () => {
     it(`${file} shows the load failure before any empty state`, () => {
       const source = fs.readFileSync(path.join(SRC, file), "utf8");
       expect(source.includes("selectCardLoadState(")).toBe(true);
-      expect(source.includes("<CardLoadFailure onRetry=")).toBe(true);
+      expect(/<CardLoadFailure\s+onRetry=/.test(source)).toBe(true);
     });
   }
 });

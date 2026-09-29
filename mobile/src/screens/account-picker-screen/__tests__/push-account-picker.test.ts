@@ -57,6 +57,22 @@ describe("pushAccountPicker", () => {
     });
   });
 
+  it("keeps preview filter selection inside the anonymous stack", () => {
+    const router = makeRouter();
+    let selected = "";
+    pushAccountPicker(router, {
+      type: "filter",
+      preview: true,
+      current: "Assets:Cash",
+      onSelect: (account) => {
+        selected = account;
+      },
+    });
+    expect(router.pushes[0].pathname).toBe("/examples/account-picker");
+    SelectedAccount.getFn()?.("Expenses:Food");
+    expect(selected).toBe("Expenses:Food");
+  });
+
   it("allows an empty field — a caller with nothing chosen yet", () => {
     const router = makeRouter();
 

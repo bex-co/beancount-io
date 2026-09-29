@@ -1,4 +1,5 @@
 import * as SecureStore from "expo-secure-store";
+import { bindGuestAuthorization } from "../guest/guest-state";
 import {
   deserializePendingAuthorization,
   type PendingOAuthAuthorization,
@@ -9,6 +10,7 @@ const PENDING_AUTHORIZATION_KEY = "oauth-pending-authorization";
 export async function savePendingAuthorization(
   pending: PendingOAuthAuthorization,
 ): Promise<void> {
+  bindGuestAuthorization(pending.serverUrl, pending.state);
   await SecureStore.setItemAsync(
     PENDING_AUTHORIZATION_KEY,
     JSON.stringify(pending),

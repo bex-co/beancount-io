@@ -8,8 +8,9 @@ type LedgerError = {
   message: string;
 };
 
-export const useLedgerErrors = () => {
-  const ledgerId = useReactiveVar(ledgerVar);
+export const useLedgerErrors = (selectedLedgerId?: string) => {
+  const accountLedgerId = useReactiveVar(ledgerVar);
+  const ledgerId = selectedLedgerId ?? accountLedgerId;
   const { data, error, loading, refetch } = useGetLedgerErrorsQuery({
     variables: { ledgerId: ledgerId ?? "" },
     skip: !ledgerId,

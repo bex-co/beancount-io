@@ -12,7 +12,9 @@ export type AuthorizationCompletionDependencies = {
     pending: PendingOAuthAuthorization,
     code: string,
   ) => Promise<OAuthSession>;
-  persist: (session: OAuthSession) => Promise<void>;
+  persist: (session: OAuthSession, isCurrent: () => boolean) => Promise<void>;
+  contextVersion?: () => unknown;
+  canComplete?: (pending: PendingOAuthAuthorization) => boolean;
   afterPersist: (
     session: OAuthSession,
     pending: PendingOAuthAuthorization,
@@ -37,11 +39,17 @@ export function createAuthorizationCompleter(
       );
     }
 
+    const contextVersion = dependencies.contextVersion?.();
     const promise = (async () => {
       const pending = await dependencies.loadPending();
       if (!pending) {
         throw new OAuthAuthorizationError("missing_pending_request");
       }
+      const isCurrent = () =>
+        dependencies.contextVersion?.() === contextVersion &&
+        (dependencies.canComplete?.(pending) ?? true);
+      if (!isCurrent())
+        throw new OAuthAuthorizationError("authorization_context_changed");
 
       let code: string;
       try {
@@ -62,8 +70,14 @@ export function createAuthorizationCompleter(
       // Authorization codes are one-time credentials. Consume the verifier
       // before exchange so a process restart cannot replay the same callback.
       await dependencies.clearPending();
+      if (!isCurrent())
+        throw new OAuthAuthorizationError("authorization_context_changed");
       const session = await dependencies.exchange(pending, code);
-      await dependencies.persist(session);
+      if (!isCurrent())
+        throw new OAuthAuthorizationError("authorization_context_changed");
+      await dependencies.persist(session, isCurrent);
+      if (!isCurrent())
+        throw new OAuthAuthorizationError("authorization_context_changed");
       await dependencies.afterPersist(session, pending);
       return session;
     })().finally(() => {

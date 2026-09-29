@@ -4,6 +4,8 @@ import { teardownSessionCaches } from "@/common/apollo/session-teardown";
 import { defaultRuntimeServerUrl } from "@/common/server-url";
 import { oauthTokenManager } from "@/common/oauth/oauth-token-manager";
 import { clearPendingAuthorization } from "@/common/oauth/pending-authorization-storage";
+import { clearGuestVisit } from "@/common/guest/guest-state";
+import { invalidateAuthorization } from "@/common/oauth/authorization-context";
 import {
   accountUsageVar,
   flushAccountUsage,
@@ -26,6 +28,8 @@ import {
 export async function clearServerScopedState(
   options: { refreshAlreadyTerminal?: boolean } = {},
 ): Promise<void> {
+  clearGuestVisit();
+  invalidateAuthorization();
   if (options.refreshAlreadyTerminal) {
     oauthTokenManager.invalidatePendingRefreshes();
   } else {

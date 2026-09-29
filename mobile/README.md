@@ -47,6 +47,7 @@ Beancount Mobile Community Edition turns a Beancount.io ledger into a native wor
 </p>
 
 - **Understand the whole picture** — follow net worth, assets, liabilities, spending, and account-level trends.
+- **Try before signing in** — when connected to `https://beancount.io/`, choose **Try an example** on Welcome to explore the same Home, Accounts, Transactions, Reports, and Files screens used after sign-in, including account and transaction details, filters, and read-only file viewing. Shared ledger permissions hide editing controls in the preview.
 - **Set and track budgets** — give any account a spending or income target, then watch actuals against it period by period, with overages called out.
 - **Record clean transactions** — enter balanced multi-posting transactions, reuse account suggestions, and scan receipts.
 - **Investigate every entry** — search and filter the journal, inspect postings and balance context, then correct the underlying directive in a syntax-highlighted source editor with quick-insert keys (dates, flags, quotes, accounts, operating currencies) and checksum-protected saves.
@@ -59,6 +60,32 @@ Beancount Mobile Community Edition turns a Beancount.io ledger into a native wor
 - **Use your language** — the app ships with 13 locales and follows the device language when supported.
 
 ## Product tour
+
+### Try a public example
+
+When connected to `https://beancount.io/`, tap **Try an example** from a signed-out
+launch. Choose **Everyday finances**, **Company finances** (Nvidia), or
+**Crypto portfolio**, then switch between **Home**, **Accounts**, **Transactions**,
+**Reports**, and **Files**. The tabs, headers, and ledger drawer use the same layout as the signed-in app.
+Open the menu to switch examples, see the server and read-only status, sign in, or
+leave examples and return to Welcome. These are live, read-only ledgers on the server shown
+in the drawer. They use the same balances and valuation disclosures as a
+signed-in visit.
+
+**Sign In** opens the usual system-browser flow. Canceling leaves your example
+and tab selected; a successful sign-in checks access again before opening that
+tab in the full app. Account and transaction details, transaction filters, and
+file viewing work without sign-in; budgets and price updates ask for sign-in.
+Guest browsing never grants permission to change a
+ledger. Notifications, account lists, stars, and AI belong to the signed-in app.
+
+Examples and their cache are temporary and separate from your account's cache.
+A new app process starts from Welcome; sign-in continuation lasts up to ten
+minutes within the current process. Leaving examples, changing servers, or
+logging out discards it. **Try an example** is hidden on custom endpoints, and
+preview links cannot bypass that restriction. If a hosted example becomes
+unavailable, retry or choose another example. The app never silently switches
+servers.
 
 <p align="center">
   <a href="./docs/marketing-showcase/webp/09-add-transaction.webp"><img width="31%" src="./docs/marketing-showcase/webp/09-add-transaction.webp" alt="Balanced multi-posting transaction form"></a>

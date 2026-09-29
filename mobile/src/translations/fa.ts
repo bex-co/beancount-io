@@ -3,6 +3,24 @@ import type { Translations } from "../common/translation-types";
 
 export const fa: Translations = {
   ...en,
+  guestTryExample: "امتحان یک نمونه",
+  guestChooseExample: "انتخاب نمونه",
+  guestReadOnly: "نمونهٔ فقط خواندنی",
+  guestExit: "خروج از نمونه‌ها",
+  guestIntroduction:
+    "بدون حساب کاربری، گزارش‌های واقعی را بررسی کنید. این دفترها فقط خواندنی هستند.",
+  guestExample0: "امور مالی روزمره",
+  guestExample1: "امور مالی شرکت",
+  guestExample2: "سبد رمزارز",
+  guestExampleDescription0: "درآمد، هزینه، پس‌انداز و سرمایه‌گذاری.",
+  guestExampleDescription1: "صورت‌های مالی عمومی NVIDIA.",
+  guestExampleDescription2: "دارایی‌های دیجیتال، قیمت‌ها و ارزش بازار.",
+  guestConnectionError:
+    "این نمونه بارگیری نشد. اتصال را بررسی کنید و دوباره تلاش کنید.",
+  guestUnavailable:
+    "این نمونه دیگر عمومی یا در دسترس نیست. نمونهٔ دیگری انتخاب کنید.",
+  guestNoExamples:
+    "هیچ نمونهٔ عمومی در این سرور در دسترس نیست. دوباره تلاش کنید یا از صفحهٔ خوشامدگویی سرور دیگری انتخاب کنید.",
   discoveryTitle: "مرور دفترها",
   discoveryTab_yours: "دفترهای شما",
   discoveryTab_starred: "ستاره‌دار",

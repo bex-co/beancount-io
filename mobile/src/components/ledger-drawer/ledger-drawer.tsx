@@ -25,7 +25,6 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { type EdgeSwipeGestureRef } from "@/common/horizontal-swipe-owner";
 import {
@@ -38,7 +37,6 @@ import {
 } from "@/common/theme";
 import { useThemeStyle, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { ledgerVar } from "@/common/vars";
 import { getServerUrl } from "@/common/vars/server-url";
 import { buildLedgerUrl } from "@/common/app-links/build-ledger-url";
 import {
@@ -50,19 +48,14 @@ import {
   layoutDirectionFactor,
   LEADING_TEXT_ALIGN,
 } from "@/common/rtl";
-import {
-  useGetLedgerQuery,
-  useListLedgersQuery,
-} from "@/generated-graphql/graphql";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { clampProgress, settleTarget } from "./drawer-motion";
 import { LoadingTile } from "@/components/loading-tile";
 import { MenuButton } from "@/components/menu-button";
 import { SearchBar } from "@/components/search-bar";
 import {
-  DRAWER_LEDGERS_PAGE_SIZE,
+  type DrawerLedger,
   filterLedgers,
-  getDrawerLedgers,
   groupLedgersByOwner,
 } from "./drawer-ledgers";
 
@@ -240,6 +233,17 @@ const getStyles = (theme: ColorTheme) =>
       textAlign: LEADING_TEXT_ALIGN,
     },
     selectedName: { fontWeight: fontWeights.medium },
+    caption: {
+      fontSize: fontSizes.sm,
+      lineHeight: 20,
+      color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
+    },
+    guestIdentity: {
+      paddingHorizontal: gutter + space.md,
+      paddingBottom: space.sm,
+      gap: space.xs,
+    },
     skeletonRow: {
       minHeight: 48,
       justifyContent: "center",
@@ -313,11 +317,13 @@ function DrawerMenuRow({
   icon,
   label,
   onPress,
+  disabled,
 }: {
   testID: string;
   icon: React.ComponentProps<typeof Ionicons>["name"];
   label: string;
   onPress: () => void;
+  disabled?: boolean;
 }): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -327,6 +333,11 @@ function DrawerMenuRow({
       testID={testID}
       style={styles.menuItem}
       onPress={onPress}
+      disabled={disabled}
+      accessibilityState={{
+        disabled: Boolean(disabled),
+        busy: Boolean(disabled),
+      }}
       activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -337,13 +348,31 @@ function DrawerMenuRow({
   );
 }
 
-type LedgerDrawerProps = {
+export type LedgerDrawerData = {
+  ledgerId: string | null;
+  ledgers: DrawerLedger[];
+  loading: boolean;
+  error: boolean;
+  refetch: () => Promise<unknown>;
+  onSelect: (id: string) => void;
+  guest?: {
+    serverUrl: string;
+    signInLabel: string;
+    signInPending: boolean;
+    signInFailed: boolean;
+    onSignIn: () => void;
+    onExit: () => void;
+  };
+};
+
+export type LedgerDrawerProps = {
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
   /** Filled with the edge-swipe gesture so swipe owners can block it. */
   edgeSwipeRef: EdgeSwipeGestureRef;
   children: React.ReactNode;
+  data: LedgerDrawerData;
 };
 
 /** Monarch-style reveal drawer: the ledger menu is a stationary layer at the
@@ -362,6 +391,7 @@ export function LedgerDrawer({
   onClose,
   edgeSwipeRef,
   children,
+  data,
 }: LedgerDrawerProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -379,24 +409,15 @@ export function LedgerDrawer({
   const signedDrawerWidth = drawerWidth * layoutDirectionFactor();
   const insets = useSafeAreaInsets();
 
-  const ledgerId = useReactiveVar(ledgerVar);
-  // Explicit pagination matching Browse page one: the server's no-argument
-  // default silently drops ledgers Browse lists (w1/031).
-  const { data, loading, error, refetch } = useListLedgersQuery({
-    variables: { page: 1, limit: DRAWER_LEDGERS_PAGE_SIZE },
-  });
-  const ledgers = useMemo(() => data?.listLedgers ?? [], [data?.listLedgers]);
-  const listedCurrent = ledgers.find(
-    (ledger) => ledger.id === ledgerId || ledger.fullName === ledgerId,
-  );
-  const { data: selectedData } = useGetLedgerQuery({
-    variables: { ledgerId: ledgerId ?? "" },
-    skip: !open || !ledgerId || !!listedCurrent,
-  });
-  const drawerLedgers = useMemo(
-    () => getDrawerLedgers(ledgers, ledgerId, selectedData?.getLedger),
-    [ledgers, ledgerId, selectedData?.getLedger],
-  );
+  const {
+    ledgerId,
+    ledgers: drawerLedgers,
+    loading,
+    error,
+    refetch,
+    onSelect,
+    guest,
+  } = data;
   const currentLedger = drawerLedgers.find(
     (ledger) => ledger.id === ledgerId || ledger.fullName === ledgerId,
   );
@@ -548,7 +569,7 @@ export function LedgerDrawer({
 
   const handleSelect = (id: string) => {
     if (id !== ledgerId) {
-      ledgerVar(id);
+      onSelect(id);
     }
     onClose();
   };
@@ -604,6 +625,66 @@ export function LedgerDrawer({
     router.push("/(app)/settings");
   };
 
+  const canCreate = !guest && !error;
+  const emptyActionLabel = t(
+    canCreate ? "createLedgerEmptyCreate" : "discoveryRetry",
+  );
+  const navigation = (
+    <View style={styles.navSection}>
+      {guest ? (
+        <>
+          {guest.signInFailed && (
+            <Text accessibilityRole="alert" style={styles.stateText}>
+              {t("signInFailed")}
+            </Text>
+          )}
+          <DrawerMenuRow
+            testID="guest-sign-in"
+            icon="log-in-outline"
+            label={guest.signInLabel}
+            disabled={guest.signInPending}
+            onPress={() => {
+              onClose();
+              guest.onSignIn();
+            }}
+          />
+          <DrawerMenuRow
+            testID="guest-exit"
+            icon="exit-outline"
+            label={t("guestExit")}
+            onPress={() => {
+              onClose();
+              guest.onExit();
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <DrawerMenuRow
+            testID="drawer-discovery-row"
+            icon="compass-outline"
+            label={t("discoveryTitle")}
+            onPress={handleBrowsePress}
+          />
+          {ledgerId ? (
+            <DrawerMenuRow
+              testID="drawer-merchants-row"
+              icon="storefront-outline"
+              label={t("merchants")}
+              onPress={handleMerchantsPress}
+            />
+          ) : null}
+          <DrawerMenuRow
+            testID="drawer-settings-row"
+            icon="settings-outline"
+            label={t("settings")}
+            onPress={handleSettingsPress}
+          />
+        </>
+      )}
+    </View>
+  );
+
   return (
     <GestureDetector gesture={panGesture}>
       <View
@@ -642,20 +723,29 @@ export function LedgerDrawer({
             </Text>
           </View>
 
+          {guest && (
+            <View style={styles.guestIdentity}>
+              <Text style={styles.caption}>{t("guestReadOnly")}</Text>
+              <Text style={styles.caption}>{guest.serverUrl}</Text>
+            </View>
+          )}
+
           <View style={styles.sectionHeader}>
             <Text accessibilityRole="header" style={styles.sectionLabel}>
               {t("ledgers")}
             </Text>
-            <TouchableOpacity
-              testID="drawer-create-ledger-row"
-              style={styles.newButton}
-              onPress={handleCreatePress}
-              accessibilityRole="button"
-              accessibilityLabel={t("createLedgerDrawerRow")}
-            >
-              <Ionicons name="add" size={20} color={theme.primary} />
-              <Text style={styles.newButtonText}>{t("drawerNew")}</Text>
-            </TouchableOpacity>
+            {!guest && (
+              <TouchableOpacity
+                testID="drawer-create-ledger-row"
+                style={styles.newButton}
+                onPress={handleCreatePress}
+                accessibilityRole="button"
+                accessibilityLabel={t("createLedgerDrawerRow")}
+              >
+                <Ionicons name="add" size={20} color={theme.primary} />
+                <Text style={styles.newButtonText}>{t("drawerNew")}</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {showFilter ? (
@@ -718,24 +808,28 @@ export function LedgerDrawer({
               ) : (
                 <View style={styles.stateContainer}>
                   <Text style={styles.stateTitle}>
-                    {t(error ? "discoveryLoadError" : "createLedgerEmptyTitle")}
+                    {t(
+                      error
+                        ? "discoveryLoadError"
+                        : guest
+                          ? "guestNoExamples"
+                          : "createLedgerEmptyTitle",
+                    )}
                   </Text>
-                  {!error ? (
+                  {canCreate ? (
                     <Text style={styles.stateText}>
                       {t("createLedgerEmptyBody")}
                     </Text>
                   ) : null}
                   <TouchableOpacity
-                    testID={error ? "drawer-retry" : "drawer-empty-create"}
+                    testID={canCreate ? "drawer-empty-create" : "drawer-retry"}
                     style={styles.emptyAction}
-                    onPress={error ? handleRefresh : handleCreatePress}
+                    onPress={canCreate ? handleCreatePress : handleRefresh}
                     accessibilityRole="button"
-                    accessibilityLabel={t(
-                      error ? "discoveryRetry" : "createLedgerEmptyCreate",
-                    )}
+                    accessibilityLabel={emptyActionLabel}
                   >
                     <Text style={styles.emptyActionText}>
-                      {t(error ? "discoveryRetry" : "createLedgerEmptyCreate")}
+                      {emptyActionLabel}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -755,10 +849,14 @@ export function LedgerDrawer({
                     testID={`ledger-drawer-item-${item.fullName}`}
                     style={styles.selectButton}
                     onPress={() => handleSelect(item.id)}
+                    disabled={item.disabled}
                     activeOpacity={0.7}
                     accessibilityRole="button"
                     accessibilityLabel={item.fullName}
-                    accessibilityState={{ selected: isSelected }}
+                    accessibilityState={{
+                      selected: isSelected,
+                      disabled: Boolean(item.disabled),
+                    }}
                   >
                     <Text
                       style={[
@@ -768,8 +866,11 @@ export function LedgerDrawer({
                     >
                       {item.name}
                     </Text>
+                    {item.statusLabel && (
+                      <Text style={styles.caption}>{item.statusLabel}</Text>
+                    )}
                   </TouchableOpacity>
-                  {isSelected ? (
+                  {isSelected && !guest ? (
                     <MenuButton
                       testID="drawer-ledger-actions"
                       accessibilityLabel={t("drawerLedgerActions", {
@@ -827,59 +928,11 @@ export function LedgerDrawer({
                 </View>
               );
             }}
-            ListFooterComponent={
-              stacked ? (
-                <View style={styles.navSection}>
-                  <DrawerMenuRow
-                    testID="drawer-discovery-row"
-                    icon="compass-outline"
-                    label={t("discoveryTitle")}
-                    onPress={handleBrowsePress}
-                  />
-                  {ledgerId ? (
-                    <DrawerMenuRow
-                      testID="drawer-merchants-row"
-                      icon="storefront-outline"
-                      label={t("merchants")}
-                      onPress={handleMerchantsPress}
-                    />
-                  ) : null}
-                  <DrawerMenuRow
-                    testID="drawer-settings-row"
-                    icon="settings-outline"
-                    label={t("settings")}
-                    onPress={handleSettingsPress}
-                  />
-                </View>
-              ) : null
-            }
+            ListFooterComponent={stacked ? navigation : null}
           />
 
           {/* Pinned at default text sizes; enlarged text scrolls nav in the list footer. */}
-          {!stacked ? (
-            <View style={styles.navSection}>
-              <DrawerMenuRow
-                testID="drawer-discovery-row"
-                icon="compass-outline"
-                label={t("discoveryTitle")}
-                onPress={handleBrowsePress}
-              />
-              {ledgerId ? (
-                <DrawerMenuRow
-                  testID="drawer-merchants-row"
-                  icon="storefront-outline"
-                  label={t("merchants")}
-                  onPress={handleMerchantsPress}
-                />
-              ) : null}
-              <DrawerMenuRow
-                testID="drawer-settings-row"
-                icon="settings-outline"
-                label={t("settings")}
-                onPress={handleSettingsPress}
-              />
-            </View>
-          ) : null}
+          {!stacked ? navigation : null}
         </View>
 
         <Animated.View

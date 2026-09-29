@@ -17,6 +17,7 @@ import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
 import { MenuButton, type MenuButtonItem } from "../menu-button";
 import { headerTitleLineHeight, headerHeight } from "./header-layout";
 import { useLedgerDrawer } from "./ledger-drawer-context";
+import { useGuest } from "@/common/guest/guest-context";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -150,6 +151,7 @@ export function LedgerDrawerHeader({
   action?: HeaderAction | false;
 }): JSX.Element {
   const styles = useThemeStyle(getStyles);
+  const guest = useGuest();
 
   const { fontScale } = useWindowDimensions();
   const height = headerHeight(fontScale);
@@ -158,7 +160,7 @@ export function LedgerDrawerHeader({
     <View testID="tab-header" style={[styles.navBar, { height }]}>
       <View style={styles.navLeft}>
         <LedgerDrawerButton />
-        <NotificationsBellButton />
+        {!guest && <NotificationsBellButton />}
       </View>
       <Text style={styles.navTitle} numberOfLines={1}>
         {title}

@@ -16,6 +16,7 @@ import {
   type BudgetPanelRow,
 } from "@/screens/home-screen/selectors/select-budget-panel";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+import { useGuest } from "@/common/guest/guest-context";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -66,6 +67,7 @@ export function BudgetCard({
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const router = useRouter();
+  const guest = useGuest();
 
   const { groups, loading: groupsLoading } = useBudgetGroups(
     ledgerId,
@@ -78,6 +80,10 @@ export function BudgetCard({
   });
 
   const openBudget = () => {
+    if (guest) {
+      guest.requestSignIn();
+      return;
+    }
     router.push({ pathname: "/budget" });
   };
 

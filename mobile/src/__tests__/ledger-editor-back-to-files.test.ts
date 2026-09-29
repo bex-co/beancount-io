@@ -14,9 +14,11 @@ describe("missing-file Back to Files", () => {
   );
 
   it("navigates explicitly to the Files tab instead of router.back()", () => {
-    expect(source.includes('router.replace("/(app)/(tabs)/ledger")')).toBe(
-      true,
-    );
+    expect(
+      /router\.replace\(\s*guest\s*\? \"\/examples\/\(tabs\)\/ledger\"\s*: \"\/\(app\)\/\(tabs\)\/ledger\"/.test(
+        source,
+      ),
+    ).toBe(true);
     // The recovery action must not depend on canGoBack / router.back.
     const unavailableBlock = source.slice(
       source.indexOf('editorState === "unavailable"'),

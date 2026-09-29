@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { useMemo, useState } from "react";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
+import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { useBalanceSheet } from "@/screens/home-screen/hooks/use-balance-sheet";
 import { useBalanceSheetBasis } from "@/screens/home-screen/hooks/use-balance-sheet-basis";
 import { useLedgerPrices } from "@/common/hooks/use-ledger-prices";
@@ -35,7 +35,7 @@ import { getPrimaryCurrency } from "@/common/currency-util";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
 import { AddTransactionCallback } from "@/common/globalFnFactory";
-import { useSession } from "@/common/hooks/use-session";
+import { useGuest } from "@/common/guest/guest-context";
 import { useThemeStyle } from "@/common/hooks";
 import { useTheme } from "@/common/theme";
 import {
@@ -55,7 +55,7 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 const HomeScreenImpl = (): JSX.Element => {
-  const { userId } = useSession();
+  const guest = useGuest();
   const { t, locale } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -67,7 +67,7 @@ const HomeScreenImpl = (): JSX.Element => {
     refetch: ledgerMetaRefetch,
     data: ledgerMeta,
     error: ledgerMetaError,
-  } = useLedgerMeta(userId, ledgerId);
+  } = useLedgerReadContext(ledgerId);
 
   const currency = getPrimaryCurrency(currencies);
   // One balance-sheet query feeds all three curves on the card. Home is the
@@ -184,6 +184,8 @@ const HomeScreenImpl = (): JSX.Element => {
         basisRefetch(),
         pricesRefetch(),
       ]);
+    } catch {
+      // Query errors render in the cards or the guest access boundary.
     } finally {
       setRefreshing(false);
     }
@@ -233,7 +235,7 @@ const HomeScreenImpl = (): JSX.Element => {
       />
       {showStale ? <StaleDataBanner /> : null}
       <DashboardScrollView refreshing={refreshing} onRefresh={onRefresh}>
-        {config.features.agentChat && <AskAiCard />}
+        {!guest && config.features.agentChat && <AskAiCard />}
         <AccountChartsCard
           currency={currency}
           netWorthSeries={netWorthSeries}
@@ -264,7 +266,7 @@ const HomeScreenImpl = (): JSX.Element => {
 
         <BudgetCard ledgerId={ledgerId} refreshSignal={refreshSignal} />
 
-        <FeedCard refreshSignal={refreshSignal} />
+        {!guest && <FeedCard refreshSignal={refreshSignal} />}
       </DashboardScrollView>
     </View>
   );

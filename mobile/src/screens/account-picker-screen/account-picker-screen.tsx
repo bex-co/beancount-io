@@ -1,3 +1,4 @@
+import { useGuest } from "@/common/guest/guest-context";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
@@ -17,7 +18,7 @@ import {
   useTheme,
 } from "@/common/theme";
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
-import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
+import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { groupAccountsByRoot } from "@/common/ledger-meta-utils";
 import { splitAccountLeaf } from "@/common/account-util";
 import {
@@ -39,7 +40,6 @@ import {
   initialScrollRetryState,
   scrollRetryAfterFailure,
 } from "./scroll-to-selected";
-import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { Ionicons } from "@expo/vector-icons";
@@ -237,7 +237,7 @@ const AccountRow = memo(function AccountRow({
 
 function AccountPickerScreenComponent(): JSX.Element {
   const router = useRouter();
-  const { userId } = useSession();
+  const guest = useGuest();
   const ledgerId = useLedgerGuard();
   const { type, selectedItem } = useLocalSearchParams<{
     type: string;
@@ -255,9 +255,7 @@ function AccountPickerScreenComponent(): JSX.Element {
 
   // Home/Accounts/Reports have usually already fetched this, so render from
   // cache and refresh behind the list instead of skeletoning on every open.
-  const { assets, expenses, loading } = useLedgerMeta(userId ?? "", ledgerId, {
-    fetchPolicy: "cache-and-network",
-  });
+  const { assets, expenses, loading } = useLedgerReadContext(ledgerId);
 
   const [query, setQuery] = useState("");
   const [activeRoot, setActiveRoot] = useState<string | null>(ALL_ROOTS);
@@ -268,7 +266,7 @@ function AccountPickerScreenComponent(): JSX.Element {
   // under the user as the screen dismisses; `now` doubles as the baseline for
   // the time-to-select the confirm event reports.
   const [ranking] = useState<RankingContext>(() => ({
-    usage: usageFor(accountUsageVar(), ledgerId),
+    usage: guest ? {} : usageFor(accountUsageVar(), ledgerId),
     now: Date.now(),
   }));
 
@@ -436,11 +434,11 @@ function AccountPickerScreenComponent(): JSX.Element {
   // trace because its path had its own hand-rolled copy of these three lines.
   const confirmSelection = useCallback(
     (account: string, at: number) => {
-      recordAccountUsage(ledgerId, account, at);
+      if (!guest) recordAccountUsage(ledgerId, account, at);
       onSelectedRef.current?.(account);
       router.back();
     },
-    [ledgerId, router],
+    [ledgerId, router, guest],
   );
 
   const onPick = useCallback(

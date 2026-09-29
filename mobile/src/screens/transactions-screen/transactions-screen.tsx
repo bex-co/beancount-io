@@ -1,3 +1,4 @@
+import { useGuest } from "@/common/guest/guest-context";
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useMemo, useCallback, useRef, useState } from "react";
 import { useRouter, useScrollToTop } from "expo-router";
@@ -97,6 +98,7 @@ const TransactionList = () => {
   const ledgerId = useLedgerGuard();
   const { canWrite } = useLedgerAccess();
   const router = useRouter();
+  const guest = useGuest();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t, locale } = useTranslations();
@@ -114,7 +116,9 @@ const TransactionList = () => {
   // Resolved against the selected ledger: an account filter picked in another
   // ledger is dropped rather than queried here, where it would match nothing
   // and read as an empty journal.
-  const scopedFilters = useReactiveVar(transactionFiltersVar);
+  const scopedFilters = useReactiveVar(
+    guest?.transactionFilters ?? transactionFiltersVar,
+  );
   const filters = useMemo(
     () => selectFiltersForLedger(scopedFilters, ledgerId),
     [scopedFilters, ledgerId],
@@ -217,14 +221,18 @@ const TransactionList = () => {
       // The query is pinned to transactions, so this guard only ever rejects a
       // surprise from the server — there is no detail screen for other kinds.
       if (!isJournalTransaction(entry)) return;
-      openTransactionDetail(router, entry);
+      openTransactionDetail(router, entry, undefined, guest);
     },
-    [router],
+    [router, guest],
   );
 
   const handleOpenFilters = useCallback(() => {
-    router.push({ pathname: "/(app)/transaction-filters" });
-  }, [router]);
+    router.push({
+      pathname: guest
+        ? "/examples/transaction-filters"
+        : "/(app)/transaction-filters",
+    });
+  }, [router, guest]);
 
   const handleQuickAdd = useCallback(() => {
     AddTransactionCallback.setFn(async () => {

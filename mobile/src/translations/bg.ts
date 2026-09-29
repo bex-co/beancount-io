@@ -3,6 +3,24 @@ import type { Translations } from "../common/translation-types";
 
 export const bg: Translations = {
   ...en,
+  guestTryExample: "Изпробвайте пример",
+  guestChooseExample: "Изберете пример",
+  guestReadOnly: "Пример само за четене",
+  guestExit: "Изход от примерите",
+  guestIntroduction:
+    "Разгледайте реални отчети без профил. Тези книги са само за четене.",
+  guestExample0: "Ежедневни финанси",
+  guestExample1: "Фирмени финанси",
+  guestExample2: "Крипто портфейл",
+  guestExampleDescription0: "Приходи, разходи, спестявания и инвестиции.",
+  guestExampleDescription1: "Публичните финансови отчети на NVIDIA.",
+  guestExampleDescription2: "Цифрови активи, цени и пазарни стойности.",
+  guestConnectionError:
+    "Примерът не се зареди. Проверете връзката и опитайте отново.",
+  guestUnavailable:
+    "Този пример вече не е публичен или достъпен. Изберете друг.",
+  guestNoExamples:
+    "На този сървър няма достъпни публични примери. Опитайте отново или изберете друг сървър от началния екран.",
   discoveryTitle: "Преглед на книги",
   discoveryTab_yours: "Вашите книги",
   discoveryTab_starred: "Любими",

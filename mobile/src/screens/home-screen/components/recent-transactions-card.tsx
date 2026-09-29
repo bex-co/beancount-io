@@ -18,6 +18,7 @@ import {
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { selectCardLoadState } from "@/common/apollo/card-load-state";
+import { useGuest } from "@/common/guest/guest-context";
 
 const RECENT_LIMIT = 5;
 
@@ -42,6 +43,7 @@ export function RecentTransactionsCard({
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const router = useRouter();
+  const guest = useGuest();
 
   const { data, loading, error, refetch } = useGetLedgerJournalQuery({
     variables: {
@@ -58,7 +60,7 @@ export function RecentTransactionsCard({
 
   useEffect(() => {
     if (refreshSignal > 0 && ledgerId) {
-      refetch();
+      void refetch().catch(() => undefined);
     }
   }, [refreshSignal, ledgerId, refetch]);
 
@@ -66,6 +68,10 @@ export function RecentTransactionsCard({
     []) as unknown as JournalDirectiveType[];
 
   const onSeeAll = () => {
+    if (guest) {
+      guest.navigate("transactions");
+      return;
+    }
     router.navigate({ pathname: "/transactions" });
   };
 
@@ -76,7 +82,9 @@ export function RecentTransactionsCard({
         hasData: data !== undefined,
         error: error,
       }) === "failed" ? (
-        <CardLoadFailure onRetry={() => void refetch()} />
+        <CardLoadFailure
+          onRetry={() => void refetch().catch(() => undefined)}
+        />
       ) : loading && entries.length === 0 ? (
         <LoadingTile height={160} mx={16} />
       ) : (
@@ -90,7 +98,8 @@ export function RecentTransactionsCard({
                 entry={entry}
                 onPress={
                   isJournalTransaction(entry)
-                    ? () => openTransactionDetail(router, entry)
+                    ? () =>
+                        openTransactionDetail(router, entry, undefined, guest)
                     : undefined
                 }
               />

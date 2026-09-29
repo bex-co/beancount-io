@@ -8,14 +8,13 @@ export {
   type ServerUrlValidation,
 } from "./server-url-validation";
 import {
+  OFFICIAL_SERVER_URL,
   allowsInsecureLocalhost,
   endpointFor,
   validateServerUrl,
   type ServerUrlErrorCode,
 } from "./server-url-validation";
 import { discoverOAuthServer } from "./oauth/discovery";
-
-export const OFFICIAL_SERVER_URL = "https://beancount.io/";
 
 export function defaultRuntimeServerUrl(): string {
   const configured = validateServerUrl(defaultServerUrl, {

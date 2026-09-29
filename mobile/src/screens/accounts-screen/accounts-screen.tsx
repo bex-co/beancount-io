@@ -7,7 +7,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { gutter, rowMinHeight, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useSession } from "@/common/hooks/use-session";
+import { useGuest } from "@/common/guest/guest-context";
 import { getPrimaryCurrency } from "@/common/currency-util";
 import { LedgerDrawerHeader, StaleDataBanner } from "@/components";
 import { LoadingTile } from "@/components/loading-tile";
@@ -16,7 +16,7 @@ import { AccountTable } from "@/components/account-table";
 import { selectTrialBalanceCategories } from "@/components/account-list";
 import { selectTrialBalanceDisplays } from "@/components/account-list/select-trial-balance";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
-import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
+import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
 import { useLedgerPrices } from "@/common/hooks/use-ledger-prices";
 import { getFormatDate } from "@/common/format-util";
@@ -55,7 +55,7 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 const AccountsScreenImpl = (): JSX.Element => {
-  const { userId } = useSession();
+  const guest = useGuest();
   const ledgerId = useLedgerGuard();
   const { canWrite } = useLedgerAccess();
   const { t } = useTranslations();
@@ -68,19 +68,20 @@ const AccountsScreenImpl = (): JSX.Element => {
       // `ledger` binds the pushed entry to this ledger, so a later ledger
       // switch cannot revive it under a different one.
       router.push({
-        pathname: "/account-detail",
+        pathname: guest ? "/examples/account-detail" : "/account-detail",
         params: { account, ledger: ledgerId },
       });
     },
-    [router, ledgerId],
+    [router, ledgerId, guest],
   );
 
   const {
     data: ledgerMeta,
+    accounts,
     currencies,
     refetch: ledgerMetaRefetch,
     error: ledgerMetaError,
-  } = useLedgerMeta(userId, ledgerId);
+  } = useLedgerReadContext(ledgerId);
   const currency = getPrimaryCurrency(currencies);
 
   // Commodity holdings are valued at market, as on Home, so they count toward
@@ -101,9 +102,8 @@ const AccountsScreenImpl = (): JSX.Element => {
   } = useTrialBalance(ledgerId, undefined, "units");
 
   const categories = useMemo(
-    () =>
-      selectTrialBalanceCategories(currency, accountData, ledgerMeta?.accounts),
-    [currency, accountData, ledgerMeta?.accounts],
+    () => selectTrialBalanceCategories(currency, accountData, accounts),
+    [currency, accountData, accounts],
   );
   // Which commodities had a price: a row's value reads "at market" or "at
   // cost", and each root dates its prices the way Home's pages do.
@@ -143,6 +143,8 @@ const AccountsScreenImpl = (): JSX.Element => {
         unitsRefetch(),
         pricesRefetch(),
       ]);
+    } catch {
+      // Query errors render in the screen or the guest access boundary.
     } finally {
       setRefreshing(false);
     }

@@ -8,7 +8,9 @@ export interface AccountSection {
   data: string[];
 }
 
-export function getAccountsAndCurrency(data: LedgerMeta | undefined) {
+export function getAccountsAndCurrency(
+  data: Pick<LedgerMeta, "accounts" | "options"> | undefined,
+) {
   let assets: string[] = [];
   let expenses: string[] = [];
   let currencies: string[] = [];

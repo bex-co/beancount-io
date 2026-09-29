@@ -3,6 +3,24 @@ import type { Translations } from "../common/translation-types";
 
 export const es: Translations = {
   ...en,
+  guestTryExample: "Probar un ejemplo",
+  guestChooseExample: "Elegir un ejemplo",
+  guestReadOnly: "Ejemplo de solo lectura",
+  guestExit: "Salir de los ejemplos",
+  guestIntroduction:
+    "Explora informes reales sin una cuenta. Estos libros son de solo lectura.",
+  guestExample0: "Finanzas cotidianas",
+  guestExample1: "Finanzas de empresa",
+  guestExample2: "Cartera de criptomonedas",
+  guestExampleDescription0: "Ingresos, gastos, ahorros e inversiones.",
+  guestExampleDescription1: "Los estados financieros públicos de NVIDIA.",
+  guestExampleDescription2: "Activos digitales, precios y valores de mercado.",
+  guestConnectionError:
+    "No se pudo cargar este ejemplo. Comprueba la conexión e inténtalo de nuevo.",
+  guestUnavailable:
+    "Este ejemplo ya no es público o no está disponible. Elige otro ejemplo.",
+  guestNoExamples:
+    "No hay ejemplos públicos disponibles en este servidor. Inténtalo de nuevo o elige otro servidor en la pantalla de bienvenida.",
   discoveryTitle: "Explorar libros",
   discoveryTab_yours: "Tus libros",
   discoveryTab_starred: "Favoritos",

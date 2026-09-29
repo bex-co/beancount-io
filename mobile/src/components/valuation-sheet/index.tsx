@@ -19,6 +19,7 @@ import { buildLedgerUrl } from "@/common/app-links/build-ledger-url";
 import { getServerUrl } from "@/common/vars/server-url";
 import { Button } from "@/components/button";
 import { ColorTheme } from "@/types/theme-props";
+import { useGuest } from "@/common/guest/guest-context";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -115,6 +116,7 @@ export function ValuationSheet({
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const insets = useSafeAreaInsets();
+  const guest = useGuest();
   if (valuation === null) return null;
 
   const stale = stalePrices(valuation);
@@ -214,8 +216,18 @@ export function ValuationSheet({
             ))}
           </ScrollView>
           <View style={styles.footer}>
-            <Button type="outline" onPress={openCommodities}>
-              {t("updatePricesOnWeb")}
+            <Button
+              type="outline"
+              onPress={
+                guest
+                  ? () => {
+                      onClose();
+                      guest.requestSignIn();
+                    }
+                  : openCommodities
+              }
+            >
+              {t(guest ? "signIn" : "updatePricesOnWeb")}
             </Button>
           </View>
         </Pressable>

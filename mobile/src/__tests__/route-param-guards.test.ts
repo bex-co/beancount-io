@@ -29,17 +29,18 @@ describe("route param guards", () => {
     ).toBe(true);
   });
 
-  it("sends the file editor without a path to the Files tab", () => {
+  it("sends the file editor without a path to the Files tab for its session", () => {
     const source = read("src/screens/ledger-file-editor-screen/index.tsx");
     const screen = source.slice(
       source.indexOf("export function LedgerFileEditorScreen("),
       source.indexOf("function LedgerFileEditorSession("),
     );
     expect(screen.includes("path?: string")).toBe(true);
+    expect(screen.includes("if (!path)")).toBe(true);
     expect(
       guardsBefore(
         screen,
-        '<Redirect href="/(app)/(tabs)/ledger" />',
+        'href={guest ? "/examples/(tabs)/ledger" : "/(app)/(tabs)/ledger"}',
         "<LedgerFileEditorSession",
       ),
     ).toBe(true);

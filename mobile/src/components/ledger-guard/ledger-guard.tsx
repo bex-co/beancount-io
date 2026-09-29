@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useReactiveVar } from "@apollo/client";
 import { ledgerVar } from "@/common/vars";
 import { useListLedgersQuery } from "@/generated-graphql/graphql";
+import { useGuest } from "@/common/guest/guest-context";
 
 interface LedgerGuardContextValue {
   ledgerId: string;
@@ -180,7 +181,19 @@ const LedgerGuardProviderComponent = ({
 
 LedgerGuardProviderComponent.displayName = "LedgerGuardProvider";
 
-export const LedgerGuard = memo(LedgerGuardProviderComponent);
+export const LedgerGuard = memo(function LedgerGuard(
+  props: LedgerGuardProviderProps,
+) {
+  const guest = useGuest();
+  if (guest) {
+    return (
+      <LedgerGuardContext.Provider value={{ ledgerId: guest.ledgerId }}>
+        {props.children}
+      </LedgerGuardContext.Provider>
+    );
+  }
+  return <LedgerGuardProviderComponent {...props} />;
+});
 
 export const useLedgerGuard = (): string => {
   const context = useContext(LedgerGuardContext);

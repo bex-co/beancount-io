@@ -29,6 +29,7 @@ interface PushAccountPickerOptions {
   type: AccountPickerType;
   /** The field's current account, scrolled into view and check-marked. */
   current?: string;
+  preview?: boolean;
   /** Receives the pick. Registered here so it cannot be registered wrongly. */
   onSelect: (account: string) => void;
 }
@@ -49,11 +50,11 @@ interface PushAccountPickerOptions {
  */
 export const pushAccountPicker = (
   router: PickerRouter,
-  { type, current, onSelect }: PushAccountPickerOptions,
+  { type, current, onSelect, preview = false }: PushAccountPickerOptions,
 ): void => {
   SelectedAccount.setFn(onSelect);
   router.push({
-    pathname: "/(app)/account-picker",
+    pathname: preview ? "/examples/account-picker" : "/(app)/account-picker",
     params: { type, selectedItem: current },
   });
 };

@@ -11,7 +11,7 @@ import { DRAWER_LEDGERS_PAGE_SIZE } from "../drawer-ledgers";
  */
 
 const DRAWER_SOURCE = fs.readFileSync(
-  path.join(__dirname, "..", "ledger-drawer.tsx"),
+  path.join(__dirname, "..", "account-ledger-drawer.tsx"),
   "utf8",
 );
 const DISCOVERY_SOURCE = fs.readFileSync(

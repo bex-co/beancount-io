@@ -3,6 +3,21 @@ import type { Translations } from "../common/translation-types";
 
 export const zh: Translations = {
   ...en,
+  guestTryExample: "试用示例",
+  guestChooseExample: "选择示例",
+  guestReadOnly: "只读示例",
+  guestExit: "退出示例",
+  guestIntroduction: "无需账号即可查看真实报表。这些账本为只读。",
+  guestExample0: "日常财务",
+  guestExample1: "公司财务",
+  guestExample2: "加密资产组合",
+  guestExampleDescription0: "收入、支出、储蓄和投资。",
+  guestExampleDescription1: "NVIDIA 的公开财务报表。",
+  guestExampleDescription2: "数字资产、价格和市场价值。",
+  guestConnectionError: "无法加载此示例。请检查网络连接后重试。",
+  guestUnavailable: "此示例已不再公开或无法访问。请选择其他示例。",
+  guestNoExamples:
+    "此服务器没有可用的公开示例。请重试，或返回欢迎页选择其他服务器。",
   discoveryTitle: "浏览账本",
   discoveryTab_yours: "你的账本",
   discoveryTab_starred: "已收藏",

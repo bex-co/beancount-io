@@ -3,6 +3,24 @@ import type { Translations } from "../common/translation-types";
 
 export const ru: Translations = {
   ...en,
+  guestTryExample: "Попробовать пример",
+  guestChooseExample: "Выбрать пример",
+  guestReadOnly: "Пример только для чтения",
+  guestExit: "Выйти из примеров",
+  guestIntroduction:
+    "Изучайте реальные отчёты без аккаунта. Эти книги доступны только для чтения.",
+  guestExample0: "Повседневные финансы",
+  guestExample1: "Финансы компании",
+  guestExample2: "Криптопортфель",
+  guestExampleDescription0: "Доходы, расходы, сбережения и инвестиции.",
+  guestExampleDescription1: "Публичная финансовая отчётность NVIDIA.",
+  guestExampleDescription2: "Цифровые активы, цены и рыночная стоимость.",
+  guestConnectionError:
+    "Не удалось загрузить пример. Проверьте соединение и повторите попытку.",
+  guestUnavailable:
+    "Этот пример больше не является открытым или недоступен. Выберите другой.",
+  guestNoExamples:
+    "На этом сервере нет доступных открытых примеров. Повторите попытку или выберите другой сервер на экране приветствия.",
   discoveryTitle: "Обзор книг",
   discoveryTab_yours: "Ваши книги",
   discoveryTab_starred: "Избранное",

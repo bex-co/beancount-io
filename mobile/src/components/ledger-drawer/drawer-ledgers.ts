@@ -10,11 +10,13 @@
  */
 export const DRAWER_LEDGERS_PAGE_SIZE = 30;
 
-type DrawerLedger = {
+export type DrawerLedger = {
   id: string;
   name: string;
   fullName: string;
   private?: boolean;
+  disabled?: boolean;
+  statusLabel?: string;
 };
 
 /** The list the drawer shows: the user's collection, in the order the API

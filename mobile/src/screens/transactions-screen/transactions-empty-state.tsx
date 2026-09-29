@@ -1,3 +1,4 @@
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStyle, useTheme } from "@/common/hooks";
@@ -84,6 +85,7 @@ const getStyles = (theme: ColorTheme) =>
  * Component for rendering the empty state when there are no transactions
  */
 export const TransactionsEmptyState = () => {
+  const { canWrite } = useLedgerAccess();
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
@@ -94,40 +96,46 @@ export const TransactionsEmptyState = () => {
         <Ionicons name="receipt-outline" size={40} color={theme.primary} />
       </View>
 
-      <Text style={styles.title}>{t("transactionsWelcomeTitle")}</Text>
-
-      <Text style={styles.message}>{t("transactionsWelcomeMessage")}</Text>
-
-      <View style={styles.instructionsContainer}>
-        <Text style={styles.instructionsTitle}>
-          {t("transactionsWelcomeInstructions")}
-        </Text>
-
-        <View style={styles.instructionItem}>
-          <Text style={styles.bullet}>•</Text>
-          <Text style={styles.instructionText}>
-            {t("transactionsWelcomeInstruction1")}
-          </Text>
-        </View>
-
-        <View style={styles.instructionItem}>
-          <Text style={styles.bullet}>•</Text>
-          <Text style={styles.instructionText}>
-            {t("transactionsWelcomeInstruction2")}
-          </Text>
-        </View>
-
-        <View style={styles.instructionItem}>
-          <Text style={styles.bullet}>•</Text>
-          <Text style={styles.instructionText}>
-            {t("transactionsWelcomeInstruction3")}
-          </Text>
-        </View>
-      </View>
-
-      <Text style={styles.finalMessage}>
-        {t("transactionsWelcomeInstructionFinal")}
+      <Text style={styles.title}>
+        {t(canWrite ? "transactionsWelcomeTitle" : "noEntries")}
       </Text>
+
+      {canWrite ? (
+        <>
+          <Text style={styles.message}>{t("transactionsWelcomeMessage")}</Text>
+
+          <View style={styles.instructionsContainer}>
+            <Text style={styles.instructionsTitle}>
+              {t("transactionsWelcomeInstructions")}
+            </Text>
+
+            <View style={styles.instructionItem}>
+              <Text style={styles.bullet}>•</Text>
+              <Text style={styles.instructionText}>
+                {t("transactionsWelcomeInstruction1")}
+              </Text>
+            </View>
+
+            <View style={styles.instructionItem}>
+              <Text style={styles.bullet}>•</Text>
+              <Text style={styles.instructionText}>
+                {t("transactionsWelcomeInstruction2")}
+              </Text>
+            </View>
+
+            <View style={styles.instructionItem}>
+              <Text style={styles.bullet}>•</Text>
+              <Text style={styles.instructionText}>
+                {t("transactionsWelcomeInstruction3")}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={styles.finalMessage}>
+            {t("transactionsWelcomeInstructionFinal")}
+          </Text>
+        </>
+      ) : null}
     </View>
   );
 };

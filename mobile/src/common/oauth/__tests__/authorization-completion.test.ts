@@ -52,6 +52,38 @@ async function captureFailure(promise: Promise<unknown>): Promise<unknown> {
 }
 
 describe("OAuth authorization completion", () => {
+  for (const reason of ["logout", "server"] as const) {
+    it(`does not persist a late exchange after ${reason} changes`, async () => {
+      let generation = 0;
+      let correctServer = true;
+      let release!: (session: OAuthSession) => void;
+      const events: string[] = [];
+      const complete = createAuthorizationCompleter({
+        loadPending: async () => pending,
+        clearPending: async () => undefined,
+        contextVersion: () => generation,
+        canComplete: () => correctServer,
+        exchange: () =>
+          new Promise((resolve) => {
+            release = resolve;
+          }),
+        persist: async () => {
+          events.push("persist");
+        },
+        afterPersist: async () => {
+          events.push("navigate");
+        },
+      });
+      const result = captureFailure(complete(callback));
+      await Promise.resolve();
+      await Promise.resolve();
+      if (reason === "logout") generation += 1;
+      else correctServer = false;
+      release(session);
+      expect(((await result) as Error).message).toBe("Authorization failed");
+      expect(events).toEqual([]);
+    });
+  }
   it("deduplicates warm and cold handling and consumes the verifier before exchange", async () => {
     const events: string[] = [];
     let releaseExchange!: () => void;

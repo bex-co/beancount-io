@@ -4,6 +4,8 @@
 
 ## Milestones
 
+- [x] **m29** — [Explore public examples before signing in](./done/m29/README.md) (9 tasks) ← approved `/pm-brainstorm for w4` candidate 1, 2026-09-27; mobile, ~4–5h implementation plus standing closing tasks
+
 - [x] **m28** — [Locale-aware plurals on both clients](./done/m28/README.md) (8 tasks) ← promoted w4/187, filed from m27's wording deviation, 2026-09-26
 
 - [x] **m27** — [Say which prices are stale, and only when they are](./done/m27/README.md) (7 tasks) ← user design review of m26's headline, 2026-09-26
@@ -49,6 +51,12 @@
 - [x] **m12** — [Make mobile's `lint:deadcode` see unused GraphQL documents and test-only modules](./done/m12/README.md) (7 tasks) ← promoted w4/025; user approved `/pm-brainstorm for w4` item 4 and its allowlist recommendation, 2026-09-15
 
 - [x] **m13** — [Preserve ledger pages through loading and hydration](./done/m13/README.md) (6 tasks) ← repeated dashboard QA, promoted w4/073, 2026-09-17
+
+## Inbox
+
+- [191 — Make Starter ledgers start without sample money](./191.md) — 45–60m; new Starter ledgers retain account scaffolding without the example transaction. A2; backend-v2.
+
+- [190 — Remove the stale CLI version from the root README](./190.md) — ~20m; use Active CLI and link to current CLI releases. Independent of m29.
 
 ## Dropped
 

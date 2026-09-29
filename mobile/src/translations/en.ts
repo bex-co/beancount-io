@@ -1,4 +1,22 @@
 export const en = {
+  guestTryExample: "Try an example",
+  guestChooseExample: "Choose an example",
+  guestReadOnly: "Read-only example",
+  guestExit: "Leave examples",
+  guestIntroduction:
+    "Explore real reports without an account. These ledgers are read-only.",
+  guestExample0: "Everyday finances",
+  guestExample1: "Company finances",
+  guestExample2: "Crypto portfolio",
+  guestExampleDescription0: "Income, spending, savings, and investments.",
+  guestExampleDescription1: "NVIDIA’s public financial statements.",
+  guestExampleDescription2: "Digital assets, prices, and market values.",
+  guestConnectionError:
+    "Couldn’t load this example. Check your connection and try again.",
+  guestUnavailable:
+    "This example is no longer public or available. Choose another example.",
+  guestNoExamples:
+    "No public examples are available on this server. Try again or choose a different server from Welcome.",
   discoveryTitle: "Browse ledgers",
   discoveryTab_yours: "Your ledgers",
   discoveryTab_starred: "Starred",

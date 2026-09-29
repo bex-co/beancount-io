@@ -305,6 +305,13 @@ export type LedgerPricesQueryVariables = Exact<{
 
 export type LedgerPricesQuery = { getLedgerCommodities: Array<{ base: string, quote: string, prices: Array<{ date: string }> }> };
 
+export type LedgerReadContextQueryVariables = Exact<{
+  ledgerId: string;
+}>;
+
+
+export type LedgerReadContextQuery = { getLedger: { id: string, private: boolean, attributes: { accounts: Array<string> }, options: { nameAssets: string, nameExpenses: string, nameIncome: string, nameLiabilities: string, nameEquity: string, operatingCurrency: Array<string> } } };
+
 export type ListCommitsQueryVariables = Exact<{
   ledgerId: string;
   branch: string;
@@ -2078,6 +2085,61 @@ export type LedgerPricesQueryHookResult = ReturnType<typeof useLedgerPricesQuery
 export type LedgerPricesLazyQueryHookResult = ReturnType<typeof useLedgerPricesLazyQuery>;
 export type LedgerPricesSuspenseQueryHookResult = ReturnType<typeof useLedgerPricesSuspenseQuery>;
 export type LedgerPricesQueryResult = Apollo.QueryResult<LedgerPricesQuery, LedgerPricesQueryVariables>;
+export const LedgerReadContextDocument = gql`
+    query LedgerReadContext($ledgerId: String!) {
+  getLedger(ledgerId: $ledgerId) {
+    id
+    private
+    attributes {
+      accounts
+    }
+    options {
+      nameAssets
+      nameExpenses
+      nameIncome
+      nameLiabilities
+      nameEquity
+      operatingCurrency
+    }
+  }
+}
+    `;
+
+/**
+ * __useLedgerReadContextQuery__
+ *
+ * To run a query within a React component, call `useLedgerReadContextQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLedgerReadContextQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLedgerReadContextQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *   },
+ * });
+ */
+export function useLedgerReadContextQuery(baseOptions: Apollo.QueryHookOptions<LedgerReadContextQuery, LedgerReadContextQueryVariables> & ({ variables: LedgerReadContextQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<LedgerReadContextQuery, LedgerReadContextQueryVariables>(LedgerReadContextDocument, options);
+      }
+export function useLedgerReadContextLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LedgerReadContextQuery, LedgerReadContextQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<LedgerReadContextQuery, LedgerReadContextQueryVariables>(LedgerReadContextDocument, options);
+        }
+// @ts-ignore
+export function useLedgerReadContextSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<LedgerReadContextQuery, LedgerReadContextQueryVariables>): Apollo.UseSuspenseQueryResult<LedgerReadContextQuery, LedgerReadContextQueryVariables>;
+export function useLedgerReadContextSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<LedgerReadContextQuery, LedgerReadContextQueryVariables>): Apollo.UseSuspenseQueryResult<LedgerReadContextQuery | undefined, LedgerReadContextQueryVariables>;
+export function useLedgerReadContextSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<LedgerReadContextQuery, LedgerReadContextQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<LedgerReadContextQuery, LedgerReadContextQueryVariables>(LedgerReadContextDocument, options);
+        }
+export type LedgerReadContextQueryHookResult = ReturnType<typeof useLedgerReadContextQuery>;
+export type LedgerReadContextLazyQueryHookResult = ReturnType<typeof useLedgerReadContextLazyQuery>;
+export type LedgerReadContextSuspenseQueryHookResult = ReturnType<typeof useLedgerReadContextSuspenseQuery>;
+export type LedgerReadContextQueryResult = Apollo.QueryResult<LedgerReadContextQuery, LedgerReadContextQueryVariables>;
 export const ListCommitsDocument = gql`
     query listCommits($ledgerId: String!, $branch: String!, $page: Int!, $limit: Int!) {
   listCommits(ledgerId: $ledgerId, branch: $branch, page: $page, limit: $limit) {

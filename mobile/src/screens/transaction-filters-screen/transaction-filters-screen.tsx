@@ -1,3 +1,4 @@
+import { useGuest } from "@/common/guest/guest-context";
 import { useState } from "react";
 import {
   Pressable,
@@ -9,7 +10,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
-import { useReactiveVar } from "@apollo/client";
 import { Ionicons } from "@expo/vector-icons";
 import { getFormatDate, parseFormatDate } from "@/common/format-util";
 import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
@@ -38,7 +38,7 @@ import {
   selectFiltersForLedger,
 } from "@/screens/transactions-screen/filters/select-filter-query";
 import { transactionFiltersVar } from "@/screens/transactions-screen/filters/var";
-import { ledgerVar } from "@/common/vars";
+import { useLedgerGuard } from "@/components/ledger-guard";
 
 type PickerTarget = "start" | "end";
 
@@ -175,17 +175,16 @@ const FilterChip = ({
  */
 export const TransactionFiltersScreen = (): JSX.Element => {
   const router = useRouter();
+  const guest = useGuest();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
 
-  // The sheet is not inside a LedgerGuard, so read the selection directly. The
-  // id is needed both to seed the draft (filters from another ledger are not
-  // this ledger's) and to stamp the applied filters with their owner.
-  const ledgerId = useReactiveVar(ledgerVar);
+  const ledgerId = useLedgerGuard();
+  const filtersVar = guest?.transactionFilters ?? transactionFiltersVar;
 
   const [draft, setDraft] = useState<TransactionFilters>(() =>
-    selectFiltersForLedger(transactionFiltersVar(), ledgerVar()),
+    selectFiltersForLedger(filtersVar(), ledgerId),
   );
   const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null);
 
@@ -220,6 +219,7 @@ export const TransactionFiltersScreen = (): JSX.Element => {
   const pickAccount = () => {
     pushAccountPicker(router, {
       type: "filter",
+      preview: !!guest,
       current: draft.account,
       onSelect: (account) => setDraft((prev) => ({ ...prev, account })),
     });
@@ -233,7 +233,7 @@ export const TransactionFiltersScreen = (): JSX.Element => {
 
   const apply = () => {
     if (!isRangeValid) return;
-    transactionFiltersVar({ ledgerId, filters: draft });
+    filtersVar({ ledgerId, filters: draft });
     router.back();
   };
 

@@ -3,6 +3,24 @@ import type { Translations } from "../common/translation-types";
 
 export const uk: Translations = {
   ...en,
+  guestTryExample: "Спробувати приклад",
+  guestChooseExample: "Вибрати приклад",
+  guestReadOnly: "Приклад лише для читання",
+  guestExit: "Вийти з прикладів",
+  guestIntroduction:
+    "Переглядайте справжні звіти без облікового запису. Ці книги доступні лише для читання.",
+  guestExample0: "Повсякденні фінанси",
+  guestExample1: "Фінанси компанії",
+  guestExample2: "Криптопортфель",
+  guestExampleDescription0: "Доходи, витрати, заощадження та інвестиції.",
+  guestExampleDescription1: "Публічна фінансова звітність NVIDIA.",
+  guestExampleDescription2: "Цифрові активи, ціни та ринкова вартість.",
+  guestConnectionError:
+    "Не вдалося завантажити приклад. Перевірте з’єднання та спробуйте знову.",
+  guestUnavailable:
+    "Цей приклад більше не є відкритим або недоступний. Виберіть інший.",
+  guestNoExamples:
+    "На цьому сервері немає доступних відкритих прикладів. Спробуйте знову або виберіть інший сервер на екрані привітання.",
   discoveryTitle: "Огляд книг",
   discoveryTab_yours: "Ваші книги",
   discoveryTab_starred: "Обране",

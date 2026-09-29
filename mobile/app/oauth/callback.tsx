@@ -11,6 +11,8 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useSignedInOnArrival } from "@/common/hooks/use-signed-in-on-arrival";
 import type { ColorTheme } from "@/types/theme-props";
 import { Button } from "@/components/button";
+import { endGuestSignIn, guestVisitVar } from "@/common/guest/guest-state";
+import { getServerUrl } from "@/common/vars/server-url";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -54,6 +56,11 @@ export default function OAuthCallbackRoute(): JSX.Element {
     setFailed(false);
 
     void completeOAuthAuthorization(callbackUrl).catch((error: unknown) => {
+      if (guestVisitVar()?.serverUrl === getServerUrl()) {
+        endGuestSignIn();
+        router.replace("/examples");
+        return;
+      }
       if (error instanceof OAuthAuthorizationError && error.cancelled) {
         router.replace("/auth/welcome");
         return;

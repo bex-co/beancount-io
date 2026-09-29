@@ -3,6 +3,24 @@ import type { Translations } from "../common/translation-types";
 
 export const ca: Translations = {
   ...en,
+  guestTryExample: "Prova un exemple",
+  guestChooseExample: "Tria un exemple",
+  guestReadOnly: "Exemple de només lectura",
+  guestExit: "Surt dels exemples",
+  guestIntroduction:
+    "Explora informes reals sense compte. Aquests llibres són de només lectura.",
+  guestExample0: "Finances quotidianes",
+  guestExample1: "Finances d’empresa",
+  guestExample2: "Cartera de criptomonedes",
+  guestExampleDescription0: "Ingressos, despeses, estalvis i inversions.",
+  guestExampleDescription1: "Els estats financers públics de NVIDIA.",
+  guestExampleDescription2: "Actius digitals, preus i valors de mercat.",
+  guestConnectionError:
+    "No s’ha pogut carregar aquest exemple. Comprova la connexió i torna-ho a provar.",
+  guestUnavailable:
+    "Aquest exemple ja no és públic o no està disponible. Tria’n un altre.",
+  guestNoExamples:
+    "No hi ha exemples públics disponibles en aquest servidor. Torna-ho a provar o tria un altre servidor a la pantalla de benvinguda.",
   discoveryTitle: "Explora els llibres",
   discoveryTab_yours: "Els teus llibres",
   discoveryTab_starred: "Preferits",

@@ -3,6 +3,24 @@ import type { Translations } from "../common/translation-types";
 
 export const nl: Translations = {
   ...en,
+  guestTryExample: "Probeer een voorbeeld",
+  guestChooseExample: "Kies een voorbeeld",
+  guestReadOnly: "Alleen-lezen voorbeeld",
+  guestExit: "Voorbeelden verlaten",
+  guestIntroduction:
+    "Bekijk echte rapporten zonder account. Deze boeken zijn alleen-lezen.",
+  guestExample0: "Dagelijkse financiën",
+  guestExample1: "Bedrijfsfinanciën",
+  guestExample2: "Cryptoportefeuille",
+  guestExampleDescription0: "Inkomsten, uitgaven, spaargeld en beleggingen.",
+  guestExampleDescription1: "De openbare financiële verslagen van NVIDIA.",
+  guestExampleDescription2: "Digitale bezittingen, prijzen en marktwaarden.",
+  guestConnectionError:
+    "Dit voorbeeld kon niet worden geladen. Controleer je verbinding en probeer het opnieuw.",
+  guestUnavailable:
+    "Dit voorbeeld is niet meer openbaar of beschikbaar. Kies een ander voorbeeld.",
+  guestNoExamples:
+    "Op deze server zijn geen openbare voorbeelden beschikbaar. Probeer het opnieuw of kies een andere server op het welkomstscherm.",
   discoveryTitle: "Boekhoudingen bekijken",
   discoveryTab_yours: "Je boeken",
   discoveryTab_starred: "Favorieten",

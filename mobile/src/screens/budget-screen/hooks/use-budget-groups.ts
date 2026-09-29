@@ -42,7 +42,7 @@ export function useBudgetGroups(ledgerId?: string, refreshSignal = 0) {
 
   useEffect(() => {
     if (refreshSignal > 0 && ledgerId) {
-      refetch();
+      void refetch().catch(() => undefined);
     }
   }, [refreshSignal, ledgerId, refetch]);
 

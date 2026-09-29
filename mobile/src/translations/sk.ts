@@ -3,6 +3,24 @@ import type { Translations } from "../common/translation-types";
 
 export const sk: Translations = {
   ...en,
+  guestTryExample: "Vyskúšať príklad",
+  guestChooseExample: "Vybrať príklad",
+  guestReadOnly: "Príklad iba na čítanie",
+  guestExit: "Opustiť príklady",
+  guestIntroduction:
+    "Preskúmajte skutočné prehľady bez účtu. Tieto knihy sú iba na čítanie.",
+  guestExample0: "Každodenné financie",
+  guestExample1: "Firemné financie",
+  guestExample2: "Krypto portfólio",
+  guestExampleDescription0: "Príjmy, výdavky, úspory a investície.",
+  guestExampleDescription1: "Verejné finančné výkazy NVIDIA.",
+  guestExampleDescription2: "Digitálne aktíva, ceny a trhové hodnoty.",
+  guestConnectionError:
+    "Tento príklad sa nepodarilo načítať. Skontrolujte pripojenie a skúste to znova.",
+  guestUnavailable:
+    "Tento príklad už nie je verejný alebo dostupný. Vyberte iný príklad.",
+  guestNoExamples:
+    "Na tomto serveri nie sú dostupné žiadne verejné príklady. Skúste to znova alebo vyberte iný server na uvítacej obrazovke.",
   discoveryTitle: "Prehľad kníh",
   discoveryTab_yours: "Vaše knihy",
   discoveryTab_starred: "Obľúbené",

@@ -1,4 +1,4 @@
-import { makeVar } from "@apollo/client";
+import { makeVar, type ReactiveVar } from "@apollo/client";
 import type { useRouter } from "expo-router";
 import type { JournalTransaction } from "@/screens/transactions-screen/types";
 
@@ -16,10 +16,13 @@ export function openTransactionDetail(
   router: Router,
   entry: JournalTransaction,
   originAccount?: string,
+  preview?: {
+    selectedTransaction: ReactiveVar<JournalTransaction | null>;
+  } | null,
 ): void {
-  selectedTransactionVar(entry);
+  (preview?.selectedTransaction ?? selectedTransactionVar)(entry);
   router.push({
-    pathname: "/transaction-detail",
+    pathname: preview ? "/examples/transaction-detail" : "/transaction-detail",
     params: originAccount
       ? { entry_hash: entry.entry_hash, origin_account: originAccount }
       : { entry_hash: entry.entry_hash },

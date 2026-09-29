@@ -3,7 +3,6 @@ import { StyleSheet, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useSession } from "@/common/hooks/use-session";
 import { getPrimaryCurrency } from "@/common/currency-util";
 import { gutter } from "@/common/theme";
 import { LedgerDrawerHeader } from "@/components/ledger-drawer/ledger-drawer-header";
@@ -20,7 +19,7 @@ import {
 } from "@/common/d3/income-expense-bar-chart";
 import { TimeRangePills } from "@/components/time-range-pills";
 import { RANGE_LABEL_KEYS, TIME_RANGES, TimeRange } from "@/common/series-util";
-import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
+import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 import { useIncomeStatement } from "./hooks/use-income-statement";
 import { selectRangedAccountTree } from "./selectors/select-ranged-account-tree";
@@ -52,7 +51,6 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 const ReportsScreenImpl = (): JSX.Element => {
-  const { userId } = useSession();
   const ledgerId = useLedgerGuard();
   const { t } = useTranslations();
   const styles = useThemeStyle(getStyles);
@@ -64,7 +62,7 @@ const ReportsScreenImpl = (): JSX.Element => {
     currencies,
     data: ledgerMeta,
     error: ledgerMetaError,
-  } = useLedgerMeta(userId, ledgerId);
+  } = useLedgerReadContext(ledgerId);
   const currency = getPrimaryCurrency(currencies);
 
   const {
@@ -79,6 +77,8 @@ const ReportsScreenImpl = (): JSX.Element => {
     setRefreshing(true);
     try {
       await incomeRefetch();
+    } catch {
+      // Query errors render in the screen or the guest access boundary.
     } finally {
       setRefreshing(false);
     }

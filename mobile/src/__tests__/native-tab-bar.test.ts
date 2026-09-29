@@ -4,7 +4,7 @@ import { nativeTabIcons } from "../components/tab-bar-icon/tab-icons";
 
 const mobileRoot = path.join(__dirname, "..", "..");
 const layout = fs.readFileSync(
-  path.join(mobileRoot, "app", "(app)", "(tabs)", "_layout.tsx"),
+  path.join(mobileRoot, "src", "components", "ledger-tabs", "index.tsx"),
   "utf8",
 );
 const tabRoutes = Object.keys(nativeTabIcons);

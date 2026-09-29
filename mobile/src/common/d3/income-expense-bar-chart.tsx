@@ -9,8 +9,10 @@ import { AnimatedBar } from "./animated-bar";
 import { useEntranceProgress } from "./use-entrance-progress";
 import { restingBarRect } from "./bar-geometry";
 import { ScrollableAxisChart } from "./scrollable-axis-chart";
+import { axisLabelWidth } from "./axis-label-width";
 import {
   BOTTOM_PADDING,
+  AXIS_FONT_SIZE,
   ChartErrorBoundary,
   ChartPlaceholder,
   LABEL_FONT_SIZE,
@@ -67,19 +69,11 @@ function IncomeExpenseBarChart({
   const { t } = useTranslations();
 
   const chartHeight = height;
-  // Width available to the scrolling plot (everything but the fixed y-axis).
-  const availableWidth = ScreenWidth - contentPadding * 2 - LEFT_PADDING;
 
   // The net line needs a hue distinct from both bars. `theme.information` (blue)
   // stays legible against green income / red expense in light AND dark — unlike
   // `theme.primary`, which IS the green income bar in dark mode.
   const netColor = theme.information;
-
-  const groupWidth = Math.max(
-    MIN_GROUP_WIDTH,
-    availableWidth / Math.max(months.length, 1),
-  );
-  const plotWidth = groupWidth * months.length;
 
   // Before the early return below: hooks cannot run conditionally.
   const entrance = useEntranceProgress(months.length > 0);
@@ -87,12 +81,6 @@ function IncomeExpenseBarChart({
   if (months.length === 0) {
     return <ChartPlaceholder height={chartHeight} />;
   }
-
-  const subScale = scaleBand<string>()
-    .domain(["income", "expense"])
-    .range([0, groupWidth])
-    .padding(0.2);
-  const subBarWidth = subScale.bandwidth();
 
   const maxBar = Math.max(0, ...income, ...expense);
   const yMax = Math.max(maxBar, ...net, 1);
@@ -102,6 +90,20 @@ function IncomeExpenseBarChart({
     .range([chartHeight - BOTTOM_PADDING, TOP_PADDING])
     .nice();
   const zeroY = yScale(0);
+  const yTicks = yScale.ticks(5);
+  const axisWidth = axisLabelWidth(
+    yTicks.map((tick) => formatShortMoneyWithCurrency(tick, currency)),
+    AXIS_FONT_SIZE,
+    LEFT_PADDING,
+  );
+  const availableWidth = ScreenWidth - contentPadding * 2 - axisWidth;
+  const groupWidth = Math.max(MIN_GROUP_WIDTH, availableWidth / months.length);
+  const plotWidth = groupWidth * months.length;
+  const subScale = scaleBand<string>()
+    .domain(["income", "expense"])
+    .range([0, groupWidth])
+    .padding(0.2);
+  const subBarWidth = subScale.bandwidth();
 
   const groupX = (i: number) => i * groupWidth;
   const centerX = (i: number) => groupX(i) + groupWidth / 2;
@@ -150,7 +152,8 @@ function IncomeExpenseBarChart({
     <ScrollableAxisChart
       chartHeight={chartHeight}
       plotWidth={plotWidth}
-      yTicks={yScale.ticks(5)}
+      yTicks={yTicks}
+      axisWidth={axisWidth}
       yScale={yScale}
       currency={currency}
       accessibilityLabel={t("incomeExpenseChartSummary", {

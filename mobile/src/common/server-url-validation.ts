@@ -1,3 +1,5 @@
+export const OFFICIAL_SERVER_URL = "https://beancount.io/";
+
 export type ServerUrlErrorCode =
   "empty" | "invalid" | "credentials" | "query" | "insecure";
 
@@ -59,4 +61,10 @@ export function validateServerUrl(
 
 export function endpointFor(serverUrl: string, path: string): string {
   return new URL(path.replace(/^\/+/, ""), serverUrl).toString();
+}
+
+/** The hosted preview catalog is only available at the official root endpoint. */
+export function isOfficialServerUrl(input: string): boolean {
+  const result = validateServerUrl(input);
+  return result.ok && result.url === OFFICIAL_SERVER_URL;
 }
