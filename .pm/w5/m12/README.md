@@ -1,6 +1,6 @@
 # w5 · m12 — Graduate a CSV workflow into a tested, maintainable importer
 
-**Worker:** worker1 **Goal:** an existing CSV user graduates to a reusable importer, preserves imported history, and repairs bank-format drift through either installed agent **Status:** in progress (t001, t002 done)
+**Worker:** worker1 **Goal:** an existing CSV user graduates to a reusable importer, preserves imported history, and repairs bank-format drift through either installed agent **Status:** in progress (t001, t002, t003 done)
 
 **Estimate:** 4h15m implementation; 6h including standing closing tasks (9 tasks). Priority 1 in the approved proposal.
 
@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | t001 | Package graduation, overlap, and bank-format drift fixtures — **DONE** | 45m | — |
 | t002 | Package the supported authoring environment and ingest runner — **DONE** | 60m | w5/m12/t001 |
-| t003 | Write the graduation and repair walkthrough with executable checkpoints | 60m | w5/m12/t002 |
+| t003 | Write the graduation and repair walkthrough with executable checkpoints — **DONE** | 60m | w5/m12/t002 |
 | t004 | Rehearse importer graduation and repair through Claude Code | 45m | w5/m12/t003 |
 | t005 | Rehearse importer graduation and repair through Codex | 45m | w5/m12/t003 |
 | t006 | Adoption surface | 25m | w5/m12/t004, w5/m12/t005 |

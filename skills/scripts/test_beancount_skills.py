@@ -667,8 +667,8 @@ class TestBeaRecipes(unittest.TestCase):
 
 
 def load_tests(loader, tests, pattern):
-    """Keep the focused first-month and migration checks in the existing skills CI entrypoint."""
-    for name in ("test_verify_first_month", "test_verify_migration"):
+    """Keep the focused journey checks in the existing skills CI entrypoint."""
+    for name in ("test_verify_first_month", "test_verify_migration", "test_verify_importer_graduation"):
         tests.addTests(loader.loadTestsFromModule(load(name, f"{name}.py")))
     return tests
 
