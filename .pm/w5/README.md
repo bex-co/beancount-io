@@ -17,7 +17,7 @@
 
 - [x] **m9** — [Complete a first month through the installed ledger skills](./done/m9/README.md) (8 tasks, ~5h) ← `/pm-brainstorm for w5`, all three proposals approved with `$pm all for w5` on 2026-09-27
 
-- [ ] **m10** — [Migrate an export and continue importing without duplicate transfers](./blocked/m10/README.md) (9 tasks, ~6h) ← `/pm-brainstorm for w5`, both proposals approved with `$pm for both to w5` on 2026-09-28 — **blocked:** closeout needs a published CLI release with w5/020 (`7302b907`); t001–t008 shipped
+- [ ] **m10** — [Migrate an export and continue importing without duplicate transfers](./m10/README.md) (9 tasks, ~6h) ← `/pm-brainstorm for w5`, both proposals approved with `$pm for both to w5` on 2026-09-28
 
 - [x] **m11** — [Publish the CLI fixes required by the migration journey](./done/m11/README.md) (8 tasks, ~5h) ← `/pm-brainstorm more for w5`, all three proposals approved with `$pm all for w5` on 2026-09-28
 

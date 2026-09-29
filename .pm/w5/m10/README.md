@@ -1,6 +1,6 @@
 # w5 · m10 — Migrate an export and continue importing without duplicate transfers
 
-**Worker:** worker1 **Goal:** a newcomer migrates synthetic export history through installed skills and continues importing without duplicating either side of an internal transfer **Status:** blocked (t001–t008 done; t009 blocked)
+**Worker:** worker1 **Goal:** a newcomer migrates synthetic export history through installed skills and continues importing without duplicating either side of an internal transfer **Status:** in progress (t001–t008 done)
 
 **Estimate:** 4h implementation; 6h including standing closing tasks (9 tasks). Priority 2 after inbox 019, with no hard dependency on it.
 
@@ -16,7 +16,7 @@
 | t006 | Adoption surface — **DONE** | 30m | w5/m10/t005 |
 | t007 | Simplify — **DONE** | 30m | w5/m10/t006 |
 | t008 | Test coverage — **DONE** | 45m | w5/m10/t006, w5/m10/t007 |
-| t009 | Closeout — **BLOCKED** | 15m | w5/m10/t007, w5/m10/t008 |
+| t009 | Closeout | 15m | w5/m10/t007, w5/m10/t008 |
 
 ## Definition of done
 
@@ -30,7 +30,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm for w5`, both proposals approved with `$pm for both to w5` on 2026-09-28. Builds on [w2/m3's shipped migration skill](../../../w2/done/m3/README.md), [w5/m9's installed first-month journey](../../done/m9/README.md), and the [existing migration skill and evals](../../../../skills/.claude/skills/beancount-migrate/SKILL.md).
+- **Source:** `/pm-brainstorm for w5`, both proposals approved with `$pm for both to w5` on 2026-09-28. Builds on [w2/m3's shipped migration skill](../../w2/done/m3/README.md), [w5/m9's installed first-month journey](../done/m9/README.md), and the [existing migration skill and evals](../../../skills/.claude/skills/beancount-migrate/SKILL.md).
 - **Goal linkage:** **A2 — Frictionless onboarding** (primary) and **A1 — Agent-native accounting**. People bringing existing financial history can establish a trustworthy ledger and continue maintaining it through either installed agent.
 - **Expected outcome:** demonstrated migration-to-first-repeat-import completion with exact duplicate counts, elapsed time, and corrective intervention counts. These are rehearsal signals, not production adoption statistics or proof of general model reliability.
 - **Why now:** installation and the first-month journey are complete. Historical dates, two-sided transfer identities, and independently anchored balances add onboarding risks not exercised by that journey. w5 has capacity while its existing external blockers remain independent.
@@ -45,13 +45,6 @@
 - No dependency on inbox 019, blocked m5, or blocked 015. Both real agents must be available for rehearsal closeout; if access is unavailable, record the exact unblock condition rather than declaring success.
 - No hosted ledger export, bank connection, deployment, or additional MCP test stack is needed.
 
-## Blocked
+## Unblocked
 
-**Blocked 2026-09-28** — t009 (Closeout) cannot run. The first definition-of-done item requires a newcomer to complete the journey with the published `bea`, and published `beancount-io` 0.3.0 previews migrated rows as new. Its overlap checkpoints would double-book migrated history. The fix is w5/020, shipped in `7302b907` but unreleased. Publishing a CLI release is a maintainer decision this loop does not make.
-
-Partial work already shipped (baseline for the next worker):
-
-- t001–t008 are done: fixtures, `scripts/verify-migration.py` with 18 tests, `docs/migration.md` (which states the version requirement), entry-point links, simplify, and test coverage.
-- Real rehearsals passed every checkpoint in Claude Code and Codex with zero corrective interventions, using a source-built `bea` at `8b9c6207` (`skills/docs/migration-rehearsal.md`).
-
-**Unblock:** a `cli-v*` release that includes `7302b907` is published to PyPI and the Homebrew tap. Then install it as a newcomer would, rerun the guide's overlap checkpoints (`checking_overlap`, `savings_overlap`, `imported_new`, `reimported_new`) against the published install in both clients, record the result in the rehearsal record, drop the guide's 0.3.0 caveat, and complete t009. **Who:** the maintainer who tags CLI releases.
+**Unblocked 2026-09-28**: t009 was blocked 2026-09-28 because published `beancount-io` 0.3.0 lacked w5/020. That cleared when `beancount-io` 0.3.1 (tag `cli-v0.3.1`, containing `7302b907`) was published to PyPI and Homebrew by [w5/m11](../done/m11/README.md). t009 resumes: rerun the overlap checkpoints against the published install in both clients, update the rehearsal record and the guide's version caveat, then close out.
