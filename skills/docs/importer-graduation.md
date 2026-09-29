@@ -41,12 +41,13 @@ export GRADUATION_INPUTS="$RUN/inputs"
 export VERIFY="$SKILLS_SRC/skills/scripts/verify-importer-graduation.py"
 export BEA="$(command -v bea)"
 export BEA_CONFIG_DIR="$RUN/bea-config"
+export XDG_CACHE_HOME="$RUN/cache"
 export AUTHOR_PYTHON="$RUN/authoring/bin/python"
 export PYTHONDONTWRITEBYTECODE=1
 export GIT_OPTIONAL_LOCKS=0
 export GIT_AUTHOR_NAME="Synthetic Ledger User" GIT_COMMITTER_NAME="Synthetic Ledger User"
 export GIT_AUTHOR_EMAIL="synthetic@example.invalid" GIT_COMMITTER_EMAIL="synthetic@example.invalid"
-mkdir -p "$BOOKS" "$GRADUATION_INPUTS" "$RUN/evidence"
+mkdir -p "$BOOKS" "$GRADUATION_INPUTS" "$RUN/evidence" "$XDG_CACHE_HOME"
 cp "$SKILLS_SRC/skills/docs/examples/importer-graduation/"*.csv "$GRADUATION_INPUTS/"
 cp "$SKILLS_SRC/skills/docs/examples/importer-graduation/prior-ledger.beancount" "$BOOKS/ledger.beancount"
 cp "$SKILLS_SRC/skills/docs/examples/importer-graduation/import-rules.toml" "$BOOKS/"
@@ -67,8 +68,10 @@ git -C "$BOOKS" commit -q -m "Existing synthetic CSV workflow"
 cd "$BOOKS"
 ```
 
-`BEA_CONFIG_DIR` isolates remembered CSV settings. Optional engine provisioning
-still uses bea's supported managed runtime. `PYTHONDONTWRITEBYTECODE` prevents
+`BEA_CONFIG_DIR` isolates remembered CSV settings. `XDG_CACHE_HOME` keeps bea's
+ledger lock files inside the run directory so sandboxed writes can acquire
+them. Optional engine provisioning still uses bea's supported managed runtime.
+`PYTHONDONTWRITEBYTECODE` prevents
 inspection and harness commands from creating bytecode in the books.
 
 ## Verify the supported runtime separately
