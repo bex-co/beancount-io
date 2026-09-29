@@ -1,6 +1,6 @@
 # w5 · m12 — Graduate a CSV workflow into a tested, maintainable importer
 
-**Worker:** worker1 **Goal:** an existing CSV user graduates to a reusable importer, preserves imported history, and repairs bank-format drift through either installed agent **Status:** in progress (t001, t002, t003, t004, t005, t006, t007 done)
+**Worker:** worker1 **Goal:** an existing CSV user graduates to a reusable importer, preserves imported history, and repairs bank-format drift through either installed agent **Status:** in progress (t001, t002, t003, t004, t005, t006, t007, t008 done)
 
 **Estimate:** 4h15m implementation; 6h including standing closing tasks (9 tasks). Priority 1 in the approved proposal.
 
@@ -15,7 +15,7 @@
 | t005 | Rehearse importer graduation and repair through Codex — **DONE** | 45m | w5/m12/t003 |
 | t006 | Adoption surface — **DONE** | 25m | w5/m12/t004, w5/m12/t005 |
 | t007 | Simplify — **DONE** | 20m | w5/m12/t006 |
-| t008 | Test coverage | 45m | w5/m12/t006, w5/m12/t007 |
+| t008 | Test coverage — **DONE** | 45m | w5/m12/t006, w5/m12/t007 |
 | t009 | Closeout | 15m | w5/m12/t007, w5/m12/t008 |
 
 ## Definition of done
