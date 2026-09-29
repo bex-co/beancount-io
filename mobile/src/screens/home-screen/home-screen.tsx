@@ -191,6 +191,11 @@ const HomeScreenImpl = (): JSX.Element => {
     }
   };
 
+  const onAddTransaction = () => {
+    AddTransactionCallback.setFn(onRefresh);
+    router.navigate({ pathname: "/add-transaction" });
+  };
+
   return (
     <View style={styles.container}>
       <LedgerDrawerHeader
@@ -210,10 +215,7 @@ const HomeScreenImpl = (): JSX.Element => {
                     color={theme.black80}
                   />
                 ),
-                onPress: () => {
-                  AddTransactionCallback.setFn(onRefresh);
-                  router.navigate({ pathname: "/add-transaction" });
-                },
+                onPress: onAddTransaction,
               },
               {
                 label: t("scanReceipt"),
@@ -256,6 +258,7 @@ const HomeScreenImpl = (): JSX.Element => {
         <RecentTransactionsCard
           ledgerId={ledgerId}
           refreshSignal={refreshSignal}
+          onAddTransaction={canWrite ? onAddTransaction : undefined}
         />
 
         <SpendingCard

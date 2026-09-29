@@ -264,8 +264,6 @@ export const en = {
   transactionsWelcomeTitle: "Welcome to your transactions! 🧾",
   transactionsWelcomeMessage: "You haven't recorded any transactions yet.",
   transactionsWelcomeInstructions: "To get started:",
-  transactionsWelcomeInstruction1:
-    'Use the "+" button to record your first transaction',
   transactionsWelcomeInstruction2:
     "Upload beancount files through the web interface",
   transactionsWelcomeInstruction3: "Import existing accounting data",

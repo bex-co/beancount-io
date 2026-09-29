@@ -279,8 +279,6 @@ export const ru: Translations = {
   transactionsWelcomeTitle: "Добро пожаловать в транзакции! 🧾",
   transactionsWelcomeMessage: "Вы ещё не записали ни одной транзакции.",
   transactionsWelcomeInstructions: "С чего начать:",
-  transactionsWelcomeInstruction1:
-    'Нажмите "+", чтобы записать первую транзакцию',
   transactionsWelcomeInstruction2:
     "Загрузите файлы beancount через веб-интерфейс",
   transactionsWelcomeInstruction3:

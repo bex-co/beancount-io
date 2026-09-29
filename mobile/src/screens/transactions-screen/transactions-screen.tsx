@@ -303,22 +303,24 @@ const TransactionList = () => {
         updateCellsBatchingPeriod={50}
         windowSize={10}
         ListEmptyComponent={
-          isInitialLoading
-            ? TransactionsListSkeleton
-            : error
-              ? () => (
-                  <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>
-                      {t("transactionsLoadError")}
-                      {error?.message}
-                    </Text>
-                  </View>
-                )
-              : showEmptyState
-                ? TransactionsEmptyState
-                : showNoResults
-                  ? NoResultsState
-                  : undefined
+          isInitialLoading ? (
+            TransactionsListSkeleton
+          ) : error ? (
+            () => (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>
+                  {t("transactionsLoadError")}
+                  {error?.message}
+                </Text>
+              </View>
+            )
+          ) : showEmptyState ? (
+            <TransactionsEmptyState
+              onAddTransaction={canWrite ? handleQuickAdd : undefined}
+            />
+          ) : showNoResults ? (
+            NoResultsState
+          ) : undefined
         }
         ListFooterComponent={
           isLoadingMore ? (

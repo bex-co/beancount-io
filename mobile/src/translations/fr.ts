@@ -276,8 +276,6 @@ export const fr: Translations = {
   transactionsWelcomeMessage:
     "Vous n'avez encore enregistré aucune transaction.",
   transactionsWelcomeInstructions: "Pour commencer :",
-  transactionsWelcomeInstruction1:
-    'Appuyez sur "+" pour enregistrer votre première transaction',
   transactionsWelcomeInstruction2:
     "Importez des fichiers beancount depuis l'interface web",
   transactionsWelcomeInstruction3: "Importez vos données comptables existantes",

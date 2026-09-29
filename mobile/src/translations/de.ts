@@ -274,8 +274,6 @@ export const de: Translations = {
   transactionsWelcomeTitle: "Willkommen bei Ihren Transaktionen! 🧾",
   transactionsWelcomeMessage: "Sie haben noch keine Transaktionen erfasst.",
   transactionsWelcomeInstructions: "So starten Sie:",
-  transactionsWelcomeInstruction1:
-    'Erfassen Sie mit der Schaltfläche "+" Ihre erste Transaktion',
   transactionsWelcomeInstruction2:
     "Laden Sie beancount-Dateien über die Weboberfläche hoch",
   transactionsWelcomeInstruction3:

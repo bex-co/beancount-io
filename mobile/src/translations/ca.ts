@@ -277,8 +277,6 @@ export const ca: Translations = {
   transactionsWelcomeTitle: "Benvingut a les teves transaccions! 🧾",
   transactionsWelcomeMessage: "Encara no has registrat cap transacció.",
   transactionsWelcomeInstructions: "Per començar:",
-  transactionsWelcomeInstruction1:
-    'Fes servir el botó "+" per registrar la primera transacció',
   transactionsWelcomeInstruction2:
     "Puja fitxers beancount des de la interfície web",
   transactionsWelcomeInstruction3: "Importa dades comptables existents",

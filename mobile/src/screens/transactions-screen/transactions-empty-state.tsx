@@ -1,4 +1,3 @@
-import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStyle, useTheme } from "@/common/hooks";
@@ -6,6 +5,7 @@ import { fontSizes, fontWeights } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+import { Button } from "@/components/button";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -43,6 +43,10 @@ const getStyles = (theme: ColorTheme) =>
     instructionsContainer: {
       width: "100%",
       alignItems: "flex-start",
+    },
+    addButton: {
+      alignSelf: "stretch",
+      marginBottom: 24,
     },
     instructionsTitle: {
       fontSize: fontSizes.lg,
@@ -84,8 +88,11 @@ const getStyles = (theme: ColorTheme) =>
 /**
  * Component for rendering the empty state when there are no transactions
  */
-export const TransactionsEmptyState = () => {
-  const { canWrite } = useLedgerAccess();
+export const TransactionsEmptyState = ({
+  onAddTransaction,
+}: {
+  onAddTransaction?: () => void;
+}) => {
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
@@ -97,24 +104,25 @@ export const TransactionsEmptyState = () => {
       </View>
 
       <Text style={styles.title}>
-        {t(canWrite ? "transactionsWelcomeTitle" : "noEntries")}
+        {t(onAddTransaction ? "transactionsWelcomeTitle" : "noEntries")}
       </Text>
 
-      {canWrite ? (
+      {onAddTransaction ? (
         <>
           <Text style={styles.message}>{t("transactionsWelcomeMessage")}</Text>
+
+          <Button
+            testID="transactions-empty-add-transaction"
+            style={styles.addButton}
+            onPress={onAddTransaction}
+          >
+            {t("addTransaction")}
+          </Button>
 
           <View style={styles.instructionsContainer}>
             <Text style={styles.instructionsTitle}>
               {t("transactionsWelcomeInstructions")}
             </Text>
-
-            <View style={styles.instructionItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.instructionText}>
-                {t("transactionsWelcomeInstruction1")}
-              </Text>
-            </View>
 
             <View style={styles.instructionItem}>
               <Text style={styles.bullet}>•</Text>

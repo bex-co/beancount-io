@@ -278,8 +278,6 @@ export const uk: Translations = {
   transactionsWelcomeTitle: "Вітаємо у ваших транзакціях! 🧾",
   transactionsWelcomeMessage: "Ви ще не записали жодної транзакції.",
   transactionsWelcomeInstructions: "Щоб почати:",
-  transactionsWelcomeInstruction1:
-    'Натисніть "+", щоб записати першу транзакцію',
   transactionsWelcomeInstruction2:
     "Завантажте файли beancount через вебінтерфейс",
   transactionsWelcomeInstruction3: "Імпортуйте наявні облікові дані",

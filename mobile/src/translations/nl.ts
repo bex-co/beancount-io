@@ -269,8 +269,6 @@ export const nl: Translations = {
   transactionsWelcomeTitle: "Welkom bij je transacties! 🧾",
   transactionsWelcomeMessage: "Je hebt nog geen transacties vastgelegd.",
   transactionsWelcomeInstructions: "Om te beginnen:",
-  transactionsWelcomeInstruction1:
-    'Gebruik de "+"-knop om je eerste transactie vast te leggen',
   transactionsWelcomeInstruction2:
     "Upload beancount-bestanden via de webinterface",
   transactionsWelcomeInstruction3: "Importeer bestaande boekhoudgegevens",

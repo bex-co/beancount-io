@@ -279,7 +279,6 @@ export const sk: Translations = {
   transactionsWelcomeTitle: "Vitajte vo svojich transakciách! 🧾",
   transactionsWelcomeMessage: "Zatiaľ ste nezaznamenali žiadnu transakciu.",
   transactionsWelcomeInstructions: "Ako začať:",
-  transactionsWelcomeInstruction1: 'Prvú transakciu zaznamenáte tlačidlom "+"',
   transactionsWelcomeInstruction2:
     "Nahrajte súbory beancount cez webové rozhranie",
   transactionsWelcomeInstruction3: "Importujte existujúce účtovné údaje",

@@ -270,8 +270,6 @@ export const bg: Translations = {
   transactionsWelcomeTitle: "Добре дошли във вашите транзакции! 🧾",
   transactionsWelcomeMessage: "Още не сте записали нито една транзакция.",
   transactionsWelcomeInstructions: "За да започнете:",
-  transactionsWelcomeInstruction1:
-    'Използвайте бутона "+", за да запишете първата си транзакция',
   transactionsWelcomeInstruction2:
     "Качете файлове beancount през уеб интерфейса",
   transactionsWelcomeInstruction3: "Импортирайте съществуващи счетоводни данни",

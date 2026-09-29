@@ -49,7 +49,7 @@ Beancount Mobile Community Edition turns a Beancount.io ledger into a native wor
 - **Understand the whole picture** — follow net worth, assets, liabilities, spending, and account-level trends.
 - **Try before signing in** — when connected to `https://beancount.io/`, choose **Try an example** on Welcome to explore the same Home, Accounts, Transactions, Reports, and Files screens used after sign-in, including account and transaction details, filters, and read-only file viewing. Shared ledger permissions hide editing controls in the preview.
 - **Set and track budgets** — give any account a spending or income target, then watch actuals against it period by period, with overages called out.
-- **Record clean transactions** — enter balanced multi-posting transactions, reuse account suggestions, and scan receipts.
+- **Record clean transactions** — use **Add Transaction** on an empty ledger's Home or Transactions screen to open the form directly, enter balanced multi-posting transactions, reuse account suggestions, and scan receipts. Write actions appear only when you have permission to edit the ledger.
 - **Investigate every entry** — search and filter the journal, inspect postings and balance context, then correct the underlying directive in a syntax-highlighted source editor with quick-insert keys (dates, flags, quotes, accounts, operating currencies) and checksum-protected saves.
 - **Work with the ledger itself** — browse and edit `.bean` files with syntax highlighting and review Git commit diffs.
 - **Browse and save ledgers** — open **Browse ledgers** in the ledger drawer to search your books, browse public examples in **Explore**, and revisit account-synced **Starred** favorites. Public books remain read-only unless you have editing permission.

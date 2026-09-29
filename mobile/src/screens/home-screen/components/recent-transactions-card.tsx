@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes } from "@/common/theme";
@@ -19,6 +19,7 @@ import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { selectCardLoadState } from "@/common/apollo/card-load-state";
 import { useGuest } from "@/common/guest/guest-context";
+import { Button } from "@/components/button";
 
 const RECENT_LIMIT = 5;
 
@@ -26,6 +27,9 @@ const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     empty: {
       paddingHorizontal: 16,
+      gap: 16,
+    },
+    emptyText: {
       fontSize: fontSizes.md,
       color: theme.black80,
     },
@@ -34,11 +38,13 @@ const getStyles = (theme: ColorTheme) =>
 type RecentTransactionsCardProps = {
   ledgerId?: string;
   refreshSignal?: number;
+  onAddTransaction?: () => void;
 };
 
 export function RecentTransactionsCard({
   ledgerId,
   refreshSignal = 0,
+  onAddTransaction,
 }: RecentTransactionsCardProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
@@ -90,7 +96,19 @@ export function RecentTransactionsCard({
       ) : (
         <FadeInView>
           {entries.length === 0 ? (
-            <Text style={styles.empty}>{t("recentTransactionsEmpty")}</Text>
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>
+                {t("recentTransactionsEmpty")}
+              </Text>
+              {ledgerId && data && !error && onAddTransaction ? (
+                <Button
+                  testID="home-empty-add-transaction"
+                  onPress={onAddTransaction}
+                >
+                  {t("addTransaction")}
+                </Button>
+              ) : null}
+            </View>
           ) : (
             entries.map((entry, index) => (
               <EntryRow

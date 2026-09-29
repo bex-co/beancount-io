@@ -267,7 +267,6 @@ export const fa: Translations = {
   transactionsWelcomeTitle: "به تراکنش‌هایتان خوش آمدید! 🧾",
   transactionsWelcomeMessage: "هنوز هیچ تراکنشی ثبت نکرده‌اید.",
   transactionsWelcomeInstructions: "برای شروع:",
-  transactionsWelcomeInstruction1: 'با دکمهٔ "+" نخستین تراکنش خود را ثبت کنید',
   transactionsWelcomeInstruction2:
     "فایل‌های beancount را از رابط وب بارگذاری کنید",
   transactionsWelcomeInstruction3: "داده‌های حسابداری موجود را وارد کنید",
