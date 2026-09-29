@@ -15,6 +15,9 @@ personal books.
 | `renamed-headers.csv` | Renamed headers: one previously imported row plus one genuinely new row |
 | `unrelated.csv` | Invoice export that neither original nor repaired importer may claim |
 | `expectations.json` | Exact source identities, dispositions, balanced transactions, and checkpoint totals |
+| `reference_importer.py` | Executable original-header baseline, kept separate from an agent's authoring rehearsal |
+| `reference_runner.py` | Managed-ingest runner for that baseline |
+| `seed-import.py` | Existing empty runner copied to rehearsal books as `import.py`; preserve its comment when wiring |
 
 ## Confirmed settings and provenance
 

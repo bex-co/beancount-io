@@ -80,7 +80,13 @@ class Importer(csvbase.Importer):
         return entries
 ```
 
-`Column("A", "B")` (multiple names) means "column named A, or B if the bank renamed it" — alternate names for one logical column, not a merge.
+`Column("A", "B")` does **not** express alternate header names in Beangulp
+0.2.0. Its getter resolves both columns and passes both values to `parse`;
+the base `Column.parse` accepts just one value. A missing name raises before
+parsing. For renamed headers, recognize each complete known signature and
+map it explicitly to the same logical fields (for example, use positional
+descriptors when both accepted signatures preserve column order). Keep
+`identify()` narrow and retain old golden files.
 
 ## Self-test CLI — make every importer its own harness
 
