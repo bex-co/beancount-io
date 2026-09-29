@@ -28,7 +28,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm more for w5`, all three proposals approved with `$pm all for w5` on 2026-09-28; [w5/020](../../done/020.md), [w5/018](../../done/018.md), [m10's release blocker](../../blocked/m10/README.md), and [the existing CLI release procedure](../../../../cli/docs/RELEASING.md).
+- **Source:** `/pm-brainstorm more for w5`, all three proposals approved with `$pm all for w5` on 2026-09-28; [w5/020](../../done/020.md), [w5/018](../../done/018.md), [m10's release blocker](../m10/README.md), and [the existing CLI release procedure](../../../../cli/docs/RELEASING.md).
 - **Goal linkage:** **A1 — Agent-native accounting**, **A2 — Frictionless onboarding**, and **A3 — Community & distribution**. Ordinary PyPI/Homebrew users gain the fixes already proven in source builds.
 - **Expected outcome:** successful migration-overlap and empty-lot-cost workflows on publicly installed artifacts; publication enables m10's final newcomer-install acceptance. Source tests alone are insufficient.
 - **Why now:** m10's implementation and source-built client rehearsals are complete, but the recorded 0.3.0 public install lacks the migration repair. w5 has capacity and this directly clears an adoption blocker.

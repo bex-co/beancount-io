@@ -67,5 +67,4 @@ migrated entry share one digest. The CSV mapping is in `expectations.json`.
 | `checking-april.csv` | `Assets:Checking` | exactly 1 written: 2026-04-03 `-61.10` to `Expenses:Groceries`, `import-id: "csv:sha256:765112df24194e91"` |
 
 Importing `checking-april.csv` a second time writes nothing. These overlap
-results need a `bea` that includes the migrated-history matching from w5/020;
-`beancount-io` 0.3.0 previews migrated rows as new.
+results need `bea` 0.3.1 or later; 0.3.0 previews migrated rows as new.

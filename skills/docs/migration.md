@@ -7,17 +7,18 @@ prompts work in Claude Code and Codex. Review each proposal before confirming
 it. `verify-migration.py` checks the resulting files and Git state
 independently.
 
-This guide needs Git, Python 3.9+, `bea`, and the customer suite from
+This guide needs Git, Python 3.9+, **bea 0.3.1 or later**, and the customer suite from
 [the installation guide](installation.md). It uses one `bea` installation and
 the skills-only checkout, with no account, hosted service, or personal
 financial data. The [sample-data contract](examples/migration/README.md) lists
 every source row's disposition, the expected import IDs, and the balance
 anchors.
 
-> **bea version.** The overlap steps need a `bea` that matches migrated IDs
-> (w5/020). `beancount-io` 0.3.0 previews migrated rows as new, so with it,
-> stop after [the migration checkpoint](#approve-the-migration). The overlap
-> checkpoints would fail rather than hide a double-booking.
+> **bea version.** The overlap steps rely on `bea import` recognizing migrated
+> IDs, which first shipped in 0.3.1. Check `"$BEA" --version` during setup, and
+> upgrade with `brew upgrade bex-co/tap/bea` or `uv tool upgrade beancount-io`.
+> With 0.3.0, migrated rows preview as new, and the overlap checkpoints fail
+> rather than hide a double-booking.
 
 ## What the migration must prove
 

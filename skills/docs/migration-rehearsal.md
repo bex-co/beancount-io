@@ -69,6 +69,33 @@ Trader Joes rule; Codex proposed an exact-description rule. In the main runs,
 Claude's merged transfer used the outflow description as its narration, and
 Codex's joined both descriptions. The verifier ignores payee and narration text.
 
+## Published-install rerun
+
+On 2026-09-28, after `beancount-io` 0.3.1 was published, each client reran the
+guide's main journey with **published `beancount-io==0.3.1`**. It was installed
+with `uv tool install` into an isolated tool directory, with no source build.
+Each run used a fresh workspace from the guide's setup block and the verbatim
+prompt blocks.
+
+| Checkpoint | Claude Code | Codex |
+| --- | --- | --- |
+| initialized | PASS | PASS |
+| declined_conversion | PASS | PASS |
+| migrated | PASS | PASS |
+| checking_overlap | PASS | PASS |
+| savings_overlap | PASS | PASS |
+| imported_new | PASS | PASS |
+| reimported_new | PASS | PASS |
+| Main journey | 5m 20s, 12 calls | 7m 29s, 12 calls |
+| Corrective interventions | 0 | 0 |
+
+Both clients verified `bea 0.3.1` at the start of the session, and both
+overlap imports wrote nothing. Unlike the first runs, a script sent each
+approval without a live pause. The verifier gated every step, and the
+transcripts were reviewed afterwards. The conflicting-balance branch was not
+repeated. Its earlier source build differs from the 0.3.1 release only in the
+two version strings in `cli/src`, and that branch involves no import.
+
 ## Guide correction from these runs
 
 During the April preview, Claude reported that `bea import` saves remembered
@@ -81,8 +108,8 @@ change touches no agent instruction, and no ledger was repaired.
 
 ## Limits
 
-These are supervised rehearsals, one run per client and branch, on macOS,
-using a source-built `bea`. They are not a reliability benchmark or an adoption
-measure, and they do not show that the published 0.3.0 install works: it does
-not match migrated IDs. Mint and QuickBooks exports, populated-ledger merges,
+These are supervised rehearsals on macOS: one run per client and branch with a
+source-built `bea`, and one main-journey rerun per client with published 0.3.1.
+They are not a reliability benchmark or an adoption measure. Published 0.3.0
+does not match migrated IDs and fails the overlap checkpoints. Mint and QuickBooks exports, populated-ledger merges,
 investment lots, and Linux or Windows were not exercised.

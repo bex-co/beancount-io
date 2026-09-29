@@ -1,6 +1,6 @@
 # w5 · m10 — Migrate an export and continue importing without duplicate transfers
 
-**Worker:** worker1 **Goal:** a newcomer migrates synthetic export history through installed skills and continues importing without duplicating either side of an internal transfer **Status:** in progress (t001–t008 done)
+**Worker:** worker1 **Goal:** a newcomer migrates synthetic export history through installed skills and continues importing without duplicating either side of an internal transfer **Status:** done
 
 **Estimate:** 4h implementation; 6h including standing closing tasks (9 tasks). Priority 2 after inbox 019, with no hard dependency on it.
 
@@ -16,7 +16,7 @@
 | t006 | Adoption surface — **DONE** | 30m | w5/m10/t005 |
 | t007 | Simplify — **DONE** | 30m | w5/m10/t006 |
 | t008 | Test coverage — **DONE** | 45m | w5/m10/t006, w5/m10/t007 |
-| t009 | Closeout | 15m | w5/m10/t007, w5/m10/t008 |
+| t009 | Closeout — **DONE** | 15m | w5/m10/t007, w5/m10/t008 |
 
 ## Definition of done
 
@@ -30,7 +30,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm for w5`, both proposals approved with `$pm for both to w5` on 2026-09-28. Builds on [w2/m3's shipped migration skill](../../w2/done/m3/README.md), [w5/m9's installed first-month journey](../done/m9/README.md), and the [existing migration skill and evals](../../../skills/.claude/skills/beancount-migrate/SKILL.md).
+- **Source:** `/pm-brainstorm for w5`, both proposals approved with `$pm for both to w5` on 2026-09-28. Builds on [w2/m3's shipped migration skill](../../../w2/done/m3/README.md), [w5/m9's installed first-month journey](../m9/README.md), and the [existing migration skill and evals](../../../../skills/.claude/skills/beancount-migrate/SKILL.md).
 - **Goal linkage:** **A2 — Frictionless onboarding** (primary) and **A1 — Agent-native accounting**. People bringing existing financial history can establish a trustworthy ledger and continue maintaining it through either installed agent.
 - **Expected outcome:** demonstrated migration-to-first-repeat-import completion with exact duplicate counts, elapsed time, and corrective intervention counts. These are rehearsal signals, not production adoption statistics or proof of general model reliability.
 - **Why now:** installation and the first-month journey are complete. Historical dates, two-sided transfer identities, and independently anchored balances add onboarding risks not exercised by that journey. w5 has capacity while its existing external blockers remain independent.
@@ -47,4 +47,4 @@
 
 ## Unblocked
 
-**Unblocked 2026-09-28**: t009 was blocked 2026-09-28 because published `beancount-io` 0.3.0 lacked w5/020. That cleared when `beancount-io` 0.3.1 (tag `cli-v0.3.1`, containing `7302b907`) was published to PyPI and Homebrew by [w5/m11](../done/m11/README.md). t009 resumes: rerun the overlap checkpoints against the published install in both clients, update the rehearsal record and the guide's version caveat, then close out.
+**Unblocked 2026-09-28**: t009 was blocked 2026-09-28 because published `beancount-io` 0.3.0 lacked w5/020. That cleared when `beancount-io` 0.3.1 (tag `cli-v0.3.1`, containing `7302b907`) was published to PyPI and Homebrew by [w5/m11](../m11/README.md). t009 resumes: rerun the overlap checkpoints against the published install in both clients, update the rehearsal record and the guide's version caveat, then close out.
