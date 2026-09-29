@@ -1,6 +1,6 @@
 # w5 · m12 — Graduate a CSV workflow into a tested, maintainable importer
 
-**Worker:** worker1 **Goal:** an existing CSV user graduates to a reusable importer, preserves imported history, and repairs bank-format drift through either installed agent **Status:** in progress (t001, t002, t003, t004, t005, t006, t007, t008 done)
+**Worker:** worker1 **Goal:** an existing CSV user graduates to a reusable importer, preserves imported history, and repairs bank-format drift through either installed agent **Status:** done
 
 **Estimate:** 4h15m implementation; 6h including standing closing tasks (9 tasks). Priority 1 in the approved proposal.
 
@@ -16,7 +16,7 @@
 | t006 | Adoption surface — **DONE** | 25m | w5/m12/t004, w5/m12/t005 |
 | t007 | Simplify — **DONE** | 20m | w5/m12/t006 |
 | t008 | Test coverage — **DONE** | 45m | w5/m12/t006, w5/m12/t007 |
-| t009 | Closeout | 15m | w5/m12/t007, w5/m12/t008 |
+| t009 | Closeout — **DONE** | 15m | w5/m12/t007, w5/m12/t008 |
 
 ## Definition of done
 
@@ -30,7 +30,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm for w5`, both proposals approved with `$pm for all for w5` on 2026-09-28. Builds on [w2/m2's authoring skill](../../w2/done/m2/README.md), [w1/m21's managed-engine integration](../../w1/done/m21/README.md), the [current authoring instructions](../../../skills/.claude/skills/beancount-importer-author/SKILL.md), and the [CLI import guide](../../../cli/docs/IMPORTING.md).
+- **Source:** `/pm-brainstorm for w5`, both proposals approved with `$pm for all for w5` on 2026-09-28. Builds on [w2/m2's authoring skill](../../../w2/done/m2/README.md), [w1/m21's managed-engine integration](../../../w1/done/m21/README.md), the [current authoring instructions](../../../../skills/.claude/skills/beancount-importer-author/SKILL.md), and the [CLI import guide](../../../../cli/docs/IMPORTING.md).
 - **Goal linkage:** **A1 — Agent-native accounting** and **A2 — Frictionless onboarding**. A person whose bank needs a reusable importer can graduate from repeated CSV imports without losing confirmed mappings or duplicating prior entries.
 - **Expected outcome:** Both installed agents complete one documented graduation and repair journey with correct extraction and ledger effects. Record completion time, corrective interventions, and duplicate counts as rehearsal signals, not production adoption metrics or proof of general model reliability.
 - **Why now:** The authoring skill and managed-engine integration already exist, and w5's first-month and migration journeys are complete. The remaining customer asset connects an existing ledger to the separate authoring environment, managed execution, and subsequent imports. w5 has capacity while m5 and 015 retain independent external blockers.
@@ -45,3 +45,7 @@
 - Scope any demonstrated CLI defect as a separate prerequisite repair. Never edit expected ledger results or weaken checkpoints to conceal it; a required unpublished repair remains a release prerequisite for ordinary-install acceptance.
 - m12 and m13 are independent. m5 and 015 retain their existing unblock conditions. Rehearsal closeout requires access to both authenticated agents; if unavailable, record the exact missing access and owner with /pm block.
 - No hosted ledger export, bank linking, deployment, new MCP stack, or new runtime dependency is needed. Publish synthetic summaries only.
+
+## Closeout evidence
+
+Completed 2026-09-29. The [guide](../../../../skills/docs/importer-graduation.md) and [two-client evidence](../../../../skills/docs/importer-graduation-rehearsal.md) satisfy the observable journey; see done/t009.md for commit and verification evidence. All nine tasks are complete. Testing covers one supervised synthetic macOS scenario on published bea 0.3.1 and Beangulp 0.2.0, including the corrected Codex cache setup. Native Windows and arbitrary importer dependencies remain outside this milestone.
