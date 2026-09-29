@@ -19,10 +19,12 @@ engine. Do not install another Beancount CLI or configure private engine paths.
   every directive write. `--file` selects the whole ledger for validation;
   `--into` selects where entries go. Never substitute the included file for
   the root: that would omit accounts, plugins, and assertions in other files.
-- Use global `--json --no-input` for machine reads and writes. Inspect the
+- Use global `--json --no-input` for machine ledger reads and writes. Inspect the
   exit status, error envelope, notes, and `truncated` indicator; a truncated
   listing is not complete input for deduplication or reconciliation. Query the
   full date window, or increase the listing limit until it is complete.
+- `bea ingest` uses native output and rejects `--json`; inspect its actual
+  identification and extraction results even when the exit status is 0.
 
 ## Read and check
 

@@ -117,7 +117,7 @@ imports, and three approved additions. Each of the five source identities
 appears exactly once. Neither client staged, committed, or pushed; HEAD
 and index stayed at each initial synthetic commit throughout.
 
-## Friction and limits
+## Friction
 
 Claude first tried `!= NULL` in a BQL identity query, which failed. It
 recognized the unsupported comparison and recovered inside the same turn

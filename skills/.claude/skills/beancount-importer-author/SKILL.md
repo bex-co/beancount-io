@@ -75,6 +75,8 @@ and `bea --file "$ledger" ingest extract --config "$runner" SAMPLE`, where
 `runner` is the actual file just wired (`import.py` in this skill's default
 layout). Do not point at a nonexistent `ingest.py`. Extraction usually has
 only the source posting, so its raw output alone is not a balanced ledger.
+`bea ingest` uses native output and rejects `--json`. Inspect identification
+and extracted entries: an unclaimed file can be skipped with exit status 0.
 For an end-to-end check, categorize and validate a complete scratch ledger
 through `bea --file "$scratch_ledger" check`; leave the user's ledger alone.
 
