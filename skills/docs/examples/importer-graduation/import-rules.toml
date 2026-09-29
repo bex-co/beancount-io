@@ -1,0 +1,11 @@
+[[rule]]
+match = "^TRADER JOES #123 SEATTLE WA$"
+account = "Expenses:Food:Groceries"
+
+[[rule]]
+match = "^SHELL OIL 5551 KIRKLAND WA$"
+account = "Expenses:Transport:Fuel"
+
+[[rule]]
+match = "^PAYROLL ACME CORP$"
+account = "Income:Salary"

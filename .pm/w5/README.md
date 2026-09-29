@@ -21,6 +21,8 @@
 
 - [x] **m11** — [Publish the CLI fixes required by the migration journey](./done/m11/README.md) (8 tasks, ~5h) ← `/pm-brainstorm more for w5`, all three proposals approved with `$pm all for w5` on 2026-09-28
 
+- [ ] **m12** — [Graduate a CSV workflow into a tested, maintainable importer](./m12/README.md) (9 tasks, ~6h) ← `/pm-brainstorm for w5`, both proposals approved with `$pm for all for w5` on 2026-09-28
+
 ## Inbox
 
 No open inbox items.

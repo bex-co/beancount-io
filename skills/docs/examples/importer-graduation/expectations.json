@@ -1,0 +1,342 @@
+{
+  "schema_version": 1,
+  "currency": "USD",
+  "account": "Assets:Bank:Checking",
+  "date_format": "%m/%d/%Y",
+  "csv_mapping": "date=Date,narration=Description,amount=Amount,sign=bank",
+  "renamed_csv_mapping": "date=Post Date,narration=Details,amount=Value,sign=bank",
+  "confirmed_config": {
+    "source": "chase-checking",
+    "account": "Assets:Bank:Checking",
+    "date_format": "%m/%d/%Y",
+    "sign": "negative=outflow",
+    "rules": "./import-rules.toml",
+    "append_target": "./ledger.beancount",
+    "imports": 1
+  },
+  "source_rows": {
+    "prior-history.csv": [
+      {
+        "row": 1,
+        "date": "2026-04-03",
+        "description": "TRADER JOES #123 SEATTLE WA",
+        "amount": "-33.20",
+        "account": "Assets:Bank:Checking",
+        "currency": "USD",
+        "hash_input": "2026-04-03|-33.2 USD|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking",
+        "import_id": "csv:sha256:a8362f899f1ef12a",
+        "transaction": "prior-groceries",
+        "disposition": "already imported"
+      },
+      {
+        "row": 2,
+        "date": "2026-04-18",
+        "description": "SHELL OIL 5551 KIRKLAND WA",
+        "amount": "-40.00",
+        "account": "Assets:Bank:Checking",
+        "currency": "USD",
+        "hash_input": "2026-04-18|-40 USD|SHELL OIL 5551 KIRKLAND WA|Assets:Bank:Checking",
+        "import_id": "csv:sha256:99d7aab6b18d28d8",
+        "transaction": "prior-fuel",
+        "disposition": "already imported"
+      }
+    ],
+    "activity.csv": [
+      {
+        "row": 1,
+        "date": "2026-04-03",
+        "description": "TRADER JOES #123 SEATTLE WA",
+        "amount": "-33.20",
+        "account": "Assets:Bank:Checking",
+        "currency": "USD",
+        "hash_input": "2026-04-03|-33.2 USD|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking",
+        "import_id": "csv:sha256:a8362f899f1ef12a",
+        "transaction": "prior-groceries",
+        "disposition": "already imported"
+      },
+      {
+        "row": 2,
+        "date": "2026-04-18",
+        "description": "SHELL OIL 5551 KIRKLAND WA",
+        "amount": "-40.00",
+        "account": "Assets:Bank:Checking",
+        "currency": "USD",
+        "hash_input": "2026-04-18|-40 USD|SHELL OIL 5551 KIRKLAND WA|Assets:Bank:Checking",
+        "import_id": "csv:sha256:99d7aab6b18d28d8",
+        "transaction": "prior-fuel",
+        "disposition": "already imported"
+      },
+      {
+        "row": 3,
+        "date": "2026-05-06",
+        "description": "TRADER JOES #123 SEATTLE WA",
+        "amount": "-28.75",
+        "account": "Assets:Bank:Checking",
+        "currency": "USD",
+        "hash_input": "2026-05-06|-28.75 USD|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking",
+        "import_id": "csv:sha256:4bb21afcb4079451",
+        "transaction": "new-groceries",
+        "disposition": "new transaction"
+      },
+      {
+        "row": 4,
+        "date": "2026-05-15",
+        "description": "PAYROLL ACME CORP",
+        "amount": "2500.00",
+        "account": "Assets:Bank:Checking",
+        "currency": "USD",
+        "hash_input": "2026-05-15|2500 USD|PAYROLL ACME CORP|Assets:Bank:Checking",
+        "import_id": "csv:sha256:56e83e6ef0f8f1e7",
+        "transaction": "salary",
+        "disposition": "new transaction"
+      }
+    ],
+    "renamed-headers.csv": [
+      {
+        "row": 1,
+        "date": "2026-05-06",
+        "description": "TRADER JOES #123 SEATTLE WA",
+        "amount": "-28.75",
+        "account": "Assets:Bank:Checking",
+        "currency": "USD",
+        "hash_input": "2026-05-06|-28.75 USD|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking",
+        "import_id": "csv:sha256:4bb21afcb4079451",
+        "transaction": "new-groceries",
+        "disposition": "already imported after activity.csv"
+      },
+      {
+        "row": 2,
+        "date": "2026-05-19",
+        "description": "SHELL OIL 5551 KIRKLAND WA",
+        "amount": "-42.30",
+        "account": "Assets:Bank:Checking",
+        "currency": "USD",
+        "hash_input": "2026-05-19|-42.3 USD|SHELL OIL 5551 KIRKLAND WA|Assets:Bank:Checking",
+        "import_id": "csv:sha256:9625a767cf66bf6d",
+        "transaction": "repair-fuel",
+        "disposition": "new transaction after repair"
+      }
+    ]
+  },
+  "transactions": {
+    "opening": {
+      "date": "2026-04-01",
+      "flag": "*",
+      "payee": null,
+      "narration": "Opening balance",
+      "import_id": null,
+      "postings": [
+        {
+          "account": "Assets:Bank:Checking",
+          "number": "1000.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Equity:Opening-Balances",
+          "number": "-1000.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "prior-groceries": {
+      "date": "2026-04-03",
+      "flag": "*",
+      "payee": null,
+      "narration": "TRADER JOES #123 SEATTLE WA",
+      "import_id": "csv:sha256:a8362f899f1ef12a",
+      "postings": [
+        {
+          "account": "Assets:Bank:Checking",
+          "number": "-33.20",
+          "currency": "USD"
+        },
+        {
+          "account": "Expenses:Food:Groceries",
+          "number": "33.20",
+          "currency": "USD"
+        }
+      ]
+    },
+    "prior-fuel": {
+      "date": "2026-04-18",
+      "flag": "*",
+      "payee": null,
+      "narration": "SHELL OIL 5551 KIRKLAND WA",
+      "import_id": "csv:sha256:99d7aab6b18d28d8",
+      "postings": [
+        {
+          "account": "Assets:Bank:Checking",
+          "number": "-40.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Expenses:Transport:Fuel",
+          "number": "40.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "new-groceries": {
+      "date": "2026-05-06",
+      "flag": "*",
+      "payee": null,
+      "narration": "TRADER JOES #123 SEATTLE WA",
+      "import_id": "csv:sha256:4bb21afcb4079451",
+      "postings": [
+        {
+          "account": "Assets:Bank:Checking",
+          "number": "-28.75",
+          "currency": "USD"
+        },
+        {
+          "account": "Expenses:Food:Groceries",
+          "number": "28.75",
+          "currency": "USD"
+        }
+      ]
+    },
+    "salary": {
+      "date": "2026-05-15",
+      "flag": "*",
+      "payee": null,
+      "narration": "PAYROLL ACME CORP",
+      "import_id": "csv:sha256:56e83e6ef0f8f1e7",
+      "postings": [
+        {
+          "account": "Assets:Bank:Checking",
+          "number": "2500.00",
+          "currency": "USD"
+        },
+        {
+          "account": "Income:Salary",
+          "number": "-2500.00",
+          "currency": "USD"
+        }
+      ]
+    },
+    "repair-fuel": {
+      "date": "2026-05-19",
+      "flag": "*",
+      "payee": null,
+      "narration": "SHELL OIL 5551 KIRKLAND WA",
+      "import_id": "csv:sha256:9625a767cf66bf6d",
+      "postings": [
+        {
+          "account": "Assets:Bank:Checking",
+          "number": "-42.30",
+          "currency": "USD"
+        },
+        {
+          "account": "Expenses:Transport:Fuel",
+          "number": "42.30",
+          "currency": "USD"
+        }
+      ]
+    }
+  },
+  "imports": {
+    "prior-history.csv": {
+      "from": "prior",
+      "extracted_transactions": 2,
+      "overlap_rows": 2,
+      "new_transactions": []
+    },
+    "activity.csv": {
+      "from": "prior",
+      "extracted_transactions": 4,
+      "overlap_rows": 2,
+      "new_transactions": [
+        "new-groceries",
+        "salary"
+      ],
+      "repeat_new_transactions": []
+    },
+    "renamed-headers.csv": {
+      "from": "imported_new",
+      "requires_repair": true,
+      "extracted_transactions": 2,
+      "overlap_rows": 1,
+      "new_transactions": [
+        "repair-fuel"
+      ],
+      "repeat_new_transactions": []
+    },
+    "unrelated.csv": {
+      "identified": false,
+      "extracted_transactions": 0,
+      "new_transactions": []
+    }
+  },
+  "checkpoints": {
+    "prior": {
+      "transaction_keys": [
+        "opening",
+        "prior-groceries",
+        "prior-fuel"
+      ],
+      "transaction_count": 3,
+      "imported_transaction_count": 2,
+      "balance": "926.80"
+    },
+    "imported_new": {
+      "transaction_keys": [
+        "opening",
+        "prior-groceries",
+        "prior-fuel",
+        "new-groceries",
+        "salary"
+      ],
+      "transaction_count": 5,
+      "imported_transaction_count": 4,
+      "balance": "3398.05"
+    },
+    "repaired": {
+      "transaction_keys": [
+        "opening",
+        "prior-groceries",
+        "prior-fuel",
+        "new-groceries",
+        "salary",
+        "repair-fuel"
+      ],
+      "transaction_count": 6,
+      "imported_transaction_count": 5,
+      "balance": "3355.75"
+    }
+  },
+  "branches": {
+    "declined_wiring": {
+      "from": "prior",
+      "ledger_matches": "prior",
+      "ledger_bytes_unchanged": true,
+      "runner_bytes_unchanged": true
+    },
+    "prior_overlap": {
+      "from": "prior",
+      "ledger_matches": "prior",
+      "ledger_bytes_unchanged": true
+    },
+    "reimported_activity": {
+      "from": "imported_new",
+      "ledger_matches": "imported_new",
+      "ledger_bytes_unchanged": true
+    },
+    "unrepaired_headers": {
+      "from": "imported_new",
+      "ledger_matches": "imported_new",
+      "identified": false,
+      "ledger_bytes_unchanged": true
+    },
+    "reimported_repair": {
+      "from": "repaired",
+      "ledger_matches": "repaired",
+      "ledger_bytes_unchanged": true
+    },
+    "unrelated": {
+      "from": "repaired",
+      "ledger_matches": "repaired",
+      "identified": false,
+      "ledger_bytes_unchanged": true
+    }
+  }
+}
