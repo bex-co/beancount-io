@@ -624,7 +624,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Manage Ledger Lifecycle",
     annotations: DESTRUCTIVE,
     description:
-      "Create, update, or delete a ledger with administrative authority. create requires name and accepts description, private, template (STARTER or SAMPLE); update takes ledger and optional name, description, private; delete takes only ledger. Pinned credentials may omit ledger on update/delete.",
+      "Create, update, or delete a ledger with administrative authority. create requires name and accepts description, private, template: STARTER (default, including null) has options and accounts without transactions or opening balances; SAMPLE has demonstration transactions. Templates affect only new ledgers. update takes ledger and optional name, description, private; delete takes only ledger. Pinned credentials may omit ledger on update/delete.",
     inputSchema: lifecycleToolInput,
     outputSchema: lifecycleToolOutput,
     execute: executeLifecycleTool,

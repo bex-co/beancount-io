@@ -46,11 +46,6 @@ plugin "beancount.plugins.auto_accounts"
 1970-01-01 open Equity:Initial
 
 * Transactions
-
-2021-10-11 * "Example Payee" "Example Memo"
-  Equity:Initial                                     -14.99 USD
-  Assets:Cash                                         14.99 USD
-
 `,
 };
 

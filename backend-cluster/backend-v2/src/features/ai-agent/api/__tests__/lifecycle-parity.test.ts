@@ -9,6 +9,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
+import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import { LedgerMutationResolver } from "@/features/ledger/api/resolvers/ledger-resolver.mutation";
 import { LedgerQueryResolver } from "@/features/ledger/api/resolvers/ledger-resolver.query";
 import {
@@ -58,6 +59,11 @@ type Surface = "rest" | "mcp" | "gql";
 const surfaces: Surface[] = ["rest", "mcp", "gql"];
 async function fixture(caller = identity) {
   const records = new Map<string, typeof seed>([["alice/main", { ...seed }]]);
+  const existingContent =
+    '2026-01-01 * "Existing entry"\n  Assets:Cash  25 USD\n  Equity:Initial  -25 USD\n';
+  const files = new Map<string, Record<string, string>>([
+    ["alice/main", { "main.bean": existingContent }],
+  ]);
   let bankRows = [{ id: "fixture_item", accessToken: "fixture-encrypted" }];
   const events: string[] = [];
   const repoGet = jest.fn(async (owner: string, name: string) => {
@@ -67,9 +73,18 @@ async function fixture(caller = identity) {
   });
   const evaluator = new SourceBackedRelationshipEvaluator(
     {} as never,
-    {} as never,
+    {
+      user: { getUserByUsername: async () => ({ id: identity.userId }) },
+    } as never,
     { getUserApiClient: async () => ({ repos: { repoGet } }) } as never,
-    {} as never,
+    {
+      getAdminClient: () => ({
+        ledgers: {
+          getLedger: async (owner: string, name: string) =>
+            envelope(records.get(`${owner}/${name}`)),
+        },
+      }),
+    } as never,
   );
   const authorization = new AuthorizationService(evaluator, jest.fn());
   const authorize = jest.spyOn(authorization, "authorizeOrThrow");
@@ -90,6 +105,7 @@ async function fixture(caller = identity) {
         private: input.private ?? false,
       };
       records.set(value.full_name, value);
+      files.set(value.full_name, { ...input.files });
       return envelope(value);
     },
   );
@@ -125,12 +141,35 @@ async function fixture(caller = identity) {
     records.delete(`${owner}/${name}`);
     return envelope(null);
   });
+  const readFile = (owner: string, name: string, path: string) => {
+    const content = files.get(`${owner}/${name}`)?.[path];
+    if (content === undefined) throw { status: 404 };
+    return {
+      name: path.split("/").at(-1),
+      path,
+      type: "file",
+      sha: "fixture-blob",
+      size: Buffer.byteLength(content),
+      content: Buffer.from(content).toString("base64"),
+      encoding: "base64",
+    };
+  };
   const ledgers = {
     listLedgers: list,
     createLedger: create,
     updateLedger: update,
     getLedger: get,
     deleteLedger: remove,
+    getLedgerFile: async (
+      owner: string,
+      name: string,
+      { path }: { path: string },
+    ) => envelope(readFile(owner, name, path)),
+    getLedgerFilesContent: async (
+      owner: string,
+      name: string,
+      { files: paths }: { files: string[] },
+    ) => envelope(paths.map((path) => readFile(owner, name, path))),
   };
   const getApiContext = jest.fn(async () => ({ favaApiClient: { ledgers } }));
   const getPublicApiClient = jest.fn(async () => ({ ledgers }));
@@ -175,6 +214,12 @@ async function fixture(caller = identity) {
     config,
     authorization,
   );
+  const services = {
+    ledgerRepo: new LedgerRepoService(
+      { getPublicApiClient } as never,
+      authorization,
+    ),
+  };
   resolvers = new Map<unknown, object>([
     [LedgerMutationResolver, new LedgerMutationResolver(workflow)],
     [LedgerQueryResolver, new LedgerQueryResolver(workflow)],
@@ -187,7 +232,7 @@ async function fixture(caller = identity) {
   });
   const schema = await schemaPromise;
   const rest = await startV1TestServer(
-    { workflows: { ledger: workflow } } as unknown as AppLayers,
+    { workflows: { ledger: workflow }, services } as unknown as AppLayers,
     config,
     { apiKeys: false },
   );
@@ -196,6 +241,7 @@ async function fixture(caller = identity) {
     {
       identity: caller,
       ledgerWorkflow: workflow,
+      services,
     } as unknown as McpRequestContext,
     config,
   );
@@ -218,6 +264,38 @@ async function fixture(caller = identity) {
     getPublicApiClient,
     repoGet,
     client,
+    files,
+    existingContent,
+    readFile: async (surface: Surface, ledgerId: string, path: string) => {
+      if (surface === "rest") {
+        const response = await fetch(
+          `${rest.url}/api-gateway/v1/ledgers/${ledgerId}/files/${path}`,
+        );
+        expect(response.status).toBe(200);
+        return ((await response.json()) as { content: string }).content;
+      }
+      if (surface === "mcp") {
+        const response = await client.readResource({
+          uri: `beancount://${ledgerId}/files/${path}`,
+        });
+        const content = response.contents[0];
+        if (!("text" in content)) throw new Error("Expected file text");
+        return content.text;
+      }
+      const response = await graphql({
+        schema,
+        source: `{getLedgerFile(ledgerId:${JSON.stringify(ledgerId)},path:${JSON.stringify(path)}){content encoding}}`,
+        contextValue: { identity: caller },
+      });
+      expect(response.errors).toBeUndefined();
+      const file = response.data?.getLedgerFile as {
+        content: string;
+        encoding: string;
+      };
+      return file.encoding === "base64"
+        ? Buffer.from(file.content, "base64").toString("utf8")
+        : file.content;
+    },
     call: async (
       surface: Surface,
       operation: "create" | "update" | "delete",
@@ -294,6 +372,57 @@ function expected(name: string, description: string, privateValue: boolean) {
   };
 }
 describe("ledger lifecycle through actual adapters and workflow", () => {
+  it.each(surfaces)(
+    "creates empty Starter books via %s and reads their contents on every surface",
+    async (surface) => {
+      const f = await fixture();
+      try {
+        for (const [name, template] of [
+          ["default", undefined],
+          ["nullable", null],
+          ["starter", "STARTER"],
+          ["sample", "SAMPLE"],
+        ] as const) {
+          const result = await f.call(surface, "create", {
+            name,
+            ...(template !== undefined && { template }),
+          });
+          expect(result.failed).toBe(false);
+          const ledgerId = `alice/${name}`;
+          const paths = Object.keys(f.files.get(ledgerId)!);
+          if (template !== "SAMPLE") expect(paths).toEqual(["main.bean"]);
+          for (const reader of surfaces) {
+            const contents = await Promise.all(
+              paths.map((path) => f.readFile(reader, ledgerId, path)),
+            );
+            const content = contents.join("\n");
+            if (template === "SAMPLE") {
+              expect(content).toMatch(/^\d{4}-\d{2}-\d{2} [*!] /m);
+              expect(paths.length).toBeGreaterThan(1);
+            } else {
+              expect(content).toContain('option "operating_currency" "USD"');
+              expect(content).toContain("1970-01-01 open Assets:Cash");
+              expect(content).toContain("1970-01-01 open Equity:Initial");
+              // Only account-opening directives: no transactions, balance
+              // assertions, pads, or prices can introduce demonstration money.
+              const directives = content
+                .split("\n")
+                .filter((line) => /^\d{4}-\d{2}-\d{2}\s/.test(line));
+              expect(directives.length).toBeGreaterThan(20);
+              expect(
+                directives.every((line) => /^\S+ open \S+$/.test(line)),
+              ).toBe(true);
+            }
+            expect(await f.readFile(reader, "alice/main", "main.bean")).toBe(
+              f.existingContent,
+            );
+          }
+        }
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it.each(surfaces)(
     "creates both templates and updates repository state via %s",
     async (surface) => {

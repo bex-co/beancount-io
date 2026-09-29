@@ -455,6 +455,13 @@ See `src/scheduler/` for implementation details and `src/scheduler/README.md` fo
 
 The backend exposes GraphQL APIs through Apollo Server. You can explore the API schema by running the server and visiting the GraphQL playground.
 
+Ledger creation through GraphQL `createLedger`, REST `POST /api-gateway/v1/ledgers`,
+or MCP `manageLedgers` uses the **STARTER** template by default (also for an omitted
+or null template). Starter includes options and account scaffolding, with no
+transactions or opening balances. Choose **SAMPLE** for a populated demonstration
+ledger. Template changes apply only to newly created ledgers; existing books are
+not rewritten.
+
 ## Connecting an MCP client
 
 The backend serves a stateless Streamable HTTP endpoint at

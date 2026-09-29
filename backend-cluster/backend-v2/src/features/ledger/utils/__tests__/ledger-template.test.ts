@@ -29,9 +29,9 @@ describe("ledger templates", () => {
       expect(mainBean).toContain("1970-01-01 open Equity:Initial");
     });
 
-    it("should contain an example transaction", () => {
-      expect(simpleLedgerTemplate["main.bean"]).toContain(
-        '2021-10-11 * "Example Payee" "Example Memo"',
+    it("starts without transactions or other dated directives beyond account openings", () => {
+      expect(simpleLedgerTemplate["main.bean"]).not.toMatch(
+        /^\d{4}-\d{2}-\d{2}\s+(?!open\b)\S+/m,
       );
     });
 

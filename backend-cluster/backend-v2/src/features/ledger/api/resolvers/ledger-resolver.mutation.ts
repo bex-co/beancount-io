@@ -23,7 +23,8 @@ export class LedgerMutationResolver {
 
   @Authenticated()
   @Mutation(() => Ledger, {
-    description: "Create a new ledger for the current user",
+    description:
+      "Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged.",
   })
   async createLedger(
     @Args() input: CreateLedgerInput,

@@ -44,7 +44,7 @@ export const LEDGER_LIFECYCLE_ROUTES = [
     operationId: "createLedger",
     summary: "Create a ledger",
     description:
-      "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER is the default template. This is an account operation even for a ledger-pinned credential.",
+      "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. This is an account operation even for a ledger-pinned credential.",
     body: ledgerCreateInput,
     responses: { 200: json("Created ledger", ledgerResultSchema) },
     handler: async ({ layers }, { identity, body }) =>
