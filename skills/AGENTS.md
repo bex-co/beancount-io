@@ -25,8 +25,8 @@ skills/
         SKILL.md
         references/           Statement-format + matching guidance loaded on demand
         evals/                Statement+ledger fixtures per mismatch class
-  docs/                       Installation, first-query, first-month, and migration guides, fixtures, rehearsal evidence
-  scripts/                    CI checks, suite installer, first-month and migration checkpoint verifiers, and tests
+  docs/                       Installation, first-query, first-month, migration, and importer graduation guides, fixtures, rehearsal evidence
+  scripts/                    CI checks, suite installer, journey checkpoint verifiers, and tests
   tmp/                        Scratch space — gitignored, safe for experiments
 ```
 
@@ -41,6 +41,8 @@ The shared execution contract lives in `.claude/skills/beancount-init/references
 CSV details live in `.claude/skills/beancount-import/references/bea-import.md`: pass confirmed sign, account, mapping, date format, durable rules path and destination on every run. The CLI does not remember sign and remembers only the rules path. Its same-date duplicate detector does not replace the suite's ±3-day manual-entry review; mixed keep/skip decisions require a reviewed batch preserving the original source IDs.
 
 The installed-suite [first-month guide](docs/first-month.md) composes init → import → reconcile → ask → close on one synthetic ledger. Its read-only `scripts/verify-first-month.py` checks exact ledger and Git effects against `docs/examples/first-month/expectations.json`; [real-client evidence](docs/first-month-rehearsal.md) remains separate from deterministic tests. The [migration guide](docs/migration.md) runs beancount-migrate on a Monarch export, then beancount-import on overlapping bank exports; `scripts/verify-migration.py` checks it against `docs/examples/migration/expectations.json`, with [real-client evidence](docs/migration-rehearsal.md) kept separately. Its overlap steps rely on `bea import` matching migrated `monarch:sha256:` digests and `import-id-2`, which first ships in `beancount-io` 0.3.1.
+
+The [importer graduation guide](docs/importer-graduation.md) composes importer-author → import from existing CSV history, then repairs renamed headers. It uses a separate Beangulp 0.2.0 authoring environment and public `bea ingest` execution; source-only extraction remains separate from approved balanced writes. Its read-only `scripts/verify-importer-graduation.py` checks independent source identities, exact ledger effects, original goldens, and workspace/Git preservation against `docs/examples/importer-graduation/expectations.json`. The [two-client rehearsal evidence](docs/importer-graduation-rehearsal.md) records macOS runs on published `bea` 0.3.1 and a targeted Codex sandbox-cache correction; it does not establish native Windows or arbitrary importer dependency support.
 
 ## Skills
 
@@ -92,7 +94,7 @@ python3 skills/scripts/test_beancount_skills.py   # installer, first query/month
 python3 scripts/check-agent-guidance.py
 ```
 
-This checks both customer and development skill trees: SKILL.md frontmatter, `evals.json` validity and fixture paths, Python syntax, the separate skill directories and Claude Code link, `bea check` with global `bean-*` scrubbed from PATH, and a deliberate oracle `uv run --project cli bean-check` on every `*ledger.beancount` (with known failure-mode fixtures listed in the script). One-install guidance is gated across customer entrypoints and supporting Markdown. Behavioral tests execute marked command recipes from the shared references against isolated ledgers, covering CSV sign/rules on repeat imports, reconcile's decimal tie-out read, the wider duplicate-query window, included-file destinations, failed batches/assertions, and historical initialization. The same test entrypoint loads the first-month and migration verifier tests and their deterministic journeys; no paid client calls run in CI.
+This checks both customer and development skill trees: SKILL.md frontmatter, `evals.json` validity and fixture paths, Python syntax, the separate skill directories and Claude Code link, `bea check` with global `bean-*` scrubbed from PATH, and a deliberate oracle `uv run --project cli bean-check` on every `*ledger.beancount` (with known failure-mode fixtures listed in the script). One-install guidance is gated across customer entrypoints and supporting Markdown. Behavioral tests execute marked command recipes from the shared references against isolated ledgers, covering CSV sign/rules on repeat imports, reconcile's decimal tie-out read, the wider duplicate-query window, included-file destinations, failed batches/assertions, and historical initialization. The same test entrypoint loads the first-month, migration, and importer graduation verifier tests and their deterministic journeys; no paid client calls run in CI.
 
 ### Iterating on a skill
 

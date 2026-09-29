@@ -178,6 +178,8 @@ Start with the [first-month tutorial](./cli/docs/TUTORIAL.md), then use the [CLI
 
 Give Claude Code or Codex the eight `beancount-*` ledger workflows. [Install the skills](./skills/docs/installation.md) with a sparse Git clone and one `install` command, then ask a sample ledger a first question with the [first-query walkthrough](./skills/docs/first-query.md). Continue through import, reconciliation, and an approved close with the [first-month guide](./skills/docs/first-month.md). Bringing history from another app? The [migration guide](./skills/docs/migration.md) converts a Monarch export and keeps importing without duplicating transfers.
 
+For a reusable bank importer, follow the [importer graduation guide](./skills/docs/importer-graduation.md): preserve existing CSV history, test extraction before writing, and repair changed headers through either installed agent.
+
 ### Coding agent (MCP)
 
 Point an MCP client at a deployment to query and edit a ledger from an agent:
