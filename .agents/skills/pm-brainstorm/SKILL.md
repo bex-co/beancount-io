@@ -12,6 +12,8 @@ Usage: `/pm-brainstorm <topic or goal to break down>`
 
 The board conventions — mission and pillars, hierarchy, sizing rule, milestone quality gate, standing closing tasks, templates — live **canonically** in [`.agents/skills/pm/SKILL.md`](../pm/SKILL.md). Read that file and apply its rules; do not restate or diverge from them here.
 
+**Minimum proposal size:** Every brainstorming turn must propose **at least 5 distinct, actionable items** — milestones and/or inbox notes, counted together as top-level candidates in both the detailed proposal and the closing summary. Tasks within a milestone and rejected candidates do not count toward the minimum. Keep exploring the requested topic until at least five candidates pass the existing scope, anti-goal, deduplication, sizing, and quality rules; do not pad the list with duplicates or artificially split work to reach five.
+
 ## Steps
 
 1. **Load the canon and the anti-goals.** Read `.agents/skills/pm/SKILL.md` (conventions, mission pillars A1/A2/A3) and `.pm/DO_NOT_DO.md` (hard constraint). If a proposed item conflicts with an anti-goal, reject it explicitly and explain why.
