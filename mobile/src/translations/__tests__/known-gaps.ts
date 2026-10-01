@@ -73,6 +73,7 @@ export const SAME_AS_ENGLISH: Record<
       keys: ["range1M", "range3M", "range6M"],
     },
     { reason: "The same abbreviation for automàtic.", keys: ["autoLabel"] },
+    { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
   ],
   de: [
     {
@@ -100,6 +101,7 @@ export const SAME_AS_ENGLISH: Record<
       keys: ["range1M", "range3M", "range6M", "rangeYTD"],
     },
     { reason: "The same abbreviation for automatisch.", keys: ["autoLabel"] },
+    { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
   ],
   es: [
     {
@@ -120,6 +122,7 @@ export const SAME_AS_ENGLISH: Record<
       keys: ["range1M", "range3M", "range6M"],
     },
     { reason: "The same abbreviation for automático.", keys: ["autoLabel"] },
+    { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
   ],
   fr: [
     {
@@ -154,6 +157,7 @@ export const SAME_AS_ENGLISH: Record<
       keys: ["range1M", "range3M", "range6M"],
     },
     { reason: "The same abbreviation for automatique.", keys: ["autoLabel"] },
+    { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
   ],
   nl: [
     {
@@ -185,6 +189,7 @@ export const SAME_AS_ENGLISH: Record<
       keys: ["range1M", "range3M", "range6M"],
     },
     { reason: "The same abbreviation for automatisch.", keys: ["autoLabel"] },
+    { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
   ],
   pt: [
     {
@@ -207,6 +212,7 @@ export const SAME_AS_ENGLISH: Record<
       keys: ["range1M", "range3M", "range6M"],
     },
     { reason: "The same abbreviation for automático.", keys: ["autoLabel"] },
+    { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
   ],
   sk: [
     {
@@ -222,6 +228,7 @@ export const SAME_AS_ENGLISH: Record<
       keys: ["range1M", "range3M", "range6M"],
     },
     { reason: "The same abbreviation for automatický.", keys: ["autoLabel"] },
+    { reason: "Blog is the same loanword.", keys: ["feedSourceBlog"] },
   ],
 };
 

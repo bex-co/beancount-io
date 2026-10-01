@@ -607,4 +607,7 @@ export const sk: Translations = {
   breakdownRowShare: "{{amount}}, {{percent}} % z celku",
   budgetChartSummary:
     "Rozpočet verzus skutočnosť za {{span}}. Skutočnosť {{actual}} z rozpočtu {{budget}} za {{count}} období, {{over}} nad cieľom.",
+  feedSourceLedger: "Kniha",
+  feedSourceBlog: "Blog",
+  feedSourceRelease: "Vydanie",
 };

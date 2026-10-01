@@ -604,4 +604,7 @@ export const ru: Translations = {
   breakdownRowShare: "{{amount}}, {{percent}}% от итога",
   budgetChartSummary:
     "Бюджет и факт за {{span}}. Факт {{actual}} из {{budget}} за {{count}} периодов, {{over}} сверх цели.",
+  feedSourceLedger: "Книга",
+  feedSourceBlog: "Блог",
+  feedSourceRelease: "Релиз",
 };

@@ -601,4 +601,7 @@ export const es: Translations = {
   breakdownRowShare: "{{amount}}, {{percent}}% del total",
   budgetChartSummary:
     "Presupuesto frente a real de {{span}}. Real {{actual}} de {{budget}} presupuestado en {{count}} periodos, {{over}} por encima del objetivo.",
+  feedSourceLedger: "Libro",
+  feedSourceBlog: "Blog",
+  feedSourceRelease: "Versión",
 };

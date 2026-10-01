@@ -10,6 +10,7 @@ import { DashboardCard } from "@/components/dashboard-card";
 import { useGetFeedQuery } from "@/generated-graphql/graphql";
 import { FeedSource } from "@/generated-graphql/types";
 import { formatFeedDate } from "@/common/date-format";
+import { feedSourceLabelKey } from "./feed-logic";
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { selectCardLoadState } from "@/common/apollo/card-load-state";
 
@@ -50,7 +51,7 @@ type FeedRowProps = {
 
 function FeedRow({ title, link, publishedAt, source, isFirst }: FeedRowProps) {
   const styles = useThemeStyle(getStyles);
-  const { locale } = useTranslations();
+  const { t, locale } = useTranslations();
   const isExternal = link.startsWith("http");
 
   const handlePress = () => {
@@ -59,7 +60,7 @@ function FeedRow({ title, link, publishedAt, source, isFirst }: FeedRowProps) {
     }
   };
 
-  const sourceLabel = source === FeedSource.LedgerRss ? "Ledger" : "Blog";
+  const sourceLabel = t(feedSourceLabelKey(source));
   const date = formatFeedDate(publishedAt, locale);
   const metaText = date ? `${sourceLabel} · ${date}` : sourceLabel;
 

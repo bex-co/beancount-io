@@ -4704,6 +4704,12 @@
             "deprecationReason": null
           },
           {
+            "name": "CHANGELOG",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "LEDGER_RSS",
             "description": null,
             "isDeprecated": false,
@@ -15061,7 +15067,7 @@
               },
               {
                 "name": "source",
-                "description": null,
+                "description": "Restrict the feed to one source: BLOG, LEDGER_RSS, or CHANGELOG. Omit for the merged feed.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",

@@ -892,6 +892,54 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "按 Enter 键以使用“{value}”",
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "新功能",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_other": {
+    message: "自上次访问以来有 {count} 条更新",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "全部标为已读",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "更新日志",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "未读",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "已读",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "显示最近发布",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "隐藏最近发布",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "自上次访问以来有 {count} 条更新",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "你已看过全部更新",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default zhCommon;

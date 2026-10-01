@@ -24,6 +24,12 @@ every call; 403/404 is a relationship denial, while source outages are audited
 service-unavailable errors. Never cache that decision or copy the social graph
 into authorization tuples.
 
+`getFeed` accepts a session or account-wide OAuth with `ledger.read`, checked
+against the caller’s exact-self user resource. API keys and ledger-pinned
+credentials cannot read the account-wide feed. REST `/api-gateway/v1/account/feed`
+and MCP `beancount://account/feed` delegate to the same service; follow/unfollow
+remain session-only.
+
 ## Push policy
 
 - HTTP and SSH must enforce the same repository-path grammar, `refs/heads/main` rule, and directive-limit decision. Shared decisions belong in `policy/`; transport files should only parse/encode their protocol.
@@ -31,8 +37,14 @@ into authorization tuples.
 - Keep refusal wording and sideband behavior aligned across both transports.
 - The SSH proxy remains disabled unless both `SSH_PROXY_ENABLED` and `SSH_PROXY_HOST_KEY` are configured. The host key must be the existing Gitea host key or clients will receive a host-key-changed warning.
 
-## Feed caching
+## Feed caching and sources
 
-`feed/service/feed-service.ts` caches parsed activity feeds through `CacheHelper` using `CACHE_KEYS.feed.*` and `TTL.MIN_5`. Keep parsing in `activity-content-parser.ts` / `html-utils.ts`, transformation in `activity-transformer.ts`, and Redis cache policy in the service.
+`feed/service/feed-service.ts` merges three sources and caches each through `CacheHelper` using `CACHE_KEYS.feed.*` and `TTL.MIN_5`. Keep parsing in `activity-content-parser.ts` / `html-utils.ts`, transformation in `activity-transformer.ts`, and Redis cache policy in the service.
+
+- `BLOG`: `https://beancount.io/{locale}/blog/atom.xml` (English at the root), cached per locale.
+- `CHANGELOG`: `https://beancount.io/{locale}/changelog/rss.xml`, cached per locale. A localized feed that fails or is empty falls back to the English feed, and the fallback is cached under the requested locale so the failure logs once per cache window. Item ids carry a `changelog:` prefix so client caches never merge a release with its blog copy.
+- `LEDGER_RSS`: the caller's Gitea activity.
+
+`getFeed(source:)` restricts the result to one source and rejects any other value; the merged feed keeps a release once, as the changelog entry, and a `BLOG`-only request excludes releases too. The feed keeps no per-user state: reading position lives in the dashboard's local storage, not the database.
 
 When adding a GraphQL sub-domain, keep its resolver and service together and register the resolver in `src/server/graphql/resolver-registry.ts`.

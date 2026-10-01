@@ -909,6 +909,59 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Натиснете Enter, за да използвате „{value}“",
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "Какво ново",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_one": {
+    message: "{count} актуализация от последното ви посещение",
+    description:
+      "Count of releases published since the user's last visit (singular, contains {count})",
+  },
+  "common.whatsNewUnread_other": {
+    message: "{count} актуализации от последното ви посещение",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "Маркирай всички като прочетени",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "Дневник на промените",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "Непрочетено",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "Прочетено",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "Покажи последните издания",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "Скрий последните издания",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "{count} актуализации от последното ви посещение",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "Всичко е прегледано",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default bgCommon;

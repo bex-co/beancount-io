@@ -10,7 +10,7 @@ operations, and 107 MCP operations. Initial missing bindings are 0, 53, and 63.
 The [milestone coverage map](../../../.pm/w1/m10/COVERAGE.md) assigns the missing
 families. Backend tests do not import the board, which can move when archived.
 `parity-baseline.test.ts` rejects removed operations, changed authorization or
-operational classes, lost client bindings, and changed eligibility. The existing
+operational classes, lost client bindings, and unapproved eligibility changes. The existing
 surface-parity test tracks the still-unimplemented bindings; its nonzero counts
 must drop only as real adapters land. Passing either test is not a declaration
 of complete behavioral parity.
@@ -25,7 +25,7 @@ old exemption prose or the operation's rate-limit class. In particular:
   `ledger.admin`; API keys remain forbidden. The MCP OAuth audience can therefore
   reach this action once the account-scoped adapter exists. No credential-policy
   expansion is required to close this row.
-- User profile updates/search, private social actions, billing, and authentication
+- User profile updates/search, follow/unfollow, billing, and authentication
   ceremonies retain their existing credential exclusions.
 - API-key minting requires OAuth on MCP, admin capability, a paid plan, and scope
   and ledger-pin narrowing. An API key cannot mint a successor.
@@ -36,6 +36,25 @@ OAuth audiences remain resource-specific: application API tokens target
 `{issuer}/v1`; MCP tokens target `{issuer}/api-gateway/mcp`. API keys can use both
 surfaces. Permission parity means the same authorized domain action and current
 relationships, not accepting an access token at the wrong resource.
+
+## Account feed OAuth policy expansion (2026-09-30)
+
+`Query.getFeed` previously required a browser session, preventing the native
+OAuth app from loading its activity feed. `user.social.feed.read` now accepts
+sessions and OAuth with `ledger.read`, still requiring the exact-self user
+relationship. API keys remain forbidden. A ledger-pinned credential is rejected
+because the merged feed includes account-wide ledger activity. This applies even
+to source-filtered requests; a filter does not change the credential policy.
+Follow/unfollow retain their session-only policy.
+
+The same service is reachable via `GET /api-gateway/v1/account/feed` and MCP
+resource `beancount://account/feed{?offset,limit,source,locale}`. Defaults are
+`offset=0`, `limit=10`, and the profile locale (then English). `source` accepts
+BLOG, CHANGELOG, or LEDGER_RSS case-insensitively; omitted/empty merges sources.
+All return `{items, total, hasMore}`. The frozen baseline remains unchanged;
+its guard explicitly permits only this operation's eligibility expansion while
+retaining its existing action, class, and GraphQL binding. Adapter contract tests
+cover the new policy and the zero-gap check covers all three bindings.
 
 ## Named structural exceptions
 
@@ -71,7 +90,7 @@ none can dissolve into stale exemption prose:
    their browser surfaces with written reasons in the op-class table.
 8. **Token introspection is not an MCP tool.** `credentials.introspect`
    (ADR 0017, w3/m44) reaches GraphQL and REST; its `mcpExempt` records why it
-   stops there. The caller is a token *validator* — a gateway, a proxy, an
+   stops there. The caller is a token _validator_ — a gateway, a proxy, an
    agent runtime's auth layer — deciding whether to admit a request it is
    holding. An MCP client is the thing being validated, not the thing
    validating, and it already learns its credential is dead from the next

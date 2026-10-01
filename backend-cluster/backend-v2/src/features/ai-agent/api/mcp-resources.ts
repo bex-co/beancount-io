@@ -1,3 +1,4 @@
+import { feedQuery } from "@/features/gitea/feed/api/feed-route";
 import { readAiCfoUsage } from "@/features/feature-usage/api/ai-cfo-usage-route";
 import { suggestCategoriesQuery } from "@/features/llm/api/suggest-categories-route";
 import { tempAssetDownloadQuery } from "@/features/s3/api/temp-asset-routes";
@@ -437,6 +438,22 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       );
     },
   })),
+  {
+    name: "getFeed",
+    title: "Your activity feed",
+    description:
+      "Read your merged blog, release, and ledger activity. Requires a session or account-wide OAuth credential with ledger.read.",
+    uriTemplate: "beancount://account/feed",
+    queryNames: Object.keys(feedQuery.shape),
+    mimeType: "application/json",
+    read: async (context, variables) =>
+      JSON.stringify(
+        await context.feedService.getFeed(
+          feedQuery.parse(variables),
+          context.identity,
+        ),
+      ),
+  },
   {
     name: "userProfile",
     title: "Your profile",

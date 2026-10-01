@@ -603,4 +603,7 @@ export const pt: Translations = {
   breakdownRowShare: "{{amount}}, {{percent}}% do total",
   budgetChartSummary:
     "Orçado versus realizado em {{span}}. Realizado {{actual}} de {{budget}} orçado em {{count}} períodos, {{over}} acima da meta.",
+  feedSourceLedger: "Livro",
+  feedSourceBlog: "Blog",
+  feedSourceRelease: "Versão",
 };

@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const frDashboardPage: Record<string, TranslationEntry> = {
-  "page.dashboard.blogFeed": {
-    message: "Dernières Mises à Jour",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.createLedger": {
     message: "Créer un grand livre",
     description: "Button to create new ledger",
@@ -113,10 +109,6 @@ const frDashboardPage: Record<string, TranslationEntry> = {
     message: "Le nom est requis",
     description: "Validation error when name is missing",
   },
-  "page.dashboard.noFeedItems": {
-    message: "Aucun élément de flux disponible",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.noLedgersFound": {
     message: "Aucun grand livre trouvé",
     description: "Message when user has no ledgers",
@@ -175,6 +167,20 @@ const frDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.goToAccount": {
     message: "Aller au compte de {owner}",
     description: "Tooltip for navigating to owner's account page",
+  },
+  "page.dashboard.activity": {
+    message: "Activité",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "Les modifications de vos livres apparaissent ici.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "Modifications dans tous les livres que vous pouvez voir",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

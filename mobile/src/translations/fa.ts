@@ -585,4 +585,7 @@ export const fa: Translations = {
   breakdownRowShare: "{{amount}}، {{percent}}٪ از کل",
   budgetChartSummary:
     "بودجه در برابر واقعی برای {{span}}. واقعی {{actual}} از بودجه {{budget}} در {{count}} دوره، {{over}} دوره بیش از هدف.",
+  feedSourceLedger: "دفتر",
+  feedSourceBlog: "وبلاگ",
+  feedSourceRelease: "انتشار",
 };

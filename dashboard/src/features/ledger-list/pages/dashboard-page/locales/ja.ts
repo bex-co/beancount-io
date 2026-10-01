@@ -158,21 +158,27 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
       "台帳の上限に達しました。さらに台帳を作成するにはアップグレードしてください。",
     description: "Tooltip shown when save button is disabled due to limit",
   },
-  "page.dashboard.blogFeed": {
-    message: "最新の更新",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.feedError": {
     message: "フィードの読み込みに失敗しました",
     description: "Error message when feed fails to load",
   },
-  "page.dashboard.noFeedItems": {
-    message: "フィードアイテムがありません",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.showMore": {
     message: "もっと表示",
     description: "Button text to load more feed items",
+  },
+  "page.dashboard.activity": {
+    message: "アクティビティ",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "帳簿への変更はここに表示されます。",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "閲覧できるすべての帳簿の変更",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

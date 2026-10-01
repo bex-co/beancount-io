@@ -917,6 +917,59 @@ const enCommon: Record<string, TranslationEntry> = {
     message: 'Press Enter to use "{value}"',
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "What's new",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_one": {
+    message: "{count} update since your last visit",
+    description:
+      "Count of releases published since the user's last visit (singular, contains {count})",
+  },
+  "common.whatsNewUnread_other": {
+    message: "{count} updates since your last visit",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "Mark all as read",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "Changelog",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "Unread",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "Read",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "Show recent releases",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "Hide recent releases",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "{count} updates since your last visit",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "You're up to date",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default enCommon;

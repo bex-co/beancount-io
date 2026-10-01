@@ -1457,7 +1457,12 @@ const SOCIAL_DISCOVERY_BINDINGS: Record<
 
 const GITEA_SOCIAL_VERBS: readonly VerbEntry[] = [
   {
-    ...gqlOnly("Query.getFeed", "read", R.giteaSocial, M.notAgentShaped),
+    verb: "Query.getFeed",
+    gql: "Query.getFeed",
+    class: "read",
+    rest: "GET /api-gateway/v1/account/feed",
+    mcpResource: "getFeed",
+    mcpExempt: "Exposed as an MCP resource; feed reads need no action tool.",
     authorizationAction: AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ,
   },
   ...Object.entries(SOCIAL_PUBLIC_EXCLUSIONS).map(([gql, reason]) => {

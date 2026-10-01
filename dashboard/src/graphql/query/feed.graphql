@@ -14,3 +14,18 @@ query GetFeed($offset: Float, $limit: Float, $source: String, $locale: String) {
     hasMore
   }
 }
+
+query GetChangelog($limit: Float, $locale: String) {
+  getFeed(offset: 0, limit: $limit, source: "CHANGELOG", locale: $locale) {
+    items {
+      id
+      title
+      summary
+      link
+      publishedAt
+      source
+    }
+    total
+    hasMore
+  }
+}

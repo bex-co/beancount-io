@@ -593,4 +593,7 @@ export const bg: Translations = {
   breakdownRowShare: "{{amount}}, {{percent}}% от общото",
   budgetChartSummary:
     "Бюджет спрямо действителни за {{span}}. Действителни {{actual}} от бюджет {{budget}} за {{count}} периода, {{over}} над целта.",
+  feedSourceLedger: "Счетоводна книга",
+  feedSourceBlog: "Блог",
+  feedSourceRelease: "Издание",
 };

@@ -602,4 +602,7 @@ export const uk: Translations = {
   breakdownRowShare: "{{amount}}, {{percent}}% від підсумку",
   budgetChartSummary:
     "Бюджет і факт за {{span}}. Факт {{actual}} із {{budget}} за {{count}} періодів, {{over}} понад ціль.",
+  feedSourceLedger: "Книга",
+  feedSourceBlog: "Блог",
+  feedSourceRelease: "Реліз",
 };

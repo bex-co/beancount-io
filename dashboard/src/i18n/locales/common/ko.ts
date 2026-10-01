@@ -904,6 +904,54 @@ const koCommon: Record<string, TranslationEntry> = {
     message: '"{value}"을(를) 사용하려면 Enter 키를 누르세요.',
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "새로운 소식",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_other": {
+    message: "마지막 방문 이후 {count}개의 업데이트",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "모두 읽음으로 표시",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "변경 내역",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "읽지 않음",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "읽음",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "최근 릴리스 보기",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "최근 릴리스 숨기기",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "마지막 방문 이후 {count}개의 업데이트",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "모두 확인했습니다",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default koCommon;

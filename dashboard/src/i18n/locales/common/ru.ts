@@ -909,6 +909,67 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Нажмите Enter, чтобы использовать «{value}»",
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "Что нового",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_one": {
+    message: "{count} обновление с вашего последнего визита",
+    description:
+      "Count of releases published since the user's last visit (singular, contains {count})",
+  },
+  "common.whatsNewUnread_few": {
+    message: "{count} обновления с вашего последнего визита",
+    description: "Unread release count (few plural form)",
+  },
+  "common.whatsNewUnread_many": {
+    message: "{count} обновлений с вашего последнего визита",
+    description: "Unread release count (many plural form)",
+  },
+  "common.whatsNewUnread_other": {
+    message: "{count} обновления с вашего последнего визита",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "Отметить все как прочитанные",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "История изменений",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "Непрочитано",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "Прочитано",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "Показать последние релизы",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "Скрыть последние релизы",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "{count} обновлений с вашего последнего визита",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "Вы всё посмотрели",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default ruCommon;

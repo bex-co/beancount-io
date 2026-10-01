@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const esDashboardPage: Record<string, TranslationEntry> = {
-  "page.dashboard.blogFeed": {
-    message: "Últimas Actualizaciones",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.createLedger": {
     message: "Crear Libro Mayor",
     description: "Button to create new ledger",
@@ -113,10 +109,6 @@ const esDashboardPage: Record<string, TranslationEntry> = {
     message: "Nombre is required",
     description: "Validation error when name is missing",
   },
-  "page.dashboard.noFeedItems": {
-    message: "No hay elementos en el feed",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.noLedgersFound": {
     message: "No se encontraron libros mayores",
     description: "Message when user has no ledgers",
@@ -174,6 +166,20 @@ const esDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.goToAccount": {
     message: "Ir a la cuenta de {owner}",
     description: "Tooltip for navigating to owner's account page",
+  },
+  "page.dashboard.activity": {
+    message: "Actividad",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "Los cambios en tus libros aparecen aquí.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "Cambios en todos los libros que puedes ver",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

@@ -593,4 +593,7 @@ export const nl: Translations = {
   breakdownRowShare: "{{amount}}, {{percent}}% van het totaal",
   budgetChartSummary:
     "Budget versus werkelijk voor {{span}}. Werkelijk {{actual}} van {{budget}} begroot over {{count}} periodes, {{over}} boven het doel.",
+  feedSourceLedger: "Grootboek",
+  feedSourceBlog: "Blog",
+  feedSourceRelease: "Uitgave",
 };

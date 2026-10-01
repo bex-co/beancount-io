@@ -908,6 +908,67 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Stlačením klávesu Enter použijete „{value}“",
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "Čo je nové",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_one": {
+    message: "{count} novinka od vašej poslednej návštevy",
+    description:
+      "Count of releases published since the user's last visit (singular, contains {count})",
+  },
+  "common.whatsNewUnread_few": {
+    message: "{count} novinky od vašej poslednej návštevy",
+    description: "Unread release count (few plural form)",
+  },
+  "common.whatsNewUnread_many": {
+    message: "{count} novinky od vašej poslednej návštevy",
+    description: "Unread release count (many plural form)",
+  },
+  "common.whatsNewUnread_other": {
+    message: "{count} noviniek od vašej poslednej návštevy",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "Označiť všetko ako prečítané",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "Zoznam zmien",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "Neprečítané",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "Prečítané",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "Zobraziť nedávne vydania",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "Skryť nedávne vydania",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "{count} noviniek od vašej poslednej návštevy",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "Ste v obraze",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default skCommon;

@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const faDashboardPage: Record<string, TranslationEntry> = {
-  "page.dashboard.blogFeed": {
-    message: "آخرین به‌روزرسانی‌ها",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.createLedger": {
     message: "ایجاد دفتر",
     description: "Button to create new ledger",
@@ -113,10 +109,6 @@ const faDashboardPage: Record<string, TranslationEntry> = {
     message: "نام الزامی است",
     description: "Validation error when name is missing",
   },
-  "page.dashboard.noFeedItems": {
-    message: "هیچ موردی در دسترس نیست",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.noLedgersFound": {
     message: "دفتری یافت نشد",
     description: "Message when user has no ledgers",
@@ -174,6 +166,20 @@ const faDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.goToAccount": {
     message: "برو به حساب {owner}",
     description: "Tooltip for navigating to owner's account page",
+  },
+  "page.dashboard.activity": {
+    message: "فعالیت",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "تغییرات دفترهای شما اینجا نمایش داده می‌شود.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "تغییرات در همه دفترهایی که می‌بینید",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

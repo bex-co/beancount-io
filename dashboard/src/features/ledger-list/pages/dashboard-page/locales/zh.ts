@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const zhDashboardPage: Record<string, TranslationEntry> = {
-  "page.dashboard.blogFeed": {
-    message: "最新动态",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.createLedger": {
     message: "创建账本",
     description: "Button to create new ledger",
@@ -110,10 +106,6 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
     message: "名称为必填项",
     description: "Validation error when name is missing",
   },
-  "page.dashboard.noFeedItems": {
-    message: "暂无动态",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.noLedgersFound": {
     message: "未找到账本",
     description: "Message when user has no ledgers",
@@ -170,6 +162,20 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.goToAccount": {
     message: "转到 {owner} 的账户",
     description: "Tooltip for navigating to owner's account page",
+  },
+  "page.dashboard.activity": {
+    message: "动态",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "你的账本提交记录会显示在这里。",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "你能看到的所有账本的提交",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

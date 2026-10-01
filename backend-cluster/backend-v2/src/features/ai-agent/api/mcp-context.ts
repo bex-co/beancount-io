@@ -1,3 +1,4 @@
+import type { IFeedService } from "@/features/gitea/feed/service/feed-service";
 import type { ILegacyEntryWorkflow } from "@/features/ledger/workflow/legacy-entry-workflow";
 import type { ILedgerEntryService } from "@/features/ledger/service/ledger-entry-service";
 import type { IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
@@ -23,6 +24,7 @@ export { ledgerSelection } from "./mcp-ledger-selection";
 /** A credential may select a ledger per call or perform account-only work. */
 export type McpRequestContext = Omit<ToolContext, "ledgerId"> & {
   ledgerId?: string;
+  feedService: IFeedService;
   socialService: Pick<
     IUserProfileService,
     | "getUserProfile"

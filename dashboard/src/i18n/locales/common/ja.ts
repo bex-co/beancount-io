@@ -910,6 +910,54 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "Enter キーを押して「{value}」を使用します",
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "新着情報",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_other": {
+    message: "前回の訪問以降 {count} 件の更新",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "すべて既読にする",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "変更履歴",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "未読",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "既読",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "最近のリリースを表示",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "最近のリリースを非表示",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "前回の訪問以降 {count} 件の更新",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "最新の状態です",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default jaCommon;

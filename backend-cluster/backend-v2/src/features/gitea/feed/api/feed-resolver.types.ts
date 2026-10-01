@@ -3,6 +3,8 @@ import { ArgsType, Field, ObjectType, registerEnumType } from "type-graphql";
 export enum FeedSource {
   BLOG = "BLOG",
   LEDGER_RSS = "LEDGER_RSS",
+  /** Product releases from the localized changelog RSS feed. */
+  CHANGELOG = "CHANGELOG",
 }
 
 registerEnumType(FeedSource, {
@@ -57,7 +59,11 @@ export class GetFeedArgs {
   @Field(() => Number, { defaultValue: 10 })
   limit: number;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "Restrict the feed to one source: BLOG, LEDGER_RSS, or CHANGELOG. Omit for the merged feed.",
+  })
   source?: string;
 
   @Field(() => String, {

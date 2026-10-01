@@ -910,6 +910,63 @@ const esCommon: Record<string, TranslationEntry> = {
     message: 'Presione Entrar para usar "{value}"',
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "Novedades",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_one": {
+    message: "{count} novedad desde tu última visita",
+    description:
+      "Count of releases published since the user's last visit (singular, contains {count})",
+  },
+  "common.whatsNewUnread_many": {
+    message: "{count} novedades desde tu última visita",
+    description: "Unread release count (many plural form)",
+  },
+  "common.whatsNewUnread_other": {
+    message: "{count} novedades desde tu última visita",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "Marcar todo como leído",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "Registro de cambios",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "No leído",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "Leído",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "Mostrar versiones recientes",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "Ocultar versiones recientes",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "{count} novedades desde tu última visita",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "Estás al día",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default esCommon;

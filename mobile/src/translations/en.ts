@@ -352,6 +352,9 @@ export const en = {
   savings: "Savings",
   // feed
   latestUpdates: "Latest Updates",
+  feedSourceLedger: "Ledger",
+  feedSourceBlog: "Blog",
+  feedSourceRelease: "Release",
   // unmatched route fallback
   notFoundTitle: "Page not found",
   notFoundBody: "That link doesn't lead anywhere in the app.",

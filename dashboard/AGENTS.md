@@ -131,6 +131,15 @@ For Search Console evidence, run `yarn search-console-report --markdown --days 2
 - Reuse common responsive and accessibility primitives before adding another abstraction.
 - Charts use ECharts 6; keep report-specific transformation close to its feature and test transformations independently from rendering.
 
+## Dashboard home (`/ledger`)
+
+`src/features/ledger-list/pages/dashboard-page/` composes two sections, each backed by one `source` of the `getFeed` operation:
+
+- **What's new** (`components/whats-new.tsx`, `source: "CHANGELOG"`): the localized changelog RSS, newest first. Rows are Beancount-style lines (`YYYY-MM-DD`, `!` unread / `*` read, title). The block is expanded with an accent edge while anything is unread, one collapsed line once everything is read, and absent when the request fails or is empty. It renders **every release the hook counts** — capping the rows below the count once left "N updates" on screen with no unread row left to open. Read state is keyed on a locale-independent release identity, because item ids and links carry the locale that fetched them and a language switch would otherwise make an opened release unread again. The unread watermark lives in `src/common/hooks/use-changelog-watermark.ts` and is **per device, in local storage only**: a reading position is not a fact the server acts on, so it does not earn a column on the identity table or a public mutation. A 30-day cutoff covers a first visit and is **recorded once** rather than recomputed against the current clock, so an unread release cannot quietly age out of the window. The watermark advances only on an explicit action — "Mark all as read" or opening the last unread row. Neither visiting a page nor the passage of time marks a release as seen. Both feed queries use `cache-and-network`, so returning to the dashboard revalidates instead of replaying a cache that predates the newest release or the user's own last commit. Titles and links arrive already translated from the CMS; only chrome strings are dashboard translations (`common.whatsNew*`).
+- **Activity** (`components/activity-feed.tsx`, `source: "LEDGER_RSS"`): the user's own ledger commits with "Show More" paging.
+
+Two deliberate absences. The blog is **not** on the dashboard: it publishes roughly twenty posts a day and none of them carry a `beancount` tag, so it is search inventory rather than something a signed-in customer needs, and no amount of collapsing earned it the space. There is also no header entry point on ledger pages: an icon-only control with an unread dot was built and judged not worth the header space.
+
 ## Shell accessibility
 
 The ledger shell (`src/common/components/ledger-layout/`) and the `/ledger` dashboard shell (`src/features/ledger-list/pages/dashboard-page/components/dashboard-layout.tsx`) share the same accessibility structure:

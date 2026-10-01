@@ -28,7 +28,10 @@ describe("the accepted parity baseline", () => {
       }).toEqual({
         verb: entry.verb,
         surface,
-        eligible: entry.eligible.includes(surface),
+        // Explicit policy expansion for native OAuth feed access; the historical
+        // fixture stays frozen and every other operation keeps its eligibility.
+        eligible:
+          entry.verb === "Query.getFeed" || entry.eligible.includes(surface),
       });
     }
   });

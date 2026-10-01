@@ -907,6 +907,67 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: 'Натисніть Enter, щоб використовувати "{value}"',
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "Що нового",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_one": {
+    message: "{count} оновлення з вашого останнього візиту",
+    description:
+      "Count of releases published since the user's last visit (singular, contains {count})",
+  },
+  "common.whatsNewUnread_few": {
+    message: "{count} оновлення з вашого останнього візиту",
+    description: "Unread release count (few plural form)",
+  },
+  "common.whatsNewUnread_many": {
+    message: "{count} оновлень з вашого останнього візиту",
+    description: "Unread release count (many plural form)",
+  },
+  "common.whatsNewUnread_other": {
+    message: "{count} оновлення з вашого останнього візиту",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "Позначити все як прочитане",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "Історія змін",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "Непрочитано",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "Прочитано",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "Показати останні релізи",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "Сховати останні релізи",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "{count} оновлень з вашого останнього візиту",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "Ви все переглянули",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default ukCommon;

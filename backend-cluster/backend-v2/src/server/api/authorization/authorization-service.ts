@@ -54,6 +54,7 @@ type CredentialRequirement = {
   readonly capability?: OperationClass;
   readonly denyMessageByMethod?: Partial<Record<AuthMethod, string>>;
   readonly enforceLedgerScope?: boolean;
+  readonly requireAccountWideCredential?: boolean;
 };
 
 type AuditClass = "read" | "write" | "admin";
@@ -298,7 +299,11 @@ const ACTION_REQUIREMENTS: Readonly<
   },
   [AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ]: {
     relationships: userRelationship(USER_RELATIONSHIPS.READ_SOCIAL),
-    credential: { methods: SESSION_ONLY },
+    credential: {
+      methods: INTERACTIVE_OR_OAUTH,
+      capability: "read",
+      requireAccountWideCredential: true,
+    },
     auditClass: "read",
   },
   [AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE]: {
@@ -772,6 +777,12 @@ const credentialDenial = (
     !identityHasCapability(identity, requirement.capability)
   ) {
     return `This operation requires the "ledger.${requirement.capability}" scope`;
+  }
+  if (
+    requirement.requireAccountWideCredential &&
+    identity.ledgerScope !== undefined
+  ) {
+    return "Reading the account feed requires an account-wide credential";
   }
   if (
     requirement.enforceLedgerScope &&

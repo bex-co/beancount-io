@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const nlDashboardPage: Record<string, TranslationEntry> = {
-  "page.dashboard.blogFeed": {
-    message: "Laatste Updates",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.createLedger": {
     message: "Grootboek aanmaken",
     description: "Button to create new ledger",
@@ -113,10 +109,6 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
     message: "Naam is required",
     description: "Validation error when name is missing",
   },
-  "page.dashboard.noFeedItems": {
-    message: "Geen feed-items beschikbaar",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.noLedgersFound": {
     message: "Geen grootboeken gevonden",
     description: "Message when user has no ledgers",
@@ -173,6 +165,20 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.goToAccount": {
     message: "Ga naar het account van {owner}",
     description: "Tooltip for navigating to owner's account page",
+  },
+  "page.dashboard.activity": {
+    message: "Activiteit",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "Wijzigingen aan je grootboeken verschijnen hier.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "Wijzigingen in alle grootboeken die je kunt zien",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

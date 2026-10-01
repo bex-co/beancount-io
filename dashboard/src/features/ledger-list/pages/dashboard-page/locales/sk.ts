@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const skDashboardPage: Record<string, TranslationEntry> = {
-  "page.dashboard.blogFeed": {
-    message: "Najnovšie Aktualizácie",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.createLedger": {
     message: "Vytvoriť knihu",
     description: "Button to create new ledger",
@@ -113,10 +109,6 @@ const skDashboardPage: Record<string, TranslationEntry> = {
     message: "Názov je povinný",
     description: "Validation error when name is missing",
   },
-  "page.dashboard.noFeedItems": {
-    message: "Nie sú k dispozícii žiadne položky",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.noLedgersFound": {
     message: "Žiadne knihy neboli nájdené",
     description: "Message when user has no ledgers",
@@ -173,6 +165,20 @@ const skDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.goToAccount": {
     message: "Prejsť na účet {owner}",
     description: "Tooltip for navigating to owner's account page",
+  },
+  "page.dashboard.activity": {
+    message: "Aktivita",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "Zmeny vo vašich knihách sa zobrazia tu.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "Zmeny vo všetkých knihách, ktoré vidíte",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

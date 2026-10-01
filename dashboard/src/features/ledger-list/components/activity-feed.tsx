@@ -1,42 +1,50 @@
 import { useState } from "react";
 import { useQuery } from "@apollo/client/react";
-import { Activity, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
+import { AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { FeedCard } from "./feed-card";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { GetFeedDocument, GetFeedQuery } from "@/graphql/definitions";
 
+const ACTIVITY_SOURCE = "LEDGER_RSS";
+
 /**
- * Latest-updates feed component
- * Displays paginated product news and traceable ledger activity
- * Features:
- * - Pagination with "Show More" button
- * - Loading state with skeleton loaders
- * - Error state with retry button
- * - Empty state message
+ * The user's own ledger activity: commits and pull requests on every ledger
+ * they can see, newest first, with "Show More" paging. Releases and blog
+ * posts have their own sections, so a day of posts cannot bury a commit.
  */
-export function BlogFeed() {
+export function ActivityFeed() {
   const { t, i18n } = useTranslations();
   const [offset, setOffset] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const limit = 10;
 
   const heading = (
-    <div className="flex items-center gap-3 border-b border-border pb-4">
-      <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
-        <Activity className="size-5" aria-hidden="true" />
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="min-w-0">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
+          {t("page.dashboard.activity")}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t("page.dashboard.activityDescription")}
+        </p>
       </div>
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-        {t("page.dashboard.blogFeed")}
-      </h1>
     </div>
   );
 
   const { data, loading, error, refetch, fetchMore } = useQuery(
     GetFeedDocument,
     {
-      variables: { offset: 0, limit, locale: i18n.language },
+      variables: {
+        offset: 0,
+        limit,
+        source: ACTIVITY_SOURCE,
+        locale: i18n.language,
+      },
+      // Show the cached commits immediately, then revalidate: returning to the
+      // dashboard after a commit should not show a list that predates it.
+      fetchPolicy: "cache-and-network",
     },
   );
 
@@ -46,7 +54,12 @@ export function BlogFeed() {
     setIsLoadingMore(true);
     try {
       await fetchMore({
-        variables: { offset: newOffset, limit, locale: i18n.language },
+        variables: {
+          offset: newOffset,
+          limit,
+          source: ACTIVITY_SOURCE,
+          locale: i18n.language,
+        },
         updateQuery: (
           prev: GetFeedQuery,
           { fetchMoreResult }: { fetchMoreResult?: GetFeedQuery },
@@ -75,7 +88,7 @@ export function BlogFeed() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="border border-border bg-card p-4 sm:p-5"
+              className="rounded-xl border bg-card p-4 shadow-sm sm:p-5"
               aria-hidden="true"
             >
               <div className="flex items-center gap-3 mb-3">
@@ -99,7 +112,7 @@ export function BlogFeed() {
     return (
       <div className="space-y-5">
         {heading}
-        <div className="border border-border bg-card p-8 text-center">
+        <div className="rounded-xl border bg-card p-8 text-center shadow-sm">
           <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
           <p className="text-sm mb-2 text-muted-foreground">
             {t("page.dashboard.feedError")}
@@ -121,9 +134,9 @@ export function BlogFeed() {
     return (
       <div className="space-y-5">
         {heading}
-        <div className="border border-border bg-card p-8 text-center">
+        <div className="rounded-xl border bg-card p-8 text-center shadow-sm">
           <p className="text-sm text-muted-foreground">
-            {t("page.dashboard.noFeedItems")}
+            {t("page.dashboard.activityEmpty")}
           </p>
         </div>
       </div>

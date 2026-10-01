@@ -157,21 +157,27 @@ const enDashboardPage: Record<string, TranslationEntry> = {
       "You've reached your ledger limit. Upgrade to create more ledgers.",
     description: "Tooltip shown when save button is disabled due to limit",
   },
-  "page.dashboard.blogFeed": {
-    message: "Latest Updates",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.feedError": {
     message: "Failed to load feed",
     description: "Error message when feed fails to load",
   },
-  "page.dashboard.noFeedItems": {
-    message: "No feed items available",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.showMore": {
     message: "Show More",
     description: "Button text to load more feed items",
+  },
+  "page.dashboard.activity": {
+    message: "Activity",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "Commits to your ledgers show up here.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "Commits across every ledger you can see",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

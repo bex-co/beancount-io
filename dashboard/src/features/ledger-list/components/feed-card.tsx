@@ -1,24 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  BookOpen,
-  ExternalLink,
-  GitCommit,
-  History,
-} from "lucide-react";
+import { ArrowRight, GitCommit, History } from "lucide-react";
 import { format, isValid } from "date-fns";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/common/components/ui/avatar";
 import { Button } from "@/common/components/ui/button";
 import {
   useDateLocale,
   useFormatRelativeTime,
 } from "@/common/hooks/use-date-locale";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { FeedSource, type GetFeedQuery } from "@/graphql/definitions";
+import type { GetFeedQuery } from "@/graphql/definitions";
 import { getLedgerDestination } from "../lib/feed-destination";
 
 type FeedItem = GetFeedQuery["getFeed"]["items"][number];
@@ -46,7 +35,7 @@ function LedgerActivityCard({ item }: { item: FeedItem }) {
   const ActivityIcon = destination?.commitSha ? GitCommit : History;
 
   return (
-    <article className="overflow-hidden border border-border bg-card shadow-xs transition-shadow hover:shadow-sm">
+    <article className="overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md motion-reduce:transition-none">
       <div className="flex items-start gap-3 p-4 sm:gap-4 sm:p-5">
         <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
           <ActivityIcon className="size-4" aria-hidden="true" />
@@ -149,68 +138,10 @@ function LedgerActivityCard({ item }: { item: FeedItem }) {
   );
 }
 
-function ProductUpdateCard({ item }: { item: FeedItem }) {
-  const initials = item.author
-    ? item.author
-        .split(/\s+/)
-        .map((part) => part.charAt(0))
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "BC";
-
-  return (
-    <article className="border border-border bg-card shadow-xs transition-colors hover:bg-accent/40">
-      <a
-        href={item.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex gap-3 p-4 sm:gap-4 sm:p-5"
-      >
-        <Avatar className="size-9 shrink-0 rounded-md">
-          <AvatarImage
-            src={item.authorAvatar || "/lgasset/logo.png"}
-            alt={item.author || "Beancount"}
-          />
-          <AvatarFallback className="rounded-md">{initials}</AvatarFallback>
-        </Avatar>
-
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-sm font-medium text-foreground">
-              {item.author || "Beancount"}
-            </span>
-            <span aria-hidden="true" className="text-muted-foreground/60">
-              ·
-            </span>
-            <FeedTimestamp publishedAt={item.publishedAt} />
-          </div>
-          <h3 className="text-base font-semibold leading-snug text-foreground group-hover:text-primary sm:text-lg">
-            {item.title}
-          </h3>
-          {item.summary && (
-            <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-              {item.summary}
-            </p>
-          )}
-        </div>
-
-        <div className="flex size-8 shrink-0 items-center justify-center text-muted-foreground transition-colors group-hover:text-foreground">
-          {item.source === FeedSource.Blog ? (
-            <ExternalLink className="size-4" aria-hidden="true" />
-          ) : (
-            <BookOpen className="size-4" aria-hidden="true" />
-          )}
-        </div>
-      </a>
-    </article>
-  );
-}
-
+/**
+ * One row of the Activity feed. Every item here is ledger activity; releases
+ * and blog posts render through their own sections on the dashboard home.
+ */
 export function FeedCard(item: FeedItem) {
-  return item.source === FeedSource.LedgerRss ? (
-    <LedgerActivityCard item={item} />
-  ) : (
-    <ProductUpdateCard item={item} />
-  );
+  return <LedgerActivityCard item={item} />;
 }

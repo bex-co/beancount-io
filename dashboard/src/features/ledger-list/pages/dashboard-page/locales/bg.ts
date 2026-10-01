@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const bgDashboardPage: Record<string, TranslationEntry> = {
-  "page.dashboard.blogFeed": {
-    message: "Последни Новини",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.createLedger": {
     message: "Създаване на книга",
     description: "Button to create new ledger",
@@ -113,10 +109,6 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
     message: "Името е задължително",
     description: "Validation error when name is missing",
   },
-  "page.dashboard.noFeedItems": {
-    message: "Няма налични елементи",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.noLedgersFound": {
     message: "Няма намерени книги",
     description: "Message when user has no ledgers",
@@ -174,6 +166,20 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.goToAccount": {
     message: "Отиди на профила на {owner}",
     description: "Tooltip for navigating to owner's account page",
+  },
+  "page.dashboard.activity": {
+    message: "Активност",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "Промените в твоите счетоводни книги се показват тук.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "Промени във всички счетоводни книги, до които имаш достъп",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

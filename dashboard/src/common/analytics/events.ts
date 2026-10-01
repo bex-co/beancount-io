@@ -136,6 +136,8 @@ export interface AnalyticsEvents {
    * free dimension, so this reports frequency with zero custom-dimension budget.
    */
   bql_query_executed: Record<string, never>;
+  /** A user opened a release from the What's new block. No release identifiers. */
+  changelog_release_opened: { surface: "dashboard" };
   /**
    * A user invoked a financial-statement export. These events intentionally
    * contain only bounded product dimensions: never ledger identifiers,

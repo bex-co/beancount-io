@@ -37,8 +37,14 @@
 - [x] **m31** — Include Live Price: managed price includes in the ledger service (11 tasks) ← from PRFAQ002 + ADR 015; user request 2026-09-15 to design, board, and implement the ledger layer
 - [x] **m32** — [Managed price status on every client surface](./done/m32/README.md) (9 tasks) ← promoted [w2/026](./done/026.md) 2026-09-23; ADR 015 follow-up to m31
 
+## Dropped
+
+- ~~**m32**~~ — What's new on /ledger: localized changelog releases with unread flags — dropped 2026-09-21: the plan was written before implementation changed the design, and three of its done criteria no longer describe anything we want — a three-item blog rail, a ledger-shell header entry, and advancing the read watermark merely by leaving the page. What shipped instead is smaller: `/ledger` is two sections, What's new over Activity, with the blog dropped from the dashboard entirely (it publishes ~20 posts a day and none carry a `beancount` tag, so no collapsing made it worth the space), and the read position kept per device in local storage. The backend gained a `CHANGELOG` feed source with per-locale fetch, English fallback, and blog de-duplication, and no persistence. Re-file if the remaining ideas are wanted; the shipped work is in git history.
+- ~~**m33**~~ — What's new everywhere: ledger-shell entry point and cross-device seen state — dropped 2026-09-21: the server-side changelog watermark was removed before shipping. Its only unique benefit was a mobile unread indicator, and the mobile home feed cannot load at all because `USER_SOCIAL_FEED_READ` is session-only while the app authenticates with OAuth (policy predates this work, `f07b3f79`). The dashboard now tracks its reading position in local storage, so no `users` column, migration, mutation, or authorization action is needed. The ledger-shell entry point was also built and removed: an icon-only control with an unread dot was judged not worth the header space.
+
 ## Cross-queue promotions and follow-ups
 
+- [028](./028.md) — Mobile cannot read the activity feed: `getFeed` is session-only while the app authenticates with OAuth, so the home screen's Latest Updates card has been dead since `f07b3f79` (2026-08-31).
 - [008](./done/008.md) — MCP prompts from the ledger skills: implemented on 2026-09-12. [w5/m5](../w5/blocked/m5/README.md) retains the approved proposal's remaining real-client verification and repairs for demonstrated workflow gaps; the completed implementation remains archived here.
 - [009](./blocked/009.md) — Agent eval harness: core scope promoted to [w5/m4](../w5/done/m4/README.md) on 2026-09-12. Only the larger Plaid sandbox journey remains open here as a deferred follow-up. — **blocked:** needs sizing approval and a hosted QA-account path to link a Plaid sandbox item
 

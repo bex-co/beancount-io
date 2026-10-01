@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const ukDashboardPage: Record<string, TranslationEntry> = {
-  "page.dashboard.blogFeed": {
-    message: "Останні Оновлення",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.createLedger": {
     message: "Створити книгу",
     description: "Button to create new ledger",
@@ -113,10 +109,6 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     message: "Назва обов'язкова",
     description: "Validation error when name is missing",
   },
-  "page.dashboard.noFeedItems": {
-    message: "Немає доступних елементів стрічки",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.noLedgersFound": {
     message: "Книги не знайдено",
     description: "Message when user has no ledgers",
@@ -173,6 +165,20 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.goToAccount": {
     message: "Перейти до профілю {owner}",
     description: "Tooltip for navigating to owner's account page",
+  },
+  "page.dashboard.activity": {
+    message: "Активність",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "Зміни у ваших книгах з’являться тут.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "Зміни в усіх доступних вам книгах",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

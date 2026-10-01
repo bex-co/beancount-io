@@ -9,7 +9,7 @@ import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
-import { UnauthenticatedError } from "@/shared/errors";
+import { UnauthenticatedError, ValidationError } from "@/shared/errors";
 import { User } from "@/features/auth/data/user-model";
 import { transformActivityToFeedItem } from "./activity-transformer";
 import { Activity } from "@/features/gitea/client/gitea-api";
@@ -29,6 +29,65 @@ const BLOG_BASE_URL = "https://beancount.io";
 const MAX_REPOSITORIES = 100; // Maximum number of repositories to fetch
 
 /**
+ * Locales with a dedicated blog and changelog feed under `/{locale}/`.
+ * English lives at the site root; any other locale falls back to English.
+ */
+const LOCALIZED_FEED_LOCALES: ReadonlySet<string> = new Set([
+  "bg",
+  "ca",
+  "de",
+  "es",
+  "fa",
+  "fr",
+  "ja",
+  "ko",
+  "nl",
+  "pt",
+  "ru",
+  "sk",
+  "uk",
+  "zh",
+]);
+
+const FEED_SOURCE_VALUES: readonly string[] = Object.values(FeedSource);
+
+/**
+ * Normalize an accepted `source` filter, rejecting anything that is not a
+ * FeedSource so a typo does not silently return the merged feed.
+ */
+function parseSourceFilter(source: string | undefined): FeedSource | undefined {
+  if (!source) {
+    return undefined;
+  }
+  const normalized = source.toUpperCase();
+  if (!FEED_SOURCE_VALUES.includes(normalized)) {
+    throw new ValidationError(
+      "source",
+      `must be one of ${FEED_SOURCE_VALUES.join(", ")}`,
+    );
+  }
+  return normalized as FeedSource;
+}
+
+/**
+ * Identity of a published post regardless of the locale it was fetched in,
+ * so a release that is both a changelog entry and a blog post counts once.
+ */
+function feedItemIdentity(link: string): string {
+  let path = link;
+  try {
+    path = new URL(link).pathname;
+  } catch {
+    // Relative dashboard links stay as they are.
+  }
+  const segments = path.split("/").filter(Boolean);
+  if (segments.length > 0 && LOCALIZED_FEED_LOCALES.has(segments[0])) {
+    segments.shift();
+  }
+  return segments.join("/");
+}
+
+/**
  * Internal types for feed parsing with type safety
  */
 interface BaseFeedItem {
@@ -41,8 +100,8 @@ interface BaseFeedItem {
   authorAvatar?: string;
 }
 
-interface BlogFeedItemInternal extends BaseFeedItem {
-  source: FeedSource.BLOG;
+interface RssFeedItemInternal extends BaseFeedItem {
+  source: FeedSource.BLOG | FeedSource.CHANGELOG;
 }
 
 export interface IFeedService {
@@ -84,6 +143,7 @@ export class FeedService implements IFeedService {
       resource: userResource(identity.userId),
     });
     const { offset = 0, limit = 10, locale: clientLocale } = args;
+    const sourceFilter = parseSourceFilter(args.source);
 
     // Get user locale from current user
     const user = await this.models.user.getById(this.db, identity.userId);
@@ -95,7 +155,7 @@ export class FeedService implements IFeedService {
     const locale = clientLocale || user.locale || "en";
 
     // Get all feed items (from cache or fresh fetch)
-    const allItems = await this.getFeedItems(locale, user);
+    const allItems = await this.getFeedItems(locale, user, sourceFilter);
 
     // Apply pagination
     const paginatedItems = allItems.slice(offset, offset + limit);
@@ -109,81 +169,141 @@ export class FeedService implements IFeedService {
   }
 
   /**
-   * Get all feed items for a locale (with caching)
-   * Merges blog feeds and Gitea feeds (account + repos)
+   * Get feed items for a locale, optionally restricted to one source.
+   * Merges the blog feed, the changelog feed, and Gitea activity; a release
+   * that is also a blog post is kept once, as the changelog entry.
    * @param locale User's language preference
+   * @param user Current user (for Gitea activity)
+   * @param sourceFilter Restrict to one source; undefined merges everything
    * @returns Array of feed items sorted by publishedAt
    */
-  private async getFeedItems(locale: string, user: User): Promise<FeedItem[]> {
-    // Fetch blog feed using dedicated blog parser
-    const blogCacheKey = CACHE_KEYS.feed.bySourceLocale("blog", locale);
+  private async getFeedItems(
+    locale: string,
+    user: User,
+    sourceFilter?: FeedSource,
+  ): Promise<FeedItem[]> {
+    const wants = (source: FeedSource) =>
+      sourceFilter === undefined || sourceFilter === source;
+
+    // Blog items are deduplicated against releases, so the changelog is
+    // needed whenever the blog is.
+    const changelogItems =
+      wants(FeedSource.CHANGELOG) || wants(FeedSource.BLOG)
+        ? await this.getChangelogItems(locale)
+        : [];
+
     let blogItems: FeedItem[] = [];
-    const cachedBlog = await this.cacheHelper.get<FeedItem[]>(blogCacheKey);
-    if (cachedBlog) {
-      blogItems = cachedBlog;
-    } else {
-      const feedUrl = this.getFeedUrl(locale);
-      blogItems = await this.fetchAndParseBlogFeed(feedUrl);
-      await this.cacheHelper.set(blogCacheKey, blogItems, CACHE_TTL_MS);
+    if (wants(FeedSource.BLOG)) {
+      const releaseIdentities = new Set(
+        changelogItems.map((item) => feedItemIdentity(item.link)),
+      );
+      blogItems = (await this.getBlogItems(locale)).filter(
+        (item) => !releaseIdentities.has(feedItemIdentity(item.link)),
+      );
     }
 
-    // Fetch Gitea feeds (new logic)
     let giteaItems: FeedItem[] = [];
-    try {
-      giteaItems = await this.getGiteaFeedItems(user);
-    } catch (error) {
-      logger.error("Failed to fetch Gitea feeds", { error });
+    if (wants(FeedSource.LEDGER_RSS)) {
+      try {
+        giteaItems = await this.getGiteaFeedItems(user);
+      } catch (error) {
+        logger.error("Failed to fetch Gitea feeds", { error });
+      }
     }
 
     // Merge and sort by publishedAt (newest first)
-    const allItems = [...blogItems, ...giteaItems];
+    const allItems = [
+      ...(wants(FeedSource.CHANGELOG) ? changelogItems : []),
+      ...blogItems,
+      ...giteaItems,
+    ];
     allItems.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
 
     return allItems;
   }
 
   /**
-   * Determine feed URL based on user locale
+   * Blog posts for a locale (cached per locale).
+   */
+  private async getBlogItems(locale: string): Promise<FeedItem[]> {
+    const cacheKey = CACHE_KEYS.feed.bySourceLocale("blog", locale);
+    const cached = await this.cacheHelper.get<FeedItem[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    const items = await this.fetchAndParseRssFeed(
+      this.getFeedUrl(locale),
+      FeedSource.BLOG,
+    );
+    await this.cacheHelper.set(cacheKey, items, CACHE_TTL_MS);
+    return items;
+  }
+
+  /**
+   * Product releases for a locale (cached per locale). A localized feed that
+   * fails or is empty falls back to the English feed, and the fallback result
+   * is cached under the requested locale so the failure is logged once per
+   * cache window rather than on every request.
+   */
+  private async getChangelogItems(locale: string): Promise<FeedItem[]> {
+    const cacheKey = CACHE_KEYS.feed.bySourceLocale("changelog", locale);
+    const cached = await this.cacheHelper.get<FeedItem[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+    let items = await this.fetchAndParseRssFeed(
+      this.getChangelogUrl(locale),
+      FeedSource.CHANGELOG,
+    );
+    if (items.length === 0 && LOCALIZED_FEED_LOCALES.has(locale)) {
+      logger.warn("Localized changelog feed unavailable, using English", {
+        locale,
+      });
+      items = await this.fetchAndParseRssFeed(
+        this.getChangelogUrl("en"),
+        FeedSource.CHANGELOG,
+      );
+    }
+    await this.cacheHelper.set(cacheKey, items, CACHE_TTL_MS);
+    return items;
+  }
+
+  /**
+   * Determine the blog feed URL for a locale
    * @param locale User's language preference
    * @returns Full feed URL
    */
   private getFeedUrl(locale: string): string {
-    // List of all supported locales with dedicated feeds
-    const supportedLocales = [
-      "bg",
-      "ca",
-      "de",
-      "es",
-      "fa",
-      "fr",
-      "ja",
-      "ko",
-      "nl",
-      "pt",
-      "ru",
-      "sk",
-      "uk",
-      "zh",
-    ];
-
-    // If locale is supported, use localized feed
-    if (supportedLocales.includes(locale)) {
+    if (LOCALIZED_FEED_LOCALES.has(locale)) {
       return `${BLOG_BASE_URL}/${locale}/blog/atom.xml`;
     }
-
     // Default to English for unsupported locales or "en"
     return `${BLOG_BASE_URL}/blog/atom.xml`;
   }
 
   /**
-   * Fetch and parse blog RSS feed
-   * Optimized for blog posts with aggressive HTML stripping and whitespace normalization
-   * @param url Blog feed URL to fetch
-   * @returns Array of parsed blog feed items
+   * Determine the changelog feed URL for a locale
+   * @param locale User's language preference
+   * @returns Full feed URL
    */
-  private async fetchAndParseBlogFeed(
+  private getChangelogUrl(locale: string): string {
+    if (LOCALIZED_FEED_LOCALES.has(locale)) {
+      return `${BLOG_BASE_URL}/${locale}/changelog/rss.xml`;
+    }
+    return `${BLOG_BASE_URL}/changelog/rss.xml`;
+  }
+
+  /**
+   * Fetch and parse a blog or changelog feed (RSS 2.0 or Atom)
+   * Optimized for posts with aggressive HTML stripping and whitespace normalization
+   * @param url Feed URL to fetch
+   * @param source Source to stamp on every item
+   * @returns Array of parsed feed items; empty when the fetch or parse fails
+   */
+  private async fetchAndParseRssFeed(
     url: string,
-  ): Promise<BlogFeedItemInternal[]> {
+    source: FeedSource.BLOG | FeedSource.CHANGELOG,
+  ): Promise<RssFeedItemInternal[]> {
     try {
       const response = await fetch(url);
 
@@ -194,18 +314,23 @@ export class FeedService implements IFeedService {
       const xmlText = await response.text();
       const feed = await this.parser.parseString(xmlText);
 
-      return (feed.items || []).map((item) => ({
-        id: item.guid || item.link || `${item.title}-${item.pubDate}`,
-        title: stripHtml(item.title || "Untitled", true),
-        summary: stripHtml(item.contentSnippet || item.content || "", true),
-        link: item.link || "",
-        publishedAt: new Date(item.pubDate || Date.now()),
-        author: this.extractAuthor(item),
-        authorAvatar: undefined,
-        source: FeedSource.BLOG,
-      }));
+      return (feed.items || []).map((item) => {
+        const guid = item.guid || item.link || `${item.title}-${item.pubDate}`;
+        return {
+          // A release is also a blog post with the same permalink; keep the
+          // two apart so client caches never merge them into one record.
+          id: source === FeedSource.CHANGELOG ? `changelog:${guid}` : guid,
+          title: stripHtml(item.title || "Untitled", true),
+          summary: stripHtml(item.contentSnippet || item.content || "", true),
+          link: item.link || "",
+          publishedAt: new Date(item.pubDate || item.isoDate || Date.now()),
+          author: this.extractAuthor(item),
+          authorAvatar: undefined,
+          source,
+        };
+      });
     } catch (error) {
-      logger.error("Failed to fetch blog feed", { url, error });
+      logger.error("Failed to fetch feed", { url, source, error });
       return [];
     }
   }

@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const caDashboardPage: Record<string, TranslationEntry> = {
-  "page.dashboard.blogFeed": {
-    message: "Últimes Actualitzacions",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.createLedger": {
     message: "Crear llibre",
     description: "Button to create new ledger",
@@ -113,10 +109,6 @@ const caDashboardPage: Record<string, TranslationEntry> = {
     message: "El nom és obligatori",
     description: "Validation error when name is missing",
   },
-  "page.dashboard.noFeedItems": {
-    message: "No hi ha elements de feed disponibles",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.noLedgersFound": {
     message: "No s'han trobat llibres",
     description: "Message when user has no ledgers",
@@ -175,6 +167,20 @@ const caDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.goToAccount": {
     message: "Anar al compte de {owner}",
     description: "Tooltip for navigating to owner's account page",
+  },
+  "page.dashboard.activity": {
+    message: "Activitat",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "Els canvis als teus llibres apareixen aquí.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "Canvis a tots els llibres que pots veure",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

@@ -194,6 +194,12 @@ and both themes. Run the rendered-component contract tests in
 `src/components/ledger-drawer/__tests__/header-layout.test.ts`; these inspect
 layout props and do not replace native visual verification.
 
+### Home feed releases
+
+`src/screens/home-screen/components/feed-card.tsx` renders the merged `getFeed` result. Rows label their source through `feedSourceLabelKey` in `feed-logic.ts` (`Ledger`, `Blog`, `Release`). There is deliberately no per-user unread state here: the web dashboard tracks its reading position in local storage rather than on the server, so there is nothing for the app to sync with.
+
+`getFeed` accepts the app’s account-wide OAuth credential with `ledger.read` (`USER_SOCIAL_FEED_READ`, backend `authorization-service.ts`). The service checks exact-self access; API keys and credentials pinned to one ledger cannot read this account-wide feed.
+
 ## Configuration files
 
 - `app.json` — Expo config; **app version lives here** (and in `package.json`).

@@ -910,6 +910,59 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: 'Druk op Enter om "{value}" te gebruiken',
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "Wat is nieuw",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_one": {
+    message: "{count} update sinds je laatste bezoek",
+    description:
+      "Count of releases published since the user's last visit (singular, contains {count})",
+  },
+  "common.whatsNewUnread_other": {
+    message: "{count} updates sinds je laatste bezoek",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "Alles als gelezen markeren",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "Changelog",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "Ongelezen",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "Gelezen",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "Recente releases tonen",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "Recente releases verbergen",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "{count} updates sinds je laatste bezoek",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "Je bent helemaal bij",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default nlCommon;

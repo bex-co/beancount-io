@@ -50,7 +50,6 @@ const BILLING_ACTIONS = [
 ] as const;
 
 const SESSION_SOCIAL_ACTIONS = [
-  AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ,
   AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
   AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_DELETE,
 ] as const;
@@ -419,6 +418,33 @@ describe("AuthorizationService", () => {
       allowed: false,
       reason: "credential_not_permitted",
     });
+  });
+
+  it("allows delegated feed reads only for the exact-self user", async () => {
+    const principal = identity("oauth", "usr_alice", ["ledger.read"]);
+    const action = AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ;
+    expect(authorizationActionAcceptsDelegatedCredential(action)).toBe(true);
+    await expect(
+      selfService().authorize({
+        principal,
+        action,
+        resource: userResource("usr_alice"),
+      }),
+    ).resolves.toMatchObject({ allowed: true });
+    await expect(
+      selfService().authorize({
+        principal,
+        action,
+        resource: userResource("usr_bob"),
+      }),
+    ).resolves.toMatchObject({ allowed: false, reason: "relationship_denied" });
+    await expect(
+      selfService().authorize({
+        principal: anonymousPrincipal(),
+        action,
+        resource: userResource("usr_alice"),
+      }),
+    ).resolves.toMatchObject({ allowed: false });
   });
 
   it.each(SESSION_SOCIAL_ACTIONS)(

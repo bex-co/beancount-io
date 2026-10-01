@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const deDashboardPage: Record<string, TranslationEntry> = {
-  "page.dashboard.blogFeed": {
-    message: "Neueste Updates",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.createLedger": {
     message: "Hauptbuch erstellen",
     description: "Button to create new ledger",
@@ -113,10 +109,6 @@ const deDashboardPage: Record<string, TranslationEntry> = {
     message: "Name is required",
     description: "Validation error when name is missing",
   },
-  "page.dashboard.noFeedItems": {
-    message: "Keine Feed-Einträge verfügbar",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.noLedgersFound": {
     message: "Keine Hauptbücher gefunden",
     description: "Message when user has no ledgers",
@@ -174,6 +166,20 @@ const deDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.goToAccount": {
     message: "Gehe zum Konto von {owner}",
     description: "Tooltip for navigating to owner's account page",
+  },
+  "page.dashboard.activity": {
+    message: "Aktivität",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "Änderungen an deinen Büchern erscheinen hier.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "Änderungen in allen Büchern, die du sehen kannst",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 

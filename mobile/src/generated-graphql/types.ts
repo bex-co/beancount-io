@@ -525,6 +525,7 @@ export type FeedResponse = {
 /** Source type of the feed item */
 export enum FeedSource {
   Blog = 'BLOG',
+  Changelog = 'CHANGELOG',
   LedgerRss = 'LEDGER_RSS'
 }
 

@@ -485,6 +485,7 @@ type FeedResponse {
 """Source type of the feed item"""
 enum FeedSource {
   BLOG
+  CHANGELOG
   LEDGER_RSS
 }
 
@@ -1404,6 +1405,9 @@ type Query {
     """
     locale: String
     offset: Float! = 0
+    """
+    Restrict the feed to one source: BLOG, LEDGER_RSS, or CHANGELOG. Omit for the merged feed.
+    """
     source: String
   ): FeedResponse!
   getLatestLedgerCommit(branchName: String! = "main", ledgerId: String!): LedgerCommit

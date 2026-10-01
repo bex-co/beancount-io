@@ -236,8 +236,9 @@ describe("op-class coverage", () => {
     // the read surface ports; the tool count above is not.
     // w2/m27 drops the three legacy compat resources from MCP (compat-only
     // exemption, REST twins kept). w2/m32 adds `ledgerManagedPrices`.
+    // Account-wide OAuth feed access adds `getFeed`.
     const resources = mcpOps.filter((op) => op.startsWith("MCP resource:"));
-    expect(resources).toHaveLength(65);
+    expect(resources).toHaveLength(66);
   });
 });
 

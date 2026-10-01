@@ -907,6 +907,59 @@ const faCommon: Record<string, TranslationEntry> = {
     message: 'برای استفاده از "{value}" Enter را فشار دهید',
     description: "Hint for accepting a custom combobox value",
   },
+  "common.whatsNew": {
+    message: "تازه‌ها",
+    description:
+      "Section heading and header control label for product releases",
+  },
+  "common.whatsNewUnread_one": {
+    message: "{count} به‌روزرسانی از آخرین بازدید شما",
+    description:
+      "Count of releases published since the user's last visit (singular, contains {count})",
+  },
+  "common.whatsNewUnread_other": {
+    message: "{count} به‌روزرسانی از آخرین بازدید شما",
+    description:
+      "Count of releases published since the user's last visit (plural, contains {count})",
+  },
+  "common.whatsNewMarkRead": {
+    message: "علامت‌گذاری همه به‌عنوان خوانده‌شده",
+    description: "Button that clears every unread release flag",
+  },
+  "common.whatsNewChangelog": {
+    message: "فهرست تغییرات",
+    description: "Link from the What's new block to the full changelog page",
+  },
+  "common.whatsNewUnreadFlag": {
+    message: "خوانده‌نشده",
+    description:
+      "Screen-reader label for the ! flag on a release the user has not seen",
+  },
+  "common.whatsNewReadFlag": {
+    message: "خوانده‌شده",
+    description:
+      "Screen-reader label for the * flag on a release the user has seen",
+  },
+  "common.whatsNewExpand": {
+    message: "نمایش انتشارهای اخیر",
+    description:
+      "Aria label of the chevron that expands the collapsed What's new line",
+  },
+  "common.whatsNewCollapse": {
+    message: "پنهان کردن انتشارهای اخیر",
+    description:
+      "Aria label of the chevron that collapses the expanded What's new block",
+  },
+  "common.whatsNewUnread": {
+    message: "{count} به‌روزرسانی از آخرین بازدید شما",
+    description:
+      "Base key for plural selection; i18next picks the _one or _other variant",
+  },
+  "common.whatsNewUpToDate": {
+    message: "شما به‌روز هستید",
+    description:
+      "Description under the What's new heading when every release has been read",
+  },
 };
 
 export default faCommon;

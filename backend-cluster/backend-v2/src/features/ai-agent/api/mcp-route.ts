@@ -109,6 +109,7 @@ async function handleMcpRequest(
     llmService: layers.services.llm,
     apiKeyService: layers.services.apiKey,
     socialService: layers.services.userProfile,
+    feedService: layers.services.feed,
     accountService: layers.services.account,
     assetStorage: layers.services.assetStorage,
     ledgerEntryService: layers.services.ledgerEntry,

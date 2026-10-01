@@ -1,3 +1,4 @@
+import { feedRoute } from "../../feed/api/feed-route";
 import { publicProfileRoute } from "./public-profile-route";
 import type Router from "@koa/router";
 import { z } from "@/shared/zod-openapi-setup";
@@ -60,6 +61,7 @@ export const SOCIAL_READS = [
 ] as const;
 export const SOCIAL_V1_ROUTES = [
   publicProfileRoute,
+  feedRoute,
   ...SOCIAL_READS.map((read) =>
     anonymousV1Route({
       method: "get",

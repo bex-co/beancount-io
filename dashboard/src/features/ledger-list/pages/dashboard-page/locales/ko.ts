@@ -157,21 +157,27 @@ const koDashboardPage: Record<string, TranslationEntry> = {
       "장부 한도에 도달했습니다. 더 많은 장부를 만들려면 업그레이드하세요.",
     description: "Tooltip shown when save button is disabled due to limit",
   },
-  "page.dashboard.blogFeed": {
-    message: "최신 업데이트",
-    description: "Title for blog feed section on dashboard",
-  },
   "page.dashboard.feedError": {
     message: "피드 로드에 실패했습니다",
     description: "Error message when feed fails to load",
   },
-  "page.dashboard.noFeedItems": {
-    message: "피드 항목이 없습니다",
-    description: "Empty state message when no feed items exist",
-  },
   "page.dashboard.showMore": {
     message: "더 보기",
     description: "Button text to load more feed items",
+  },
+  "page.dashboard.activity": {
+    message: "활동",
+    description:
+      "Heading of the user's ledger activity feed on the dashboard home",
+  },
+  "page.dashboard.activityEmpty": {
+    message: "장부의 변경 내역이 여기에 표시됩니다.",
+    description:
+      "Empty state of the activity feed when the user has no ledger commits yet",
+  },
+  "page.dashboard.activityDescription": {
+    message: "볼 수 있는 모든 장부의 변경 내역",
+    description: "Description under the Activity heading on the dashboard home",
   },
 };
 
