@@ -307,6 +307,17 @@ export function releaseNoteErrors(
   if (/\[add your changes here\]|what's new in version|\bTODO\b/i.test(value)) {
     errors.push("whatsNew still contains a scaffold placeholder");
   }
+  // Apple-only metadata (2.3.10). Do not reuse this check for Play notes.
+  // Avoid word boundaries: platform names can touch Chinese text directly.
+  if (
+    /android|安卓|google\s*play|amazon\s*appstore|harmony\s*os|鸿蒙|鴻蒙|app\s*gallery|galaxy\s*store/i.test(
+      value.normalize("NFKC"),
+    )
+  ) {
+    errors.push(
+      "whatsNew must describe Apple-platform changes only; remove other mobile platforms or marketplaces",
+    );
+  }
   return errors;
 }
 

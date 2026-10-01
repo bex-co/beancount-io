@@ -252,6 +252,28 @@ release. Run `yarn bump` locally first; it scaffolds every canonical locale from
 release note and stage the listing before the bump reaches `main` and triggers
 EAS auto-submit.
 
+### Release-note content
+
+- Write `whatsNew` for users of the target store: describe what they can now do,
+  what reads more clearly, or what problem they will no longer encounter. Select
+  meaningful changes; do not paste a git log or an internal engineering report.
+- Omit dependency/version bumps, refactors, test coverage, CI/build tooling,
+  implementation details, and changes with no observable user benefit. When a
+  technical fix matters, describe its visible result in plain language.
+- Apple release notes must describe only the iPhone/iPad experience. Never copy
+  Android fixes or mention Android, Google Play, other mobile platforms, or other
+  marketplaces into Apple `whatsNew` (App Review 2.3.10). Keep platform-specific
+  release notes separate; review every localization, not only English.
+- Review the English notes for relevance and accuracy before translating. Keep
+  every translation aligned with the same user-facing changes. Human/agent review
+  must check relevance; a keyword guard cannot establish that a claim is useful
+  or true.
+- Before staging, run `yarn test:unit src/scripts/__tests__` and
+  `yarn metadata:validate`. `releaseNoteErrors` rejects known other-platform
+  references; the unit suite also validates every current Apple localization.
+  After editing already staged metadata, apply and verify it again through the
+  release workflow; never hand-update the staging receipt to bypass its digest.
+
 Keywords must not repeat words already in the app name or subtitle — Apple indexes
 those separately — and drop the spaces after commas; they count against the 100.
 
