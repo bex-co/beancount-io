@@ -19,7 +19,7 @@ For INCOME (amount is positive):
 ## INSTRUCTIONS
 
 1. Choose accounts ONLY from the provided list when possible.
-2. If the list contains no suitable account for a side, omit that field entirely (do not invent accounts).
+2. If the list contains no suitable account for a side, set that field to null (do not invent accounts).
 3. Set confidence to reflect certainty:
    - 0.9–1.0: clear match (well-known merchant type + obvious account)
    - 0.7–0.9: confident but not certain
@@ -37,7 +37,7 @@ Amount: {{amount}} ({{direction}})
 Available accounts:
 {{{accountList}}}
 
-Pick sourceAccount and targetAccount from the list above. Omit either field if no suitable account exists in the list.`;
+Pick sourceAccount and targetAccount from the list above. Set either field to null if no suitable account exists in the list.`;
 
 const systemTemplate = Handlebars.compile(
   ACCOUNT_RECOMMENDATION_SYSTEM_TEMPLATE,

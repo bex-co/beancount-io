@@ -15,7 +15,7 @@ const ACCOUNT_MAPPING_TEMPLATE = `You are mapping bank accounts from "{{institut
 **Instructions:**
 1. For each bank account, suggest exactly ONE Beancount account.
 {{{accountConstraint}}}
-4. CRITICAL: Every bank account listed is a DIFFERENT account, even when they share the same institution and type (e.g. multiple currency sub-accounts at one bank). Give each accountId a DISTINCT suggestedAccount — never reuse the same suggestion for two different accountIds in this request.
+4. Every bank account listed is a different real account, even when several share an institution and type (e.g. currency sub-accounts at one bank), so give each accountId a distinct suggestedAccount.
 5. Keep account names Beancount-safe: Title-case words, no spaces or special characters, colon-separated hierarchy.
 6. Provide a confidence score (0.0 to 1.0):
    - 0.9-1.0: Very confident (e.g. currency/subtype clearly identifies the account)
@@ -54,7 +54,7 @@ export function buildAccountMappingPrompt({
 3. If no existing account fits, suggest a NEW account following Beancount conventions:
    - Assets:${institutionName}:{name-or-currency} for depository/investment accounts
    - Liabilities:${institutionName}:{name-or-currency} for credit/loan accounts`
-    : `2. CRITICAL: You MUST ONLY suggest an account from the existing accounts list above. Do NOT create a new account.
+    : `2. Suggest only an account from the existing accounts list above — this ledger doesn't auto-open accounts, so a new name would be invalid.
 3. If no existing account is a strong match, choose the closest/best-fit existing account instead and lower the confidence score accordingly — every bank account must receive a suggestion from the existing accounts list.`;
 
   return template({

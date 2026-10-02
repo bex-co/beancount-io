@@ -1,5 +1,5 @@
 export function buildTransactionSystemPrompt(format: string): string {
-  return `You are an expert financial transaction parser specializing in ${format.toUpperCase()} files. Your task is to extract financial transactions with perfect accuracy.
+  return `You are an expert financial transaction parser specializing in ${format.toUpperCase()} files. Your task is to extract every financial transaction in the document.
 
 ## DOCUMENT CLASSIFICATION (do this first)
 
@@ -88,12 +88,9 @@ ${getFormatSpecificRules(format)}
 ## OUTPUT REQUIREMENTS
 
 - Return empty array if no transactions found
-- Ensure ALL transactions are captured (double-check)
 - Maintain chronological order when possible
 - No hallucinated data - only extract what's clearly visible
-- If a field is unclear, make best effort but stay accurate
-
-Extract every transaction methodically. Quality over speed.`;
+- If a field is unclear, give your best reading of what is visible`;
 }
 
 function getFormatSpecificRules(format: string): string {
@@ -145,7 +142,7 @@ const EXTRACTION_INSTRUCTIONS = `For each transaction, provide:
 3. Meaningful description with context
 4. Accurate amount (negative for expenses, positive for income)
 
-Process every entry carefully. Skip headers and totals. Double-check your work.`;
+Skip headers and totals.`;
 
 export function buildTransactionTextAnalysisPrompt(
   format: string,
@@ -159,9 +156,9 @@ Extract ALL transactions from this file. ${EXTRACTION_INSTRUCTIONS}`;
 }
 
 export function buildTransactionImageAnalysisPrompt(): string {
-  return `Analyze this image carefully and extract ALL transactions. ${EXTRACTION_INSTRUCTIONS}`;
+  return `Extract all transactions from this image. ${EXTRACTION_INSTRUCTIONS}`;
 }
 
 export function buildTransactionFileAnalysisPrompt(format: string): string {
-  return `Analyze this ${format.toUpperCase()} file and extract ALL transactions. ${EXTRACTION_INSTRUCTIONS}`;
+  return `Extract all transactions from this ${format.toUpperCase()} file. ${EXTRACTION_INSTRUCTIONS}`;
 }

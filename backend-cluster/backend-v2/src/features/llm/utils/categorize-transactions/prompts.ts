@@ -21,8 +21,8 @@ const CATEGORIZATION_TEMPLATE = `You are categorizing financial transactions for
 {{{transactions}}}
 
 **Instructions:**
-1. CRITICAL: Set each suggestion's \`rowIndex\` to the EXACT rowIndex given for that transaction below. Never renumber, reindex, or reorder — rowIndex is an opaque identifier, not a position.
-2. For each transaction, suggest the BEST target account
+1. Set each suggestion's \`rowIndex\` to the exact rowIndex given for that transaction below; rowIndex is an opaque identifier, not a position, so don't renumber or reorder.
+2. For each transaction, suggest the best-fitting target account
 3. Prefer EXISTING accounts from the user's list when appropriate
 {{{accountConstraint}}}
 6. Provide confidence score (0.0 to 1.0):
@@ -74,7 +74,7 @@ export function buildCategorizationPrompt({
    - Income:Category (for income)
    - Assets:Category (for asset purchases)
 5. Common expense categories: Food, Transport, Shopping, Entertainment, Utilities, Healthcare, etc.`
-    : `4. CRITICAL: You MUST ONLY suggest accounts from the existing accounts list above. Do NOT create new accounts.
+    : `4. Suggest only accounts from the existing accounts list above — this ledger doesn't auto-open accounts, so a new account name would make the entry invalid.
 5. If you cannot find a suitable existing account, skip the transaction (do not include it in suggestions).`;
 
   return template({

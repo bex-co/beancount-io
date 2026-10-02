@@ -15,7 +15,9 @@ const description =
 const insertReceiptTransactionInputSchema = z.object({
   receiptObjectKey: z
     .string()
-    .describe("S3 object key of the receipt file (starts with tmp/)"),
+    .describe(
+      "S3 object key of the receipt file (starts with tmp/) — the same objectKey that was parsed for this receipt",
+    ),
   date: z
     .string()
     .nullable()
@@ -39,7 +41,7 @@ const insertReceiptTransactionInputSchema = z.object({
   documentAccount: z
     .string()
     .describe(
-      "Account to attach the receipt document to (e.g. 'Expenses:Food:Dining')",
+      "Account to attach the receipt document to (e.g. 'Expenses:Food:Dining'). Use the expenseAccount unless the user names a different one.",
     ),
 });
 

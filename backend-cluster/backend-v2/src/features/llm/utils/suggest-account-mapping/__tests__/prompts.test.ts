@@ -19,7 +19,7 @@ describe("buildAccountMappingPrompt", () => {
     });
 
     expect(prompt).toContain(
-      "MUST ONLY suggest an account from the existing accounts list",
+      "Suggest only an account from the existing accounts list",
     );
     expect(prompt).not.toContain(
       "suggest a NEW account following Beancount conventions",
@@ -35,7 +35,7 @@ describe("buildAccountMappingPrompt", () => {
     });
 
     expect(prompt).toContain(
-      "MUST ONLY suggest an account from the existing accounts list",
+      "Suggest only an account from the existing accounts list",
     );
     expect(prompt).toContain(
       "every bank account must receive a suggestion from the existing accounts list",
@@ -58,7 +58,7 @@ describe("buildAccountMappingPrompt", () => {
     );
     expect(prompt).toContain("Assets:Test Bank:{name-or-currency}");
     expect(prompt).not.toContain(
-      "MUST ONLY suggest an account from the existing accounts list",
+      "Suggest only an account from the existing accounts list",
     );
   });
 });
