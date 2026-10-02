@@ -760,12 +760,12 @@ def appended_content(original: bytes, texts: list[str]) -> str:
     kept = len(text.splitlines())
     tail = draft.splitlines()[kept:]
     try:
-        from beancount.scripts.format import align_beancount
+        from bea_engine.ledger.formatting import align_text
 
         # The aligner emits one line per input line, so the appended lines are
         # the tail of its output. Line endings are normalised first because its
         # own whitespace-only safety check cannot account for a carriage return.
-        aligned = align_beancount(draft.replace("\r\n", "\n").replace("\r", "\n"))  # type: ignore[no-untyped-call]
+        aligned = align_text(draft.replace("\r\n", "\n").replace("\r", "\n"))
         tail = aligned.splitlines()[kept:]
     except AssertionError:
         pass  # The aligner refused the text; alignment is cosmetic, the append is not.

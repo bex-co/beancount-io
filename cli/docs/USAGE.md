@@ -396,6 +396,13 @@ With no paths at all it is a filter: it formats stdin and writes to stdout, so
 without a temporary file. An explicit `-` asks for the same thing by name, and
 cannot be combined with file paths.
 
+Automatic alignment chooses account-prefix and number widths from values up
+to 200 characters wide. Longer values retain their full text on their own
+lines without forcing every other posting to that column. Explicit
+`--prefix-width`, `--num-width`, and `--currency-column` values are also capped
+at 200; zero keeps automatic sizing. Appended entries use the same automatic
+alignment rule.
+
 In `--json` mode the destination has to be explicit, because stdout carries the
 envelope and nothing else: pass `-i`, `-o FILE`, `--check` or `--dry-run`.
 `-o -` is refused there for the same reason — it names the stream the envelope

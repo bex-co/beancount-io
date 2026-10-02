@@ -34,6 +34,9 @@ from bea_engine.protocol import EngineError, LedgerError, UsageError
 #: The UTF-8 BOM as one character: `compat.UTF8_BOM` is the same mark in bytes.
 BOM_CHARACTER = "\ufeff"
 
+# Match the frontend's explicit-width ceiling without importing frontend code.
+_MAX_ALIGNMENT_WIDTH = 200
+
 
 def format_files(
     files: list[Path],
@@ -124,7 +127,6 @@ def _read(file: Path) -> tuple[bytes, str]:
 def _aligned(file: Path, text: str, widths: tuple[int | None, int | None, int | None]) -> str:
     """Align real postings while preserving metadata indents and string content."""
     from beancount.parser.lexer import lex_iter_string
-    from beancount.scripts import format as upstream
 
     text = text.removeprefix(BOM_CHARACTER).replace("\r\n", "\n").replace("\r", "\n")
     lines = text.splitlines(keepends=True)
@@ -149,9 +151,8 @@ def _aligned(file: Path, text: str, widths: tuple[int | None, int | None, int | 
     for index in protected:
         lines[index] = ";\n"
 
-    align: Callable[[str, int | None, int | None, int | None], str] = upstream.align_beancount
     try:
-        aligned = align("".join(lines), *widths)
+        aligned = align_text("".join(lines), *widths)
     except AssertionError as exc:
         # Upstream asserts that it changed nothing but whitespace. Its own
         # message is both halves of the file, which is no use in an envelope.
@@ -163,3 +164,39 @@ def _aligned(file: Path, text: str, widths: tuple[int | None, int | None, int | 
     for index, original in protected.items():
         formatted[index] = original if original.endswith("\n") else original + "\n"
     return "".join(formatted)
+
+
+def align_text(
+    text: str,
+    prefix_width: int | None = None,
+    num_width: int | None = None,
+    currency_column: int | None = None,
+) -> str:
+    """Use native alignment without letting one oversized value widen every row."""
+    import regex
+    from beancount.core import account, amount
+    from beancount.scripts import format as upstream
+
+    if not currency_column and (not prefix_width or not num_width):
+        # The pinned aligner exposes no width-discovery helper. Match exactly
+        # what it measures, including dated directives, before it allocates
+        # padding. Values wider than the ceiling retain their natural width.
+        pattern = (
+            rf'(^\d[^";]*?|\s+{account.ACCOUNT_RE})\s+'
+            rf"({upstream.PARENTHESIZED_BINARY_OP_RE}|{upstream.NUMBER_RE})\s+"
+            rf"((?:{amount.CURRENCY_RE})\b.*)"
+        )
+        automatic_prefix = automatic_number = 0
+        for line in text.splitlines():
+            match = regex.match(pattern, line)
+            if match is None:
+                continue
+            prefix, number, _ = match.groups()
+            if len(prefix) <= _MAX_ALIGNMENT_WIDTH:
+                automatic_prefix = max(automatic_prefix, len(prefix))
+            if len(number) <= _MAX_ALIGNMENT_WIDTH:
+                automatic_number = max(automatic_number, len(number))
+        prefix_width = prefix_width or automatic_prefix or _MAX_ALIGNMENT_WIDTH
+        num_width = num_width or automatic_number or _MAX_ALIGNMENT_WIDTH
+    align: Callable[[str, int | None, int | None, int | None], str] = upstream.align_beancount
+    return align(text, prefix_width, num_width, currency_column)
