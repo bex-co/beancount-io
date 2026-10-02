@@ -13,6 +13,7 @@ from pytest_httpx import HTTPXMock
 from typer.testing import CliRunner
 
 from cli.api.client import DEFAULT_TIMEOUT, bearer_client, make_client
+from cli.auth.credentials import ENVIRONMENT, FILE, save_credentials
 from cli.commands.cloud.ledger.manager import CloneError, clone_ledger, ensure_git_available
 from cli.errors import AuthError, UsageError, to_bea_error, unknown_write_outcome
 from cli.main import app
@@ -37,6 +38,73 @@ def test_simulated_malformed_success_has_status_and_request_id(
         assert error["request_id"] == "simulated-malformed-200"
     assert "KeyError" not in result.stderr
     assert "proxy response" not in result.stderr
+
+
+@pytest.mark.parametrize("credential_source", [FILE, ENVIRONMENT])
+@pytest.mark.parametrize("json_output", [False, True], ids=["human", "json"])
+@pytest.mark.parametrize(
+    ("status", "code", "message", "exit_code", "category"),
+    [(403, "FORBIDDEN", "Authorization denied", 3, "auth"), (404, "NOT_FOUND", "Ledger not found", 1, "validation")],
+)
+def test_ledger_access_errors_do_not_reject_a_valid_credential(
+    monkeypatch: pytest.MonkeyPatch,
+    httpx_mock: HTTPXMock,
+    credential_source: str,
+    json_output: bool,
+    status: int,
+    code: str,
+    message: str,
+    exit_code: int,
+    category: str,
+) -> None:
+    monkeypatch.setenv("BEA_API_URL", "https://api.example")
+    save_credentials("synthetic-stored-token", "2099-01-01T00:00:00Z")
+    token = "synthetic-stored-token"
+    if credential_source == ENVIRONMENT:
+        token = "synthetic-environment-token"
+        monkeypatch.setenv("BEA_TOKEN", token)
+    httpx_mock.add_response(
+        method="GET",
+        url="https://api.example/api-gateway/v1/ledgers/alice/missing",
+        status_code=status,
+        json={"ok": False, "error": {"code": code, "message": message}},
+        headers={"X-Request-Id": "synthetic-access-denial"},
+    )
+    httpx_mock.add_response(
+        method="GET",
+        url="https://api.example/api-gateway/v1/user-profile",
+        json={
+            "id": "u1",
+            "email": "alice@example.com",
+            "locale": "en",
+            "username": "alice",
+            "tier": "free",
+            "limits": {"ledgersUsed": 0, "ledgersMax": 1, "collaboratorsPerLedgerMax": 1, "maxDirectives": 100},
+            "hasEverSubscribed": False,
+        },
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(app, [*(["--json"] if json_output else []), "cloud", "ledger", "show", "alice/missing"])
+    profile = runner.invoke(app, ["--json", "cloud", "status"])
+
+    assert result.exit_code == exit_code, result.stderr
+    assert result.stdout == ""
+    assert message in result.stderr
+    assert "bea cloud login" not in result.stderr
+    assert "BEA_TOKEN" not in result.stderr
+    if status == 403:
+        assert "permission" in result.stderr.lower()
+    if json_output:
+        error = json.loads(result.stderr)["error"]
+        assert error["category"] == category
+        assert error["request_id"] == "synthetic-access-denial"
+    assert profile.exit_code == 0, profile.stderr
+    data = json.loads(profile.stdout)["data"]
+    assert data["authenticated"] is True
+    assert data["source"] == credential_source
+    assert data["username"] == "alice"
+    assert [request.headers["Authorization"] for request in httpx_mock.get_requests()] == [f"Bearer {token}"] * 2
 
 
 def test_clients_use_finite_timeout() -> None:

@@ -181,7 +181,7 @@ class TestRejectedCredentialRemedy:
     ) -> None:
         monkeypatch.delenv("BEA_TOKEN", raising=False)
 
-        assert "Run 'bea cloud login'." in str(error_from_status(403, "forbidden"))
+        assert "Run 'bea cloud login'." in str(error_from_status(401, "unauthenticated"))
 
     def test_an_unreadable_credential_store_still_produces_a_message(
         self, bea_config_dir: Path, monkeypatch: pytest.MonkeyPatch

@@ -209,6 +209,12 @@ failing anyway; `--debug` adds the `traceback` string.
 
 Cloud commands map the server's HTTP status onto the same table, keeping the server's own message: `401`/`403` exit **3**, `400` exits **2**, `409` exits **4**, and everything else — including `404`, rate limiting, and server errors — exits **1**. A write whose outcome the CLI cannot know (a timeout mid-delete) exits **4** and says so rather than guessing.
 
+An HTTP `401` asks you to replace the rejected credential: log in again for a
+stored session, or correct or unset `BEA_TOKEN` when it supplies the credential.
+An HTTP `403` asks you to check account and credential permissions; it does not
+ask you to log in again. A missing or inaccessible ledger reported as `404`
+keeps the server's not-found message.
+
 A successful HTTP response that the generated parser cannot read exits **1**
 with `Unexpected server response (HTTP 200).` (using the actual status code)
 and preserves the request ID when supplied. This is a server-response error;

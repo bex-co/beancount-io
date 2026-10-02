@@ -118,8 +118,13 @@ def error_from_status(status: int, message: str | None, *, request_id: str | Non
     person reads the server's own message rather than a paraphrase.
     """
     detail = message or f"HTTP {status}"
-    if status in (401, 403):
+    if status == 401:
         return AuthError(f"Not authorized ({detail}). {_auth_remedy()}", request_id=request_id)
+    if status == 403:
+        return AuthError(
+            f"Not authorized ({detail}). Check that your account and credential have permission for this action.",
+            request_id=request_id,
+        )
     if status == 409:
         return ConflictError(detail, request_id=request_id)
     if status == 400:
