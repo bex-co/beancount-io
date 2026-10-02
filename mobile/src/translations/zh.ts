@@ -51,6 +51,7 @@ export const zh: Translations = {
   openInBrowser: "在浏览器中打开",
   shareLink: "分享链接",
   copyLink: "复制链接",
+  drawerCurrentLedger: "当前账本",
   drawerNew: "新建",
   drawerLedgerActions: "{{name}} 的操作",
   drawerPrivateLinkHint: "接收者需要访问权限才能打开此链接。",

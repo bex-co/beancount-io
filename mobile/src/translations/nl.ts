@@ -58,6 +58,7 @@ export const nl: Translations = {
   openInBrowser: "Openen in browser",
   shareLink: "Link delen",
   copyLink: "Link kopiëren",
+  drawerCurrentLedger: "Huidig grootboek",
   drawerNew: "Nieuw",
   drawerLedgerActions: "Acties voor {{name}}",
   drawerPrivateLinkHint:

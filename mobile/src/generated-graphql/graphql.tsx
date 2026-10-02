@@ -234,6 +234,14 @@ export type GetLedgerIntervalTotalsQueryVariables = Exact<{
 
 export type GetLedgerIntervalTotalsQuery = { getLedgerIntervalTotals: Array<{ date: string, balance: Record<string, number | string> }> };
 
+export type LedgerDirectoryQueryVariables = Exact<{
+  page: number;
+  limit: number;
+}>;
+
+
+export type LedgerDirectoryQuery = { listLedgers: Array<{ id: string, name: string, fullName: string, private: boolean }> };
+
 export type DiscoveryLedgerFragment = { id: string, fullName: string, description: string | null, private: boolean, isStarred: boolean | null, permissions: { pull: boolean, push: boolean, admin: boolean } | null };
 
 export type DiscoverLedgersQueryVariables = Exact<{
@@ -1677,6 +1685,53 @@ export type GetLedgerIntervalTotalsQueryHookResult = ReturnType<typeof useGetLed
 export type GetLedgerIntervalTotalsLazyQueryHookResult = ReturnType<typeof useGetLedgerIntervalTotalsLazyQuery>;
 export type GetLedgerIntervalTotalsSuspenseQueryHookResult = ReturnType<typeof useGetLedgerIntervalTotalsSuspenseQuery>;
 export type GetLedgerIntervalTotalsQueryResult = Apollo.QueryResult<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>;
+export const LedgerDirectoryDocument = gql`
+    query LedgerDirectory($page: Float!, $limit: Float!) {
+  listLedgers(page: $page, limit: $limit) {
+    id
+    name
+    fullName
+    private
+  }
+}
+    `;
+
+/**
+ * __useLedgerDirectoryQuery__
+ *
+ * To run a query within a React component, call `useLedgerDirectoryQuery` and pass it any options that fit your needs.
+ * When your component renders, `useLedgerDirectoryQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useLedgerDirectoryQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useLedgerDirectoryQuery(baseOptions: Apollo.QueryHookOptions<LedgerDirectoryQuery, LedgerDirectoryQueryVariables> & ({ variables: LedgerDirectoryQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<LedgerDirectoryQuery, LedgerDirectoryQueryVariables>(LedgerDirectoryDocument, options);
+      }
+export function useLedgerDirectoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LedgerDirectoryQuery, LedgerDirectoryQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<LedgerDirectoryQuery, LedgerDirectoryQueryVariables>(LedgerDirectoryDocument, options);
+        }
+// @ts-ignore
+export function useLedgerDirectorySuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<LedgerDirectoryQuery, LedgerDirectoryQueryVariables>): Apollo.UseSuspenseQueryResult<LedgerDirectoryQuery, LedgerDirectoryQueryVariables>;
+export function useLedgerDirectorySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<LedgerDirectoryQuery, LedgerDirectoryQueryVariables>): Apollo.UseSuspenseQueryResult<LedgerDirectoryQuery | undefined, LedgerDirectoryQueryVariables>;
+export function useLedgerDirectorySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<LedgerDirectoryQuery, LedgerDirectoryQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<LedgerDirectoryQuery, LedgerDirectoryQueryVariables>(LedgerDirectoryDocument, options);
+        }
+export type LedgerDirectoryQueryHookResult = ReturnType<typeof useLedgerDirectoryQuery>;
+export type LedgerDirectoryLazyQueryHookResult = ReturnType<typeof useLedgerDirectoryLazyQuery>;
+export type LedgerDirectorySuspenseQueryHookResult = ReturnType<typeof useLedgerDirectorySuspenseQuery>;
+export type LedgerDirectoryQueryResult = Apollo.QueryResult<LedgerDirectoryQuery, LedgerDirectoryQueryVariables>;
 export const DiscoverLedgersDocument = gql`
     query DiscoverLedgers($q: String!, $page: Float!, $limit: Float!) {
   searchLedgers(

@@ -58,6 +58,7 @@ export const ru: Translations = {
   openInBrowser: "Открыть в браузере",
   shareLink: "Поделиться ссылкой",
   copyLink: "Копировать ссылку",
+  drawerCurrentLedger: "Текущая книга",
   drawerNew: "Новая",
   drawerLedgerActions: "Действия для {{name}}",
   drawerPrivateLinkHint:

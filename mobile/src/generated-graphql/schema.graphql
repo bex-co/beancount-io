@@ -971,7 +971,9 @@ type Mutation {
   Initiate a CLI authentication session. Returns the device code the CLI polls with and the user code to display for the person to enter in the browser.
   """
   createCliAuthSession(client: CliAuthClientInfoInput): CreateCliAuthSessionResponse!
-  """Create a new ledger for the current user"""
+  """
+  Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged.
+  """
   createLedger(description: String, name: String!, private: Boolean, template: LedgerTemplate): Ledger!
   """Create a new file in a specific ledger"""
   createLedgerFile(content: String!, ledgerId: String!, message: String, path: String!): LedgerFileContent!

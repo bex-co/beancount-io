@@ -16,10 +16,8 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  ListLedgersDocument,
   LedgerTemplate,
   useCreateLedgerMutation,
-  useListLedgersQuery,
 } from "@/generated-graphql/graphql";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -32,6 +30,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { useLedgerDirectory } from "@/common/ledger-directory/ledger-directory-provider";
 import { ledgerVar } from "@/common/vars";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import type { ColorTheme } from "@/types/theme-props";
@@ -142,7 +141,7 @@ export function CreateLedgerScreen(): JSX.Element {
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
-  const { data: listData } = useListLedgersQuery();
+  const { ledgers, loading: directoryLoading, refresh } = useLedgerDirectory();
   const [createLedger, { loading }] = useCreateLedgerMutation();
 
   const schema = useMemo(
@@ -163,8 +162,8 @@ export function CreateLedgerScreen(): JSX.Element {
   );
 
   const existingNames = useMemo(
-    () => (listData?.listLedgers ?? []).map((ledger) => ledger.name),
-    [listData?.listLedgers],
+    () => ledgers.map((ledger) => ledger.name),
+    [ledgers],
   );
 
   const {
@@ -186,11 +185,11 @@ export function CreateLedgerScreen(): JSX.Element {
 
   useEffect(() => {
     if (watch("name")) return;
-    if (existingNames.length === 0 && !listData) return;
+    if (directoryLoading) return;
     setValue("name", generateDefaultLedgerName(existingNames));
     // Only seed once list data arrives and name is still empty.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listData, existingNames.join("|")]);
+  }, [directoryLoading, existingNames.join("|")]);
 
   const nameValue = watch("name");
   const slugPreview = ledgerSlugPreview(nameValue ?? "");
@@ -208,14 +207,15 @@ export function CreateLedgerScreen(): JSX.Element {
             ? { template: LedgerTemplate.Sample }
             : {}),
         },
-        refetchQueries: [{ query: ListLedgersDocument }],
-        awaitRefetchQueries: true,
       });
       const id = result.data?.createLedger?.id;
       if (!id) {
         setError("root", { message: t("createLedgerGenericError") });
         return;
       }
+      // The creation already succeeded. A failed list refresh must not invite
+      // another submission; the directory retains the confirmed new ledger.
+      await refresh(result.data!.createLedger).catch(() => {});
       ledgerVar(id);
       router.replace("/(app)/(tabs)");
     } catch (error) {

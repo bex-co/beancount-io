@@ -54,11 +54,7 @@ import { clampProgress, settleTarget } from "./drawer-motion";
 import { LoadingTile } from "@/components/loading-tile";
 import { MenuButton } from "@/components/menu-button";
 import { SearchBar } from "@/components/search-bar";
-import {
-  type DrawerLedger,
-  filterLedgers,
-  groupLedgersByOwner,
-} from "./drawer-ledgers";
+import { type DrawerLedger, getDrawerSections } from "./drawer-ledgers";
 
 const skeletonWidths = [140, 112, 160];
 
@@ -352,6 +348,7 @@ function DrawerMenuRow({
 export type LedgerDrawerData = {
   ledgerId: string | null;
   ledgers: DrawerLedger[];
+  selectedLedger?: DrawerLedger;
   loading: boolean;
   error: boolean;
   refetch: () => Promise<unknown>;
@@ -413,25 +410,25 @@ export function LedgerDrawer({
   const {
     ledgerId,
     ledgers: drawerLedgers,
+    selectedLedger,
     loading,
     error,
     refetch,
     onSelect,
     guest,
   } = data;
-  const currentLedger = drawerLedgers.find(
-    (ledger) => ledger.id === ledgerId || ledger.fullName === ledgerId,
-  );
+  const currentLedger =
+    drawerLedgers.find(
+      (ledger) => ledger.id === ledgerId || ledger.fullName === ledgerId,
+    ) ?? selectedLedger;
   const [query, setQuery] = useState("");
   // Filtering is offered on the unfiltered count, so narrowing to one match
   // can't pull the field out from under the query that produced it.
   const showFilter = drawerLedgers.length >= FILTER_FROM_LEDGERS;
   const drawerSections = useMemo(
     () =>
-      groupLedgersByOwner(
-        showFilter ? filterLedgers(drawerLedgers, query) : drawerLedgers,
-      ),
-    [drawerLedgers, showFilter, query],
+      getDrawerSections(drawerLedgers, currentLedger, showFilter ? query : ""),
+    [drawerLedgers, currentLedger, showFilter, query],
   );
   const filteredEmpty = drawerSections.length === 0 && query.trim() !== "";
 
@@ -776,7 +773,9 @@ export function LedgerDrawer({
                   style={styles.ownerHeaderText}
                   numberOfLines={1}
                 >
-                  {section.owner}
+                  {section.current
+                    ? `${t("drawerCurrentLedger")} · ${section.owner}`
+                    : section.owner}
                 </Text>
                 <View style={styles.ownerHeaderRule} />
               </View>
@@ -933,7 +932,24 @@ export function LedgerDrawer({
                 </View>
               );
             }}
-            ListFooterComponent={stacked ? navigation : null}
+            ListFooterComponent={
+              <>
+                {error && drawerLedgers.length > 0 ? (
+                  <TouchableOpacity
+                    testID="drawer-directory-retry"
+                    style={styles.emptyAction}
+                    onPress={handleRefresh}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("discoveryLoadError")}
+                  >
+                    <Text style={styles.stateText}>
+                      {t("discoveryLoadError")}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+                {stacked ? navigation : null}
+              </>
+            }
           />
 
           {/* Pinned at default text sizes; enlarged text scrolls nav in the list footer. */}

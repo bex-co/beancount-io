@@ -52,6 +52,7 @@ export const en = {
   openInBrowser: "Open in browser",
   shareLink: "Share link",
   copyLink: "Copy link",
+  drawerCurrentLedger: "Current ledger",
   drawerNew: "New",
   drawerLedgerActions: "Actions for {{name}}",
   drawerPrivateLinkHint: "Recipients need access to open this link.",

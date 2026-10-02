@@ -1,0 +1,8 @@
+query LedgerDirectory($page: Float!, $limit: Float!) {
+  listLedgers(page: $page, limit: $limit) {
+    id
+    name
+    fullName
+    private
+  }
+}

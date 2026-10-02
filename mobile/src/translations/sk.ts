@@ -58,6 +58,7 @@ export const sk: Translations = {
   openInBrowser: "Otvoriť v prehliadači",
   shareLink: "Zdieľať odkaz",
   copyLink: "Kopírovať odkaz",
+  drawerCurrentLedger: "Aktuálna účtovná kniha",
   drawerNew: "Nová",
   drawerLedgerActions: "Akcie pre {{name}}",
   drawerPrivateLinkHint:

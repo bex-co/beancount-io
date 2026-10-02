@@ -81,6 +81,12 @@ function load(file: string): any {
         if (id === "@expo/vector-icons") return {};
         if (id === "@/components/stack-back-button")
           return { StackBackButton: "Back" };
+        if (id === "@/common/ledger-directory/ledger-directory-provider")
+          return {
+            LedgerDirectoryProvider: () => {
+              throw new Error("Guest must not mount an account directory");
+            },
+          };
         throw new Error(`Unexpected dependency: ${id}`);
       },
     },

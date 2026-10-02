@@ -58,6 +58,7 @@ export const bg: Translations = {
   openInBrowser: "Отвори в браузър",
   shareLink: "Сподели връзка",
   copyLink: "Копирай връзка",
+  drawerCurrentLedger: "Текуща счетоводна книга",
   drawerNew: "Нова",
   drawerLedgerActions: "Действия за {{name}}",
   drawerPrivateLinkHint:

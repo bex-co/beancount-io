@@ -58,6 +58,7 @@ export const uk: Translations = {
   openInBrowser: "Відкрити в браузері",
   shareLink: "Поділитися посиланням",
   copyLink: "Копіювати посилання",
+  drawerCurrentLedger: "Поточна книга",
   drawerNew: "Нова",
   drawerLedgerActions: "Дії для {{name}}",
   drawerPrivateLinkHint:

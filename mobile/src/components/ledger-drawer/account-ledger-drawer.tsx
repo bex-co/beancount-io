@@ -1,23 +1,16 @@
 import { useMemo } from "react";
 import { useReactiveVar } from "@apollo/client";
 import { ledgerVar } from "@/common/vars";
-import {
-  useGetLedgerQuery,
-  useListLedgersQuery,
-} from "@/generated-graphql/graphql";
+import { useGetLedgerQuery } from "@/generated-graphql/graphql";
 import { LedgerDrawer, type LedgerDrawerProps } from "./ledger-drawer";
-import { DRAWER_LEDGERS_PAGE_SIZE, getDrawerLedgers } from "./drawer-ledgers";
+import { useLedgerDirectory } from "@/common/ledger-directory/ledger-directory-provider";
+import { getDrawerLedgers } from "./drawer-ledgers";
 
 /** Account queries live outside the shared drawer so a guest never mounts them. */
 export function AccountLedgerDrawer(props: Omit<LedgerDrawerProps, "data">) {
   const { open } = props;
   const ledgerId = useReactiveVar(ledgerVar);
-  // Explicit pagination matching Browse page one: the server's no-argument
-  // default silently drops ledgers Browse lists (w1/031).
-  const { data, loading, error, refetch } = useListLedgersQuery({
-    variables: { page: 1, limit: DRAWER_LEDGERS_PAGE_SIZE },
-  });
-  const ledgers = useMemo(() => data?.listLedgers ?? [], [data?.listLedgers]);
+  const { ledgers, loading, error, refresh } = useLedgerDirectory();
   const listedCurrent = ledgers.find(
     (ledger) => ledger.id === ledgerId || ledger.fullName === ledgerId,
   );
@@ -25,19 +18,20 @@ export function AccountLedgerDrawer(props: Omit<LedgerDrawerProps, "data">) {
     variables: { ledgerId: ledgerId ?? "" },
     skip: !open || !ledgerId || !!listedCurrent,
   });
-  const drawerLedgers = useMemo(
-    () => getDrawerLedgers(ledgers, ledgerId, selectedData?.getLedger),
-    [ledgers, ledgerId, selectedData?.getLedger],
+  const selectedLedger = useMemo(
+    () => getDrawerLedgers([], ledgerId, selectedData?.getLedger)[0],
+    [ledgerId, selectedData?.getLedger],
   );
   return (
     <LedgerDrawer
       {...props}
       data={{
         ledgerId,
-        ledgers: drawerLedgers,
+        ledgers,
+        selectedLedger,
         loading,
         error: Boolean(error),
-        refetch,
+        refetch: refresh,
         onSelect: (id) => ledgerVar(id),
       }}
     />

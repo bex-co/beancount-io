@@ -58,6 +58,7 @@ export const es: Translations = {
   openInBrowser: "Abrir en el navegador",
   shareLink: "Compartir enlace",
   copyLink: "Copiar enlace",
+  drawerCurrentLedger: "Libro actual",
   drawerNew: "Nuevo",
   drawerLedgerActions: "Acciones para {{name}}",
   drawerPrivateLinkHint:

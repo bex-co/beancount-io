@@ -1,15 +1,3 @@
-/**
- * How many collection ledgers the quick-switch drawer asks for.
- *
- * Kept equal to Browse's page size (`PAGE_SIZE` in
- * `screens/ledger-selection/use-discovery.ts`) so the drawer shows exactly
- * Browse → Your ledgers page one. The drawer passes this explicitly because
- * the server answers the no-argument shape with a smaller default set than
- * the explicit `{page, limit}` shape (w1/031); the limit lives here so the
- * call site and the regression test share one value.
- */
-export const DRAWER_LEDGERS_PAGE_SIZE = 30;
-
 export type DrawerLedger = {
   id: string;
   name: string;
@@ -70,7 +58,36 @@ export function getLedgerOwner(fullName: string): string {
 export type LedgerOwnerSection<T> = {
   owner: string;
   data: T[];
+  current?: boolean;
+  key?: string;
 };
+
+/** Keep an out-of-directory selection separate from the stable owner groups. */
+export function getDrawerSections(
+  ledgers: readonly DrawerLedger[],
+  selectedLedger: DrawerLedger | undefined,
+  query: string,
+): LedgerOwnerSection<DrawerLedger>[] {
+  const sections = groupLedgersByOwner(filterLedgers(ledgers, query)).map(
+    (section) => ({ ...section, key: section.owner }),
+  );
+  if (
+    selectedLedger &&
+    !ledgers.some((ledger) => ledger.fullName === selectedLedger.fullName) &&
+    filterLedgers([selectedLedger], query).length
+  ) {
+    return [
+      {
+        key: "current-ledger",
+        owner: getLedgerOwner(selectedLedger.fullName),
+        current: true,
+        data: [selectedLedger],
+      },
+      ...sections,
+    ];
+  }
+  return sections;
+}
 
 /** Splits the list into one group per owning account, in the order the owners
  * first appear, which is the collection's own order. The account name belongs

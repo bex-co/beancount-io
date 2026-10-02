@@ -58,6 +58,7 @@ export const fa: Translations = {
   openInBrowser: "باز کردن در مرورگر",
   shareLink: "اشتراک‌گذاری پیوند",
   copyLink: "کپی پیوند",
+  drawerCurrentLedger: "دفتر فعلی",
   drawerNew: "جدید",
   drawerLedgerActions: "عملیات برای {{name}}",
   drawerPrivateLinkHint:

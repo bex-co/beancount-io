@@ -124,28 +124,26 @@ function load(relative: string): any {
         if (id === "./drawer-ledgers") return drawerLedgers;
         if (id === "@/common/horizontal-swipe-owner")
           return { EdgeSwipeGestureProvider: "EdgeSwipeGestureProvider" };
-        if (id === "@/generated-graphql/graphql")
+        if (id === "@/common/ledger-directory/ledger-directory-provider")
           return {
-            useListLedgersQuery: (options: any) => {
+            useLedgerDirectory: () => {
               accountReads += 1;
-              expect(options.variables.page).toBe(1);
-              expect(options.variables.limit).toBe(
-                drawerLedgers.DRAWER_LEDGERS_PAGE_SIZE,
-              );
               return {
-                data: {
-                  listLedgers: [
-                    {
-                      id: persistedLedger,
-                      fullName: persistedLedger,
-                      name: "private",
-                    },
-                  ],
-                },
+                ledgers: [
+                  {
+                    id: persistedLedger,
+                    fullName: persistedLedger,
+                    name: "private",
+                  },
+                ],
                 loading: false,
-                refetch: async () => {},
+                error: false,
+                refresh: async () => {},
               };
             },
+          };
+        if (id === "@/generated-graphql/graphql")
+          return {
             useGetLedgerQuery: ({ skip }: { skip: boolean }) => {
               if (!skip) permissionReads += 1;
               return {};
