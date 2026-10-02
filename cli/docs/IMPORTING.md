@@ -209,14 +209,18 @@ For a remembered mapping, human output reports
 `Using remembered settings for <file>` (or `Using settings remembered from
 <seeding file> for <file>`) listing every setting in force, and JSON reports
 `config_source` `remembered --csv` plus a `remembered` object with the same
-fields (`null` when the run used no memory). An explicit `--csv` run replaces
-the remembered settings; settings it drops are named, never silently
-discarded. Only a `--date-format` you passed is remembered, and even that is
-re-validated per file: when the new export unambiguously uses another
-convention, the import refuses and names the expected format, since two
+fields (`null` when the run used no memory). A successful explicit `--csv`
+preview or apply replaces the remembered settings; settings it drops are named,
+never silently discarded. Failed runs leave the saved settings unchanged,
+including an apply rejected for review with exit 4. A successful preview can
+remember its mapping even when some rows need review. Only a `--date-format`
+you passed is remembered, and even that is re-validated per file: when the new
+export unambiguously uses another convention, the import refuses and names the
+expected format, since two
 exports can share a header row without sharing a date convention. A
 remembered `--rules` path that is missing or unreadable degrades to a warning
-and an unruled import rather than failing. A changed header row matches
+and an unruled import rather than failing; that repair is saved only after a
+successful preview or apply. A changed header row matches
 nothing remembered, and bea falls back to reading that header directly.
 
 ## A Python importer (`--config`)

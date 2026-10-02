@@ -135,30 +135,6 @@ def _csv_record(file: Path) -> Path:
     return config_dir() / "importers" / f"csv-{key}.json"
 
 
-def _patch_csv_entry(file: Path, headers: list[str], account: str, updates: dict[str, Any]) -> None:
-    """Rewrite stored keys for one remembered entry; failures warn, never fail."""
-    from cli.csv_mapper import header_signature
-
-    record = _csv_record(file)
-    try:
-        payload = json.loads(record.read_text())
-        sources = payload.get("sources", [])
-        wanted = header_signature(headers)
-        for entry in sources:
-            if (
-                isinstance(entry, dict)
-                and header_signature(entry.get("headers")) == wanted
-                and entry.get("account") == account
-            ):
-                entry.update(updates)
-        record.parent.mkdir(parents=True, exist_ok=True)
-        atomic_write(record, json.dumps({"sources": sources}))
-    except OSError as exc:
-        output.note(f"Could not update the remembered column mapping: {exc}.")
-    except (ValueError, AttributeError):
-        pass
-
-
 def _find_csv_entry(file: Path, headers: list[str] | None, account: str) -> dict[str, Any] | None:
     """The remembered entry for a header row and account, without side effects."""
     from cli.csv_mapper import header_signature
@@ -192,7 +168,7 @@ def _recall_csv(file: Path, source: Path, account: str | None = None, *, notes: 
     Stale assumptions are repaired loudly: a remembered `sign=ledger` is
     dropped (sign is never re-applied across files) and an unreadable
     remembered `--rules` path degrades to an unruled import, each announced
-    in `notes` and persisted back to the record.
+    in `notes`. The caller persists the repaired entry only after success.
     """
     from cli.csv_mapper import header_signature, load_rules, parse_mapping, read_header
 
@@ -249,7 +225,6 @@ def _recall_csv(file: Path, source: Path, account: str | None = None, *, notes: 
                 f"Dropped remembered sign=ledger for {source.name}; sign is never re-applied across files. "
                 "Pass sign=ledger explicitly for a ledger-signed export."
             )
-            _patch_csv_entry(file, headers, entry["account"], {"mapping": stripped})
     rules_path = entry.get("rules")
     if isinstance(rules_path, str):
         try:
@@ -260,17 +235,16 @@ def _recall_csv(file: Path, source: Path, account: str | None = None, *, notes: 
                 "Re-pass --rules to restore it."
             )
             entry["rules"] = None
-            _patch_csv_entry(file, headers, entry["account"], {"rules": None})
     return entry
 
 
-def _remember_csv(file: Path, source: Path, spec: dict[str, Any], encoding: str = "utf-8") -> None:
-    """Remember a `--csv` run keyed by root ledger, CSV header row and account."""
-    from cli.csv_mapper import header_signature, read_header
+def _remember_csv(file: Path, spec: dict[str, Any]) -> bool:
+    """Persist captured settings without re-reading a source already imported."""
+    from cli.csv_mapper import header_signature
 
-    headers = read_header(source, encoding=encoding)
+    headers = spec.get("headers")
     if not headers:
-        return
+        return False
     record = _csv_record(file)
     try:
         try:
@@ -287,11 +261,13 @@ def _remember_csv(file: Path, source: Path, spec: dict[str, Any], encoding: str 
                 and entry.get("account") == spec["account"]
             )
         ]
-        payload = json.dumps({"sources": [*sources, {"headers": headers, **spec}]})
+        payload = json.dumps({"sources": [*sources, spec]})
         record.parent.mkdir(parents=True, exist_ok=True)
         atomic_write(record, payload)
+        return True
     except OSError as exc:
         output.note(f"Could not remember the column mapping: {exc}. Pass --csv on the next import.")
+        return False
 
 
 def import_entries(
@@ -379,6 +355,8 @@ def import_entries(
 
     csv_request: str | None = csv_mapping
     config_to_remember: Path | None = None
+    csv_to_remember: dict[str, Any] | None = None
+    discarded_note: str | None = None
     csv_origin = "--csv"
     csv_run_account: str | None = csv_account
     csv_rules_arg: Path | None = rules_file.expanduser().resolve() if rules_file is not None else None
@@ -422,6 +400,8 @@ def import_entries(
     if csv_request is None and config is None:
         remembered = _recall_csv(file, source, csv_account, notes=recall_notes)
         if remembered is not None:
+            if recall_notes:
+                csv_to_remember = remembered
             csv_request = remembered["mapping"]
             csv_run_account = csv_account or remembered["account"]
             remembered_run = True
@@ -563,8 +543,10 @@ def import_entries(
             try:
                 from cli.csv_mapper import read_header
 
-                prior = _find_csv_entry(file, read_header(source, encoding=csv_encoding), csv_run_account or "")
+                headers = read_header(source, encoding=csv_encoding)
+                prior = _find_csv_entry(file, headers, csv_run_account or "")
             except UsageError:
+                headers = None
                 prior = None
             if prior is not None:
                 discarded: list[str] = []
@@ -583,26 +565,20 @@ def import_entries(
                 ):
                     discarded.append(f"--date-format {prior['date_format']}")
                 if discarded:
-                    message = (
+                    discarded_note = (
                         f"Discarded remembered settings for {source.name}: "
                         f"{', '.join(discarded)}. Re-pass them to keep them across refreshes."
                     )
-                    frontend_notes.append(message)
-                    output.note(message)
-            _remember_csv(
-                file,
-                source,
-                {
-                    "mapping": stored_mapping,
-                    "source": source.name,
-                    "account": csv_run_account,
-                    "rules": str(csv_rules_arg) if csv_rules_arg is not None else None,
-                    "default_account": default_account,
-                    "date_format": chosen_date_format,
-                    "delimiter": csv_delimiter,
-                },
-                encoding=csv_encoding,
-            )
+            csv_to_remember = {
+                "headers": headers,
+                "mapping": stored_mapping,
+                "source": source.name,
+                "account": csv_run_account,
+                "rules": str(csv_rules_arg) if csv_rules_arg is not None else None,
+                "default_account": default_account,
+                "date_format": chosen_date_format,
+                "delimiter": csv_delimiter,
+            }
     else:
         frontend_notes = []
         config_path, config_source = _config_path(file, config)
@@ -622,6 +598,11 @@ def import_entries(
             for note in exc.result.get("notes") or []:
                 output.note(str(note))
         raise
+    # Only a successful preview/apply commits settings. A rejected apply may
+    # carry a preview in error.result, but must preserve the previous memory.
+    if csv_to_remember is not None and _remember_csv(file, csv_to_remember) and discarded_note is not None:
+        frontend_notes.append(discarded_note)
+        output.note(discarded_note)
     engine_notes = [str(note) for note in preview.pop("notes", []) or []]
     for note in engine_notes:
         output.note(note)

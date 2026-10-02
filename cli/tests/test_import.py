@@ -1373,10 +1373,139 @@ class TestCsvRulesMatching:
 
 class TestStickyRecall:
     MAPPING = "date=Date,amount=Amount,narration=Description"
+    BAD_MAPPING = "date=Date,amount=Description,narration=Amount"
 
     def _record(self, book: Path, cfg: Path) -> Path:
         key = hashlib.sha256(str(book.resolve()).encode()).hexdigest()
         return cfg / "importers" / f"csv-{key}.json"
+
+    def _remember_rule_mapping(self, book: Path) -> tuple[Path, Path]:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        rules = rules_file(book, '[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Dining"\n')
+        seed = run_csv(book, source, "--csv", self.MAPPING, "--account", "Assets:Checking", "--rules", str(rules))
+        assert seed.exit_code == 0, seed.output
+        assert json.loads(seed.stdout)["data"]["ready"] == 1
+        return source, rules
+
+    def test_failed_first_mapping_leaves_the_next_import_free_to_infer(self, book: Path, isolated_config: Path) -> None:
+        source = book.parent / "bank.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Coffee,-5.25\n")
+        before = book.read_bytes()
+
+        failed = run_csv(book, source, "--csv", self.BAD_MAPPING, "--account", "Assets:Checking")
+
+        assert failed.exit_code == 2, failed.output
+        assert "cannot parse amount 'Coffee'" in failed.stderr
+        assert not self._record(book, isolated_config).exists()
+        assert book.read_bytes() == before
+        retry = run_csv(book, source, "--account", "Assets:Checking")
+        assert retry.exit_code == 0, retry.output
+        data = json.loads(retry.stdout)["data"]
+        assert data["config_source"] == "inferred --csv"
+        assert data["ready"] == 1
+        assert data["rows"][0]["amount"] == "-5.25 USD"
+        assert book.read_bytes() == before
+
+    @pytest.mark.parametrize("apply", [False, True], ids=["preview", "apply"])
+    @pytest.mark.parametrize("as_json", [False, True], ids=["human", "json"])
+    def test_failed_explicit_mapping_preserves_the_working_rules(
+        self, book: Path, isolated_config: Path, apply: bool, as_json: bool
+    ) -> None:
+        source, rules = self._remember_rule_mapping(book)
+        record = self._record(book, isolated_config)
+        remembered = record.read_bytes()
+        before = book.read_bytes()
+
+        failed = runner.invoke(
+            app,
+            [
+                *(["--json"] if as_json else []),
+                "--file",
+                str(book),
+                "import",
+                str(source),
+                "--csv",
+                self.BAD_MAPPING,
+                "--account",
+                "Assets:Checking",
+                *(["--apply"] if apply else []),
+            ],
+        )
+
+        assert failed.exit_code == 2, failed.output
+        assert "cannot parse amount 'Coffee'" in failed.stderr
+        assert record.read_bytes() == remembered
+        assert book.read_bytes() == before
+        assert "Discarded remembered" not in failed.output
+        retry = run_csv(book, source)
+        assert retry.exit_code == 0, retry.output
+        data = json.loads(retry.stdout)["data"]
+        assert data["config_source"] == "remembered --csv"
+        assert data["remembered"]["rules"] == str(rules)
+        assert data["rows"][0]["rule"] == "Coffee"
+        assert "Expenses:Dining" in data["rows"][0]["entry"]
+        assert record.read_bytes() == remembered
+        assert book.read_bytes() == before
+
+    def test_review_blocked_apply_preserves_the_working_memory(self, book: Path, isolated_config: Path) -> None:
+        source, rules = self._remember_rule_mapping(book)
+        record = self._record(book, isolated_config)
+        remembered = record.read_bytes()
+        before = book.read_bytes()
+
+        failed = run_csv(
+            book,
+            source,
+            "--csv",
+            self.MAPPING,
+            "--account",
+            "Assets:Checking",
+            "--default-account",
+            "Expenses:NotOpened",
+            "--apply",
+        )
+
+        assert failed.exit_code == 4, failed.output
+        error = json.loads(failed.stderr)["error"]
+        assert error["result"]["written"] == 0
+        assert error["result"]["rows"][0]["status"] == "blocked"
+        assert record.read_bytes() == remembered
+        assert book.read_bytes() == before
+        assert "Discarded remembered" not in failed.output
+        retry = run_csv(book, source)
+        assert retry.exit_code == 0, retry.output
+        data = json.loads(retry.stdout)["data"]
+        assert data["remembered"]["rules"] == str(rules)
+        assert data["rows"][0]["rule"] == "Coffee"
+        assert data["ready"] == 1
+        assert record.read_bytes() == remembered
+        assert book.read_bytes() == before
+
+    @pytest.mark.parametrize("stale_setting", ["missing-rules", "corrupt-rules", "legacy-sign"])
+    def test_failed_extraction_does_not_persist_stale_memory_repairs(
+        self, book: Path, isolated_config: Path, stale_setting: str
+    ) -> None:
+        source, rules = self._remember_rule_mapping(book)
+        record = self._record(book, isolated_config)
+        if stale_setting == "missing-rules":
+            rules.unlink()
+        elif stale_setting == "corrupt-rules":
+            rules.write_text("NOT TOML {{{")
+        else:
+            payload = json.loads(record.read_text())
+            payload["sources"][0]["mapping"] += ",sign=ledger"
+            record.write_text(json.dumps(payload, indent=2) + "\n")
+        remembered = record.read_bytes()
+        before = book.read_bytes()
+        source.write_text("Date,Description,Amount\n2026-08-03,Coffee,not-a-number\n")
+
+        failed = run_csv(book, source)
+
+        assert failed.exit_code == 2, failed.output
+        assert "cannot parse amount 'not-a-number'" in failed.stderr
+        assert record.read_bytes() == remembered
+        assert book.read_bytes() == before
 
     def test_remembered_run_lists_every_setting(self, book: Path, isolated_config: Path) -> None:
         rules = rules_file(book, '[[rule]]\nmatch = "Coffee"\naccount = "Expenses:Food"\n')
