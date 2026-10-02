@@ -28,6 +28,7 @@ from beancount.core.data import (
     Transaction,
 )
 from beancount.core.position import CostSpec, cost_to_str
+from beancount.core.number import MISSING
 from beancount.parser.printer import EntryPrinter
 from beancount.utils import misc_utils
 
@@ -69,14 +70,46 @@ TOTAL_PRICE_META = "__bea_total_price__"
 Posting.price is always a unit price, so a parsed `@@` total would print
 back as `@` with a divided, possibly repeating value. The stash rides the
 `__` never-write convention — the printer, `metadata_for_write`, and
-`metadata_to_json` all skip it — and only `_TotalPricePrinter` reads it.
+`metadata_to_json` all skip it — and only `DirectivePrinter` reads it.
 The value is a Beancount Amount. A ledger file cannot smuggle the key in:
 metadata names there are lowercase without leading underscores.
 """
 
 
-class _TotalPricePrinter(EntryPrinter):
-    """Upstream's printer, rendering stashed `@@` totals and whole cost specs."""
+class DirectivePrinter(EntryPrinter):
+    """Preserve directive values when printing new writes or query exports.
+
+    This only prepares values for Beancount syntax. Input normalization belongs
+    to `format_entry`: an export must retain existing multiline ledger strings.
+    """
+
+    def __call__(self, entry: Any) -> str:
+        fields = {
+            Note: ("comment",),
+            Document: ("filename",),
+            Event: ("type", "description"),
+            Custom: ("type",),
+        }.get(type(entry), ())
+        if fields:
+            entry = entry._replace(**{field: escape_string(getattr(entry, field)) for field in fields})
+        if isinstance(entry, Custom):
+            entry = entry._replace(
+                values=[
+                    _ValueType(escape_string(v.value) if v.dtype is str else _custom_value(v.value), v.dtype)
+                    for v in entry.values
+                ]
+            )
+        entry = entry._replace(meta=_fixed_point_metadata(entry.meta))
+        if isinstance(entry, Transaction):
+            # Upstream quotes a lot label but never escapes it. Cost and
+            # CostSpec are both namedtuples; copy rather than mutate the input.
+            entry = entry._replace(
+                postings=[
+                    _escape_cost_label(p)._replace(meta=_fixed_point_metadata(p.meta) if p.meta else p.meta)
+                    for p in entry.postings
+                ]
+            )
+        return str(super().__call__(entry))  # type: ignore[no-untyped-call]
 
     def render_posting_strings(self, posting: Any) -> tuple[str, str, str]:
         flag_account, position_str, weight_str = super().render_posting_strings(posting)  # type: ignore[no-untyped-call]
@@ -143,20 +176,21 @@ def _cost_spec_text(cost: Any, dformat: Any) -> str:
 
     `beancount.core.position.cost_to_str` prints a cost's currency only
     alongside a number, so a currency-only constraint (`{EUR}`) renders as the
-    empty `{}` — a different lot selector, silently accepted by validation. A
-    zero per-unit number beside a total is the parser's own spelling of
-    `{{total CUR}}` and is left out, so the rendering says what was meant.
+    empty `{}` — a different lot selector, silently accepted by validation.
+    Keep an explicit per-unit zero beside a total: `{0 # total CUR}` means
+    `{{total CUR}}`, whereas `{# total CUR}` leaves the unit cost to interpolate.
+    Likewise a missing total keeps its `#` interpolation marker.
     """
     parts: list[str] = []
     amounts: list[str] = []
     total = cost.number_total if isinstance(cost.number_total, Decimal) else None
     per = cost.number_per if isinstance(cost.number_per, Decimal) else None
-    if total is not None and per is not None and not per:
-        per = None
     if per is not None:
         amounts.append(dformat.format(per))
-    if total is not None:
-        amounts.extend(("#", dformat.format(total)))
+    if total is not None or cost.number_total is MISSING:
+        amounts.append("#")
+        if total is not None:
+            amounts.append(dformat.format(total))
     if isinstance(cost.currency, str):
         amounts.append(cost.currency)
     if amounts:
@@ -250,38 +284,10 @@ def _nfc_entry_accounts(entry: Any) -> Any:
 
 
 def format_entry(entry: Any) -> str:
-    """Fill upstream printer escaping gaps without changing the input entry."""
+    """Normalize new directive input and print it without changing the entry."""
     entry = _nfc_entry_accounts(entry)
     entry = normalize_entry_strings(entry)
-    fields = {
-        Note: ("comment",),
-        Document: ("filename",),
-        Event: ("type", "description"),
-        Custom: ("type",),
-    }.get(type(entry), ())
-    if fields:
-        entry = entry._replace(**{field: escape_string(getattr(entry, field)) for field in fields})
-    if isinstance(entry, Custom):
-        entry = entry._replace(
-            values=[
-                _ValueType(escape_string(v.value) if v.dtype is str else _custom_value(v.value), v.dtype)
-                for v in entry.values
-            ]
-        )
-    entry = entry._replace(meta=_fixed_point_metadata(entry.meta))
-    if isinstance(entry, Transaction):
-        # Upstream quotes a lot label but never escapes it, so `lot\A` reloads
-        # as `lotA` and a quote inside breaks the line. Cost and CostSpec are
-        # both namedtuples; copy rather than mutate the caller's value.
-        entry = entry._replace(
-            postings=[
-                _escape_cost_label(p)._replace(meta=_fixed_point_metadata(p.meta) if p.meta else p.meta)
-                for p in entry.postings
-            ]
-        )
-    # Default construction matches upstream format_entry exactly; only postings
-    # carrying TOTAL_PRICE_META render differently.
-    rendered = str(_TotalPricePrinter()(entry))  # type: ignore[no-untyped-call]
+    rendered = DirectivePrinter()(entry)  # type: ignore[no-untyped-call]
     first, separator, rest = rendered.partition("\n")
     if isinstance(entry, Open | Balance):
         # The upstream printer pads opens and balances to 47 columns. bean-format

@@ -440,9 +440,12 @@ alike — see [Output destinations](#output-destinations) for the one rule every
 command with an output destination follows.
 
 `--format beancount` prints directives, so the query has to return entries:
-`bea query PRINT -f beancount` (or `SELECT entry`) renders them through upstream's
-printer. A column result such as `SELECT date, account` is a usage error (exit 2)
-that points you at `PRINT` or at `--format text`/`csv`.
+`bea query PRINT -f beancount` (or `SELECT entry`) preserves negative custom
+values as separate values, decimal precision, and complete cost specifications.
+Existing multiline text stays intact. These rules also apply to stored queries
+and the interactive shell; explicit `--source` uses native Beanquery rendering.
+A column result such as `SELECT date, account` is a usage error (exit 2) that
+points you at `PRINT` or at `--format text`/`csv`.
 
 Under `--json`, `--format` is refused (exit 2): the envelope already selects
 JSON output, so `--json` and `--format` cannot be combined. Drop `--format`

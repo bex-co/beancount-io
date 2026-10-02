@@ -1,4 +1,4 @@
-"""BQL, engine-side: upstream's dispatch and renderers, plus bea's two fixes.
+"""BQL, engine-side: upstream's dispatch with bea's path and rendering fixes.
 
 This is where `bea query` runs after ADR014 t005. The frontend has no Beanquery
 and no shell subclass; it passes a ledger path and a query string across the
@@ -6,10 +6,8 @@ process boundary and renders whatever comes back.
 
 Upstream owns everything that makes a query a query: parsing, the statement
 dispatch that makes `PRINT` print directives rather than a `ROW(*)` table,
-`.run` and the rest of the dot commands, the text/CSV/Beancount renderers, and
-the interactive shell. Two things are ours, both of them fixes for behavior
-customers reported, and both of them needing Beancount objects — which is why
-they live here and not in `bea`:
+`.run` and the rest of the dot commands, and the interactive shell. The fixes
+below need Beancount objects, which is why they live here and not in `bea`:
 
 - **Exact paths.** Beanquery attaches a ledger through a `beancount:<path>` DSN
   that it hands to `urlparse`, so a `#` or `?` in a filename reads as a
@@ -21,6 +19,9 @@ they live here and not in `bea`:
   `decimal.InvalidOperation` outright on a balance wider than twelve integer
   digits. `result_context` derives the precision from the values being
   rendered instead.
+- **Directive exports.** The shared writer printer preserves negative custom
+  values, small decimal metadata, string escapes and whole cost specifications
+  so reloading an export does not silently change those values.
 """
 
 from __future__ import annotations
@@ -494,6 +495,8 @@ def build_shell(
                     # Upstream CSV reuses text DecimalRenderer padding. Emit
                     # unpadded machine cells so spreadsheets and Decimal() parse.
                     return _render_csv(description, rows, out)
+                if self.settings.format == "beancount":
+                    return _render_beancount(rows, out)
                 if self.settings.format == "text":
                     rows = [tuple(_inert_cell(value) for value in row) for row in rows]
                 renderer = FORMATS[self.settings.format]
@@ -541,13 +544,12 @@ def _inert_cell(value: Any) -> Any:
 
 
 def _require_entries(description: Any, rows: Any) -> None:
-    """Refuse a column result under the beancount format before upstream's renderer sees it.
+    """Refuse a column result under the beancount format before rendering it.
 
     Upstream's renderer unpacks every row as a single directive, so a column
     `SELECT` fails inside it with 'too many values to unpack' or a missing
-    `meta` attribute. `PRINT` answers one directive per row and still goes to
-    upstream unchanged; the ledger is fine either way, so this is a usage
-    failure rather than a validation one.
+    `meta` attribute. `PRINT` answers one directive per row; the ledger is fine
+    either way, so this is a usage failure rather than a validation one.
 
     An empty result keys on the cursor, not the rows: `SELECT entry` types its
     lone column as the directive, while a column `SELECT` types it scalar, so
@@ -566,6 +568,25 @@ def _require_entries(description: Any, rows: Any) -> None:
         "--format beancount prints directives, so the query must return entries; "
         "use PRINT, or --format text or csv for a column result."
     )
+
+
+def _render_beancount(rows: Any, out: TextIO) -> None:
+    """Use the writer's syntax fixes with upstream's grouping and exact precision."""
+    from beancount.core.data import Commodity, Transaction
+    from beancount.core.display_context import DisplayContext
+
+    from bea_engine.ledger.writer import DirectivePrinter
+
+    # Like upstream's Beancount renderer, a fresh display context retains each
+    # number's natural precision instead of rounding to a result-column width.
+    printer = DirectivePrinter(DisplayContext())  # type: ignore[no-untyped-call]
+    previous_type = type(rows[0][0]) if rows else None
+    for (entry,) in rows:
+        entry_type = type(entry)
+        if entry_type in (Transaction, Commodity) or entry_type is not previous_type:
+            out.write("\n")
+            previous_type = entry_type
+        out.write(printer(entry))
 
 
 def _render_csv(description: Any, rows: Any, out: TextIO) -> None:
