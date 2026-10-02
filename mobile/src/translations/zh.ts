@@ -375,7 +375,7 @@ export const zh: Translations = {
   // saves on the next screen.
   receiptRevealHint: "尚未保存 — 请在下一屏核对详情。",
   total: "合计",
-  receiptQuotaExhausted: "AI 额度已用完，请升级套餐。",
+  receiptQuotaExhausted: "AI 额度已用完。",
   receiptParseFailed: "无法识别小票，请重试。",
   receiptUploadFailed: "上传失败，请重试。",
   receiptCameraPermission: "拍摄小票需要相机权限，请在“设置”中开启。",
@@ -492,7 +492,7 @@ export const zh: Translations = {
   agentNoAnswerBody:
     "我查阅了你的账本，但在给出答案前用完了步骤。问得更具体一些通常就能得到结果。",
   agentQuotaTitle: "本月 AI 额度已用完",
-  agentQuotaBody: "你已用完本月的 AI 额度。下月会重置，也可以升级获得更多。",
+  agentQuotaBody: "你已用完本月的 AI 额度，下月会重置。",
   agentApprovalTitle: "请在网页端确认",
   agentApprovalBody:
     "这项改动需要你先确认才能写入账本，而 App 暂时还无法展示完整差异。请在 beancount.io 上打开此账本进行确认。",
@@ -518,7 +518,7 @@ export const zh: Translations = {
   createLedgerTemplateStarterHint: "带标准科目的空白账本。",
   createLedgerTemplateSample: "示例",
   createLedgerTemplateSampleHint: "含示例交易，便于探索应用。",
-  createLedgerTierLimit: "已达到当前方案的账本数量上限。请升级或归档后再创建。",
+  createLedgerTierLimit: "已达到账本数量上限，无法创建新的账本。",
   createLedgerGenericError: "无法创建账本，请重试。",
   createLedgerDrawerRow: "新建账本",
   createLedgerEmptyTitle: "还没有账本",

@@ -9,7 +9,7 @@
  * unit runner can exercise.
  *
  * Only the quota case is special: retrying a request the server just refused
- * for quota produces another refusal, so that one offers the upgrade path
+ * for quota produces another refusal, so that one shows a notice
  * instead of a retry button.
  */
 export type AgentErrorKind = "quota" | "auth" | "generic";

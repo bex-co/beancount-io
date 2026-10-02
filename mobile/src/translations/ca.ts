@@ -416,7 +416,7 @@ export const ca: Translations = {
   receiptRevealHint:
     "Encara no s'ha desat res: revisa els detalls a la pantalla següent.",
   total: "Total",
-  receiptQuotaExhausted: "Has exhaurit la quota d'IA. Millora el teu pla.",
+  receiptQuotaExhausted: "Has exhaurit la quota d'IA.",
   receiptParseFailed: "No s'ha pogut llegir el rebut. Torna-ho a provar.",
   receiptUploadFailed: "No s'ha pogut pujar. Torna-ho a provar.",
   receiptCameraPermission:
@@ -544,7 +544,7 @@ export const ca: Translations = {
     "He consultat el teu llibre, però m'he quedat sense passos abans de respondre. Una pregunta més concreta sol funcionar.",
   agentQuotaTitle: "Límit mensual d'IA exhaurit",
   agentQuotaBody:
-    "Has exhaurit l'ús d'IA d'aquest mes. Es restableix el mes vinent, o pots millorar el pla.",
+    "Has exhaurit l'ús d'IA d'aquest mes. Es restableix el mes vinent.",
   agentApprovalTitle: "Aprova-ho al web",
   agentApprovalBody:
     "Aquest canvi necessita la teva revisió abans de tocar el llibre, i l'aplicació encara no pot mostrar-te el diff complet. Obre aquest llibre a beancount.io per aprovar-lo.",
@@ -574,7 +574,7 @@ export const ca: Translations = {
   createLedgerTemplateSampleHint:
     "Transaccions d'exemple per explorar l'aplicació.",
   createLedgerTierLimit:
-    "Heu arribat al límit de llibres del vostre pla. Actualitzeu o archiveu un llibre per crear-ne un altre.",
+    "S'ha arribat al límit de llibres. No se'n pot crear cap més.",
   createLedgerGenericError:
     "No s'ha pogut crear el llibre. Torneu-ho a provar.",
   createLedgerDrawerRow: "Nou llibre",

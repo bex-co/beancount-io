@@ -415,7 +415,7 @@ export const es: Translations = {
   receiptRevealHint:
     "Todavía no se ha guardado nada: revisa los detalles en la pantalla siguiente.",
   total: "Total",
-  receiptQuotaExhausted: "Has agotado tu cuota de IA. Mejora tu plan.",
+  receiptQuotaExhausted: "Has agotado tu cuota de IA.",
   receiptParseFailed: "No se pudo leer el recibo. Inténtalo de nuevo.",
   receiptUploadFailed: "Error al subir. Inténtalo de nuevo.",
   receiptCameraPermission:
@@ -542,7 +542,7 @@ export const es: Translations = {
     "He revisado tu libro contable, pero me quedé sin pasos antes de responder. Una pregunta más concreta suele funcionar.",
   agentQuotaTitle: "Límite mensual de IA alcanzado",
   agentQuotaBody:
-    "Has agotado el uso de IA de este mes. Se restablece el mes que viene, o puedes mejorar tu plan.",
+    "Has agotado el uso de IA de este mes. Se restablece el mes que viene.",
   agentApprovalTitle: "Apruébalo en la web",
   agentApprovalBody:
     "Este cambio necesita tu revisión antes de tocar tu libro contable, y la aplicación aún no puede mostrarte el diff completo. Abre este libro en beancount.io para aprobarlo.",
@@ -572,7 +572,7 @@ export const es: Translations = {
   createLedgerTemplateSampleHint:
     "Transacciones de ejemplo para explorar la app.",
   createLedgerTierLimit:
-    "Has alcanzado el límite de libros de tu plan. Mejora el plan o archiva un libro para crear otro.",
+    "Se ha alcanzado el límite de libros. No se puede crear otro.",
   createLedgerGenericError: "No se pudo crear el libro. Inténtalo de nuevo.",
   createLedgerDrawerRow: "Nuevo libro",
   createLedgerEmptyTitle: "Aún no hay libros",

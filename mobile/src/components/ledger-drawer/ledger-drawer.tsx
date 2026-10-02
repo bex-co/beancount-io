@@ -3,6 +3,7 @@ import {
   BackHandler,
   Image,
   Linking,
+  Platform,
   Pressable,
   SectionList,
   StyleSheet,
@@ -910,18 +911,22 @@ export function LedgerDrawer({
                           ),
                           onPress: handleCopyLinkPress,
                         },
-                        {
-                          testID: "drawer-website-row",
-                          label: t("openInBrowser"),
-                          icon: (
-                            <Ionicons
-                              name="open-outline"
-                              size={20}
-                              color={theme.black80}
-                            />
-                          ),
-                          onPress: handleWebsitePress,
-                        },
+                        ...(Platform.OS === "ios"
+                          ? []
+                          : [
+                              {
+                                testID: "drawer-website-row",
+                                label: t("openInBrowser"),
+                                icon: (
+                                  <Ionicons
+                                    name="open-outline"
+                                    size={20}
+                                    color={theme.black80}
+                                  />
+                                ),
+                                onPress: handleWebsitePress,
+                              },
+                            ]),
                       ]}
                     />
                   ) : null}

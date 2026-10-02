@@ -409,7 +409,7 @@ export const en = {
   receiptRevealHint:
     "Nothing saved yet — check the details on the next screen.",
   total: "Total",
-  receiptQuotaExhausted: "AI quota exhausted. Please upgrade your plan.",
+  receiptQuotaExhausted: "AI quota exhausted.",
   receiptParseFailed: "Could not read receipt. Please try again.",
   receiptUploadFailed: "Upload failed. Please try again.",
   receiptCameraPermission:
@@ -535,7 +535,7 @@ export const en = {
     "I looked through your ledger but ran out of steps before answering. A more specific question usually gets there.",
   agentQuotaTitle: "Monthly AI limit reached",
   agentQuotaBody:
-    "You've used this month's AI allowance. It resets next month, or you can upgrade for more.",
+    "You've used this month's AI allowance. It resets next month.",
   agentApprovalTitle: "Approve this on the web",
   agentApprovalBody:
     "This change needs your review before it touches your ledger, and the app can't show you the full diff yet. Open this ledger on beancount.io to approve it.",
@@ -566,7 +566,7 @@ export const en = {
   createLedgerTemplateSampleHint:
     "Example transactions so you can explore the app.",
   createLedgerTierLimit:
-    "You've reached the ledger limit on your plan. Upgrade or archive a ledger to create another.",
+    "The ledger limit has been reached. Another ledger cannot be created.",
   createLedgerGenericError: "Couldn't create the ledger. Please try again.",
   createLedgerDrawerRow: "New ledger",
   createLedgerEmptyTitle: "No ledgers yet",

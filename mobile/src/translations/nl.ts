@@ -407,7 +407,7 @@ export const nl: Translations = {
   receiptRevealHint:
     "Nog niets opgeslagen — controleer de details op het volgende scherm.",
   total: "Totaal",
-  receiptQuotaExhausted: "AI-tegoed op. Waardeer je abonnement op.",
+  receiptQuotaExhausted: "AI-tegoed op.",
   receiptParseFailed: "Kon de bon niet lezen. Probeer het opnieuw.",
   receiptUploadFailed: "Uploaden mislukt. Probeer het opnieuw.",
   receiptCameraPermission:
@@ -533,7 +533,7 @@ export const nl: Translations = {
     "Ik heb je grootboek doorzocht, maar mijn stappen waren op voordat ik kon antwoorden. Een specifiekere vraag lukt meestal wel.",
   agentQuotaTitle: "Maandelijkse AI-limiet bereikt",
   agentQuotaBody:
-    "Je AI-tegoed van deze maand is op. Het wordt volgende maand hersteld, of je kunt upgraden.",
+    "Je AI-tegoed van deze maand is op. Het wordt volgende maand hersteld.",
   agentApprovalTitle: "Keur dit goed op het web",
   agentApprovalBody:
     "Deze wijziging moet je eerst nakijken voordat ze je grootboek raakt, en de app kan de volledige diff nog niet tonen. Open dit grootboek op beancount.io om goed te keuren.",
@@ -563,7 +563,7 @@ export const nl: Translations = {
   createLedgerTemplateSampleHint:
     "Voorbeeldtransacties om de app te verkennen.",
   createLedgerTierLimit:
-    "Je hebt de grootboeklimiet van je abonnement bereikt. Upgrade of archiveer een grootboek om er een te maken.",
+    "De grootboeklimiet is bereikt. Er kan geen nieuw grootboek worden aangemaakt.",
   createLedgerGenericError:
     "Kon het grootboek niet maken. Probeer het opnieuw.",
   createLedgerDrawerRow: "Nieuw grootboek",

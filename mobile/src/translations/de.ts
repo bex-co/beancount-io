@@ -415,8 +415,7 @@ export const de: Translations = {
   receiptRevealHint:
     "Noch nichts gespeichert — prüfen Sie die Details im nächsten Schritt.",
   total: "Summe",
-  receiptQuotaExhausted:
-    "KI-Kontingent aufgebraucht. Bitte upgraden Sie Ihren Tarif.",
+  receiptQuotaExhausted: "KI-Kontingent aufgebraucht.",
   receiptParseFailed:
     "Beleg konnte nicht gelesen werden. Bitte erneut versuchen.",
   receiptUploadFailed: "Hochladen fehlgeschlagen. Bitte erneut versuchen.",
@@ -543,7 +542,7 @@ export const de: Translations = {
     "Ich habe dein Hauptbuch durchsucht, aber die Schritte waren aufgebraucht, bevor ich antworten konnte. Eine gezieltere Frage führt meist zum Ziel.",
   agentQuotaTitle: "Monatliches KI-Limit erreicht",
   agentQuotaBody:
-    "Du hast das KI-Kontingent dieses Monats aufgebraucht. Es wird nächsten Monat zurückgesetzt, oder du kannst upgraden.",
+    "Du hast das KI-Kontingent dieses Monats aufgebraucht. Es wird nächsten Monat zurückgesetzt.",
   agentApprovalTitle: "Im Web bestätigen",
   agentApprovalBody:
     "Diese Änderung muss geprüft werden, bevor sie in dein Hauptbuch gelangt, und die App kann den vollständigen Diff noch nicht anzeigen. Öffne dieses Hauptbuch auf beancount.io, um sie zu bestätigen.",
@@ -571,7 +570,7 @@ export const de: Translations = {
   createLedgerTemplateSample: "Beispiel",
   createLedgerTemplateSampleHint: "Beispielbuchungen zum Erkunden der App.",
   createLedgerTierLimit:
-    "Sie haben das Hauptbuch-Limit Ihres Tarifs erreicht. Upgraden oder archivieren Sie ein Hauptbuch, um ein weiteres zu erstellen.",
+    "Das Limit für Hauptbücher wurde erreicht. Es kann kein weiteres Hauptbuch erstellt werden.",
   createLedgerGenericError:
     "Hauptbuch konnte nicht erstellt werden. Bitte erneut versuchen.",
   createLedgerDrawerRow: "Neues Hauptbuch",

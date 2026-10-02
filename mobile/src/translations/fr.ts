@@ -415,8 +415,7 @@ export const fr: Translations = {
   receiptRevealHint:
     "Rien n'est encore enregistré — vérifiez les détails à l'écran suivant.",
   total: "Total",
-  receiptQuotaExhausted:
-    "Quota d'IA épuisé. Veuillez passer à une offre supérieure.",
+  receiptQuotaExhausted: "Quota d'IA épuisé.",
   receiptParseFailed: "Impossible de lire le reçu. Veuillez réessayer.",
   receiptUploadFailed: "Échec de l'envoi. Veuillez réessayer.",
   receiptCameraPermission:
@@ -544,7 +543,7 @@ export const fr: Translations = {
     "J'ai parcouru votre livre, mais je n'avais plus d'étapes avant de pouvoir répondre. Une question plus précise aboutit généralement.",
   agentQuotaTitle: "Limite mensuelle d'IA atteinte",
   agentQuotaBody:
-    "Vous avez épuisé votre quota d'IA du mois. Il se réinitialise le mois prochain, ou vous pouvez passer à une offre supérieure.",
+    "Vous avez épuisé votre quota d'IA du mois. Il se réinitialise le mois prochain.",
   agentApprovalTitle: "À valider sur le web",
   agentApprovalBody:
     "Cette modification doit être vérifiée avant de toucher votre livre, et l'application ne peut pas encore afficher le diff complet. Ouvrez ce livre sur beancount.io pour la valider.",
@@ -574,7 +573,7 @@ export const fr: Translations = {
   createLedgerTemplateSampleHint:
     "Transactions d'exemple pour explorer l'application.",
   createLedgerTierLimit:
-    "Vous avez atteint la limite de grands livres de votre offre. Passez à un niveau supérieur ou archivez-en un pour en créer un autre.",
+    "La limite de grands livres est atteinte. Impossible d'en créer un autre.",
   createLedgerGenericError: "Impossible de créer le grand livre. Réessayez.",
   createLedgerDrawerRow: "Nouveau grand livre",
   createLedgerEmptyTitle: "Aucun grand livre pour l'instant",

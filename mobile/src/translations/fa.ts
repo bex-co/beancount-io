@@ -404,7 +404,7 @@ export const fa: Translations = {
   receiptRevealHint:
     "هنوز چیزی ذخیره نشده — جزئیات را در صفحهٔ بعد بررسی کنید.",
   total: "جمع کل",
-  receiptQuotaExhausted: "سهمیهٔ هوش مصنوعی تمام شد. طرح خود را ارتقا دهید.",
+  receiptQuotaExhausted: "سهمیهٔ هوش مصنوعی تمام شد.",
   receiptParseFailed: "خواندن رسید ممکن نشد. دوباره تلاش کنید.",
   receiptUploadFailed: "بارگذاری ناموفق بود. دوباره تلاش کنید.",
   receiptCameraPermission:
@@ -529,7 +529,7 @@ export const fa: Translations = {
     "دفترت را بررسی کردم، اما پیش از رسیدن به پاسخ گام‌هایم تمام شد. پرسش مشخص‌تر معمولاً به نتیجه می‌رسد.",
   agentQuotaTitle: "سقف ماهانه هوش مصنوعی پر شد",
   agentQuotaBody:
-    "سهم هوش مصنوعی این ماه را مصرف کرده‌ای. ماه آینده بازنشانی می‌شود، یا می‌توانی طرحت را ارتقا دهی.",
+    "سهم هوش مصنوعی این ماه را مصرف کرده‌ای. ماه آینده بازنشانی می‌شود.",
   agentApprovalTitle: "در وب تأیید کن",
   agentApprovalBody:
     "این تغییر پیش از آنکه به دفترت اعمال شود نیاز به بازبینی تو دارد و برنامه هنوز نمی‌تواند تفاوت کامل را نشان دهد. این دفتر را در beancount.io باز کن تا تأییدش کنی.",
@@ -556,7 +556,7 @@ export const fa: Translations = {
   createLedgerTemplateSample: "نمونه",
   createLedgerTemplateSampleHint: "تراکنش‌های نمونه برای کاوش در برنامه.",
   createLedgerTierLimit:
-    "به سقف تعداد دفترکل در طرح خود رسیده‌اید. ارتقا دهید یا یکی را بایگانی کنید.",
+    "به سقف تعداد دفترکل رسیده‌اید. ایجاد دفترکل دیگری امکان‌پذیر نیست.",
   createLedgerGenericError: "ایجاد دفترکل ممکن نشد. دوباره تلاش کنید.",
   createLedgerDrawerRow: "دفترکل جدید",
   createLedgerEmptyTitle: "هنوز دفترکلی ندارید",
