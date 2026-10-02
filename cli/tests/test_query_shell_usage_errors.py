@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import os
 import pty
+import re
 import select
 import signal
 import subprocess
@@ -137,6 +138,25 @@ def test_a_native_syntax_error_keeps_its_own_rendering(tmp_path: Path, ledger: P
     assert TRACEBACK not in screen
     assert "syntax error" in screen
     assert "^" in screen, "the caret upstream prints under the offending token"
+
+
+def test_interactive_headers_are_complete_and_narrow_remains_an_explicit_option(tmp_path: Path, ledger: Path) -> None:
+    ledger.write_text(
+        "2026-01-01 open Assets:Cash USD\n2026-01-01 open Expenses:Food USD\n"
+        + "".join(f'2026-01-{day:02} * "Lunch"\n  Assets:Cash -1 USD\n  Expenses:Food 1 USD\n' for day in range(2, 8))
+    )
+    before = ledger.read_bytes()
+    status, screen = _shell_session(
+        tmp_path,
+        ledger,
+        "SELECT count(*);\n.set narrow true\nSELECT count(*);\n.set narrow false\nSELECT count(*);\n.exit\n",
+    )
+
+    assert status == 0, screen
+    # Match rendered tables, not the echoed SELECT text at the PTY prompt.
+    headers = re.findall(r"(?m)^([^\n]+)\n-+\n[ \t]*12[ \t]*\n", screen.replace("\r", ""))
+    assert [header.strip() for header in headers] == ["count(*)", "co", "count(*)"], screen
+    assert ledger.read_bytes() == before
 
 
 def test_output_redirection_recovery_is_unchanged(tmp_path: Path, ledger: Path) -> None:

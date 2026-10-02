@@ -182,10 +182,6 @@ def text_answer(
     # `show_errors=False`: the load errors travel in the envelope, and
     # upstream printing them to stderr too would report each one twice.
     shell = build_shell(file, buffer, format=format, numberify=numberify, show_errors=False)
-    # One-shot text tables must keep full headers. Upstream `narrow=True`
-    # treats the boolean as width 1 (`max(..., True, ...)`), truncating
-    # `count(*)` to `c`. Interactive users can still `.set narrow true`.
-    shell.settings.narrow = False
     errors = _gate([format_error(error, ledger_file=file) for error in shell.context.errors], allow_errors)
     if output is not None:
         # Still before the query: refusing to write over the ledger being read
@@ -517,7 +513,12 @@ def build_shell(
     # The override above drops upstream's SELECT help; without it, `help
     # select` crashes formatting a missing docstring.
     PreciseShell.on_Select.__doc__ = BQLShell.on_Select.__doc__
-    return PreciseShell(LEDGER_DSN, stream, interactive, True, format, numberify, show_errors)
+    shell = PreciseShell(LEDGER_DSN, stream, interactive, True, format, numberify, show_errors)
+    # Both one-shot and interactive tables keep full headers by default.
+    # Upstream narrow=True treats the boolean as width 1 and cuts count(*)
+    # to c/co. Interactive users can still explicitly `.set narrow true`.
+    shell.settings.narrow = False
+    return shell
 
 
 def _inert_cell(value: Any) -> Any:
