@@ -298,8 +298,9 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   `--id-key id` is accepted as an alias for `bank_id`, the canonical key the
   `--csv` path writes, so it never silently disables bank-ID dedupe.
   IDs must be stable and unique within that account. An exact match is skipped;
-  reused native IDs with different dates, payees, narration, or source amounts
-  are conflicts requiring review (generated ids: see below). The preview's `ID` column names each row's
+  reused native IDs with different source amounts or commodities are conflicts
+  requiring review. Payee, narration, date, flag, and counter-account edits do
+  not change that identity (generated ids: see below). The preview's `ID` column names each row's
   identifier source: `bank` for a bank column, `hash` for a content hash, or
   `importer` for an `import-id` the importer supplied.
 - A row with a native ID is written with `import-id: "<kind>:<id>"` (`bank_id`
@@ -318,17 +319,20 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   `monarch:sha256:…` (or `mint:`/`qbo:`) is skipped rather than written
   again. For each side of a merged transfer, the digest is found through
   `import-id` or `import-id-2`. The digest already binds the date, amount,
-  description, and account, so a generated-id hit is a duplicate when its date
-  and source amounts agree, even if migration or cleanup changed the payee or
-  narration.
+  description, and account of the original source row, so a canonical
+  generated-id hit is a duplicate even if the ledger's date, amounts, payee, or
+  narration were edited later. Preserve the ID while reviewing an entry; it
+  records where that entry came from, not its current presentation. A canonical
+  hit also takes precedence over older file IDs retained on the same entry.
 - Ids written before the amount was exact (it was rounded to two decimals with
   no commodity) or before the description was NFC-normalized are still
   recognized: import offers every older spelling as a lookup-only key, matches
   it, and writes only the current one, so no re-hash pass is needed. An older
-  *amount* digest also has to agree with the whole source row before it counts
+  *amount* digest also has to agree with the date and source amounts before it counts
   as a match, because that form was lossy enough to give two different rows one
   digest — a disagreement is ignored rather than reported as a conflict. A
-  reused **native** bank ID whose data changed is still a conflict.
+  reused **native** bank ID with different source amounts or commodities is
+  still a conflict.
 - Date, normalized payee, and signed source amount/currency identify a *possible*
   duplicate even when bank IDs or narration differ. This does not prove
   duplication: two real purchases can have identical details. `--apply` requires

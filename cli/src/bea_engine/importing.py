@@ -243,16 +243,26 @@ def answer(
             # An older generated id is lookup-only *and* content-checked: that
             # format was lossy enough to hand two genuinely different rows one
             # digest, so a hit on it means "already imported" only when the
-            # whole source row agrees. Dropping the rest here, rather than
+            # date and source amounts agree. Dropping the rest here, rather than
             # letting them reach the conflict test, is what keeps a reused
-            # native id with changed data a conflict.
+            # native id with changed source amounts a conflict.
             hits = [
                 (key, found, same)
                 for key in ids
                 if (found := identities.get(key)) is not None
-                and ((same := _same_row(key, found, account, fingerprint)) or key not in lookup_only)
+                and (
+                    (same := _same_row(key, found, account, fingerprint, lookup_only=key in lookup_only))
+                    or key not in lookup_only
+                )
             ]
             if hits:
+                # A canonical digest proves the original source row even if
+                # a retained file/native ID disagrees with later ledger edits.
+                canonical = next(
+                    (hit for hit in hits if hit[0] not in lookup_only and _is_generated_identity(hit[0])), None
+                )
+                if canonical is not None:
+                    hits = [canonical]
                 (_, kind, matched_value), match, _ = hits[0]
                 if not all(same for _, _, same in hits):
                     status, reason, conflicts = (
@@ -514,21 +524,29 @@ def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, st
 _GENERATED_ID = re.compile(r"(?:csv|mint|monarch|qbo):sha256:([0-9a-f]{16})")
 
 
-def _same_row(key: tuple[str, str, str], found: Any, account: str, fingerprint: tuple[Any, ...]) -> bool:
+def _is_generated_identity(key: tuple[str, str, str]) -> bool:
+    return key[1] == "digest" or (key[1] == "import-id" and _GENERATED_ID.fullmatch(key[2]) is not None)
+
+
+def _same_row(
+    key: tuple[str, str, str], found: Any, account: str, fingerprint: tuple[Any, ...], *, lookup_only: bool
+) -> bool:
     """Whether an id hit names the same source row rather than changed data.
 
-    A generated id is a digest of date, exact amount, raw description and
-    account, so its hit already proves the description; payee and narration
-    are presentation that migration and cleanup rules legitimately change, and
-    a merged transfer's one narration cannot equal both of its source rows.
-    Date and source amounts are still compared, since the older lossy digest
-    form is looked up through the same keys. Every other id — a native bank
-    id above all — must match the whole fingerprint, or it is a conflict.
+    Canonical hashes already identify the original source row; mutable ledger
+    fields cannot invalidate that proof. Older lookup-only hashes retain the
+    date/amount guard against lossy collisions. Native IDs compare exact source
+    amounts and commodities, allowing date and description cleanup. Pre-release
+    file identities retain their full-content comparison.
     """
+    generated = _is_generated_identity(key)
+    if generated and not lookup_only:
+        return True
     found_print = _fingerprint(found, account)
-    kind, value = key[1], key[2]
-    if kind == "digest" or (kind == "import-id" and _GENERATED_ID.fullmatch(value)):
+    if generated:
         return (found_print[0], found_print[3]) == (fingerprint[0], fingerprint[3])
+    if key[1] in {"bank", "import-id"}:
+        return bool(found_print[3] == fingerprint[3])
     return found_print == fingerprint
 
 

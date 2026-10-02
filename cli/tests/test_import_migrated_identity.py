@@ -150,16 +150,19 @@ def test_new_activity_beside_the_overlap_is_written_once(tmp_path: Path) -> None
     assert ledger.read_text().count("INTEREST PAYMENT") == 1
 
 
-def test_generated_id_with_a_different_amount_is_still_a_conflict(tmp_path: Path) -> None:
+def test_generated_id_survives_a_later_edit_to_the_ledger_amount(tmp_path: Path) -> None:
     ledger = tmp_path / "main.bean"
     ledger.write_text(MIGRATED.replace("-54.20 USD", "-45.20 USD"))
+    before = ledger.read_bytes()
 
-    data = _import(tmp_path, ledger, "2026-03-08,TRADER JOES #123 SEATTLE WA,-54.20\n", CHECKING)
+    data = _import(tmp_path, ledger, "2026-03-08,TRADER JOES #123 SEATTLE WA,-54.20\n", CHECKING, "--apply")
 
-    assert _statuses(data) == ["conflict"]
+    assert _statuses(data) == ["duplicate"]
+    assert data["written"] == 0
+    assert ledger.read_bytes() == before
 
 
-def test_reused_native_bank_id_with_changed_payee_is_still_a_conflict(tmp_path: Path) -> None:
+def test_native_bank_id_survives_payee_and_narration_cleanup(tmp_path: Path) -> None:
     ledger = tmp_path / "main.bean"
     ledger.write_text(
         f'option "operating_currency" "USD"\n2026-03-04 open {CHECKING} USD\n'
@@ -169,6 +172,7 @@ def test_reused_native_bank_id_with_changed_payee_is_still_a_conflict(tmp_path: 
     )
     source = tmp_path / "export.csv"
     source.write_text("Date,Description,Amount,Id\n2026-03-08,TEA,-4.00,tx-1\n")
+    before = ledger.read_bytes()
 
     done = _bea(
         tmp_path,
@@ -184,10 +188,14 @@ def test_reused_native_bank_id_with_changed_payee_is_still_a_conflict(tmp_path: 
         CHECKING,
         "--date-format",
         "%Y-%m-%d",
+        "--apply",
     )
 
     assert done.returncode == 0, done.stderr
-    assert _statuses(json.loads(done.stdout)["data"]) == ["conflict"]
+    data = json.loads(done.stdout)["data"]
+    assert _statuses(data) == ["duplicate"]
+    assert data["written"] == 0
+    assert ledger.read_bytes() == before
 
 
 def test_migration_written_with_the_older_two_decimal_digest_still_matches(tmp_path: Path) -> None:
