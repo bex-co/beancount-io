@@ -117,6 +117,8 @@ class RunContext:
             )
         if not candidate.is_file():
             raise UsageError(f"Ledger path '{candidate}' (from {source}) is not a regular file.")
+        if not os.access(candidate, os.R_OK):
+            raise UsageError(f"Ledger path '{candidate}' (from {source}) is not readable.")
         # Absolute from here on: the beancount loader asserts on a relative
         # entry path, and every include is resolved against this one.
         return candidate.resolve()

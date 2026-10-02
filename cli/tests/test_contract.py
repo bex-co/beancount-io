@@ -7,6 +7,7 @@ they are tested through the real command tree rather than against the helpers.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -62,6 +63,49 @@ def error_object(result: Any) -> dict[str, Any]:
 
 
 class TestTargetResolution:
+    @pytest.mark.parametrize("json_output", [False, True], ids=["text", "json"])
+    @pytest.mark.parametrize("source", ["--file", "$BEA_FILE", "the working directory"])
+    @pytest.mark.parametrize(
+        "command",
+        [
+            ["check"],
+            ["list", "open"],
+            ["report", "balance-sheet"],
+            ["query", "SELECT account"],
+            ["add", "open", "--date", "2026-01-02", "--account", "Assets:Reserve"],
+        ],
+    )
+    def test_unreadable_ledger_is_a_usage_error_before_the_engine_starts(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, source: str, command: list[str], json_output: bool
+    ) -> None:
+        ledger = tmp_path / "main.bean"
+        original = VALID.read_bytes()
+        ledger.write_bytes(original)
+        monkeypatch.chdir(tmp_path)
+        if source == "$BEA_FILE":
+            monkeypatch.setenv("BEA_FILE", str(ledger))
+        flags = ["--file", str(ledger)] if source == "--file" else []
+        ledger.chmod(0)
+        try:
+            if os.access(ledger, os.R_OK):
+                pytest.skip("The current user can read files without read permission bits.")
+            with patch("cli.engine.launch.helper_json") as helper, patch("cli.engine.launch.run_native") as native:
+                result = runner.invoke(app, [*(["--json"] if json_output else []), *flags, *command])
+                assert result.exit_code == 2, result.stderr
+                assert result.stdout == ""
+                if json_output:
+                    assert error_object(result)["category"] == "usage"
+                assert ledger.name in result.stderr
+                assert source in result.stderr
+                assert "not readable" in result.stderr
+                assert "bea_engine" not in result.stderr
+                assert "engine did not answer" not in result.stderr
+                helper.assert_not_called()
+                native.assert_not_called()
+        finally:
+            ledger.chmod(0o600)
+        assert ledger.read_bytes() == original
+
     def test_file_flag_beats_the_environment(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("BEA_FILE", str(INVALID))
 

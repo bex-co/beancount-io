@@ -109,6 +109,8 @@ Local commands resolve their target in this order:
 
 If the resolved file does not exist, the command exits **2** and names those sources. Hosted targeting (`--ledger`) is not implemented yet.
 Passing a directory also exits **2** with a hint to select its root ledger file.
+An unreadable ledger exits **2**, naming the path and the source that selected
+it. Choose a readable ledger or correct its permissions.
 Hosted commands name ledgers as `owner/name`; local files are never implicitly
 uploaded. `init` creates its target from its own argument or global `--file`
 and ignores `BEA_FILE`; `format` uses its own positional path and likewise
