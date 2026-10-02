@@ -44,6 +44,12 @@ def ask(
     if ctx.json_output:
         raise UsageError("bea ask has no JSON output. Use 'bea query' for machine-readable results.")
 
+    question = question or ""
+    if not question.strip():
+        if print_mode or ctx.no_input:
+            raise UsageError("A question is required without a terminal (or with --print).")
+        question = ""
+
     # The missing extra is checked before the credential: without it the
     # command cannot run at all, and "log in first" would be misleading advice.
     try:
@@ -68,8 +74,6 @@ def ask(
     deps = BqlDeps(file=file, skills={s.name: s for s in skills}, into=into)
 
     if print_mode or ctx.no_input:
-        if not question:
-            raise UsageError("A question is required without a terminal (or with --print).")
         from rich.console import Console
         from rich.markdown import Markdown
 

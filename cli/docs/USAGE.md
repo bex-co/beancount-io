@@ -1112,6 +1112,11 @@ bea ask "what did I spend on groceries last month?" --print
 
 Without the extra the command exits **2** with the install command. It also needs hosted credentials: the model runs through the Beancount.io AI proxy, so a local ledger still requires `bea cloud login`. `bea ask` has no `--json` mode; use `bea query` for machine-readable results. Ledger queries and validation run locally, while questions, supplied skill context, and tool results are sent to the hosted service. The current command uses `gpt-4o` and has no model-selection flag.
 
+Print mode and noninteractive use require a nonblank question: empty or
+whitespace-only input exits **2** before constructing the agent or making a
+request. A blank starting question in an interactive session leaves the prompt
+empty.
+
 Interactive write requests are validated before confirmation, then appended
 atomically only if the root ledger and included files still match the preview.
 The confirmation names the file the write will actually change — with
