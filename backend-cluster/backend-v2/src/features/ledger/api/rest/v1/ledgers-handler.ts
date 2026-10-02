@@ -31,7 +31,7 @@ export const LEDGER_ROUTES = [
     operationId: "getLedger",
     summary: "Get one ledger",
     description:
-      "Metadata for a single ledger: description, visibility, default branch, and the caller's permissions on it.",
+      "Metadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's permissions when available.",
     params: ledgerPathSchema,
     responses: {
       200: json("The ledger", ledgerResultSchema),

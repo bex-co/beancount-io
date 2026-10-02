@@ -2083,7 +2083,7 @@
       "get": {
         "operationId": "getLedger",
         "summary": "Get one ledger",
-        "description": "Metadata for a single ledger: description, visibility, default branch, and the caller's permissions on it.",
+        "description": "Metadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's permissions when available.",
         "tags": [
           "Ledger v1"
         ],
