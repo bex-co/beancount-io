@@ -17,6 +17,8 @@ category name, so a caller can branch on either and get the same answer.
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from typing import Any
 
 EXIT_VALIDATION = 1
@@ -108,6 +110,32 @@ def request_id_from(headers: Any) -> str | None:
         value = headers.get(name)
         if value:
             return str(value)
+    return None
+
+
+def server_message(body: object) -> str | None:
+    """Read a sentence from nested API/SDK envelopes without printing raw JSON.
+
+    Gateways can put an encoded error envelope inside another error's message.
+    Bound the unwrapping; unsupported, malformed, or deeper bodies leave the
+    caller's HTTP-status fallback intact.
+    """
+    for _ in range(8):
+        if isinstance(body, Mapping):
+            message = body.get("message")
+            body = message if isinstance(message, str) and message.strip() else body.get("error")
+        elif isinstance(body, str):
+            sentence = body.strip()
+            if not sentence:
+                return None
+            try:
+                body = json.loads(sentence)
+            except ValueError:
+                return None if sentence.startswith("{") else sentence
+            except RecursionError:
+                return None
+        else:
+            return None
     return None
 
 

@@ -168,10 +168,12 @@ def _error_message(parsed: object, content: bytes) -> str | None:
     (a proxy's 502, an HTML error page). Read the raw body as best effort
     rather than reducing everything to "HTTP <status>".
     """
+    from cli.errors import server_message
+
     if isinstance(parsed, V1Error):
-        return parsed.error.message
+        return server_message(parsed.error.message)
     try:
-        message = json.loads(content).get("error", {}).get("message")
-    except Exception:
+        body = json.loads(content)
+    except (ValueError, RecursionError):
         return None
-    return str(message) if message else None
+    return server_message(body)

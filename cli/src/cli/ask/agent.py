@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
@@ -19,6 +19,7 @@ from cli.ask.results import format_result
 from cli.ask.skills import AgentSkill, build_skills_index_prompt
 from cli.engine import launch
 from cli.errors import BeaError, LedgerError, error_from_status
+from cli.errors import server_message as _server_message
 
 _SYSTEM_PROMPT = """You are a helpful Beancount accounting assistant.
 Use the run_bql_query tool to retrieve data from the user's ledger, then answer their question.
@@ -240,25 +241,6 @@ def _quota_refusal(body: object) -> str | None:
         f"nothing was written to your ledger.{when} "
         "Run the query yourself with 'bea query' in the meantime."
     )
-
-
-def _server_message(body: object) -> str | None:
-    """The server's own sentence, lifted out of the SDK's envelope.
-
-    Returning None lets `error_from_status` fall back to `HTTP <status>`, which
-    is still better than quoting SDK internals at the user.
-    """
-    payload = body
-    if isinstance(body, str):
-        try:
-            payload = json.loads(body)
-        except ValueError:
-            return body.strip() or None
-    if isinstance(payload, Mapping):
-        message = payload.get("message")
-        if isinstance(message, str) and message.strip():
-            return message.strip()
-    return None
 
 
 def make_agent(
