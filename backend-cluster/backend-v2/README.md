@@ -476,6 +476,20 @@ the caller's monthly AI allowance before contacting the model. Successful calls
 record the provider's reported total token usage. This wire-compatible endpoint
 retains its documented GraphQL and MCP transport exceptions.
 
+A recognized provider quota refusal returns HTTP 429 with
+`error.code: "RATE_LIMITED"` and `error.metadata.quotaScope: "shared_service"`. This limit
+belongs to the deployment's shared model capacity; the caller's monthly AI
+allowance is tracked separately. When the provider supplies a valid future
+reset, `blockedUntil` contains its UTC ISO timestamp and the message includes
+it. Optional `retryAfter` is a positive integer number of seconds, taken from
+the provider's numeric field, integer `Retry-After` header, or reset timestamp
+(in that order). Failed requests do not record token usage.
+
+Provider quota documents are recognized through bounded `error`/`message`
+envelopes. Other provider failures retain their HTTP status with a generic
+product error; provider messages, links, and credentials are never copied into
+that error. Shared capacity is not currently reported by the monthly usage API.
+
 ## Connecting an MCP client
 
 The backend serves a stateless Streamable HTTP endpoint at

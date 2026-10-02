@@ -17,6 +17,7 @@ import { extractTransactionsFromFile } from "../utils/extract-transactions-from-
 import { extractReceiptFromFile } from "../utils/extract-receipt-from-file";
 import { recommendAccounts } from "../utils/recommend-accounts";
 import { categorizeTransactions } from "../utils/categorize-transactions";
+import { modelProxyError } from "../utils/model-proxy-error";
 import { parseLedgerId } from "@/shared/str";
 import { DirectiveType } from "@/foundation/fava";
 import {
@@ -395,7 +396,11 @@ export class LLMService implements ILLMService {
     });
     if (!upstream.ok) {
       const text = await upstream.text();
-      throw new InternalServerError(text, undefined, upstream.status);
+      throw modelProxyError(
+        upstream.status,
+        text,
+        upstream.headers.get("retry-after"),
+      );
     }
     return upstream.json();
   }
