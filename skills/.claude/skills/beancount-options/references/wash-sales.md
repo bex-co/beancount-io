@@ -38,7 +38,7 @@ This is approximate — beancount can't enforce the substantially-identical dete
 
 If the user closes a position at Broker A and opens substantially identical at Broker B within 30 days, **neither 1099-B will catch it**. The user is responsible for tracking and reporting cross-broker wash sales themselves.
 
-This skill flags the possibility but doesn't auto-detect cross-broker wash sales in v1. If the user has multiple broker accounts and frequent options trading, recommend they manually review at year-end.
+This skill flags the possibility but doesn't auto-detect cross-broker wash sales. If the user has multiple broker accounts and frequent options trading, recommend they manually review at year-end.
 
 ## What "substantially identical" means for options
 

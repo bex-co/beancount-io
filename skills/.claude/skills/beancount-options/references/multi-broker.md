@@ -1,6 +1,6 @@
 # Multi-broker handling
 
-When the user holds options across multiple brokers, each broker's accounts must be isolated. Cross-broker effects are mostly out of scope in v1, with one exception (cross-broker wash sales).
+When the user holds options across multiple brokers, each broker's accounts must be isolated. Cross-broker effects are mostly out of scope, with one exception (cross-broker wash sales).
 
 ## Account isolation
 
@@ -44,7 +44,7 @@ Detect the pattern from existing entries for that broker. If unclear, ask.
 
 The one cross-broker concern that matters for tax accuracy. See `wash-sales.md`. Brokers don't see each other; the user is responsible for tracking these manually.
 
-The skill doesn't auto-detect them in v1. At most, flag for user awareness if they're trading the same underlying across brokers within 30-day windows.
+The skill doesn't auto-detect them. At most, flag for user awareness if they're trading the same underlying across brokers within 30-day windows.
 
 ## Common confusions
 

@@ -14,11 +14,11 @@ Some options qualify as "Section 1256 contracts" under U.S. tax code, with very 
 
 If the underlying is a single stock or ETF (other than the broad-based indexes listed), use regular treatment.
 
-## What this skill does in v1
+## What this skill does
 
 - **Generates the same transaction structure** as regular equity options. The beancount mechanics don't change.
 - **Flags index options** when detected so the user knows Section 1256 treatment applies.
-- **Does NOT compute** mark-to-market, 60/40 split, or Form 6781 figures. That's a year-end reconciliation task (phase 2).
+- **Does NOT compute** mark-to-market, 60/40 split, or Form 6781 figures. That's a year-end reconciliation task outside this skill.
 
 ## Recommended tagging
 
@@ -31,11 +31,11 @@ Tag index option transactions with `#section-1256` to make them filterable for y
   Expenses:Trading:Fees                                          0.65 USD
 ```
 
-## Year-end mark-to-market (deferred to phase 2)
+## Year-end mark-to-market (out of scope)
 
-For now, just flag to the user that any open Section 1256 position at year-end will need to be marked-to-market for tax purposes. They'll need to:
+Flag to the user that any open Section 1256 position at year-end will need to be marked-to-market for tax purposes. They'll need to:
 1. Look up FMV at end of year
 2. Recognize unrealized gain/loss as 60/40
 3. Reset basis to FMV for the new year
 
-This skill won't generate those transactions in v1.
+This skill doesn't generate those transactions.

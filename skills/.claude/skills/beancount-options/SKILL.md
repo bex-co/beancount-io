@@ -19,16 +19,6 @@ explicit lots and the shared native `add transaction --posting` recipe for
 `{}` lot selection or total-cost syntax. Keep the strategy-specific reasoning
 and confirmation below.
 
-## When to use this skill
-
-Use whenever the user:
-- Describes opening, closing, rolling, expiring, or being assigned/exercised on an options position
-- Names any options strategy: cash-secured put, covered call, iron condor, vertical/credit/debit spread, calendar, butterfly, straddle, strangle, diagonal, collar, the wheel
-- Pastes a broker confirmation containing PUT, CALL, strikes, or expiry dates
-- Uses options jargon (STO, BTC, STC, BTO, "the put I sold", "my short call")
-
-Don't use for: pricing/greeks analysis, position sizing, market-data lookup, or broker statement importing (a separate import workflow).
-
 ## Workflow
 
 Five phases, in order: **Discover → Parse → Generate → Confirm + Write → Verify**.
@@ -270,7 +260,7 @@ On no: ask what to change. Never argue. Never write without explicit yes.
 - **Mini contracts** (10-share multiplier): rare but exists. Ask explicitly if there's any chance.
 - **Same-day open and close**: still two transactions.
 - **Partial closes**: closing N of M open contracts is supported; remaining stay open at original basis.
-- **Index options**: trigger Section 1256 reference; note 60/40 treatment and Form 6781 implications even though we don't compute them now.
+- **Index options**: trigger Section 1256 reference; note 60/40 treatment and Form 6781 implications; this skill does not compute them.
 - **Dividends during a covered call holding period**: dividends post separately to `Income:Dividends`. Qualified-CC rules can affect tax treatment of the dividend itself — see stock-plus-option reference.
 - **LEAPS held >1 year then closed**: only options case where long-term capital gains apply for **long** positions. Short positions are always short-term regardless of holding period.
 
@@ -281,5 +271,5 @@ On no: ask what to change. Never argue. Never write without explicit yes.
 - Don't touch the user's `option`, `plugin`, or `include` directives.
 - Don't compute wash sales, greeks, P&L curves, or anything analytics-flavored.
 - Don't import broker statements (different workflow).
-- Don't bulk-rewrite historical entries (deferred; phase 2).
+- Don't bulk-rewrite historical entries.
 - Don't guess missing fields (premium, strike, expiry). Ask.
