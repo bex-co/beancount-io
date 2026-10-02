@@ -4,7 +4,7 @@
 
 **Goal:** Make public ledger examples discoverable, understandable before JavaScript finishes, and useful to a newcomer arriving from search or a shared link.
 
-**Status:** in progress — 12 of 13 tasks complete; publication authorized, shipping and deployed closeout underway.
+**Status:** blocked — 12 of 13 tasks complete; implementation pushed to main, awaiting the production deployment target/access for deployed closeout.
 
 **Research date:** 2026-10-02
 
@@ -34,20 +34,27 @@ Materialized through `/pm` on 2026-10-02 after the user approved this research a
 
 ## Implementation and validation record
 
-Implemented locally on 2026-10-02; not committed, pushed or deployed by this milestone run. The baseline research below remains historical evidence.
+Implemented and pushed to `origin/main` on 2026-10-02 in [d5219cac](https://github.com/bex-co/beancount-io/commit/d5219cac97c640876c6fbb6abfba5e5150bbf7c6). Production deployment remains pending. The baseline research below remains historical evidence.
 
 - Dashboard: bounded public README SSR, matching hydration snapshot, public narrative/layout, active-month default, consolidated route metadata and the owned summary image. Production-build browser checks cover initial HTML, no JavaScript, hydration, mobile, language/filter canonicals, report/journal/back navigation, private/denied access and file/report failure cases.
 - Backend: complete repository traversal, stable user ordering, no partial-success cache replacement, shared generation and canonical encoded URLs. Full backend suite: **292 suites / 4,620 tests passed**; final focused follow-up: **5 suites / 92 tests passed**. Typecheck, build, Knip and touched ESLint/format checks pass. v1 OpenAPI has no drift; the generated internal OpenAPI snapshot changes only sitemap documentation.
 - Dashboard final checks pass: `yarn format:check`, `yarn lint`, `yarn build`, and the full `yarn test --maxWorkers=1` run (**447 files / 4,949 tests passed, one existing skip**). Concurrent runs exposed locale-import timeouts; isolated retries and the complete serial run passed without changing timeouts, assertions or skipped tests.
-- Current performance measurements, the selected 1,000 ms file-read deadline, request accounting, failure behavior and limits are in the [route-loading record](../../../dashboard/docs/performance-route-loading.md#public-overview-validation-october-2). The change does not promise zero extra TTFB or improved Core Web Vitals. Deployment verification is still pending.
+- Current performance measurements, the selected 1,000 ms file-read deadline, request accounting, failure behavior and limits are in the [route-loading record](../../../../dashboard/docs/performance-route-loading.md#public-overview-validation-october-2). The change does not promise zero extra TTFB or improved Core Web Vitals. Deployment verification is still pending.
 - Adoption guidance and the three simplify reviews are complete. The agent-guidance checker passes. Board task/link checks keep completed tasks outside the open tree.
 - Adjacent validation limitation: regenerating the internal OpenAPI snapshot also exercised its admin CLI generator. Code generation succeeds, but that CLI's typecheck already references two admin endpoint paths absent from both baseline and current schemas. After normalizing the sitemap description, the baseline and current schemas are identical; this milestone changes no CLI source or operation contract.
 - Publication preparation rebased onto `origin/main` at `6710d2de`. The two README conflicts preserve both upstream documentation and this milestone; dashboard sources were unchanged upstream. Backend integration validation passes after the merge: **294 suites / 4,849 tests**, plus typecheck; regenerating v1 OpenAPI produces no snapshot drift. The staged Git tree passes the secret scan, and agent guidance and milestone IDs/links pass their checks.
-- Deployed closeout recheck at **2026-10-02 08:56:28 UTC** still shows the baseline behavior: anonymous overview HTML has two titles/two descriptions, no README prose and the previous external OG image URL; the public sitemap has 9,341 URLs with no `stock-example` entries. The serving revision remains unverified. [t013](./t013.md#publication-and-cache-verification) records the deployment-target and cache checks required after publication authorization.
+- GitHub CI for the shipped implementation `d5219cac` is green: [dashboard formatting, lint, full tests and production build](https://github.com/bex-co/beancount-io/actions/runs/37063767713), [backend typecheck, full tests and OpenAPI drift](https://github.com/bex-co/beancount-io/actions/runs/37063767514), [secret scan](https://github.com/bex-co/beancount-io/actions/runs/37063767624), and [agent guidance](https://github.com/bex-co/beancount-io/actions/runs/37063767557). These checks validate the source revision; they do not deploy it.
+- Deployed closeout recheck at **2026-10-02 08:56:28 UTC** still shows the baseline behavior: anonymous overview HTML has two titles/two descriptions, no README prose and the previous external OG image URL; the public sitemap has 9,341 URLs with no `stock-example` entries. A post-push recheck at **20:57:32 UTC** again found two titles/descriptions, the previous external image URL and the same sitemap count/omission. The serving revision remains unverified. [t013](./t013.md#publication-and-cache-verification) records the deployment-target and cache checks required after publication authorization.
 
 ## Publication authorization
 
 **Unblocked 2026-10-02** — the user requested continuation after the publication approval blocker was explained. Publication is now authorized; proceed with shipping, identify the serving deployment target, and verify the deployed artifacts before closeout.
+
+## Blocked
+
+**Blocked 2026-10-02** — publication is authorized and the implementation is pushed to `origin/main` in `d5219cac97c640876c6fbb6abfba5e5150bbf7c6`. The remaining production closeout cannot run because the active deployment target and authenticated administrative access are not established. The repository contains multiple deployment configurations; the available Bex login is expired, and no production administrative SSH connection is configured. The deployment operator can clear this dependency.
+
+**Unblock:** provide the active production platform/service identity and authenticated access, or the production SSH alias and checkout/Compose location. Then deploy the reviewed dashboard/backend revision and verify the real overview, social image and fresh sitemap under the cache/revision checks below. No further publication approval is needed.
 
 ## Source + Goal linkage
 
@@ -55,7 +62,7 @@ Implemented locally on 2026-10-02; not committed, pushed or deployed by this mil
 - **Goal linkage:** **A3 — Community & distribution**, with **A2 — Frictionless onboarding** secondary. Someone searching for a working Beancount stock-accounting example should discover a descriptive page and immediately understand how to inspect and reuse it.
 - **Expected outcome:** healthy public example pages expose authored explanations in server-rendered HTML; their titles describe the ledger; sitemap generation includes repositories beyond the first upstream page; shared links show a working image. Search impressions and subsequent example engagement are downstream signals, not guaranteed ranking or conversion gains.
 - **Why now:** the public ledger already contains substantial educational material and a meaningful title. Rendering, metadata ownership, and sitemap enumeration prevent that existing material from being presented consistently. Improve these foundations before writing more SEO copy or adding more example pages.
-- **Prior work:** build on [w2/m8 indexability policy](../done/m8/README.md), [w2/m10 canonical handling](../done/m10/README.md), [w2/m23 optional-panel performance](../done/m23/README.md), and [w4/m13 hydration/navigation stability](../../w4/done/m13/README.md). Their accepted behavior remains relevant; this proposal is not a redo of those milestones.
+- **Prior work:** build on [w2/m8 indexability policy](../../done/m8/README.md), [w2/m10 canonical handling](../../done/m10/README.md), [w2/m23 optional-panel performance](../../done/m23/README.md), and [w4/m13 hydration/navigation stability](../../../w4/done/m13/README.md). Their accepted behavior remains relevant; this proposal is not a redo of those milestones.
 - **Adoption surface:** included. Public ledger pages and their sharing/discovery surfaces are user-facing; the standing Adoption surface, Simplify, Test coverage, and Closeout tasks are appended after implementation.
 - **Public record:** only public/synthetic examples and source evidence belong here. Keep credentials, account-level Search Console exports, session data, and private ledger content out of this document and future fixtures.
 
@@ -82,7 +89,7 @@ The initial overview already contains real balances, and the balance-sheet page 
 
 Before [afcd6bae](https://github.com/bex-co/beancount-io/commit/afcd6baece3c02664bbe3b78e31fbf9d48e34e42), the overview waited for the report, README, and account metadata together. The September 6 change completing w2/m23 made README and account metadata optional browser requests. In its recorded public fixture, injecting two seconds into optional requests changed cold primary-content readiness from 3,308 ms to 1,330 ms and client navigation from 3,370 ms to 1,315 ms. The record also explicitly acknowledges the cost: on fast cold loads, README appeared approximately three seconds later.
 
-The current [optional-query helper](../../../dashboard/src/common/apollo/prefetch.ts) exits during SSR. The [overview loader](../../../dashboard/src/features/reports/overview/loader.ts) therefore cannot populate the initial cache with README content. [Reports guidance](../../../dashboard/src/features/reports/AGENTS.md) explicitly requires this behavior. The [performance record](../../../dashboard/docs/performance-route-loading.md) explains the original measurements and their limits.
+The current [optional-query helper](../../../../dashboard/src/common/apollo/prefetch.ts) exits during SSR. The [overview loader](../../../../dashboard/src/features/reports/overview/loader.ts) therefore cannot populate the initial cache with README content. [Reports guidance](../../../../dashboard/src/features/reports/AGENTS.md) explicitly requires this behavior. The [performance record](../../../../dashboard/docs/performance-route-loading.md) explains the original measurements and their limits.
 
 **Design gap, inferred from those decisions:** README was classified as an optional financial-dashboard widget, without giving its public acquisition role a different initial-render contract. The proposed repair must consciously narrow that policy, not present the old optimization as an accidental bug.
 
@@ -90,40 +97,40 @@ The historical timing is not today's baseline. [be8e9eba](https://github.com/bex
 
 ### 2. The hydration guard fixes a real race
 
-[c4159705](https://github.com/bex-co/beancount-io/commit/c4159705961862f091099d8eb78528929e0c91c5) added `useHydrated()` to [ReadmeCard](../../../dashboard/src/common/components/readme-card.tsx). A fast browser prefetch could otherwise replace the server skeleton before hydration reached the card, causing a mismatch and recovery. The [regression test](../../../dashboard/src/common/components/__tests__/readme-card-hydration.test.tsx) protects surrounding DOM identity and covers present and absent README results.
+[c4159705](https://github.com/bex-co/beancount-io/commit/c4159705961862f091099d8eb78528929e0c91c5) added `useHydrated()` to [ReadmeCard](../../../../dashboard/src/common/components/readme-card.tsx). A fast browser prefetch could otherwise replace the server skeleton before hydration reached the card, causing a mismatch and recovery. The [regression test](../../../../dashboard/src/common/components/__tests__/readme-card-hydration.test.tsx) protects surrounding DOM identity and covers present and absent README results.
 
-[router.tsx](../../../dashboard/src/router.tsx) extracts Apollo state once and restores that snapshot during hydration. The [SSR Apollo factory](../../../dashboard/src/common/apollo/factory.server.ts) creates a request-scoped client and forwards the requesting identity. Starting an unawaited server query does not automatically put its eventual result into the serialized snapshot. Removing the guard alone, or enabling optional queries during SSR without a settled-data handoff, would reopen the race.
+[router.tsx](../../../../dashboard/src/router.tsx) extracts Apollo state once and restores that snapshot during hydration. The [SSR Apollo factory](../../../../dashboard/src/common/apollo/factory.server.ts) creates a request-scoped client and forwards the requesting identity. Starting an unawaited server query does not automatically put its eventual result into the serialized snapshot. Removing the guard alone, or enabling optional queries during SSR without a settled-data handoff, would reopen the race.
 
 ### 3. Route metadata and component metadata both own the page
 
-The [overview route](../../../dashboard/src/routes/ledger.$ledgerOwner.$ledgerName.index.tsx) emits generic slug-based metadata through `head()`. [LedgerPageSEO](https://github.com/bex-co/beancount-io/blob/28171bf7/dashboard/src/common/components/seo/ledger-page-seo.tsx) and [LedgerSEO](https://github.com/bex-co/beancount-io/blob/28171bf7/dashboard/src/common/components/seo/ledger-seo.tsx) emit another set through React metadata hoisting. The [ledger provider](../../../dashboard/src/common/providers/ledger-provider/ledger-provider.tsx) uses repository `name` for `ledgerDisplayName`, despite already receiving `options.title`.
+The [overview route](../../../../dashboard/src/routes/ledger.$ledgerOwner.$ledgerName.index.tsx) emits generic slug-based metadata through `head()`. [LedgerPageSEO](https://github.com/bex-co/beancount-io/blob/28171bf7/dashboard/src/common/components/seo/ledger-page-seo.tsx) and [LedgerSEO](https://github.com/bex-co/beancount-io/blob/28171bf7/dashboard/src/common/components/seo/ledger-seo.tsx) emit another set through React metadata hoisting. The [ledger provider](../../../../dashboard/src/common/providers/ledger-provider/ledger-provider.tsx) uses repository `name` for `ledgerDisplayName`, despite already receiving `options.title`.
 
 Both mechanisms existed in public import `af5339de`; this history does not establish an earlier migration rationale. Related repairs show why consolidation needs care:
 
 - `54f9887d` fixed the same duplicate-emitter pattern on `/ledger`, using `PageSEO` as that page's owner.
 - `b200c260` preserved path-aware public file titles after hydration.
-- `6fbe3892` restored metadata on Accounts and Budget. Its [route metadata guard](../../../dashboard/src/routes/__tests__/ledger-route-head-metadata.test.ts) requires ledger leaf routes to declare a head.
+- `6fbe3892` restored metadata on Accounts and Budget. Its [route metadata guard](../../../../dashboard/src/routes/__tests__/ledger-route-head-metadata.test.ts) requires ledger leaf routes to declare a head.
 
 Consequently, blindly deleting route heads is not a suitable general repair. Choose one owner for the ledger route family and preserve the metadata and error behavior currently supplied by the other.
 
 ### 4. Reading order and period selection follow workspace defaults
 
-[use-dashboard-layout.ts](../../../dashboard/src/features/reports/overview/hooks/use-dashboard-layout.ts) puts README last after six financial widgets. Readers can reorder and hide widgets; preferences are stored per ledger under `ledger.<ledgerId>.overview.layout.v1`. SSR uses the default layout, with browser storage applied after hydration. The financial-workspace ordering already existed in the public import; no documented SEO rationale was found.
+[use-dashboard-layout.ts](../../../../dashboard/src/features/reports/overview/hooks/use-dashboard-layout.ts) puts README last after six financial widgets. Readers can reorder and hide widgets; preferences are stored per ledger under `ledger.<ledgerId>.overview.layout.v1`. SSR uses the default layout, with browser storage applied after hydration. The financial-workspace ordering already existed in the public import; no documented SEO rationale was found.
 
-[money-movement-section.tsx](../../../dashboard/src/features/reports/overview/components/money-movement-section.tsx) defaults to the final date returned by [overview-utils.ts](../../../dashboard/src/features/reports/overview/lib/overview-utils.ts), including empty monthly buckets. Public source-file reads show five balance assertions and three price directives on January 1, 2027. Those valid directives extend the ledger's timeline into 2027 without creating income or expense activity. Do not delete them to make a widget look busier.
+[money-movement-section.tsx](../../../../dashboard/src/features/reports/overview/components/money-movement-section.tsx) defaults to the final date returned by [overview-utils.ts](../../../../dashboard/src/features/reports/overview/lib/overview-utils.ts), including empty monthly buckets. Public source-file reads show five balance assertions and three price directives on January 1, 2027. Those valid directives extend the ledger's timeline into 2027 without creating income or expense activity. Do not delete them to make a widget look busier.
 
 ### 5. The sitemap's completeness assumption is wrong
 
-[sitemap-service.ts](../../../backend-cluster/backend-v2/src/features/sitemap/service/sitemap-service.ts) makes one `userListRepos({ limit: 100 })` call per user and comments that Gitea handles pagination internally. The [generated client](../../../backend-cluster/backend-v2/src/features/gitea/client/gitea-api.ts) exposes `page` and `limit` and makes one request; it does not walk pages. This behavior was already present in backend import `a6dfc11c`; later directory/configuration changes did not repair it.
+[sitemap-service.ts](../../../../backend-cluster/backend-v2/src/features/sitemap/service/sitemap-service.ts) makes one `userListRepos({ limit: 100 })` call per user and comments that Gitea handles pagination internally. The [generated client](../../../../backend-cluster/backend-v2/src/features/gitea/client/gitea-api.ts) exposes `page` and `limit` and makes one request; it does not walk pages. This behavior was already present in backend import `a6dfc11c`; later directory/configuration changes did not repair it.
 
 The exact deployed page-size cap remains **unproven**. Anonymous access to the external Gitea repository-list endpoint returned 401, so the public audit could not directly inspect page two or prove the stock ledger's page position. Exactly 50 visible examples strongly suggests a cap, but the definite defect is the absence of pagination, not a proven server setting.
 
 Related completeness failures exist in the same generator:
 
-- Users are fetched in offset pages of 1,000, up to 50,000, but the [database query](../../../backend-cluster/backend-v2/src/features/auth/data/user-model/postgres-impl.ts) has no explicit ordering.
+- Users are fetched in offset pages of 1,000, up to 50,000, but the [database query](../../../../backend-cluster/backend-v2/src/features/auth/data/user-model/postgres-impl.ts) has no explicit ordering.
 - A database failure breaks the loop and returns the users collected so far. A repository failure becomes `null`, disappearing from the batch error list and output.
 - Partial output can therefore replace the cached XML as if generation succeeded. The file-cache TTL is 24 hours with stale-while-revalidate; the handler's one-hour HTTP cache header is a separate duration.
-- The [existing tests](../../../backend-cluster/backend-v2/src/features/sitemap/service/__tests__/sitemap-service.test.ts) do not exercise repository pagination, and one explicitly expects database failure to produce an empty sitemap.
+- The [existing tests](../../../../backend-cluster/backend-v2/src/features/sitemap/service/__tests__/sitemap-service.test.ts) do not exercise repository pagination, and one explicitly expects database failure to produce an empty sitemap.
 
 ### 6. Sharing relies on an external image provider
 
