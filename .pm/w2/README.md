@@ -36,6 +36,7 @@
 - [ ] **m30** — [AI reliability hardening: ADR 0011 follow-ups](./blocked/m30/README.md) (11 tasks) ← from the 2026-09-07 receipt-parse outage diagnosis + ADR 0011 tier-3 discussion; user routed to w2 as one milestone 2026-09-09 — **blocked:** t006 Haiku eval needs an operator-supplied ANTHROPIC_API_KEY
 - [x] **m31** — Include Live Price: managed price includes in the ledger service (11 tasks) ← from PRFAQ002 + ADR 015; user request 2026-09-15 to design, board, and implement the ledger layer
 - [x] **m32** — [Managed price status on every client surface](./done/m32/README.md) (9 tasks) ← promoted [w2/026](./done/026.md) 2026-09-23; ADR 015 follow-up to m31
+- [ ] **m34** — [Ledger catalogs list every ledger, not the first upstream page](./blocked/m34/README.md) (6 tasks) ← from user report 2026-10-01 (dashboard ledger switcher could not find `open_ledger/stock-example`), reproduced against the deployed site; user routed to w2 — **blocked:** t001–t005 shipped; closeout needs production backend-v2 deployed with the fix
 
 ## Dropped
 
@@ -44,6 +45,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [034](./034.md) — Ledger counts read from one upstream page: the tier ledger-limit check counts owned ledgers inside the first 10 accessible ones, and `ledgersUsed` and the activity feed stop at 50. Found during m34; needs a grandfathering decision before enforcement tightens.
 - [028](./028.md) — Mobile cannot read the activity feed: `getFeed` is session-only while the app authenticates with OAuth, so the home screen's Latest Updates card has been dead since `f07b3f79` (2026-08-31).
 - [008](./done/008.md) — MCP prompts from the ledger skills: implemented on 2026-09-12. [w5/m5](../w5/blocked/m5/README.md) retains the approved proposal's remaining real-client verification and repairs for demonstrated workflow gaps; the completed implementation remains archived here.
 - [009](./blocked/009.md) — Agent eval harness: core scope promoted to [w5/m4](../w5/done/m4/README.md) on 2026-09-12. Only the larger Plaid sandbox journey remains open here as a deferred follow-up. — **blocked:** needs sizing approval and a hosted QA-account path to link a Plaid sandbox item
