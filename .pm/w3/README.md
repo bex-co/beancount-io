@@ -78,7 +78,7 @@
 
 ## Dropped
 
-- ~~**439**~~ — `--offline` with no cached revision reports the cause as `None` — dropped 2026-09-26: not a separate defect. Same six lines of `cli/src/bea_engine/managed_load.py` (~399–405) as [433](./433.md), which now carries both symptoms and the full record; one fix covers both.
+- ~~**439**~~ — `--offline` with no cached revision reports the cause as `None` — dropped 2026-09-26: not a separate defect. Same six lines of `cli/src/bea_engine/managed_load.py` (~399–405) as [433](./done/433.md), which now carries both symptoms and the full record; one fix covers both.
 - ~~**453**~~ — One server-side failure ends the whole `bea ask` session — dropped 2026-09-26: not a separate defect. Same five lines of `cli/src/cli/ask/repl.py` (225–233) as [449](./done/449.md), which now carries both triggers and the full record; both notes already said they belonged in one pass.
 
 ## Blocked
