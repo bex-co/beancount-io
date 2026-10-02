@@ -178,8 +178,12 @@ A nonzero exit does not universally mean nothing changed:
 several files can rewrite some before failing on one it cannot write, and
 `cloud ledger create --clone` can create a ledger before cloning fails. Read
 the operation result before retrying mutations. An in-place formatter failure
-reports the paths already changed in `error.result.formatted` under `--json`
-and alongside the error in human output; `--debug` includes any upstream traceback.
+reports completed replacements in `error.result.formatted`, failed files and
+their reasons in `failed`, files already aligned in `unchanged`, and files it
+never reached in `not_attempted`. Human output names the same outcomes. A
+staging-cleanup failure after a replacement still lists that file as formatted.
+These per-file outcomes require the engine's result; a lost engine response
+cannot establish which writes finished. `--debug` includes any upstream traceback.
 
 These five codes are the whole table. If the engine process dies on a signal —
 an upstream crash, an out-of-memory kill — `bea` reports it as exit 1 with a

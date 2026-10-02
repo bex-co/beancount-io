@@ -157,15 +157,40 @@ def _format_in_place(
         # Report even after a failure: the engine rewrites file by file and can
         # meet one it cannot write after replacing earlier ones. Never invite a
         # retry without saying which files are already done.
-        partial = [str(name) for name in (exc.result or {}).get("formatted", [])]
-        exc.details = [f"formatted: {name}" for name in partial] + exc.details
-        exc.result = _result(files, partial, failed, missing) | {"in_place": True}
+        if exc.result is None:
+            # A lost response cannot establish even an empty formatted list.
+            exc.details = _problem_lines(failed, missing) + exc.details
+            raise
+        progress = exc.result
+        partial = [str(name) for name in progress.get("formatted", [])]
+        write_failed = {
+            str(item["file"]): [str(error) for error in item["errors"]] for item in progress.get("failed", [])
+        }
+        details = [f"formatted: {name}" for name in partial] + _problem_lines(failed, missing)
+        details.extend(f"failed: {name}: {errors[0]}" for name, errors in write_failed.items() if errors)
+        result = _result(files, partial, failed | write_failed, missing) | {"in_place": True}
+        # A missing engine result can mean an unknown write outcome. Only
+        # publish these classifications when the engine actually reported them.
+        for key, label in (("unchanged", "unchanged"), ("not_attempted", "not attempted")):
+            if key in progress:
+                names = [str(name) for name in progress[key]]
+                result[key] = names
+                details.extend(f"{label}: {name}" for name in names)
+        exc.details = details + exc.details
+        exc.result = result
         raise
     result = _result(files, changed, failed, missing) | {"in_place": True}
     if failed or missing:
+        completed = set(changed)
+        unchanged = [str(file) for file in formattable if str(file) not in completed]
+        result.update(unchanged=unchanged, not_attempted=[])
         raise LedgerError(
             _problems_message(len(changed), failed, missing) + " Nothing was written to the failed files.",
-            details=[f"formatted: {name}" for name in changed] + _problem_lines(failed, missing),
+            details=(
+                [f"formatted: {name}" for name in changed]
+                + [f"unchanged: {name}" for name in unchanged]
+                + _problem_lines(failed, missing)
+            ),
             result=result,
         )
     if context.current().json_output:

@@ -13,12 +13,15 @@ and the target is replaced rather than truncated.
 
 from __future__ import annotations
 
+import errno
 import os
 import signal
 import subprocess
 import sys
 import threading
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -26,7 +29,7 @@ from typer.testing import CliRunner
 
 from bea_engine.ledger import formatting
 from bea_engine.ledger import write as ledger_write
-from bea_engine.protocol import AuthError
+from bea_engine.protocol import AuthError, ConflictError, EngineError
 from cli.main import app
 
 runner = CliRunner()
@@ -138,11 +141,125 @@ def test_a_failure_before_the_replacement_leaves_every_byte_in_place(
     with pytest.raises(AuthError) as failure:
         formatting.format_files(files, in_place=True, prefix_width=None, num_width=None, currency_column=None)
 
-    assert failure.value.result == {"formatted": [str(files[0])]}
+    assert failure.value.result == {
+        "formatted": [str(files[0])],
+        "failed": [{"file": str(files[1]), "errors": [str(failure.value)]}],
+        "not_attempted": [str(files[2])],
+        "unchanged": [],
+    }
     assert "  Expenses:Food" in files[0].read_text()
     assert files[1].read_bytes() == original
     assert files[2].read_bytes() == original
     assert _litter(tmp_path) == []
+
+
+@pytest.mark.parametrize("conflict", [False, True], ids=["disk-full", "concurrent-edit"])
+def test_write_failures_keep_partial_progress_and_their_error_category(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, conflict: bool
+) -> None:
+    files = [_ledger(tmp_path, name) for name in ("a.bean", "b.bean", "c.bean")]
+    before = {file: file.read_bytes() for file in files}
+    real = ledger_write.replace_checked
+
+    def refuse(target: Path, *args: object) -> None:
+        if target == files[1]:
+            if conflict:
+                raise ConflictError("The ledger changed while formatting; retry.")
+            raise OSError(errno.ENOSPC, "No space left on device")
+        real(target, *args)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(ledger_write, "replace_checked", refuse)
+    with pytest.raises(EngineError) as failure:
+        formatting.format_files(files, in_place=True, prefix_width=None, num_width=None, currency_column=None)
+
+    assert failure.value.exit_code == (4 if conflict else 1)
+    result = failure.value.result
+    assert result is not None
+    assert result["formatted"] == [str(files[0])]
+    assert result["not_attempted"] == [str(files[2])]
+    assert result["failed"][0]["file"] == str(files[1])
+    assert ("changed" if conflict else "No space left") in result["failed"][0]["errors"][0]
+    assert files[0].read_bytes() != before[files[0]]
+    assert all(file.read_bytes() == before[file] for file in files[1:])
+    assert _litter(tmp_path) == []
+
+
+def test_a_lock_failure_reports_that_no_file_was_attempted(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    files = [_ledger(tmp_path, name) for name in ("a.bean", "b.bean", "c.bean")]
+    before = {file: file.read_bytes() for file in files}
+    real = ledger_write.lock_file
+
+    @contextmanager
+    def refuse(target: Path) -> Iterator[None]:
+        if target == files[1]:
+            raise PermissionError(errno.EACCES, "Cannot open the ledger lock")
+        with real(target):
+            yield
+
+    monkeypatch.setattr(ledger_write, "lock_file", refuse)
+    with pytest.raises(EngineError) as failure:
+        formatting.format_files(files, in_place=True, prefix_width=None, num_width=None, currency_column=None)
+
+    result = failure.value.result
+    assert result is not None
+    assert result["formatted"] == result["unchanged"] == []
+    assert result["failed"][0]["file"] == str(files[1])
+    assert "Cannot open the ledger lock" in result["failed"][0]["errors"][0]
+    assert result["not_attempted"] == [str(files[0]), str(files[2])]
+    assert all(file.read_bytes() == before[file] for file in files)
+    assert _litter(tmp_path) == []
+
+
+def test_cleanup_failure_does_not_hide_a_completed_replacement(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    files = [_ledger(tmp_path, name) for name in ("a.bean", "b.bean")]
+    before = {file: file.read_bytes() for file in files}
+    real = ledger_write.candidate_file
+
+    @contextmanager
+    def fail_cleanup(file: Path, content: str) -> Iterator[Path]:
+        with real(file, content) as candidate:
+            yield candidate
+        raise OSError(errno.EACCES, "Cannot remove a staging sidecar")
+
+    monkeypatch.setattr(ledger_write, "candidate_file", fail_cleanup)
+    with pytest.raises(EngineError) as failure:
+        formatting.format_files(files, in_place=True, prefix_width=None, num_width=None, currency_column=None)
+
+    result = failure.value.result
+    assert result is not None
+    assert result["formatted"] == [str(files[0])]
+    assert result["failed"] == result["unchanged"] == []
+    assert result["not_attempted"] == [str(files[1])]
+    assert "Cannot remove a staging sidecar" in str(failure.value)
+    assert files[0].read_bytes() != before[files[0]]
+    assert files[1].read_bytes() == before[files[1]]
+    assert formatting.format_files(
+        files[:1], in_place=False, prefix_width=None, num_width=None, currency_column=None
+    ) == {"changed": []}
+
+
+def test_lock_release_failure_keeps_all_completed_replacements(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    files = [_ledger(tmp_path, name) for name in ("a.bean", "b.bean")]
+    real = ledger_write.lock_file
+
+    @contextmanager
+    def fail_release(file: Path) -> Iterator[None]:
+        with real(file):
+            yield
+        raise OSError(errno.EIO, "Cannot close the ledger lock")
+
+    monkeypatch.setattr(ledger_write, "lock_file", fail_release)
+    with pytest.raises(EngineError) as failure:
+        formatting.format_files(files, in_place=True, prefix_width=None, num_width=None, currency_column=None)
+
+    result = failure.value.result
+    assert result is not None
+    assert result["formatted"] == [str(file) for file in files]
+    assert result["failed"] == result["unchanged"] == result["not_attempted"] == []
+    assert "Cannot close the ledger lock" in str(failure.value)
+    assert formatting.format_files(files, in_place=False, prefix_width=None, num_width=None, currency_column=None) == {
+        "changed": []
+    }
 
 
 def test_the_target_is_never_observed_empty_during_a_run(tmp_path: Path) -> None:

@@ -55,19 +55,35 @@ def format_files(
         return {"changed": [str(file) for file in targets if _would_change(file, widths)]}
 
     changed: list[str] = []
-    with ExitStack() as stack:
-        for file in targets:
-            stack.enter_context(write.lock_file(file))
-        try:
+    unchanged: list[str] = []
+    try:
+        with ExitStack() as stack:
+            for file in targets:
+                stack.enter_context(write.lock_file(file))
             for file in targets:
                 write.sweep_abandoned_candidates(file.parent)
-                if _rewrite(file, widths):
+                raw, text = _read(file)
+                aligned = _aligned(file, text, widths)
+                if aligned.encode("utf-8") == raw:
+                    unchanged.append(str(file))
+                    continue
+                original_stat = file.stat()
+                with write.candidate_file(file, aligned) as candidate:
+                    write.replace_checked(file, candidate, raw, original_stat)
+                    # Record the commit before staging cleanup can fail.
                     changed.append(str(file))
-        except EngineError as exc:
-            # A batch that rewrote three of five files says which three: it is
-            # the one thing the caller cannot recover by re-reading the ledger.
-            exc.result = {"formatted": changed}
+    except (EngineError, OSError) as exc:
+        error = exc if isinstance(exc, EngineError) else LedgerError(f"Could not finish in-place formatting: {exc}.")
+        completed = {*changed, *unchanged}
+        error.result = (error.result or {}) | {
+            "formatted": changed,
+            "unchanged": unchanged,
+            "failed": [] if str(file) in completed else [{"file": str(file), "errors": [str(error), *error.details]}],
+            "not_attempted": [str(target) for target in targets if str(target) not in completed and target != file],
+        }
+        if error is exc:
             raise
+        raise error from exc
     return {"changed": changed}
 
 
@@ -75,18 +91,6 @@ def render_file(file: Path, widths: tuple[int | None, int | None, int | None]) -
     """The same formatted text for stdout/output as for an in-place rewrite."""
     text = sys.stdin.read() if str(file) == "-" else _read(file)[1]
     return _aligned(file, text, widths)
-
-
-def _rewrite(file: Path, widths: tuple[int | None, int | None, int | None]) -> bool:
-    """Replace `file` with its aligned bytes, atomically; False when already aligned."""
-    raw, text = _read(file)
-    aligned = _aligned(file, text, widths)
-    if aligned.encode("utf-8") == raw:
-        return False
-    original_stat = file.stat()
-    with write.candidate_file(file, aligned) as candidate:
-        write.replace_checked(file, candidate, raw, original_stat)
-    return True
 
 
 def _would_change(file: Path, widths: tuple[int | None, int | None, int | None]) -> bool:
