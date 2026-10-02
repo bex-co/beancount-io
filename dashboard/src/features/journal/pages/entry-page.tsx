@@ -2,11 +2,9 @@ import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/common/components/page-header";
 import { Button } from "@/common/components/ui/button";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { createLedgerId } from "@/common/lib/utils/encode";
-import { getLedgerEntryCanonicalUrl } from "@/common/lib/seo/indexability";
 import { EntryContextPanel } from "@/features/journal/components/entry-context-panel";
 
 /**
@@ -30,14 +28,6 @@ export default function EntryPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <LedgerPageSEO
-        seoKey="ledgerEntry"
-        canonicalUrl={getLedgerEntryCanonicalUrl({
-          ledgerOwner,
-          ledgerName,
-          entryHash,
-        })}
-      />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
           title={t("journal.entryPageTitle")}

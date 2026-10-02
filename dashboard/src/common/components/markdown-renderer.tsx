@@ -6,11 +6,16 @@ import rehypeSanitize from "rehype-sanitize";
 import { CodeBlock } from "@/common/components/code-block";
 import { ExternalLink } from "lucide-react";
 import type { Components } from "react-markdown";
+import { useMemo, type ComponentProps } from "react";
 
 interface MarkdownRendererProps {
   content: string;
   className?: string;
+  /** Nest a document under its containing page's heading, without editing it. */
+  headingOffset?: number;
 }
+
+const headingTags = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
 
 const components: Components = {
   pre({ children }) {
@@ -134,7 +139,34 @@ const components: Components = {
 export function MarkdownRenderer({
   content,
   className,
+  headingOffset = 0,
 }: MarkdownRendererProps) {
+  const renderedComponents = useMemo<Components>(() => {
+    if (!headingOffset) return components;
+    return {
+      ...components,
+      ...Object.fromEntries(
+        headingTags.map((tag, index) => {
+          const Heading =
+            headingTags[Math.min(5, Math.max(0, index + headingOffset))];
+          return [
+            tag,
+            function NestedHeading({
+              children,
+              ...headingProps
+            }: ComponentProps<"h1"> & { node?: unknown }) {
+              delete headingProps.node;
+              return (
+                <Heading className="font-semibold mt-6 mb-3" {...headingProps}>
+                  {children}
+                </Heading>
+              );
+            },
+          ];
+        }),
+      ),
+    };
+  }, [headingOffset]);
   return (
     <div
       className={`prose prose-sm dark:prose-invert max-w-full overflow-x-auto break-words ${className ?? ""}`}
@@ -142,7 +174,7 @@ export function MarkdownRenderer({
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
         rehypePlugins={[rehypeRaw, rehypeSanitize]}
-        components={components}
+        components={renderedComponents}
       >
         {content}
       </ReactMarkdown>

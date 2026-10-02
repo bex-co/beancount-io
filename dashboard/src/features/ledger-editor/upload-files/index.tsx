@@ -24,7 +24,6 @@ import { createLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { toast } from "sonner";
 import { useLedger } from "@/common/hooks/use-ledger";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { WriteAccessRequired } from "@/features/ledger-editor/shared/components/write-access-required";
 
@@ -222,7 +221,6 @@ const UploadFilesPage = () => {
   if (!canWrite && selectedFiles.length === 0) {
     return (
       <div className="h-full flex flex-col space-y-4">
-        <LedgerPageSEO seoKey="ledgerFilesUpload" noIndex />
         <PageHeader
           title={t("ledgerEditor.uploadFiles")}
           description={t("common.pageDescription.uploadFiles", {
@@ -240,7 +238,6 @@ const UploadFilesPage = () => {
 
   return (
     <div className="h-full flex flex-col space-y-4">
-      <LedgerPageSEO seoKey="ledgerFilesUpload" noIndex />
       <PageHeader
         title={t("ledgerEditor.uploadFiles")}
         description={t("common.pageDescription.uploadFiles", {

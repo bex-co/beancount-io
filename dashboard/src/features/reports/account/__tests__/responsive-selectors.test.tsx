@@ -41,10 +41,6 @@ vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 vi.mock("@/features/reports/balance-sheet/line-chart", () => ({
   LineChart: () => <div data-testid="line-chart" />,
 }));

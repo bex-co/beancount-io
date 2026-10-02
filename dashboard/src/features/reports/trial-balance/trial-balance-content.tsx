@@ -19,7 +19,6 @@ import {
 } from "../components/collapsible-charts-section";
 import { useChartsVisibility } from "../components/use-charts-visibility";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { filterAccountHierarchy } from "../balance-sheet/utils";
 import type { HierarchySummaryRow } from "../balance-sheet/hierarchy-list-types";
 import { computeTrialBalanceReconciliation } from "./lib/trial-balance-summary";
@@ -168,7 +167,6 @@ export function TrialBalanceContent({
 
   return (
     <div className="space-y-6">
-      <LedgerPageSEO seoKey="ledgerTrialBalance" />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
           className="min-w-0"

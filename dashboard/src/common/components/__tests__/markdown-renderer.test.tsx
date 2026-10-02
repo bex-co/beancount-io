@@ -44,6 +44,29 @@ describe("MarkdownRenderer", () => {
     expect(screen.getByText("Heading 3")).toBeInTheDocument();
   });
 
+  it("nests embedded headings without changing standalone Markdown", () => {
+    const { rerender } = render(
+      <MarkdownRenderer
+        content={"# Ledger\n\n## Purchases\n\n###### Detail"}
+        headingOffset={1}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Ledger" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 3, name: "Purchases" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 6, name: "Detail" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    rerender(<MarkdownRenderer content="# Ledger" />);
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Ledger" }),
+    ).toBeInTheDocument();
+  });
+
   it("renders links with external icon for http links", () => {
     render(<MarkdownRenderer content="[Example](https://example.com)" />);
     const link = screen.getByText("Example");

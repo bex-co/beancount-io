@@ -6,7 +6,6 @@ import {
   PlaidLoadingState,
   PlaidErrorState,
 } from "../../components/plaid-states";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { createLedgerId } from "@/common/lib/utils/encode";
 
 export function PlaidSettingsPage() {
@@ -19,7 +18,6 @@ export function PlaidSettingsPage() {
   if (loading) {
     return (
       <div className="container mx-auto py-8">
-        <LedgerPageSEO seoKey="plaidSettings" noIndex />
         <PlaidLoadingState />
       </div>
     );
@@ -28,25 +26,14 @@ export function PlaidSettingsPage() {
   if (error) {
     return (
       <div className="container mx-auto py-8">
-        <LedgerPageSEO seoKey="plaidSettings" noIndex />
         <PlaidErrorState onRetry={() => refetch()} />
       </div>
     );
   }
 
   if (items.length === 0) {
-    return (
-      <>
-        <LedgerPageSEO seoKey="plaidSettings" noIndex />
-        <PlaidOnboardingState ledgerId={ledgerId} />
-      </>
-    );
+    return <PlaidOnboardingState ledgerId={ledgerId} />;
   }
 
-  return (
-    <>
-      <LedgerPageSEO seoKey="plaidSettings" noIndex />
-      <PlaidManagementState items={items} ledgerId={ledgerId} />
-    </>
-  );
+  return <PlaidManagementState items={items} ledgerId={ledgerId} />;
 }

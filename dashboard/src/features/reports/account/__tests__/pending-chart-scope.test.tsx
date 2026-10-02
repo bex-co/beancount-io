@@ -97,9 +97,7 @@ vi.mock("@/features/journal/components/journal-pagination", () => ({
 vi.mock("@/features/journal/components/entry-context-dialog", () => ({
   EntryContextDialog: () => null,
 }));
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
+
 vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
 }));

@@ -75,6 +75,17 @@ function hasNonZeroAmount(value: unknown): boolean {
   });
 }
 
+/** A zero total can still contain offsetting activity in individual accounts. */
+function pointHasActivity(
+  point: DataSeries[number] | IntervalDataSeries[number],
+): boolean {
+  return (
+    hasNonZeroAmount(point.balance) ||
+    ("accountBalances" in point &&
+      Object.values(point.accountBalances ?? {}).some(hasNonZeroAmount))
+  );
+}
+
 function hierarchyHasActivity(value: unknown): boolean {
   if (Array.isArray(value)) return value.some(hierarchyHasActivity);
   if (!value || typeof value !== "object") return false;
@@ -110,11 +121,7 @@ export function hasOverviewActivity(
     overview.expensesData,
   ];
   const hasSeriesActivity = series.some((points) =>
-    points?.some(
-      (point) =>
-        hasNonZeroAmount(point.balance) ||
-        ("accountBalances" in point && hasNonZeroAmount(point.accountBalances)),
-    ),
+    points?.some(pointHasActivity),
   );
 
   return (
@@ -244,6 +251,19 @@ export function getIntervalDates(
       ...expenses.map((point) => point.date),
     ]),
   ).sort((a, b) => a.localeCompare(b));
+}
+
+export function getLatestActiveIntervalDate(
+  income: IntervalDataSeries,
+  expenses: IntervalDataSeries,
+): string | undefined {
+  return [...income, ...expenses].reduce<string | undefined>(
+    (latest, point) =>
+      pointHasActivity(point) && (!latest || point.date > latest)
+        ? point.date
+        : latest,
+    undefined,
+  );
 }
 
 function averageBalances(

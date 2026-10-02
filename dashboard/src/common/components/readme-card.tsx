@@ -1,7 +1,5 @@
-import { useQuery } from "@apollo/client/react";
-import { useHydrated } from "@tanstack/react-router";
-import { GetLedgerFileDocument } from "@/graphql/definitions";
-import { base64Decode } from "@/common/lib/utils/encode";
+import { useLedgerReadme } from "@/common/hooks/use-ledger-readme";
+import type { InitialLedgerReadme } from "@/common/lib/ledger-readme";
 import { MarkdownRenderer } from "@/common/components/markdown-renderer";
 import { Button } from "@/common/components/ui/button";
 import { Card, CardContent } from "@/common/components/ui/card";
@@ -14,22 +12,23 @@ import { BookOpen, Pencil } from "lucide-react";
 interface ReadmeCardProps {
   ledgerId: string;
   path?: string;
+  initialReadme?: InitialLedgerReadme;
+  headingOffset?: number;
 }
 
-export function ReadmeCard({ ledgerId, path = "README.md" }: ReadmeCardProps) {
-  const hydrated = useHydrated();
+export function ReadmeCard({
+  ledgerId,
+  path = "README.md",
+  initialReadme,
+  headingOffset = 0,
+}: ReadmeCardProps) {
   const fileNavigate = useFileNavigate();
   const { t } = useTranslations();
-  const { data, loading, error } = useQuery(GetLedgerFileDocument, {
-    variables: { ledgerId, path },
-    fetchPolicy: "cache-first",
-  });
+  const { content, loading } = useLedgerReadme(ledgerId, initialReadme, path);
 
   const displayName = path.split("/").pop() ?? path;
 
-  // Browser prefetch can finish before hydration reaches this optional card.
-  // Preserve the server skeleton until the first client render has committed.
-  if (!hydrated || loading) {
+  if (loading) {
     return (
       <Card className="gap-0 py-0">
         <div className="flex items-center justify-between px-4 py-2 border-b text-sm font-medium text-muted-foreground">
@@ -62,20 +61,7 @@ export function ReadmeCard({ ledgerId, path = "README.md" }: ReadmeCardProps) {
     );
   }
 
-  // Silent failure — README is optional
-  if (error) return null;
-
-  const content = data?.getLedgerFile?.content;
   if (!content) return null;
-
-  let decoded: string;
-  try {
-    decoded = base64Decode(content);
-  } catch {
-    return null;
-  }
-
-  if (!decoded.trim()) return null;
 
   return (
     <Card className="gap-0 py-0">
@@ -97,7 +83,7 @@ export function ReadmeCard({ ledgerId, path = "README.md" }: ReadmeCardProps) {
         </LedgerWritePermission>
       </div>
       <CardContent className="px-4 py-4">
-        <MarkdownRenderer content={decoded} />
+        <MarkdownRenderer content={content} headingOffset={headingOffset} />
       </CardContent>
     </Card>
   );

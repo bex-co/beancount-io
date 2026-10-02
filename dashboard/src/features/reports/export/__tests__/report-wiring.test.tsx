@@ -38,9 +38,7 @@ vi.mock("@/common/components/page-header", () => ({
 vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
 }));
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
+
 vi.mock("@/common/components/ui/tabs", () => ({
   Tabs: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   TabsContent: ({ children }: { children: React.ReactNode }) => (

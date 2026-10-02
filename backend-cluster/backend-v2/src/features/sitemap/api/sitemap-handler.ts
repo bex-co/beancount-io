@@ -40,13 +40,13 @@ function registerSitemapOpenAPI() {
     description: `Returns a sitemap.xml file containing all public ledger pages for search engine indexing.
 
 The sitemap includes:
-- User profile pages (/ledger/{username}/)
-- Repository pages (/ledger/{username}/{repoName}/)
+- User profile pages (/ledger/{username})
+- Repository pages (/ledger/{username}/{repoName})
 - Repository subpages (journal, balance-sheet, income-statement, trial-balance, statistics, holdings)
 
 Only public repositories and active users are included.
 
-The sitemap is cached for 1 hour to optimize performance.`,
+Complete sitemap generations are cached by the application for 24 hours with stale-while-revalidate. HTTP responses can be cached for 1 hour. Failed refreshes retain the previous artifact; cold generation failures return 500.`,
     tags: ["SEO"],
     responses: {
       200: {

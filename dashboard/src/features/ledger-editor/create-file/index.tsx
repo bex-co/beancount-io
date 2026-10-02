@@ -29,7 +29,6 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { toast } from "sonner";
 import { getFileLanguage } from "@/features/ledger-editor/shared/lib/utils";
 import { useLedger } from "@/common/hooks/use-ledger";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { WriteAccessRequired } from "@/features/ledger-editor/shared/components/write-access-required";
 import { createFileNameIssue } from "./validate-create-file-name";
@@ -171,7 +170,6 @@ const CreateFilePage = () => {
   if (!canWrite && !hasDraft) {
     return (
       <div className="h-full flex flex-col space-y-4">
-        <LedgerPageSEO seoKey="ledgerFilesCreate" noIndex />
         <PageHeader
           title={t("ledgerEditor.createFile")}
           description={t("common.pageDescription.createFile", {
@@ -189,7 +187,6 @@ const CreateFilePage = () => {
 
   return (
     <div className="h-full flex flex-col space-y-4">
-      <LedgerPageSEO seoKey="ledgerFilesCreate" noIndex />
       <PageHeader
         title={t("ledgerEditor.createFile")}
         description={t("common.pageDescription.createFile", {

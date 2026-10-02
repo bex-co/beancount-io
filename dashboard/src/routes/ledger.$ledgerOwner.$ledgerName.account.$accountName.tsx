@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LedgerAccountPage from "@/features/reports/account";
-import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
+import { createLedgerHead } from "@/common/lib/seo/ledger-head";
 import { accountJournalSearchSchema } from "@/features/reports/account/search";
 
 export const Route = createFileRoute(
@@ -8,17 +8,5 @@ export const Route = createFileRoute(
 )({
   component: LedgerAccountPage,
   validateSearch: (search) => accountJournalSearchSchema.parse(search),
-  head: ({ params, match }) =>
-    createHeadMeta(
-      match.context.localization.i18n,
-      getSEOMetadata(
-        match.context.localization.i18n,
-        "seo.ledgerAccount.title",
-        "seo.ledgerAccount.description",
-        {
-          ledgerName: params.ledgerName,
-          accountName: params.accountName,
-        },
-      ),
-    ),
+  head: (args) => createLedgerHead(args, "ledgerAccount"),
 });

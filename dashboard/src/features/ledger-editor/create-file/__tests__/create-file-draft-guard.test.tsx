@@ -84,10 +84,6 @@ vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 
 import CreateFilePage from "../index";

@@ -6,6 +6,7 @@ import {
   getSelfCanonicalUrl,
 } from "@/common/lib/seo/indexability";
 import { HreflangLinks } from "./hreflang-links";
+import { SOCIAL_IMAGE } from "@/common/lib/seo/social-image";
 
 interface PageSEOProps {
   /**
@@ -41,7 +42,7 @@ interface PageSEOProps {
  * It supports title, description, Open Graph, and Twitter Card meta tags.
  *
  * Use this component for pages that don't have ledger context (auth pages, settings, gallery, etc.).
- * For ledger-specific pages, use <LedgerSEO> instead.
+ * Ledger-specific pages use their route's createLedgerHead instead.
  *
  * @example
  * ```tsx
@@ -79,9 +80,6 @@ export function PageSEO({
       : t(descriptionKey)
     : "";
 
-  // Generate dynamic OG image URL using the page title
-  const ogImageUrl = `https://opengraph-image.blockeden.xyz/api/og-beancount-io?title=${encodeURIComponent(title)}`;
-
   // Get OpenGraph locale for current language (use i18n from hook for SSR compatibility)
   const ogLocale = getOgLocale(i18n.language);
 
@@ -96,14 +94,19 @@ export function PageSEO({
       {/* Open Graph meta tags for social sharing */}
       <meta property="og:title" content={title} />
       {description && <meta property="og:description" content={description} />}
-      <meta property="og:image" content={ogImageUrl} />
+      <meta property="og:image" content={SOCIAL_IMAGE.url} />
+      <meta property="og:image:type" content={SOCIAL_IMAGE.type} />
+      <meta property="og:image:width" content={SOCIAL_IMAGE.width} />
+      <meta property="og:image:height" content={SOCIAL_IMAGE.height} />
+      <meta property="og:image:alt" content={SOCIAL_IMAGE.alt} />
       <meta property="og:locale" content={ogLocale} />
 
       {/* Twitter Card meta tags */}
-      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:card" content={SOCIAL_IMAGE.card} />
       <meta name="twitter:title" content={title} />
       {description && <meta name="twitter:description" content={description} />}
-      <meta name="twitter:image" content={ogImageUrl} />
+      <meta name="twitter:image" content={SOCIAL_IMAGE.url} />
+      <meta name="twitter:image:alt" content={SOCIAL_IMAGE.alt} />
 
       {noIndex ? null : <HreflangLinks />}
     </>

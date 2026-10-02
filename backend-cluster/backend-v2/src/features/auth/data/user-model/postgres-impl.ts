@@ -148,6 +148,7 @@ export class UserPostgresModel implements IUserModel {
           sql`${users.ledger_username} IS NOT NULL`,
         ),
       )
+      .orderBy(users.id)
       .limit(limit)
       .offset(offset);
 

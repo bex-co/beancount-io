@@ -187,12 +187,21 @@ send that same shared filter as `query.filterAccount` (ledger HTTP
 overload the target field — without `filterAccount`, a Statistics drill-down
 that retains `?account=` shows an unfiltered journal beside a filtered chart.
 
-Await only the data the page cannot render without. Optional panels (README
-card, account metadata, sidebar counts) own their queries and render honest
-pending states; a loader may start them in the browser with
-`prefetchOptionalQuery` from `common/apollo/prefetch.ts` but must not wait for
-them, and it must not start them during SSR. Measurement method and evidence:
-`docs/performance-route-loading.md`.
+Await only primary content. On the initial server render of a currently public
+overview, the authored README is primary explanatory content: after resolving
+ledger access, `loadPublicReadme` gives that read a one-second deadline alongside
+the report work. Its settled, ledger/path-scoped snapshot owns both server and
+first client rendering. The file query uses `no-cache` and writes the request
+cache only on timely success, so even an uncancelled late response cannot race
+the router's single cache extraction. Keep that handoff when changing hydration.
+
+Private-ledger README cards, account metadata, and sidebar counts remain optional.
+They own their queries and honest pending states; a loader may start them in the
+browser with `prefetchOptionalQuery` from `common/apollo/prefetch.ts` but must not
+wait for them or start them during SSR. Client navigation also keeps README
+nonblocking. Failed or timed-out public README reads recover after hydration
+without delaying the report indefinitely. Measurement method and the historical
+performance tradeoff: `docs/performance-route-loading.md`.
 
 ## Locales
 

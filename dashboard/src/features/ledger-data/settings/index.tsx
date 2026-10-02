@@ -9,7 +9,6 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { Authenticated } from "@/common/components/authenticated";
 import { QueryView } from "@/common/components/query-view";
 import { GeneralSettingsSection } from "./general-settings-section";
@@ -61,7 +60,6 @@ export function LedgerSettingsContent({
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <LedgerPageSEO seoKey="ledgerSettings" noIndex />
       <PageHeader
         title={t("common.ledgerSettings")}
         description={t("common.pageDescription.settings", {

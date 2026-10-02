@@ -37,6 +37,7 @@
 - [x] **m31** — Include Live Price: managed price includes in the ledger service (11 tasks) ← from PRFAQ002 + ADR 015; user request 2026-09-15 to design, board, and implement the ledger layer
 - [x] **m32** — [Managed price status on every client surface](./done/m32/README.md) (9 tasks) ← promoted [w2/026](./done/026.md) 2026-09-23; ADR 015 follow-up to m31
 - [ ] **m34** — [Ledger catalogs list every ledger, not the first upstream page](./blocked/m34/README.md) (6 tasks) ← from user report 2026-10-01 (dashboard ledger switcher could not find `open_ledger/stock-example`), reproduced against the deployed site; user routed to w2 — **blocked:** t001–t005 shipped; closeout needs production backend-v2 deployed with the fix
+- [ ] **m35** — [Public ledgers that explain themselves in search and on first visit](./m35/README.md) (13 tasks) ← public-ledger SEO research; materialized 2026-10-02 at user request
 
 ## Dropped
 

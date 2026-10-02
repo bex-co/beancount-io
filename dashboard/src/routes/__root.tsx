@@ -10,7 +10,17 @@ import { detectLanguage } from "@/i18n/detect-language";
 import appCss from "../style.css?inline";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  head: () => ({
+  head: ({
+    match,
+    matches,
+  }: {
+    match: { status: string; globalNotFound?: boolean };
+    matches: ReadonlyArray<{
+      routeId: string;
+      status: string;
+      globalNotFound?: boolean;
+    }>;
+  }) => ({
     meta: [
       {
         charSet: "utf-8",
@@ -19,9 +29,22 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         name: "viewport",
         content: "width=device-width, initial-scale=1",
       },
-      {
-        title: "Beancount.io",
-      },
+      // Root 404/error pages supply their own title via PageSEO. The ledger
+      // loader error shell only supplies robots, so it keeps this fallback.
+      // `matches` is the load's original snapshot; `match` includes a loader's
+      // notFound result after it bubbles to the root boundary.
+      ...(match.globalNotFound ||
+      match.status === "notFound" ||
+      match.status === "error" ||
+      matches.some(
+        (item) =>
+          item.globalNotFound ||
+          item.status === "notFound" ||
+          (item.status === "error" &&
+            item.routeId !== "/ledger/$ledgerOwner/$ledgerName"),
+      )
+        ? []
+        : [{ title: "Beancount.io" }]),
     ],
     links: [
       {

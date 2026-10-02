@@ -64,10 +64,6 @@ vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 vi.mock("@/common/components/monaco-editor", () => ({
   MonacoEditor: () => (
     <textarea

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import LedgerUploadFilesPage from "@/features/ledger-editor/upload-files";
-import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
+import { createLedgerHead } from "@/common/lib/seo/ledger-head";
 
 // Empty search schema - this route uses path params only
 const searchSchema = z.object({});
@@ -11,15 +11,6 @@ export const Route = createFileRoute(
 )({
   component: LedgerUploadFilesPage,
   validateSearch: (search) => searchSchema.parse(search),
-  head: ({ params, match }) =>
-    createHeadMeta(
-      match.context.localization.i18n,
-      getSEOMetadata(
-        match.context.localization.i18n,
-        "seo.ledgerFilesUpload.title",
-        "seo.ledgerFilesUpload.description",
-        { ledgerName: params.ledgerName },
-      ),
-      { noIndex: true },
-    ),
+  head: (args) =>
+    createLedgerHead(args, "ledgerFilesUpload", { noIndex: true }),
 });

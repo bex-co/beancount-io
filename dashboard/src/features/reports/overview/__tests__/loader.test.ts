@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { RouterContext } from "@/common/types/router-context";
 import {
   GetLedgerAccountMetaDocument,
+  GetLedgerDocument,
   GetLedgerFileDocument,
   GetLedgerOverviewDocument,
   GetLedgerOverviewValuationDocument,
@@ -46,7 +47,9 @@ describe("overviewLoader", () => {
         : pending(),
     );
 
-    await expect(overviewLoader(loaderInput(query))).resolves.toBeUndefined();
+    await expect(overviewLoader(loaderInput(query))).resolves.toEqual({
+      readme: undefined,
+    });
 
     const requested = query.mock.calls.map(([options]) => options);
     expect(requested).toEqual(
@@ -125,7 +128,9 @@ describe("overviewLoader", () => {
         : pending(),
     );
 
-    await expect(overviewLoader(loaderInput(query))).resolves.toBeUndefined();
+    await expect(overviewLoader(loaderInput(query))).resolves.toEqual({
+      readme: undefined,
+    });
   });
 
   it("leaves a market-read failure to the balance modules", async () => {
@@ -139,10 +144,12 @@ describe("overviewLoader", () => {
         : pending();
     });
 
-    await expect(overviewLoader(loaderInput(query))).resolves.toBeUndefined();
+    await expect(overviewLoader(loaderInput(query))).resolves.toEqual({
+      readme: undefined,
+    });
   });
 
-  it("does not start README or metadata during SSR", async () => {
+  it("does not start README during SSR unless resolved ledger visibility is public, and leaves metadata optional", async () => {
     vi.stubEnv("SSR", true);
     const query = vi.fn((_options: QueryOptions) =>
       Promise.resolve({ data: {} }),
@@ -151,8 +158,11 @@ describe("overviewLoader", () => {
     await overviewLoader(loaderInput(query));
 
     // A server render still carries both primary reads.
-    expect(query).toHaveBeenCalledTimes(2);
-    expect(query.mock.calls.map(([options]) => options.query)).toEqual(PRIMARY);
+    expect(query).toHaveBeenCalledTimes(3);
+    expect(query.mock.calls.map(([options]) => options.query)).toEqual([
+      GetLedgerDocument,
+      ...PRIMARY,
+    ]);
   });
 
   it("uses destination loader deps rather than a global URL snapshot", async () => {

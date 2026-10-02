@@ -26,10 +26,6 @@ vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({ ledgerName: "example" }),
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 const errorRow = {
   __typename: "LedgerError",
   message: "Transaction does not balance",

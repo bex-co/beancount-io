@@ -90,10 +90,6 @@ vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 import CreateFilePage from "@/features/ledger-editor/create-file";

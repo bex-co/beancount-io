@@ -21,7 +21,6 @@ import {
   unitsFirstRowsFilter,
 } from "./utils";
 import { useLedger } from "@/common/hooks/use-ledger";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 
 const LedgerHoldingsTabs = () => {
   const { t } = useTranslations();
@@ -118,7 +117,6 @@ const LedgerHoldingsPage = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-full">
-      <LedgerPageSEO seoKey="ledgerHoldings" />
       <PageHeader
         title={t("page.holdings.holdings")}
         description={t("common.pageDescription.holdings", {

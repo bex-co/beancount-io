@@ -12,8 +12,7 @@ describe("ledger entry route", () => {
     expect(source).toContain(
       '"/ledger/$ledgerOwner/$ledgerName/entry/$entryHash"',
     );
-    expect(source).toContain("seo.ledgerEntry.title");
-    expect(source).toContain("seo.ledgerEntry.description");
+    expect(source).toContain('createLedgerHead(args, "ledgerEntry")');
     expect(source).toContain("EntryPage");
     // Metadata must stay generic — never interpolate entry source/narration.
     expect(source).not.toMatch(/slice|narration|Dispose property/);

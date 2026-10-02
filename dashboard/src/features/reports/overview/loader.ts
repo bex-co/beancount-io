@@ -8,19 +8,23 @@ import {
   GetLedgerOverviewValuationDocument,
 } from "@/graphql/definitions";
 import { overviewQueryDefaults } from "./constants";
+import { loadPublicReadme } from "./load-public-readme";
+import type { InitialLedgerReadme } from "@/common/lib/ledger-readme";
 
 export const overviewLoader: RouteLoader<
   "/ledger/$ledgerOwner/$ledgerName/",
-  void,
+  { readme?: InitialLedgerReadme },
   LedgerSearchParams
-> = async ({ params, context, deps }) => {
+> = async ({ params, context, deps, abortController }) => {
   const ledgerId = `${params.ledgerOwner}/${params.ledgerName}`;
   const { account, filter, time } = deps;
 
-  // The README card and the account open-directive metadata (cash-flow-role
-  // declarations behind the Sankey) are optional panels that own their
-  // queries and show honest pending states. Start them alongside the overview
-  // so they usually land together, but never let them gate primary content.
+  // Client navigation keeps optional panels nonblocking. Initial public SSR
+  // additionally settles README within a deadline so its authored explanation
+  // can be read without JavaScript, using the same first-render snapshot.
+  const readme = import.meta.env.SSR
+    ? loadPublicReadme(context.client, ledgerId, abortController.signal)
+    : Promise.resolve(undefined);
   prefetchOptionalQuery(context.client, {
     query: GetLedgerFileDocument,
     variables: { ledgerId, path: "README.md" },
@@ -62,4 +66,5 @@ export const overviewLoader: RouteLoader<
       })
       .catch(() => undefined),
   ]);
+  return { readme: await readme };
 };

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LedgerBalanceSheetPage from "@/features/reports/balance-sheet";
 import { ledgerFilterLoaderDeps } from "@/common/lib/ledger-search-params";
-import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
+import { createLedgerHead } from "@/common/lib/seo/ledger-head";
 import { balanceSheetLoader } from "@/features/reports/balance-sheet/loader";
 import { viewSearchSchema } from "@/features/reports/balance-sheet/search";
 
@@ -12,14 +12,5 @@ export const Route = createFileRoute(
   validateSearch: (search) => viewSearchSchema.parse(search),
   loaderDeps: ({ search }) => ledgerFilterLoaderDeps(search),
   loader: balanceSheetLoader,
-  head: ({ params, match }) =>
-    createHeadMeta(
-      match.context.localization.i18n,
-      getSEOMetadata(
-        match.context.localization.i18n,
-        "seo.ledgerBalanceSheet.title",
-        "seo.ledgerBalanceSheet.description",
-        { ledgerName: params.ledgerName },
-      ),
-    ),
+  head: (args) => createLedgerHead(args, "ledgerBalanceSheet"),
 });

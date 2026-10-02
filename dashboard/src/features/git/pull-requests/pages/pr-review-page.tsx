@@ -14,7 +14,6 @@ import {
   ApprovePullRequestDocument,
   RejectPullRequestDocument,
 } from "@/graphql/definitions";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 
 export default function PRReviewPage() {
   const { ledgerOwner, ledgerName, prNumber } = useParams({
@@ -107,7 +106,6 @@ export default function PRReviewPage() {
 
   return (
     <div className="space-y-6">
-      <LedgerPageSEO seoKey="ledgerPullRequest" params={{ prNumber }} />
       <PRMetadata
         title={pr.title}
         number={pr.number}

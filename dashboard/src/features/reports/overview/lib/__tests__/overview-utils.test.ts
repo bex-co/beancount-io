@@ -3,11 +3,68 @@ import {
   buildAccountBalanceRows,
   formatPeriodMonth,
   getMovementSnapshot,
+  getLatestActiveIntervalDate,
   hasOverviewActivity,
   isPartialMonthlyPeriod,
 } from "../overview-utils";
 
 describe("overview financial selectors", () => {
+  it("finds the latest active income or expense interval instead of a trailing empty one", () => {
+    expect(
+      getLatestActiveIntervalDate(
+        [{ date: "2026-04-30", balance: { USD: "-50" }, accountBalances: {} }],
+        [
+          { date: "2027-01-31", balance: { USD: 0 }, accountBalances: {} },
+          { date: "2026-05-31", balance: { USD: "12" }, accountBalances: {} },
+        ],
+      ),
+    ).toBe("2026-05-31");
+  });
+
+  it("recognizes offsetting accounts even when the period total is zero", () => {
+    const offsetting = {
+      date: "2026-06-30",
+      balance: { USD: 0 },
+      accountBalances: {
+        "Expenses:Fees": { USD: 10 },
+        "Expenses:Refund": { USD: -10 },
+      },
+    };
+    // The page must also display its report modules for this same activity.
+    expect(hasOverviewActivity({ expensesIntervalData: [offsetting] })).toBe(
+      true,
+    );
+    expect(
+      getLatestActiveIntervalDate(
+        [],
+        [
+          offsetting,
+          {
+            date: "2026-07-31",
+            balance: { USD: 0 },
+            accountBalances: { "Expenses:Fees": { USD: 0 } },
+          },
+        ],
+      ),
+    ).toBe("2026-06-30");
+  });
+
+  it("does not invent activity for empty or zero-filled intervals", () => {
+    expect(getLatestActiveIntervalDate([], [])).toBeUndefined();
+    expect(
+      getLatestActiveIntervalDate(
+        [],
+        [
+          {
+            date: "2027-01-31",
+            balance: { USD: 0 },
+            accountBalances: { "Expenses:Fees": { USD: 0 } },
+          },
+        ],
+      ),
+    ).toBeUndefined();
+  });
+
   it("returns real leaf accounts and keeps currencies separate", () => {
     const rows = buildAccountBalanceRows({
       assets: {

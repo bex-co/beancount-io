@@ -23,6 +23,58 @@ beforeEach(() => {
 });
 
 describe("normalizeDashboardLayout", () => {
+  it("uses README-first defaults for public readers without writing a preference", () => {
+    const { result } = renderHook(() =>
+      useDashboardLayout("owner/public", true),
+    );
+    expect(result.current.layout.order[0]).toBe("readme");
+    expect(result.current.layout.hidden).toEqual([]);
+    expect(
+      window.localStorage.getItem("ledger.owner/public.overview.layout.v1"),
+    ).toBeNull();
+  });
+
+  it("keeps a saved order and hidden README, and resets to the reader's default", () => {
+    const saved = {
+      version: 1,
+      order: [...DASHBOARD_WIDGET_IDS],
+      hidden: ["readme"],
+    };
+    window.localStorage.setItem(
+      "ledger.owner/public.overview.layout.v1",
+      JSON.stringify(saved),
+    );
+    const { result } = renderHook(() =>
+      useDashboardLayout("owner/public", true),
+    );
+    expect(result.current.layout).toEqual(saved);
+    act(() => result.current.reset());
+    expect(result.current.layout.order[0]).toBe("readme");
+    expect(result.current.layout.hidden).toEqual([]);
+  });
+
+  it("keeps public defaults usable when localStorage is denied", () => {
+    vi.mocked(window.localStorage.getItem).mockImplementation(() => {
+      throw new Error("Storage denied");
+    });
+    const { result } = renderHook(() =>
+      useDashboardLayout("owner/public", true),
+    );
+    expect(result.current.layout.order[0]).toBe("readme");
+  });
+
+  it("changes only an unsaved default when a reader gains write access", () => {
+    const { result, rerender } = renderHook(
+      ({ reader }) => useDashboardLayout("owner/public", reader),
+      {
+        initialProps: { reader: true },
+      },
+    );
+    expect(result.current.layout.order[0]).toBe("readme");
+    rerender({ reader: false });
+    expect(result.current.layout.order).toEqual(DASHBOARD_WIDGET_IDS);
+  });
+
   it("repairs stale IDs, duplicates, and newly introduced widgets", () => {
     const result = normalizeDashboardLayout({
       version: 0,

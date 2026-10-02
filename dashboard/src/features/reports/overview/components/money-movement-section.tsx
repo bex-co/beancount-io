@@ -25,6 +25,7 @@ import type {
 import {
   formatPeriodMonth,
   getIntervalDates,
+  getLatestActiveIntervalDate,
   getMovementSnapshot,
   isPartialMonthlyPeriod,
   resolveMovementTimeFilter,
@@ -169,12 +170,14 @@ export function MoneyMovementSection({
   primaryCurrency,
   ledgerOwner,
   ledgerName,
+  preferActiveMonth = false,
 }: {
   income: IntervalDataSeries;
   expenses: IntervalDataSeries;
   primaryCurrency: string;
   ledgerOwner: string;
   ledgerName: string;
+  preferActiveMonth?: boolean;
 }) {
   const { t, i18n } = useTranslations();
   const { searchParams } = useLedgerSearchParams();
@@ -183,9 +186,21 @@ export function MoneyMovementSection({
     [expenses, income],
   );
   const [requestedDate, setRequestedDate] = useState("");
+  const hasFilters = Boolean(
+    searchParams.account || searchParams.filter || searchParams.time,
+  );
+  const defaultDate = useMemo(
+    () =>
+      (preferActiveMonth && !hasFilters
+        ? getLatestActiveIntervalDate(income, expenses)
+        : undefined) ??
+      dates.at(-1) ??
+      "",
+    [income, expenses, preferActiveMonth, hasFilters, dates],
+  );
   const selectedDate = dates.includes(requestedDate)
     ? requestedDate
-    : (dates.at(-1) ?? "");
+    : defaultDate;
 
   const timeFilter = selectedDate
     ? resolveMovementTimeFilter(selectedDate, searchParams.time || undefined)

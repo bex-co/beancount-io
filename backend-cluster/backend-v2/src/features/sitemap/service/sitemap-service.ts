@@ -7,6 +7,22 @@ import { SitemapUrl, UserRepositories } from "../types/sitemap-types";
 import { processBatch } from "@/shared/batch-processor";
 import { logger } from "@/shared/logger";
 import { CACHE_KEYS, TTL } from "@/shared/cache";
+import { DomainError, ErrorCategory } from "@/shared/errors";
+
+const sitemapLogger = logger.child({ module: "SitemapService" });
+
+class SitemapGenerationError extends DomainError {
+  constructor(reason: string, context: Record<string, unknown> = {}) {
+    super(
+      ErrorCategory.SERVICE_UNAVAILABLE,
+      "Sitemap generation is incomplete",
+      {
+        reason,
+        ...context,
+      },
+    );
+  }
+}
 
 /**
  * Service for generating sitemap.xml
@@ -22,7 +38,7 @@ export class SitemapService implements ISitemapService {
   // stale-while-revalidate) rather than in Redis, but uses the shared TTL/key
   // conventions from @/shared/cache.
   private readonly CACHE_TTL_MS = TTL.HOUR_24;
-  private static isRefreshing = false; // Prevent concurrent refreshes
+  private static generation: Promise<string> | undefined;
 
   // Batch processing configuration
   /** Max concurrent Gitea API calls to avoid overwhelming the server */
@@ -33,6 +49,10 @@ export class SitemapService implements ISitemapService {
   private static readonly USER_PAGE_SIZE = 1000;
   /** Maximum total users to fetch across all pages */
   private static readonly MAX_USERS_LIMIT = 50000;
+  private static readonly REPOSITORY_PAGE_SIZE = 100;
+  private static readonly MAX_REPOSITORY_PAGES = 1000;
+  private static readonly MAX_SITEMAP_URLS = 50000;
+  private static readonly MAX_SITEMAP_BYTES = 50 * 1024 * 1024;
 
   constructor(
     private database: DatabaseLayer,
@@ -54,54 +74,42 @@ export class SitemapService implements ISitemapService {
     // 1. Check for valid (non-expired) cache
     const validCache = this.cache.get(cacheKey);
     if (validCache) {
-      logger.debug("Serving valid cache");
       return validCache;
     }
 
     // 2. Check for stale cache (expired but exists)
     const staleCache = this.cache.getStale(cacheKey);
     if (staleCache) {
-      logger.debug("Serving stale cache, triggering background refresh");
-
-      // Trigger background refresh (non-blocking)
-      this.refreshInBackground(cacheKey);
-
-      // Return stale data immediately
+      if (!SitemapService.generation) {
+        void this.refreshSitemap(cacheKey).catch((error: unknown) => {
+          sitemapLogger.error(
+            "Background refresh failed; retaining stale sitemap",
+            { error },
+          );
+        });
+      }
       return staleCache;
     }
 
     // 3. No cache exists - must generate synchronously
-    logger.debug("No cache found, generating fresh sitemap");
-    const xml = await this.generateFreshSitemap();
-    this.cache.set(cacheKey, xml, this.CACHE_TTL_MS);
-    return xml;
+    return this.refreshSitemap(cacheKey);
   }
 
   /**
-   * Refresh cache in background without blocking the request
+   * Share one generation across cold requests and stale refreshes in this process.
+   * The cache is updated only after the entire traversal and render succeed.
    */
-  private refreshInBackground(cacheKey: string): void {
-    // Prevent multiple concurrent refreshes
-    if (SitemapService.isRefreshing) {
-      logger.debug("Refresh already in progress, skipping");
-      return;
-    }
-
-    SitemapService.isRefreshing = true;
-
-    // Use setImmediate to run in next event loop tick (non-blocking)
-    setImmediate(async () => {
-      try {
-        logger.debug("Starting background refresh");
-        const xml = await this.generateFreshSitemap();
+  private refreshSitemap(cacheKey: string): Promise<string> {
+    SitemapService.generation ??= Promise.resolve()
+      .then(() => this.generateFreshSitemap())
+      .then((xml) => {
         this.cache.set(cacheKey, xml, this.CACHE_TTL_MS);
-        logger.debug("Background refresh completed");
-      } catch (error) {
-        logger.error("Background refresh failed", { error });
-      } finally {
-        SitemapService.isRefreshing = false;
-      }
-    });
+        return xml;
+      })
+      .finally(() => {
+        SitemapService.generation = undefined;
+      });
+    return SitemapService.generation;
   }
 
   /**
@@ -109,7 +117,21 @@ export class SitemapService implements ISitemapService {
    */
   private async generateFreshSitemap(): Promise<string> {
     const urls = await this.collectAllUrls();
-    return this.renderSitemapXml(urls);
+    if (urls.length > SitemapService.MAX_SITEMAP_URLS) {
+      throw new SitemapGenerationError("sitemap-url-limit", {
+        urls: urls.length,
+      });
+    }
+    const xml = this.renderSitemapXml(urls);
+    const bytes = Buffer.byteLength(xml, "utf8");
+    if (bytes > SitemapService.MAX_SITEMAP_BYTES) {
+      throw new SitemapGenerationError("sitemap-byte-limit", { bytes });
+    }
+    sitemapLogger.debug("Generated complete sitemap", {
+      urls: urls.length,
+      bytes,
+    });
+    return xml;
   }
 
   /**
@@ -122,201 +144,131 @@ export class SitemapService implements ISitemapService {
   private async getAllActiveUsersWithPagination(): Promise<User[]> {
     const allUsers: User[] = [];
     let offset = 0;
-    let hasMorePages = true;
-    let pagesProcessed = 0;
 
-    logger.debug("Fetching all active users with pagination", {
-      pageSize: SitemapService.USER_PAGE_SIZE,
-      maxLimit: SitemapService.MAX_USERS_LIMIT,
-    });
-
-    while (hasMorePages) {
-      // Check if we've reached the maximum limit
-      if (allUsers.length >= SitemapService.MAX_USERS_LIMIT) {
-        logger.warn("Reached maximum user limit, stopping pagination", {
-          currentCount: allUsers.length,
-          maxLimit: SitemapService.MAX_USERS_LIMIT,
-          pagesProcessed,
-        });
-        break;
-      }
-
-      // Fetch a page of active users
+    while (true) {
+      // Probe once beyond a full limit to distinguish completion from truncation.
+      const limit = Math.min(
+        SitemapService.USER_PAGE_SIZE,
+        SitemapService.MAX_USERS_LIMIT - allUsers.length + 1,
+      );
       let users: User[];
       try {
-        users = (await this.database.models.user.getActiveUsersWithUsername(
+        users = await this.database.models.user.getActiveUsersWithUsername(
           this.database.db,
-          {
-            limit: SitemapService.USER_PAGE_SIZE,
-            offset,
-          },
-        )) as User[];
-      } catch (error) {
-        logger.error("Failed to fetch active users from database", {
-          error,
-          offset,
-          pagesProcessed,
-        });
-        break; // Stop processing on database error, return what we have
+          { limit, offset },
+        );
+      } catch {
+        throw new SitemapGenerationError("user-page-failed", { offset });
       }
-
-      // Check if we have more pages
-      hasMorePages = users.length === SitemapService.USER_PAGE_SIZE;
-      pagesProcessed += 1;
-
-      if (users.length === 0) {
-        logger.debug("No more users to process", { offset, pagesProcessed });
-        break;
-      }
-
-      logger.debug("Fetched user page", {
-        page: pagesProcessed,
-        userCount: users.length,
-        offset,
-      });
-
       allUsers.push(...users);
-      offset += SitemapService.USER_PAGE_SIZE;
+      if (allUsers.length > SitemapService.MAX_USERS_LIMIT) {
+        throw new SitemapGenerationError("user-limit", { offset });
+      }
+      if (users.length < limit) return allUsers;
+      offset += users.length;
     }
-
-    logger.debug("Completed fetching all active users", {
-      totalUsers: allUsers.length,
-      pagesProcessed,
-      hitLimit: allUsers.length >= SitemapService.MAX_USERS_LIMIT,
-    });
-
-    return allUsers;
   }
 
-  /**
-   * Collect all URLs for sitemap
-   * Combines user profiles + repository pages
-   *
-   * Uses paginated user fetching and batch processing with controlled
-   * concurrency to prevent overwhelming the Gitea server and consuming
-   * excessive memory.
-   */
+  /** Fetch each user's pages sequentially, with at most ten users in flight. */
   private async collectAllUrls(): Promise<SitemapUrl[]> {
-    const startTime = Date.now();
-
-    // Metrics tracking
-    const metrics = {
-      usersTotal: 0,
-      usersProcessed: 0,
-      usersFailed: 0,
-      reposFound: 0,
-      urlsGenerated: 0,
-    };
-
-    logger.debug("Starting sitemap URL collection with pagination", {
-      pageSize: SitemapService.USER_PAGE_SIZE,
-    });
-
-    // 1. Fetch all active users with pagination
     const users = await this.getAllActiveUsersWithPagination();
-    metrics.usersTotal = users.length;
-
-    // 2. Fetch repositories for users in batches with controlled concurrency
-    const { results: userRepos, errors } = await processBatch(
-      users,
-      async (user) => this.fetchUserRepositories(user.ledger_username),
+    const usernames = [...new Set(users.map((user) => user.ledger_username))];
+    const { results, errors } = await processBatch(
+      usernames,
+      (username) => this.fetchUserRepositories(username),
       {
         batchSize: SitemapService.BATCH_SIZE,
         delayBetweenBatches: SitemapService.BATCH_DELAY_MS,
-        onProgress: (processed, total) => {
-          logger.debug("Processing user batch", {
-            processed,
-            total,
-            remaining: total - processed,
-          });
-        },
       },
     );
 
-    // Filter out null results (failed fetches)
-    const validUserRepos = userRepos.filter(
-      (repo): repo is UserRepositories => repo !== null,
-    );
-
-    // Update metrics
-    metrics.usersProcessed = validUserRepos.length;
-    metrics.usersFailed = errors.length;
-    metrics.reposFound = validUserRepos.reduce(
-      (sum, ur) => sum + ur.repositories.length,
-      0,
-    );
-
-    // Log individual failures for debugging
-    errors.forEach(({ index, error }) => {
-      logger.error("Failed to fetch user repositories", {
-        username: users[index]?.ledger_username,
-        error: error.message,
+    if (errors.length) {
+      // Log our sanitized domain context, never the upstream response/body.
+      for (const { index, error } of errors) {
+        sitemapLogger.error("Failed to enumerate public repositories", {
+          username: usernames[index],
+          metadata: error instanceof DomainError ? error.metadata : undefined,
+        });
+      }
+      throw new SitemapGenerationError("repository-traversal-failed", {
+        usersFailed: errors.length,
       });
-    });
+    }
 
-    // 3. Generate URLs for each user and their repos using functional style
-    const urls = validUserRepos.flatMap((userRepo) => [
-      this.createUserProfileUrl(userRepo.username),
-      ...userRepo.repositories.flatMap((repo) =>
-        this.createRepositoryUrls(userRepo.username, repo.name, repo.updatedAt),
-      ),
-    ]);
-
-    // Update final metrics
-    metrics.urlsGenerated = urls.length;
-    const duration = Date.now() - startTime;
-
-    // Log completion with detailed metrics
-    logger.debug("Sitemap URL collection completed", {
-      ...metrics,
-      durationMs: duration,
-      successRate:
-        metrics.usersTotal > 0
-          ? `${((metrics.usersProcessed / metrics.usersTotal) * 100).toFixed(1)}%`
-          : "N/A",
-    });
-
-    return urls;
+    return results.flatMap((userRepo) =>
+      userRepo === null
+        ? []
+        : [
+            this.createUserProfileUrl(userRepo.username),
+            ...userRepo.repositories.flatMap((repo) =>
+              this.createRepositoryUrls(
+                userRepo.username,
+                repo.name,
+                repo.updatedAt,
+              ),
+            ),
+          ],
+    );
   }
 
-  /**
-   * Fetch public repositories for a user from Gitea
-   */
   private async fetchUserRepositories(
     username: string,
   ): Promise<UserRepositories | null> {
-    try {
-      // Create unauthenticated Gitea client
-      const giteaClient = this.createUnauthenticatedGiteaClient();
+    const giteaClient = this.createUnauthenticatedGiteaClient();
+    const repositories: UserRepositories["repositories"] = [];
+    const seen = new Set<string>();
 
-      // Fetch repositories (Gitea handles pagination internally)
-      const response = await giteaClient.users.userListRepos(
-        username,
-        {
-          limit: 100, // Max repos per user
-        },
-        {
-          format: "json",
-        },
-      );
+    for (let page = 1; page <= SitemapService.MAX_REPOSITORY_PAGES; page++) {
+      let response;
+      try {
+        response = await giteaClient.users.userListRepos(
+          username,
+          { page, limit: SitemapService.REPOSITORY_PAGE_SIZE },
+          { format: "json" },
+        );
+      } catch (error) {
+        const status =
+          typeof error === "object" && error !== null && "status" in error
+            ? error.status
+            : undefined;
+        // A first-page 404 denotes a missing user. A later 404 cannot prove
+        // completion and must not publish the prefix already collected.
+        if (status === 404 && page === 1) return null;
+        throw new SitemapGenerationError("repository-page-failed", {
+          page,
+          status,
+        });
+      }
 
-      // Filter out private repositories at the source
-      const repos = (response.data || [])
-        .filter((r) => !r.private)
-        .map((r) => ({
-          name: r.name || "",
-          updatedAt: r.updated_at ? new Date(r.updated_at) : new Date(),
-          isPrivate: false, // Already filtered above
-        }));
+      // The generated client can return data:null after a JSON parse failure.
+      if (!Array.isArray(response.data)) {
+        throw new SitemapGenerationError("invalid-repository-page", { page });
+      }
+      if (response.data.length === 0) return { username, repositories };
 
-      return {
-        username,
-        repositories: repos,
-      };
-    } catch {
-      // Don't log here - let caller handle error logging with batch context
-      return null;
+      const previousCount = seen.size;
+      for (const repo of response.data) {
+        if (!repo || typeof repo.name !== "string" || !repo.name) {
+          throw new SitemapGenerationError("invalid-repository", { page });
+        }
+        // Count raw entries before filtering: a private-only page is not EOF.
+        if (seen.has(repo.name)) continue;
+        seen.add(repo.name);
+        if (repo.private) continue;
+        const updatedAt = repo.updated_at
+          ? new Date(repo.updated_at)
+          : new Date();
+        if (!Number.isFinite(updatedAt.getTime())) {
+          throw new SitemapGenerationError("invalid-repository-date", { page });
+        }
+        repositories.push({ name: repo.name, updatedAt, isPrivate: false });
+      }
+      if (seen.size === previousCount) {
+        throw new SitemapGenerationError("repeated-repository-page", { page });
+      }
+      // Never infer EOF from data.length < requested limit: Gitea may cap it.
     }
+    throw new SitemapGenerationError("repository-page-limit");
   }
 
   /**
@@ -324,7 +276,7 @@ export class SitemapService implements ISitemapService {
    */
   private createUserProfileUrl(username: string): SitemapUrl {
     return {
-      loc: `${this.config.dashboard.url}/ledger/${username}/`,
+      loc: `${this.config.dashboard.url.replace(/\/$/, "")}/ledger/${encodeURIComponent(username)}`,
       changefreq: "weekly",
       priority: 0.6,
     };
@@ -338,13 +290,13 @@ export class SitemapService implements ISitemapService {
     repoName: string,
     updatedAt: Date,
   ): SitemapUrl[] {
-    const baseUrl = this.config.dashboard.url;
-    const basePath = `/ledger/${username}/${repoName}`;
+    const baseUrl = this.config.dashboard.url.replace(/\/$/, "");
+    const basePath = `/ledger/${encodeURIComponent(username)}/${encodeURIComponent(repoName)}`;
     const lastmod = updatedAt.toISOString();
 
     // Priority pages for each repository
     const pages = [
-      { path: "/", priority: 0.8, changefreq: "daily" as const }, // Overview
+      { path: "", priority: 0.8, changefreq: "daily" as const }, // Overview
       { path: "/journal", priority: 0.7, changefreq: "daily" as const },
       {
         path: "/balance-sheet",
@@ -422,7 +374,6 @@ ${urlEntries}
    * Create unauthenticated Gitea client for public data
    */
   private createUnauthenticatedGiteaClient(): GiteaApi<unknown> {
-    // Use port 3000 for internal Docker communication (container internal port)
     const baseUrl = `${this.config.gitea.internalBaseUrl}/api/v1`;
     return new GiteaApi({ baseUrl });
   }

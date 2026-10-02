@@ -41,10 +41,6 @@ vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({ t: (key: string) => key }),
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
 }));

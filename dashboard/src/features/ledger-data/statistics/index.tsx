@@ -7,7 +7,6 @@ import { AccountLastEntries } from "./account-last-entries";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedger } from "@/common/hooks/use-ledger";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 
 /**
  * Ledger Statistics Page Component
@@ -23,7 +22,6 @@ export default function LedgerStatisticsPage() {
 
   return (
     <div className="space-y-4">
-      <LedgerPageSEO seoKey="ledgerStatistics" />
       <PageHeader
         title={t("page.statistics.statistics")}
         description={t("common.pageDescription.statistics", {

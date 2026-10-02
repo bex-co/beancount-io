@@ -490,6 +490,12 @@ envelopes. Other provider failures retain their HTTP status with a generic
 product error; provider messages, links, and credentials are never copied into
 that error. Shared capacity is not currently reported by the monthly usage API.
 
+### Public ledger sitemap
+
+The anonymous `GET /api-gateway/sitemap.xml` endpoint lists public ledger pages.
+Its [sitemap operations guide](./docs/sitemap.md) documents complete pagination,
+cache and failure behavior, canonical URLs, and post-deployment verification.
+
 ## Connecting an MCP client
 
 The backend serves a stateless Streamable HTTP endpoint at

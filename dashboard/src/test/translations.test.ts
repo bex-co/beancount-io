@@ -67,24 +67,42 @@ function collectReferencedTranslationKeys(
       true,
       scriptKind,
     );
+    const ledgerHeadImports = new Set<string>();
+    for (const statement of sourceFile.statements) {
+      if (
+        !ts.isImportDeclaration(statement) ||
+        !ts.isStringLiteral(statement.moduleSpecifier) ||
+        statement.moduleSpecifier.text !== "@/common/lib/seo/ledger-head"
+      ) {
+        continue;
+      }
+      const bindings = statement.importClause?.namedBindings;
+      if (!bindings || !ts.isNamedImports(bindings)) continue;
+      for (const binding of bindings.elements) {
+        if (
+          (binding.propertyName ?? binding.name).text === "createLedgerHead"
+        ) {
+          ledgerHeadImports.add(binding.name.text);
+        }
+      }
+    }
 
     const visit = (node: ts.Node): void => {
       if (ts.isStringLiteralLike(node) && isKnownKey(node.text, validKeys)) {
         referencedKeys.add(node.text);
       }
 
-      // LedgerPageSEO builds keys dynamically as `seo.${seoKey}.title` and
-      // `seo.${seoKey}.description`, so record both generated keys when the
-      // component receives a static seoKey prop.
+      // The ledger head helper builds the title/description keys from its
+      // static second argument. Only calls to the imported helper count.
       if (
-        ts.isJsxAttribute(node) &&
-        ts.isIdentifier(node.name) &&
-        node.name.text === "seoKey" &&
-        node.initializer &&
-        ts.isStringLiteral(node.initializer)
+        ts.isCallExpression(node) &&
+        ts.isIdentifier(node.expression) &&
+        ledgerHeadImports.has(node.expression.text) &&
+        node.arguments[1] &&
+        ts.isStringLiteralLike(node.arguments[1])
       ) {
-        referencedKeys.add(`seo.${node.initializer.text}.title`);
-        referencedKeys.add(`seo.${node.initializer.text}.description`);
+        referencedKeys.add(`seo.${node.arguments[1].text}.title`);
+        referencedKeys.add(`seo.${node.arguments[1].text}.description`);
       }
 
       ts.forEachChild(node, visit);
@@ -589,6 +607,53 @@ describe("Translation Files Validation", () => {
   });
 
   describe("Source Code Translation Key Validation", () => {
+    it.each(["createLedgerHead", "routeHead"])(
+      "recognizes generated metadata keys through the imported %s helper",
+      (localName) => {
+        const referenced = collectReferencedTranslationKeys(
+          {
+            "../routes/ledger.tsx": {
+              default: `import { createLedgerHead as ${localName} } from "@/common/lib/seo/ledger-head";
+                export const head = args => ${localName}(args, "ledgerOverview");`,
+            },
+          },
+          new Set([
+            "seo.ledgerOverview.title",
+            "seo.ledgerOverview.description",
+            "seo.ledgerUnused.title",
+            "seo.ledgerUnused.description",
+          ]),
+        );
+        expect(referenced).toEqual(
+          new Set([
+            "seo.ledgerOverview.title",
+            "seo.ledgerOverview.description",
+          ]),
+        );
+      },
+    );
+
+    it("does not treat unrelated calls, unused imports, obsolete JSX or tests as metadata usage", () => {
+      const referenced = collectReferencedTranslationKeys(
+        {
+          "../routes/unrelated.ts": {
+            default: `import { createLedgerHead } from "./another-helper";
+              createLedgerHead(args, "ledgerUnused");`,
+          },
+          "../routes/unused.tsx": {
+            default: `import { createLedgerHead } from "@/common/lib/seo/ledger-head";
+              export const content = <OtherComponent seoKey="ledgerUnused" />;`,
+          },
+          "../routes/__tests__/ledger.test.ts": {
+            default: `import { createLedgerHead } from "@/common/lib/seo/ledger-head";
+              createLedgerHead(args, "ledgerUnused");`,
+          },
+        },
+        new Set(["seo.ledgerUnused.title", "seo.ledgerUnused.description"]),
+      );
+      expect(referenced.size).toBe(0);
+    });
+
     it("should not define translations that are unused by production code", async () => {
       const locales = await loadAllLocales();
       const enTranslations = locales.get("en");

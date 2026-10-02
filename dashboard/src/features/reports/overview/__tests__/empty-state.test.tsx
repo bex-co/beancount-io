@@ -37,6 +37,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
     </a>
   ),
   useParams: () => ({ ledgerOwner: "demo", ledgerName: "empty" }),
+  useLoaderData: () => ({}),
 }));
 
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({

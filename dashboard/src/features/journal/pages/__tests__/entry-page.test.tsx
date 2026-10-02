@@ -40,22 +40,6 @@ vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({ ledgerName: "Real Estate Example" }),
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: ({
-    seoKey,
-    canonicalUrl,
-  }: {
-    seoKey: string;
-    canonicalUrl?: string;
-  }) => (
-    <div
-      data-testid="ledger-page-seo"
-      data-seo-key={seoKey}
-      data-canonical={canonicalUrl}
-    />
-  ),
-}));
-
 vi.mock("@/features/journal/components/entry-context-panel", () => ({
   EntryContextPanel: ({
     entryHash,
@@ -111,16 +95,6 @@ describe("EntryPage", () => {
     );
     expect(screen.getByTestId("entry-hash")).not.toHaveTextContent(
       "2f4431f658f3553e73512ea3ebc1a2d4",
-    );
-  });
-
-  it("emits generic SEO without embedding the entry hash in the seo key", () => {
-    render(<EntryPage />);
-
-    const seo = screen.getByTestId("ledger-page-seo");
-    expect(seo).toHaveAttribute("data-seo-key", "ledgerEntry");
-    expect(seo.getAttribute("data-canonical")).toBe(
-      "https://beancount.io/ledger/open_ledger/real-estate-example/entry/2f4431f658f3553e73512ea3ebc1a2d4",
     );
   });
 

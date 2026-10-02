@@ -88,9 +88,9 @@ describe("ledger route head metadata", () => {
       join(ROUTES_DIR, `${LEDGER_ROUTE_PREFIX}.budget.tsx`),
       "utf8",
     );
-    expect(accountsSource).toContain("seo.ledgerAccounts.title");
-    expect(accountsSource).toContain("seo.ledgerAccounts.description");
-    expect(budgetSource).toContain("seo.ledgerBudget.title");
-    expect(budgetSource).toContain("seo.ledgerBudget.description");
+    expect(accountsSource).toContain(
+      'createLedgerHead(args, "ledgerAccounts")',
+    );
+    expect(budgetSource).toContain('createLedgerHead(args, "ledgerBudget")');
   });
 });

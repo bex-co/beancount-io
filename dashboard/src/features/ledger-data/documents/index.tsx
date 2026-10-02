@@ -25,7 +25,6 @@ import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedger } from "@/common/hooks/use-ledger";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { getClickableRowProps } from "@/common/components/clickable-row";
 
 type LedgerDocument = GetLedgerDocumentsQuery["getLedgerDocuments"][number];
@@ -126,7 +125,6 @@ export default function LedgerDocumentsPage() {
 
   return (
     <div className="space-y-4">
-      <LedgerPageSEO seoKey="ledgerDocuments" />
       <PageHeader
         title={t("page.documents.documents")}
         description={t("common.pageDescription.documents", {

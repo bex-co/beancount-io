@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { UserPostgresModel } from "../postgres-impl";
 import type { CreateUserInput } from "../types";
 import { PgDialect } from "drizzle-orm/pg-core";
+import { drizzle } from "drizzle-orm/node-postgres";
 
 jest.mock("bcryptjs", () => ({
   hash: jest.fn().mockResolvedValue("hashed-password"),
@@ -83,6 +84,19 @@ describe("UserPostgresModel", () => {
       // avatarUrl computed from makeGravatar since avatar is null
       expect(result!.avatarUrl).toMatch(/gravatar\.com\/avatar\//);
     });
+  });
+
+  it("orders active-user pages by ID before applying limit and offset", async () => {
+    const query = jest.fn().mockResolvedValue({ rows: [] });
+    const db = drizzle({ query } as never);
+
+    await model.getActiveUsersWithUsername(db, { limit: 1000, offset: 1000 });
+
+    const [statement, parameters] = query.mock.calls[0];
+    expect(statement.text).toMatch(
+      /order by "[^"]+"\."id" limit \$\d+ offset \$\d+/,
+    );
+    expect(parameters).toEqual([true, 1000, 1000]);
   });
 
   describe("getByMail", () => {

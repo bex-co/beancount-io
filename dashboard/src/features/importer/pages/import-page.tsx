@@ -7,7 +7,6 @@ import { AiCfoUpgradePanel } from "@/common/components/ai-cfo-upgrade-panel";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 
 export default function ImportPage() {
   const { t } = useTranslations();
@@ -20,7 +19,6 @@ export default function ImportPage() {
 
   return (
     <div className="space-y-6">
-      <LedgerPageSEO seoKey="ledgerImport" noIndex />
       {/* Header */}
       <PageHeader
         title={t("page.importer.title")}

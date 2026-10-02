@@ -19,7 +19,6 @@ import { QueryResultCard } from "../components/query-result-card";
 import { BQL_LANGUAGE_ID, registerBqlLanguage } from "../lib/bql-language";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { track } from "@/common/analytics";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import {
   BQL_QUERY_SNIPPETS,
   bqlQuerySnippetRange,
@@ -227,7 +226,6 @@ export default function LedgerQueryPage() {
 
   return (
     <div className="container mx-auto space-y-6">
-      <LedgerPageSEO seoKey="ledgerQuery" noIndex />
       <PageHeader
         title={t("page.bql.query")}
         description={t("common.pageDescription.query", {

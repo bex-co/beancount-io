@@ -28,6 +28,11 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
   useParams: () => ({ ledgerOwner: "open_ledger", ledgerName: "example" }),
+  useLoaderData: () => ({}),
+}));
+
+vi.mock("@/common/hooks/use-ledger-readme", () => ({
+  useLedgerReadme: () => ({ content: null, loading: false }),
 }));
 
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({
@@ -87,9 +92,6 @@ vi.mock("@/features/ai-agent/components/quick-ask-input", () => ({
 }));
 vi.mock("@/common/components/ledger-permission/write", () => ({
   LedgerWritePermission: () => null,
-}));
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
 }));
 vi.mock("@/common/components/readme-card", () => ({ ReadmeCard: () => null }));
 vi.mock("../components/net-worth-card", () => ({

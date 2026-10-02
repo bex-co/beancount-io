@@ -1,19 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import CommitDetailPage from "@/features/git/commits/pages/commit-detail-page";
-import { createHeadMeta, getSEOMetadata } from "@/common/lib/seo/seo-helpers";
+import { createLedgerHead } from "@/common/lib/seo/ledger-head";
 
 export const Route = createFileRoute(
   "/ledger/$ledgerOwner/$ledgerName/commit/$commitSha",
 )({
   component: CommitDetailPage,
-  head: ({ params, match }) => {
-    const shortSha = params.commitSha.slice(0, 7);
-    const metadata = getSEOMetadata(
-      match.context.localization.i18n,
-      "seo.ledgerCommit.title",
-      "seo.ledgerCommit.description",
-      { ledgerName: params.ledgerName, shortSha },
-    );
-    return createHeadMeta(match.context.localization.i18n, metadata);
-  },
+  head: (args) => createLedgerHead(args, "ledgerCommit"),
 });

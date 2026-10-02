@@ -23,8 +23,6 @@ import { track } from "@/common/analytics";
 import { config } from "@/config/config";
 import { AgentChatInput } from "./agent-chat-input";
 import { AgentMessageList, type AgentUIMessage } from "./agent-message-list";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
-import { getLedgerAgentCanonicalUrl } from "@/common/lib/seo/indexability";
 
 import { buildUnauthenticatedLoginHref } from "@/common/apollo/links/auth-error-link";
 import { buildAgentLoginNextUrl } from "./agent-login-next-url";
@@ -295,120 +293,110 @@ export function AgentPageImpl({
   };
 
   return (
-    <>
-      <LedgerPageSEO
-        seoKey="ledgerAsk"
-        noIndex={Boolean(initialQuestion)}
-        canonicalUrl={getLedgerAgentCanonicalUrl({
-          ledgerOwner,
-          ledgerName,
-        })}
-      />
-      <div className="relative flex h-full min-h-0 w-full flex-col">
-        <div
-          ref={messagesContainerRef}
-          onScroll={handleScroll}
-          className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain"
+    <div className="relative flex h-full min-h-0 w-full flex-col">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain"
+      >
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-1 pb-8 pt-1 sm:px-3 sm:pt-2">
+          <PageHeader
+            title={t("aiAgent.title", { ledgerName: ledgerDisplayName })}
+            description={t("common.pageDescription.ask", {
+              ledgerName: ledgerDisplayName ?? ledgerName,
+            })}
+            className="gap-1.5 space-y-0 pb-1 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-foreground [&_p]:leading-5"
+          />
+          {isAuthenticated ? <AiCfoUpgradePanel className="mb-0" /> : null}
+          {isReadOnly ? (
+            <div
+              role="status"
+              className="flex gap-3 rounded-lg border border-border/70 bg-muted/50 px-4 py-3 text-sm"
+            >
+              <LockKeyhole
+                className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <div>
+                <p className="font-medium text-foreground">
+                  {t("aiAgent.readOnlyTitle")}
+                </p>
+                <p className="text-muted-foreground">
+                  {t("aiAgent.readOnlyDescription")}
+                </p>
+              </div>
+            </div>
+          ) : null}
+          <AgentMessageList
+            messages={messages}
+            isLoading={isLoading}
+            addToolApprovalResponse={addToolApprovalResponse}
+            durations={responseDurationsMs}
+          />
+        </div>
+      </div>
+
+      {!shouldAutoScroll && (
+        <Button
+          onClick={() => {
+            setShouldAutoScroll(true);
+            messagesContainerRef.current?.scrollTo({
+              top: messagesContainerRef.current.scrollHeight,
+              behavior: "smooth",
+            });
+          }}
+          variant="outline"
+          size="icon-sm"
+          className="absolute bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-background/95 shadow-md backdrop-blur sm:bottom-28"
+          aria-label={t("aiAgent.scrollToBottom")}
         >
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-1 pb-8 pt-1 sm:px-3 sm:pt-2">
-            <PageHeader
-              title={t("aiAgent.title", { ledgerName: ledgerDisplayName })}
-              description={t("common.pageDescription.ask", {
-                ledgerName: ledgerDisplayName ?? ledgerName,
-              })}
-              className="gap-1.5 space-y-0 pb-1 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-foreground [&_p]:leading-5"
-            />
-            {isAuthenticated ? <AiCfoUpgradePanel className="mb-0" /> : null}
-            {isReadOnly ? (
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      )}
+
+      {!isAwaitingApproval && (
+        <div className="relative z-40 shrink-0">
+          <div className="pointer-events-none absolute inset-x-0 -top-8 h-8 bg-gradient-to-t from-background to-transparent" />
+          <div className="mx-auto w-full max-w-3xl px-1 pb-1 pt-2 sm:px-3 sm:pb-2">
+            {canRetryNetworkError ? (
               <div
-                role="status"
-                className="flex gap-3 rounded-lg border border-border/70 bg-muted/50 px-4 py-3 text-sm"
+                role="alert"
+                className="mb-2 flex flex-col gap-2 rounded-lg border border-border/70 bg-muted/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
               >
-                <LockKeyhole
-                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <div>
-                  <p className="font-medium text-foreground">
-                    {t("aiAgent.readOnlyTitle")}
-                  </p>
-                  <p className="text-muted-foreground">
-                    {t("aiAgent.readOnlyDescription")}
-                  </p>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  {formatError(error)}
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0 self-start sm:self-auto"
+                  disabled={isLoading}
+                  onClick={() => {
+                    void regenerate();
+                  }}
+                >
+                  {t("common.tryAgain")}
+                </Button>
               </div>
             ) : null}
-            <AgentMessageList
-              messages={messages}
-              isLoading={isLoading}
-              addToolApprovalResponse={addToolApprovalResponse}
-              durations={responseDurationsMs}
+            <AgentChatInput
+              value={input}
+              onValueChange={setInput}
+              onSubmit={() => void handleSubmit()}
+              onStop={() => {
+                void stop();
+                toast.message(t("aiAgent.stopped"));
+              }}
+              placeholder={t("aiAgent.placeholder")}
+              disabled={isLoading}
+              stagedFiles={stagedFiles}
+              onFilesSelected={(files) => void handleFilesSelected(files)}
+              onRemoveFile={handleRemoveFile}
             />
           </div>
         </div>
-
-        {!shouldAutoScroll && (
-          <Button
-            onClick={() => {
-              setShouldAutoScroll(true);
-              messagesContainerRef.current?.scrollTo({
-                top: messagesContainerRef.current.scrollHeight,
-                behavior: "smooth",
-              });
-            }}
-            variant="outline"
-            size="icon-sm"
-            className="absolute bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-background/95 shadow-md backdrop-blur sm:bottom-28"
-            aria-label={t("aiAgent.scrollToBottom")}
-          >
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-        )}
-
-        {!isAwaitingApproval && (
-          <div className="relative z-40 shrink-0">
-            <div className="pointer-events-none absolute inset-x-0 -top-8 h-8 bg-gradient-to-t from-background to-transparent" />
-            <div className="mx-auto w-full max-w-3xl px-1 pb-1 pt-2 sm:px-3 sm:pb-2">
-              {canRetryNetworkError ? (
-                <div
-                  role="alert"
-                  className="mb-2 flex flex-col gap-2 rounded-lg border border-border/70 bg-muted/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <p className="text-sm text-muted-foreground">
-                    {formatError(error)}
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="shrink-0 self-start sm:self-auto"
-                    disabled={isLoading}
-                    onClick={() => {
-                      void regenerate();
-                    }}
-                  >
-                    {t("common.tryAgain")}
-                  </Button>
-                </div>
-              ) : null}
-              <AgentChatInput
-                value={input}
-                onValueChange={setInput}
-                onSubmit={() => void handleSubmit()}
-                onStop={() => {
-                  void stop();
-                  toast.message(t("aiAgent.stopped"));
-                }}
-                placeholder={t("aiAgent.placeholder")}
-                disabled={isLoading}
-                stagedFiles={stagedFiles}
-                onFilesSelected={(files) => void handleFilesSelected(files)}
-                onRemoveFile={handleRemoveFile}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    </>
+      )}
+    </div>
   );
 }

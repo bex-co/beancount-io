@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
-import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
+import { createLedgerHead } from "@/common/lib/seo/ledger-head";
 import FilesContentPage from "@/features/ledger-editor/files-content";
 
 const filesSchema = z.object({
@@ -42,18 +42,6 @@ export const Route = createFileRoute(
       replace: true,
     });
   },
-  head: ({ params, match }) =>
-    createHeadMeta(
-      match.context.localization.i18n,
-      getSEOMetadata(
-        match.context.localization.i18n,
-        "seo.ledgerFiles.title",
-        "seo.ledgerFiles.description",
-        {
-          ledgerName: params.ledgerName,
-        },
-      ),
-      { noIndex: true },
-    ),
+  head: (args) => createLedgerHead(args, "ledgerFiles", { noIndex: true }),
   ssr: false, // Disable SSR - dedicated route for webview with client-side auth
 });

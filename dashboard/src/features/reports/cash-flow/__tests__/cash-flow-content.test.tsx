@@ -55,9 +55,7 @@ vi.mock("../cash-flow-charts", () => ({
 vi.mock("../export/statement-export-menu", () => ({
   StatementExportMenu: () => null,
 }));
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
+
 vi.mock("@/common/components/conversion-select", () => ({
   ConversionSelect: () => <div data-testid="conversion-select" />,
 }));

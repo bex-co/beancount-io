@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LedgerIncomeStatementPage from "@/features/reports/income-statement";
 import { ledgerFilterLoaderDeps } from "@/common/lib/ledger-search-params";
-import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
+import { createLedgerHead } from "@/common/lib/seo/ledger-head";
 import { incomeStatementLoader } from "@/features/reports/income-statement/loader";
 import { viewSearchSchema } from "@/features/reports/income-statement/search";
 
@@ -11,15 +11,6 @@ export const Route = createFileRoute(
   component: LedgerIncomeStatementPage,
   validateSearch: (search) => viewSearchSchema.parse(search),
   loaderDeps: ({ search }) => ledgerFilterLoaderDeps(search),
-  head: ({ params, match }) =>
-    createHeadMeta(
-      match.context.localization.i18n,
-      getSEOMetadata(
-        match.context.localization.i18n,
-        "seo.ledgerIncomeStatement.title",
-        "seo.ledgerIncomeStatement.description",
-        { ledgerName: params.ledgerName },
-      ),
-    ),
+  head: (args) => createLedgerHead(args, "ledgerIncomeStatement"),
   loader: incomeStatementLoader,
 });

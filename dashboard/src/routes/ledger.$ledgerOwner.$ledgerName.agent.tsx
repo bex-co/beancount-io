@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import AgentPage from "@/features/ai-agent/pages/agent";
-import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
+import { createLedgerHead } from "@/common/lib/seo/ledger-head";
 
 const searchSchema = z.object({
   q: z.string().optional(),
@@ -10,17 +10,8 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/agent")({
   component: AgentPage,
   validateSearch: searchSchema,
-  head: ({ params, match }) =>
-    createHeadMeta(
-      match.context.localization.i18n,
-      getSEOMetadata(
-        match.context.localization.i18n,
-        "seo.ledgerAsk.title",
-        "seo.ledgerAsk.description",
-        {
-          ledgerName: params.ledgerName,
-        },
-      ),
-      { noIndex: Boolean(match.search.q) },
-    ),
+  head: (args) =>
+    createLedgerHead(args, "ledgerAsk", {
+      noIndex: Boolean(args.match.search.q),
+    }),
 });

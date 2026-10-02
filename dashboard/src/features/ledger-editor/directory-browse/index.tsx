@@ -1,7 +1,6 @@
 import { useParams } from "@tanstack/react-router";
 import LedgerDirectoryView from "./components/ledger-directory-view";
 import { createLedgerId } from "@/common/lib/utils/encode";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 
 export default function LedgerDirectoryPage() {
   const params = useParams({
@@ -14,7 +13,6 @@ export default function LedgerDirectoryPage() {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-      <LedgerPageSEO seoKey="ledgerFiles" noIndex />
       <div className="flex-1">
         <LedgerDirectoryView ledgerId={ledgerId} currentPath={dirPath} />
       </div>

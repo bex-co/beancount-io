@@ -6,6 +6,7 @@ node_modules
 .claude
 .vscode
 coverage
+tmp
 
 api-gateway.graphql
 src/graphql/definitions.ts

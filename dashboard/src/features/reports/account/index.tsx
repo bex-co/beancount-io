@@ -61,7 +61,6 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { accountQueryDefaults } from "./constants";
 import { getAccountJournalWithChildren } from "@/common/lib/fava-options";
 
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { isAccountReportEmpty } from "./lib/account-report-empty";
 import { useReportConversion } from "@/features/reports/components/use-report-conversion";
 
@@ -462,7 +461,6 @@ export default function AccountPage() {
   if (!accountReportData) {
     return (
       <div className="space-y-4">
-        <LedgerPageSEO seoKey="ledgerAccount" params={{ accountName }} />
         <PageHeader
           title={accountName}
           description={t("common.pageDescription.account", {
@@ -484,7 +482,6 @@ export default function AccountPage() {
 
   return (
     <div className="space-y-4">
-      <LedgerPageSEO seoKey="ledgerAccount" params={{ accountName }} />
       <PageHeader
         title={accountName}
         description={t("common.pageDescription.account", {

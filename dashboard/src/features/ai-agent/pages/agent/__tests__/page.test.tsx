@@ -55,10 +55,6 @@ vi.mock("@/common/analytics", () => ({
   track: vi.fn(),
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 vi.mock("@/common/components/ai-cfo-upgrade-panel", () => ({
   AiCfoUpgradePanel: () => null,
 }));

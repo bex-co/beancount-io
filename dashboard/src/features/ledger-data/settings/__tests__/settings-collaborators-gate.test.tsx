@@ -26,10 +26,6 @@ vi.mock("@/common/components/ledger-permission/admin", () => ({
     permissionState.isAdmin ? <>{children}</> : null,
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 vi.mock("@/common/components/page-header", () => ({
   PageHeader: () => <div>page-header</div>,
 }));

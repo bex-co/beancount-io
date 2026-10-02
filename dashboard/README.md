@@ -102,12 +102,31 @@ for the registry inventory, production comparison, and reproduction steps.
 
 ## Route loading
 
-Ledger routes wait only for the ledger and the page's primary report. Optional
-panels — the sidebar directive count, the README card, and the account metadata
-behind the cash-flow chart — own their own requests and show pending states, so a
-slow optional request no longer delays primary content. See
+Ledger routes wait for the ledger and the page's primary report. An authorized
+public overview also attempts to include `README.md` in its initial HTML, with a
+one-second file-read deadline. Private README files, sidebar directive counts,
+and account metadata remain deferred; client navigation does not wait for the
+README. Missing files render no card, while failed or timed-out server reads can
+recover in the browser. See
 [route loading measurements](./docs/performance-route-loading.md) for the
 delay-injection traces, request accounting, and reproduction steps.
+
+## Public ledger presentation
+
+Public readers can open the [stock example](https://beancount.io/ledger/open_ledger/stock-example)
+without signing in. The overview uses the ledger's `option "title"`, falling back
+to its name, and introduces the ledger using its description or the first README
+paragraph. With no saved layout, ledger notes precede reports; jump links reach
+either section. Saved layouts and owners' defaults remain available. Unfiltered
+money movement initially selects the latest month with income or expense
+activity; explicit periods and user selections remain authoritative.
+
+The router owns ledger titles, descriptions, canonical links and social metadata
+through `src/common/lib/seo/ledger-head.ts`. The public overview shares its title
+and introduction policy with the visible page. Private and editor routes retain
+their noindex policy. Social previews use the owned 256×256 logo with a small
+summary card. Public URL discovery is covered by the backend's
+[sitemap contract](../backend-cluster/backend-v2/docs/sitemap.md).
 
 ## Personal access tokens
 

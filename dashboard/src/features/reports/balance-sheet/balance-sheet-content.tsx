@@ -21,7 +21,6 @@ import { IntervalSelect } from "@/common/components/interval-select";
 import { ConversionSelect } from "@/common/components/conversion-select";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { filterAccountHierarchy } from "./utils";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
 import { StatementExportMenu } from "../export/statement-export-menu";
@@ -172,7 +171,6 @@ export function BalanceSheetContent({
 
   return (
     <div className="space-y-6">
-      <LedgerPageSEO seoKey="ledgerBalanceSheet" />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
           className="min-w-0"

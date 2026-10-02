@@ -38,6 +38,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
     </a>
   ),
   useParams: () => ({ ledgerOwner: "demo", ledgerName: "empty" }),
+  useLoaderData: () => ({}),
 }));
 
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({
@@ -74,9 +75,6 @@ vi.mock("@/features/ai-agent/components/quick-ask-input", () => ({
 }));
 vi.mock("@/common/components/ledger-permission/write", () => ({
   LedgerWritePermission: () => null,
-}));
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
 }));
 // The modules themselves are not under test here; only which are shown.
 vi.mock("../components/net-worth-card", () => ({

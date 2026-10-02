@@ -1,20 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LedgerErrorsPage from "@/features/ledger-data/errors";
-import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
+import { createLedgerHead } from "@/common/lib/seo/ledger-head";
 
 export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/errors")(
   {
     component: LedgerErrorsPage,
-    head: ({ params, match }) =>
-      createHeadMeta(
-        match.context.localization.i18n,
-        getSEOMetadata(
-          match.context.localization.i18n,
-          "seo.ledgerErrors.title",
-          "seo.ledgerErrors.description",
-          { ledgerName: params.ledgerName },
-        ),
-        { noIndex: true },
-      ),
+    head: (args) => createLedgerHead(args, "ledgerErrors", { noIndex: true }),
   },
 );

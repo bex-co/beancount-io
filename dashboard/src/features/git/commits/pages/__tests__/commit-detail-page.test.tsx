@@ -14,10 +14,6 @@ vi.mock("@/common/hooks/use-translations", () => ({
   }),
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 vi.mock("../../components/commits-split-view", () => ({
   default: ({ ledgerId, selectedCommitSha }: any) => (
     <div data-testid="commits-split-view">

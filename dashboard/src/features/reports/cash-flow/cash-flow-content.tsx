@@ -3,7 +3,6 @@ import { ClientOnly } from "@tanstack/react-router";
 import { DollarSign, Layers } from "lucide-react";
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
 import { ConversionSelect } from "@/common/components/conversion-select";
@@ -194,7 +193,6 @@ export function CashFlowContent({
 
   return (
     <div className="space-y-6">
-      <LedgerPageSEO seoKey="ledgerCashFlow" />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
           className="min-w-0"

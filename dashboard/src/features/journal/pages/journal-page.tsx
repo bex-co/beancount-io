@@ -45,7 +45,6 @@ import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { Authenticated } from "@/common/components/authenticated";
 import { useLedger } from "@/common/hooks/use-ledger";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import {
   JOURNAL_MAX_OFFSET,
@@ -393,7 +392,6 @@ const LedgerJournalPage = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <LedgerPageSEO seoKey="ledgerJournal" />
       <PageHeader
         title={t("journal.journal")}
         description={t("common.pageDescription.journal", {

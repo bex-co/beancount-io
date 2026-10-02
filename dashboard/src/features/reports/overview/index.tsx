@@ -22,7 +22,7 @@ import {
   GetLedgerOverviewDocument,
   GetLedgerOverviewValuationDocument,
 } from "@/graphql/definitions";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useLoaderData, useParams } from "@tanstack/react-router";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { useLedger } from "@/common/hooks/use-ledger";
@@ -33,7 +33,9 @@ import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import CashFlowSankey from "./components/cash-flow-sankey";
 import { overviewQueryDefaults } from "./constants";
 import { ReadmeCard } from "@/common/components/readme-card";
-import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
+import { useLedgerReadme } from "@/common/hooks/use-ledger-readme";
+import type { InitialLedgerReadme } from "@/common/lib/ledger-readme";
+import { resolveLedgerPresentation } from "@/common/lib/seo/ledger-presentation";
 import { getInvertIncomeLiabilitiesEquity } from "@/common/lib/fava-options";
 import { StarButton } from "./components/star-button";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
@@ -59,6 +61,55 @@ import { hasOverviewActivity, toLocalISODate } from "./lib/overview-utils";
 import { describeLatestNetWorth } from "./lib/net-worth-valuation";
 import { EmptyLedgerSetup } from "./components/empty-ledger-setup";
 
+function PublicLedgerIntroduction({
+  ledgerId,
+  initialReadme,
+  name,
+  description,
+  readmeVisible,
+  reportsHref,
+}: {
+  ledgerId: string;
+  initialReadme?: InitialLedgerReadme;
+  name: string;
+  description?: string | null;
+  readmeVisible: boolean;
+  reportsHref?: string;
+}) {
+  const { t } = useTranslations();
+  const { content } = useLedgerReadme(ledgerId, initialReadme);
+  const presentation = resolveLedgerPresentation({
+    name,
+    description,
+    readme: content,
+    fallbackDescription: t("common.pageDescription.overview", {
+      ledgerName: name,
+    }),
+  });
+  return (
+    <>
+      <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        {presentation.description}
+      </p>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+        {readmeVisible && content && (
+          <a
+            href="#overview-ledger-notes"
+            className="underline underline-offset-4"
+          >
+            {t("page.overview.ledgerNotes")}
+          </a>
+        )}
+        {reportsHref && (
+          <a href={reportsHref} className="underline underline-offset-4">
+            {t("common.reports")}
+          </a>
+        )}
+      </div>
+    </>
+  );
+}
+
 /**
  * Overview page component
  * This page shows ledger overview information
@@ -68,17 +119,27 @@ export default function LedgerOverviewPage() {
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/",
   });
+  const loaderData = useLoaderData({
+    from: "/ledger/$ledgerOwner/$ledgerName/",
+  });
+  const initialReadme = loaderData?.readme;
 
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
-  const { layout, setVisible, move, reset } = useDashboardLayout(ledgerId);
+  const {
+    primaryCurrency,
+    ledgerName: ledgerDisplayName,
+    ledgerData,
+  } = useLedger();
+  const { isAdmin, canWrite } = useLedgerPermission();
+  const publicReader = !ledgerData.private && !canWrite;
+  const { layout, setVisible, move, reset } = useDashboardLayout(
+    ledgerId,
+    publicReader,
+  );
   // One customization panel for both entry points; see DashboardCustomizer.
   const [customizing, setCustomizing] = useState(false);
   const customizeOpener = useRef<HTMLElement | null>(null);
   const ledgerFilters = useLedgerSearchParams();
-  const { primaryCurrency, ledgerName: ledgerDisplayName } = useLedger();
-  const { isAdmin, canWrite } = useLedgerPermission();
-
-  const { ledgerData } = useLedger();
   const invertIncomeLiabilitiesEquity =
     getInvertIncomeLiabilitiesEquity(ledgerData);
 
@@ -134,8 +195,9 @@ export default function LedgerOverviewPage() {
   // Do not keep a prior period's overview cards while a replacement read is in
   // flight — the URL/filters already name the new scope. Both reads gate the
   // page, so a balance is never drawn at cost and then redrawn at market.
+  let reportState: ReactNode;
   if (overviewLoading || valuationLoading) {
-    return (
+    reportState = (
       <div className="space-y-6 md:space-y-8">
         <Card>
           <CardContent>
@@ -156,10 +218,8 @@ export default function LedgerOverviewPage() {
         </Card>
       </div>
     );
-  }
-
-  if (error) {
-    return (
+  } else if (error) {
+    reportState = (
       <div className="space-y-6 md:space-y-8">
         <Card>
           <CardHeader>
@@ -181,9 +241,19 @@ export default function LedgerOverviewPage() {
     );
   }
 
+  // Public explanations remain usable while reports fail or have no matching
+  // activity. Writers retain the existing report loading/error experience.
+  if (reportState && !publicReader) return reportState;
+
   const showStarButton = !isAdmin;
   const isStarred = ledgerData?.isStarred ?? false;
-  const displayName = ledgerDisplayName ?? ledgerName;
+  const displayName = publicReader
+    ? resolveLedgerPresentation({
+        name: ledgerData.name ?? ledgerDisplayName ?? ledgerName,
+        title: ledgerData.options.title,
+        fallbackDescription: "",
+      }).title
+    : (ledgerDisplayName ?? ledgerName);
   const overview = data?.getLedgerOverview;
   const hasActivity = hasOverviewActivity(overview);
   const hasActiveFilters = Boolean(
@@ -245,6 +315,7 @@ export default function LedgerOverviewPage() {
         primaryCurrency={primaryCurrency}
         ledgerOwner={ledgerOwner}
         ledgerName={ledgerName}
+        preferActiveMonth={publicReader}
       />
     ),
     "recent-activity": (
@@ -363,17 +434,30 @@ export default function LedgerOverviewPage() {
         </Card>
       </section>
     ),
-    readme: <ReadmeCard ledgerId={ledgerId} />,
+    readme: (
+      <div id="overview-ledger-notes" className="scroll-mt-4">
+        <ReadmeCard
+          ledgerId={ledgerId}
+          initialReadme={initialReadme}
+          headingOffset={1}
+        />
+      </div>
+    ),
   };
 
   const visibleWidgetIds = layout.order.filter(
     (id) => !layout.hidden.includes(id),
   );
+  const narrativeOnly = Boolean(reportState) || !hasActivity;
+  const firstReport = visibleWidgetIds.find((id) => id !== "readme");
+  const reportsHref = narrativeOnly
+    ? "#overview-report-state"
+    : firstReport
+      ? `#overview-widget-${firstReport}`
+      : undefined;
 
   return (
     <div className="space-y-6 pb-4 md:space-y-8">
-      <LedgerPageSEO seoKey="ledgerOverview" />
-
       <section className="relative overflow-hidden rounded-xl border bg-card shadow-sm">
         <div className="pointer-events-none absolute -top-32 -left-24 size-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="pointer-events-none absolute -top-24 right-0 size-64 rounded-full bg-chart-4/10 blur-3xl" />
@@ -384,14 +468,27 @@ export default function LedgerOverviewPage() {
                 <p className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
                   {t("common.overview")}
                 </p>
-                <h1 className="mt-1 truncate text-xl font-semibold tracking-tight sm:text-2xl">
+                <h1
+                  className={`mt-1 text-xl font-semibold tracking-tight sm:text-2xl ${publicReader ? "" : "truncate"}`}
+                >
                   {displayName}
                 </h1>
-                <p className="mt-1 max-w-2xl text-xs leading-snug text-muted-foreground sm:text-sm">
-                  {t("common.pageDescription.overview", {
-                    ledgerName: displayName,
-                  })}
-                </p>
+                {publicReader ? (
+                  <PublicLedgerIntroduction
+                    ledgerId={ledgerId}
+                    initialReadme={initialReadme}
+                    name={displayName}
+                    description={ledgerData.description}
+                    readmeVisible={visibleWidgetIds.includes("readme")}
+                    reportsHref={reportsHref}
+                  />
+                ) : (
+                  <p className="mt-1 max-w-2xl text-xs leading-snug text-muted-foreground sm:text-sm">
+                    {t("common.pageDescription.overview", {
+                      ledgerName: displayName,
+                    })}
+                  </p>
+                )}
               </div>
               {showStarButton && (
                 <StarButton
@@ -480,24 +577,32 @@ export default function LedgerOverviewPage() {
         </div>
       </section>
 
-      {!hasActivity ? (
-        hasActiveFilters ? (
-          <ReportEmptyState
-            Icon={Filter}
-            title={t("page.overview.filteredEmptyTitle")}
-            message={t("page.overview.filteredEmptyDescription")}
-          />
-        ) : (
-          <EmptyLedgerSetup
-            ledgerOwner={ledgerOwner}
-            ledgerName={ledgerName}
-            entryFile={
-              ledgerData.bcioOptions.transactionFile ??
-              ledgerData.bcioOptions.defaultFile
-            }
-            canWrite={canWrite}
-          />
-        )
+      {publicReader && narrativeOnly && visibleWidgetIds.includes("readme") && (
+        <ErrorBoundary>{widgets.readme}</ErrorBoundary>
+      )}
+
+      {reportState ? (
+        <div id="overview-report-state">{reportState}</div>
+      ) : !hasActivity ? (
+        <div id="overview-report-state">
+          {hasActiveFilters ? (
+            <ReportEmptyState
+              Icon={Filter}
+              title={t("page.overview.filteredEmptyTitle")}
+              message={t("page.overview.filteredEmptyDescription")}
+            />
+          ) : (
+            <EmptyLedgerSetup
+              ledgerOwner={ledgerOwner}
+              ledgerName={ledgerName}
+              entryFile={
+                ledgerData.bcioOptions.transactionFile ??
+                ledgerData.bcioOptions.defaultFile
+              }
+              canWrite={canWrite}
+            />
+          )}
+        </div>
       ) : visibleWidgetIds.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
@@ -515,7 +620,7 @@ export default function LedgerOverviewPage() {
         </Card>
       ) : (
         visibleWidgetIds.map((id) => (
-          <div key={id}>
+          <div key={id} id={`overview-widget-${id}`} className="scroll-mt-4">
             <ErrorBoundary>{widgets[id]}</ErrorBoundary>
           </div>
         ))

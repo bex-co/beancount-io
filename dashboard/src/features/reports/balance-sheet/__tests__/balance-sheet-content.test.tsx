@@ -51,9 +51,7 @@ vi.mock("../../export/statement-export-menu", () => ({
 vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
 }));
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
+
 vi.mock("@/common/components/interval-select", () => ({
   IntervalSelect: () => <button type="button">interval-select</button>,
 }));

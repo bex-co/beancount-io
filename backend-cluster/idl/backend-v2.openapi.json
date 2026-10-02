@@ -2097,7 +2097,7 @@
     "/api-gateway/sitemap.xml": {
       "get": {
         "summary": "Get sitemap.xml for SEO",
-        "description": "Returns a sitemap.xml file containing all public ledger pages for search engine indexing.\n\nThe sitemap includes:\n- User profile pages (/ledger/{username}/)\n- Repository pages (/ledger/{username}/{repoName}/)\n- Repository subpages (journal, balance-sheet, income-statement, trial-balance, statistics, holdings)\n\nOnly public repositories and active users are included.\n\nThe sitemap is cached for 1 hour to optimize performance.",
+        "description": "Returns a sitemap.xml file containing all public ledger pages for search engine indexing.\n\nThe sitemap includes:\n- User profile pages (/ledger/{username})\n- Repository pages (/ledger/{username}/{repoName})\n- Repository subpages (journal, balance-sheet, income-statement, trial-balance, statistics, holdings)\n\nOnly public repositories and active users are included.\n\nComplete sitemap generations are cached by the application for 24 hours with stale-while-revalidate. HTTP responses can be cached for 1 hour. Failed refreshes retain the previous artifact; cold generation failures return 500.",
         "tags": [
           "SEO"
         ],

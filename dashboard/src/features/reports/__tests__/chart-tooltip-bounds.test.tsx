@@ -50,10 +50,6 @@ vi.mock("@/common/hooks/use-ledger-permission", () => ({
   useLedgerPermission: () => ({ canWrite: false }),
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 vi.mock("@/features/ledger-data/commodities/managed-price-sources", () => ({
   ManagedPriceSources: () => null,
 }));

@@ -1,27 +1,144 @@
 # Route loading: primary content before optional panels
 
-Ledger routes gate only on the data the page cannot render without. Optional
-panels own their own queries and render honest pending states:
+Ledger routes gate on primary content. Since the public-ledger SEO work,
+an initial public overview also allows a bounded README read: its explanation
+is content a visitor should be able to read before JavaScript. Optional panels
+otherwise own their queries and render honest pending states:
 
 | Route | Awaited (gates the route) | Optional, panel-owned |
 | --- | --- | --- |
 | `/ledger/$owner/$name` (layout) | `GetLedger` — its failure is the route error (not found, private) | `GetLedgerEntriesCountPerType` — `DirectiveUsageIndicator` (owner-only sidebar gauge) renders nothing until the real count exists, so there is never a false `0 / max` |
-| `/ledger/$owner/$name/` (overview) | `GetLedgerOverview` — the page shows its own error state, so the loader swallows a failure | `GetLedgerFile` (README card, skeleton while loading, hidden on error) and `GetLedgerAccountMeta` (`useAccountMeta` → cash-flow Sankey, explicit pending state, heuristics only after a failure) |
+| `/ledger/$owner/$name/` (overview) | `GetLedgerOverview` and `GetLedgerOverviewValuation` — both are primary; the page owns report failure states. Initial public SSR additionally settles `GetLedgerFile` within a 1,000 ms file-read deadline after access is resolved. | Private/client-navigation README, and `GetLedgerAccountMeta` (`useAccountMeta` → cash-flow Sankey, explicit pending state, heuristics only after a failure) |
 
-In the browser the overview loader still starts README and account metadata
+In the browser the overview loader starts README and account metadata
 alongside the overview through `prefetchOptionalQuery`, so on client
-navigation they usually land together; it just never waits for them. During
-SSR nothing optional is started: the server never waits on, or races, an
-optional request, and the dehydrated Apollo cache carries only awaited data.
-The panel's `useQuery` then issues each optional operation exactly once after
-hydration (Apollo deduplicates an in-flight prefetch when the panel mounts).
+navigation they usually land together; it never waits for them. During SSR,
+only a ledger whose authorized result says `private: false` gets the bounded
+README read. Account metadata and counts remain client-only.
+
+The public read starts alongside primary work and reuses the parent's ledger
+request/cache. It uses `no-cache` until a timely successful response explicitly
+writes the request-scoped cache. On a deadline/navigation abort, the transport
+is cancelled and late results cannot write that cache even if cancellation is
+ignored. The loader returns a matching ledger/path snapshot with decoded content
+or an unavailable outcome. `useLedgerReadme` uses that snapshot for initial
+rendering and only enables live Apollo reads after hydration, preserving the
+fast-prefetch race protection. A successful SSR response therefore needs no
+equivalent hydration refetch; timeout/failure recovery intentionally retries in
+the browser. A missing/empty README settles as an absent explanation.
+
+The one-second budget is a deliberate maximum file wait, not a claim of zero
+added public TTFB. Normal fixture reads at 400 ms fit within it; a two-second
+optional delay must fall back. The deadline begins after existing ledger access
+resolution and overlaps report requests. Report/backend latency outside this
+file read is not bounded by it. No shared cross-request README/HTML cache or
+crawler-specific rendering is used.
 
 Declared `cash-flow-role` metadata stays authoritative: while the directives
 are loading, the Sankey reserves its space with a pending state instead of
 drawing the heuristic layout as if it were final. A failed or unsupported
 metadata query degrades to the name heuristics exactly as before.
 
-## Delay injection, request accounting and correctness
+## Public overview validation: October 2
+
+The current baseline is `28171bf7`, including the cost and market-valuation
+queries. Its production output was saved before editing, then compared with the
+candidate using anonymous `open_ledger/stock-example` responses recorded by the
+same fixture script. No credentials or private ledger data were recorded.
+
+Initial baseline observations used three fresh browser contexts at 390×844,
+400 ms per fixture operation, no browser network/CPU throttling, and an
+additional 2,000 ms on `GetLedgerFile` for the slow-file case:
+
+| Baseline case | TTFB range | Financial-position DOM range | README prose DOM range |
+| --- | ---: | ---: | ---: |
+| Normal file | 860–1,585 ms | 876–1,624 ms | 1,637–2,532 ms |
+| Slow file | 896–2,467 ms | 928–2,507 ms | 3,658–5,431 ms |
+
+All six baseline documents omitted the README prose initially and had three
+titles after hydration. There were no page errors. These runs had concurrent
+local test activity and substantial variance; they are diagnostic ranges, not a
+controlled performance claim or production Core Web Vitals. DOM appearance is
+also not the same as first paint or LCP.
+
+The selected file deadline is **1,000 ms after public access resolves**, shared
+by every visitor. It accommodates the normal 400 ms fixture response and bounds
+the slow file's wait. The authorized ledger read may overlap the primary report
+queries; its own duration remains governed by the existing route. The new
+deadline does not change that access check or bound total document time.
+
+Regression tests exercise a real Apollo client and controllable transport:
+public access deduplication, absent/empty/malformed files, private/denied access,
+abort, failure/retry, and a transport that ignores cancellation. Late file
+responses cannot mutate the serialized cache. DOM hydration tests preserve the
+surrounding heading even when the browser cache already holds a different file
+or a missing result; later cache updates and deletion still render. The document
+head test covers SSR, hydration, report navigation and browser back.
+
+The final local production build was measured with the same three-context
+fixture setup:
+
+| Candidate case | TTFB range | Financial-position DOM range | README prose DOM range | Initial README |
+| --- | ---: | ---: | ---: | --- |
+| Normal file | 1,281–2,136 ms | 1,297–2,173 ms | 1,297–2,170 ms | Present in all three |
+| Slow file (+2,000 ms) | 1,837–4,706 ms | 1,852–4,807 ms | 4,577–7,799 ms | Deadline fallback in all three |
+
+The normal candidate sends the explanation in the document, with one server
+file request and no equivalent hydration request. The slow candidate sends its
+fallback and makes one intentional browser retry. All six hydrated documents had
+one authored title, one description, the slashless canonical and no page errors
+or horizontal mobile overflow. The README card started about 498 px down at
+390×844, compared with roughly 5,000 px in the original live-page audit.
+
+This is an explicit latency tradeoff. With the simulated request chain, the
+normal README read adds about one 400 ms backend round trip after access; a slow
+read can consume its one-second budget. The broad measured ranges include local
+CPU/scheduling contention and are not evidence of an overall speedup. The timer
+bounds the file operation's scheduled wait, not total TTFB or event-loop stalls.
+A desktop client-navigation check with the slow file still showed primary
+content at 1,024 ms and README at 3,001 ms, with only a browser file request.
+
+Additional production-build browser checks:
+
+- JavaScript-disabled stock-example renders prose, headings, four code blocks
+  and tables. Its authored README has no Markdown links; an augmented synthetic
+  fixture renders an ordinary documentation link without JavaScript and strips
+  an injected script through the unchanged sanitizer.
+- French and Chinese UI keep the authored English explanation, one H1 and
+  correctly localized HTML language/alternates. Canonicals retain supported
+  `lang` while removing explicit time/tracking parameters. Report and Journal
+  links, followed by browser back, retain one metadata owner.
+- Missing, empty, malformed and failed files remove the pending card without
+  losing reports. A successful README remains visible when the report fails or
+  an explicit empty period is selected. Deadline reads recover in the browser.
+- A synthetic authorized private ledger has no initial README, makes its file
+  request only in the browser, retains the financial-first default and emits
+  noindex without a canonical. A denied ledger returns 404, one generic title
+  and description, noindex, no canonical and no README; hydration has no page
+  errors. These are synthetic access checks, not a production permission change.
+- The owned social PNG returns `200 image/png` at 256×256 from the local build
+  and from the public host using anonymous curl, including a Twitterbot user
+  agent. Metadata advertises the matching small summary card.
+
+Reproduce against the current source by recording `stock-example` once, building
+with both `VITE_API_URL` and `VITE_SSR_API_URL` pointed at the fixture, and running
+the generated server on another local port. Use `--base-delay-ms 400`, then add
+`--delay-ops GetLedgerFile --delay-ms 2000`. Inspect `/__log` for server/browser
+request counts. Test fixtures and screenshots remain ignored under `tmp/`;
+the regression tests carry the permanent synthetic failure/race coverage.
+
+The changed metadata and sitemap generator have not been verified in a deployed
+release. Deployment, fresh sitemap generation (including its 24-hour application
+and one-hour HTTP caches), and live URL membership remain release checks.
+
+## Historical measurements: September 6 optional-panel change
+
+The tables below describe the original w2/m23 change, before the September 26
+market-valuation query and October public-README exception. They are retained as
+the rationale for keeping other optional work nonblocking, not current timing
+claims.
+
+### Delay injection, request accounting and correctness
 
 Everything below uses the public `open_ledger/example` ledger recorded through
 `scripts/perf-fixture-api.mjs` (Node built-ins only): anonymous public reads

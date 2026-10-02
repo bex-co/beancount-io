@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, cleanup } from "@testing-library/react";
 import { HreflangLinks } from "../hreflang-links";
-import { SUPPORTED_LANGUAGES } from "@/i18n";
+import { SUPPORTED_LANGUAGES } from "@/i18n/config";
 
 // Mock TanStack Router's useLocation
 vi.mock("@tanstack/react-router", () => ({
@@ -35,7 +35,7 @@ describe("HreflangLinks", () => {
     expect(links.length).toBe(SUPPORTED_LANGUAGES.length + 1);
   });
 
-  it("should include all 13 supported languages", () => {
+  it("should include all supported languages", () => {
     render(<HreflangLinks />);
 
     SUPPORTED_LANGUAGES.forEach((lang) => {
@@ -123,7 +123,6 @@ describe("HreflangLinks", () => {
     render(<HreflangLinks />);
     const links = document.querySelectorAll('link[rel="alternate"]');
 
-    // 13 supported languages + 1 x-default = 14 total
-    expect(links.length).toBe(14);
+    expect(links.length).toBe(SUPPORTED_LANGUAGES.length + 1);
   });
 });

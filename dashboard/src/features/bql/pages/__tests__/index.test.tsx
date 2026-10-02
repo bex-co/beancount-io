@@ -77,10 +77,6 @@ vi.mock("@/common/components/related-links", () => ({
   RelatedLinks: () => null,
 }));
 
-vi.mock("@/common/components/seo/ledger-page-seo", () => ({
-  LedgerPageSEO: () => null,
-}));
-
 vi.mock("@/features/bql/components/query-result-card", () => ({
   QueryResultCard: ({
     query,
