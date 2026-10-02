@@ -41,7 +41,7 @@ def cloud_login() -> None:
 @cloud_app.command("logout")
 def cloud_logout() -> None:
     """Revoke the token and clear stored credentials."""
-    from cli.api.client import bearer_client, unwrap
+    from cli.api.client import bearer_client, call, unwrap
     from cli.api.rest_client.api.ledger_v_1 import logout
     from cli.auth.credentials import ENVIRONMENT, clear_credentials, load_credentials
 
@@ -60,7 +60,7 @@ def cloud_logout() -> None:
         )
         return
     try:
-        unwrap(logout.sync_detailed(client=bearer_client(creds.token)))
+        unwrap(call(logout.sync_detailed, client=bearer_client(creds.token)))
     except Exception:
         # The local credential goes either way: a server that cannot be
         # reached must not leave a token sitting on this disk.
@@ -73,13 +73,13 @@ def cloud_logout() -> None:
 def cloud_status() -> None:
     """Show who is logged in, where the credential came from, and when it expires."""
     ctx = context.current()
-    from cli.api.client import bearer_client, unwrap_or_none
+    from cli.api.client import bearer_client, call, unwrap_or_none
     from cli.api.rest_client.api.ledger_v_1 import get_user_profile
     from cli.auth.credentials import require_credentials
     from cli.errors import error_from_status
 
     creds = require_credentials()
-    user = unwrap_or_none(get_user_profile.sync_detailed(client=bearer_client(creds.token)))
+    user = unwrap_or_none(call(get_user_profile.sync_detailed, client=bearer_client(creds.token)))
     if user is None:
         # A revoked or unknown bearer answers this endpoint with an empty
         # profile rather than a 401. Report it exactly the way every other

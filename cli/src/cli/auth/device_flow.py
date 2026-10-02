@@ -6,7 +6,7 @@ import time
 import webbrowser
 from typing import TYPE_CHECKING
 
-from cli.api.client import unwrap
+from cli.api.client import call, unwrap
 from cli.api.rest_client.api.ledger_v_1 import (
     consume_cli_auth_session,
     create_cli_auth_session,
@@ -48,7 +48,8 @@ def run_device_flow(client: AuthenticatedClient, dashboard_url: str) -> tuple[st
     no secret — opening it, or having it opened for you, authorizes nothing.
     """
     session = unwrap(
-        create_cli_auth_session.sync_detailed(
+        call(
+            create_cli_auth_session.sync_detailed,
             client=client,
             body=CreateCliAuthSessionBody(client=_client_info()),
         )
@@ -64,11 +65,11 @@ def run_device_flow(client: AuthenticatedClient, dashboard_url: str) -> tuple[st
 
     while True:
         time.sleep(poll_seconds)
-        status_result = unwrap(get_cli_auth_session.sync_detailed(session.device_code, client=client))
+        status_result = unwrap(call(get_cli_auth_session.sync_detailed, session.device_code, client=client))
         status = status_result.status.value
 
         if status == "AUTHORIZED":
-            grant = unwrap(consume_cli_auth_session.sync_detailed(session.device_code, client=client))
+            grant = unwrap(call(consume_cli_auth_session.sync_detailed, session.device_code, client=client))
             save_credentials(grant.token, grant.expire_at)
             return grant.token, grant.expire_at
         elif status == "DENIED":

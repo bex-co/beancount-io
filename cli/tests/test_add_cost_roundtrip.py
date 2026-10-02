@@ -112,6 +112,7 @@ def test_native_option_expiry_with_empty_cost_returns_json_after_one_write(tmp_p
     assert result["data"]["written"] == 1
     assert result["data"]["directive"]["postings"][0]["cost"] == {
         "number": None,
+        "number_total": None,
         "currency": None,
         "date": None,
         "label": None,

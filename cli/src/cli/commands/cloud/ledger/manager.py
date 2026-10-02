@@ -6,7 +6,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from cli.api.client import unwrap
+from cli.api.client import call, unwrap
 from cli.api.rest_client.api.ledger_v_1 import (
     create_ledger as create_ledger_op,
 )
@@ -57,12 +57,12 @@ def create_ledger(
     private: bool = False,
 ) -> LedgerInfo:
     body = CreateLedgerBody(name=name, description=description, private=private)
-    return _to_info(unwrap(create_ledger_op.sync_detailed(client=client, body=body)))
+    return _to_info(unwrap(call(create_ledger_op.sync_detailed, client=client, body=body)))
 
 
 def get_ledger(client: AuthenticatedClient, full_name: str) -> LedgerInfo:
     owner, name = owner_and_name(full_name)
-    return _to_info(unwrap(get_ledger_op.sync_detailed(owner, name, client=client)))
+    return _to_info(unwrap(call(get_ledger_op.sync_detailed, owner, name, client=client)))
 
 
 def ensure_git_available() -> None:

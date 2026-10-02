@@ -127,16 +127,24 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
     p_params = path_params(op)
     collapses_full_name = [p["name"] for p in p_params] == ["owner", "name"]
     if p_params and not collapses_full_name:
-        fail(f"operation '{cmd.operation_id}' has path params {[p['name'] for p in p_params]}; only owner+name is supported")
+        fail(
+            f"operation '{cmd.operation_id}' has path params {[p['name'] for p in p_params]}; "
+            "only owner+name is supported"
+        )
 
     destructive = is_destructive(method, op)
     if destructive and not cmd.confirm:
         fail(f"operation '{cmd.operation_id}' is destructive; add a `confirm` template to its registry entry")
     if method != "get" and not (cmd.write_action and cmd.success):
-        fail(f"operation '{cmd.operation_id}' is a write; add `write_action` and `success` templates to its registry entry")
+        fail(
+            f"operation '{cmd.operation_id}' is a write; "
+            "add `write_action` and `success` templates to its registry entry"
+        )
 
     module = snake(cmd.operation_id)
-    help_text = esc(f"{op['summary']}.\n\n{op['description']}") if op["summary"] != op["description"] else esc(op["summary"])
+    help_text = (
+        esc(f"{op['summary']}.\n\n{op['description']}") if op["summary"] != op["description"] else esc(op["summary"])
+    )
 
     signature: list[str] = []
     call_args: list[str] = []
@@ -169,7 +177,7 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
     # be answered with "pass --yes".
     lines.extend(body)
 
-    lines.append("    from cli.api.client import authenticated_client, unwrap")
+    lines.append("    from cli.api.client import authenticated_client, call, unwrap")
     lines.append(f"    from cli.api.rest_client.api.ledger_v_1 import {module}")
 
     # Resolve credentials before the destructive confirmation gate so a
@@ -183,7 +191,7 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
     else:
         client_expr = "authenticated_client()"
 
-    call = f"{module}.sync_detailed({', '.join(call_args)}{', ' if call_args else ''}client={client_expr})"
+    call = f"call({module}.sync_detailed, {', '.join(call_args)}{', ' if call_args else ''}client={client_expr})"
     if method == "get":
         lines.append(f"    result = unwrap({call})")
     else:

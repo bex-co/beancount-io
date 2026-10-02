@@ -25,10 +25,10 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
         page: Annotated[int, typer.Option("--page", help="1-based page number")] = 1,
         limit: Annotated[int, typer.Option("--limit", help="Page size, at most 100")] = 50,
     ) -> None:
-        from cli.api.client import authenticated_client, unwrap
+        from cli.api.client import authenticated_client, call, unwrap
         from cli.api.rest_client.api.ledger_v_1 import accessible_ledgers
 
-        result = unwrap(accessible_ledgers.sync_detailed(page=page, limit=limit, client=authenticated_client()))
+        result = unwrap(call(accessible_ledgers.sync_detailed, page=page, limit=limit, client=authenticated_client()))
         data = result if isinstance(result, list) else [result]
         rows = [snake_keys(item.to_dict()) for item in data]
         if context.current().json_output:
@@ -55,10 +55,10 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
         full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],
     ) -> None:
         owner, name = owner_and_name(full_name)
-        from cli.api.client import authenticated_client, unwrap
+        from cli.api.client import authenticated_client, call, unwrap
         from cli.api.rest_client.api.ledger_v_1 import get_ledger
 
-        result = unwrap(get_ledger.sync_detailed(owner, name, client=authenticated_client()))
+        result = unwrap(call(get_ledger.sync_detailed, owner, name, client=authenticated_client()))
         data = result if isinstance(result, list) else [result]
         rows = [snake_keys(item.to_dict()) for item in data]
         if context.current().json_output:
@@ -75,7 +75,7 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
         full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],
     ) -> None:
         owner, name = owner_and_name(full_name)
-        from cli.api.client import authenticated_client, unwrap
+        from cli.api.client import authenticated_client, call, unwrap
         from cli.api.rest_client.api.ledger_v_1 import delete_ledger
 
         client = authenticated_client()
@@ -87,7 +87,7 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
         from cli.errors import unknown_write_outcome
 
         try:
-            result = unwrap(delete_ledger.sync_detailed(owner, name, client=client))
+            result = unwrap(call(delete_ledger.sync_detailed, owner, name, client=client))
         except (httpx.TimeoutException, httpx.TransportError) as e:
             raise unknown_write_outcome(f"Deleting ledger '{full_name}'", e) from e
         data = result if isinstance(result, list) else [result]

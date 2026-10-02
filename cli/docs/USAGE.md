@@ -207,6 +207,11 @@ failing anyway; `--debug` adds the `traceback` string.
 
 Cloud commands map the server's HTTP status onto the same table, keeping the server's own message: `401`/`403` exit **3**, `400` exits **2**, `409` exits **4**, and everything else — including `404`, rate limiting, and server errors — exits **1**. A write whose outcome the CLI cannot know (a timeout mid-delete) exits **4** and says so rather than guessing.
 
+A successful HTTP response that the generated parser cannot read exits **1**
+with `Unexpected server response (HTTP 200).` (using the actual status code)
+and preserves the request ID when supplied. This is a server-response error;
+the CLI does not expose parser exceptions or the raw response body.
+
 ### `bea doctor` exit contract
 
 `doctor` delegates to upstream `bean-doctor` but maps its diagnostics onto the

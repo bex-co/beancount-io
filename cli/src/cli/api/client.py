@@ -1,13 +1,14 @@
 """The hosted-API seam: build clients from settings and credentials, and turn
 transport responses into the documented error categories.
 
-Commands never touch httpx or parse a `V1Error`; they call an operation module
-from the generated client and hand the `Response` to `unwrap`.
+Commands never touch httpx or parse a `V1Error`; `call` guards the generated
+operation's parser and `unwrap` handles its resulting `Response`.
 """
 
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from typing import Any, cast
 
 import httpx
@@ -91,6 +92,42 @@ def authenticated_client() -> AuthenticatedClient:
     from cli.auth.credentials import require_credentials
 
     return bearer_client(require_credentials().token)
+
+
+def call[T](
+    operation: Callable[..., Response[T]],
+    /,
+    *args: Any,
+    client: AuthenticatedClient,
+    **kwargs: Any,
+) -> Response[T]:
+    """Keep HTTP context when a generated success-body parser rejects a response.
+
+    Parsing happens inside `sync_detailed`, before `unwrap` can see a Response.
+    A temporary response hook captures status/headers without exposing the body
+    or converting errors raised before an HTTP response into server failures.
+    """
+    from cli.errors import BeaError, request_id_from
+
+    response: httpx.Response | None = None
+
+    def capture(received: httpx.Response) -> None:
+        nonlocal response
+        response = received
+
+    hooks = client.get_httpx_client().event_hooks["response"]
+    hooks.append(capture)
+    try:
+        return operation(*args, client=client, **kwargs)
+    except (KeyError, ValueError, TypeError, AttributeError) as exc:
+        if response is None or not response.is_success:
+            raise
+        raise BeaError(
+            f"Unexpected server response (HTTP {response.status_code}).",
+            request_id=request_id_from(response.headers),
+        ) from exc
+    finally:
+        hooks.remove(capture)
 
 
 def unwrap[T](response: Response[T | V1Error]) -> T:

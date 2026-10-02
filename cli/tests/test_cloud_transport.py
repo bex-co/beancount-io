@@ -2,16 +2,41 @@
 
 from __future__ import annotations
 
+import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import httpx
 import pytest
+from pytest_httpx import HTTPXMock
+from typer.testing import CliRunner
 
 from cli.api.client import DEFAULT_TIMEOUT, bearer_client, make_client
 from cli.commands.cloud.ledger.manager import CloneError, clone_ledger, ensure_git_available
 from cli.errors import AuthError, UsageError, to_bea_error, unknown_write_outcome
+from cli.main import app
+
+
+@pytest.mark.parametrize("body", [b"{}", b"[]", b"null", b"<html>proxy response</html>"])
+@pytest.mark.parametrize("json_output", [False, True])
+def test_simulated_malformed_success_has_status_and_request_id(
+    logged_in: None, httpx_mock: HTTPXMock, body: bytes, json_output: bool
+) -> None:
+    """Synthetic HTTP responses, not evidence of a live server defect."""
+    httpx_mock.add_response(status_code=200, content=body, headers={"X-Request-Id": "simulated-malformed-200"})
+
+    result = CliRunner().invoke(app, [*(["--json"] if json_output else []), "cloud", "ledger", "show", "alice/books"])
+
+    assert result.exit_code == 1
+    assert result.stdout == ""
+    assert "Unexpected server response (HTTP 200)." in result.stderr
+    if json_output:
+        error = json.loads(result.stderr)["error"]
+        assert error["category"] == "validation"
+        assert error["request_id"] == "simulated-malformed-200"
+    assert "KeyError" not in result.stderr
+    assert "proxy response" not in result.stderr
 
 
 def test_clients_use_finite_timeout() -> None:

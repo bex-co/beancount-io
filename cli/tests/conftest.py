@@ -330,9 +330,9 @@ KEYS = {"CTRL_C": b"\x03", "CTRL_D": b"\x04", "ENTER": b"\r"}
 def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., TerminalRun]:
     """Run `bea ask` on a PTY against `stub_model`, typing a script of keystrokes.
 
-    A script entry is either literal text to type or `@NAME` from `KEYS`. Each is
-    sent once the child has been quiet for a moment, which is what makes the
-    interactive steps (a prompt, then an approval panel) land in order.
+    A script entry is literal text, `@NAME` from `KEYS`, or `@WAIT:text` to
+    await output before the next keystroke. Wait markers match in order, so a
+    later prompt cannot accidentally match the one from an earlier turn.
     """
 
     def run(argv: list[str], script: list[str], *, timeout: float = 120.0) -> TerminalRun:
@@ -357,6 +357,7 @@ def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., Te
             os.execve(sys.executable, [sys.executable, "-m", "cli.main", *argv], env)
         emitted = b""
         step = 0
+        matched_output = 0
         started = last = time.time()
         try:
             while True:
@@ -377,7 +378,13 @@ def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., Te
                 # the terminal, and a Ctrl-C then lands on startup instead of on
                 # the prompt under test.
                 ready_to_type = step > 0 or PROMPT_ARROW in emitted
-                if step < len(script) and ready_to_type and time.time() - last > 1.5:
+                if step < len(script) and script[step].startswith("@WAIT:"):
+                    marker = script[step].removeprefix("@WAIT:").encode()
+                    match = emitted.find(marker, matched_output)
+                    if match >= 0:
+                        matched_output = match + len(marker)
+                        step += 1
+                elif step < len(script) and ready_to_type and time.time() - last > 1.5:
                     key = script[step]
                     os.write(fd, KEYS[key[1:]] if key.startswith("@") else key.encode())
                     step += 1

@@ -143,6 +143,7 @@ def test_jsonable_empty_cost_spec_is_json_safe(surface: str) -> None:
     cost = CostSpec(MISSING, None, MISSING, None, None, False)
     assert json.loads(json.dumps(serialize(cost))) == {
         "number": None,
+        "number_total": None,
         "currency": None,
         "date": None,
         "label": None,

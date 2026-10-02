@@ -208,7 +208,18 @@ def test_ctrl_c_on_a_real_terminal_keeps_the_session_and_its_history(
 
     run = ask_on_a_terminal(
         ["--file", str(ledger), "ask"],
-        ["what is my balance", "@ENTER", "@CTRL_C", "and last month", "@ENTER", "@CTRL_D"],
+        [
+            "what is my balance",
+            "@ENTER",
+            "@WAIT:answer 1",
+            "@WAIT:❯",
+            "@CTRL_C",
+            "and last month",
+            "@ENTER",
+            "@WAIT:answer 2",
+            "@WAIT:❯",
+            "@CTRL_D",
+        ],
     )
 
     assert run.status == 0, run.screen
