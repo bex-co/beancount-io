@@ -20,7 +20,7 @@ const toolLogger = logger.child({ module: "tool:ledger-context" });
 // --- listLedgers --------------------------------------------------------
 
 export const listLedgersDescription =
-  "List the ledgers this credential can reach. A pinned credential returns its one ledger; an unpinned credential must call this first and pass `ledger: owner/name` afterwards.";
+  "List the ledgers this credential can reach — every one when `page` and `limit` are omitted. A pinned credential returns its one ledger; an unpinned credential must call this first and pass `ledger: owner/name` afterwards.";
 
 export const listLedgersInputSchema = z.object({
   page: z

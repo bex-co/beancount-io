@@ -53,6 +53,55 @@ const IDENTITY = {
   scopes: new Set<string>(),
 } as const;
 
+const fixtureName = (n: number) => `ledger-${String(n).padStart(3, "0")}`;
+
+/** `testuser/ledger-001` … `ledger-<count>`: name order, as Gitea lists them. */
+function catalogFixture(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    name: fixtureName(i + 1),
+    full_name: `testuser/${fixtureName(i + 1)}`,
+    description: null,
+    private: false,
+    empty: false,
+    size: 1,
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+  }));
+}
+
+/** Ledger ids `from` … `to` of {@link catalogFixture}, inclusive. */
+const fixtureIds = (from: number, to: number) =>
+  Array.from(
+    { length: to - from + 1 },
+    (_, i) => `testuser/${fixtureName(from + i)}`,
+  );
+
+type PageQuery = { page?: number | null; limit?: number | null };
+
+/**
+ * Serves a catalog the way the ledger service relays Gitea's lists: at most
+ * 50 per page (API.MAX_RESPONSE_ITEMS), 30 when `limit` is omitted
+ * (DEFAULT_PAGING_NUM), and page numbers below 1 read as page 1.
+ */
+function giteaPaged(ledgers: ReturnType<typeof catalogFixture>) {
+  return ({ page, limit }: PageQuery = {}) => {
+    const size = Math.min(limit && limit > 0 ? limit : 30, 50);
+    const start = ((page && page > 0 ? page : 1) - 1) * size;
+    return Promise.resolve({
+      data: { success: true, data: ledgers.slice(start, start + size) },
+    });
+  };
+}
+
+/** {@link giteaPaged} behind `listUserLedgers(username, query)`. */
+function ownedPaged(ledgers: ReturnType<typeof catalogFixture>) {
+  const serve = giteaPaged(ledgers);
+  return (_username: string, query: PageQuery) => serve(query);
+}
+
+const ids = (ledgers: { id: string }[]) => ledgers.map((ledger) => ledger.id);
+
 describe("LedgerWorkflow", () => {
   let workflow: LedgerWorkflow;
   let mockFavaApiClient: MockFavaApiClient;
@@ -601,6 +650,104 @@ describe("LedgerWorkflow", () => {
         workflow.listLedgers({ identity: IDENTITY, args: {} }),
       ).rejects.toThrow(InternalServerError);
     });
+
+    describe("over a catalog larger than one upstream page", () => {
+      beforeEach(() => {
+        mockFavaApiClient.ledgers.listLedgers.mockImplementation(
+          giteaPaged(catalogFixture(91)),
+        );
+      });
+
+      it("returns every ledger when neither page nor limit is given", async () => {
+        const result = await workflow.listLedgers({
+          identity: IDENTITY,
+          args: {},
+        });
+
+        expect(ids(result)).toEqual(fixtureIds(1, 91));
+        expect(mockFavaApiClient.ledgers.listLedgers).toHaveBeenCalledTimes(2);
+      });
+
+      it("treats GraphQL's explicit null page and limit as no paging", async () => {
+        const result = await workflow.listLedgers({
+          identity: IDENTITY,
+          args: { page: null, limit: null } as never,
+        });
+
+        expect(ids(result)).toEqual(fixtureIds(1, 91));
+      });
+
+      it("passes an explicit page and a small limit through unchanged", async () => {
+        const result = await workflow.listLedgers({
+          identity: IDENTITY,
+          args: { page: 2, limit: 7 },
+        });
+
+        expect(ids(result)).toEqual(fixtureIds(8, 14));
+        expect(mockFavaApiClient.ledgers.listLedgers.mock.calls).toEqual([
+          [{ page: 2, limit: 7 }],
+        ]);
+      });
+
+      it("keeps the ledger service's default page size for a page-only read", async () => {
+        const result = await workflow.listLedgers({
+          identity: IDENTITY,
+          args: { page: 2 },
+        });
+
+        expect(ids(result)).toEqual(fixtureIds(31, 60));
+        expect(mockFavaApiClient.ledgers.listLedgers).toHaveBeenCalledTimes(1);
+      });
+
+      it("keeps page boundaries when one page spans upstream pages", async () => {
+        const read = (page: number, limit: number) =>
+          workflow
+            .listLedgers({ identity: IDENTITY, args: { page, limit } })
+            .then(ids);
+
+        expect(await read(1, 75)).toEqual(fixtureIds(1, 75));
+        expect(await read(2, 60)).toEqual(fixtureIds(61, 91));
+        expect(await read(2, 100)).toEqual([]);
+      });
+
+      it("keeps one upstream call when page arithmetic would pass 2^53", async () => {
+        const result = await workflow.listLedgers({
+          identity: IDENTITY,
+          args: { page: 1e12, limit: 1e12 },
+        });
+
+        expect(result).toEqual([]);
+        expect(mockFavaApiClient.ledgers.listLedgers.mock.calls).toEqual([
+          [{ page: 1e12, limit: 1e12 }],
+        ]);
+      });
+    });
+
+    it("fails the whole read, never a partial list, when a later page fails", async () => {
+      const firstPage = catalogFixture(50);
+      mockFavaApiClient.ledgers.listLedgers
+        .mockResolvedValueOnce({ data: { success: true, data: firstPage } })
+        .mockResolvedValueOnce({ data: { success: false } });
+
+      await expect(
+        workflow.listLedgers({ identity: IDENTITY, args: {} }),
+      ).rejects.toThrow(InternalServerError);
+    });
+
+    it("stops at the page cap when the ledger service never returns a short page", async () => {
+      const fullPage = catalogFixture(50);
+      mockFavaApiClient.ledgers.listLedgers.mockResolvedValue({
+        data: { success: true, data: fullPage },
+      });
+
+      const result = await workflow.listLedgers({
+        identity: IDENTITY,
+        args: {},
+      });
+
+      expect(mockFavaApiClient.ledgers.listLedgers).toHaveBeenCalledTimes(200);
+      expect(result).toHaveLength(10_000);
+    });
   });
 
   describe("listUserOwnedLedgers", () => {
@@ -645,6 +792,47 @@ describe("LedgerWorkflow", () => {
       await expect(
         workflow.listUserOwnedLedgers({ identity: IDENTITY, args: {} }),
       ).rejects.toThrow(InternalServerError);
+    });
+
+    describe("over a catalog larger than one upstream page", () => {
+      beforeEach(() => {
+        mockFavaApiClient.ledgers.listUserLedgers.mockImplementation(
+          ownedPaged(catalogFixture(91)),
+        );
+      });
+
+      it("returns every owned ledger when neither page nor limit is given", async () => {
+        const result = await workflow.listUserOwnedLedgers({
+          identity: IDENTITY,
+          args: {},
+        });
+
+        expect(ids(result)).toEqual(fixtureIds(1, 91));
+        // The fake ignores the owner, so assert every page asked for ours.
+        expect(
+          mockFavaApiClient.ledgers.listUserLedgers.mock.calls.map(
+            ([username]) => username,
+          ),
+        ).toEqual(["testuser", "testuser"]);
+      });
+
+      it("returns a full page of a limit above the ledger service's 50", async () => {
+        const result = await workflow.listUserOwnedLedgers({
+          identity: IDENTITY,
+          args: { page: 1, limit: 60 },
+        });
+
+        expect(ids(result)).toEqual(fixtureIds(1, 60));
+      });
+
+      it("finds a pinned ledger that sorts after the first upstream page", async () => {
+        const result = await workflow.listUserOwnedLedgers({
+          identity: { ...IDENTITY, ledgerScope: "testuser/ledger-082" },
+          args: {},
+        });
+
+        expect(ids(result)).toEqual(["testuser/ledger-082"]);
+      });
     });
   });
 
@@ -728,6 +916,22 @@ describe("LedgerWorkflow", () => {
           directiveCount: null,
         }),
       ]);
+    });
+
+    it("counts every owned ledger, not just the first upstream page", async () => {
+      mockFavaApiClient.ledgers.listUserLedgers.mockImplementation(
+        ownedPaged(catalogFixture(91)),
+      );
+      ledgerDataService.getEntriesCountPerType.mockResolvedValue([
+        { type: "Transaction", number: 1 },
+      ]);
+
+      const result = await workflow.listUserOwnedLedgersWithDirectiveCounts({
+        userId: USER_ID,
+      });
+
+      expect(ids(result)).toEqual(fixtureIds(1, 91));
+      expect(result.every((ledger) => ledger.directiveCount === 1)).toBe(true);
     });
   });
 

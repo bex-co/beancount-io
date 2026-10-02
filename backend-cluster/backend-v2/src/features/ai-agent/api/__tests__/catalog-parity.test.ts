@@ -208,6 +208,120 @@ describe("catalog adapters", () => {
   });
 });
 
+describe("catalogs larger than one ledger-service page", () => {
+  const catalog = Array.from({ length: 120 }, (_, i) => {
+    const name = `book-${String(i + 1).padStart(3, "0")}`;
+    return { ...ledger, full_name: `alice/${name}`, name };
+  });
+  const fullNames = (from: number, to: number) =>
+    catalog.slice(from - 1, to).map((entry) => entry.full_name);
+  // The ledger service relays Gitea: at most 50 per page, 30 when `limit` is omitted.
+  const paged = ({
+    page,
+    limit,
+  }: { page?: number | null; limit?: number | null } = {}) => {
+    const size = Math.min(limit && limit > 0 ? limit : 30, 50);
+    const start = ((page && page > 0 ? page : 1) - 1) * size;
+    return Promise.resolve(envelope(catalog.slice(start, start + size)));
+  };
+  const namesOf = (rows: unknown) =>
+    (rows as { fullName: string }[]).map((row) => row.fullName);
+
+  async function pagedFixture() {
+    const f = await fixture();
+    f.ledgers.listLedgers.mockImplementation(paged);
+    f.ledgers.listUserLedgers.mockImplementation(
+      (_owner: string, query: Parameters<typeof paged>[0]) => paged(query),
+    );
+    return f;
+  }
+
+  async function resourceRows(
+    f: Awaited<ReturnType<typeof fixture>>,
+    uri: string,
+  ) {
+    const content = (await f.client.readResource({ uri })).contents[0];
+    if (!("text" in content)) throw new Error("Expected JSON resource text");
+    return JSON.parse(content.text) as unknown;
+  }
+
+  async function toolRows(
+    f: Awaited<ReturnType<typeof fixture>>,
+    args: Record<string, number>,
+  ) {
+    const result = await f.client.callTool({
+      name: "listLedgers",
+      arguments: args,
+    });
+    expect(result.isError).not.toBe(true);
+    return (result.structuredContent as { result: unknown }).result;
+  }
+
+  it.each([
+    {
+      kind: "accessible",
+      path: "",
+      uri: "beancount://catalog/ledgers",
+      field: "listLedgers",
+    },
+    {
+      kind: "owned",
+      path: "owned",
+      uri: "beancount://catalog/ledgers/owned",
+      field: "listUserOwnedLedgers",
+    },
+  ])(
+    "returns the whole $kind catalog when page and limit are omitted",
+    async (entry) => {
+      const f = await pagedFixture();
+      try {
+        const response = await f.rest(entry.path);
+        expect(response.status).toBe(200);
+        const rest = await response.json();
+        expect(namesOf(rest)).toEqual(fullNames(1, 120));
+        const gql = await f.gql(entry.field);
+        expect(gql.errors).toBeUndefined();
+        expect(rest).toMatchObject(gql.data?.[entry.field] as object);
+        expect(await resourceRows(f, entry.uri)).toEqual(rest);
+        if (entry.field === "listLedgers")
+          expect(namesOf(await toolRows(f, {}))).toEqual(fullNames(1, 120));
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("returns exactly the documented maximum page size on every surface", async () => {
+    const f = await pagedFixture();
+    try {
+      for (const [page, from, to] of [
+        [1, 1, 100],
+        [2, 101, 120],
+      ]) {
+        const response = await f.rest(`?page=${page}&limit=100`);
+        expect(response.status).toBe(200);
+        expect(namesOf(await response.json())).toEqual(fullNames(from, to));
+        const gql = await f.gql(`listLedgers(page: ${page}, limit: 100)`);
+        expect(gql.errors).toBeUndefined();
+        expect(namesOf(gql.data?.listLedgers)).toEqual(fullNames(from, to));
+        expect(
+          namesOf(
+            await resourceRows(
+              f,
+              `beancount://catalog/ledgers?page=${page}&limit=100`,
+            ),
+          ),
+        ).toEqual(fullNames(from, to));
+        expect(namesOf(await toolRows(f, { page, limit: 100 }))).toEqual(
+          fullNames(from, to),
+        );
+      }
+    } finally {
+      await f.close();
+    }
+  });
+});
+
 describe("pinned catalog disclosure", () => {
   it.each([1, 2])(
     "returns only the pinned ledger on catalog page %s",
