@@ -56,7 +56,7 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
 
     @ledger_app.command(
         "show",
-        help="Get one ledger.\n\nMetadata for a single ledger: description, visibility, default branch, and the caller's permissions on it.",
+        help="Get one ledger.\n\nMetadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's permissions when available.",
     )
     def ledger_show(
         full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],
@@ -71,8 +71,7 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
         if context.current().json_output:
             output.emit(rows[0], target=output.server_target())
             return
-        for key, value in rows[0].items():
-            typer.echo(f"{key}: {value}")
+        output.fields(rows[0])
 
     @ledger_app.command(
         "delete",

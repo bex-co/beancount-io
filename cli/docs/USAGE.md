@@ -1218,6 +1218,10 @@ bea cloud ledger delete alice/my-books          # asks for confirmation
 bea --yes cloud ledger delete alice/old-books   # global switches precede the command
 ```
 
+`bea cloud ledger show` renders booleans as `yes`/`no` and indents nested
+permissions beneath their field name. Use `--json` for the complete structured
+result with native booleans and objects.
+
 For `bea --json cloud ledger list`, `truncated` means another row was found after
 the returned page. A full page triggers one additional request for that next
 row; a short or empty page needs no extra request. The envelope keeps the

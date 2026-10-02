@@ -1,4 +1,4 @@
-"""Everything the CLI prints, in exactly two shapes: a table for people, an envelope for machines.
+"""Everything the CLI prints: readable values for people, envelopes for machines.
 
 In JSON mode data goes to stdout and nothing else does, so a caller can pipe
 stdout straight into `jq`; failures go to stderr as one error object with the
@@ -14,7 +14,7 @@ import json
 import re
 import sys
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, NoReturn
@@ -156,6 +156,27 @@ def table(headers: list[str], rows: list[list[str]]) -> None:
     typer.echo(sep.join("-" * widths[i] for i in range(len(headers))))
     for row in rows:
         typer.echo(sep.join(_pad(cell, widths[i]) for i, cell in enumerate(row)))
+
+
+def fields(values: Mapping[str, object], *, indent: int = 0) -> None:
+    """Render object fields with yes/no booleans and indented nested objects."""
+    if _json_mode():
+        return
+    for key, value in values.items():
+        label = f"{' ' * indent}{single_line(key)}:"
+        if isinstance(value, Mapping):
+            typer.echo(label)
+            fields(value, indent=indent + 2)
+            continue
+        if isinstance(value, bool):
+            text = "yes" if value else "no"
+        elif value is None:
+            text = ""
+        elif isinstance(value, list):
+            text = json.dumps(value, ensure_ascii=False)
+        else:
+            text = single_line(str(value))
+        typer.echo(f"{label} {text}")
 
 
 def file_target(path: Path) -> dict[str, Any]:

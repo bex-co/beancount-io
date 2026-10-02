@@ -105,8 +105,8 @@ def sync_detailed(
 ) -> Response[GetLedgerResponse200 | V1Error]:
     """Get one ledger
 
-     Metadata for a single ledger: description, visibility, default branch, and the caller's permissions
-    on it.
+     Metadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's
+    permissions when available.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -140,8 +140,8 @@ def sync(
 ) -> GetLedgerResponse200 | V1Error | None:
     """Get one ledger
 
-     Metadata for a single ledger: description, visibility, default branch, and the caller's permissions
-    on it.
+     Metadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's
+    permissions when available.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -170,8 +170,8 @@ async def asyncio_detailed(
 ) -> Response[GetLedgerResponse200 | V1Error]:
     """Get one ledger
 
-     Metadata for a single ledger: description, visibility, default branch, and the caller's permissions
-    on it.
+     Metadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's
+    permissions when available.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -203,8 +203,8 @@ async def asyncio(
 ) -> GetLedgerResponse200 | V1Error | None:
     """Get one ledger
 
-     Metadata for a single ledger: description, visibility, default branch, and the caller's permissions
-    on it.
+     Metadata for a single ledger: description, visibility, clone URLs, timestamps, and the caller's
+    permissions when available.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

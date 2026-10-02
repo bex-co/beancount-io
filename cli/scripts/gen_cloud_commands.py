@@ -235,8 +235,7 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
         lines.append("    if context.current().json_output:")
         lines.append("        output.emit(rows[0], target=output.server_target())")
         lines.append("        return")
-        lines.append("    for key, value in rows[0].items():")
-        lines.append('        typer.echo(f"{key}: {value}")')
+        lines.append("    output.fields(rows[0])")
     else:
         lines.append("    if context.current().json_output:")
         lines.append("        output.emit(rows[0], target=output.server_target())")
