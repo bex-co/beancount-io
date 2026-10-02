@@ -83,7 +83,7 @@ When a new package gets real code, add a `<package>/AGENTS.md` documenting its t
 
 ## Tooling
 
-- Node ≥ 20 (`mobile/package.json` sets `engines.node >= 20.19.4`); both Node CI jobs run Node 22.
+- Node ≥ 20 (`mobile/package.json` sets `engines.node >= 20.19.4`); Node CI jobs run Node 22.
 - Packages pin different Yarn majors — always run Yarn from inside the package directory so its local configuration wins:
   - `dashboard/` → Yarn 4.17.0 (Berry); installs with `yarn install --immutable`.
   - `mobile/` → Yarn 1.22.22 (Classic); installs with `yarn install --frozen-lockfile`.

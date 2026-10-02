@@ -13,6 +13,8 @@ src/
 ├── features/               # Domain features
 │   ├── admin/              # Admin REST API
 │   ├── ai-agent/           # Agent routes, tools, and workflows
+│   ├── apikeys/            # bcio_ API keys and token introspection
+│   ├── audit/              # Audit-event persistence
 │   ├── auth/               # Authentication, users, and CLI auth
 │   ├── feature-usage/      # Quotas and AI-CFO usage
 │   ├── gitea/              # Git API, HTTP/SSH proxy, and push policy
@@ -24,7 +26,8 @@ src/
 │   ├── s3/                 # Temporary/permanent asset storage
 │   ├── sitemap/            # Sitemap generation and cache
 │   ├── stripe/             # Billing and tier operations
-│   └── v1-compat/          # Legacy URL compatibility
+│   ├── v1-compat/          # Legacy URL compatibility
+│   └── well-known/         # /.well-known routes (ADR 0009)
 ├── foundation/             # Composition root, clients, models, Redis
 ├── metrics/                # Observability
 ├── scheduler/              # node-cron jobs
@@ -76,7 +79,7 @@ The application dependency graph is explicit:
 - `src/foundation/composition/builder.ts` constructs services and workflows bottom-up.
 - `src/server/graphql/resolver-registry.ts` constructs resolvers and is the only GraphQL resolver registration list.
 - `src/server/graphql/api-gateway.ts` passes the resolver container to TypeGraphQL.
-- `src/server/api/composition-root.ts` assembles the transport surfaces: one REST router, one GraphQL schema, and one MCP registry, built from per-feature registration fragments (ADR 0006). There is no `server-routes.ts`, `rest/rest-routes.ts`, or `graphql/index.ts`; a feature exposes itself by registering a fragment, not by being wired into a route list.
+- `src/server/api/composition-root.ts` assembles the transport surfaces: one REST router, one GraphQL schema, and one MCP registry, built from per-feature registration fragments. There is no `server-routes.ts`, `rest/rest-routes.ts`, or `graphql/index.ts`; a feature exposes itself by registering a fragment, not by being wired into a route list.
 
 When adding a constructor-injected resolver, register both its class and instance in `resolver-registry.ts`. The container intentionally throws if a resolver with constructor parameters was not wired.
 
@@ -167,7 +170,7 @@ REST, GraphQL, and MCP are equal public contracts. An API change is complete onl
 
 ### The v1 REST surface
 
-`src/features/ledger/api/rest/v1/` is the public ledger API. Keep endpoints easy to use with curl while covering every eligible capability under the parity workflow above. The early minimal-surface guidance in ADR 0006 D7 does not exempt new operations from REST parity; ADR 0008 and `docs/api-parity.md` define the current contract.
+`src/features/ledger/api/rest/v1/` is the public ledger API. Keep endpoints easy to use with curl while covering every eligible capability under the parity workflow above; ADR 0008 and `docs/api-parity.md` define the contract.
 
 - **Add an endpoint** by declaring a `v1Route({...})` in the relevant `*-handler.ts` and listing it in `v1/index.ts`. `registerV1Route` mounts it, validates it, requires the shared request identity, and registers it with the spec from that one declaration, so the mounted path, enforced schema/authentication, and documented contract cannot disagree.
 - **Paths address a ledger as `{owner}/{name}`,** two segments, never one `{ledgerId}`. A single segment needs `%2F` to survive Cloudflare and Caddy unchanged.
@@ -190,7 +193,7 @@ Every surface authenticates through one gate and classifies every operation:
 
 ### API keys
 
-`src/features/apikeys/` issues durable `bcio_` credentials for CI, cron, CLI, and agents (ADR 0006 D6). GraphQL, REST, and MCP all call `ApiKeyService`, the application-service boundary whose protected methods make one centralized authorization decision before domain work. The PDP owns the existing admin credential ceiling, exact-self/key-owner relationship, and no-self-replication rule. The service then enforces the remaining domain constraints identically on all three surfaces:
+`src/features/apikeys/` issues durable `bcio_` credentials for CI, cron, CLI, and agents. GraphQL, REST, and MCP all call `ApiKeyService`, the application-service boundary whose protected methods make one centralized authorization decision before domain work. The PDP owns the existing admin credential ceiling, exact-self/key-owner relationship, and no-self-replication rule. The service then enforces the remaining domain constraints identically on all three surfaces:
 
 - **Minting requires a paid plan.** A pricing decision confirmed in w1/m22; existing keys keep working if a subscription lapses, because breaking a running integration is a support incident rather than a nudge.
 - **A key can only narrow what its minter held,** never widen it.

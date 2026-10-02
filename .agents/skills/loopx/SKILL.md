@@ -60,14 +60,14 @@ The last tasks of every milestone are the standing closing tasks defined in [`.a
 
 Do the actual engineering, one item at a time, following `depends_on` order inside a milestone:
 
-- Follow all `AGENTS.md` rules — root and the scoped `<package>/AGENTS.md` for every package you touch (lockfiles are never hand-edited, changes stay scoped to one package, `cd` into the package before running its scripts, no secrets, `AGENTS.md` symlinks stay in sync with `AGENTS.md`).
+- Follow all `AGENTS.md` rules — root and the scoped `<package>/AGENTS.md` for every package you touch (lockfiles are never hand-edited, changes stay scoped to one package, `cd` into the package before running its scripts, no secrets, every scope's guidance stays in a real `AGENTS.md`).
 - Run the checks the change touches and make them pass before considering the item done:
   - `dashboard/` → `yarn format:check`, `yarn lint`, `yarn test`, `yarn build`
   - `mobile/` → `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit`
   - `cli/` → `make check-all`
   - `skills/` or `.agents/skills/` → `python3 skills/scripts/ci-check.py` (from the repo root)
   - `backend-cluster/*`, `deploy/` → the commands in that package's scoped `AGENTS.md`
-  - any `AGENTS.md` / `AGENTS.md` / skill change → `python3 scripts/check-agent-guidance.py` (from the repo root)
+  - any `AGENTS.md` or skill change → `python3 scripts/check-agent-guidance.py` (from the repo root)
   - before every ship → `gitleaks dir . --redact --verbose`
 
   Never mark an item complete on unverified code.
@@ -88,7 +88,7 @@ If `/ship` surfaces a failure it cannot fix (a rebase conflict it can't resolve,
 
 Loop back to step 1 to pick the next pending item. After every ship (or block isolation), **immediately** re-scan and pick again — do not end the turn, ask the user to resume, or wait for another `/loopx` invocation while step 1 would still find an actionable item. Stopping because the queue is long, the session is long, or you already shipped several items is not an exit.
 
-Between items, write **one sentence**: what shipped, and the id you are picking next. No tables, no per-item recaps, no "where the run stands", no tallies of milestones closed or notes drained — that is the shape of the Exit report, and writing it mid-run is how a loop talks itself into stopping. If you catch yourself composing one, you are not finishing; you are about to skip the next pick. Write the pick instead. The full report belongs only at a real Exit.
+Between items, write one sentence: what shipped and the id you are picking next. Save tallies and per-item recaps for the Exit report — a mid-run summary tends to become a premature stop.
 
 ## Handling a block
 

@@ -41,6 +41,7 @@ gh run list --workflow=ci.yml --branch main --limit 50            # mobile
 gh run list --workflow=ci-dashboard.yml --branch main --limit 50
 gh run list --workflow=ci-cli.yml --branch main --limit 50
 gh run list --workflow=ci-skills.yml --branch main --limit 50
+gh run list --workflow=ci-backend-parity.yml --branch main --limit 50  # backend-v2
 ```
 
 Flake signals: the same commit red then green on rerun; failures whose job logs

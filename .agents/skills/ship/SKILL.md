@@ -23,7 +23,7 @@ Use the full Step 2 inspection when the working tree contains unfamiliar changes
 ## Step 1 — Verify branch
 
 ```bash
-!git branch --show-current
+git branch --show-current
 ```
 
 If not on `main`, **STOP** and ask the user whether to switch or abort.
@@ -31,17 +31,17 @@ If not on `main`, **STOP** and ask the user whether to switch or abort.
 ## Step 2 — Inspect state
 
 ```bash
-!git status
+git status
 ```
 
-If every listed change is one you made this session, stop here. Otherwise, inspect the unfamiliar changes:
+If every listed change is one you made this session, skip the diff inspection below. Otherwise, inspect the unfamiliar changes:
 
 ```bash
-!git diff --stat
+git diff --stat
 ```
 
 ```bash
-!git diff --cached --stat
+git diff --cached --stat
 ```
 
 If the working tree is clean, skip Step 4 but still pull and push.
