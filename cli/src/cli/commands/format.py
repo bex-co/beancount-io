@@ -1,18 +1,16 @@
 """`bea format` — upstream's aligner, run as a child process (ADR014 t004).
 
-`bean-format` owns the formatting: it is a text transformation, deliberately
-regex-based and not a parse, and `bea` neither reimplements nor second-guesses
-it. What `bea` keeps is the two conveniences that upstream has no equivalent
-for — expanding a directory into the ledger files under it, and reporting what
-would change without writing it (`--check` for a pre-commit hook, `--dry-run`
-for a look first).
+The engine uses upstream's text aligner, with Beancount's lexer identifying
+posting indents and protecting multiline strings from whitespace edits. Every
+destination uses that same transformation. The frontend expands directories
+and reports what would change without writing it (`--check` for a pre-commit
+hook, `--dry-run` for a look first).
 
 Rewriting a file is `bea-engine format --in-place` rather than upstream's own
 `--in-place`, because upstream truncates the file it was given. The engine runs
 the same alignment on the bytes it read and replaces each target atomically
 under the ledger lock, which is what makes `-i` safe to run beside another
-`bea` write or to interrupt (w3/434, w3/435). Both are child processes either
-way; only the writing moved.
+`bea` write or to interrupt (w3/434, w3/435).
 
 **Breaking change (ADR014).** Formatting used to rewrite the files it was given.
 It now writes to stdout, like `bean-format`, and rewriting is `--in-place`.
@@ -24,6 +22,7 @@ be recovered by any flag. `bea format -i .` is the old `bea format .`.
 from __future__ import annotations
 
 import shlex
+import sys
 from pathlib import Path
 from typing import Annotated
 
@@ -86,15 +85,10 @@ def format_beans(
             raise UsageError("Name the files to format: reading stdin has nothing to compare or rewrite.")
         if ctx.json_output:
             _require_json_destination(in_place, output_file)
-        # Upstream's stdin filter, and the one case where `bea` does not need to
-        # know what the files are. The `-` is what asks for it: `bean-format`
-        # takes filenames, and a call naming none is refused before it reads a
-        # byte of the pipe.
-        status = launch.run_native("bean-format", [*alignment, *_destination(output_file), STDIN])
-        if status == 0 and ctx.json_output and output_file is not None:
+        _render(None, alignment, output_file)
+        if ctx.json_output and output_file is not None:
             output.emit(_wrote(0, output_file), target={"stdin": STDIN})
-            return
-        raise typer.Exit(status)
+        return
 
     target = _target(paths, files)
     # The walk modes see whole ledgers: a root stands for its include closure,
@@ -142,14 +136,7 @@ def format_beans(
         for ledger_file in files:
             output.refuse_ledger_alias(output_file, ledger_file)
 
-    # Upstream decodes the file itself and dies with a raw traceback on a
-    # stray byte, so the encoding is checked here first: the same path, offset,
-    # and re-save hint `--check` gives, before the destination is touched.
-    for ledger_file in files:
-        _text(ledger_file)
-    status = launch.run_native("bean-format", [*alignment, *_destination(output_file), *(str(f) for f in files)])
-    if status != 0:
-        raise typer.Exit(status)
+    _render(files[0], alignment, output_file)
     if ctx.json_output and output_file is not None:
         output.emit(_wrote(len(files), output_file), target=target)
 
@@ -447,8 +434,17 @@ def _alignment(prefix_width: int | None, num_width: int | None, currency_column:
     return flags
 
 
-def _destination(output_file: Path | None) -> list[str]:
-    return ["--output", str(output_file)] if output_file is not None else []
+def _render(file: Path | None, alignment: list[str], destination: Path | None) -> None:
+    """Keep every output mode on the engine's single formatting transformation."""
+    data = launch.helper_json(
+        ["format", "--render", *alignment, str(file) if file is not None else STDIN],
+        stdin=sys.stdin.read() if file is None else None,
+    )
+    text = str(data["text"])
+    if destination is None or str(destination) == STDIN:
+        sys.stdout.write(text)
+    else:
+        destination.write_text(text, encoding="utf-8")
 
 
 def _require_json_destination(in_place: bool, output_file: Path | None) -> None:

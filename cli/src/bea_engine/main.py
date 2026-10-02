@@ -69,6 +69,9 @@ def format_files(
     in_place: Annotated[
         bool, typer.Option("--in-place", "-i", help="Rewrite each file instead of only reporting it.")
     ] = False,
+    render: Annotated[
+        bool, typer.Option("--render", help="Return formatted text for one file or - for stdin.")
+    ] = False,
     prefix_width: Annotated[int | None, typer.Option("--prefix-width", "-w", help="Force fixed prefix width.")] = None,
     num_width: Annotated[int | None, typer.Option("--num-width", "-W", help="Force fixed numbers width.")] = None,
     currency_column: Annotated[
@@ -87,6 +90,11 @@ def format_files(
     with protocol.answering("format") as answer:
         from bea_engine.ledger import formatting
 
+        if render:
+            if in_place or len(files) != 1:
+                raise protocol.UsageError("--render needs exactly one file and cannot be combined with --in-place.")
+            answer.data = {"text": formatting.render_file(files[0], (prefix_width, num_width, currency_column))}
+            return
         answer.data = formatting.format_files(
             files,
             in_place=in_place,

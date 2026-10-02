@@ -22,8 +22,8 @@ and the rewrite can never disagree about what would change.
 
 from __future__ import annotations
 
-import re
-from collections.abc import Callable
+import sys
+from collections.abc import Callable, Iterator
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any
@@ -71,25 +71,10 @@ def format_files(
     return {"changed": changed}
 
 
-def canonical_posting_indent(text: str) -> str:
-    """Normalize tab / single-space posting indents to the usual two spaces.
-
-    Upstream bean-format turns tabs into one ASCII space and then treats that
-    as already formatted. Agents and docs use two spaces; rewrite leftover
-    odd indents so --check stays honest.
-    """
-    lines: list[str] = []
-    for line in text.splitlines(keepends=True):
-        match = re.match(r"^([ \t]+)(.*)$", line)
-        if match and match.group(1) != "  ":
-            rest = match.group(2)
-            if rest and not re.match(r"^\d{4}-\d{2}-\d{2}\b", rest):
-                ending = "\n" if line.endswith("\n") else ""
-                body = line[: -len(ending)] if ending else line
-                lines.append("  " + body.lstrip(" \t") + ending)
-                continue
-        lines.append(line)
-    return "".join(lines)
+def render_file(file: Path, widths: tuple[int | None, int | None, int | None]) -> str:
+    """The same formatted text for stdout/output as for an in-place rewrite."""
+    text = sys.stdin.read() if str(file) == "-" else _read(file)[1]
+    return _aligned(file, text, widths)
 
 
 def _rewrite(file: Path, widths: tuple[int | None, int | None, int | None]) -> bool:
@@ -107,12 +92,7 @@ def _rewrite(file: Path, widths: tuple[int | None, int | None, int | None]) -> b
 def _would_change(file: Path, widths: tuple[int | None, int | None, int | None]) -> bool:
     """Whether a rewrite would change `file`, without touching it."""
     raw, text = _read(file)
-    if raw != text.encode("utf-8"):
-        # A byte alignment cannot see: a BOM upstream cannot parse at all.
-        return True
-    # Both sides canonicalized, because an odd indent is not an alignment
-    # difference: upstream leaves it alone and the pass below fixes it.
-    return _aligned(file, text, widths) != canonical_posting_indent(text)
+    return _aligned(file, text, widths).encode("utf-8") != raw
 
 
 def _read(file: Path) -> tuple[bytes, str]:
@@ -138,12 +118,36 @@ def _read(file: Path) -> tuple[bytes, str]:
 
 
 def _aligned(file: Path, text: str, widths: tuple[int | None, int | None, int | None]) -> str:
-    """Upstream's alignment plus the canonical posting indent, in memory."""
+    """Align real postings while preserving metadata indents and string content."""
+    from beancount.parser.lexer import lex_iter_string
     from beancount.scripts import format as upstream
+
+    text = text.removeprefix(BOM_CHARACTER).replace("\r\n", "\n").replace("\r", "\n")
+    lines = text.splitlines(keepends=True)
+    protected: dict[int, str] = {}
+    indented: int | None = None
+    lex: Callable[[str], Iterator[tuple[str, int, bytes, object]]] = lex_iter_string
+    for kind, lineno, raw, _ in lex(text):
+        if kind == "STRING":
+            # A STRING token names its closing line. Shield continuation lines
+            # even when they look like postings, so upstream's regex aligner
+            # neither rewrites them nor uses them to choose alignment widths.
+            for index in range(lineno - raw.count(b"\n"), lineno):
+                protected[index] = lines[index]
+        if kind == "INDENT":
+            indented = lineno
+        elif kind in {"FLAG", "ASTERISK", "HASH", "CAPITAL"} and indented == lineno:
+            continue
+        else:
+            if kind == "ACCOUNT" and indented == lineno:
+                lines[lineno - 1] = "  " + lines[lineno - 1].lstrip(" \t")
+            indented = None
+    for index in protected:
+        lines[index] = ";\n"
 
     align: Callable[[str, int | None, int | None, int | None], str] = upstream.align_beancount
     try:
-        aligned = align(text, *widths)
+        aligned = align("".join(lines), *widths)
     except AssertionError as exc:
         # Upstream asserts that it changed nothing but whitespace. Its own
         # message is both halves of the file, which is no use in an envelope.
@@ -151,4 +155,7 @@ def _aligned(file: Path, text: str, widths: tuple[int | None, int | None, int | 
             f"bean-format could not align {file}: it would have changed more than whitespace. Nothing was written.",
             traceback=str(exc)[:2000],
         ) from None
-    return canonical_posting_indent(aligned)
+    formatted = aligned.splitlines(keepends=True)
+    for index, original in protected.items():
+        formatted[index] = original if original.endswith("\n") else original + "\n"
+    return "".join(formatted)

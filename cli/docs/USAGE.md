@@ -330,11 +330,13 @@ formatted text and leaves the file alone; `--in-place` (`-i`) is what rewrites
 it, and `--output FILE` (`-o`) writes somewhere else. `bea format -i .` is the
 old `bea format .`.
 
-This follows the formatter `bea` now runs, `bean-format`, whose default is the
-safe one — a command that reads a path and silently rewrites it cannot be tried
-out first. The same formatter is a text transformation and not a parse, so
-formatting no longer refuses a file with a syntax error: it aligns the amounts
-it recognises and leaves the rest alone. Run `bea check` to validate.
+The engine uses `bean-format`'s alignment for every destination, with two-space
+posting indents. Beancount's lexer distinguishes postings from metadata and
+multiline strings: metadata indentation and string contents are preserved,
+including string lines that look like postings. Stdout, `-o`, and `-i` produce
+the same text; `--check` and `--dry-run` compare the exact bytes `-i` would write.
+Stdout and `-o` remain text filters that accept syntax errors; the walking modes
+check parseability as described below. Run `bea check` to validate the ledger.
 
 Writes match the file they append to: new lines use CRLF in a CRLF ledger and
 LF elsewhere, a missing final newline is repaired as part of the append, and
