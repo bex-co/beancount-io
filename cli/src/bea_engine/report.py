@@ -13,7 +13,7 @@ from __future__ import annotations
 import dataclasses
 import re
 import unicodedata
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -25,6 +25,27 @@ from bea_engine.query import format_error
 
 KINDS = ("overview", "income-statement", "balance-sheet", "trial-balance")
 INTERVALS = ("monthly", "quarterly", "yearly", "weekly", "daily")
+CONVERSIONS = ("units", "at_cost", "at_value")
+
+
+def _valid_conversion(value: str) -> bool:
+    """Use the ledger's currency grammar without accepting trailing text."""
+    if value in CONVERSIONS:
+        return True
+    if not value.isascii():
+        return False
+    from beancount.parser.lexer import lex_iter_string
+
+    lex: Callable[[str], Iterator[tuple[str, int, bytes, object]]] = lex_iter_string
+    # Single-letter symbols are CAPITAL tokens in Beancount's currency grammar;
+    # terminate the line so the lexer can distinguish them at end of input.
+    tokens = list(lex(value + "\n"))
+    return (
+        len(tokens) == 2
+        and tokens[0][0] in {"CURRENCY", "CAPITAL"}
+        and tokens[0][2] == value.encode("utf-8")
+        and tokens[1][0] == "EOL"
+    )
 
 
 def answer(
@@ -39,6 +60,15 @@ def answer(
     allow_errors: bool = False,
 ) -> dict[str, Any]:
     """Compute one report or a filtered balance tree and return its JSON-ready payload."""
+    if conversion is not None and not _valid_conversion(conversion):
+        suggestion = conversion.strip().lower().replace("-", "_")
+        if suggestion not in CONVERSIONS:
+            suggestion = conversion.strip().upper()
+        hint = f" Did you mean {suggestion!r}?" if _valid_conversion(suggestion) else ""
+        raise protocol.UsageError(
+            f"Invalid --conversion {conversion!r}. Use units, at_cost, at_value, "
+            f"or an uppercase Beancount currency such as USD.{hint}"
+        )
     if kind == "balances":
         return _balances(file, accounts or [], conversion=conversion, time=time, allow_errors=allow_errors)
     if kind not in KINDS:
@@ -449,7 +479,7 @@ def _valuation(
         (currency, when)
         for when, balance in balances
         for currency, amount in balance.items()
-        if amount and currency != conversion and conversion not in {"units", "at_cost", "at_value"}
+        if amount and currency != conversion and conversion not in CONVERSIONS
     }
     missing = sorted({currency for currency, _ in missing_dates})
     pairs = [{"from": currency, "to": conversion} for currency in missing]
@@ -501,7 +531,7 @@ def _unvalued(balance: Mapping[str, Decimal], conversion: str) -> bool:
     balance still holding a currency other than the one asked for is a partial
     valuation. Per-unit conversions ask for no valuation and are never partial.
     """
-    if conversion in {"units", "at_cost", "at_value"}:
+    if conversion in CONVERSIONS:
         return False
     return any(amount and currency != conversion for currency, amount in balance.items())
 
@@ -547,7 +577,7 @@ def _sum(*balances: Mapping[str, Decimal]) -> Any:
 
 
 def _summary(balance: Mapping[str, Decimal], conversion: str, *, incomplete: bool = False) -> dict[str, Decimal | None]:
-    if conversion in {"units", "at_cost", "at_value"}:
+    if conversion in CONVERSIONS:
         return dict(balance.items())
     return {conversion: None if incomplete else balance.get(conversion, Decimal(0))}
 

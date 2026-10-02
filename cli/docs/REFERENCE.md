@@ -65,7 +65,7 @@ Usage: bea balance [OPTIONS] [accounts]...
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--conversion, -x` | str |  | Currency; defaults to the single operating currency, otherwise units |
+| `--conversion, -x` | str |  | Currency or units/at_cost/at_value; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
@@ -835,7 +835,7 @@ Usage: bea report overview [OPTIONS]
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--conversion, -x` | str |  | Currency; defaults to the single operating currency, otherwise units |
+| `--conversion, -x` | str |  | Currency or units/at_cost/at_value; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--interval, -i` | choice: monthly \| quarterly \| yearly \| weekly \| daily | monthly | Reporting interval |
@@ -851,7 +851,7 @@ Usage: bea report income-statement [OPTIONS]
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--conversion, -x` | str |  | Currency; defaults to the single operating currency, otherwise units |
+| `--conversion, -x` | str |  | Currency or units/at_cost/at_value; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--interval, -i` | choice: monthly \| quarterly \| yearly \| weekly \| daily | monthly | Reporting interval |
@@ -867,7 +867,7 @@ Usage: bea report balance-sheet [OPTIONS]
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--conversion, -x` | str |  | Currency; defaults to the single operating currency, otherwise units |
+| `--conversion, -x` | str |  | Currency or units/at_cost/at_value; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--interval, -i` | choice: monthly \| quarterly \| yearly \| weekly \| daily | monthly | Reporting interval |
@@ -883,7 +883,7 @@ Usage: bea report trial-balance [OPTIONS]
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--conversion, -x` | str |  | Currency; defaults to the single operating currency, otherwise units |
+| `--conversion, -x` | str |  | Currency or units/at_cost/at_value; defaults to the single operating currency, otherwise units |
 | `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
 | `--account, -a` | str |  | Account filter: a parent account or a regular expression |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |

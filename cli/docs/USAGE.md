@@ -983,6 +983,11 @@ keep their number. It also withholds the derived equity adjustment and equity
 total. Text shows the source amounts and says the total is unavailable.
 `--conversion units` shows quantities; `at_cost` shows acquisition costs and
 `at_value` uses market values with Fava's cost fallback when no price exists.
+Other values must be valid uppercase Beancount currency symbols. Misspellings
+such as `at-cost`, `usd`, and `US D` exit **2** before loading the ledger, in
+terminals and automation alike. Valid symbols need not already appear in the
+ledger: an unpriced target such as `GBP` follows the partial-valuation policy
+above.
 
 The conversion decides how an interval row spells itself, and a quiet row keeps
 its place in the series either way. A currency conversion names that currency in

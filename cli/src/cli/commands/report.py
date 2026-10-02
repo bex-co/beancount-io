@@ -31,7 +31,11 @@ class ReportInterval(StrEnum):
 
 ConversionOpt = Annotated[
     str | None,
-    typer.Option("--conversion", "-x", help="Currency; defaults to the single operating currency, otherwise units"),
+    typer.Option(
+        "--conversion",
+        "-x",
+        help="Currency or units/at_cost/at_value; defaults to the single operating currency, otherwise units",
+    ),
 ]
 TimeOpt = Annotated[
     str | None, typer.Option("--time", "-t", help='Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06"')
