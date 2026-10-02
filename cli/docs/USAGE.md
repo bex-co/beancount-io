@@ -1293,7 +1293,17 @@ The envelope is always:
 }
 ```
 
-`target` is `{"file": "<absolute path>"}` for commands that resolve a ledger (including formatting one file), `{"directory": "<absolute path>"}` for formatting a directory, and `{"server": "<api url>"}` for hosted commands. Bounded lists also carry `limit`, and paged hosted lists (`cloud ledger list`) also carry the `page` that was served. Amounts use decimal **strings** — never floats — and dates are ISO `YYYY-MM-DD`.
+`target` identifies the operation's scope:
+
+| Shape | Scope |
+|---|---|
+| `{"file": "<absolute path>"}` | A resolved ledger, including formatting one file |
+| `{"files": ["<absolute path>", "…"]}` | Formatting multiple named files or a root's include closure; paths are sorted and deduplicated |
+| `{"directory": "<absolute path>"}` | Formatting a directory |
+| `{"stdin": "-"}` | Formatting stdin to an explicit output file |
+| `{"server": "<api url>"}` | Hosted commands |
+
+Bounded lists also carry `limit`, and paged hosted lists (`cloud ledger list`) also carry the `page` that was served. Amounts use decimal **strings** — never floats — and dates are ISO `YYYY-MM-DD`.
 
 ```bash
 $ bea --json check

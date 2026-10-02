@@ -144,7 +144,7 @@ def format_beans(
 def _format_in_place(
     files: list[Path],
     alignment: list[str],
-    target: dict[str, str],
+    target: dict[str, str | list[str]],
     failed: dict[str, list[str]],
     missing: list[output.MissingInclude],
 ) -> None:
@@ -204,7 +204,7 @@ def _format_in_place(
 def _report(
     files: list[Path],
     alignment: list[str],
-    target: dict[str, str],
+    target: dict[str, str | list[str]],
     remedy: str,
     failed: dict[str, list[str]],
     missing: list[output.MissingInclude],
@@ -512,10 +512,10 @@ def _result(
     }
 
 
-def _target(paths: list[Path] | None, files: list[Path]) -> dict[str, str]:
+def _target(paths: list[Path] | None, files: list[Path]) -> dict[str, str | list[str]]:
     named = [path for path in (paths or []) if str(path)]
     if len(named) == 1 and named[0].expanduser().resolve().is_dir():
         return {"directory": str(named[0].expanduser().resolve())}
     if len(files) == 1:
         return {"file": str(files[0])}
-    return {"files": ", ".join(str(f) for f in files)}
+    return {"files": [str(file) for file in files]}
