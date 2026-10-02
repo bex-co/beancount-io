@@ -49,7 +49,12 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 
 ## Inbox
 
-No open notes. The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
+- [038](./038.md) — Native query `.output` bypasses source protection and erases the ledger — **major**, CLI QA 2026-10-02.
+- [039](./039.md) — Interactive `.reload` bypasses `--strict` and answers from an invalid ledger — **minor**, CLI QA 2026-10-02.
+- [040](./040.md) — Native `query --source` ignores `--no-input` and waits at a prompt — **minor**, CLI QA 2026-10-02.
+- [041](./041.md) — Root formatting skips included `.inc`/other suffixes and reports false success — **minor**, CLI QA 2026-10-02.
+
+The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
 
 The four mobile QA findings filed on 2026-09-16 were drained the same day: [031](./done/031.md), [032](./done/032.md), and [034](./done/034.md) shipped with regression coverage, and [033](./blocked/033.md) is blocked.
 
