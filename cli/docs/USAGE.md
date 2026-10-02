@@ -113,8 +113,10 @@ An unreadable ledger exits **2**, naming the path and the source that selected
 it. Choose a readable ledger or correct its permissions.
 Hosted commands name ledgers as `owner/name`; local files are never implicitly
 uploaded. `init` creates its target from its own argument or global `--file`
-and ignores `BEA_FILE`; `format` uses its own positional path and likewise
-ignores both. The delegated commands `doctor`, `example`, and `treeify` forward
+and ignores `BEA_FILE`. `format` uses its positional paths first, then global
+`--file` when no paths are given; it ignores `BEA_FILE` and cwd discovery.
+Directories must be positional (`bea format -i DIR`); `--file` must name a file.
+The delegated commands `doctor`, `example`, and `treeify` forward
 their own arguments to upstream unchanged, so they ignore all three sources:
 pass the ledger as upstream's positional argument, as in
 `bea doctor lex main.bean`. `bea --file main.bean doctor lex` and
@@ -395,10 +397,12 @@ under its real path. `format -i` over a directory with no `.bean` or
 `.beancount` files exits 2 — there was nothing to rewrite. Under `--json`
 the error carries the zero-file scan result.
 
-With no paths at all it is a filter: it formats stdin and writes to stdout, so
+With no positional paths, global `--file` selects the input file. Without
+either, it is a filter: it formats stdin and writes to stdout, so
 `cat main.bean | bea format` and `bea format < main.bean` work in a pipeline
 without a temporary file. An explicit `-` asks for the same thing by name, and
-cannot be combined with file paths.
+cannot be combined with file paths. `BEA_FILE` and cwd ledger discovery do not
+select a formatter input.
 
 Automatic alignment chooses account-prefix and number widths from values up
 to 200 characters wide. Longer values retain their full text on their own

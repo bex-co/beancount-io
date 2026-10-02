@@ -345,6 +345,12 @@ def _targets(
     naming a directory must not rewrite files outside it.
     """
     named = _named(paths, default)
+    if not paths and default is not None and default.expanduser().is_dir():
+        directory = default.expanduser().resolve()
+        raise UsageError(
+            f"Ledger path '{directory}' (from --file) is a directory; expected a ledger file. "
+            f"To format this directory, run bea format -i {shlex.quote(str(directory))}."
+        )
     if any(str(path) == STDIN for path in named):
         if len(named) > 1:
             raise UsageError(f"Read either stdin ('{STDIN}') or named files, not both.")
