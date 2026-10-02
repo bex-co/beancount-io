@@ -1,3 +1,4 @@
+import { requestPlatform } from "@/server/api/request-platform";
 import { z } from "@/shared/zod-openapi-setup";
 import { LedgerTemplate } from "@/features/ledger/workflow/ledger-workflow.types";
 import { v1Route } from "@/server/rest/v1-route";
@@ -47,8 +48,12 @@ export const LEDGER_LIFECYCLE_ROUTES = [
       "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. This is an account operation even for a ledger-pinned credential.",
     body: ledgerCreateInput,
     responses: { 200: json("Created ledger", ledgerResultSchema) },
-    handler: async ({ layers }, { identity, body }) =>
-      layers.workflows.ledger.createLedger({ identity, input: body }),
+    handler: async ({ layers }, { identity, body, ctx }) =>
+      layers.workflows.ledger.createLedger({
+        identity,
+        input: body,
+        platform: requestPlatform(ctx.headers),
+      }),
   }),
   v1Route({
     method: "put",

@@ -33,6 +33,7 @@ export class LedgerMutationResolver {
     return this.workflow.createLedger({
       identity: ctx.getCurrentIdentity(),
       input,
+      platform: ctx.platform,
     });
   }
 

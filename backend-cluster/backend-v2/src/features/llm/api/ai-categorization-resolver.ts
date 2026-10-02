@@ -26,6 +26,7 @@ export class LLMCategorizationQueryResolver {
       ctx.getCurrentIdentity(),
       ledgerId,
       transactions,
+      ctx.platform,
     );
   }
 }

@@ -69,6 +69,7 @@ describe("Ledger resolvers (delegation)", () => {
       expect(workflow.createLedger).toHaveBeenCalledWith({
         identity: IDENTITY,
         input,
+        platform: "web",
       });
       expect(result).toEqual({ id: "x" });
     });

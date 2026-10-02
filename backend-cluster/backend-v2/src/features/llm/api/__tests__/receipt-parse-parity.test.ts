@@ -1,3 +1,4 @@
+import { requestPlatform } from "@/server/api/request-platform";
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
@@ -81,7 +82,9 @@ beforeEach(() => {
   });
 });
 
-async function fixture(caller = identity) {
+async function fixture(caller = identity, appId?: string) {
+  const headers: Record<string, string> = appId ? { "x-app-id": appId } : {};
+  const platform = requestPlatform(headers);
   const metadata = jest.fn(async () => ({ contentType: "application/pdf" }));
   const download = jest.fn(async () => ({
     downloadUrl: "https://storage.invalid/fixture",
@@ -165,7 +168,11 @@ async function fixture(caller = identity) {
   );
   rest.setIdentity(caller);
   const server = assembleMcpRegistry(
-    { identity: caller, llmService: service } as unknown as McpRequestContext,
+    {
+      identity: caller,
+      llmService: service,
+      platform,
+    } as unknown as McpRequestContext,
     config,
   );
   const client = new Client({ name: "receipt-parse-parity", version: "1" });
@@ -178,12 +185,12 @@ async function fixture(caller = identity) {
     charge,
     metadata,
     download,
-    rest: (body: unknown = input) =>
+    rest: (body: unknown = input, requestHeaders = headers) =>
       fetch(
         `${rest.url}/api-gateway/v1/ledgers/alice/main/import/parse-receipt`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", ...requestHeaders },
           body: JSON.stringify({
             s3ObjectKey: (body as typeof input).s3ObjectKey,
           }),
@@ -195,7 +202,11 @@ async function fixture(caller = identity) {
         source:
           "mutation($s3ObjectKey:String!,$ledgerId:String!) { parseReceipt(s3ObjectKey:$s3ObjectKey,ledgerId:$ledgerId) { date payee description amount sourceAccount targetAccount } }",
         variableValues: args,
-        contextValue: { identity: caller, getCurrentIdentity: () => caller },
+        contextValue: {
+          identity: caller,
+          getCurrentIdentity: () => caller,
+          platform,
+        },
       }),
     mcp: (args: Record<string, unknown> = input) =>
       client.callTool({
@@ -253,14 +264,18 @@ it.each([
   },
 );
 
-it.each([
-  "tmp/usr_other/statement.csv",
-  "assets/usr_alice/statement.csv",
-  "tmp/usr_alice/",
-])(
-  "rejects unowned key %s before storage or provider access",
-  async (s3ObjectKey) => {
-    const f = await fixture();
+it.each(
+  [undefined, "beancount-mobile"].flatMap((appId) =>
+    [
+      "tmp/usr_other/statement.csv",
+      "assets/usr_alice/statement.csv",
+      "tmp/usr_alice/",
+    ].map((s3ObjectKey) => ({ appId, s3ObjectKey })),
+  ),
+)(
+  "rejects unowned key $s3ObjectKey before storage or provider access ($appId)",
+  async ({ appId, s3ObjectKey }) => {
+    const f = await fixture(identity, appId);
     const args = { ...input, s3ObjectKey };
     try {
       expect((await f.rest(args)).status).toBe(404);
@@ -276,19 +291,22 @@ it.each([
   },
 );
 
-it("refuses missing read capability before quota or storage access", async () => {
-  const f = await fixture({ ...identity, scopes: new Set() });
-  try {
-    expect((await f.rest()).status).toBe(403);
-    expect((await f.gql()).errors).toHaveLength(1);
-    expect((await f.mcp()).isError).toBe(true);
-    expect(f.check).not.toHaveBeenCalled();
-    expect(f.metadata).not.toHaveBeenCalled();
-    expect(extractReceiptFromFile).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "refuses missing read capability before quota or storage access (%s)",
+  async (appId) => {
+    const f = await fixture({ ...identity, scopes: new Set() }, appId);
+    try {
+      expect((await f.rest()).status).toBe(403);
+      expect((await f.gql()).errors).toHaveLength(1);
+      expect((await f.mcp()).isError).toBe(true);
+      expect(f.check).not.toHaveBeenCalled();
+      expect(f.metadata).not.toHaveBeenCalled();
+      expect(extractReceiptFromFile).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
 
 it("refuses exhausted quota before downloading or parsing", async () => {
   const f = await fixture();
@@ -310,69 +328,74 @@ it("refuses exhausted quota before downloading or parsing", async () => {
   }
 });
 
-it("propagates provider failure without charging a successful parse", async () => {
-  const f = await fixture();
-  jest
-    .mocked(extractReceiptFromFile)
-    .mockRejectedValue(new Error("fixture provider unavailable"));
-  try {
-    expect((await f.rest()).status).toBe(500);
-    expect((await f.gql()).errors).toHaveLength(1);
-    expect((await f.mcp()).isError).toBe(true);
-    expect(f.charge).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "propagates provider failure without charging a successful parse (%s)",
+  async (appId) => {
+    const f = await fixture(identity, appId);
+    jest
+      .mocked(extractReceiptFromFile)
+      .mockRejectedValue(new Error("fixture provider unavailable"));
+    try {
+      expect((await f.rest()).status).toBe(500);
+      expect((await f.gql()).errors).toHaveLength(1);
+      expect((await f.mcp()).isError).toBe(true);
+      expect(f.charge).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
 
-it("refuses revoked ledger access before quota or storage", async () => {
-  const f = await fixture();
-  f.state.readable = false;
-  try {
-    expect((await f.rest()).status).toBe(403);
-    expect((await f.gql()).errors).toHaveLength(1);
-    expect((await f.mcp()).isError).toBe(true);
-    expect(f.check).not.toHaveBeenCalled();
-    expect(f.metadata).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "refuses revoked ledger access before quota or storage (%s)",
+  async (appId) => {
+    const f = await fixture(identity, appId);
+    f.state.readable = false;
+    try {
+      expect((await f.rest()).status).toBe(403);
+      expect((await f.gql()).errors).toHaveLength(1);
+      expect((await f.mcp()).isError).toBe(true);
+      expect(f.check).not.toHaveBeenCalled();
+      expect(f.metadata).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
 
-it("rejects unsupported receipt media before signing or extraction", async () => {
-  const f = await fixture();
-  f.metadata.mockResolvedValue({ contentType: "text/csv" });
-  try {
-    expect((await f.rest()).status).toBe(400);
-    expect((await f.gql()).errors).toHaveLength(1);
-    expect((await f.mcp()).isError).toBe(true);
-    expect(f.download).not.toHaveBeenCalled();
-    expect(extractReceiptFromFile).not.toHaveBeenCalled();
-    expect(f.charge).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "rejects unsupported receipt media before signing or extraction (%s)",
+  async (appId) => {
+    const f = await fixture(identity, appId);
+    f.metadata.mockResolvedValue({ contentType: "text/csv" });
+    try {
+      expect((await f.rest()).status).toBe(400);
+      expect((await f.gql()).errors).toHaveLength(1);
+      expect((await f.mcp()).isError).toBe(true);
+      expect(f.download).not.toHaveBeenCalled();
+      expect(extractReceiptFromFile).not.toHaveBeenCalled();
+      expect(f.charge).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
 
 it("preserves an unknown date and absent account recommendations", async () => {
   const f = await fixture();
-  jest
-    .mocked(extractReceiptFromFile)
-    .mockResolvedValue({
-      transaction: { ...receipt, date: "" },
-      tokenUsage: { inputTokens: 1, outputTokens: 2 },
-    });
-  jest
-    .mocked(recommendAccounts)
-    .mockResolvedValue({
-      recommendation: {
-        sourceAccount: null,
-        targetAccount: null,
-        confidence: 0,
-        reasoning: "No matching accounts",
-      },
-      tokenUsage: { inputTokens: 3, outputTokens: 4 },
-    });
+  jest.mocked(extractReceiptFromFile).mockResolvedValue({
+    transaction: { ...receipt, date: "" },
+    tokenUsage: { inputTokens: 1, outputTokens: 2 },
+  });
+  jest.mocked(recommendAccounts).mockResolvedValue({
+    recommendation: {
+      sourceAccount: null,
+      targetAccount: null,
+      confidence: 0,
+      reasoning: "No matching accounts",
+    },
+    tokenUsage: { inputTokens: 3, outputTokens: 4 },
+  });
   try {
     const r = await f.rest();
     const g = await f.gql();
@@ -402,22 +425,122 @@ it("preserves an unknown date and absent account recommendations", async () => {
   }
 });
 
-it("refuses a different credential pin before storage or extraction", async () => {
-  const f = await fixture({ ...identity, ledgerScope: "other/books" });
+it.each([undefined, "beancount-mobile"])(
+  "refuses a different credential pin before storage or extraction (%s)",
+  async (appId) => {
+    const f = await fixture({ ...identity, ledgerScope: "other/books" }, appId);
+    try {
+      expect((await f.rest()).status).toBe(403);
+      expect((await f.gql()).errors).toHaveLength(1);
+      expect(
+        (
+          await f.client.callTool({
+            name: "parseReceipt",
+            arguments: { objectKey: input.s3ObjectKey, ledger: "alice/main" },
+          })
+        ).isError,
+      ).toBe(true);
+      expect(f.metadata).not.toHaveBeenCalled();
+      expect(extractReceiptFromFile).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it.each(["beancount-mobile", "mobile-beancount"])(
+  "mobile %s bypasses exhausted plan quota while recording actual usage",
+  async (appId) => {
+    const f = await fixture(identity, appId);
+    f.check.mockResolvedValue({
+      allowed: false,
+      currentCount: 1000,
+      maxAllowed: 1000,
+    });
+    try {
+      const r = await f.rest();
+      const g = await f.gql();
+      const m = await f.mcp();
+      expect(r.status).toBe(200);
+      expect(g.errors).toBeUndefined();
+      expect(m.isError).not.toBe(true);
+      for (const result of [
+        await r.json(),
+        g.data!.parseReceipt,
+        (m.structuredContent as { result: unknown }).result,
+      ]) {
+        expect(result).toEqual({ ...receipt, ...recommendation });
+      }
+      expect(f.check).not.toHaveBeenCalled();
+      expect(f.charge).toHaveBeenCalledTimes(3);
+      expect(f.charge).toHaveBeenCalledWith("usr_alice", 140);
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it("keeps concurrent and subsequent web requests subject to quota on the same account", async () => {
+  const f = await fixture();
+  f.check.mockResolvedValue({
+    allowed: false,
+    currentCount: 1000,
+    maxAllowed: 1000,
+  });
+  let started!: () => void;
+  let release!: () => void;
+  const parsing = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  const finish = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  jest.mocked(extractReceiptFromFile).mockImplementationOnce(async () => {
+    started();
+    await finish;
+    return {
+      transaction: receipt,
+      tokenUsage: { inputTokens: 80, outputTokens: 20 },
+    };
+  });
+  const mobileRequest = f.rest(input, { "x-app-id": "beancount-mobile" });
   try {
-    expect((await f.rest()).status).toBe(403);
-    expect((await f.gql()).errors).toHaveLength(1);
-    expect(
-      (
-        await f.client.callTool({
-          name: "parseReceipt",
-          arguments: { objectKey: input.s3ObjectKey, ledger: "alice/main" },
-        })
-      ).isError,
-    ).toBe(true);
-    expect(f.metadata).not.toHaveBeenCalled();
-    expect(extractReceiptFromFile).not.toHaveBeenCalled();
+    // Hold the mobile model call open so the web check runs while it is in flight.
+    await Promise.race([
+      parsing,
+      mobileRequest.then(() => {
+        throw new Error("Mobile request finished before extraction");
+      }),
+    ]);
+    const webHeaders: Record<string, string>[] = [
+      {},
+      { "x-app-id": "unknown-app" },
+    ];
+    for (const headers of webHeaders) {
+      const response = await f.rest(input, headers);
+      expect(response.status).toBe(403);
+      await response.text();
+    }
+    expect(f.metadata).toHaveBeenCalledTimes(1);
+    expect(extractReceiptFromFile).toHaveBeenCalledTimes(1);
+    expect(f.charge).not.toHaveBeenCalled();
+    release();
+    const response = await mobileRequest;
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ...receipt, ...recommendation });
+    const later = await f.rest();
+    expect(later.status).toBe(403);
+    await later.text();
+    expect(f.check).toHaveBeenCalledTimes(3);
+    expect(f.charge).toHaveBeenCalledTimes(1);
+    expect(f.charge).toHaveBeenCalledWith("usr_alice", 140);
   } finally {
+    release();
+    await Promise.allSettled([
+      mobileRequest.then((response) =>
+        response.bodyUsed ? undefined : response.text(),
+      ),
+    ]);
     await f.close();
   }
 });

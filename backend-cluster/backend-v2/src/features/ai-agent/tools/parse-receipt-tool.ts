@@ -31,7 +31,7 @@ export const parseReceiptOutputSchema = toolOutputSchema(receiptParseResult);
 export type ParseReceiptOutput = z.infer<typeof parseReceiptOutputSchema>;
 
 export async function executeParseReceipt(
-  ctx: Pick<ToolContext, "llmService" | "identity" | "ledgerId">,
+  ctx: Pick<ToolContext, "llmService" | "identity" | "ledgerId" | "platform">,
   input: z.infer<typeof parseReceiptInputSchema>,
 ): Promise<ParseReceiptOutput> {
   const { llmService, identity, ledgerId } = ctx;
@@ -47,6 +47,7 @@ export async function executeParseReceipt(
         identity,
         input.objectKey,
         ledgerId,
+        ctx.platform,
       );
       return result;
     },

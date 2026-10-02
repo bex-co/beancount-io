@@ -6,6 +6,7 @@ import { logger } from "@/shared/logger";
 import { type AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
 import { OAUTH_CONFIG } from "@/features/oauth/data/config";
+import { requestPlatform } from "@/server/api/request-platform";
 import type { McpRequestContext } from "./mcp-context";
 import { resolveIdentity } from "@/server/api/identity";
 import { setRouteRateLimitPolicy } from "@/server/api/rate-limit";
@@ -94,6 +95,7 @@ async function handleMcpRequest(
   }
 
   const toolCtx: McpRequestContext = {
+    platform: requestPlatform(ctx.headers),
     services: {
       ledgerShell: layers.services.ledgerShell,
       ledgerRepo: layers.services.ledgerRepo,

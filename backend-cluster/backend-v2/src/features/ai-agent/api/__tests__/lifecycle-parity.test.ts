@@ -1,3 +1,4 @@
+import { requestPlatform } from "@/server/api/request-platform";
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
@@ -57,7 +58,9 @@ let resolvers: Map<unknown, object>;
 let schemaPromise: ReturnType<typeof buildSchema> | undefined;
 type Surface = "rest" | "mcp" | "gql";
 const surfaces: Surface[] = ["rest", "mcp", "gql"];
-async function fixture(caller = identity) {
+async function fixture(caller = identity, appId?: string) {
+  const headers: Record<string, string> = appId ? { "x-app-id": appId } : {};
+  const platform = requestPlatform(headers);
   const records = new Map<string, typeof seed>([["alice/main", { ...seed }]]);
   const existingContent =
     '2026-01-01 * "Existing entry"\n  Assets:Cash  25 USD\n  Equity:Initial  -25 USD\n';
@@ -240,6 +243,7 @@ async function fixture(caller = identity) {
   const server = assembleMcpRegistry(
     {
       identity: caller,
+      platform,
       ledgerWorkflow: workflow,
       services,
     } as unknown as McpRequestContext,
@@ -312,7 +316,7 @@ async function fixture(caller = identity) {
             operation
           ],
           ...(operation !== "delete" && {
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...headers },
             body: JSON.stringify(input),
           }),
         });
@@ -344,7 +348,11 @@ async function fixture(caller = identity) {
       const r = await graphql({
         schema,
         source: `mutation{${field}(${formatted}){${operation === "delete" ? "ledgerId" : fields}}}`,
-        contextValue: { identity: caller, getCurrentIdentity: () => caller },
+        contextValue: {
+          identity: caller,
+          getCurrentIdentity: () => caller,
+          platform,
+        },
       });
       return { failed: Boolean(r.errors), data: r.data?.[field] };
     },
@@ -701,3 +709,51 @@ describe("ledger lifecycle through actual adapters and workflow", () => {
     }
   });
 });
+
+it.each(surfaces)(
+  "mobile creates beyond the free ledger cap via %s without changing web limits",
+  async (surface) => {
+    for (const [appId, mobile] of [
+      [undefined, false],
+      ["unknown-app", false],
+      ["beancount-mobile,unknown-app", false],
+      ["BEANCOUNT-MOBILE", false],
+      ["beancount-mobile", true],
+      ["mobile-beancount", true],
+    ] as const) {
+      const f = await fixture(identity, appId);
+      f.subscriptions.mockResolvedValue([]);
+      try {
+        const result = await f.call(surface, "create", { name: "second" });
+        expect(result.failed).toBe(!mobile);
+        expect(f.records.has("alice/second")).toBe(mobile);
+        if (mobile) {
+          expect(result.data).toEqual(expected("second", "", false));
+          expect(f.files.get("alice/second")).toEqual(defaultLedgerTemplate);
+        }
+        expect(f.create).toHaveBeenCalledTimes(mobile ? 1 : 0);
+        if (mobile) expect(f.subscriptions).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    }
+  },
+);
+it.each(surfaces)(
+  "mobile cannot create without administrative scope via %s",
+  async (surface) => {
+    const f = await fixture(
+      { ...identity, scopes: new Set(["ledger.read"]) },
+      "beancount-mobile",
+    );
+    try {
+      expect((await f.call(surface, "create", { name: "second" })).failed).toBe(
+        true,
+      );
+      expect(f.create).not.toHaveBeenCalled();
+      expect(f.subscriptions).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);

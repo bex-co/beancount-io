@@ -31,6 +31,7 @@ export class LLMParserResolver {
       ctx.getCurrentIdentity(),
       s3ObjectKey,
       fileFormat,
+      ctx.platform,
     );
   }
 
@@ -57,6 +58,7 @@ export class LLMParserResolver {
       ctx.getCurrentIdentity(),
       s3ObjectKey,
       ledgerId,
+      ctx.platform,
     );
   }
 }

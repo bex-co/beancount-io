@@ -143,6 +143,7 @@ export interface ILedgerWorkflow {
   createLedger(params: {
     identity: Identity;
     input: CreateLedgerCommand;
+    platform?: "web" | "mobile";
   }): Promise<LedgerData>;
   updateLedger(params: {
     identity: Identity;
@@ -387,9 +388,11 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   async createLedger({
     identity,
     input,
+    platform = "web",
   }: {
     identity: Identity;
     input: CreateLedgerCommand;
+    platform?: "web" | "mobile";
   }): Promise<LedgerData> {
     await this.authorization.authorizeOrThrow({
       principal: identity,
@@ -423,6 +426,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         config: this.config,
         ledgerCreate,
         userId,
+        platform,
       });
     });
   }

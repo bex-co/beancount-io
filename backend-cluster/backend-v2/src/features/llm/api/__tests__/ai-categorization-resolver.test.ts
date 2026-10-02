@@ -36,6 +36,7 @@ describe("LLMCategorizationQueryResolver", () => {
     };
 
     mockContext = {
+      platform: "mobile",
       getCurrentUserId: jest.fn().mockReturnValue("user123"),
       getCurrentIdentity: jest.fn().mockReturnValue(pinnedIdentity),
     } as unknown as IContext;
@@ -72,6 +73,7 @@ describe("LLMCategorizationQueryResolver", () => {
         pinnedIdentity,
         testLedgerId,
         mockTransactions,
+        "mobile",
       );
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({

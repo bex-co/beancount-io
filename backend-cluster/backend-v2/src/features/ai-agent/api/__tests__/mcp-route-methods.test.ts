@@ -48,18 +48,17 @@ const layers = {
 describe("MCP route: methods other than POST", () => {
   let server: http.Server;
   let url: string;
+  const receivedPlatforms: unknown[] = [];
 
   beforeAll(async () => {
     const app = new Koa();
     const router = new Router();
     app.use(restErrorMiddleware());
     app.use(bodyParser());
-    setMcpRoute(
-      router,
-      layers,
-      config,
-      () => new McpServer({ name: "test", version: "1.0.0" }),
-    );
+    setMcpRoute(router, layers, config, (context) => {
+      receivedPlatforms.push(context.platform);
+      return new McpServer({ name: "test", version: "1.0.0" });
+    });
     app.use(router.routes()).use(router.allowedMethods());
     server = http.createServer(app.callback());
     await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
@@ -137,4 +136,32 @@ describe("MCP route: methods other than POST", () => {
     expect(res.status).toBe(405);
     expect(res.headers.get("allow")).toBe("POST");
   });
+  it.each(["beancount-mobile", "mobile-beancount", "unknown-app"])(
+    "extracts %s on each authenticated POST",
+    async (appId) => {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json, text/event-stream",
+          "x-app-id": appId,
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "initialize",
+          params: {
+            protocolVersion: "2025-03-26",
+            capabilities: {},
+            clientInfo: { name: "test", version: "1" },
+          },
+        }),
+      });
+      await response.text();
+      expect(response.status).toBe(200);
+      expect(receivedPlatforms.at(-1)).toBe(
+        appId === "unknown-app" ? "web" : "mobile",
+      );
+    },
+  );
 });

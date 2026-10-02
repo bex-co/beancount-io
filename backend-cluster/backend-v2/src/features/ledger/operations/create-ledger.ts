@@ -44,6 +44,7 @@ export type CreateLedgerParams = {
   config: Pick<AppConfig, "gitea">;
   ledgerCreate: LedgerCreate;
   userId: string;
+  platform?: "web" | "mobile";
 };
 
 /**
@@ -60,35 +61,38 @@ export async function createLedger({
   config,
   ledgerCreate,
   userId,
+  platform = "web",
 }: CreateLedgerParams): Promise<Ledger> {
-  const listLedgersData = await unwrapFavaResponse(
-    favaApiClient.ledgers.listLedgers({
-      page: 1,
-      limit: 10,
-    }),
-    "list ledgers",
-    (cause) => ledgerApiError("list ledgers", cause),
-  );
-
   const user = await models.user.getById(postgresDb, userId);
   if (!user) {
     throw new NotFoundError("User", userId);
   }
 
-  const userLedgers = listLedgersData.filter((ledger) =>
-    ledger.full_name?.startsWith(`${user.ledger_username}/`),
-  );
-
-  // Check tier-based ledger limit
-  const userTier = await getUserTier({ stripe, models, postgresDb, userId });
-  const tierLimits = getTierLimits(userTier);
-
-  if (userLedgers.length >= tierLimits.maxLedgers) {
-    throw new ResourceLimitReachedError(
-      "Ledger",
-      tierLimits.maxLedgers,
-      userLedgers.length,
+  if (platform !== "mobile") {
+    const listLedgersData = await unwrapFavaResponse(
+      favaApiClient.ledgers.listLedgers({
+        page: 1,
+        limit: 10,
+      }),
+      "list ledgers",
+      (cause) => ledgerApiError("list ledgers", cause),
     );
+
+    const userLedgers = listLedgersData.filter((ledger) =>
+      ledger.full_name?.startsWith(`${user.ledger_username}/`),
+    );
+
+    // Check tier-based ledger limit
+    const userTier = await getUserTier({ stripe, models, postgresDb, userId });
+    const tierLimits = getTierLimits(userTier);
+
+    if (userLedgers.length >= tierLimits.maxLedgers) {
+      throw new ResourceLimitReachedError(
+        "Ledger",
+        tierLimits.maxLedgers,
+        userLedgers.length,
+      );
+    }
   }
 
   const data = (await unwrapFavaResponse(

@@ -44,6 +44,7 @@ export async function executeLifecycleTool(
       result: await context.ledgerWorkflow.createLedger({
         identity,
         input: ledgerCreateInput.parse(payload),
+        platform: context.platform,
       }),
     };
   }

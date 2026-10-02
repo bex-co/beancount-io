@@ -33,6 +33,7 @@ export interface ToolContext {
    * on the very next tool invocation (ADR 0006 D4/D9).
    */
   identity: Identity;
+  platform?: "web" | "mobile";
   ledgerId: string;
   llmService: ILLMService;
   apiKeyService: IApiKeyService;

@@ -1,3 +1,4 @@
+import { requestPlatform } from "@/server/api/request-platform";
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
@@ -26,10 +27,11 @@ export const receiptParseRoute = v1Route({
   responses: {
     200: json("Parsed receipt and account recommendations", receiptParseResult),
   },
-  handler: ({ layers }, { identity, params, body }) =>
+  handler: ({ layers }, { identity, params, body, ctx }) =>
     layers.services.llm.parseReceipt(
       identity,
       body.s3ObjectKey,
       ledgerIdOf(params),
+      requestPlatform(ctx.headers),
     ),
 });

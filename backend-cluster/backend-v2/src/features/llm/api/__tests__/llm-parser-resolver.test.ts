@@ -42,6 +42,7 @@ describe("LLMParserResolver", () => {
     };
 
     mockContext = {
+      platform: "mobile",
       getCurrentUserId: jest.fn().mockReturnValue("user123"),
       getCurrentIdentity: jest.fn().mockReturnValue(pinnedIdentity),
     } as unknown as IContext;
@@ -65,6 +66,7 @@ describe("LLMParserResolver", () => {
         pinnedIdentity,
         "tmp/file.csv",
         "csv",
+        "mobile",
       );
       expect(result.rows).toHaveLength(1);
       expect(result.rows[0].payee).toBe("Starbucks");
@@ -85,6 +87,7 @@ describe("LLMParserResolver", () => {
         pinnedIdentity,
         "tmp/receipt.jpg",
         "ledger123",
+        "mobile",
       );
       expect(result.sourceAccount).toBe("Assets:Bank");
       expect(result.targetAccount).toBe("Expenses:Food");

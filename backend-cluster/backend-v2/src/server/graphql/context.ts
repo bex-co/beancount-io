@@ -1,3 +1,4 @@
+import { requestPlatform } from "@/server/api/request-platform";
 import { AppConfig } from "@/config/config";
 import { type DatabaseLayer } from "@/foundation/composition";
 import { UnauthenticatedError } from "@/shared/errors";
@@ -9,17 +10,6 @@ import { logger } from "@/shared/logger";
 
 const lastSeenThrottle = new Map<string, number>();
 const LAST_SEEN_THROTTLE_MS = 5 * 60 * 1000;
-
-/**
- * Values of the `x-app-id` header the mobile app sends on every request
- * (`src/common/request.ts` in the mobile repo). NOTE: this is a plain,
- * client-supplied header, not a credential — anyone can set it (devtools,
- * curl, a browser extension). Known, accepted interim tradeoff: platform
- * detection is deliberately weak until a real mobile-only auth ceremony
- * exists. Do not use `ctx.platform` for anything beyond the soft directive
- * bypass it currently gates.
- */
-const MOBILE_APP_IDS = ["mobile-beancount", "beancount-mobile"];
 
 export interface IContext {
   /**
@@ -102,11 +92,7 @@ export async function createContext(
     return user as User;
   };
 
-  const platform: "web" | "mobile" = MOBILE_APP_IDS.includes(
-    reqHeaders["x-app-id"],
-  )
-    ? "mobile"
-    : "web";
+  const platform = requestPlatform(ctx.headers);
 
   // Create DataLoaders for this request
   const loaders = createLoaders(database.db, database.models);

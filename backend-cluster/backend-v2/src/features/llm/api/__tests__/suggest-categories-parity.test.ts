@@ -1,3 +1,4 @@
+import { requestPlatform } from "@/server/api/request-platform";
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
@@ -81,7 +82,13 @@ beforeEach(() => {
   });
 });
 
-async function fixture(caller = identity, accessKey = "fixture") {
+async function fixture(
+  caller = identity,
+  accessKey = "fixture",
+  appId?: string,
+) {
+  const headers: Record<string, string> = appId ? { "x-app-id": appId } : {};
+  const platform = requestPlatform(headers);
   const check = jest.fn(async () => ({
     allowed: true,
     currentCount: 10,
@@ -172,7 +179,11 @@ async function fixture(caller = identity, accessKey = "fixture") {
   );
   rest.setIdentity(caller);
   const server = assembleMcpRegistry(
-    { identity: caller, llmService: service } as unknown as McpRequestContext,
+    {
+      identity: caller,
+      llmService: service,
+      platform,
+    } as unknown as McpRequestContext,
     config,
   );
   const client = new Client({
@@ -192,7 +203,7 @@ async function fixture(caller = identity, accessKey = "fixture") {
         `${rest.url}/api-gateway/v1/ledgers/alice/main/import/suggest-categories`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", ...headers },
           body: JSON.stringify(body),
         },
       ),
@@ -202,7 +213,11 @@ async function fixture(caller = identity, accessKey = "fixture") {
         source:
           "query($ledgerId:String!,$transactions:[TransactionToCategorizeInput!]!) { suggestTransactionCategories(ledgerId:$ledgerId,transactions:$transactions) { rowIndex targetAccount confidence source reasoning } }",
         variableValues: { ledgerId: "alice/main", ...vars },
-        contextValue: { identity: caller, getCurrentIdentity: () => caller },
+        contextValue: {
+          identity: caller,
+          getCurrentIdentity: () => caller,
+          platform,
+        },
       }),
     read: async (payload: unknown = transactions) => {
       const result = await client.readResource({
@@ -299,44 +314,61 @@ it("passes an empty batch through without inventing a minimum", async () => {
   }
 });
 
-it("refuses missing read capability before quota or ledger work", async () => {
-  const f = await fixture({ ...identity, scopes: new Set() });
-  try {
-    expect((await f.rest()).status).toBe(403);
-    expect((await f.gql()).errors).toHaveLength(1);
-    await expect(f.read()).rejects.toThrow();
-    expect(f.check).not.toHaveBeenCalled();
-    expect(categorizeTransactions).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "refuses missing read capability before quota or ledger work (%s)",
+  async (appId) => {
+    const f = await fixture(
+      { ...identity, scopes: new Set() },
+      "fixture",
+      appId,
+    );
+    try {
+      expect((await f.rest()).status).toBe(403);
+      expect((await f.gql()).errors).toHaveLength(1);
+      await expect(f.read()).rejects.toThrow();
+      expect(f.check).not.toHaveBeenCalled();
+      expect(categorizeTransactions).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
 
-it("refuses a caller without AI-write relationship before quota", async () => {
-  const f = await fixture();
-  f.state.permission = "read";
-  try {
-    expect((await f.rest()).status).toBe(403);
-    expect((await f.gql()).errors).toHaveLength(1);
-    await expect(f.read()).rejects.toThrow();
-    expect(f.check).not.toHaveBeenCalled();
-    expect(categorizeTransactions).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "refuses a caller without AI-write relationship before quota (%s)",
+  async (appId) => {
+    const f = await fixture(identity, "fixture", appId);
+    f.state.permission = "read";
+    try {
+      expect((await f.rest()).status).toBe(403);
+      expect((await f.gql()).errors).toHaveLength(1);
+      await expect(f.read()).rejects.toThrow();
+      expect(f.check).not.toHaveBeenCalled();
+      expect(categorizeTransactions).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
 
-it("refuses a different credential pin before ledger work", async () => {
-  const f = await fixture({ ...identity, ledgerScope: "other/books" });
-  try {
-    expect((await f.rest()).status).toBe(403);
-    expect((await f.gql()).errors).toHaveLength(1);
-    await expect(f.read()).rejects.toThrow();
-    expect(categorizeTransactions).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "refuses a different credential pin before ledger work (%s)",
+  async (appId) => {
+    const f = await fixture(
+      { ...identity, ledgerScope: "other/books" },
+      "fixture",
+      appId,
+    );
+    try {
+      expect((await f.rest()).status).toBe(403);
+      expect((await f.gql()).errors).toHaveLength(1);
+      await expect(f.read()).rejects.toThrow();
+      expect(categorizeTransactions).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
 
 it("refuses exhausted quota before provider work or charging", async () => {
   const f = await fixture();
@@ -356,44 +388,48 @@ it("refuses exhausted quota before provider work or charging", async () => {
   }
 });
 
-it("fails without a configured provider key instead of guessing", async () => {
-  // The behavior under test is the service's per-call isLlmConfigured guard
-  // (ADR 0011): with neither direct provider key set at call time, every
-  // surface fails with a clear error before touching the model or the quota.
-  const f = await fixture(identity, "");
-  const priorAnthropic = process.env.ANTHROPIC_API_KEY;
-  const priorOpenai = process.env.OPENAI_API_KEY;
-  delete process.env.ANTHROPIC_API_KEY;
-  delete process.env.OPENAI_API_KEY;
-  try {
-    expect((await f.rest()).status).toBe(500);
-    expect((await f.gql()).errors).toHaveLength(1);
-    await expect(f.read()).rejects.toThrow();
-    expect(categorizeTransactions).not.toHaveBeenCalled();
-    expect(f.charge).not.toHaveBeenCalled();
-  } finally {
-    if (priorAnthropic === undefined) delete process.env.ANTHROPIC_API_KEY;
-    else process.env.ANTHROPIC_API_KEY = priorAnthropic;
-    if (priorOpenai === undefined) delete process.env.OPENAI_API_KEY;
-    else process.env.OPENAI_API_KEY = priorOpenai;
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "fails without a configured provider key instead of guessing (%s)",
+  async (appId) => {
+    // Provider configuration is checked at call time on every surface.
+    const f = await fixture(identity, "", appId);
+    const priorAnthropic = process.env.ANTHROPIC_API_KEY;
+    const priorOpenai = process.env.OPENAI_API_KEY;
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+    try {
+      expect((await f.rest()).status).toBe(500);
+      expect((await f.gql()).errors).toHaveLength(1);
+      await expect(f.read()).rejects.toThrow();
+      expect(categorizeTransactions).not.toHaveBeenCalled();
+      expect(f.charge).not.toHaveBeenCalled();
+    } finally {
+      if (priorAnthropic === undefined) delete process.env.ANTHROPIC_API_KEY;
+      else process.env.ANTHROPIC_API_KEY = priorAnthropic;
+      if (priorOpenai === undefined) delete process.env.OPENAI_API_KEY;
+      else process.env.OPENAI_API_KEY = priorOpenai;
+      await f.close();
+    }
+  },
+);
 
-it("propagates provider failure without charging", async () => {
-  const f = await fixture();
-  jest
-    .mocked(categorizeTransactions)
-    .mockRejectedValue(new Error("fixture provider unavailable"));
-  try {
-    expect((await f.rest()).status).toBe(500);
-    expect((await f.gql()).errors).toHaveLength(1);
-    await expect(f.read()).rejects.toThrow();
-    expect(f.charge).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "propagates provider failure without charging (%s)",
+  async (appId) => {
+    const f = await fixture(identity, "fixture", appId);
+    jest
+      .mocked(categorizeTransactions)
+      .mockRejectedValue(new Error("fixture provider unavailable"));
+    try {
+      expect((await f.rest()).status).toBe(500);
+      expect((await f.gql()).errors).toHaveLength(1);
+      await expect(f.read()).rejects.toThrow();
+      expect(f.charge).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
 
 it("rejects malformed structured input before any domain work", async () => {
   const f = await fixture();
@@ -422,3 +458,33 @@ it("rejects malformed structured input before any domain work", async () => {
     await f.close();
   }
 });
+
+it.each(["beancount-mobile", "mobile-beancount"])(
+  "mobile %s bypasses exhausted plan quota while recording actual usage",
+  async (appId) => {
+    const f = await fixture(identity, "fixture", appId);
+    f.check.mockResolvedValue({
+      allowed: false,
+      currentCount: 1000,
+      maxAllowed: 1000,
+    });
+    try {
+      const r = await f.rest();
+      const g = await f.gql();
+      expect(r.status).toBe(200);
+      expect(g.errors).toBeUndefined();
+      for (const result of [
+        await r.json(),
+        g.data!.suggestTransactionCategories,
+        await f.read(),
+      ]) {
+        expect(result).toEqual(expected);
+      }
+      expect(f.check).not.toHaveBeenCalled();
+      expect(f.charge).toHaveBeenCalledTimes(3);
+      expect(f.charge).toHaveBeenCalledWith("usr_alice", 140);
+    } finally {
+      await f.close();
+    }
+  },
+);

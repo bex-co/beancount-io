@@ -386,6 +386,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
           context.identity,
           resolveLedgerId(context, { owner, name }),
           suggestCategoriesQuery.parse(query).transactions,
+          context.platform,
         ),
       ),
   },

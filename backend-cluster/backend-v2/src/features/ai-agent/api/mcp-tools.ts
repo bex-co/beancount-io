@@ -462,6 +462,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
           context.identity,
           args.s3ObjectKey,
           args.fileFormat,
+          context.platform,
         ),
       };
     },

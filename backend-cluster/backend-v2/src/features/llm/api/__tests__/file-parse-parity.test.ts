@@ -1,3 +1,4 @@
+import { requestPlatform } from "@/server/api/request-platform";
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
@@ -67,7 +68,9 @@ beforeEach(() => {
   });
 });
 
-async function fixture(caller = identity) {
+async function fixture(caller = identity, appId?: string) {
+  const headers: Record<string, string> = appId ? { "x-app-id": appId } : {};
+  const platform = requestPlatform(headers);
   const metadata = jest.fn(async () => ({ contentType: "text/csv" }));
   const download = jest.fn(async () => ({
     downloadUrl: "https://storage.invalid/fixture",
@@ -100,7 +103,11 @@ async function fixture(caller = identity) {
   );
   rest.setIdentity(caller);
   const server = assembleMcpRegistry(
-    { identity: caller, llmService: service } as unknown as McpRequestContext,
+    {
+      identity: caller,
+      llmService: service,
+      platform,
+    } as unknown as McpRequestContext,
     config,
   );
   const client = new Client({ name: "file-parse-parity", version: "1" });
@@ -114,7 +121,7 @@ async function fixture(caller = identity) {
     rest: (body: unknown = input) =>
       fetch(`${rest.url}/api-gateway/v1/import/parse-file`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", ...headers },
         body: JSON.stringify(body),
       }),
     gql: (args = input) =>
@@ -123,7 +130,11 @@ async function fixture(caller = identity) {
         source:
           "mutation($s3ObjectKey:String!,$fileFormat:String!) { parseFile(s3ObjectKey:$s3ObjectKey,fileFormat:$fileFormat) { rows { date payee description amount } } }",
         variableValues: args,
-        contextValue: { identity: caller, getCurrentIdentity: () => caller },
+        contextValue: {
+          identity: caller,
+          getCurrentIdentity: () => caller,
+          platform,
+        },
       }),
     mcp: (args: Record<string, unknown> = input) =>
       client.callTool({ name: "parseFile", arguments: args }),
@@ -167,14 +178,18 @@ it.each([
   }
 });
 
-it.each([
-  "tmp/usr_other/statement.csv",
-  "assets/usr_alice/statement.csv",
-  "tmp/usr_alice/",
-])(
-  "rejects unowned key %s before storage or provider access",
-  async (s3ObjectKey) => {
-    const f = await fixture();
+it.each(
+  [undefined, "beancount-mobile"].flatMap((appId) =>
+    [
+      "tmp/usr_other/statement.csv",
+      "assets/usr_alice/statement.csv",
+      "tmp/usr_alice/",
+    ].map((s3ObjectKey) => ({ appId, s3ObjectKey })),
+  ),
+)(
+  "rejects unowned key $s3ObjectKey before storage or provider access ($appId)",
+  async ({ appId, s3ObjectKey }) => {
+    const f = await fixture(identity, appId);
     const args = { ...input, s3ObjectKey };
     try {
       expect((await f.rest(args)).status).toBe(404);
@@ -190,19 +205,22 @@ it.each([
   },
 );
 
-it("refuses missing read capability before quota or storage access", async () => {
-  const f = await fixture({ ...identity, scopes: new Set() });
-  try {
-    expect((await f.rest()).status).toBe(403);
-    expect((await f.gql()).errors).toHaveLength(1);
-    expect((await f.mcp()).isError).toBe(true);
-    expect(f.check).not.toHaveBeenCalled();
-    expect(f.metadata).not.toHaveBeenCalled();
-    expect(extractTransactionsFromFile).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "refuses missing read capability before quota or storage access (%s)",
+  async (appId) => {
+    const f = await fixture({ ...identity, scopes: new Set() }, appId);
+    try {
+      expect((await f.rest()).status).toBe(403);
+      expect((await f.gql()).errors).toHaveLength(1);
+      expect((await f.mcp()).isError).toBe(true);
+      expect(f.check).not.toHaveBeenCalled();
+      expect(f.metadata).not.toHaveBeenCalled();
+      expect(extractTransactionsFromFile).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
 
 it("refuses exhausted quota before downloading or parsing", async () => {
   const f = await fixture();
@@ -224,17 +242,52 @@ it("refuses exhausted quota before downloading or parsing", async () => {
   }
 });
 
-it("propagates provider failure without charging a successful parse", async () => {
-  const f = await fixture();
-  jest
-    .mocked(extractTransactionsFromFile)
-    .mockRejectedValue(new Error("fixture provider unavailable"));
-  try {
-    expect((await f.rest()).status).toBe(500);
-    expect((await f.gql()).errors).toHaveLength(1);
-    expect((await f.mcp()).isError).toBe(true);
-    expect(f.charge).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "propagates provider failure without charging a successful parse (%s)",
+  async (appId) => {
+    const f = await fixture(identity, appId);
+    jest
+      .mocked(extractTransactionsFromFile)
+      .mockRejectedValue(new Error("fixture provider unavailable"));
+    try {
+      expect((await f.rest()).status).toBe(500);
+      expect((await f.gql()).errors).toHaveLength(1);
+      expect((await f.mcp()).isError).toBe(true);
+      expect(f.charge).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it.each(["beancount-mobile", "mobile-beancount"])(
+  "mobile %s bypasses exhausted plan quota while recording actual usage",
+  async (appId) => {
+    const f = await fixture(identity, appId);
+    f.check.mockResolvedValue({
+      allowed: false,
+      currentCount: 1000,
+      maxAllowed: 1000,
+    });
+    try {
+      const r = await f.rest();
+      const g = await f.gql();
+      const m = await f.mcp();
+      expect(r.status).toBe(200);
+      expect(g.errors).toBeUndefined();
+      expect(m.isError).not.toBe(true);
+      for (const result of [
+        await r.json(),
+        g.data!.parseFile,
+        (m.structuredContent as { result: unknown }).result,
+      ]) {
+        expect(result).toEqual({ rows });
+      }
+      expect(f.check).not.toHaveBeenCalled();
+      expect(f.charge).toHaveBeenCalledTimes(3);
+      expect(f.charge).toHaveBeenCalledWith("usr_alice", 100);
+    } finally {
+      await f.close();
+    }
+  },
+);
