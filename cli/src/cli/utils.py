@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import os
 import re
-import tempfile
+import secrets
+import stat
 import unicodedata
 from datetime import date as Date
 from pathlib import Path
@@ -163,21 +164,35 @@ def parse_opt_date(date_str: str | None) -> Date | None:
     return parse_date(date_str)
 
 
-def atomic_write(path: Path, content: str) -> None:
-    """Replace `path` with `content` without a half-written file."""
+def atomic_write(path: Path, content: str, *, export: bool = False) -> None:
+    """Replace atomically; exports preserve modes and follow destination links.
+
+    Internal configuration remains private. Export creation lets the OS apply
+    the umask, avoiding any process-wide mask change while other threads run.
+    """
+    if export:
+        path = path.resolve()
     try:
-        mode = path.stat().st_mode
+        mode = stat.S_IMODE(path.stat().st_mode)
     except FileNotFoundError:
         mode = None
     if mode is not None and not mode & 0o222:
         raise PermissionError(f"Output file is read-only: {path}")
-    fd, name = tempfile.mkstemp(prefix=".bea-", suffix=".tmp", dir=path.parent)
-    candidate = Path(name)
+    creation_mode = 0o666 if export and mode is None else 0o600
+    while True:
+        candidate = path.parent / f".bea-{secrets.token_hex(8)}.tmp"
+        try:
+            fd = os.open(candidate, os.O_RDWR | os.O_CREAT | os.O_EXCL, creation_mode)
+            break
+        except FileExistsError:
+            continue
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as stream:
             stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())
+        if export and mode is not None:
+            candidate.chmod(mode)
         os.replace(candidate, path)
     finally:
         candidate.unlink(missing_ok=True)

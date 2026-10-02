@@ -395,7 +395,7 @@ def emit(
     if destination is None:
         print(serialized, end="")
     else:
-        atomic_write(destination, serialized)
+        atomic_write(destination, serialized, export=True)
 
 
 def _cost_spec_jsonable(cost: Any) -> dict[str, Any]:

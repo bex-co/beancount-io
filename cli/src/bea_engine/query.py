@@ -28,6 +28,7 @@ from __future__ import annotations
 import difflib
 import os
 import re
+import stat
 import sys
 import unicodedata
 from collections.abc import Mapping
@@ -166,6 +167,10 @@ def text_answer(
     """
     import io
 
+    if output is not None:
+        # Keep the approved target stable if the user's symlink is retargeted
+        # while the query runs. The alias check below sees this same path.
+        output = output.resolve()
     # The shell renders into a buffer and the destination is opened only once
     # the whole query has succeeded. Opening it before the load would truncate
     # a `-o` naming the ledger under read before the load saw a byte of it;
@@ -200,7 +205,13 @@ def text_answer(
         # JSON path, which is why that path already preserved.
         from bea_engine.ledger.write import candidate_file
 
-        with candidate_file(output, buffer.getvalue()) as candidate:
+        try:
+            mode = stat.S_IMODE(output.stat().st_mode)
+        except FileNotFoundError:
+            mode = None
+        with candidate_file(output, buffer.getvalue(), mode=0o666 if mode is None else 0o600) as candidate:
+            if mode is not None:
+                candidate.chmod(mode)
             os.replace(candidate, output)
         # The export is the result; the frontend has nothing left to print.
         return {"text": "", "errors": errors}

@@ -410,8 +410,10 @@ envelope names `{"stdin": "-"}` as its target.
 `bea --json query "SELECT account, sum(position) GROUP BY account" -o result.json`
 writes the standard JSON envelope to the file with no duplicate stdout output.
 `-o -` keeps stdout; `--numberify` splits inventories into decimal currency columns
-in JSON as well as text. JSON exports replace the destination only after a successful
-query; a failed query or write preserves an existing export.
+in JSON as well as text. One-shot query exports replace the destination only after a successful
+query; a failed query or write preserves an existing export. Text, CSV, and JSON
+exports preserve an existing file's permissions and follow destination symlinks.
+New exports use the caller's umask (for example, `0644` with umask `022`).
 
 An `-o` destination that is the ledger under read is refused with exit 2 before
 anything is written, in one-shots and in the interactive shell's `.output`

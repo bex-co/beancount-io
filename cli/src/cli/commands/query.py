@@ -216,6 +216,9 @@ def query(
     if output_format is None:
         output_format = "text"
     if output_file is not None:
+        # Resolve once before checking aliases, then carry that target through
+        # the engine and JSON writer even if the original link changes.
+        output_file = str(Path(output_file).resolve())
         output.check_output_destination(Path(output_file))
 
     rendering = ["--format", output_format]

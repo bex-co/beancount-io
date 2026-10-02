@@ -8,10 +8,10 @@ import glob
 import hashlib
 import os
 import re
+import secrets
 import shlex
 import stat
 import sys
-import tempfile
 import time
 import unicodedata
 from collections import Counter
@@ -242,10 +242,19 @@ def lock_file(file: Path) -> Iterator[None]:
 
 
 @contextmanager
-def candidate_file(file: Path, content: str) -> Iterator[Path]:
-    """Keep relative includes and documents relative to the original directory."""
-    fd, name = tempfile.mkstemp(prefix=".bea-", suffix=".tmp", dir=file.parent)
-    candidate = Path(name)
+def candidate_file(file: Path, content: str, *, mode: int = 0o600) -> Iterator[Path]:
+    """Stage beside the original, privately unless an export requests a mode.
+
+    Exclusive creation lets the OS apply the umask without changing the
+    process-wide mask, which would also affect other threads' file writes.
+    """
+    while True:
+        candidate = file.parent / f".bea-{secrets.token_hex(8)}.tmp"
+        try:
+            fd = os.open(candidate, os.O_RDWR | os.O_CREAT | os.O_EXCL, mode)
+            break
+        except FileExistsError:
+            continue
     try:
         # Preserve the supplied bytes: Windows newline translation would turn
         # existing CRLF into CRCRLF on every append.
