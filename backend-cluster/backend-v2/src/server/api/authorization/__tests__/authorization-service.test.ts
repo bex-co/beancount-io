@@ -615,6 +615,32 @@ describe("AuthorizationService", () => {
     }
   });
 
+  it.each(LEDGER_CONTENT_READ_ACTIONS)(
+    "conceals relationship denials but preserves credential denials for %s",
+    async (action) => {
+      const relationships = { check: jest.fn(async () => false) };
+      const service = new AuthorizationService(relationships);
+      const principal = identity("oauth", "usr_alice", ["ledger.read"]);
+      const resource = ledgerResource("alice/private");
+      await expect(
+        service.authorizeOrThrow({ principal, action, resource }),
+      ).rejects.toMatchObject({
+        category: ErrorCategory.NOT_FOUND,
+        message: "Ledger not found",
+      });
+      relationships.check.mockClear();
+      for (const restricted of [
+        { ...principal, scopes: new Set<string>() },
+        { ...principal, ledgerScope: "alice/other" },
+      ]) {
+        await expect(
+          service.authorizeOrThrow({ principal: restricted, action, resource }),
+        ).rejects.toMatchObject({ category: ErrorCategory.FORBIDDEN });
+      }
+      expect(relationships.check).not.toHaveBeenCalled();
+    },
+  );
+
   it("checks a ledger pin before any control-plane relationship lookup", async () => {
     const relationships = { check: jest.fn(async () => true) };
     const principal = {

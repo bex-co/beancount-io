@@ -191,7 +191,7 @@ describe("archive bytes through canonical adapters and the legacy REST twin", ()
       await f.read(canonical("main.zip"));
       f.check.mockResolvedValue(false);
       await expect(f.read(canonical("main.zip"))).rejects.toThrow();
-      expect((await f.rest("main.zip")).status).toBe(403);
+      expect((await f.rest("main.zip")).status).toBe(404);
       expect(f.calls).toHaveLength(1);
     } finally {
       await f.close();

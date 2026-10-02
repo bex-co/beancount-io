@@ -133,6 +133,14 @@ access. Metadata permission checks also require a positive integer repository
 ID and boolean visibility before granting owner, collaborator, or public access;
 a malformed successful response is denied across REST, GraphQL, and MCP.
 
+Authenticated ledger content reads conceal missing or inaccessible ledgers with `NOT_FOUND`
+and `Ledger not found` (HTTP 404 on REST), matching administration and
+collaborator operations. This includes metadata, reports, journals, accounts,
+files, repository history, BQL, archives, and pull-request reads. Credential
+scope and ledger-pin denials remain forbidden; unavailable authorization
+sources remain service-unavailable errors. Denied anonymous reads keep their
+authentication-required response. No relationship grant changes.
+
 ## Contract evidence required per operation
 
 Each adapter family must record and exercise its actual arguments and defaults,

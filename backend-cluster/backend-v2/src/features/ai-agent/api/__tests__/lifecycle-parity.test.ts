@@ -25,6 +25,7 @@ import {
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { formatError } from "@/server/graphql/format-error";
+import { FavaApiError } from "@/foundation/fava";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
@@ -80,13 +81,26 @@ async function fixture(caller = identity, appId?: string) {
   const adminGet = jest.fn(async (owner: string, name: string) =>
     envelope(records.get(`${owner}/${name}`)),
   );
+  const collaboratorPermission = jest.fn(async () =>
+    envelope({ permission: null }),
+  );
   const evaluator = new SourceBackedRelationshipEvaluator(
     {} as never,
     {
-      user: { getUserByUsername },
+      user: {
+        getUserByUsername,
+        getById: async () => ({ ledger_username: "bob" }),
+      },
     } as never,
     { getUserApiClient: async () => ({ repos: { repoGet } }) } as never,
     {
+      getApiContext: async () => ({
+        favaApiClient: {
+          collaborators: {
+            getLedgerCollaboratorPermission: collaboratorPermission,
+          },
+        },
+      }),
       getAdminClient: () => ({
         ledgers: { getLedger: adminGet },
       }),
@@ -272,6 +286,7 @@ async function fixture(caller = identity, appId?: string) {
     repoGet,
     getUserByUsername,
     adminGet,
+    collaboratorPermission,
     client,
     files,
     existingContent,
@@ -466,6 +481,69 @@ function expected(name: string, description: string, privateValue: boolean) {
   };
 }
 describe("ledger lifecycle through actual adapters and workflow", () => {
+  describe.each(surfaces)("ledger denial contract via %s", (surface) => {
+    it.each(["missing", "inaccessible"] as const)(
+      "conceals %s ledgers identically for reads and deletion",
+      async (state) => {
+        const f = await fixture({ ...identity, userId: "usr_bob" });
+        f.repoGet.mockRejectedValue({ status: 404 });
+        if (state === "missing") {
+          f.records.delete("alice/main");
+          f.adminGet.mockRejectedValue(new FavaApiError("Not found", 404));
+        }
+        try {
+          const deletion = await f.call(surface, "delete");
+          const read = await f.call(surface, "read");
+          for (const response of [deletion, read]) {
+            expect(response.failed).toBe(true);
+            expect(response.error).toMatchObject({
+              code: "NOT_FOUND",
+              message: "Ledger not found",
+            });
+            if ("status" in response) expect(response.status).toBe(404);
+          }
+          expect(f.get).not.toHaveBeenCalled();
+          expect(f.getPublicApiClient).not.toHaveBeenCalled();
+          expect(f.getApiContext).not.toHaveBeenCalled();
+          expect(f.remove).not.toHaveBeenCalled();
+          if (state === "inaccessible")
+            expect(f.collaboratorPermission).toHaveBeenCalledWith(
+              "alice",
+              "main",
+              "bob",
+            );
+        } finally {
+          await f.close();
+        }
+      },
+    );
+    it("keeps credential denials distinct from missing ledgers", async () => {
+      const f = await fixture({ ...identity, scopes: new Set() });
+      try {
+        const response = await f.call(surface, "read");
+        expect(response.failed).toBe(true);
+        expect(response.error?.code).toBe("FORBIDDEN");
+        if ("status" in response) expect(response.status).toBe(403);
+        expect(f.adminGet).not.toHaveBeenCalled();
+        expect(f.get).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+    it("keeps authorization source outages distinct from missing ledgers", async () => {
+      const f = await fixture();
+      f.adminGet.mockRejectedValue(new Error("source unavailable"));
+      try {
+        const response = await f.call(surface, "read");
+        expect(response.failed).toBe(true);
+        expect(response.error?.code).toBe("SERVICE_UNAVAILABLE");
+        if ("status" in response) expect(response.status).toBe(503);
+        expect(f.get).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  });
   it.each(surfaces)(
     "denies the owner a malformed privacy probe before reading ledger content via %s",
     async (surface) => {
@@ -474,8 +552,8 @@ describe("ledger lifecycle through actual adapters and workflow", () => {
       try {
         const response = await f.call(surface, "read");
         expect(response.failed).toBe(true);
-        expect(response.error?.code).toBe("FORBIDDEN");
-        if ("status" in response) expect(response.status).toBe(403);
+        expect(response.error?.code).toBe("NOT_FOUND");
+        if ("status" in response) expect(response.status).toBe(404);
         expect(f.authorize).toHaveBeenCalledTimes(1);
         expect(f.getUserByUsername).toHaveBeenCalledTimes(1);
         expect(f.adminGet).toHaveBeenCalledTimes(1);

@@ -257,8 +257,8 @@ describe("download URL discovery and authorized HTTP consumption", () => {
             `${f.restBase}/api-gateway/v1/ledgers/alice/main/archive-download-url`,
           )
         ).status,
-      ).toBe(403);
-      expect((await fetch(mcp.downloadUrl)).status).toBe(403);
+      ).toBe(404);
+      expect((await fetch(mcp.downloadUrl)).status).toBe(404);
       expect(
         f.upstreamRequests.filter((p) => p.includes("archive")),
       ).toHaveLength(1);
@@ -323,7 +323,7 @@ describe("download URL discovery and authorized HTTP consumption", () => {
       ]) {
         if (failure === false) f.check.mockResolvedValue(false);
         else f.check.mockRejectedValue(failure);
-        expect((await f.rest()).status).toBe(failure === false ? 403 : 503);
+        expect((await f.rest()).status).toBe(failure === false ? 404 : 503);
         await expect(
           f.read(
             `beancount://assets/download-url?ledgerRepoId=42&filename=${encodeURIComponent(filename)}`,

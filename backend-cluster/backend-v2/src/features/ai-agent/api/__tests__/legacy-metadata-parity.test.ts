@@ -238,7 +238,7 @@ describe("legacy metadata parity", () => {
     const f = await fixture(pinnedReadToken);
     f.check.mockResolvedValue(false);
     try {
-      expect((await f.rest()).status).toBe(403);
+      expect((await f.rest()).status).toBe(404);
       expect((await f.gql()).errors).toHaveLength(1);
       expect(f.reports.getLedgerOptions).not.toHaveBeenCalled();
     } finally {
@@ -368,7 +368,7 @@ describe("legacy journal parity", () => {
     const f = await fixture(pinnedReadToken);
     f.check.mockResolvedValue(false);
     try {
-      expect((await f.restJournal({})).status).toBe(403);
+      expect((await f.restJournal({})).status).toBe(404);
       expect((await f.gqlJournal({})).errors).toHaveLength(1);
       expect(f.legacy.getLegacyJournal).not.toHaveBeenCalled();
     } finally {

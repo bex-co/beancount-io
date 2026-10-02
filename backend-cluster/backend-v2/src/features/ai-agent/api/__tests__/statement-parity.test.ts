@@ -440,7 +440,7 @@ describe("report refusals", () => {
     const f = await fixture();
     f.check.mockResolvedValue(false);
     try {
-      expect((await f.rest(path)).status).toBe(403);
+      expect((await f.rest(path)).status).toBe(404);
       await expect(f.mcp(path)).rejects.toThrow();
       expect((await f.gql(query)).errors).toHaveLength(1);
       for (const call of Object.values(f.reports))

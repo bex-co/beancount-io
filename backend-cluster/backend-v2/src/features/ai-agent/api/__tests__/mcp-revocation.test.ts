@@ -132,7 +132,7 @@ describe("MCP per-call authorization: mid-session revocation", () => {
     ).resolves.toEqual({ ok: true, result: "ok" });
   });
 
-  it("authorizeLedger itself throws an actionable forbidden error once revoked", async () => {
+  it("authorizeLedger itself conceals the ledger once access is revoked", async () => {
     const ledgerShell = buildService(() => false);
     await expect(
       ledgerShell.queryShellText({
@@ -140,6 +140,6 @@ describe("MCP per-call authorization: mid-session revocation", () => {
         identity: identity(),
         query: "BALANCES",
       }),
-    ).rejects.toMatchObject({ category: ErrorCategory.FORBIDDEN });
+    ).rejects.toMatchObject({ category: ErrorCategory.NOT_FOUND });
   });
 });

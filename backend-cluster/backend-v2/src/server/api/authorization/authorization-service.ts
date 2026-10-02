@@ -179,6 +179,7 @@ const ledgerContentReadRequirement = (): ActionRequirement => ({
   relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS)],
   credential: LEDGER_CONTENT_READ_CREDENTIAL,
   auditClass: "read",
+  concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
 });
 
 /** The one executable policy catalog for protected application domains. */
