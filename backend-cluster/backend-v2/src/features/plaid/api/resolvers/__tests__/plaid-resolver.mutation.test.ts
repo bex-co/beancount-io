@@ -424,8 +424,8 @@ describe("PlaidMutationResolver", () => {
       } as unknown as IContext;
     }
 
-    const PINNED = "alice/ledgerA";
-    const OTHER = "alice/ledgerB";
+    const PINNED = "alice/ledger-a";
+    const OTHER = "alice/ledger-b";
 
     it.each([
       [

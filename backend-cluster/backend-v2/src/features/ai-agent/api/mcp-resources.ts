@@ -41,7 +41,7 @@ import {
   type ListResourcesCallback,
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type McpRequestContext, resolveMcpLedger } from "./mcp-context";
-import { parseLedgerId } from "@/shared/str";
+import { createLedgerId, parseLedgerId } from "@/shared/str";
 import { VOCABULARY_READS } from "@/features/ledger/api/rest/v1/vocabulary-handler";
 import { ANALYSIS_READS } from "@/features/ledger/api/rest/v1/analysis-handler";
 import { NotFoundError } from "@/shared/errors";
@@ -137,8 +137,8 @@ function resolveLedgerId(
 ): string {
   const owner = String(variables.owner ?? "");
   const name = String(variables.name ?? "");
-  const requested = owner && name ? `${owner}/${name}` : "";
-  return resolveMcpLedger(toolCtx, requested || undefined);
+  const requested = createLedgerId(owner, name);
+  return resolveMcpLedger(toolCtx, requested);
 }
 
 /** `payee-accounts` → `ledgerPayeeAccounts`: the path segment, camel-cased. */

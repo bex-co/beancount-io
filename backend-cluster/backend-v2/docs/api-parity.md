@@ -118,6 +118,15 @@ account-scoped operations do not require a fabricated ledger ID. MCP remains
 stateless and resolves identity for each HTTP request. Existing pinned clients
 continue to work. Account-wide OAuth grants require explicit user consent.
 
+Ledger targets are validated before repository lookups on REST, GraphQL, and
+MCP. A ledger name contains 1–100 lowercase ASCII letters, digits, underscores,
+or hyphens. Owners retain existing case and may also contain dots, but cannot
+be `.` or `..`. Encoded separators, query/fragment delimiters, whitespace, and
+extra path segments are rejected rather than decoded into another repository.
+REST reports its schema-validation error; GraphQL and MCP report bad input.
+A literal dot segment that the MCP SDK normalizes into an unmatched resource
+URI is rejected as not found before any repository lookup.
+
 ## Contract evidence required per operation
 
 Each adapter family must record and exercise its actual arguments and defaults,

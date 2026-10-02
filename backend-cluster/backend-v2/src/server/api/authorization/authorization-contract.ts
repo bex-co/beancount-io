@@ -1,4 +1,5 @@
 import type { Identity } from "@/server/api/identity";
+import { parseLedgerId } from "@/shared/str";
 
 /**
  * Transport-neutral domain actions understood by the centralized PDP.
@@ -169,6 +170,7 @@ export function apiKeyResource(apiKeyId: string): ApiKeyResource {
 
 /** Canonical application ledger id (`owner/name`), never a caller identity. */
 export function ledgerResource(ledgerId: string): LedgerResource {
+  parseLedgerId(ledgerId);
   return `ledger:${ledgerId}`;
 }
 

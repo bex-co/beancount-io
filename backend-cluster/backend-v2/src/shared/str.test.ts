@@ -6,6 +6,7 @@ import {
   createLedgerId,
   parseLedgerId,
 } from "./str";
+import { BadUserInputError } from "./errors";
 
 describe("str utilities", () => {
   describe("getRandomString", () => {
@@ -44,11 +45,9 @@ describe("str utilities", () => {
     });
 
     it("does not depend on Math.random", () => {
-      const mathRandom = jest
-        .spyOn(Math, "random")
-        .mockImplementation(() => {
-          throw new Error("insecure PRNG called");
-        });
+      const mathRandom = jest.spyOn(Math, "random").mockImplementation(() => {
+        throw new Error("insecure PRNG called");
+      });
 
       expect(getRandomString(16)).toMatch(/^[a-zA-Z0-9]{16}$/);
       expect(mathRandom).not.toHaveBeenCalled();
@@ -172,11 +171,38 @@ describe("str utilities", () => {
       expect(parsed.ledgerName).toBe(name);
     });
 
-    it("should split on first slash to support names with slashes", () => {
-      const parsed = parseLedgerId("owner/my/ledger");
+    it.each([
+      "my/ledger",
+      "%2f",
+      "%252f",
+      "main?x=1",
+      "main#x",
+      "..",
+      "MAIN",
+      "my ledger",
+      "a".repeat(101),
+      "main\n",
+    ])("rejects unsafe ledger name %s when building or parsing IDs", (name) => {
+      expect(() => createLedgerId("alice", name)).toThrow(BadUserInputError);
+      expect(() => parseLedgerId(`alice/${name}`)).toThrow(BadUserInputError);
+    });
 
-      expect(parsed.ledgerOwner).toBe("owner");
-      expect(parsed.ledgerName).toBe("my/ledger");
+    it.each([".", "..", "a/b", "a%2fb", "a?b", "a#b", "a b", "a\\b"])(
+      "rejects unsafe owner %s when building or parsing IDs",
+      (owner) => {
+        expect(() => createLedgerId(owner, "main")).toThrow(BadUserInputError);
+        expect(() => parseLedgerId(`${owner}/main`)).toThrow(BadUserInputError);
+      },
+    );
+
+    it("preserves existing mixed-case and dotted usernames", () => {
+      expect(createLedgerId("Alice.Smith_1", "main-ledger")).toBe(
+        "Alice.Smith_1/main-ledger",
+      );
+      expect(parseLedgerId("Alice.Smith_1/main-ledger")).toEqual({
+        ledgerOwner: "Alice.Smith_1",
+        ledgerName: "main-ledger",
+      });
     });
 
     it("should throw error when parsing empty ID", () => {

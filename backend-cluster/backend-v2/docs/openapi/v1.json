@@ -2099,7 +2099,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -2111,7 +2111,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -2313,7 +2313,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -2325,7 +2325,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -2553,7 +2553,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -2565,7 +2565,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -2707,7 +2707,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -2719,7 +2719,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -3476,7 +3476,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -3488,7 +3488,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -3666,7 +3666,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -3678,7 +3678,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -3883,7 +3883,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -3895,7 +3895,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -4106,7 +4106,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -4118,7 +4118,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -4322,7 +4322,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -4334,7 +4334,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -4550,7 +4550,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -4562,7 +4562,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -4740,7 +4740,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -4752,7 +4752,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -4930,7 +4930,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -4942,7 +4942,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -5100,7 +5100,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -5112,7 +5112,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -5272,7 +5272,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -5284,7 +5284,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -5426,7 +5426,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -5438,7 +5438,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -5600,7 +5600,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -5612,7 +5612,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -5753,7 +5753,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -5765,7 +5765,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -5955,7 +5955,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -5967,7 +5967,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -6145,7 +6145,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -6157,7 +6157,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -6329,7 +6329,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -6341,7 +6341,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -6493,7 +6493,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -6505,7 +6505,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -7669,7 +7669,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -7681,7 +7681,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -7828,7 +7828,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -7840,7 +7840,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -8059,7 +8059,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -8071,7 +8071,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -8230,7 +8230,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -8242,7 +8242,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -8489,7 +8489,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -8501,7 +8501,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -8634,7 +8634,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -8646,7 +8646,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -8792,7 +8792,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -8804,7 +8804,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -9019,7 +9019,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -9031,7 +9031,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -9178,7 +9178,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -9190,7 +9190,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -9333,7 +9333,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -9345,7 +9345,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -9497,7 +9497,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -9509,7 +9509,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -9663,7 +9663,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -9675,7 +9675,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -9857,7 +9857,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -9869,7 +9869,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -10024,7 +10024,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -10036,7 +10036,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -10481,7 +10481,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -10493,7 +10493,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -10660,7 +10660,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -10672,7 +10672,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -10851,7 +10851,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -10863,7 +10863,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -11043,7 +11043,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -11055,7 +11055,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -11191,7 +11191,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -11203,7 +11203,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -11339,7 +11339,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -11351,7 +11351,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -11487,7 +11487,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -11499,7 +11499,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -11635,7 +11635,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -11647,7 +11647,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -11783,7 +11783,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -11795,7 +11795,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -11931,7 +11931,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -11943,7 +11943,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -12079,7 +12079,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -12091,7 +12091,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -12320,7 +12320,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -12332,7 +12332,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -12468,7 +12468,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -12480,7 +12480,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -12616,7 +12616,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -12628,7 +12628,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -12761,7 +12761,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -12773,7 +12773,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -13014,7 +13014,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -13026,7 +13026,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -13226,7 +13226,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -13238,7 +13238,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -13404,7 +13404,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -13416,7 +13416,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -13604,7 +13604,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -13616,7 +13616,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -13830,7 +13830,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -13842,7 +13842,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -14041,7 +14041,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -14053,7 +14053,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -14219,7 +14219,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -14231,7 +14231,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -14397,7 +14397,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -14409,7 +14409,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -14575,7 +14575,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -14587,7 +14587,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -14730,7 +14730,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -14742,7 +14742,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -14885,7 +14885,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -14897,7 +14897,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -15040,7 +15040,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -15052,7 +15052,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -15195,7 +15195,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -15207,7 +15207,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -15340,7 +15340,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -15352,7 +15352,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -15485,7 +15485,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -15497,7 +15497,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -15638,7 +15638,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -15650,7 +15650,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -15807,7 +15807,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -15819,7 +15819,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -15962,7 +15962,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -15974,7 +15974,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -16107,7 +16107,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -16119,7 +16119,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -16262,7 +16262,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -16274,7 +16274,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -16417,7 +16417,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -16429,7 +16429,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -16572,7 +16572,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -16584,7 +16584,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -16741,7 +16741,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -16753,7 +16753,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -16909,7 +16909,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -16921,7 +16921,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -17077,7 +17077,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -17089,7 +17089,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -17246,7 +17246,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -17258,7 +17258,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -17424,7 +17424,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -17436,7 +17436,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -17599,7 +17599,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -17611,7 +17611,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },
@@ -17774,7 +17774,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
               "description": "Ledger owner's username",
               "example": "alice"
             },
@@ -17786,7 +17786,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
               "description": "Ledger (repository) name",
               "example": "main-ledger"
             },

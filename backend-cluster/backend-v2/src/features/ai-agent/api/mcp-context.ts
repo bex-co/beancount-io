@@ -18,6 +18,7 @@ import type { Identity } from "@/server/api/identity";
 import { BadUserInputError, ForbiddenError } from "@/shared/errors";
 import { CLASS_BUDGETS } from "@/server/api/rate-limit";
 import { LEDGER_ID_PATTERN } from "./mcp-ledger-selection";
+import { parseLedgerId } from "@/shared/str";
 
 export { ledgerSelection } from "./mcp-ledger-selection";
 
@@ -96,6 +97,7 @@ export function resolveMcpLedger(
       'Call `listLedgers`, then pass `ledger: "owner/name"` on this call. A credential pinned to one ledger may omit it.',
     );
   }
+  parseLedgerId(ledger);
   if (context.identity.ledgerScope && ledger !== context.identity.ledgerScope) {
     throw new ForbiddenError(
       "The selected ledger is outside this credential's ledger restriction",

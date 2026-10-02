@@ -318,7 +318,9 @@ describe("SourceBackedRelationshipEvaluator", () => {
       evaluator.check({
         user: userResource("usr_alice"),
         relation: LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
-        object: ledgerResource("malformed"),
+        // Deliberately bypass the validated constructor to exercise the
+        // evaluator's defense against an untrusted locator.
+        object: "ledger:malformed",
       }),
     ).resolves.toBe(false);
     expect(getUserApiClient).not.toHaveBeenCalled();

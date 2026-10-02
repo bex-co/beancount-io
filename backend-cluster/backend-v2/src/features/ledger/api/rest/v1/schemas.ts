@@ -1,5 +1,11 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { createLedgerId } from "@/shared/str";
+import {
+  LEDGER_OWNER_PATTERN,
+  LEDGER_NAME_PATTERN,
+  LEDGER_OWNER_RULE,
+  LEDGER_NAME_RULE,
+} from "@/shared/ledger-slug";
 
 /**
  * Shared request shapes for the v1 surface.
@@ -13,11 +19,11 @@ import { createLedgerId } from "@/shared/str";
 
 export const ledgerPathSchema = z
   .object({
-    owner: z.string().min(1).openapi({
+    owner: z.string().regex(LEDGER_OWNER_PATTERN, LEDGER_OWNER_RULE).openapi({
       description: "Ledger owner's username",
       example: "alice",
     }),
-    name: z.string().min(1).openapi({
+    name: z.string().regex(LEDGER_NAME_PATTERN, LEDGER_NAME_RULE).openapi({
       description: "Ledger (repository) name",
       example: "main-ledger",
     }),
