@@ -1027,6 +1027,11 @@ A price you declare yourself wins: a ledger-authored price for the same date
 and pair shadows the managed point, and the shadowed count is reported. Feed
 entries are read-only — a write targeting one fails naming the managed
 source — and your files are never rewritten to accommodate a feed.
+`bea add price` writes your supplied quote even when it matches a managed
+point, pinning that price in your ledger. A different supplied quote also
+shadows the managed point without `--force`; the result names the managed
+source. Duplicate detection and the `--force` conflict rule apply to prices
+already authored in the ledger, including its local included files.
 
 ```bash
 bea price status            # freshness, revision, observed-at, errors per source

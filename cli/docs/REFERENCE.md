@@ -552,7 +552,7 @@ Usage: bea add event [OPTIONS]
 
 ### `bea add price`
 
-Append a price, or report an exact existing date/commodity/amount match.
+Append a price, or report an exact ledger-authored date/commodity/amount match.
 
 ```text
 Usage: bea add price [OPTIONS]
@@ -565,7 +565,7 @@ Usage: bea add price [OPTIONS]
 | `--amount` | str (repeatable) | required | 'NUMBER CURRENCY' (pass once) |
 | `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
 | `--into` | path |  | Write to an included file, relative to the root ledger |
-| `--force` | flag |  | Record another quote when the date/commodity already has one |
+| `--force` | flag |  | Record another quote when the ledger already has one for the date/commodity |
 
 ### `bea add commodity`
 

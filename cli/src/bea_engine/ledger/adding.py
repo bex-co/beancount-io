@@ -361,16 +361,17 @@ def _parse_balance_amount(text: str) -> tuple[Decimal, str, Decimal | None]:
 def _price(
     file: Path, request: dict[str, Any], *, into: Path | None, allow_errors: bool, strict_read: bool
 ) -> dict[str, Any]:
-    """Append a price, or report the existing directive that already records it.
+    """Append a price, or report the ledger-authored directive already recording it.
 
-    Recording the same quote twice is not an error and not a change, so the
-    duplicate is answered with its source location and the file is left alone.
+    Repeating a local quote is a no-op with its source location. A managed
+    quote can be pinned or overridden in the ledger without forcing a conflict.
     """
     from beancount.core.amount import Amount as BcAmount
     from beancount.core.data import Price
 
     from bea_engine import managed_load
     from bea_engine.ledger.models import Amount, PriceDirective
+    from bea_engine.managed_price_cache import managed_source_for_path
     from bea_engine.query import format_error
 
     currency = _text(request, "currency")
@@ -388,18 +389,24 @@ def _price(
         raise protocol.LedgerError(
             f"Ledger has {len(ledger_errors)} error(s). Pass --allow-errors to report anyway.", details=ledger_errors
         )
-    match = next(
-        (
-            entry
-            for entry in entries
-            if isinstance(entry, Price)
-            and entry.date == directive.date
-            and entry.currency == currency
-            and entry.amount.number == number
-            and entry.amount.currency == amount_currency
-        ),
-        None,
-    )
+    local_prices: list[Price] = []
+    managed_sources: set[str] = set()
+    pair = (currency, amount_currency)
+    shadowed_pairs = {pair, (amount_currency, currency)}
+    for entry in entries:
+        if not isinstance(entry, Price) or entry.date != directive.date:
+            continue
+        entry_pair = (entry.currency, entry.amount.currency)
+        if entry_pair not in shadowed_pairs:
+            continue
+        filename = entry.meta.get("filename")
+        managed_source = managed_source_for_path(Path(filename)) if isinstance(filename, str) and filename else None
+        if managed_source is not None:
+            managed_sources.add(managed_source)
+        elif entry_pair == pair:
+            local_prices.append(entry)
+
+    match = next((entry for entry in local_prices if entry.amount.number == number), None)
     if match is not None:
         snapshot.verify()
         source = {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
@@ -412,18 +419,7 @@ def _price(
             "ledger_errors": ledger_errors,
             "target": str(target),
         }
-    conflict = next(
-        (
-            entry
-            for entry in entries
-            if isinstance(entry, Price)
-            and entry.date == directive.date
-            and entry.currency == currency
-            and entry.amount.currency == amount_currency
-            and entry.amount.number != number
-        ),
-        None,
-    )
+    conflict = next((entry for entry in local_prices if entry.amount.number != number), None)
     if conflict is not None and not request.get("force"):
         where = conflict.meta.get("filename"), conflict.meta.get("lineno")
         raise protocol.UsageError(
@@ -434,6 +430,7 @@ def _price(
 
     entry = Price({}, directive.date, currency, BcAmount(number, amount_currency))
     warnings = write.append(file, [writer.format_entry(entry)], allow_errors=allow_errors, into=into, snapshot=snapshot)
+    warnings.extend(f"Ledger price shadows the managed quote from {source}." for source in sorted(managed_sources))
     return {
         "written": 1,
         "directive": directive.model_dump(mode="json"),

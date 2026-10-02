@@ -332,10 +332,10 @@ def add_price(
     into: IntoOpt = None,
     force: Annotated[
         bool,
-        typer.Option("--force", help="Record another quote when the date/commodity already has one"),
+        typer.Option("--force", help="Record another quote when the ledger already has one for the date/commodity"),
     ] = False,
 ) -> None:
-    """Append a price, or report an exact existing date/commodity/amount match."""
+    """Append a price, or report an exact ledger-authored date/commodity/amount match."""
     number, price_currency = _parse_amount(_single_amount(amount, "price"))
     request = {
         "date": parse_date(date).isoformat(),
