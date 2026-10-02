@@ -3098,9 +3098,7 @@ export class HttpClient<SecurityDataType = unknown> {
 
       const shouldParseResponse =
         responseFormat !== undefined && responseFormat !== "raw";
-      const responseToParse = shouldParseResponse
-        ? response.clone()
-        : response;
+      const responseToParse = shouldParseResponse ? response.clone() : response;
       const data = !shouldParseResponse
         ? r
         : await responseToParse[responseFormat]()
@@ -3532,7 +3530,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/admin/unadopted/${owner}/${repo}`,
+        path: `/admin/unadopted/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
         method: "POST",
         secure: true,
         ...params,
@@ -3553,7 +3551,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/admin/unadopted/${owner}/${repo}`,
+        path: `/admin/unadopted/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -5310,7 +5308,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Package[], any>({
-        path: `/packages/${owner}`,
+        path: `/packages/${encodeURIComponent(owner)}`,
         method: "GET",
         query: query,
         secure: true,
@@ -5339,7 +5337,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Package[], any>({
-        path: `/packages/${owner}/${type}/${name}`,
+        path: `/packages/${encodeURIComponent(owner)}/${type}/${name}`,
         method: "GET",
         query: query,
         secure: true,
@@ -5362,7 +5360,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Package, any>({
-        path: `/packages/${owner}/${type}/${name}/-/latest`,
+        path: `/packages/${encodeURIComponent(owner)}/${type}/${name}/-/latest`,
         method: "GET",
         secure: true,
         ...params,
@@ -5385,7 +5383,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/packages/${owner}/${type}/${name}/-/link/${repoName}`,
+        path: `/packages/${encodeURIComponent(owner)}/${type}/${name}/-/link/${encodeURIComponent(repoName)}`,
         method: "POST",
         secure: true,
         ...params,
@@ -5407,7 +5405,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/packages/${owner}/${type}/${name}/-/unlink`,
+        path: `/packages/${encodeURIComponent(owner)}/${type}/${name}/-/unlink`,
         method: "POST",
         secure: true,
         ...params,
@@ -5430,7 +5428,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Package, any>({
-        path: `/packages/${owner}/${type}/${name}/${version}`,
+        path: `/packages/${encodeURIComponent(owner)}/${type}/${name}/${version}`,
         method: "GET",
         secure: true,
         ...params,
@@ -5453,7 +5451,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/packages/${owner}/${type}/${name}/${version}`,
+        path: `/packages/${encodeURIComponent(owner)}/${type}/${name}/${version}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -5476,7 +5474,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PackageFile[], any>({
-        path: `/packages/${owner}/${type}/${name}/${version}/files`,
+        path: `/packages/${encodeURIComponent(owner)}/${type}/${name}/${version}/files`,
         method: "GET",
         secure: true,
         ...params,
@@ -5671,7 +5669,7 @@ export class Api<
      */
     repoGet: (owner: string, repo: string, params: RequestParams = {}) =>
       this.request<Repository, any>({
-        path: `/repos/${owner}/${repo}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
         method: "GET",
         secure: true,
         ...params,
@@ -5688,7 +5686,7 @@ export class Api<
      */
     repoDelete: (owner: string, repo: string, params: RequestParams = {}) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -5710,7 +5708,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Repository, any>({
-        path: `/repos/${owner}/${repo}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -5737,7 +5735,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ActionArtifactsResponse, any>({
-        path: `/repos/${owner}/${repo}/actions/artifacts`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/artifacts`,
         method: "GET",
         query: query,
         secure: true,
@@ -5760,7 +5758,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ActionArtifact, any>({
-        path: `/repos/${owner}/${repo}/actions/artifacts/${artifactId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/artifacts/${artifactId}`,
         method: "GET",
         secure: true,
         ...params,
@@ -5782,7 +5780,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/actions/artifacts/${artifactId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/artifacts/${artifactId}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -5804,7 +5802,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, void>({
-        path: `/repos/${owner}/${repo}/actions/artifacts/${artifactId}/zip`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/artifacts/${artifactId}/zip`,
         method: "GET",
         secure: true,
         ...params,
@@ -5826,7 +5824,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/actions/jobs/${jobId}/logs`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/jobs/${jobId}/logs`,
         method: "GET",
         secure: true,
         ...params,
@@ -5843,7 +5841,7 @@ export class Api<
      */
     getRepoRunners: (owner: string, repo: string, params: RequestParams = {}) =>
       this.request<ActionRunnersResponse, any>({
-        path: `/repos/${owner}/${repo}/actions/runners`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/runners`,
         method: "GET",
         secure: true,
         ...params,
@@ -5864,7 +5862,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/actions/runners/registration-token`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/runners/registration-token`,
         method: "GET",
         secure: true,
         ...params,
@@ -5885,7 +5883,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/actions/runners/registration-token`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/runners/registration-token`,
         method: "POST",
         secure: true,
         ...params,
@@ -5907,7 +5905,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ActionRunner, any>({
-        path: `/repos/${owner}/${repo}/actions/runners/${runnerId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/runners/${runnerId}`,
         method: "GET",
         secure: true,
         ...params,
@@ -5929,7 +5927,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/actions/runners/${runnerId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/runners/${runnerId}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -5955,7 +5953,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ActionArtifactsResponse, any>({
-        path: `/repos/${owner}/${repo}/actions/runs/${run}/artifacts`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/runs/${run}/artifacts`,
         method: "GET",
         query: query,
         secure: true,
@@ -5983,7 +5981,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Secret[], any>({
-        path: `/repos/${owner}/${repo}/actions/secrets`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/secrets`,
         method: "GET",
         query: query,
         secure: true,
@@ -6007,7 +6005,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/actions/secrets/${secretname}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/secrets/${secretname}`,
         method: "PUT",
         body: body,
         secure: true,
@@ -6031,7 +6029,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/actions/secrets/${secretname}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/secrets/${secretname}`,
         method: "DELETE",
         secure: true,
         type: ContentType.Json,
@@ -6059,7 +6057,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ActionTaskResponse, any>({
-        path: `/repos/${owner}/${repo}/actions/tasks`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/tasks`,
         method: "GET",
         query: query,
         secure: true,
@@ -6087,7 +6085,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ActionVariable[], any>({
-        path: `/repos/${owner}/${repo}/actions/variables`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/variables`,
         method: "GET",
         query: query,
         secure: true,
@@ -6110,7 +6108,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ActionVariable, any>({
-        path: `/repos/${owner}/${repo}/actions/variables/${variablename}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/variables/${variablename}`,
         method: "GET",
         secure: true,
         ...params,
@@ -6133,7 +6131,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/actions/variables/${variablename}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/variables/${variablename}`,
         method: "PUT",
         body: body,
         secure: true,
@@ -6158,7 +6156,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/actions/variables/${variablename}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/variables/${variablename}`,
         method: "POST",
         body: body,
         secure: true,
@@ -6182,7 +6180,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ActionVariable, any>({
-        path: `/repos/${owner}/${repo}/actions/variables/${variablename}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/variables/${variablename}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -6203,7 +6201,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ActionWorkflowResponse, any>({
-        path: `/repos/${owner}/${repo}/actions/workflows`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows`,
         method: "GET",
         secure: true,
         ...params,
@@ -6225,7 +6223,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ActionWorkflow, any>({
-        path: `/repos/${owner}/${repo}/actions/workflows/${workflowId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows/${workflowId}`,
         method: "GET",
         secure: true,
         ...params,
@@ -6247,7 +6245,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/actions/workflows/${workflowId}/disable`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows/${workflowId}/disable`,
         method: "PUT",
         secure: true,
         ...params,
@@ -6270,7 +6268,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/actions/workflows/${workflowId}/dispatches`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows/${workflowId}/dispatches`,
         method: "POST",
         body: body,
         secure: true,
@@ -6294,7 +6292,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/actions/workflows/${workflowId}/enable`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows/${workflowId}/enable`,
         method: "PUT",
         secure: true,
         ...params,
@@ -6326,7 +6324,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Activity[], any>({
-        path: `/repos/${owner}/${repo}/activities/feeds`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/activities/feeds`,
         method: "GET",
         query: query,
         secure: true,
@@ -6349,7 +6347,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/archive/${archive}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/archive/${archive}`,
         method: "GET",
         secure: true,
         ...params,
@@ -6370,7 +6368,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<User[], any>({
-        path: `/repos/${owner}/${repo}/assignees`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/assignees`,
         method: "GET",
         secure: true,
         ...params,
@@ -6392,7 +6390,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/avatar`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/avatar`,
         method: "POST",
         body: body,
         secure: true,
@@ -6415,7 +6413,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/avatar`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/avatar`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -6436,7 +6434,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<BranchProtection[], any>({
-        path: `/repos/${owner}/${repo}/branch_protections`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branch_protections`,
         method: "GET",
         secure: true,
         ...params,
@@ -6458,7 +6456,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<BranchProtection, any>({
-        path: `/repos/${owner}/${repo}/branch_protections`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branch_protections`,
         method: "POST",
         body: body,
         secure: true,
@@ -6482,7 +6480,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/branch_protections/priority`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branch_protections/priority`,
         method: "POST",
         body: body,
         secure: true,
@@ -6506,7 +6504,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<BranchProtection, any>({
-        path: `/repos/${owner}/${repo}/branch_protections/${name}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branch_protections/${name}`,
         method: "GET",
         secure: true,
         ...params,
@@ -6528,7 +6526,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/branch_protections/${name}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branch_protections/${name}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -6551,7 +6549,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<BranchProtection, any>({
-        path: `/repos/${owner}/${repo}/branch_protections/${name}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branch_protections/${name}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -6580,7 +6578,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Branch[], any>({
-        path: `/repos/${owner}/${repo}/branches`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches`,
         method: "GET",
         query: query,
         secure: true,
@@ -6603,7 +6601,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Branch, void>({
-        path: `/repos/${owner}/${repo}/branches`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches`,
         method: "POST",
         body: body,
         secure: true,
@@ -6627,7 +6625,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Branch, any>({
-        path: `/repos/${owner}/${repo}/branches/${branch}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${branch}`,
         method: "GET",
         secure: true,
         ...params,
@@ -6649,7 +6647,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/branches/${branch}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${branch}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -6672,7 +6670,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/branches/${branch}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/branches/${branch}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -6701,7 +6699,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<User[], any>({
-        path: `/repos/${owner}/${repo}/collaborators`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators`,
         method: "GET",
         query: query,
         secure: true,
@@ -6724,7 +6722,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/collaborators/${collaborator}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${collaborator}`,
         method: "GET",
         secure: true,
         ...params,
@@ -6747,7 +6745,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/collaborators/${collaborator}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${collaborator}`,
         method: "PUT",
         body: body,
         secure: true,
@@ -6771,7 +6769,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/collaborators/${collaborator}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${collaborator}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -6793,7 +6791,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<RepoCollaboratorPermission, any>({
-        path: `/repos/${owner}/${repo}/collaborators/${collaborator}/permission`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/${collaborator}/permission`,
         method: "GET",
         secure: true,
         ...params,
@@ -6832,7 +6830,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Commit[], APIError>({
-        path: `/repos/${owner}/${repo}/commits`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits`,
         method: "GET",
         query: query,
         secure: true,
@@ -6861,7 +6859,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<CombinedStatus, any>({
-        path: `/repos/${owner}/${repo}/commits/${ref}/status`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${ref}/status`,
         method: "GET",
         query: query,
         secure: true,
@@ -6899,7 +6897,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<CommitStatus[], any>({
-        path: `/repos/${owner}/${repo}/commits/${ref}/statuses`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${ref}/statuses`,
         method: "GET",
         query: query,
         secure: true,
@@ -6922,7 +6920,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullRequest, any>({
-        path: `/repos/${owner}/${repo}/commits/${sha}/pull`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${sha}/pull`,
         method: "GET",
         secure: true,
         ...params,
@@ -6944,7 +6942,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Compare, any>({
-        path: `/repos/${owner}/${repo}/compare/${basehead}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/compare/${basehead}`,
         method: "GET",
         secure: true,
         ...params,
@@ -6969,7 +6967,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ContentsResponse[], any>({
-        path: `/repos/${owner}/${repo}/contents`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents`,
         method: "GET",
         query: query,
         secure: true,
@@ -6992,7 +6990,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<FilesResponse, any>({
-        path: `/repos/${owner}/${repo}/contents`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents`,
         method: "POST",
         body: body,
         secure: true,
@@ -7020,7 +7018,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ContentsResponse, any>({
-        path: `/repos/${owner}/${repo}/contents/${filepath}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${filepath}`,
         method: "GET",
         query: query,
         secure: true,
@@ -7044,7 +7042,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<FileResponse, any>({
-        path: `/repos/${owner}/${repo}/contents/${filepath}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${filepath}`,
         method: "PUT",
         body: body,
         secure: true,
@@ -7069,7 +7067,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<FileResponse, any>({
-        path: `/repos/${owner}/${repo}/contents/${filepath}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${filepath}`,
         method: "POST",
         body: body,
         secure: true,
@@ -7094,7 +7092,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<FileDeleteResponse, any>({
-        path: `/repos/${owner}/${repo}/contents/${filepath}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${filepath}`,
         method: "DELETE",
         body: body,
         secure: true,
@@ -7118,7 +7116,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<FileResponse, any>({
-        path: `/repos/${owner}/${repo}/diffpatch`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/diffpatch`,
         method: "POST",
         body: body,
         secure: true,
@@ -7146,7 +7144,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, any>({
-        path: `/repos/${owner}/${repo}/editorconfig/${filepath}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/editorconfig/${filepath}`,
         method: "GET",
         query: query,
         secure: true,
@@ -7174,7 +7172,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ContentsResponse[], any>({
-        path: `/repos/${owner}/${repo}/file-contents`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/file-contents`,
         method: "GET",
         query: query,
         secure: true,
@@ -7201,7 +7199,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ContentsResponse[], any>({
-        path: `/repos/${owner}/${repo}/file-contents`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/file-contents`,
         method: "POST",
         query: query,
         body: body,
@@ -7231,7 +7229,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Repository[], any>({
-        path: `/repos/${owner}/${repo}/forks`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/forks`,
         method: "GET",
         query: query,
         secure: true,
@@ -7254,7 +7252,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Repository, void>({
-        path: `/repos/${owner}/${repo}/forks`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/forks`,
         method: "POST",
         body: body,
         secure: true,
@@ -7278,7 +7276,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<GitBlobResponse, any>({
-        path: `/repos/${owner}/${repo}/git/blobs/${sha}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/blobs/${sha}`,
         method: "GET",
         secure: true,
         ...params,
@@ -7308,7 +7306,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Commit, any>({
-        path: `/repos/${owner}/${repo}/git/commits/${sha}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/commits/${sha}`,
         method: "GET",
         query: query,
         secure: true,
@@ -7332,7 +7330,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<string, any>({
-        path: `/repos/${owner}/${repo}/git/commits/${sha}.${diffType}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/commits/${sha}.${diffType}`,
         method: "GET",
         secure: true,
         ...params,
@@ -7360,7 +7358,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Note, any>({
-        path: `/repos/${owner}/${repo}/git/notes/${sha}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/notes/${sha}`,
         method: "GET",
         query: query,
         secure: true,
@@ -7382,7 +7380,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Reference[], any>({
-        path: `/repos/${owner}/${repo}/git/refs`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/refs`,
         method: "GET",
         secure: true,
         ...params,
@@ -7404,7 +7402,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Reference[], any>({
-        path: `/repos/${owner}/${repo}/git/refs/${ref}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/refs/${ref}`,
         method: "GET",
         secure: true,
         ...params,
@@ -7426,7 +7424,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<AnnotatedTag, any>({
-        path: `/repos/${owner}/${repo}/git/tags/${sha}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/tags/${sha}`,
         method: "GET",
         secure: true,
         ...params,
@@ -7456,7 +7454,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<GitTreeResponse, any>({
-        path: `/repos/${owner}/${repo}/git/trees/${sha}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${sha}`,
         method: "GET",
         query: query,
         secure: true,
@@ -7484,7 +7482,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Hook[], any>({
-        path: `/repos/${owner}/${repo}/hooks`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/hooks`,
         method: "GET",
         query: query,
         secure: true,
@@ -7507,7 +7505,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Hook, any>({
-        path: `/repos/${owner}/${repo}/hooks`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/hooks`,
         method: "POST",
         body: body,
         secure: true,
@@ -7530,7 +7528,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<GitHook[], any>({
-        path: `/repos/${owner}/${repo}/hooks/git`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/hooks/git`,
         method: "GET",
         secure: true,
         ...params,
@@ -7552,7 +7550,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<GitHook, any>({
-        path: `/repos/${owner}/${repo}/hooks/git/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/hooks/git/${id}`,
         method: "GET",
         secure: true,
         ...params,
@@ -7574,7 +7572,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/hooks/git/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/hooks/git/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -7597,7 +7595,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<GitHook, any>({
-        path: `/repos/${owner}/${repo}/hooks/git/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/hooks/git/${id}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -7621,7 +7619,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Hook, any>({
-        path: `/repos/${owner}/${repo}/hooks/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/hooks/${id}`,
         method: "GET",
         secure: true,
         ...params,
@@ -7643,7 +7641,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/hooks/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/hooks/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -7666,7 +7664,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Hook, any>({
-        path: `/repos/${owner}/${repo}/hooks/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/hooks/${id}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -7694,7 +7692,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/hooks/${id}/tests`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/hooks/${id}/tests`,
         method: "POST",
         query: query,
         secure: true,
@@ -7716,7 +7714,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<IssueConfig, any>({
-        path: `/repos/${owner}/${repo}/issue_config`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issue_config`,
         method: "GET",
         secure: true,
         ...params,
@@ -7737,7 +7735,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<IssueConfigValidation, any>({
-        path: `/repos/${owner}/${repo}/issue_config/validate`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issue_config/validate`,
         method: "GET",
         secure: true,
         ...params,
@@ -7758,7 +7756,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<IssueTemplate[], any>({
-        path: `/repos/${owner}/${repo}/issue_templates`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issue_templates`,
         method: "GET",
         secure: true,
         ...params,
@@ -7811,7 +7809,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue[], any>({
-        path: `/repos/${owner}/${repo}/issues`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`,
         method: "GET",
         query: query,
         secure: true,
@@ -7834,7 +7832,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue, any>({
-        path: `/repos/${owner}/${repo}/issues`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`,
         method: "POST",
         body: body,
         secure: true,
@@ -7873,7 +7871,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Comment[], any>({
-        path: `/repos/${owner}/${repo}/issues/comments`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments`,
         method: "GET",
         query: query,
         secure: true,
@@ -7896,7 +7894,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Comment, any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}`,
         method: "GET",
         secure: true,
         type: ContentType.Json,
@@ -7919,7 +7917,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -7942,7 +7940,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Comment, any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -7966,7 +7964,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment[], any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}/assets`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}/assets`,
         method: "GET",
         secure: true,
         ...params,
@@ -7996,7 +7994,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment, any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}/assets`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}/assets`,
         method: "POST",
         query: query,
         body: data,
@@ -8022,7 +8020,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment, any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}/assets/${attachmentId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}/assets/${attachmentId}`,
         method: "GET",
         secure: true,
         ...params,
@@ -8045,7 +8043,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}/assets/${attachmentId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}/assets/${attachmentId}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -8069,7 +8067,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment, any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}/assets/${attachmentId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}/assets/${attachmentId}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -8093,7 +8091,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Reaction[], any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}/reactions`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}/reactions`,
         method: "GET",
         secure: true,
         type: ContentType.Json,
@@ -8117,7 +8115,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Reaction, any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}/reactions`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}/reactions`,
         method: "POST",
         body: content,
         secure: true,
@@ -8142,7 +8140,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/comments/${id}/reactions`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/comments/${id}/reactions`,
         method: "DELETE",
         body: content,
         secure: true,
@@ -8165,7 +8163,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue[], any>({
-        path: `/repos/${owner}/${repo}/issues/pinned`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/pinned`,
         method: "GET",
         secure: true,
         ...params,
@@ -8187,7 +8185,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}`,
         method: "GET",
         secure: true,
         ...params,
@@ -8209,7 +8207,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -8232,7 +8230,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -8256,7 +8254,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/assets`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/assets`,
         method: "GET",
         secure: true,
         ...params,
@@ -8286,7 +8284,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/assets`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/assets`,
         method: "POST",
         query: query,
         body: data,
@@ -8312,7 +8310,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/assets/${attachmentId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/assets/${attachmentId}`,
         method: "GET",
         secure: true,
         ...params,
@@ -8335,7 +8333,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/assets/${attachmentId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/assets/${attachmentId}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -8359,7 +8357,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/assets/${attachmentId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/assets/${attachmentId}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -8389,7 +8387,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/blocks`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/blocks`,
         method: "GET",
         query: query,
         secure: true,
@@ -8413,7 +8411,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue, void>({
-        path: `/repos/${owner}/${repo}/issues/${index}/blocks`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/blocks`,
         method: "POST",
         body: body,
         secure: true,
@@ -8438,7 +8436,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/blocks`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/blocks`,
         method: "DELETE",
         body: body,
         secure: true,
@@ -8474,7 +8472,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Comment[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/comments`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/comments`,
         method: "GET",
         query: query,
         secure: true,
@@ -8498,7 +8496,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Comment, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/comments`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/comments`,
         method: "POST",
         body: body,
         secure: true,
@@ -8524,7 +8522,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/comments/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/comments/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -8549,7 +8547,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Comment, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/comments/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/comments/${id}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -8574,7 +8572,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<IssueDeadline, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/deadline`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/deadline`,
         method: "POST",
         body: body,
         secure: true,
@@ -8604,7 +8602,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/dependencies`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/dependencies`,
         method: "GET",
         query: query,
         secure: true,
@@ -8628,7 +8626,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue, void>({
-        path: `/repos/${owner}/${repo}/issues/${index}/dependencies`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/dependencies`,
         method: "POST",
         body: body,
         secure: true,
@@ -8653,7 +8651,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Issue, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/dependencies`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/dependencies`,
         method: "DELETE",
         body: body,
         secure: true,
@@ -8677,7 +8675,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Label[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/labels`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/labels`,
         method: "GET",
         secure: true,
         ...params,
@@ -8700,7 +8698,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Label[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/labels`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/labels`,
         method: "PUT",
         body: body,
         secure: true,
@@ -8725,7 +8723,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Label[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/labels`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/labels`,
         method: "POST",
         body: body,
         secure: true,
@@ -8749,7 +8747,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/labels`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/labels`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -8772,7 +8770,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/labels/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/labels/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -8795,7 +8793,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/lock`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/lock`,
         method: "PUT",
         body: body,
         secure: true,
@@ -8819,7 +8817,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/lock`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/lock`,
         method: "DELETE",
         secure: true,
         type: ContentType.Json,
@@ -8842,7 +8840,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/pin`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/pin`,
         method: "POST",
         secure: true,
         ...params,
@@ -8864,7 +8862,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/pin`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/pin`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -8887,7 +8885,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/pin/${position}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/pin/${position}`,
         method: "PATCH",
         secure: true,
         ...params,
@@ -8915,7 +8913,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Reaction[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/reactions`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/reactions`,
         method: "GET",
         query: query,
         secure: true,
@@ -8940,7 +8938,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Reaction, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/reactions`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/reactions`,
         method: "POST",
         body: content,
         secure: true,
@@ -8965,7 +8963,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/reactions`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/reactions`,
         method: "DELETE",
         body: content,
         secure: true,
@@ -8989,7 +8987,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, void>({
-        path: `/repos/${owner}/${repo}/issues/${index}/stopwatch/delete`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/stopwatch/delete`,
         method: "DELETE",
         secure: true,
         type: ContentType.Json,
@@ -9012,7 +9010,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, void>({
-        path: `/repos/${owner}/${repo}/issues/${index}/stopwatch/start`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/stopwatch/start`,
         method: "POST",
         secure: true,
         type: ContentType.Json,
@@ -9035,7 +9033,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, void>({
-        path: `/repos/${owner}/${repo}/issues/${index}/stopwatch/stop`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/stopwatch/stop`,
         method: "POST",
         secure: true,
         type: ContentType.Json,
@@ -9064,7 +9062,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<User[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/subscriptions`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/subscriptions`,
         method: "GET",
         query: query,
         secure: true,
@@ -9088,7 +9086,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<WatchInfo, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/subscriptions/check`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/subscriptions/check`,
         method: "GET",
         secure: true,
         type: ContentType.Json,
@@ -9112,7 +9110,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, void>({
-        path: `/repos/${owner}/${repo}/issues/${index}/subscriptions/${user}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/subscriptions/${user}`,
         method: "PUT",
         secure: true,
         type: ContentType.Json,
@@ -9136,7 +9134,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, void>({
-        path: `/repos/${owner}/${repo}/issues/${index}/subscriptions/${user}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/subscriptions/${user}`,
         method: "DELETE",
         secure: true,
         type: ContentType.Json,
@@ -9175,7 +9173,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TimelineComment[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/timeline`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/timeline`,
         method: "GET",
         query: query,
         secure: true,
@@ -9216,7 +9214,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TrackedTime[], any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/times`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/times`,
         method: "GET",
         query: query,
         secure: true,
@@ -9240,7 +9238,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TrackedTime, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/times`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/times`,
         method: "POST",
         body: body,
         secure: true,
@@ -9264,7 +9262,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/times`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/times`,
         method: "DELETE",
         secure: true,
         type: ContentType.Json,
@@ -9288,7 +9286,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/issues/${index}/times/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${index}/times/${id}`,
         method: "DELETE",
         secure: true,
         type: ContentType.Json,
@@ -9320,7 +9318,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<DeployKey[], any>({
-        path: `/repos/${owner}/${repo}/keys`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/keys`,
         method: "GET",
         query: query,
         secure: true,
@@ -9343,7 +9341,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<DeployKey, any>({
-        path: `/repos/${owner}/${repo}/keys`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/keys`,
         method: "POST",
         body: body,
         secure: true,
@@ -9367,7 +9365,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<DeployKey, any>({
-        path: `/repos/${owner}/${repo}/keys/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/keys/${id}`,
         method: "GET",
         secure: true,
         ...params,
@@ -9389,7 +9387,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/keys/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/keys/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -9416,7 +9414,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Label[], any>({
-        path: `/repos/${owner}/${repo}/labels`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/labels`,
         method: "GET",
         query: query,
         secure: true,
@@ -9439,7 +9437,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Label, any>({
-        path: `/repos/${owner}/${repo}/labels`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/labels`,
         method: "POST",
         body: body,
         secure: true,
@@ -9463,7 +9461,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Label, any>({
-        path: `/repos/${owner}/${repo}/labels/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/labels/${id}`,
         method: "GET",
         secure: true,
         ...params,
@@ -9485,7 +9483,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/labels/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/labels/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -9508,7 +9506,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Label, any>({
-        path: `/repos/${owner}/${repo}/labels/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/labels/${id}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -9531,7 +9529,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Record<string, number>, any>({
-        path: `/repos/${owner}/${repo}/languages`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/languages`,
         method: "GET",
         secure: true,
         ...params,
@@ -9552,7 +9550,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<string[], any>({
-        path: `/repos/${owner}/${repo}/licenses`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/licenses`,
         method: "GET",
         secure: true,
         ...params,
@@ -9578,7 +9576,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Blob, any>({
-        path: `/repos/${owner}/${repo}/media/${filepath}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/media/${filepath}`,
         method: "GET",
         query: query,
         secure: true,
@@ -9601,7 +9599,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<MergeUpstreamResponse, any>({
-        path: `/repos/${owner}/${repo}/merge-upstream`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/merge-upstream`,
         method: "POST",
         body: body,
         secure: true,
@@ -9634,7 +9632,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Milestone[], any>({
-        path: `/repos/${owner}/${repo}/milestones`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/milestones`,
         method: "GET",
         query: query,
         secure: true,
@@ -9657,7 +9655,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Milestone, any>({
-        path: `/repos/${owner}/${repo}/milestones`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/milestones`,
         method: "POST",
         body: body,
         secure: true,
@@ -9681,7 +9679,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Milestone, any>({
-        path: `/repos/${owner}/${repo}/milestones/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/milestones/${id}`,
         method: "GET",
         secure: true,
         ...params,
@@ -9703,7 +9701,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/milestones/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/milestones/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -9726,7 +9724,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Milestone, any>({
-        path: `/repos/${owner}/${repo}/milestones/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/milestones/${id}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -9745,7 +9743,7 @@ export class Api<
      */
     repoMirrorSync: (owner: string, repo: string, params: RequestParams = {}) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/mirror-sync`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/mirror-sync`,
         method: "POST",
         secure: true,
         ...params,
@@ -9766,7 +9764,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<NewIssuePinsAllowed, any>({
-        path: `/repos/${owner}/${repo}/new_pin_allowed`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/new_pin_allowed`,
         method: "GET",
         secure: true,
         ...params,
@@ -9809,7 +9807,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<NotificationThread[], any>({
-        path: `/repos/${owner}/${repo}/notifications`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/notifications`,
         method: "GET",
         query: query,
         secure: true,
@@ -9845,7 +9843,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<NotificationThread[], any>({
-        path: `/repos/${owner}/${repo}/notifications`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/notifications`,
         method: "PUT",
         query: query,
         secure: true,
@@ -9906,7 +9904,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullRequest[], any>({
-        path: `/repos/${owner}/${repo}/pulls`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`,
         method: "GET",
         query: query,
         secure: true,
@@ -9929,7 +9927,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullRequest, any>({
-        path: `/repos/${owner}/${repo}/pulls`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`,
         method: "POST",
         body: body,
         secure: true,
@@ -9952,7 +9950,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullRequest[], any>({
-        path: `/repos/${owner}/${repo}/pulls/pinned`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/pinned`,
         method: "GET",
         secure: true,
         ...params,
@@ -9975,7 +9973,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullRequest, any>({
-        path: `/repos/${owner}/${repo}/pulls/${base}/${head}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${base}/${head}`,
         method: "GET",
         secure: true,
         ...params,
@@ -9997,7 +9995,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullRequest, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}`,
         method: "GET",
         secure: true,
         ...params,
@@ -10020,7 +10018,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullRequest, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -10049,7 +10047,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<string, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}.${diffType}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}.${diffType}`,
         method: "GET",
         query: query,
         secure: true,
@@ -10082,7 +10080,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Commit[], any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/commits`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/commits`,
         method: "GET",
         query: query,
         secure: true,
@@ -10115,7 +10113,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<ChangedFile[], any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/files`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/files`,
         method: "GET",
         query: query,
         secure: true,
@@ -10138,7 +10136,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, void>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/merge`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/merge`,
         method: "GET",
         secure: true,
         ...params,
@@ -10161,7 +10159,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/merge`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/merge`,
         method: "POST",
         body: body,
         secure: true,
@@ -10185,7 +10183,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/merge`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/merge`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -10208,7 +10206,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullReview[], any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/requested_reviewers`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/requested_reviewers`,
         method: "POST",
         body: body,
         secure: true,
@@ -10233,7 +10231,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/requested_reviewers`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/requested_reviewers`,
         method: "DELETE",
         body: body,
         secure: true,
@@ -10263,7 +10261,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullReview[], any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/reviews`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/reviews`,
         method: "GET",
         query: query,
         secure: true,
@@ -10287,7 +10285,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullReview, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/reviews`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/reviews`,
         method: "POST",
         body: body,
         secure: true,
@@ -10312,7 +10310,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullReview, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/reviews/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/reviews/${id}`,
         method: "GET",
         secure: true,
         ...params,
@@ -10336,7 +10334,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullReview, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/reviews/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/reviews/${id}`,
         method: "POST",
         body: body,
         secure: true,
@@ -10361,7 +10359,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/reviews/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/reviews/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -10384,7 +10382,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullReviewComment[], any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/reviews/${id}/comments`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/reviews/${id}/comments`,
         method: "GET",
         secure: true,
         ...params,
@@ -10408,7 +10406,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullReview, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/reviews/${id}/dismissals`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/reviews/${id}/dismissals`,
         method: "POST",
         body: body,
         secure: true,
@@ -10433,7 +10431,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PullReview, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/reviews/${id}/undismissals`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/reviews/${id}/undismissals`,
         method: "POST",
         secure: true,
         ...params,
@@ -10459,7 +10457,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/pulls/${index}/update`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${index}/update`,
         method: "POST",
         query: query,
         secure: true,
@@ -10487,7 +10485,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PushMirror[], any>({
-        path: `/repos/${owner}/${repo}/push_mirrors`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/push_mirrors`,
         method: "GET",
         query: query,
         secure: true,
@@ -10510,7 +10508,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PushMirror, any>({
-        path: `/repos/${owner}/${repo}/push_mirrors`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/push_mirrors`,
         method: "POST",
         body: body,
         secure: true,
@@ -10533,7 +10531,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/push_mirrors-sync`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/push_mirrors-sync`,
         method: "POST",
         secure: true,
         ...params,
@@ -10555,7 +10553,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<PushMirror, any>({
-        path: `/repos/${owner}/${repo}/push_mirrors/${name}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/push_mirrors/${name}`,
         method: "GET",
         secure: true,
         ...params,
@@ -10577,7 +10575,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/push_mirrors/${name}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/push_mirrors/${name}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -10603,7 +10601,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Blob, any>({
-        path: `/repos/${owner}/${repo}/raw/${filepath}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/raw/${filepath}`,
         method: "GET",
         query: query,
         secure: true,
@@ -10635,7 +10633,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Release[], any>({
-        path: `/repos/${owner}/${repo}/releases`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases`,
         method: "GET",
         query: query,
         secure: true,
@@ -10658,7 +10656,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Release, any>({
-        path: `/repos/${owner}/${repo}/releases`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases`,
         method: "POST",
         body: body,
         secure: true,
@@ -10681,7 +10679,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Release, any>({
-        path: `/repos/${owner}/${repo}/releases/latest`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/latest`,
         method: "GET",
         secure: true,
         ...params,
@@ -10703,7 +10701,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Release, any>({
-        path: `/repos/${owner}/${repo}/releases/tags/${tag}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/tags/${tag}`,
         method: "GET",
         secure: true,
         ...params,
@@ -10725,7 +10723,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/releases/tags/${tag}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/tags/${tag}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -10747,7 +10745,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Release, any>({
-        path: `/repos/${owner}/${repo}/releases/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/${id}`,
         method: "GET",
         secure: true,
         ...params,
@@ -10769,7 +10767,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/releases/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -10792,7 +10790,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Release, any>({
-        path: `/repos/${owner}/${repo}/releases/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/${id}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -10816,7 +10814,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment[], any>({
-        path: `/repos/${owner}/${repo}/releases/${id}/assets`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/${id}/assets`,
         method: "GET",
         secure: true,
         ...params,
@@ -10846,7 +10844,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment, any>({
-        path: `/repos/${owner}/${repo}/releases/${id}/assets`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/${id}/assets`,
         method: "POST",
         query: query,
         body: data,
@@ -10872,7 +10870,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment, any>({
-        path: `/repos/${owner}/${repo}/releases/${id}/assets/${attachmentId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/${id}/assets/${attachmentId}`,
         method: "GET",
         secure: true,
         ...params,
@@ -10895,7 +10893,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/releases/${id}/assets/${attachmentId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/${id}/assets/${attachmentId}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -10919,7 +10917,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Attachment, any>({
-        path: `/repos/${owner}/${repo}/releases/${id}/assets/${attachmentId}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/${id}/assets/${attachmentId}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -10942,7 +10940,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<User[], any>({
-        path: `/repos/${owner}/${repo}/reviewers`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/reviewers`,
         method: "GET",
         secure: true,
         ...params,
@@ -10959,7 +10957,7 @@ export class Api<
      */
     repoSigningKey: (owner: string, repo: string, params: RequestParams = {}) =>
       this.request<CommitStatusState, any>({
-        path: `/repos/${owner}/${repo}/signing-key.gpg`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/signing-key.gpg`,
         method: "GET",
         secure: true,
         ...params,
@@ -10986,7 +10984,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<User[], any>({
-        path: `/repos/${owner}/${repo}/stargazers`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/stargazers`,
         method: "GET",
         query: query,
         secure: true,
@@ -11024,7 +11022,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<CommitStatus[], any>({
-        path: `/repos/${owner}/${repo}/statuses/${sha}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/statuses/${sha}`,
         method: "GET",
         query: query,
         secure: true,
@@ -11048,7 +11046,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<CommitStatus, any>({
-        path: `/repos/${owner}/${repo}/statuses/${sha}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/statuses/${sha}`,
         method: "POST",
         body: body,
         secure: true,
@@ -11077,7 +11075,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<User[], any>({
-        path: `/repos/${owner}/${repo}/subscribers`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/subscribers`,
         method: "GET",
         query: query,
         secure: true,
@@ -11099,7 +11097,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<WatchInfo, void>({
-        path: `/repos/${owner}/${repo}/subscription`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/subscription`,
         method: "GET",
         secure: true,
         ...params,
@@ -11120,7 +11118,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<WatchInfo, any>({
-        path: `/repos/${owner}/${repo}/subscription`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/subscription`,
         method: "PUT",
         secure: true,
         ...params,
@@ -11141,7 +11139,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/subscription`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/subscription`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -11162,7 +11160,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TagProtection[], any>({
-        path: `/repos/${owner}/${repo}/tag_protections`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/tag_protections`,
         method: "GET",
         secure: true,
         ...params,
@@ -11184,7 +11182,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TagProtection, any>({
-        path: `/repos/${owner}/${repo}/tag_protections`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/tag_protections`,
         method: "POST",
         body: body,
         secure: true,
@@ -11208,7 +11206,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TagProtection, any>({
-        path: `/repos/${owner}/${repo}/tag_protections/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/tag_protections/${id}`,
         method: "GET",
         secure: true,
         ...params,
@@ -11230,7 +11228,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/tag_protections/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/tag_protections/${id}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -11253,7 +11251,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TagProtection, any>({
-        path: `/repos/${owner}/${repo}/tag_protections/${id}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/tag_protections/${id}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -11282,7 +11280,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Tag[], any>({
-        path: `/repos/${owner}/${repo}/tags`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/tags`,
         method: "GET",
         query: query,
         secure: true,
@@ -11305,7 +11303,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Tag, any>({
-        path: `/repos/${owner}/${repo}/tags`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/tags`,
         method: "POST",
         body: body,
         secure: true,
@@ -11329,7 +11327,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Tag, any>({
-        path: `/repos/${owner}/${repo}/tags/${tag}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/tags/${tag}`,
         method: "GET",
         secure: true,
         ...params,
@@ -11351,7 +11349,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/tags/${tag}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/tags/${tag}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -11368,7 +11366,7 @@ export class Api<
      */
     repoListTeams: (owner: string, repo: string, params: RequestParams = {}) =>
       this.request<Team[], any>({
-        path: `/repos/${owner}/${repo}/teams`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/teams`,
         method: "GET",
         secure: true,
         ...params,
@@ -11390,7 +11388,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Team, any>({
-        path: `/repos/${owner}/${repo}/teams/${team}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/teams/${team}`,
         method: "GET",
         secure: true,
         ...params,
@@ -11412,7 +11410,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/teams/${team}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/teams/${team}`,
         method: "PUT",
         secure: true,
         ...params,
@@ -11434,7 +11432,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/teams/${team}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/teams/${team}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -11473,7 +11471,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TrackedTime[], any>({
-        path: `/repos/${owner}/${repo}/times`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/times`,
         method: "GET",
         query: query,
         secure: true,
@@ -11497,7 +11495,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TrackedTime[], any>({
-        path: `/repos/${owner}/${repo}/times/${user}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/times/${user}`,
         method: "GET",
         secure: true,
         ...params,
@@ -11524,7 +11522,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<TopicName, any>({
-        path: `/repos/${owner}/${repo}/topics`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/topics`,
         method: "GET",
         query: query,
         secure: true,
@@ -11547,7 +11545,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/topics`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/topics`,
         method: "PUT",
         body: body,
         secure: true,
@@ -11571,7 +11569,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/topics/${topic}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/topics/${topic}`,
         method: "PUT",
         secure: true,
         ...params,
@@ -11593,7 +11591,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/topics/${topic}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/topics/${topic}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -11615,7 +11613,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Repository, any>({
-        path: `/repos/${owner}/${repo}/transfer`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/transfer`,
         method: "POST",
         body: body,
         secure: true,
@@ -11638,7 +11636,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Repository, any>({
-        path: `/repos/${owner}/${repo}/transfer/accept`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/transfer/accept`,
         method: "POST",
         secure: true,
         ...params,
@@ -11659,7 +11657,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Repository, any>({
-        path: `/repos/${owner}/${repo}/transfer/reject`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/transfer/reject`,
         method: "POST",
         secure: true,
         ...params,
@@ -11681,7 +11679,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<WikiPage, any>({
-        path: `/repos/${owner}/${repo}/wiki/new`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/wiki/new`,
         method: "POST",
         body: body,
         secure: true,
@@ -11705,7 +11703,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<WikiPage, any>({
-        path: `/repos/${owner}/${repo}/wiki/page/${pageName}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/wiki/page/${pageName}`,
         method: "GET",
         secure: true,
         ...params,
@@ -11727,7 +11725,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/repos/${owner}/${repo}/wiki/page/${pageName}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/wiki/page/${pageName}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -11750,7 +11748,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<WikiPage, any>({
-        path: `/repos/${owner}/${repo}/wiki/page/${pageName}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/wiki/page/${pageName}`,
         method: "PATCH",
         body: body,
         secure: true,
@@ -11779,7 +11777,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<WikiPageMetaData[], any>({
-        path: `/repos/${owner}/${repo}/wiki/pages`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/wiki/pages`,
         method: "GET",
         query: query,
         secure: true,
@@ -11806,7 +11804,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<WikiCommitList, any>({
-        path: `/repos/${owner}/${repo}/wiki/revisions/${pageName}`,
+        path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/wiki/revisions/${pageName}`,
         method: "GET",
         query: query,
         secure: true,
@@ -12165,7 +12163,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<Repository, any>({
-        path: `/teams/${id}/repos/${org}/${repo}`,
+        path: `/teams/${id}/repos/${org}/${encodeURIComponent(repo)}`,
         method: "GET",
         secure: true,
         ...params,
@@ -12187,7 +12185,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/teams/${id}/repos/${org}/${repo}`,
+        path: `/teams/${id}/repos/${org}/${encodeURIComponent(repo)}`,
         method: "PUT",
         secure: true,
         ...params,
@@ -12209,7 +12207,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/teams/${id}/repos/${org}/${repo}`,
+        path: `/teams/${id}/repos/${org}/${encodeURIComponent(repo)}`,
         method: "DELETE",
         secure: true,
         ...params,
@@ -13335,7 +13333,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/user/starred/${owner}/${repo}`,
+        path: `/user/starred/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
         method: "GET",
         secure: true,
         ...params,
@@ -13356,7 +13354,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/user/starred/${owner}/${repo}`,
+        path: `/user/starred/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
         method: "PUT",
         secure: true,
         ...params,
@@ -13377,7 +13375,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<any, any>({
-        path: `/user/starred/${owner}/${repo}`,
+        path: `/user/starred/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
         method: "DELETE",
         secure: true,
         ...params,

@@ -3,6 +3,8 @@
   "entry": [
     "server.ts",
     "scripts/**/*.ts",
+    // swagger-typescript-api loads this through its --custom-config flag.
+    "scripts/gitea-client.config.cjs",
     // Worker threads load this computed path at runtime, so Knip cannot infer
     // its reachability from a static import graph.
     "src/foundation/rustledger/rustledger-worker.ts",

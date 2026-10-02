@@ -61,6 +61,10 @@ yarn dev                # runs on :8000
 - `yarn test` - unit tests (WASM-free)
 - `yarn verify:rustledger` - live engine checks against the real WASM module
 - `yarn lint` / `yarn typecheck`
+- `yarn generate-gitea-client` - regenerate the client from
+  `../idl/gitea.swagger.v1.json` using pinned generator tooling. The local config
+  encodes owner/repository path segments; the thin HTTP template preserves
+  `format: "raw"` streaming and rejects unexpected upstream template changes.
 
 ### Environment variables
 

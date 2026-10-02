@@ -1,0 +1,26 @@
+<%
+// Preserve raw streaming without forking the generator's full HTTP client.
+let source = includeFile("@base/http-clients/fetch-http-client", it);
+const replacements = [
+  [
+    'export type ResponseFormat = keyof Omit<Body, "body" | "bodyUsed">;',
+    'export type ResponseFormat = keyof Omit<Body, "body" | "bodyUsed"> | "raw";',
+  ],
+  [
+    "const responseToParse = responseFormat ? response.clone() : response;",
+    'const shouldParseResponse = responseFormat !== undefined && responseFormat !== "raw";\n' +
+      "const responseToParse = shouldParseResponse ? response.clone() : response;",
+  ],
+  [
+    "const data = !responseFormat ? r : await responseToParse[responseFormat]()",
+    "const data = !shouldParseResponse ? r : await responseToParse[responseFormat]()",
+  ],
+];
+for (const [before, after] of replacements) {
+  if (source.split(before).length !== 2) {
+    throw new Error(`Upstream HTTP client template changed: ${before}`);
+  }
+  source = source.replace(before, after);
+}
+%>
+<%~ source %>

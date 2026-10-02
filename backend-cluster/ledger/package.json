@@ -21,6 +21,7 @@
     "lint:deadcode:fix": "knip --include files,exports,types --fix --fix-type files,exports,types --allow-remove-files --format",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "format": "prettier --write .",
+    "generate-gitea-client": "npx --yes swagger-typescript-api@13.13.0 generate --path ../idl/gitea.swagger.v1.json --output src/features/gitea/client --name gitea-api.ts --custom-config scripts/gitea-client.config.cjs --templates scripts/gitea-templates",
     "verify:rustledger": "NODE_OPTIONS=--experimental-vm-modules ts-node -r tsconfig-paths/register --transpile-only scripts/verify-rustledger.ts",
     "verify:rustledger:shadow": "echo 'shadow verify returns with the service layer (w1/003)' && exit 0",
     "kill": "lsof -ti tcp:8000 | xargs kill -9 || true"
