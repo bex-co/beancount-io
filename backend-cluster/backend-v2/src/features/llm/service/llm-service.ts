@@ -355,10 +355,15 @@ export class LLMService implements ILLMService {
     identity: Identity,
     request: Readonly<Record<string, unknown>>,
   ): Promise<unknown> {
+    const boundedRequest =
+      request.max_tokens === undefined &&
+      request.max_completion_tokens === undefined
+        ? { ...request, max_completion_tokens: 1500 }
+        : request;
     const response = await this.invokeModelProxy(
       identity,
       `https://api.blockeden.xyz/openai/${this.config.blockeden.accessKey}/v1/chat/completions`,
-      request,
+      boundedRequest,
     );
     const usage = (response as { usage?: { total_tokens?: number } }).usage;
     await this.recordProxyUsage(identity.userId, usage?.total_tokens ?? 0);

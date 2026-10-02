@@ -27,24 +27,31 @@ const chatMessageSchema = z.union([
   }),
 ]);
 
-const chatCompletionBodySchema = z.object({
-  model: z.string().optional().default("gpt-4o"),
-  messages: z.array(chatMessageSchema).min(1),
-  temperature: z.number().min(0).max(2).optional(),
-  max_tokens: z.number().int().positive().optional(),
-  tools: z
-    .array(
-      z.object({
-        type: z.literal("function"),
-        function: z.object({
-          name: z.string(),
-          description: z.string().optional(),
-          parameters: z.record(z.string(), z.unknown()).optional(),
+const chatCompletionBodySchema = z
+  .object({
+    model: z.string().optional().default("gpt-4o"),
+    messages: z.array(chatMessageSchema).min(1),
+    temperature: z.number().min(0).max(2).optional(),
+    max_tokens: z.number().int().positive().optional(),
+    max_completion_tokens: z.number().int().positive().optional(),
+    tools: z
+      .array(
+        z.object({
+          type: z.literal("function"),
+          function: z.object({
+            name: z.string(),
+            description: z.string().optional(),
+            parameters: z.record(z.string(), z.unknown()).optional(),
+          }),
         }),
-      }),
-    )
-    .optional(),
-});
+      )
+      .optional(),
+  })
+  .refine(
+    ({ max_tokens, max_completion_tokens }) =>
+      max_tokens === undefined || max_completion_tokens === undefined,
+    { message: "Specify only one output token cap" },
+  );
 
 export function setOpenAIChatCompletionsRoute(
   router: Router,

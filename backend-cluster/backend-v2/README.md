@@ -462,6 +462,20 @@ transactions or opening balances. Choose **SAMPLE** for a populated demonstratio
 ledger. Template changes apply only to newly created ledgers; existing books are
 not rewritten.
 
+### OpenAI-compatible model proxy
+
+`POST /api-gateway/ai/openai/chat/completions` accepts either
+`max_completion_tokens` or the legacy `max_tokens` as a positive integer and
+forwards the supplied field unchanged. Supplying both is a bad request. When
+neither is present, the proxy sends `max_completion_tokens: 1500` instead of
+relying on an uncapped provider default. An explicit cap replaces this default;
+it remains subject to the selected model's limits.
+
+The route requires an authenticated credential with write capability and checks
+the caller's monthly AI allowance before contacting the model. Successful calls
+record the provider's reported total token usage. This wire-compatible endpoint
+retains its documented GraphQL and MCP transport exceptions.
+
 ## Connecting an MCP client
 
 The backend serves a stateless Streamable HTTP endpoint at
