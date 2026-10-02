@@ -25,6 +25,7 @@ nothing here describes the hosted AI service.
 from __future__ import annotations
 
 import re
+import time
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -173,7 +174,7 @@ def test_an_armed_directive_never_reaches_the_ledger_or_repaints_the_panel(
 
     run = ask_on_a_terminal(
         ["--file", str(split_ledger), "ask", "--into", "side.bean"],
-        ["add a 7 usd lunch", "@ENTER", "@ENTER", "@CTRL_D"],
+        ["add a 7 usd lunch", "@ENTER", "@WAIT:Done.", "@WAIT:❯", "@CTRL_D"],
     )
 
     assert run.status == 0, run.screen
@@ -186,14 +187,27 @@ def test_an_armed_directive_never_reaches_the_ledger_or_repaints_the_panel(
 def test_an_approved_write_lands_in_the_into_file_the_panel_named(
     split_ledger: Path, stub_model: StubModel, ask_on_a_terminal: Any
 ) -> None:
-    stub_model.reply = lambda n: (
-        model_tool_call("write_directive", {"directive": CLEAN_DIRECTIVE}) if n == 1 else model_answer("Done.")
-    )
+    def reply(number: int) -> dict[str, object]:
+        if number == 1:
+            # Quiet output is not readiness for approval: the model may still be working.
+            time.sleep(5)
+            return model_tool_call("write_directive", {"directive": CLEAN_DIRECTIVE})
+        return model_answer("Done.")
+
+    stub_model.reply = reply
     root_before = split_ledger.read_text()
 
     run = ask_on_a_terminal(
         ["--file", str(split_ledger), "ask", "--into", "side.bean"],
-        ["add a 7 usd lunch", "@ENTER", "@ENTER", "@CTRL_D"],
+        [
+            "add a 7 usd lunch",
+            "@ENTER",
+            "@WAIT:Append this directive to the ledger",
+            "@ENTER",
+            "@WAIT:Done.",
+            "@WAIT:❯",
+            "@CTRL_D",
+        ],
     )
 
     assert run.status == 0, run.screen
