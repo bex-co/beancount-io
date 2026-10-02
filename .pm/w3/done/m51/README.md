@@ -52,7 +52,7 @@ refused by the gateway instead of answered. **Status:** done
 ## Source + Goal linkage
 
 - **Source:** inbox notes [447](../447.md), [455](../455.md), [448](../448.md)
-  and the CLI half of [446](../../446.md) — the `bea ask` answer-correctness and
+  and the CLI half of [446](../../m52/source-446.md) — the `bea ask` answer-correctness and
   request-budget cluster from the continuous CLI QA rounds of 2026-09-26. All
   four live in `cli/src/cli/ask/agent.py`'s query-result and prompt layer, so
   they were fixed in one pass.
@@ -86,4 +86,4 @@ refused by the gateway instead of answered. **Status:** done
   refused by the account's AI quota (`blockedUntil 2026-10-02T23:12:31Z`, after
   ~8 short questions on a 2,000,000-token allowance reading 12% used), so the
   truncation path's live confirmation is outstanding and the quota-accounting
-  defect stays on [446](../../446.md) as backend work.
+  defect stays on [446](../../m52/source-446.md) as backend work.
