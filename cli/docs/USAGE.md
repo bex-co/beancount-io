@@ -452,6 +452,12 @@ Native forwarding commands include their pinned upstream usage/options in
 `--help`, even offline and before optional engine features are enabled. The
 native `FILENAME` in check help is supplied by global `bea --file`.
 
+Native short-option tokens are forwarded intact, including glued values such
+as `-o/home/alice/export.bean` or `-e/home/alice/main.bean`. Letters inside a
+native option's value do not activate bea's own flags. Use a separate `-h` or
+`--help` to request bea's help; native options remain subject to the downstream
+command's parser and the output-destination checks above.
+
 In the interactive query shell, `.output FILE` redirects results and `.output`
 restores the original output stream. A failed redirection reports the path and
 reason on stderr, keeps the current output destination, and leaves the shell usable.

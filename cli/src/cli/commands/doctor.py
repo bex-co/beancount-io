@@ -11,6 +11,7 @@ import typer
 
 from cli.engine import launch
 from cli.errors import BeaError, ConflictError, LedgerError, refuse_json
+from cli.native_command import ForwardingCommand
 from cli.native_help import native_help
 
 doctor_app = typer.Typer(
@@ -355,6 +356,7 @@ def _register(op: str) -> None:
 
     @doctor_app.command(
         op,
+        cls=ForwardingCommand,
         help=help_text,
         epilog=native_help(f"doctor {op}"),
         context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
@@ -370,6 +372,7 @@ for _op in _OPS:
 
 @doctor_app.command(
     "dump-lexer",
+    cls=ForwardingCommand,
     epilog=native_help("doctor dump-lexer"),
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )

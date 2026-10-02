@@ -17,6 +17,7 @@ import typer
 from cli import context, output
 from cli.engine import launch
 from cli.errors import UsageError, refuse_json
+from cli.native_command import ForwardingCommand
 from cli.native_help import native_help
 
 _EXTRA = {"allow_extra_args": True, "ignore_unknown_options": True}
@@ -108,19 +109,19 @@ def _refuse_config_only_script(script: Path) -> None:
         )
 
 
-@ingest_app.command("identify", epilog=native_help("ingest identify"), context_settings=_EXTRA)
+@ingest_app.command("identify", cls=ForwardingCommand, epilog=native_help("ingest identify"), context_settings=_EXTRA)
 def identify(ctx: typer.Context, config: _CONFIG = None) -> None:
     """Identify which importer matches each document (Beangulp identify)."""
     _forward("identify", ctx, config)
 
 
-@ingest_app.command("extract", epilog=native_help("ingest extract"), context_settings=_EXTRA)
+@ingest_app.command("extract", cls=ForwardingCommand, epilog=native_help("ingest extract"), context_settings=_EXTRA)
 def extract(ctx: typer.Context, config: _CONFIG = None) -> None:
     """Extract raw entries from documents (Beangulp extract; not bea import --apply)."""
     _forward("extract", ctx, config)
 
 
-@ingest_app.command("archive", epilog=native_help("ingest archive"), context_settings=_EXTRA)
+@ingest_app.command("archive", cls=ForwardingCommand, epilog=native_help("ingest archive"), context_settings=_EXTRA)
 def archive(ctx: typer.Context, config: _CONFIG = None) -> None:
     """File documents into the archive hierarchy (Beangulp archive)."""
     _forward("archive", ctx, config)

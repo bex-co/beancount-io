@@ -6,7 +6,8 @@ readme = "README.md"
 license = { text = "MIT AND GPL-2.0-only" }
 requires-python = ">=3.12"
 dependencies = [
-    "typer>=0.12",
+    # Native forwarding customizes Typer's vendored Click parser.
+    "typer>=0.27.0",
     "httpx>=0.27",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
