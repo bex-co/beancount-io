@@ -64,7 +64,7 @@
 
 - [x] **m45** — Keep generated import identities exact across amounts and currencies (6 tasks) ← continuous CLI QA, 2026-09-21
 
-- [ ] **m46** — [Harden REST v1 ledger path params (validate + encode + fail-closed)](./m46/README.md) (8 tasks) ← continuous CLI QA, 2026-09-26
+- [x] **m46** — [Harden REST v1 ledger path params (validate + encode + fail-closed)](./done/m46/README.md) (8 tasks) ← continuous CLI QA, 2026-09-26
 
 - [x] **m47** — Make `bea format --in-place` a locked, atomic write (6 tasks) ← continuous CLI QA, 2026-09-26; consolidates notes 434 + 435
 

@@ -3,7 +3,7 @@
 **Worker:** worker3 **Goal:** REST v1 `{owner}/{name}` path parameters are
 slug-validated at the boundary and safely encoded before every upstream call,
 so no encoded input can reshape the upstream Gitea/Fava URL or coax an
-anonymous-access probe into failing open. **Status:** todo (t001, t002, t003, t004, t008, t005, t006 done)
+anonymous-access probe into failing open. **Status:** done
 
 ## Tasks (in order)
 
@@ -16,7 +16,7 @@ anonymous-access probe into failing open. **Status:** todo (t001, t002, t003, t0
 | t008 | Encode ledger-service coordinates on the second Gitea hop — **DONE** | 30m | t002       |
 | t005 | Simplify — **DONE** | 20m | t002, t003, t004, t008 |
 | t006 | Test coverage — **DONE** | 40m | t005       |
-| t007 | Closeout                                                          | 10m | t006       |
+| t007 | Closeout — **DONE** | 10m | t006       |
 
 ## Definition of done
 
@@ -104,3 +104,12 @@ mark them cause-verified-by-source, live-unverified.
 - **Adoption surface task omitted:** this milestone is backend/CLI hardening
   with no new user- or agent-facing surface or quickstart step; it changes
   rejection behavior for malformed input, not any documented workflow.
+
+## Shipped outcome
+
+Completed 2026-10-02. Ledger references now pass one shared boundary rule on
+REST, GraphQL, and MCP; each owning service encodes upstream owner/repository
+segments; malformed privacy metadata denies access; and the CLI explains
+unexpected successful response bodies with status and request ID.
+Implementation commits: `50c759fb`, `42f631c2`, `e8c39ebe`, `aadc7eb9`,
+`deb649ff`. See `done/t006.md` for the requirement-by-requirement verification.
