@@ -1463,6 +1463,107 @@ class TestPriceStatus:
         assert "bea price status" in loaded.errors[0].message
 
 
+class TestManagedPriceFailureText:
+    def _record_provider_failure(self, url: str, cache: Path) -> str:
+        from email.message import Message
+        from unittest.mock import Mock
+        from urllib.error import HTTPError
+
+        opener = Mock()
+        opener.open.side_effect = HTTPError(url, 503, "Unavailable", Message(), None)
+        resolved = resolve_feed(url, "BTC-USD", root=cache, opener=opener)
+        assert resolved.blob is None
+        assert resolved.head.last_error == (
+            "fetch failed (provider): HTTP 503: price service unavailable. Retry later; cached prices remain usable."
+        )
+        return resolved.head.last_error
+
+    @pytest.mark.parametrize("command", [("check",), ("price", "status")], ids=["check", "status"])
+    @pytest.mark.parametrize("prior_failure", [False, True], ids=["empty-cache", "recorded-error"])
+    def test_offline_cli_reports_a_readable_cause_without_changing_files(
+        self, feed_server: str, tmp_path: Path, command: tuple[str, ...], prior_failure: bool
+    ) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        original = ledger.read_bytes()
+        url = f"{feed_server}/prices/BTC-USD"
+        cache = tmp_path / "cache" / "bea" / "managed-prices"
+        cause = self._record_provider_failure(url, cache) if prior_failure else "no cached revision"
+        cached = {path: path.read_bytes() for path in cache.rglob("*") if path.is_file()}
+
+        result = _run_bea(tmp_path, feed_server, "--offline", "--file", str(ledger), *command)
+
+        assert result.returncode == (1 if command == ("check",) else 0), result.stderr
+        assert f"{cause.rstrip('.')}. Run bea price status to inspect the source." in result.stderr
+        assert url in result.stderr
+        assert "None" not in result.stderr
+        assert ledger.read_bytes() == original
+        assert {path: path.read_bytes() for path in cache.rglob("*") if path.is_file()} == cached
+        assert _FeedHandler.hits == []
+
+    @pytest.mark.parametrize("prior_failure", [False, True], ids=["empty-cache", "recorded-error"])
+    def test_offline_temporary_comment_preserves_the_cause_and_customer_ledger(
+        self, feed_server: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, prior_failure: bool
+    ) -> None:
+        from beancount import loader
+
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        original = ledger.read_bytes()
+        url = f"{feed_server}/prices/BTC-USD"
+        cache = tmp_path / "cache"
+        cause = self._record_provider_failure(url, cache) if prior_failure else "no cached revision"
+        staged_contents: list[bytes] = []
+        load_file = loader.load_file
+
+        def inspect_load(filename: str, *args: Any, **kwargs: Any) -> Any:
+            assert Path(filename) != ledger
+            staged_contents.append(Path(filename).read_bytes())
+            return load_file(filename, *args, **kwargs)
+
+        monkeypatch.setattr(loader, "load_file", inspect_load)
+
+        loaded = load_with_sources(ledger, origins=(feed_server,), root=cache, offline=True, strict=False)
+
+        expected = original.replace(
+            f'include "{url}"\n'.encode(),
+            f"; managed price source unavailable: {url} ({cause})\n".encode(),
+        )
+        assert staged_contents == [expected]
+        assert ledger.read_bytes() == original
+        assert len(loaded.errors) == 1
+        assert loaded.errors[0].source == {"filename": str(ledger), "lineno": 2}
+        assert cause in loaded.errors[0].message
+        assert _FeedHandler.hits == []
+
+    def test_signed_out_non_strict_error_has_one_full_stop(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from email.message import Message
+        from unittest.mock import Mock
+        from urllib.error import HTTPError
+
+        monkeypatch.delenv("BEA_MANAGED_PRICE_TOKEN", raising=False)
+        monkeypatch.delenv("BEA_MANAGED_PRICE_AUTH_ERROR", raising=False)
+        origin = "https://beancount.io"
+        url = f"{origin}/prices/BTC-USD"
+        ledger = _write_managed_ledger(tmp_path, origin)
+        original = ledger.read_bytes()
+        opener = Mock()
+        opener.open.side_effect = HTTPError(url, 401, "Unauthorized", Message(), None)
+
+        loaded = load_with_sources(
+            ledger, origins=(origin,), root=tmp_path / "cache", offline=False, strict=False, opener=opener
+        )
+
+        assert len(loaded.errors) == 1
+        message = loaded.errors[0].message
+        assert "Not logged in." in message
+        assert "BEA_TOKEN. Run bea price status to inspect the source." in message
+        assert "BEA_TOKEN.." not in message
+        assert url in message
+        assert ledger.read_bytes() == original
+        opener.open.assert_called_once()
+
+
 class TestPriceExport:
     """`price export` snapshots a portable tree stock tools check (t005)."""
 

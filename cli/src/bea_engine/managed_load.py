@@ -396,13 +396,14 @@ def _rewrite_includes(
             else:
                 content = _swap_line(content, span.line, f"{_ALREADY_INCLUDED_LINE}\n".encode())
             continue
-        cause = result.head.last_error if result is not None else "no cached revision"
+        cause = ((result.head.last_error if result is not None else None) or "no cached revision").rstrip()
         comment = f"; managed price source unavailable: {span.target} ({cause})\n".encode()
         content = _swap_line(content, span.line, comment)
         unavailable.append(
             load_error(
                 {"filename": str(path), "lineno": span.line},
-                f'managed price source unavailable: include "{span.target}" in {path}:{span.line}: {cause}. '
+                f'managed price source unavailable: include "{span.target}" in {path}:{span.line}: '
+                f"{cause.rstrip('.')}. "
                 "Run bea price status to inspect the source.",
             )
         )
