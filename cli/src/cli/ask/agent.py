@@ -5,6 +5,7 @@ import re
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 
 from pydantic_ai import Agent, ModelRetry, RunContext
@@ -280,9 +281,17 @@ def make_agent(
         model_settings=model_settings(),
     )
 
+    @agent.system_prompt
+    def todays_date() -> str:
+        return f"Today's date is {date.today().isoformat()}."
+
     @agent.tool(retries=2)
     def run_bql_query(ctx: RunContext[BqlDeps], query: str) -> str:
-        """Run a BQL SELECT (Beancount Query Language) against the user's Beancount ledger."""
+        """Run a BQL SELECT (Beancount Query Language) against the user's Beancount ledger.
+
+        Returns the matching rows with a row count. An invalid query or an invalid
+        ledger comes back as an error to fix and retry.
+        """
         try:
             # Rows and columns, not the rendered table: the row count, a visible
             # zero and a bounded result all need the typed shape (`ask.results`).
@@ -296,7 +305,13 @@ def make_agent(
 
     @agent.tool()
     def write_directive(ctx: RunContext[BqlDeps], directive: str) -> str:
-        """Append a beancount directive to the ledger file. Use valid beancount syntax."""
+        """Append Beancount directive text (one or more directives) to the ledger file.
+
+        The text is validated first; invalid text is rejected with the reason and nothing
+        is written. In an interactive session the user sees the directive and approves or
+        declines it; in non-interactive mode writes are skipped. Returns one line: how many
+        directives were added and to which file, or why nothing was written.
+        """
         perm = ctx.deps.write_permission
         if perm.deny_all:
             return "Write denied (you denied all writes this session)."
