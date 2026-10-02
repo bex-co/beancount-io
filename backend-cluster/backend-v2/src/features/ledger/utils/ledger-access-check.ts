@@ -96,7 +96,7 @@ export async function assertLedgerAccess(
         ledgerOwner,
         ledgerName,
       );
-      if (!response.data.success) {
+      if (response.data?.success !== true) {
         throw new Error("Ledger source returned an unsuccessful response");
       }
       ledgerData = response.data.data;
@@ -119,6 +119,15 @@ export async function assertLedgerAccess(
       () =>
         new ForbiddenError("Forbidden - you do not have access to this ledger"),
     );
+  }
+  // A successful status alone does not establish which repository was found.
+  // Validate the facts needed by every grant before trusting an owner match.
+  if (
+    !Number.isSafeInteger(ledgerData?.id) ||
+    ledgerData.id <= 0 ||
+    typeof ledgerData.private !== "boolean"
+  ) {
+    throw new ForbiddenError("Forbidden - invalid ledger response");
   }
   const ledgerRepoId = ledgerData.id;
 
@@ -190,7 +199,7 @@ export async function assertLedgerAccess(
   }
 
   // Not a collaborator (or no identity at all) — check if the ledger is public
-  if (!ledgerData.private) {
+  if (ledgerData.private === false) {
     return { permission: "read", ledgerOwnerId, ledgerRepoId };
   }
 

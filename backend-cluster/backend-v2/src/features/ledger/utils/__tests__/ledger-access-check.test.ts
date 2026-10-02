@@ -77,6 +77,77 @@ describe("assertLedgerAccess", () => {
     });
   });
 
+  describe.each(["fallback", "throw"] as const)(
+    "%s source failures",
+    (sourceFailures) => {
+      describe.each([undefined, "user1", "user2"])("caller %p", (userId) => {
+        it.each([
+          undefined,
+          null,
+          {},
+          { id: 999 },
+          { id: 999, private: null },
+          { id: 999, private: 0 },
+          { id: 999, private: "false" },
+          { private: false },
+          { id: "999", private: false },
+          { id: 0, private: false },
+        ])(
+          "denies a malformed repo record %p before any permission grant",
+          async (data) => {
+            mockGetUserByUsername.mockResolvedValue({
+              id: "user1",
+              ledger_username: "owner",
+            });
+            mockGetById.mockResolvedValue({
+              id: "user2",
+              ledger_username: "collaborator",
+            });
+            mockGetLedgerCollaboratorPermission.mockResolvedValue({
+              data: { success: true, data: { permission: "write" } },
+            });
+            mockGetLedger.mockResolvedValue({ data: { success: true, data } });
+
+            await expect(
+              assertLedgerAccess("owner/ledger", userId, deps, {
+                sourceFailures,
+              }),
+            ).rejects.toThrow(ForbiddenError);
+            expect(mockGetLedgerCollaboratorPermission).not.toHaveBeenCalled();
+          },
+        );
+      });
+
+      it("allows anonymous reads only for an explicitly public repo", async () => {
+        mockGetUserByUsername.mockResolvedValue({
+          id: "user1",
+          ledger_username: "owner",
+        });
+        mockGetLedger.mockResolvedValue({
+          data: { success: true, data: { id: 999, private: false } },
+        });
+        await expect(
+          assertLedgerAccess("owner/ledger", undefined, deps, {
+            sourceFailures,
+          }),
+        ).resolves.toEqual({
+          permission: "read",
+          ledgerOwnerId: "user1",
+          ledgerRepoId: 999,
+        });
+
+        mockGetLedger.mockResolvedValue({
+          data: { success: true, data: { id: 999, private: true } },
+        });
+        await expect(
+          assertLedgerAccess("owner/ledger", undefined, deps, {
+            sourceFailures,
+          }),
+        ).rejects.toThrow(ForbiddenError);
+      });
+    },
+  );
+
   it("should throw ForbiddenError when requesting user is not found", async () => {
     mockGetUserByUsername.mockResolvedValue({
       id: "ownerUser",

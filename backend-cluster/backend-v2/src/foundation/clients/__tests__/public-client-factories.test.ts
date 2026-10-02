@@ -16,6 +16,7 @@ jest.mock("@/features/gitea/service/gitea-client-factory", () => ({
 
 import { FavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import { GiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
+import { ForbiddenError } from "@/shared/errors";
 
 const config = {
   favaApi: {
@@ -37,6 +38,58 @@ function models() {
 
 describe("anonymous public client selection", () => {
   beforeEach(() => jest.clearAllMocks());
+
+  it.each([undefined, null, true, 0, "", "false"])(
+    "denies anonymous ledger-v2 access when private is %p",
+    async (privateValue) => {
+      mockCreateFavaApi.mockReturnValue({
+        ledgers: {
+          getLedger: jest.fn().mockResolvedValue({
+            data: { success: true, data: { private: privateValue } },
+          }),
+        },
+      });
+      const factory = new FavaClientFactory(models(), {} as any, config);
+
+      await expect(
+        factory.getPublicApiClient("alice/public-ledger"),
+      ).rejects.toThrow(ForbiddenError);
+      expect(mockCreateAnonymousFavaApi).not.toHaveBeenCalled();
+    },
+  );
+
+  it("denies anonymous ledger-v2 access when the successful body has no repo", async () => {
+    mockCreateFavaApi.mockReturnValue({
+      ledgers: {
+        getLedger: jest.fn().mockResolvedValue({ data: { success: true } }),
+      },
+    });
+    const factory = new FavaClientFactory(models(), {} as any, config);
+
+    await expect(
+      factory.getPublicApiClient("alice/public-ledger"),
+    ).rejects.toThrow(ForbiddenError);
+    expect(mockCreateAnonymousFavaApi).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, null, true, 0, "", "false"])(
+    "denies anonymous Gitea access when private is %p",
+    async (privateValue) => {
+      mockCreateGiteaClient.mockReturnValue({
+        repos: {
+          repoGet: jest
+            .fn()
+            .mockResolvedValue({ data: { private: privateValue } }),
+        },
+      });
+      const factory = new GiteaClientFactory(models(), {} as any, config);
+
+      await expect(
+        factory.getPublicApiClient("alice/public-ledger"),
+      ).rejects.toThrow(ForbiddenError);
+      expect(mockCreateAnonymousGiteaClient).not.toHaveBeenCalled();
+    },
+  );
 
   it("uses anonymous ledger-v2 access after confirming the repo is public", async () => {
     const userModels = models();

@@ -127,6 +127,12 @@ REST reports its schema-validation error; GraphQL and MCP report bad input.
 A literal dot segment that the MCP SDK normalizes into an unmatched resource
 URI is rejected as not found before any repository lookup.
 
+Public-client selection requires an explicit boolean `private: false` from
+the repository source. Missing or non-boolean visibility never grants anonymous
+access. Metadata permission checks also require a positive integer repository
+ID and boolean visibility before granting owner, collaborator, or public access;
+a malformed successful response is denied across REST, GraphQL, and MCP.
+
 ## Contract evidence required per operation
 
 Each adapter family must record and exercise its actual arguments and defaults,

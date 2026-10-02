@@ -466,6 +466,32 @@ function expected(name: string, description: string, privateValue: boolean) {
   };
 }
 describe("ledger lifecycle through actual adapters and workflow", () => {
+  it.each(surfaces)(
+    "denies the owner a malformed privacy probe before reading ledger content via %s",
+    async (surface) => {
+      const f = await fixture();
+      f.adminGet.mockResolvedValueOnce(envelope({ id: seed.id }));
+      try {
+        const response = await f.call(surface, "read");
+        expect(response.failed).toBe(true);
+        expect(response.error?.code).toBe("FORBIDDEN");
+        if ("status" in response) expect(response.status).toBe(403);
+        expect(f.authorize).toHaveBeenCalledTimes(1);
+        expect(f.getUserByUsername).toHaveBeenCalledTimes(1);
+        expect(f.adminGet).toHaveBeenCalledTimes(1);
+        expect(f.adminGet).toHaveBeenCalledWith("alice", "main");
+        expect(f.getApiContext).not.toHaveBeenCalled();
+        expect(f.getPublicApiClient).not.toHaveBeenCalled();
+        expect(f.get).not.toHaveBeenCalled();
+        expect(f.repoGet).not.toHaveBeenCalled();
+        expect(f.update).not.toHaveBeenCalled();
+        expect(f.remove).not.toHaveBeenCalled();
+        expect(f.records.get("alice/main")).toEqual(seed);
+      } finally {
+        await f.close();
+      }
+    },
+  );
   describe.each(surfaces)("ledger slug validation via %s", (surface) => {
     it.each(["read", "update", "delete"] as const)(
       "rejects malformed targets before any upstream lookup during %s",

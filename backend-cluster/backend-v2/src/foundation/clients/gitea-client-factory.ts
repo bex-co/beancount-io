@@ -58,7 +58,7 @@ export class GiteaClientFactory implements IGiteaClientFactory {
       throw new NotFoundError("Invalid ledger ID");
     }
 
-    if (repoResponse.data.private) {
+    if (repoResponse.data.private !== false) {
       throw new ForbiddenError("Ledger is private");
     }
 

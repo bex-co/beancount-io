@@ -87,10 +87,10 @@ export class FavaClientFactory implements IFavaClientFactory {
       ledgerOwner,
       ledgerName,
     );
-    if (!response.data?.success) {
+    if (response.data?.success !== true) {
       throw new NotFoundError("Invalid ledger ID");
     }
-    if (response.data.data.private) {
+    if (response.data.data?.private !== false) {
       throw new ForbiddenError("Ledger is private");
     }
     return createAnonymousFavaApi(this.config.favaApi.baseUrl);
