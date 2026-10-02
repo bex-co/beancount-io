@@ -1,0 +1,3 @@
+Explore public example ledgers without signing in. Add your first transaction directly from an empty ledger, and tap the active tab to return to the top. The ledger menu keeps your complete list visible after creating a ledger, and chart totals follow your finger more smoothly.
+
+Investments use market prices, budgets compare matching dates, transfers show the amount moved, and drafts are protected from accidental discard.

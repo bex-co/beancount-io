@@ -128,6 +128,13 @@ an inexact confirmation. Screenshot application uses upstream `asc screenshots
 plan` and `asc screenshots apply --confirm --replace`; no repository code
 handles bearer tokens or App Store upload requests.
 
+A replacement release can reuse a withdrawn version record in
+`DEVELOPER_REJECTED`, which Apple permits editing, as well as a new record in
+`PREPARE_FOR_SUBMISSION`. The same plans, approvals, exact-version confirmation,
+and parity checks apply. Verification reads the current remote state into the
+receipt; it never labels a withdrawn record as a new draft. Versions awaiting
+or undergoing review remain blocked.
+
 Diff `tmp/asc-parity-<version>/app-info/` and
 `tmp/asc-parity-<version>/version/<version>/` against the canonical files. Also
 list every remote screenshot set and verify locale, display type, processed

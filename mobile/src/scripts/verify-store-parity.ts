@@ -3,6 +3,7 @@ import * as path from "path";
 import { execFileSync } from "child_process";
 import { createHash } from "crypto";
 import {
+  isEditableStoreState,
   loadScreenshotManifest,
   loadStoreLocaleManifest,
   storeInputDigest,
@@ -193,6 +194,22 @@ for (const localization of localizationResponse.data) {
   }
 }
 
+// Read the actual version state after verification instead of assuming a newly
+// created draft: a replacement release can remain DEVELOPER_REJECTED.
+const remoteVersion = JSON.parse(
+  execFileSync(
+    asc,
+    ["versions", "view", "--version-id", versionId, "--output", "json"],
+    { encoding: "utf8" },
+  ),
+) as { id: string; versionString: string; state: string };
+if (remoteVersion.id !== versionId || remoteVersion.versionString !== version) {
+  errors.push("remote version does not match the requested staging target");
+}
+if (!isEditableStoreState(remoteVersion.state)) {
+  errors.push(`remote version is no longer editable: ${remoteVersion.state}`);
+}
+
 if (errors.length > 0) {
   console.error(errors.map((error) => `- ${error}`).join("\n"));
   process.exit(1);
@@ -202,7 +219,7 @@ const receipt: StoreStagingReceipt = {
   schemaVersion: 1,
   appId: "1527950512",
   version,
-  verifiedState: "PREPARE_FOR_SUBMISSION",
+  verifiedState: remoteVersion.state,
   storeLocales: localeManifest.storeLocales,
   displayTypes: screenshotManifest.displayTypes.map((display) => display.name),
   screenshotsPerSet: screenshotManifest.stories.length,

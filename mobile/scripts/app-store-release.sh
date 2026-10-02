@@ -33,6 +33,10 @@ version_id() {
     head -1
 }
 
+is_editable_state() {
+  [[ "$1" == "PREPARE_FOR_SUBMISSION" || "$1" == "DEVELOPER_REJECTED" ]]
+}
+
 ensure_version_locales() {
   local target_version_id response created=0
   target_version_id=$(version_id)
@@ -79,7 +83,7 @@ case "$ACTION" in
   create)
     require_confirmation
     STATE=$(version_state)
-    if [[ -n "$STATE" && "$STATE" != "PREPARE_FOR_SUBMISSION" ]]; then
+    if [[ -n "$STATE" ]] && ! is_editable_state "$STATE"; then
       echo "version $VERSION already exists in non-editable state $STATE" >&2
       exit 1
     fi
@@ -99,8 +103,8 @@ case "$ACTION" in
     ;;
   plan)
     STATE=$(version_state)
-    if [[ "$STATE" != "PREPARE_FOR_SUBMISSION" ]]; then
-      echo "target $VERSION must be PREPARE_FOR_SUBMISSION; found ${STATE:-missing}" >&2
+    if ! is_editable_state "$STATE"; then
+      echo "target $VERSION must be PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED; found ${STATE:-missing}" >&2
       exit 1
     fi
     npx tsx ./src/scripts/validate-store-metadata.ts
@@ -165,8 +169,8 @@ case "$ACTION" in
     ;;
   plan-screenshots)
     STATE=$(version_state)
-    if [[ "$STATE" != "PREPARE_FOR_SUBMISSION" ]]; then
-      echo "target $VERSION must be PREPARE_FOR_SUBMISSION; found ${STATE:-missing}" >&2
+    if ! is_editable_state "$STATE"; then
+      echo "target $VERSION must be PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED; found ${STATE:-missing}" >&2
       exit 1
     fi
     NEXT_JSON="$SCREENSHOT_REVIEW/plan.json.next"
@@ -212,8 +216,8 @@ case "$ACTION" in
     ;;
   verify)
     STATE=$(version_state)
-    if [[ "$STATE" != "PREPARE_FOR_SUBMISSION" ]]; then
-      echo "target $VERSION must still be PREPARE_FOR_SUBMISSION; found ${STATE:-missing}" >&2
+    if ! is_editable_state "$STATE"; then
+      echo "target $VERSION must still be PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED; found ${STATE:-missing}" >&2
       exit 1
     fi
     mkdir -p "tmp/asc-parity-$VERSION"

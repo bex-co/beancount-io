@@ -371,6 +371,38 @@ describe("remote release gate", () => {
           reviewDirectory: screenshotReviewDirectory,
         }),
       ).toEqual([]);
+      for (const phase of ["metadata", "screenshots"] as const) {
+        const reviewDirectory =
+          phase === "metadata"
+            ? metadataReviewDirectory
+            : screenshotReviewDirectory;
+        expect(
+          validateReleaseGate({
+            phase,
+            version: "1.20260824.45",
+            state: "DEVELOPER_REJECTED",
+            confirmedVersion: "1.20260824.45",
+            reviewDirectory,
+          }),
+        ).toEqual([]);
+        for (const state of [
+          "READY_FOR_REVIEW",
+          "WAITING_FOR_REVIEW",
+          "IN_REVIEW",
+          "READY_FOR_SALE",
+          "",
+        ]) {
+          expect(
+            validateReleaseGate({
+              phase,
+              version: "1.20260824.45",
+              state,
+              confirmedVersion: "1.20260824.45",
+              reviewDirectory,
+            }).length,
+          ).toBe(1);
+        }
+      }
       expect(
         validateReleaseGate({
           phase: "screenshots",
@@ -406,6 +438,11 @@ describe("remote release gate", () => {
       inputDigest: storeInputDigest(root, version),
     };
     expect(validateStoreStagingReceipt(root, version, receipt)).toEqual([]);
+    receipt.verifiedState = "DEVELOPER_REJECTED";
+    expect(validateStoreStagingReceipt(root, version, receipt)).toEqual([]);
+    receipt.verifiedState = "IN_REVIEW";
+    expect(validateStoreStagingReceipt(root, version, receipt).length).toBe(1);
+    receipt.verifiedState = "DEVELOPER_REJECTED";
     receipt.inputDigest = "sha256:stale";
     expect(
       validateStoreStagingReceipt(root, version, receipt).length > 0,

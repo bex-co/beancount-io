@@ -766,6 +766,12 @@ export function screenshotIdentityErrors(
   return errors;
 }
 
+// A withdrawn submission can be edited and resubmitted with a replacement build.
+// READY_FOR_REVIEW and active review states remain locked.
+export function isEditableStoreState(state: string): boolean {
+  return state === "PREPARE_FOR_SUBMISSION" || state === "DEVELOPER_REJECTED";
+}
+
 export function validateReleaseGate(input: ReleaseGateInput): string[] {
   const errors: string[] = [];
   if (input.confirmedVersion !== input.version) {
@@ -773,9 +779,9 @@ export function validateReleaseGate(input: ReleaseGateInput): string[] {
       `confirmation must exactly match target version ${input.version}`,
     );
   }
-  if (input.state !== "PREPARE_FOR_SUBMISSION") {
+  if (!isEditableStoreState(input.state)) {
     errors.push(
-      `target version must be PREPARE_FOR_SUBMISSION, found ${input.state || "missing"}`,
+      `target version must be PREPARE_FOR_SUBMISSION or DEVELOPER_REJECTED, found ${input.state || "missing"}`,
     );
   }
   const requiredFiles =
@@ -837,7 +843,7 @@ export function validateStoreStagingReceipt(
     errors.push("store staging receipt appId is wrong");
   if (receipt.version !== version)
     errors.push("store staging receipt version is stale");
-  if (receipt.verifiedState !== "PREPARE_FOR_SUBMISSION") {
+  if (!isEditableStoreState(receipt.verifiedState)) {
     errors.push(
       "store staging receipt was not captured while the version was editable",
     );

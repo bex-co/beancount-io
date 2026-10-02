@@ -246,8 +246,9 @@ limits — name 30, subtitle 30, keywords 100, promotional text 170, description
 
 Only **promotional text** is editable while a version is live. `name`, `subtitle`,
 `keywords`, `description`, `marketingUrl`, `supportUrl`, and the age-rating
-declaration all require a version in `PREPARE_FOR_SUBMISSION`, so they ship with a
-release. Run `yarn bump` locally first; it scaffolds every canonical locale from
+declaration require an editable version, so they ship with a release. The helper
+supports `PREPARE_FOR_SUBMISSION` and withdrawn `DEVELOPER_REJECTED` versions,
+with the same review gates for both. Run `yarn bump` locally first; it scaffolds every canonical locale from
 `metadata/version-template/` with blank `whatsNew` fields. Fill every localized
 release note and stage the listing before the bump reaches `main` and triggers
 EAS auto-submit.
@@ -300,8 +301,8 @@ yarn screenshots:validate
 
 The build produces 84 opaque Apple assets: 14 locales × two device types × the
 three ordered stories in `metadata/screenshots.json`, plus the 64 Play assets
-described below. Apple uploads only work against
-`PREPARE_FOR_SUBMISSION`; all planning, review, replacement, and ordering use
+described below. The helper permits Apple uploads against
+`PREPARE_FOR_SUBMISSION` and `DEVELOPER_REJECTED`; all planning, review, replacement, and ordering use
 upstream `asc screenshots` commands. See `docs/app-store-localization.md` for the
 complete pre-auto-submit choreography.
 
