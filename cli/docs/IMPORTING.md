@@ -55,7 +55,9 @@ There is no automatic categorization model or hosted request in this command.
 For split ledgers, add `--into 2026.bean` to write an included file while
 `--file books/main.bean` continues to identify the validation root. The
 destination is relative to the root ledger's directory and must already be
-included. The preview's `into` and diff identify the actual destination.
+included by a literal path or glob. The preview's `into` and diff identify the
+actual destination. If it does not exist, a successful `--apply` creates it;
+previews, rejected imports, and imports with nothing new leave it absent.
 
 ## CSV without an importer (`--csv`)
 

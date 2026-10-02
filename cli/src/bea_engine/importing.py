@@ -99,9 +99,8 @@ def answer(
     source_bytes = source.read_bytes()
     snapshot = ledger_write.LedgerSnapshot.capture(file)
     target = ledger_write.destination(file, into)
-    snapshot.require_target(target)
-    original = target.read_bytes()
-    existing, errors, options = managed_load.load_file(file)
+    original = snapshot.require_target(target)
+    existing, errors, options = managed_load.load_file(file, snapshot=snapshot)
     if not allow_errors and errors:
         raise LedgerError(
             f"Ledger has {len(errors)} error(s). Pass --allow-errors to preview and apply anyway.",

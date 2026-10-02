@@ -604,8 +604,11 @@ copy left by a kill that could not be caught, which is the only case a signal
 handler cannot cover.
 
 For split ledgers, keep `--file` pointed at the root and choose the included
-destination with `--into`. The destination must already exist and be included
-by the root. Its path is relative to the root ledger's directory:
+destination with `--into`. Its path is relative to the root ledger's directory
+and must match a literal include or include glob. An absent destination is
+created only when a validated write succeeds; its parent directory must already
+exist. Previews, rejected writes, and duplicate-only imports leave it absent.
+New destinations are private (`0600` on POSIX).
 
 ```bash
 bea --file main.bean add transaction --into 2026.bean \

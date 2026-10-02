@@ -201,7 +201,7 @@ def _balance(
         snapshot = write.LedgerSnapshot.capture(file)
         target = write.destination(file, into)
         snapshot.require_target(target)
-        entries, errors, _ = managed_load.load_file(file)
+        entries, errors, _ = managed_load.load_file(file, snapshot=snapshot)
         ledger_errors = [format_error(error, ledger_file=file) for error in errors]
         if ledger_errors and strict_read and not all("Unused Pad" in error for error in ledger_errors):
             # A staged pad is the transient error this very write resolves:
@@ -383,7 +383,7 @@ def _price(
     snapshot = write.LedgerSnapshot.capture(file)
     target = write.destination(file, into)
     snapshot.require_target(target)
-    entries, errors, _ = managed_load.load_file(file)
+    entries, errors, _ = managed_load.load_file(file, snapshot=snapshot)
     ledger_errors = [format_error(error, ledger_file=file) for error in errors]
     if ledger_errors and strict_read:
         raise protocol.LedgerError(

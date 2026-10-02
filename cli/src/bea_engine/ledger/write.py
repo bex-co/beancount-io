@@ -49,11 +49,15 @@ def _includes(content: bytes) -> Iterator[tuple[int, int, str]]:
 
 @dataclass
 class LedgerSnapshot:
-    """Freeze the root and its include graph for validation and conflict checks."""
+    """Freeze the root and its include graph for validation and conflict checks.
+
+    A planned destination has empty contents and a None stat. It participates
+    in staged loads, but must remain absent until the validated write commits.
+    """
 
     root: Path
     contents: dict[Path, bytes] = field(default_factory=dict)
-    stats: dict[Path, os.stat_result] = field(default_factory=dict)
+    stats: dict[Path, os.stat_result | None] = field(default_factory=dict)
     patterns: dict[str, tuple[Path, ...]] = field(default_factory=dict)
 
     @classmethod
@@ -73,7 +77,8 @@ class LedgerSnapshot:
                 pending.extend(matches)
         return snapshot
 
-    def require_target(self, target: Path) -> None:
+    def require_target(self, target: Path) -> bytes:
+        """Register an included destination without creating it; return its frozen bytes."""
         from bea_engine.managed_price_cache import managed_source_for_path
 
         source = managed_source_for_path(target)
@@ -83,23 +88,22 @@ class LedgerSnapshot:
                 "declare a price directive in your own ledger file to override it."
             )
         resolved = target.resolve()
-        if any(path.resolve() == resolved for path in self.contents):
-            return
-        for pattern, matches in self.patterns.items():
-            if not fnmatch.fnmatch(str(resolved), pattern):
-                continue
-            # Covered by an include glob that was expanded before this path existed.
-            if not resolved.parent.is_dir():
-                raise UsageError(
-                    f"Write destination {target} matches include {pattern!r} but its directory "
-                    f"{resolved.parent} does not exist. Create the directory first."
-                )
-            if not resolved.exists():
-                resolved.write_bytes(b"")
-            self.contents[resolved] = resolved.read_bytes()
-            self.stats[resolved] = resolved.stat()
-            self.patterns[pattern] = tuple(sorted({*matches, resolved}))
-            return
+        for path, content in self.contents.items():
+            if path.resolve() == resolved:
+                return content
+        matching = [pattern for pattern in self.patterns if _included_new_file(resolved, pattern)]
+        if matching:
+            if resolved.exists() or resolved.is_symlink():
+                raise ConflictError(f"The ledger changed during the operation: {resolved}. Nothing was written; retry.")
+            self.contents[resolved] = b""
+            self.stats[resolved] = None
+            for pattern in matching:
+                self.patterns[pattern] = tuple(sorted({*self.patterns[pattern], resolved}))
+            return b""
+        if not resolved.parent.is_dir():
+            raise UsageError(
+                f"Write destination directory {resolved.parent} does not exist. Create the directory first."
+            )
         raise UsageError(
             f"Write destination {target} is not included by {self.root}. "
             "Create it and add an include directive to the root first."
@@ -108,20 +112,32 @@ class LedgerSnapshot:
     def verify(self) -> None:
         for path, original in self.contents.items():
             try:
-                current = path.stat()
                 before = self.stats[path]
-                changed = (current.st_ino, current.st_mtime_ns, current.st_size) != (
-                    before.st_ino,
-                    before.st_mtime_ns,
-                    before.st_size,
-                ) or path.read_bytes() != original
+                if before is None:
+                    try:
+                        path.lstat()
+                    except FileNotFoundError:
+                        changed = False
+                    else:
+                        changed = True
+                else:
+                    current = path.stat()
+                    changed = (current.st_ino, current.st_mtime_ns, current.st_size) != (
+                        before.st_ino,
+                        before.st_mtime_ns,
+                        before.st_size,
+                    ) or path.read_bytes() != original
             except OSError:
                 changed = True
             if changed:
                 raise ConflictError(f"The ledger changed during the operation: {path}. Nothing was written; retry.")
         for pattern, before_paths in self.patterns.items():
             current_paths = tuple(sorted(Path(p).absolute() for p in glob.glob(pattern, recursive=True)))
-            if current_paths != before_paths:
+            existing_paths = tuple(path for path in before_paths if self.stats[path] is not None)
+            missing_still_included = all(
+                _included_new_file(path, pattern) for path in before_paths if self.stats[path] is None
+            )
+            if current_paths != existing_paths or not missing_still_included:
                 raise ConflictError(f"The included files changed: {pattern}. Nothing was written; retry.")
 
     @contextmanager
@@ -142,6 +158,18 @@ class LedgerSnapshot:
                         content = content[:start] + replacement.encode() + content[end:]
                 paths[path].write_bytes(content)
             yield paths[self.root], {staged: original for original, staged in paths.items()}
+
+
+def _included_new_file(target: Path, pattern: str) -> bool:
+    """Match an absent leaf using the same directory and hidden-file rules as glob."""
+    parent, name = os.path.split(pattern)
+    if target.name.startswith(".") and not name.startswith("."):
+        return False
+    if not fnmatch.fnmatch(target.name, name):
+        return False
+    if name == "**":
+        parent = os.path.join(parent, "**")
+    return any(Path(directory).resolve() == target.parent for directory in glob.glob(parent, recursive=True))
 
 
 #: How long a staged candidate must have been sitting before another write
@@ -499,7 +527,7 @@ def validate_candidate(
     # and message; anything else in the after set is newly introduced.
     before_keys: Counter[tuple[str, int | None, str]] | None = None
     if allow_errors:
-        _, before_errors, _ = managed_load.load_file(snapshot.root if snapshot else file)
+        _, before_errors, _ = managed_load.load_file(snapshot.root if snapshot else file, snapshot=snapshot)
         before_keys = Counter(_error_key(before, {}) for before in before_errors)
     accounts = [entry.account for entry in entries if isinstance(entry, Open)]
     records: list[_ErrorRecord] = []
@@ -782,8 +810,8 @@ def validate_append(
     """Validate the append without writing; returns the errors `allow_errors` tolerated."""
     snapshot = snapshot or LedgerSnapshot.capture(file)
     target = destination(file, into)
-    snapshot.require_target(target)
-    with candidate_file(target, _appended_or_report(target, target.read_bytes(), texts)) as candidate:
+    original = snapshot.require_target(target)
+    with candidate_file(target, _appended_or_report(target, original, texts)) as candidate:
         warnings = validate_candidate(candidate, target, allow_errors=allow_errors, snapshot=snapshot)
     snapshot.verify()
     return warnings
@@ -833,17 +861,23 @@ def append(
             stack.enter_context(lock_file(path))
         sweep_abandoned_candidates(target.parent)
         snapshot = snapshot or LedgerSnapshot.capture(file)
-        snapshot.require_target(target)
+        original = snapshot.require_target(target)
         snapshot.verify()
-        require_writable(target)
-        original_stat = target.stat()
-        original = target.read_bytes()
+        original_stat = target.stat() if target.exists() else None
+        if original_stat is not None:
+            require_writable(target)
         if expected is not None and original != expected:
             raise ConflictError("The ledger changed since the preview was prepared; nothing was written. Retry.")
         with candidate_file(target, _appended_or_report(target, original, texts)) as candidate:
             warnings = validate_candidate(candidate, target, allow_errors=allow_errors, snapshot=snapshot)
             snapshot.verify()
-            replace_checked(target, candidate, original, original_stat)
+            if original_stat is None:
+                try:
+                    os.link(candidate, target)
+                except FileExistsError as exc:
+                    raise ConflictError(f"Already exists: {target}; nothing was overwritten.") from exc
+            else:
+                replace_checked(target, candidate, original, original_stat)
     return warnings
 
 

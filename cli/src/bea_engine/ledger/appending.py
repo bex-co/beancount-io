@@ -80,10 +80,11 @@ def _snapshot_for(file: Path, token: dict[str, str] | None) -> ledger_write.Ledg
 
 
 def _token(snapshot: ledger_write.LedgerSnapshot) -> dict[str, str]:
-    """Per-path content digests: enough to detect any edit to the include graph."""
+    """Digest existing files; a planned destination must still be absent at commit."""
     return {
         str(path): hashlib.sha256(content).hexdigest()
         for path, content in sorted(snapshot.contents.items(), key=lambda item: str(item[0]))
+        if snapshot.stats[path] is not None
     }
 
 

@@ -36,7 +36,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.request import OpenerDirector
 
 from bea_engine.managed_price_cache import (
@@ -54,6 +54,9 @@ from bea_engine.managed_prices import (
     is_url_include_target,
     parse_managed_price_url,
 )
+
+if TYPE_CHECKING:
+    from bea_engine.ledger.write import LedgerSnapshot
 
 ORIGINS_ENV = "MANAGED_PRICE_ORIGINS"
 """Comma-separated origin allowlist, mirroring the hosted variable; empty disables."""
@@ -200,13 +203,15 @@ def load_with_sources(
     root: Path | None = None,
     now: float | None = None,
     opener: OpenerDirector | None = None,
+    snapshot: LedgerSnapshot | None = None,
 ) -> LoadedLedger:
     """Load `entry` with managed price includes resolved, plus per-source status.
 
     Flags default from the `MANAGED_PRICE_*` environment; explicit arguments
     win. Without a managed include this is a plain Beancount load. Strict
     mode raises naming any stale or unavailable source; offline mode never
-    fetches.
+    fetches. A write snapshot may supply an absent included destination as an
+    empty staged file, so reads and validation never need to create it.
     """
     from beancount import loader
     from beancount.loader import LoadError
@@ -221,9 +226,9 @@ def load_with_sources(
         allowed_origins = DEFAULT_ORIGINS
     cache = root or cache_root()
 
-    snapshot = LedgerSnapshot.capture(entry.resolve())
+    snapshot = snapshot or LedgerSnapshot.capture(entry.resolve())
     managed = _collect_managed(snapshot, allowed_origins)
-    if not managed:
+    if not managed and all(state is not None for state in snapshot.stats.values()):
         entries, errors, options = loader.load_file(str(entry))
         return LoadedLedger(list(entries), list(errors), dict(options), ())
 
@@ -477,6 +482,7 @@ def load_file(
     root: Path | None = None,
     now: float | None = None,
     opener: OpenerDirector | None = None,
+    snapshot: LedgerSnapshot | None = None,
 ) -> tuple[list[Any], list[Any], dict[str, Any]]:
     """Drop-in `loader.load_file` with managed includes resolved.
 
@@ -484,7 +490,14 @@ def load_file(
     returns them alongside.
     """
     loaded = load_with_sources(
-        Path(entry), offline=offline, strict=strict, origins=origins, root=root, now=now, opener=opener
+        Path(entry),
+        offline=offline,
+        strict=strict,
+        origins=origins,
+        root=root,
+        now=now,
+        opener=opener,
+        snapshot=snapshot,
     )
     if loaded.sources:
         loaded.options["bea_managed_price_sources"] = [source_json(source) for source in loaded.sources]
