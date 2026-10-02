@@ -54,7 +54,8 @@ import select
 import signal
 import subprocess
 import sys
-from collections.abc import Iterator, Sequence
+import threading
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -326,41 +327,49 @@ _CLEANUP_GRACE_SECONDS = 5.0
 
 def _run_helper(command: list[str], env: dict[str, str] | None, stdin: str | None) -> subprocess.CompletedProcess[str]:
     """`subprocess.run`, except the child is told when the frontend is being stopped."""
-    with subprocess.Popen(
-        command,
-        env=env,
-        stdin=subprocess.PIPE if stdin is not None else None,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    ) as child:
-        with _forwarding_teardown(child):
+    with _forwarding_teardown() as attach:
+        with subprocess.Popen(
+            command,
+            env=env,
+            stdin=subprocess.PIPE if stdin is not None else None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            # Group delivery plus forwarding could otherwise interrupt cleanup twice.
+            # Worker threads cannot forward signals, so their helpers stay in the group.
+            start_new_session=sys.platform != "win32" and threading.current_thread() is threading.main_thread(),
+        ) as child:
+            attach(child)
             out, err = child.communicate(stdin)
     return subprocess.CompletedProcess(command, child.returncode, out, err)
 
 
 @contextmanager
-def _forwarding_teardown(child: subprocess.Popen[str]) -> Iterator[None]:
+def _forwarding_teardown() -> Iterator[Callable[[subprocess.Popen[str]], None]]:
     """Pass a termination signal on to `child`, and let it unwind before we go.
 
     The engine stages every write into a `.bea-*.tmp` candidate beside the
     ledger and drops it in a `finally`. That cleanup only runs if the child is
-    told to stop. A terminal delivers Ctrl-C to the whole foreground process
-    group, so interactive use was always fine — but a supervisor, a container
-    stopping its main pid, `timeout` or `Popen.terminate()` signals the
-    frontend alone, and the orphaned child left a full-size copy of the ledger
-    beside the user's books on every attempt.
+    told to stop. Main-thread calls give the helper a separate session, making
+    this the only signal-delivery path: a terminal's group-wide Ctrl-C cannot
+    interrupt cleanup again after forwarding. Worker-thread calls keep their
+    helpers in the terminal's group because Python cannot install handlers
+    there. Signals aimed at the frontend alone, such as a supervisor's
+    termination request, also reach main-thread helpers through this path.
 
-    Handlers are installed only for the child's lifetime and restored after, so
-    nothing else in the process changes its interrupt behaviour. Once the child
-    is done we re-raise the signal with its default disposition, which keeps the
-    status the shell reports exactly what it was.
+    Install before spawning and defer signals until the child handle is ready,
+    so an interrupt during Popen cannot orphan an isolated helper. Handlers are
+    restored after the child exits. Once the child is done we re-raise the signal
+    with its default disposition, keeping the status the shell reports.
     """
-    if not _FORWARDED_SIGNALS:
-        yield
-        return
+    child: subprocess.Popen[str] | None = None
+    pending: int | None = None
 
     def forward(number: int, _frame: Any) -> None:
+        nonlocal pending
+        if child is None:
+            pending = number
+            return
         child.send_signal(number)
         try:
             child.wait(timeout=_CLEANUP_GRACE_SECONDS)
@@ -368,6 +377,13 @@ def _forwarding_teardown(child: subprocess.Popen[str]) -> Iterator[None]:
             child.kill()
         signal.signal(number, signal.SIG_DFL)
         os.kill(os.getpid(), number)
+
+    def attach(started: subprocess.Popen[str]) -> None:
+        nonlocal child, pending
+        child = started
+        if pending is not None:
+            number, pending = pending, None
+            forward(number, None)
 
     installed: list[tuple[int, Any]] = []
     try:
@@ -379,13 +395,17 @@ def _forwarding_teardown(child: subprocess.Popen[str]) -> Iterator[None]:
                 # `signal.signal` only works on the main thread. Forwarding is
                 # an improvement where it is available, never a requirement.
                 continue
-        yield
+        yield attach
     finally:
         for number, previous in installed:
             try:
                 signal.signal(number, previous)
             except (OSError, ValueError):
                 pass
+        if pending is not None:
+            # A failed spawn must not swallow a termination signal either.
+            signal.signal(pending, signal.SIG_DFL)
+            os.kill(os.getpid(), pending)
 
 
 def _parse(completed: subprocess.CompletedProcess[str], args: Sequence[str], *, writes: bool = False) -> dict[str, Any]:

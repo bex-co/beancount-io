@@ -14,9 +14,12 @@ only thing that covers SIGKILL.
 from __future__ import annotations
 
 import os
+import signal
 import subprocess
 import sys
+import textwrap
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -138,3 +141,193 @@ def test_a_terminated_frontend_passes_the_signal_to_the_engine(tmp_path: Path) -
 
     assert signalled.exists(), "the engine child was never told the frontend was stopping"
     assert signalled.read_text() == "15"
+
+
+@pytest.mark.parametrize("launch_fails", [False, True], ids=["success", "spawn-error"])
+def test_helper_restores_signal_handlers(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, launch_fails: bool) -> None:
+    from cli.engine import launch
+
+    command = (
+        [str(tmp_path / "missing-engine")]
+        if launch_fails
+        else [sys.executable, "-c", 'print(\'{"ok": true, "data": {}}\')']
+    )
+    monkeypatch.setattr(launch, "helper_command", lambda: (command, None))
+    previous = [signal.getsignal(number) for number in launch._FORWARDED_SIGNALS]
+
+    if launch_fails:
+        with pytest.raises(FileNotFoundError):
+            launch.helper_json(["check"])
+    else:
+        assert launch.helper_json(["check"]) == {}
+
+    assert [signal.getsignal(number) for number in launch._FORWARDED_SIGNALS] == previous
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX signal semantics")
+def test_worker_thread_helper_keeps_terminal_signal_delivery(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Sync agent tools run in workers, where Python cannot install signal handlers."""
+    from cli.engine import launch
+
+    script = "import json, os\nprint(json.dumps({'ok': True, 'data': {'process_group': os.getpgrp()}}))\n"
+    monkeypatch.setattr(launch, "helper_command", lambda: ([sys.executable, "-c", script], None))
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        result = executor.submit(launch.helper_json, ["check"]).result(timeout=10)
+
+    assert result["process_group"] == os.getpgrp()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX signal semantics")
+def test_interrupt_during_spawn_reaches_the_isolated_helper(tmp_path: Path) -> None:
+    """The child can exist before Popen returns its handle to the launcher."""
+    ready = tmp_path / "child-started"
+    signalled = tmp_path / "child-was-signalled"
+    engine = tmp_path / "engine.py"
+    engine.write_text(
+        textwrap.dedent(f"""
+            import os, signal, sys, time
+            from pathlib import Path
+
+            def interrupted(number, frame):
+                Path({str(signalled)!r}).touch()
+                sys.exit(0)
+            signal.signal(signal.SIGINT, interrupted)
+            Path({str(ready)!r}).write_text(str(os.getpid()))
+            time.sleep(30)
+        """),
+        encoding="utf-8",
+    )
+    driver = tmp_path / "driver.py"
+    driver.write_text(
+        textwrap.dedent(f"""
+            import os, signal, subprocess, sys, time
+            from pathlib import Path
+            from cli.engine import launch
+
+            real_popen = subprocess.Popen
+            def interrupt_before_returning_handle(*args, **kwargs):
+                child = real_popen(*args, **kwargs)
+                deadline = time.monotonic() + 10
+                while not Path({str(ready)!r}).exists():
+                    if time.monotonic() >= deadline:
+                        child.kill()
+                        child.wait()
+                        raise RuntimeError('the engine never started')
+                    time.sleep(0.005)
+                os.killpg(os.getpgrp(), signal.SIGINT)
+                return child
+            subprocess.Popen = interrupt_before_returning_handle
+            launch.helper_command = lambda: ([sys.executable, {str(engine)!r}], None)
+            launch.helper_json(['check'])
+        """),
+        encoding="utf-8",
+    )
+    frontend = subprocess.Popen(
+        [sys.executable, str(driver)],
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
+    )
+    try:
+        _, err = frontend.communicate(timeout=20)
+        assert ready.exists(), err
+        assert signalled.exists(), "a signal during Popen left the isolated engine running"
+        assert frontend.returncode == -signal.SIGINT, err
+    finally:
+        if frontend.poll() is None:  # pragma: no cover - only after an unexpected hang
+            frontend.kill()
+            frontend.communicate(timeout=10)
+        if ready.exists() and not signalled.exists():
+            # The deliberately broken startup path must not leave its test engine alive.
+            try:
+                os.kill(int(ready.read_text()), signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX signal semantics")
+@pytest.mark.parametrize("process_group", [False, True], ids=["frontend-pid", "process-group"])
+def test_one_interrupt_does_not_interrupt_candidate_cleanup_twice(tmp_path: Path, process_group: bool) -> None:
+    """A group interrupt must not reach the engine directly and through forwarding."""
+    ready = tmp_path / "child-started"
+    cleaning = tmp_path / "cleanup-started"
+    release = tmp_path / "release-cleanup"
+    ledger = tmp_path / "main.bean"
+    ledger.write_text("original ledger\n")
+    engine = tmp_path / "engine.py"
+    engine.write_text(
+        textwrap.dedent(f"""
+            import time
+            from pathlib import Path
+            from bea_engine.ledger.write import candidate_file
+
+            real_unlink = Path.unlink
+            def held_unlink(path, *args, **kwargs):
+                if path.name.startswith('.bea-'):
+                    Path({str(cleaning)!r}).touch()
+                    while not Path({str(release)!r}).exists():
+                        time.sleep(0.005)
+                return real_unlink(path, *args, **kwargs)
+            Path.unlink = held_unlink
+
+            with candidate_file(Path({str(ledger)!r}), 'formatted ledger\\n'):
+                Path({str(ready)!r}).touch()
+                time.sleep(30)
+        """),
+        encoding="utf-8",
+    )
+    driver = tmp_path / "driver.py"
+    driver.write_text(
+        textwrap.dedent(f"""
+            import os, signal, subprocess, sys, time
+            from pathlib import Path
+            from cli.engine import launch
+
+            real_send_signal = subprocess.Popen.send_signal
+            def forward_after_cleanup_starts(child, number):
+                if {process_group!r} and os.getpgid(child.pid) == os.getpgrp():
+                    deadline = time.monotonic() + 10
+                    while not Path({str(cleaning)!r}).exists():
+                        if time.monotonic() >= deadline:
+                            raise RuntimeError('the group signal never reached engine cleanup')
+                        time.sleep(0.005)
+                real_send_signal(child, number)
+                Path({str(release)!r}).touch()
+            subprocess.Popen.send_signal = forward_after_cleanup_starts
+
+            launch.helper_command = lambda: ([sys.executable, {str(engine)!r}], None)
+            launch.helper_json(['format'])
+        """),
+        encoding="utf-8",
+    )
+    frontend = subprocess.Popen(
+        [sys.executable, str(driver)],
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src")},
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
+    )
+    try:
+        deadline = time.monotonic() + 30
+        while not ready.exists() and frontend.poll() is None and time.monotonic() < deadline:
+            time.sleep(0.01)
+        assert ready.exists(), "the engine never staged a candidate"
+        if process_group:
+            os.killpg(frontend.pid, signal.SIGINT)
+        else:
+            frontend.send_signal(signal.SIGINT)
+        _, err = frontend.communicate(timeout=30)
+    finally:
+        release.touch()
+        if frontend.poll() is None:  # pragma: no cover - only after an unexpected hang
+            frontend.kill()
+            frontend.communicate(timeout=10)
+
+    assert frontend.returncode == -signal.SIGINT, err
+    assert cleaning.exists(), "the engine never entered candidate cleanup"
+    assert ledger.read_text() == "original ledger\n"
+    assert list(tmp_path.glob(".bea-*.tmp")) == []
