@@ -68,6 +68,13 @@ def ledger_create(
     except (httpx.TimeoutException, httpx.TransportError) as e:
         raise unknown_write_outcome(f"Creating ledger '{name}'", e) from e
 
+    if not ctx.json_output:
+        typer.echo(f"name:     {ledger.name}")
+        typer.echo(f"fullName: {ledger.full_name}")
+        typer.echo(f"private:  {'yes' if ledger.private else 'no'}")
+        typer.echo(f"httpUrl:  {ledger.http_url}")
+        typer.echo(f"sshUrl:   {ledger.ssh_url}")
+
     if clone:
         target = directory or Path.cwd() / ledger.name
         output.note(f"Cloning repository to '{target}'...")
@@ -81,17 +88,10 @@ def ledger_create(
         except manager.CloneError as e:
             # The ledger exists on the server. Saying "created" and exiting 0
             # here would hide a half-finished setup from a script.
-            raise LedgerError(_clone_failure_message(ledger.full_name, e)) from e
+            raise LedgerError(_clone_failure_message(ledger.full_name, e), result=asdict(ledger)) from e
 
     if ctx.json_output:
         output.emit(asdict(ledger), target=output.server_target())
-        return
-
-    typer.echo(f"name:     {ledger.name}")
-    typer.echo(f"fullName: {ledger.full_name}")
-    typer.echo(f"private:  {'yes' if ledger.private else 'no'}")
-    typer.echo(f"httpUrl:  {ledger.http_url}")
-    typer.echo(f"sshUrl:   {ledger.ssh_url}")
 
 
 @ledger_app.command("clone")

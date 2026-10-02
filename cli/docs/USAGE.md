@@ -177,7 +177,11 @@ A nonzero exit does not universally mean nothing changed:
 `add transactions --partial` can write accepted rows, `format --in-place` over
 several files can rewrite some before failing on one it cannot write, and
 `cloud ledger create --clone` can create a ledger before cloning fails. Read
-the operation result before retrying mutations. An in-place formatter failure
+the operation result before retrying mutations. A clone failure carries the
+confirmed ledger metadata in `error.result`, including `id`, `full_name`,
+`ssh_url`, and `http_url`; use those to clone the existing ledger instead of
+creating it again. Human output prints the ledger details before cloning.
+An in-place formatter failure
 reports completed replacements in `error.result.formatted`, failed files and
 their reasons in `failed`, files already aligned in `unchanged`, and files it
 never reached in `not_attempted`. Human output names the same outcomes. A
