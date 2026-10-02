@@ -28,11 +28,18 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
         from cli.api.client import authenticated_client, call, unwrap
         from cli.api.rest_client.api.ledger_v_1 import accessible_ledgers
 
-        result = unwrap(call(accessible_ledgers.sync_detailed, page=page, limit=limit, client=authenticated_client()))
+        client = authenticated_client()
+        result = unwrap(call(accessible_ledgers.sync_detailed, page=page, limit=limit, client=client))
         data = result if isinstance(result, list) else [result]
         rows = [snake_keys(item.to_dict()) for item in data]
         if context.current().json_output:
-            output.emit(rows, target=output.server_target(), truncated=len(rows) >= limit, limit=limit, page=page)
+            truncated = False
+            if len(rows) == limit:
+                # A full page alone cannot distinguish a final page from a middle one.
+                truncated = bool(
+                    unwrap(call(accessible_ledgers.sync_detailed, page=page * limit + 1, limit=1, client=client))
+                )
+            output.emit(rows, target=output.server_target(), truncated=truncated, limit=limit, page=page)
             return
         output.table(
             ["NAME", "FULLNAME", "PRIVATE", "CREATED"],

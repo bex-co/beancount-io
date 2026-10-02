@@ -118,7 +118,13 @@ def call[T](
     hooks = client.get_httpx_client().event_hooks["response"]
     hooks.append(capture)
     try:
-        return operation(*args, client=client, **kwargs)
+        result = operation(*args, client=client, **kwargs)
+        if response is not None and response.is_success and isinstance(result.parsed, list):
+            # Generated array parsers iterate JSON directly: {} and "" would
+            # otherwise silently become [], falsely claiming an empty page.
+            if not isinstance(response.json(), list):
+                raise ValueError("Expected a JSON array")
+        return result
     except (KeyError, ValueError, TypeError, AttributeError) as exc:
         if response is None or not response.is_success:
             raise

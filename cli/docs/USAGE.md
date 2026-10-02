@@ -1195,6 +1195,13 @@ bea cloud ledger delete alice/my-books          # asks for confirmation
 bea --yes cloud ledger delete alice/old-books   # global switches precede the command
 ```
 
+For `bea --json cloud ledger list`, `truncated` means another row was found after
+the returned page. A full page triggers one additional request for that next
+row; a short or empty page needs no extra request. The envelope keeps the
+requested `page` and `limit`, and a full final page reports `truncated: false`.
+If the additional read fails, the command reports the error instead of guessing
+whether more rows exist. Human table output uses only the requested page.
+
 A ledger name uses lowercase letters, digits, hyphens and underscores, at most
 100 characters — the service's own rule. `create` checks it before touching
 credentials, so a malformed name exits **2** naming the rule and a slugified

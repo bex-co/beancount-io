@@ -487,6 +487,7 @@ class TestJsonOutput:
 
     def test_ledger_list_echoes_the_page_it_served(self, logged_in: None, httpx_mock: HTTPXMock) -> None:
         httpx_mock.add_response(url=f"{V1}/ledgers?page=2&limit=3", json=[ledger_item()] * 3)
+        httpx_mock.add_response(url=f"{V1}/ledgers?page=7&limit=1", json=[ledger_item("alice/next")])
 
         result = runner.invoke(app, ["--json", "cloud", "ledger", "list", "--page", "2", "--limit", "3"])
 
