@@ -3,17 +3,18 @@
 **Worker:** worker3 **Goal:** REST v1 `{owner}/{name}` path parameters are
 slug-validated at the boundary and safely encoded before every upstream call,
 so no encoded input can reshape the upstream Gitea/Fava URL or coax an
-anonymous-access probe into failing open. **Status:** todo (t001 done)
+anonymous-access probe into failing open. **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id   | title                                                              | est | depends_on |
 | ---- | ------------------------------------------------------------------ | --- | ---------- |
 | t001 | Slug-validate `{owner}`/`{name}` at the REST v1 boundary — **DONE** | 40m | —          |
-| t002 | Encode path params before upstream Fava/Gitea calls                | 40m | t001       |
+| t002 | Encode path params before upstream Fava/Gitea calls — **DONE** | 40m | t001       |
 | t003 | Make the anonymous-access privacy probe fail closed               | 30m | —          |
 | t004 | CLI: turn a malformed 200 into a clear error, not `KeyError: 'id'`  | 25m | —          |
-| t005 | Simplify                                                           | 20m | t002, t003, t004 |
+| t008 | Encode ledger-service coordinates on the second Gitea hop       | 30m | t002       |
+| t005 | Simplify                                                           | 20m | t002, t003, t004, t008 |
 | t006 | Test coverage                                                     | 40m | t005       |
 | t007 | Closeout                                                          | 10m | t006       |
 

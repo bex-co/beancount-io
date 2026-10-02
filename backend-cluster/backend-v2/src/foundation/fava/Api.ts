@@ -4167,7 +4167,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/ledgers/${owner}/${repoName}`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -4190,7 +4190,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseLedgerPublic, ErrorResponse>({
-        path: `/ledgers/${owner}/${repoName}`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -4210,7 +4210,7 @@ export class Api<
      */
     getLedger: (owner: string, repoName: string, params: RequestParams = {}) =>
       this.request<SuccessResponseLedgerPublic, ErrorResponse>({
-        path: `/ledgers/${owner}/${repoName}`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4239,7 +4239,7 @@ export class Api<
         SuccessResponseUnionLedgerFileContentPublicNoneType,
         ErrorResponse
       >({
-        path: `/ledgers/${owner}/${repoName}/files`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/files`,
         method: "GET",
         query: query,
         secure: true,
@@ -4263,7 +4263,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseLedgerFileContentPublic, ErrorResponse>({
-        path: `/ledgers/${owner}/${repoName}/files`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/files`,
         method: "POST",
         body: data,
         secure: true,
@@ -4288,7 +4288,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseLedgerFileContentPublic, ErrorResponse>({
-        path: `/ledgers/${owner}/${repoName}/files`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/files`,
         method: "PUT",
         body: data,
         secure: true,
@@ -4313,7 +4313,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/ledgers/${owner}/${repoName}/files`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/files`,
         method: "DELETE",
         body: data,
         secure: true,
@@ -4338,7 +4338,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListLedgerFileContentPublic, ErrorResponse>({
-        path: `/ledgers/${owner}/${repoName}/files-content`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/files-content`,
         method: "POST",
         body: data,
         secure: true,
@@ -4363,7 +4363,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/ledgers/${owner}/${repoName}/change-files`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/change-files`,
         method: "POST",
         body: data,
         secure: true,
@@ -4391,7 +4391,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListLedgerFileContentPublic, ErrorResponse>({
-        path: `/ledgers/${owner}/${repoName}/dirs`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/dirs`,
         method: "GET",
         query: query,
         secure: true,
@@ -4415,7 +4415,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<void, ErrorResponse>({
-        path: `/ledgers/${owner}/${repoName}/archive/${archive}`,
+        path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/archive/${archive}`,
         method: "GET",
         secure: true,
         ...params,
@@ -4437,7 +4437,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseAttributesPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/attributes`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/attributes`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4459,7 +4459,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseBeancountOptionsPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/options`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/options`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4481,7 +4481,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseFavaOptionsPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/fava-options`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/fava-options`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4503,7 +4503,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseBcioOptionsPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/beancountio-options`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/beancountio-options`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4525,7 +4525,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListStr, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/plugins`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/plugins`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4547,7 +4547,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListStr, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/source-files`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/source-files`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4580,7 +4580,7 @@ export class Api<
         SuccessResponseListCommodityPairWithPricesPublic,
         ErrorResponse
       >({
-        path: `/reports/${owner}/${repoName}/commodities`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/commodities`,
         method: "GET",
         query: query,
         secure: true,
@@ -4610,7 +4610,7 @@ export class Api<
         SuccessResponseUnionTransactionPublicNoneType,
         ErrorResponse
       >({
-        path: `/reports/${owner}/${repoName}/payee-transactions`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/payee-transactions`,
         method: "GET",
         query: query,
         secure: true,
@@ -4640,7 +4640,7 @@ export class Api<
         SuccessResponseUnionTransactionPublicNoneType,
         ErrorResponse
       >({
-        path: `/reports/${owner}/${repoName}/narration-transactions`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/narration-transactions`,
         method: "GET",
         query: query,
         secure: true,
@@ -4667,7 +4667,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListStr, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/payee-accounts`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/payee-accounts`,
         method: "GET",
         query: query,
         secure: true,
@@ -4690,7 +4690,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListStr, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/narrations`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/narrations`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4720,7 +4720,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListEventPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/events`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/events`,
         method: "GET",
         query: query,
         secure: true,
@@ -4751,7 +4751,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListDocumentPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/documents`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/documents`,
         method: "GET",
         query: query,
         secure: true,
@@ -4774,7 +4774,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseDictStrAccountDataPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/accounts`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/accounts`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4796,7 +4796,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListStr, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/payees`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/payees`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4818,7 +4818,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListStr, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/links`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/links`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4840,7 +4840,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListStr, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/years`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/years`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4862,7 +4862,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListStr, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/currencies`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/currencies`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4884,7 +4884,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListStr, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/tags`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/tags`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4906,7 +4906,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListBeancountErrorPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/errors`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/errors`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4928,7 +4928,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListBeancountErrorPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/check`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/check`,
         method: "POST",
         body: data,
         type: ContentType.Json,
@@ -4960,7 +4960,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseSerializableTreeNodePublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/hierarchy`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/hierarchy`,
         method: "GET",
         query: query,
         secure: true,
@@ -5017,7 +5017,7 @@ export class Api<
         SuccessResponseListDateAndBalanceWithAccountBalancePublic,
         ErrorResponse
       >({
-        path: `/reports/${owner}/${repoName}/interval-totals`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/interval-totals`,
         method: "GET",
         query: query,
         secure: true,
@@ -5048,7 +5048,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListAccountLastEntryPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/account_last_entries`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/account_last_entries`,
         method: "GET",
         query: query,
         secure: true,
@@ -5080,7 +5080,7 @@ export class Api<
     ) =>
       this.request<SuccessResponseListEntriesCountPerTypePublic, ErrorResponse>(
         {
-          path: `/reports/${owner}/${repoName}/entries_count_per_type`,
+          path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/entries_count_per_type`,
           method: "GET",
           query: query,
           secure: true,
@@ -5112,7 +5112,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListPostingsPerAccountPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/postings_per_account`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/postings_per_account`,
         method: "GET",
         query: query,
         secure: true,
@@ -5166,7 +5166,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseAccountReportPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/account_report`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/account_report`,
         method: "GET",
         query: query,
         secure: true,
@@ -5218,7 +5218,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseIncomeStatementDataPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/income-statement`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/income-statement`,
         method: "GET",
         query: query,
         secure: true,
@@ -5254,7 +5254,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseTrialBalanceDataPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/trial-balance`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/trial-balance`,
         method: "GET",
         query: query,
         secure: true,
@@ -5306,7 +5306,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseBalanceSheetDataPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/balance-sheet`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/balance-sheet`,
         method: "GET",
         query: query,
         secure: true,
@@ -5347,7 +5347,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseOverviewPublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/overview`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/overview`,
         method: "GET",
         query: query,
         secure: true,
@@ -5370,7 +5370,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListManagedPriceSourcePublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/managed-prices`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/managed-prices`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5392,7 +5392,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListManagedPriceSourcePublic, ErrorResponse>({
-        path: `/reports/${owner}/${repoName}/managed-prices/refresh`,
+        path: `/reports/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/managed-prices/refresh`,
         method: "POST",
         secure: true,
         format: "json",
@@ -5517,7 +5517,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListUserPublic, ErrorResponse>({
-        path: `/collaborators/${owner}/${repoName}`,
+        path: `/collaborators/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}`,
         method: "GET",
         query: query,
         secure: true,
@@ -5541,7 +5541,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseLedgerCollaboratorPermission, ErrorResponse>({
-        path: `/collaborators/${owner}/${repoName}/${collaborator}`,
+        path: `/collaborators/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/${collaborator}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5565,7 +5565,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/collaborators/${owner}/${repoName}/${collaborator}`,
+        path: `/collaborators/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/${collaborator}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5590,7 +5590,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/collaborators/${owner}/${repoName}/${collaborator}`,
+        path: `/collaborators/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/${collaborator}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5614,7 +5614,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/entries/${owner}/${repoName}/bulk`,
+        path: `/entries/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/bulk`,
         method: "POST",
         body: data,
         secure: true,
@@ -5643,7 +5643,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseQueryResult, ErrorResponse>({
-        path: `/shell/${owner}/${repoName}/query`,
+        path: `/shell/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/query`,
         method: "GET",
         query: query,
         secure: true,
@@ -5670,7 +5670,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseQueryTextResult, ErrorResponse>({
-        path: `/shell/${owner}/${repoName}/query-text`,
+        path: `/shell/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/query-text`,
         method: "GET",
         query: query,
         secure: true,
@@ -5712,7 +5712,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListCommitPublic, ErrorResponse>({
-        path: `/repo/${owner}/${repoName}/commits`,
+        path: `/repo/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/commits`,
         method: "GET",
         query: query,
         secure: true,
@@ -5735,7 +5735,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListReferencePublic, ErrorResponse>({
-        path: `/repo/${owner}/${repoName}/git/refs`,
+        path: `/repo/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/git/refs`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5800,7 +5800,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseJournalQueryResponsePublic, ErrorResponse>({
-        path: `/journal/${owner}/${repoName}`,
+        path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}`,
         method: "GET",
         query: query,
         secure: true,
@@ -5840,7 +5840,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponsePlaintextJournalResponse, ErrorResponse>({
-        path: `/journal/${owner}/${repoName}/plaintext`,
+        path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/plaintext`,
         method: "GET",
         query: query,
         secure: true,
@@ -5925,7 +5925,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseAccountJournalResponsePublic, ErrorResponse>({
-        path: `/journal/${owner}/${repoName}/account-journal`,
+        path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/account-journal`,
         method: "GET",
         query: query,
         secure: true,
@@ -5949,7 +5949,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseContextPublic, ErrorResponse>({
-        path: `/journal/${owner}/${repoName}/context/${entryHash}`,
+        path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/context/${entryHash}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5972,7 +5972,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseDeleteSourceSliceResponse, ErrorResponse>({
-        path: `/journal/${owner}/${repoName}/source-slice`,
+        path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/source-slice`,
         method: "DELETE",
         body: data,
         secure: true,
@@ -5997,7 +5997,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseUpdateSourceSliceResponse, ErrorResponse>({
-        path: `/journal/${owner}/${repoName}/source-slice`,
+        path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/source-slice`,
         method: "PUT",
         body: data,
         secure: true,
@@ -6025,7 +6025,7 @@ export class Api<
         SuccessResponseDeleteMultiSourceSlicesResponse,
         ErrorResponse
       >({
-        path: `/journal/${owner}/${repoName}/source-slices`,
+        path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/source-slices`,
         method: "DELETE",
         body: data,
         secure: true,
@@ -6115,7 +6115,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListDict, ErrorResponse>({
-        path: `/legacy/journal/${owner}/${repoName}`,
+        path: `/legacy/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}`,
         method: "GET",
         query: query,
         secure: true,
