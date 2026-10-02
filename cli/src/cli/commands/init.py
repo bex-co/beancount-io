@@ -9,13 +9,14 @@ from __future__ import annotations
 import datetime
 import re
 import shlex
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
 from cli import context, output
+from cli.amounts import parse_decimal_number
 from cli.errors import ConflictError, UsageError
 from cli.utils import parse_date
 
@@ -60,12 +61,10 @@ def _currency(value: str) -> str:
 
 def _opening_amount(value: str) -> Decimal:
     try:
-        amount = Decimal(value)
-    except InvalidOperation as exc:
-        raise typer.BadParameter(f"Invalid opening amount: {value!r}. Enter a number such as 1538.25.") from exc
-    if not amount.is_finite():
-        raise typer.BadParameter("Opening balances must be finite numbers.")
-    return amount
+        return parse_decimal_number(value)
+    except UsageError as exc:
+        # Typer retries this question for an invalid interactive answer.
+        raise typer.BadParameter(str(exc)) from exc
 
 
 def init(

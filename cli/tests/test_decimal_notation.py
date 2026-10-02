@@ -17,7 +17,7 @@ from pydantic import ValidationError
 
 from bea_engine.amounts import require_decimal_notation
 from bea_engine.ledger.models import Amount, Cost, TransactionDirective
-from cli.commands.add import _check_decimal_notation
+from cli.amounts import check_decimal_notation
 from cli.errors import UsageError
 
 CLI_ROOT = Path(__file__).resolve().parents[1]
@@ -150,7 +150,7 @@ def test_exponent_refusal_matches_across_the_process_boundary() -> None:
     with pytest.raises(ValueError, match="Scientific notation") as engine:
         require_decimal_notation("1e2")
     with pytest.raises(UsageError) as frontend:
-        _check_decimal_notation("1e2 USD")
+        check_decimal_notation("1e2 USD")
 
     assert str(frontend.value) == str(engine.value)
 

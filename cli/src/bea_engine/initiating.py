@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import datetime
 import os
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from bea_engine.amounts import parse_decimal_number
 from bea_engine.ledger import write as ledger_write
 from bea_engine.protocol import ConflictError, UsageError
 
@@ -71,11 +72,9 @@ def answer(
         if account in balances:
             raise UsageError(f"Opening balance specified twice for {account}.")
         try:
-            amount = Decimal(number)
-        except InvalidOperation as exc:
-            raise UsageError(f"Invalid opening amount: {number!r}. Enter a number such as 1538.25.") from exc
-        if not amount.is_finite():
-            raise UsageError("Opening balances must be finite numbers.")
+            amount = parse_decimal_number(number)
+        except ValueError as exc:
+            raise UsageError(str(exc)) from exc
         balances[account] = amount
 
     content = f'option "title" "Personal ledger"\noption "operating_currency" "{currency}"\n\n'

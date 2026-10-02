@@ -12,15 +12,15 @@ from __future__ import annotations
 
 import datetime
 import json
-import re
 import sys
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Any
 
 import typer
 
 from cli import context, output
+from cli.amounts import check_decimal_notation, parse_decimal_number
 from cli.errors import UsageError
 from cli.utils import decode_error_message, parse_date
 
@@ -45,7 +45,7 @@ def _parse_amount(amount_str: str) -> tuple[Decimal, str]:
     parts = amount_str.strip().split()
     if len(parts) != 2:
         raise typer.BadParameter(f"Amount must be 'NUMBER CURRENCY', got: {amount_str!r}")
-    return _parse_number(parts[0]), parts[1]
+    return parse_decimal_number(parts[0]), parts[1]
 
 
 def _single_amount(amounts: list[str], name: str) -> str:
@@ -56,46 +56,6 @@ def _single_amount(amounts: list[str], name: str) -> str:
             "Repeat the command for another."
         )
     return amounts[0]
-
-
-def _parse_number(text: str) -> Decimal:
-    _check_decimal_notation(text)
-    try:
-        number = Decimal(text)
-    except InvalidOperation as err:
-        raise typer.BadParameter(f"Not a number: {text!r}") from err
-    if not number.is_finite():
-        raise UsageError("Amounts must be finite numbers, such as 1538.25.")
-    return number
-
-
-def _check_decimal_notation(text: str) -> None:
-    """Reject the amount spellings that never reach a useful engine answer.
-
-    Both checks run here, at the input boundary, because both cost more to
-    diagnose once the expression is inside the engine: an exponent is rejected
-    by a parser that cannot say which posting it came from, and a zero divisor
-    crashes it outright.
-    """
-    # A cost label or comment may contain an exponent-looking string. Only
-    # reject numeric tokens, leaving native arithmetic and quoted text alone.
-    unquoted = re.sub(r'"(?:[^"\\]|\\.)*"|;[^\r\n]*', "", text)
-    match = re.search(r"(?<![\w.:#^'\-])[-+]?(?:\d+(?:\.\d*)?|\.\d+)[eE][+-]?\d+(?![\w.])", unquoted)
-    if match:
-        raise UsageError(
-            f"Scientific notation {match[0]!r} is not supported in Beancount amounts. "
-            "Use decimal notation, such as '1000' instead of '1e3'."
-        )
-    # Upstream's parser segfaults on a zero divisor rather than reporting it,
-    # which takes the whole engine process down and leaves nothing to attribute
-    # to a posting. A literal zero is the case worth catching here; anything
-    # computed (`100/(2-2)`) still reaches the engine.
-    divisor = re.search(r"/\s*[-+]?(?:0+(?:\.0*)?|\.0+)(?![\d.])", unquoted)
-    if divisor:
-        raise UsageError(
-            f"Division by zero in {text.strip()!r}. Beancount evaluates amount arithmetic while parsing, "
-            "and a zero divisor crashes it outright, so bea refuses the expression instead of sending it."
-        )
 
 
 def _write(
@@ -181,7 +141,7 @@ def add_transaction(
     if any("\n" in p or "\r" in p for p in postings):
         raise UsageError("Each --posting must be one line; repeat -p for another posting.")
     for posting_text in postings:
-        _check_decimal_notation(posting_text)
+        check_decimal_notation(posting_text)
     request = {
         "date": (parse_date(date) if date else datetime.date.today()).isoformat(),
         "flag": flag,
@@ -264,7 +224,7 @@ def add_balance(
     if "\n" not in single and "\r" not in single:
         # Multi-line text is the engine's complaint to make; this only rejects
         # an exponent, which no Beancount amount accepts.
-        _check_decimal_notation(single)
+        check_decimal_notation(single)
     day = parse_date(date)
     request: dict[str, Any] = {"date": day.isoformat(), "account": account, "amount": single, "force": force}
     ctx = context.current()
@@ -501,7 +461,7 @@ def _parse_custom_value(raw: str) -> dict[str, Any]:
     if kind == "text":
         return {"kind": "text", "value": rest}
     if kind == "number":
-        return {"kind": "number", "value": str(_parse_number(rest))}
+        return {"kind": "number", "value": str(parse_decimal_number(rest))}
     if kind == "amount":
         number, currency = _parse_amount(rest)
         return {"kind": "amount", "number": str(number), "currency": currency}

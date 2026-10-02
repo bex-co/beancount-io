@@ -265,6 +265,9 @@ An inactive-account error shows the account's opening/closing date and file
 location so you can correct the date without creating another open directive.
 Invalid answers re-prompt the current question while keeping earlier answers.
 Invalid command-line options still fail with exit **2**.
+Opening balances and custom `number:`/`amount:` values accept finite decimal
+notation with ASCII digits and an optional sign and decimal point. Exponents,
+underscores, and non-ASCII digits are refused before anything is written.
 
 The personal template opens checking, savings, cash, credit card, salary,
 interest, groceries, dining, rent, transport, utilities, fees, and opening
