@@ -440,7 +440,7 @@ def including_root(file: Path) -> Path | None:
 
 
 def root_ledger_hints(file: Path) -> list[str]:
-    """The `--into` recipe when the write target is an included file, else nothing."""
+    """The `--into` recipe when the invoked entry file is an included leaf."""
     root = including_root(file)
     if root is None:
         return []
@@ -575,7 +575,7 @@ def validate_candidate(
                 if matches:
                     message += f" Did you mean {', '.join(matches)}?"
                 message += f" To create it, use bea add open --account {shlex.quote(account)} --date YYYY-MM-DD."
-            hints.extend(root_ledger_hints(file))
+            hints.extend(root_ledger_hints(snapshot.root if snapshot else file))
         if "inactive account '" in message:
             account = message.split("inactive account '", 1)[1].split("'", 1)[0]
             for entry in entries:
