@@ -62,7 +62,11 @@ import {
   LedgerTemplate,
 } from "./ledger-workflow.types";
 import { createLedger as createLedgerOperation } from "@/features/ledger/operations/create-ledger";
-import { BadUserInputError, InternalServerError } from "@/shared/errors";
+import {
+  BadUserInputError,
+  InternalServerError,
+  NotFoundError,
+} from "@/shared/errors";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
 import { filterNullish } from "@/shared/tools";
 import { processBatch } from "@/shared/batch-processor";
@@ -93,7 +97,9 @@ const MAX_CATALOG_PAGES = 200;
 const DIRECTIVE_COUNT_CONCURRENCY = 3;
 
 function includeTargetOf(line: string): string | null {
-  const match = line.match(/^\s*include\s+(?:"([^"]+)"|'([^']+)'|(\S+))\s*(;.*)?$/);
+  const match = line.match(
+    /^\s*include\s+(?:"([^"]+)"|'([^']+)'|(\S+))\s*(;.*)?$/,
+  );
   return match?.[1] ?? match?.[2] ?? match?.[3] ?? null;
 }
 
@@ -101,14 +107,19 @@ function matchesIncludeLine(line: string, oldPath: string): boolean {
   return includeTargetOf(line) === oldPath;
 }
 
-function rewriteIncludeLine(line: string, oldPath: string, newPath: string): string {
+function rewriteIncludeLine(
+  line: string,
+  oldPath: string,
+  newPath: string,
+): string {
   const match = line.match(
     /^(\s*include\s+)(?:"([^"]+)"|'([^']+)'|(\S+))(\s*(;.*)?)$/,
   );
   if (!match) return line;
   const target = match[2] ?? match[3] ?? match[4];
   if (target !== oldPath) return line;
-  const quote = match[2] !== undefined ? '"' : match[3] !== undefined ? "'" : "";
+  const quote =
+    match[2] !== undefined ? '"' : match[3] !== undefined ? "'" : "";
   return `${match[1]}${quote}${newPath}${quote}${match[5] ?? ""}`;
 }
 
@@ -798,17 +809,21 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         path: input.oldPath,
       }),
       "read ledger file for rename",
-      (cause) => operationNotAllowedFromCause("read ledger file for rename", cause),
+      (cause) =>
+        operationNotAllowedFromCause("read ledger file for rename", cause),
     );
     if (!oldFile) {
-      throw new BadUserInputError(`${input.oldPath}: file not found`);
+      // NOT_FOUND, as a missing file is on every read and edit path; it was
+      // BAD_USER_INPUT here alone (w5/051).
+      throw new NotFoundError("File", input.oldPath);
     }
     const existingTarget = await unwrapFavaResponse(
       favaApiClient.ledgers.getLedgerFile(ledgerOwner, ledgerName, {
         path: input.newPath,
       }),
       "read ledger file for rename",
-      (cause) => operationNotAllowedFromCause("read ledger file for rename", cause),
+      (cause) =>
+        operationNotAllowedFromCause("read ledger file for rename", cause),
     );
     if (existingTarget) {
       throw new BadUserInputError(
@@ -852,7 +867,8 @@ export class LedgerWorkflow implements ILedgerWorkflow {
           files: candidates,
         }),
         "read ledger files for rename",
-        (cause) => operationNotAllowedFromCause("read ledger files for rename", cause),
+        (cause) =>
+          operationNotAllowedFromCause("read ledger files for rename", cause),
       );
       includingFiles = (contents ?? [])
         .map((file) => ({

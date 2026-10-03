@@ -350,6 +350,24 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
       }
     },
   );
+  it("answers a source that does not exist as NOT_FOUND and writes nothing", async () => {
+    const f = await fixture();
+    try {
+      const outcome = await f.call(surface, "ghost.bean", "new.bean");
+      expect(outcome.success).toBe(false);
+      // The category is the shared workflow's; REST is where this helper
+      // exposes it. It was BAD_USER_INPUT here alone (w5/051).
+      if (surface === "rest") {
+        expect(outcome.result).toMatchObject({
+          ok: false,
+          error: { code: "NOT_FOUND" },
+        });
+      }
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
   it("defaults the commit message to Rename a → b", async () => {
     const f = await fixture();
     try {

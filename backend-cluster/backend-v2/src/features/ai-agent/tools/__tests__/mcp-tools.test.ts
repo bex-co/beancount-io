@@ -423,7 +423,83 @@ describe("executeEditLedgerFiles", () => {
       },
     );
     expect(result.ok).toBe(false);
+    // The file is there; the argument is what does not match (w5/051).
+    expect(result).toMatchObject({
+      errorCode: "BAD_USER_INPUT",
+      error: expect.stringMatching(/^commit failed: main\.bean: old_string/),
+    });
     expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+  });
+
+  it.each(["update", "replace", "delete"] as const)(
+    "%s: a file that does not exist is NOT_FOUND by category, not by wording",
+    async (operation) => {
+      const ledgerRepo = {
+        getFilesContent: jest.fn().mockResolvedValue([]),
+        changeFiles: jest.fn(),
+      };
+      const result = await executeEditLedgerFiles(
+        {
+          services: { ledgerRepo } as any,
+          identity: IDENTITY,
+          ledgerId: LEDGER_ID,
+        },
+        {
+          description: "edit",
+          files: [
+            {
+              operation,
+              path: "ghost.bean",
+              old_string: "a",
+              new_string: "b",
+              content: "x",
+            } as any,
+          ],
+          dry_run: false,
+        },
+      );
+      expect(result).toMatchObject({
+        ok: false,
+        errorCode: "NOT_FOUND",
+        error: expect.stringContaining("ghost.bean"),
+      });
+      expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+    },
+  );
+
+  it("dry_run: a refusal says the preview was refused, not that a commit failed", async () => {
+    const ledgerRepo = {
+      getFilesContent: jest
+        .fn()
+        .mockResolvedValue([
+          { path: "main.bean", content: "abc", sha: "sha1" },
+        ]),
+      changeFiles: jest.fn(),
+    };
+    const result = await executeEditLedgerFiles(
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      {
+        description: "edit",
+        files: [
+          {
+            operation: "update",
+            path: "main.bean",
+            old_string: "zzz",
+            new_string: "y",
+          },
+        ],
+        dry_run: true,
+      },
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      error: expect.stringMatching(/^preview refused: /),
+    });
+    expect((result as { error: string }).error).not.toContain("commit failed");
   });
 
   it("update (str_replace): rejects an ambiguous match (appears more than once)", async () => {
