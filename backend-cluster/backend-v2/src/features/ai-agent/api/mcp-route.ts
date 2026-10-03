@@ -158,6 +158,52 @@ async function handleMcpRequest(
 /** The one spelling of this endpoint's path; everything else derives from it. */
 export const MCP_ENDPOINT_PATH = "/api-gateway/mcp";
 
+/**
+ * The JSON-RPC answer for a request body the HTTP body parser refused.
+ *
+ * The parser runs before this route, so a body it cannot read never reaches
+ * the transport, which is what would otherwise say so in JSON-RPC. `-32700`
+ * is the spec's code for text that is not JSON; `-32600` for JSON that is not
+ * a request — a bare scalar, or a body past the size limit. `id` is null
+ * because no request was read to take one from.
+ */
+export function mcpBodyParseFailure(rawBody: unknown): {
+  jsonrpc: "2.0";
+  error: { code: number; message: string };
+  id: null;
+} {
+  let isJson = false;
+  if (typeof rawBody === "string") {
+    try {
+      JSON.parse(rawBody);
+      isJson = true;
+    } catch {
+      isJson = false;
+    }
+  }
+  return {
+    jsonrpc: "2.0",
+    error:
+      typeof rawBody !== "string"
+        ? {
+            code: -32600,
+            message:
+              "Invalid Request: the body could not be read as a JSON-RPC request",
+          }
+        : isJson
+          ? {
+              code: -32600,
+              message:
+                "Invalid Request: the body must be a JSON-RPC request object",
+            }
+          : {
+              code: -32700,
+              message: "Parse error: the body is not valid JSON",
+            },
+    id: null,
+  };
+}
+
 export function setMcpRoute(
   router: Router,
   layers: AppLayers,

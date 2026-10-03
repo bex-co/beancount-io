@@ -6,12 +6,12 @@ import Koa from "koa";
 import Router from "@koa/router";
 import http from "http";
 
-import bodyParser from "koa-bodyparser";
 import cookie from "koa-cookie";
 import cors from "@koa/cors";
 import { restMetricsMiddleware } from "@/metrics/koa-middleware";
 import { logger } from "@/shared/logger";
 import { asyncContextMiddleware } from "./middleware/async-context-middleware";
+import { bodyParserMiddleware } from "./middleware/body-parser-middleware";
 import { createOrphanedHostCookieMiddleware } from "./middleware/orphaned-host-cookie-middleware";
 
 import { buildAppLayers } from "@/foundation";
@@ -57,20 +57,7 @@ export async function startServer(): Promise<void> {
   });
 
   app.proxy = config.server.proxy;
-  const koaBodyParser = bodyParser({ jsonLimit: "1mb", formLimit: "56kb" });
-  app.use(async (ctx, next) => {
-    // oidc-provider core routes parse their own body from the raw stream.
-    // Interaction routes (/interaction/*) still need bodyParser — our handlers read ctx.request.body there.
-    const isOidcCore =
-      ctx.path.startsWith("/api-gateway/oauth/") &&
-      !ctx.path.startsWith("/api-gateway/oauth/interaction/");
-    if (isOidcCore) return next();
-    // Type cast: root @types/koa and @koa/router's bundled copy are structurally incompatible
-    return koaBodyParser(
-      ctx as unknown as Parameters<typeof koaBodyParser>[0],
-      next,
-    );
-  });
+  app.use(bodyParserMiddleware());
 
   // Add async context middleware (must be early in the chain)
   // This enables automatic correlation ID propagation throughout the request
