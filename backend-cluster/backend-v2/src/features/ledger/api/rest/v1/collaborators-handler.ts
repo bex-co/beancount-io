@@ -32,10 +32,10 @@ export const collaboratorListQuery = z
     limit: z.coerce.number().default(10),
   })
   .strict();
-export const collaboratorPermissionQuery = z
-  .object({ collaborator: z.string() })
-  .strict();
 const collaboratorName = z.string().min(1);
+export const collaboratorPermissionQuery = z
+  .object({ collaborator: collaboratorName })
+  .strict();
 export const collaboratorUpdateInput = z
   .object({
     collaborator: collaboratorName,

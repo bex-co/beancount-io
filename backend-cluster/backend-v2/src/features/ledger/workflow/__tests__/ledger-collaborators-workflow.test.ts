@@ -218,7 +218,7 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
   });
 
   it.each(["", "   "])(
-    "refuses a blank collaborator name %j on update and delete before any upstream work",
+    "refuses a blank collaborator name %j on update, delete and permission read before any upstream work",
     async (collaborator) => {
       await expect(
         workflow.addOrUpdateCollaborator({
@@ -231,9 +231,17 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
       await expect(
         workflow.deleteCollaborator({ identity, ledgerId, collaborator }),
       ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
+      await expect(
+        workflow.getCollaboratorPermission({
+          identity,
+          ledgerId,
+          collaborator,
+        }),
+      ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
       expect(getPublicApiClient).not.toHaveBeenCalled();
       expect(addOrUpdateLedgerCollaborator).not.toHaveBeenCalled();
       expect(deleteLedgerCollaborator).not.toHaveBeenCalled();
+      expect(getLedgerCollaboratorPermission).not.toHaveBeenCalled();
     },
   );
 

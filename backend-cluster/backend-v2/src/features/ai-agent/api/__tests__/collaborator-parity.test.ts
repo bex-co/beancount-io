@@ -509,6 +509,29 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
       }
     },
   );
+  it("refuses a permission read with an empty collaborator as bad input on every surface", async () => {
+    const f = await fixture();
+    try {
+      const rest = await f.request("collaborators/permission?collaborator=");
+      expect(rest.status).toBe(400);
+      await expect(
+        f.read("collaborators/permission?collaborator="),
+      ).rejects.toMatchObject({
+        code: -32602,
+        data: { code: "BAD_USER_INPUT" },
+      });
+      const gql = await f.gql(
+        '{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:""){permission}}',
+      );
+      expect(gql.errors).toHaveLength(1);
+      expect(gql.errors?.[0].originalError).toMatchObject({
+        category: "BAD_USER_INPUT",
+      });
+      expect(f.permission).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
   it("answers a permission read for an unknown user as bad input, without upstream internals, on every surface", async () => {
     const f = await fixture();
     try {

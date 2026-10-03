@@ -312,6 +312,7 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     collaborator: string;
   }): Promise<CollaboratorPermissionData> {
     const { identity, ledgerId, collaborator } = params;
+    assertCollaboratorName(collaborator);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_PERMISSION_READ,
