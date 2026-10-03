@@ -25,9 +25,56 @@
 
 - [ ] **m13** — [Install the ledger skills and reach a first query on native Windows](./blocked/m13/README.md) (8 tasks, ~5½h) ← `/pm-brainstorm for w5`, both proposals approved with `$pm for all for w5` on 2026-09-28 — **blocked:** native Windows host access is required
 
+## Dropped
+
+- ~~**032**~~ — Catalog search `private` filter validated but inert — dropped 2026-10-02: the finding reads an include flag as an only filter. The upstream search takes `private` (include private ledgers the caller can see, on by default) and `is_private` (only private ones) as separate parameters, and the three transcripts — `private=true`, `private=false`, no filter — are each consistent with that. Mapping `private` onto `is_private`, or rejecting it, would break a working parameter. Re-file as a documentation note if the two names prove confusing in practice.
+- ~~**044**~~ — Mistyped list cursor returns -32603 with a raw Zod dump — dropped 2026-10-02: a numeric `cursor` or a `tools/call` with no `name` is a malformed protocol envelope that no conforming MCP client sends, and the MCP SDK's dispatcher refuses it before any handler of ours runs. Re-coding it means overriding the SDK's own request validation for every list method, for an input only a hand-written probe produces.
+- ~~**049**~~ — Responses without `Origin` carry an empty `Access-Control-Allow-Origin` — dropped 2026-10-02: no caller can observe a difference. A request with no `Origin` is not a cross-origin browser request, an empty allow-origin grants nothing, and non-browser clients ignore the header.
+- ~~**050**~~ — PUT/PATCH get the router's plain-text 405 — dropped 2026-10-02: PUT and PATCH are not MCP transport methods and no client sends them; the router's standard 405 is already a correct refusal. The in-band, authenticated 405 that ADR007 D9 asks for covers GET and DELETE, the two methods the transport defines.
+- ~~**052**~~ — Missing rename source refused BAD_USER_INPUT, not NOT_FOUND — dropped 2026-10-02: the note records the throw as deliberate and offers "or document the category" as a fix. Its sibling for comparison gets NOT_FOUND only by accident of wording (see [036](./036.md)), and the one real question — which code a missing file should carry on the edit and rename paths — is already in [051](./051.md).
+
 ## Inbox
 
-No open inbox items.
+Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10-02: each cause was checked against `backend-cluster/backend-v2` at `a8b2c3a8` and still holds. Every fix must land on each eligible surface (REST, GraphQL, MCP) in one change.
+
+**High**
+
+- [023](./023.md) — Fractional `keyId` accepted by public-key delete; success reported and key 1 removed.
+
+**Medium — a caller's mistake answered as INTERNAL**
+
+- [024](./024.md) — `manageApiKeys` unknown argument returns INTERNAL with a raw Zod dump.
+- [025](./025.md) — Deleting an unknown collaborator returns INTERNAL.
+- [026](./026.md) — Reading an unknown collaborator's permission returns INTERNAL with upstream internals.
+- [027](./027.md) — Collaborator update with an empty username returns INTERNAL.
+- [029](./029.md) — Commits list for an unknown branch returns INTERNAL `[object Response]`.
+- [031](./031.md) — Reading an unknown pull request returns INTERNAL.
+- [033](./033.md) — Invalid directive date crashes as an INTERNAL `RangeError`.
+- [034](./034.md) — Bank-connection `dry_run` refusal is INTERNAL on MCP, 400 on REST.
+- [036](./036.md) — `editLedgerFiles` ambiguous `old_string` returns INTERNAL.
+- [037](./037.md) — Pull request create with an unknown base branch returns INTERNAL.
+- [038](./038.md) — Approving or rejecting an unknown pull request answers `Unknown error`.
+
+**Medium — wrong result or missing guard**
+
+- [028](./028.md) — MCP tool path returns raw unexpected-error messages; ADR007 D7 masking is missing there.
+- [030](./030.md) — A directory path reads as an empty file.
+- [035](./035.md) — `dry_run` accepts `create` over an existing file.
+- [039](./039.md) — Non-strict write tools drop unknown arguments, so a `dry_run` typo commits.
+
+**Low**
+
+- [040](./040.md) — Empty `collaborator` on a permission read returns 200 `{}`.
+- [041](./041.md) — An unparseable resource URI skips the coded error envelope.
+- [042](./042.md) — Ledger-name CONFLICT hint points at entry editing.
+- [043](./043.md) — Unknown API key revoke hint names ledger and file calls.
+- [045](./045.md) — Unknown prompt name refused without `data.code`.
+- [046](./046.md) — `readLedgerFiles` accepts reversed line ranges.
+- [047](./047.md) — Commits list accepts `limit=-1` and `page=0`.
+- [048](./048.md) — Malformed request bodies get a plain-text 400 instead of a JSON-RPC error.
+- [051](./051.md) — Dry-run refusals say "commit failed"; the missing-file code differs between edit and rename.
+- [053](./053.md) — Pull request create with empty changes leaves its branch behind.
+- [054](./054.md) — Empty temp-asset key returns FORBIDDEN with a ledger-permission hint.
 
 ## Blocked inbox
 
