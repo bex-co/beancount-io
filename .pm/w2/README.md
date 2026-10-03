@@ -47,7 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
-- [036](./036.md) — Mention the MCP Registry listing in the root and backend READMEs once `io.beancount/beancount` is live. Found during m36 t007; waits on m36/t006.
+- [036](./blocked/036.md) — Mention the MCP Registry listing in the root and backend READMEs once `io.beancount/beancount` is live. Found during m36 t007 — **blocked:** waits on m36/t006 (the registry still answers 404)
 - [034](./blocked/034.md) — Ledger counts read from one upstream page: the tier ledger-limit check counts owned ledgers inside the first 10 accessible ones, and `ledgersUsed` and the activity feed stop at 50. Found during m34. — **blocked:** repository owner must decide grandfathering before accurate counts tighten creation eligibility.
 - [008](./done/008.md) — MCP prompts from the ledger skills: implemented on 2026-09-12. [w5/m5](../w5/blocked/m5/README.md) retains the approved proposal's remaining real-client verification and repairs for demonstrated workflow gaps; the completed implementation remains archived here.
 - [009](./blocked/009.md) — Agent eval harness: core scope promoted to [w5/m4](../w5/done/m4/README.md) on 2026-09-12. Only the larger Plaid sandbox journey remains open here as a deferred follow-up. — **blocked:** needs sizing approval and a hosted QA-account path to link a Plaid sandbox item
