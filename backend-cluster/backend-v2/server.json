@@ -1,0 +1,27 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.beancount/beancount",
+  "title": "Beancount.io",
+  "description": "Query, edit, and reconcile a hosted Beancount ledger: BQL, reports, files, and bank imports.",
+  "version": "1.0.0",
+  "websiteUrl": "https://github.com/bex-co/beancount-io/blob/main/backend-cluster/backend-v2/docs/mcp.md",
+  "repository": {
+    "url": "https://github.com/bex-co/beancount-io",
+    "source": "github",
+    "id": "300529232",
+    "subfolder": "backend-cluster/backend-v2"
+  },
+  "icons": [
+    {
+      "src": "https://beancount.io/lgasset/logo.png",
+      "mimeType": "image/png",
+      "sizes": ["256x256"]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://beancount.io/api-gateway/mcp"
+    }
+  ]
+}

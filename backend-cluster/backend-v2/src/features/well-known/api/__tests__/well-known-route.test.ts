@@ -1,4 +1,6 @@
+import fs from "node:fs";
 import http from "node:http";
+import path from "node:path";
 import Koa from "koa";
 import Router from "@koa/router";
 import type { AppConfig } from "@/config/config";
@@ -16,6 +18,16 @@ const config = {
     ],
   },
 } as unknown as AppConfig;
+
+/**
+ * The official MCP Registry listing (`server.json` at the package root). It is
+ * what a client that never reads our docs installs from, so it must name the
+ * endpoint the manifest advertises and nothing else (ADR 019 D1).
+ */
+const REGISTRY_LISTING_PATH = path.resolve(
+  __dirname,
+  "../../../../../server.json",
+);
 
 const unsetAppLinksConfig = {
   ...config,
@@ -124,6 +136,41 @@ describe("well-known routes", () => {
       properties: { ledger: { type: "string" }, query: { type: "string" } },
     });
     expect(structuredBql?.outputSchema).toHaveProperty("properties");
+  });
+
+  it("lists the manifest's endpoint in the MCP Registry listing", async () => {
+    const listing = JSON.parse(
+      fs.readFileSync(REGISTRY_LISTING_PATH, "utf8"),
+    ) as {
+      $schema: string;
+      name: string;
+      description: string;
+      version: string;
+      icons: Array<{ src: string }>;
+      remotes: Array<{ type: string; url: string }>;
+    };
+    const response = await fetch(`${origin}/.well-known/mcp.json`);
+    const manifest = (await response.json()) as {
+      endpoint: string;
+      version: string;
+    };
+
+    expect(new URL(listing.$schema).host).toBe(
+      "static.modelcontextprotocol.io",
+    );
+    expect(listing.name).toBe("io.beancount/beancount");
+    // The registry schema caps the description at 100 characters.
+    expect(listing.description.length).toBeLessThanOrEqual(100);
+    expect(listing.version).toMatch(/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/);
+    expect(listing.version).toBe(manifest.version);
+    // Exactly one remote, exactly these keys: no `headers` (OAuth is discovered
+    // from the 401) and the same URL every host is given.
+    expect(listing.remotes).toEqual([
+      { type: "streamable-http", url: manifest.endpoint },
+    ]);
+    expect(listing.icons.map(({ src }) => new URL(src).origin)).toEqual([
+      new URL(manifest.endpoint).origin,
+    ]);
   });
 
   it("serves the Apple app-site association as JSON", async () => {
