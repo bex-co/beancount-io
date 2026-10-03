@@ -39,7 +39,6 @@ Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10
 
 **Medium — a caller's mistake answered as INTERNAL**
 
-- [025](./025.md) — Deleting an unknown collaborator returns INTERNAL.
 - [026](./026.md) — Reading an unknown collaborator's permission returns INTERNAL with upstream internals.
 - [027](./027.md) — Collaborator update with an empty username returns INTERNAL.
 - [029](./029.md) — Commits list for an unknown branch returns INTERNAL `[object Response]`.
