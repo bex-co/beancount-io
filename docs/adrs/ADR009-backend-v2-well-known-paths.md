@@ -1,6 +1,6 @@
 # ADR: `.well-known` paths — one index for every one of them
 
-- Status: Done (path index and implementation reviewed 2026-09-27)
+- Status: Done (path index and implementation reviewed 2026-09-27; `/.well-known/mcp-registry-auth` added 2026-10-03)
 - Date: 2026-08-25
 - Decision owners: Backend (`backend-cluster/backend-v2`)
 - Scope: every `/.well-known/*` path served by, proxied to, or referenced about Beancount.io. What exists today, who serves it, and every file that has to change together when a path is added or moved.
@@ -22,6 +22,7 @@ This ADR is that index. It does not re-implement or re-decide anything — `oidc
 | `/.well-known/mcp.json`                                                                               | Beancount.io MCP discovery contract | `well-known-route.ts`                                                                                                    | MCP transport endpoint, current tool list, OAuth endpoints, and public API contract pointer. Migrated from the CMS project's MCP manifest handler. |
 | `/.well-known/apple-app-site-association`                                                             | Apple Universal Links               | `well-known-route.ts`                                                                                                    | AASA voucher for `io.beancount.ios` on `/ledger/*`. Served only when `APP_LINKS_APPLE_TEAM_ID` is set; otherwise 404.                              |
 | `/.well-known/assetlinks.json`                                                                        | Android App Links (Digital Asset Links) | `well-known-route.ts`                                                                                                | Asset-links voucher for `io.beancount.android` on `/ledger`. Served only when `APP_LINKS_ANDROID_SHA256` is set; otherwise 404.                    |
+| `/.well-known/mcp-registry-auth`                                                                      | Official MCP Registry domain proof (HTTP method) | `well-known-route.ts`                                                                                       | Public-key record `v=MCPv1; k=<ed25519\|ecdsap384>; p=<base64>` that `registry.modelcontextprotocol.io` reads to verify a publish under `io.beancount/*` signed by the matching private key (`mcp-publisher login http`). Served only when `MCP_REGISTRY_AUTH_PROOF` is set; otherwise 404, so a self-host never vouches for Beancount.io's key. |
 
 When OAuth signing keys are absent (`config.oauth.jwks` unset), all three OAuth discovery routes are replaced with a `503 oauth_not_configured` handler instead of removed — the path still exists, it just can't answer (the early no-JWKS branch in `setOidcRoutes`).
 

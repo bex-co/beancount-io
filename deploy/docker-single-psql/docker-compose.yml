@@ -143,6 +143,8 @@ services:
       # Native app-link vouchers. Unset → /.well-known AASA and assetlinks 404.
       APP_LINKS_APPLE_TEAM_ID: ${APP_LINKS_APPLE_TEAM_ID:-}
       APP_LINKS_ANDROID_SHA256: ${APP_LINKS_ANDROID_SHA256:-}
+      # Official MCP Registry domain proof. Unset → /.well-known/mcp-registry-auth 404.
+      MCP_REGISTRY_AUTH_PROOF: ${MCP_REGISTRY_AUTH_PROOF:-}
       AUTH_JWT_EXP_MINUTES: ${AUTH_JWT_EXP_MINUTES:-525600}
       # Same server as Gitea's database, different database and login role.
       POSTGRES_BACKEND_URI: postgresql://${BACKEND_DB_USER:-beancount}:${BACKEND_DB_PASSWORD:?Set BACKEND_DB_PASSWORD in .env}@postgres:5432/${BACKEND_DB_NAME:-beancount}

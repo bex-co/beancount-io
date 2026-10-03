@@ -224,6 +224,22 @@ Unset either variable and its route returns 404, so a self-host without a
 store build does not advertise Beancount.io's apps. Beancount.io production
 uses `APP_LINKS_APPLE_TEAM_ID=PTLM7BZQMM`.
 
+### MCP Registry domain proof
+
+Optional. `MCP_REGISTRY_AUTH_PROOF` holds the public half of the key that
+signs Beancount.io's publishes to the official MCP Registry
+(`registry.modelcontextprotocol.io`), as the whole record
+`v=MCPv1; k=ed25519; p=<base64 public key>` (`k=ecdsap384` for a P-384 key).
+When set, this server answers `GET /.well-known/mcp-registry-auth` with it,
+which is how the registry verifies that a publish under `io.beancount/*` comes
+from whoever controls this domain. A value that is not that exact record fails
+startup.
+
+Unset → 404. Leave it unset on a self-host: serving Beancount.io's key on your
+domain would let Beancount.io publish under your domain's registry namespace.
+The listing itself is `server.json` at this package's root; the
+[MCP guide](./docs/mcp.md) describes how it is published.
+
 The static `beancount-mobile` client is public (no
 secret), accepts only authorization code plus refresh grants, requires S256
 PKCE, and registers only `io.beancount.ios:/oauth/callback` and

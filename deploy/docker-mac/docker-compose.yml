@@ -106,6 +106,8 @@ services:
       OAUTH_JWKS: ${OAUTH_JWKS:-}
       APP_LINKS_APPLE_TEAM_ID: ${APP_LINKS_APPLE_TEAM_ID:-}
       APP_LINKS_ANDROID_SHA256: ${APP_LINKS_ANDROID_SHA256:-}
+      # Official MCP Registry domain proof. Unset → /.well-known/mcp-registry-auth 404.
+      MCP_REGISTRY_AUTH_PROOF: ${MCP_REGISTRY_AUTH_PROOF:-}
       # Data stores (service-name addressing inside the compose network).
       POSTGRES_BACKEND_URI: ${POSTGRES_BACKEND_URI:-postgresql://postgres:password@postgres-backend:5432/backend}
       REDIS_URI: ${REDIS_URI:-redis://redis:6379}
