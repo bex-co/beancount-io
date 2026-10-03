@@ -242,7 +242,13 @@ export async function executeBankConnection(
         input.operation !== "reconcile" &&
         input.operation !== "unlink"
       ) {
-        throw new Error(`dry_run is not supported for ${input.operation}`);
+        // The caller's to fix, as REST's 400 for the same request says — a
+        // plain Error here read as a server fault to retry (w5/034).
+        throw new BadUserInputError(
+          `dry_run is not supported for ${input.operation}`,
+          "dry_run",
+          "Only `reconcile` and `unlink` can be previewed. Omit `dry_run` to perform this operation.",
+        );
       }
       switch (input.operation) {
         case "reconcile":

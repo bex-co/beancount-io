@@ -265,6 +265,13 @@ describe("bank import on MCP", () => {
       });
       expect(result.isError).toBe(true);
       expect(JSON.stringify(result.content)).toContain("dry_run");
+      // The caller's to fix, as REST's 400 for the same request says — not a
+      // server fault with a hint to retry (w5/034).
+      const { error } = result.structuredContent as {
+        error: { code: string; hint: string };
+      };
+      expect(error.code).toBe("BAD_USER_INPUT");
+      expect(error.hint).not.toMatch(/retry/i);
       for (const operation of Object.values(services.plaidItem)) {
         expect(operation).not.toHaveBeenCalled();
       }
