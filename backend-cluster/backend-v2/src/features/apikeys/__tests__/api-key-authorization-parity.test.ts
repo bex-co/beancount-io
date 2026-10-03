@@ -374,19 +374,35 @@ describe("API-key authorization parity", () => {
     },
   );
 
-  it.each([{ expires_at: "not-a-date" }, { expires_at: "2000-01-01T00:00:00Z" }])(
-    "rejects invalid MCP arguments before persistence: %j",
-    async (extra) => {
-      const response = await callMcp("manageApiKeys", {
-        operation: "create",
-        name: "Automation",
-        scopes: ["ledger.read"],
-        ...extra,
-      });
-      expect(response.isError).toBe(true);
-      expect(model.create).not.toHaveBeenCalled();
-    },
-  );
+  it.each([
+    { expires_at: "not-a-date" },
+    { expires_at: "2000-01-01T00:00:00Z" },
+  ])("rejects invalid MCP arguments before persistence: %j", async (extra) => {
+    const response = await callMcp("manageApiKeys", {
+      operation: "create",
+      name: "Automation",
+      scopes: ["ledger.read"],
+      ...extra,
+    });
+    expect(response.isError).toBe(true);
+    expect(model.create).not.toHaveBeenCalled();
+  });
+
+  it("refuses an unknown MCP argument as bad input naming the argument", async () => {
+    const response = await callMcp("manageApiKeys", {
+      operation: "list",
+      bogus_field: 1,
+    });
+    expect(response.isError).toBe(true);
+    const { error } = response.structuredContent as {
+      error: { code: string; message: string; hint: string };
+    };
+    expect(error.code).toBe("BAD_USER_INPUT");
+    expect(error.message).toContain("bogus_field");
+    expect(error.message).not.toContain("unrecognized_keys");
+    expect(error.hint).not.toMatch(/retry/i);
+    expect(model.listByUserId).not.toHaveBeenCalled();
+  });
 
   it("prefers the documented spelling when both key spellings are sent", async () => {
     // The snake_case spellings stay accepted for one release (w2/m27); when

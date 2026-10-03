@@ -1,4 +1,5 @@
 import { runToolSafely } from "../run-tool";
+import { z } from "zod";
 import type { ILogger } from "@/shared/logger";
 
 function makeLogger() {
@@ -59,5 +60,25 @@ describe("runToolSafely", () => {
     expect(error).toHaveBeenCalledWith("Failed to commit file operations", {
       error: "upstream 500",
     });
+  });
+
+  it("reports a tool's own argument parse failure as the caller's to fix", async () => {
+    const { logger } = makeLogger();
+    const schema = z.object({ operation: z.enum(["list"]) }).strict();
+
+    const out = await runToolSafely({
+      logger,
+      message: "Failed to manage API keys",
+      formatError: (msg) => `refused: ${msg}`,
+      execute: async () => schema.parse({ operation: "nope", bogus_field: 1 }),
+    });
+
+    expect(out).toMatchObject({ ok: false, errorCode: "BAD_USER_INPUT" });
+    const { error } = out as { error: string };
+    expect(error).toMatch(/^refused: operation: /);
+    expect(error).toContain("bogus_field");
+    // The issue array itself must not be the message.
+    expect(error).not.toContain('"code"');
+    expect(error).not.toContain("[\n");
   });
 });

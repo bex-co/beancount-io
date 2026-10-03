@@ -1,5 +1,6 @@
 import type { ILogger } from "@/shared/logger";
-import { DomainError } from "@/shared/errors";
+import { ZodError } from "zod";
+import { DomainError, ErrorCategory } from "@/shared/errors";
 import type { ToolError } from "../tools/types";
 
 /**
@@ -15,6 +16,12 @@ import type { ToolError } from "../tools/types";
  * after it, the failure is a value — and the MCP surface needs a machine code
  * and a next step, not just prose. The fields are additive: the chat surfaces
  * that read `error` alone are unaffected.
+ *
+ * A `ZodError` is a tool's own strict parse refusing the arguments it was
+ * called with, so it is the caller's to fix: it carries `BAD_USER_INPUT` and
+ * names the argument, rather than travelling uncoded — which the MCP boundary
+ * reads as a server fault — with the whole issue array as its message
+ * (w5/024).
  */
 export async function runToolSafely<T>({
   execute,
@@ -34,7 +41,12 @@ export async function runToolSafely<T>({
   try {
     return { ok: true, result: await execute() };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const invalidInput = err instanceof ZodError;
+    const msg = invalidInput
+      ? describeZodIssues(err)
+      : err instanceof Error
+        ? err.message
+        : String(err);
     logger[level](message, { ...context, error: msg });
     const metadata =
       err instanceof DomainError
@@ -44,10 +56,21 @@ export async function runToolSafely<T>({
       ok: false,
       error: formatError ? formatError(msg) : msg,
       ...(err instanceof DomainError && { errorCode: err.category }),
+      ...(invalidInput && { errorCode: ErrorCategory.BAD_USER_INPUT }),
       ...(typeof metadata?.hint === "string" && { errorHint: metadata.hint }),
       ...(typeof metadata?.retryAfter === "number" && {
         retryAfter: metadata.retryAfter,
       }),
     };
   }
+}
+
+/** Which argument is wrong and why, without the issue array around it. */
+function describeZodIssues(error: ZodError): string {
+  return error.issues
+    .map((issue) => {
+      const path = issue.path.join(".");
+      return path ? `${path}: ${issue.message}` : issue.message;
+    })
+    .join("; ");
 }
