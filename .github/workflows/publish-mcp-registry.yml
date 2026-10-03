@@ -1,0 +1,145 @@
+name: Publish (mcp registry)
+
+# Keeps Beancount.io's listing on the official MCP Registry
+# (registry.modelcontextprotocol.io) in step with
+# backend-cluster/backend-v2/server.json:
+# - Every run validates server.json with mcp-publisher. Pull requests validate
+#   and stop.
+# - Only a push to main that touches server.json, or a manual dispatch with
+#   `publish` set, publishes.
+# - A published version is immutable, so the publish job refuses a version the
+#   registry already has: a listing change must bump `version`.
+# - Authentication is the registry's HTTP domain proof. MCP_REGISTRY_PRIVATE_KEY,
+#   an environment secret on `mcp-registry-publish`, signs the login; the
+#   registry checks the matching public record that production backend-v2 serves
+#   at https://beancount.io/.well-known/mcp-registry-auth from
+#   MCP_REGISTRY_AUTH_PROOF. See backend-cluster/backend-v2/docs/mcp.md.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend-cluster/backend-v2/server.json"
+      - ".github/workflows/publish-mcp-registry.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend-cluster/backend-v2/server.json"
+      - ".github/workflows/publish-mcp-registry.yml"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish to the registry (unset: validate only)"
+        type: boolean
+        default: false
+
+permissions: {}
+
+# One publish at a time; never cancel one mid-flight.
+concurrency:
+  group: mcp-registry-publish
+  cancel-in-progress: false
+
+env:
+  SERVER_JSON: backend-cluster/backend-v2/server.json
+  REGISTRY_URL: https://registry.modelcontextprotocol.io
+  PROOF_DOMAIN: beancount.io
+
+jobs:
+  validate:
+    name: validate server.json
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      name: ${{ steps.listing.outputs.name }}
+      version: ${{ steps.listing.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install mcp-publisher
+        # The latest release on purpose: the registry rejects stale publisher
+        # binaries with "invalid audience", so a pin would be the first thing
+        # to break.
+        run: |
+          curl -sSfL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" \
+            | tar xz mcp-publisher
+          ./mcp-publisher --help | head -1
+
+      - name: Validate the listing
+        run: ./mcp-publisher validate "$SERVER_JSON"
+
+      - name: Read the listing's name and version
+        id: listing
+        run: |
+          echo "name=$(jq -r '.name' "$SERVER_JSON")" >> "$GITHUB_OUTPUT"
+          echo "version=$(jq -r '.version' "$SERVER_JSON")" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: publish to the registry
+    needs: validate
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)
+    runs-on: ubuntu-latest
+    # The private key lives only on this environment. In the repository
+    # settings, restrict it to `main` and add a required reviewer; the
+    # `environment:` key alone protects nothing.
+    environment: mcp-registry-publish
+    permissions:
+      contents: read
+    env:
+      NAME: ${{ needs.validate.outputs.name }}
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install mcp-publisher
+        run: |
+          curl -sSfL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" \
+            | tar xz mcp-publisher
+
+      - name: Require the domain proof to be served
+        run: |
+          if ! record=$(curl -sSf "https://${PROOF_DOMAIN}/.well-known/mcp-registry-auth"); then
+            echo "::error::https://${PROOF_DOMAIN}/.well-known/mcp-registry-auth is not served — set MCP_REGISTRY_AUTH_PROOF on the production backend (backend-cluster/backend-v2/README.md)"
+            exit 1
+          fi
+          case "$record" in
+            "v=MCPv1; k="*) echo "domain proof is served" ;;
+            *) echo "::error::unexpected record at https://${PROOF_DOMAIN}/.well-known/mcp-registry-auth"; exit 1 ;;
+          esac
+
+      - name: Refuse to republish an existing version
+        run: |
+          encoded=$(jq -rn --arg n "$NAME" '$n | @uri')
+          status=$(curl -s -o /dev/null -w '%{http_code}' "${REGISTRY_URL}/v0.1/servers/${encoded}/versions/${VERSION}")
+          case "$status" in
+            404) echo "${NAME} ${VERSION} is not published yet" ;;
+            200) echo "::error::${NAME} ${VERSION} is already published and registry versions are immutable — bump \`version\` in ${SERVER_JSON}"; exit 1 ;;
+            *) echo "::error::registry answered HTTP ${status} for ${NAME} ${VERSION}"; exit 1 ;;
+          esac
+
+      - name: Sign in with the domain proof
+        env:
+          MCP_REGISTRY_PRIVATE_KEY: ${{ secrets.MCP_REGISTRY_PRIVATE_KEY }}
+        run: |
+          if [ -z "$MCP_REGISTRY_PRIVATE_KEY" ]; then
+            echo "::error::MCP_REGISTRY_PRIVATE_KEY is not set on the mcp-registry-publish environment"
+            exit 1
+          fi
+          ./mcp-publisher login http --domain "$PROOF_DOMAIN" --private-key "$MCP_REGISTRY_PRIVATE_KEY"
+
+      - name: Publish
+        run: ./mcp-publisher publish "$SERVER_JSON"
+
+      - name: Verify the published version
+        run: |
+          encoded=$(jq -rn --arg n "$NAME" '$n | @uri')
+          expected_url=$(jq -r '.remotes[0].url' "$SERVER_JSON")
+          curl -sSf "${REGISTRY_URL}/v0.1/servers/${encoded}/versions/${VERSION}" \
+            | jq -e --arg n "$NAME" --arg v "$VERSION" --arg url "$expected_url" \
+              '.server.name == $n and .server.version == $v and .server.remotes[0].url == $url' >/dev/null
+          echo "published ${NAME} ${VERSION} → ${expected_url}"
