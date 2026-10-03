@@ -5,8 +5,9 @@ name: Publish (mcp registry)
 # backend-cluster/backend-v2/server.json:
 # - Every run validates server.json with mcp-publisher. Pull requests validate
 #   and stop.
-# - Only a push to main that touches server.json, or a manual dispatch with
-#   `publish` set, publishes.
+# - Only a push to main whose commits change server.json, or a manual dispatch
+#   with `publish` set, publishes. A push that edits only this workflow
+#   validates and stops.
 # - A published version is immutable, so the publish job refuses a version the
 #   registry already has: a listing change must bump `version`.
 # - Authentication is the registry's HTTP domain proof. MCP_REGISTRY_PRIVATE_KEY,
@@ -54,10 +55,12 @@ jobs:
     outputs:
       name: ${{ steps.listing.outputs.name }}
       version: ${{ steps.listing.outputs.version }}
+      publish: ${{ steps.decide.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0 # the publish decision diffs the pushed range
 
       - name: Install mcp-publisher
         # The latest release on purpose: the registry rejects stale publisher
@@ -77,10 +80,35 @@ jobs:
           echo "name=$(jq -r '.name' "$SERVER_JSON")" >> "$GITHUB_OUTPUT"
           echo "version=$(jq -r '.version' "$SERVER_JSON")" >> "$GITHUB_OUTPUT"
 
+      - name: Decide whether this run publishes
+        id: decide
+        env:
+          EVENT: ${{ github.event_name }}
+          PUBLISH_INPUT: ${{ inputs.publish }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          publish=false
+          case "$EVENT" in
+            workflow_dispatch)
+              [ "$PUBLISH_INPUT" = "true" ] && publish=true
+              ;;
+            push)
+              # Publish only when the pushed range changed the listing itself;
+              # an edit to this workflow alone must not try to publish.
+              if git diff --name-only "$BEFORE" "$AFTER" | grep -qx "$SERVER_JSON"; then
+                publish=true
+              else
+                echo "$SERVER_JSON unchanged in $BEFORE..$AFTER; validating only"
+              fi
+              ;;
+          esac
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+
   publish:
     name: publish to the registry
     needs: validate
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)
+    if: needs.validate.outputs.publish == 'true'
     runs-on: ubuntu-latest
     # The private key lives only on this environment. In the repository
     # settings, restrict it to `main` and add a required reviewer; the

@@ -25,6 +25,10 @@
 
 t006 is the one step this repository cannot finish alone: the signing key, the production environment value, and the GitHub secret belong to the deployment operator. If it waits, park it with `/pm block` and keep t007–t009 moving on the code already on `main`; t010 waits for both.
 
+## Implementation notes
+
+- **2026-10-03, t004 follow-up.** The first push of the workflow to `main` triggered itself: `validate` passed (so `mcp-publisher validate` works on the runner) and `publish` failed, as designed, at "Require the domain proof to be served" — production does not serve `/.well-known/mcp-registry-auth` until t006. A workflow-only edit should not try to publish, so `validate` now decides: a push publishes only when its range changed `server.json`; a dispatch only with `publish`. A validate-only dispatch on the same commit passed with `publish` skipped.
+
 ## What the registry needs (verified 2026-10-03)
 
 - A `server.json` (`$schema` 2025-12-11) with a `remotes` entry of type `streamable-http`. The only rules on a remote URL are HTTPS and not localhost; nothing ties the URL's host to the namespace. `description` is at most 100 characters and `_meta` publisher data at most 4 KB.
