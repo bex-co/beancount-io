@@ -4,7 +4,7 @@
 
 **Goal:** Publish Beancount.io's hosted MCP endpoint to the official MCP Registry (`registry.modelcontextprotocol.io`) as `io.beancount/beancount`, so clients and directories that read the registry find `https://beancount.io/api-gateway/mcp` from a list instead of a pasted URL — the first marketplace from ADR 019, chosen because it needs none of that record's unimplemented host work.
 
-**Status:** in progress (t001–t005, t007–t009 done; t006 blocked on the operator — see [Blocked](#blocked))
+**Status:** blocked — 8 of 10 tasks done (t001–t005, t007–t009); t006 and t010 wait on the operator — see [Blocked](#blocked)
 
 **Research date:** 2026-10-02/03 — registry documentation and validators at `modelcontextprotocol/registry` `main`; a draft listing run through `mcp-publisher validate` against the live registry.
 
@@ -21,13 +21,14 @@
 | [t007](./done/t007.md) | Adoption surface — **DONE** | 30m | t005 |
 | [t008](./done/t008.md) | Simplify — **DONE** | 30m | t007 |
 | [t009](./done/t009.md) | Test coverage and required package gates — **DONE** | 45m | t007, t008 |
-| [t010](./t010.md) | Closeout after the listing is live | 15m | t006, t009 |
+| [t010](./t010.md) | Closeout after the listing is live — **blocked** | 15m | t006, t009 |
 
 t006 is the one step this repository cannot finish alone: the signing key, the production environment value, and the GitHub secret belong to the deployment operator. If it waits, park it with `/pm block` and keep t007–t009 moving on the code already on `main`; t010 waits for both.
 
 ## Blocked
 
 - **t006 (2026-10-03)** — the signing key, the production `MCP_REGISTRY_AUTH_PROOF`, and the `MCP_REGISTRY_PRIVATE_KEY` environment secret are the deployment operator's; production answers 404 on `/.well-known/mcp-registry-auth`, the `mcp-registry-publish` environment exists (auto-created, unprotected) without the secret, and the registry has no listing yet. **Unblock:** the operator sets the proof on production (backend at or after `b4518048`), adds the secret, and dispatches `Publish (mcp registry)` with `publish` — full condition in [t006](./t006.md). t007–t009 proceed on the shipped code; t010 waits for t006.
+- **t010 (2026-10-03)** — closeout cannot run until t006 makes the listing live; t007–t009 are done, so every open task is blocked and the milestone moves to `blocked/`. **Unblock:** t006 clears; then verify the definition of done against the registry API and production and close through `/pm done w2/m36/t010`.
 
 ## Implementation notes
 
