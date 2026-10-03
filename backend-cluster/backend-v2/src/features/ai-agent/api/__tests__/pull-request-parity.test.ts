@@ -509,6 +509,37 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
       await f.close();
     }
   });
+  it("answers creating against an unknown base branch as NOT_FOUND on every surface", async () => {
+    const f = await fixture();
+    f.repos.repoGetBranch.mockRejectedValue({ status: 404 });
+    const input = {
+      title: "Patch",
+      ...validCreate,
+      baseBranch: "qa-no-such-branch",
+      changes,
+    };
+    try {
+      const rest = await f.call("rest", "create", input);
+      expect(rest.failed).toBe(true);
+      expect(rest.data).toMatchObject({ error: { code: "NOT_FOUND" } });
+      const mcp = await f.client.callTool({
+        name: "managePullRequests",
+        arguments: { operation: "create", ledger: "alice/main", ...input },
+      });
+      expect(mcp.isError).toBe(true);
+      expect(mcp.structuredContent).toMatchObject({
+        error: {
+          code: "NOT_FOUND",
+          hint: expect.stringContaining("baseBranch"),
+        },
+      });
+      expect((await f.call("gql", "create", input)).failed).toBe(true);
+      expect(f.repos.repoCreateBranch).not.toHaveBeenCalled();
+      expect(f.branches.size).toBe(2);
+    } finally {
+      await f.close();
+    }
+  });
   it("answers reading an unknown pull request as NOT_FOUND on every surface", async () => {
     const f = await fixture();
     // What the generated client throws for a number Gitea does not know.

@@ -157,15 +157,20 @@ export class PullRequestService implements IPullRequestService {
       // 2. Get base branch reference (`format` is load-bearing: without it
       // the generated client resolves `data` to null and every check below
       // misfires against a live Gitea.)
-      const baseBranchRef = await client.repos.repoGetBranch(
-        owner,
-        repo,
-        baseBranch,
-        { format: "json" },
-      );
+      const baseBranchRef = await client.repos
+        .repoGetBranch(owner, repo, baseBranch, { format: "json" })
+        .catch((error: unknown) => {
+          // The client throws on a 404 rather than resolving empty data, so
+          // the guard below never saw an unknown branch: it fell through to
+          // the catch-all and read as a server fault to retry.
+          if (clientFailureStatus(error) === 404) return { data: null };
+          throw error;
+        });
       if (!baseBranchRef.data) {
-        throw new Error(
-          `Base branch '${baseBranch}' not found in repository ${owner}/${repo}`,
+        throw new NotFoundError(
+          "Branch",
+          baseBranch,
+          `No branch named '${baseBranch}' in ${owner}/${repo}. Pass an existing branch as baseBranch.`,
         );
       }
       const baseSha = baseBranchRef.data.commit?.id ?? "";

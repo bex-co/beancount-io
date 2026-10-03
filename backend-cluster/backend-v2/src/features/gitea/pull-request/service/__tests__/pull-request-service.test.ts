@@ -164,7 +164,32 @@ describe("PullRequestService", () => {
 
       await expect(
         service.createPRFromPatch(identity, owner, repo, input),
-      ).rejects.toThrow("Base branch 'main' not found");
+      ).rejects.toMatchObject({ category: "NOT_FOUND" });
+    });
+
+    it("maps the client's thrown 404 for the base branch to NOT_FOUND before creating anything", async () => {
+      // The generated client throws the response itself for an unknown branch.
+      mockClient.repos.repoGetBranch.mockRejectedValue({
+        status: 404,
+        error: { message: "branch does not exist [name: main]" },
+      });
+
+      const failure = await service
+        .createPRFromPatch(identity, owner, repo, input)
+        .catch((error: unknown) => error);
+      expect(failure).toMatchObject({ category: "NOT_FOUND" });
+      expect((failure as Error).message).toContain("main");
+      expect(mockClient.repos.repoCreateBranch).not.toHaveBeenCalled();
+    });
+
+    it("does not relabel another base-branch failure as not found", async () => {
+      mockClient.repos.repoGetBranch.mockRejectedValue({ status: 502 });
+
+      const failure = await service
+        .createPRFromPatch(identity, owner, repo, input)
+        .catch((error: unknown) => error);
+      expect(failure).not.toMatchObject({ category: "NOT_FOUND" });
+      expect(mockClient.repos.repoCreateBranch).not.toHaveBeenCalled();
     });
 
     it.each([
