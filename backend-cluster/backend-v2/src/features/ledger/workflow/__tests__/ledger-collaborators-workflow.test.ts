@@ -134,10 +134,12 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
   });
 
   it("preserves self-leave through the current user's source username", async () => {
-    await expect(workflow.leaveLedger({ identity, ledgerId })).resolves.toEqual({
-      success: true,
-      message: "Removed self from repository successfully",
-    });
+    await expect(workflow.leaveLedger({ identity, ledgerId })).resolves.toEqual(
+      {
+        success: true,
+        message: "Removed self from repository successfully",
+      },
+    );
     expect(deleteLedgerCollaborator).toHaveBeenCalledWith(
       "owner",
       "main",
@@ -161,6 +163,31 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
       category: "BAD_USER_INPUT",
       message: "No such user: ghost",
     });
+  });
+
+  it("translates Gitea's unknown-user error on delete, and nothing else", async () => {
+    deleteLedgerCollaborator.mockRejectedValueOnce(
+      new Error("user does not exist [uid: 0, name: ghost]"),
+    );
+    await expect(
+      workflow.deleteCollaborator({
+        identity,
+        ledgerId,
+        collaborator: "ghost",
+      }),
+    ).rejects.toMatchObject({
+      name: "BadUserInputError",
+      category: "BAD_USER_INPUT",
+      message: "No such user: ghost",
+    });
+    deleteLedgerCollaborator.mockRejectedValueOnce(new Error("upstream down"));
+    await expect(
+      workflow.deleteCollaborator({
+        identity,
+        ledgerId,
+        collaborator: "ghost",
+      }),
+    ).rejects.toThrow("upstream down");
   });
 
   it("rethrows other collaborator-update failures unchanged", async () => {

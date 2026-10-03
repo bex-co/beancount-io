@@ -509,6 +509,40 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
       }
     },
   );
+  it("answers deleting an unknown user as bad input, without upstream internals, on every surface", async () => {
+    const f = await fixture();
+    try {
+      f.remove.mockRejectedValue(
+        new Error("user does not exist [uid: 0, name: zz-ghost]"),
+      );
+      const rest = await f.request("collaborators/zz-ghost", "DELETE");
+      expect(rest.status).toBe(400);
+      expect(await rest.text()).not.toContain("uid");
+      const mcp = await f.client.callTool({
+        name: "manageLedgerCollaborators",
+        arguments: {
+          operation: "delete",
+          ledger: "alice/main",
+          collaborator: "zz-ghost",
+        },
+      });
+      expect(mcp.isError).toBe(true);
+      expect(mcp.structuredContent).toMatchObject({
+        error: { code: "BAD_USER_INPUT", message: "No such user: zz-ghost" },
+      });
+      const gql = await f.gql(
+        'mutation { deleteLedgerCollaborator(ledgerId: "alice/main", collaborator: "zz-ghost") { success } }',
+      );
+      expect(gql.errors).toHaveLength(1);
+      expect(gql.errors?.[0].originalError).toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: "No such user: zz-ghost",
+      });
+      expect(f.members.size).toBe(2);
+    } finally {
+      await f.close();
+    }
+  });
   it.each(surfaces)(
     "leaves as the caller and refuses owners or stale membership via %s",
     async (surface) => {

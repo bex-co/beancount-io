@@ -21,6 +21,19 @@ import {
 
 const moduleLogger = logger.child({ module: "ledger-collaborators-workflow" });
 
+/**
+ * Gitea reports an unknown username as "user does not exist
+ * [uid: 0, name: …]" — an internal shape no agent can act on. The
+ * collaborator name came from the caller, so this is their input error.
+ * Anything else is returned unchanged for the caller to rethrow.
+ */
+function translateUnknownUser(error: unknown, collaborator: string): unknown {
+  const message = error instanceof Error ? error.message : String(error);
+  return /user does not exist/i.test(message)
+    ? new BadUserInputError(`No such user: ${collaborator}`)
+    : error;
+}
+
 export type CollaboratorData = {
   id?: number;
   login?: string;
@@ -151,14 +164,7 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
           { permission: permission || null },
         );
     } catch (error) {
-      // Gitea reports an unknown username as "user does not exist
-      // [uid: 0, name: …]" — an internal shape no agent can act on. The
-      // collaborator name came from the caller, so this is their input error.
-      const message = error instanceof Error ? error.message : String(error);
-      if (/user does not exist/i.test(message)) {
-        throw new BadUserInputError(`No such user: ${collaborator}`);
-      }
-      throw error;
+      throw translateUnknownUser(error, collaborator);
     }
 
     if (response.data?.success) {
@@ -189,11 +195,16 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     );
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
-    const response = await favaApiClient.collaborators.deleteLedgerCollaborator(
-      ledgerOwner,
-      ledgerName,
-      collaborator,
-    );
+    let response;
+    try {
+      response = await favaApiClient.collaborators.deleteLedgerCollaborator(
+        ledgerOwner,
+        ledgerName,
+        collaborator,
+      );
+    } catch (error) {
+      throw translateUnknownUser(error, collaborator);
+    }
 
     if (response.data?.success) {
       return { success: true, message: "Collaborator deleted successfully" };
