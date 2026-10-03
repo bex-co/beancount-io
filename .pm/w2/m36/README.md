@@ -4,7 +4,7 @@
 
 **Goal:** Publish Beancount.io's hosted MCP endpoint to the official MCP Registry (`registry.modelcontextprotocol.io`) as `io.beancount/beancount`, so clients and directories that read the registry find `https://beancount.io/api-gateway/mcp` from a list instead of a pasted URL — the first marketplace from ADR 019, chosen because it needs none of that record's unimplemented host work.
 
-**Status:** in progress (t001–t005, t007 done; t006 blocked on the operator — see [Blocked](#blocked))
+**Status:** in progress (t001–t005, t007–t008 done; t006 blocked on the operator — see [Blocked](#blocked))
 
 **Research date:** 2026-10-02/03 — registry documentation and validators at `modelcontextprotocol/registry` `main`; a draft listing run through `mcp-publisher validate` against the live registry.
 
@@ -19,7 +19,7 @@
 | [t005](./done/t005.md) | Document the listing and amend ADR 019 — **DONE** | 30m | t001, t002, t003, t004 |
 | [t006](./t006.md) | Operator: signing key, production proof, secret, first publish — **blocked** | 30m | t003, t004, t005 |
 | [t007](./done/t007.md) | Adoption surface — **DONE** | 30m | t005 |
-| [t008](./t008.md) | Simplify | 30m | t007 |
+| [t008](./done/t008.md) | Simplify — **DONE** | 30m | t007 |
 | [t009](./t009.md) | Test coverage and required package gates | 45m | t007, t008 |
 | [t010](./t010.md) | Closeout after the listing is live | 15m | t006, t009 |
 
@@ -31,7 +31,7 @@ t006 is the one step this repository cannot finish alone: the signing key, the p
 
 ## Implementation notes
 
-- **2026-10-03, t004 follow-up.** The first push of the workflow to `main` triggered itself: `validate` passed (so `mcp-publisher validate` works on the runner) and `publish` failed, as designed, at "Require the domain proof to be served" — production does not serve `/.well-known/mcp-registry-auth` until t006. A workflow-only edit should not try to publish, so `validate` now decides: a push publishes only when its range changed `server.json`; a dispatch only with `publish`. A validate-only dispatch on the same commit passed with `publish` skipped.
+- **2026-10-03, t004 follow-up.** The first push of the workflow to `main` triggered itself: `validate` passed (so `mcp-publisher validate` works on the runner) and `publish` failed, as designed, at "Require the domain proof to be served" — production does not serve `/.well-known/mcp-registry-auth` until t006. A workflow-only edit should not try to publish, so `validate` now decides: a push publishes only when its range changed `server.json`; a dispatch only with `publish`. A validate-only dispatch on the same commit passed with `publish` skipped. The simplify pass (t008) then replaced the shell `git diff` and full-history clone with the push payload's own per-commit file lists in the job's `if`, which also sidesteps the all-zeros `github.event.before` on a first push.
 
 ## What the registry needs (verified 2026-10-03)
 

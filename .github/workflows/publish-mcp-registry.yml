@@ -3,11 +3,10 @@ name: Publish (mcp registry)
 # Keeps Beancount.io's listing on the official MCP Registry
 # (registry.modelcontextprotocol.io) in step with
 # backend-cluster/backend-v2/server.json:
-# - Every run validates server.json with mcp-publisher. Pull requests validate
-#   and stop.
-# - Only a push to main whose commits change server.json, or a manual dispatch
-#   with `publish` set, publishes. A push that edits only this workflow
-#   validates and stops.
+# - Every run validates server.json with mcp-publisher. Pull requests, and
+#   pushes that touch only this workflow, validate and stop.
+# - A push to main whose commits changed server.json, or a manual dispatch with
+#   `publish` set, publishes.
 # - A published version is immutable, so the publish job refuses a version the
 #   registry already has: a listing change must bump `version`.
 # - Authentication is the registry's HTTP domain proof. MCP_REGISTRY_PRIVATE_KEY,
@@ -45,6 +44,11 @@ env:
   SERVER_JSON: backend-cluster/backend-v2/server.json
   REGISTRY_URL: https://registry.modelcontextprotocol.io
   PROOF_DOMAIN: beancount.io
+  PROOF_URL: https://beancount.io/.well-known/mcp-registry-auth
+  # The latest release on purpose: the registry rejects stale publisher
+  # binaries with "invalid audience", so a pin would be the first thing to
+  # break. Both jobs run on ubuntu-latest, so the platform is fixed.
+  PUBLISHER_URL: https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz
 
 jobs:
   validate:
@@ -55,21 +59,13 @@ jobs:
     outputs:
       name: ${{ steps.listing.outputs.name }}
       version: ${{ steps.listing.outputs.version }}
-      publish: ${{ steps.decide.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          fetch-depth: 0 # the publish decision diffs the pushed range
 
       - name: Install mcp-publisher
-        # The latest release on purpose: the registry rejects stale publisher
-        # binaries with "invalid audience", so a pin would be the first thing
-        # to break.
-        run: |
-          curl -sSfL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" \
-            | tar xz mcp-publisher
-          ./mcp-publisher --help | head -1
+        run: curl -sSfL "$PUBLISHER_URL" | tar xz mcp-publisher
 
       - name: Validate the listing
         run: ./mcp-publisher validate "$SERVER_JSON"
@@ -80,35 +76,17 @@ jobs:
           echo "name=$(jq -r '.name' "$SERVER_JSON")" >> "$GITHUB_OUTPUT"
           echo "version=$(jq -r '.version' "$SERVER_JSON")" >> "$GITHUB_OUTPUT"
 
-      - name: Decide whether this run publishes
-        id: decide
-        env:
-          EVENT: ${{ github.event_name }}
-          PUBLISH_INPUT: ${{ inputs.publish }}
-          BEFORE: ${{ github.event.before }}
-          AFTER: ${{ github.sha }}
-        run: |
-          publish=false
-          case "$EVENT" in
-            workflow_dispatch)
-              [ "$PUBLISH_INPUT" = "true" ] && publish=true
-              ;;
-            push)
-              # Publish only when the pushed range changed the listing itself;
-              # an edit to this workflow alone must not try to publish.
-              if git diff --name-only "$BEFORE" "$AFTER" | grep -qx "$SERVER_JSON"; then
-                publish=true
-              else
-                echo "$SERVER_JSON unchanged in $BEFORE..$AFTER; validating only"
-              fi
-              ;;
-          esac
-          echo "publish=$publish" >> "$GITHUB_OUTPUT"
-
   publish:
     name: publish to the registry
     needs: validate
-    if: needs.validate.outputs.publish == 'true'
+    # The push payload lists each commit's added and modified paths (for up to
+    # 20 commits), so a push that touched only this workflow validates and
+    # stops. A listing change buried in a larger push publishes via dispatch.
+    if: >-
+      (github.event_name == 'push'
+        && (contains(toJSON(github.event.commits.*.added), 'backend-cluster/backend-v2/server.json')
+          || contains(toJSON(github.event.commits.*.modified), 'backend-cluster/backend-v2/server.json')))
+      || (github.event_name == 'workflow_dispatch' && inputs.publish)
     runs-on: ubuntu-latest
     # The private key lives only on this environment. In the repository
     # settings, restrict it to `main` and add a required reviewer; the
@@ -125,25 +103,25 @@ jobs:
           persist-credentials: false
 
       - name: Install mcp-publisher
-        run: |
-          curl -sSfL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" \
-            | tar xz mcp-publisher
+        run: curl -sSfL "$PUBLISHER_URL" | tar xz mcp-publisher
+
+      - name: Resolve this version's registry URL
+        run: echo "VERSION_URL=${REGISTRY_URL}/v0.1/servers/$(jq -rn --arg n "$NAME" '$n | @uri')/versions/${VERSION}" >> "$GITHUB_ENV"
 
       - name: Require the domain proof to be served
         run: |
-          if ! record=$(curl -sSf "https://${PROOF_DOMAIN}/.well-known/mcp-registry-auth"); then
-            echo "::error::https://${PROOF_DOMAIN}/.well-known/mcp-registry-auth is not served — set MCP_REGISTRY_AUTH_PROOF on the production backend (backend-cluster/backend-v2/README.md)"
+          if ! record=$(curl -sSf "$PROOF_URL"); then
+            echo "::error::${PROOF_URL} is not served — set MCP_REGISTRY_AUTH_PROOF on the production backend (backend-cluster/backend-v2/README.md)"
             exit 1
           fi
           case "$record" in
             "v=MCPv1; k="*) echo "domain proof is served" ;;
-            *) echo "::error::unexpected record at https://${PROOF_DOMAIN}/.well-known/mcp-registry-auth"; exit 1 ;;
+            *) echo "::error::unexpected record at ${PROOF_URL}"; exit 1 ;;
           esac
 
       - name: Refuse to republish an existing version
         run: |
-          encoded=$(jq -rn --arg n "$NAME" '$n | @uri')
-          status=$(curl -s -o /dev/null -w '%{http_code}' "${REGISTRY_URL}/v0.1/servers/${encoded}/versions/${VERSION}")
+          status=$(curl -s -o /dev/null -w '%{http_code}' "$VERSION_URL")
           case "$status" in
             404) echo "${NAME} ${VERSION} is not published yet" ;;
             200) echo "::error::${NAME} ${VERSION} is already published and registry versions are immutable — bump \`version\` in ${SERVER_JSON}"; exit 1 ;;
@@ -165,9 +143,8 @@ jobs:
 
       - name: Verify the published version
         run: |
-          encoded=$(jq -rn --arg n "$NAME" '$n | @uri')
           expected_url=$(jq -r '.remotes[0].url' "$SERVER_JSON")
-          curl -sSf "${REGISTRY_URL}/v0.1/servers/${encoded}/versions/${VERSION}" \
+          curl -sSf "$VERSION_URL" \
             | jq -e --arg n "$NAME" --arg v "$VERSION" --arg url "$expected_url" \
               '.server.name == $n and .server.version == $v and .server.remotes[0].url == $url' >/dev/null
           echo "published ${NAME} ${VERSION} → ${expected_url}"

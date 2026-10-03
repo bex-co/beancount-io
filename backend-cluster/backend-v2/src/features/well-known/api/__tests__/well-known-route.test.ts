@@ -148,9 +148,7 @@ describe("well-known routes", () => {
     const listing = JSON.parse(
       fs.readFileSync(REGISTRY_LISTING_PATH, "utf8"),
     ) as {
-      $schema: string;
       name: string;
-      description: string;
       version: string;
       icons: Array<{ src: string }>;
       remotes: Array<{ type: string; url: string }>;
@@ -161,13 +159,11 @@ describe("well-known routes", () => {
       version: string;
     };
 
-    expect(new URL(listing.$schema).host).toBe(
-      "static.modelcontextprotocol.io",
-    );
+    // Schema rules (description length, version format, $schema) are the
+    // publish workflow's `mcp-publisher validate`; this test guards what the
+    // schema cannot: the name that is the registry identity, and agreement
+    // with the manifest.
     expect(listing.name).toBe("io.beancount/beancount");
-    // The registry schema caps the description at 100 characters.
-    expect(listing.description.length).toBeLessThanOrEqual(100);
-    expect(listing.version).toMatch(/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/);
     expect(listing.version).toBe(manifest.version);
     // Exactly one remote, exactly these keys: no `headers` (OAuth is discovered
     // from the 401) and the same URL every host is given.
@@ -276,7 +272,6 @@ describe("well-known app-link routes without config", () => {
   });
 
   it("returns 404 for the MCP Registry proof when none is configured", async () => {
-    // A self-host must not vouch for Beancount.io's signing key on its domain.
     const response = await fetch(`${origin}/.well-known/mcp-registry-auth`);
     expect(response.status).toBe(404);
   });

@@ -54,19 +54,14 @@ interface AppLinksConfig {
 }
 
 /**
- * Domain proof for the official MCP Registry (registry.modelcontextprotocol.io).
- * `mcp-publisher login http` signs a challenge with a private key, and the
- * registry checks the signature against the public key it reads from
- * `/.well-known/mcp-registry-auth` on the namespace's domain. Unset on a
- * self-host: serving Beancount.io's key there would let Beancount.io publish
- * under that domain's registry namespace, so the route 404s instead.
+ * Domain proof for the official MCP Registry (registry.modelcontextprotocol.io):
+ * the public record a `mcp-publisher login http` signature is verified against,
+ * served at `/.well-known/mcp-registry-auth`. Unset on a self-host — serving
+ * Beancount.io's key there would let Beancount.io publish under that domain's
+ * registry namespace.
  */
 interface McpRegistryConfig {
-  /**
-   * The whole proof record, `v=MCPv1; k=ed25519; p=<base64 public key>`
-   * (`k=ecdsap384` for a P-384 key), as `mcp-publisher`'s documentation
-   * generates it. Null when unset.
-   */
+  /** `v=MCPv1; k=ed25519; p=<base64 public key>` (`k=ecdsap384` for P-384), or null. */
   authProof: string | null;
 }
 
