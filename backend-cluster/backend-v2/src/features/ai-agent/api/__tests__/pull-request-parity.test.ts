@@ -61,6 +61,12 @@ async function fixture(caller = identity) {
       return { data: { name: branch } };
     }),
     repoCompareDiff: jest.fn(async () => ({ data: { total_commits: 1 } })),
+    repoDeleteBranch: jest.fn(
+      async (_o: string, _n: string, branch: string) => {
+        branches.delete(branch);
+        return { data: null };
+      },
+    ),
     repoCreateBranch: jest.fn(
       async (
         _o: string,
@@ -509,6 +515,38 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
       await f.close();
     }
   });
+  it.each(surfaces)(
+    "leaves no branch behind when a create is refused via %s",
+    async (surface) => {
+      const f = await fixture();
+      try {
+        // Nothing to apply: refused before any branch is minted.
+        const empty = await f.call(surface, "create", {
+          title: "Patch",
+          ...validCreate,
+          changes: [],
+        });
+        expect(empty.failed).toBe(true);
+        expect(f.repos.repoCreateBranch).not.toHaveBeenCalled();
+        // Changes that turn out identical to the base: the branch exists by
+        // the time the empty diff is seen, and is removed again.
+        f.repos.repoCompareDiff.mockResolvedValue({
+          data: { total_commits: 0 },
+        });
+        const same = await f.call(surface, "create", {
+          title: "Patch",
+          ...validCreate,
+          changes,
+        });
+        expect(same.failed).toBe(true);
+        expect(f.repos.repoCreateBranch).toHaveBeenCalledTimes(1);
+        expect([...f.branches.keys()]).toEqual(["main", "feature/base"]);
+        expect(f.prs.size).toBe(0);
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("answers creating against an unknown base branch as NOT_FOUND on every surface", async () => {
     const f = await fixture();
     f.repos.repoGetBranch.mockRejectedValue({ status: 404 });

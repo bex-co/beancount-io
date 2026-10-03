@@ -163,6 +163,15 @@ export class PullRequestService implements IPullRequestService {
         "clearCommitMessage must not be empty — it becomes the commit message for the pull request branch",
       );
     }
+    // Refused before any branch exists: with nothing to apply there is nothing
+    // a pull request could hold, and discovering that only after step 3 left
+    // a `pr-patch-*` branch behind on every such call (w5/053).
+    if (input.changes.length === 0) {
+      throw new BadUserInputError(
+        "changes must not be empty — a pull request needs at least one file to change",
+        "changes",
+      );
+    }
     for (const change of input.changes) assertSafeRepoPath(change.path);
     const userId = identity.userId;
     const client = await this.giteaClientFactory.getUserApiClient(userId);
@@ -171,6 +180,7 @@ export class PullRequestService implements IPullRequestService {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(7);
     const headBranch = `pr-patch-${timestamp}-${random}`;
+    let branchCreated = false;
 
     try {
       // 2. Get base branch reference (`format` is load-bearing: without it
@@ -208,6 +218,7 @@ export class PullRequestService implements IPullRequestService {
       if (!createBranchResult.data) {
         throw new Error(`Failed to create branch ${headBranch}`);
       }
+      branchCreated = true;
 
       // 4. Apply file changes to new branch
       for (const change of input.changes) {
@@ -311,6 +322,22 @@ export class PullRequestService implements IPullRequestService {
         headBranch: prResult.data.head?.ref || headBranch,
       };
     } catch (error) {
+      // No pull request was opened, so the branch minted for it has no
+      // purpose: a refusal that leaves it behind litters one branch per
+      // failed call. Best effort — the original failure is what the caller
+      // needs, and a cleanup that fails must not replace it.
+      if (branchCreated) {
+        await client.repos
+          .repoDeleteBranch(owner, repo, headBranch)
+          .catch((cleanupError: unknown) => {
+            logger.warn("Failed to delete an unused pull request branch", {
+              owner,
+              repo,
+              headBranch,
+              error: describeClientFailure(cleanupError),
+            });
+          });
+      }
       if (error instanceof DomainError) throw error;
       throw new Error(
         `Failed to create PR from patch: ${describeClientFailure(error)}`,

@@ -4,6 +4,7 @@ import { PullRequestService } from "../pull-request-service";
 jest.mock("@/shared/logger", () => ({
   logger: {
     error: jest.fn(),
+    warn: jest.fn(),
     child: jest.fn().mockReturnValue({
       error: jest.fn(),
       warn: jest.fn(),
@@ -20,6 +21,7 @@ type MockGiteaClient = {
     repoDownloadPullDiffOrPatch: jest.Mock;
     repoGetBranch: jest.Mock;
     repoCreateBranch: jest.Mock;
+    repoDeleteBranch: jest.Mock;
     repoGetContents: jest.Mock;
     repoUpdateFile: jest.Mock;
     repoCreateFile: jest.Mock;
@@ -55,6 +57,7 @@ describe("PullRequestService", () => {
         repoDownloadPullDiffOrPatch: jest.fn().mockResolvedValue({ data: "" }),
         repoGetBranch: jest.fn(),
         repoCreateBranch: jest.fn(),
+        repoDeleteBranch: jest.fn().mockResolvedValue({ data: null }),
         repoGetContents: jest.fn(),
         repoUpdateFile: jest.fn(),
         repoCreateFile: jest.fn(),
@@ -223,6 +226,72 @@ describe("PullRequestService", () => {
         /No differences between main \(base-sha\) and \S+ \(head-sha\)/,
       );
       expect(mockClient.repos.repoCreatePullRequest).not.toHaveBeenCalled();
+    });
+
+    it("refuses empty changes before creating a branch", async () => {
+      mockSuccessfulCreate();
+
+      await expect(
+        service.createPRFromPatch(identity, owner, repo, {
+          ...input,
+          changes: [],
+        }),
+      ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
+      expect(mockClient.repos.repoGetBranch).not.toHaveBeenCalled();
+      expect(mockClient.repos.repoCreateBranch).not.toHaveBeenCalled();
+    });
+
+    it("deletes the branch it created when the diff turns out empty", async () => {
+      mockSuccessfulCreate();
+      mockClient.repos.repoCompareDiff.mockResolvedValue({
+        data: { total_commits: 0 },
+      });
+
+      await expect(
+        service.createPRFromPatch(identity, owner, repo, input),
+      ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
+      const created =
+        mockClient.repos.repoCreateBranch.mock.calls[0][2].new_branch_name;
+      expect(mockClient.repos.repoDeleteBranch).toHaveBeenCalledTimes(1);
+      expect(mockClient.repos.repoDeleteBranch).toHaveBeenCalledWith(
+        owner,
+        repo,
+        created,
+      );
+    });
+
+    it("deletes the branch when a later step fails, and reports that failure", async () => {
+      mockSuccessfulCreate();
+      mockClient.repos.repoCreatePullRequest.mockRejectedValue({
+        status: 422,
+        error: { message: "pull request already exists" },
+      });
+      // A cleanup that itself fails must not replace the original failure.
+      mockClient.repos.repoDeleteBranch.mockRejectedValue({ status: 500 });
+
+      await expect(
+        service.createPRFromPatch(identity, owner, repo, input),
+      ).rejects.toThrow(/pull request already exists/);
+      expect(mockClient.repos.repoDeleteBranch).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps the branch of a pull request that was opened", async () => {
+      mockSuccessfulCreate();
+
+      await service.createPRFromPatch(identity, owner, repo, input);
+      expect(mockClient.repos.repoDeleteBranch).not.toHaveBeenCalled();
+    });
+
+    it("does not try to delete a branch that was never created", async () => {
+      mockClient.repos.repoGetBranch.mockResolvedValue({
+        data: { name: "main", commit: { id: "base-sha" } },
+      });
+      mockClient.repos.repoCreateBranch.mockRejectedValue({ status: 500 });
+
+      await expect(
+        service.createPRFromPatch(identity, owner, repo, input),
+      ).rejects.toThrow();
+      expect(mockClient.repos.repoDeleteBranch).not.toHaveBeenCalled();
     });
 
     it("requests parsed bodies from the generated client on every call", async () => {
