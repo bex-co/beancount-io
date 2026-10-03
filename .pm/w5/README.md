@@ -39,7 +39,6 @@ Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10
 
 **Low**
 
-- [048](./048.md) — Malformed request bodies get a plain-text 400 instead of a JSON-RPC error.
 - [051](./051.md) — Dry-run refusals say "commit failed"; the missing-file code differs between edit and rename.
 - [053](./053.md) — Pull request create with empty changes leaves its branch behind.
 - [054](./054.md) — Empty temp-asset key returns FORBIDDEN with a ledger-permission hint.
