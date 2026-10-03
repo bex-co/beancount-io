@@ -39,7 +39,6 @@ Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10
 
 **Low**
 
-- [043](./043.md) — Unknown API key revoke hint names ledger and file calls.
 - [045](./045.md) — Unknown prompt name refused without `data.code`.
 - [046](./046.md) — `readLedgerFiles` accepts reversed line ranges.
 - [047](./047.md) — Commits list accepts `limit=-1` and `page=0`.
