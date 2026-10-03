@@ -314,6 +314,30 @@ it.each(["tmp/usr_other/receipt.pdf", "assets/usr_alice/receipt.pdf"])(
   },
 );
 
+// w5/054: an empty key is a malformed request, not an ownership question.
+it("refuses a blank receipt key as bad input on every surface, before any effect", async () => {
+  const f = await fixture();
+  const blank = { receiptObjectKey: "", input };
+  try {
+    const r = await f.rest(blank);
+    expect(r.status).toBe(400);
+    expect(await r.json()).toMatchObject({ error: { code: "BAD_USER_INPUT" } });
+    const g = await f.gql(blank);
+    expect(g.errors?.[0].originalError).toMatchObject({
+      category: "BAD_USER_INPUT",
+    });
+    const m = await f.mcp(blank);
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      error: { code: "BAD_USER_INPUT" },
+    });
+    expect(f.copy).not.toHaveBeenCalled();
+    expect(f.write).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
 it("refuses missing write capability before any effect", async () => {
   const f = await fixture({ ...identity, scopes: new Set(["ledger.read"]) });
   try {

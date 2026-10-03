@@ -12,6 +12,7 @@ import { nanoid } from "nanoid";
 import type { AssetS3Config } from "@/config/config";
 import { BadUserInputError, ConfigurationError } from "@/shared/errors";
 import { S3_PREFIX_TMP } from "@/features/s3/temp-asset-key";
+import { assertTempAssetKey } from "@/features/s3/temp-asset-key";
 import type { Identity } from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
@@ -300,6 +301,7 @@ export class AssetStorageService implements IAssetStorageService {
     downloadUrl: string;
     expiresIn: number;
   }> {
+    assertTempAssetKey(objectKey, "objectKey");
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.TEMP_ASSET_DOWNLOAD_READ,

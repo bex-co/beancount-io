@@ -1,3 +1,4 @@
+import { assertTempAssetKey } from "@/features/s3/temp-asset-key";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
 import type { IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
@@ -154,6 +155,7 @@ export class LLMService implements ILLMService {
     platform: "web" | "mobile" = "web",
   ): Promise<ParseFileResult> {
     const { userId } = identity;
+    assertTempAssetKey(s3ObjectKey, "objectKey");
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.ASSISTED_FILE_PARSE,
@@ -196,6 +198,7 @@ export class LLMService implements ILLMService {
     platform: "web" | "mobile" = "web",
   ): Promise<ParseReceiptResult> {
     const { userId } = identity;
+    assertTempAssetKey(s3ObjectKey, "objectKey");
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,

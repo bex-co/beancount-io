@@ -291,6 +291,41 @@ it.each(
   },
 );
 
+// w5/054: a blank key is a malformed request. It used to reach the ownership
+// check and come back as an authorization refusal with a hint about ledger
+// permission.
+it.each(["", "   "])(
+  "refuses the blank key %j as bad input on every surface, before authorization",
+  async (s3ObjectKey) => {
+    const f = await fixture();
+    const args = { ...input, s3ObjectKey };
+    try {
+      const r = await f.rest(args);
+      expect(r.status).toBe(400);
+      expect(await r.json()).toMatchObject({
+        error: { code: "BAD_USER_INPUT" },
+      });
+      const g = await f.gql(args);
+      expect(g.errors?.[0].originalError).toMatchObject({
+        category: "BAD_USER_INPUT",
+      });
+      const m = await f.mcp(args);
+      expect(m.isError).toBe(true);
+      const { error } = m.structuredContent as {
+        error: { code: string; hint: string };
+      };
+      expect(error.code).toBe("BAD_USER_INPUT");
+      expect(error.hint).toContain("tmp/");
+      expect(error.hint).not.toMatch(/permission/i);
+      expect(f.check).not.toHaveBeenCalled();
+      expect(f.metadata).not.toHaveBeenCalled();
+      expect(f.charge).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
+
 it.each([undefined, "beancount-mobile"])(
   "refuses missing read capability before quota or storage access (%s)",
   async (appId) => {

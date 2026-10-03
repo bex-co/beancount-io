@@ -1,3 +1,4 @@
+import { assertTempAssetKey } from "@/features/s3/temp-asset-key";
 import { parseLedgerId } from "@/shared/str";
 import { nanoidBase58 } from "@/shared/nanoid-base58";
 import { fetchAssetAsBase64 } from "@/shared/fetch-asset-base64";
@@ -96,6 +97,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     // One composite decision precedes the options read, S3 promotion, file
     // commit, and ledger mutation. LedgerEntry's later authorization is
     // intentional defense in depth at the final write boundary.
+    assertTempAssetKey(receiptObjectKey, "receiptObjectKey");
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,

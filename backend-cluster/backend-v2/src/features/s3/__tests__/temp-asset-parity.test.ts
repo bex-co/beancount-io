@@ -207,6 +207,30 @@ it.each([
   }
 });
 
+// w5/054: an empty key is a malformed request, not an ownership question.
+it("refuses a blank download key as bad input on every surface", async () => {
+  const f = await fixture();
+  try {
+    const rest = await f.rest("download-url?objectKey=");
+    expect(rest.status).toBe(400);
+    const gql = await f.gql(
+      "query($key:String!) { generateTempAssetDownloadUrl(objectKey:$key) { downloadUrl } }",
+      { key: "" },
+    );
+    expect(gql.errors?.[0].originalError).toMatchObject({
+      category: "BAD_USER_INPUT",
+    });
+    await expect(
+      f.client.readResource({
+        uri: "beancount://temp-assets/download-url?objectKey=",
+      }),
+    ).rejects.toMatchObject({ data: { code: "BAD_USER_INPUT" } });
+    expect(getSignedUrl).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
 it("refuses upload with a scopeless credential on every surface", async () => {
   const f = await fixture({ ...identity, scopes: new Set() });
   try {
