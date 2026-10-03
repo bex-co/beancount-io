@@ -37,13 +37,6 @@
 
 Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10-02: each cause was checked against `backend-cluster/backend-v2` at `a8b2c3a8` and still holds. Every fix must land on each eligible surface (REST, GraphQL, MCP) in one change.
 
-**Medium — a caller's mistake answered as INTERNAL**
-
-
-**Medium — wrong result or missing guard**
-
-- [039](./039.md) — Non-strict write tools drop unknown arguments, so a `dry_run` typo commits.
-
 **Low**
 
 - [040](./040.md) — Empty `collaborator` on a permission read returns 200 `{}`.
