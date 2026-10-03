@@ -1,6 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { logger } from "@/shared/logger";
+import { BadUserInputError } from "@/shared/errors";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
@@ -68,6 +69,21 @@ export async function executeReadLedgerFiles(
         ...file,
         path: normalizeAgentRepoPath(file.path),
       }));
+      // A reversed range is wrong whatever the file holds, so it is refused
+      // before anything is read.
+      for (const { path, start_line, end_line } of requestedFiles) {
+        if (
+          start_line !== undefined &&
+          end_line !== undefined &&
+          start_line > end_line
+        ) {
+          throw new BadUserInputError(
+            `${path}: start_line ${start_line} is after end_line ${end_line}`,
+            "start_line",
+            "Pass start_line ≤ end_line, or omit either to read from the start or to the end of the file.",
+          );
+        }
+      }
       const files = await services.ledgerRepo.getFilesContent({
         ledgerId,
         identity,
@@ -83,6 +99,17 @@ export async function executeReadLedgerFiles(
           throw new Error(`file not found: ${path}`);
         }
         const lines = raw.split("\n");
+        // A start past the last line used to come back as an empty section
+        // whose own metadata contradicted itself (startLine 10, endLine 9).
+        // An end_line past the end is still clamped: "up to N lines" is an
+        // ordinary request against a file whose length the caller cannot know.
+        if (start_line !== undefined && start_line > lines.length) {
+          throw new BadUserInputError(
+            `${path}: start_line ${start_line} is past the end of the file (${lines.length} lines)`,
+            "start_line",
+            `Pass a start_line between 1 and ${lines.length}.`,
+          );
+        }
         const s = (start_line ?? 1) - 1;
         const e = end_line ?? lines.length;
         const slice = lines.slice(s, e);

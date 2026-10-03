@@ -152,6 +152,65 @@ describe("executeReadLedgerFiles", () => {
     });
   });
 
+  it("refuses a reversed line range before reading anything", async () => {
+    const ledgerRepo = serviceReturning("line1\nline2\nline3");
+    const result = await executeReadLedgerFiles(
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      { files: [{ path: "main.bean", start_line: 10, end_line: 9 }] },
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      errorCode: "BAD_USER_INPUT",
+      error: expect.stringContaining("start_line 10 is after end_line 9"),
+    });
+    expect(ledgerRepo.getFilesContent).not.toHaveBeenCalled();
+  });
+
+  it("refuses a start past the end of the file, naming its length", async () => {
+    const ledgerRepo = serviceReturning("line1\nline2\nline3");
+    const result = await executeReadLedgerFiles(
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      { files: [{ path: "main.bean", start_line: 4 }] },
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      errorCode: "BAD_USER_INPUT",
+      error: expect.stringContaining("past the end of the file (3 lines)"),
+    });
+  });
+
+  it("clamps an end_line past the end instead of refusing it", async () => {
+    const ledgerRepo = serviceReturning("line1\nline2\nline3");
+    const result = await executeReadLedgerFiles(
+      {
+        services: { ledgerRepo } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      { files: [{ path: "main.bean", start_line: 3, end_line: 500 }] },
+    );
+    expect(result).toEqual({
+      ok: true,
+      result: [
+        {
+          path: "main.bean",
+          startLine: 3,
+          endLine: 3,
+          totalLines: 3,
+          content: "line3",
+        },
+      ],
+    });
+  });
+
   it("slices to the requested 1-based, inclusive line range", async () => {
     const ledgerRepo = serviceReturning("line1\nline2\nline3\nline4");
     const result = await executeReadLedgerFiles(
