@@ -2,6 +2,7 @@ import {
   assertOAuthInteractionHost,
   config,
   getDevelopmentPremiumUserIds,
+  getMcpRegistryAuthProof,
   getOAuthPublicUrl,
 } from "./config";
 
@@ -188,6 +189,41 @@ describe("config", () => {
       expect(typeof config.plaid.secret).toBe("string");
       expect(typeof config.plaid.environment).toBe("string");
       expect(typeof config.plaid.webhookUrl).toBe("string");
+    });
+  });
+
+  describe("MCP Registry domain proof", () => {
+    const ed25519 =
+      "v=MCPv1; k=ed25519; p=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    const ecdsaP384 =
+      "v=MCPv1; k=ecdsap384; p=AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==";
+
+    it("is unset by default so a self-host serves no proof", () => {
+      expect(config.mcpRegistry.authProof).toBeNull();
+      expect(getMcpRegistryAuthProof(undefined)).toBeNull();
+      expect(getMcpRegistryAuthProof("")).toBeNull();
+      expect(getMcpRegistryAuthProof("   ")).toBeNull();
+    });
+
+    it("accepts the whole record for either supported algorithm", () => {
+      expect(getMcpRegistryAuthProof(ed25519)).toBe(ed25519);
+      expect(getMcpRegistryAuthProof(ecdsaP384)).toBe(ecdsaP384);
+      // Surrounding whitespace from an env file is not part of the record.
+      expect(getMcpRegistryAuthProof(`  ${ed25519}\n`)).toBe(ed25519);
+    });
+
+    it("refuses anything that is not the record mcp-publisher emits", () => {
+      const expectRefused = (value: string) =>
+        expect(() => getMcpRegistryAuthProof(value)).toThrow(
+          /MCP_REGISTRY_AUTH_PROOF must be the whole proof record/,
+        );
+      // A bare key: the operator pasted `p=` without the envelope.
+      expectRefused("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+      // Wrong version, unknown algorithm, non-base64 key, trailing junk.
+      expectRefused(ed25519.replace("MCPv1", "MCPv2"));
+      expectRefused(ed25519.replace("ed25519", "rsa"));
+      expectRefused("v=MCPv1; k=ed25519; p=not base64!");
+      expectRefused(`${ed25519}; extra=1`);
     });
   });
 });

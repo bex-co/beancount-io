@@ -8,6 +8,10 @@ import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import { API_SCOPES } from "@/server/api/identity";
 import { setWellKnownRoutes } from "../well-known-route";
 
+// A syntactically valid record with a throwaway key — not Beancount.io's.
+const MCP_REGISTRY_AUTH_PROOF =
+  "v=MCPv1; k=ed25519; p=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+
 const config = {
   dashboard: { url: "https://beancount.io" },
   oauth: { issuer: "https://beancount.io" },
@@ -17,6 +21,7 @@ const config = {
       "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99",
     ],
   },
+  mcpRegistry: { authProof: MCP_REGISTRY_AUTH_PROOF },
 } as unknown as AppConfig;
 
 /**
@@ -35,6 +40,7 @@ const unsetAppLinksConfig = {
     appleTeamId: null,
     androidSha256Fingerprints: [],
   },
+  mcpRegistry: { authProof: null },
 } as unknown as AppConfig;
 describe("well-known routes", () => {
   let server: http.Server;
@@ -195,6 +201,16 @@ describe("well-known routes", () => {
     ]);
   });
 
+  it("serves the MCP Registry domain proof as plain text", async () => {
+    const response = await fetch(`${origin}/.well-known/mcp-registry-auth`);
+    const body = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toMatch(/^text\/plain/);
+    // Exactly the record plus a trailing newline, as `mcp-publisher` writes it.
+    expect(body).toBe(`${MCP_REGISTRY_AUTH_PROOF}\n`);
+  });
+
   it("serves Android assetlinks as JSON", async () => {
     const response = await fetch(`${origin}/.well-known/assetlinks.json`);
     const body = (await response.json()) as Array<{
@@ -256,6 +272,12 @@ describe("well-known app-link routes without config", () => {
 
   it("returns 404 for assetlinks when no fingerprints are configured", async () => {
     const response = await fetch(`${origin}/.well-known/assetlinks.json`);
+    expect(response.status).toBe(404);
+  });
+
+  it("returns 404 for the MCP Registry proof when none is configured", async () => {
+    // A self-host must not vouch for Beancount.io's signing key on its domain.
+    const response = await fetch(`${origin}/.well-known/mcp-registry-auth`);
     expect(response.status).toBe(404);
   });
 });

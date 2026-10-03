@@ -4,7 +4,7 @@
 
 **Goal:** Publish Beancount.io's hosted MCP endpoint to the official MCP Registry (`registry.modelcontextprotocol.io`) as `io.beancount/beancount`, so clients and directories that read the registry find `https://beancount.io/api-gateway/mcp` from a list instead of a pasted URL — the first marketplace from ADR 019, chosen because it needs none of that record's unimplemented host work.
 
-**Status:** in progress (t001 done)
+**Status:** in progress (t001–t002 done)
 
 **Research date:** 2026-10-02/03 — registry documentation and validators at `modelcontextprotocol/registry` `main`; a draft listing run through `mcp-publisher validate` against the live registry.
 
@@ -13,7 +13,7 @@
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | [t001](./done/t001.md) | Add the registry listing and tie it to the discovery manifest — **DONE** | 30m | — |
-| [t002](./t002.md) | Serve the domain proof at `/.well-known/mcp-registry-auth` | 45m | — |
+| [t002](./done/t002.md) | Serve the domain proof at `/.well-known/mcp-registry-auth` — **DONE** | 45m | — |
 | [t003](./t003.md) | Plumb the proof through deployment targets and the path index | 30m | t002 |
 | [t004](./t004.md) | Add the `Publish (mcp registry)` workflow | 45m | t001, t002 |
 | [t005](./t005.md) | Document the listing and amend ADR 019 | 30m | t001, t002, t003, t004 |

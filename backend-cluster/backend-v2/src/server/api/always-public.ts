@@ -87,6 +87,11 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
     reason:
       "Android App Links voucher; Google's verifier and the OS fetch it anonymously to decide whether https ledger URLs may open the native app.",
   },
+  {
+    opId: "REST GET /.well-known/mcp-registry-auth",
+    reason:
+      "Domain-ownership proof for the official MCP Registry; the registry fetches it anonymously to check that whoever signs a publish under io.beancount/* controls this domain.",
+  },
 
   // --- Probes and operator surfaces -------------------------------------
   {
