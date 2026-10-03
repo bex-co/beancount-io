@@ -49,7 +49,6 @@ Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10
 
 **Medium — wrong result or missing guard**
 
-- [028](./028.md) — MCP tool path returns raw unexpected-error messages; ADR007 D7 masking is missing there.
 - [030](./030.md) — A directory path reads as an empty file.
 - [035](./035.md) — `dry_run` accepts `create` over an existing file.
 - [039](./039.md) — Non-strict write tools drop unknown arguments, so a `dry_run` typo commits.
