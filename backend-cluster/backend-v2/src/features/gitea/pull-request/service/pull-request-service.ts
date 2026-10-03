@@ -1,6 +1,11 @@
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 import { logger } from "@/shared/logger";
-import { BadUserInputError, DomainError } from "@/shared/errors";
+import {
+  BadUserInputError,
+  DomainError,
+  InternalServerError,
+  NotFoundError,
+} from "@/shared/errors";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import type {
   ContentsResponse,
@@ -54,6 +59,17 @@ function describeClientFailure(error: unknown): string {
   } catch {
     return "Unknown error";
   }
+}
+
+/**
+ * The HTTP status of a refusal the generated Gitea client threw. It throws the
+ * response itself rather than an Error, so the status is the one reliable
+ * thing a catch can read off it.
+ */
+function clientFailureStatus(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  const status = (error as { status?: unknown }).status;
+  return typeof status === "number" ? status : undefined;
 }
 
 export interface CreatedPullRequest {
@@ -313,11 +329,7 @@ export class PullRequestService implements IPullRequestService {
 
       const pr = prResponse.data;
 
-      if (!pr) {
-        throw new Error(
-          `Pull request #${prNumber} not found in ${owner}/${repo}`,
-        );
-      }
+      if (!pr) throw new NotFoundError("Pull request", String(prNumber));
 
       // Process files data
       const filesData = filesResponse.data;
@@ -342,12 +354,19 @@ export class PullRequestService implements IPullRequestService {
         diff: diffResponse.data || "",
       };
     } catch (error) {
+      if (error instanceof DomainError) throw error;
+      // A pull request number Gitea does not know is the caller's to fix, not
+      // a server fault to retry.
+      if (clientFailureStatus(error) === 404) {
+        throw new NotFoundError("Pull request", String(prNumber));
+      }
       logger.error("Gitea API error fetching PR", {
-        error: error instanceof Error ? error.message : String(error),
+        error: describeClientFailure(error),
       });
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      throw new Error(`Failed to fetch PR details: ${errorMessage}`);
+      throw new InternalServerError(
+        "Failed to fetch PR details",
+        error instanceof Error ? error : undefined,
+      );
     }
   }
 

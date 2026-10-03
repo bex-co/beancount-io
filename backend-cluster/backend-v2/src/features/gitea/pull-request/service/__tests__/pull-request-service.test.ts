@@ -194,10 +194,10 @@ describe("PullRequestService", () => {
 
       await expect(
         service.createPRFromPatch(identity, owner, repo, input),
-      ).rejects.toThrow(/No differences between main \(base-sha\) and \S+ \(head-sha\)/);
-      expect(
-        mockClient.repos.repoCreatePullRequest,
-      ).not.toHaveBeenCalled();
+      ).rejects.toThrow(
+        /No differences between main \(base-sha\) and \S+ \(head-sha\)/,
+      );
+      expect(mockClient.repos.repoCreatePullRequest).not.toHaveBeenCalled();
     });
 
     it("requests parsed bodies from the generated client on every call", async () => {
@@ -275,7 +275,35 @@ describe("PullRequestService", () => {
 
       await expect(
         service.getPRDetails(identity, owner, repo, prNumber),
-      ).rejects.toThrow("Pull request #42 not found");
+      ).rejects.toMatchObject({ category: "NOT_FOUND" });
+    });
+
+    it("maps the client's thrown 404 response to NOT_FOUND", async () => {
+      // The generated client throws the response itself, not an Error.
+      mockClient.repos.repoGetPullRequest.mockRejectedValue({
+        status: 404,
+        error: { message: "pull request does not exist [id: 0]" },
+      });
+
+      const failure = await service
+        .getPRDetails(identity, owner, repo, prNumber)
+        .catch((error: unknown) => error);
+      expect(failure).toMatchObject({ category: "NOT_FOUND" });
+      expect((failure as Error).message).toContain("42");
+      expect((failure as Error).message).not.toContain("Unknown error");
+    });
+
+    it("keeps any other upstream failure internal, without its detail", async () => {
+      mockClient.repos.repoGetPullRequest.mockRejectedValue({
+        status: 502,
+        error: { message: "upstream detail" },
+      });
+
+      const failure = await service
+        .getPRDetails(identity, owner, repo, prNumber)
+        .catch((error: unknown) => error);
+      expect(failure).toMatchObject({ category: "INTERNAL_SERVER_ERROR" });
+      expect((failure as Error).message).not.toContain("upstream detail");
     });
   });
 

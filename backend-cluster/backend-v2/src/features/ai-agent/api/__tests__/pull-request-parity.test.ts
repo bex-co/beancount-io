@@ -318,9 +318,9 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
           message: "Pull request created successfully",
           baseBranch: "feature/base",
         });
-        expect(
-          (created.data as { headBranch?: unknown }).headBranch,
-        ).toMatch(/^pr-patch-/);
+        expect((created.data as { headBranch?: unknown }).headBranch).toMatch(
+          /^pr-patch-/,
+        );
         const pr = f.prs.get(1)!;
         expect([...f.branches.get(pr.head.ref)!]).toEqual([
           ["main.bean", "new"],
@@ -404,8 +404,8 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
                 surface,
                 op,
                 op === "create"
-              ? { title: "Patch", ...validCreate, changes }
-              : {},
+                  ? { title: "Patch", ...validCreate, changes }
+                  : {},
               )
             ).data,
           ).toEqual({
@@ -450,8 +450,8 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
                 surface,
                 op,
                 op === "create"
-              ? { title: "Patch", ...validCreate, changes }
-              : {},
+                  ? { title: "Patch", ...validCreate, changes }
+                  : {},
               )
             ).failed,
           ).toBe(true);
@@ -477,8 +477,8 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
                 surface,
                 op,
                 op === "create"
-              ? { title: "Patch", ...validCreate, changes }
-              : {},
+                  ? { title: "Patch", ...validCreate, changes }
+                  : {},
               )
             ).failed,
           ).toBe(true);
@@ -498,13 +498,30 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
               surface,
               op,
               op === "create"
-              ? { title: "Patch", ...validCreate, changes }
-              : {},
+                ? { title: "Patch", ...validCreate, changes }
+                : {},
             )
           ).failed,
         ).toBe(true);
       await expect(f.details(surface)).rejects.toThrow();
       expect(f.getUserApiClient).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+  it("answers reading an unknown pull request as NOT_FOUND on every surface", async () => {
+    const f = await fixture();
+    // What the generated client throws for a number Gitea does not know.
+    f.repos.repoGetPullRequest.mockRejectedValue({ status: 404 });
+    try {
+      await expect(f.details("rest")).rejects.toThrow("REST 404");
+      await expect(f.details("mcp")).rejects.toMatchObject({
+        code: -32002,
+        data: { code: "NOT_FOUND" },
+      });
+      await expect(f.details("gql")).rejects.toMatchObject({
+        originalError: { category: "NOT_FOUND" },
+      });
     } finally {
       await f.close();
     }
