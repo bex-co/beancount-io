@@ -4,7 +4,7 @@
 
 **Goal:** Publish Beancount.io's hosted MCP endpoint to the official MCP Registry (`registry.modelcontextprotocol.io`) as `io.beancount/beancount`, so clients and directories that read the registry find `https://beancount.io/api-gateway/mcp` from a list instead of a pasted URL — the first marketplace from ADR 019, chosen because it needs none of that record's unimplemented host work.
 
-**Status:** in progress (t001–t005 done; t006 blocked on the operator — see [Blocked](#blocked))
+**Status:** in progress (t001–t005, t007 done; t006 blocked on the operator — see [Blocked](#blocked))
 
 **Research date:** 2026-10-02/03 — registry documentation and validators at `modelcontextprotocol/registry` `main`; a draft listing run through `mcp-publisher validate` against the live registry.
 
@@ -18,7 +18,7 @@
 | [t004](./done/t004.md) | Add the `Publish (mcp registry)` workflow — **DONE** | 45m | t001, t002 |
 | [t005](./done/t005.md) | Document the listing and amend ADR 019 — **DONE** | 30m | t001, t002, t003, t004 |
 | [t006](./t006.md) | Operator: signing key, production proof, secret, first publish — **blocked** | 30m | t003, t004, t005 |
-| [t007](./t007.md) | Adoption surface | 30m | t005 |
+| [t007](./done/t007.md) | Adoption surface — **DONE** | 30m | t005 |
 | [t008](./t008.md) | Simplify | 30m | t007 |
 | [t009](./t009.md) | Test coverage and required package gates | 45m | t007, t008 |
 | [t010](./t010.md) | Closeout after the listing is live | 15m | t006, t009 |
