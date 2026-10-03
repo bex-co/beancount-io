@@ -114,6 +114,35 @@ describe("CommitsService.getCommitDetails missing revisions", () => {
   });
 });
 
+describe("CommitsService.listCommits paging bounds", () => {
+  it.each([
+    { page: 0 },
+    { page: -1 },
+    { limit: 0 },
+    { limit: -1 },
+    { page: 1.5 },
+  ])("refuses %j as bad input before any Gitea call", async (paging) => {
+    const history = jest.fn();
+    const service = new CommitsService(
+      {
+        getUserApiClient: jest.fn().mockResolvedValue({
+          repos: { repoGetAllCommits: history },
+        }),
+        getAnonymousApiClient: jest.fn(),
+      } as never,
+      { authorizeOrThrow: jest.fn().mockResolvedValue(undefined) } as never,
+    );
+    await expect(
+      service.listCommits({
+        identity: { userId: "usr_1", method: "session", scopes: new Set() },
+        ledgerId: "alice/main",
+        ...paging,
+      }),
+    ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
+    expect(history).not.toHaveBeenCalled();
+  });
+});
+
 describe("CommitsService.listCommits unknown branches", () => {
   const identity = {
     userId: "usr_1",

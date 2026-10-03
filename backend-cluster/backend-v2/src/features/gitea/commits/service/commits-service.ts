@@ -13,6 +13,7 @@ import {
   type IAuthorizationService,
 } from "@/server/api/authorization";
 import {
+  BadUserInputError,
   DomainError,
   InternalServerError,
   NotFoundError,
@@ -151,6 +152,17 @@ export class CommitsService implements ICommitsService {
     page = 1,
     limit = 30,
   }: ListCommitsInput): Promise<CommitListItem[]> {
+    // Gitea answers an out-of-range page or limit with its own defaults, so
+    // `limit=-1` and `page=0` returned a full first page as if they had been
+    // honoured. Checked here because GraphQL's Int arguments arrive unchecked.
+    for (const [name, value] of [
+      ["page", page],
+      ["limit", limit],
+    ] as const) {
+      if (!Number.isInteger(value) || value < 1) {
+        throw new BadUserInputError(`${name} must be a positive integer`, name);
+      }
+    }
     await this.authorization.authorizeOrThrow({
       principal: identity ?? anonymousPrincipal(),
       action: AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,

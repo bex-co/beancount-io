@@ -5459,7 +5459,7 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true,
+              "minimum": 1,
               "default": 1
             },
             "required": false,
@@ -5469,7 +5469,7 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true,
+              "minimum": 1,
               "default": 30
             },
             "required": false,

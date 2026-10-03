@@ -255,6 +255,32 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
       await f.close();
     }
   });
+  it.each(["limit=-1", "limit=0", "page=0"])(
+    "refuses the commits list with %s as bad input across REST, GraphQL, and MCP",
+    async (query) => {
+      const f = await fixture();
+      const [name, value] = query.split("=");
+      try {
+        const response = await f.rest(`commits?${query}`);
+        expect(response.status).toBe(400);
+        await expect(f.mcp(`commits?${query}`)).rejects.toMatchObject({
+          code: -32602,
+          data: { code: "BAD_USER_INPUT" },
+        });
+        const result = await f.gql(
+          `listCommits(ledgerId: "alice/main", ${name}: ${value}) { sha }`,
+        );
+        const [graphqlError] = result.errors ?? [];
+        expect(graphqlError).toBeDefined();
+        expect(
+          formatError(graphqlError.toJSON(), graphqlError).extensions?.code,
+        ).toBe("BAD_USER_INPUT");
+        expect(f.history).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("maps an unknown branch on the commits list to NOT_FOUND across REST, GraphQL, and MCP", async () => {
     const f = await fixture();
     f.history.mockRejectedValue(

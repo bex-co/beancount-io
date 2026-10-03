@@ -41,8 +41,8 @@ export const COMMIT_READS = [
     summary: "List commits with branch and pagination controls",
     query: z.object({
       branch: z.string().default("main"),
-      page: z.coerce.number().int().default(1),
-      limit: z.coerce.number().int().default(30),
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).default(30),
     }),
     fetch: (services: Services, { identity, ledgerId, query }: Params) =>
       services.commits.listCommits({
