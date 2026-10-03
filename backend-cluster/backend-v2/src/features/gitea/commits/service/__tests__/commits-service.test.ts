@@ -68,7 +68,10 @@ describe("CommitsService.getCommitDetails missing revisions", () => {
   });
 
   it("maps a Gitea 404 Response to NotFoundError", async () => {
-    const response = new Response(null, { status: 404, statusText: "Not Found" });
+    const response = new Response(null, {
+      status: 404,
+      statusText: "Not Found",
+    });
     const history = jest.fn().mockRejectedValue(response);
     const service = serviceWithHistory(history);
     await expect(
@@ -108,6 +111,57 @@ describe("CommitsService.getCommitDetails missing revisions", () => {
     await expect(
       service.getCommitDetails({ identity, ledgerId: "alice/main", sha }),
     ).rejects.toBeInstanceOf(InternalServerError);
+  });
+});
+
+describe("CommitsService.listCommits unknown branches", () => {
+  const identity = {
+    userId: "usr_1",
+    method: "session" as const,
+    scopes: new Set<string>(),
+  };
+  const list = (history: jest.Mock) =>
+    new CommitsService(
+      {
+        getUserApiClient: jest.fn().mockResolvedValue({
+          repos: { repoGetAllCommits: history },
+        }),
+        getAnonymousApiClient: jest.fn(),
+      } as never,
+      { authorizeOrThrow: jest.fn().mockResolvedValue(undefined) } as never,
+    ).listCommits({ identity, ledgerId: "alice/main", branch: "feature/x" });
+
+  it("maps a Gitea 404 Response to NotFoundError naming the branch", async () => {
+    const failure = await list(
+      jest
+        .fn()
+        .mockRejectedValue(
+          new Response(null, { status: 404, statusText: "Not Found" }),
+        ),
+    ).catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(NotFoundError);
+    expect((failure as Error).message).toContain("feature/x");
+    expect((failure as Error).message).not.toContain("[object Response]");
+  });
+
+  it("keeps a genuine outage as InternalServerError without stringifying the Response", async () => {
+    const failure = await list(
+      jest
+        .fn()
+        .mockRejectedValue(
+          new Response(null, { status: 503, statusText: "Unavailable" }),
+        ),
+    ).catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(InternalServerError);
+    expect((failure as Error).message).not.toContain("[object Response]");
+  });
+
+  it("preserves preexisting DomainError instances", async () => {
+    await expect(
+      list(
+        jest.fn().mockRejectedValue(new ForbiddenError("Ledger is private")),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 });
 

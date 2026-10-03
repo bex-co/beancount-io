@@ -255,6 +255,33 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
       await f.close();
     }
   });
+  it("maps an unknown branch on the commits list to NOT_FOUND across REST, GraphQL, and MCP", async () => {
+    const f = await fixture();
+    f.history.mockRejectedValue(
+      new Response(null, { status: 404, statusText: "Not Found" }),
+    );
+    try {
+      const response = await f.rest("commits?branch=feature%2Fx");
+      expect(response.status).toBe(404);
+      const body = await response.json();
+      expect(body).toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
+      expect(JSON.stringify(body)).not.toContain("[object Response]");
+      await expect(f.mcp("commits?branch=feature%2Fx")).rejects.toMatchObject({
+        code: -32002,
+        data: { code: "NOT_FOUND" },
+      });
+      const result = await f.gql(
+        'listCommits(ledgerId: "alice/main", branch: "feature/x") { sha }',
+      );
+      const [graphqlError] = result.errors ?? [];
+      expect(graphqlError).toBeDefined();
+      expect(
+        formatError(graphqlError.toJSON(), graphqlError).extensions?.code,
+      ).toBe("NOT_FOUND");
+    } finally {
+      await f.close();
+    }
+  });
   it("maps a missing revision to NOT_FOUND across REST, GraphQL, and MCP", async () => {
     const f = await fixture();
     f.history.mockResolvedValue({ data: [] });

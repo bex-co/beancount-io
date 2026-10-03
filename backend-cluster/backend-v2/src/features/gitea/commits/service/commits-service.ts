@@ -28,7 +28,8 @@ export function isMissingCommitLookupError(error: unknown): boolean {
   if (error.status === 404 || error.status === 422) return true;
   if (error.status !== 500) return false;
   const apiError = (error as Response & { error?: { message?: string } }).error;
-  const message = `${apiError?.message ?? ""} ${error.statusText ?? ""}`.toLowerCase();
+  const message =
+    `${apiError?.message ?? ""} ${error.statusText ?? ""}`.toLowerCase();
   return (
     message.includes("not found") ||
     message.includes("does not exist") ||
@@ -200,14 +201,23 @@ export class CommitsService implements ICommitsService {
         shortSha: commit.sha?.substring(0, 7),
       }));
     } catch (error) {
+      if (error instanceof DomainError) throw error;
+      // The generated client throws the `Response` itself, so stringifying it
+      // told the caller "[object Response]". A revision Gitea does not know is
+      // the caller's branch name, not a server fault.
+      if (isMissingCommitLookupError(error)) {
+        throw new NotFoundError("Branch", branch);
+      }
       logger.error("Error fetching commits from Gitea", {
         owner,
         repo,
         branch,
         error: error instanceof Error ? error.message : String(error),
+        status: error instanceof Response ? error.status : undefined,
       });
-      throw new Error(
-        `Failed to fetch commits from Gitea: ${error instanceof Error ? error.message : String(error)}`,
+      throw new InternalServerError(
+        "Failed to fetch commits from Gitea",
+        error instanceof Error ? error : undefined,
       );
     }
   }
