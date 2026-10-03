@@ -19,6 +19,7 @@ import { prefixedNanoidBase58 } from "@/shared/nanoid-base58";
 import { logger } from "@/shared/logger";
 import { parseLedgerId } from "@/shared/str";
 import {
+  API_KEY_NOT_FOUND_HINT,
   apiKeyResource,
   AUTHORIZATION_ACTIONS,
   type IAuthorizationService,
@@ -264,7 +265,9 @@ export class ApiKeyService implements IApiKeyService {
       ownerUserId,
       new Date(),
     );
-    if (!revoked) throw new NotFoundError("API key", id);
+    if (!revoked) {
+      throw new NotFoundError("API key", id, API_KEY_NOT_FOUND_HINT);
+    }
     keyLogger.info("API key revoked", { keyId: id, userId: ownerUserId });
     return revoked;
   }

@@ -225,6 +225,25 @@ describe("API-key authorization parity", () => {
     expect(model.revoke).not.toHaveBeenCalled();
   });
 
+  it("tells an MCP caller revoking an unknown key to list keys, not ledgers", async () => {
+    // w5/043: the NOT_FOUND fallback hint names ledger and file calls. No
+    // key-owner relationship exists for an id nobody holds.
+    (relationships.check as jest.Mock).mockResolvedValueOnce(false);
+    const response = await callMcp("manageApiKeys", {
+      operation: "revoke",
+      id: "akey_does_not_exist",
+    });
+    expect(response.isError).toBe(true);
+    const { error } = response.structuredContent as {
+      error: { code: string; hint: string };
+    };
+    expect(error.code).toBe("NOT_FOUND");
+    expect(error.hint).toContain("manageApiKeys");
+    expect(error.hint).toContain("list");
+    expect(error.hint).not.toContain("listLedgers");
+    expect(model.revoke).not.toHaveBeenCalled();
+  });
+
   it("conceals a blank REST revoke id as not found", async () => {
     server.setIdentity(adminOAuth);
     await expect(

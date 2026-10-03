@@ -59,11 +59,20 @@ type CredentialRequirement = {
 
 type AuditClass = "read" | "write" | "admin";
 
+/** Shared with the key service's own not-found, so both say the same thing. */
+export const API_KEY_NOT_FOUND_HINT =
+  "Pass a key id (`akey_…`) that belongs to this account, not the key itself. `manageApiKeys` with operation `list` shows your keys and their ids.";
+
 interface DenialConcealment {
   readonly reasons: readonly AuthorizationDenyReason[];
   readonly resourceTypes?: readonly AuthorizationResourceType[];
   readonly category: ErrorCategory;
   readonly message: string;
+  /**
+   * The next step, for a concealment whose category fallback would point at
+   * the wrong kind of resource — NOT_FOUND's talks about ledgers and files.
+   */
+  readonly hint?: string;
 }
 
 interface ActionRequirement {
@@ -261,6 +270,7 @@ const ACTION_REQUIREMENTS: Readonly<
       reasons: ["relationship_denied", "unknown_resource"],
       category: ErrorCategory.NOT_FOUND,
       message: "API key not found",
+      hint: API_KEY_NOT_FOUND_HINT,
     },
   },
   [AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ]: {
@@ -831,6 +841,7 @@ export class AuthorizationDeniedError extends DomainError {
         ...(decision.failedResourceType && {
           resourceType: decision.failedResourceType,
         }),
+        ...(concealed?.hint !== undefined && { hint: concealed.hint }),
       },
     );
   }
