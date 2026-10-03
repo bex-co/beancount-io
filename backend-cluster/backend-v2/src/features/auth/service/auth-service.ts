@@ -658,7 +658,7 @@ export class AuthService implements IAuthService {
         ledgerCreate: {
           name: "Default",
           description: "Default ledger for the user",
-          private: false,
+          private: true,
           files: defaultLedgerTemplate,
         },
         userId,
