@@ -376,6 +376,32 @@ describe("SSH public keys through actual adapters and exact-self authorization",
       }
     },
   );
+  it.each(surfaces)(
+    "refuses a non-integer or non-positive key id before upstream work via %s",
+    async (surface) => {
+      const f = await fixture();
+      try {
+        for (const keyId of [1.5, 0, -1]) {
+          expect((await f.write(surface, "delete", { keyId })).failed).toBe(
+            true,
+          );
+          if (surface === "rest")
+            expect((await f.request(`/${keyId}`)).status).toBe(400);
+          if (surface === "mcp")
+            await expect(f.read(`public-key?keyId=${keyId}`)).rejects.toThrow();
+          if (surface === "gql") {
+            const g = await f.gql(`{getPublicKey(keyId:${keyId}){id}}`);
+            expect(g.errors).toHaveLength(1);
+          }
+        }
+        expect(f.records.has(1)).toBe(true);
+        expect(f.get).not.toHaveBeenCalled();
+        expect(f.remove).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("rejects selectors, unknown branches, and unsupported previews without mutation", async () => {
     const f = await fixture();
     try {

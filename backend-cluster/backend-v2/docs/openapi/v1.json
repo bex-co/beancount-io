@@ -6999,10 +6999,11 @@
         "parameters": [
           {
             "schema": {
-              "type": "number",
-              "nullable": true
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
             },
-            "required": false,
+            "required": true,
             "name": "keyId",
             "in": "path"
           }
@@ -7154,10 +7155,11 @@
         "parameters": [
           {
             "schema": {
-              "type": "number",
-              "nullable": true
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
             },
-            "required": false,
+            "required": true,
             "name": "keyId",
             "in": "path"
           }

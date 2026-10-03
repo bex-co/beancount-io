@@ -16,7 +16,12 @@ export const publicKeyListQuery = z
     limit: z.coerce.number().optional(),
   })
   .strict();
-export const publicKeyIdQuery = z.object({ keyId: z.coerce.number() }).strict();
+// A key id is a positive integer. A fraction would be truncated downstream and
+// name a different key than the caller asked for (w5/023).
+const publicKeyId = z.number().int().positive();
+export const publicKeyIdQuery = z
+  .object({ keyId: z.coerce.number().int().positive() })
+  .strict();
 export const publicKeyCreateInput = z
   .object({
     key: z.string(),
@@ -24,7 +29,7 @@ export const publicKeyCreateInput = z
     readOnly: z.boolean().nullable().default(false),
   })
   .strict();
-export const publicKeyDeleteInput = z.object({ keyId: z.number() }).strict();
+export const publicKeyDeleteInput = z.object({ keyId: publicKeyId }).strict();
 
 export const PUBLIC_KEY_ROUTES = [
   v1Route({

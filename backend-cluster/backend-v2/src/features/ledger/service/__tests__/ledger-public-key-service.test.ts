@@ -3,6 +3,7 @@ import {
   AUTHORIZATION_ACTIONS,
   userResource,
 } from "@/server/api/authorization";
+import { BadUserInputError } from "@/shared/errors";
 
 const identity = {
   userId: "usr_alice",
@@ -97,6 +98,20 @@ describe("LedgerPublicKeyService authorization", () => {
     expect(getApiContext).not.toHaveBeenCalled();
     expect(deletePublicKey).not.toHaveBeenCalled();
   });
+
+  it.each([1.5, 0, -1, Number.NaN])(
+    "refuses key id %s as bad input before any Fava work",
+    async (keyId) => {
+      await expect(service.deletePublicKey(identity, keyId)).rejects.toThrow(
+        BadUserInputError,
+      );
+      await expect(service.getPublicKey(identity, keyId)).rejects.toThrow(
+        BadUserInputError,
+      );
+      expect(getApiContext).not.toHaveBeenCalled();
+      expect(deletePublicKey).not.toHaveBeenCalled();
+    },
+  );
 
   it("preserves key mapping and API inputs after authorization", async () => {
     await expect(service.listPublicKeys(identity)).resolves.toEqual([

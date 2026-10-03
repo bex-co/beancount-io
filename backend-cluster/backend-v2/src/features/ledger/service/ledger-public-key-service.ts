@@ -6,6 +6,7 @@ import {
   type IAuthorizationService,
   userResource,
 } from "@/server/api/authorization";
+import { BadUserInputError } from "@/shared/errors";
 
 export type PublicKeyData = {
   id: number;
@@ -30,6 +31,14 @@ export interface ILedgerPublicKeyService {
   ): Promise<PublicKeyData>;
 
   deletePublicKey(identity: Identity, keyId: number): Promise<{ id: number }>;
+}
+
+// GraphQL types keyId as a Float, so the adapters' schemas cannot be the only
+// guard: a fractional id is truncated downstream and deletes another key.
+function assertKeyId(keyId: number): void {
+  if (!Number.isSafeInteger(keyId) || keyId <= 0) {
+    throw new BadUserInputError("keyId must be a positive integer", "keyId");
+  }
 }
 
 export class LedgerPublicKeyService implements ILedgerPublicKeyService {
@@ -71,6 +80,7 @@ export class LedgerPublicKeyService implements ILedgerPublicKeyService {
     identity: Identity,
     keyId: number,
   ): Promise<PublicKeyData> {
+    assertKeyId(keyId);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_READ,
@@ -128,6 +138,7 @@ export class LedgerPublicKeyService implements ILedgerPublicKeyService {
     identity: Identity,
     keyId: number,
   ): Promise<{ id: number }> {
+    assertKeyId(keyId);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_DELETE,
