@@ -123,8 +123,47 @@ function compactZodMessage(message: string): string | undefined {
   }
 }
 
+/**
+ * What a caller reads in place of an unexpected error's own message (ADR 0007
+ * D7) — the same words REST and GraphQL use.
+ */
+const MASKED_MESSAGE = "Internal server error";
+
+/**
+ * Whether to mask a failure nobody shaped for a client.
+ *
+ * An unexpected error's message is written by whatever threw it, for whoever
+ * reads logs: a `RangeError`'s "Invalid time value", a driver's SQL text. In
+ * production it is replaced, with its category kept. A `DomainError`, a Zod
+ * refusal, and a tool guard's own not-found keep their message, because those
+ * were written for the caller. The full message still goes to the logger,
+ * which is why this is an option and not the only behaviour.
+ */
+export interface EnvelopeOptions {
+  readonly maskUnexpected?: boolean;
+}
+
+/** The mask applies in production only, exactly as on REST and GraphQL. */
+export function maskingFor(config: { env?: string }): EnvelopeOptions {
+  return { maskUnexpected: config.env === "production" };
+}
+
+function unexpectedMessage(
+  category: ErrorCategory,
+  message: string,
+  options: EnvelopeOptions,
+): string {
+  return options.maskUnexpected &&
+    category === ErrorCategory.INTERNAL_SERVER_ERROR
+    ? MASKED_MESSAGE
+    : message;
+}
+
 /** The envelope for a thrown failure, whatever threw it. */
-export function envelopeFromThrown(error: unknown): McpErrorEnvelope {
+export function envelopeFromThrown(
+  error: unknown,
+  options: EnvelopeOptions = {},
+): McpErrorEnvelope {
   if (error instanceof DomainError) {
     const metadata = error.metadata as
       | { hint?: unknown; retryAfter?: unknown }
@@ -154,7 +193,11 @@ export function envelopeFromThrown(error: unknown): McpErrorEnvelope {
     };
   }
   const category = categoryForMessage(raw);
-  return { code: category, message: raw, hint: CATEGORY_HINTS[category] };
+  return {
+    code: category,
+    message: unexpectedMessage(category, raw, options),
+    hint: CATEGORY_HINTS[category],
+  };
 }
 
 /**
@@ -183,7 +226,10 @@ function categoryForMessage(message: string): ErrorCategory {
  * fields — and a caller that had to remember to strip them would eventually
  * forget.
  */
-export function splitToolFailure(result: Record<string, unknown>): {
+export function splitToolFailure(
+  result: Record<string, unknown>,
+  options: EnvelopeOptions = {},
+): {
   envelope: McpErrorEnvelope;
   /** Everything the failure carried besides its error, for the wire. */
   rest: Record<string, unknown>;
@@ -202,9 +248,14 @@ export function splitToolFailure(result: Record<string, unknown>): {
     errorHint?: unknown;
     retryAfter?: unknown;
   } & Record<string, unknown>;
-  const message = typeof error === "string" ? error : "The tool failed.";
-  const code =
-    typeof errorCode === "string" ? errorCode : categoryForMessage(message);
+  const raw = typeof error === "string" ? error : "The tool failed.";
+  // A failure with no category of its own came from something other than a
+  // `DomainError`, so it is the one kind the mask applies to.
+  const uncoded = typeof errorCode !== "string";
+  const code = uncoded ? categoryForMessage(raw) : errorCode;
+  const message = uncoded
+    ? unexpectedMessage(code as ErrorCategory, raw, options)
+    : raw;
   return {
     envelope: {
       code,

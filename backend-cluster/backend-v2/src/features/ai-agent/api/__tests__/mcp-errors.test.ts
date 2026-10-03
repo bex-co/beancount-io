@@ -1,6 +1,7 @@
 import { resolveMcpLedger } from "../mcp-context";
 import {
   envelopeFromThrown,
+  maskingFor,
   splitToolFailure,
   JSON_RPC_FORBIDDEN,
   JSON_RPC_INVALID_PARAMS,
@@ -47,7 +48,9 @@ describe("envelopeFromThrown", () => {
       ),
     );
     expect(envelope.code).toBe("CONFIGURATION_ERROR");
-    expect(envelope.hint).toBe("Set TEMP_ASSETS_AWS_S3_BUCKET (see .env.example)");
+    expect(envelope.hint).toBe(
+      "Set TEMP_ASSETS_AWS_S3_BUCKET (see .env.example)",
+    );
   });
 
   it("names the next call for the refusals the audit actually hit", () => {
@@ -181,6 +184,86 @@ describe("splitToolFailure", () => {
       result: { success: false, message: "PR is no longer open" },
     });
     expect(envelope.code).toBe("CONFLICT");
+  });
+});
+
+/**
+ * ADR 0007 D7 (w5/028). An unexpected error's message was written for whoever
+ * reads logs, so production replaces it; anything shaped for the caller — a
+ * DomainError, a Zod refusal, a tool guard's own not-found — keeps its words.
+ */
+describe("production masking of unexpected errors", () => {
+  const production = maskingFor({ env: "production" });
+
+  it("masks only in production", () => {
+    expect(maskingFor({ env: "production" }).maskUnexpected).toBe(true);
+    expect(maskingFor({ env: "development" }).maskUnexpected).toBe(false);
+    expect(maskingFor({}).maskUnexpected).toBe(false);
+    expect(
+      envelopeFromThrown(new RangeError("Invalid time value")).message,
+    ).toBe("Invalid time value");
+  });
+
+  it("replaces an unexpected throw's message and keeps its category and hint", () => {
+    const envelope = envelopeFromThrown(
+      new RangeError("Invalid time value"),
+      production,
+    );
+    expect(envelope).toEqual({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Internal server error",
+      hint: expect.stringMatching(/Retry once/),
+    });
+  });
+
+  it("replaces an uncoded tool failure's message the same way", () => {
+    const { envelope, rest } = splitToolFailure(
+      { ok: false, error: 'select * from "api_keys" where digest = $1', n: 1 },
+      production,
+    );
+    expect(envelope.code).toBe("INTERNAL_SERVER_ERROR");
+    expect(envelope.message).toBe("Internal server error");
+    expect(rest).toEqual({ n: 1 });
+  });
+
+  it("leaves everything written for the caller alone", () => {
+    expect(
+      envelopeFromThrown(
+        new BadUserInputError("date is not a date"),
+        production,
+      ).message,
+    ).toBe("date is not a date");
+    expect(
+      envelopeFromThrown(
+        new ConfigurationError("Object storage is not configured"),
+        production,
+      ).message,
+    ).toBe("Object storage is not configured");
+    expect(
+      envelopeFromThrown(new Error("No such file in alice/main"), production),
+    ).toMatchObject({
+      code: "NOT_FOUND",
+      message: "No such file in alice/main",
+    });
+    expect(
+      splitToolFailure(
+        {
+          ok: false,
+          error: "upstream refused the write",
+          errorCode: "INTERNAL_SERVER_ERROR",
+        },
+        production,
+      ).envelope.message,
+    ).toBe("upstream refused the write");
+    expect(
+      splitToolFailure(
+        { ok: false, error: "main.bean: file not found" },
+        production,
+      ).envelope,
+    ).toMatchObject({
+      code: "NOT_FOUND",
+      message: "main.bean: file not found",
+    });
   });
 });
 

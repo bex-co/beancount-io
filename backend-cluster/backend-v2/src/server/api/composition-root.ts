@@ -88,6 +88,7 @@ import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import { buildInstructions } from "@/features/ai-agent/api/mcp-context";
 import {
   envelopeFromThrown,
+  maskingFor,
   splitToolFailure,
   McpRequestFailure,
   renderErrorText,
@@ -623,6 +624,7 @@ export function assembleMcpRegistry(
         ),
         "MCP resource read failed",
         { resource: UNKNOWN_RESOURCE },
+        config,
       ),
   );
 
@@ -658,9 +660,12 @@ export function assembleMcpRegistry(
             ],
           };
         } catch (err) {
-          return refuseMcpRequest(err, "MCP prompt fetch failed", {
-            prompt: descriptor.name,
-          });
+          return refuseMcpRequest(
+            err,
+            "MCP prompt fetch failed",
+            { prompt: descriptor.name },
+            config,
+          );
         }
       },
     );
@@ -684,14 +689,17 @@ function refuseMcpRequest(
   err: unknown,
   logMessage: string,
   meta: Record<string, unknown>,
+  config: AppConfig,
 ): never {
+  // The log keeps the unexpected error's own message; the caller gets the
+  // masked one in production (ADR 0007 D7).
   const envelope = envelopeFromThrown(err);
   mcpLogger.error(logMessage, {
     ...meta,
     code: envelope.code,
     error: envelope.message,
   });
-  throw new McpRequestFailure(envelope);
+  throw new McpRequestFailure(envelopeFromThrown(err, maskingFor(config)));
 }
 
 /**
@@ -754,9 +762,12 @@ function makeMcpResourceHandler(
         // channel is the JSON-RPC error — so the envelope travels as `data`
         // beside the right code, and the message stays unprefixed so the
         // client's own `McpError` adds the one prefix (w2/m28:t003).
-        return refuseMcpRequest(err, "MCP resource read failed", {
-          resource: descriptor.name,
-        });
+        return refuseMcpRequest(
+          err,
+          "MCP resource read failed",
+          { resource: descriptor.name },
+          config,
+        );
       }
     });
   };
@@ -825,8 +836,11 @@ function makeMcpToolHandler(
           // place every failure passes through, so it is the only place that
           // can promise a client `error.code` and `error.hint` exist
           // (w2/m28:t003).
+          // `runToolSafely` already logged the failure's own message; the
+          // mask covers only what the caller reads (ADR 0007 D7).
           const { envelope, rest } = splitToolFailure(
             result as Record<string, unknown>,
+            maskingFor(config),
           );
           return toolFailureResult(descriptor.name, envelope, rest);
         }
@@ -852,7 +866,10 @@ function makeMcpToolHandler(
           code: envelope.code,
           error: envelope.message,
         });
-        return toolFailureResult(descriptor.name, envelope);
+        return toolFailureResult(
+          descriptor.name,
+          envelopeFromThrown(err, maskingFor(config)),
+        );
       }
     });
   };

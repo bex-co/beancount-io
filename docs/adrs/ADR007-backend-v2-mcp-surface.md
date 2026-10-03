@@ -314,6 +314,10 @@ The dated implementation account below is historical, including its statements t
 - The conformance checklist below is now executable: `yarn mcp:conformance <base-url> [--token …] [--read-only-token …]` runs all seven checks against any deployment, names the check that failed, skips (rather than fails) what it has no credential for, and only observes. Credential-gated checks that an operator often cannot exercise by hand are covered by tests against a real socket.
 - `backend-cluster/backend-v2/README.md` documents connecting a client; the root `README.md` surfaces it.
 
+**Landed with w5/028 (2026-10-03):**
+
+- D7 on MCP — the masking the rule requires of all three surfaces had landed only on REST. The MCP boundary (`mcp-errors.ts`, applied in `composition-root.ts`) now replaces the message of an unexpected failure with `"Internal server error"` in production on tool calls, resource reads, and prompt fetches, keeping its category and hint. A `DomainError`, an argument refusal, and a tool guard's own not-found keep their message; the full message still goes to the logger. Covered through the real registry in `mcp-unexpected-error-masking.test.ts`.
+
 **Landed on the deployment side (verified 2026-08-25):**
 
 - D4 — `OAUTH_JWKS` is seeded. `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server` both return `200`, `/api-gateway/oauth/jwks` serves an ES256 key, and dynamic client registration works. An MCP client can now complete the OAuth ceremony end to end; a browser consent step is the only part a script cannot drive.
