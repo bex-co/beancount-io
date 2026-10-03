@@ -37,10 +37,6 @@
 
 Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10-02: each cause was checked against `backend-cluster/backend-v2` at `a8b2c3a8` and still holds. Every fix must land on each eligible surface (REST, GraphQL, MCP) in one change.
 
-**High**
-
-- [023](./023.md) — Fractional `keyId` accepted by public-key delete; success reported and key 1 removed.
-
 **Medium — a caller's mistake answered as INTERNAL**
 
 - [024](./024.md) — `manageApiKeys` unknown argument returns INTERNAL with a raw Zod dump.
