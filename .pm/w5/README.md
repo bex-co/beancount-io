@@ -39,7 +39,6 @@ Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10
 
 **Low**
 
-- [041](./041.md) — An unparseable resource URI skips the coded error envelope.
 - [042](./042.md) — Ledger-name CONFLICT hint points at entry editing.
 - [043](./043.md) — Unknown API key revoke hint names ledger and file calls.
 - [045](./045.md) — Unknown prompt name refused without `data.code`.
