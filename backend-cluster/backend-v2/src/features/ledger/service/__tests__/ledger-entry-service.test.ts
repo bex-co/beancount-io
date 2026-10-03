@@ -616,6 +616,32 @@ describe("LedgerEntryService", () => {
       );
     });
 
+    it.each(["2026-13-45", "2026-02-30", "not-a-date"])(
+      "refuses the date %s as bad input, naming the entry, before any ledger work",
+      async (date) => {
+        await expect(
+          service.addBulkEntries(
+            IDENTITY,
+            "testuser",
+            "test-ledger",
+            [
+              {
+                type: "commodity",
+                entry: { date: "2024-01-01", currency: "USD" },
+              },
+              { type: "commodity", entry: { date, currency: "EUR" } },
+            ],
+            "web",
+          ),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          message: expect.stringContaining(`entry 1: date "${date}"`),
+        });
+        expect(mockGetLedgerFile).not.toHaveBeenCalled();
+        expect(mockCreateLedgerFile).not.toHaveBeenCalled();
+      },
+    );
+
     it("skips file creation when the target file already exists", async () => {
       await service.addBulkEntries(
         IDENTITY,

@@ -318,6 +318,40 @@ describe("appending Beancount text through the real adapters", () => {
     },
   );
 
+  describe.each([
+    ["with date routing", "txns/{date}.bean"],
+    ["without routing", undefined],
+  ])("a date that is not on the calendar, %s", (_label, route) => {
+    it.each(["rest", "gql", "mcp"] as const)(
+      "is refused as bad input and writes nothing via %s",
+      async (surface) => {
+        const f = await fixture();
+        if (route) f.state.routeTransactionsTo = route;
+        try {
+          const result = await f.call(surface, {
+            text: TXN.replace(/^\d{4}-\d{2}-\d{2}/, "2026-13-45"),
+            dryRun: true,
+          });
+          expect(result.ok).toBe(false);
+          const error = (result.ok === false ? result.error : {}) as {
+            code?: string;
+            message?: string;
+            originalError?: { category?: string };
+          };
+          expect(error.code ?? error.originalError?.category).toBe(
+            "BAD_USER_INPUT",
+          );
+          expect(error.message).toContain("2026-13-45");
+          expect(error.message).not.toContain("Invalid time value");
+          expect(f.checkProjectedErrors).not.toHaveBeenCalled();
+          expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  });
+
   it("names the UNBALANCED code and a hint on the MCP surface", async () => {
     const f = await fixture();
     f.state.projectedErrors = [

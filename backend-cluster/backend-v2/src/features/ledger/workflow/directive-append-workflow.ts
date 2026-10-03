@@ -2,6 +2,7 @@ import { type BcioOptionsPublic } from "@/foundation/fava";
 import { logger } from "@/shared/logger";
 import { BadUserInputError } from "@/shared/errors";
 import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
+import { parseDirectiveDate } from "@/features/ledger/utils/directive-date";
 import {
   insertDirectives,
   parseDirectiveText,
@@ -90,6 +91,13 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
         `text holds ${directives.length} directives; at most ${MAX_APPENDED_DIRECTIVES} may be appended per call. Split the text into several calls.`,
       );
     }
+    // A date that is not on the calendar is refused before any routing: the
+    // router would otherwise throw on it, and only for a ledger that routes
+    // by date, so the same typo was a server error or not depending on the
+    // ledger's options.
+    const dates = directives.map((directive) =>
+      directive.date === null ? null : parseDirectiveDate(directive.date),
+    );
     // Still asserted here, ahead of any work, so a bad explicit path is a
     // refusal rather than a wasted read. Auto-routed targets are asserted too
     // now — by the repo service, on every operation it is handed.
@@ -100,13 +108,13 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
     // Group by target file so one commit covers however many files the
     // ledger's own routing rules spread the text across.
     const byPath = new Map<string, typeof directives>();
-    for (const directive of directives) {
+    for (const [index, directive] of directives.entries()) {
       const target =
         path ??
         (bcioData
           ? resolveEntryFile(
               directive.kind,
-              directive.date ? new Date(directive.date) : new Date(),
+              dates[index] ?? new Date(),
               bcioData,
             )
           : "main.bean");

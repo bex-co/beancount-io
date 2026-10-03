@@ -15,6 +15,7 @@ import { logger } from "@/shared/logger";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
 import { BadUserInputError } from "@/shared/errors";
 import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
+import { parseDirectiveDate } from "@/features/ledger/utils/directive-date";
 import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
 import type { FavaApiClient } from "@/foundation/fava";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
@@ -270,6 +271,11 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
         );
       }
     });
+    // Refused before any file is read, and whether or not the ledger routes
+    // by date — the router throws on a date that is not on the calendar.
+    const dates = inputs.map((input, index) =>
+      parseDirectiveDate(input.entry.date, `entry ${index}: date`),
+    );
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -282,13 +288,9 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       ledgerName,
     );
 
-    const entries: BulkEntries = inputs.map((input) => {
+    const entries: BulkEntries = inputs.map((input, index) => {
       const filename = bcioData
-        ? resolveEntryFile(
-            ENTRY_FILE_TYPE[input.type],
-            new Date(input.entry.date),
-            bcioData,
-          )
+        ? resolveEntryFile(ENTRY_FILE_TYPE[input.type], dates[index], bcioData)
         : undefined;
       return this.buildEntry(input, filename);
     });
