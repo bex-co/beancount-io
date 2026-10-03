@@ -77,14 +77,15 @@ doing money arithmetic, and a float would silently round.
 | `syntax PATH...`                    | `{"files": {path: [errors]}}`, per-file syntax errors       |
 | `format PATH... [--in-place]`       | `{"changed": [path, ...]}` — locked, atomic in-place writes |
 | `format --render PATH`             | `{"text": "..."}` — same formatting for a file or `-` for stdin |
-| `shell --file PATH`                 | nothing — the one streaming command (see below)            |
+| `shell --file PATH`                 | interactive query streams (see below)                     |
+| `source-shell SOURCE`               | native Beanquery streams, with input-file protection      |
 | `report --file PATH --kind KIND`    | one financial report (trees, series, valuation metadata)   |
 | `balance --file PATH [ACCOUNT...]`  | filtered balances or the trial balance                     |
 | `init --file PATH --currency CCY --date DATE` | starter ledger creation                          |
 | `import --file PATH --source PATH`  | CSV/Beangulp extract, dedup preview, optional append       |
 | `version`                           | `{"version": "0.1.0"}`                                     |
 
-`shell` is the exception to everything above: an interactive terminal session
+`shell` and `source-shell` are exceptions to the envelope contract: a terminal session
 cannot be summarised in an envelope, so it streams and answers with its exit
 status.
 

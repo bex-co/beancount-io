@@ -17,6 +17,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.query_terminal import QueryTerminal
+
 ROOT = Path(__file__).resolve().parents[1]
 MAIN = 'include "child.bean"\n2024-01-02 * "Start"\n  Assets:Cash 1000 USD\n  Equity:OpeningBalances\n'
 CHILD = "2024-01-01 open Assets:Cash USD\n2024-01-01 open Equity:OpeningBalances USD\n"
@@ -89,3 +91,84 @@ def test_a_distinct_destination_still_exports(tmp_path: Path, books: Path) -> No
     assert result.returncode == 0, result.stderr
     assert "Assets:Cash" in out.read_text()
     assert books.read_text() == MAIN
+
+
+@pytest.mark.parametrize(
+    ("source", "destination"),
+    [
+        ("{main}", "main.bean"),
+        ("beancount:{main}", "main.bean"),
+        ("{main}", "child.bean"),
+        ("{main}", "sym.bean"),
+        ("{main}", "hard.bean"),
+        ("csv:{csv}", "t.csv"),
+        ("{main}", "unused.txt"),
+    ],
+)
+def test_native_one_shot_output_refuses_before_opening(
+    tmp_path: Path, books: Path, source: str, destination: str
+) -> None:
+    before = _digest(tmp_path)
+    spec = source.format(main=books, csv=tmp_path / "t.csv")
+    result = _bea(tmp_path, "query", "--source", spec, f".output {tmp_path / destination}")
+
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "One-shot `.output` writes nothing" in result.stderr
+    assert _digest(tmp_path) == before
+
+
+@pytest.mark.parametrize(
+    ("source", "destination", "query"),
+    [
+        ("{main}", "main.bean", "SELECT 73 AS n LIMIT 1"),
+        ("beancount:{main}", "child.bean", "SELECT 73 AS n LIMIT 1"),
+        ("{main}", "sym.bean", "SELECT 73 AS n LIMIT 1"),
+        ("{main}", "hard.bean", "SELECT 73 AS n LIMIT 1"),
+        ("{main}", "settings.bean", "SELECT 73 AS n LIMIT 1"),
+        ("csv:{csv}", "t.csv", "SELECT 73 AS n FROM t"),
+    ],
+)
+def test_native_shell_preserves_source_and_recovers(
+    tmp_path: Path, books: Path, source: str, destination: str, query: str
+) -> None:
+    with books.open("a") as stream:
+        stream.write('include "settings.bean"\n')
+    (tmp_path / "settings.bean").write_text('; no entries\noption "title" "QA"\n')
+    before = _digest(tmp_path)
+    spec = source.format(main=books, csv=tmp_path / "t.csv")
+    export = tmp_path / "export.txt"
+    with QueryTerminal(tmp_path, ["query", "--source", spec]) as shell:
+        shell.read("beanquery>")
+        shell.send(f".output {tmp_path / destination}")
+        refused = shell.read("beanquery>")
+        assert "Refusing to write query output" in refused
+        shell.send(query)
+        assert "\n73\n" in shell.read("beanquery>")
+        assert _digest(tmp_path) == before
+        shell.send(f".output {export}")
+        shell.read("beanquery>")
+        shell.send(query)
+        shell.read("beanquery>")
+        shell.send(".output")
+        shell.read("beanquery>")
+        shell.send(query)
+        assert "\n73\n" in shell.read("beanquery>")
+        assert shell.finish() == 0
+        assert "Traceback" not in shell.screen
+    assert "73" in export.read_text()
+    assert {name: digest for name, digest in _digest(tmp_path).items() if name != "export.txt"} == before
+
+
+def test_native_non_file_source_does_not_protect_a_fake_input(tmp_path: Path) -> None:
+    export = tmp_path / "export.txt"
+    export.write_text("previous export\n")
+    with QueryTerminal(tmp_path, ["query", "--source", "test:export.txt"]) as shell:
+        shell.read("beanquery>")
+        shell.send(f".output {export}")
+        assert "Refusing" not in shell.read("beanquery>")
+        shell.send("SELECT 73 AS n FROM test LIMIT 1")
+        shell.read("beanquery>")
+        shell.send(".output")
+        shell.read("beanquery>")
+        assert shell.finish() == 0
+    assert "73" in export.read_text()

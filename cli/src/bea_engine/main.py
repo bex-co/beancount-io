@@ -5,9 +5,8 @@ arguments, and answers with one JSON envelope (see `protocol`). Nothing here
 knows about the frontend's terminal rendering, credentials or AI clients — the
 frontend reads the envelope and decides how to show it.
 
-`shell` is the one exception, and it says so in its own help: an interactive
-terminal session cannot be summarised in an envelope, so it streams. Every
-other command answers exactly one JSON object.
+`shell`, `source-shell` and `scoped` stream terminal output instead of an
+envelope. Every other command answers exactly one JSON object.
 
 Init and import accounting operations live here as `init` / `import` (t021).
 Balances and Fava reports live as `report` / `balance` (t020).
@@ -531,6 +530,24 @@ def shell(
         print(f"error: {exc}", file=sys.stderr)
         for detail in exc.details or ():
             print(f"  {detail}", file=sys.stderr)
+        raise SystemExit(exc.exit_code) from None
+
+
+@app.command("source-shell")
+def source_shell(
+    source: Annotated[str, typer.Argument(help="Native Beanquery source URI or ledger path.")],
+    format: Annotated[str, typer.Option("--format", help="Query output format.")] = "text",
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Query output file.")] = None,
+    numberify: Annotated[bool, typer.Option("--numberify", "-m")] = False,
+    no_errors: Annotated[bool, typer.Option("--no-errors", "-q")] = False,
+) -> None:
+    """Stream a native query shell with protection for its input files."""
+    from bea_engine import query as bql
+
+    try:
+        bql.native_interactive(source, format=format, output=output, numberify=numberify, show_errors=not no_errors)
+    except protocol.EngineError as exc:
+        protocol.note(str(exc))
         raise SystemExit(exc.exit_code) from None
 
 

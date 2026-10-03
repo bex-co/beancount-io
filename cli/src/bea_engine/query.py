@@ -267,6 +267,66 @@ def _refuse_alias(destination: Path, root: Path, context: Any) -> None:
         )
 
 
+def _redirect_output(shell: Any, arg: str, stream: TextIO, file: Path | None) -> None:
+    """Protect loaded inputs and keep the current stream when redirection fails."""
+    if arg and file is not None:
+        member = _find_alias(Path(arg), file, shell.context)
+        if member is not None:
+            protocol.note(
+                f"Refusing to write query output to {arg}: it is one of the ledger files under query ({member})."
+            )
+            return
+    try:
+        destination = open(arg, "w", encoding="utf-8") if arg else stream
+    except OSError as exc:
+        protocol.note(f"Cannot write to {arg}: {exc.strerror or exc}.")
+        return
+    if shell.outfile is not stream:
+        shell.outfile.close()
+    shell.outfile = destination
+
+
+def native_interactive(
+    source: str,
+    *,
+    format: str = "text",
+    output: Path | None = None,
+    numberify: bool = False,
+    show_errors: bool = True,
+) -> None:
+    """Native Beanquery sources and rendering, with bea's destination protection."""
+    import warnings
+    from urllib.parse import urlparse
+
+    from beanquery.shell import INIT_FILENAME, BQLShell
+
+    dsn = source if re.match("[a-z]{2,}:", source) else "beancount:" + source
+    parts = urlparse(dsn)
+    file = Path(parts.path) if parts.scheme in {"beancount", "csv"} and parts.path else None
+
+    class GuardedShell(BQLShell):  # type: ignore[misc]
+        def do_output(self, arg: str) -> None:
+            """Send output to FILE or restore stdout, preserving source files."""
+            _redirect_output(self, arg, sys.stdout, file)
+
+    warnings.filterwarnings("always")
+    # Load before replaying init commands, so .output sees the include closure.
+    shell = GuardedShell(dsn, sys.stdout, True, False, format, numberify, show_errors)
+    try:
+        if output is not None:
+            if file is not None:
+                _refuse_alias(output, file, shell.context)
+            shell.outfile = output.open("w", encoding="utf-8")
+        init = Path(INIT_FILENAME).expanduser()
+        if init.is_file():
+            for line in init.read_text(encoding="utf-8").splitlines():
+                shell.onecmd(line)
+        shell.cmdloop()
+    finally:
+        if shell.outfile is not sys.stdout:
+            shell.outfile.close()
+
+
 def _gate(errors: list[str], allow_errors: bool) -> list[str]:
     """Refuse to answer from a ledger that does not load, unless told otherwise.
 
@@ -343,22 +403,7 @@ def build_shell(
             # Beanquery 0.2.0 calls open(sys.stdout) on reset and closes the old
             # stream before opening its replacement. Remove this override when
             # upstream supports reset and failed redirection without losing output.
-            if arg:
-                member = _find_alias(Path(arg), file, self.context)
-                if member is not None:
-                    protocol.note(
-                        f"Refusing to write query output to {arg}: "
-                        f"it is one of the ledger files under query ({member})."
-                    )
-                    return
-            try:
-                destination = open(arg, "w", encoding="utf-8") if arg else stream
-            except OSError as exc:
-                protocol.note(f"Cannot write to {arg}: {exc.strerror or exc}.")
-                return
-            if self.outfile is not stream:
-                self.outfile.close()
-            self.outfile = destination
+            _redirect_output(self, arg, stream, file)
 
         def do_reload(self, arg: Any = None) -> None:
             """Reload the Beancount input file."""

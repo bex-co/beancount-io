@@ -234,9 +234,13 @@ def query(
         _check_source_scheme(source)
         if output_file is not None:
             _refuse_source_alias(source, Path(output_file))
+        if query_string is None and sys.stdin.isatty():
+            raise typer.Exit(launch.run_engine_argv(["source-shell", *rendering, source]))
+        if query_string is None:
+            query_string = sys.stdin.read()
+        _refuse_one_shot_output(query_string)
         native_args = [*rendering, source]
-        if query_string is not None:
-            native_args.append(query_string)
+        native_args.append(query_string)
         raise typer.Exit(launch.run_native("bean-query", native_args))
 
     file = ctx.entry_file()
