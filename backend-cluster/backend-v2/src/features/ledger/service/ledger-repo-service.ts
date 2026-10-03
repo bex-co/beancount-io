@@ -13,6 +13,7 @@ import {
 } from "@/features/ledger/utils/authorize-ledger";
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
+import { BadUserInputError } from "@/shared/errors";
 
 type CommitUser = {
   login: string | null;
@@ -208,6 +209,18 @@ export class LedgerRepoService
       }),
       "read ledger files",
     );
+
+    // A directory comes back with no content, which decodes to "" — so it
+    // read as an empty file on every surface. Refuse it instead: nothing a
+    // caller does with the "content" of a directory is what it meant.
+    const directory = files.find((file) => file.type === "dir");
+    if (directory) {
+      throw new BadUserInputError(
+        `${directory.path} is a directory, not a file`,
+        "path",
+        "List a directory instead of reading it: `listLedgerFiles` with `dir_path`, or `GET …/files?dir=`.",
+      );
+    }
 
     return files.map((file) => ({
       path: file.path,

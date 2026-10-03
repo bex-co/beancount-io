@@ -303,6 +303,29 @@ describe("LedgerRepoService", () => {
       ]);
     });
 
+    it("refuses a directory rather than returning it as an empty file", async () => {
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            { path: "main.bean", type: "file", sha: "s1", content: "x" },
+            { path: "FY2026", type: "dir", sha: "s2", content: null },
+          ],
+        },
+      });
+
+      await expect(
+        service.getFilesContent({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          paths: ["main.bean", "FY2026"],
+        }),
+      ).rejects.toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: "FY2026 is a directory, not a file",
+      });
+    });
+
     it("passes plain (non-base64) content through unchanged", async () => {
       mockGetLedgerFilesContent.mockResolvedValue({
         data: {
