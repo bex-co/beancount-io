@@ -190,6 +190,33 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
     ).rejects.toThrow("upstream down");
   });
 
+  it("translates Gitea's unknown-user error on a permission read, and nothing else", async () => {
+    getLedgerCollaboratorPermission.mockRejectedValueOnce(
+      new Error("user does not exist [uid: 0, name: ghost]"),
+    );
+    await expect(
+      workflow.getCollaboratorPermission({
+        identity,
+        ledgerId,
+        collaborator: "ghost",
+      }),
+    ).rejects.toMatchObject({
+      name: "BadUserInputError",
+      category: "BAD_USER_INPUT",
+      message: "No such user: ghost",
+    });
+    getLedgerCollaboratorPermission.mockRejectedValueOnce(
+      new Error("upstream down"),
+    );
+    await expect(
+      workflow.getCollaboratorPermission({
+        identity,
+        ledgerId,
+        collaborator: "ghost",
+      }),
+    ).rejects.toThrow("upstream down");
+  });
+
   it("rethrows other collaborator-update failures unchanged", async () => {
     addOrUpdateLedgerCollaborator.mockRejectedValueOnce(
       new Error("team is full"),

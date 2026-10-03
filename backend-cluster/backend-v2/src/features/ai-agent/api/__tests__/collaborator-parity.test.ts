@@ -509,6 +509,35 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
       }
     },
   );
+  it("answers a permission read for an unknown user as bad input, without upstream internals, on every surface", async () => {
+    const f = await fixture();
+    try {
+      f.permission.mockRejectedValue(
+        new Error("user does not exist [uid: 0, name: zz-ghost]"),
+      );
+      const rest = await f.request(
+        "collaborators/permission?collaborator=zz-ghost",
+      );
+      expect(rest.status).toBe(400);
+      expect(await rest.text()).not.toContain("uid");
+      await expect(
+        f.read("collaborators/permission?collaborator=zz-ghost"),
+      ).rejects.toMatchObject({
+        code: -32602,
+        data: { code: "BAD_USER_INPUT", message: "No such user: zz-ghost" },
+      });
+      const gql = await f.gql(
+        '{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:"zz-ghost"){permission}}',
+      );
+      expect(gql.errors).toHaveLength(1);
+      expect(gql.errors?.[0].originalError).toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: "No such user: zz-ghost",
+      });
+    } finally {
+      await f.close();
+    }
+  });
   it("answers deleting an unknown user as bad input, without upstream internals, on every surface", async () => {
     const f = await fixture();
     try {

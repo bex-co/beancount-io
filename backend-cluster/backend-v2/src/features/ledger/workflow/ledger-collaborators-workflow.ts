@@ -308,12 +308,17 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     );
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
-    const response =
-      await favaApiClient.collaborators.getLedgerCollaboratorPermission(
-        ledgerOwner,
-        ledgerName,
-        collaborator,
-      );
+    let response;
+    try {
+      response =
+        await favaApiClient.collaborators.getLedgerCollaboratorPermission(
+          ledgerOwner,
+          ledgerName,
+          collaborator,
+        );
+    } catch (error) {
+      throw translateUnknownUser(error, collaborator);
+    }
 
     if (!response.data?.success || !response.data.data) {
       throw new InternalServerError("Failed to fetch collaborator permission");
