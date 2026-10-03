@@ -28,7 +28,7 @@ import type {
   CallToolResult,
   ReadResourceResult,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { ZodTypeAny } from "zod";
+import { z, type ZodTypeAny } from "zod";
 
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
@@ -500,9 +500,9 @@ export function assembleMcpRegistry(
           ),
         );
       }
-      const parsed = await entry.descriptor.inputSchema.safeParseAsync(
-        request.params.arguments ?? {},
-      );
+      const parsed = await refusingUnknownArguments(
+        entry.descriptor.inputSchema,
+      ).safeParseAsync(request.params.arguments ?? {});
       if (!parsed.success) {
         // A Zod error's message is its issue array, which `envelopeFromThrown`
         // reduces to `path: reason` per wrong field, nested paths included.
@@ -672,6 +672,24 @@ export function assembleMcpRegistry(
   }
 
   return server;
+}
+
+/**
+ * The schema a tool call is validated against: the advertised one, except
+ * that an argument it does not name is refused instead of dropped.
+ *
+ * A plain Zod object strips unknown keys, so a misspelt `dryrun: true` on a
+ * write tool was discarded, `dry_run` took its default of false, and the call
+ * committed what the caller meant to preview (w5/039). Refusing here covers
+ * every tool at once without publishing `additionalProperties: false` on each
+ * schema, which `tools/list` has no byte budget left for. A schema that
+ * already decided — strict, or deliberately loose like `manageApiKeys`, which
+ * folds deprecated spellings before its own strict parse — is left alone.
+ */
+function refusingUnknownArguments(schema: ZodTypeAny): ZodTypeAny {
+  return schema instanceof z.ZodObject && schema.def.catchall === undefined
+    ? schema.strict()
+    : schema;
 }
 
 /** The catch-all template's name, in `resources/templates/list` and the logs. */

@@ -66,6 +66,7 @@ async function fixture() {
   await Promise.all([client.connect(a), server.connect(b)]);
   return {
     changeLedgerFiles,
+    getLedgerFilesContent,
     preview: (path: string) =>
       client.callTool({
         name: "editLedgerFiles",
@@ -76,6 +77,7 @@ async function fixture() {
           files: [{ operation: "create", path, content: "; new\n" }],
         },
       }),
+    client,
     update: (old_string: string) =>
       client.callTool({
         name: "editLedgerFiles",
@@ -139,4 +141,67 @@ describe("an old_string that matches more than once", () => {
       await f.close();
     }
   });
+});
+
+/**
+ * w5/039. A plain Zod object strips keys it does not name, so a misspelt
+ * `dry_run` was dropped, the default of false applied, and the call committed
+ * what the caller meant to preview. The `tools/call` boundary now refuses an
+ * argument the tool does not declare, on every tool.
+ */
+describe("an argument the tool does not declare", () => {
+  it.each(["dryrun", "dryRun", "bogus"])(
+    "refuses %s on editLedgerFiles instead of committing",
+    async (typo) => {
+      const f = await fixture();
+      try {
+        const result = await f.client.callTool({
+          name: "editLedgerFiles",
+          arguments: {
+            ledger: "alice/main",
+            description: "add a file",
+            [typo]: true,
+            files: [{ operation: "create", path: "new.bean", content: "x\n" }],
+          },
+        });
+        expect(result.isError).toBe(true);
+        const { error } = result.structuredContent as {
+          error: { code: string; message: string };
+        };
+        expect(error.code).toBe("BAD_USER_INPUT");
+        expect(error.message).toContain(typo);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each([
+    ["readLedgerFiles", { files: [{ path: "main.bean" }] }],
+    ["listLedgerFiles", {}],
+    ["manageBankConnection", { operation: "refresh", item_id: "pitm_1" }],
+    ["manageBankImport", { operation: "sync", item_id: "pitm_1" }],
+  ])(
+    "refuses an unknown argument on %s before the tool runs",
+    async (name, args) => {
+      const f = await fixture();
+      try {
+        const result = await f.client.callTool({
+          name,
+          arguments: { ledger: "alice/main", ...args, bogus: 1 },
+        });
+        expect(result.isError).toBe(true);
+        expect(result.structuredContent).toMatchObject({
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("bogus"),
+          },
+        });
+        expect(f.getLedgerFilesContent).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });
