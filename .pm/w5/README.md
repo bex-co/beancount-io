@@ -39,7 +39,6 @@ Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10
 
 **Low**
 
-- [046](./046.md) — `readLedgerFiles` accepts reversed line ranges.
 - [047](./047.md) — Commits list accepts `limit=-1` and `page=0`.
 - [048](./048.md) — Malformed request bodies get a plain-text 400 instead of a JSON-RPC error.
 - [051](./051.md) — Dry-run refusals say "commit failed"; the missing-file code differs between edit and rename.
