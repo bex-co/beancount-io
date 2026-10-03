@@ -4,7 +4,7 @@
 
 **Goal:** Publish Beancount.io's hosted MCP endpoint to the official MCP Registry (`registry.modelcontextprotocol.io`) as `io.beancount/beancount`, so clients and directories that read the registry find `https://beancount.io/api-gateway/mcp` from a list instead of a pasted URL — the first marketplace from ADR 019, chosen because it needs none of that record's unimplemented host work.
 
-**Status:** in progress (t001–t004 done)
+**Status:** in progress (t001–t005 done)
 
 **Research date:** 2026-10-02/03 — registry documentation and validators at `modelcontextprotocol/registry` `main`; a draft listing run through `mcp-publisher validate` against the live registry.
 
@@ -16,7 +16,7 @@
 | [t002](./done/t002.md) | Serve the domain proof at `/.well-known/mcp-registry-auth` — **DONE** | 45m | — |
 | [t003](./done/t003.md) | Plumb the proof through deployment targets and the path index — **DONE** | 30m | t002 |
 | [t004](./done/t004.md) | Add the `Publish (mcp registry)` workflow — **DONE** | 45m | t001, t002 |
-| [t005](./t005.md) | Document the listing and amend ADR 019 | 30m | t001, t002, t003, t004 |
+| [t005](./done/t005.md) | Document the listing and amend ADR 019 — **DONE** | 30m | t001, t002, t003, t004 |
 | [t006](./t006.md) | Operator: signing key, production proof, secret, first publish | 30m | t003, t004, t005 |
 | [t007](./t007.md) | Adoption surface | 30m | t005 |
 | [t008](./t008.md) | Simplify | 30m | t007 |
@@ -45,12 +45,12 @@ t006 is the one step this repository cannot finish alone: the signing key, the p
 - The `Publish (mcp registry)` workflow validates on every pull request or push touching `server.json`, publishes only from `main` or an explicit dispatch, reads its key from the `mcp-registry-publish` environment, and refuses to republish a version the registry already has.
 - `backend-cluster/backend-v2/docs/mcp.md`, the backend `README.md`, ADR 0009's path table, ADR 019 (an amendment answering "which directory comes first"), and the root `AGENTS.md` tooling list describe the listing, the proof, the secret, and the version-bump rule.
 - The hosted endpoint answers the ADR 0007 D4 chain (`401` with a `resource_metadata` pointer) at the time of the first publish — re-checked, because a probe on 2026-10-03 got `502` from `/.well-known/mcp.json`.
-- Appearance in downstream directories (VS Code's MCP gallery, GitHub's MCP registry, PulseMCP, Glama) follows their own scrape cadence; it is recorded when observed and is not a closeout gate.
+- Appearance in downstream subregistries and aggregators (Smithery and PulseMCP are the ones the registry's documentation names; others read the same API) follows their own scrape cadence; it is recorded when observed and is not a closeout gate.
 
 ## Source + Goal linkage
 
 - **Source:** [ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) — non-goal "Submitting directory listings" and open question "Which directory comes first"; user decision 2026-10-02 to start bringing the MCP server to marketplaces with the easiest one; registry research 2026-10-02/03 (publishing, authentication, remote-server, versioning, and official-requirements docs in `modelcontextprotocol/registry`; `internal/validators` for the remote-URL rule; `internal/api/handlers/v0/auth/common.go` for the proof-record pattern).
-- **Goal linkage:** **A3 — Community & distribution.** A listing in the registry that package-manager-style MCP clients and directories read is distribution, as PyPI and the Homebrew tap are for `bea`. Secondary **A1 — Agent-native accounting**: coding-agent hosts that browse registries find the MCP surface, and the listing points at ADR 019 D1's single endpoint, so every host meets the same discovery chain.
+- **Goal linkage:** **A3 — Community & distribution.** A listing in the registry that package-manager-style MCP clients and directories read is distribution, as PyPI and the Homebrew tap are for `bea`. Secondary **A1 — Agent-native accounting**: coding-agent hosts whose server galleries read the registry find the MCP surface, and the listing points at ADR 019 D1's single endpoint, so every host meets the same discovery chain.
 - **Expected outcome:** a person in a registry-aware client adds "Beancount.io" from a list and lands on the existing OAuth sign-in; aggregators carry the listing within their scrape cadence (hourly in the registry's guidance); the project has one place to change when the endpoint or description changes, with CI refusing an edit that bumps nothing.
 - **Why now:** ADR 019's D3–D9 are still unimplemented (checked 2026-10-02) and gate the Claude, ChatGPT, and Muse directories, each of which also adds a third-party review. The official registry needs none of that — the URL, a 100-character description, and domain proof — and feeds several directories at once, so it is the cheapest first marketplace with the widest reach. Adoption surface is included because the milestone ships a user- and agent-facing listing, new docs, and an environment variable self-hosters will meet in `.env.example`.
 

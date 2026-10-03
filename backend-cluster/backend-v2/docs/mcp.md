@@ -95,6 +95,28 @@ carries its selected `ledger_id`. Application API/mobile tokens targeting
 does not authenticate to MCP, even though a browser session is used to approve
 the OAuth grant.
 
+### From the MCP Registry
+
+Beancount.io publishes the hosted endpoint to the official MCP Registry
+(`registry.modelcontextprotocol.io`) as **`io.beancount/beancount`** (see
+[Publishing the registry listing](#publishing-the-registry-listing)). Clients,
+subregistries, and aggregators that read the registry — Smithery and PulseMCP
+are among those the registry's own documentation names — install it from there
+on their own schedule. The entry names `https://beancount.io/api-gateway/mcp` and nothing else:
+no header and no package, so a client that installs it meets the same `401` and
+discovery chain as one configured by hand, and signs in with the OAuth flow
+above. Claude Code and Codex do not browse the registry; configure them with the
+URL as described earlier in this section.
+
+A self-hosted deployment is not in the listing; configure its URL by hand.
+
+To inspect the published entry:
+
+```bash
+curl -fsS "https://registry.modelcontextprotocol.io/v0.1/servers/io.beancount%2Fbeancount/versions/latest" \
+  | jq '{_meta, server: (.server | {name, version, remotes})}'
+```
+
 ## Permissions and ledger boundaries
 
 The current implementation computes cumulative capabilities from the grant:
@@ -791,6 +813,68 @@ Conformance says whether a client can connect. To see whether real coding agents
 complete ordinary ledger tasks through the surface — correct answers, the right
 ledger changes, and the calls, time, and cost it took — run the
 [MCP agent journeys](./mcp-agent-eval.md) with Claude Code and Codex.
+
+### Publishing the registry listing
+
+The listing is [`server.json`](../server.json) at this package's root: name,
+title, a description of at most 100 characters, `version`, the repository, an
+icon, and one `streamable-http` remote at `https://beancount.io/api-gateway/mcp`.
+A test in [`well-known-route.test.ts`](../src/features/well-known/api/__tests__/well-known-route.test.ts)
+fails if its remote URL or version drifts from what `/.well-known/mcp.json`
+advertises.
+
+The registry grants the `io.beancount/*` namespace to whoever proves control of
+`beancount.io`. This deployment proves it over HTTP: `MCP_REGISTRY_AUTH_PROOF`
+holds the public half of an Ed25519 key as the record
+`v=MCPv1; k=ed25519; p=<base64 public key>`, and the backend serves it at
+`GET /.well-known/mcp-registry-auth`. Unset, the route answers 404 — a self-host
+must not serve Beancount.io's key, because that would let Beancount.io publish
+under the self-host's namespace. The registry also accepts a DNS TXT record with
+the same content at the domain apex; this repository documents only the HTTP
+path.
+
+Generate the key pair with OpenSSL 3 (macOS's system LibreSSL lacks Ed25519 in
+`genpkey`; `brew install openssl@3` and call that binary):
+
+```bash
+openssl genpkey -algorithm Ed25519 -out key.pem
+# MCP_REGISTRY_AUTH_PROOF — the public record production serves
+echo "v=MCPv1; k=ed25519; p=$(openssl pkey -in key.pem -pubout -outform DER | tail -c 32 | base64)"
+# MCP_REGISTRY_PRIVATE_KEY — 64 hex characters, the GitHub environment secret
+openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n'
+```
+
+Keep `key.pem` and the hex private key out of the repository.
+
+Publishing runs in GitHub Actions. The `Publish (mcp registry)` workflow
+([`publish-mcp-registry.yml`](../../../.github/workflows/publish-mcp-registry.yml))
+validates `server.json` on every pull request or push that touches it, and
+publishes on a push to `main` whose commits changed it, or on a
+`workflow_dispatch` with `publish` set. The publish job runs under the
+`mcp-registry-publish` environment, whose secret `MCP_REGISTRY_PRIVATE_KEY` is
+the hex private key; restrict that environment to `main` and add a required
+reviewer. Before signing in, the job checks that production serves the proof
+record and that the registry does not already have this version.
+
+Published versions are immutable. To change anything in the listing, bump
+`version` in `server.json` — the registry marks the highest semantic version
+`latest` — or the publish fails with a message saying so.
+
+To publish by hand instead, from `backend-cluster/backend-v2/`:
+
+```bash
+mcp-publisher validate server.json
+mcp-publisher login http --domain beancount.io --private-key "$MCP_REGISTRY_PRIVATE_KEY"
+mcp-publisher publish server.json
+```
+
+Verify either path:
+
+```bash
+curl -fsS https://beancount.io/.well-known/mcp-registry-auth
+curl -fsS "https://registry.modelcontextprotocol.io/v0.1/servers/io.beancount%2Fbeancount/versions/latest" \
+  | jq '{_meta, server: (.server | {name, version, remotes})}'
+```
 
 ## Implementation references
 

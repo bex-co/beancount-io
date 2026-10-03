@@ -198,7 +198,7 @@ Stance: no Muse-specific code. A submission uses D1's URL, offers both paths —
 - **In-chat UI for ChatGPT** (MCP Apps `ui://` resources, Apps SDK components). That is a product decision needing its own record; ChatGPT gets the tool surface.
 - **Host-specific tools, descriptions, or endpoints** — see D1.
 - **Anthropic-held credentials or a predefined ChatGPT client.** Both end per-connection registration, but each is a per-host secret to hold and rotate, and CIMD ends it with no secret. Revisit if a directory requires one.
-- **Submitting directory listings.** Listing on Claude's directory, ChatGPT's app directory, or Muse's is a product decision; this record makes the technical prerequisites true.
+- **Submitting directory listings.** Listing on Claude's directory, ChatGPT's app directory, or Muse's is a product decision; this record makes the technical prerequisites true. The official MCP Registry is the one exception, taken up in [Amendments](#amendments): it needs none of this record's decisions.
 - **The paid-plan rule for API keys.** D2 records its effect; it does not change it.
 
 ## Alternatives Considered
@@ -260,6 +260,7 @@ Nothing has landed. D3, D4, and D6 land in that order, each depending on the one
 | D8 | Host fixtures in `oidc-route.test.ts`; metadata checks in `scripts/mcp-conformance.ts` |
 | D9 | Edge-rule review for `/.well-known/*`, `/api-gateway/oauth/*`, and `/api-gateway/mcp` |
 | Docs | Per-host setup notes in `docs/mcp.md` under "Connect a client", once each host has a fixture |
+| Listing | `backend-cluster/backend-v2/server.json`, the `/.well-known/mcp-registry-auth` route behind `MCP_REGISTRY_AUTH_PROOF`, and `.github/workflows/publish-mcp-registry.yml` — see [Amendments](#amendments) (2026-10-02); tracked as `.pm/w2/m36` |
 
 ## Open Questions
 
@@ -267,7 +268,13 @@ Ledger scope was settled on 2026-09-27: [MCP connections should access all autho
 
 - **Is Codex a fair stand-in for a tools-only host** in `yarn mcp:agent-eval`? ChatGPT cannot be driven by the harness, and D7's deferred bridge needs transcripts from a host that never reads resources.
 - **Does ChatGPT surface MCP resources to the model at all?** OpenAI's documentation describes integrations as tool-driven and resources as carriers for UI, but nobody has examined a transcript.
-- **Which directory comes first** — Claude's, ChatGPT's, or Muse's — is a product question this record leaves open.
+- **Which directory comes first** — answered in part on 2026-10-02 ([Amendments](#amendments)): the official MCP Registry listing ships first, because it needs none of D3–D9. The order among Claude's, ChatGPT's, and Muse's directories remains open.
+
+## Amendments
+
+### 2026-10-02 — The official MCP Registry listing goes first
+
+The open question "which directory comes first" is answered for a directory this record did not name. The hosted endpoint is published to the official MCP Registry (`registry.modelcontextprotocol.io`) as `io.beancount/beancount`, from `backend-cluster/backend-v2/server.json`, by `.github/workflows/publish-mcp-registry.yml`; the work is tracked as `.pm/w2/m36`. It goes first because it depends on none of D3–D9: the listing names D1's URL and nothing else — no header, no package — so a client that installs from it meets the same `401` and discovery chain as one configured by hand; the registry checks only that the remote is HTTPS and that the publisher controls `beancount.io`; and subregistries and aggregators — Smithery and PulseMCP among those the registry's own documentation names — read its API, so one listing reaches several hosts at once. Domain control is proven over HTTP: `GET /.well-known/mcp-registry-auth` serves the signing key's public record from `MCP_REGISTRY_AUTH_PROOF`, and answers 404 when unset so a self-host never vouches for Beancount.io's key (ADR 0009 indexes the path). Published versions are immutable, so a listing change bumps `version`. Claude's, ChatGPT's, and Muse's directories still wait on D3–D9 and on each host's own review; their order remains open.
 
 ## References
 
