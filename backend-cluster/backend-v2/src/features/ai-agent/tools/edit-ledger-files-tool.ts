@@ -1,6 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { logger } from "@/shared/logger";
+import { BadUserInputError } from "@/shared/errors";
 import type { LedgerChangeFileOperation } from "@/foundation/fava/Api";
 import type { ToolContext } from "./types";
 import { toolOutputSchema, withWriteOutcome } from "./types";
@@ -228,8 +229,12 @@ export async function executeEditLedgerFiles(
         if (count === 0)
           throw new Error(`${f.path}: old_string not found in file`);
         if (count > 1)
-          throw new Error(
+          // The caller's to fix by sending more context. As a plain Error it
+          // read as a server fault with a hint to retry (w5/036).
+          throw new BadUserInputError(
             `${f.path}: old_string matches ${count} times (must match exactly once — add more context lines)`,
+            "old_string",
+            "Extend `old_string` with neighbouring lines until it is unique in the file, or use `replace` to overwrite the whole file.",
           );
         operations.push({
           operation: "update",

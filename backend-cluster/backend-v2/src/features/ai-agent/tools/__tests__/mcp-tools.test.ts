@@ -396,6 +396,12 @@ describe("executeEditLedgerFiles", () => {
       },
     );
     expect(result.ok).toBe(false);
+    // Ambiguity is the caller's to fix, not a server fault to retry (w5/036).
+    expect(result).toMatchObject({
+      errorCode: "BAD_USER_INPUT",
+      error: expect.stringContaining("matches 2 times"),
+      errorHint: expect.stringContaining("old_string"),
+    });
     expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
   });
 

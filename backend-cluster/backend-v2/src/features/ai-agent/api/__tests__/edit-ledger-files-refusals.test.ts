@@ -32,7 +32,13 @@ async function fixture() {
         success: true,
         data: files
           .filter((path) => existing.has(path))
-          .map((path) => ({ path, name: path, type: "file", sha: "s1" })),
+          .map((path) => ({
+            path,
+            name: path,
+            type: "file",
+            sha: "s1",
+            content: '2026-01-05 * "Cafe"\n2026-02-05 * "Cafe"\n',
+          })),
       },
     }),
   );
@@ -70,6 +76,23 @@ async function fixture() {
           files: [{ operation: "create", path, content: "; new\n" }],
         },
       }),
+    update: (old_string: string) =>
+      client.callTool({
+        name: "editLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "rename a payee",
+          dry_run: true,
+          files: [
+            {
+              operation: "update",
+              path: "main.bean",
+              old_string,
+              new_string: "Bakery",
+            },
+          ],
+        },
+      }),
     close: async () => {
       await client.close();
       await server.close();
@@ -91,6 +114,26 @@ describe("previewing a create over an existing file", () => {
       expect(error.hint).toContain("replace");
       // The category's fallback hint is about entry editing; it must not win.
       expect(error.hint).not.toContain("getEntryContext");
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+/** w5/036: an ambiguous `old_string` is the caller's to fix, in production too. */
+describe("an old_string that matches more than once", () => {
+  it("is refused as bad input with the count and a way forward", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.update("Cafe");
+      expect(result.isError).toBe(true);
+      const { error } = result.structuredContent as {
+        error: { code: string; message: string; hint: string };
+      };
+      expect(error.code).toBe("BAD_USER_INPUT");
+      expect(error.message).toContain("matches 2 times");
+      expect(error.hint).not.toMatch(/retry/i);
       expect(f.changeLedgerFiles).not.toHaveBeenCalled();
     } finally {
       await f.close();
