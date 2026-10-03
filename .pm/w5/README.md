@@ -39,7 +39,6 @@ Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10
 
 **Low**
 
-- [051](./051.md) — Dry-run refusals say "commit failed"; the missing-file code differs between edit and rename.
 - [053](./053.md) — Pull request create with empty changes leaves its branch behind.
 - [054](./054.md) — Empty temp-asset key returns FORBIDDEN with a ledger-permission hint.
 
