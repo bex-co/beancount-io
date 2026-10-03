@@ -6168,7 +6168,8 @@
           },
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "required": true,
             "name": "collaborator",
@@ -6352,7 +6353,8 @@
           },
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "required": true,
             "name": "collaborator",

@@ -538,6 +538,52 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
       await f.close();
     }
   });
+  it.each(["update", "delete"] as const)(
+    "refuses an empty collaborator name on %s as bad input without mutation",
+    async (operation) => {
+      const f = await fixture();
+      try {
+        const mcp = await f.client.callTool({
+          name: "manageLedgerCollaborators",
+          arguments: {
+            operation,
+            ledger: "alice/main",
+            collaborator: "",
+            ...(operation === "update" && { permission: "read" }),
+          },
+        });
+        expect(mcp.isError).toBe(true);
+        expect(mcp.structuredContent).toMatchObject({
+          error: { code: "BAD_USER_INPUT" },
+        });
+        const field =
+          operation === "update"
+            ? 'addOrUpdateLedgerCollaborator(ledgerId: "alice/main", collaborator: "", permission: "read")'
+            : 'deleteLedgerCollaborator(ledgerId: "alice/main", collaborator: "")';
+        const gql = await f.gql(`mutation { ${field} { success } }`);
+        expect(gql.errors).toHaveLength(1);
+        expect(gql.errors?.[0].originalError).toMatchObject({
+          category: "BAD_USER_INPUT",
+        });
+        // REST names the collaborator in the path, so an empty one is not a
+        // route at all.
+        expect(
+          (
+            await f.request(
+              "collaborators/",
+              operation === "update" ? "PUT" : "DELETE",
+              operation === "update" ? { permission: "read" } : undefined,
+            )
+          ).status,
+        ).toBe(405);
+        expect(f.update).not.toHaveBeenCalled();
+        expect(f.remove).not.toHaveBeenCalled();
+        expect(f.members.size).toBe(2);
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("answers deleting an unknown user as bad input, without upstream internals, on every surface", async () => {
     const f = await fixture();
     try {

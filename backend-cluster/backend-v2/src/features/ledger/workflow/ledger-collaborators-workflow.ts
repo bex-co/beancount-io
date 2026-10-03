@@ -34,6 +34,20 @@ function translateUnknownUser(error: unknown, collaborator: string): unknown {
     : error;
 }
 
+/**
+ * A blank collaborator name is refused here rather than only in the adapters'
+ * schemas, because GraphQL hands its string argument over unvalidated. Sent
+ * upstream it fails opaquely and reads as a server fault.
+ */
+function assertCollaboratorName(collaborator: string): void {
+  if (collaborator.trim() === "") {
+    throw new BadUserInputError(
+      "collaborator must be a non-empty username",
+      "collaborator",
+    );
+  }
+}
+
 export type CollaboratorData = {
   id?: number;
   login?: string;
@@ -110,6 +124,7 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     permission?: "read" | "write" | "admin";
   }): Promise<{ success: boolean; message?: string }> {
     const { identity, ledgerId, collaborator, permission } = params;
+    assertCollaboratorName(collaborator);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_UPDATE,
@@ -183,6 +198,7 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     collaborator: string;
   }): Promise<{ success: boolean; message?: string }> {
     const { identity, ledgerId, collaborator } = params;
+    assertCollaboratorName(collaborator);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_DELETE,
