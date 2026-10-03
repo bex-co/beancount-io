@@ -142,7 +142,7 @@ export default function LedgerErrorsPage() {
                           // pointer-only and unreachable by keyboard.
                           <button
                             type="button"
-                            className="truncate underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                            className="cursor-pointer truncate underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                             onClick={() =>
                               handleGoToFile(
                                 err.filename || "",
