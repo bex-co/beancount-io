@@ -39,7 +39,6 @@ Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10
 
 **Medium — a caller's mistake answered as INTERNAL**
 
-- [037](./037.md) — Pull request create with an unknown base branch returns INTERNAL.
 - [038](./038.md) — Approving or rejecting an unknown pull request answers `Unknown error`.
 
 **Medium — wrong result or missing guard**
