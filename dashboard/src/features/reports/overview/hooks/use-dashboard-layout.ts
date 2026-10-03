@@ -24,11 +24,6 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
   hidden: [],
 };
 
-const PUBLIC_DASHBOARD_LAYOUT: DashboardLayout = {
-  ...DEFAULT_DASHBOARD_LAYOUT,
-  order: ["readme", ...DASHBOARD_WIDGET_IDS.filter((id) => id !== "readme")],
-};
-
 const DASHBOARD_LAYOUT_EVENT = "dashboard-layout-change";
 
 function readStoredLayout(storageKey: string): string {
@@ -86,10 +81,8 @@ export function normalizeDashboardLayout(
   };
 }
 
-export function useDashboardLayout(ledgerId: string, readmeFirst = false) {
-  const defaultLayout = readmeFirst
-    ? PUBLIC_DASHBOARD_LAYOUT
-    : DEFAULT_DASHBOARD_LAYOUT;
+export function useDashboardLayout(ledgerId: string) {
+  const defaultLayout = DEFAULT_DASHBOARD_LAYOUT;
   const storageKey = useMemo(
     () => `ledger.${ledgerId}.overview.layout.v1`,
     [ledgerId],

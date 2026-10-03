@@ -132,10 +132,7 @@ export default function LedgerOverviewPage() {
   } = useLedger();
   const { isAdmin, canWrite } = useLedgerPermission();
   const publicReader = !ledgerData.private && !canWrite;
-  const { layout, setVisible, move, reset } = useDashboardLayout(
-    ledgerId,
-    publicReader,
-  );
+  const { layout, setVisible, move, reset } = useDashboardLayout(ledgerId);
   // One customization panel for both entry points; see DashboardCustomizer.
   const [customizing, setCustomizing] = useState(false);
   const customizeOpener = useRef<HTMLElement | null>(null);
@@ -577,10 +574,6 @@ export default function LedgerOverviewPage() {
         </div>
       </section>
 
-      {publicReader && narrativeOnly && visibleWidgetIds.includes("readme") && (
-        <ErrorBoundary>{widgets.readme}</ErrorBoundary>
-      )}
-
       {reportState ? (
         <div id="overview-report-state">{reportState}</div>
       ) : !hasActivity ? (
@@ -624,6 +617,10 @@ export default function LedgerOverviewPage() {
             <ErrorBoundary>{widgets[id]}</ErrorBoundary>
           </div>
         ))
+      )}
+
+      {publicReader && narrativeOnly && visibleWidgetIds.includes("readme") && (
+        <ErrorBoundary>{widgets.readme}</ErrorBoundary>
       )}
 
       <RelatedLinks

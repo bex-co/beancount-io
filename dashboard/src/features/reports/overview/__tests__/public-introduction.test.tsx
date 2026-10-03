@@ -149,7 +149,7 @@ beforeEach(() => {
 });
 
 describe("public overview introduction", () => {
-  it("renders the authored title, introduction and one full README before reports on the server", () => {
+  it("renders the authored title and introduction, with the full README after reports on the server", () => {
     const container = document.createElement("div");
     container.innerHTML = renderToString(<LedgerOverviewPage />);
     expect(container.querySelector("h1")).toHaveTextContent(
@@ -161,8 +161,13 @@ describe("public overview introduction", () => {
     )!;
     expect(readme.textContent).toContain("Fictional stock purchases");
     expect(
-      readme.compareDocumentPosition(reports) &
+      reports.compareDocumentPosition(readme) &
         Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      container
+        .querySelector("#overview-widget-cash-flow")!
+        .compareDocumentPosition(readme) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(container.querySelectorAll("#overview-ledger-notes")).toHaveLength(
       1,
@@ -183,7 +188,14 @@ describe("public overview introduction", () => {
       else if (mode === "loading") state.loading = true;
       else state.activity = false;
       if (mode === "filtered") state.search.time = "2027-01";
-      render(<LedgerOverviewPage />);
+      const { container } = render(<LedgerOverviewPage />);
+      expect(
+        container
+          .querySelector("#overview-report-state")!
+          .compareDocumentPosition(
+            container.querySelector("#overview-ledger-notes")!,
+          ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
       expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
         "Stock & ETF Cost-Basis Example",
       );
