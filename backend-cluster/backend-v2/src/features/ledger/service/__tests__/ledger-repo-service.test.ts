@@ -402,6 +402,9 @@ describe("LedgerRepoService", () => {
     });
 
     it("runs a dry run through the same authorization and stops before the commit", async () => {
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
       await service.changeFiles({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
@@ -417,6 +420,51 @@ describe("LedgerRepoService", () => {
         "ledger.files.write",
         expect.anything(),
       );
+      expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+    });
+
+    it("refuses a dry-run create over a file that already exists", async () => {
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [{ path: "main.bean", type: "file", sha: "s1", content: "" }],
+        },
+      });
+      await expect(
+        service.changeFiles({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          operations: [
+            { operation: "create", path: "new.bean", content: "Zm9v" },
+            { operation: "create", path: "main.bean", content: "Zm9v" },
+          ],
+          message: "add files",
+          dryRun: true,
+        }),
+      ).rejects.toMatchObject({
+        category: "CONFLICT",
+        message: expect.stringContaining("main.bean already exists"),
+      });
+      expect(mockGetLedgerFilesContent).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        { files: ["new.bean", "main.bean"] },
+      );
+      expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+    });
+
+    it("lets a dry run create a path the same batch deletes first, and reads nothing without a create", async () => {
+      await service.changeFiles({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        operations: [
+          { operation: "delete", path: "main.bean", sha: "s1" },
+          { operation: "create", path: "main.bean", content: "Zm9v" },
+        ],
+        message: "recreate",
+        dryRun: true,
+      });
+      expect(mockGetLedgerFilesContent).not.toHaveBeenCalled();
       expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
     });
 

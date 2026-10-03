@@ -1,0 +1,99 @@
+import "reflect-metadata";
+jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
+jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
+import { AuthorizationService } from "@/server/api/authorization";
+import { assembleMcpRegistry } from "@/server/api/composition-root";
+import type { AppConfig } from "@/config/config";
+import type { Identity } from "@/server/api/identity";
+import type { McpRequestContext } from "../mcp-context";
+
+/**
+ * w5/035. `editLedgerFiles` promises that a dry run gives "the same refusal as
+ * the commit", and describes `create` as a new file. The preview nevertheless
+ * approved a `create` over a file that already exists. Driven through the real
+ * registry and repo service, with only the ledger client faked.
+ */
+const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
+const identity: Identity = {
+  userId: "usr_alice",
+  method: "oauth",
+  scopes: new Set(["ledger.read", "ledger.write"]),
+  tokenId: "tok_edit_preview",
+};
+
+async function fixture() {
+  const existing = new Set(["main.bean"]);
+  const getLedgerFilesContent = jest.fn(
+    async (_owner: string, _name: string, { files }: { files: string[] }) => ({
+      data: {
+        success: true,
+        data: files
+          .filter((path) => existing.has(path))
+          .map((path) => ({ path, name: path, type: "file", sha: "s1" })),
+      },
+    }),
+  );
+  const changeLedgerFiles = jest.fn();
+  const authorization = new AuthorizationService(
+    { check: jest.fn().mockResolvedValue(true) },
+    jest.fn(),
+  );
+  const services = {
+    ledgerRepo: new LedgerRepoService(
+      {
+        getPublicApiClient: async () => ({
+          ledgers: { getLedgerFilesContent, changeLedgerFiles },
+        }),
+      } as never,
+      authorization,
+    ),
+  };
+  const server = assembleMcpRegistry(
+    { identity, services } as unknown as McpRequestContext,
+    config,
+  );
+  const client = new Client({ name: "edit-preview", version: "1" });
+  const [a, b] = InMemoryTransport.createLinkedPair();
+  await Promise.all([client.connect(a), server.connect(b)]);
+  return {
+    changeLedgerFiles,
+    preview: (path: string) =>
+      client.callTool({
+        name: "editLedgerFiles",
+        arguments: {
+          ledger: "alice/main",
+          description: "add a file",
+          dry_run: true,
+          files: [{ operation: "create", path, content: "; new\n" }],
+        },
+      }),
+    close: async () => {
+      await client.close();
+      await server.close();
+    },
+  };
+}
+
+describe("previewing a create over an existing file", () => {
+  it("is refused as a conflict that names the file and the way to overwrite it", async () => {
+    const f = await fixture();
+    try {
+      const result = await f.preview("main.bean");
+      expect(result.isError).toBe(true);
+      const { error } = result.structuredContent as {
+        error: { code: string; message: string; hint: string };
+      };
+      expect(error.code).toBe("CONFLICT");
+      expect(error.message).toContain("main.bean already exists");
+      expect(error.hint).toContain("replace");
+      // The category's fallback hint is about entry editing; it must not win.
+      expect(error.hint).not.toContain("getEntryContext");
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});
