@@ -83,11 +83,8 @@ describe("MCP prompts", () => {
 
   it("returns a playbook when the caller supplies no argument values", async () => {
     // Every argument is optional, so a client that knows nothing but the
-    // prompt's name still gets a usable procedure. (`arguments: {}` rather
-    // than omitted: the SDK parses `params.arguments` against the declared
-    // shape and rejects `undefined` for any prompt that declares arguments at
-    // all — upstream behaviour, identical for every server, not a contract of
-    // ours.)
+    // prompt's name still gets a usable procedure. Omitting `arguments`
+    // altogether is covered separately below.
     for (const descriptor of MCP_PROMPTS) {
       const result = await withClient(pinned, (client) =>
         client.getPrompt({ name: descriptor.name, arguments: {} }),
@@ -184,6 +181,37 @@ describe("MCP prompts", () => {
       );
     },
   );
+
+  /**
+   * w5/045. An unknown name never reached a callback of ours: the SDK refused
+   * it as its own `McpError` — no `data.code`, no hint, and a message the
+   * client prefixed a second time.
+   */
+  it("refuses an unknown prompt name as a coded, hinted NOT_FOUND", async () => {
+    const error = await withClient(pinned, (client) =>
+      client
+        .getPrompt({ name: "no-such-prompt", arguments: {} })
+        .then(() => undefined)
+        .catch((caught: unknown) => caught as McpError),
+    );
+    expect(error?.code).toBe(-32002);
+    expect(error?.data).toMatchObject({
+      code: "NOT_FOUND",
+      hint: expect.stringContaining("prompts/list"),
+    });
+    expect((error?.data as { message: string }).message).toContain(
+      "no-such-prompt",
+    );
+    // Exactly one prefix, added by the client on receipt.
+    expect(error?.message.match(/MCP error/g)).toHaveLength(1);
+  });
+
+  it("builds a playbook fetched with no arguments at all", async () => {
+    const result = await withClient(pinned, (client) =>
+      client.getPrompt({ name: "close-month" }),
+    );
+    expect(textOf(result.messages[0].content).length).toBeGreaterThan(500);
+  });
 
   it("still builds the playbook when the arguments are well formed", async () => {
     const valid = await withClient(pinned, (client) =>

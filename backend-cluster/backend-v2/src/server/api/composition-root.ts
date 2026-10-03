@@ -25,7 +25,9 @@ import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { UriTemplate } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
 import {
   CallToolRequestSchema,
+  GetPromptRequestSchema,
   ReadResourceRequestSchema,
+  type GetPromptResult,
 } from "@modelcontextprotocol/sdk/types.js";
 import type {
   CallToolResult,
@@ -698,7 +700,40 @@ export function assembleMcpRegistry(
   // tells the agent to do is charged and authorized by the tool or resource
   // it names, at the moment the agent actually calls it. Building the body
   // per request is what lets it address this caller's ledger pin.
+  const promptBuilders = new Map<
+    string,
+    (args: Record<string, string | undefined>) => GetPromptResult
+  >();
   for (const descriptor of MCP_PROMPTS) {
+    const build = (
+      args: Record<string, string | undefined>,
+    ): GetPromptResult => {
+      try {
+        // The fixed-shape arguments are checked here rather than in the
+        // advertised `argsSchema`, so a malformed one is refused in this
+        // server's envelope instead of the SDK's prose (w4/070).
+        validatePromptArgs(args);
+        return {
+          messages: [
+            {
+              role: "user" as const,
+              content: {
+                type: "text" as const,
+                text: descriptor.build(args, toolCtx.identity),
+              },
+            },
+          ],
+        };
+      } catch (err) {
+        return refuseMcpRequest(
+          err,
+          "MCP prompt fetch failed",
+          { prompt: descriptor.name },
+          config,
+        );
+      }
+    };
+    promptBuilders.set(descriptor.name, build);
     server.registerPrompt(
       descriptor.name,
       {
@@ -706,34 +741,48 @@ export function assembleMcpRegistry(
         description: descriptor.description,
         argsSchema: descriptor.argsSchema,
       },
-      (args) => {
-        try {
-          // The fixed-shape arguments are checked here rather than in the
-          // advertised `argsSchema`, so a malformed one is refused in this
-          // server's envelope instead of the SDK's prose (w4/070).
-          validatePromptArgs(args);
-          return {
-            messages: [
-              {
-                role: "user" as const,
-                content: {
-                  type: "text" as const,
-                  text: descriptor.build(args, toolCtx.identity),
-                },
-              },
-            ],
-          };
-        } catch (err) {
-          return refuseMcpRequest(
-            err,
-            "MCP prompt fetch failed",
-            { prompt: descriptor.name },
-            config,
-          );
-        }
-      },
+      build,
     );
   }
+
+  // `prompts/list` stays the SDK's; `prompts/get` is answered here, like
+  // `tools/call` and `resources/read` above. The SDK refuses an unknown name,
+  // and an argument of the wrong type, as its own `McpError` before any
+  // callback of ours runs: no `data.code`, no hint, and a message the client
+  // prefixes a second time (w5/045). It also refused a prompt fetched with no
+  // `arguments` at all, though every argument here is optional.
+  server.server.setRequestHandler(
+    GetPromptRequestSchema,
+    async (request): Promise<GetPromptResult> => {
+      const { name } = request.params;
+      const build = promptBuilders.get(name);
+      if (!build) {
+        return refuseMcpRequest(
+          new NotFoundError(
+            "Prompt",
+            name.length > 120 ? `${name.slice(0, 120)}…` : name,
+            "No prompt by that name. Call `prompts/list` for the inventory.",
+          ),
+          "MCP prompt fetch failed",
+          { prompt: "unknown" },
+          config,
+        );
+      }
+      const descriptor = MCP_PROMPTS.find((prompt) => prompt.name === name)!;
+      const parsed = z
+        .object(descriptor.argsSchema)
+        .safeParse(request.params.arguments ?? {});
+      if (!parsed.success) {
+        return refuseMcpRequest(
+          parsed.error,
+          "MCP prompt fetch failed",
+          { prompt: name },
+          config,
+        );
+      }
+      return build(parsed.data);
+    },
+  );
 
   return server;
 }
