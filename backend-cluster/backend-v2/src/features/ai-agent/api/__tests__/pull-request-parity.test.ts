@@ -557,6 +557,34 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
       await f.close();
     }
   });
+  it.each(["approve", "reject"] as const)(
+    "answers %s of an unknown pull request as NOT_FOUND on every surface",
+    async (operation) => {
+      const f = await fixture();
+      // What the generated client throws for a number Gitea does not know.
+      f.repos.repoMergePullRequest.mockRejectedValue({ status: 404 });
+      f.repos.repoEditPullRequest.mockRejectedValue({ status: 404 });
+      try {
+        const rest = await f.call("rest", operation);
+        expect(rest.failed).toBe(true);
+        expect(rest.data).toMatchObject({ error: { code: "NOT_FOUND" } });
+        const mcp = await f.client.callTool({
+          name: "managePullRequests",
+          arguments: { operation, ledger: "alice/main", prNumber: 1 },
+        });
+        expect(mcp.isError).toBe(true);
+        expect(mcp.structuredContent).toMatchObject({
+          error: { code: "NOT_FOUND" },
+        });
+        expect(JSON.stringify(mcp.structuredContent)).not.toContain(
+          "Unknown error",
+        );
+        expect((await f.call("gql", operation)).failed).toBe(true);
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("marks failed MCP reviews as errors while retaining their domain result", async () => {
     const f = await fixture();
     try {

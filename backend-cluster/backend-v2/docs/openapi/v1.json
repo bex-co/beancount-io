@@ -4534,7 +4534,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/pull-requests/{prNumber}/approve": {
       "post": {
         "summary": "Merge a pull request",
-        "description": "Applies immediately using current repository write authority. Repository failures retain the GraphQL success/message result.",
+        "description": "Applies immediately using current repository write authority. Repository failures retain the GraphQL success/message result; a pull request number that does not exist is NOT_FOUND.",
         "tags": [
           "Ledger v1"
         ],
@@ -4724,7 +4724,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/pull-requests/{prNumber}/reject": {
       "post": {
         "summary": "Close a pull request",
-        "description": "Applies immediately using current repository write authority. Repository failures retain the GraphQL success/message result.",
+        "description": "Applies immediately using current repository write authority. Repository failures retain the GraphQL success/message result; a pull request number that does not exist is NOT_FOUND.",
         "tags": [
           "Ledger v1"
         ],

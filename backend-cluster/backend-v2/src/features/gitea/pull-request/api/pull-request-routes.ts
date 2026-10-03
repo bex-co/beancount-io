@@ -7,7 +7,10 @@ export const pullRequestCreateInput = z
     title: z.string().min(1, "title must not be empty"),
     description: z
       .string()
-      .min(1, "description must not be empty — describe what the pull request changes and why"),
+      .min(
+        1,
+        "description must not be empty — describe what the pull request changes and why",
+      ),
     baseBranch: z.string().default("main"),
     clearCommitMessage: z
       .string()
@@ -108,7 +111,7 @@ export const PULL_REQUEST_ROUTES = [
           ? "Merge a pull request"
           : "Close a pull request",
       description:
-        "Applies immediately using current repository write authority. Repository failures retain the GraphQL success/message result.",
+        "Applies immediately using current repository write authority. Repository failures retain the GraphQL success/message result; a pull request number that does not exist is NOT_FOUND.",
       params: path,
       body: z.object({}).strict(),
       responses: { 200: json("Review result", pullRequestResultSchema) },

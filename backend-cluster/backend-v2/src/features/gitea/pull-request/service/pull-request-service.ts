@@ -72,6 +72,25 @@ function clientFailureStatus(error: unknown): number | undefined {
   return typeof status === "number" ? status : undefined;
 }
 
+/**
+ * What a failed merge or close reports.
+ *
+ * A number Gitea does not know is thrown as NOT_FOUND: there is no pull
+ * request to return a review result about. Any other refusal — already
+ * merged, conflicts, a closed pull request — stays a `success: false` result,
+ * described from the response the client threw rather than as "Unknown
+ * error", which is all its missing `Error.message` used to leave.
+ */
+function reviewFailure(
+  error: unknown,
+  prNumber: number,
+): { success: false; message: string } {
+  if (clientFailureStatus(error) === 404) {
+    throw new NotFoundError("Pull request", String(prNumber));
+  }
+  return { success: false, message: describeClientFailure(error) };
+}
+
 export interface CreatedPullRequest {
   prNumber: number;
   prUrl: string;
@@ -396,9 +415,7 @@ export class PullRequestService implements IPullRequestService {
 
       return { success: true, message: "PR merged successfully" };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      return { success: false, message: errorMessage };
+      return reviewFailure(error, prNumber);
     }
   }
 
@@ -423,9 +440,7 @@ export class PullRequestService implements IPullRequestService {
 
       return { success: true, message: "PR closed successfully" };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      return { success: false, message: errorMessage };
+      return reviewFailure(error, prNumber);
     }
   }
 }

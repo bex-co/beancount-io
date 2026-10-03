@@ -365,4 +365,44 @@ describe("PullRequestService", () => {
       expect(result.message).toBe("PR closed successfully");
     });
   });
+
+  describe.each([
+    ["mergePR", "repoMergePullRequest"],
+    ["closePR", "repoEditPullRequest"],
+  ] as const)("%s failures", (method, clientCall) => {
+    it("throws NOT_FOUND for a pull request number Gitea does not know", async () => {
+      // The generated client throws the response itself, not an Error.
+      mockClient.repos[clientCall].mockRejectedValue({ status: 404 });
+
+      const failure = await service[method](identity, "o", "r", 999999).catch(
+        (error: unknown) => error,
+      );
+      expect(failure).toMatchObject({ category: "NOT_FOUND" });
+      expect((failure as Error).message).toContain("999999");
+    });
+
+    it("keeps any other refusal as a described success:false result", async () => {
+      mockClient.repos[clientCall].mockRejectedValue({
+        status: 405,
+        error: { message: "pull request is not mergeable" },
+      });
+
+      const result = await service[method](identity, "o", "r", 42);
+      expect(result).toEqual({
+        success: false,
+        message: "Gitea 405: pull request is not mergeable",
+      });
+    });
+
+    it("keeps an Error's own message", async () => {
+      mockClient.repos[clientCall].mockRejectedValue(
+        new Error("PR is no longer open"),
+      );
+
+      expect(await service[method](identity, "o", "r", 42)).toEqual({
+        success: false,
+        message: "PR is no longer open",
+      });
+    });
+  });
 });
