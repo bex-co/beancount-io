@@ -396,6 +396,77 @@ describe("a malformed resource URI", () => {
 });
 
 /**
+ * w5/041. The SDK parsed the URI with `new URL()` before consulting any
+ * template, so a string that is not a URI at all threw a bare `TypeError`:
+ * `-32603 Invalid URL` with no `data`. A URI in another scheme parsed, matched
+ * nothing — not even the `beancount://` catch-all — and got the SDK's own
+ * uncoded "not found".
+ */
+describe("a resource URI the SDK refused before any template", () => {
+  it.each(["not-a-uri", "", "beancount//alice/main/errors"])(
+    "refuses the unparseable %j as a coded, hinted BAD_USER_INPUT",
+    async (uri) => {
+      const getFilesContent = contentOf("main.beancount", "");
+      const { client, close } = await connect(ctx(getFilesContent));
+      try {
+        const error = await client
+          .readResource({ uri })
+          .then(() => undefined)
+          .catch((caught: unknown) => caught as McpError);
+        expect(error?.code).toBe(JSON_RPC_INVALID_PARAMS);
+        expect(error?.data).toMatchObject({
+          code: "BAD_USER_INPUT",
+          hint: expect.stringContaining("resources/templates/list"),
+        });
+        // One prefix — the client's own — and not the SDK's "Invalid URL".
+        expect(error?.message).toBe(
+          `MCP error ${JSON_RPC_INVALID_PARAMS}: Not a resource URI: ${uri}`,
+        );
+        expect(getFilesContent).not.toHaveBeenCalled();
+      } finally {
+        await close();
+      }
+    },
+  );
+
+  it("refuses a URI in another scheme as a coded NOT_FOUND", async () => {
+    const { client, close } = await connect(
+      ctx(contentOf("main.beancount", "")),
+    );
+    try {
+      const error = await client
+        .readResource({ uri: "https://example.com/alice/main/errors" })
+        .then(() => undefined)
+        .catch((caught: unknown) => caught as McpError);
+      expect(error?.code).toBe(-32002);
+      expect(error?.data).toMatchObject({
+        code: "NOT_FOUND",
+        hint: expect.stringContaining("resources/templates/list"),
+      });
+    } finally {
+      await close();
+    }
+  });
+
+  it("does not echo an oversized unparseable URI back in full", async () => {
+    const { client, close } = await connect(
+      ctx(contentOf("main.beancount", "")),
+    );
+    try {
+      const error = await client
+        .readResource({ uri: "x".repeat(5000) })
+        .then(() => undefined)
+        .catch((caught: unknown) => caught as McpError);
+      expect((error?.data as { message: string }).message.length).toBeLessThan(
+        200,
+      );
+    } finally {
+      await close();
+    }
+  });
+});
+
+/**
  * w4/070. An unmatched `beancount://` URI was refused by the SDK before any
  * handler of ours ran, so it arrived as `-32602` with no `data.code`, no hint,
  * and `MCP error -32602:` stamped on twice — the exact dialect w2/m28:t003

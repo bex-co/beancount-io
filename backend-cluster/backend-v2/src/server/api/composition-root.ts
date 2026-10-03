@@ -23,7 +23,10 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { UriTemplate } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
-import { CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import {
+  CallToolRequestSchema,
+  ReadResourceRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
 import type {
   CallToolResult,
   ReadResourceResult,
@@ -32,7 +35,7 @@ import { z, type ZodTypeAny } from "zod";
 
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
-import { NotFoundError } from "@/shared/errors";
+import { BadUserInputError, NotFoundError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import { runWithOperationId } from "@/shared/async-context";
 
@@ -557,11 +560,30 @@ export function assembleMcpRegistry(
     return sharedListing;
   };
 
+  // Every template with its read handler, in registration order, for the
+  // `resources/read` dispatcher below.
+  const resourceReaders: {
+    template: ResourceTemplate;
+    read: (
+      uri: URL,
+      variables: Record<string, string | string[]>,
+    ) => ReadResourceResult | Promise<ReadResourceResult>;
+  }[] = [];
+  const registerReadableResource = (
+    name: string,
+    template: ResourceTemplate,
+    metadata: { title: string; description: string; mimeType: string },
+    read: (typeof resourceReaders)[number]["read"],
+  ) => {
+    resourceReaders.push({ template, read });
+    server.registerResource(name, template, metadata, read);
+  };
+
   for (const descriptor of MCP_RESOURCES) {
     const listable =
       descriptor.listSegment !== undefined ||
       descriptor.listPerSourceFile === true;
-    server.registerResource(
+    registerReadableResource(
       descriptor.name,
       resourceTemplateFor(
         descriptor,
@@ -605,7 +627,7 @@ export function assembleMcpRegistry(
   // every other refusal on this surface uses. There is no `gateMcpCall`: this
   // reaches no service and always refuses, and the transport limiter has
   // already charged the request by the time it arrives.
-  server.registerResource(
+  registerReadableResource(
     UNKNOWN_RESOURCE,
     new ResourceTemplate(new UriTemplate(`${RESOURCE_SCHEME}://{+rest}`), {
       list: undefined,
@@ -626,6 +648,48 @@ export function assembleMcpRegistry(
         { resource: UNKNOWN_RESOURCE },
         config,
       ),
+  );
+
+  // `resources/templates/list` and `resources/list` stay the SDK's, but
+  // `resources/read` is answered here, as `tools/call` is above. The SDK's
+  // dispatcher parses the URI with `new URL()` before it consults any
+  // template, so a string that is not a URI at all threw a bare `TypeError`
+  // — `-32603 Invalid URL`, no `data.code`, no hint — and one in another
+  // scheme matched nothing and got the SDK's own uncoded "not found" (w5/041).
+  // Dispatching over the same templates in the same order keeps every other
+  // read exactly as it was.
+  server.server.setRequestHandler(
+    ReadResourceRequestSchema,
+    async (request): Promise<ReadResourceResult> => {
+      const raw = request.params.uri;
+      if (!URL.canParse(raw)) {
+        return refuseMcpRequest(
+          new BadUserInputError(
+            `Not a resource URI: ${raw.length > 120 ? `${raw.slice(0, 120)}…` : raw}`,
+            "uri",
+            `A resource URI looks like \`${RESOURCE_SCHEME}://{owner}/{name}/<segment>\`. Call \`resources/templates/list\` for the inventory.`,
+          ),
+          "MCP resource read failed",
+          { resource: UNKNOWN_RESOURCE },
+          config,
+        );
+      }
+      const uri = new URL(raw);
+      for (const { template, read } of resourceReaders) {
+        const variables = template.uriTemplate.match(uri.toString());
+        if (variables) return read(uri, variables);
+      }
+      return refuseMcpRequest(
+        new NotFoundError(
+          "Resource",
+          uri.href,
+          `No resource template matches that URI. Call \`resources/templates/list\` for the inventory; a ledger read is \`${RESOURCE_SCHEME}://{owner}/{name}/<segment>\`.`,
+        ),
+        "MCP resource read failed",
+        { resource: UNKNOWN_RESOURCE },
+        config,
+      );
+    },
   );
 
   // Prompts are static playbook text (w2/008): user-initiated, selected
