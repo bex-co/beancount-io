@@ -39,7 +39,6 @@ Findings from the MCP QA auth sweep against the hosted endpoint, triaged 2026-10
 
 **Medium — a caller's mistake answered as INTERNAL**
 
-- [031](./031.md) — Reading an unknown pull request returns INTERNAL.
 - [033](./033.md) — Invalid directive date crashes as an INTERNAL `RangeError`.
 - [034](./034.md) — Bank-connection `dry_run` refusal is INTERNAL on MCP, 400 on REST.
 - [036](./036.md) — `editLedgerFiles` ambiguous `old_string` returns INTERNAL.
