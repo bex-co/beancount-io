@@ -76,6 +76,9 @@ export function favaApiErrorToDomainError(
     return new ConflictError("Ledger", "Name already exists", {
       reasonCode: LEDGER_NAME_ALREADY_EXISTS,
       field: "name",
+      // Without one, MCP falls back to the CONFLICT category's hint, which is
+      // about re-reading an entry's hash — nothing to do with a name (w5/042).
+      hint: "Choose a different ledger name. Your existing ledgers are listed by `listLedgers`.",
     });
   }
 

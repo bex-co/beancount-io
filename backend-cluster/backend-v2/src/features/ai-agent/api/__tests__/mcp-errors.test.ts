@@ -11,6 +11,8 @@ import {
   McpRequestFailure,
   renderErrorText,
 } from "../mcp-errors";
+import { favaApiErrorToDomainError } from "@/foundation/fava/error-to-domain";
+import { FavaApiError } from "@/foundation/fava/api-client";
 import {
   BadUserInputError,
   ConfigurationError,
@@ -99,6 +101,27 @@ describe("envelopeFromThrown", () => {
         new BadUserInputError("ledgerScope must be owner/name"),
       ).hint,
     ).toMatch(/tools\/list publishes each tool's input schema|`tools\/list`/);
+  });
+
+  /**
+   * w5/042. The CONFLICT fallback is about re-reading an entry's hash, which
+   * sent an agent that had picked a taken ledger name off to edit entries.
+   */
+  it("tells a ledger-name conflict to pick another name, not to re-read an entry", () => {
+    const envelope = envelopeFromThrown(
+      favaApiErrorToDomainError(
+        new FavaApiError("duplicate", 400, {
+          success: false,
+          error: "Ledger name conflict",
+          code: "ledger_name_already_exists",
+        }),
+        "create ledger",
+      ),
+    );
+    expect(envelope.code).toBe("CONFLICT");
+    expect(envelope.hint).toMatch(/different ledger name/);
+    expect(envelope.hint).toContain("listLedgers");
+    expect(envelope.hint).not.toContain("getEntryContext");
   });
 
   it("carries retryAfter for a rate-limit refusal", () => {

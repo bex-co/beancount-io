@@ -237,6 +237,7 @@ describe("createLedger operation", () => {
           reason: "Name already exists",
           reasonCode: "LEDGER_NAME_ALREADY_EXISTS",
           field: "name",
+          hint: expect.stringContaining("different ledger name"),
         });
       }
     });
