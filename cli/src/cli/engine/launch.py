@@ -497,7 +497,12 @@ def helper_command() -> tuple[list[str], dict[str, str] | None]:
 
 
 def _module_command(python: Path) -> list[str]:
-    return [str(python), "-m", "bea_engine"]
+    # `-P`: `-m` would otherwise put the working directory first on the
+    # module path, so a `regex.py` in whatever folder bea ran from was
+    # imported ahead of the standard library, and a plugin resolved from cwd
+    # only in the helper, never in bean-check (w1/098). The managed engine
+    # requires Python 3.12, and `-P` exists since 3.11.
+    return [str(python), "-P", "-m", "bea_engine"]
 
 
 def _helper_env(source_root: Path | None = None) -> dict[str, str] | None:

@@ -152,7 +152,7 @@ class TestResolution:
 
         command, _env = launch.helper_command()
 
-        assert command == [sys.executable, "-m", "bea_engine"]
+        assert command == [sys.executable, "-P", "-m", "bea_engine"]
 
     def test_a_provisioned_engine_beats_the_checkout(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         root = fake_venv(tmp_path / "engine")
@@ -160,7 +160,7 @@ class TestResolution:
 
         command, env = launch.helper_command()
 
-        assert command == [str(root / "bin" / "python"), "-m", "bea_engine"]
+        assert command == [str(root / "bin" / "python"), "-P", "-m", "bea_engine"]
         # Live checkout source still wins for the helper module itself.
         assert env is not None
         assert str(SOURCE_ROOT) in env["PYTHONPATH"]
@@ -171,7 +171,7 @@ class TestResolution:
 
         command, env = launch.helper_command()
 
-        assert command == [sys.executable, "-m", "bea_engine"]
+        assert command == [sys.executable, "-P", "-m", "bea_engine"]
         assert env is not None
         assert str(SOURCE_ROOT) in env["PYTHONPATH"]
 

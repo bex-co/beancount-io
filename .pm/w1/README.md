@@ -56,7 +56,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [092](./092.md) — `add transaction --json` output for a `{{total}}` cost is refused when fed back if the balancing leg was omitted — **minor**, CLI QA 2026-10-03.
 - [093](./093.md) — `add transaction --json` output drops a `@@` total, so feeding it back writes a repeating `@` unit price — **minor**, CLI QA 2026-10-03.
 - [094](./094.md) — Bulk-added posting metadata is written at posting indentation, so it reads as transaction metadata — **minor**, CLI QA 2026-10-03.
-- [098](./098.md) — The engine imports Python modules from the current directory, so untrusted folders run code and `check` modes disagree — **major**, CLI QA 2026-10-03.
 - [099](./099.md) — Ledger writes keep only mode bits: group, ACLs, extended attributes and file flags are dropped — **major**, CLI QA 2026-10-03.
 - [100](./100.md) — Appending to a ledger without a final newline drops the blank line before the new entry — **minor**, CLI QA 2026-10-03.
 - [108](./108.md) — Unknown keys inside bulk `units`/`cost`/`price` are silently dropped, so a typo sells the wrong lot — **major**, CLI QA 2026-10-03.
