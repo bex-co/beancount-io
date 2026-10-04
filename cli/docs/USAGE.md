@@ -859,7 +859,9 @@ dates and amounts retain their types, including when single-add JSON is reused
 for bulk entry. Inner quotes force a string, e.g. `--meta 'code:"1234"'`;
 `--meta 'note:""'` writes an empty string. Repeat `--meta` for different keys;
 keys must be distinct and cannot use the reserved source fields `filename` or
-`lineno`.
+`lineno`. A date-shaped value in any spelling Beancount reads (`2026-02-30`,
+`2026/02/30`, `2026-2-30`) that is not a real calendar day is refused rather
+than stored as text.
 
 `add commodity` takes the same `--meta`, which is how a symbol becomes more than
 a date and a ticker — `--meta 'name:Vanguard 500 Index' --meta

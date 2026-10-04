@@ -55,7 +55,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [075](./075.md) — Write locks are case-sensitive on macOS, so writers using differently-cased paths can lose an add (partly verified) — **minor**, CLI QA 2026-10-02.
 - [099](./099.md) — Ledger writes keep only mode bits: group, ACLs, extended attributes and file flags are dropped — **major**, CLI QA 2026-10-03.
 - [100](./100.md) — Appending to a ledger without a final newline drops the blank line before the new entry — **minor**, CLI QA 2026-10-03.
-- [164](./164.md) — The `--meta` invalid-date check misses slash and unpadded dates and stores them as strings — **minor**, CLI QA 2026-10-03.
 - [165](./165.md) — `add document` accepts a `../` path outside the ledger directory that the next `bea check` rejects (as "absolute") — **minor**, CLI QA 2026-10-03.
 - [167](./167.md) — A refused bulk add without `--partial` reloads the ledger once per row just to build its hint — **minor**, CLI QA 2026-10-03.
 - [169](./169.md) — A schema-invalid bulk batch suggests `--partial` "for some of the 0" valid rows — **minor**, CLI QA 2026-10-03.

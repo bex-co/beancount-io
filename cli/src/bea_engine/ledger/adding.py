@@ -888,7 +888,9 @@ def _parse_metadata(items: list[str]) -> dict[str, Any]:
                 f"Invalid --meta key {key!r}; Beancount rejected it ({errors[0].message}).",
                 details=[str(error.message) for error in errors],
             )
-        elif re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
+        elif re.fullmatch(r"[0-9]{4}[-/][0-9]{1,2}[-/][0-9]{1,2}", raw):
+            # Beancount's date grammar: a slash or unpadded spelling of an
+            # impossible day used to fall through and be stored as text.
             raise protocol.UsageError(
                 f"Invalid --meta date for {key!r}: {raw!r} is not a valid calendar date. "
                 "Use YYYY-MM-DD (for example 2020-01-15). Nothing was written."
