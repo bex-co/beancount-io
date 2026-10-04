@@ -75,8 +75,14 @@ PLANS = {
     "README.md": DocPlan(expect={2: (0, ["987.50"])}),
     # Example gallery: every fence starts from the same seeded ledger, except
     # the init fence, which creates it. The check fence ends on the bare
-    # `bea query`, which needs a terminal and exits 2 without one.
-    "USAGE.md": DocPlan(mode="isolated", setup=USAGE_SETUP, setup_skip=frozenset({3}), expect={4: (2, [])}),
+    # `bea query`, which needs a terminal and exits 2 without one; its message
+    # proves the fence ran to that last line rather than stopping earlier.
+    "USAGE.md": DocPlan(
+        mode="isolated",
+        setup=USAGE_SETUP,
+        setup_skip=frozenset({3}),
+        expect={4: (2, ["A query is required"])},
+    ),
     # Narratives share one directory; the examples/ copy serves the --config,
     # --rules, and CSV paths the walkthroughs reference.
     "IMPORTING.md": DocPlan(setup=["mkdir -p docs", "cp -r _EXAMPLES_ docs/examples"]),
@@ -140,6 +146,17 @@ def script_for(body: str) -> str | None:
     if not any(ln.strip() and not ln.strip().startswith("#") for ln in kept):
         return None
     return "\n".join(kept)
+
+
+# Prepended to every fence; reports the (1-based, trap line included) line of
+# the command that ended the fence, so an expected failure can be pinned to it.
+FAILED_LINE_TRAP = "trap 'echo \"__bea_doc_failed_line=$LINENO\" >&2' ERR\n"
+
+
+def last_command_line(script: str) -> int:
+    """The 1-based line of the last command in a fence script."""
+    lines = script.splitlines()
+    return max(i for i, ln in enumerate(lines, 1) if ln.strip() and not ln.strip().startswith("#"))
 
 
 def run_script(script: str, cwd: Path, env: dict[str, str]) -> subprocess.CompletedProcess[str]:
@@ -212,13 +229,22 @@ def run_doc(doc: str, path: Path, plan: DocPlan, tmp_path: Path, env: dict[str, 
                 )
                 for line in setup:
                     cwd = apply_cd(line, cwd, fence_root)
-        result = run_script(script, cwd, env)
+        result = run_script(FAILED_LINE_TRAP + script, cwd, env)
         expected, fragments = plan.expect.get(fence.index, (0, []))
         label = f"{doc} fence {fence.index} (line {fence.line})"
         assert result.returncode == expected, (
             f"{label}: exit {result.returncode}, expected {expected}\n"
             f"--- script ---\n{script}\n--- stderr ---\n{result.stderr[-3000:]}"
         )
+        if expected:
+            # Under `bash -e` a failure ends the fence, so an expected failure
+            # anywhere but the last command would leave later lines untested.
+            failed = re.findall(r"__bea_doc_failed_line=(\d+)", result.stderr)
+            assert failed and int(failed[-1]) - 1 == last_command_line(script), (
+                f"{label}: expected exit {expected} from its last command, but it failed at "
+                f"script line {int(failed[-1]) - 1 if failed else '?'}; later lines never ran\n"
+                f"--- script ---\n{script}"
+            )
         combined = result.stdout + result.stderr
         for fragment in fragments:
             assert fragment in combined, f"{label}: missing {fragment!r}\n{combined[-3000:]}"

@@ -312,16 +312,17 @@ bea format -i .                    # rewrite every .bean/.beancount file under a
 bea format . --dry-run             # write nothing; list the files that would change
 bea format . --check               # CI/pre-commit gate: alignment, parseable files, complete includes
 
+# Upstream's own diagnostics and generators; a location is [FILE:]LINENO
+bea doctor context main.bean main.bean:22   # the entry at that line, as an include spells it
+bea doctor context main.bean 22             # a bare line number means the root file
+bea example --seed 1 -o example.beancount
+bea query "SELECT account, sum(position) GROUP BY account" > balances.txt
+bea treeify < balances.txt                  # the account column drawn as a tree
+
 # Run a BQL query and print a table; omit the query for the interactive shell
 bea query "SELECT account, sum(position) GROUP BY account"
 bea query "PRINT"          # parseable directives, not a table
 bea query                  # needs a terminal; exits 2 without one
-
-# Upstream's own diagnostics and generators
-bea doctor context main.bean txns/jan.bean:4
-bea doctor context main.bean 2026-01-02
-bea example --seed 1 -o example.beancount
-bea treeify < balances.txt
 ```
 
 `bea doctor region` and `bea doctor linked` number their balance tree from the
