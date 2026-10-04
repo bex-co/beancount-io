@@ -9,6 +9,7 @@ import typer
 from cli import context, output
 from cli.commands.cloud.generated.ledger import register_ledger_commands
 from cli.errors import LedgerError, unknown_write_outcome
+from cli.utils import single_line
 
 ledger_app = typer.Typer(help="Manage hosted ledgers on beancount.io", no_args_is_help=True, rich_markup_mode=None)
 
@@ -23,16 +24,18 @@ def _clone_failure_message(ledger_name: str | None, error: object) -> str:
     from . import manager
 
     assert isinstance(error, manager.CloneError)
-    detail = f" ({error.diagnostic})" if error.diagnostic else ""
+    # Server-supplied text (names, URLs, and git's report of what the remote
+    # said) is escaped like any untrusted table cell before it reaches stderr.
+    detail = f" ({single_line(error.diagnostic)})" if error.diagnostic else ""
+    remote = single_line(error.git_remote_url)
     if ledger_name:
-        remote = error.git_remote_url or "<remote>"
         return (
-            f"Ledger '{ledger_name}' was created but could not be cloned{detail}. "
-            f"Clone it manually with: git clone {remote}"
+            f"Ledger '{single_line(ledger_name)}' was created but could not be cloned{detail}. "
+            f"Clone it manually with: git clone {remote or '<remote>'}"
         )
     if error.diagnostic:
-        return f"Clone failed for {error.git_remote_url}{detail}."
-    return f"Clone failed for {error.git_remote_url}. Ensure you have SSH access."
+        return f"Clone failed for {remote}{detail}."
+    return f"Clone failed for {remote}. Ensure you have SSH access."
 
 
 @ledger_app.command("create")
@@ -69,11 +72,12 @@ def ledger_create(
         raise unknown_write_outcome(f"Creating ledger '{name}'", e) from e
 
     if not ctx.json_output:
-        typer.echo(f"name:     {ledger.name}")
-        typer.echo(f"fullName: {ledger.full_name}")
+        # Every value is server text: escape it so it cannot drive the terminal.
+        typer.echo(f"name:     {single_line(ledger.name)}")
+        typer.echo(f"fullName: {single_line(ledger.full_name)}")
         typer.echo(f"private:  {'yes' if ledger.private else 'no'}")
-        typer.echo(f"httpUrl:  {ledger.http_url}")
-        typer.echo(f"sshUrl:   {ledger.ssh_url}")
+        typer.echo(f"httpUrl:  {single_line(ledger.http_url)}")
+        typer.echo(f"sshUrl:   {single_line(ledger.ssh_url)}")
 
     if clone:
         try:
@@ -81,9 +85,9 @@ def ledger_create(
             target = directory or manager.default_clone_dir(ledger.name)
         except manager.UnsafeCloneSource as e:
             raise LedgerError(
-                f"Ledger '{ledger.full_name}' was created but was not cloned. {e}", result=asdict(ledger)
+                f"Ledger '{single_line(ledger.full_name)}' was created but was not cloned. {e}", result=asdict(ledger)
             ) from e
-        output.note(f"Cloning repository to '{target}'...")
+        output.note(f"Cloning repository to '{single_line(str(target))}'...")
         try:
             manager.clone_ledger(
                 ledger.ssh_url,
@@ -118,7 +122,8 @@ def ledger_clone(
     ledger = manager.get_ledger(authenticated_client(), full_name)
     manager.check_clone_url(ledger.ssh_url)
     target = directory or manager.default_clone_dir(ledger.name)
-    output.note(f"Cloning '{ledger.full_name}' to '{target}'...")
+    shown_name, shown_target = single_line(ledger.full_name), single_line(str(target))
+    output.note(f"Cloning '{shown_name}' to '{shown_target}'...")
     try:
         manager.clone_ledger(
             ledger.ssh_url,
@@ -128,4 +133,4 @@ def ledger_clone(
         )
     except manager.CloneError as e:
         raise LedgerError(_clone_failure_message(None, e)) from e
-    output.success(f"Ledger '{ledger.full_name}' cloned to '{target}'.")
+    output.success(f"Ledger '{shown_name}' cloned to '{shown_target}'.")

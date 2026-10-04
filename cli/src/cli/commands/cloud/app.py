@@ -125,8 +125,12 @@ def cloud_status() -> None:
         )
         return
 
+    from cli.utils import single_line
+
+    # Email, username and tier are server text, and the expiry is read from a
+    # file: escape them so none can drive the terminal or forge a line.
     typer.echo(f"Source:    {creds.source}")
-    typer.echo(f"Expires:   {creds.expire_at or '(unknown — supplied by BEA_TOKEN)'}")
-    typer.echo(f"Email:     {user.email}")
-    typer.echo(f"Username:  {username if username else '(not set)'}")
-    typer.echo(f"Tier:      {user.tier}")
+    typer.echo(f"Expires:   {single_line(creds.expire_at) if creds.expire_at else '(unknown — supplied by BEA_TOKEN)'}")
+    typer.echo(f"Email:     {single_line(user.email)}")
+    typer.echo(f"Username:  {single_line(username) if username else '(not set)'}")
+    typer.echo(f"Tier:      {single_line(user.tier)}")
