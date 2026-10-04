@@ -6,44 +6,31 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.get_api_gateway_v1_public_keys_key_id_response_200 import GetApiGatewayV1PublicKeysKeyIdResponse200
 from ...models.v1_error import V1Error
-from ...types import UNSET, Response, Unset
+from ...types import Response
 
 
 def _get_kwargs(
-    owner: str,
-    name: str,
-    *,
-    branch: str | Unset = "main",
-    page: int | Unset = 1,
-    limit: int | Unset = 30,
+    key_id: int,
 ) -> dict[str, Any]:
-
-    params: dict[str, Any] = {}
-
-    params["branch"] = branch
-
-    params["page"] = page
-
-    params["limit"] = limit
-
-    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/api-gateway/v1/ledgers/{owner}/{name}/commits".format(
-            owner=quote(str(owner), safe=""),
-            name=quote(str(name), safe=""),
+        "url": "/api-gateway/v1/public-keys/{key_id}".format(
+            key_id=quote(str(key_id), safe=""),
         ),
-        "params": params,
     }
 
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Any | V1Error | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> GetApiGatewayV1PublicKeysKeyIdResponse200 | V1Error | None:
     if response.status_code == 200:
-        response_200 = response.json()
+        response_200 = GetApiGatewayV1PublicKeysKeyIdResponse200.from_dict(response.json())
+
         return response_200
 
     if response.status_code == 400:
@@ -97,7 +84,9 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[Any | V1Error]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[GetApiGatewayV1PublicKeysKeyIdResponse200 | V1Error]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -107,39 +96,27 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
 
 def sync_detailed(
-    owner: str,
-    name: str,
+    key_id: int,
     *,
     client: AuthenticatedClient,
-    branch: str | Unset = "main",
-    page: int | Unset = 1,
-    limit: int | Unset = 30,
-) -> Response[Any | V1Error]:
-    """List commits with branch and pagination controls
+) -> Response[GetApiGatewayV1PublicKeysKeyIdResponse200 | V1Error]:
+    """Read the caller's SSH public key
 
-     List commits with branch and pagination controls
+     Administrative account operation. The key is fetched using the authenticated user's key API.
 
     Args:
-        owner (str): Ledger owner's username Example: alice.
-        name (str): Ledger (repository) name Example: main-ledger.
-        branch (str | Unset):  Default: 'main'.
-        page (int | Unset):  Default: 1.
-        limit (int | Unset):  Default: 30.
+        key_id (int):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | V1Error]
+        Response[GetApiGatewayV1PublicKeysKeyIdResponse200 | V1Error]
     """
 
     kwargs = _get_kwargs(
-        owner=owner,
-        name=name,
-        branch=branch,
-        page=page,
-        limit=limit,
+        key_id=key_id,
     )
 
     response = client.get_httpx_client().request(
@@ -150,77 +127,53 @@ def sync_detailed(
 
 
 def sync(
-    owner: str,
-    name: str,
+    key_id: int,
     *,
     client: AuthenticatedClient,
-    branch: str | Unset = "main",
-    page: int | Unset = 1,
-    limit: int | Unset = 30,
-) -> Any | V1Error | None:
-    """List commits with branch and pagination controls
+) -> GetApiGatewayV1PublicKeysKeyIdResponse200 | V1Error | None:
+    """Read the caller's SSH public key
 
-     List commits with branch and pagination controls
+     Administrative account operation. The key is fetched using the authenticated user's key API.
 
     Args:
-        owner (str): Ledger owner's username Example: alice.
-        name (str): Ledger (repository) name Example: main-ledger.
-        branch (str | Unset):  Default: 'main'.
-        page (int | Unset):  Default: 1.
-        limit (int | Unset):  Default: 30.
+        key_id (int):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | V1Error
+        GetApiGatewayV1PublicKeysKeyIdResponse200 | V1Error
     """
 
     return sync_detailed(
-        owner=owner,
-        name=name,
+        key_id=key_id,
         client=client,
-        branch=branch,
-        page=page,
-        limit=limit,
     ).parsed
 
 
 async def asyncio_detailed(
-    owner: str,
-    name: str,
+    key_id: int,
     *,
     client: AuthenticatedClient,
-    branch: str | Unset = "main",
-    page: int | Unset = 1,
-    limit: int | Unset = 30,
-) -> Response[Any | V1Error]:
-    """List commits with branch and pagination controls
+) -> Response[GetApiGatewayV1PublicKeysKeyIdResponse200 | V1Error]:
+    """Read the caller's SSH public key
 
-     List commits with branch and pagination controls
+     Administrative account operation. The key is fetched using the authenticated user's key API.
 
     Args:
-        owner (str): Ledger owner's username Example: alice.
-        name (str): Ledger (repository) name Example: main-ledger.
-        branch (str | Unset):  Default: 'main'.
-        page (int | Unset):  Default: 1.
-        limit (int | Unset):  Default: 30.
+        key_id (int):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Any | V1Error]
+        Response[GetApiGatewayV1PublicKeysKeyIdResponse200 | V1Error]
     """
 
     kwargs = _get_kwargs(
-        owner=owner,
-        name=name,
-        branch=branch,
-        page=page,
-        limit=limit,
+        key_id=key_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -229,40 +182,28 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    owner: str,
-    name: str,
+    key_id: int,
     *,
     client: AuthenticatedClient,
-    branch: str | Unset = "main",
-    page: int | Unset = 1,
-    limit: int | Unset = 30,
-) -> Any | V1Error | None:
-    """List commits with branch and pagination controls
+) -> GetApiGatewayV1PublicKeysKeyIdResponse200 | V1Error | None:
+    """Read the caller's SSH public key
 
-     List commits with branch and pagination controls
+     Administrative account operation. The key is fetched using the authenticated user's key API.
 
     Args:
-        owner (str): Ledger owner's username Example: alice.
-        name (str): Ledger (repository) name Example: main-ledger.
-        branch (str | Unset):  Default: 'main'.
-        page (int | Unset):  Default: 1.
-        limit (int | Unset):  Default: 30.
+        key_id (int):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Any | V1Error
+        GetApiGatewayV1PublicKeysKeyIdResponse200 | V1Error
     """
 
     return (
         await asyncio_detailed(
-            owner=owner,
-            name=name,
+            key_id=key_id,
             client=client,
-            branch=branch,
-            page=page,
-            limit=limit,
         )
     ).parsed

@@ -4534,7 +4534,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/pull-requests/{prNumber}/approve": {
       "post": {
         "summary": "Merge a pull request",
-        "description": "Applies immediately using current repository write authority. Repository failures retain the GraphQL success/message result.",
+        "description": "Applies immediately using current repository write authority. Repository failures retain the GraphQL success/message result; a pull request number that does not exist is NOT_FOUND.",
         "tags": [
           "Ledger v1"
         ],
@@ -4724,7 +4724,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/pull-requests/{prNumber}/reject": {
       "post": {
         "summary": "Close a pull request",
-        "description": "Applies immediately using current repository write authority. Repository failures retain the GraphQL success/message result.",
+        "description": "Applies immediately using current repository write authority. Repository failures retain the GraphQL success/message result; a pull request number that does not exist is NOT_FOUND.",
         "tags": [
           "Ledger v1"
         ],
@@ -5459,7 +5459,7 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true,
+              "minimum": 1,
               "default": 1
             },
             "required": false,
@@ -5469,7 +5469,7 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true,
+              "minimum": 1,
               "default": 30
             },
             "required": false,
@@ -5978,7 +5978,8 @@
           },
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "required": true,
             "name": "collaborator",
@@ -6168,7 +6169,8 @@
           },
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "required": true,
             "name": "collaborator",
@@ -6352,7 +6354,8 @@
           },
           {
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "required": true,
             "name": "collaborator",
@@ -6999,10 +7002,11 @@
         "parameters": [
           {
             "schema": {
-              "type": "number",
-              "nullable": true
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
             },
-            "required": false,
+            "required": true,
             "name": "keyId",
             "in": "path"
           }
@@ -7154,10 +7158,11 @@
         "parameters": [
           {
             "schema": {
-              "type": "number",
-              "nullable": true
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
             },
-            "required": false,
+            "required": true,
             "name": "keyId",
             "in": "path"
           }

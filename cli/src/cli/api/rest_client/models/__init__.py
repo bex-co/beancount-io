@@ -34,6 +34,7 @@ from .delete_api_gateway_v1_ledgers_owner_name_star_body import DeleteApiGateway
 from .delete_api_gateway_v1_ledgers_owner_name_star_response_200 import (
     DeleteApiGatewayV1LedgersOwnerNameStarResponse200,
 )
+from .delete_api_gateway_v1_public_keys_key_id_response_200 import DeleteApiGatewayV1PublicKeysKeyIdResponse200
 from .delete_ledger_response_200 import DeleteLedgerResponse200
 from .directive_text_request import DirectiveTextRequest
 from .entries_request import EntriesRequest
@@ -128,6 +129,7 @@ from .get_api_gateway_v1_ledgers_owner_name_statements_statement_statement impor
     GetApiGatewayV1LedgersOwnerNameStatementsStatementStatement,
 )
 from .get_api_gateway_v1_legacy_journal_entries_detailed import GetApiGatewayV1LegacyJournalEntriesDetailed
+from .get_api_gateway_v1_public_keys_key_id_response_200 import GetApiGatewayV1PublicKeysKeyIdResponse200
 from .get_api_gateway_v1_public_keys_response_200_item import GetApiGatewayV1PublicKeysResponse200Item
 from .get_api_gateway_v1_social_followers_response_200 import GetApiGatewayV1SocialFollowersResponse200
 from .get_api_gateway_v1_social_followers_response_200_users_item import (
@@ -366,6 +368,7 @@ __all__ = (
     "DeleteApiGatewayV1LedgersOwnerNameCollaboratorsCollaboratorResponse200",
     "DeleteApiGatewayV1LedgersOwnerNameStarBody",
     "DeleteApiGatewayV1LedgersOwnerNameStarResponse200",
+    "DeleteApiGatewayV1PublicKeysKeyIdResponse200",
     "DeleteLedgerResponse200",
     "DirectiveTextRequest",
     "EntriesRequest",
@@ -430,6 +433,7 @@ __all__ = (
     "GetApiGatewayV1LedgersOwnerNameStatementsStatementShape",
     "GetApiGatewayV1LedgersOwnerNameStatementsStatementStatement",
     "GetApiGatewayV1LegacyJournalEntriesDetailed",
+    "GetApiGatewayV1PublicKeysKeyIdResponse200",
     "GetApiGatewayV1PublicKeysResponse200Item",
     "GetApiGatewayV1SocialFollowersResponse200",
     "GetApiGatewayV1SocialFollowersResponse200UsersItem",
