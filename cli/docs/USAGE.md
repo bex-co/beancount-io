@@ -353,8 +353,10 @@ untouched.
 `bea treeify` exits 2 when its input has no hierarchical column to render,
 naming what it looked for — piping plain text is not a tree. Its `-o`
 destination follows [Output destinations](#output-destinations): the ledger
-under read is refused, and an existing `.bean`/`.beancount` file needs
-`--force`. `bea ingest`
+under read is refused, an existing `.bean`/`.beancount` file needs
+`--force`, and a destination that is the input file is refused. The
+destination is written only after the tree renders, so a failed run leaves it
+untouched. `bea ingest`
 needs a script that calls `beangulp.Ingest(...)()`; a `CONFIG = [...]`
 import module is refused with exit 2 and pointed at `bea import --config`,
 which is the command that shape belongs to.

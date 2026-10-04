@@ -53,7 +53,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [073](./073.md) — A read-only included directory blocks every write with a raw `Errno 13` reported as a validation error — **minor**, CLI QA 2026-10-02.
 - [074](./074.md) — A signal during Beancount parsing is swallowed: a stopped write can still land, or staging copies leak — **minor**, CLI QA 2026-10-02.
 - [075](./075.md) — Write locks are case-sensitive on macOS, so writers using differently-cased paths can lose an add (partly verified) — **minor**, CLI QA 2026-10-02.
-- [084](./084.md) — `bea treeify -o` writes before deciding the run failed: failed runs clobber the destination and same-path input becomes empty — **minor**, CLI QA 2026-10-03.
 - [085](./085.md) — Unexpected engine exceptions lose their type and traceback: a bad BQL date literal exits 1 and `--debug` cannot locate it — **minor**, CLI QA 2026-10-03.
 - [086](./086.md) — `bea example` date-order guard only fires when both dates are given; one-sided or short ranges crash upstream — **minor**, CLI QA 2026-10-03.
 - [087](./087.md) — `bea format --check` is quadratic on long include chains (86 s for 1,500 files) — **minor**, CLI QA 2026-10-03.

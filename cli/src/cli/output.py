@@ -354,7 +354,19 @@ def guard_forwarded_output(
     value = forwarded_option(args, "-o", "--output")
     if value is None:
         return
-    destination = Path(value).expanduser()
+    guard_output_destination(
+        Path(value).expanduser(), ledgers, refuse_existing_ledger_file=refuse_existing_ledger_file, force=force
+    )
+
+
+def guard_output_destination(
+    destination: Path,
+    ledgers: Sequence[Path],
+    *,
+    refuse_existing_ledger_file: bool = False,
+    force: bool = False,
+) -> None:
+    """`guard_forwarded_output` for a destination the caller already parsed."""
     for ledger in ledgers:
         refuse_ledger_alias(destination, ledger)
     if (

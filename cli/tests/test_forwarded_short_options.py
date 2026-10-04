@@ -64,7 +64,6 @@ def test_ingest_preserves_glued_native_options_around_frontend_config(
 @pytest.mark.parametrize(
     ("command", "native", "seam", "program", "prefix"),
     [
-        (["treeify"], ["-o./help/tree.txt", "input.txt"], "capture_native", "treeify", []),
         (["example"], ["-o./help/example.bean"], "capture_native", "bean-example", []),
         (["price"], ["-eUSD:help/source"], "run_optional_native", "bean-price", []),
         (["check"], ["-f./help/check.log"], "run_native", "bean-check", ["{root}"]),
@@ -77,7 +76,7 @@ def test_ingest_preserves_glued_native_options_around_frontend_config(
             ["lex"],
         ),
     ],
-    ids=["treeify", "example", "price", "check-global-short-f", "doctor-leaf", "doctor-alias"],
+    ids=["example", "price", "check-global-short-f", "doctor-leaf", "doctor-alias"],
 )
 def test_other_forwarders_preserve_the_complete_unknown_short_token(
     books: Path,
@@ -100,14 +99,26 @@ def test_other_forwarders_preserve_the_complete_unknown_short_token(
         recorded_engine[seam].assert_called_once_with(program, forwarded)
 
 
-@pytest.mark.parametrize("native", [["-o", "help.out"], ["--output=help.out"], ["-of.out"]])
-def test_existing_output_spellings_still_forward(
-    books: Path, recorded_engine: dict[str, Mock], native: list[str]
+@pytest.mark.parametrize(
+    ("native", "written"),
+    [
+        (["-o", "help.out"], "help.out"),
+        (["--output=help.out"], "help.out"),
+        (["-of.out"], "f.out"),
+        (["-o./help/tree.txt"], "help/tree.txt"),
+    ],
+)
+def test_existing_output_spellings_still_reach_the_destination(
+    books: Path, recorded_engine: dict[str, Mock], native: list[str], written: str
 ) -> None:
+    """bea writes treeify's destination itself, after upstream succeeds (w1/084)."""
+    (books / "help").mkdir()
+
     result = runner.invoke(app, ["treeify", *native, "input.txt"])
 
     assert result.exit_code == 0, result.output
-    recorded_engine["capture_native"].assert_called_once_with("treeify", [*native, "input.txt"])
+    recorded_engine["capture_native"].assert_called_once_with("treeify", ["--", "input.txt"])
+    assert (books / written).read_text() == "native result\n"
 
 
 @pytest.mark.parametrize("command", [["treeify"], ["ingest", "extract"], ["doctor", "dump-lexer"]])
