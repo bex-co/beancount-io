@@ -781,12 +781,17 @@ Balance amounts accept native tolerance syntax, for example
 `--amount '1538 ~ 1 EUR'`. The assertion succeeds only within the supplied
 nonnegative tolerance. This also works with `--pad-from`.
 Concurrent CLI writers use persistent locks under `$XDG_CACHE_HOME/bea/locks`
-(default `~/.cache/bea/locks`), keyed by each file's resolved absolute path.
-No lock files are created in ledger directories. Locks remain in the cache
-after release so waiting writers always coordinate through the same file.
-Stop any older CLI writers before deleting their leftover `.FILENAME.bea.lock`
-sidecars. An external edit detected before replacement produces exit **4**
-and is preserved.
+(default `~/.cache/bea/locks`), keyed by the identity of each file's
+directory plus its case-folded name, so every spelling of one path — `Books`
+and `books` on a case-insensitive volume, a symlinked directory — takes the
+same lock. No lock files are created in ledger directories. Locks remain in
+the cache after release so waiting writers always coordinate through the same
+file. Stop any older CLI writers before deleting their leftover
+`.FILENAME.bea.lock` sidecars. An external edit detected before replacement
+produces exit **4** and is preserved. The locks coordinate `bea` writers only:
+an editor or script that does not take them is caught by the final
+compare-before-replace check in most cases, but can still slip a change in
+between that check and the replacement and lose it.
 
 ```bash
 bea add transaction "Coffee" \

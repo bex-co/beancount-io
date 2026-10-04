@@ -273,6 +273,46 @@ def sweep_abandoned_candidates(directory: Path) -> None:
             continue
 
 
+def _lock_key(file: Path) -> str:
+    """One key per file, however the path that names it is spelled.
+
+    The resolved path string was not enough: macOS's default volumes are
+    case- and normalization-insensitive, `resolve()` keeps the caller's
+    spelling and `normcase` is the identity there, so `~/Books/main.bean` and
+    `~/books/main.bean` took different locks on one file and concurrent adds
+    could lose an entry (w1/075). The directory is identified by device and
+    inode, which every spelling shares; the name is case-folded and
+    normalized, which at worst makes two distinct files on a case-sensitive
+    volume share a lock — slower, never unsafe. The file itself is not keyed
+    by inode: every atomic replace gives it a new one, and a destination may
+    not exist yet.
+    """
+    resolved = file.resolve()
+    try:
+        parent = resolved.parent.stat()
+    except OSError:
+        identity = os.path.normcase(str(resolved))
+    else:
+        name = unicodedata.normalize("NFD", resolved.name).casefold()
+        identity = f"{parent.st_dev}:{parent.st_ino}/{name}"
+    return hashlib.sha256(identity.encode()).hexdigest()
+
+
+@contextmanager
+def lock_files(files: Iterable[Path]) -> Iterator[None]:
+    """Lock every file, each once, in one global order so writers queue instead of deadlocking."""
+    with ExitStack() as stack:
+        for file in lock_order(files):
+            stack.enter_context(lock_file(file))
+        yield
+
+
+def lock_order(files: Iterable[Path]) -> list[Path]:
+    """One file per lock, in the global order every writer takes them."""
+    keyed = {_lock_key(file): file for file in files}
+    return [keyed[key] for key in sorted(keyed)]
+
+
 @contextmanager
 def lock_file(file: Path) -> Iterator[None]:
     """Serialize CLI writers across atomic replacements of the ledger inode.
@@ -282,7 +322,7 @@ def lock_file(file: Path) -> Iterator[None]:
     """
     directory = cache_dir() / "locks"
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
-    key = hashlib.sha256(os.path.normcase(str(file.resolve())).encode()).hexdigest()
+    key = _lock_key(file)
     fd = os.open(directory / f"{key}.lock", os.O_RDWR | os.O_CREAT, 0o600)
     with os.fdopen(fd, "r+b") as stream:
         if sys.platform == "win32":
@@ -1089,8 +1129,7 @@ def append(
     file = Path(os.path.abspath(file))
     target = destination(file, into)
     with ExitStack() as stack:
-        for path in sorted({file.resolve(), target}):
-            stack.enter_context(lock_file(path))
+        stack.enter_context(lock_files([file, target]))
         sweep_abandoned_candidates(target.parent)
         snapshot = snapshot or LedgerSnapshot.capture(file)
         original = snapshot.require_target(target)

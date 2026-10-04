@@ -62,7 +62,7 @@ def format_files(
     """Which files alignment would change, rewriting them when `in_place`.
 
     Targets are resolved and sorted, and every lock is taken before the first
-    byte is written, in that same ascending order `append` uses — so two
+    byte is written, in the same global order `append` uses — so two
     concurrent runs, or a run racing an append, queue instead of deadlocking.
     """
     widths = (prefix_width, num_width, currency_column)
@@ -74,7 +74,7 @@ def format_files(
     unchanged: list[str] = []
     try:
         with ExitStack() as stack:
-            for file in targets:
+            for file in write.lock_order(targets):
                 stack.enter_context(write.lock_file(file))
             for file in targets:
                 write.sweep_abandoned_candidates(file.parent)
