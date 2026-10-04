@@ -330,7 +330,8 @@ def _native_shell(source: str, *, interactive: bool, format: str, numberify: boo
             statement = query if isinstance(query, str) else ""
             if statement:
                 _refuse_statement_tail(statement)
-            return _compiled(partial(super().execute, query, **kwargs), statement, list)
+            context = None if self.interactive else self.context
+            return _compiled(partial(super().execute, query, **kwargs), statement, list, context)
 
         def onecmd(self, line: str) -> Any:
             return _recovering(self, self._dispatch, line)
@@ -682,6 +683,7 @@ def build_shell(
                 partial(super().execute, query, **kwargs),
                 statement,
                 lambda: [format_error(error, ledger_file=file) for error in self.context.errors],
+                None if self.interactive else self.context,
             )
 
         def onecmd(self, line: str) -> Any:
@@ -943,16 +945,30 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
         raise _usage_error(exc, query_string, conn, ledger_errors) from None
 
 
-def _compiled(run: Callable[[], Any], statement: str, ledger_errors: Callable[[], list[str]]) -> Any:
+def _compiled(
+    run: Callable[[], Any], statement: str, ledger_errors: Callable[[], list[str]], context: Any = None
+) -> Any:
     """Run one BQL statement, naming the compile failures Beanquery lets escape raw.
 
     Every path that executes BQL — one-shot, `.run`, and a line typed at the
     prompt — comes through here, so they all explain the same failure the same
     way. The prompt used to print these as Python tracebacks while the one-shot
     named the column and what would work instead.
+
+    With a `context`, Beanquery's own errors are explained here too, against
+    the statement that actually ran: a stored query reached through `.run`
+    used to be explained against the `.run NAME` text, so it lost the caret,
+    the column suggestions and the set-column advice its direct form gets.
+    The interactive prompt passes none and keeps upstream's rendering.
     """
+    from beanquery import Error as BeanqueryError
+
     try:
         return run()
+    except BeanqueryError as exc:
+        if context is None:
+            raise
+        raise _usage_error(exc, statement, context, ledger_errors()) from None
     except SyntaxError as exc:
         # Beanquery compiles a query to Python. `SELECT DISTINCT tags` makes it
         # emit code it cannot parse, and the SyntaxError that escapes says only
