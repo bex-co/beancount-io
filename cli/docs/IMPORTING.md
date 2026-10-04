@@ -156,8 +156,9 @@ described under [Duplicate decisions](#duplicate-decisions).
 ### Categorization rules (`--rules`)
 
 A TOML rules file categorizes rows by regex over three fields — payee,
-narration, then the category label (case-insensitive); the first matching
-rule wins:
+narration, then the category label (case-insensitive, with pattern and text
+compared NFC-normalized, so a composed `café` matches a decomposed one); the
+first matching rule wins:
 
 ```toml
 [[rule]]

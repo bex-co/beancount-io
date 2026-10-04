@@ -1397,6 +1397,31 @@ class TestCsvRulesMatching:
         assert "Expenses:Food" in row["entry"]
         assert "STARBUCKS" not in " ".join(data["notes"])
 
+    @pytest.mark.parametrize("rule_form", ["NFC", "NFD"])
+    def test_rule_matches_either_unicode_normalization(self, book: Path, isolated_config: Path, rule_form: str) -> None:
+        import unicodedata
+
+        nfc, nfd = (unicodedata.normalize(form, "Café Nero") for form in ("NFC", "NFD"))
+        label = unicodedata.normalize("NFD", "Crème")
+        rules = rules_file(
+            book,
+            f'[[rule]]\nmatch = "{unicodedata.normalize(rule_form, "café")}"\naccount = "Expenses:Food"\n'
+            f'[[rule]]\nmatch = "{unicodedata.normalize(rule_form, "^crème$")}"\naccount = "Expenses:Dining"\n',
+        )
+        result = csv_result(
+            book,
+            "Date,Description,Amount,Category\n"
+            f"2026-08-02,{nfd},-4.00,\n2026-08-03,{nfc},-5.00,\n2026-08-04,Card,-6.00,{label}\n",
+            "--rules",
+            str(rules),
+            mapping="date=Date,amount=Amount,narration=Description,category=Category",
+        )
+        assert result.exit_code == 0, result.output
+        rows = json.loads(result.stdout)["data"]["rows"]
+        assert [row["rule"] != "unmatched" for row in rows] == [True, True, True]
+        assert "Expenses:Food" in rows[0]["entry"] and "Expenses:Food" in rows[1]["entry"]
+        assert "Expenses:Dining" in rows[2]["entry"]
+
 
 class TestStickyRecall:
     MAPPING = "date=Date,amount=Amount,narration=Description"

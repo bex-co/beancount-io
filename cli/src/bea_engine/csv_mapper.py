@@ -278,7 +278,9 @@ class CsvRule:
         if not match.strip():
             raise UsageError(f"Rule {index + 1} has an empty match; write a regex, or .* for a catch-all.")
         try:
-            expression = re.compile(match, re.IGNORECASE)
+            # Compiled NFC, like the cell text it searches: `café` typed
+            # composed must match a bank's decomposed `café`, and vice versa.
+            expression = re.compile(unicodedata.normalize("NFC", match), re.IGNORECASE)
         except re.error as exc:
             raise UsageError(f"Rule {index + 1} has an invalid regex {match!r}: {exc}.") from exc
         # A pattern that matches empty text (`a|b|`, `(x)?`, `y*`) matches every
@@ -984,12 +986,11 @@ class CsvImporter:
         from beancount.core.account import is_valid
 
         category_text = row.get(category_header, "").strip() if category_header is not None else ""
+        # Bank exports mix Unicode normalization forms; rules compare NFC
+        # text, as `list --search` does, so equal-looking text matches.
+        texts = [unicodedata.normalize("NFC", text) for text in (payee or "", narration, category_text)]
         for rule in self._rules:
-            if (
-                rule.expression.search(payee or "")
-                or rule.expression.search(narration)
-                or rule.expression.search(category_text)
-            ):
+            if any(rule.expression.search(text) for text in texts):
                 return rule.account, "*", rule.pattern
         if category_header is not None:
             if category_header not in row:

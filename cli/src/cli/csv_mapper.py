@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import re
+import unicodedata
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -71,7 +72,8 @@ class CsvRule:
         if not match.strip():
             raise UsageError(f"Rule {index + 1} has an empty match; write a regex, or .* for a catch-all.")
         try:
-            expression = re.compile(match, re.IGNORECASE)
+            # NFC like the engine's copy, which matches NFC-normalized cells.
+            expression = re.compile(unicodedata.normalize("NFC", match), re.IGNORECASE)
         except re.error as exc:
             raise UsageError(f"Rule {index + 1} has an invalid regex {match!r}: {exc}.") from exc
         # A pattern that matches empty text (`a|b|`, `(x)?`, `y*`) matches every
