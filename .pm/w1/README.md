@@ -100,7 +100,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [140](./140.md) — Close checklist's period-end balance query has no date bound, so later entries change the result — **minor**, CLI QA 2026-10-03.
 - [141](./141.md) — `bea treeify` output guard is bypassed by abbreviated long options and clustered short flags, overwriting the ledger — **major**, CLI QA 2026-10-03.
 - [144](./144.md) — A partial `format -i` failure leads with "nothing was written" although earlier files were rewritten — **minor**, CLI QA 2026-10-03.
-- [145](./145.md) — CSV query cells leak `filename`/`lineno`/`__tolerances__` metadata as a Python dict repr — **minor**, CLI QA 2026-10-03.
 - [146](./146.md) — `bea --json query -o X.tsv` is refused with advice that `--json` itself refuses — **minor**, CLI QA 2026-10-03.
 - [147](./147.md) — CSV query export doesn't neutralise spreadsheet formulas, and the docs don't say so — **minor**, CLI QA 2026-10-03.
 - [148](./148.md) — Without a payee column, any same-day same-amount rows are "possible duplicates" and `--duplicates skip` drops real rows — **major**, CLI QA 2026-10-03.

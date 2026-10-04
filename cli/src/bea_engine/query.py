@@ -169,7 +169,7 @@ def rows_answer(
         description, rows = numberify_results(description, rows, result_context(rows).build())
     return {
         "columns": columns(description),
-        "rows": [[protocol._jsonable(value) for value in row] for row in rows],
+        "rows": [[protocol._jsonable(_public_value(value)) for value in row] for row in rows],
         "errors": errors,
     }
 
@@ -708,7 +708,7 @@ def build_shell(
                 if self.settings.format == "beancount":
                     return _render_beancount(rows, out)
                 if self.settings.format == "text":
-                    rows = [tuple(_inert_cell(value) for value in row) for row in rows]
+                    rows = [tuple(_inert_cell(_public_value(value)) for value in row) for row in rows]
                 renderer = FORMATS[self.settings.format]
                 return renderer(description, rows, out, dcontext=dcontext, **self.settings.todict())
 
@@ -813,11 +813,59 @@ def _render_csv(description: Any, rows: Any, out: TextIO) -> None:
 
 
 def _csv_cell(value: Any) -> str:
-    """One unpadded CSV field from a BQL cell."""
+    """One unpadded CSV field from a BQL cell.
+
+    Metadata is the text table's cell, user keys only. A directive is the
+    Beancount text `--format beancount` prints for it. Both used to go through
+    the JSON walk and `str()`, which leaked the loader's `filename`, `lineno`
+    and `__tolerances__` keys — an absolute path in every exported row.
+    """
+    from beancount.core.data import ALL_DIRECTIVES
+
     if value is None:
         return ""
+    if _is_metadata(value):
+        return str(_user_metadata(value))
+    if isinstance(value, ALL_DIRECTIVES):
+        from beancount.core.display_context import DisplayContext
+
+        from bea_engine.ledger.writer import DirectivePrinter
+
+        return DirectivePrinter(DisplayContext())(value).strip("\n")  # type: ignore[no-untyped-call]
     rendered = protocol._jsonable(value)
     return _csv_from_jsonable(rendered)
+
+
+def _is_metadata(value: Any) -> bool:
+    """True for a directive's or posting's metadata, which the loader stamps with its location."""
+    return isinstance(value, dict) and "filename" in value and "lineno" in value
+
+
+def _user_metadata(meta: Mapping[str, Any]) -> dict[str, Any]:
+    """The keys a ledger author wrote: upstream's `MetadataRenderer` filter."""
+    return {key: item for key, item in meta.items() if key not in {"filename", "lineno"} and not key.startswith("__")}
+
+
+def _public_value(value: Any) -> Any:
+    """A result cell without the loader's internal metadata, at any depth.
+
+    Upstream hides `filename`, `lineno` and `__*` keys only for a column typed
+    as entry metadata, so a posting's `meta`, or the metadata inside a whole
+    directive, carried the ledger's absolute path into every rendering. Only
+    text and JSON use this; `--format beancount` prints directives through the
+    writer, which reads the internal keys and never writes them.
+    """
+    if _is_metadata(value):
+        return _user_metadata(value)
+    fields = getattr(value, "_fields", None)
+    if fields is None or "meta" not in fields:
+        return value
+    changes: dict[str, Any] = {}
+    if isinstance(value.meta, dict):
+        changes["meta"] = _user_metadata(value.meta)
+    if "postings" in fields and value.postings:
+        changes["postings"] = [_public_value(posting) for posting in value.postings]
+    return value._replace(**changes)
 
 
 def _csv_from_jsonable(value: Any) -> str:

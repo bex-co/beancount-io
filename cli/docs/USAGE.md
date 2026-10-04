@@ -452,6 +452,11 @@ in JSON as well as text. One-shot query exports replace the destination only aft
 query; a failed query or write preserves an existing export. Text, CSV, and JSON
 exports preserve an existing file's permissions and follow destination symlinks.
 New exports use the caller's umask (for example, `0644` with umask `022`).
+Metadata cells (`meta`, `entry.meta`, and the metadata inside a directive) hold
+only the keys written in the ledger — never the loader's `filename`, `lineno`
+or `__`-prefixed keys — in text, CSV, and JSON alike; a CSV metadata cell is
+the text table's cell, and a CSV directive cell is the directive's Beancount
+text. Native `--source` queries keep upstream's rendering.
 
 An `-o` destination that is the ledger under read is refused with exit 2 before
 anything is written, in one-shots and in the interactive shell's `.output`
