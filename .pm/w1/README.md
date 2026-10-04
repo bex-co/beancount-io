@@ -59,7 +59,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [051](./051.md) — `-a/--account` interval series stop at the filtered account's last entry while the headline covers the whole ledger — **minor**, CLI QA 2026-10-02.
 - [052](./052.md) — One long price quote makes every amount in that currency print with that many decimals in report tables — **minor**, CLI QA 2026-10-02.
 - [053](./053.md) — Query, balance and report JSON/CSV print tiny amounts in scientific notation (`1E-8`, `0E-8`) — **minor**, CLI QA 2026-10-02.
-- [054](./054.md) — `bea check -v` NFC refusal advises `bea format -i`, which can never fix it, and fires on comment-only text — **minor**, CLI QA 2026-10-02.
 - [055](./055.md) — Cloud JSON error bodies without the `{ok, error}` envelope surface as `'ok'` and lose 401/403/409 exit codes — **major**, CLI QA 2026-10-02.
 - [056](./056.md) — A symlinked root ledger resolves includes from the link target's directory, unlike `bean-check` — **minor**, CLI QA 2026-10-02.
 - [057](./057.md) — A non-ASCII `BEA_TOKEN` or stored token fails with a raw `UnicodeEncodeError` (exit 1) instead of the auth error — **minor**, CLI QA 2026-10-02.

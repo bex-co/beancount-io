@@ -117,3 +117,37 @@ def test_amounts_dates_and_metadata_survive_normalization(tmp_path: Path) -> Non
     assert txn["date"] == "2026-01-01"
     assert txn["postings"][0]["units"] == {"number": "10.00", "currency": "USD"}
     assert txn["meta"] == {"receipt": "qr-123"}
+
+
+def test_check_options_refusal_names_a_remedy_that_clears_it(tmp_path: Path) -> None:
+    """format -i never renormalizes, so the NFD refusal must not advise it (w1/054)."""
+    file = tmp_path / "main.bean"
+    file.write_text(f"2024-01-01 open Assets:{NFD} EUR\n")
+
+    refused = runner.invoke(app, ["--file", str(file), "check", "-v"])
+
+    assert refused.exit_code == 2, refused.output
+    assert "bea format -i" not in refused.stderr
+    assert "mixes" not in refused.stderr
+    assert "outside Unicode NFC" in refused.stderr
+    # Either printed remedy clears the refusal: drop the options...
+    assert runner.invoke(app, ["--file", str(file), "check"]).exit_code == 0
+    # ...or re-save the file in NFC.
+    file.write_text(unicodedata.normalize("NFC", file.read_text()))
+    resaved = runner.invoke(app, ["--file", str(file), "check", "-v"])
+    assert resaved.exit_code == 0, resaved.output
+
+
+def test_non_nfc_prose_does_not_block_native_options(tmp_path: Path) -> None:
+    """Comments, strings, and org headings never name an account (w1/054)."""
+    file = tmp_path / "main.bean"
+    file.write_text(
+        f"* {NFD} section\n"
+        f"; note about {NFD}\n"
+        "2024-01-01 open Assets:Cash EUR\n"
+        f'2024-01-02 note Assets:Cash "{NFD} \\" ; still a string"\n'
+    )
+
+    result = runner.invoke(app, ["--file", str(file), "check", "-v"])
+
+    assert result.exit_code == 0, result.output

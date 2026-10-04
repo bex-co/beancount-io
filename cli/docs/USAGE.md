@@ -387,7 +387,11 @@ A ledger saved with a UTF-8 BOM loads like any other: the mark is skipped on
 read, kept by appends, and removed only by `format -i`. Account names, search
 terms, and BQL literals compare NFC-normalized, so NFC and NFD spellings of
 one name resolve to one account with one balance; new directives are written
-NFC while existing bytes are never renormalised as a side effect. A file that
+NFC while existing bytes are never renormalised as a side effect. `bea check`
+therefore runs a closure that spells an account or tag outside NFC through the
+helper, and refuses bean-check options such as `-v` for it (exit **2**): drop
+the options, or re-save the file as NFC — `format -i` does not renormalize.
+Non-NFC text in comments and strings does not count. A file that
 is not UTF-8 at all fails with its path, the offending byte offset, and a hint
 to re-save as UTF-8.
 

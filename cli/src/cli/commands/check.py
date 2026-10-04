@@ -20,6 +20,14 @@ A posting line can never match: account names cannot start with the lowercase
 enough to exact for routing the closure to the helper check.
 """
 
+_PROSE_RE = re.compile(r'"(?:[^"\\]|\\.)*"|;[^\n]*|^\*[^\n]*', re.MULTILINE)
+"""String literals, `;` comments, and org-mode `*` heading lines.
+
+Their text never names an account, so bean-check reads it byte for byte
+whatever its Unicode normalization; only the remaining tokens decide whether
+NFC and NFD spellings could split one account in two (w1/054).
+"""
+
 
 def check(ctx: typer.Context) -> None:
     """Parse, check and realize a beancount ledger."""
@@ -70,7 +78,7 @@ def _closure_needs_compat(file: Path) -> tuple[str, str] | None:
     """
     from cli.utils import has_bom
 
-    converge = "Run bea format -i to converge the encoding, then retry."
+    strip_bom = "Run bea format -i to strip the mark, then retry."
     try:
         members = output.ledger_closure(file)
     except OSError:
@@ -79,7 +87,7 @@ def _closure_needs_compat(file: Path) -> tuple[str, str] | None:
         if has_bom(member):
             return (
                 "a file in its include closure starts with a UTF-8 BOM bean-check cannot parse",
-                converge,
+                strip_bom,
             )
     for member in members:
         try:
@@ -87,10 +95,13 @@ def _closure_needs_compat(file: Path) -> tuple[str, str] | None:
         except OSError:
             continue
         text = raw.decode("utf-8", errors="ignore")
-        if not unicodedata.is_normalized("NFC", text):
+        if not unicodedata.is_normalized("NFC", _PROSE_RE.sub("", text)):
+            # format -i never renormalizes existing bytes, so it is no remedy here.
             return (
-                "a file in its include closure mixes Unicode normalizations bean-check reads as distinct accounts",
-                converge,
+                f"{member} names an account or tag outside Unicode NFC, which bean-check reads "
+                "as distinct from its NFC spelling",
+                "Drop the bean-check options to check through the helper, "
+                "or re-save the file in Unicode NFC, then retry.",
             )
         if _URL_INCLUDE_RE.search(text):
             return (
