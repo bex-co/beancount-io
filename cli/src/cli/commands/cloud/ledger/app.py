@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 from pathlib import Path
 from typing import Annotated
 
@@ -85,7 +84,7 @@ def ledger_create(
             target = directory or manager.default_clone_dir(ledger.name)
         except manager.UnsafeCloneSource as e:
             raise LedgerError(
-                f"Ledger '{single_line(ledger.full_name)}' was created but was not cloned. {e}", result=asdict(ledger)
+                f"Ledger '{single_line(ledger.full_name)}' was created but was not cloned. {e}", result=ledger.record
             ) from e
         output.note(f"Cloning repository to '{single_line(str(target))}'...")
         try:
@@ -98,10 +97,10 @@ def ledger_create(
         except manager.CloneError as e:
             # The ledger exists on the server. Saying "created" and exiting 0
             # here would hide a half-finished setup from a script.
-            raise LedgerError(_clone_failure_message(ledger.full_name, e), result=asdict(ledger)) from e
+            raise LedgerError(_clone_failure_message(ledger.full_name, e), result=ledger.record) from e
 
     if ctx.json_output:
-        output.emit(asdict(ledger), target=output.server_target())
+        output.emit(ledger.record, target=output.server_target())
 
 
 @ledger_app.command("clone")

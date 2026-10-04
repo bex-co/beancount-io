@@ -66,6 +66,7 @@ def test_create_result_survives_the_clone_step(
             "ssh_url": origin,
             "private": True,
             "empty": True,
+            "size": 0,
             "created_at": "2026-10-02T00:00:00Z",
             "updated_at": "2026-10-02T00:00:00Z",
         }

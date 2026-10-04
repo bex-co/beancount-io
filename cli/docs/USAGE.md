@@ -1351,7 +1351,7 @@ advertised to a Homebrew installation before the tap can install them.
 
 ## JSON output
 
-Global `--json` provides structured results for `check`, local-file `query`, `list <type>`, `balance`, `report`, `engine status`, and hosted reads such as `cloud status`, `cloud ledger list`, and `cloud ledger show`. `init`, `import`, `format`, `add`, `engine enable`, `cloud ledger create`, and `cloud ledger delete` also emit an envelope so a script can confirm what was written (create returns the new ledger's metadata, delete the deleted ledger's id). Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
+Global `--json` provides structured results for `check`, local-file `query`, `list <type>`, `balance`, `report`, `engine status`, and hosted reads such as `cloud status`, `cloud ledger list`, and `cloud ledger show`. `init`, `import`, `format`, `add`, `engine enable`, `cloud ledger create`, and `cloud ledger delete` also emit an envelope so a script can confirm what was written (create returns the new ledger's metadata with the same fields as `cloud ledger show`, delete the deleted ledger's id). Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
 
 The envelope is always:
 

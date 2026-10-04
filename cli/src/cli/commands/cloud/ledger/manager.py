@@ -6,6 +6,7 @@ import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlsplit
 
 from cli.api.client import call, unwrap
@@ -20,7 +21,7 @@ from cli.api.rest_client.models.create_ledger_body import CreateLedgerBody
 from cli.api.rest_client.models.create_ledger_response_200 import CreateLedgerResponse200
 from cli.api.rest_client.models.get_ledger_response_200 import GetLedgerResponse200
 from cli.errors import BeaError, UsageError
-from cli.utils import ledger_name, owner_and_name, single_line
+from cli.utils import ledger_name, owner_and_name, single_line, snake_keys
 
 # Cap captured Git diagnostics so a noisy clone failure cannot flood JSON stderr.
 _MAX_GIT_DIAGNOSTIC = 500
@@ -28,28 +29,23 @@ _MAX_GIT_DIAGNOSTIC = 500
 
 @dataclass
 class LedgerInfo:
-    id: str
     name: str
     full_name: str
     http_url: str
     ssh_url: str
     private: bool
-    empty: bool
-    created_at: str
-    updated_at: str
+    record: dict[str, Any]
+    """Every field the server returned, snake_cased — the JSON `data`, exactly as `show` emits it."""
 
 
 def _to_info(lg: CreateLedgerResponse200 | GetLedgerResponse200) -> LedgerInfo:
     return LedgerInfo(
-        id=lg.id,
         name=lg.name,
         full_name=lg.full_name,
         http_url=lg.http_url,
         ssh_url=lg.ssh_url,
         private=lg.private,
-        empty=lg.empty,
-        created_at=lg.created_at,
-        updated_at=lg.updated_at,
+        record=snake_keys(lg.to_dict()),
     )
 
 
