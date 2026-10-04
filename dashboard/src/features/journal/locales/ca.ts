@@ -134,6 +134,11 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Context de l'entrada",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "Font i ubicació al fitxer de {entry}.",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "Entrada creada correctament",
     description: "Success message after creating entry",

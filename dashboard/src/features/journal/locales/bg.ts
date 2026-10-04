@@ -134,6 +134,11 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Контекст на запис",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "Източник и местоположение във файла за {entry}.",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "Записът е създаден успешно",
     description: "Success message after creating entry",

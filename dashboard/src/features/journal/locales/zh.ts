@@ -134,6 +134,11 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "条目上下文",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "{entry} 的源文本和文件位置。",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "条目创建成功",
     description: "Success message after creating entry",

@@ -134,6 +134,11 @@ const enJournal: Record<string, TranslationEntry> = {
     message: "Entry Context",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "Source and file location for {entry}.",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "Entry created successfully",
     description: "Success message after creating entry",

@@ -134,6 +134,11 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "Contexto do Lançamento",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "Origem e localização no arquivo de {entry}.",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "Lançamento criado com sucesso",
     description: "Success message after creating entry",

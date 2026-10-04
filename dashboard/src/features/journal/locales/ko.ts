@@ -131,6 +131,11 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "항목 컨텍스트",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "{entry}의 소스와 파일 위치.",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "항목이 성공적으로 생성되었습니다",
     description: "Success message after creating entry",

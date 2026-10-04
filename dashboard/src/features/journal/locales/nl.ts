@@ -134,6 +134,11 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Context van boeking",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "Bron en bestandslocatie voor {entry}.",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "Boeking succesvol aangemaakt",
     description: "Success message after creating entry",

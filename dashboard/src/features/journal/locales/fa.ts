@@ -134,6 +134,11 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "متن ثبت",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "منبع و محل فایل برای {entry}.",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "ثبت با موفقیت ایجاد شد",
     description: "Success message after creating entry",

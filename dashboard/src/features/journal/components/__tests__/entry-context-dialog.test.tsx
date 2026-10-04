@@ -45,7 +45,10 @@ vi.mock("@apollo/client/react", () => ({
 }));
 
 vi.mock("@/common/hooks/use-translations", () => ({
-  useTranslations: () => ({ t: (key: string) => key }),
+  useTranslations: () => ({
+    t: (key: string, params?: { entry?: string }) =>
+      params?.entry ? `${key} ${params.entry}` : key,
+  }),
 }));
 
 vi.mock("@/common/hooks/use-ledger-permission", () => ({
@@ -127,6 +130,39 @@ describe("EntryContextDialog", () => {
       balances_before: null,
       balances_after: null,
     };
+  });
+
+  it("describes the dialog by the entry it shows, without a Radix warning", () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(
+      <EntryContextDialog
+        open
+        onOpenChange={vi.fn()}
+        entry={
+          {
+            entry_hash: "hash-1",
+            directive_type: "Transaction",
+            date: "2024-01-01",
+            payee: "Cafe",
+            narration: "Coffee",
+          } as never
+        }
+        ledgerId="open_ledger/example"
+      />,
+    );
+
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(
+      "journal.entryContextDescription 2024-01-01 · Cafe · Coffee",
+    );
+    const warnings = [...consoleError.mock.calls, ...consoleWarn.mock.calls]
+      .flat()
+      .join(" ");
+    expect(warnings).not.toMatch(/Missing `Description`|aria-describedby/);
+    consoleError.mockRestore();
+    consoleWarn.mockRestore();
   });
 
   it("navigates to a resolved source location for writers via keyboard", async () => {

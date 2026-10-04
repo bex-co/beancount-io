@@ -134,6 +134,11 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Контекст записи",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "Исходный текст и расположение в файле для {entry}.",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "Запись успешно создана",
     description: "Success message after creating entry",

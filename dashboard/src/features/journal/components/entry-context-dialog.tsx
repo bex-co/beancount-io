@@ -3,6 +3,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogTitle,
 } from "@/common/components/ui/dialog";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
@@ -120,6 +121,15 @@ function GeneratedEntryPanel({
   );
 }
 
+/** The date, payee and narration a reader would recognise the entry by. */
+function describeEntry(entry: JournalDirectiveType | null): string {
+  if (!entry) return "";
+  const parts = [entry.date];
+  if ("payee" in entry && entry.payee) parts.push(entry.payee);
+  if ("narration" in entry && entry.narration) parts.push(entry.narration);
+  return parts.filter(Boolean).join(" · ");
+}
+
 /**
  * Dialog component for viewing and editing entry context
  * Shows location, content, and allows editing of entry source
@@ -137,6 +147,7 @@ export function EntryContextDialog({
   const generatedEntry = isGeneratedEntry(entry) ? entry : null;
   const entryHash = entry?.entry_hash ?? "";
   const skipFocusRestoreRef = useRef(false);
+  const entryLabel = describeEntry(entry);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -154,9 +165,17 @@ export function EntryContextDialog({
             fallbackFocusRef?.current,
           );
         }}
+        // Without an entry there is nothing to describe; say so explicitly
+        // rather than leave Radix pointing at a missing description.
+        {...(entryLabel ? {} : { "aria-describedby": undefined })}
       >
         <VisuallyHidden>
           <DialogTitle>{t("journal.entryContext")}</DialogTitle>
+          {entryLabel && (
+            <DialogDescription>
+              {t("journal.entryContextDescription", { entry: entryLabel })}
+            </DialogDescription>
+          )}
         </VisuallyHidden>
         <div className="flex-1 overflow-y-auto">
           {generatedEntry ? (

@@ -131,6 +131,11 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "エントリコンテキスト",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "{entry} のソースとファイル内の位置。",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "エントリが正常に作成されました",
     description: "Success message after creating entry",

@@ -134,6 +134,11 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Kontext záznamu",
     description: "Dialog title for entry context",
   },
+  "journal.entryContextDescription": {
+    message: "Zdroj a umiestnenie v súbore pre {entry}.",
+    description:
+      "Screen-reader description of the entry context dialog; {entry} is the entry's date, payee and narration",
+  },
   "journal.entryCreatedSuccess": {
     message: "Záznam bol úspešne vytvorený",
     description: "Success message after creating entry",
