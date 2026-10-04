@@ -799,7 +799,7 @@ def _destination_indent(content: str) -> str:
     draft to bean-format's aligner and keeps its rendering of the new lines.
     """
     indents: Counter[str] = Counter()
-    for line in content.splitlines():
+    for line in _lines(content):
         match = re.match(r"^(\s+)(\S+)( +).*$", line)
         if not match or "\t" in match.group(1):
             continue
@@ -807,18 +807,35 @@ def _destination_indent(content: str) -> str:
     return indents.most_common(1)[0][0] if indents else "  "
 
 
+def _lines(text: str) -> list[str]:
+    """Lines as the lexer counts them: split on `\n` alone, any `\r` folded in first.
+
+    `str.splitlines` also breaks on U+2028, U+2029 and friends, which inside
+    a string turned one written line into two (w1/136).
+    """
+    lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    return lines[:-1] if lines[-1] == "" else lines
+
+
 def _indent_block(texts: list[str], indent: str) -> list[str]:
     """Re-indent appended entries to the destination's style without touching it.
 
     Posting lines keep a two-space gap before their amount; `appended_content`
-    aligns the amounts afterwards with the code `bea format` runs.
+    aligns the amounts afterwards with the code `bea format` runs. A line that
+    continues a multi-line string is string content and stays verbatim.
     """
+    from bea_engine.ledger.formatting import string_continuation_lines
+
     rendered = []
     for text in texts:
+        block = text.rstrip()
+        verbatim = string_continuation_lines(block)
         lines = []
-        for index, line in enumerate(text.rstrip().splitlines()):
+        for index, line in enumerate(_lines(block)):
             match = None if index == 0 else re.match(r"^\s*(\S+)(  +)(\S.*)$", line)
-            if match and ":" in match.group(1) and not match.group(1).endswith(":"):
+            if index in verbatim:
+                lines.append(line)
+            elif match and ":" in match.group(1) and not match.group(1).endswith(":"):
                 lines.append(f"{indent}{match.group(1)}  {match.group(3)}")
             elif index == 0 or not line.strip() or not line[0].isspace():
                 # A continuation at column zero is content (a wrapped note
@@ -850,16 +867,17 @@ def appended_content(original: bytes, texts: list[str]) -> str:
     ending = _dominant_ending(original)
     blocks = _indent_block(texts, _destination_indent(text))
     draft = text + "".join("\n" + block + "\n" for block in blocks)
-    kept = len(text.splitlines())
-    tail = draft.splitlines()[kept:]
+    kept = len(_lines(text))
+    tail = _lines(draft)[kept:]
     try:
-        from bea_engine.ledger.formatting import align_text
+        from bea_engine.ledger.formatting import align_protected
 
         # The aligner emits one line per input line, so the appended lines are
         # the tail of its output. Line endings are normalised first because its
-        # own whitespace-only safety check cannot account for a carriage return.
-        aligned = align_text(draft.replace("\r\n", "\n").replace("\r", "\n"))
-        tail = aligned.splitlines()[kept:]
+        # own whitespace-only safety check cannot account for a carriage return,
+        # and string content is kept out of its reach (w1/136).
+        aligned = align_protected(draft.replace("\r\n", "\n").replace("\r", "\n"))
+        tail = _lines(aligned)[kept:]
     except AssertionError:
         pass  # The aligner refused the text; alignment is cosmetic, the append is not.
     head = text if text.endswith("\n") or not text else text + ending

@@ -63,7 +63,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [110](./110.md) — Bulk amounts accept `1_000`, Arabic-Indic and full-width digits that single `add` refuses — **minor**, CLI QA 2026-10-03.
 - [111](./111.md) — Bulk dates accept numeric strings as Unix timestamps and other non-ISO spellings — **minor**, CLI QA 2026-10-03.
 - [112](./112.md) — `add transactions --from -` leaks raw Python errors (exit 1) for undecodable, deeply nested or huge-integer stdin — **minor**, CLI QA 2026-10-03.
-- [136](./136.md) — Appends rewrite text inside strings: U+2028/U+2029 become newlines and continuation lines are re-indented — **major**, CLI QA 2026-10-03.
 - [151](./151.md) — Quoted semicolons in a comma CSV make delimiter detection choose `;` and refuse the file — **minor**, CLI QA 2026-10-03.
 - [152](./152.md) — A blank first line hides the CSV header, and the error advice cannot work — **minor**, CLI QA 2026-10-03.
 - [153](./153.md) — Contradictory double-negative CSV amounts like `(-5.00)` are silently booked as money in — **minor**, CLI QA 2026-10-03.

@@ -184,6 +184,38 @@ def _aligned(file: Path, text: str, widths: tuple[int | None, int | None, int | 
     return "".join(formatted)
 
 
+def string_continuation_lines(text: str) -> set[int]:
+    """Zero-based indices (lines split on `\\n`) that continue a multi-line string.
+
+    Text there is string content, however much it looks like a posting, so
+    neither indentation nor alignment may touch it.
+    """
+    from beancount.parser.lexer import lex_iter_string
+
+    lex: Callable[[str], Iterator[tuple[str, int, bytes, object]]] = lex_iter_string
+    continued: set[int] = set()
+    for kind, lineno, raw, _ in lex(text):
+        if kind == "STRING":
+            continued.update(range(lineno - raw.count(b"\n"), lineno))
+    return continued
+
+
+def align_protected(text: str) -> str:
+    """`align_text` for `\\n`-separated text, leaving string content and foreign line breaks alone.
+
+    String continuation lines and lines holding a character `splitlines`
+    would break on are swapped for a comment while upstream aligns, then put
+    back verbatim — the line count is unchanged either way (w1/136).
+    """
+    lines = text.split("\n")
+    protected = string_continuation_lines(text) | {
+        index for index, line in enumerate(lines) if not _FOREIGN_LINE_BREAKS.isdisjoint(line)
+    }
+    shielded = [";" if index in protected else line for index, line in enumerate(lines)]
+    aligned = align_text("\n".join(shielded)).split("\n")
+    return "\n".join(lines[index] if index in protected else line for index, line in enumerate(aligned))
+
+
 def align_text(
     text: str,
     prefix_width: int | None = None,
