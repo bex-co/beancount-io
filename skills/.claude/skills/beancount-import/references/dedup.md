@@ -30,13 +30,23 @@ Hash input is the UTF-8 string:
 - `description` — the **raw** row description (not the cleaned payee), uppercased, runs of whitespace collapsed to one space, leading/trailing whitespace stripped, then Unicode-normalized to **NFC**. Raw, because payee-cleanup rules may improve over time and must not change hashes; NFC, because the same description can arrive decomposed in one export and composed in the next, and the two must hash alike. Normalize *after* uppercasing — uppercasing decomposed text can itself emit a non-canonical form.
 - `source-account` — the full account name in NFC, e.g. `Assets:Bank:Checking`.
 
+**Rows with a separate payee.** When the source row carries a raw payee/name field (a merchant or counterparty column — not a payee cleaned out of the description) as well as a description, hash both, the payee normalized exactly like the description:
+
+```
+<date>|<amount>|<payee>|<description>|<source-account>
+```
+
+Otherwise `STARBUCKS / CARD PURCHASE` and `PEETS COFFEE / CARD PURCHASE` for the same amount on the same day share one input and only the occurrence suffix tells them apart — and a re-downloaded export may list them in the other order. A row whose only text is its description keeps the four-field form.
+
 Take the SHA-256 hex digest, keep the **first 16 hex chars** (64 bits — collision-safe at personal-ledger scale, short enough to read).
 
-Example: `2026-05-07|-54.2 USD|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking` → `import-id: "csv:sha256:<first-16-of-sha256>"`.
+Example: `2026-05-07|-54.2 USD|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking` → `import-id: "csv:sha256:<first-16-of-sha256>"`. With a payee column reading `Store`: `2026-05-07|-54.2 USD|STORE|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking`.
 
 Compute it honestly (e.g. `printf '%s' '<input>' | shasum -a 256 | cut -c1-16`) — never fabricate a plausible-looking hash.
 
 **Ledgers written before exact amounts or before NFC normalization.** Ids stored by an earlier `bea` were hashed from the un-normalized description, or from the two-decimal amount without its commodity, or both. There are therefore two independent axes a ledger may predate, and `bea import` offers every older combination as a **lookup-only** key: it matches them, writes only the canonical one, and needs no re-hash pass.
+
+**Ledgers written before payees were hashed.** Earlier ids for a row with both a payee and a description were hashed from the description alone. They also stay **lookup-only** keys. Their occurrence suffixes followed the old export's row order, so `bea import` gives each such stored id that a group of same-description rows reaches to the row whose payee matches the stored entry's payee; an id whose payee no row has (edited since) stays with the row at its old occurrence. When computing ids by hand, check a row with a payee against both its five-field and its four-field id.
 
 An older amount digest is additionally **content-checked** before it counts as a match. That form was lossy — it could hand two genuinely different rows the same digest — so a hit on one means *already imported* only when the date and source amounts agree; otherwise the hit is ignored rather than reported as a conflict. A reused **native** bank id with different source amounts or commodities is still a conflict and requires review. Payee, narration, date, flag, and counter-account edits do not invalidate a native ID match with unchanged source amounts.
 

@@ -266,7 +266,8 @@ def test_import_writes_skill_shaped_import_ids(book: Path) -> None:
     assert book.read_text().count("bea_import_id") == 0
     assert _import_ids(book)[-2:] == [
         "bank:bank-001",
-        "csv:sha256:" + hashlib.sha256(b"2026-08-04|-5.25 USD|COFFEE|Assets:Checking").hexdigest()[:16],
+        # Payee and narration are both hashed, so rows differing in payee differ (w1/149).
+        "csv:sha256:" + hashlib.sha256(b"2026-08-04|-5.25 USD|CAFE|COFFEE|Assets:Checking").hexdigest()[:16],
     ]
 
 
@@ -303,7 +304,8 @@ def test_hash_matches_the_skill_worked_example(tmp_path: Path) -> None:
     )
     source = tmp_path / "bank.csv"
     source.write_text(
-        "Date,Payee,Narration,Amount\n2026-05-07,Store,Trader Joes #123 Seattle WA,-54.20\n",
+        # No payee, exactly as in the reference's narration-only worked example.
+        "Date,Payee,Narration,Amount\n2026-05-07,,Trader Joes #123 Seattle WA,-54.20\n",
     )
     assert run(book, source, "--apply", config=config).exit_code == 0
     # The worked example from the skill reference, recomputed for the exact
@@ -317,7 +319,7 @@ def test_identical_same_day_rows_take_occurrence_suffixes(book: Path) -> None:
     source = book.parent / "bank.csv"
     source.write_text(HEADER + row + row)
     assert run(book, source, "--apply", "--duplicates", "include").exit_code == 0
-    base = "2026-08-02|-5.25 USD|COFFEE|Assets:Checking"
+    base = "2026-08-02|-5.25 USD|CAFE|COFFEE|Assets:Checking"
     first = "csv:sha256:" + hashlib.sha256(base.encode()).hexdigest()[:16]
     second = "csv:sha256:" + hashlib.sha256(f"{base}|2".encode()).hexdigest()[:16]
     assert first != second

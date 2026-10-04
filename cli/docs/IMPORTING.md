@@ -334,8 +334,10 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   exact source amount with its commodity and trailing zeros stripped
   (`-54.2 USD`), the narration (or payee when
   narration is empty) uppercased with whitespace collapsed, and the source
-  account. Identical rows within one file take an occurrence suffix, so
-  re-importing the same file skips every row. Keep this metadata when editing
+  account. A row with both a payee and a narration hashes both, as
+  `date|amount|payee|narration|account`, so rows that differ only in payee
+  keep distinct ids however the export orders them. Identical rows within one
+  file take an occurrence suffix, so re-importing the same file skips every row. Keep this metadata when editing
   entries. New writes no longer carry the pre-release `bea_import_id` key, but
   existing entries with it still match on re-import.
 - A generated id matches by its digest under any documented prefix, so a bank
@@ -357,6 +359,11 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   digest — a disagreement is ignored rather than reported as a conflict. A
   reused **native** bank ID with different source amounts or commodities is
   still a conflict.
+- Ids written before payees were hashed (narration only) also stay
+  lookup-only. Because their occurrence suffixes followed the old export's row
+  order, every such id that a group of same-narration rows reaches is given to
+  the row with that entry's payee; an id whose payee no row has (edited since)
+  stays with the row at its old position.
 - Date, normalized payee, and signed source amount/currency identify a *possible*
   duplicate even when bank IDs or narration differ. A row with no payee (the
   one-description mapping) is compared by its normalized narration instead, so
