@@ -57,7 +57,8 @@ def fake_venv(root: Path) -> Path:
     """The parts of a provisioned environment that `paths.is_provisioned` looks for."""
     (root / "bin").mkdir(parents=True, exist_ok=True)
     (root / "bin" / "python").write_text("")
-    (root / "lib" / "python3.12" / "site-packages" / "beanquery").mkdir(parents=True, exist_ok=True)
+    for package in ("beancount", "beanquery"):
+        (root / "lib" / "python3.12" / "site-packages" / package).mkdir(parents=True, exist_ok=True)
     return root
 
 
@@ -227,6 +228,25 @@ class TestPaths:
 
         assert paths.is_provisioned(root) is False
         assert paths.is_provisioned(fake_venv(root)) is True
+
+    def test_an_engine_missing_beancount_is_damaged_not_provisioned(self, tmp_path: Path) -> None:
+        """w1/122: every command printed an import traceback while status said yes."""
+        root = fake_venv(tmp_path / "engine")
+        (root / "lib" / "python3.12" / "site-packages" / "beancount").rmdir()
+
+        assert paths.is_provisioned(root) is False
+
+    def test_a_damaged_engine_is_rebuilt_by_the_next_command(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        root = fake_venv(tmp_path / "engine")
+        (root / "lib" / "python3.12" / "site-packages" / "beancount").rmdir()
+        monkeypatch.setenv(paths.DIR_ENV, str(root))
+        rebuilt: list[Path] = []
+        monkeypatch.setattr(provision, "provision", lambda target: rebuilt.append(fake_venv(target)))
+
+        assert provision.ensure_engine() == root / "bin" / "python"
+        assert rebuilt == [root]
 
     def test_executables_are_resolved_beside_the_interpreter(self, tmp_path: Path) -> None:
         """`bean-check` comes from the engine, never from whatever `PATH` offers."""
@@ -597,6 +617,7 @@ def test_managed_engine_layout_and_native_executable(
     python.touch()
     site = root / ("Lib/site-packages" if platform == "win32" else "lib/python3.12/site-packages")
     (site / "beanquery").mkdir(parents=True)
+    (site / "beancount").mkdir()
     command = python.parent / ("bean-check.exe" if platform == "win32" else "bean-check")
     command.touch()
     monkeypatch.setenv("BEA_ENGINE_DIR", str(root))
@@ -636,7 +657,8 @@ class TestMissingNativeExecutable:
         python = paths.venv_python(root)
         python.parent.mkdir(parents=True)
         python.touch()
-        (root / "lib" / "python3.12" / "site-packages" / "beanquery").mkdir(parents=True)
+        for package in ("beancount", "beanquery"):
+            (root / "lib" / "python3.12" / "site-packages" / package).mkdir(parents=True)
         monkeypatch.setenv("BEA_ENGINE_DIR", str(root))
         monkeypatch.delenv(paths.PYTHON_ENV, raising=False)
         # An installed copy, not a checkout: otherwise the developer's own

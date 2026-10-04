@@ -98,18 +98,27 @@ def bin_dir_for(python: Path) -> Path:
     return python.parent
 
 
+#: Upstream packages every engine command imports. A root missing one is
+#: damaged, not provisioned: the next command rebuilds it rather than running
+#: an interpreter that can only print an import traceback.
+_CORE_PACKAGES = ("beancount", "beanquery")
+
+
 def is_provisioned(root: Path) -> bool:
     """Whether `root` holds a usable engine.
 
-    The interpreter and upstream query package must be present. Helper sources
-    belong to the beancount-io installation, not this dependency environment.
+    The interpreter and the core upstream packages must be present. Helper
+    sources belong to the beancount-io installation, not this dependency
+    environment.
     """
     python = venv_python(root)
     if not python.exists():
         return False
     if sys.platform == "win32":
-        return (root / "Lib" / "site-packages" / "beanquery").is_dir()
-    return any(path.is_dir() for path in root.glob("lib/python*/site-packages/beanquery"))
+        site_packages = [root / "Lib" / "site-packages"]
+    else:
+        site_packages = list(root.glob("lib/python*/site-packages"))
+    return any(all((directory / name).is_dir() for name in _CORE_PACKAGES) for directory in site_packages)
 
 
 def checkout_source_root() -> Path | None:

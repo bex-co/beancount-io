@@ -32,7 +32,8 @@ def fake_uv(tmp_path: Path) -> Path:
             #!/bin/sh
             if [ "$1" = venv ]; then
               for target; do :; done
-              mkdir -p "$target/bin" "$target/lib/python3.12/site-packages/beanquery"
+              mkdir -p "$target/bin" "$target/lib/python3.12/site-packages/beanquery" \\
+                "$target/lib/python3.12/site-packages/beancount"
               : > "$target/bin/python"
             fi
             sleep 0.4

@@ -28,7 +28,8 @@ SOURCE_ROOT = CLI_ROOT / "src"
 def fake_venv(root: Path) -> Path:
     (root / "bin").mkdir(parents=True, exist_ok=True)
     (root / "bin" / "python").write_text("")
-    (root / "lib" / "python3.12" / "site-packages" / "beanquery").mkdir(parents=True, exist_ok=True)
+    for package in ("beancount", "beanquery"):
+        (root / "lib" / "python3.12" / "site-packages" / package).mkdir(parents=True, exist_ok=True)
     return root
 
 
@@ -212,6 +213,20 @@ class TestEngineStatusReportsTheServingTier:
         assert "Provisioned: yes" in text
         assert f"Serving from: managed engine ({root})" in text
         assert self.serving() == {"tier": "managed", "location": str(root)}
+
+    def test_a_damaged_managed_engine_is_reported_as_incomplete(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        root = fake_venv(tmp_path / "engine")
+        (root / "lib" / "python3.12" / "site-packages" / "beancount").rmdir()
+        monkeypatch.setenv(paths.DIR_ENV, str(root))
+        monkeypatch.delenv(paths.PYTHON_ENV, raising=False)
+        monkeypatch.setattr(paths, "_IMPORT_ROOT", tmp_path / "site-packages")
+        monkeypatch.setattr(provision, "provision", lambda _root: pytest.fail("status must not provision"))
+
+        text = self.status()
+        assert "Provisioned: no (the engine there is incomplete; the next local command rebuilds it)" in text
+        assert self.serving() == {"tier": "first-use", "location": str(root)}
 
     def test_a_checkout_without_a_managed_engine(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setenv(paths.DIR_ENV, str(tmp_path / "absent"))

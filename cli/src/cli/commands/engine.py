@@ -45,7 +45,12 @@ def engine_status() -> None:
         typer.echo(f"Engine interpreter override: {override}")
     else:
         typer.echo(f"Engine {status['engine_version']} at {status['engine_root']}")
-        typer.echo(f"Provisioned: {'yes' if status['provisioned'] else 'no'}")
+        if status["provisioned"]:
+            typer.echo("Provisioned: yes")
+        elif paths.engine_root().exists():
+            typer.echo("Provisioned: no (the engine there is incomplete; the next local command rebuilds it)")
+        else:
+            typer.echo("Provisioned: no")
     typer.echo(f"Serving from: {_TIER_LABELS[source.tier]} ({source.location})")
 
     features = status.get("features") or {}
