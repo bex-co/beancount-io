@@ -72,33 +72,36 @@ const JournalContent = () => {
   });
   const { canWrite } = useLedgerPermission();
 
-  // Filter state — persisted per ledger in localStorage
+  // Filter state — persisted per ledger in localStorage. The keys carry the
+  // ledger id so one ledger's selections never hide another's entries; the
+  // page remounts per ledger (see `key` below) because the hook reads its key
+  // only on mount.
   const [selectedDirectiveTypes, setSelectedDirectiveTypes] =
     useLocalStorageState<DirectiveType[]>(
-      `journal.directiveTypes`,
+      `journal.${ledgerId}.directiveTypes`,
       DEFAULT_DIRECTIVE_TYPES,
     );
   const [selectedTransactionSubtypes, setSelectedTransactionSubtypes] =
     useLocalStorageState<string[]>(
-      `journal.transactionSubtypes`,
+      `journal.${ledgerId}.transactionSubtypes`,
       DEFAULT_STRING_FILTER,
     );
   const [selectedDocumentSubtypes, setSelectedDocumentSubtypes] =
     useLocalStorageState<string[]>(
-      `journal.documentSubtypes`,
+      `journal.${ledgerId}.documentSubtypes`,
       DEFAULT_STRING_FILTER,
     );
   const [selectedCustomSubtypes, setSelectedCustomSubtypes] =
     useLocalStorageState<string[]>(
-      `journal.customSubtypes`,
+      `journal.${ledgerId}.customSubtypes`,
       DEFAULT_STRING_FILTER,
     );
   const [showMetadata, setShowMetadata] = useLocalStorageState(
-    `journal.showMetadata`,
+    `journal.${ledgerId}.showMetadata`,
     true,
   );
   const [showPostings, setShowPostings] = useLocalStorageState(
-    `journal.showPostings`,
+    `journal.${ledgerId}.showPostings`,
     false,
   );
 
@@ -399,7 +402,7 @@ const LedgerJournalPage = () => {
         })}
       />
       <ClientOnly fallback={<JournalLoadingState />}>
-        <JournalContent />
+        <JournalContent key={createLedgerId(ledgerOwner, ledgerName)} />
       </ClientOnly>
       <RelatedLinks
         links={[
