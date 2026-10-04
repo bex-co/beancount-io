@@ -241,6 +241,8 @@ def load_with_sources(
 
     from bea_engine.ledger.write import LedgerSnapshot, candidate_file, is_candidate_file
 
+    _record_plugin_configs(loader)
+
     at = time.time() if now is None else now
     want_offline = _env_flag(OFFLINE_ENV) if offline is None else offline
     want_strict = _env_flag(STRICT_ENV) if strict is None else strict
@@ -381,6 +383,49 @@ def load_with_sources(
     if isinstance(remapped_options.get("include"), list):
         remapped_options["include"] = [_remap(str(item), back) for item in remapped_options["include"]]
     return LoadedLedger(entries, errors, remapped_options, tuple(sources))
+
+
+#: Source-meta key naming the config of the `plugin` directive whose run or
+#: import failed. The loader reports every plugin failure against `<load>:0`
+#: by name alone, so two directives naming one plugin with different configs
+#: could not be told apart (w1/101).
+PLUGIN_CONFIG_KEY = "__bea_plugin_config__"
+
+
+def _record_plugin_configs(loader: Any) -> None:
+    """Have the loader's plugin errors carry the failing directive's config.
+
+    The loader builds those errors inside `run_transformations`, where the
+    config is the `plugin_config` local. For the duration of that call only,
+    `loader.LoadError` is a subclass that copies the local from the
+    constructing frame into the error's source meta. Swapping it back
+    afterwards keeps every pickle — Beancount's load cache — resolving the
+    plain `LoadError`, so upstream tools can still read the cache.
+    """
+    if getattr(loader.run_transformations, "_bea_records_plugin_config", False):
+        return
+    base = loader.LoadError
+    original = loader.run_transformations
+
+    class _PluginAwareLoadError(base):  # type: ignore[misc,valid-type]
+        def __new__(cls, source: Any, message: str, entry: Any = None) -> Any:
+            caller = sys._getframe(1)
+            if caller.f_code is original.__code__ and "plugin_config" in caller.f_locals:
+                source = {**source, PLUGIN_CONFIG_KEY: caller.f_locals["plugin_config"]}
+            return super().__new__(cls, source, message, entry)
+
+        def __reduce__(self) -> Any:
+            return (base, tuple(self))
+
+    def run_transformations(*args: Any, **kwargs: Any) -> Any:
+        loader.LoadError = _PluginAwareLoadError
+        try:
+            return original(*args, **kwargs)
+        finally:
+            loader.LoadError = base
+
+    run_transformations._bea_records_plugin_config = True  # type: ignore[attr-defined]
+    loader.run_transformations = run_transformations
 
 
 def _load_fresh(entry: Path, snapshot: LedgerSnapshot) -> tuple[Any, Any, Any]:

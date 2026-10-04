@@ -1188,7 +1188,7 @@ def format_error(error: Any, ledger_file: Path | str | None = None) -> str:
     source = getattr(error, "source", None) or {}
     message = getattr(error, "message", error)
     if isinstance(message, str):
-        plugin = _plugin_message(message, ledger_file)
+        plugin = _plugin_message(message, ledger_file, source)
         if plugin is not None:
             return plugin
         duplicate = _duplicate_message(error, message)
@@ -1197,44 +1197,91 @@ def format_error(error: Any, ledger_file: Path | str | None = None) -> str:
     return f"{source.get('filename', '<ledger>')}:{source.get('lineno', 0)}: {message}"
 
 
-def _plugin_message(message: str, ledger_file: Path | str | None) -> str | None:
+def _plugin_message(message: str, ledger_file: Path | str | None, source: Any) -> str | None:
     """A plugin load failure as `file:line: Cannot ... plugin "name": cause`.
 
     The loader reports these against `<load>:0` with the traceback attached,
-    so the directive's own line is found by scanning the ledger source and
-    only the traceback's final exception line is kept as the cause.
+    so the directive's own line is found by scanning the ledger source — by
+    name and, when the load recorded it, config — and the traceback's final
+    exception block is kept as the cause.
     """
+    from bea_engine.managed_load import PLUGIN_CONFIG_KEY
+
+    config = source.get(PLUGIN_CONFIG_KEY, _UNKNOWN_CONFIG) if isinstance(source, dict) else _UNKNOWN_CONFIG
     match = _PLUGIN_FAILURE.match(message)
     if match is None:
         return None
     kind, name, traceback_text = match.groups()
-    cause = ""
-    for line in traceback_text.splitlines():
-        if line.strip():
-            cause = line.strip()
+    cause = _exception_summary(traceback_text)
     if kind == "importing":
         text = f'Cannot import plugin "{name}": {cause}. Check the name is spelled right and the plugin is installed.'
     else:
         text = f'Plugin "{name}" failed while running: {cause}.'
-    location = _plugin_directive(ledger_file, name)
+    location = _plugin_directive(ledger_file, name, config)
     if location is None:
         return f"<ledger>:0: {text}"
     return f"{location[0]}:{location[1]}: {text}"
 
 
-def _plugin_directive(ledger_file: Path | str | None, name: str) -> tuple[str, int] | None:
-    """The `file, line` of the `plugin "name"` directive in the ledger source."""
+_UNKNOWN_CONFIG = object()
+_FRAME_LINE = re.compile(r'^(\s*)File "')
+
+
+def _exception_summary(traceback_text: str) -> str:
+    """The final exception of a formatted traceback: its type and whole message.
+
+    The message may span lines (and carry notes), so the cause is everything
+    after the last frame's source lines — not just the last non-empty line,
+    which kept `Assets:Old -> ?` and dropped `ValueError: Bad account mapping:`
+    (w1/101). Lines are joined with single spaces into one detail line.
+    """
+    lines = traceback_text.splitlines()
+    start = 0
+    frame_indent: int | None = None
+    for index, line in enumerate(lines):
+        match = _FRAME_LINE.match(line)
+        if match:
+            start, frame_indent = index + 1, len(match.group(1))
+    if frame_indent is not None:
+        # Skip the frame's source and caret lines, indented deeper than `File`.
+        while start < len(lines) and (
+            not lines[start].strip() or len(lines[start]) - len(lines[start].lstrip()) > frame_indent
+        ):
+            start += 1
+    block = [line.strip() for line in lines[start:] if line.strip()]
+    return " ".join(block) if block else traceback_text.strip()
+
+
+def _plugin_directive(
+    ledger_file: Path | str | None, name: str, config: Any = _UNKNOWN_CONFIG
+) -> tuple[str, int] | None:
+    """The `file, line` of the `plugin "name"` directive in the ledger source.
+
+    With a known config, the directive carrying that config wins; the first
+    directive naming the plugin is the fallback.
+    """
     if ledger_file is None:
         return None
-    directive = re.compile(rf"^\s*plugin\s+[\"']{re.escape(name)}[\"']")
+    directive = re.compile(rf"""^\s*plugin\s+"{re.escape(name)}"(?:\s+"((?:[^"\\]|\\.)*)")?""")
     try:
         lines = Path(ledger_file).read_text(encoding="utf-8", errors="replace").split("\n")
     except OSError:
         return None
+    first: tuple[str, int] | None = None
     for lineno, line in enumerate(lines, start=1):
-        if directive.match(line):
+        match = directive.match(line)
+        if match is None:
+            continue
+        first = first or (str(ledger_file), lineno)
+        written = match.group(1)
+        if config is not _UNKNOWN_CONFIG and (None if written is None else _unescape(written)) == config:
             return (str(ledger_file), lineno)
-    return None
+    return first
+
+
+def _unescape(text: str) -> str:
+    """A Beancount string body as the parser reads it: backslash escapes the next character."""
+    return re.sub(r"\\(.)", r"\1", text)
 
 
 def _duplicate_message(error: Any, message: str) -> str | None:
