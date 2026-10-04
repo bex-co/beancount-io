@@ -121,3 +121,41 @@ def test_unsaved_refresh_warns_without_claiming_remembered_settings_were_discard
         assert ledger.read_bytes() == before_ledger
     finally:
         record.chmod(0o600)
+
+
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        {"sources": 5},
+        {"sources": "abc"},
+        {"sources": [{"headers": [1, 2], "account": "Assets:Checking", "mapping": "x"}]},
+        {"sources": [{"headers": "Date", "account": "Assets:Checking", "mapping": "x"}, 7]},
+        [1, 2],
+    ],
+    ids=["int-sources", "str-sources", "int-headers", "str-headers", "list-record"],
+)
+def test_corrupt_record_reads_as_no_memory_and_is_rewritten(
+    csv_import: tuple[Path, Path, list[str]], bea_config_dir: Path, corrupt: object
+) -> None:
+    ledger, source, args = csv_import
+    record = _record(ledger, bea_config_dir)
+    record.parent.mkdir(parents=True, exist_ok=True)
+    record.write_text(json.dumps(corrupt))
+    runner = CliRunner()
+
+    # A flag-free run over the corrupt record recalls nothing and does not crash.
+    flag_free = ["--json", "--no-input", "--file", str(ledger), "import", str(source), "--account", "Assets:Checking"]
+    recalled_nothing = runner.invoke(app, flag_free)
+    assert recalled_nothing.exit_code == 0, recalled_nothing.output
+    assert json.loads(recalled_nothing.stdout)["data"]["remembered"] is None
+
+    applied = runner.invoke(app, [*args, "--apply"])
+
+    assert applied.exit_code == 0, applied.output
+    assert json.loads(applied.stdout)["data"]["written"] == 1
+    (stored,) = json.loads(record.read_text())["sources"]
+    assert stored["headers"] == ["Date", "Description", "Amount"]
+    assert stored["mapping"] == MAPPING
+    recalled = runner.invoke(app, flag_free)
+    assert recalled.exit_code == 0, recalled.output
+    assert json.loads(recalled.stdout)["data"]["remembered"]["mapping"] == MAPPING

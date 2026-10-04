@@ -135,6 +135,30 @@ def _csv_record(file: Path) -> Path:
     return config_dir() / "importers" / f"csv-{key}.json"
 
 
+def _stored_sources(record: Path) -> list[dict[str, Any]]:
+    """The well-formed entries of a remembered-CSV record.
+
+    A corrupt record — unreadable, not JSON, `sources` not a list, an entry
+    that is not an object, or headers that are not a list of strings — reads
+    as no memory for that part, so stale local state never blocks an import.
+    The next successful run rewrites the record from the surviving entries.
+    """
+    try:
+        data = json.loads(record.read_text())
+    except (OSError, ValueError):
+        return []
+    sources = data.get("sources") if isinstance(data, dict) else None
+    if not isinstance(sources, list):
+        return []
+    return [
+        entry
+        for entry in sources
+        if isinstance(entry, dict)
+        and isinstance(entry.get("headers"), list)
+        and all(isinstance(header, str) for header in entry["headers"])
+    ]
+
+
 def _find_csv_entry(file: Path, headers: list[str] | None, account: str) -> dict[str, Any] | None:
     """The remembered entry for a header row and account, without side effects."""
     from cli.csv_mapper import header_signature
@@ -144,15 +168,10 @@ def _find_csv_entry(file: Path, headers: list[str] | None, account: str) -> dict
     record = _csv_record(file)
     if not record.is_file():
         return None
-    try:
-        sources = json.loads(record.read_text()).get("sources", [])
-    except (ValueError, AttributeError):
-        return None
     wanted = header_signature(headers)
-    for entry in sources:
+    for entry in _stored_sources(record):
         if (
-            isinstance(entry, dict)
-            and header_signature(entry.get("headers")) == wanted
+            header_signature(entry.get("headers")) == wanted
             and entry.get("account") == account
             and isinstance(entry.get("mapping"), str)
         ):
@@ -175,10 +194,7 @@ def _recall_csv(file: Path, source: Path, account: str | None = None, *, notes: 
     record = _csv_record(file)
     if not record.is_file():
         return None
-    try:
-        sources = json.loads(record.read_text()).get("sources", [])
-    except (ValueError, AttributeError):
-        return None
+    sources = _stored_sources(record)
     try:
         headers = read_header(source)
     except UsageError:
@@ -196,8 +212,7 @@ def _recall_csv(file: Path, source: Path, account: str | None = None, *, notes: 
     matches = []
     for entry in sources:
         if (
-            isinstance(entry, dict)
-            and header_signature(entry.get("headers")) == wanted
+            header_signature(entry.get("headers")) == wanted
             and isinstance(entry.get("mapping"), str)
             and isinstance(entry.get("account"), str)
         ):
@@ -247,19 +262,11 @@ def _remember_csv(file: Path, spec: dict[str, Any]) -> bool:
         return False
     record = _csv_record(file)
     try:
-        try:
-            sources = json.loads(record.read_text()).get("sources", [])
-        except (OSError, ValueError, AttributeError):
-            sources = []
         wanted = header_signature(headers)
         sources = [
             entry
-            for entry in sources
-            if not (
-                isinstance(entry, dict)
-                and header_signature(entry.get("headers")) == wanted
-                and entry.get("account") == spec["account"]
-            )
+            for entry in _stored_sources(record)
+            if not (header_signature(entry.get("headers")) == wanted and entry.get("account") == spec["account"])
         ]
         payload = json.dumps({"sources": [*sources, spec]})
         record.parent.mkdir(parents=True, exist_ok=True)

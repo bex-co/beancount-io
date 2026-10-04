@@ -61,7 +61,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [099](./099.md) — Ledger writes keep only mode bits: group, ACLs, extended attributes and file flags are dropped — **major**, CLI QA 2026-10-03.
 - [100](./100.md) — Appending to a ledger without a final newline drops the blank line before the new entry — **minor**, CLI QA 2026-10-03.
 - [101](./101.md) — Plugin failures lose the exception type and point at the wrong `plugin` line — **minor**, CLI QA 2026-10-03.
-- [105](./105.md) — A corrupt remembered-CSV record makes every later `import` for that ledger fail with a raw `TypeError` — **minor**, CLI QA 2026-10-03.
 - [108](./108.md) — Unknown keys inside bulk `units`/`cost`/`price` are silently dropped, so a typo sells the wrong lot — **major**, CLI QA 2026-10-03.
 - [109](./109.md) — Bulk metadata errors abort the whole batch, ignore `--partial`, and name no row — **minor**, CLI QA 2026-10-03.
 - [110](./110.md) — Bulk amounts accept `1_000`, Arabic-Indic and full-width digits that single `add` refuses — **minor**, CLI QA 2026-10-03.
