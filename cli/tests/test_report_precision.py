@@ -117,3 +117,64 @@ def test_quantize_passes_non_finite_values_through(spelling: str) -> None:
     number = Decimal(spelling)
 
     assert _quantize(number, "USD", {"USD": 2}) is number
+
+
+QUOTED = """option "operating_currency" "USD"
+2024-01-01 open Assets:Bank USD
+2024-01-01 open Assets:Broker
+2024-01-01 open Equity:Opening
+2024-01-01 open Expenses:Food USD
+2024-01-02 * "Seed"
+  Assets:Bank  1000.00 USD
+  Equity:Opening  -1000.00 USD
+2024-01-03 * "Lunch"
+  Expenses:Food  12.50 USD
+  Assets:Bank  -12.50 USD
+2024-01-04 * "Dinner"
+  Expenses:Food  20.25 USD
+  Assets:Bank  -20.25 USD
+2024-01-05 * "Buy"
+  Assets:Broker  2 AAPL {187.25 USD}
+  Assets:Bank  -374.50 USD
+2024-01-31 price AAPL 191.559998 USD
+"""
+
+
+def test_a_long_price_quote_does_not_widen_amounts(tmp_path: Path) -> None:
+    """A quote is a rate, not money anyone holds: cents stay cents (w1/052)."""
+    ledger = tmp_path / "quoted.bean"
+    ledger.write_text(QUOTED)
+
+    statement = _bea(tmp_path, "--file", str(ledger), "report", "income-statement")
+    assert statement.returncode == 0, statement.stderr
+    assert "32.75 USD" in statement.stdout
+    assert "32.750000" not in statement.stdout
+
+    balance = _bea(tmp_path, "--file", str(ledger), "balance", "Bank")
+    assert balance.returncode == 0, balance.stderr
+    assert "592.75 USD" in balance.stdout
+    assert "592.750000" not in balance.stdout
+
+    exact = _bea(tmp_path, "--json", "--file", str(ledger), "report", "balance-sheet")
+    assert exact.returncode == 0, exact.stderr
+    assert json.loads(exact.stdout)["data"]["net_worth"] == {"USD": "975.869996"}
+
+
+def test_display_precision_option_still_wins(tmp_path: Path) -> None:
+    ledger = tmp_path / "quoted.bean"
+    ledger.write_text('option "display_precision" "USD:0.001"\n' + QUOTED)
+
+    result = _bea(tmp_path, "--file", str(ledger), "balance", "Bank")
+
+    assert result.returncode == 0, result.stderr
+    assert "592.750 USD" in result.stdout
+
+
+def test_whole_dollars_with_one_cents_posting_keep_cents(tmp_path: Path) -> None:
+    ledger = tmp_path / "mixed.bean"
+    ledger.write_text(WHOLE + '2024-01-03 * "cents"\n  Expenses:Food  0.25 USD\n  Assets:Checking\n')
+
+    result = _bea(tmp_path, "--file", str(ledger), "balance", "Food")
+
+    assert result.returncode == 0, result.stderr
+    assert "10.25 USD" in result.stdout

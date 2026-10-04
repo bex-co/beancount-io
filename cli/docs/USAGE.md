@@ -954,7 +954,10 @@ back as transaction metadata.
 
 Human tables round each currency to the finest precision the ledger itself
 uses for it, so a whole-dollar ledger prints `10 USD` rather than `10.00`.
-A currency the ledger never names — usually a `--conversion` target — has no
+That precision comes from posting amounts and balance assertions (or
+`option "display_precision"`), not from price quotes or cost numbers, so a
+`price AAPL 191.559998 USD` does not make a cents ledger print six decimals.
+A currency no posting names — usually a `--conversion` target — has no
 precision to infer and renders with two decimals; `--json` keeps the exact
 value either way.
 

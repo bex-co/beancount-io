@@ -1264,7 +1264,7 @@ class TestManagedLoadCommands:
         )
 
         assert result.returncode == 0, result.stderr
-        assert "30 USD" in result.stdout
+        assert "30.00 USD" in result.stdout
         assert "Partial valuation" not in result.stdout
 
     def test_import_applies_beside_a_managed_include(self, feed_server: str, tmp_path: Path) -> None:
@@ -1626,7 +1626,7 @@ class TestPriceExport:
         )
 
         assert result.returncode == 0, result.stderr
-        assert "30 USD" in result.stdout
+        assert "30.00 USD" in result.stdout
 
     def test_export_refuses_unavailable_naming_the_source(self, feed_server: str, tmp_path: Path) -> None:
         ledger = tmp_path / "main.bean"
