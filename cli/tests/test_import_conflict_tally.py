@@ -161,3 +161,40 @@ def test_a_clean_preview_says_nothing_about_conflicts(tmp_path: Path) -> None:
     summary = preview.stdout.splitlines()[0]
     assert "1 ready" in summary
     assert "conflict" not in summary
+
+
+def _apply_error(tmp_path: Path, ledger: Path, source: Path) -> dict:
+    done = _import(tmp_path, ledger, source, "--apply", as_json=True)
+    assert done.returncode == 4, done.stdout
+    return json.loads(done.stderr)["error"]
+
+
+def test_an_id_repeated_inside_the_export_points_at_the_file(tmp_path: Path) -> None:
+    """w1/168: the advice sent the user to a ledger entry that does not exist."""
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER, encoding="utf-8")
+    before = ledger.read_bytes()
+    source = tmp_path / "in3.csv"
+    source.write_text(HEADER + "2020-06-03,-1.00,Tea,Q9\n2020-06-03,-2.00,Tea,Q9\n", encoding="utf-8")
+
+    error = _apply_error(tmp_path, ledger, source)
+
+    rows = error["result"]["rows"]
+    assert [row["status"] for row in rows] == ["new", "conflict"]
+    assert rows[1]["reason"] == "Stable ID repeats row 1 of this import with different transaction data."
+    assert "ledger" not in error["message"]
+    assert "source file" in error["message"]
+    assert error["details"] == [f"Row 2 (conflict): {rows[1]['reason']}"]
+    assert ledger.read_bytes() == before
+
+
+def test_a_ledger_id_conflict_keeps_its_wording(tmp_path: Path, seeded: tuple[Path, Path]) -> None:
+    ledger, _ = seeded
+
+    error = _apply_error(tmp_path, ledger, _conflict_source(tmp_path))
+
+    assert error["message"] == (
+        "Import needs review; nothing was written. A stable ID already matches a ledger entry with different "
+        "data — edit or remove that entry, change the bank ID, or drop the row."
+    )
+    assert error["result"]["rows"][0]["reason"] == "Stable ID matches an entry with different transaction data."

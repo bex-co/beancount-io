@@ -334,7 +334,9 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   `--csv` path writes, so it never silently disables bank-ID dedupe.
   IDs must be stable and unique within that account. An exact match is skipped;
   reused native IDs with different source amounts or commodities are conflicts
-  requiring review. Payee, narration, date, flag, and counter-account edits do
+  requiring review. An ID repeated within one export with different data is a
+  conflict too; it names the earlier row of the import, and the fix is in the
+  source file rather than the ledger. Payee, narration, date, flag, and counter-account edits do
   not change that identity (generated ids: see below). The preview's `ID` column names each row's
   identifier source: `bank` for a bank column, `hash` for a content hash, or
   `importer` for an `import-id` the importer supplied.

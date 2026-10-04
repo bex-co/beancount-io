@@ -64,7 +64,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [164](./164.md) — The `--meta` invalid-date check misses slash and unpadded dates and stores them as strings — **minor**, CLI QA 2026-10-03.
 - [165](./165.md) — `add document` accepts a `../` path outside the ledger directory that the next `bea check` rejects (as "absolute") — **minor**, CLI QA 2026-10-03.
 - [167](./167.md) — A refused bulk add without `--partial` reloads the ledger once per row just to build its hint — **minor**, CLI QA 2026-10-03.
-- [168](./168.md) — An `import-id` conflict inside the import file tells the user to edit a ledger entry that doesn't exist — **minor**, CLI QA 2026-10-03.
 - [169](./169.md) — A schema-invalid bulk batch suggests `--partial` "for some of the 0" valid rows — **minor**, CLI QA 2026-10-03.
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.

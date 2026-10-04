@@ -223,6 +223,10 @@ def answer(
     rows: list[dict[str, Any]] = []
     texts: list[str] = []
     conflicts = False
+    # Which side a conflicting id came from: the ledger, or an earlier row of
+    # this same export (banks do reuse ids within one file).
+    ledger_conflicts = False
+    batch_conflicts = False
     hashed = _hash_rows(entries, account, keys, Transaction)
     claimed = _claim_payeeless_ids(hashed, identities, account)
     batch_rows: dict[int, int] = {}
@@ -278,11 +282,16 @@ def answer(
                     hits = [canonical]
                 (_, kind, matched_value), match, _ = hits[0]
                 if not all(same for _, _, same in hits):
-                    status, reason, conflicts = (
-                        "conflict",
-                        "Stable ID matches an entry with different transaction data.",
-                        True,
-                    )
+                    status, conflicts = "conflict", True
+                    if id(match) in batch_rows:
+                        batch_conflicts = True
+                        reason = (
+                            f"Stable ID repeats row {batch_rows[id(match)]} of this import with different "
+                            "transaction data."
+                        )
+                    else:
+                        ledger_conflicts = True
+                        reason = "Stable ID matches an entry with different transaction data."
                 elif kind == "file":
                     status, reason = "duplicate", "Previously imported source row matches."
                 elif kind == "digest":
@@ -410,15 +419,24 @@ def answer(
                 or (row["status"] == "possible_duplicate" and duplicates == "review")
                 or row["status"] == "blocked"
             ]
-            if conflicts and not (preview["possible_duplicates"] and duplicates == "review"):
-                guidance = (
-                    "Import needs review; nothing was written. A stable ID already matches a ledger "
-                    "entry with different data — edit or remove that entry, change the bank ID, or drop the row."
+            fixes = []
+            if ledger_conflicts:
+                fixes.append(
+                    "a stable ID already matches a ledger entry with different data — edit or remove that "
+                    "entry, change the bank ID, or drop the row"
                 )
+            if batch_conflicts:
+                fixes.append(
+                    "a stable ID repeats within this export with different data — correct or drop one of "
+                    "those rows in the source file, or map a different id column"
+                )
+            conflict_fix = "; ".join(fixes)
+            if conflicts and not (preview["possible_duplicates"] and duplicates == "review"):
+                guidance = f"Import needs review; nothing was written. {conflict_fix[:1].upper()}{conflict_fix[1:]}."
             elif conflicts:
                 guidance = (
-                    "Import needs review; nothing was written. Resolve ID conflicts (stable ID with different "
-                    "ledger data) and choose --duplicates skip/include for possible duplicates."
+                    f"Import needs review; nothing was written. Resolve ID conflicts ({conflict_fix}) and choose "
+                    "--duplicates skip/include for possible duplicates."
                 )
             elif preview["possible_duplicates"] and duplicates == "review":
                 guidance = (
