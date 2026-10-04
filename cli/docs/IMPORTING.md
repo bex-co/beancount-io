@@ -81,7 +81,8 @@ zero counts as empty, so the `Debit=30.00,Credit=0.00` shape banks zero-fill
 imports as `-30.00`. Amount, debit, and credit cells must use decimal notation (`1000`,
 not `1e3`); a notation error names the row and column before anything is written.
 Cells may carry currency symbols (`$4.50`, `4,50 €`), thousands separators,
-accounting parentheses or a trailing minus for negatives, and comma decimals —
+accounting parentheses or a trailing minus for negatives (one marker per cell:
+`(-5.00)` is refused rather than read as `+5.00`), and comma decimals —
 the point-vs-comma convention is resolved from the whole column, and a column
 mixing `1,000.00` with `1.000,00` is refused rather than guessed. A lone
 `1,234` stays a thousands group, but `0,125` and `1613,030` cannot be one,

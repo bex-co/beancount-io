@@ -101,16 +101,16 @@ def _negated(number: Decimal) -> Decimal:
     return number.copy_negate()
 
 
-def _split_amount_sign(value: str) -> tuple[str, str, bool]:
+def _split_amount_sign(value: str) -> tuple[str, str, int]:
     """Split the sign, currency symbols, and parentheses off an amount cell.
 
-    Returns the leading +/- sign (kept for Decimal), the bare core, and whether
-    parentheses/trailing-minus negation applies.
+    Returns the leading +/- sign (kept for Decimal), the bare core, and how
+    many parentheses/trailing-minus negations the cell carries.
     """
     text = value.strip()
-    negate = False
+    negations = 0
     if len(text) >= 2 and text.startswith("(") and text.endswith(")"):
-        negate = True
+        negations += 1
         text = text[1:-1]
     text = text.strip()
     sign = ""
@@ -128,11 +128,11 @@ def _split_amount_sign(value: str) -> tuple[str, str, bool]:
             text = text[:-1]
         elif text.endswith("-") and not trailing_minus_seen:
             trailing_minus_seen = True
-            negate = not negate
+            negations += 1
             text = text[:-1]
         else:
             break
-    return sign, text.strip(), negate
+    return sign, text.strip(), negations
 
 
 def _separator_vote(core: str) -> str | None:
@@ -161,7 +161,7 @@ def _resolve_decimal_comma(cells: list[tuple[int, str]]) -> bool:
     for row_number, value in cells:
         if not value.strip():
             continue
-        _sign, core, _negate = _split_amount_sign(value)
+        _sign, core, _negations = _split_amount_sign(value)
         vote = _separator_vote(core)
         if vote == "us" and first_us is None:
             first_us = (row_number, value.strip())
@@ -223,7 +223,14 @@ def _comma_decimal_to_point(where: str, column: str, value: str, text: str) -> s
 
 def _parse_amount_cell(where: str, column: str, value: str, *, decimal_comma: bool) -> Decimal:
     """Parse one bank amount cell under the column's resolved convention."""
-    sign, core, negate = _split_amount_sign(value)
+    sign, core, negations = _split_amount_sign(value)
+    if negations > 1 or (negations and (sign == "-" or core.startswith("-"))):
+        # `(-5.00)`, `-5.00-` or `(5.00-)` marks one amount negative twice.
+        # Cancelling the two would book a payment as money in: refuse it.
+        raise UsageError(
+            f"{where}: amount {value!r} in column {column!r} is marked negative twice (more than one of a "
+            "minus sign, parentheses, and a trailing minus); keep one negative marker."
+        )
     if _NON_FINITE_AMOUNT.fullmatch(core):
         raise UsageError(f"{where}: amount {value!r} in column {column!r} is not a finite number.")
     text = _THOUSAND_SEPARATOR_FILLER.sub("", core)
@@ -245,7 +252,7 @@ def _parse_amount_cell(where: str, column: str, value: str, *, decimal_comma: bo
         raise UsageError(f"{where}, column {column!r}: {exc}") from None
     except InvalidOperation:
         raise _unparseable_amount(where, column, value) from None
-    return _negated(number) if negate else number
+    return _negated(number) if negations else number
 
 
 @dataclass(frozen=True)
