@@ -701,7 +701,7 @@ def test_example_output_refuses_an_existing_file(tmp_path: Path, flag: str) -> N
     # A fixed seed: unseeded `bean-example` draws randomly and occasionally dies
     # with StopIteration inside balance-check generation.
     result = runner.invoke(
-        app, ["example", "--date-begin", "2020-01-01", "--date-end", "2020-01-31", "-s", "7", *output_args]
+        app, ["example", "--date-begin", "2020-01-01", "--date-end", "2020-02-01", "-s", "7", *output_args]
     )
     assert result.exit_code == 4, result.output
     assert victim.read_bytes() == b"Real books\n"
@@ -714,13 +714,13 @@ def test_example_output_force_and_fresh_paths_write(tmp_path: Path) -> None:
     victim.write_bytes(b"Real books\n")
     forced = runner.invoke(
         app,
-        ["example", "--date-begin", "2020-01-01", "--date-end", "2020-01-31", "-s", "7", "--force", "-o", str(victim)],
+        ["example", "--date-begin", "2020-01-01", "--date-end", "2020-02-01", "-s", "7", "--force", "-o", str(victim)],
     )
     assert forced.exit_code == 0, forced.output
     assert victim.read_bytes() != b"Real books\n"
     fresh = tmp_path / "fresh.bean"
     result = runner.invoke(
-        app, ["example", "--date-begin", "2020-01-01", "--date-end", "2020-01-31", "-s", "7", "-o", str(fresh)]
+        app, ["example", "--date-begin", "2020-01-01", "--date-end", "2020-02-01", "-s", "7", "-o", str(fresh)]
     )
     assert result.exit_code == 0, result.output
     assert fresh.stat().st_size > 0

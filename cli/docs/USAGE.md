@@ -352,6 +352,9 @@ against the root ledger's directory when the working directory has no such file.
 A location that already resolves, and an absolute one, are passed through
 untouched.
 
+`bea example` exits 2 before generating when its date range is inverted or
+shorter than 31 days; a missing `--date-begin` or `--date-end` takes
+upstream's default (January 1 two years back, and today) for that check.
 `bea treeify` exits 2 when its input has no hierarchical column to render,
 naming what it looked for — piping plain text is not a tree. Its `-o`
 destination follows [Output destinations](#output-destinations): the ledger

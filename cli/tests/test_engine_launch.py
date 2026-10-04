@@ -761,6 +761,24 @@ class TestNativeMisuse:
         assert "Traceback" not in result.stderr
         assert not target.exists()
 
+    @pytest.mark.parametrize(
+        ("args", "reason"),
+        [
+            (["--date-end", "2001-06-01"], "begin must be on or before end"),
+            (["--date-begin", "2999-12-01"], "begin must be on or before end"),
+            (["--date-begin", "2024-01-01", "--date-end", "2024-01-01"], "needs at least 31"),
+            (["--date-begin", "2020-01-01", "--date-end", "2020-01-16"], "needs at least 31"),
+        ],
+        ids=["end-only", "begin-only", "same-day", "short-span"],
+    )
+    def test_example_unusable_ranges_are_usage_errors(self, tmp_path: Path, args: list[str], reason: str) -> None:
+        """A missing side takes upstream's default before comparing (w1/086)."""
+        result = _bea_native(tmp_path, "example", *args)
+        assert result.returncode == 2, result.stderr
+        assert reason in result.stderr
+        assert "Traceback" not in result.stderr
+        assert result.stdout == ""
+
     def test_example_valid_range_still_works(self, tmp_path: Path) -> None:
         target = tmp_path / "ex.bean"
         result = _bea_native(

@@ -209,7 +209,7 @@ CASES: list[dict[str, Any]] = [
     {
         "id": "w3/336",
         "files": {"victim.bean": "Real books\n"},
-        "args": ["example", "--date-begin", "2020-01-01", "--date-end", "2020-01-31", "-s", "7", "-o", "victim.bean"],
+        "args": ["example", "--date-begin", "2020-01-01", "--date-end", "2020-02-01", "-s", "7", "-o", "victim.bean"],
         "exit": 4,
         "unchanged": ["victim.bean"],
         "stderr_has": ["Already exists", "--force"],
