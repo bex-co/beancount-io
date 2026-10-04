@@ -74,7 +74,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [131](./131.md) — When no CSV date format fits the column, the error blames row 1 and an ISO format the user never chose — **minor**, CLI QA 2026-10-03.
 - [134](./134.md) — Ledger-controlled paths and diagnostics reach the terminal raw through bea's error and warning output — **minor**, CLI QA 2026-10-03.
 - [136](./136.md) — Appends rewrite text inside strings: U+2028/U+2029 become newlines and continuation lines are re-indented — **major**, CLI QA 2026-10-03.
-- [139](./139.md) — Close and ask skills detect recurring charges by `payee`, which `bea import` leaves empty for one-description CSVs — **minor**, CLI QA 2026-10-03.
 - [140](./140.md) — Close checklist's period-end balance query has no date bound, so later entries change the result — **minor**, CLI QA 2026-10-03.
 - [144](./144.md) — A partial `format -i` failure leads with "nothing was written" although earlier files were rewritten — **minor**, CLI QA 2026-10-03.
 - [148](./148.md) — Without a payee column, any same-day same-amount rows are "possible duplicates" and `--duplicates skip` drops real rows — **major**, CLI QA 2026-10-03.

@@ -43,7 +43,7 @@ After reconciliation, every reconciled account has a period-end `balance` assert
 
 ### 4. Recurring completeness
 
-Detect expected-but-missing entries: payees appearing in **each of the prior 2–3 months** (steady amount ⇒ subscription-like) but absent this period (query per `close-checklist.md`). Each gap is a **finding** ("NETFLIX appeared Apr+May, absent in June — charge missing, subscription cancelled, or card changed?") — the user answers; if a real entry is missing, it arrives via `beancount-import`/manual entry, **never fabricated** by this skill.
+Detect expected-but-missing entries: merchants (payee, or narration when the payee is empty) appearing in **each of the prior 2–3 months** (steady amount ⇒ subscription-like) but absent this period (query per `close-checklist.md`). Each gap is a **finding** ("NETFLIX appeared Apr+May, absent in June — charge missing, subscription cancelled, or card changed?") — the user answers; if a real entry is missing, it arrives via `beancount-import`/manual entry, **never fabricated** by this skill.
 
 ### 5. Flags
 

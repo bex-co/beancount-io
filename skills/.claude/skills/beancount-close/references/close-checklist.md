@@ -27,14 +27,15 @@ For each active account, find the latest `balance` assertion dated ≥ period en
 
 ## Recurring completeness
 
-Candidate subscriptions = payees present in each of the prior 2–3 months with steady amounts:
+Candidate subscriptions = merchants present in each of the prior 2–3 months with steady amounts. A merchant is the payee, or the narration when the payee is empty — `bea import` maps a one-description bank CSV to the narration, so grouping by `payee` alone puts every imported row in one empty group and hides the gap:
 
+<!-- recipe: recurring-grid -->
 ```sql
-SELECT payee, year(date) as year, month(date) as month, sum(cost(position)) as total
-WHERE account ~ '^Expenses:' GROUP BY payee, year, month ORDER BY payee, year, month
+SELECT coalesce(payee, narration) as merchant, year(date) as year, month(date) as month, sum(cost(position)) as total
+WHERE account ~ '^Expenses:' GROUP BY merchant, year, month ORDER BY merchant, year, month
 ```
 
-Read the month-grid per payee: present in all prior months of the window, absent in the close month, amounts steady (±20%) → **recurring gap** finding. Variable-amount recurrers (groceries, gas) are *not* gaps — mention only subscriptions-like patterns. For each gap ask: charge missing from import? cancelled? moved cards? The answer routes to `beancount-import` (missing data) or nothing (genuinely cancelled — note it).
+Read the month-grid per merchant: present in all prior months of the window, absent in the close month, amounts steady (±20%) → **recurring gap** finding. Variable-amount recurrers (groceries, gas) are *not* gaps — mention only subscriptions-like patterns. For each gap ask: charge missing from import? cancelled? moved cards? The answer routes to `beancount-import` (missing data) or nothing (genuinely cancelled — note it).
 
 ## Flag sweep
 

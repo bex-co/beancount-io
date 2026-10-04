@@ -434,6 +434,8 @@ class TestBeaRecipes(unittest.TestCase):
                 "beancount-init/references/bea-cli.md",
                 "beancount-import/references/bea-import.md",
                 "beancount-reconcile/SKILL.md",
+                "beancount-close/references/close-checklist.md",
+                "beancount-ask/references/bql-recipes.md",
             )
         )
 
@@ -499,6 +501,19 @@ class TestBeaRecipes(unittest.TestCase):
             return json.loads(result.stdout)["data"]
         self.assertNotEqual(result.returncode, 0, result.stdout)
         return result
+
+    def query_recipe(self, name: str, **placeholders: str):
+        """Run a shipped BQL recipe, filling its `<placeholder>` slots."""
+        query = " ".join(self.block(name, "sql").split())
+        for placeholder, value in placeholders.items():
+            query = query.replace(placeholder, value)
+        self.assertNotIn("<", query.replace("< ", ""), f"unfilled placeholder in {query}")
+        result = subprocess.run(
+            [*self.bea, "--file", self.values["ledger"], "--json", "--no-input", "query", query],
+            cwd=self.root, env=self.env, capture_output=True, text=True, timeout=90,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)["data"]["rows"]
 
     def batch(self, rows=None):
         rows = json.loads(self.block("batch-json", "json")) if rows is None else rows
@@ -664,6 +679,32 @@ class TestBeaRecipes(unittest.TestCase):
         self.values.update(statement_ending="2940.00", proposed_net="(-3.00 + -1.00)")
         self.assertEqual(self.recipe("tie-out")["rows"], [["2945.00", "2941.00", "-1.00"]])
         self.assertEqual(ledger.read_bytes(), before)
+
+    def test_recurring_recipes_find_a_gap_in_a_payee_less_import(self):
+        # A one-description bank CSV, imported through the shipped recipe: bea
+        # maps the description to the narration and leaves the payee empty.
+        self.ledger.write_text(
+            self.ledger.read_text() + "2023-01-01 open Expenses:Uncategorized USD\n"
+        )
+        self.csv(
+            "Date,Description,Amount\n"
+            "2026-01-12,NETFLIX.COM,-15.49\n2026-02-12,NETFLIX.COM,-15.49\n"
+            "2026-01-20,SAFEWAY,-50.00\n2026-02-20,SAFEWAY,-52.00\n2026-03-20,SAFEWAY,-48.00\n",
+            "date=Date,amount=Amount,narration=Description,sign=bank",
+        )
+        self.assertEqual(self.recipe("csv-apply")["written"], 5)
+
+        grid = {(row[0], row[1], row[2]) for row in self.query_recipe("recurring-grid")}
+        self.assertIn(("NETFLIX.COM", 2026, 1), grid)
+        self.assertIn(("NETFLIX.COM", 2026, 2), grid)
+        self.assertNotIn(("NETFLIX.COM", 2026, 3), grid, "the March gap is visible")
+        self.assertIn(("SAFEWAY", 2026, 3), grid)
+        self.assertNotIn(None, {merchant for merchant, _, _ in grid}, "rows grouped under an empty payee")
+
+        candidates = {row[0]: row[1] for row in self.query_recipe("recurring-candidates")}
+        self.assertEqual(candidates, {"SAFEWAY": 3, "NETFLIX.COM": 2})
+        history = self.query_recipe("merchant-history", **{"'NETFLIX'": "'NETFLIX.COM'"})
+        self.assertEqual([row[0] for row in history], ["2026-01-12", "2026-02-12"])
 
 
 def load_tests(loader, tests, pattern):

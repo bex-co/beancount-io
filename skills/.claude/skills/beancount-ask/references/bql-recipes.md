@@ -17,7 +17,7 @@ WHERE account ~ '^Expenses:' AND date >= 2026-06-01 AND date < 2026-07-01
 GROUP BY account ORDER BY total DESC
 ```
 
-Half-open period (`>= first, < first-of-next`) — never `<= last-day`, it drops nothing but reads wrong on time-of-day semantics elsewhere; consistency wins. Per-payee variant: `GROUP BY payee`.
+Half-open period (`>= first, < first-of-next`) — never `<= last-day`, it drops nothing but reads wrong on time-of-day semantics elsewhere; consistency wins. Per-merchant variant: select `coalesce(payee, narration) as merchant` and `GROUP BY merchant` (imported one-description rows have an empty payee).
 
 ## 2. Monthly trend for one category
 
@@ -49,18 +49,20 @@ GROUP BY year, month ORDER BY year, month
 
 ## 5. Recurring charges & price creep
 
-Candidates — same payee hitting Expenses repeatedly:
+Candidates — same merchant hitting Expenses repeatedly. A merchant is the payee, or the narration when the payee is empty: `bea import` maps a one-description bank CSV to the narration, so grouping by `payee` alone lumps every imported row into one empty group.
 
+<!-- recipe: recurring-candidates -->
 ```sql
-SELECT payee, count(date) as n, sum(cost(position)) as total
-WHERE account ~ '^Expenses:' GROUP BY payee ORDER BY n DESC
+SELECT coalesce(payee, narration) as merchant, count(date) as n, sum(cost(position)) as total
+WHERE account ~ '^Expenses:' GROUP BY merchant ORDER BY n DESC
 ```
 
-A payee with n ≈ months-in-ledger and steady amounts is a subscription; groceries/gas also recur — distinguish by *amount regularity*, and say which you excluded and why. Then per-payee history to spot creep:
+A merchant with n ≈ months-in-ledger and steady amounts is a subscription; groceries/gas also recur — distinguish by *amount regularity*, and say which you excluded and why. Then per-merchant history to spot creep, using the `merchant` value from the candidates:
 
+<!-- recipe: merchant-history -->
 ```sql
 SELECT date, cost(position) as amount
-WHERE account ~ '^Expenses:' AND payee = 'NETFLIX' ORDER BY date
+WHERE account ~ '^Expenses:' AND coalesce(payee, narration) = 'NETFLIX' ORDER BY date
 ```
 
 Report creep as "was X through <date>, now Y (+Z%)".
