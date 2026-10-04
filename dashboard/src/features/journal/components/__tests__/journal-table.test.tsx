@@ -77,6 +77,49 @@ describe("JournalTable", () => {
       .getAllByRole("button", { name: "Toggle postings" })
       .filter((_, index) => index % 2 === 0);
 
+  describe("narrow layout", () => {
+    // jsdom has no table layout, so this pins the contract that keeps a phone
+    // row from clipping the posting count (verified in a browser at 390px):
+    // the description column must not contribute its untruncated, `nowrap`
+    // payee width to the table's minimum, or the table outgrows its scroll
+    // container and the rightmost column — the count — is cut off.
+    it("lets the description column shrink so a two-digit count stays whole", () => {
+      const transaction = {
+        ...createMockTransaction(16),
+        payee: "Metro Transport Authority of the Greater Region",
+      };
+      render(
+        <JournalTable
+          data={createTableData([transaction])}
+          showMetadata={false}
+          showPostings={false}
+          onEntryClick={mockOnEntryClick}
+        />,
+      );
+
+      const descriptionHeader = screen.getByRole("columnheader", {
+        name: "Payee/Narration",
+      });
+      const descriptionCell = screen
+        .getByText("Metro Transport Authority of the Greater Region")
+        .closest("td");
+      for (const el of [descriptionHeader, descriptionCell]) {
+        // Phone-only: from `sm:` up the original auto sizing is restored.
+        expect(el).toHaveClass(
+          "w-full",
+          "max-w-0",
+          "sm:w-auto",
+          "sm:max-w-none",
+        );
+      }
+      for (const toggle of screen.getAllByRole("button", {
+        name: "Toggle postings",
+      })) {
+        expect(toggle).toHaveTextContent("16");
+      }
+    });
+  });
+
   describe("PostingIndicators", () => {
     it("should render the posting count for a transaction", () => {
       const transaction = createMockTransaction(3);

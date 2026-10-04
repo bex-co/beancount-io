@@ -135,12 +135,18 @@ const FLAG_COL: JournalColumnDef = {
     "flag w-12 shrink-0 text-center font-mono text-xs sm:w-24 sm:text-sm",
 };
 
+// On phones, `w-full max-w-0` keeps this column from contributing its content
+// width to the table's minimum: a truncated payee is `nowrap`, so a long one
+// widened the table past its scroll container and clipped the rightmost
+// column — the posting count. The column takes the remaining width instead and
+// its text truncates as intended. From `sm:` up the original auto sizing stays,
+// so desktop column widths are unchanged.
 const DESCRIPTION_COL: JournalColumnDef = {
   id: "description",
   visibility: "always",
   headerClassName:
-    "description min-w-0 text-xs font-medium text-muted-foreground sm:text-sm",
-  cellClassName: "description min-w-0",
+    "description w-full max-w-0 text-xs font-medium text-muted-foreground sm:w-auto sm:max-w-none sm:text-sm",
+  cellClassName: "description w-full max-w-0 sm:w-auto sm:max-w-none",
 };
 
 const UNITS_COL: JournalColumnDef = {
