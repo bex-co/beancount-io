@@ -260,6 +260,53 @@ describe("ActivityTransformer", () => {
       });
     });
 
+    describe("authorAvatar", () => {
+      const withAvatar = (avatar_url: string | undefined): Activity => ({
+        id: 9,
+        op_type: "commit_repo",
+        repo: {
+          id: 1,
+          name: "my-ledger",
+          full_name: "testuser/my-ledger",
+          owner: { login: "testuser" },
+        },
+        act_user: { login: "testuser", avatar_url },
+        created: "2024-01-15T10:00:00Z",
+        content: "Fixed accounting errors",
+      });
+
+      it.each([
+        "https://git.example.org/avatars/abc123",
+        "https://secure.gravatar.com/avatar/abc?d=identicon",
+      ])("keeps a publicly reachable avatar URL (%s)", (url) => {
+        expect(transformActivityToFeedItem(withAvatar(url))?.authorAvatar).toBe(
+          url,
+        );
+      });
+
+      it.each([
+        "http://localhost:3000/avatars/abc123",
+        "http://LOCALHOST/avatars/abc123",
+        "http://gitea:3000/avatars/abc123",
+        "http://127.0.0.1:3000/avatars/abc123",
+        "http://[::1]:3000/avatars/abc123",
+        "http://10.0.0.5/avatars/abc123",
+        "http://172.20.1.2/avatars/abc123",
+        "http://192.168.1.10/avatars/abc123",
+        "http://169.254.169.254/avatars/abc123",
+        "http://gitea.internal/avatars/abc123",
+        "http://app.localhost/avatars/abc123",
+        "/avatars/abc123",
+        "javascript:alert(1)",
+        "",
+        undefined,
+      ])("omits a non-public avatar URL (%s)", (url) => {
+        const item = transformActivityToFeedItem(withAvatar(url));
+        expect(item).not.toBeNull();
+        expect(item?.authorAvatar).toBeUndefined();
+      });
+    });
+
     it("links push commits to their exact dashboard version", () => {
       const activity: Activity = {
         id: 7,
