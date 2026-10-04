@@ -110,7 +110,9 @@ rather than relabelled; `$` and `¥` name several commodities each and are
 accepted as before. `--account` names the source account and
 is required. The file may start with a BOM; header cells are stripped before
 matching. Field separators are detected from the header among comma,
-semicolon, tab, and pipe; pass `--delimiter ','`, `--delimiter ';'`, or
+semicolon, tab, and pipe — the one on which the header and the first rows
+split into the same number of fields, so quoted `;` or dates like
+`Jan 05, 2026` cannot outvote the real separator; pass `--delimiter ','`, `--delimiter ';'`, or
 `--delimiter tab` to force one — or `delimiter=';'` inside `--csv` itself.
 Files read as UTF-8 (with or without a BOM) unless `--csv encoding=` names
 cp1252 or latin-1 — Windows exports with accented payees need

@@ -407,11 +407,14 @@ def detect_delimiter(source: Path, encoding: str = "utf-8") -> str:
     """Pick comma, semicolon, tab, or pipe from the first non-empty lines.
 
     Bank exports often use ``;`` (EU), tabs, or ``|`` (brokers). Prefer the
-    separator with a consistent multi-field column count across the sampled
-    body rows, so a header tied on field count resolves by the body; the
-    header itself stays out of the uniformity check (a merged header cell is
-    not a vote), and when no candidate is consistent the most fields on the
-    header line wins as before.
+    separator on which the header and every sampled body row agree on one
+    multi-field count, so a header tied on field count resolves by the body
+    and a body tie resolves by the header: a comma file whose quoted cells
+    hold semicolons, or a tab file whose dates hold commas, splits its header
+    on the real separator only. A separator the body agrees on but the header
+    does not (a merged header cell) comes next, provided the header splits on
+    it at all; when nothing is consistent the most fields on the header line
+    wins.
     """
     _refuse_utf16(source)
     try:
@@ -426,19 +429,30 @@ def detect_delimiter(source: Path, encoding: str = "utf-8") -> str:
         raise _decode_usage_error(source, exc, encoding) from None
     if not sample:
         return ","
-    best = ","
-    best_count = 0
-    body = sample[1:]
+    header, body = sample[0], sample[1:]
+    agreed: tuple[int, str] | None = None
+    body_only: tuple[int, str] | None = None
     for delim in _CANDIDATE_DELIMITERS:
         counts = {_field_count(line, delim) for line in body}
-        if len(counts) == 1:
-            (count,) = counts
-            if count is not None and count > 1 and count > best_count:
-                best, best_count = delim, count
-    if best_count > 1:
-        return best
+        if len(counts) != 1:
+            continue
+        (count,) = counts
+        header_count = _field_count(header, delim)
+        if count is None or count < 2 or header_count is None or header_count < 2:
+            continue
+        if header_count == count:
+            if agreed is None or count > agreed[0]:
+                agreed = (count, delim)
+        elif body_only is None or count > body_only[0]:
+            body_only = (count, delim)
+    if agreed is not None:
+        return agreed[1]
+    if body_only is not None:
+        return body_only[1]
+    best = ","
+    best_count = 0
     for delim in _CANDIDATE_DELIMITERS:
-        count = _field_count(sample[0], delim)
+        count = _field_count(header, delim)
         if count is not None and count > best_count:
             best, best_count = delim, count
     return best

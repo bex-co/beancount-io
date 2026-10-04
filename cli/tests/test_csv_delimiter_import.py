@@ -228,3 +228,45 @@ def test_sniffer_prefers_consistent_column_count(tmp_path: Path, module: str) ->
     comma = tmp_path / "comma.csv"
     comma.write_text("A,B,C\n1,2,3\n4,5,6\n")
     assert detect(comma) == ","
+
+
+SEPA = "Date,Description,Amount\n" + "".join(f'2026-08-0{day},"SEPA;DE89;REF{day};Rent",-5.00\n' for day in range(2, 6))
+
+
+@pytest.mark.parametrize("module", ["cli.csv_mapper", "bea_engine.csv_mapper"])
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        # Quoted semicolons give the body 4 fields on ';' but the header 1 (w1/151).
+        (SEPA, ","),
+        # Dates with commas tie ',' with tab on body count; the header decides.
+        ("Date\tDescription\tAmount\nJan 05, 2026\tA\t-5,74\nJan 06, 2026\tB\t-1,09\n", "\t"),
+        # A decimal comma and an unclosed quote must not hand the file to ','.
+        ('Date;Amount;Description\n2026-02-02;-4,00;Tea\n2026-02-03;-5,00;"Coffee\n', ";"),
+    ],
+    ids=["quoted-semicolons", "comma-dates-in-tab-file", "unclosed-quote-semicolon"],
+)
+def test_the_header_must_agree_with_the_detected_delimiter(
+    tmp_path: Path, module: str, body: str, expected: str
+) -> None:
+    source = tmp_path / "export.csv"
+    source.write_text(body)
+    assert import_module(module).detect_delimiter(source) == expected
+
+
+@pytest.mark.parametrize("extra", [[], ["--csv", "date=Date,amount=Amount,narration=Description"]])
+def test_comma_csv_with_quoted_semicolons_imports(books: Path, tmp_path: Path, extra: list[str]) -> None:
+    export = tmp_path / "sepa.csv"
+    export.write_text(SEPA)
+    result = _bea(tmp_path, books, "--json", "import", str(export), *extra, "--account", "Assets:Bank:Checking")
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert '"ready": 4' in result.stdout
+
+
+def test_unclosed_quote_in_semicolon_csv_reports_the_quote(books: Path, tmp_path: Path) -> None:
+    export = tmp_path / "q.csv"
+    export.write_text('Date;Amount;Description\n2026-02-02;-4,00;Tea\n2026-02-03;-5,00;"Coffee\n')
+    result = _bea(tmp_path, books, "import", str(export), "--csv", "auto", "--account", "Assets:Bank:Checking")
+    assert result.returncode == 2
+    assert "not well-formed CSV" in result.stderr
+    assert "omit the override" not in result.stderr
