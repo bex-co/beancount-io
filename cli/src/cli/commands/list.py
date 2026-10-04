@@ -176,7 +176,7 @@ SPECS: dict[str, _Spec] = {
         filter="account",
     ),
     "pad": _Spec(
-        headers=["DATE", "ACCOUNT", "SOURCE"],
+        headers=["DATE", "ACCOUNT", "FROM"],
         row=lambda p: [p["date"], p["account"], p["source_account"]],
         empty="No pad directives found.",
         filter="account",

@@ -620,7 +620,9 @@ opens, `implicit_prices` prices, `currency_accounts` opens, `close_tree`
 closes. `list` marks those rows `generated`: a `SOURCE` column in human
 tables, a `"generated": true` field in JSON. The field is absent when false,
 so a plugin-free answer is unchanged. `--on-disk` drops the synthesized rows,
-answering exactly what `grep` would find in the file.
+answering exactly what `grep` would find in the file. `list pad` heads the
+funding account `FROM` (JSON `source_account`), so the provenance column is
+the only `SOURCE`.
 
 The transaction table shows signed amounts by account and currency, with the
 cost basis and price that tell one lot from another — `5 HOOL {50.00 USD,

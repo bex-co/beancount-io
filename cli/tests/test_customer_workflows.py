@@ -697,6 +697,31 @@ class TestListMarksPluginSynthesizedRows:
         assert human.exit_code == 0, human.output
         assert "generated" in human.stdout
 
+    def test_generated_pad_headers_are_unique(self, tmp_path: Path) -> None:
+        # w1/115: the pad's funding account and the provenance column were both `SOURCE`.
+        (tmp_path / "padgen_w1_115.py").write_text(
+            "import datetime\n"
+            "from beancount.core import data\n"
+            '__plugins__ = ["padgen"]\n'
+            "def padgen(entries, options_map):\n"
+            '    meta = data.new_metadata("<padgen>", 0)\n'
+            '    pad = data.Pad(meta, datetime.date(2026, 1, 2), "Assets:Cash", "Equity:Opening")\n'
+            "    return [*entries, pad], []\n"
+        )
+        file = self._book(
+            tmp_path,
+            'option "insert_pythonpath" "TRUE"\n'
+            'plugin "padgen_w1_115"\n'
+            "2026-01-01 open Assets:Cash USD\n"
+            "2026-01-01 open Equity:Opening\n",
+        )
+        human = runner.invoke(app, ["--file", str(file), "list", "pad", "--allow-errors"])
+        assert human.exit_code == 0, human.output
+        header = next(line for line in human.stdout.splitlines() if line.startswith("DATE"))
+        assert header.split() == ["DATE", "ACCOUNT", "FROM", "SOURCE"]
+        [row] = [line for line in human.stdout.splitlines() if line.startswith("2026-01-02")]
+        assert row.split() == ["2026-01-02", "Assets:Cash", "Equity:Opening", "generated"]
+
     def test_currency_accounts_opens_marked_generated(self, tmp_path: Path) -> None:
         file = self._book(tmp_path, self.CURRENCY_BOOK)
         items = self._items(file, "list", "open")
