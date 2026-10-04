@@ -202,7 +202,9 @@ creating it again. Human output prints the ledger details before cloning.
 An in-place formatter failure
 reports completed replacements in `error.result.formatted`, failed files and
 their reasons in `failed`, files already aligned in `unchanged`, and files it
-never reached in `not_attempted`. Human output names the same outcomes. A
+never reached in `not_attempted`. Human output names the same outcomes. Once
+any file was rewritten, the error message counts each outcome instead of
+repeating the stopped file's "nothing was written". A
 staging-cleanup failure after a replacement still lists that file as formatted.
 These per-file outcomes require the engine's result; a lost engine response
 cannot establish which writes finished. `--debug` includes any upstream traceback.

@@ -164,7 +164,8 @@ def _format_in_place(
         progress = exc.result
         partial = [str(name) for name in progress.get("formatted", [])]
         write_failed = {
-            str(item["file"]): [str(error) for error in item["errors"]] for item in progress.get("failed", [])
+            str(item["file"]): [_file_reason(str(error), partial) for error in item["errors"]]
+            for item in progress.get("failed", [])
         }
         details = [f"formatted: {name}" for name in partial] + _problem_lines(failed, missing)
         details.extend(f"failed: {name}: {errors[0]}" for name, errors in write_failed.items() if errors)
@@ -176,8 +177,12 @@ def _format_in_place(
                 names = [str(name) for name in progress[key]]
                 result[key] = names
                 details.extend(f"{label}: {name}" for name in names)
-        exc.details = details + exc.details
+        exc.details = details + [_file_reason(detail, partial) for detail in exc.details]
         exc.result = result
+        if partial:
+            # The engine's message describes the one file it stopped on; after
+            # earlier rewrites, "nothing was written" would misreport the run.
+            exc.args = (_partial_message(len(partial), write_failed, failed, missing, progress),)
         raise
     result = _result(files, changed, failed, missing) | {"in_place": True}
     if failed or missing:
@@ -239,6 +244,29 @@ def _report(
         output.success(f"All {len(files)} file(s) are formatted.")
     else:
         output.success(f"Would format {len(changed)}/{len(files)} file(s) (dry run).")
+
+
+def _file_reason(reason: str, partial: list[str]) -> str:
+    """A per-file write failure, worded for that file once other files were rewritten."""
+    return reason.replace("nothing was written", "this file was not changed") if partial else reason
+
+
+def _partial_message(
+    formatted_count: int,
+    write_failed: dict[str, list[str]],
+    failed: dict[str, list[str]],
+    missing: list[output.MissingInclude],
+    progress: dict[str, object],
+) -> str:
+    """The headline of an `-i` run the engine stopped after rewriting some files."""
+    parts = [f"{formatted_count} file(s) formatted"]
+    if write_failed:
+        parts.append(f"{len(write_failed)} file(s) could not be written")
+    parts.extend(_problem_parts(failed, missing))
+    not_attempted = progress.get("not_attempted")
+    if isinstance(not_attempted, list) and not_attempted:
+        parts.append(f"{len(not_attempted)} file(s) not attempted")
+    return "; ".join(parts) + ". Each file is listed below; fix the failures and re-run."
 
 
 def _problem_lines(failed: dict[str, list[str]], missing: list[output.MissingInclude]) -> list[str]:

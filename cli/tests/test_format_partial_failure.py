@@ -50,6 +50,11 @@ def test_partial_failure_reports_every_outcome_and_preserves_unattempted_bytes(
         read_only.chmod(0o644)
 
     assert result.exit_code == 3, result.output
+    # The run rewrote a file before stopping: its headline must say so (w1/144).
+    assert "nothing was written" not in result.stderr
+    headline = json.loads(result.stderr)["error"]["message"] if as_json else result.stderr.splitlines()[0]
+    assert "1 file(s) formatted" in headline
+    assert "1 file(s) not attempted" in headline
     assert first.read_bytes() != before[first]
     for path in before.keys() - {first}:
         assert path.read_bytes() == before[path]
