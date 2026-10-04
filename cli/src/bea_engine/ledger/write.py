@@ -185,6 +185,13 @@ _ABANDONED_CANDIDATE_SECONDS = 3600
 #: leading dots, which a `.bea-*` glob cannot reach.
 _CANDIDATE_GLOBS = (".bea-*", "..bea-*")
 
+_CANDIDATE_NAME = re.compile(r"\.bea-[0-9a-f]{16}\.tmp")
+
+
+def is_candidate_file(path: Path) -> bool:
+    """Whether `path` is a staged candidate `candidate_file` created."""
+    return _CANDIDATE_NAME.fullmatch(path.name) is not None
+
 
 def pickle_cache_of(candidate: Path) -> Path:
     """Where Beancount will write the cache sidecar for a staged file.

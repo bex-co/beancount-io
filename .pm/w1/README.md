@@ -58,7 +58,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [073](./073.md) — A read-only included directory blocks every write with a raw `Errno 13` reported as a validation error — **minor**, CLI QA 2026-10-02.
 - [074](./074.md) — A signal during Beancount parsing is swallowed: a stopped write can still land, or staging copies leak — **minor**, CLI QA 2026-10-02.
 - [075](./075.md) — Write locks are case-sensitive on macOS, so writers using differently-cased paths can lose an add (partly verified) — **minor**, CLI QA 2026-10-02.
-- [080](./080.md) — Every write and import preview leaves another full copy of each managed price feed in the cache — **minor**, CLI QA 2026-10-03.
 - [081](./081.md) — Managed price feed validation accepts Unicode whitespace Beancount cannot parse, and replaces the last good revision — **minor**, CLI QA 2026-10-03.
 - [082](./082.md) — A relative `XDG_CACHE_HOME` breaks every ledger that uses managed prices — **minor**, CLI QA 2026-10-03.
 - [083](./083.md) — Beancount's load cache ignores newly matching include-glob files, so repeated `bea import --apply` writes duplicates — **major**, CLI QA 2026-10-03.

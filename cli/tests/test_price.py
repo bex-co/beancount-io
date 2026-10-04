@@ -2382,3 +2382,63 @@ class TestOfflineAndReadOnlyCache:
         assert "price cache not writable" in online.stderr
         assert refresh.returncode == 1
         assert "Cannot refresh" in refresh.stderr
+
+
+class TestEffectiveFeedCacheGrowth:
+    """w1/080: write validation never adds an effective feed copy to the cache."""
+
+    def test_staged_candidate_load_writes_no_effective_file(self, feed_server: str, tmp_path: Path) -> None:
+        from bea_engine.ledger.write import candidate_file
+
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(_managed_ledger(feed_server))
+        assert _load(feed_server, tmp_path, ledger.read_text()).errors == []
+        directory = feed_dir(f"{feed_server}/prices/BTC-USD", tmp_path / "cache")
+        before = _tree(directory)
+        origins = (f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}",)
+
+        with candidate_file(ledger, ledger.read_text() + "2026-09-10 price BTC 1 USD\n") as candidate:
+            loaded = load_with_sources(candidate, origins=origins, root=tmp_path / "cache")
+
+        assert loaded.errors == []
+        assert _price_numbers(loaded) == ["1", "113500.50"]
+        assert _tree(directory) == before
+        assert not list(tmp_path.glob(".bea-*"))
+
+    def test_repeated_writes_leave_one_effective_file(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        assert _run_bea(tmp_path, feed_server, "--file", str(ledger), "check").returncode == 0
+
+        for day in (1, 2, 3):
+            note = _run_bea(
+                tmp_path,
+                feed_server,
+                "--file",
+                str(ledger),
+                "add",
+                "note",
+                "--account",
+                "Assets:Broker",
+                "--comment",
+                f"note {day}",
+                "--date",
+                f"2026-01-0{day}",
+            )
+            assert note.returncode == 0, note.stderr
+            price = _run_bea(
+                tmp_path,
+                feed_server,
+                "--file",
+                str(ledger),
+                "add",
+                "price",
+                "-c",
+                "BTC",
+                "--amount",
+                f"5000{day} USD",
+                "--date",
+                f"2026-02-0{day}",
+            )
+            assert price.returncode == 0, price.stderr
+
+        assert len(list((tmp_path / "cache").rglob("*.effective.*"))) == 1

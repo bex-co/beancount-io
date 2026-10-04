@@ -230,7 +230,7 @@ def load_with_sources(
     from beancount import loader
     from beancount.loader import LoadError
 
-    from bea_engine.ledger.write import LedgerSnapshot, candidate_file
+    from bea_engine.ledger.write import LedgerSnapshot, candidate_file, is_candidate_file
 
     at = time.time() if now is None else now
     want_offline = _env_flag(OFFLINE_ENV) if offline is None else offline
@@ -264,6 +264,9 @@ def load_with_sources(
     texts = [content.decode("utf-8", errors="replace") for content in snapshot.contents.values()]
     pairs = collect_ledger_price_pairs(*texts) if blobs else set()
     ledger_key = sha256(str(entry.resolve()).encode("utf-8")).hexdigest()[:16]
+    # A staged write candidate is a fresh random file every time; caching its
+    # effective text would leave one more full feed copy per write or preview.
+    ephemeral = want_offline or is_candidate_file(entry)
 
     primary: set[tuple[str, int]] = set()
     for source in pending:
@@ -275,7 +278,8 @@ def load_with_sources(
     with ExitStack() as stack:
         # Each feed's effective text is cached per (revision, ledger) so export
         # reads what the load parsed. Offline loads write nothing to the cache
-        # (ADR 015 section 8) and an unwritable cache degrades, so either stages
+        # (ADR 015 section 8), staged write candidates are not ledgers worth a
+        # cache entry, and an unwritable cache degrades, so each of these stages
         # the text beside the ledger for this load only; its entries still
         # carry the cache path, like every other feed entry.
         effective: dict[str, tuple[PriceFeedBlob, EffectiveFeed, Path]] = {}
@@ -285,13 +289,13 @@ def load_with_sources(
             path = feed_dir(url, cache) / f"{blob.revision}.effective.{ledger_key}.beancount"
             if not _holds(path, precedence.text):
                 problem: str | None = None
-                if not want_offline:
+                if not ephemeral:
                     try:
                         # Atomic: a concurrent load may be parsing this very file.
                         write_text_atomic(path, precedence.text)
                     except OSError as error:
                         problem = cache_write_problem(error, path)
-                if want_offline or problem is not None:
+                if ephemeral or problem is not None:
                     if problem is not None:
                         cache_problems[url] = problem
                     stand_in = stack.enter_context(candidate_file(snapshot.root, precedence.text))
