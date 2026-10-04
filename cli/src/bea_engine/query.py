@@ -370,6 +370,9 @@ def interactive(
     shell = build_shell(file, sys.stdout, interactive=True, format=format, numberify=numberify, show_errors=show_errors)
     # After build_shell, which is what loads the ledger, and before cmdloop.
     _gate([format_error(error, ledger_file=file) for error in shell.context.errors], allow_errors)
+    # The policy outlives startup: `.reload` swaps in whatever the file holds
+    # now, and every later query re-checks it (see PreciseShell.execute).
+    shell.allow_errors = allow_errors
     destination = None
     if output is not None:
         _refuse_alias(output, file, shell.context)
@@ -397,6 +400,10 @@ def build_shell(
 
     class PreciseShell(BQLShell):  # type: ignore[misc]  # beanquery does not ship type annotations
         outfile: TextIO
+        # The read policy for queries after a `.reload`. One-shot callers gate
+        # the load themselves before executing, so only `interactive()` turns
+        # this off, once the startup load has passed its own gate.
+        allow_errors: bool = True
 
         def do_output(self, arg: str) -> None:
             """Send output to FILE or restore the original output stream."""
@@ -417,6 +424,13 @@ def build_shell(
             self._extract_queries(self.context.tables["entries"].entries)
             if self.context.errors and self.show_load_errors:
                 printer.print_errors(self.context.errors, file=sys.stderr)  # type: ignore[no-untyped-call]
+            if self.context.errors and not self.allow_errors:
+                # Said even under `--no-errors`: that flag quietens the banner,
+                # it does not waive the strict read the session opened with.
+                protocol.note(
+                    f"Ledger has {len(self.context.errors)} error(s); queries are refused until "
+                    "it loads cleanly. Fix the ledger and .reload, or reopen with --allow-errors."
+                )
 
         def do_help(self, arg: str) -> None:
             """List commands, writing to outfile so one-shot JSON stays clean."""
@@ -479,7 +493,14 @@ def build_shell(
             BQL. Preparation is idempotent (the quoting pattern skips names
             already quoted), which is what lets the outer wrapper stay as it is
             for the JSON path, which never builds a shell.
+
+            It is also where a strict session re-applies its read policy: the
+            startup gate saw only the first load, and `.reload` used to swap
+            in an invalid ledger that typed and stored queries then answered
+            from as if nothing had changed.
             """
+            if not self.allow_errors:
+                _gate([format_error(error, ledger_file=file) for error in self.context.errors], False)
             if isinstance(query, str):
                 query = _quote_reserved_tables(unicodedata.normalize("NFC", query))
                 _refuse_empty_window(query, [])

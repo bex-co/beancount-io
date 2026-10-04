@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import os
 import pty
+import re
 import select
 import signal
 import subprocess
@@ -178,3 +179,115 @@ def test_the_one_shot_policy_is_unchanged(tmp_path: Path, invalid: Path) -> None
     assert done.returncode == 1
     assert REFUSAL in done.stderr
     assert done.stdout == ""
+
+
+# ---------------------------------------------------------------------------
+# `.reload` keeps the policy (w1/039)
+#
+# The startup gate saw only the first load. `.reload` swapped in whatever the
+# file held now, and a strict session then answered from a ledger with a
+# failed assertion — silently, under `--no-errors`. The shell now keeps the
+# resolved policy and re-checks it before every query, typed or stored.
+# ---------------------------------------------------------------------------
+
+BROKEN = VALID + "2026-01-03 balance Assets:Cash 0 USD\n"
+STORED = '2026-01-04 query "cash" "SELECT sum(position) AS cash_total WHERE account = \'Assets:Cash\'"\n'
+QUERY = b"SELECT sum(position) AS cash_total WHERE account = 'Assets:Cash';\n"
+# A rendered table: the header, then its rule. The echoed input line carries
+# the alias too, but never a rule directly beneath it.
+TABLE = re.compile(r"cash_total\s*\r?\n-{5,}")
+
+
+def _reload_session(
+    tmp_path: Path, ledger: Path, steps: list[tuple[str | None, bytes]], *, query_flags: tuple[str, ...] = ()
+) -> tuple[int, str, list[str]]:
+    """Open a strict shell and play `steps`, one per prompt.
+
+    Each step optionally rewrites the ledger first, then types its input. The
+    screen is returned whole and also split per step, so an assertion can say
+    which part of the session printed what.
+    """
+    pid, fd = pty.fork()
+    if pid == 0:  # pragma: no cover - replaced by exec in the child
+        os.chdir(tmp_path)
+        argv = [str(BEA), "--strict", "--file", str(ledger), "query", *query_flags]
+        os.execve(str(BEA), argv, _env(tmp_path))
+    screen = ""
+    marks: list[int] = []
+    started = time.time()
+    try:
+        while True:
+            if len(marks) < len(steps) and screen.count("beanquery>") > len(marks):
+                text, typed = steps[len(marks)]
+                if text is not None:
+                    ledger.write_text(text, encoding="utf-8")
+                marks.append(len(screen))
+                os.write(fd, typed)
+            ready, _, _ = select.select([fd], [], [], 0.3)
+            if ready:
+                try:
+                    chunk = os.read(fd, 65536)
+                except OSError:  # The PTY closes as the child exits.
+                    chunk = b""
+                if chunk:
+                    screen += chunk.decode("utf-8", "replace")
+            finished, status = os.waitpid(pid, os.WNOHANG)
+            if finished:
+                bounds = [*marks, len(screen)]
+                parts = [screen[start:end] for start, end in zip(bounds, bounds[1:], strict=False)]
+                return os.waitstatus_to_exitcode(status), screen, parts
+            if time.time() - started > 120:
+                os.kill(pid, signal.SIGKILL)
+                os.waitpid(pid, 0)
+                raise AssertionError(f"the shell never exited; screen was {screen!r}")
+    finally:
+        os.close(fd)
+
+
+@pytest.mark.parametrize("query_flags", [(), ("--no-errors",)], ids=["banner", "no-errors"])
+def test_strict_refuses_queries_after_an_invalid_reload(
+    tmp_path: Path, valid: Path, query_flags: tuple[str, ...]
+) -> None:
+    broken = BROKEN + STORED
+    status, screen, parts = _reload_session(
+        tmp_path,
+        valid,
+        [(broken, b".reload\n"), (None, QUERY), (None, b".run cash\n"), (None, b".exit\n")],
+        query_flags=query_flags,
+    )
+
+    assert status == 0, screen
+    assert "queries are refused" in parts[0], "the reload itself says the session now refuses"
+    assert REFUSAL in parts[1] and "Pass --allow-errors" in parts[1]
+    assert REFUSAL in parts[2], "a stored query is gated too"
+    assert not TABLE.search(screen), "a strict session must not answer from the invalid load"
+    assert "Traceback" not in screen
+    assert valid.read_text(encoding="utf-8") == broken, "querying never writes the ledger"
+
+
+def test_a_clean_reload_restores_answers(tmp_path: Path, valid: Path) -> None:
+    status, screen, parts = _reload_session(
+        tmp_path,
+        valid,
+        [(BROKEN, b".reload\n"), (None, QUERY), (VALID, b".reload\n"), (None, QUERY), (None, b".exit\n")],
+        query_flags=("--no-errors",),
+    )
+
+    assert status == 0, screen
+    assert REFUSAL in parts[1] and not TABLE.search(parts[1])
+    assert "refused" not in parts[2], "a clean reload lifts the refusal"
+    assert TABLE.search(parts[3]) and "-10 USD" in parts[3], screen
+
+
+def test_allow_errors_keeps_answering_after_an_invalid_reload(tmp_path: Path, valid: Path) -> None:
+    status, screen, parts = _reload_session(
+        tmp_path,
+        valid,
+        [(BROKEN, b".reload\n"), (None, QUERY), (None, b".exit\n")],
+        query_flags=("--allow-errors",),
+    )
+
+    assert status == 0, screen
+    assert "Balance failed" in parts[0], "the banner still reports why it is partial"
+    assert "refused" not in screen
+    assert TABLE.search(parts[1]) and "-10 USD" in parts[1], screen
