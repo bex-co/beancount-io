@@ -35,7 +35,11 @@ _EU_GROUPING = re.compile(r"\d{1,3}(?:\.\d{3})+")
 # (`-0,5`, `-0,50`, `-0,1234`), so it can only be a decimal comma.
 _COMMA_DECIMAL_TAIL = re.compile(r"\A[^,]*,(?:\d{1,2}|\d{4,})\Z")
 # The comma groupings point-decimal exports use: 1,234,567 and Indian 12,34,567.
-_COMMA_GROUPING = re.compile(r"\d{1,3}(?:,\d{3})+|\d{1,2}(?:,\d{2})*,\d{3}")
+# A first group is never zero-led: `0,125` is not grouping in any convention.
+_COMMA_GROUPING = re.compile(r"[1-9]\d{0,2}(?:,\d{3})+|[1-9]\d?(?:,\d{2})*,\d{3}")
+# One comma and exactly three digits after it: a thousands group only when the
+# whole part is a valid first group, so `0,125` and `1613,030` are decimals.
+_SINGLE_COMMA_THREE = re.compile(r"\d+,\d{3}")
 _ACCEPTED_AMOUNTS = (
     "Accepted: plain decimals (1000.50), $/€ symbols, thousands separators, "
     "(parentheses) or trailing-minus negatives; comma decimals like 1.000,00 "
@@ -137,6 +141,10 @@ def _separator_vote(core: str) -> str | None:
         return "eu" if core.rfind(",") > core.rfind(".") else "us"
     if _COMMA_DECIMAL_TAIL.match(core):
         return "eu-weak"
+    if _SINGLE_COMMA_THREE.fullmatch(core) and not _COMMA_GROUPING.fullmatch(core):
+        # `0,125` or `1613,030`: three decimals that no grouping can explain,
+        # so the cell proves comma decimals as firmly as `1.613,030` does.
+        return "eu"
     return None
 
 

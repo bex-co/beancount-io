@@ -83,7 +83,9 @@ not `1e3`); a notation error names the row and column before anything is written
 Cells may carry currency symbols (`$4.50`, `4,50 €`), thousands separators,
 accounting parentheses or a trailing minus for negatives, and comma decimals —
 the point-vs-comma convention is resolved from the whole column, and a column
-mixing `1,000.00` with `1.000,00` is refused rather than guessed. `NaN` and
+mixing `1,000.00` with `1.000,00` is refused rather than guessed. A lone
+`1,234` stays a thousands group, but `0,125` and `1613,030` cannot be one,
+so they import as `0.125` and `1613.030`. `NaN` and
 `Infinity` are blocked at preview time with the row named, so `--apply` can
 never write them. A failed parse names the cell, the row, and the accepted
 spellings.

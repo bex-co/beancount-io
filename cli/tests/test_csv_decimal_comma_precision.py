@@ -122,6 +122,45 @@ def test_a_stray_comma_in_a_point_column_is_refused_without_writing(tmp_path: Pa
         assert ledger.read_bytes() == before
 
 
+@pytest.mark.parametrize(
+    ("cells", "expected"),
+    [
+        (["0,125"], ["0.125"]),
+        (["-0,500"], ["-0.500"]),
+        (["0,125", "-1,50"], ["0.125", "-1.50"]),
+        (["0,125", "1,500"], ["0.125", "1.500"]),
+        (["-1613,030"], ["-1613.030"]),
+        (["-5,740", "-1613,030"], ["-5.740", "-1613.030"]),
+    ],
+)
+def test_three_decimals_no_grouping_explains_import_exactly(
+    tmp_path: Path, ledger: Path, cells: list[str], expected: list[str]
+) -> None:
+    """w1/130: a zero or over-long first group is a decimal comma, not 1000x."""
+    rows = "".join(f"2024-03-0{day};Interest;{cell}\n" for day, cell in enumerate(cells, 1))
+    body = f"Date;Description;Amount\n{rows}"
+    applied = _import(tmp_path, ledger, body, "date=Date,amount=Amount,narration=Description", "--apply")
+    assert applied.returncode == 0, applied.stderr
+    assert _cash_numbers(tmp_path, ledger) == expected
+
+
+def test_three_decimal_debit_and_credit_cells_import_exactly(tmp_path: Path, ledger: Path) -> None:
+    body = "Date;Description;Debit;Credit\n2024-03-01;Fee;1613,030;\n2024-03-02;Interest;;0,125\n"
+    applied = _import(tmp_path, ledger, body, "date=Date,narration=Description,debit=Debit,credit=Credit", "--apply")
+    assert applied.returncode == 0, applied.stderr
+    assert _cash_numbers(tmp_path, ledger) == ["-1613.030", "0.125"]
+
+
+@pytest.mark.parametrize("cell", ["0,125", "-1613,030"])
+def test_three_decimal_comma_beside_point_grouping_is_refused(tmp_path: Path, ledger: Path, cell: str) -> None:
+    body = f'Date,Description,Amount\n2024-03-01,Interest,"{cell}"\n2024-03-02,Big,"1,234.56"\n'
+    before = ledger.read_bytes()
+    result = _import(tmp_path, ledger, body, "date=Date,amount=Amount,narration=Description", "--apply")
+    assert result.returncode == 2, result.stdout
+    assert "mix decimal conventions" in result.stderr
+    assert ledger.read_bytes() == before
+
+
 class TestAmountParser:
     """The column vote and the cell parser, below the CLI."""
 
@@ -136,6 +175,13 @@ class TestAmountParser:
             (["1,00,000"], False),
             # Three digits after one comma could be either; it stays a group.
             (["1,234"], False),
+            (["12,345"], False),
+            # No grouping has a zero or four-digit first group: decimals.
+            (["0,125"], True),
+            (["-0,500"], True),
+            (["00,125"], True),
+            (["1613,030"], True),
+            (["0,125", "1,500"], True),
         ],
     )
     def test_column_vote(self, cells: list[str], decimal_comma: bool) -> None:
@@ -154,7 +200,9 @@ class TestAmountParser:
     def test_point_column_strips_only_real_grouping(self, cell: str, expected: Decimal) -> None:
         assert _parse_amount_cell("Row 1", "Amount", cell, decimal_comma=False) == expected
 
-    @pytest.mark.parametrize("cell", ["0,5", "0,1234", "12,34", "1,2345.00", "1234,567", "1.5,0"])
+    @pytest.mark.parametrize(
+        "cell", ["0,5", "0,1234", "12,34", "1,2345.00", "1234,567", "1.5,0", "0,125", "0,125,000", "0,12,345"]
+    )
     def test_point_column_refuses_a_comma_that_is_not_grouping(self, cell: str) -> None:
         with pytest.raises(UsageError, match="cannot parse amount"):
             _parse_amount_cell("Row 1", "Amount", cell, decimal_comma=False)
