@@ -43,7 +43,9 @@ managed engine environment that `bea` provisions.
 If first-use or upgrade provisioning fails, fix network/`uv` availability and
 retry a local command such as `bea check` — do not `pip install beancount`.
 A broken managed environment is discarded and rebuilt on the next successful
-provision; global `bean-check` decoys on `PATH` are ignored.
+provision; global `bean-check` decoys on `PATH` are ignored. Commands started
+together on a fresh install share one provision: the first builds the engine
+under a lock file beside it (`<version>.lock`) and the rest wait and reuse it.
 
 `bea engine status` names the engine that local commands would actually use:
 a `BEA_ENGINE_PYTHON` override, the provisioned managed engine, or a source

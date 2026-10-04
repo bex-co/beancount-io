@@ -29,6 +29,8 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from importlib import resources
 from pathlib import Path
 from typing import Any
@@ -48,15 +50,52 @@ def ensure_engine() -> Path:
         return override
 
     root = paths.engine_root()
-    if paths.is_provisioned(root):
-        return paths.venv_python(root)
-
-    provision(root)
+    if not paths.is_provisioned(root):
+        with provisioning_lock(root):
+            # Another command may have finished provisioning while we waited.
+            if not paths.is_provisioned(root):
+                provision(root)
     return paths.venv_python(root)
+
+
+@contextmanager
+def provisioning_lock(root: Path) -> Iterator[None]:
+    """Hold the exclusive lock for changing the engine at `root`.
+
+    Commands started together on a fresh install would otherwise each build
+    an engine and each move the other's freshly published one aside — out
+    from under a command already running it. The lock file sits beside the
+    root and is never removed, so every waiter locks the same inode.
+    """
+    root.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(root.with_name(f"{root.name}.lock"), os.O_RDWR | os.O_CREAT, 0o600)
+    with os.fdopen(fd, "r+b") as stream:
+        if sys.platform == "win32":
+            import msvcrt
+
+            if not os.fstat(stream.fileno()).st_size:
+                stream.write(b"\0")
+                stream.flush()
+            stream.seek(0)
+            msvcrt.locking(stream.fileno(), msvcrt.LK_LOCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            if sys.platform == "win32":
+                stream.seek(0)
+                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
 
 
 def provision(root: Path) -> None:
     """Build the engine environment at `root`, atomically.
+
+    Callers hold `provisioning_lock(root)`.
 
     Whatever is already at `root` stays there until its replacement is
     complete, so a failed rebuild (offline, no uv, a bad package) keeps the
@@ -68,8 +107,7 @@ def provision(root: Path) -> None:
     version = paths.engine_version()
     manifest = paths.manifest()
 
-    # Per-process, so two commands provisioning at the same time build in
-    # separate directories and the loser's rename is simply redundant.
+    # Per-process, so an interrupted build is attributable to its pid.
     partial = root.with_name(f"{root.name}.partial.{os.getpid()}")
     shutil.rmtree(partial, ignore_errors=True)
     partial.parent.mkdir(parents=True, exist_ok=True)
@@ -166,17 +204,18 @@ def enable_feature(name: str) -> tuple[bool, set[str]]:
         raise UsageError(f"Unknown engine feature '{name}'. Choose one of: {choices}.")
 
     root = paths.engine_root()
-    if not paths.is_provisioned(root):
-        provision(root)
+    with provisioning_lock(root):
+        if not paths.is_provisioned(root):
+            provision(root)
 
-    already = enabled_features(root)
-    if name in already and _feature_present(root, name):
-        output.note(f"Engine feature '{name}' is already enabled.")
-        return False, already
+        already = enabled_features(root)
+        if name in already and _feature_present(root, name):
+            output.note(f"Engine feature '{name}' is already enabled.")
+            return False, already
 
-    output.note(f"Enabling engine feature '{name}' in {root}...")
-    _install_feature(root, name)
-    recorded = _record_feature(root, name)
+        output.note(f"Enabling engine feature '{name}' in {root}...")
+        _install_feature(root, name)
+        recorded = _record_feature(root, name)
     output.note(f"Engine feature '{name}' ready.")
     return True, recorded
 
@@ -329,14 +368,17 @@ def _find_packaged_file(name: str) -> Path | None:
 
 def _publish(partial: Path, root: Path) -> None:
     """Move a finished environment into place under the name commands look for."""
-    if root.exists():
-        # Something unusable is already there — `ensure_engine` only calls us
-        # when `is_provisioned` said no. Move it out of the way first, because
-        # renaming onto a non-empty directory fails.
-        discarded = root.with_name(f"{root.name}.discarded.{os.getpid()}")
-        os.replace(root, discarded)
-        shutil.rmtree(discarded, ignore_errors=True)
-    os.replace(partial, root)
+    try:
+        if root.exists():
+            # Something unusable is already there — under the provisioning
+            # lock we only build when `is_provisioned` said no. Move it out of
+            # the way first, because renaming onto a non-empty directory fails.
+            discarded = root.with_name(f"{root.name}.discarded.{os.getpid()}")
+            os.replace(root, discarded)
+            shutil.rmtree(discarded, ignore_errors=True)
+        os.replace(partial, root)
+    except OSError as exc:
+        raise BeaError(f"Could not move the finished engine into place at {root}: {exc.strerror or exc}.") from exc
 
 
 def _requirements() -> list[str]:
