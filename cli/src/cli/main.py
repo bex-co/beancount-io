@@ -34,6 +34,24 @@ from cli.native_command import ForwardingCommand
 from cli.native_help import native_help
 
 
+def _tolerate_unencodable_output() -> None:
+    """Escape what the terminal's encoding cannot show instead of failing on it.
+
+    stdout is strict by default, so under an ASCII or cp1252 locale a write
+    that had already landed reported `'ascii' codec can't encode …` and exit 1
+    when its confirmation named a non-ASCII path — and a retry wrote the entry
+    again. Output is a report of what happened; it must never undo exit 0.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(errors="backslashreplace")
+        except (OSError, ValueError):  # A detached or already-closed stream.
+            pass
+
+
 def _settle_stdout() -> None:
     """Push the last of stdout out while a closed reader is still catchable.
 
@@ -137,6 +155,7 @@ class _GuardedGroup(TyperGroup):
             output.error(exc)
 
     def invoke(self, ctx: Any) -> Any:
+        _tolerate_unencodable_output()
         try:
             result = super().invoke(ctx)
             _settle_stdout()

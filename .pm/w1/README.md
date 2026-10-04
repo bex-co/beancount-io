@@ -65,7 +65,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [100](./100.md) — Appending to a ledger without a final newline drops the blank line before the new entry — **minor**, CLI QA 2026-10-03.
 - [101](./101.md) — Plugin failures lose the exception type and point at the wrong `plugin` line — **minor**, CLI QA 2026-10-03.
 - [102](./102.md) — An Emacs lock file (`.#main.bean`) fails directory formatting with advice to delete it — **minor**, CLI QA 2026-10-03.
-- [104](./104.md) — A write lands, then `bea` exits 1 when stdout cannot encode a non-ASCII path; a retry duplicates the entry — **minor**, CLI QA 2026-10-03.
 - [105](./105.md) — A corrupt remembered-CSV record makes every later `import` for that ledger fail with a raw `TypeError` — **minor**, CLI QA 2026-10-03.
 - [107](./107.md) — With stdout closed (`>&-`), commands exit 1 with `'NoneType' object has no attribute 'flush'` after writes land — **minor**, CLI QA 2026-10-03.
 - [108](./108.md) — Unknown keys inside bulk `units`/`cost`/`price` are silently dropped, so a typo sells the wrong lot — **major**, CLI QA 2026-10-03.
