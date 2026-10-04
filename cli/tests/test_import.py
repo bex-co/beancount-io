@@ -1346,6 +1346,33 @@ class TestCsvRulesMatching:
         assert "Rule 1" in result.stderr
         assert "empty match" in result.stderr
 
+    @pytest.mark.parametrize("pattern", ["whole foods|trader joe|", "|cafe", "(cafe)?", "x*", "^"])
+    def test_pattern_matching_empty_text_refused(self, book: Path, isolated_config: Path, pattern: str) -> None:
+        rules = rules_file(book, f'[[rule]]\nmatch = "{pattern}"\naccount = "Expenses:Food"\n')
+        before = book.read_bytes()
+        result = csv_result(book, CSV_HEADER + CSV_ROW, "--rules", str(rules), "--apply")
+        assert result.exit_code == 2, result.output
+        assert "Rule 1" in result.stderr
+        assert "matches empty text" in result.stderr
+        assert ".*" in result.stderr
+        assert book.read_bytes() == before
+
+    @pytest.mark.parametrize("pattern", ["whole foods|trader joe|", "(cafe)?"])
+    def test_engine_refuses_pattern_matching_empty_text(self, pattern: str) -> None:
+        from bea_engine.csv_mapper import CsvRule as EngineCsvRule
+        from bea_engine.protocol import UsageError as EngineUsageError
+
+        with pytest.raises(EngineUsageError, match="Rule 2 pattern .* matches empty text"):
+            EngineCsvRule.compile(1, {"match": pattern, "account": "Expenses:Food"})
+
+    @pytest.mark.parametrize("pattern", [".*", "^.*$", " .* "])
+    def test_explicit_catch_all_spellings_still_load(self, pattern: str) -> None:
+        from bea_engine.csv_mapper import CsvRule as EngineCsvRule
+        from cli.csv_mapper import CsvRule
+
+        assert CsvRule.compile(0, {"match": pattern, "account": "Expenses:Food"}).pattern == pattern
+        assert EngineCsvRule.compile(0, {"match": pattern, "account": "Expenses:Food"}).pattern == pattern
+
     def test_explicit_catch_all_categorizes_everything(self, book: Path, isolated_config: Path) -> None:
         rules = rules_file(book, '[[rule]]\nmatch = ".*"\naccount = "Expenses:Food"\n')
         result = csv_result(book, CSV_HEADER + CSV_ROW, "--rules", str(rules))

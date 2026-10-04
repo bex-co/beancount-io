@@ -257,6 +257,10 @@ class CsvMapping:
         return self.columns.get(name)
 
 
+# The spellings of "match every row" a rules file may use on purpose.
+_EXPLICIT_CATCH_ALL = frozenset({".*", "^.*", ".*$", "^.*$"})
+
+
 @dataclass(frozen=True)
 class CsvRule:
     """One categorization rule: the first matching pattern wins."""
@@ -277,6 +281,14 @@ class CsvRule:
             expression = re.compile(match, re.IGNORECASE)
         except re.error as exc:
             raise UsageError(f"Rule {index + 1} has an invalid regex {match!r}: {exc}.") from exc
+        # A pattern that matches empty text (`a|b|`, `(x)?`, `y*`) matches every
+        # row, so a typo would silently categorize all of them. Only the
+        # documented spelling of a catch-all may do that.
+        if expression.search("") is not None and match.strip() not in _EXPLICIT_CATCH_ALL:
+            raise UsageError(
+                f"Rule {index + 1} pattern {match!r} matches empty text, so it would categorize every row; "
+                "drop the empty alternative (such as a trailing |), or write .* for an explicit catch-all."
+            )
         # A rule naming an unopenable account used to surface as every matching
         # row being "not open" — a name no `open` directive can ever create.
         # Refuse it here, where the rule number says which line to fix.

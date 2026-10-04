@@ -64,7 +64,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [058](./058.md) — `bea cloud logout` prints "Logged out." and exits 0 when server-side revocation failed — **minor**, CLI QA 2026-10-02.
 - [059](./059.md) — Empty or scheme-less `BEA_API_URL` is reported as a network outage — **minor**, CLI QA 2026-10-02.
 - [061](./061.md) — A ledger plugin or importer that prints to stdout corrupts the engine envelope: successful writes report exit 4 — **major**, CLI QA 2026-10-02.
-- [062](./062.md) — A rules pattern that matches empty text (e.g. trailing `|`) silently becomes a catch-all and books rows cleared — **minor**, CLI QA 2026-10-02.
 - [063](./063.md) — Import rules miss Unicode-equivalent text (NFD vs NFC) — **minor**, CLI QA 2026-10-02.
 - [064](./064.md) — A `currency=` mapping that differs from the header only by case silently becomes a constant commodity — **minor**, CLI QA 2026-10-02.
 - [065](./065.md) — UTF-16 bank exports are misdiagnosed as cp1252, and BOM-prefixed rules files are refused — **minor**, CLI QA 2026-10-02.

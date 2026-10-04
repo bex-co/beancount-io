@@ -167,8 +167,10 @@ account = "Expenses:Groceries"
 
 See the bundled [rules example](examples/rules.toml). Each entry needs
 `match` and `account`; a bad regex or a file without a `[[rule]]` list fails
-naming the rule number. An empty or whitespace-only `match` is refused —
-write `match = ".*"` for an explicit catch-all. Rules beat a `category`
+naming the rule number. An empty or whitespace-only `match` is refused, and
+so is any pattern that matches empty text (a trailing `|` as in
+`"whole foods|"`, `(cafe)?`), since it would match every row — write
+`match = ".*"` for an explicit catch-all. Rules beat a `category`
 column, and also match its labels: a rule pattern matching a bank's own
 label categorizes the row before the category column is considered. An
 explicit `category=Column` mapping, or a `Category` header when unmapped,
