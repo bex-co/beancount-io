@@ -413,10 +413,25 @@ def _collapse_repeats(records: list[_ErrorRecord]) -> list[str]:
 
     A single unopened account referenced by forty imported rows is one thing to
     fix, and forty identical paragraphs bury the hint that says how.
+
+    Upstream can also report one problem twice for the same line (an unknown
+    account on a balance, an inactive pad source), sometimes with different
+    hints attached. Those are one record, line or no line, carrying every hint
+    either had — otherwise the output names the line as "1 more line" of
+    itself, or prints the same paragraph twice.
     """
+    distinct: dict[tuple[str, str, int | None], _ErrorRecord] = {}
+    for record in records:
+        same = distinct.get((record.kind, record.message, record.lineno))
+        if same is None:
+            distinct[(record.kind, record.message, record.lineno)] = _ErrorRecord(
+                record.kind, record.message, record.lineno, list(record.hints)
+            )
+        else:
+            same.hints.extend(hint for hint in record.hints if hint not in same.hints)
     order: list[tuple[str, tuple[str, ...]]] = []
     grouped: dict[tuple[str, tuple[str, ...]], list[_ErrorRecord]] = {}
-    for record in records:
+    for record in distinct.values():
         key = (record.kind, tuple(record.hints))
         if key not in grouped:
             grouped[key] = []

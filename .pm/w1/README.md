@@ -73,7 +73,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [110](./110.md) — Bulk amounts accept `1_000`, Arabic-Indic and full-width digits that single `add` refuses — **minor**, CLI QA 2026-10-03.
 - [111](./111.md) — Bulk dates accept numeric strings as Unix timestamps and other non-ISO spellings — **minor**, CLI QA 2026-10-03.
 - [112](./112.md) — `add transactions --from -` leaks raw Python errors (exit 1) for undecodable, deeply nested or huge-integer stdin — **minor**, CLI QA 2026-10-03.
-- [118](./118.md) — The error collapser repeats identical messages for the same line — **minor**, CLI QA 2026-10-03.
 - [127](./127.md) — USAGE.md's JSON automation examples show output the CLI doesn't produce — **minor**, CLI QA 2026-10-03.
 - [128](./128.md) — Docs-example tests pass when a piped `bea` command fails and never check documented output — **minor**, CLI QA 2026-10-03.
 - [130](./130.md) — A comma-decimal bank amount like `0,125` is imported 1000× too large — **major**, CLI QA 2026-10-03.

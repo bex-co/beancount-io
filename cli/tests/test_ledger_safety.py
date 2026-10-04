@@ -560,6 +560,43 @@ def test_distinct_problems_are_still_reported_separately(book: Path) -> None:
     assert not any("Same problem on" in detail for detail in details)
 
 
+def test_a_problem_reported_twice_for_one_line_reads_once(book: Path) -> None:
+    # w1/118: upstream reports an unknown account on a balance twice for the
+    # same line; it is not "the same problem on 1 more line" of itself.
+    before = book.read_bytes()
+    result = invoke(book, "add", "balance", "--date", "2026-02-01", "-a", "Assets:Bank", "--amount", "974.50 USD")
+    assert result.exit_code == 1 and book.read_bytes() == before
+    details = json.loads(result.stderr)["error"]["details"]
+    unknown = [detail for detail in details if "unknown account 'Assets:Bank'" in detail]
+    assert len(unknown) == 1
+    assert "Same problem on" not in unknown[0]
+
+
+def test_an_inactive_pad_source_reads_once(book: Path) -> None:
+    # w1/118: the inactive-account paragraph printed twice for the one pad.
+    (book.parent / "accounts.beancount").write_text(
+        "2020-01-01 open Assets:Cash USD\n2020-01-01 open Equity:Old\n2020-01-02 close Equity:Old\n"
+    )
+    before = book.read_bytes()
+    result = invoke(
+        book,
+        "add",
+        "balance",
+        "--date",
+        "2026-02-01",
+        "-a",
+        "Assets:Cash",
+        "--amount",
+        "974.50 USD",
+        "--pad-from",
+        "Equity:Old",
+    )
+    assert result.exit_code == 1 and book.read_bytes() == before
+    details = json.loads(result.stderr)["error"]["details"]
+    assert sum("inactive account 'Equity:Old'" in detail for detail in details) == 1
+    assert "Pad accounts must be active, even with --allow-errors." in details
+
+
 def test_pointing_the_root_at_an_included_leaf_names_into_as_the_fix(book: Path) -> None:
     # The leaf holds entries; its accounts and options live in the root's
     # other include, so on its own the currency cannot be resolved.
