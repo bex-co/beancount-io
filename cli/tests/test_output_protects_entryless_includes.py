@@ -67,6 +67,8 @@ def _env(tmp_path: Path) -> dict[str, str]:
         BEA_CONFIG_DIR=str(tmp_path / "config"),
         XDG_CACHE_HOME=str(tmp_path / "cache"),
         XDG_DATA_HOME=str(tmp_path / "data"),
+        # beanquery keeps its shell history under ~; parallel tests must not share it.
+        HOME=str(tmp_path / "home"),
         BEA_NO_UPDATE_NOTIFIER="1",
         PYTHONPATH=str(ROOT / "src"),
         TERM="dumb",
