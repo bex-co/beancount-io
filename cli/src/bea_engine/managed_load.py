@@ -74,6 +74,7 @@ _LEDGER_PRICE_RE = re.compile(
 _METADATA_LINE_RE = re.compile(r"^[ \t]+[a-z][A-Za-z0-9_-]*\s*:")
 _SHADOWED_LINE = "; shadowed by a ledger-authored price for the same date"
 _ALREADY_INCLUDED_LINE = "; managed price feed already included from another file"
+_NO_CACHED_REVISION = "no cached revision"
 
 
 @dataclass(frozen=True)
@@ -306,9 +307,12 @@ def load_with_sources(
                 etag=serving.etag if serving else None,
                 observed_at=serving.feed.latest_observed_at if serving else None,
                 fetched_at=_iso(serving.fetched_at) if serving else None,
-                next_refresh_at=_iso(result.head.next_refresh_at),
+                # A zero window is the "never fetched / refresh now" sentinel,
+                # not a moment: report no scheduled refresh rather than 1970.
+                next_refresh_at=_iso(result.head.next_refresh_at) if result.head.next_refresh_at > 0 else None,
                 freshness=freshness(serving, at),
-                error=result.head.last_error,
+                # The same cause the load's unavailable-include error names.
+                error=result.head.last_error or (None if serving else _NO_CACHED_REVISION),
                 shadowed_count=applied.shadowed_count if applied else 0,
                 effective_dates=applied.effective_dates if applied else (),
                 effective_path=str(feed_path) if feed_path else None,
@@ -401,7 +405,7 @@ def _rewrite_includes(
             else:
                 content = _swap_line(content, span.line, f"{_ALREADY_INCLUDED_LINE}\n".encode())
             continue
-        cause = ((result.head.last_error if result is not None else None) or "no cached revision").rstrip()
+        cause = ((result.head.last_error if result is not None else None) or _NO_CACHED_REVISION).rstrip()
         comment = f"; managed price source unavailable: {span.target} ({cause})\n".encode()
         content = _swap_line(content, span.line, comment)
         unavailable.append(
@@ -790,7 +794,7 @@ def _export_feed_text(source: ManagedSource, at: float) -> str:
     if source.revision is None:
         day = datetime.fromtimestamp(at, UTC).strftime("%Y-%m-%d")
         marker = f'{day} custom "bea-managed-source" "{source.alias}" "{source.url}" "none" "unknown" "unknown" 0\n'
-        cause = source.error or "no cached revision"
+        cause = source.error or _NO_CACHED_REVISION
         return f"; bea-managed-error: {cause}\n{marker}"
     effective = Path(source.effective_path).read_text(encoding="utf-8") if source.effective_path else ""
     day = max(source.effective_dates) if source.effective_dates else _iso_day(source.fetched_at, at)

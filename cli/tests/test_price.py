@@ -1446,6 +1446,26 @@ class TestPriceStatus:
         assert "r1" in result.stdout
         assert _FeedHandler.hits == []
 
+    def test_offline_never_fetched_source_has_no_epoch_refresh_and_names_the_cause(
+        self, feed_server: str, tmp_path: Path
+    ) -> None:
+        """w1/070: an empty cache reports no 1970 refresh and the banner's cause."""
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+
+        human = _run_bea(tmp_path, feed_server, "--offline", "--file", str(ledger), "price", "status")
+        machine = _run_bea(tmp_path, feed_server, "--offline", "--json", "--file", str(ledger), "price", "status")
+
+        assert human.returncode == 0, human.stderr
+        assert "no cached revision" in human.stderr
+        assert "1970" not in human.stdout
+        assert "no cached revision" in human.stdout
+        assert machine.returncode == 0, machine.stderr
+        (source,) = json.loads(machine.stdout)["data"]["sources"]
+        assert source["freshness"] == "unavailable"
+        assert source["next_refresh_at"] is None
+        assert source["error"] == "no cached revision"
+        assert _FeedHandler.hits == []
+
     def test_strict_flag_fails_naming_a_stale_source(self, feed_server: str, tmp_path: Path) -> None:
         body = _feed_text(_stamp(time.time() - 660)).encode("utf-8")
         _FeedHandler.routes["/prices/BTC-USD"] = {"body": body}
