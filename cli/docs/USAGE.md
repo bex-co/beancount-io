@@ -496,7 +496,9 @@ only after the query succeeds.
 With no query argument, `--file` and `--source` alike read BQL from piped
 stdin and open the interactive shell only on a terminal where prompting is
 allowed; under `--no-input` (or `CI`), or with empty stdin, a missing query is
-refused with exit 2 instead of waiting at a prompt.
+refused with exit 2 instead of waiting at a prompt. In the shell, `Ctrl-C`
+cancels the current line and returns to `beanquery>`, as under `bean-query`;
+`.exit` (or `Ctrl-D`) ends the session with exit 0 and saves its history.
 
 Query tables preserve the precision of result values, including calculated
 amounts and commodity quantities. Interactive queries and the `ask` BQL tool

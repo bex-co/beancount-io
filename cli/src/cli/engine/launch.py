@@ -67,10 +67,45 @@ from cli.engine import paths, provision
 from cli.errors import BY_CATEGORY, AuthError, BeaError, ConflictError, UsageError
 
 
-def run_engine_argv(argv: Sequence[str]) -> int:
-    """Run the engine helper with `argv`, streams inherited. Returns its exit code."""
+def run_engine_argv(argv: Sequence[str], *, interactive: bool = False) -> int:
+    """Run the engine helper with `argv`, streams inherited. Returns its exit code.
+
+    `interactive` marks a child that owns the terminal for a whole session,
+    such as the query shell: Ctrl-C there belongs to the child, which cancels
+    the line and keeps going, so this process must not die of it too.
+    """
     command, env = helper_command()
-    return _spawn([*command, *argv], env)
+    if not interactive:
+        return _spawn([*command, *argv], env)
+    with _terminal_child_owns_interrupts():
+        return _spawn([*command, *argv], env)
+
+
+@contextmanager
+def _terminal_child_owns_interrupts() -> Iterator[None]:
+    """Let a foreground child answer Ctrl-C while this process waits it out.
+
+    The terminal delivers SIGINT to the whole foreground process group, so the
+    frontend heard every Ctrl-C the shell's user meant for the shell. The
+    `KeyboardInterrupt` then made `subprocess.run` kill the shell a quarter
+    second later — before its atexit history write — and `bea` exited 130
+    while the shell had already printed `(interrupted)` and a fresh prompt.
+
+    A do-nothing Python handler rather than `SIG_IGN`: an ignored disposition
+    survives `exec`, and Python started with SIGINT ignored never raises
+    `KeyboardInterrupt`, so the child would stop hearing Ctrl-C altogether. A
+    handler is reset to the default on `exec`. A child that does die of SIGINT
+    still reports it, and `_died_on_signal` maps that to 130.
+    """
+    try:
+        previous = signal.signal(signal.SIGINT, lambda _number, _frame: None)
+    except (OSError, ValueError):  # Not the main thread: nothing to change.
+        yield
+        return
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, previous)
 
 
 def run_native(name: str, args: Sequence[str], *, env: dict[str, str] | None = None) -> int:

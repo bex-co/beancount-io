@@ -50,7 +50,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 ## Inbox
 
 - [061](./061.md) — A ledger plugin or importer that prints to stdout corrupts the engine envelope: successful writes report exit 4 — **major**, CLI QA 2026-10-02.
-- [066](./066.md) — Ctrl-C ends the interactive `bea query` shell (exit 130) and loses its history — **major**, CLI QA 2026-10-02.
 - [067](./067.md) — The interactive query shell prints raw Python tracebacks for errors the one-shot path already explains — **minor**, CLI QA 2026-10-02.
 - [068](./068.md) — `doctor roundtrip` and `doctor print-options` ignore syntax errors in included files and exit 0 — **minor**, CLI QA 2026-10-02.
 - [071](./071.md) — `bea balance ACCOUNT` hides closed accounts that still hold money, so totals disagree with the trial balance — **major**, CLI QA 2026-10-02.

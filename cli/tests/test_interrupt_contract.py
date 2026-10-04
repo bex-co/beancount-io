@@ -4,7 +4,8 @@
 purpose: Ctrl-C exits 130 and a closed downstream pipe exits 141, both without
 a message. The pipe half was fixed in w3/378. This is the SIGINT half.
 
-A mid-computation Ctrl-C and `bea query`'s interactive shell already complied.
+A mid-computation Ctrl-C already complied. `bea query`'s interactive shell is
+not a run to end: there Ctrl-C cancels the line, as under `bean-query` (w1/066).
 A `bea`-owned Typer prompt did not: `click` turns the `KeyboardInterrupt` into
 `Abort`, and its own top-level handler prints `Aborted!` and exits 1 — so a
 script could not tell a deliberate Ctrl-C from a genuine failure, which is the
@@ -130,14 +131,88 @@ def test_an_aborted_init_writes_nothing(tmp_path: Path) -> None:
     assert not (tmp_path / "books").exists(), "a prompt aborts before the command does any work"
 
 
-def test_the_interactive_shell_still_exits_130(tmp_path: Path, ledger: Path) -> None:
-    """The control w5/010 established, and the one path that already complied."""
-    status, screen = _interrupt_at(tmp_path, ["--file", str(ledger), "query"], expect="beanquery>")
+def _shell_session(tmp_path: Path, argv: list[str], keys: list[bytes], *, timeout: float = 60.0) -> tuple[int, str]:
+    """Drive the query shell on a PTY: wait for each prompt, then type the next keys."""
+    pid, fd = pty.fork()
+    if pid == 0:  # pragma: no cover - replaced by exec in the child
+        os.chdir(tmp_path)
+        os.execve(str(BEA), [str(BEA), *argv], _child_env(tmp_path))
+    screen = ""
+    pending = list(keys)
+    started = time.time()
+    try:
+        while True:
+            # One key sequence per fresh prompt, so input never races the shell.
+            if pending and screen.count("beanquery>") > len(keys) - len(pending):
+                os.write(fd, pending.pop(0))
+            ready, _, _ = select.select([fd], [], [], 0.2)
+            if ready:
+                try:
+                    chunk = os.read(fd, 4096)
+                except OSError:
+                    chunk = b""
+                if chunk:
+                    screen += chunk.decode("utf-8", "replace")
+            finished, status = os.waitpid(pid, os.WNOHANG)
+            if finished:
+                return os.waitstatus_to_exitcode(status), screen
+            if time.time() - started > timeout:
+                os.kill(pid, signal.SIGKILL)
+                os.waitpid(pid, 0)
+                raise AssertionError(f"{argv} never exited; screen was {screen!r}")
+    finally:
+        os.close(fd)
 
-    assert status == 130
-    # The shell answers Ctrl-C with its own `(interrupted)` and returns to the
-    # prompt; that is the shell's behaviour, not a `bea` failure report.
+
+@pytest.mark.parametrize("native", [False, True], ids=["file", "source"])
+def test_ctrl_c_in_the_query_shell_cancels_the_line_and_keeps_the_session(
+    tmp_path: Path, ledger: Path, native: bool
+) -> None:
+    """Ctrl-C at `beanquery>` behaves as under `bean-query`: the session goes on (w1/066).
+
+    The frontend shares the terminal's foreground process group, so it heard the
+    same SIGINT, killed the shell and exited 130 — losing the session history,
+    which the shell writes only on a clean exit.
+    """
+    argv = ["query", "--source", str(ledger)] if native else ["--file", str(ledger), "query"]
+    keys = [b"SELECT 1 AS x LIMIT 1;\r", CTRL_C, b"SELECT 2 AS y LIMIT 1;\r", b".exit\r"]
+
+    status, screen = _shell_session(tmp_path, argv, keys)
+
+    assert status == 0, screen
+    assert "(interrupted)" in screen
+    assert screen.split("(interrupted)", 1)[1].count("beanquery>") >= 2, "the session ended at Ctrl-C"
     assert "Aborted!" not in screen
+    history = (tmp_path / "home" / ".config" / "beanquery" / "history").read_text(encoding="utf-8")
+    assert "2\\040AS\\040y" in history or "2 AS y" in history
+
+
+def test_a_frontend_waiting_on_the_shell_does_not_die_of_its_ctrl_c(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The terminal sends Ctrl-C to the frontend too; only the session child may answer it."""
+    import sys
+
+    from cli.engine import launch
+
+    child = "import os, signal, time; os.kill(os.getppid(), signal.SIGINT); time.sleep(0.5)"
+    monkeypatch.setattr(launch, "helper_command", lambda: ([sys.executable, "-c", child], None))
+
+    assert launch.run_engine_argv(["shell"], interactive=True) == 0
+    with pytest.raises(KeyboardInterrupt):
+        launch.run_engine_argv(["query"])
+
+
+def test_a_session_child_that_dies_of_ctrl_c_still_exits_130(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The child's own SIGINT death keeps the documented status, and the handler is restored."""
+    import sys
+
+    from cli.engine import launch
+
+    child = "import os, signal; os.kill(os.getpid(), signal.SIGINT)"
+    monkeypatch.setattr(launch, "helper_command", lambda: ([sys.executable, "-c", child], None))
+    before = signal.getsignal(signal.SIGINT)
+
+    assert launch.run_engine_argv(["shell"], interactive=True) == 130
+    assert signal.getsignal(signal.SIGINT) is before
 
 
 def test_declining_a_confirmation_is_not_an_interrupt(monkeypatch: pytest.MonkeyPatch) -> None:
