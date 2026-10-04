@@ -481,6 +481,10 @@ One-shot queries carry exactly one statement: an empty or whitespace-only
 query, a `.output` with no query, a `.run` naming no stored query, and two
 statements joined by `;` are each refused with exit 2 and the supported form.
 A trailing `;`, and semicolons inside quotes, are not second statements.
+The same one-statement rule covers native `--source` one-shots, the body of a
+stored `query` directive replayed by `.run NAME` or `.run *`, and BQL typed at
+the interactive prompt, where the refusal is an ordinary error and the shell
+stays usable. `.run *` still runs several separate stored queries.
 With no query argument, `--file` and `--source` alike read BQL from piped
 stdin and open the interactive shell only on a terminal where prompting is
 allowed; under `--no-input` (or `CI`), or with empty stdin, a missing query is

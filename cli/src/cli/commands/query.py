@@ -246,6 +246,8 @@ def query(
         if not query_string.strip():
             raise UsageError("A query is required as an argument or on stdin.")
         _refuse_one_shot_output(query_string)
+        # Native `bean-query` runs the first statement and drops the rest too.
+        _refuse_multi_statement(query_string)
         native_args = [*rendering, source]
         native_args.append(query_string)
         raise typer.Exit(launch.run_native("bean-query", native_args))

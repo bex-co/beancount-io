@@ -91,6 +91,31 @@ def _code_mask(text: str) -> str:
     return "".join(out)
 
 
+def _refuse_statement_tail(query_string: str, ledger_errors: list[str] | None = None) -> None:
+    """Refuse BQL text carrying more than one statement.
+
+    Beanquery parses the first statement and silently drops whatever follows
+    a `;` — even text that is not BQL at all — so `SELECT 1; SELECT 2` stored
+    in a `query` directive, or typed at the prompt, answered half and exited 0.
+    Separators are found in the code mask, so a `;` inside a literal or a
+    comment does not count, and a trailing `;` is not a second statement: the
+    same rules as the frontend's one-shot `_split_statements`.
+    """
+    masked = _code_mask(query_string)
+    statements = 0
+    start = 0
+    for index in [*(i for i, char in enumerate(masked) if char == ";"), len(masked)]:
+        if query_string[start:index].strip():
+            statements += 1
+        start = index + 1
+    if statements > 1:
+        raise protocol.UsageError(
+            f"One BQL statement per query; got {statements}. Beanquery would run only the first.",
+            details=["Split the statements into separate queries."],
+            ledger_errors=ledger_errors,
+        )
+
+
 def _quote_reserved_tables(query_string: str) -> str:
     """Rewrite `FROM accounts|balances` to the quoted form discovery documents.
 
@@ -502,6 +527,7 @@ def build_shell(
             if not self.allow_errors:
                 _gate([format_error(error, ledger_file=file) for error in self.context.errors], False)
             if isinstance(query, str):
+                _refuse_statement_tail(query)
                 query = _quote_reserved_tables(unicodedata.normalize("NFC", query))
                 _refuse_empty_window(query, [])
             return super().execute(query, **kwargs)
@@ -703,6 +729,10 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
     # comparison literal in another normalization would otherwise miss the
     # identical string. Keywords and column names are ASCII and pass through.
     statement = _quote_reserved_tables(unicodedata.normalize("NFC", query_string))
+    if not statement.lstrip().startswith("."):
+        # Dot commands are not BQL; a stored body `.run` reaches is checked
+        # when the shell executes it.
+        _refuse_statement_tail(statement, ledger_errors)
     _refuse_empty_window(statement, ledger_errors)
     try:
         return run(statement)
