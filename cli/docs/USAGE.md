@@ -1421,8 +1421,8 @@ select targets, endpoints, and state directories:
 | `BEA_CONFIG_DIR` | `$XDG_CONFIG_HOME/bea`, else `~/.config/bea` | Per-user state: credentials, `ask` history, user skills |
 | `XDG_DATA_HOME` | `~/.local/share` | Root for the managed PyPI engine under `…/bea/engine/<version>` |
 | `XDG_CACHE_HOME` | `~/.cache` | Root for ledger write locks under `…/bea/locks` |
-| `BEA_API_URL` | `https://api.v3.beancount.io` | API base URL |
-| `BEA_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL, used by the device login flow |
+| `BEA_API_URL` | `https://api.v3.beancount.io` | API base URL; empty means the default, and a value that is not an `http(s)://` URL with a host is a usage error (exit 2) |
+| `BEA_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL, used by the device login flow; validated like `BEA_API_URL` |
 | `BEA_NO_UPDATE_NOTIFIER` | — | Truthy disables the update notice entirely |
 | `CI` | — | Truthy implies `--no-input`, and disables the update notice |
 | `MANAGED_PRICE_ORIGINS` | `https://beancount.io` | Comma-separated origin allowlist for managed price includes; empty disables them |
