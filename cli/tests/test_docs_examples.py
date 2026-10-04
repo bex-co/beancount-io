@@ -81,7 +81,19 @@ PLANS = {
         mode="isolated",
         setup=USAGE_SETUP,
         setup_skip=frozenset({3}),
-        expect={4: (2, ["A query is required"])},
+        expect={
+            4: (2, ["A query is required"]),
+            # The JSON automation transcript: the values agents copy (w1/127).
+            23: (
+                0,
+                [
+                    '"valid": true',
+                    '"number": "12.50"',
+                    '[{"name":"account","type":"str"},{"name":"total","type":"Inventory"}]',
+                    '{"USD":"-12.50"}',
+                ],
+            ),
+        },
     ),
     # Narratives share one directory; the examples/ copy serves the --config,
     # --rules, and CSV paths the walkthroughs reference.
