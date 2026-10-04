@@ -1000,8 +1000,9 @@ bea balance Checking
 
 `bea balance [ACCOUNT…]` prunes the trial balance to the subtrees whose
 account names contain any argument (case-insensitive, and insensitive to
-Unicode normalization), keeping ancestors for structure. Closed accounts are excluded from filtered views. With no argument
-it prints the trial balance; `--conversion`, `--time`, and `--allow-errors`
+Unicode normalization), keeping ancestors for structure. Accounts closed by the `--time` end date that
+hold no balance are excluded from filtered views; a closed account still holding
+money stays, so totals agree with the trial balance. With no argument it prints the trial balance; `--conversion`, `--time`, and `--allow-errors`
 work as in reports.
 
 All four accept `--conversion / -x`, `--time / -t`, `--account / -a`, and

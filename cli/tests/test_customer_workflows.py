@@ -356,6 +356,35 @@ class TestBalanceCommand:
         assert "Cash" in result.stdout
         assert "Old" not in result.stdout
 
+    def test_filtered_views_keep_closed_accounts_that_still_hold_money(self, tmp_path: Path) -> None:
+        # w1/071: Beancount lets a non-empty account be closed; hiding it
+        # understated the parent total against the trial balance.
+        file = tmp_path / "main.bean"
+        file.write_text(
+            'option "operating_currency" "USD"\n'
+            "2024-01-01 open Assets:Bank USD\n"
+            "2024-01-01 open Assets:Old USD\n"
+            "2024-01-01 open Equity:Opening\n"
+            '2024-01-02 * "fund"\n'
+            "  Assets:Bank  100 USD\n"
+            "  Assets:Old    50 USD\n"
+            "  Equity:Opening\n"
+            "2024-12-31 close Assets:Old\n"
+        )
+
+        assets = run(file, "balance", "Assets")
+        old = run(file, "balance", "Old")
+
+        assert assets.exit_code == 0, assets.output
+        tree = json.loads(assets.stdout)["data"]["assets"]
+        assert tree["balance_children"] == {"USD": "150"}
+        assert {child["account"]: child["balance"] for child in tree["children"]} == {
+            "Assets:Bank": {"USD": "100"},
+            "Assets:Old": {"USD": "50"},
+        }
+        assert old.exit_code == 0, old.output
+        assert json.loads(old.stdout)["data"]["assets"]["balance_children"] == {"USD": "50"}
+
     def test_no_filter_matches_trial_balance(self, book: Path) -> None:
         balance = runner.invoke(app, ["--file", str(book), "balance"])
         trial = runner.invoke(app, ["--file", str(book), "report", "trial-balance"])

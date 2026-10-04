@@ -665,8 +665,10 @@ def _prune_tree(node: Any, matches: Callable[[str], bool], closed: set[str] | No
     report` document different ones — substrings there, parent-or-regex here —
     and a shared matcher can only honor one of them.
 
-    In a filtered view, closed accounts drop out unless a still-open
-    descendant was kept; ancestors stay for structure. Every retained node's
+    In a filtered view, closed accounts that hold nothing drop out unless a
+    still-open descendant was kept; ancestors stay for structure. A closed
+    account still holding a balance stays, so totals agree with the trial
+    balance. Every retained node's
     subtree total is recomputed from what was kept, so a parent never reports
     the balance of a sibling the filter excluded.
 
@@ -682,7 +684,12 @@ def _prune_tree(node: Any, matches: Callable[[str], bool], closed: set[str] | No
         pruned = _prune_tree(child, matches, closed)
         if pruned is not None:
             kept.append(pruned)
-    is_closed = bool(closed) and node.account in (closed or ())
+    # Beancount lets a non-empty account be closed; hiding one would silently
+    # understate every parent total, so only a closed account that holds
+    # nothing drops out.
+    is_closed = (
+        bool(closed) and node.account in (closed or ()) and not any(number for _, number in node.balance.items())
+    )
     in_scope = not is_closed and matches(node.account)
     if not (in_scope or kept):
         return None
