@@ -358,7 +358,9 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   reused **native** bank ID with different source amounts or commodities is
   still a conflict.
 - Date, normalized payee, and signed source amount/currency identify a *possible*
-  duplicate even when bank IDs or narration differ. This does not prove
+  duplicate even when bank IDs or narration differ. A row with no payee (the
+  one-description mapping) is compared by its normalized narration instead, so
+  two different same-day purchases of one amount are both new. This does not prove
   duplication: two real purchases can have identical details. `--apply` requires
   `--duplicates skip` or `--duplicates include`; choose include to preserve
   legitimate repeated purchases. Review the rows before choosing;

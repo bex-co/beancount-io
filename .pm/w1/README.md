@@ -67,7 +67,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [111](./111.md) — Bulk dates accept numeric strings as Unix timestamps and other non-ISO spellings — **minor**, CLI QA 2026-10-03.
 - [112](./112.md) — `add transactions --from -` leaks raw Python errors (exit 1) for undecodable, deeply nested or huge-integer stdin — **minor**, CLI QA 2026-10-03.
 - [136](./136.md) — Appends rewrite text inside strings: U+2028/U+2029 become newlines and continuation lines are re-indented — **major**, CLI QA 2026-10-03.
-- [148](./148.md) — Without a payee column, any same-day same-amount rows are "possible duplicates" and `--duplicates skip` drops real rows — **major**, CLI QA 2026-10-03.
 - [149](./149.md) — The generated `import-id` ignores payee, so a reordered export marks a new row as an exact duplicate — **major**, CLI QA 2026-10-03.
 - [150](./150.md) — A `sign=ledger` preview followed by the documented flag-free `--apply` writes the opposite sign — **minor**, CLI QA 2026-10-03.
 - [151](./151.md) — Quoted semicolons in a comma CSV make delimiter detection choose `;` and refuse the file — **minor**, CLI QA 2026-10-03.

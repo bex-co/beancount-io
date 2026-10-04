@@ -59,7 +59,8 @@ Dedup runs **before** categorization (Suggest). Skipped rows must not consume ca
 ## `bea import` behavior
 
 `bea import` auto-skips exact `import-id` matches and reports possible
-duplicates with the same date, normalized payee and source amount/currency.
+duplicates with the same date, normalized payee (the narration when the row has
+no payee) and source amount/currency.
 It **does not implement** the ±3-day, similar-description pass above. Run that
 additional review even when the CLI reports zero possible duplicates; see
 `references/bea-import.md` for the query and write procedure.

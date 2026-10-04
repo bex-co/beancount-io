@@ -293,7 +293,9 @@ def answer(
             elif _candidate_key(entry, account) in fingerprints:
                 status, reason, match = (
                     "possible_duplicate",
-                    "Date, payee and source amount match; different bank IDs or narration do not rule out a duplicate.",
+                    "Date, payee and source amount match; different bank IDs or narration do not rule out a duplicate."
+                    if _match_text(entry.payee)
+                    else "Date, narration and source amount match; different bank IDs do not rule out a duplicate.",
                     fingerprints[_candidate_key(entry, account)],
                 )
             if status == "new" or (status == "possible_duplicate" and duplicates == "include"):
@@ -745,8 +747,15 @@ def _hash_import_ids(entry: Any, account: str, seen: dict[str, int]) -> tuple[st
 
 
 def _candidate_key(entry: Any, account: str) -> tuple[Any, ...]:
-    date, payee, _narration, amounts = _fingerprint(entry, account)
-    return date, payee, amounts
+    """Date, who was paid, and source amounts: what flags a possible duplicate.
+
+    The payee names who was paid. A row with no payee — the documented
+    one-description CSV mapping puts the bank text in `narration` — is named
+    by its narration instead; otherwise every same-day same-amount row would
+    collapse onto date + amount and `--duplicates skip` would drop real ones.
+    """
+    date, payee, narration, amounts = _fingerprint(entry, account)
+    return date, payee or narration, amounts
 
 
 def _source_amounts(entry: Any, account: str) -> str:
