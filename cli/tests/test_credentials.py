@@ -57,6 +57,69 @@ class TestCredentials:
         assert require_credentials().token == "qa-synthetic-value.with-dashes_and.dots"
 
 
+# A token httpx cannot encode as an ASCII header value used to escape as a raw
+# `UnicodeEncodeError` (exit 1, category validation) instead of the auth error.
+_NON_ASCII_TOKENS = pytest.mark.parametrize(
+    "token",
+    ["tök", "qa-synthetic-€", "qa-synthetic\u200bvalue"],
+    ids=["o-umlaut", "euro", "zero-width-space"],
+)
+
+
+class TestNonAsciiToken:
+    @_NON_ASCII_TOKENS
+    def test_environment_token_is_an_auth_error(self, monkeypatch: pytest.MonkeyPatch, token: str) -> None:
+        monkeypatch.setenv("BEA_TOKEN", token)
+        with pytest.raises(AuthError, match="Invalid BEA_TOKEN"):
+            require_credentials()
+
+    @_NON_ASCII_TOKENS
+    def test_stored_token_is_an_auth_error(
+        self, bea_config_dir: Path, monkeypatch: pytest.MonkeyPatch, token: str
+    ) -> None:
+        monkeypatch.delenv("BEA_TOKEN", raising=False)
+        _write_stored(bea_config_dir, token, "2099-01-01T00:00:00Z")
+        with pytest.raises(AuthError, match="Invalid BEA_TOKEN"):
+            require_credentials()
+
+    @_NON_ASCII_TOKENS
+    @pytest.mark.parametrize("source", ["environment", "file"])
+    @pytest.mark.parametrize(
+        "command",
+        [["--json", "cloud", "status"], ["cloud", "ledger", "list"], ["ask", "--print", "how much?"]],
+        ids=["status", "ledger-list", "ask"],
+    )
+    def test_commands_exit_with_the_auth_error(
+        self,
+        bea_config_dir: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+        token: str,
+        source: str,
+        command: list[str],
+    ) -> None:
+        from typer.testing import CliRunner
+
+        from cli.main import app
+
+        ledger = tmp_path / "main.beancount"
+        ledger.write_text("2024-01-01 open Assets:Cash\n")
+        monkeypatch.setenv("BEA_FILE", str(ledger))
+        monkeypatch.setenv("BEA_API_URL", "http://127.0.0.1:9")
+        if source == "environment":
+            monkeypatch.setenv("BEA_TOKEN", token)
+        else:
+            monkeypatch.delenv("BEA_TOKEN", raising=False)
+            _write_stored(bea_config_dir, token, "2099-01-01T00:00:00Z")
+
+        result = CliRunner().invoke(app, command)
+
+        assert result.exit_code == 3, result.output
+        assert "Invalid BEA_TOKEN or stored credential" in result.output
+        assert "bea cloud login" in result.output
+        assert "codec" not in result.output
+
+
 def _write_stored(config_dir: Path, token: str, expire_at: str) -> Path:
     config_dir.mkdir(parents=True, exist_ok=True)
     path = config_dir / "credentials.json"

@@ -13,18 +13,19 @@ from cli.errors import AuthError
 ENVIRONMENT = "environment"
 FILE = "file"
 
-# HTTP header values reject control characters, and a bearer token never
-# contains whitespace of any kind: a pasted token with a trailing newline or
+# A bearer token is printable ASCII without whitespace: HTTP header values
+# reject control characters, and httpx encodes headers as ASCII. A pasted
+# token with a trailing newline, a space, an accented letter or a zero-width
 # space must fail here, as an auth error, rather than reach httpx/h11 and
-# surface as a transport failure with the token in the exception text.
-_INVALID_TOKEN = re.compile(r"[\s\x00-\x1f\x7f]")
+# surface as a transport failure or a raw codec error.
+_INVALID_TOKEN = re.compile(r"[^\x21-\x7e]")
 
 
 def _validate_token(token: str) -> str:
     if _INVALID_TOKEN.search(token):
         raise AuthError(
-            "Invalid BEA_TOKEN or stored credential (contains whitespace or "
-            "control characters). Fix the environment value or run "
+            "Invalid BEA_TOKEN or stored credential (contains whitespace, "
+            "control or non-ASCII characters). Fix the environment value or run "
             "'bea cloud login'."
         )
     if not token:
