@@ -232,13 +232,14 @@ def _transaction_table(headers: list[str], rows: list[tuple[list[str], list[tupl
         output.table(headers, single)
         return
     width = shutil.get_terminal_size().columns
-    if all(sum(len(cell) for cell in row) + 2 * (len(row) - 1) <= width for row in single):
+    if all(sum(output.display_width(cell) for cell in row) + 2 * (len(row) - 1) <= width for row in single):
         output.table(headers, single)
         return
-    widths = [len(header) for header in headers]
+    # Columns, not code points: a CJK character takes two (w1/106).
+    widths = [output.display_width(header) for header in headers]
     for cells, _ in rows:
         for i, cell in enumerate([*cells, ""]):
-            widths[i] = max(widths[i], len(cell))
+            widths[i] = max(widths[i], output.display_width(cell))
     # The table reads in the terminal it prints to: shrink narration, then
     # payee, with an ellipsis so the first line fits the width. Piped output
     # and --details keep the full text.
@@ -246,29 +247,29 @@ def _transaction_table(headers: list[str], rows: list[tuple[list[str], list[tupl
         total = sum(widths) + 2 * (len(headers) - 1)
         if total <= width:
             break
-        shrink = min(widths[i] - len(headers[i]), total - width)
+        shrink = min(widths[i] - output.display_width(headers[i]), total - width)
         if shrink > 0:
             widths[i] -= shrink
     rows = [
         (
-            [cell if len(cell) <= widths[i] else f"{cell[: widths[i] - 3]}..." for i, cell in enumerate(cells)],
+            [output.truncate(cell, widths[i]) for i, cell in enumerate(cells)],
             postings,
         )
         for cells, postings in rows
     ]
     single = [[*cells, "; ".join(f"{account}: {amount}" for account, amount in postings)] for cells, postings in rows]
     sep = "  "
-    typer.echo(sep.join(header.ljust(widths[i]) for i, header in enumerate(headers)))
+    typer.echo(sep.join(output.pad(header, widths[i]) for i, header in enumerate(headers)))
     typer.echo(sep.join("-" * widths[i] for i in range(len(headers))))
     for (cells, postings), row in zip(rows, single, strict=True):
-        line = sep.join(cell.ljust(widths[i]) for i, cell in enumerate(row))
-        if len(line) <= width or not postings:
+        line = sep.join(output.pad(cell, widths[i]) for i, cell in enumerate(row))
+        if output.display_width(line) <= width or not postings:
             typer.echo(line)
             continue
-        typer.echo(sep.join(cell.ljust(widths[i]) for i, cell in enumerate([*cells, ""])))
-        pad = max(len(account) for account, _ in postings)
+        typer.echo(sep.join(output.pad(cell, widths[i]) for i, cell in enumerate([*cells, ""])))
+        pad = max(output.display_width(account) for account, _ in postings)
         for account, amount in postings:
-            typer.echo(f"{sep}{account.ljust(pad)}: {amount}")
+            typer.echo(f"{sep}{output.pad(account, pad)}: {amount}")
 
 
 def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: bool = False, **filters: Any) -> None:

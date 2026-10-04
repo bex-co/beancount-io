@@ -136,9 +136,21 @@ def display_width(text: str) -> int:
     return sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in text)
 
 
-def _pad(text: str, width: int) -> str:
+def pad(text: str, width: int) -> str:
     """`str.ljust` measured in columns rather than code points."""
     return text + " " * max(0, width - display_width(text))
+
+
+def truncate(text: str, width: int) -> str:
+    """`text` cut to at most `width` columns, ending in `...` when it was cut."""
+    if display_width(text) <= width:
+        return text
+    kept = ""
+    for char in text:
+        if display_width(kept + char) > width - 3:
+            break
+        kept += char
+    return f"{kept}..."
 
 
 def table(headers: list[str], rows: list[list[str]]) -> None:
@@ -152,10 +164,10 @@ def table(headers: list[str], rows: list[list[str]]) -> None:
         for i, cell in enumerate(row):
             widths[i] = max(widths[i], display_width(cell))
     sep = "  "
-    typer.echo(sep.join(_pad(h, widths[i]) for i, h in enumerate(headers)))
+    typer.echo(sep.join(pad(h, widths[i]) for i, h in enumerate(headers)))
     typer.echo(sep.join("-" * widths[i] for i in range(len(headers))))
     for row in rows:
-        typer.echo(sep.join(_pad(cell, widths[i]) for i, cell in enumerate(row)))
+        typer.echo(sep.join(pad(cell, widths[i]) for i, cell in enumerate(row)))
 
 
 def fields(values: Mapping[str, object], *, indent: int = 0) -> None:

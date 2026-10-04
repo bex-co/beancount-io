@@ -102,6 +102,39 @@ def test_terminal_keeps_fitting_rows_single_line(monkeypatch: pytest.MonkeyPatch
     assert "Expenses:Dining:AVeryLongRestaurantName: 12.50 USD; Assets:Checking: -12.50 USD" in lines[2]
 
 
+def test_narrow_terminal_sizes_cjk_cells_by_display_width(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fit, truncation and padding count columns, not code points (w1/106)."""
+    from cli.output import display_width
+
+    tty = _Tty()
+    monkeypatch.setattr(sys, "stdout", tty)
+    monkeypatch.setattr(shutil, "get_terminal_size", lambda *args, **kwargs: os.terminal_size((70, 24)))
+    _transaction_table(
+        HEADERS,
+        [
+            (
+                ["2026-01-02", "*", "東京ラーメン屋さん", "昼ご飯のラーメンと餃子を食べました"],
+                [("Expenses:Food", "1200 JPY"), ("Assets:Cash", "-1200 JPY")],
+            ),
+            (["2026-01-03", "*", "Cafe", "Coffee"], [("Expenses:Food", "500 JPY"), ("Assets:Cash", "-500 JPY")]),
+        ],
+    )
+    lines = tty.getvalue().splitlines()
+
+    assert all(display_width(line) <= 70 for line in lines), lines
+    header = lines[0]
+    cafe = next(line for line in lines if line.startswith("2026-01-03"))
+    # Each cell starts in the column its header does.
+    for row, text, column in (
+        (lines[2], "東京", "PAYEE"),
+        (lines[2], "昼ご飯", "NARRATION"),
+        (cafe, "Cafe", "PAYEE"),
+        (cafe, "Coffee", "NARRATION"),
+    ):
+        assert display_width(row[: row.index(text)]) == header.index(column), (row, text)
+    assert "..." in lines[2]
+
+
 def test_jsonable_keeps_lot_dates_and_labels_on_costs() -> None:
     import datetime
     from decimal import Decimal
