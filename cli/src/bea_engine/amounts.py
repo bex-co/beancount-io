@@ -22,6 +22,19 @@ def parse_decimal_number(value: str) -> Decimal:
     return Decimal(text)
 
 
+def require_plain_decimal(value: Any) -> Any:
+    """`require_decimal_notation`, plus `parse_decimal_number`'s ASCII rule for text.
+
+    `Decimal()` also reads `1_000`, Arabic-Indic and full-width digits, which
+    Beancount's own grammar — and so `add transaction --posting` — refuses.
+    Already-converted Decimals and integers pass unchanged.
+    """
+    require_decimal_notation(value)
+    if isinstance(value, str):
+        parse_decimal_number(value)
+    return value
+
+
 def split_total_price(text: str) -> tuple[str, str] | None:
     """The `@@` total from a posting line as `(number, currency)` strings, or None.
 

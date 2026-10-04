@@ -18,7 +18,7 @@ from pydantic import (
     model_validator,
 )
 
-from bea_engine.amounts import require_decimal_notation, split_total_price
+from bea_engine.amounts import require_plain_decimal, split_total_price
 from bea_engine.ledger.text import require_commodity, require_flag, require_tag_or_link
 
 
@@ -78,7 +78,7 @@ LedgerDate = Annotated[datetime.date, BeforeValidator(_require_calendar_date)]
 # exponent notation for a tiny number. Preserve all digits and trailing zeros.
 AmountNumber = Annotated[
     Decimal,
-    BeforeValidator(require_decimal_notation),
+    BeforeValidator(require_plain_decimal),
     PlainSerializer(lambda number: format(number, "f"), return_type=str, when_used="json"),
 ]
 
@@ -150,6 +150,8 @@ class Posting(BaseModel):
                     f"Could not parse amount {amount!r} as 'NUMBER CURRENCY': {number!r} is not a number. "
                     f"{_FRAGMENT_HELP}"
                 ) from None
+            # A number Decimal reads but the flag path refuses (`1e3`, `1_000`,
+            # `٤٥`) is refused by `units.number`'s spelling rule, at that path.
             value["units"] = {"number": number, "currency": currency}
             return value
         value |= _posting_fragment(amount)

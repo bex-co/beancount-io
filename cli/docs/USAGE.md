@@ -677,7 +677,9 @@ the same account instead of a false unknown-account error, and the new
 directive is written NFC. Amount strings use decimal notation
 (e.g. `1000`, not `1e3`) in command arguments, bulk JSON, and imports,
 including units, costs, and prices; scientific notation is refused on every
-path with the same message. Bulk JSON amounts must be decimal strings or
+path with the same message. Bulk JSON amounts and tagged `number`/`amount`
+metadata, like `--posting`, also refuse underscores (`1_000`) and non-ASCII
+digits (`٤٥`, `１０`). Bulk JSON amounts must be decimal strings or
 integers — a JSON float such as `0.3` is refused naming the field, the row,
 and the string form to send, because the double already carries binary
 error. Bulk notation errors follow the normal row-validation and

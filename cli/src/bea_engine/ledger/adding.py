@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from bea_engine import protocol
+from bea_engine.amounts import parse_decimal_number
 from bea_engine.ledger import write, writer
 from bea_engine.ledger.text import parse_account, single_line
 
@@ -940,6 +941,18 @@ def _bulk_meta_problems(location: str, meta: dict[str, Any]) -> list[str]:
                 keys = ", ".join(sorted(expected))
                 problems.append(f"{path}: A {kind!r} metadata object takes exactly the keys {keys}.")
                 continue
+            number = value.get("value" if kind == "number" else "number")
+            if kind != "date" and isinstance(number, str):
+                # Amounts' spelling rule: `Decimal()` alone reads `1_000`, `1e3`
+                # and non-ASCII digits that no other write path accepts.
+                try:
+                    parse_decimal_number(number)
+                except ValueError:
+                    problems.append(
+                        f"{path}: Invalid {kind!r} metadata for {key!r}: expected a decimal string with "
+                        f"ASCII digits and no exponent or underscores, such as '1.25'; got {number!r}."
+                    )
+                    continue
         elif value is not None and not isinstance(value, str | bool | int | float):
             problems.append(f"{path}: Unsupported metadata value of type {type(value).__name__}; {_META_VALUE_HELP}")
             continue
