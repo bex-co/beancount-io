@@ -192,16 +192,26 @@ class FilteredLedger:
 
         self._date_first = None
         self._date_last = None
-        # Match report `_metadata` period bounds: every dated fact except
-        # Open/Close/Commodity declarations (notes, balances, events, …).
-        for entry in self.entries:
+        # The report period (`bea_engine.report._metadata` reads it through
+        # `period`): every dated fact except Open/Close/Commodity declarations
+        # (notes, balances, events, …). An account filter narrows balances,
+        # not the calendar, so it is bounded by the whole ledger — otherwise
+        # interval series stopped at the filtered account's last entry while
+        # the headline covered the full period.
+        period_entries = ledger.all_entries if account else self.entries
+        for entry in period_entries:
             if not isinstance(entry, Open | Close | Commodity):
                 self._date_first = entry.date
                 break
-        for entry in reversed(self.entries):
+        for entry in reversed(period_entries):
             if not isinstance(entry, Open | Close | Commodity):
                 self._date_last = entry.date + timedelta(1)
                 break
+
+    @property
+    def period(self) -> tuple[date | None, date | None]:
+        """The report period as (first day, exclusive end); None when undated."""
+        return self._date_first, self._date_last
 
     @property
     def end_date(self) -> date | None:

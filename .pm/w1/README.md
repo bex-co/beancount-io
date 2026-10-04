@@ -49,7 +49,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 
 ## Inbox
 
-- [051](./051.md) — `-a/--account` interval series stop at the filtered account's last entry while the headline covers the whole ledger — **minor**, CLI QA 2026-10-02.
 - [052](./052.md) — One long price quote makes every amount in that currency print with that many decimals in report tables — **minor**, CLI QA 2026-10-02.
 - [053](./053.md) — Query, balance and report JSON/CSV print tiny amounts in scientific notation (`1E-8`, `0E-8`) — **minor**, CLI QA 2026-10-02.
 - [061](./061.md) — A ledger plugin or importer that prints to stdout corrupts the engine envelope: successful writes report exit 4 — **major**, CLI QA 2026-10-02.

@@ -410,24 +410,17 @@ def _interval(value: str) -> Any:
 
 
 def _metadata(filtered: Any, conversion: str, ledger_errors: list[str], interval: str | None = None) -> dict[str, Any]:
-    from fava.beans.abc import Close, Commodity, Open
-
     # Every dated fact the report covers sets the period, not transactions
     # alone: a period-end balance assertion is the last thing a close writes,
     # and a report that stopped before it would omit its own evidence. Opens,
     # closes and commodities are declarations — a commodity conventionally
-    # carries a placeholder date decades before any activity.
+    # carries a placeholder date decades before any activity. Account filters
+    # narrow balances, not the calendar: an over-narrow `--account` that
+    # matches nothing must not read as "no dated activity". The interval
+    # series are cut from the same bounds, so they cover exactly this period.
     start: date | None
     end: date | None
-    if filtered.date_range:
-        start, end = filtered.date_range.begin, filtered.date_range.end
-    else:
-        # Account filters narrow balances, not the calendar. An over-narrow
-        # `--account` that matches nothing must not read as "no dated activity".
-        period_entries = filtered.entries if not filtered.account else filtered.ledger.all_entries
-        dates = [entry.date for entry in period_entries if not isinstance(entry, Open | Close | Commodity)]
-        start = min(dates) if dates else None
-        end = max(dates) + timedelta(days=1) if dates else None
+    start, end = filtered.period
     data: dict[str, Any] = {
         "conversion": conversion,
         "period": {"start": start, "end_exclusive": end},
