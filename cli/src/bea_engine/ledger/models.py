@@ -192,6 +192,9 @@ class TransactionHeader(BaseModel):
     posting lines as text, so it has to build one before any posting exists.
     It still needs validation: this is where a tag or link written with its
     sigil loses it, so that formatting does not write it a second time.
+
+    Reads use it too: Beancount accepts a transaction with no postings, so a
+    loaded one must list rather than fail `TransactionDirective`'s input rule.
     """
 
     model_config = ConfigDict(extra="forbid")

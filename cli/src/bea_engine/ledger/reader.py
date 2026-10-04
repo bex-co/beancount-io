@@ -46,7 +46,7 @@ from bea_engine.ledger.models import (
     Posting,
     PriceDirective,
     SourceLocation,
-    TransactionDirective,
+    TransactionHeader,
 )
 from bea_engine.ledger.text import fold_account
 
@@ -157,7 +157,9 @@ def metadata_to_json(meta: dict[str, Any] | None) -> dict[str, Any]:
     return result
 
 
-def _to_transaction(entry: Any) -> TransactionDirective:
+def _to_transaction(entry: Any) -> TransactionHeader:
+    # A loaded transaction may legitimately have no postings (Beancount accepts
+    # one), so reads use the header model; only input requires a posting.
     postings = []
     for p in entry.postings:
         cost = None
@@ -179,7 +181,7 @@ def _to_transaction(entry: Any) -> TransactionDirective:
                 meta=metadata_to_json(p.meta),
             )
         )
-    return TransactionDirective(
+    return TransactionHeader(
         date=entry.date,
         flag=entry.flag,
         payee=entry.payee,
@@ -215,7 +217,7 @@ def list_transactions(
     search: list[str] | None = None,
     tags: list[str] | None = None,
     links: list[str] | None = None,
-) -> list[TransactionDirective]:
+) -> list[TransactionHeader]:
     terms = [_nfc(term or "").casefold() for term in search or []]
     wanted_tags = {_nfc(tag.lstrip("#")) for tag in tags or []}
     wanted_links = {_nfc(link.lstrip("^")) for link in links or []}

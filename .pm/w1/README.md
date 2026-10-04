@@ -57,7 +57,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [045](./045.md) — Bulk typed metadata writes binary floating-point artifacts — **minor**, CLI QA 2026-10-02.
 - [060](./060.md) — A bank CSV currency cell injects additional directives through import — **major**, CLI QA 2026-10-02.
 - [046](./046.md) — Tags, links, flags and currencies are not validated as tokens, so one value splits or injects directives — **major**, CLI QA 2026-10-02.
-- [047](./047.md) — `bea list transaction` crashes on any ledger containing a posting-less transaction (regression of w3/261) — **major**, CLI QA 2026-10-02.
 - [048](./048.md) — `bea format` corrupts multi-line strings containing U+2028/U+0085/form feed and never converges — **major**, CLI QA 2026-10-02.
 - [049](./049.md) — One U+2028 in a string marks every later directive in that file `generated`, and `--on-disk` hides them — **major**, CLI QA 2026-10-02.
 - [050](./050.md) — `--conversion at_value` revalues cost-less holdings with the first price pair seen, even converting the operating currency — **major**, CLI QA 2026-10-02.
