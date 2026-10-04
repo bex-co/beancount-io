@@ -784,6 +784,11 @@ def _error_key(error: Any, filenames: dict[Path, Path]) -> tuple[str, int | None
         message = f"Balance failed for {entry.account} on {entry.date}"
     else:
         message = getattr(error, "message", str(error))
+        # Some messages embed a path (a posting's repr with its `meta`, a
+        # duplicate include); the after-load reads staged copies, so map those
+        # back too or every such pre-existing error reads as new.
+        for staged, original in filenames.items():
+            message = message.replace(str(staged), str(original))
     return (name, error.source.get("lineno"), message)
 
 
