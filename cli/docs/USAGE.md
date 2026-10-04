@@ -1449,7 +1449,7 @@ select targets, endpoints, and state directories:
 | `BEA_TOKEN` | — | Hosted credential for unattended jobs; never written to disk |
 | `BEA_CONFIG_DIR` | `$XDG_CONFIG_HOME/bea`, else `~/.config/bea` | Per-user state: credentials, `ask` history, user skills |
 | `XDG_DATA_HOME` | `~/.local/share` | Root for the managed PyPI engine under `…/bea/engine/<version>` |
-| `XDG_CACHE_HOME` | `~/.cache` | Root for ledger write locks under `…/bea/locks` |
+| `XDG_CACHE_HOME` | `~/.cache` | Root for ledger write locks under `…/bea/locks` and managed price feeds under `…/bea/managed-prices` |
 | `BEA_API_URL` | `https://api.v3.beancount.io` | API base URL; empty means the default, and a value that is not an `http(s)://` URL with a host is a usage error (exit 2) |
 | `BEA_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL, used by the device login flow; validated like `BEA_API_URL` |
 | `BEA_NO_UPDATE_NOTIFIER` | — | Truthy disables the update notice entirely |
@@ -1457,6 +1457,9 @@ select targets, endpoints, and state directories:
 | `MANAGED_PRICE_ORIGINS` | `https://beancount.io` | Comma-separated origin allowlist for managed price includes; empty disables them |
 | `MANAGED_PRICE_OFFLINE` | — | Truthy resolves managed includes from the cache only, like `--offline` |
 | `MANAGED_PRICE_STRICT` | — | Truthy fails loads on stale or unavailable sources, like `--strict-prices` |
+
+A relative `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, or `XDG_CACHE_HOME` is ignored,
+as the XDG Base Directory spec requires, and the default applies.
 
 Homebrew sets `BEA_ENGINE_DIR` to the keg-local engine so installs never look
 for a separately provisioned copy. Advanced overrides (`BEA_ENGINE_PYTHON`,

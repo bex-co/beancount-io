@@ -2503,3 +2503,57 @@ class TestFeedGrammarMatchesBeancount:
         assert resolved.blob is not None and resolved.blob.revision == "r1"
         assert (resolved.head.last_error or "").startswith("invalid feed at line 12")
         assert (feed_dir(f"{feed_server}/prices/BTC-USD", root) / "r1.beancount").read_text() == FEED
+
+
+class TestRelativeXdgHomes:
+    """w1/082: a relative XDG base directory is ignored, as the spec requires."""
+
+    def test_relative_values_fall_back_to_the_home_defaults(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from bea_engine.ledger.write import cache_dir as engine_cache_dir
+        from bea_engine.managed_price_cache import cache_root
+        from cli import config
+
+        monkeypatch.setenv("HOME", str(tmp_path / "home"))
+        monkeypatch.delenv("BEA_CONFIG_DIR", raising=False)
+        for variable in ("XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME"):
+            monkeypatch.setenv(variable, "relative")
+
+        assert config.config_dir() == tmp_path / "home" / ".config" / "bea"
+        assert config.cache_dir() == tmp_path / "home" / ".cache" / "bea"
+        assert config.data_dir() == tmp_path / "home" / ".local" / "share" / "bea"
+        assert engine_cache_dir() == tmp_path / "home" / ".cache" / "bea"
+        assert cache_root() == tmp_path / "home" / ".cache" / "bea" / "managed-prices"
+
+    def test_absolute_values_still_win(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        from bea_engine.managed_price_cache import cache_root
+        from cli import config
+
+        monkeypatch.delenv("BEA_CONFIG_DIR", raising=False)
+        monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
+
+        assert config.config_dir() == tmp_path / "config" / "bea"
+        assert cache_root() == tmp_path / "cache" / "bea" / "managed-prices"
+
+    def test_check_with_a_relative_cache_home_from_another_directory(self, feed_server: str, tmp_path: Path) -> None:
+        books = tmp_path / "books"
+        books.mkdir()
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        ledger = _write_managed_ledger(books, feed_server)
+        env = {**_cli_env(tmp_path, feed_server), "XDG_CACHE_HOME": "relcache", "HOME": str(tmp_path / "home")}
+
+        result = subprocess.run(
+            [sys.executable, "-m", "cli.main", "--file", str(ledger), "check"],
+            env=env,
+            cwd=elsewhere,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert not (elsewhere / "relcache").exists()
+        assert list((tmp_path / "home" / ".cache" / "bea" / "managed-prices").rglob("*.effective.*"))

@@ -11,6 +11,16 @@ DEFAULT_ENTRY_FILE = Path("main.bean")
 DEFAULT_ENTRY_FILE_FALLBACKS = (Path("main.bean"), Path("main.beancount"))
 
 
+def _xdg_home(variable: str, default: Path) -> Path:
+    """An XDG base directory, ignoring a relative value as the spec requires.
+
+    A relative path would resolve against whatever directory a command ran
+    from, so state would scatter across working directories.
+    """
+    value = Path(os.environ.get(variable) or "").expanduser()
+    return value if value.is_absolute() else default
+
+
 def config_dir() -> Path:
     """Per-user state directory: `$BEA_CONFIG_DIR`, else `$XDG_CONFIG_HOME/bea`, else `~/.config/bea`.
 
@@ -20,10 +30,7 @@ def config_dir() -> Path:
     override = os.environ.get("BEA_CONFIG_DIR")
     if override:
         return Path(override).expanduser()
-    xdg = os.environ.get("XDG_CONFIG_HOME")
-    if xdg:
-        return Path(xdg).expanduser() / "bea"
-    return Path.home() / ".config" / "bea"
+    return _xdg_home("XDG_CONFIG_HOME", Path.home() / ".config") / "bea"
 
 
 def credentials_path() -> Path:
@@ -32,8 +39,7 @@ def credentials_path() -> Path:
 
 def cache_dir() -> Path:
     """Local caches and locks, separate from ledger files and user settings."""
-    base = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache").expanduser()
-    return base / "bea"
+    return _xdg_home("XDG_CACHE_HOME", Path.home() / ".cache") / "bea"
 
 
 def data_dir() -> Path:
@@ -43,8 +49,7 @@ def data_dir() -> Path:
     state, so a cache cleaner deleting it would leave every local command
     needing a download before it could run again.
     """
-    base = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share").expanduser()
-    return base / "bea"
+    return _xdg_home("XDG_DATA_HOME", Path.home() / ".local" / "share") / "bea"
 
 
 def history_path() -> Path:

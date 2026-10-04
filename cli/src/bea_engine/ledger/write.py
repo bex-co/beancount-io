@@ -30,8 +30,12 @@ def cache_dir() -> Path:
 
     Every writer — `bea add`, `bea import`, `bea ask` via `bea-engine append` —
     runs in the engine process and must contend for the same lock file.
+    A relative `XDG_CACHE_HOME` is ignored, as the XDG Base Directory spec
+    requires: it would resolve against whatever directory a command ran from,
+    and the managed price cache writes this path into staged includes.
     """
-    base = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache").expanduser()
+    xdg = Path(os.environ.get("XDG_CACHE_HOME") or "").expanduser()
+    base = xdg if xdg.is_absolute() else Path.home() / ".cache"
     return base / "bea"
 
 

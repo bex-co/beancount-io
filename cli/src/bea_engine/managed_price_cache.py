@@ -95,8 +95,9 @@ class ResolvedFeed:
 
 def cache_root() -> Path:
     """Where feed revisions live — beside the write locks, under XDG cache."""
-    base = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache").expanduser()
-    return base / "bea" / "managed-prices"
+    from bea_engine.ledger.write import cache_dir
+
+    return cache_dir() / "managed-prices"
 
 
 def feed_dir(url: str, root: Path | None = None) -> Path:
