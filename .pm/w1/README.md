@@ -49,9 +49,137 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 
 ## Inbox
 
+- [088](./088.md) — `bea cloud ledger delete ../account` sends `DELETE /api-gateway/v1/account`: dot segments escape the ledger path — **blocker**, CLI QA 2026-10-03.
 - [039](./039.md) — Interactive `.reload` bypasses `--strict` and answers from an invalid ledger — **minor**, CLI QA 2026-10-02.
 - [040](./040.md) — Native `query --source` ignores `--no-input` and waits at a prompt — **minor**, CLI QA 2026-10-02.
 - [041](./041.md) — Root formatting skips included `.inc`/other suffixes and reports false success — **minor**, CLI QA 2026-10-02.
+- [042](./042.md) — Native and stored queries silently drop trailing statements — **minor**, CLI QA 2026-10-02.
+- [043](./043.md) — Native missing stored queries print an error but exit 0 — **minor**, CLI QA 2026-10-02.
+- [044](./044.md) — Portable price exports lose symlinked document references — **minor**, CLI QA 2026-10-02.
+- [045](./045.md) — Bulk typed metadata writes binary floating-point artifacts — **minor**, CLI QA 2026-10-02.
+- [060](./060.md) — A bank CSV currency cell injects additional directives through import — **major**, CLI QA 2026-10-02.
+- [046](./046.md) — Tags, links, flags and currencies are not validated as tokens, so one value splits or injects directives — **major**, CLI QA 2026-10-02.
+- [047](./047.md) — `bea list transaction` crashes on any ledger containing a posting-less transaction (regression of w3/261) — **major**, CLI QA 2026-10-02.
+- [048](./048.md) — `bea format` corrupts multi-line strings containing U+2028/U+0085/form feed and never converges — **major**, CLI QA 2026-10-02.
+- [049](./049.md) — One U+2028 in a string marks every later directive in that file `generated`, and `--on-disk` hides them — **major**, CLI QA 2026-10-02.
+- [050](./050.md) — `--conversion at_value` revalues cost-less holdings with the first price pair seen, even converting the operating currency — **major**, CLI QA 2026-10-02.
+- [051](./051.md) — `-a/--account` interval series stop at the filtered account's last entry while the headline covers the whole ledger — **minor**, CLI QA 2026-10-02.
+- [052](./052.md) — One long price quote makes every amount in that currency print with that many decimals in report tables — **minor**, CLI QA 2026-10-02.
+- [053](./053.md) — Query, balance and report JSON/CSV print tiny amounts in scientific notation (`1E-8`, `0E-8`) — **minor**, CLI QA 2026-10-02.
+- [054](./054.md) — `bea check -v` NFC refusal advises `bea format -i`, which can never fix it, and fires on comment-only text — **minor**, CLI QA 2026-10-02.
+- [055](./055.md) — Cloud JSON error bodies without the `{ok, error}` envelope surface as `'ok'` and lose 401/403/409 exit codes — **major**, CLI QA 2026-10-02.
+- [056](./056.md) — A symlinked root ledger resolves includes from the link target's directory, unlike `bean-check` — **minor**, CLI QA 2026-10-02.
+- [057](./057.md) — A non-ASCII `BEA_TOKEN` or stored token fails with a raw `UnicodeEncodeError` (exit 1) instead of the auth error — **minor**, CLI QA 2026-10-02.
+- [058](./058.md) — `bea cloud logout` prints "Logged out." and exits 0 when server-side revocation failed — **minor**, CLI QA 2026-10-02.
+- [059](./059.md) — Empty or scheme-less `BEA_API_URL` is reported as a network outage — **minor**, CLI QA 2026-10-02.
+- [061](./061.md) — A ledger plugin or importer that prints to stdout corrupts the engine envelope: successful writes report exit 4 — **major**, CLI QA 2026-10-02.
+- [062](./062.md) — A rules pattern that matches empty text (e.g. trailing `|`) silently becomes a catch-all and books rows cleared — **minor**, CLI QA 2026-10-02.
+- [063](./063.md) — Import rules miss Unicode-equivalent text (NFD vs NFC) — **minor**, CLI QA 2026-10-02.
+- [064](./064.md) — A `currency=` mapping that differs from the header only by case silently becomes a constant commodity — **minor**, CLI QA 2026-10-02.
+- [065](./065.md) — UTF-16 bank exports are misdiagnosed as cp1252, and BOM-prefixed rules files are refused — **minor**, CLI QA 2026-10-02.
+- [066](./066.md) — Ctrl-C ends the interactive `bea query` shell (exit 130) and loses its history — **major**, CLI QA 2026-10-02.
+- [067](./067.md) — The interactive query shell prints raw Python tracebacks for errors the one-shot path already explains — **minor**, CLI QA 2026-10-02.
+- [068](./068.md) — `doctor roundtrip` and `doctor print-options` ignore syntax errors in included files and exit 0 — **minor**, CLI QA 2026-10-02.
+- [069](./069.md) — A USAGE.md `doctor context` example is invalid, and the docs test never executes it — **minor**, CLI QA 2026-10-02.
+- [070](./070.md) — `price status` reports a 1970 next refresh and no error for a never-fetched managed price source — **minor**, CLI QA 2026-10-02.
+- [071](./071.md) — `bea balance ACCOUNT` hides closed accounts that still hold money, so totals disagree with the trial balance — **major**, CLI QA 2026-10-02.
+- [072](./072.md) — Parents whose children cancel show `—` instead of the promised explicit zero for plain currencies and in filtered views — **minor**, CLI QA 2026-10-02.
+- [073](./073.md) — A read-only included directory blocks every write with a raw `Errno 13` reported as a validation error — **minor**, CLI QA 2026-10-02.
+- [074](./074.md) — A signal during Beancount parsing is swallowed: a stopped write can still land, or staging copies leak — **minor**, CLI QA 2026-10-02.
+- [075](./075.md) — Write locks are case-sensitive on macOS, so writers using differently-cased paths can lose an add (partly verified) — **minor**, CLI QA 2026-10-02.
+- [076](./076.md) — Concurrent commands on a ledger with managed prices fail at random with a raw `[Errno 2]` on the price cache — **major**, CLI QA 2026-10-03.
+- [077](./077.md) — A truncated managed-price download is cached as a new revision and then pinned forever by 304s — **major**, CLI QA 2026-10-03.
+- [078](./078.md) — The managed-price 5-second fetch limit is per socket read, so a slow server stalls every command — **minor**, CLI QA 2026-10-03.
+- [079](./079.md) — `--offline` writes to the managed-price cache, and a read-only cache crashes loads with a raw `[Errno 13]` — **minor**, CLI QA 2026-10-03.
+- [080](./080.md) — Every write and import preview leaves another full copy of each managed price feed in the cache — **minor**, CLI QA 2026-10-03.
+- [081](./081.md) — Managed price feed validation accepts Unicode whitespace Beancount cannot parse, and replaces the last good revision — **minor**, CLI QA 2026-10-03.
+- [082](./082.md) — A relative `XDG_CACHE_HOME` breaks every ledger that uses managed prices — **minor**, CLI QA 2026-10-03.
+- [083](./083.md) — Beancount's load cache ignores newly matching include-glob files, so repeated `bea import --apply` writes duplicates — **major**, CLI QA 2026-10-03.
+- [084](./084.md) — `bea treeify -o` writes before deciding the run failed: failed runs clobber the destination and same-path input becomes empty — **minor**, CLI QA 2026-10-03.
+- [085](./085.md) — Unexpected engine exceptions lose their type and traceback: a bad BQL date literal exits 1 and `--debug` cannot locate it — **minor**, CLI QA 2026-10-03.
+- [086](./086.md) — `bea example` date-order guard only fires when both dates are given; one-sided or short ranges crash upstream — **minor**, CLI QA 2026-10-03.
+- [087](./087.md) — `bea format --check` is quadratic on long include chains (86 s for 1,500 files) — **minor**, CLI QA 2026-10-03.
+- [089](./089.md) — Server-controlled `sshUrl`/`name` let `bea cloud ledger clone` run local commands and write outside cwd — **major**, CLI QA 2026-10-03.
+- [090](./090.md) — Hand-written cloud output prints server strings raw, including terminal escape sequences — **minor**, CLI QA 2026-10-03.
+- [091](./091.md) — `cloud ledger create --json` omits fields that `show --json` returns for the same ledger — **minor**, CLI QA 2026-10-03.
+- [092](./092.md) — `add transaction --json` output for a `{{total}}` cost is refused when fed back if the balancing leg was omitted — **minor**, CLI QA 2026-10-03.
+- [093](./093.md) — `add transaction --json` output drops a `@@` total, so feeding it back writes a repeating `@` unit price — **minor**, CLI QA 2026-10-03.
+- [094](./094.md) — Bulk-added posting metadata is written at posting indentation, so it reads as transaction metadata — **minor**, CLI QA 2026-10-03.
+- [095](./095.md) — After an approved `ask` write, a failed turn claims "nothing was written to your ledger" and forgets the write — **major**, CLI QA 2026-10-03.
+- [096](./096.md) — One long cell bypasses `ask`'s ~12,000-character query-result limit — **minor**, CLI QA 2026-10-03.
+- [097](./097.md) — `ask` renders model Markdown links as disguised terminal hyperlinks — **minor**, CLI QA 2026-10-03.
+- [098](./098.md) — The engine imports Python modules from the current directory, so untrusted folders run code and `check` modes disagree — **major**, CLI QA 2026-10-03.
+- [099](./099.md) — Ledger writes keep only mode bits: group, ACLs, extended attributes and file flags are dropped — **major**, CLI QA 2026-10-03.
+- [100](./100.md) — Appending to a ledger without a final newline drops the blank line before the new entry — **minor**, CLI QA 2026-10-03.
+- [101](./101.md) — Plugin failures lose the exception type and point at the wrong `plugin` line — **minor**, CLI QA 2026-10-03.
+- [102](./102.md) — An Emacs lock file (`.#main.bean`) fails directory formatting with advice to delete it — **minor**, CLI QA 2026-10-03.
+- [103](./103.md) — `query -o /dev/null` fails with a raw errno and `-o /dev/stdout` leaks an engine usage error — **minor**, CLI QA 2026-10-03.
+- [104](./104.md) — A write lands, then `bea` exits 1 when stdout cannot encode a non-ASCII path; a retry duplicates the entry — **minor**, CLI QA 2026-10-03.
+- [105](./105.md) — A corrupt remembered-CSV record makes every later `import` for that ledger fail with a raw `TypeError` — **minor**, CLI QA 2026-10-03.
+- [106](./106.md) — Narrow-terminal `list` tables still pad and truncate CJK/emoji by character count (gap in w3/391) — **minor**, CLI QA 2026-10-03.
+- [107](./107.md) — With stdout closed (`>&-`), commands exit 1 with `'NoneType' object has no attribute 'flush'` after writes land — **minor**, CLI QA 2026-10-03.
+- [108](./108.md) — Unknown keys inside bulk `units`/`cost`/`price` are silently dropped, so a typo sells the wrong lot — **major**, CLI QA 2026-10-03.
+- [109](./109.md) — Bulk metadata errors abort the whole batch, ignore `--partial`, and name no row — **minor**, CLI QA 2026-10-03.
+- [110](./110.md) — Bulk amounts accept `1_000`, Arabic-Indic and full-width digits that single `add` refuses — **minor**, CLI QA 2026-10-03.
+- [111](./111.md) — Bulk dates accept numeric strings as Unix timestamps and other non-ISO spellings — **minor**, CLI QA 2026-10-03.
+- [112](./112.md) — `add transactions --from -` leaks raw Python errors (exit 1) for undecodable, deeply nested or huge-integer stdin — **minor**, CLI QA 2026-10-03.
+- [113](./113.md) — Bundled forecast/amortize plugin copies count as written rows, so `list --on-disk` disagrees with grep — **major**, CLI QA 2026-10-03.
+- [114](./114.md) — A flag or keyword written without a following space marks a real directive `generated`, and `--on-disk` hides it — **minor**, CLI QA 2026-10-03.
+- [115](./115.md) — `list pad` shows two columns both headed `SOURCE` when any pad is generated — **minor**, CLI QA 2026-10-03.
+- [116](./116.md) — `add balance --pad-from` treats any "Unused Pad" error as "book balance already matches", hiding real padding — **minor**, CLI QA 2026-10-03.
+- [117](./117.md) — A failed assertion on a parent account offers a ready-to-run opening adjustment despite subaccount activity — **minor**, CLI QA 2026-10-03.
+- [118](./118.md) — The error collapser repeats identical messages for the same line — **minor**, CLI QA 2026-10-03.
+- [119](./119.md) — `bea upgrade` deletes the working engine before rebuilding it, leaving none if the rebuild fails — **major**, CLI QA 2026-10-03.
+- [120](./120.md) — Concurrent first-use commands race engine provisioning and fail with raw errno errors (some as exit 2) — **major**, CLI QA 2026-10-03.
+- [121](./121.md) — Engine installs silently drop hash verification when the cached lockfile can't be refreshed — **major**, CLI QA 2026-10-03.
+- [122](./122.md) — A damaged managed engine reports `Provisioned: yes` and every command prints a raw traceback — **minor**, CLI QA 2026-10-03.
+- [123](./123.md) — An interrupted first-use engine install leaves a ~25 MB `.partial` directory forever — **minor**, CLI QA 2026-10-03.
+- [124](./124.md) — Balance-sheet `net_profit` follows a different rule from the income statement's — **minor**, CLI QA 2026-10-03.
+- [125](./125.md) — Report headlines read "Unavailable" when only an earlier interval row lacks a price — **minor**, CLI QA 2026-10-03.
+- [126](./126.md) — `bea balance --json` always reports `account_filter_empty: false` — **minor**, CLI QA 2026-10-03.
+- [127](./127.md) — USAGE.md's JSON automation examples show output the CLI doesn't produce — **minor**, CLI QA 2026-10-03.
+- [128](./128.md) — Docs-example tests pass when a piped `bea` command fails and never check documented output — **minor**, CLI QA 2026-10-03.
+- [129](./129.md) — IMPORTING.md's link to the `import-id` convention points outside the repository — **minor**, CLI QA 2026-10-03.
+- [130](./130.md) — A comma-decimal bank amount like `0,125` is imported 1000× too large — **major**, CLI QA 2026-10-03.
+- [131](./131.md) — When no CSV date format fits the column, the error blames row 1 and an ISO format the user never chose — **minor**, CLI QA 2026-10-03.
+- [132](./132.md) — Case-insensitive filters never match Turkish `İ`/`ı` against `i`/`I`, unlike `report -a` and import rules — **minor**, CLI QA 2026-10-03.
+- [133](./133.md) — Managed price freshness compares `observed-at` as text and reads naive stamps in local time — **minor**, CLI QA 2026-10-03.
+- [134](./134.md) — Ledger-controlled paths and diagnostics reach the terminal raw through bea's error and warning output — **minor**, CLI QA 2026-10-03.
+- [135](./135.md) — `--allow-errors` treats an existing error as new when its message embeds a file path, blocking every write — **major**, CLI QA 2026-10-03.
+- [136](./136.md) — Appends rewrite text inside strings: U+2028/U+2029 become newlines and continuation lines are re-indented — **major**, CLI QA 2026-10-03.
+- [137](./137.md) — `add balance` reports a more precise assertion as a duplicate and records nothing — **minor**, CLI QA 2026-10-03.
+- [138](./138.md) — `add price` treats prices generated by `implicit_prices` as ledger-written — **minor**, CLI QA 2026-10-03.
+- [139](./139.md) — Close and ask skills detect recurring charges by `payee`, which `bea import` leaves empty for one-description CSVs — **minor**, CLI QA 2026-10-03.
+- [140](./140.md) — Close checklist's period-end balance query has no date bound, so later entries change the result — **minor**, CLI QA 2026-10-03.
+- [141](./141.md) — `bea treeify` output guard is bypassed by abbreviated long options and clustered short flags, overwriting the ledger — **major**, CLI QA 2026-10-03.
+- [142](./142.md) — A `.output` line in the beanquery init file erases the ledger through one-shot `bea query --source` — **major**, CLI QA 2026-10-03.
+- [143](./143.md) — Any `.output` line in the beanquery init file breaks every managed `bea query` with a raw AttributeError — **minor**, CLI QA 2026-10-03.
+- [144](./144.md) — A partial `format -i` failure leads with "nothing was written" although earlier files were rewritten — **minor**, CLI QA 2026-10-03.
+- [145](./145.md) — CSV query cells leak `filename`/`lineno`/`__tolerances__` metadata as a Python dict repr — **minor**, CLI QA 2026-10-03.
+- [146](./146.md) — `bea --json query -o X.tsv` is refused with advice that `--json` itself refuses — **minor**, CLI QA 2026-10-03.
+- [147](./147.md) — CSV query export doesn't neutralise spreadsheet formulas, and the docs don't say so — **minor**, CLI QA 2026-10-03.
+- [148](./148.md) — Without a payee column, any same-day same-amount rows are "possible duplicates" and `--duplicates skip` drops real rows — **major**, CLI QA 2026-10-03.
+- [149](./149.md) — The generated `import-id` ignores payee, so a reordered export marks a new row as an exact duplicate — **major**, CLI QA 2026-10-03.
+- [150](./150.md) — A `sign=ledger` preview followed by the documented flag-free `--apply` writes the opposite sign — **minor**, CLI QA 2026-10-03.
+- [151](./151.md) — Quoted semicolons in a comma CSV make delimiter detection choose `;` and refuse the file — **minor**, CLI QA 2026-10-03.
+- [152](./152.md) — A blank first line hides the CSV header, and the error advice cannot work — **minor**, CLI QA 2026-10-03.
+- [153](./153.md) — Contradictory double-negative CSV amounts like `(-5.00)` are silently booked as money in — **minor**, CLI QA 2026-10-03.
+- [154](./154.md) — A `#` or `?` in a bare `query --source` path bypasses the ledger-alias guard and overwrites the ledger — **major**, CLI QA 2026-10-03.
+- [155](./155.md) — `query --source` forwards the query without `--`, so a dash-leading query injects `--output=` past the guard — **major**, CLI QA 2026-10-03.
+- [156](./156.md) — `doctor roundtrip` through a symlinked ledger overwrites and deletes a file beside the real ledger — **major**, CLI QA 2026-10-03.
+- [157](./157.md) — Import blocks rows for account names with an unknown root and suggests a `bea add open` that cannot work — **major**, CLI QA 2026-10-03.
+- [158](./158.md) — A zero-day `CLOSE ON` window inside a subquery bypasses the empty-window refusal — **minor**, CLI QA 2026-10-03.
+- [159](./159.md) — The frontend include scan misses `include"x"` and escaped include strings, so `-o` guards let exports overwrite included ledger files — **major**, CLI QA 2026-10-03.
+- [160](./160.md) — CSV import-ids collapse amounts beyond 28 significant digits, so a new row is skipped as an exact duplicate — **minor**, CLI QA 2026-10-03.
+- [161](./161.md) — A stored `.run` query with `DISTINCT tags`/`GROUP BY tags` still leaks the raw compile error — **minor**, CLI QA 2026-10-03.
+- [162](./162.md) — A malformed-CSV error names the last line of the file, not where the unclosed quote starts — **minor**, CLI QA 2026-10-03.
+- [163](./163.md) — A ledger price written with a slash or unpadded date doesn't override the managed-feed price for that date — **major**, CLI QA 2026-10-03.
+- [164](./164.md) — The `--meta` invalid-date check misses slash and unpadded dates and stores them as strings — **minor**, CLI QA 2026-10-03.
+- [165](./165.md) — `add document` accepts a `../` path outside the ledger directory that the next `bea check` rejects (as "absolute") — **minor**, CLI QA 2026-10-03.
+- [166](./166.md) — `bea format -` with non-UTF-8 stdin leaks a raw "can't encode … surrogates" error instead of the decode error — **minor**, CLI QA 2026-10-03.
+- [167](./167.md) — A refused bulk add without `--partial` reloads the ledger once per row just to build its hint — **minor**, CLI QA 2026-10-03.
+- [168](./168.md) — An `import-id` conflict inside the import file tells the user to edit a ledger entry that doesn't exist — **minor**, CLI QA 2026-10-03.
+- [169](./169.md) — A schema-invalid bulk batch suggests `--partial` "for some of the 0" valid rows — **minor**, CLI QA 2026-10-03.
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
 
