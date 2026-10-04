@@ -88,7 +88,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [153](./153.md) — Contradictory double-negative CSV amounts like `(-5.00)` are silently booked as money in — **minor**, CLI QA 2026-10-03.
 - [156](./156.md) — `doctor roundtrip` through a symlinked ledger overwrites and deletes a file beside the real ledger — **major**, CLI QA 2026-10-03.
 - [157](./157.md) — Import blocks rows for account names with an unknown root and suggests a `bea add open` that cannot work — **major**, CLI QA 2026-10-03.
-- [158](./158.md) — A zero-day `CLOSE ON` window inside a subquery bypasses the empty-window refusal — **minor**, CLI QA 2026-10-03.
 - [159](./159.md) — The frontend include scan misses `include"x"` and escaped include strings, so `-o` guards let exports overwrite included ledger files — **major**, CLI QA 2026-10-03.
 - [160](./160.md) — CSV import-ids collapse amounts beyond 28 significant digits, so a new row is skipped as an exact duplicate — **minor**, CLI QA 2026-10-03.
 - [161](./161.md) — A stored `.run` query with `DISTINCT tags`/`GROUP BY tags` still leaks the raw compile error — **minor**, CLI QA 2026-10-03.

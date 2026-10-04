@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = """option "operating_currency" "USD"
 2024-01-01 open Assets:Cash USD
@@ -29,6 +31,7 @@ def _bea(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
         BEA_CONFIG_DIR=str(tmp_path / "config"),
         XDG_CACHE_HOME=str(tmp_path / "cache"),
         XDG_DATA_HOME=str(tmp_path / "data"),
+        HOME=str(tmp_path / "home"),
         BEA_NO_UPDATE_NOTIFIER="1",
         PYTHONPATH=str(ROOT / "src"),
         TERM="dumb",
@@ -124,3 +127,44 @@ def test_an_empty_but_real_window_still_answers_no_rows(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     assert "(no rows)" in result.stderr
+
+
+SUBQUERY = "SELECT date, narration FROM (SELECT date, narration FROM OPEN ON {open} CLOSE ON {close})"
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        SUBQUERY,
+        SUBQUERY + " WHERE date = {open}",
+        "SELECT date WHERE date IN (SELECT date FROM OPEN ON {open} CLOSE ON {close})",
+    ],
+    ids=["from-subquery", "from-subquery-where", "where-subquery"],
+)
+def test_a_zero_day_window_inside_a_subquery_is_refused(tmp_path: Path, query: str) -> None:
+    """The outer FROM was the only one checked (w1/158)."""
+    result = _bea(
+        tmp_path, "--file", str(_ledger(tmp_path)), "query", query.format(open="2024-03-10", close="2024-03-10")
+    )
+
+    assert result.returncode == 2, result.stdout
+    assert "covers no days" in result.stderr
+    assert "Use CLOSE ON 2024-03-11 to cover 2024-03-10." in result.stderr
+
+
+def test_a_reversed_window_inside_a_subquery_gets_the_hint(tmp_path: Path) -> None:
+    result = _bea(
+        tmp_path, "--file", str(_ledger(tmp_path)), "query", SUBQUERY.format(open="2024-03-12", close="2024-03-10")
+    )
+
+    assert result.returncode == 2
+    assert "Did you mean OPEN ON 2024-03-10 CLOSE ON 2024-03-13?" in result.stderr
+
+
+def test_a_valid_subquery_window_still_answers(tmp_path: Path) -> None:
+    result = _bea(
+        tmp_path, "--file", str(_ledger(tmp_path)), "query", SUBQUERY.format(open="2024-03-10", close="2024-03-11")
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Lunch" in result.stdout

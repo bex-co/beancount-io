@@ -1049,16 +1049,23 @@ def _refuse_empty_window(query_string: str, ledger_errors: list[str]) -> None:
     Answering `(no rows)` reads as "that day is empty" rather than "you asked
     for no days", so say which it is and how to ask for the day.
     """
-    from datetime import date, timedelta
-
     try:
-        from beanquery.parser import parse
+        from beanquery.parser import ast, parse
 
         parsed = parse(query_string)
     except Exception:  # noqa: BLE001 - a dot command or a broken query; beanquery reports it
         return
-    clause = getattr(parsed, "from_clause", None)
-    begin, end = getattr(clause, "open", None), getattr(clause, "close", None)
+    # Every dated window, not just the outer one: a subquery's `FROM OPEN ON D
+    # CLOSE ON D` answered `(no rows)` just the same (w1/158).
+    for clause in ast.walk(parsed):
+        if isinstance(clause, ast.From):
+            _refuse_window(clause.open, clause.close, ledger_errors)
+
+
+def _refuse_window(begin: Any, end: Any, ledger_errors: list[str]) -> None:
+    """Refuse one `OPEN ON begin CLOSE ON end` window that spans no days."""
+    from datetime import date, timedelta
+
     # A bare `CLOSE` is `True`, not a date, and closes at the end of the ledger.
     if not isinstance(begin, date) or not isinstance(end, date) or begin < end:
         return
