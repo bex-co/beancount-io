@@ -130,3 +130,78 @@ def test_query_and_format_still_refuse_the_ledger(tmp_path: Path) -> None:
         assert result.exit_code == 2, result.output
         assert "would overwrite the ledger it reads" in result.output
     assert _tree(tmp_path) == before
+
+
+# Spellings only a cluster- or abbreviation-aware reading finds (w1/141): Click
+# lets Beangulp's boolean `-r`/`-x`/`-q` cluster before `-o`, and treeify's
+# argparse also abbreviates long options and clusters `-F`/`-A`.
+INGEST_CLUSTERS = [["-qo", "main.bean"], ["-ro", "main.bean"], ["-xomain.bean"], ["-rqo", "sub/extra.bean"]]
+TREEIFY_SPELLINGS = [["--outp", "main.bean"], ["--out=main.bean"], ["-Ao", "main.bean"], ["-Fomain.bean"]]
+
+
+@pytest.mark.parametrize("spelling", INGEST_CLUSTERS, ids=lambda spelling: " ".join(spelling))
+def test_ingest_extract_reads_clustered_output_flags(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, spelling: list[str]
+) -> None:
+    root = _books(tmp_path)
+    (tmp_path / "ingest.py").write_text("from beangulp import Ingest\n\nIngest([])()\n")
+    downloads = tmp_path / "in"
+    downloads.mkdir()
+    monkeypatch.chdir(tmp_path)
+    before = _tree(tmp_path)
+
+    result = runner.invoke(app, ["--file", str(root), "ingest", "extract", *spelling, str(downloads)])
+
+    assert result.exit_code == 2, result.output
+    assert "would overwrite the ledger it reads" in result.output
+    assert _tree(tmp_path) == before
+
+
+@pytest.mark.parametrize("existing", [["-re", "ledger.bean"], ["-qeledger.bean"]], ids=" ".join)
+def test_ingest_extract_reads_a_clustered_existing_ledger(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, existing: list[str]
+) -> None:
+    (tmp_path / "ledger.bean").write_text(LEDGER.replace('include "sub/extra.bean"\n', ""))
+    (tmp_path / "ingest.py").write_text("from beangulp import Ingest\n\nIngest([])()\n")
+    downloads = tmp_path / "in"
+    downloads.mkdir()
+    monkeypatch.chdir(tmp_path)
+    before = _tree(tmp_path)
+
+    result = runner.invoke(app, ["ingest", "extract", *existing, "-o", "ledger.bean", str(downloads)])
+
+    assert result.exit_code == 2, result.output
+    assert "would overwrite the ledger it reads" in result.output
+    assert _tree(tmp_path) == before
+
+
+@pytest.mark.parametrize("spelling", TREEIFY_SPELLINGS, ids=lambda spelling: " ".join(spelling))
+def test_treeify_reads_abbreviated_and_clustered_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, spelling: list[str]
+) -> None:
+    root = _books(tmp_path)
+    source = tmp_path / "in.txt"
+    source.write_text("Assets:Bank:Checking  10\nAssets:Bank:Savings 5\n")
+    monkeypatch.chdir(tmp_path)
+    before = _tree(tmp_path)
+
+    result = runner.invoke(app, ["--file", str(root), "treeify", *spelling, str(source)])
+
+    assert result.exit_code == 2, result.output
+    assert "would overwrite the ledger it reads" in result.output
+    assert _tree(tmp_path) == before
+
+
+def test_treeify_abbreviation_still_needs_force_for_a_foreign_ledger_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "other.bean").write_text("keep me\n")
+    source = tmp_path / "in.txt"
+    source.write_text("Assets:Bank:Checking  10\nAssets:Bank:Savings 5\n")
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["treeify", "--outp", "other.bean", str(source)])
+
+    assert result.exit_code == 2, result.output
+    assert "--force" in result.output
+    assert (tmp_path / "other.bean").read_text() == "keep me\n"

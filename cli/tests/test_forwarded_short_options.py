@@ -198,3 +198,16 @@ def test_real_example_writes_glued_destination_containing_help(books: Path) -> N
     assert "Assets:" in destination.read_text()
     checked = runner.invoke(app, ["--file", str(destination), "check"])
     assert checked.exit_code == 0, checked.output
+
+
+@pytest.mark.parametrize("native", [["-qo", "new.bean"], ["-ronew.bean"]])
+def test_clustered_output_to_a_fresh_file_still_forwards(
+    books: Path, recorded_engine: dict[str, Mock], native: list[str]
+) -> None:
+    """The cluster-aware guard (w1/141) refuses only ledgers, not new destinations."""
+    result = runner.invoke(app, ["-f", str(books / "history.bean"), "ingest", "extract", *native, "input.csv"])
+
+    assert result.exit_code == 0, result.output
+    recorded_engine["run_optional_script"].assert_called_once_with(
+        "beangulp", (books / "ingest.py").resolve(), ["extract", *native, "input.csv"]
+    )

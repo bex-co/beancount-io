@@ -84,7 +84,7 @@ def treeify(ctx: typer.Context) -> None:
         # guard still runs in case its grammar ever drifts from the mirror.
         parsed = None
         output.guard_forwarded_output(
-            forwarded, _ledgers(), refuse_existing_ledger_file=True, force=_FORCE in args[:stop]
+            forwarded, _ledgers(), refuse_existing_ledger_file=True, force=_FORCE in args[:stop], flags="FA"
         )
     if parsed is not None and parsed.output is not None and not parsed.help:
         # Upstream opens `-o` for writing before it reads the input, so a run

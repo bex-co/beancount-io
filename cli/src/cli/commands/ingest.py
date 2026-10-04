@@ -56,13 +56,19 @@ def _ingest_script(supplied: Path | None) -> Path:
     )
 
 
+#: Beangulp `extract`'s boolean short flags (`--reverse`, `--failfast`,
+#: `--quiet`). Click lets them cluster in front of `-o`/`-e`, so `-qo X` names
+#: a destination exactly as `-o X` does (w1/141).
+_EXTRACT_FLAGS = "rxq"
+
+
 def _forward(operation: str, ctx: typer.Context, config: Path | None) -> None:
     refuse_json("ingest", hint="Run without --json for native output; use bea import for a JSON preview.")
     if operation == "extract":
         # `archive -o DIR` moves source documents into a directory tree — not a
         # ledger write — so it stays outside the guard on purpose, and
         # `identify` writes nothing at all.
-        output.guard_forwarded_output(list(ctx.args), _extract_ledgers(ctx))
+        output.guard_forwarded_output(list(ctx.args), _extract_ledgers(ctx), flags=_EXTRACT_FLAGS)
     script = _ingest_script(config)
     _refuse_config_only_script(script)
     code = launch.run_optional_script("beangulp", script, [operation, *ctx.args])
@@ -80,7 +86,7 @@ def _extract_ledgers(ctx: typer.Context) -> list[Path]:
         ledgers.append(context.current().entry_file())
     except UsageError:
         pass
-    existing = output.forwarded_option(list(ctx.args), "-e", "--existing")
+    existing = output.forwarded_option(list(ctx.args), "-e", "--existing", flags=_EXTRACT_FLAGS)
     if existing is not None:
         ledgers.append(Path(existing).expanduser())
     return ledgers

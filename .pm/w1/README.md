@@ -87,7 +87,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [136](./136.md) — Appends rewrite text inside strings: U+2028/U+2029 become newlines and continuation lines are re-indented — **major**, CLI QA 2026-10-03.
 - [139](./139.md) — Close and ask skills detect recurring charges by `payee`, which `bea import` leaves empty for one-description CSVs — **minor**, CLI QA 2026-10-03.
 - [140](./140.md) — Close checklist's period-end balance query has no date bound, so later entries change the result — **minor**, CLI QA 2026-10-03.
-- [141](./141.md) — `bea treeify` output guard is bypassed by abbreviated long options and clustered short flags, overwriting the ledger — **major**, CLI QA 2026-10-03.
 - [144](./144.md) — A partial `format -i` failure leads with "nothing was written" although earlier files were rewritten — **minor**, CLI QA 2026-10-03.
 - [146](./146.md) — `bea --json query -o X.tsv` is refused with advice that `--json` itself refuses — **minor**, CLI QA 2026-10-03.
 - [147](./147.md) — CSV query export doesn't neutralise spreadsheet formulas, and the docs don't say so — **minor**, CLI QA 2026-10-03.

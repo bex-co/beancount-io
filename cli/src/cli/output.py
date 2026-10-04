@@ -306,7 +306,7 @@ def refuse_input_alias(destination: Path, source: Path) -> None:
 _LEDGER_SUFFIXES = (".bean", ".beancount")
 
 
-def forwarded_option(args: Sequence[str], short: str, long: str) -> str | None:
+def forwarded_option(args: Sequence[str], short: str, long: str, *, flags: str = "") -> str | None:
     """The value a forwarded option carries, in every spelling its parser accepts.
 
     A native command takes its arguments as one passthrough list, so an option
@@ -315,6 +315,10 @@ def forwarded_option(args: Sequence[str], short: str, long: str) -> str | None:
     shape is how an aliasing `-omain.bean` slips past a guard. Anything after
     `--` is a positional argument, not an option. The last spelling wins, which
     is what the parser downstream does too.
+
+    `flags` names the downstream's boolean short flags, which its parser lets
+    cluster in front of a value option: with `flags="q"`, `-qo X` and `-qoX`
+    carry the destination exactly as `-o X` does (w1/141).
     """
     value: str | None = None
     index = 0
@@ -329,8 +333,18 @@ def forwarded_option(args: Sequence[str], short: str, long: str) -> str | None:
                 continue
         elif arg.startswith(f"{long}="):
             value = arg.split("=", 1)[1]
-        elif arg.startswith(short) and len(arg) > len(short):
-            value = arg[len(short) :]
+        elif arg.startswith("-") and not arg.startswith("--") and len(arg) > 1:
+            cluster = arg[1:]
+            start = 0
+            while start < len(cluster) and cluster[start] in flags:
+                start += 1
+            if cluster[start : start + 1] == short[1:]:
+                if start + 1 < len(cluster):
+                    value = cluster[start + 1 :]
+                elif index + 1 < len(args):
+                    value = args[index + 1]
+                    index += 2
+                    continue
         index += 1
     return value or None
 
@@ -341,6 +355,7 @@ def guard_forwarded_output(
     *,
     refuse_existing_ledger_file: bool = False,
     force: bool = False,
+    flags: str = "",
 ) -> None:
     """Apply the output-destination rule to a `-o/--output` that is about to be forwarded.
 
@@ -351,7 +366,7 @@ def guard_forwarded_output(
     native writer is launched, so a refusal leaves the destination
     byte-identical.
     """
-    value = forwarded_option(args, "-o", "--output")
+    value = forwarded_option(args, "-o", "--output", flags=flags)
     if value is None:
         return
     guard_output_destination(
