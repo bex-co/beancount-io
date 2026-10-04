@@ -202,7 +202,9 @@ def query(
         # device path for stdout means what `-` means: print the result here.
         output_file = None
     explicit_format = output_format
-    if output_format is None and output_file is not None:
+    # Under `--json` the destination receives the JSON envelope whatever its
+    # suffix, so a `.csv`/`.tsv` name says nothing about the format.
+    if output_format is None and output_file is not None and not ctx.json_output:
         suffix = Path(output_file).suffix.casefold()
         if suffix == ".csv":
             output_format = "csv"

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = """option "operating_currency" "USD"
@@ -23,6 +26,7 @@ def _bea(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
         BEA_CONFIG_DIR=str(tmp_path / "config"),
         XDG_CACHE_HOME=str(tmp_path / "cache"),
         XDG_DATA_HOME=str(tmp_path / "data"),
+        HOME=str(tmp_path / "home"),
         BEA_NO_UPDATE_NOTIFIER="1",
         PYTHONPATH=str(ROOT / "src"),
         TERM="dumb",
@@ -56,3 +60,25 @@ def test_query_output_csv_suffix_infers_csv_format(tmp_path: Path) -> None:
     assert "----" not in text
     assert "date" in text.splitlines()[0].lower()
     assert "," in text.splitlines()[0]
+
+
+@pytest.mark.parametrize("name", ["r.tsv", "E.TSV", "r.csv"])
+def test_json_exports_ignore_the_destination_suffix(tmp_path: Path, name: str) -> None:
+    """`--json -o r.tsv` writes the envelope; the TSV advice it got could only be refused (w1/146)."""
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    out = tmp_path / name
+    result = _bea(tmp_path, "--json", "--file", str(ledger), "query", "SELECT narration", "-o", str(out))
+
+    assert result.returncode == 0, result.stderr or result.stdout
+    assert json.loads(out.read_text())["data"]["rows"] == [["Coffee"], ["Coffee"]]
+
+
+def test_a_text_export_to_a_tsv_name_is_still_refused(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    result = _bea(tmp_path, "--file", str(ledger), "query", "SELECT narration", "-o", str(tmp_path / "r.tsv"))
+
+    assert result.returncode == 2
+    assert "looks like TSV" in result.stderr
+    assert not (tmp_path / "r.tsv").exists()
