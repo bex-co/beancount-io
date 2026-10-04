@@ -252,7 +252,7 @@ def load_with_sources(
     snapshot = snapshot or LedgerSnapshot.capture(entry)
     managed = _collect_managed(snapshot, allowed_origins)
     if not managed and all(state is not None for state in snapshot.stats.values()):
-        entries, errors, options = loader.load_file(str(entry))
+        entries, errors, options = _load_fresh(entry, snapshot)
         return LoadedLedger(list(entries), list(errors), dict(options), ())
 
     budget = ManagedPriceBudget(limit=MAX_URLS_PER_LOAD)
@@ -381,6 +381,31 @@ def load_with_sources(
     if isinstance(remapped_options.get("include"), list):
         remapped_options["include"] = [_remap(str(item), back) for item in remapped_options["include"]]
     return LoadedLedger(entries, errors, remapped_options, tuple(sources))
+
+
+def _load_fresh(entry: Path, snapshot: LedgerSnapshot) -> tuple[Any, Any, Any]:
+    """`loader.load_file`, refusing a pickle-cache hit that misses files now on disk.
+
+    Beancount's cache keys on the mtime and size of the files the cached load
+    read, so a file that newly matches an include glob, or a missing include
+    that now exists, never invalidates it (w1/083). The snapshot has already
+    expanded every include on disk; when it holds a file the cached load never
+    read, the cache is stale — drop it and load again.
+    """
+    from beancount import loader
+
+    from bea_engine.ledger.write import pickle_cache_of
+
+    cache = pickle_cache_of(entry)
+    cached = cache.exists()
+    entries, errors, options = loader.load_file(str(entry))
+    if cached:
+        read = {os.path.normpath(name) for name in options.get("include") or ()}
+        on_disk = {os.path.normpath(path) for path in snapshot.contents}
+        if not on_disk <= read:
+            cache.unlink(missing_ok=True)
+            entries, errors, options = loader.load_file(str(entry))
+    return entries, errors, options
 
 
 @dataclass
