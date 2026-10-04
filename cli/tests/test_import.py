@@ -2130,6 +2130,50 @@ class TestCsvRowCurrency:
 
         assert result.exit_code == 0, result.output
         assert self._units(book, "Assets:EurBank") == ["-4.50 EUR", "-12.00 EUR"]
+        assert any("every row posts in EUR" in note for note in json.loads(result.stdout)["data"]["notes"])
+
+    def test_a_currency_column_misspelled_by_case_is_refused_not_a_constant(
+        self, book: Path, isolated_config: Path
+    ) -> None:
+        self._euro_account(book)
+        body = "Date,Description,Amount,Currency\n2026-08-02,Hotel Paris,-120.00,EUR\n"
+        before = book.read_bytes()
+
+        result = csv_result(book, body, "--apply", mapping=f"{self.MAPPING},currency=CURRENCY")
+
+        assert result.exit_code == 2, result.output
+        assert "'CURRENCY'" in result.stderr and "Did you mean 'Currency'?" in result.stderr
+        assert book.read_bytes() == before
+
+    def test_a_constant_the_ledger_does_not_know_is_refused(self, book: Path, isolated_config: Path) -> None:
+        body = "Date,Description,Amount\n2026-08-02,Hotel Paris,-120.00\n"
+        before = book.read_bytes()
+
+        result = csv_result(book, body, "--apply", mapping=f"{self.MAPPING},currency=XYZ")
+
+        assert result.exit_code == 2, result.output
+        assert "currency=XYZ" in result.stderr and "bea add commodity" in result.stderr
+        assert book.read_bytes() == before
+
+    def test_a_declared_commodity_is_a_valid_constant(self, book: Path, isolated_config: Path) -> None:
+        book.write_text(
+            book.read_text()
+            + "2026-08-01 commodity GBP\n2026-08-01 open Assets:Foreign\n2026-08-01 open Expenses:Foreign\n"
+        )
+        body = "Date,Description,Amount\n2026-08-02,London Pub,-12.00\n"
+
+        result = csv_result(
+            book,
+            body,
+            "--default-account",
+            "Expenses:Foreign",
+            "--apply",
+            mapping=f"{self.MAPPING},currency=GBP",
+            account="Assets:Foreign",
+        )
+
+        assert result.exit_code == 0, result.output
+        assert self._units(book, "Assets:Foreign") == ["-12.00 GBP"]
 
     def test_an_ambiguous_dollar_symbol_is_unchanged(self, book: Path, isolated_config: Path) -> None:
         body = "Date,Description,Amount\n2026-08-02,Cafe,$4.50\n"

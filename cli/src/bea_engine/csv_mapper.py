@@ -734,6 +734,13 @@ def read_header(source: Path, *, delimiter: str | None = None, encoding: str = "
         return None
 
 
+def _lookalike_header(column: str, headers: list[str]) -> str | None:
+    """The one header that differs from a mapped column name only by case."""
+    folded = column.casefold()
+    matches = [header for header in headers if header != column and header.casefold() == folded]
+    return matches[0] if len(matches) == 1 else None
+
+
 class CsvImporter:
     """A column-mapping importer with the Beangulp shape (`name = "csv"`)."""
 
@@ -748,6 +755,7 @@ class CsvImporter:
         rules: list[CsvRule] | None = None,
         default_account: str = "Expenses:Uncategorized",
         currency: str | None = None,
+        known_currencies: frozenset[str] | None = None,
         delimiter: str | None = None,
         encoding: str = "utf-8",
     ) -> None:
@@ -759,6 +767,8 @@ class CsvImporter:
         self._rules = rules or []
         self._default_account = default_account
         self._currency = currency
+        # Commodities a constant `currency=CODE` may name; None skips the check.
+        self._known_currencies = known_currencies
         # Set by _check_columns when the currency mapping names a commodity
         # rather than a column the file has.
         self._constant_currency: str | None = None
@@ -766,6 +776,11 @@ class CsvImporter:
         self.skipped_blank_rows = 0
         # Category values that were not account names, for the caller to report once.
         self.rejected_categories: Counter[str] = Counter()
+
+    @property
+    def constant_currency(self) -> str | None:
+        """The commodity `currency=CODE` fixed for every row, once extraction ran."""
+        return self._constant_currency
 
     def identify(self, filepath: str) -> bool:
         return True
@@ -789,14 +804,29 @@ class CsvImporter:
         # typo: a foreign-currency export that names its commodity nowhere used
         # to be importable only by editing the bank's own file.
         constant = wanted.get("currency")
-        if constant is not None and counts[constant] == 0 and _is_currency_code(constant):
+        if (
+            constant is not None
+            and counts[constant] == 0
+            and _is_currency_code(constant)
+            and _lookalike_header(constant, headers) is None
+        ):
+            # A constant relabels every row's money, so it must be a
+            # commodity the ledger already knows, not any capitalized word.
+            if self._known_currencies is not None and constant not in self._known_currencies:
+                raise UsageError(
+                    f"currency={constant} names no column of {source.name} and no commodity this ledger "
+                    f"knows. Map the file's currency column, or declare it first: "
+                    f"bea add commodity --date YYYY-MM-DD --currency {constant}."
+                )
             self._constant_currency = constant
             del wanted["currency"]
         if category_header is not None:
             wanted.setdefault("category", category_header)
         for role, column in wanted.items():
             if counts[column] == 0:
-                raise UsageError(f"The mapping names column {column!r} for {role}, which {source.name} lacks.")
+                lookalike = _lookalike_header(column, headers)
+                hint = f" Did you mean {lookalike!r}? Column names are case-sensitive." if lookalike else ""
+                raise UsageError(f"The mapping names column {column!r} for {role}, which {source.name} lacks.{hint}")
             if counts[column] > 1:
                 raise UsageError(
                     f"Column {column!r} appears {counts[column]} times in the header of {source.name}, so {role} "
@@ -848,10 +878,14 @@ class CsvImporter:
                 continue
             symbol, symbol_currency = found
             if symbol_currency != currency:
+                unknown = self._known_currencies is not None and symbol_currency not in self._known_currencies
+                declare = (
+                    f" (after bea add commodity --date YYYY-MM-DD --currency {symbol_currency})" if unknown else ""
+                )
                 raise UsageError(
                     f"{where}: column {column!r} carries {symbol!r} ({symbol_currency}), but the row would post "
-                    f"{currency}. Name the commodity with --csv currency={symbol_currency}, or open the source "
-                    f"account for {symbol_currency}. Nothing was written."
+                    f"{currency}. Name the commodity with --csv currency={symbol_currency}{declare}, or open the "
+                    f"source account for {symbol_currency}. Nothing was written."
                 )
 
     def _check_pair_signs(self, numbered: list[tuple[int, int, dict[str, str]]]) -> None:

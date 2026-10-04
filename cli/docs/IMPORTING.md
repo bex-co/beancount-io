@@ -93,7 +93,12 @@ this order: the `currency=` column, then the source account's own currency when
 its `open` directive names exactly one, then the ledger's single
 `operating_currency`; with none of the three, the row is refused. `currency=`
 also takes a commodity name the file has no column for — `--csv
-…,currency=EUR` — for an export that never states its own currency. A cell
+…,currency=EUR` — for an export that never states its own currency. Such a
+constant must be a commodity the ledger already knows (declared with
+`commodity`, named by an `open`, posted, priced, or the operating currency),
+and the preview notes that every row posts in it; a value that differs from a
+header only by case (`currency=CURRENCY` for a `Currency` column) is refused
+with the header it probably meant, as is any other mistyped column. A cell
 carrying a symbol that names exactly one commodity (`€`, `£`, `₹`, …) and
 contradicts the resolved currency is refused naming the row and the symbol,
 rather than relabelled; `$` and `¥` name several commodities each and are

@@ -133,6 +133,7 @@ def answer(
             rules=load_rules(Path(rules_file)) if rules_file is not None else None,
             default_account=default_account,
             currency=_row_currency(existing, csv_account, operating),
+            known_currencies=_known_currencies(existing, operating),
             delimiter=resolved_delimiter,
             encoding=resolved_encoding,
         )
@@ -149,6 +150,11 @@ def answer(
                 traceback=_traceback(exc),
             ) from exc
         skipped_blank = importer.skipped_blank_rows
+        if importer.constant_currency is not None:
+            notes.append(
+                f"currency={importer.constant_currency} names no column of {source.name}, so every row "
+                f"posts in {importer.constant_currency}."
+            )
         if importer.rejected_categories:
             examples = ", ".join(repr(name) for name in list(importer.rejected_categories)[:3])
             count = sum(importer.rejected_categories.values())
@@ -590,6 +596,23 @@ def _row_currency(existing: list[Any], account: str, operating: list[str]) -> st
     if opened is not None and len(opened) == 1:
         return next(iter(opened))
     return operating[0] if len(operating) == 1 else None
+
+
+def _known_currencies(existing: list[Any], operating: list[str]) -> frozenset[str]:
+    """Commodities the ledger names: declared, opened for, posted, priced, or operating."""
+    from beancount.core.data import Commodity, Open, Price, Transaction
+
+    known = set(operating)
+    for entry in existing:
+        if isinstance(entry, Commodity):
+            known.add(entry.currency)
+        elif isinstance(entry, Open):
+            known.update(entry.currencies or ())
+        elif isinstance(entry, Price):
+            known.update((entry.currency, entry.amount.currency))
+        elif isinstance(entry, Transaction):
+            known.update(posting.units.currency for posting in entry.postings if posting.units is not None)
+    return frozenset(currency for currency in known if isinstance(currency, str))
 
 
 def _blocked_reason(entry: Any, open_currencies: dict[str, set[str] | None]) -> str | None:
