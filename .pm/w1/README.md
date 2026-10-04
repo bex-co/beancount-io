@@ -49,7 +49,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 
 ## Inbox
 
-- [088](./088.md) — `bea cloud ledger delete ../account` sends `DELETE /api-gateway/v1/account`: dot segments escape the ledger path — **blocker**, CLI QA 2026-10-03.
 - [039](./039.md) — Interactive `.reload` bypasses `--strict` and answers from an invalid ledger — **minor**, CLI QA 2026-10-02.
 - [040](./040.md) — Native `query --source` ignores `--no-input` and waits at a prompt — **minor**, CLI QA 2026-10-02.
 - [041](./041.md) — Root formatting skips included `.inc`/other suffixes and reports false success — **minor**, CLI QA 2026-10-02.

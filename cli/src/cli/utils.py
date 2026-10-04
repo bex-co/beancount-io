@@ -111,15 +111,33 @@ def fold_account(name: str) -> str:
 
 
 def owner_and_name(full_name: str) -> tuple[str, str]:
-    """REST addresses a ledger as `{owner}/{name}` — two segments, exactly."""
+    """REST addresses a ledger as `{owner}/{name}` — two segments, exactly.
+
+    Each segment is checked against the spec's own path-parameter pattern, not
+    just for presence: percent-encoding leaves `.` intact and httpx removes dot
+    segments client-side, so `../account` would otherwise address
+    `/api-gateway/v1/account` — a different endpoint, never a ledger.
+    """
     owner, _, name = full_name.partition("/")
     if not owner or not name or "/" in name:
         raise UsageError(f"'{full_name}' is not a ledger full name; expected 'owner/name'.")
+    if not _LEDGER_OWNER.fullmatch(owner) or owner in {".", ".."}:
+        raise UsageError(
+            f"'{full_name}' is not a ledger full name; the owner '{owner}' must use letters, digits, "
+            "dots, hyphens and underscores, and cannot be '.' or '..'."
+        )
+    if not _LEDGER_NAME.fullmatch(name) or len(name) > _LEDGER_NAME_MAX:
+        raise UsageError(
+            f"'{full_name}' is not a ledger full name; the name '{name}' must use lowercase letters, digits, "
+            f"hyphens and underscores, at most {_LEDGER_NAME_MAX} characters."
+        )
     return owner, name
 
 
-# The server accepts exactly this, in REST v1 and in GraphQL alike. Keep the two
-# in step: a stricter rule here would refuse a name the service would have taken.
+# The server accepts exactly these, in REST v1 and in GraphQL alike (the v1
+# spec's `owner`/`name` path patterns). Keep them in step: a stricter rule here
+# would refuse a name the service would have taken.
+_LEDGER_OWNER = re.compile(r"^[A-Za-z0-9_.-]+$")
 _LEDGER_NAME = re.compile(r"^[a-z0-9_-]+$")
 _LEDGER_NAME_MAX = 100
 

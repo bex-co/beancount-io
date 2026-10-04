@@ -106,8 +106,20 @@ def call[T](
     Parsing happens inside `sync_detailed`, before `unwrap` can see a Response.
     A temporary response hook captures status/headers without exposing the body
     or converting errors raised before an HTTP response into server failures.
+
+    Generated operations take their path parameters positionally, and each is
+    refused here if it is a dot segment: `quote` leaves `.` and `..` intact and
+    httpx then resolves them, so the request would leave the operation's path
+    for another endpoint. Commands validate their arguments first; this is
+    the backstop for every path parameter, present and future.
     """
-    from cli.errors import BeaError, request_id_from
+    from cli.errors import BeaError, UsageError, request_id_from
+
+    for arg in args:
+        if isinstance(arg, str) and arg in {".", ".."}:
+            raise UsageError(
+                f"'{arg}' cannot be a path segment; refusing to send a request that would leave its endpoint."
+            )
 
     response: httpx.Response | None = None
 
