@@ -169,6 +169,9 @@ collision handling (exit 1 naming the document), and `example -o` reports its
 existing destination as a conflict with exit **4**, the code it has always
 documented. `query -o` and `format -o` overwrite an ordinary existing export
 file by the usual CLI convention; only ledger files are protected there.
+A device or FIFO destination is written through rather than replaced, so
+`query -o /dev/null` discards the result, and `query -o /dev/stdout` (or
+`/dev/fd/1`) prints it as `-o -` does.
 
 ## Exit codes
 

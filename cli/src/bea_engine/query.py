@@ -481,9 +481,17 @@ def _write_export(output: Path, text: str) -> None:
     from bea_engine.ledger.write import candidate_file
 
     try:
-        mode = stat.S_IMODE(output.stat().st_mode)
+        status = output.stat()
     except FileNotFoundError:
         mode = None
+    else:
+        if not stat.S_ISREG(status.st_mode):
+            # A device or FIFO (`-o /dev/null`): there is no sibling to stage
+            # in, and replacing it would swap the device for a regular file.
+            with output.open("w", encoding="utf-8") as stream:
+                stream.write(text)
+            return
+        mode = stat.S_IMODE(status.st_mode)
     with candidate_file(output, text, mode=0o666 if mode is None else 0o600) as candidate:
         if mode is not None:
             candidate.chmod(mode)

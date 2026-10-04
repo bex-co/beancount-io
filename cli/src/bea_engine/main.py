@@ -112,7 +112,10 @@ def query(
         str, typer.Option("--format", help="Result shape: json for columns and rows, or text, csv, beancount.")
     ] = "json",
     output: Annotated[
-        Path | None, typer.Option("--output", "-o", help="Write a rendered result here instead of into the envelope.")
+        Path | None,
+        typer.Option(
+            "--output", "-o", help="Write a rendered result here instead of into the envelope.", readable=False
+        ),
     ] = None,
     numberify: Annotated[
         bool, typer.Option("--numberify", "-m", help="Split amounts into per-currency columns.")
@@ -492,7 +495,7 @@ def import_entries(
 def shell(
     file: Annotated[Path, typer.Option("--file", "-f", help="Root ledger file to query.")],
     format: Annotated[str, typer.Option("--format", help="Query output format.")] = "text",
-    output: Annotated[Path | None, typer.Option("--output", "-o", help="Query output file.")] = None,
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Query output file.", readable=False)] = None,
     numberify: Annotated[
         bool, typer.Option("--numberify", "-m", help="Split amounts into per-currency columns.")
     ] = False,
@@ -538,7 +541,7 @@ def shell(
 def source_shell(
     source: Annotated[str, typer.Argument(help="Native Beanquery source URI or ledger path.")],
     format: Annotated[str, typer.Option("--format", help="Query output format.")] = "text",
-    output: Annotated[Path | None, typer.Option("--output", "-o", help="Query output file.")] = None,
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Query output file.", readable=False)] = None,
     numberify: Annotated[bool, typer.Option("--numberify", "-m")] = False,
     no_errors: Annotated[bool, typer.Option("--no-errors", "-q")] = False,
 ) -> None:
@@ -557,7 +560,7 @@ def source_query(
     source: Annotated[str, typer.Argument(help="Native Beanquery source URI or ledger path.")],
     query_string: Annotated[str, typer.Argument(help="The BQL statement, dot command or stored query to run.")],
     format: Annotated[str, typer.Option("--format", help="Query output format.")] = "text",
-    output: Annotated[Path | None, typer.Option("--output", "-o", help="Query output file.")] = None,
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Query output file.", readable=False)] = None,
     numberify: Annotated[bool, typer.Option("--numberify", "-m")] = False,
     no_errors: Annotated[bool, typer.Option("--no-errors", "-q")] = False,
 ) -> None:

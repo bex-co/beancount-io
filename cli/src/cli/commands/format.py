@@ -51,7 +51,7 @@ def format_beans(
         bool, typer.Option("--in-place", "-i", help="Rewrite each file instead of writing stdout")
     ] = False,
     output_file: Annotated[
-        Path | None, typer.Option("--output", "-o", help="Write to this file instead of stdout")
+        Path | None, typer.Option("--output", "-o", help="Write to this file instead of stdout", readable=False)
     ] = None,
     check: Annotated[bool, typer.Option("--check", help="Write nothing; exit 1 if any file needs formatting")] = False,
     dry_run: Annotated[bool, typer.Option("--dry-run", help="Write nothing; report what would change")] = False,

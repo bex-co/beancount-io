@@ -191,9 +191,18 @@ def atomic_write(path: Path, content: str, *, export: bool = False) -> None:
     if export:
         path = path.resolve()
     try:
-        mode = stat.S_IMODE(path.stat().st_mode)
+        status = path.stat()
     except FileNotFoundError:
         mode = None
+    else:
+        if export and not stat.S_ISREG(status.st_mode):
+            # A device or FIFO (`-o /dev/null`) cannot be staged beside: its
+            # directory is not ours to write, and replacing it would swap the
+            # device for a regular file. There is nothing to keep atomic.
+            with path.open("w", encoding="utf-8") as stream:
+                stream.write(content)
+            return
+        mode = stat.S_IMODE(status.st_mode)
     if mode is not None and not mode & 0o222:
         raise PermissionError(f"Output file is read-only: {path}")
     creation_mode = 0o666 if export and mode is None else 0o600
