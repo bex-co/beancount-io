@@ -1059,27 +1059,18 @@ def _transactions(
 
     # Validate the entire batch first: an earlier sale may depend on a buy that
     # appears later in the input. Only partial recovery needs sequential trials.
+    batch_texts = [writer.format_transaction(d) for _, d in valid]
     try:
-        write.validate_append(
-            file, [writer.format_transaction(d) for _, d in valid], allow_errors=allow_errors, into=into
-        )
+        write.validate_append(file, batch_texts, allow_errors=allow_errors, into=into)
     except protocol.LedgerError as batch_error:
         if not partial:
-            recoverable: list[int] = []
-            probe_texts: list[str] = []
-            for index, directive in valid:
-                try:
-                    text = writer.format_transaction(directive)
-                    write.validate_append(file, [*probe_texts, text], allow_errors=allow_errors, into=into)
-                except protocol.LedgerError:
-                    continue
-                else:
-                    recoverable.append(index)
-                    probe_texts.append(text)
             message = str(batch_error)
+            recoverable = _recoverable_rows(file, valid, batch_texts, batch_error, allow_errors=allow_errors, into=into)
             if recoverable:
                 noun = "row" if len(recoverable) == 1 else "rows"
                 message = f"{message} Pass --partial to append the {len(recoverable)} valid {noun}."
+            elif recoverable is None and len(valid) > 1:
+                message = f"{message} Pass --partial to append the rows that validate."
             raise protocol.LedgerError(
                 message,
                 details=list(batch_error.details),
@@ -1121,6 +1112,69 @@ def _transactions(
             },
         )
     return {"written": len(valid), "rejected": [], "warnings": warnings, "target": target}
+
+
+def _recoverable_rows(
+    file: Path,
+    valid: list[tuple[int, Any]],
+    texts: list[str],
+    batch_error: protocol.LedgerError,
+    *,
+    allow_errors: bool,
+    into: Path | None,
+) -> list[int] | None:
+    """The rows `--partial` could append, from the refused batch's own errors.
+
+    Probing row by row cost a full ledger load per row — over a minute for a
+    dozen rows on a large ledger — just to word a hint. Instead the batch
+    error's line numbers are mapped back to the appended rows, and the rest
+    are confirmed with one more load. None means the errors could not be
+    attributed to rows (or the rest still fail), so no count is promised.
+    """
+    rows = _rows_with_errors(file, texts, batch_error, into=into)
+    if rows is None:
+        return None
+    kept = [(valid[number][0], text) for number, text in enumerate(texts) if number not in rows]
+    if not kept:
+        return []
+    try:
+        write.validate_append(file, [text for _, text in kept], allow_errors=allow_errors, into=into)
+    except protocol.LedgerError:
+        return None
+    return [index for index, _ in kept]
+
+
+def _rows_with_errors(
+    file: Path, texts: list[str], batch_error: protocol.LedgerError, *, into: Path | None
+) -> set[int] | None:
+    """Positions in `texts` whose appended lines carry an error, or None when one cannot be placed."""
+    locations = getattr(batch_error, "locations", None)
+    if not locations:
+        return None
+    target = write.destination(file, into)
+    try:
+        original = target.read_bytes() if target.exists() else b""
+        content = write.appended_content(original, texts)
+    except (OSError, UnicodeDecodeError):
+        return None
+    # Blocks are appended one after another, each after one separating line;
+    # walking back from the end gives every block's line span.
+    spans: list[tuple[int, int]] = []
+    end = content.count("\n")
+    for text in reversed(texts):
+        size = text.rstrip().count("\n") + 1  # the lexer's line count: `\n` only (w1/136)
+        spans.append((end - size + 1, end))
+        end -= size + 1
+    spans.reverse()
+    rows: set[int] = set()
+    for source, lineno in locations:
+        if lineno is None or Path(source).resolve() != target:
+            return None
+        hits = [number for number, (first, last) in enumerate(spans) if first <= lineno <= last]
+        if not hits:
+            return None
+        rows.add(hits[0])
+    return rows
 
 
 # --------------------------------------------------------------------------- #

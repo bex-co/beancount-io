@@ -398,6 +398,18 @@ def _balance_recovery_hints(
     return hints
 
 
+class CandidateRejected(LedgerError):
+    """A refused candidate, with the file and line of each error behind the refusal.
+
+    The locations let a batch writer tell which of its appended rows failed
+    from the one load it already paid for, instead of reloading per row.
+    """
+
+    def __init__(self, message: str, *, details: list[str], locations: list[tuple[Path, int | None]]) -> None:
+        super().__init__(message, details=details)
+        self.locations = locations
+
+
 @dataclass(frozen=True)
 class _ErrorRecord:
     """One loader error, kept separable so identical problems can be merged."""
@@ -565,6 +577,7 @@ def validate_candidate(
         before_keys = Counter(_error_key(before, {}) for before in before_errors)
     accounts = [entry.account for entry in entries if isinstance(entry, Open)]
     records: list[_ErrorRecord] = []
+    locations: list[tuple[Path, int | None]] = []
     introduced: list[bool] = []
     invalid_pad_accounts = False
     for error in errors:
@@ -672,18 +685,23 @@ def validate_candidate(
                     )
                 )
         records.append(_ErrorRecord(getattr(error, "message", str(error)), message, error.source.get("lineno"), hints))
+        locations.append((source, lineno if isinstance(lineno, int) else None))
     messages = _collapse_repeats(records)
     syntax_errors = [err for err in errors if isinstance(err, ParserError | ParserSyntaxError | LexerError)]
     new_records = [record for record, is_new in zip(records, introduced, strict=True) if is_new]
     if errors and (not allow_errors or syntax_errors or invalid_pad_accounts or new_records):
         if not allow_errors:
-            raise LedgerError("The change would leave the ledger invalid; nothing was written.", details=messages)
+            raise CandidateRejected(
+                "The change would leave the ledger invalid; nothing was written.",
+                details=messages,
+                locations=locations,
+            )
         # A refused `--allow-errors` write names what forced the refusal —
         # the introduced errors, any syntax failure, any invalid pad — and
         # not the pre-existing errors the flag tolerates.
-        reasons = [
-            record
-            for record, error, is_new in zip(records, errors, introduced, strict=True)
+        blocking = [
+            index
+            for index, (error, is_new) in enumerate(zip(errors, introduced, strict=True))
             if is_new
             or isinstance(error, ParserError | ParserSyntaxError | LexerError)
             or (isinstance(error.entry, Pad) and str(getattr(error, "message", "")).startswith("Invalid reference to "))
@@ -692,7 +710,11 @@ def validate_candidate(
             message = f"The change would introduce {len(new_records)} new ledger error(s); nothing was written."
         else:
             message = "The change would leave the ledger invalid; nothing was written."
-        raise LedgerError(message, details=_collapse_repeats(reasons))
+        raise CandidateRejected(
+            message,
+            details=_collapse_repeats([records[index] for index in blocking]),
+            locations=[locations[index] for index in blocking],
+        )
     return messages
 
 
