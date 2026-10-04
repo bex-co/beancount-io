@@ -43,6 +43,8 @@ from typing import Any
 #: it is an aggregate, which the truncation line says.
 MAX_ROWS = 200
 MAX_CHARS = 12_000
+#: Room kept for the "…(N chars cut)" marker on a row cut to fit.
+_CUT_MARKER_ROOM = 32
 
 #: The relations a BQL query may name. `FROM` in this dialect takes either one
 #: of these (optionally `#`-prefixed or quoted) or an entry filter expression —
@@ -95,9 +97,12 @@ def format_result(query: str, answer: Mapping[str, Any]) -> str:
     header = f"{len(rows)} row(s) from the {table} table{grain}."
     lines = [header, " | ".join(names) if names else "(no columns)"]
     # The budget is spent in whole rows: a cut row would read as a real value
-    # the model could quote.
+    # the model could quote. The one exception is a first row that alone is
+    # over budget — taking it whole let one long cell put the entire value into
+    # every later request (w1/096) — so it is cut, and the cut is marked.
     shown = 0
     used = sum(len(line) + 1 for line in lines)
+    cut = 0
     zeroed = False
     for row in rows:
         if shown >= MAX_ROWS:
@@ -108,14 +113,21 @@ def format_result(query: str, answer: Mapping[str, Any]) -> str:
             cell == "0" and kind == "Inventory" for cell, (_, kind) in zip(cells, typed, strict=True)
         )
         line = " | ".join(cells)
-        if used + len(line) + 1 > MAX_CHARS and shown:
-            break
+        if used + len(line) + 1 > MAX_CHARS:
+            if shown:
+                break
+            keep = max(MAX_CHARS - used - 1 - _CUT_MARKER_ROOM, 0)
+            cut = len(line) - keep
+            line = f"{line[:keep]}…({cut} chars cut)"
         lines.append(line)
         used += len(line) + 1
         shown += 1
-    if shown < len(rows):
+        if cut:
+            break
+    if shown < len(rows) or cut:
+        clipped = f" The first row was cut short by {cut} characters where marked." if cut else ""
         lines.append(
-            f"… truncated: showing the first {shown} of {len(rows)} rows. "
+            f"… truncated: showing the first {shown} of {len(rows)} rows.{clipped} "
             "Say in your answer that the result was truncated, or ask a narrower question — "
             "an aggregate (sum, count, GROUP BY), a date range or a LIMIT — instead of enumerating."
         )

@@ -269,6 +269,60 @@ def test_an_enumeration_of_a_real_ledger_stays_within_budget_on_the_wire(
     assert len(str(stub_model.requests[1])) < 100_000, "the body the gateway refused was megabytes"
 
 
+# ── w1/096: one long cell cannot carry a result past the budget ────────────
+
+HUGE = 300_000
+
+
+def _one_column(*values: str) -> dict[str, object]:
+    return {"columns": [{"name": "narration", "type": "str"}], "rows": [[value] for value in values]}
+
+
+@pytest.mark.parametrize("trailing_rows", [0, 3], ids=["alone", "first-of-four"])
+def test_a_first_row_over_budget_is_cut_and_says_so(trailing_rows: int) -> None:
+    answer = results.format_result("SELECT narration", _one_column("x" * HUGE, *["short"] * trailing_rows))
+
+    assert len(answer) <= results.MAX_CHARS + 500, "one cell carried the result past the budget"
+    assert f"…({HUGE - answer.count('x')} chars cut)" in answer, "the cut is not marked where it was made"
+    assert "truncated" in answer
+    assert "Say in your answer that the result was truncated" in answer
+    assert f"showing the first 1 of {1 + trailing_rows} rows" in answer
+
+
+def test_a_long_row_that_fits_is_left_whole() -> None:
+    value = "y" * (results.MAX_CHARS // 2)
+
+    answer = results.format_result("SELECT narration", _one_column(value))
+
+    assert value in answer
+    assert "cut" not in answer and "truncated" not in answer
+
+
+def test_one_huge_narration_stays_within_budget_on_the_wire(
+    tmp_path: Path, stub_model: StubModel, monkeypatch: pytest.MonkeyPatch, logged_in: None
+) -> None:
+    ledger = tmp_path / "huge.bean"
+    ledger.write_text(
+        'option "operating_currency" "USD"\n'
+        "2024-01-01 open Assets:Checking USD\n"
+        "2024-01-01 open Expenses:Food USD\n"
+        f'2024-02-01 * "Big" "{"x" * HUGE}"\n  Expenses:Food 5.00 USD\n  Assets:Checking\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("BEA_API_URL", stub_model.url)
+    stub_model.reply = lambda n: (
+        model_tool_call("run_bql_query", {"query": "SELECT narration WHERE payee = 'Big'"})
+        if n == 1
+        else model_answer("It is very long; the result was truncated.")
+    )
+
+    result = CliRunner().invoke(app, ["--file", str(ledger), "ask", "query the big row", "--print"])
+
+    assert result.exit_code == 0, result.output
+    assert stub_model.count == 2
+    assert len(str(stub_model.requests[1])) < 30_000, "the whole cell rode along in the next request"
+
+
 # ── w3/446: every request carries an explicit output cap ───────────────────
 
 

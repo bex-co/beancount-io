@@ -1288,7 +1288,8 @@ model's default allowance.
 A query's result reaches the assistant as rows with a row count, the relation
 they came from, and a zero written as `0` — a total that nets to zero is a zero,
 not missing data. Results are bounded: past a few hundred rows, or roughly
-12,000 characters, the result is truncated and the answer says so. Enumerating a
+12,000 characters, the result is truncated and the answer says so; a single row
+longer than that is cut short with a marked cut. Enumerating a
 large ledger therefore returns a truncated list instead of failing; ask for a
 total, a `GROUP BY` or a date range to see everything that matters. The BQL tool
 runs `SELECT` (and `BALANCES` / `JOURNAL`); `PRINT` and dot commands remain
