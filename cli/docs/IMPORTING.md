@@ -362,7 +362,8 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   records where that entry came from, not its current presentation. A canonical
   hit also takes precedence over older file IDs retained on the same entry.
 - Ids written before the amount was exact (it was rounded to two decimals with
-  no commodity) or before the description was NFC-normalized are still
+  no commodity, or later to 28 significant digits) or before the description
+  was NFC-normalized are still
   recognized: import offers every older spelling as a lookup-only key, matches
   it, and writes only the current one, so no re-hash pass is needed. An older
   *amount* digest also has to agree with the date and source amounts before it counts

@@ -19,7 +19,7 @@ import sys
 import unicodedata
 from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Context, Decimal
 from pathlib import Path
 from typing import Any
 
@@ -680,10 +680,25 @@ def _exact_amount(number: Decimal, currency: str) -> str:
     result out of scientific notation, which `normalize()` otherwise produces
     for trailing zeros before the point (`100` becomes `1E+2`).
 
+    It normalizes under a context as precise as the number itself. The
+    default context keeps 28 significant digits, so `1.00…001` and
+    `1.00…002` (29+ digits, written exactly to the ledger) rounded to one
+    rendering, shared an id, and the second row was skipped as a duplicate.
+
     The currency is part of the identity. Without it, `1 ETH` and `1 BTC` on
     one date with one description shared a digest.
     """
-    return f"{number.normalize():f} {currency}"
+    return f"{_exactly_normalized(number):f} {currency}"
+
+
+def _exactly_normalized(number: Decimal) -> Decimal:
+    """`number.normalize()` without rounding to the ambient context's precision."""
+    return number.normalize(Context(prec=max(len(number.as_tuple().digits), 1)))
+
+
+def _amounts_rounded(amounts: list[tuple[Decimal, str]]) -> str:
+    """The exact-amount rendering as written before it stopped rounding to 28 digits."""
+    return "+".join(f"{number.normalize():f} {currency}" for number, currency in amounts)
 
 
 def _amounts_exact(amounts: list[tuple[Decimal, str]]) -> str:
@@ -845,6 +860,14 @@ def _hash_import_ids(entry: Any, account: str, seen: dict[str, int]) -> _HashedR
     two_decimal = _amounts_two_decimal(amounts)
     known = {single_base}
     older: list[str] = []
+    rounded_base = _hash_base(date, _amounts_rounded(amounts), description, nfc_account)
+    if rounded_base != single_base:
+        # Amounts past 28 significant digits were hashed rounded, and those
+        # rows were numbered among every row rounding to the same base.
+        counter = f"rounded\0{rounded_base}"
+        seen[counter] = seen.get(counter, 0) + 1
+        known.add(rounded_base)
+        older.append(_digest_import_id(rounded_base, seen[counter]))
     for base in (
         _hash_base(date, two_decimal, description, nfc_account),  # before exact amounts
         _hash_base(date, two_decimal, raw_description, account),  # and before NFC

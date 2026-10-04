@@ -44,7 +44,7 @@ Example: `2026-05-07|-54.2 USD|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking`
 
 Compute it honestly (e.g. `printf '%s' '<input>' | shasum -a 256 | cut -c1-16`) — never fabricate a plausible-looking hash.
 
-**Ledgers written before exact amounts or before NFC normalization.** Ids stored by an earlier `bea` were hashed from the un-normalized description, or from the two-decimal amount without its commodity, or both. There are therefore two independent axes a ledger may predate, and `bea import` offers every older combination as a **lookup-only** key: it matches them, writes only the canonical one, and needs no re-hash pass.
+**Ledgers written before exact amounts or before NFC normalization.** Ids stored by an earlier `bea` were hashed from the un-normalized description, or from the two-decimal amount without its commodity, or both. (Earlier exact-amount ids also rounded amounts past 28 significant digits; `bea import` matches those lookup-only too.) There are therefore two independent axes a ledger may predate, and `bea import` offers every older combination as a **lookup-only** key: it matches them, writes only the canonical one, and needs no re-hash pass.
 
 **Ledgers written before payees were hashed.** Earlier ids for a row with both a payee and a description were hashed from the description alone. They also stay **lookup-only** keys. Their occurrence suffixes followed the old export's row order, so `bea import` gives each such stored id that a group of same-description rows reaches to the row whose payee matches the stored entry's payee; an id whose payee no row has (edited since) stays with the row at its old occurrence. When computing ids by hand, check a row with a payee against both its five-field and its four-field id.
 

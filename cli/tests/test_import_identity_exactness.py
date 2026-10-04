@@ -287,3 +287,47 @@ def test_equivalent_decimal_spellings_share_an_identity(tmp_path: Path) -> None:
     assert status == 0, payload
     assert _counts(payload) == {"written": 0, "duplicates": 1, "conflicts": 0}
     assert ledger.read_bytes() == before
+
+
+WIDE_1 = "1.00000000000000000000000000001"
+WIDE_2 = "1.00000000000000000000000000002"
+
+
+class TestBeyondTwentyEightDigits:
+    """w1/160: `normalize()` rounded to the default 28-digit context."""
+
+    def test_rendering_keeps_every_digit(self) -> None:
+        from decimal import Decimal
+
+        assert _exact_amount(Decimal(WIDE_1), "USD") == f"{WIDE_1} USD"
+        assert _exact_amount(Decimal(WIDE_1), "USD") != _exact_amount(Decimal(WIDE_2), "USD")
+        assert _exact_amount(Decimal(WIDE_1 + "000"), "USD") == f"{WIDE_1} USD"
+        assert _exact_amount(Decimal("1" + "0" * 30), "USD") == "1" + "0" * 30 + " USD"
+
+    def test_a_wider_second_row_is_new_not_an_exact_duplicate(self, tmp_path: Path) -> None:
+        ledger = _books(tmp_path)
+        assert _import(tmp_path, ledger, _csv(tmp_path, "a.csv", [f"2026-01-02,{WIDE_1},USD,Coffee\n"]))[0] == 0
+
+        status, payload = _import(tmp_path, ledger, _csv(tmp_path, "b.csv", [f"2026-01-02,{WIDE_2},USD,Coffee\n"]))
+
+        assert status == 0, payload
+        assert _counts(payload) == {"written": 1, "duplicates": 0, "conflicts": 0}
+        ids = [line.split('"')[1] for line in ledger.read_text(encoding="utf-8").splitlines() if "import-id" in line]
+        assert len(set(ids)) == 2
+
+    def test_an_id_written_rounded_still_dedupes_only_its_own_row(self, tmp_path: Path) -> None:
+        rounded = _digest("2026-01-02|1 USD|COFFEE|Assets:Cash")
+        ledger = _books(tmp_path)
+        ledger.write_text(
+            LEDGER + f'2026-01-02 * "Coffee"\n  import-id: "{rounded}"\n'
+            f"  Assets:Cash  {WIDE_1} USD\n  Expenses:Food  -{WIDE_1} USD\n",
+            encoding="utf-8",
+        )
+
+        status, same = _import(tmp_path, ledger, _csv(tmp_path, "a.csv", [f"2026-01-02,{WIDE_1},USD,Coffee\n"]))
+        assert status == 0, same
+        assert _counts(same) == {"written": 0, "duplicates": 1, "conflicts": 0}
+
+        status, other = _import(tmp_path, ledger, _csv(tmp_path, "b.csv", [f"2026-01-02,{WIDE_2},USD,Coffee\n"]))
+        assert status == 0, other
+        assert _counts(other) == {"written": 1, "duplicates": 0, "conflicts": 0}
