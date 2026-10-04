@@ -110,3 +110,47 @@ def test_a_remembered_format_is_refused_by_a_late_decisive_date(tmp_path: Path) 
     assert refused.returncode == 2, refused.stdout
     assert "Remembered --date-format %m/%d/%Y does not match" in refused.stderr
     assert "%d/%m/%Y" in refused.stderr
+
+
+@pytest.mark.parametrize(
+    ("body", "row", "line", "value"),
+    [
+        ("01/02/2026,a,-1.00\n15/02/2026,b,-1.00\n31/02/2026,c,-1.00\n", 3, 4, "31/02/2026"),
+        ("15 Jan 2026,a,-1.00\n20 Feb 2026,b,-1.00\n15 Mär 2026,c,-1.00\n", 3, 4, "15 Mär 2026"),
+        ("15.03.26,a,-1.00\n16.03.26,b,-1.00\n", 1, 2, "15.03.26"),
+        # Blank rows are not counted and a multiline cell spans two lines,
+        # exactly as the preview's ROW column and the engine's errors count.
+        (
+            '01/02/2026,"two\nlines",-1.00\n,,\n15/02/2026,b,-1.00\n,memo only,\n31/02/2026,c,-1.00\n',
+            4,
+            7,
+            "31/02/2026",
+        ),
+    ],
+    ids=["impossible-day", "german-month", "two-digit-year", "blank-and-multiline"],
+)
+def test_no_fitting_date_format_names_the_row_that_ruled_it_out(
+    tmp_path: Path, body: str, row: int, line: int, value: str
+) -> None:
+    """w1/131: the error named row 1 and an ISO format the user never chose."""
+    source = tmp_path / "bad.csv"
+    source.write_text("Date,Description,Amount\n" + body, encoding="utf-8")
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    before = ledger.read_bytes()
+    for csv in (("--csv", "auto"), ("--csv", "date=Date,amount=Amount,narration=Description"), ()):
+        result = _preview(tmp_path, source, "--apply", csv=csv)
+        assert result.returncode == 2, result.stdout
+        message = json.loads(result.stderr)["error"]["message"]
+        assert message.startswith(f"Row {row} (line {line}): cannot parse date {value!r} in column 'Date'")
+        assert "--date-format" in message
+        assert "%Y-%m-%d" not in message
+        assert ledger.read_bytes() == before
+
+
+def test_the_suggested_date_format_imports_the_file(tmp_path: Path) -> None:
+    source = tmp_path / "bad.csv"
+    source.write_text("Date,Description,Amount\n15.03.26,a,-1.00\n16.03.26,b,-1.00\n", encoding="utf-8")
+    result = _preview(tmp_path, source, "--date-format", "%d.%m.%y")
+    assert result.returncode == 0, result.stderr
+    assert "2026-03-16" in json.dumps(json.loads(result.stdout)["data"])

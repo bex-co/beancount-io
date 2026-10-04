@@ -158,7 +158,9 @@ role unmapped rather than guessing. `Description`-style headers map to
 `--date-format` is likewise read from the file when unset: bea keeps the one
 `strptime` format that parses every date in the column. A column whose days
 never pass the twelfth cannot distinguish `%m/%d/%Y` from `%d/%m/%Y`, and bea
-says so instead of choosing quietly. Anything read this way is printed as the
+says so instead of choosing quietly. When no known format reads the whole
+column, the error names the row whose date ruled out the last one; correct
+that cell or pass `--date-format`. Anything read this way is printed as the
 equivalent flags, so a wrong reading is visible in the preview that writes
 nothing. An option you type always wins over one bea read or remembered.
 

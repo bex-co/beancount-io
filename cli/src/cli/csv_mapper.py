@@ -462,8 +462,8 @@ def parse_delimiter(value: str) -> str:
 @contextmanager
 def open_records(
     source: Path, *, delimiter: str | None = None, encoding: str = "utf-8"
-) -> Iterator[tuple[list[str], Iterator[dict[str, str]]]]:
-    """The stripped header row and one dict per data row, keyed by those names.
+) -> Iterator[tuple[list[str], Iterator[tuple[int, dict[str, str]]]]]:
+    """The stripped header row, and each data row with the line it starts on.
 
     This is the one reader every CSV path shares, so discovery, date inference,
     and extraction agree on what a column is called: names are stripped (and
@@ -484,10 +484,14 @@ def open_records(
             raise _decode_usage_error(source, exc, encoding) from None
         headers = [cell.strip() for cell in first or []]
 
-        def rows() -> Iterator[dict[str, str]]:
+        def rows() -> Iterator[tuple[int, dict[str, str]]]:
+            # As in the engine's reader: a record starts one line past wherever
+            # the reader was before it, which stays right across multiline cells.
+            start = reader.line_num + 1
             try:
                 for record in reader:
-                    yield {name: record[i] if i < len(record) else "" for i, name in enumerate(headers)}
+                    yield start, {name: record[i] if i < len(record) else "" for i, name in enumerate(headers)}
+                    start = reader.line_num + 1
             except csv.Error as exc:
                 raise _malformed(source, reader.line_num, exc) from None
             except UnicodeDecodeError as exc:
@@ -496,10 +500,34 @@ def open_records(
         yield headers, rows()
 
 
+@dataclass(frozen=True)
+class DateRejection:
+    """The date cell that ruled out the last candidate format."""
+
+    row: int
+    line: int
+    value: str
+    first: bool
+
+
 def infer_date_format(
     source: Path, column: str, *, delimiter: str | None = None, encoding: str = "utf-8"
 ) -> tuple[str | None, bool]:
-    """The one date format that parses this column, and whether others also did.
+    """The one date format that parses this column, and whether others also did."""
+    date_format, ambiguous, _rejection = inspect_date_column(source, column, delimiter=delimiter, encoding=encoding)
+    return date_format, ambiguous
+
+
+def inspect_date_column(
+    source: Path,
+    column: str,
+    *,
+    delimiter: str | None = None,
+    encoding: str = "utf-8",
+    mapped_columns: dict[str, str] | None = None,
+) -> tuple[str | None, bool, DateRejection | None]:
+    """The one date format that parses this column, whether others also did,
+    and — when none fits — the cell that ruled out the last candidate.
 
     Day-first and month-first columns are indistinguishable until a row carries
     a day past the twelfth, so the caller is told when the choice was a guess
@@ -509,26 +537,38 @@ def infer_date_format(
     sample that stopped at 200 chose month-first for an export whose 201st date
     was `13/04/2024`, then refused that valid date. Candidates are narrowed as
     the rows stream, so no value is kept.
+
+    The rejection names its row the way the import preview does — data rows
+    counted from 1, skipping rows whose mapped cells are all blank — so the
+    error points at the record to fix. ``mapped_columns`` is the `--csv`
+    mapping that decides which cells count; without it only the date cell does.
     """
     working = list(_DATE_FORMATS)
     seen = False
     try:
         with open_records(source, delimiter=delimiter, encoding=encoding) as (headers, rows):
             if column not in headers:
-                return None, False
-            for row in rows:
+                return None, False, None
+            counted = set((mapped_columns or {"date": column}).values())
+            if mapped_columns is not None and "category" not in mapped_columns:
+                counted.update(header for header in headers if header.casefold() == "category")
+            row_number = 0
+            for line, row in rows:
+                if any((row.get(header) or "").strip() for header in counted):
+                    row_number += 1
                 value = row[column].strip()
                 if not value:
                     continue
+                first = not seen
                 seen = True
                 working = [candidate for candidate in working if _parses(value, candidate)]
                 if not working:
-                    return None, False
+                    return None, False, DateRejection(row=row_number, line=line, value=value, first=first)
     except (OSError, UnicodeDecodeError, UsageError):
-        return None, False
+        return None, False, None
     if not seen:
-        return None, False
-    return working[0], len(working) > 1
+        return None, False, None
+    return working[0], len(working) > 1, None
 
 
 def _parses(value: str, date_format: str) -> bool:

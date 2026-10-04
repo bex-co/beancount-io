@@ -347,7 +347,13 @@ def import_entries(
     Possible duplicates require an explicit --duplicates skip/include decision
     before applying.
     """
-    from cli.csv_mapper import detect_delimiter, infer_date_format, parse_delimiter, parse_mapping
+    from cli.csv_mapper import (
+        detect_delimiter,
+        infer_date_format,
+        inspect_date_column,
+        parse_delimiter,
+        parse_mapping,
+    )
     from cli.engine import launch
 
     file = context.current().entry_file()
@@ -471,9 +477,23 @@ def import_entries(
         if mapping.encoding is not None:
             csv_encoding = mapping.encoding
         if date_format is None:
-            date_format, ambiguous = infer_date_format(
-                source, mapping.columns["date"], delimiter=csv_delimiter, encoding=csv_encoding
+            date_format, ambiguous, rejection = inspect_date_column(
+                source,
+                mapping.columns["date"],
+                delimiter=csv_delimiter,
+                encoding=csv_encoding,
+                mapped_columns=mapping.columns,
             )
+            if rejection is not None:
+                # No known format reads the whole column: name the cell that
+                # ruled out the last one, never a format the user did not pick.
+                fits = "any date format bea recognizes" if rejection.first else "the date format the rows above use"
+                raise UsageError(
+                    f"Row {rejection.row} (line {rejection.line}): cannot parse date {rejection.value!r} in column "
+                    f"{mapping.columns['date']!r} with {fits}. Correct the cell, or pass --date-format with the "
+                    "file's strptime format (for example --date-format %d.%m.%y).",
+                    details=[*recall_notes, *inferred_notes],
+                )
             if date_format is None:
                 date_format = "%Y-%m-%d"
             elif ambiguous:
