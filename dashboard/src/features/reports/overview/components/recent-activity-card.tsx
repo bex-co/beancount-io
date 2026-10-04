@@ -267,9 +267,21 @@ export function RecentActivityCard({
                           )}
                         </span>
                         <span className="block truncate text-xs text-muted-foreground">
-                          {[subtitle, accountSummary]
-                            .filter(Boolean)
-                            .join(" · ")}
+                          {subtitle}
+                          {accountSummary && (
+                            // From `sm:` up the accounts column carries this,
+                            // except for transfers, whose column is a label.
+                            <span
+                              className={
+                                summary.kind === "transfer"
+                                  ? undefined
+                                  : "sm:hidden"
+                              }
+                            >
+                              {subtitle && " · "}
+                              {accountSummary}
+                            </span>
+                          )}
                         </span>
                         <span className="mt-0.5 block text-xs text-muted-foreground sm:hidden">
                           {formatActivityDate(transaction.date, language)}
