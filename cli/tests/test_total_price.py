@@ -188,6 +188,34 @@ def test_json_answer_carries_no_render_stash(ledger: Path) -> None:
 
 
 @pytest.mark.parametrize(
+    "posting", ["Assets:Brokerage 3 EUR @@ 10.00 USD", "Assets:Brokerage 3 HOOL {1 USD} @@ 10.00 USD"]
+)
+def test_json_answer_total_price_round_trips_through_bulk(ledger: Path, posting: str) -> None:
+    """w1/093: the answer reports `@@` as `price_total`, so feeding it back writes the same `@@`."""
+    added = _bea(
+        ledger.parent,
+        *("--json", "--file", str(ledger), "add", "transaction", "--date", "2024-03-23"),
+        *("--narration", "fx", "--posting", posting, "--posting", "Equity:Opening-Balances"),
+    )
+    assert added.returncode == 0, added.stderr
+    first = ledger.read_text()[len(LEDGER) :]
+    directive = json.loads(added.stdout)["data"]["directive"]
+    answered = directive["postings"][0]
+    assert answered["price"] is None
+    assert answered["price_total"] == {"number": "10.00", "currency": "USD"}
+    assert directive["postings"][1]["price_total"] is None
+
+    ledger.write_text(LEDGER)
+    rows = ledger.parent / "rows.json"
+    rows.write_text(json.dumps([{key: directive[key] for key in ("date", "narration", "postings")}]))
+    bulk = _bea(ledger.parent, "--file", str(ledger), "add", "transactions", "--from", str(rows))
+
+    assert bulk.returncode == 0, bulk.stderr
+    assert ledger.read_text()[len(LEDGER) :] == first
+    assert "@@ 10.00 USD" in first
+
+
+@pytest.mark.parametrize(
     ("text", "total"),
     [
         ("3 HOOL @@ 100 USD", ("100", "USD")),

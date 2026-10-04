@@ -685,6 +685,7 @@ def _transaction(
         raise protocol.UsageError(f"{_ZERO_NET_INFERRED} Nothing was written.")
     entry = entry._replace(postings=normalized, meta=write.metadata_for_write(entry.meta))
     rendered = writer.format_entry(entry)
+    totals = [(posting.meta or {}).get(writer.TOTAL_PRICE_META) for posting in entry.postings]
     # The `@@` stash served the render; the JSON answer must not carry it.
     # Normalized posting metas hold nothing else, so they go back to empty.
     entry = entry._replace(postings=[posting._replace(meta={}) for posting in entry.postings])
@@ -692,6 +693,12 @@ def _transaction(
     # once this function returns, and a value it could not encode used to fail
     # with the directive already appended, so every retry appended another copy.
     directive = protocol.jsonable(entry._replace(meta=metadata_to_json(entry.meta)))
+    # A `@@` total is reported as the bulk schema's `price_total`, not as the
+    # divided unit price, so feeding the answer back writes the same `@@`.
+    for posting, total in zip(directive["postings"], totals, strict=True):
+        posting["price_total"] = None if total is None else protocol.jsonable(total)
+        if total is not None:
+            posting["price"] = None
     warnings = write.append(file, [rendered], allow_errors=allow_errors, into=into, snapshot=snapshot)
     return {
         "written": 1,

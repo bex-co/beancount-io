@@ -994,9 +994,10 @@ Bulk `amount` shorthand accepts the same lot spelling: `"amount": "5 HOOL
 cannot spell a total cost (`{{...}}`); use `units` with a structured `cost`
 carrying `number_total` instead.
 
-Round-trip guarantee: the `units`, `cost`, and `price` shapes in `add
-transaction --json` output are valid `add transactions` input, so a
-returned posting pipes back into `--from -` unedited.
+Round-trip guarantee: the `units`, `cost`, `price`, and `price_total` shapes
+in `add transaction --json` output are valid `add transactions` input, so a
+returned posting pipes back into `--from -` unedited. A `@@` total is
+answered as `price_total` with `price` null, never as its divided unit price.
 Transaction and posting `meta` preserve text and booleans; numeric, date and
 amount metadata use tagged objects: `{"kind":"number","value":"1.125"}`,
 `{"kind":"date","value":"2026-08-03"}`, or
