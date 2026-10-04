@@ -371,6 +371,8 @@ def _targets(
                     if match.is_dir():
                         continue
                     if not match.is_file():
+                        if _editor_lock(match):
+                            continue
                         # A walked entry the scan cannot read is not one it may
                         # drop: naming the same path explicitly is an error, and
                         # a `--check` that skips it reports a tree it never
@@ -432,6 +434,16 @@ def _syntax_failures(files: list[Path]) -> dict[str, list[str]]:
 # Upstream pads with spaces to these columns; unbounded values rewrite a ledger
 # into hundreds of KiB of whitespace (w3/331). 200 is well above useful layouts.
 _MAX_ALIGNMENT_WIDTH = 200
+
+
+def _editor_lock(path: Path) -> bool:
+    """A dangling `.#name` link: the lock Emacs keeps beside a file with unsaved edits.
+
+    It points at `user@host.pid:boot`, never at a file, and no ledger includes
+    it. Failing the walk on it would make a pre-commit gate demand deleting
+    the editor's edit-collision guard (w1/102).
+    """
+    return path.name.startswith(".#") and path.is_symlink() and not path.exists()
 
 
 def _unreadable(path: Path) -> str:

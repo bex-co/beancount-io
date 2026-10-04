@@ -81,6 +81,28 @@ def test_a_readable_tree_still_scans_every_file(tmp_path: Path) -> None:
     assert json.loads(result.stdout)["data"]["scanned"] == 3
 
 
+def test_an_emacs_lock_link_does_not_fail_the_walk(tmp_path: Path) -> None:
+    # Emacs keeps `.#name` -> `user@host.pid:boot` beside a file with unsaved
+    # edits; it is never a ledger file (w1/102).
+    books = _books(tmp_path)
+    (books / "txns" / "feb.bean").write_text(FEB)
+    (books / ".#main.bean").symlink_to("user@host.local.4242:1727900000")
+    for mode in ("--check", "--dry-run", "-i"):
+        result = _bea(tmp_path, "--json", "format", str(books), mode)
+        assert result.returncode == 0, (mode, result.stderr)
+        assert json.loads(result.stdout)["data"]["scanned"] == 3
+    assert (books / ".#main.bean").is_symlink()
+
+
+def test_a_broken_include_still_fails_beside_a_lock_link(tmp_path: Path) -> None:
+    books = _books(tmp_path)
+    (books / "txns" / "feb.bean").symlink_to("/missing/feb.bean")
+    (books / ".#main.bean").symlink_to("user@host.local.4242:1727900000")
+    result = _bea(tmp_path, "format", str(books), "--check")
+    assert result.returncode == 2
+    assert "/missing/feb.bean" in result.stderr
+
+
 def test_a_symlink_pointing_outside_the_tree_is_still_skipped(tmp_path: Path) -> None:
     books = _books(tmp_path)
     (books / "txns" / "feb.bean").write_text(
