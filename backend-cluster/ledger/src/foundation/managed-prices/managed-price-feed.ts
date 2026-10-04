@@ -140,11 +140,15 @@ const MANAGED_PRICE_METADATA_KEYS: ReadonlySet<string> = new Set([
 /** Header comments (`; key: value`) the validator records when present. */
 const HEADER_KEYS = new Set(["alias", "commodity", "quote", "source", "revision"]);
 
-const COMMENT_RE = /^\s*;/u;
+// Separators are spaces and tabs only, as Beancount's lexer accepts: `\s`
+// would also admit NBSP and other Unicode whitespace, validating a body the
+// CLI's Beancount cannot parse (w1/081). A metadata key carries its colon.
+const BLANK_RE = /^[ \t]*$/u;
+const COMMENT_RE = /^[ \t]*;/u;
 const HEADER_RE = /^;\s*([a-z][a-z0-9_-]*)\s*:\s*(.+?)\s*$/u;
 const PRICE_RE =
-  /^(\d{4}-\d{2}-\d{2})\s+price\s+([A-Z][A-Z0-9'._-]*)\s+([0-9]+(?:\.[0-9]+)?)\s+([A-Z][A-Z0-9'._-]*)\s*(?:;.*)?$/u;
-const METADATA_RE = /^[ \t]+([a-z][A-Za-z0-9_-]*)\s*:\s*(.*?)\s*$/u;
+  /^(\d{4}-\d{2}-\d{2})[ \t]+price[ \t]+([A-Z][A-Z0-9'._-]*)[ \t]+([0-9]+(?:\.[0-9]+)?)[ \t]+([A-Z][A-Z0-9'._-]*)[ \t]*(?:;.*)?$/u;
+const METADATA_RE = /^[ \t]+([a-z][A-Za-z0-9_-]*):[ \t]*(.*?)[ \t]*$/u;
 const METADATA_VALUE_RE =
   /^(?:"[^"\\]*"|TRUE|FALSE|\d{4}-\d{2}-\d{2}|-?[0-9]+(?:\.[0-9]+)?)$/u;
 const MAX_COMMODITY_LENGTH = 24;
@@ -192,7 +196,7 @@ export function validateManagedPriceText(text: string): ManagedPriceValidation {
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     const lineNumber = index + 1;
-    if (line.trim() === "") continue;
+    if (BLANK_RE.test(line)) continue;
 
     if (COMMENT_RE.test(line)) {
       const header = HEADER_RE.exec(line);

@@ -53,14 +53,19 @@ _USER_AGENT = "bea managed-prices"
 
 _PRICES_PATH_RE = re.compile(r"^/prices/([A-Za-z0-9._-]{1,64})$")
 _URL_TARGET_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.IGNORECASE)
-_COMMENT_RE = re.compile(r"^\s*;")
+# The feed grammar is a strict subset of what Beancount's lexer accepts:
+# separators are spaces and tabs only (no Unicode whitespace, form feed, or
+# vertical tab), digits are ASCII, and a metadata key carries its colon.
+# Anything looser validates a body that then fails to parse in the ledger.
+_BLANK_RE = re.compile(r"^[ \t]*$")
+_COMMENT_RE = re.compile(r"^[ \t]*;")
 _HEADER_RE = re.compile(r"^;\s*([a-z][a-z0-9_-]*)\s*:\s*(.+?)\s*$")
 _PRICE_RE = re.compile(
-    r"^(\d{4}-\d{2}-\d{2})\s+price\s+([A-Z][A-Z0-9'._-]*)\s+([0-9]+(?:\.[0-9]+)?)\s+"
-    r"([A-Z][A-Z0-9'._-]*)\s*(?:;.*)?$"
+    r"^([0-9]{4}-[0-9]{2}-[0-9]{2})[ \t]+price[ \t]+([A-Z][A-Z0-9'._-]*)[ \t]+([0-9]+(?:\.[0-9]+)?)[ \t]+"
+    r"([A-Z][A-Z0-9'._-]*)[ \t]*(?:;.*)?$"
 )
-_METADATA_RE = re.compile(r"^[ \t]+([a-z][A-Za-z0-9_-]*)\s*:\s*(.*?)\s*$")
-_METADATA_VALUE_RE = re.compile(r'^(?:"[^"\\]*"|TRUE|FALSE|\d{4}-\d{2}-\d{2}|-?[0-9]+(?:\.[0-9]+)?)$')
+_METADATA_RE = re.compile(r"^[ \t]+([a-z][A-Za-z0-9_-]*):[ \t]*(.*?)[ \t]*$")
+_METADATA_VALUE_RE = re.compile(r'^(?:"[^"\\]*"|TRUE|FALSE|[0-9]{4}-[0-9]{2}-[0-9]{2}|-?[0-9]+(?:\.[0-9]+)?)$')
 _METADATA_KEYS = frozenset({"price-source", "price-kind", "observed-at", "provisional"})
 _HEADER_KEYS = frozenset({"alias", "commodity", "quote", "source", "revision"})
 _MAX_COMMODITY_LENGTH = 24
@@ -411,9 +416,12 @@ def validate_managed_price_text(text: str) -> ValidFeed | InvalidFeed:
     headers: dict[str, str] = {}
     prices: list[PricePoint] = []
     current: PricePoint | None = None
-    for index, line in enumerate(text.splitlines()):
+    # Lines split the way Beancount and the precedence pass count them: on
+    # "\n" only, so a stray U+2028 or form feed never shifts a line number.
+    for index, raw in enumerate(text.split("\n")):
         line_number = index + 1
-        if not line.strip():
+        line = raw.removesuffix("\r")
+        if _BLANK_RE.match(line):
             continue
         if _COMMENT_RE.match(line):
             header = _HEADER_RE.match(line)

@@ -123,6 +123,29 @@ describe("validateManagedPriceText", () => {
     });
     expect(result.feed.prices).toHaveLength(1);
   });
+
+  it.each([
+    ["nbsp separator", "2026-09-16\u00a0price BTC 1 USD"],
+    ["em-space separator", "2026-09-16 price\u2003BTC 1 USD"],
+    ["form-feed separator", "2026-09-16\fprice BTC 1 USD"],
+    ["trailing nbsp", "2026-09-16 price BTC 1 USD\u00a0"],
+    ["nbsp-only line", "\u00a0"],
+    ["space before metadata colon", '  observed-at :"2026-09-16T00:00:00Z"'],
+    ["nbsp metadata value", '  observed-at:\u00a0"2026-09-16T00:00:00Z"'],
+  ])("rejects a line Beancount cannot lex: %s (w1/081)", (_name, line) => {
+    const body = `2026-09-15 price BTC 1 USD\n${line}\n`;
+    const result = validateManagedPriceText(body);
+    expect(result).toMatchObject({ ok: false, line: 2 });
+  });
+
+  it("still accepts tab separators and an attached metadata colon (w1/081)", () => {
+    const result = validateManagedPriceText(
+      '2026-09-15\tprice\tBTC\t1\tUSD\t; c\n\tobserved-at:\t"2026-09-15T00:00:00Z"\n',
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.feed.latestObservedAt).toBe("2026-09-15T00:00:00Z");
+  });
 });
 
 function response(

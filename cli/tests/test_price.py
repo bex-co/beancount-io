@@ -2442,3 +2442,64 @@ class TestEffectiveFeedCacheGrowth:
             assert price.returncode == 0, price.stderr
 
         assert len(list((tmp_path / "cache").rglob("*.effective.*"))) == 1
+
+
+class TestFeedGrammarMatchesBeancount:
+    """w1/081: the validator accepts only what Beancount's lexer can parse."""
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "2026-09-12\u00a0price BTC 1 USD",
+            "2026-09-12 price\u2003BTC 1 USD",
+            "2026-09-12\fprice BTC 1 USD",
+            "2026-09-12 price BTC 1 USD\u00a0",
+            "2026-09-12 price BTC \u0661 USD",
+            "\u00a0",
+        ],
+        ids=["nbsp", "em-space", "form-feed", "trailing-nbsp", "arabic-digit", "nbsp-only-line"],
+    )
+    def test_whitespace_or_digits_beancount_rejects_are_invalid(self, line: str) -> None:
+        validation = validate_managed_price_text(FEED + line + "\n")
+
+        assert isinstance(validation, InvalidFeed)
+        assert validation.line == 12
+
+    @pytest.mark.parametrize(
+        "meta",
+        ['  observed-at :"2026-09-12T00:00:00Z"', '  observed-at:\u00a0"2026-09-12T00:00:00Z"'],
+        ids=["space-before-colon", "nbsp-value"],
+    )
+    def test_metadata_beancount_rejects_is_invalid(self, meta: str) -> None:
+        validation = validate_managed_price_text(f"2026-09-12 price BTC 1 USD\n{meta}\n")
+
+        assert isinstance(validation, InvalidFeed)
+        assert validation.line == 2
+
+    def test_tabs_and_crlf_remain_valid(self) -> None:
+        validation = validate_managed_price_text('2026-09-12\tprice\tBTC\t1\tUSD\t; c\r\n\tobserved-at:\t"x"\r\n')
+
+        assert isinstance(validation, ValidFeed)
+        assert validation.feed.prices[0].observed_at == "x"
+
+    def test_line_numbers_count_newlines_only(self) -> None:
+        validation = validate_managed_price_text("; note\u2028continued\n2026-09-12 price BTC 1 USD\n")
+
+        assert isinstance(validation, ValidFeed)
+        assert validation.feed.prices[0].line == 2
+
+    def test_unparseable_refresh_keeps_the_last_good_revision(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        root = tmp_path / "cache"
+        good = _resolve(feed_server, root, now=now)
+        assert good.blob is not None
+        _FeedHandler.routes["/prices/BTC-USD"] = {
+            "body": (FEED + "2026-09-12\u00a0price BTC 1 USD\n").encode("utf-8"),
+            "headers": {"ETag": '"n"'},
+        }
+
+        resolved = _resolve(feed_server, root, now=now + 301)
+
+        assert resolved.blob is not None and resolved.blob.revision == "r1"
+        assert (resolved.head.last_error or "").startswith("invalid feed at line 12")
+        assert (feed_dir(f"{feed_server}/prices/BTC-USD", root) / "r1.beancount").read_text() == FEED
