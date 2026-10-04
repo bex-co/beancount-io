@@ -116,3 +116,62 @@ def test_an_absolute_document_path_refuses_rather_than_pinning_this_machine(tmp_
     assert refused.returncode == 2, refused.stdout
     assert "main.bean:2" in refused.stderr
     assert not out.exists()
+
+
+def test_symlinked_documents_keep_the_name_the_directive_uses(tmp_path: Path) -> None:
+    """w1/044: a symlinked file or folder was copied under its target's name.
+
+    The copied ledger still named `alias.pdf` and `linked/statement.pdf`, so
+    the export reported success and then failed its own check; two aliases of
+    one receipt collapsed into a single copy neither name reached.
+    """
+    source = tmp_path / "source"
+    (source / "real").mkdir(parents=True)
+    (source / "receipt.pdf").write_bytes(RECEIPT)
+    (source / "real" / "statement.pdf").write_bytes(b"statement\n")
+    (source / "alias.pdf").symlink_to("receipt.pdf")
+    (source / "alias2.pdf").symlink_to("receipt.pdf")
+    (source / "linked").symlink_to("real")
+    os.link(source / "receipt.pdf", source / "hard.pdf")
+    main = source / "main.bean"
+    main.write_text(
+        "2024-01-01 open Assets:Cash USD\n"
+        '2024-03-01 document Assets:Cash "alias.pdf"\n'
+        '2024-03-02 document Assets:Cash "alias2.pdf"\n'
+        '2024-03-03 document Assets:Cash "linked/statement.pdf"\n'
+        '2024-03-04 document Assets:Cash "receipt.pdf"\n'
+        '2024-03-05 document Assets:Cash "hard.pdf"\n'
+    )
+    before = _snapshot(source)
+
+    out = tmp_path / "out"
+    exported = _export(tmp_path, main, out)
+    assert exported.returncode == 0, exported.stderr
+    files = sorted(Path(f).relative_to(out).as_posix() for f in json.loads(exported.stdout)["data"]["files"])
+    assert files == ["alias.pdf", "alias2.pdf", "hard.pdf", "linked/statement.pdf", "main.bean", "receipt.pdf"]
+    assert _snapshot(source) == before
+    # Plain copies, so the snapshot does not depend on links that may not travel.
+    assert not any(p.is_symlink() for p in out.rglob("*"))
+    assert (out / "alias2.pdf").read_bytes() == RECEIPT
+    assert (out / "linked" / "statement.pdf").read_bytes() == b"statement\n"
+
+    relocated = tmp_path / "elsewhere" / "copy"
+    shutil.copytree(out, relocated)
+    shutil.rmtree(source)
+    checked = _bean_check(tmp_path, relocated / "main.bean")
+    assert checked.returncode == 0, checked.stdout + checked.stderr
+
+
+def test_a_symlink_to_a_file_outside_the_tree_still_refuses(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    (tmp_path / "elsewhere.pdf").write_bytes(RECEIPT)
+    (source / "alias.pdf").symlink_to(tmp_path / "elsewhere.pdf")
+    main = source / "main.bean"
+    main.write_text('2024-01-01 open Assets:Cash USD\n2024-03-01 document Assets:Cash "alias.pdf"\n')
+
+    out = tmp_path / "out"
+    refused = _export(tmp_path, main, out)
+    assert refused.returncode == 2, refused.stdout
+    assert "elsewhere.pdf" in refused.stderr
+    assert not out.exists()

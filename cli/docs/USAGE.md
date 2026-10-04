@@ -1091,8 +1091,10 @@ forwards to `bean-price`, so name a quotes job file `status` by path
 lands at `prices/<ALIAS>.beancount` as a `custom "bea-managed-source"`
 marker directive plus the exact effective text the load parsed, and every
 include is rewritten relative. `document` attachments under the root's
-directory are copied to the same relative place; one outside that tree, or
-named by an absolute path, refuses the export before anything is written. An
+directory are copied to the same relative place, under the name the
+directive uses — a path through a symlinked file or folder becomes a plain
+copy at that path; one outside that tree (including a symlink pointing out of
+it), or named by an absolute path, refuses the export before anything is written. An
 unavailable source refuses the export unless `--allow-errors` carries its
 marker alone. The destination follows
 [Output destinations](#output-destinations): a file already at any path the

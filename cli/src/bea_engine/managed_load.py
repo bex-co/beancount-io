@@ -603,11 +603,11 @@ def export_portable(
     # link no path comparison can see — would be written straight through
     # into the books, so identity is compared, not spelling.
     attachments = _export_attachments(loaded, snapshot.contents, destinations, target, home)
-    planned = [*destinations.values(), *feed_files.values(), *attachments.values()]
+    planned = [*destinations.values(), *feed_files.values(), *attachments]
     for dest in planned:
         if not dest.exists():
             continue
-        for ledger_file in [*snapshot.contents, *attachments]:
+        for ledger_file in [*snapshot.contents, *attachments.values()]:
             if os.path.samefile(dest, ledger_file):
                 raise UsageError(
                     f"Cannot export: {dest} is the source file {ledger_file} (a link to it), "
@@ -636,7 +636,7 @@ def export_portable(
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(_rewrite_export_includes(original, path, snapshot.patterns, destinations, by_target))
         written.append(str(dest))
-    for document, dest in attachments.items():
+    for dest, document in attachments.items():
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(document, dest)
         written.append(str(dest))
@@ -682,27 +682,45 @@ def _export_attachments(
     for option_dir in loaded.options.get("documents") or []:
         if os.path.isabs(option_dir):
             unsupported.append(f'option "documents" "{option_dir}" (absolute)')
+    # Keyed by destination, valued by the file to copy. The destination keeps
+    # the path exactly as the directive spells it: a symlink (`alias.pdf ->
+    # receipt.pdf`, or a symlinked folder `linked/`) used to be resolved
+    # first, so the export copied `receipt.pdf` while the copied ledger still
+    # named `alias.pdf`, and two aliases of one receipt collapsed into a
+    # single copy that neither name reached. The resolved file still decides
+    # containment and what bytes travel; the copy is a plain file.
     attachments: dict[Path, Path] = {}
     for entry in loaded.entries:
         if not isinstance(entry, Document):
             continue
         document = Path(entry.filename).resolve()
         try:
-            dest = target / document.relative_to(home)
+            canonical = target / document.relative_to(home)
         except ValueError:
             unsupported.append(f"{document} (outside {home})")
             continue
-        ledger = ledger_files.get(Path(entry.meta.get("filename", "")).resolve())
+        named_by = str(entry.meta.get("filename", ""))
+        ledger = ledger_files.get(Path(named_by).resolve()) if named_by else None
+        if ledger is None:
+            attachments[canonical] = document
+            continue
         line = int(entry.meta.get("lineno") or 0)
-        if ledger is not None and line > 0:
-            lines = contents[ledger].decode("utf-8", "replace").splitlines()
-            text = lines[line - 1] if line <= len(lines) else ""
-            quoted = text.split('"')[1] if text.count('"') >= 2 else ""
-            moved = os.path.relpath(dest, destinations[ledger].parent) != os.path.relpath(document, ledger.parent)
-            if os.path.isabs(quoted) or moved:
-                unsupported.append(f"{document} (named by {ledger.name}:{line})")
-                continue
-        attachments[document] = dest
+        lines = contents[ledger].decode("utf-8", "replace").splitlines()
+        text = lines[line - 1] if 0 < line <= len(lines) else ""
+        quoted = text.split('"')[1] if text.count('"') >= 2 else ""
+        # Beancount joins a relative name onto its file's directory and
+        # normalizes lexically, both here and when checking the export, so
+        # the same relative spelling from the copied ledger is what must exist.
+        spelled = os.path.relpath(os.path.normpath(entry.filename), os.path.dirname(os.path.abspath(named_by)))
+        dest = Path(os.path.normpath(destinations[ledger].parent / spelled))
+        try:
+            relocated = destinations[ledger] != target / ledger.resolve().relative_to(home)
+        except ValueError:
+            relocated = True
+        if os.path.isabs(quoted) or relocated or not dest.is_relative_to(target):
+            unsupported.append(f"{document} (named by {ledger.name}:{line})")
+            continue
+        attachments[dest] = document
     if unsupported:
         raise UsageError(
             "Cannot export: these document attachments would not travel with the export: "
