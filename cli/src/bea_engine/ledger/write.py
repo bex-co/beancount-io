@@ -638,17 +638,7 @@ def validate_candidate(
             )
         if "Unused Pad" in message:
             pad_entry = error.entry if isinstance(error.entry, Pad) else None
-            already_paired = pad_entry is not None and any(
-                isinstance(entry, Balance) and entry.account == pad_entry.account and entry.date > pad_entry.date
-                for entry in entries
-            )
-            if already_paired:
-                message += " Book balance already matches the assertion; omit --pad-from and add the balance alone."
-            else:
-                message += (
-                    " Add both directives atomically with bea add balance --pad-from ACCOUNT"
-                    " --date YYYY-MM-DD --amount 'NUMBER CURRENCY' --account ACCOUNT."
-                )
+            message += _unused_pad_hint(pad_entry, entries, errors, filenames)
         elif isinstance(error.entry, Balance) and "Balance failed" in error.message:
             if allow_errors:
                 hints.append(
@@ -683,6 +673,70 @@ def validate_candidate(
             message = "The change would leave the ledger invalid; nothing was written."
         raise LedgerError(message, details=_collapse_repeats(reasons))
     return messages
+
+
+def _unused_pad_hint(pad: Any, entries: list[Any], errors: list[Any], filenames: dict[Path, Path]) -> str:
+    """Why Beancount found nothing for this pad to fill, as a next step.
+
+    Beancount applies a pad to the first assertion in each currency that
+    follows it on the account (or a subaccount), until the next pad there. So
+    a pad is unused because nothing follows it, because a later pad took its
+    assertions over, or because every assertion it reached already held — and
+    only that last case means the book balance already matches. An earlier
+    assertion that holds still consumes the pad, leaving a later failing one
+    unpadded; claiming "already matches" there contradicted the failure
+    printed beside it.
+    """
+    from beancount.core.data import Balance, Pad
+
+    atomic = (
+        " Add both directives atomically with bea add balance --pad-from ACCOUNT"
+        " --date YYYY-MM-DD --amount 'NUMBER CURRENCY' --account ACCOUNT."
+    )
+    position = next((index for index, entry in enumerate(entries) if entry is pad), None)
+    if pad is None or position is None:
+        return atomic
+    prefix = f"{pad.account}:"
+    reached: list[Any] = []
+    superseded_by = None
+    for entry in entries[position + 1 :]:
+        if isinstance(entry, Pad) and entry.account == pad.account:
+            superseded_by = entry
+            break
+        if isinstance(entry, Balance) and (entry.account == pad.account or entry.account.startswith(prefix)):
+            reached.append(entry)
+    if not reached:
+        if superseded_by is not None:
+            return (
+                f" The later pad at {_location(superseded_by, filenames)} takes over the assertions after it, "
+                "leaving this pad nothing to fill; keep one of the two pads."
+            )
+        return atomic
+    # Keyed by source line: the balance check replaces a failing entry with a
+    # copy carrying its difference, so identity does not survive.
+    failed = {
+        (error.entry.meta.get("filename"), error.entry.meta.get("lineno"))
+        for error in errors
+        if isinstance(error.entry, Balance) and "Balance failed" in getattr(error, "message", "")
+    }
+    first_by_currency: dict[str, Any] = {}
+    for balance in reached:
+        first = first_by_currency.setdefault(balance.amount.currency, balance)
+        if first is not balance and (balance.meta.get("filename"), balance.meta.get("lineno")) in failed:
+            return (
+                f" A pad fills only the first later assertion in each currency; the {first.date} assertion at "
+                f"{_location(first, filenames)} already holds and consumes it, so the {balance.date} assertion "
+                f"stays unpadded. Date the pad after {first.date}."
+            )
+    return " Book balance already matches the assertion; omit --pad-from and add the balance alone."
+
+
+def _location(entry: Any, filenames: dict[Path, Path]) -> str:
+    """An entry's `file:line`, naming the real file rather than its staged copy."""
+    filename = str(entry.meta.get("filename", ""))
+    for staged, original in filenames.items():
+        filename = filename.replace(str(staged), str(original))
+    return f"{filename}:{entry.meta.get('lineno')}"
 
 
 def _error_key(error: Any, filenames: dict[Path, Path]) -> tuple[str, int | None, str]:

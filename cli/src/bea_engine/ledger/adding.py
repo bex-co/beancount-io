@@ -286,11 +286,26 @@ def _balance(
     try:
         warnings = write.append(file, [writer.format_entry(e) for e in entries], allow_errors=allow_errors, into=into)
     except protocol.LedgerError as exc:
-        # A zero residual makes Beancount reject the pad as unused. The atomic
-        # --pad-from path still wants the assertion; write that alone.
+        # The only failure worth a retry is a pad Beancount reports unused;
+        # anything else stands. Why it went unused decides what happens next.
         if allow_errors or not _unused_pad_only(exc):
             raise
-        loaded, _, _ = managed_load.load_file(file)
+        source_account = parse_account(str(pad_from))
+        loaded, before_errors, options = managed_load.load_file(file)
+        staged = [
+            f"{format_error(error, ledger_file=file)} "
+            f"({error.entry.date} pad {error.entry.account} {error.entry.source_account})"
+            for error in before_errors
+            if "Unused Pad" in getattr(error, "message", "") and isinstance(error.entry, Pad)
+        ]
+        if staged:
+            # A pad already waiting for its balance is the failure, not this
+            # write; retrying without the new pad only blamed the assertion.
+            raise protocol.LedgerError(
+                "The ledger has a staged pad still waiting for its balance assertion; nothing was written. "
+                "Complete that pair (add its balance without --pad-from) or remove the pad, then retry.",
+                details=staged,
+            ) from exc
         match = _balance_match(loaded, date, account, number, currency, tolerance)
         if match is not None:
             source = {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
@@ -305,11 +320,37 @@ def _balance(
                 "source": source,
                 "target": str(write.destination(file, into)),
             }
+        difference = number - _book_units(loaded, account, currency, date)
+        if abs(difference) <= _balance_tolerance(entries[1], options):
+            result = _appended(file, directive, allow_errors=allow_errors, into=into)
+            warnings = list(result.get("warnings") or [])
+            warnings.append(
+                f"Book balance already matches {number} {currency}; omitted the pad from "
+                "--pad-from and wrote the assertion alone."
+            )
+            result["warnings"] = warnings
+            return result
+        # The book does not match, so the new pad went unused because an
+        # existing pad fills this assertion instead (Beancount pads every
+        # currency of the next assertion after the latest pad).
+        cover = _covering_pad(loaded, account, date)
+        if cover is None:
+            raise
+        pad_at = f"{cover.meta.get('filename')}:{cover.meta.get('lineno')}"
+        if cover.source_account != source_account:
+            raise protocol.LedgerError(
+                f"The existing pad at {pad_at} ({cover.date} from {cover.source_account}) already fills this "
+                f"assertion, so a pad from {source_account} would go unused; nothing was written.",
+                details=[
+                    f"Add the balance without --pad-from to let that pad insert {difference} {currency} "
+                    f"from {cover.source_account}, or edit that pad first."
+                ],
+            ) from exc
         result = _appended(file, directive, allow_errors=allow_errors, into=into)
         warnings = list(result.get("warnings") or [])
         warnings.append(
-            f"Book balance already matches {number} {currency}; omitted the pad from "
-            "--pad-from and wrote the assertion alone."
+            f"The existing pad at {pad_at} ({cover.date} from {cover.source_account}) fills this assertion, "
+            f"inserting {difference} {currency}; omitted the pad from --pad-from and wrote the assertion alone."
         )
         result["warnings"] = warnings
         return result
@@ -365,6 +406,51 @@ def _balance_conflict(
 def _balance_amount(number: Decimal, currency: str, tolerance: Decimal | None) -> str:
     """A balance amount as the user typed it, tolerance included."""
     return f"{number} {currency}" if tolerance is None else f"{number} ~ {tolerance} {currency}"
+
+
+def _book_units(entries: list[Any], account: str, currency: str, date: datetime.date) -> Decimal:
+    """Units of `currency` in `account` and its children when a `date` assertion runs.
+
+    Assertions run at the start of the day, so only earlier postings count —
+    including the padding Beancount already inserted for earlier pads.
+    """
+    from beancount.core.data import Transaction
+
+    prefix = f"{account}:"
+    return sum(
+        (
+            posting.units.number
+            for entry in entries
+            if isinstance(entry, Transaction) and entry.date < date
+            for posting in entry.postings
+            if (posting.account == account or posting.account.startswith(prefix))
+            and posting.units is not None
+            and posting.units.currency == currency
+            and posting.units.number is not None
+        ),
+        Decimal(0),
+    )
+
+
+def _balance_tolerance(balance: Any, options: dict[str, Any]) -> Decimal:
+    from beancount.ops.balance import get_balance_tolerance
+
+    tolerance: Decimal = get_balance_tolerance(balance, options)  # type: ignore[no-untyped-call]
+    return tolerance
+
+
+def _covering_pad(entries: list[Any], account: str, date: datetime.date) -> Any | None:
+    """The pad Beancount would apply to an assertion on `account` at `date`: the latest before it."""
+    from beancount.core.data import Pad
+
+    return next(
+        (
+            entry
+            for entry in reversed(entries)
+            if isinstance(entry, Pad) and entry.account == account and entry.date < date
+        ),
+        None,
+    )
 
 
 def _unused_pad_only(exc: protocol.LedgerError) -> bool:

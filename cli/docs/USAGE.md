@@ -730,7 +730,14 @@ bea add balance --date 2026-01-02 --account Assets:Checking \
 ```
 
 The pad defaults to the preceding day; `--pad-date` can select another date
-before the assertion. Both accounts must be open by the pad date. Ordinary
+before the assertion. Both accounts must be open by the pad date. When the
+book already holds the asserted amount, `--pad-from` writes the assertion alone
+and says so. When an existing pad on the account already fills the assertion
+from the same source, it writes the assertion alone with a warning naming that
+pad and the amount it inserts; an existing pad from a different source refuses.
+A staged pad still waiting for its balance refuses the write, naming it. A pad
+fills only the first later assertion in each currency, so an assertion between
+`--pad-date` and `--date` is named as the reason the pad went unused. Ordinary
 `add balance` remains a strict assertion: review missing transactions before
 choosing to create an adjustment. Advanced users can stage `add pad --allow-errors`,
 add the later balance, then run `bea check`. The staged pad reports `Unused Pad`
