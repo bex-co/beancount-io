@@ -86,7 +86,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [151](./151.md) — Quoted semicolons in a comma CSV make delimiter detection choose `;` and refuse the file — **minor**, CLI QA 2026-10-03.
 - [152](./152.md) — A blank first line hides the CSV header, and the error advice cannot work — **minor**, CLI QA 2026-10-03.
 - [153](./153.md) — Contradictory double-negative CSV amounts like `(-5.00)` are silently booked as money in — **minor**, CLI QA 2026-10-03.
-- [154](./154.md) — A `#` or `?` in a bare `query --source` path bypasses the ledger-alias guard and overwrites the ledger — **major**, CLI QA 2026-10-03.
 - [155](./155.md) — `query --source` forwards the query without `--`, so a dash-leading query injects `--output=` past the guard — **major**, CLI QA 2026-10-03.
 - [156](./156.md) — `doctor roundtrip` through a symlinked ledger overwrites and deletes a file beside the real ledger — **major**, CLI QA 2026-10-03.
 - [157](./157.md) — Import blocks rows for account names with an unknown root and suggests a `bea add open` that cannot work — **major**, CLI QA 2026-10-03.
