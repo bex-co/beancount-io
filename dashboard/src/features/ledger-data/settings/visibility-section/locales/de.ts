@@ -71,6 +71,24 @@ const deVisibilitySection: Record<string, TranslationEntry> = {
     message: "Einbettungscode kopieren",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "Wer auf dieses Hauptbuch zugreifen kann. Nur Hauptbuch-Administratoren können das ändern.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "Dieses Hauptbuch ist öffentlich. Jeder mit dem Link kann es ansehen.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "Dieses Hauptbuch ist privat. Nur der Eigentümer und Mitwirkende können darauf zugreifen.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default deVisibilitySection;

@@ -71,6 +71,24 @@ const caVisibilitySection: Record<string, TranslationEntry> = {
     message: "Copia el codi d’incrustació",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "Qui pot accedir a aquest llibre. Només els administradors del llibre ho poden canviar.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "Aquest llibre és públic. Qualsevol persona amb l'enllaç el pot veure.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "Aquest llibre és privat. Només el propietari i els col·laboradors hi poden accedir.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default caVisibilitySection;

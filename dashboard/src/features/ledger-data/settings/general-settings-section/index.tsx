@@ -24,6 +24,7 @@ import { decodeLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { LedgerAdminPermission } from "@/common/components/ledger-permission/admin";
+import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 
 export function GeneralSettingsSection({
   ledger,
@@ -35,6 +36,9 @@ export function GeneralSettingsSection({
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const navigate = useNavigate();
+  // Only admins can save, so only admins get editable fields — anyone else
+  // would be typing into a form with no way to submit it.
+  const { isAdmin } = useLedgerPermission();
   const [ledgerName, setLedgerName] = useState(ledger.name || "");
   const [ledgerDescription, setLedgerDescription] = useState(
     ledger.description || "",
@@ -123,7 +127,9 @@ export function GeneralSettingsSection({
       <CardHeader>
         <CardTitle>{t("page.settings.generalSettings")}</CardTitle>
         <CardDescription>
-          {t("page.settings.generalSettingsDescription")}
+          {isAdmin
+            ? t("page.settings.generalSettingsDescription")
+            : t("page.settings.generalSettingsDescriptionReadOnly")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -133,7 +139,10 @@ export function GeneralSettingsSection({
             id="ledger-name"
             value={ledgerName}
             onChange={(e) => setLedgerName(e.target.value)}
-            placeholder={t("page.dashboard.enterLedgerName")}
+            readOnly={!isAdmin}
+            placeholder={
+              isAdmin ? t("page.dashboard.enterLedgerName") : undefined
+            }
           />
           <p className="text-sm text-muted-foreground">
             {t("page.settings.ledgerNameDescription")}
@@ -146,15 +155,22 @@ export function GeneralSettingsSection({
           </Label>
           <Textarea
             id="ledger-description"
-            placeholder={t("page.settings.ledgerDescriptionPlaceholder")}
+            placeholder={
+              isAdmin
+                ? t("page.settings.ledgerDescriptionPlaceholder")
+                : undefined
+            }
             value={ledgerDescription}
             onChange={(e) => setLedgerDescription(e.target.value)}
+            readOnly={!isAdmin}
             rows={3}
             className="resize-none"
           />
-          <p className="text-sm text-muted-foreground">
-            {t("page.settings.ledgerDescriptionDescription")}
-          </p>
+          {isAdmin && (
+            <p className="text-sm text-muted-foreground">
+              {t("page.settings.ledgerDescriptionDescription")}
+            </p>
+          )}
         </div>
 
         <LedgerAdminPermission>

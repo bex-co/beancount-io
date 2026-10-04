@@ -70,6 +70,24 @@ const ukVisibilitySection: Record<string, TranslationEntry> = {
     message: "Скопіювати код вбудовування",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "Хто має доступ до цієї облікової книги. Змінити це можуть лише адміністратори книги.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "Ця облікова книга публічна. Будь-хто з посиланням може її переглянути.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "Ця облікова книга приватна. Доступ мають лише власник і співавтори.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default ukVisibilitySection;

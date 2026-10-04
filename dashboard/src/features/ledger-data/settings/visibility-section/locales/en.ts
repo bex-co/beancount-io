@@ -70,6 +70,22 @@ const enVisibilitySection: Record<string, TranslationEntry> = {
     message: "Copy embed code",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message: "Who can access this ledger. Only ledger admins can change it.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message: "This ledger is public. Anyone with the link can view it.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "This ledger is private. Only its owner and collaborators can access it.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default enVisibilitySection;

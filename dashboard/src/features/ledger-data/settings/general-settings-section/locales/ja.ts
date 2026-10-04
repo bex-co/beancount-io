@@ -33,6 +33,11 @@ const jaGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "元帳の説明を入力（任意）",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message: "この元帳の名前と説明です。変更できるのは元帳の管理者だけです。",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default jaGeneralSettingsSection;

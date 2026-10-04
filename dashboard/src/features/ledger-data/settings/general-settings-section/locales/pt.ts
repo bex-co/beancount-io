@@ -33,6 +33,12 @@ const ptGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Enter a description for your ledger (optional)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message:
+      "O nome e a descrição deste livro-razão. Somente os administradores do livro podem alterá-los.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default ptGeneralSettingsSection;

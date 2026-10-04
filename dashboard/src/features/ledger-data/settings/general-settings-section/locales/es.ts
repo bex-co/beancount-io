@@ -33,6 +33,12 @@ const esGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Ingrese una descripción para su libro mayor (opcional)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message:
+      "El nombre y la descripción de este libro contable. Solo los administradores del libro pueden cambiarlos.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default esGeneralSettingsSection;

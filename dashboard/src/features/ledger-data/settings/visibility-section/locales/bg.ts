@@ -70,6 +70,23 @@ const bgVisibilitySection: Record<string, TranslationEntry> = {
     message: "Копирай кода за вграждане",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "Кой има достъп до тази книга. Само администраторите на книгата могат да го променят.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message: "Тази книга е публична. Всеки с връзката може да я разгледа.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "Тази книга е частна. Достъп имат само собственикът и сътрудниците ѝ.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default bgVisibilitySection;

@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { LedgerAdminPermission } from "@/common/components/ledger-permission/admin";
+import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 
 function buildEmbedCode(
   shareableUrl: string,
@@ -71,6 +72,7 @@ export function VisibilitySection({
   ledgerId: string;
 }) {
   const { t } = useTranslations();
+  const { isAdmin } = useLedgerPermission();
   const formatError = useErrorMessage();
   const [isPrivate, setIsPrivate] = useState(ledger.private);
   const [copiedUrl, setCopiedUrl] = useState(false);
@@ -155,7 +157,9 @@ export function VisibilitySection({
       <CardHeader>
         <CardTitle>{t("page.settings.visibility")}</CardTitle>
         <CardDescription>
-          {t("page.settings.visibilityDescription")}
+          {isAdmin
+            ? t("page.settings.visibilityDescription")
+            : t("page.settings.visibilityDescriptionReadOnly")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -171,12 +175,19 @@ export function VisibilitySection({
             <p
               className={cn(
                 "text-sm",
-                isPrivate ? "text-muted-foreground" : "text-destructive",
+                // The red warning is for the admin who made it public.
+                isPrivate || !isAdmin
+                  ? "text-muted-foreground"
+                  : "text-destructive",
               )}
             >
-              {isPrivate
-                ? t("page.settings.privateLedgerDescription")
-                : t("page.settings.publicLedgerDescription")}
+              {isAdmin
+                ? isPrivate
+                  ? t("page.settings.privateLedgerDescription")
+                  : t("page.settings.publicLedgerDescription")
+                : isPrivate
+                  ? t("page.settings.privateLedgerDescriptionReadOnly")
+                  : t("page.settings.publicLedgerDescriptionReadOnly")}
             </p>
           </div>
           <LedgerAdminPermission>

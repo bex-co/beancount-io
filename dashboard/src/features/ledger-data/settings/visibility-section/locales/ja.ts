@@ -69,6 +69,23 @@ const jaVisibilitySection: Record<string, TranslationEntry> = {
     message: "埋め込みコードをコピー",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "この元帳にアクセスできるユーザーです。変更できるのは元帳の管理者だけです。",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "この元帳は公開されています。リンクを知っている人は誰でも閲覧できます。",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message: "この元帳は非公開です。所有者と共同編集者だけがアクセスできます。",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default jaVisibilitySection;

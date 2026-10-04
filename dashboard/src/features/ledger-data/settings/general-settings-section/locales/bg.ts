@@ -33,6 +33,12 @@ const bgGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Enter a description for your ledger (optional)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message:
+      "Името и описанието на тази счетоводна книга. Само администраторите на книгата могат да ги променят.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default bgGeneralSettingsSection;

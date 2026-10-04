@@ -33,6 +33,12 @@ const faGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Enter a description for your ledger (optional)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message:
+      "نام و توضیحات این دفتر. فقط مدیران دفتر می‌توانند آن‌ها را تغییر دهند.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default faGeneralSettingsSection;

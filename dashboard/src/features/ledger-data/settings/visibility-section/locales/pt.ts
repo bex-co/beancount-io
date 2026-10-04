@@ -71,6 +71,24 @@ const ptVisibilitySection: Record<string, TranslationEntry> = {
     message: "Copiar código de incorporação",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "Quem pode acessar este livro-razão. Somente os administradores do livro podem alterar isso.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "Este livro-razão é público. Qualquer pessoa com o link pode visualizá-lo.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "Este livro-razão é privado. Somente o proprietário e os colaboradores podem acessá-lo.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default ptVisibilitySection;

@@ -71,6 +71,23 @@ const faVisibilitySection: Record<string, TranslationEntry> = {
     message: "کپی کد جاسازی",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "چه کسانی به این دفتر دسترسی دارند. فقط مدیران دفتر می‌توانند آن را تغییر دهند.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "این دفتر عمومی است. هر کسی که پیوند را داشته باشد می‌تواند آن را ببیند.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message: "این دفتر خصوصی است. فقط مالک و همکاران آن به آن دسترسی دارند.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default faVisibilitySection;

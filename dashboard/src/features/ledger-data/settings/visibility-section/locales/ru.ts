@@ -71,6 +71,24 @@ const ruVisibilitySection: Record<string, TranslationEntry> = {
     message: "Скопировать код встраивания",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "Кто имеет доступ к этой книге учёта. Изменить это могут только администраторы книги.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "Эта книга учёта публичная. Любой, у кого есть ссылка, может её просматривать.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "Эта книга учёта приватная. Доступ есть только у владельца и соавторов.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default ruVisibilitySection;

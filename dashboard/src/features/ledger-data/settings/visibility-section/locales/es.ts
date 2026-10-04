@@ -70,6 +70,24 @@ const esVisibilitySection: Record<string, TranslationEntry> = {
     message: "Copiar código de inserción",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "Quién puede acceder a este libro contable. Solo los administradores del libro pueden cambiarlo.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "Este libro contable es público. Cualquiera con el enlace puede verlo.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "Este libro contable es privado. Solo su propietario y los colaboradores pueden acceder.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default esVisibilitySection;

@@ -69,6 +69,21 @@ const zhVisibilitySection: Record<string, TranslationEntry> = {
     message: "复制嵌入代码",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message: "谁可以访问此账本。只有账本管理员可以更改。",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message: "此账本是公开的。任何拥有链接的人都可以查看。",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message: "此账本是私有的。只有其所有者和协作者可以访问。",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default zhVisibilitySection;

@@ -33,6 +33,12 @@ const frGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Entrez une description pour votre registre (facultatif)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message:
+      "Le nom et la description de ce grand livre. Seuls les administrateurs du grand livre peuvent les modifier.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default frGeneralSettingsSection;

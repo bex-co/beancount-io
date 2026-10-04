@@ -33,6 +33,12 @@ const ukGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Enter a description for your ledger (optional)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message:
+      "Назва та опис цієї облікової книги. Змінити їх можуть лише адміністратори книги.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default ukGeneralSettingsSection;

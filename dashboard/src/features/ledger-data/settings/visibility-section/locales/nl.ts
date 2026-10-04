@@ -70,6 +70,24 @@ const nlVisibilitySection: Record<string, TranslationEntry> = {
     message: "Insluitcode kopiëren",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "Wie toegang heeft tot dit grootboek. Alleen beheerders van het grootboek kunnen dit wijzigen.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "Dit grootboek is openbaar. Iedereen met de link kan het bekijken.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "Dit grootboek is privé. Alleen de eigenaar en medewerkers hebben toegang.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default nlVisibilitySection;

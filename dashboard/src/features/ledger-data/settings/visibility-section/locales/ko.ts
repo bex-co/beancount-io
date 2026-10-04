@@ -69,6 +69,22 @@ const koVisibilitySection: Record<string, TranslationEntry> = {
     message: "임베드 코드 복사",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "이 원장에 접근할 수 있는 사람입니다. 원장 관리자만 변경할 수 있습니다.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message: "이 원장은 공개되어 있습니다. 링크가 있는 누구나 볼 수 있습니다.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message: "이 원장은 비공개입니다. 소유자와 협업자만 접근할 수 있습니다.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default koVisibilitySection;

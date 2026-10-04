@@ -33,6 +33,11 @@ const koGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "장부 설명 입력 (선택사항)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message: "이 원장의 이름과 설명입니다. 원장 관리자만 변경할 수 있습니다.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default koGeneralSettingsSection;

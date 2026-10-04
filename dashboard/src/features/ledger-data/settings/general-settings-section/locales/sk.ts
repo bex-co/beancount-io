@@ -33,6 +33,12 @@ const skGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Enter a description for your ledger (optional)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message:
+      "Názov a popis tejto účtovnej knihy. Zmeniť ich môžu iba správcovia knihy.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default skGeneralSettingsSection;

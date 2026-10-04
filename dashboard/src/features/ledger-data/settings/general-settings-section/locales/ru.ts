@@ -33,6 +33,12 @@ const ruGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Введите описание для вашей книги учета (необязательно)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message:
+      "Название и описание этой книги учёта. Изменить их могут только администраторы книги.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default ruGeneralSettingsSection;

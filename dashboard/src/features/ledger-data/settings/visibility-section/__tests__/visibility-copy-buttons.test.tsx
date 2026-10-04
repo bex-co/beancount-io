@@ -26,6 +26,10 @@ vi.mock("@/common/components/ledger-permission/admin", () => ({
   ),
 }));
 
+vi.mock("@/common/hooks/use-ledger-permission", () => ({
+  useLedgerPermission: () => ({ isAdmin: true, canWrite: true, canRead: true }),
+}));
+
 const publicLedger = {
   id: "ledger-1",
   name: "example",

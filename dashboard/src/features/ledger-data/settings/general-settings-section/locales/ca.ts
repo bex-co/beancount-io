@@ -33,6 +33,12 @@ const caGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Enter a description for your ledger (optional)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message:
+      "El nom i la descripció d'aquest llibre comptable. Només els administradors del llibre els poden canviar.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default caGeneralSettingsSection;

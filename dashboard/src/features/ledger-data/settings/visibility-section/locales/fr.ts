@@ -71,6 +71,24 @@ const frVisibilitySection: Record<string, TranslationEntry> = {
     message: "Copier le code d’intégration",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "Qui peut accéder à ce grand livre. Seuls les administrateurs du grand livre peuvent le modifier.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "Ce grand livre est public. Toute personne disposant du lien peut le consulter.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "Ce grand livre est privé. Seuls son propriétaire et ses collaborateurs peuvent y accéder.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default frVisibilitySection;

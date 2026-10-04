@@ -34,6 +34,12 @@ const deGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Geben Sie eine Beschreibung für Ihr Hauptbuch ein (optional)",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message:
+      "Name und Beschreibung dieses Hauptbuchs. Nur Hauptbuch-Administratoren können sie ändern.",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default deGeneralSettingsSection;

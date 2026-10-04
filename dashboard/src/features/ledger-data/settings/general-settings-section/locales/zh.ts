@@ -32,6 +32,11 @@ const zhGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "输入账本描述（可选）",
     description: "Placeholder text for description field",
   },
+  "page.settings.generalSettingsDescriptionReadOnly": {
+    message: "此账本的名称和描述。只有账本管理员可以更改。",
+    description:
+      "General settings description shown to viewers who cannot edit the ledger",
+  },
 };
 
 export default zhGeneralSettingsSection;

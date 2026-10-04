@@ -70,6 +70,24 @@ const skVisibilitySection: Record<string, TranslationEntry> = {
     message: "Kopírovať kód na vloženie",
     description: "Accessible name for the button that copies the embed code",
   },
+  "page.settings.visibilityDescriptionReadOnly": {
+    message:
+      "Kto má prístup k tejto účtovnej knihe. Zmeniť to môžu iba správcovia knihy.",
+    description:
+      "Visibility section description shown to viewers who cannot change it",
+  },
+  "page.settings.publicLedgerDescriptionReadOnly": {
+    message:
+      "Táto účtovná kniha je verejná. Ktokoľvek s odkazom si ju môže pozrieť.",
+    description:
+      "Public ledger state described to viewers who cannot change it",
+  },
+  "page.settings.privateLedgerDescriptionReadOnly": {
+    message:
+      "Táto účtovná kniha je súkromná. Prístup majú iba jej vlastník a spolupracovníci.",
+    description:
+      "Private ledger state described to viewers who cannot change it",
+  },
 };
 
 export default skVisibilitySection;
