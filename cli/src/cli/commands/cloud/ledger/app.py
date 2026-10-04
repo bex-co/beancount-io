@@ -76,7 +76,13 @@ def ledger_create(
         typer.echo(f"sshUrl:   {ledger.ssh_url}")
 
     if clone:
-        target = directory or Path.cwd() / ledger.name
+        try:
+            manager.check_clone_url(ledger.ssh_url)
+            target = directory or manager.default_clone_dir(ledger.name)
+        except manager.UnsafeCloneSource as e:
+            raise LedgerError(
+                f"Ledger '{ledger.full_name}' was created but was not cloned. {e}", result=asdict(ledger)
+            ) from e
         output.note(f"Cloning repository to '{target}'...")
         try:
             manager.clone_ledger(
@@ -110,7 +116,8 @@ def ledger_clone(
     # a usage error on every `cloud ledger` command, signed in or not.
     owner_and_name(full_name)
     ledger = manager.get_ledger(authenticated_client(), full_name)
-    target = directory or Path.cwd() / ledger.name
+    manager.check_clone_url(ledger.ssh_url)
+    target = directory or manager.default_clone_dir(ledger.name)
     output.note(f"Cloning '{ledger.full_name}' to '{target}'...")
     try:
         manager.clone_ledger(

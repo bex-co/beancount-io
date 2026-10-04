@@ -180,6 +180,31 @@ def logged_in(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("BEA_TOKEN", "test-token")
 
 
+@dataclass
+class GitRemote:
+    url: str
+    """The ssh URL the stubbed server hands out; git rewrites it to `origin`."""
+    origin: Path
+
+
+@pytest.fixture
+def git_remote(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> GitRemote:
+    """A bare local repository reachable as an `ssh://` clone URL.
+
+    `bea cloud ledger clone` only accepts ssh/https remotes from the server, so
+    tests cannot hand it a filesystem path. Instead the clone URL is a real
+    ssh URL that git's `url.<base>.insteadOf` (set through the environment the
+    clone inherits) rewrites to the local bare repository: no network, no ssh.
+    """
+    origin = tmp_path / "origin.git"
+    subprocess.run(["git", "init", "--bare", str(origin)], check=True, capture_output=True)
+    url = "ssh://git@example.test/alice/books.git"
+    monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
+    monkeypatch.setenv("GIT_CONFIG_KEY_0", f"url.{origin.as_uri()}.insteadOf")
+    monkeypatch.setenv("GIT_CONFIG_VALUE_0", url)
+    return GitRemote(url=url, origin=origin)
+
+
 @pytest.fixture
 def tmp_bean_file(tmp_path: Path) -> Path:
     f = tmp_path / "main.bean"

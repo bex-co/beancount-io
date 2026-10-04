@@ -74,7 +74,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [085](./085.md) — Unexpected engine exceptions lose their type and traceback: a bad BQL date literal exits 1 and `--debug` cannot locate it — **minor**, CLI QA 2026-10-03.
 - [086](./086.md) — `bea example` date-order guard only fires when both dates are given; one-sided or short ranges crash upstream — **minor**, CLI QA 2026-10-03.
 - [087](./087.md) — `bea format --check` is quadratic on long include chains (86 s for 1,500 files) — **minor**, CLI QA 2026-10-03.
-- [089](./089.md) — Server-controlled `sshUrl`/`name` let `bea cloud ledger clone` run local commands and write outside cwd — **major**, CLI QA 2026-10-03.
 - [090](./090.md) — Hand-written cloud output prints server strings raw, including terminal escape sequences — **minor**, CLI QA 2026-10-03.
 - [091](./091.md) — `cloud ledger create --json` omits fields that `show --json` returns for the same ledger — **minor**, CLI QA 2026-10-03.
 - [092](./092.md) — `add transaction --json` output for a `{{total}}` cost is refused when fed back if the balancing leg was omitted — **minor**, CLI QA 2026-10-03.

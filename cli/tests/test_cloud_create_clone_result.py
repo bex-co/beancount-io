@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
 from pathlib import Path
 
 import httpx
@@ -12,6 +11,7 @@ from pytest_httpx import HTTPXMock
 from typer.testing import CliRunner
 
 from cli.main import app
+from tests.conftest import GitRemote
 
 
 @pytest.fixture(autouse=True)
@@ -22,16 +22,15 @@ def cloud_credentials(logged_in: None, monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.parametrize("json_output", [False, True], ids=["human", "json"])
 @pytest.mark.parametrize("clone", ["none", "success", "failure"])
 def test_create_result_survives_the_clone_step(
-    tmp_path: Path, httpx_mock: HTTPXMock, json_output: bool, clone: str
+    tmp_path: Path, httpx_mock: HTTPXMock, git_remote: GitRemote, json_output: bool, clone: str
 ) -> None:
-    origin = tmp_path / "origin.git"
-    subprocess.run(["git", "init", "--bare", str(origin)], check=True, capture_output=True)
+    origin = git_remote.url
     wire = {
         "id": "ledger-created",
         "name": "books",
         "fullName": "alice/books",
         "httpUrl": "https://example.test/alice/books",
-        "sshUrl": str(origin),
+        "sshUrl": origin,
         "private": True,
         "empty": True,
         "size": 0,
@@ -64,7 +63,7 @@ def test_create_result_survives_the_clone_step(
             "name": "books",
             "full_name": "alice/books",
             "http_url": "https://example.test/alice/books",
-            "ssh_url": str(origin),
+            "ssh_url": origin,
             "private": True,
             "empty": True,
             "created_at": "2026-10-02T00:00:00Z",

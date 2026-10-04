@@ -1271,6 +1271,12 @@ bea cloud ledger delete alice/my-books          # asks for confirmation
 bea --yes cloud ledger delete alice/old-books   # global switches precede the command
 ```
 
+`clone` and `create --clone` pass git only an `ssh://`, `https://` or
+`user@host:path` remote, and clone into `./<name>` only when the server's
+ledger name is a valid ledger name. Any other clone URL or name is an
+unexpected server response (exit 1) and git is not run; pass `--dir` to choose
+the directory yourself.
+
 `bea cloud ledger show` renders booleans as `yes`/`no` and indents nested
 permissions beneath their field name. Use `--json` for the complete structured
 result with native booleans and objects.

@@ -17,6 +17,7 @@ from cli.auth.credentials import ENVIRONMENT, FILE, save_credentials
 from cli.commands.cloud.ledger.manager import CloneError, clone_ledger, ensure_git_available
 from cli.errors import AuthError, UsageError, to_bea_error, unknown_write_outcome
 from cli.main import app
+from tests.conftest import GitRemote
 
 
 @pytest.mark.parametrize("body", [b"{}", b"[]", b"null", b"<html>proxy response</html>"])
@@ -213,16 +214,12 @@ def test_non_json_http_error_keeps_status_category(monkeypatch: pytest.MonkeyPat
         server.server_close()
 
 
-def test_clone_retains_git_diagnostic(tmp_path: Path) -> None:
+def test_clone_retains_git_diagnostic(tmp_path: Path, git_remote: GitRemote) -> None:
     occupied = tmp_path / "occupied"
     occupied.mkdir()
     (occupied / "keep.txt").write_text("pristine\n")
-    origin = tmp_path / "origin.git"
-    import subprocess
-
-    subprocess.run(["git", "init", "--bare", str(origin)], check=True, capture_output=True)
     with pytest.raises(CloneError) as caught:
-        clone_ledger(str(origin), occupied, quiet=True)
+        clone_ledger(git_remote.url, occupied, quiet=True)
     assert caught.value.diagnostic
     assert "already exists" in caught.value.diagnostic.lower() or "not an empty" in caught.value.diagnostic.lower()
 
