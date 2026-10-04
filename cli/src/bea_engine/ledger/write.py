@@ -1088,6 +1088,86 @@ def require_writable(file: Path) -> None:
         )
 
 
+#: User file flags a replacement carries over (`nodump`, `hidden`, `opaque`).
+#: `uchg`/`uappnd` would make the staged copy itself impossible to rename, and
+#: a ledger carrying them cannot be replaced anyway; system flags need root.
+_KEPT_FILE_FLAGS = 0x00000001 | 0x00000008 | 0x00008000
+
+#: copyfile(3) flags: COPYFILE_ACL | COPYFILE_XATTR.
+_COPYFILE_ACL_XATTR = (1 << 0) | (1 << 2)
+
+
+def keep_file_metadata(file: Path, candidate: Path, original_stat: os.stat_result) -> None:
+    """Give the staged replacement everything about `file` but its bytes and times.
+
+    A rename installs a new inode, so whatever the old one carried beyond
+    its mode — its group, ACL entries, extended attributes, file flags — was
+    silently dropped (w1/099): group members lost access and a deny ACL
+    disappeared. The group is required, so a group this user cannot assign
+    refuses the write (exit 3) rather than changing who may read the ledger.
+    """
+    if hasattr(os, "chown") and candidate.stat().st_gid != original_stat.st_gid:
+        try:
+            os.chown(candidate, -1, original_stat.st_gid)
+        except PermissionError as exc:
+            raise AuthError(
+                f"Cannot keep {file}'s group (gid {original_stat.st_gid}) on the rewritten file: this user "
+                "may not assign it. Nothing was written; write as a member of that group or change the "
+                "file's group explicitly."
+            ) from exc
+    # After chown, which may clear setgid.
+    candidate.chmod(stat.S_IMODE(original_stat.st_mode))
+    if sys.platform == "darwin":
+        _copy_acl_and_xattrs_darwin(file, candidate)
+    elif sys.platform == "linux":
+        _copy_xattrs_linux(file, candidate)
+    flags = getattr(original_stat, "st_flags", 0) & _KEPT_FILE_FLAGS
+    if flags and hasattr(os, "chflags"):
+        try:
+            os.chflags(candidate, os.stat(candidate).st_flags | flags)
+        except OSError as exc:
+            raise AuthError(f"Cannot keep {file}'s file flags on the rewritten file; nothing was written.") from exc
+
+
+def _copy_acl_and_xattrs_darwin(file: Path, candidate: Path) -> None:
+    import ctypes
+
+    libc = ctypes.CDLL("libc.dylib", use_errno=True)
+    copyfile = libc.copyfile
+    copyfile.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_void_p, ctypes.c_uint32]
+    copyfile.restype = ctypes.c_int
+    if copyfile(os.fsencode(file), os.fsencode(candidate), None, _COPYFILE_ACL_XATTR) < 0:
+        number = ctypes.get_errno()
+        raise AuthError(
+            f"Cannot keep {file}'s ACL and extended attributes on the rewritten file "
+            f"({os.strerror(number)}); nothing was written."
+        )
+
+
+def _copy_xattrs_linux(file: Path, candidate: Path) -> None:
+    """User attributes and POSIX ACLs, which Linux stores as `system.posix_acl_*` attributes."""
+    import errno
+
+    if sys.platform != "linux":
+        return
+
+    try:
+        names = os.listxattr(file)
+    except OSError as exc:
+        if exc.errno in (errno.ENOTSUP, errno.EOPNOTSUPP):
+            return
+        raise
+    for name in names:
+        if not name.startswith(("user.", "system.posix_acl_")):
+            continue
+        try:
+            os.setxattr(candidate, name, os.getxattr(file, name))
+        except OSError as exc:
+            raise AuthError(
+                f"Cannot keep {file}'s extended attribute {name} on the rewritten file; nothing was written."
+            ) from exc
+
+
 def replace_checked(file: Path, candidate: Path, original: bytes, original_stat: os.stat_result) -> None:
     """Refuse to overwrite an edit made while validation was running."""
     require_writable(file)
@@ -1101,7 +1181,7 @@ def replace_checked(file: Path, candidate: Path, original: bytes, original_stat:
         raise ConflictError(
             "The ledger changed while the operation was running; nothing was written. Retry the command."
         )
-    candidate.chmod(stat.S_IMODE(original_stat.st_mode))
+    keep_file_metadata(file, candidate, original_stat)
     stopping.check()
     try:
         os.replace(candidate, file)

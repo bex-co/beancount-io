@@ -284,7 +284,10 @@ relevant account opens and ensure the opening balances still describe that
 history. New ledger files are
 private by default (`0600` on POSIX: readable and writable only by their owner).
 For group-readable books, explicitly run `chmod 640 books/main.bean` after
-creation. Subsequent add/import/format writes preserve the file's permissions.
+creation. Subsequent add/import/format writes preserve the file's permissions:
+its mode, group, ACL entries, extended attributes and user file flags such as
+`nodump`. A group the writing user cannot assign refuses the write with exit
+**3** instead of silently changing who can read the ledger.
 `BEA_FILE` does not redirect
 `init`. Without a terminal, `--currency` is required and the date defaults to
 today. Interactively, choose the earliest date you intend to record. Use
