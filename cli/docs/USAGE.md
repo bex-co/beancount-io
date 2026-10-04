@@ -455,7 +455,9 @@ New exports use the caller's umask (for example, `0644` with umask `022`).
 
 An `-o` destination that is the ledger under read is refused with exit 2 before
 anything is written, in one-shots and in the interactive shell's `.output`
-alike — see [Output destinations](#output-destinations) for the one rule every
+alike, including a `.output` line in Beanquery's `~/.config/beanquery/init`
+file, which is replayed once the ledger is loaded (an explicit `-o` outranks
+it) — see [Output destinations](#output-destinations) for the one rule every
 command with an output destination follows.
 
 `--format beancount` prints directives, so the query has to return entries:

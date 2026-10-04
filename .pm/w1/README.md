@@ -99,7 +99,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [139](./139.md) — Close and ask skills detect recurring charges by `payee`, which `bea import` leaves empty for one-description CSVs — **minor**, CLI QA 2026-10-03.
 - [140](./140.md) — Close checklist's period-end balance query has no date bound, so later entries change the result — **minor**, CLI QA 2026-10-03.
 - [141](./141.md) — `bea treeify` output guard is bypassed by abbreviated long options and clustered short flags, overwriting the ledger — **major**, CLI QA 2026-10-03.
-- [143](./143.md) — Any `.output` line in the beanquery init file breaks every managed `bea query` with a raw AttributeError — **minor**, CLI QA 2026-10-03.
 - [144](./144.md) — A partial `format -i` failure leads with "nothing was written" although earlier files were rewritten — **minor**, CLI QA 2026-10-03.
 - [145](./145.md) — CSV query cells leak `filename`/`lineno`/`__tolerances__` metadata as a Python dict repr — **minor**, CLI QA 2026-10-03.
 - [146](./146.md) — `bea --json query -o X.tsv` is refused with advice that `--json` itself refuses — **minor**, CLI QA 2026-10-03.

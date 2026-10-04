@@ -214,6 +214,7 @@ def text_answer(
         # Still before the query: refusing to write over the ledger being read
         # is a refusal, and a refusal has to happen before any work is done.
         _refuse_alias(output, file, shell.context)
+    _replay_init(shell, buffer if output is not None else None)
     _executed(shell.context, query_string, shell.onecmd, errors)
     if output is not None:
         # Rendered whole, then swapped in atomically. w3/380 moved this past
@@ -336,14 +337,25 @@ def _native_shell(source: str, *, interactive: bool, format: str, numberify: boo
     return GuardedShell(dsn, sys.stdout, interactive, False, format, numberify, show_errors)
 
 
-def _replay_init(shell: Any) -> None:
-    """Replay Beanquery's init file, as `bean-query` does, once the source is loaded."""
+def _replay_init(shell: Any, output: TextIO | None = None) -> None:
+    """Replay Beanquery's init file, as `bean-query` does, once the source is loaded.
+
+    Upstream replays it inside the shell's constructor, before the source is
+    attached, so a guarded `.output` there could neither see the files it must
+    not overwrite nor run at all. An explicit `--output` stream, set here once
+    the init file is done, outranks an init-file `.output`.
+    """
     from beanquery.shell import INIT_FILENAME
 
+    default = shell.outfile
     init = Path(INIT_FILENAME).expanduser()
     if init.is_file():
         for line in init.read_text(encoding="utf-8").splitlines():
             shell.onecmd(line)
+    if output is not None:
+        if shell.outfile is not default:
+            shell.outfile.close()
+        shell.outfile = output
 
 
 def native_interactive(
@@ -363,8 +375,7 @@ def native_interactive(
         if output is not None:
             if shell.source_file is not None:
                 _refuse_alias(output, shell.source_file, shell.context)
-            shell.outfile = output.open("w", encoding="utf-8")
-        _replay_init(shell)
+        _replay_init(shell, None if output is None else output.open("w", encoding="utf-8"))
         shell.cmdloop()
     finally:
         if shell.outfile is not sys.stdout:
@@ -396,8 +407,7 @@ def native_one_shot(
         output = output.resolve()
         if shell.source_file is not None:
             _refuse_alias(output, shell.source_file, shell.context)
-        shell.outfile = buffer
-    _replay_init(shell)
+    _replay_init(shell, buffer if output is not None else None)
     from beanquery import Error as BeanqueryError
 
     try:
@@ -548,8 +558,8 @@ def interactive(
     if output is not None:
         _refuse_alias(output, file, shell.context)
         destination = output.open("w")
-        shell.outfile = destination
     try:
+        _replay_init(shell, destination)
         shell.cmdloop()
     finally:
         if destination is not None:
@@ -716,7 +726,10 @@ def build_shell(
     # The override above drops upstream's SELECT help; without it, `help
     # select` crashes formatting a missing docstring.
     PreciseShell.on_Select.__doc__ = BQLShell.on_Select.__doc__
-    shell = PreciseShell(LEDGER_DSN, stream, interactive, True, format, numberify, show_errors)
+    # `runinit=False`: upstream would replay the init file inside the
+    # constructor, before `self.context` exists, so a guarded `.output` there
+    # failed every query. Callers replay it once the ledger is loaded.
+    shell = PreciseShell(LEDGER_DSN, stream, interactive, False, format, numberify, show_errors)
     # Both one-shot and interactive tables keep full headers by default.
     # Upstream narrow=True treats the boolean as width 1 and cuts count(*)
     # to c/co. Interactive users can still explicitly `.set narrow true`.
