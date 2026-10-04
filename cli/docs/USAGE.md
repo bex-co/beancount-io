@@ -38,7 +38,7 @@ managed engine environment that `bea` provisions.
 | Channel | Provisioning | Offline reuse | Upgrade |
 | --- | --- | --- | --- |
 | Homebrew (`brew install bex-co/tap/bea`) | Frontend and engine virtualenvs are created during installation | Local commands use the keg-local engine with no further download | `bea upgrade` → `brew upgrade bea` refreshes both |
-| PyPI (`uv tool install beancount-io` or pipx) | First local command that needs the engine downloads the hash-pinned combination (needs network and `uv` on `PATH`) | Later commands reuse `$XDG_DATA_HOME/bea/engine/<version>` (default `~/.local/share/bea/engine/…`) | `bea upgrade` upgrades the frontend and rebuilds the matching engine |
+| PyPI (`uv tool install beancount-io` or pipx) | First local command that needs the engine downloads the hash-pinned combination (needs network and `uv` on `PATH`) | Later commands reuse `$XDG_DATA_HOME/bea/engine/<version>` (default `~/.local/share/bea/engine/…`) | `bea upgrade` upgrades the frontend and, when the version changed, provisions the matching engine |
 
 If first-use or upgrade provisioning fails, fix network/`uv` availability and
 retry a local command such as `bea check` — do not `pip install beancount`.
@@ -1300,8 +1300,11 @@ Cloning uses `git clone` over SSH, so it needs Git and working SSH access. If a 
 
 `bea upgrade` hands the update to whichever package manager installed this copy
 — Homebrew, uv, or pipx — and never rewrites its own installed files. After the
-manager finishes, it also refreshes the managed Beancount engine so frontend
-and engine versions stay paired.
+manager finishes on a uv or pipx install that changed version, it also
+provisions the new version's managed Beancount engine so frontend and engine
+stay paired; Homebrew builds the keg's engine itself, and a no-op upgrade
+leaves the engine alone. A failed engine provision exits **1** after the
+upgrade and keeps the current engine; a later local command retries it.
 
 ```bash norun
 # Needs network for the latest-version check; versions vary by machine.

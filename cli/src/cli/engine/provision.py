@@ -55,27 +55,16 @@ def ensure_engine() -> Path:
     return paths.venv_python(root)
 
 
-def repair_engine() -> Path:
-    """Rebuild the managed engine after a failed or incomplete install."""
-    override = paths.python_override()
-    if override is not None:
-        return override
-    root = paths.engine_root()
-    remembered = enabled_features(root)
-    if root.exists():
-        discarded = root.with_name(f"{root.name}.repair-discard.{os.getpid()}")
-        os.replace(root, discarded)
-        shutil.rmtree(discarded, ignore_errors=True)
-    provision(root)
-    for name in sorted(remembered):
-        _install_feature(root, name)
-        _record_feature(root, name)
-    return paths.venv_python(root)
-
-
 def provision(root: Path) -> None:
-    """Build the engine environment at `root`, atomically."""
+    """Build the engine environment at `root`, atomically.
+
+    Whatever is already at `root` stays there until its replacement is
+    complete, so a failed rebuild (offline, no uv, a bad package) keeps the
+    engine commands were using. Optional features recorded in it are
+    reinstalled into the replacement before it is published.
+    """
     uv = _find_uv()
+    remembered = enabled_features(root)
     version = paths.engine_version()
     manifest = paths.manifest()
 
@@ -121,6 +110,9 @@ def provision(root: Path) -> None:
                 [uv, "pip", "install", "--python", python, *_requirements()],
                 failure="Could not install the engine's packages",
             )
+        for name in sorted(remembered):
+            _install_feature(partial, name)
+            _record_feature(partial, name)
         _publish(partial, root)
     except BaseException:
         shutil.rmtree(partial, ignore_errors=True)

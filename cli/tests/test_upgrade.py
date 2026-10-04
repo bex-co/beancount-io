@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from typing import Any
 
 import pytest
@@ -219,6 +220,77 @@ class TestRunning:
         assert result.exit_code == 2
         assert "brew upgrade bea" in result.stderr
         assert "uv tool upgrade beancount-io" in result.stderr
+
+
+class TestEngineRefresh:
+    """w1/119: the engine step after a successful manager run, outside a checkout."""
+
+    @pytest.fixture(autouse=True)
+    def installed(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("cli.engine.paths.checkout_source_root", lambda: None)
+
+    def _versions(self, monkeypatch: pytest.MonkeyPatch, before: str, after: str) -> None:
+        answers = iter([before, after])
+        monkeypatch.setattr("cli.commands.upgrade.package_version", lambda: next(answers))
+
+    def _runs(self, monkeypatch: pytest.MonkeyPatch, *, engine_returncode: int = 0) -> list[tuple[str, ...]]:
+        ran: list[tuple[str, ...]] = []
+
+        def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+            ran.append(tuple(command))
+            if command[0] == sys.executable:
+                return subprocess.CompletedProcess(command, engine_returncode, "", "Could not create the engine\n")
+            return subprocess.CompletedProcess(command, 0)
+
+        monkeypatch.setattr(subprocess, "run", fake_run)
+        return ran
+
+    def test_homebrew_never_rebuilds_the_keg_engine(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("cli.commands.upgrade.current_channel", lambda: upgrade_command.HOMEBREW)
+        self._versions(monkeypatch, "0.3.1", "0.4.0")
+        ran = self._runs(monkeypatch)
+
+        result = runner.invoke(app, ["--json", "upgrade"])
+
+        assert result.exit_code == 0, result.output
+        assert ran == [("brew", "upgrade", "bea")]
+        assert _envelope(result)["data"]["engine_refreshed"] is False
+
+    def test_a_no_op_upgrade_leaves_the_engine_alone(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("cli.commands.upgrade.current_channel", lambda: upgrade_command.UV_TOOL)
+        self._versions(monkeypatch, "0.3.1", "0.3.1")
+        ran = self._runs(monkeypatch)
+
+        result = runner.invoke(app, ["--json", "upgrade"])
+
+        assert result.exit_code == 0, result.output
+        assert ran == [("uv", "tool", "upgrade", "beancount-io")]
+        assert _envelope(result)["data"]["engine_refreshed"] is False
+
+    def test_a_new_version_provisions_its_engine_in_the_upgraded_interpreter(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr("cli.commands.upgrade.current_channel", lambda: upgrade_command.UV_TOOL)
+        self._versions(monkeypatch, "0.3.1", "0.4.0")
+        ran = self._runs(monkeypatch)
+
+        result = runner.invoke(app, ["--json", "upgrade"])
+
+        assert result.exit_code == 0, result.output
+        assert ran[1][0] == sys.executable
+        assert "ensure_engine()" in ran[1][-1]
+        assert _envelope(result)["data"]["engine_refreshed"] is True
+
+    def test_a_failed_engine_provision_says_the_current_engine_was_kept(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("cli.commands.upgrade.current_channel", lambda: upgrade_command.PIPX)
+        self._versions(monkeypatch, "0.3.1", "0.4.0")
+        self._runs(monkeypatch, engine_returncode=1)
+
+        result = runner.invoke(app, ["upgrade"])
+
+        assert result.exit_code == 1
+        assert "current engine was kept" in result.stderr
+        assert "Could not create the engine" in result.stderr
 
 
 def _record_runs(monkeypatch: pytest.MonkeyPatch, *, returncode: int) -> list[tuple[str, ...]]:

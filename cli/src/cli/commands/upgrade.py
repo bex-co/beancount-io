@@ -144,11 +144,10 @@ def upgrade(
     if completed.returncode != 0:
         raise BeaError(f"`{printed}` failed (exit {completed.returncode}); bea was not changed.")
 
-    # After the frontend package updates, refresh the managed engine so the
-    # helper/version pins stay matched (ADR014 t017). Homebrew already
-    # provisions `libexec/engine` at install time; PyPI/uv installs rely on
-    # this path. Failures here are reported — do not silently keep a stale env.
-    engine_refreshed = _refresh_engine()
+    # The engine directory is versioned, so the new frontend finds its own
+    # engine by name; this only builds it ahead of time, while the network the
+    # upgrade just used is still there (ADR014 t017).
+    engine_refreshed = _refresh_engine(channel, current)
 
     if ctx.json_output:
         output.emit(
@@ -163,26 +162,54 @@ def upgrade(
         output.success(f"`{printed}` finished. Run 'bea --version' to see the installed version.")
 
 
-def _refresh_engine() -> bool:
-    """Rebuild the managed engine for the new frontend, when one is managed.
+#: Run by the upgraded interpreter, so it reads the new frontend's manifest.
+_PROVISION_SCRIPT = """
+import sys
+from cli.engine.provision import ensure_engine
+try:
+    ensure_engine()
+except Exception as exc:
+    print(exc, file=sys.stderr)
+    for line in getattr(exc, "details", None) or []:
+        print(line, file=sys.stderr)
+    sys.exit(1)
+"""
 
-    Returns whether a rebuild ran. Overrides (`BEA_ENGINE_PYTHON`), checkouts
-    (helper runs from the tree), and missing uv are left alone — the next local
-    command will surface a clear provision error if the engine is still required.
+
+def _refresh_engine(channel: Channel, before: str) -> bool:
+    """Provision the managed engine the upgraded frontend will use, if any.
+
+    Returns whether a provision ran. Homebrew builds `libexec/engine` inside
+    the keg at install time, so there is nothing for bea to do. Overrides
+    (`BEA_ENGINE_PYTHON`) and checkouts own their engines. When the manager
+    left the version unchanged, the engine already matches.
+
+    The provision runs in a fresh interpreter: this process still holds the
+    old frontend's manifest, which would name the old engine. It builds
+    beside whatever exists and publishes only on success, so a failure (for
+    example offline) leaves the current engine working.
     """
-    from cli.engine import paths, provision
+    from cli.engine import paths
 
+    if channel is HOMEBREW:
+        return False
     if paths.python_override() is not None:
         return False
     if paths.checkout_source_root() is not None:
         return False
-    try:
-        provision.repair_engine()
-    except Exception as exc:  # noqa: BLE001 — surface through BeaError below
+    if package_version() == before:
+        return False
+    output.note("Installing the Beancount engine for the upgraded bea...")
+    completed = subprocess.run([sys.executable, "-c", _PROVISION_SCRIPT], capture_output=True, text=True, check=False)
+    if completed.returncode != 0:
+        lines = [line for line in completed.stderr.splitlines() if line.strip()]
         raise BeaError(
-            "bea upgraded, but refreshing the Beancount engine failed.",
-            details=[str(exc), "Retry with a local command such as 'bea check', or set BEA_ENGINE_PYTHON."],
-        ) from exc
+            "bea upgraded, but provisioning the new Beancount engine failed; the current engine was kept.",
+            details=[
+                *lines[-20:],
+                "Retry with a local command such as 'bea check' once the network and uv are available.",
+            ],
+        )
     return True
 
 

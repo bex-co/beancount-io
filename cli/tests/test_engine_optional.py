@@ -127,26 +127,29 @@ class TestEnableFeature:
         with pytest.raises(UsageError, match="Unknown engine feature"):
             provision.enable_feature("not-a-feature")
 
-    def test_repair_reapplies_enabled_features(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_a_rebuild_reapplies_enabled_features_before_publishing(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         root = fake_venv(tmp_path / "engine")
         (root / provision.FEATURES_FILE).write_text(json.dumps({"enabled": ["beanprice"]}))
-        monkeypatch.setenv(paths.DIR_ENV, str(root))
-        monkeypatch.delenv(paths.PYTHON_ENV, raising=False)
-        reapplied: list[str] = []
+        reapplied: list[tuple[Path, str]] = []
 
-        def fake_provision(target: Path) -> None:
-            fake_venv(target)
+        def fake_run(command: list[str], *, failure: str) -> None:
+            if command[1] == "venv":
+                fake_venv(Path(command[-1]))
 
         def fake_install(target: Path, name: str) -> None:
-            reapplied.append(name)
+            reapplied.append((target, name))
 
-        monkeypatch.setattr(provision, "provision", fake_provision)
+        monkeypatch.setattr(provision, "_find_uv", lambda: "uv")
+        monkeypatch.setattr(provision, "_run", fake_run)
         monkeypatch.setattr(provision, "_install_feature", fake_install)
-        monkeypatch.setattr(provision, "_feature_present", lambda _root, _name: True)
 
-        provision.repair_engine()
+        provision.provision(root)
 
-        assert reapplied == ["beanprice"]
+        # Installed into the replacement, not into the engine being replaced.
+        assert [(target.name.split(".partial.")[0], name) for target, name in reapplied] == [("engine", "beanprice")]
+        assert reapplied[0][0] != root
         assert provision.enabled_features(root) == {"beanprice"}
 
     def test_base_provision_requirements_never_include_optional_packages(self) -> None:

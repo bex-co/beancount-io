@@ -281,6 +281,27 @@ class TestProvision:
         assert not root.exists()
         assert not list(tmp_path.glob("*.partial*"))
 
+    def test_a_failed_rebuild_keeps_the_working_engine_and_its_features(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """w1/119: an offline rebuild deleted the engine before building its replacement."""
+        root = fake_venv(tmp_path / "engine")
+        features = root / provision.FEATURES_FILE
+        features.write_text(json.dumps({"enabled": ["beanprice"]}))
+
+        def offline(command: list[str], *, failure: str) -> None:
+            raise BeaError(failure)
+
+        monkeypatch.setattr(provision, "_find_uv", lambda: "uv")
+        monkeypatch.setattr(provision, "_run", offline)
+
+        with pytest.raises(BeaError):
+            provision.provision(root)
+
+        assert paths.is_provisioned(root)
+        assert json.loads(features.read_text()) == {"enabled": ["beanprice"]}
+        assert sorted(path.name for path in tmp_path.iterdir()) == ["engine"]
+
     def test_an_unusable_existing_environment_is_replaced(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
