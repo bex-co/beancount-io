@@ -146,23 +146,47 @@ class LedgerSnapshot:
             if current_paths != existing_paths or not missing_still_included:
                 raise ConflictError(f"The included files changed: {pattern}. Nothing was written; retry.")
 
+    def _includers(self, target: Path) -> set[Path]:
+        """The files whose load reads `target`: itself and everything that includes it, transitively."""
+        included_by: dict[Path, set[Path]] = {}
+        for path, content in self.contents.items():
+            for _, _, name in _includes(content):
+                for match in self.patterns.get(str(path.parent / name), ()):
+                    included_by.setdefault(match, set()).add(path)
+        found = {path for path in self.contents if path.resolve() == target}
+        pending = list(found)
+        while pending:
+            for parent in included_by.get(pending.pop(), ()):
+                if parent not in found:
+                    found.add(parent)
+                    pending.append(parent)
+        return found
+
     @contextmanager
     def staged(self, candidate: Path, target: Path) -> Iterator[tuple[Path, dict[Path, Path]]]:
-        """Keep each staged file beside its source so documents/plugins retain their paths."""
+        """Stage the changed file and its includers, each beside its source.
+
+        Staging beside the source keeps documents and plugins at their paths.
+        Only the destination and the files that (transitively) include it need
+        a copy — their include lines must lead to the candidate — so a file
+        the write cannot affect is read where it is, and a read-only shared
+        directory elsewhere in the include graph does not block the write
+        (w1/073).
+        """
         from beancount.utils import misc_utils
 
         escape_string: Callable[[str], str] = misc_utils.escape_string
 
         with ExitStack() as stack:
-            paths = {path: stack.enter_context(candidate_file(path, "")) for path in self.contents}
-            for path, original in self.contents.items():
-                content = candidate.read_bytes() if path.resolve() == target else original
+            paths = {path: stack.enter_context(candidate_file(path, "")) for path in self._includers(target)}
+            for path, staged in paths.items():
+                content = candidate.read_bytes() if path.resolve() == target else self.contents[path]
                 for start, end, name in reversed(list(_includes(content))):
                     matches = self.patterns.get(str(path.parent / name), ())
                     if matches:
-                        replacement = "\ninclude ".join(f'"{escape_string(str(paths[p]))}"' for p in matches)
+                        replacement = "\ninclude ".join(f'"{escape_string(str(paths.get(p, p)))}"' for p in matches)
                         content = content[:start] + replacement.encode() + content[end:]
-                paths[path].write_bytes(content)
+                staged.write_bytes(content)
             yield paths[self.root], {staged: original for original, staged in paths.items()}
 
 
@@ -296,6 +320,14 @@ def candidate_file(file: Path, content: str, *, mode: int = 0o600) -> Iterator[P
             break
         except FileExistsError:
             continue
+        except PermissionError as exc:
+            # A raw Errno 13 read as a validation failure (w1/073); this is
+            # the filesystem refusing, which callers treat as exit 3.
+            raise AuthError(
+                f"Cannot stage a copy of {file.name} in {file.parent}: the directory is not writable. "
+                "bea validates a write on a staged copy beside each changed file; make the directory "
+                "writable before retrying. Nothing was written."
+            ) from exc
     try:
         # Preserve the supplied bytes: Windows newline translation would turn
         # existing CRLF into CRCRLF on every append.
@@ -1023,7 +1055,13 @@ def replace_checked(file: Path, candidate: Path, original: bytes, original_stat:
             "The ledger changed while the operation was running; nothing was written. Retry the command."
         )
     candidate.chmod(stat.S_IMODE(original_stat.st_mode))
-    os.replace(candidate, file)
+    try:
+        os.replace(candidate, file)
+    except PermissionError as exc:
+        raise AuthError(
+            f"The filesystem refused to replace {file} (an ACL, file flag or directory permission "
+            "forbids it); nothing was written."
+        ) from exc
 
 
 def append(
@@ -1062,6 +1100,8 @@ def append(
                     os.link(candidate, target)
                 except FileExistsError as exc:
                     raise ConflictError(f"Already exists: {target}; nothing was overwritten.") from exc
+                except PermissionError as exc:
+                    raise AuthError(f"The filesystem refused to create {target}; nothing was written.") from exc
             else:
                 replace_checked(target, candidate, original, original_stat)
     return warnings

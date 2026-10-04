@@ -694,7 +694,12 @@ evaluates amount arithmetic while parsing and a zero divisor crashes it.
 
 Every write is staged into a hidden `.bea-*.tmp` copy beside the ledger and
 moved into place only once it validates, so an interrupted write never leaves a
-half-written ledger. If the command is stopped, the staging copy goes with it:
+half-written ledger. Only the destination and the files that include it,
+directly or through other includes, get a staging copy; the rest of the include
+graph is read in place, so a read-only shared directory of included files does
+not block a write elsewhere. When a directory that needs a staging copy is not
+writable, or the filesystem refuses the final replacement, the write exits
+**3** naming the directory or file, and nothing is written. If the command is stopped, the staging copy goes with it:
 the engine is told to unwind, and a later write in the same directory clears any
 copy left by a kill that could not be caught, which is the only case a signal
 handler cannot cover.

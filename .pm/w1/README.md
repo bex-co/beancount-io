@@ -49,7 +49,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 
 ## Inbox
 
-- [073](./073.md) — A read-only included directory blocks every write with a raw `Errno 13` reported as a validation error — **minor**, CLI QA 2026-10-02.
 - [074](./074.md) — A signal during Beancount parsing is swallowed: a stopped write can still land, or staging copies leak — **minor**, CLI QA 2026-10-02.
 - [075](./075.md) — Write locks are case-sensitive on macOS, so writers using differently-cased paths can lose an add (partly verified) — **minor**, CLI QA 2026-10-02.
 - [099](./099.md) — Ledger writes keep only mode bits: group, ACLs, extended attributes and file flags are dropped — **major**, CLI QA 2026-10-03.
