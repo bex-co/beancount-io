@@ -79,7 +79,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [111](./111.md) — Bulk dates accept numeric strings as Unix timestamps and other non-ISO spellings — **minor**, CLI QA 2026-10-03.
 - [112](./112.md) — `add transactions --from -` leaks raw Python errors (exit 1) for undecodable, deeply nested or huge-integer stdin — **minor**, CLI QA 2026-10-03.
 - [113](./113.md) — Bundled forecast/amortize plugin copies count as written rows, so `list --on-disk` disagrees with grep — **major**, CLI QA 2026-10-03.
-- [117](./117.md) — A failed assertion on a parent account offers a ready-to-run opening adjustment despite subaccount activity — **minor**, CLI QA 2026-10-03.
 - [118](./118.md) — The error collapser repeats identical messages for the same line — **minor**, CLI QA 2026-10-03.
 - [127](./127.md) — USAGE.md's JSON automation examples show output the CLI doesn't produce — **minor**, CLI QA 2026-10-03.
 - [128](./128.md) — Docs-example tests pass when a piped `bea` command fails and never check documented output — **minor**, CLI QA 2026-10-03.

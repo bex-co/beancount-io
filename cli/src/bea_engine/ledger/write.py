@@ -328,10 +328,16 @@ def _balance_recovery_hints(
             f"Review transactions against the existing assertion at {source}:{balance.meta['lineno']}. "
             "Correct missing transactions or edit that assertion; adding another balance would duplicate it.",
         ]
+    # A balance assertion covers the account's subaccounts too, so activity
+    # there is activity here: an opening adjustment on the parent would paper
+    # over a discrepancy in the child.
+    subaccount = f"{balance.account}:"
     if any(
         isinstance(entry, Transaction)
         and entry.date <= balance.date
-        and any(posting.account == balance.account for posting in entry.postings)
+        and any(
+            posting.account == balance.account or posting.account.startswith(subaccount) for posting in entry.postings
+        )
         for entry in entries
     ):
         return [date_hint]

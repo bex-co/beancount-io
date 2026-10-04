@@ -279,3 +279,24 @@ def test_established_balance_error_explains_dates_without_equity_padding(book: P
     assert corrected.exit_code == 0, corrected.output
     assert not loader.load_file(book)[1]
     assert "pad Assets:Checking" not in book.read_text()
+
+
+def test_parent_assertion_with_subaccount_activity_gets_no_equity_padding(tmp_path: Path) -> None:
+    # w1/117: a parent's assertion covers its subaccounts; padding the parent
+    # from equity would hide a discrepancy in the child.
+    file = tmp_path / "par.bean"
+    file.write_text(
+        "2026-01-01 open Assets:Bank\n"
+        "2026-01-01 open Assets:Bank:Checking USD\n"
+        "2026-01-01 open Equity:OpeningBalances\n"
+        "2026-01-01 open Income:Salary\n"
+        '2026-01-05 * "Pay"\n'
+        "  Assets:Bank:Checking  1000.00 USD\n"
+        "  Income:Salary\n"
+    )
+    before = file.read_bytes()
+    failed = invoke(file, "add", "balance", "--date", "2026-02-01", "-a", "Assets:Bank", "--amount", "900 USD")
+    assert failed.exit_code == 1 and file.read_bytes() == before
+    assert "start of the day" in failed.stderr
+    assert "Opening adjustment command:" not in failed.stderr
+    assert "--pad-from" not in failed.stderr
