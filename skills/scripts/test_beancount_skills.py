@@ -706,6 +706,27 @@ class TestBeaRecipes(unittest.TestCase):
         history = self.query_recipe("merchant-history", **{"'NETFLIX'": "'NETFLIX.COM'"})
         self.assertEqual([row[0] for row in history], ["2026-01-12", "2026-02-12"])
 
+    def test_period_end_balances_ignore_entries_after_the_period(self):
+        self.ledger.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Checking USD\n"
+            "2026-01-01 open Assets:Savings USD\n"
+            "2026-01-01 open Expenses:Food USD\n"
+            "2026-01-01 open Equity:OpeningBalances USD\n"
+            '2026-01-01 * "Opening"\n  Assets:Checking 3000.00 USD\n  Equity:OpeningBalances\n'
+            '2026-02-10 * "Grocer"\n  Expenses:Food 185.75 USD\n  Assets:Checking\n'
+            '2026-03-05 * "Transfer to savings"\n  Assets:Savings 500.00 USD\n  Assets:Checking\n'
+        )
+
+        # Closing February: the bound is the first day after the period.
+        rows = self.query_recipe("period-end-balances", **{"<period-end+1>": "2026-03-01"})
+
+        balances = {
+            account: [(lot["units"]["number"], lot["units"]["currency"]) for lot in balance]
+            for account, balance in rows
+        }
+        self.assertEqual(balances, {"Assets:Checking": [("2814.25", "USD")]})
+
 
 def load_tests(loader, tests, pattern):
     """Keep the focused journey checks in the existing skills CI entrypoint."""

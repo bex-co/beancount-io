@@ -31,7 +31,7 @@ Seven phases: **Scope → Reconcile → Assert → Recurring → Flags → Repor
 
 ### 1. Scope
 
-Resolve the period (user's words or last complete month — state it). Find the ledger (same discovery as sibling skills). Enumerate **active accounts**: any Assets/Liabilities account with postings in the period or a nonzero balance. Run `bea --file "$ledger" --json --no-input check` first — a ledger that starts red must be fixed (surface the errors) before a close can mean anything.
+Resolve the period (user's words or last complete month — state it). Find the ledger (same discovery as sibling skills). Enumerate **active accounts**: any Assets/Liabilities account with postings in the period or a nonzero balance at period end (bounded by `date < <period-end+1>`, so later entries don't count). Run `bea --file "$ledger" --json --no-input check` first — a ledger that starts red must be fixed (surface the errors) before a close can mean anything.
 
 ### 2. Reconcile
 

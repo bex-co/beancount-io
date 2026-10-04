@@ -6,12 +6,13 @@ Every phase ends in a one-line status. A close report with a gap is a *successfu
 
 Active = an `Assets:` or `Liabilities:` account with (a) any posting dated in the period, or (b) a nonzero balance at period end:
 
+<!-- recipe: period-end-balances -->
 ```sql
 SELECT account, sum(cost(position)) as balance
-WHERE account ~ '^Assets:|^Liabilities:' GROUP BY account ORDER BY account
+WHERE account ~ '^Assets:|^Liabilities:' AND date < <period-end+1> GROUP BY account ORDER BY account
 ```
 
-plus a period-posting check (`WHERE date >= <start> AND date < <end>`). Equity/Income/Expenses accounts are never "reconciled" — they're outputs of the P&L, not statements.
+The `date < <period-end+1>` bound is what makes these period-end balances: without it, entries dated after the period (a transfer on the 5th of next month) change the figures and can surface accounts that did not exist in the period. Plus a period-posting check (`WHERE date >= <start> AND date < <end>`). Equity/Income/Expenses accounts are never "reconciled" — they're outputs of the P&L, not statements.
 
 ## Reconciliation delegation
 
@@ -49,7 +50,7 @@ Each `!` is either resolved by the user during the close (their edit, not this s
 
 ## Report numbers
 
-Income statement for the period, via the beancount-ask recipes (sum over `^Income:` negated, `^Expenses:` by account and total). Balance sheet = the account-balance query at period end. State book-value caveats exactly as beancount-ask does.
+Income statement for the period, via the beancount-ask recipes (sum over `^Income:` negated, `^Expenses:` by account and total). Balance sheet = the period-end account-balance query above, with its `date < <period-end+1>` bound — never the unbounded query, which counts entries dated after the period. State book-value caveats exactly as beancount-ask does.
 
 ## Commit convention
 
