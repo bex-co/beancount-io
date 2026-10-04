@@ -846,7 +846,9 @@ date and commodity is refused naming both values; pass `--force` to record a
 corrected quote. `add balance` is idempotent the same way: re-running an
 identical assertion reports the existing location and writes nothing, and a
 different value for the same date, account, and currency needs `--force`
-(ledger validation still applies, so a conflicting value cannot land).
+(ledger validation still applies, so a conflicting value cannot land). Without
+an explicit `~` tolerance the number's precision sets the tolerance, so
+`10.30 USD` is a different, stricter assertion than `10.3 USD`.
 Repeated `--amount` is refused on both commands — a price and an assertion
 each hold one amount.
 

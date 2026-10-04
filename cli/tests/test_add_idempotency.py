@@ -153,6 +153,37 @@ def test_tolerance_change_conflicts_but_force_appends(ledger: Path) -> None:
     assert ledger.read_text().count("balance Assets:Checking") == 2
 
 
+def test_precision_change_is_a_different_assertion(tmp_path: Path) -> None:
+    # w1/137: `10.3 USD` holds within 0.05, `10.30 USD` only within 0.005;
+    # equal Decimals must not make the stricter one an "identical duplicate".
+    file = tmp_path / "bal.bean"
+    file.write_text(
+        'option "operating_currency" "USD"\n'
+        "2020-01-01 open Assets:Cash USD\n"
+        "2020-01-01 open Equity:Open USD\n"
+        '2020-01-05 * "seed"\n'
+        "  Assets:Cash  10.34 USD\n"
+        "  Equity:Open\n"
+        "2020-02-01 balance Assets:Cash 10.3 USD\n"
+    )
+    before = file.read_bytes()
+    args = ["--file", str(file), "add", "balance", "--date", "2020-02-01", "--account", "Assets:Cash", "--amount"]
+
+    stricter = _bea(tmp_path, "--json", *args, "10.30 USD")
+
+    assert stricter.returncode == 2, stricter.stdout + stricter.stderr
+    assert "duplicate" not in stricter.stdout
+    assert "10.3 USD" in stricter.stderr and "10.30 USD" in stricter.stderr
+    assert file.read_bytes() == before
+    forced = _bea(tmp_path, *args, "10.30 USD", "--force")
+    assert forced.returncode == 1, forced.stderr
+    assert "10.30 USD" in forced.stderr
+    assert file.read_bytes() == before
+    same = _bea(tmp_path, "--json", *args, "10.3 USD")
+    assert same.returncode == 0, same.stderr
+    assert json.loads(same.stdout)["data"]["duplicate"] is True
+
+
 def test_repeated_amount_is_refused_on_balance_and_price(ledger: Path) -> None:
     repeated = _bea(
         ledger.parent,

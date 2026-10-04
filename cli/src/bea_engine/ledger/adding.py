@@ -375,9 +375,8 @@ def _balance_match(
             if isinstance(entry, Balance)
             and entry.date == date
             and entry.account == account
-            and entry.amount.number == number
             and entry.amount.currency == currency
-            and entry.tolerance == tolerance
+            and _same_assertion(entry, number, tolerance)
         ),
         None,
     )
@@ -397,10 +396,22 @@ def _balance_conflict(
             and entry.date == date
             and entry.account == account
             and entry.amount.currency == currency
-            and (entry.amount.number != number or entry.tolerance != tolerance)
+            and not _same_assertion(entry, number, tolerance)
         ),
         None,
     )
+
+
+def _same_assertion(entry: Any, number: Decimal, tolerance: Decimal | None) -> bool:
+    """Whether an existing balance asserts exactly what `number`/`tolerance` would.
+
+    Without an explicit tolerance Beancount infers one from the number's
+    precision, so `10.3 USD` (within 0.05) and `10.30 USD` (within 0.005) are
+    different assertions even though the Decimals compare equal.
+    """
+    if entry.amount.number != number or entry.tolerance != tolerance:
+        return False
+    return tolerance is not None or entry.amount.number.as_tuple().exponent == number.as_tuple().exponent
 
 
 def _balance_amount(number: Decimal, currency: str, tolerance: Decimal | None) -> str:
