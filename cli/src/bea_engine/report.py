@@ -282,14 +282,18 @@ def _balance_sheet(
     liabilities = trees[1].balance_children if trees[1] is not None else empty
     worth = _summary(_sum(assets, liabilities), conversion, incomplete=incomplete)
     reconciled = not incomplete and not filtered.ledger.load_errors and conversion != "units" and not filtered.account
+    # The same rule as the income statement's `net_profit`: under a currency
+    # conversion the requested currency is always named, `null` when part of
+    # the earnings could not be valued and zero when there are none.
+    earnings_incomplete = _unvalued(earnings, conversion)
     return metadata | {
         "display_precision": _display_precision(filtered),
         "assets": _tree_json(trees[0]) if trees[0] is not None else None,
         "liabilities": _tree_json(trees[1]) if trees[1] is not None else None,
         "equity": _tree_json(trees[2]) if trees[2] is not None else None,
-        "current_earnings": earnings,
+        "current_earnings": _summary(earnings, conversion, incomplete=earnings_incomplete),
         "current_earnings_signs": "negative_for_gain",
-        "net_profit": _negated(earnings),
+        "net_profit": _summary(-earnings, conversion, incomplete=earnings_incomplete),
         "valuation_adjustment": data.valuation_adjustment if reconciled else None,
         "equity_total": data.equity_total if reconciled else None,
         "equity_reconciled": reconciled,
@@ -546,11 +550,6 @@ def _summary_series_json(series: Iterable[Any], conversion: str) -> list[dict[st
         }
         for point in series
     ]
-
-
-def _negated(balance: Mapping[str, Decimal]) -> dict[str, Decimal | None]:
-    """The same balance in the opposite sign convention, for translating a credit."""
-    return {currency: -number for currency, number in balance.items()}
 
 
 def _tree_balances(node: Any) -> Iterable[Mapping[str, Decimal]]:

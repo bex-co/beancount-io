@@ -1032,7 +1032,11 @@ are interval flows; asset/liability series are balances as of each date.
 
 Balance sheets include signed `current_earnings`, a derived
 `valuation_adjustment`, and `equity_total` so converted assets, liabilities,
-and total equity reconcile. These are report values and do not create ledger
+and total equity reconcile. A balance sheet's `net_profit` (and
+`current_earnings`, its credit-signed twin) follows the income statement's
+rule, so the two reports always give the same `net_profit`: under a currency
+conversion it names that currency, `null` when part of it could not be valued
+and `"0"` when there is no income or expense. These are report values and do not create ledger
 directives. Prices after the report date do not affect its valuation.
 Unconverted `units` reports do not claim an equity reconciliation or invent a
 valuation adjustment across unlike commodities. `equity_reconciled` states

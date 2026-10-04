@@ -107,15 +107,6 @@ def _amounts(
     return "  ".join(render(currency, number) for currency, number in sorted(balance.items())) or "—"
 
 
-def _negated(balance: Mapping[str, Any]) -> dict[str, Decimal | None]:
-    """The same balance in the opposite sign convention, for translating a credit."""
-    result: dict[str, Decimal | None] = {}
-    for currency, number in balance.items():
-        value = _as_decimal(number)
-        result[currency] = None if value is None else -value
-    return result
-
-
 def _print_tree(
     node: dict[str, Any],
     depth: int = 0,
@@ -328,7 +319,7 @@ def balance_sheet(
         typer.echo(f"  {'Total equity (credit):':<46}  {equity_total}")
     # The credit lines above carry the opposite sign to the income statement's
     # Net Profit, which is the same quantity. Say so, and say what it equals.
-    profit = _amounts(_negated(data["current_earnings"]), conversion, precision)
+    profit = _amounts(data["net_profit"], conversion, precision)
     typer.echo(f"\nCredit lines above are negative for a gain; the same period's Net Profit is {profit}.")
     typer.echo(f"Net Worth: {_amounts(data['net_worth'], conversion, precision)}")
     typer.echo(f"\n{str(data['interval']).title()} net worth")

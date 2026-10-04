@@ -97,7 +97,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [116](./116.md) — `add balance --pad-from` treats any "Unused Pad" error as "book balance already matches", hiding real padding — **minor**, CLI QA 2026-10-03.
 - [117](./117.md) — A failed assertion on a parent account offers a ready-to-run opening adjustment despite subaccount activity — **minor**, CLI QA 2026-10-03.
 - [118](./118.md) — The error collapser repeats identical messages for the same line — **minor**, CLI QA 2026-10-03.
-- [124](./124.md) — Balance-sheet `net_profit` follows a different rule from the income statement's — **minor**, CLI QA 2026-10-03.
 - [125](./125.md) — Report headlines read "Unavailable" when only an earlier interval row lacks a price — **minor**, CLI QA 2026-10-03.
 - [126](./126.md) — `bea balance --json` always reports `account_filter_empty: false` — **minor**, CLI QA 2026-10-03.
 - [127](./127.md) — USAGE.md's JSON automation examples show output the CLI doesn't produce — **minor**, CLI QA 2026-10-03.
