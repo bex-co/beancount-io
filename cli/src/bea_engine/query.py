@@ -34,6 +34,7 @@ import sys
 import unicodedata
 from collections.abc import Callable, Mapping
 from decimal import Decimal, localcontext
+from functools import partial
 from pathlib import Path
 from typing import Any, TextIO
 
@@ -323,9 +324,10 @@ def _native_shell(source: str, *, interactive: bool, format: str, numberify: boo
             _run_stored(self, arg)
 
         def execute(self, query: Any, **kwargs: Any) -> Any:
-            if isinstance(query, str):
-                _refuse_statement_tail(query)
-            return super().execute(query, **kwargs)
+            statement = query if isinstance(query, str) else ""
+            if statement:
+                _refuse_statement_tail(statement)
+            return _compiled(partial(super().execute, query, **kwargs), statement, list)
 
         def onecmd(self, line: str) -> Any:
             return _recovering(self, super().onecmd, line)
@@ -637,11 +639,16 @@ def build_shell(
             """
             if not self.allow_errors:
                 _gate([format_error(error, ledger_file=file) for error in self.context.errors], False)
+            statement = ""
             if isinstance(query, str):
                 _refuse_statement_tail(query)
-                query = _quote_reserved_tables(unicodedata.normalize("NFC", query))
+                query = statement = _quote_reserved_tables(unicodedata.normalize("NFC", query))
                 _refuse_empty_window(query, [])
-            return super().execute(query, **kwargs)
+            return _compiled(
+                partial(super().execute, query, **kwargs),
+                statement,
+                lambda: [format_error(error, ledger_file=file) for error in self.context.errors],
+            )
 
         def onecmd(self, line: str) -> Any:
             return _recovering(self, self._dispatch, line)
@@ -828,9 +835,21 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
         _refuse_statement_tail(statement, ledger_errors)
     _refuse_empty_window(statement, ledger_errors)
     try:
-        return run(statement)
+        return _compiled(lambda: run(statement), statement, lambda: ledger_errors)
     except BeanqueryError as exc:
         raise _usage_error(exc, query_string, conn, ledger_errors) from None
+
+
+def _compiled(run: Callable[[], Any], statement: str, ledger_errors: Callable[[], list[str]]) -> Any:
+    """Run one BQL statement, naming the compile failures Beanquery lets escape raw.
+
+    Every path that executes BQL — one-shot, `.run`, and a line typed at the
+    prompt — comes through here, so they all explain the same failure the same
+    way. The prompt used to print these as Python tracebacks while the one-shot
+    named the column and what would work instead.
+    """
+    try:
+        return run()
     except SyntaxError as exc:
         # Beanquery compiles a query to Python. `SELECT DISTINCT tags` makes it
         # emit code it cannot parse, and the SyntaxError that escapes says only
@@ -841,13 +860,13 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
             raise protocol.UsageError(
                 f"Beanquery could not compile this BQL query: {exc}.",
                 details=_SET_COLUMN_ADVICE,
-                ledger_errors=ledger_errors,
+                ledger_errors=ledger_errors(),
             ) from None
         named = ", ".join(columns)
         raise protocol.UsageError(
             f"BQL cannot use DISTINCT or GROUP BY on {named}: a set is not a value it can compare.",
             details=_SET_COLUMN_ADVICE,
-            ledger_errors=ledger_errors,
+            ledger_errors=ledger_errors(),
         ) from None
     except TypeError as exc:
         # The hashability check calls `issubclass(dtype, Hashable)`, which
@@ -860,7 +879,7 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
             raise protocol.UsageError(
                 f"BQL cannot use DISTINCT or GROUP BY on {named}: a set is not a value it can compare.",
                 details=_SET_COLUMN_ADVICE,
-                ledger_errors=ledger_errors,
+                ledger_errors=ledger_errors(),
             ) from None
         raise
     except AttributeError as exc:
@@ -870,7 +889,7 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
             raise protocol.UsageError(
                 "BQL cannot use a subquery in the SELECT list.",
                 details=["Filter with it instead: SELECT ... WHERE column IN (SELECT ...)"],
-                ledger_errors=ledger_errors,
+                ledger_errors=ledger_errors(),
             ) from None
         raise
 

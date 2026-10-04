@@ -67,12 +67,15 @@ def ledger(tmp_path: Path) -> Path:
     return path
 
 
-def _shell_session(tmp_path: Path, ledger: Path, script: str, timeout: float = 120.0) -> tuple[int, str]:
+def _shell_session(
+    tmp_path: Path, ledger: Path, script: str, timeout: float = 120.0, *, native: bool = False
+) -> tuple[int, str]:
     """Type `script` into a real query shell and return its status and screen."""
+    argv = ["query", "--source", str(ledger)] if native else ["--file", str(ledger), "query"]
     pid, fd = pty.fork()
     if pid == 0:  # pragma: no cover - replaced by exec in the child
         os.chdir(tmp_path)
-        os.execve(str(BEA), [str(BEA), "--file", str(ledger), "query"], _env(tmp_path))
+        os.execve(str(BEA), [str(BEA), *argv], _env(tmp_path))
     screen = ""
     sent = False
     started = time.time()
@@ -140,6 +143,54 @@ def test_a_native_syntax_error_keeps_its_own_rendering(tmp_path: Path, ledger: P
     assert TRACEBACK not in screen
     assert "syntax error" in screen
     assert "^" in screen, "the caret upstream prints under the offending token"
+
+
+COMPILE_FAILURES = {
+    "SELECT DISTINCT tags;": "BQL cannot use DISTINCT or GROUP BY on tags",
+    "SELECT account GROUP BY accounts;": "BQL cannot use DISTINCT or GROUP BY on accounts",
+    "SELECT (SELECT 1);": "BQL cannot use a subquery in the SELECT list.",
+}
+
+
+@pytest.mark.parametrize("native", [False, True], ids=["file", "source"])
+def test_compile_failures_at_the_prompt_say_what_the_one_shot_says(tmp_path: Path, ledger: Path, native: bool) -> None:
+    """Queries Beanquery cannot compile are explained at the prompt, not dumped as stacks (w1/067).
+
+    The translation lived only on the one-shot path, so the shell printed
+    `SyntaxError: cannot use starred expression here` and friends.
+    """
+    script = "".join(f"{line}\n" for line in COMPILE_FAILURES) + "SELECT count(*) AS n;\n.exit\n"
+    status, screen = _shell_session(tmp_path, ledger, script, native=native)
+
+    assert status == 0, screen
+    assert TRACEBACK not in screen
+    for message in COMPILE_FAILURES.values():
+        assert message in screen
+    assert "\n2\n" in screen.replace("\r", ""), "the session keeps answering afterwards"
+
+
+def test_a_stored_query_that_cannot_compile_is_explained_too(tmp_path: Path, ledger: Path) -> None:
+    ledger.write_text(LEDGER + '2026-01-04 query "sets" "SELECT DISTINCT tags"\n', encoding="utf-8")
+    status, screen = _shell_session(tmp_path, ledger, ".run sets\n.exit\n")
+
+    assert status == 0, screen
+    assert TRACEBACK not in screen
+    assert "BQL cannot use DISTINCT or GROUP BY on tags" in screen
+
+
+def test_a_native_one_shot_compile_failure_is_a_usage_error(tmp_path: Path, ledger: Path) -> None:
+    done = subprocess.run(
+        [sys.executable, "-m", "cli.main", "query", "--source", str(ledger), "SELECT DISTINCT tags"],
+        env=_env(tmp_path),
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+
+    assert done.returncode == 2, done.stderr
+    assert "SyntaxError" not in done.stderr
+    assert "BQL cannot use DISTINCT or GROUP BY on tags" in done.stderr
 
 
 def test_interactive_headers_are_complete_and_narrow_remains_an_explicit_option(tmp_path: Path, ledger: Path) -> None:
