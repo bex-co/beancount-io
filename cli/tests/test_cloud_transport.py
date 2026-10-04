@@ -40,6 +40,76 @@ def test_simulated_malformed_success_has_status_and_request_id(
     assert "proxy response" not in result.stderr
 
 
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [(b'{"message":"m"}', "m"), (b'{"error":"m"}', "m"), (b"[]", None), (b'"str"', "str")],
+    ids=["message", "error-string", "array", "bare-string"],
+)
+@pytest.mark.parametrize(
+    ("status", "category", "exit_code"),
+    [
+        (400, "usage", 2),
+        (401, "auth", 3),
+        (403, "auth", 3),
+        (404, "validation", 1),
+        (409, "conflict", 4),
+        (429, "validation", 1),
+        (500, "validation", 1),
+    ],
+)
+def test_unenveloped_json_error_body_keeps_status_mapping(
+    logged_in: None,
+    httpx_mock: HTTPXMock,
+    body: bytes,
+    message: str | None,
+    status: int,
+    category: str,
+    exit_code: int,
+) -> None:
+    """Synthetic gateway-style error bodies without the `{ok, error}` envelope (w1/055)."""
+    httpx_mock.add_response(
+        status_code=status,
+        content=body,
+        headers={"Content-Type": "application/json", "X-Request-Id": "synthetic-unenveloped"},
+    )
+
+    result = CliRunner().invoke(app, ["--json", "cloud", "ledger", "show", "alice/books"])
+
+    assert result.exit_code == exit_code, result.stderr
+    assert result.stdout == ""
+    error = json.loads(result.stderr)["error"]
+    assert error["category"] == category
+    assert error["exit_code"] == exit_code
+    assert error["request_id"] == "synthetic-unenveloped"
+    assert (message or f"HTTP {status}") in error["message"]
+    assert "'ok'" not in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("argv", "status", "exit_code"),
+    [
+        (["cloud", "status"], 401, 3),
+        (["cloud", "ledger", "create", "qa-synthetic"], 403, 3),
+        (["-y", "cloud", "ledger", "delete", "alice/books"], 409, 4),
+    ],
+    ids=["status", "create", "delete"],
+)
+def test_unenveloped_json_error_body_human_mode(
+    logged_in: None, httpx_mock: HTTPXMock, argv: list[str], status: int, exit_code: int
+) -> None:
+    httpx_mock.add_response(
+        status_code=status,
+        content=b'{"message":"upstream overloaded"}',
+        headers={"Content-Type": "application/json", "X-Request-Id": "synthetic-unenveloped"},
+    )
+
+    result = CliRunner().invoke(app, argv)
+
+    assert result.exit_code == exit_code, result.stderr
+    assert "upstream overloaded" in result.stderr
+    assert "'ok'" not in result.stderr
+
+
 @pytest.mark.parametrize("credential_source", [FILE, ENVIRONMENT])
 @pytest.mark.parametrize("json_output", [False, True], ids=["human", "json"])
 @pytest.mark.parametrize(

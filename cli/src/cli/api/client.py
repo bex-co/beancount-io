@@ -101,7 +101,7 @@ def call[T](
     client: AuthenticatedClient,
     **kwargs: Any,
 ) -> Response[T]:
-    """Keep HTTP context when a generated success-body parser rejects a response.
+    """Keep HTTP context when a generated parser rejects a response body.
 
     Parsing happens inside `sync_detailed`, before `unwrap` can see a Response.
     A temporary response hook captures status/headers without exposing the body
@@ -138,8 +138,19 @@ def call[T](
                 raise ValueError("Expected a JSON array")
         return result
     except (KeyError, ValueError, TypeError, AttributeError) as exc:
-        if response is None or not response.is_success:
+        if response is None:
             raise
+        if not response.is_success:
+            # A documented error status whose JSON body lacks the `{ok, error}`
+            # envelope (a gateway's `{"message": ...}`, `[]`, a bare string)
+            # makes `V1Error.from_dict` raise; keep the status mapping anyway.
+            from cli.errors import error_from_status
+
+            raise error_from_status(
+                response.status_code,
+                _error_message(None, response.content),
+                request_id=request_id_from(response.headers),
+            ) from exc
         raise BeaError(
             f"Unexpected server response (HTTP {response.status_code}).",
             request_id=request_id_from(response.headers),
