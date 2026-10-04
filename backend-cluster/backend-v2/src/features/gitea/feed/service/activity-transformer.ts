@@ -71,6 +71,14 @@ export function aggregateActivities(activities: Activity[]): Activity[] {
 }
 
 /**
+ * Short display name of an activity ref. Gitea records full ref names
+ * (`refs/heads/main`, `refs/tags/v1`); readers know them by their short name.
+ */
+function refName(activity: Activity): string {
+  return (activity.ref_name || "").replace(/^refs\/(heads|tags)\//, "");
+}
+
+/**
  * Title templates for different activity types
  */
 const titleTemplates: Record<string, (activity: Activity) => string> = {
@@ -84,8 +92,11 @@ const titleTemplates: Record<string, (activity: Activity) => string> = {
     `Created pull request in ${a.repo?.name || "repository"}`,
   transfer_repo: (a) =>
     `Transferred repository ${a.repo?.name || "repository"}`,
+  // Gitea records a new branch as push_tag too, with a refs/heads/ ref.
   push_tag: (a) =>
-    `Pushed tag ${a.ref_name || ""} to ${a.repo?.name || "repository"}`,
+    a.ref_name?.startsWith("refs/heads/")
+      ? `Created branch ${refName(a)} in ${a.repo?.name || "repository"}`
+      : `Pushed tag ${refName(a)} to ${a.repo?.name || "repository"}`,
   comment_issue: (a) => `Commented on issue in ${a.repo?.name || "repository"}`,
   merge_pull_request: (a) =>
     `Merged pull request in ${a.repo?.name || "repository"}`,
@@ -96,9 +107,9 @@ const titleTemplates: Record<string, (activity: Activity) => string> = {
   reopen_pull_request: (a) =>
     `Reopened pull request in ${a.repo?.name || "repository"}`,
   delete_tag: (a) =>
-    `Deleted tag ${a.ref_name || ""} from ${a.repo?.name || "repository"}`,
+    `Deleted tag ${refName(a)} from ${a.repo?.name || "repository"}`,
   delete_branch: (a) =>
-    `Deleted branch ${a.ref_name || ""} from ${a.repo?.name || "repository"}`,
+    `Deleted branch ${refName(a)} from ${a.repo?.name || "repository"}`,
   mirror_sync_push: (a) =>
     `Mirror synced (push) ${a.repo?.name || "repository"}`,
   mirror_sync_create: (a) =>
@@ -137,9 +148,8 @@ function generateActivityTitle(
     return `${parsed.count} activities in ${repoName}`;
   }
 
-  const template =
-    titleTemplates[activity.op_type || ""] || titleTemplates.commit_repo;
-  return template(activity);
+  const template = titleTemplates[activity.op_type || ""];
+  return template ? template(activity) : `Activity in ${repoName}`;
 }
 
 /**
@@ -198,6 +208,24 @@ function publicAvatarUrl(avatarUrl: string | undefined): string | undefined {
 }
 
 /**
+ * A push that introduced no commits — a new ref at an existing tip, or a
+ * branch moved back to an ancestor. Its head commit already has its own card
+ * from the push that introduced it, so a card here would only repeat that SHA
+ * under a "Committed to" title with nothing to read.
+ */
+function isContentlessPush(
+  opType: string,
+  parsed: ReturnType<typeof parseActivityContent>,
+): boolean {
+  if (opType !== "commit_repo" && opType !== "mirror_sync_push") {
+    return false;
+  }
+  return parsed.kind === "push"
+    ? parsed.commits.length === 0
+    : parsed.kind === "raw" && parsed.text.trim() === "";
+}
+
+/**
  * Transform Gitea Activity object to FeedItem format
  * @param activity Activity object from Gitea API
  * @returns FeedItem or null if activity is invalid
@@ -211,6 +239,9 @@ export function transformActivityToFeedItem(
   }
 
   const parsed = parseActivityContent(activity.op_type, activity.content);
+  if (isContentlessPush(activity.op_type, parsed)) {
+    return null;
+  }
 
   return {
     id: `gitea-activity-${activity.id}`,

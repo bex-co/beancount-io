@@ -260,6 +260,89 @@ describe("ActivityTransformer", () => {
       });
     });
 
+    describe("contentless and ref activities", () => {
+      const activityOf = (
+        op_type: string,
+        content: string,
+        ref_name?: string,
+      ): Activity => ({
+        id: 11,
+        op_type: op_type as Activity["op_type"],
+        ref_name,
+        repo: {
+          id: 1,
+          name: "example",
+          full_name: "testuser/example",
+          owner: { login: "testuser" },
+        },
+        act_user: { login: "testuser" },
+        created: "2024-01-15T10:00:00Z",
+        content,
+      });
+      const emptyPush = JSON.stringify({
+        Commits: [],
+        HeadCommit: { Sha1: "abc123", Message: "Add opening balances" },
+        CompareURL: "",
+        Len: 0,
+      });
+
+      it.each(["commit_repo", "mirror_sync_push"])(
+        "skips a %s push that introduced no commits",
+        (op) => {
+          expect(
+            transformActivityToFeedItem(activityOf(op, emptyPush)),
+          ).toBeNull();
+        },
+      );
+
+      it("skips a commit_repo activity with no content", () => {
+        expect(
+          transformActivityToFeedItem(activityOf("commit_repo", "")),
+        ).toBeNull();
+      });
+
+      it("keeps a push that introduced commits", () => {
+        const push = JSON.stringify({
+          Commits: [{ Sha1: "abc123", Message: "Add opening balances" }],
+          HeadCommit: { Sha1: "abc123" },
+          CompareURL: "",
+          Len: 1,
+        });
+        const item = transformActivityToFeedItem(
+          activityOf("commit_repo", push),
+        );
+        expect(item?.title).toBe("Committed to example");
+        expect(item?.summary).toBe("Add opening balances");
+      });
+
+      it("titles a branch creation recorded as push_tag as a branch", () => {
+        const item = transformActivityToFeedItem(
+          activityOf("push_tag", "", "refs/heads/feature"),
+        );
+        expect(item?.title).toBe("Created branch feature in example");
+      });
+
+      it("titles tags and deleted refs by their short names", () => {
+        expect(
+          transformActivityToFeedItem(
+            activityOf("push_tag", "", "refs/tags/v1"),
+          )?.title,
+        ).toBe("Pushed tag v1 to example");
+        expect(
+          transformActivityToFeedItem(
+            activityOf("delete_branch", "", "refs/heads/old"),
+          )?.title,
+        ).toBe("Deleted branch old from example");
+      });
+
+      it("gives an unknown op type a neutral title, not a commit title", () => {
+        const item = transformActivityToFeedItem(
+          activityOf("some_future_op", ""),
+        );
+        expect(item?.title).toBe("Activity in example");
+      });
+    });
+
     describe("authorAvatar", () => {
       const withAvatar = (avatar_url: string | undefined): Activity => ({
         id: 9,
