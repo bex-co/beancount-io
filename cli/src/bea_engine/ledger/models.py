@@ -274,7 +274,7 @@ class BalanceDirective(BaseModel):
     date: LedgerDate
     account: str
     amount: Amount
-    tolerance: Decimal | None = None
+    tolerance: AmountNumber | None = None
     meta: dict[str, Any] = Field(default_factory=dict)
     generated: bool = Field(default=False, exclude=True)
 
@@ -341,12 +341,12 @@ class CustomDirectiveValueText(BaseModel):
 
 class CustomDirectiveValueNumber(BaseModel):
     kind: Literal["number"]
-    value: Decimal
+    value: AmountNumber
 
 
 class CustomDirectiveValueAmount(BaseModel):
     kind: Literal["amount"]
-    number: Decimal
+    number: AmountNumber
     currency: Commodity
 
 

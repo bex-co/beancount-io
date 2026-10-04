@@ -157,11 +157,11 @@ def metadata_to_json(meta: dict[str, Any] | None) -> dict[str, Any]:
         if key in {"filename", "lineno"} or key.startswith("__"):
             continue
         if isinstance(value, Decimal):
-            value = {"kind": "number", "value": str(value)}
+            value = {"kind": "number", "value": format(value, "f")}
         elif isinstance(value, datetime.date):
             value = {"kind": "date", "value": value.isoformat()}
         elif isinstance(value, BcAmount):
-            value = {"kind": "amount", "number": str(value.number), "currency": value.currency}
+            value = {"kind": "amount", "number": format(value.number, "f"), "currency": value.currency}
         result[key] = value
     return result
 

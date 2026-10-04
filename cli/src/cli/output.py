@@ -462,10 +462,13 @@ def jsonable(value: Any) -> Any:
         return {str(k): jsonable(v) for k, v in value.items()}
     if type(value) is list:
         return [jsonable(v) for v in value]
+    # Fixed-point, never exponent notation: `str(Decimal("0.00000001"))` is
+    # `1E-8`, which bea's own amount inputs refuse, so the output could not be
+    # fed back in.
     if isinstance(value, Decimal):
-        return str(value)
+        return format(value, "f")
     if isinstance(value, float):
-        return str(Decimal(repr(value)))
+        return format(Decimal(repr(value)), "f")
     if isinstance(value, datetime.date | datetime.datetime):
         return value.isoformat()
     if isinstance(value, Path):

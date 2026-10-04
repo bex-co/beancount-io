@@ -340,7 +340,7 @@ def add_price(
     request = {
         "date": parse_date(date).isoformat(),
         "currency": currency,
-        "number": str(number),
+        "number": format(number, "f"),
         "amount_currency": price_currency,
         "force": force,
     }
@@ -461,10 +461,10 @@ def _parse_custom_value(raw: str) -> dict[str, Any]:
     if kind == "text":
         return {"kind": "text", "value": rest}
     if kind == "number":
-        return {"kind": "number", "value": str(parse_decimal_number(rest))}
+        return {"kind": "number", "value": format(parse_decimal_number(rest), "f")}
     if kind == "amount":
         number, currency = _parse_amount(rest)
-        return {"kind": "amount", "number": str(number), "currency": currency}
+        return {"kind": "amount", "number": format(number, "f"), "currency": currency}
     if kind == "account":
         return {"kind": "account", "value": rest}
     if kind == "bool" and rest.lower() in {"true", "false"}:
