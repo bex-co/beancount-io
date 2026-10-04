@@ -111,8 +111,8 @@ def provision(root: Path) -> None:
 
     # Per-process, so an interrupted build is attributable to its pid.
     partial = root.with_name(f"{root.name}.partial.{os.getpid()}")
-    shutil.rmtree(partial, ignore_errors=True)
     partial.parent.mkdir(parents=True, exist_ok=True)
+    _sweep_abandoned(root)
 
     output.note(f"Installing the Beancount engine {version} (one time) in {root}...")
     try:
@@ -385,6 +385,37 @@ def _find_packaged_file(name: str) -> Path | None:
             details=["Make that directory writable, or set BEA_ENGINE_DIR to a writable location."],
         ) from exc
     return cache
+
+
+def _sweep_abandoned(root: Path) -> None:
+    """Remove scratch directories left beside `root` by builds that died.
+
+    A build killed by SIGTERM or SIGHUP (a closed terminal) never reaches its
+    cleanup, leaving a `.partial.<pid>` engine of tens of megabytes behind.
+    Called under the provisioning lock; a directory whose process is still
+    alive is left alone, since an older bea without the lock may own it.
+    """
+    for prefix in (f"{root.name}.partial.", f"{root.name}.discarded.", f"{root.name}.repair-discard."):
+        for path in root.parent.glob(f"{prefix}*"):
+            suffix = path.name[len(prefix) :]
+            if not suffix.isdigit():
+                continue
+            pid = int(suffix)
+            if pid == os.getpid() or not _process_alive(pid):
+                shutil.rmtree(path, ignore_errors=True)
+
+
+def _process_alive(pid: int) -> bool:
+    if sys.platform == "win32":
+        # `os.kill` on Windows terminates rather than probes; assume alive.
+        return True
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
 
 
 def _publish(partial: Path, root: Path) -> None:

@@ -46,6 +46,8 @@ A broken managed environment is discarded and rebuilt on the next successful
 provision; global `bean-check` decoys on `PATH` are ignored. Commands started
 together on a fresh install share one provision: the first builds the engine
 under a lock file beside it (`<version>.lock`) and the rest wait and reuse it.
+A build killed mid-install (closed terminal, `SIGTERM`) leaves a
+`<version>.partial.<pid>` directory that the next provision removes.
 
 `bea engine status` names the engine that local commands would actually use:
 a `BEA_ENGINE_PYTHON` override, the provisioned managed engine, or a source
