@@ -521,7 +521,9 @@ def shell(
     import sys
 
     from bea_engine import query as bql
+    from bea_engine import stopping
 
+    stopping.interactive()
     try:
         ledger = _ledger(file)
         # Inside the handler as well: a strict read refuses the session itself,
@@ -555,7 +557,9 @@ def source_shell(
 ) -> None:
     """Stream a native query shell with protection for its input files."""
     from bea_engine import query as bql
+    from bea_engine import stopping
 
+    stopping.interactive()
     try:
         bql.native_interactive(source, format=format, output=output, numberify=numberify, show_errors=not no_errors)
     except protocol.EngineError as exc:

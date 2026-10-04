@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from bea_engine import stopping
 from bea_engine.protocol import AuthError, ConflictError, LedgerError, UsageError
 from bea_engine.query import format_error
 
@@ -315,30 +316,36 @@ def candidate_file(file: Path, content: str, *, mode: int = 0o600) -> Iterator[P
     """
     while True:
         candidate = file.parent / f".bea-{secrets.token_hex(8)}.tmp"
-        try:
-            fd = os.open(candidate, os.O_RDWR | os.O_CREAT | os.O_EXCL, mode)
-            break
-        except FileExistsError:
-            continue
-        except PermissionError as exc:
-            # A raw Errno 13 read as a validation failure (w1/073); this is
-            # the filesystem refusing, which callers treat as exit 3.
-            raise AuthError(
-                f"Cannot stage a copy of {file.name} in {file.parent}: the directory is not writable. "
-                "bea validates a write on a staged copy beside each changed file; make the directory "
-                "writable before retrying. Nothing was written."
-            ) from exc
-    try:
-        # Preserve the supplied bytes: Windows newline translation would turn
-        # existing CRLF into CRCRLF on every append.
-        with os.fdopen(fd, "w", encoding="utf-8", newline="") as stream:
-            stream.write(content)
-            stream.flush()
-            os.fsync(stream.fileno())
-        yield candidate
-    finally:
-        candidate.unlink(missing_ok=True)
-        pickle_cache_of(candidate).unlink(missing_ok=True)
+        # Registered before it exists, so a termination signal at any point
+        # from creation on removes it at once — even while a parse it cannot
+        # interrupt is still running (w1/074).
+        with stopping.staged(candidate):
+            try:
+                fd = os.open(candidate, os.O_RDWR | os.O_CREAT | os.O_EXCL, mode)
+            except FileExistsError:
+                continue
+            except PermissionError as exc:
+                # A raw Errno 13 read as a validation failure (w1/073); this is
+                # the filesystem refusing, which callers treat as exit 3.
+                raise AuthError(
+                    f"Cannot stage a copy of {file.name} in {file.parent}: the directory is not writable. "
+                    "bea validates a write on a staged copy beside each changed file; make the directory "
+                    "writable before retrying. Nothing was written."
+                ) from exc
+            try:
+                # The sidecar's name may import Beancount, so it is registered second.
+                with stopping.staged(pickle_cache_of(candidate)):
+                    # Preserve the supplied bytes: Windows newline translation would turn
+                    # existing CRLF into CRCRLF on every append.
+                    with os.fdopen(fd, "w", encoding="utf-8", newline="") as stream:
+                        stream.write(content)
+                        stream.flush()
+                        os.fsync(stream.fileno())
+                    yield candidate
+            finally:
+                candidate.unlink(missing_ok=True)
+                pickle_cache_of(candidate).unlink(missing_ok=True)
+            return
 
 
 def _balance_recovery_hints(
@@ -1055,6 +1062,7 @@ def replace_checked(file: Path, candidate: Path, original: bytes, original_stat:
             "The ledger changed while the operation was running; nothing was written. Retry the command."
         )
     candidate.chmod(stat.S_IMODE(original_stat.st_mode))
+    stopping.check()
     try:
         os.replace(candidate, file)
     except PermissionError as exc:
@@ -1096,6 +1104,7 @@ def append(
             warnings = validate_candidate(candidate, target, allow_errors=allow_errors, snapshot=snapshot)
             snapshot.verify()
             if original_stat is None:
+                stopping.check()
                 try:
                     os.link(candidate, target)
                 except FileExistsError as exc:

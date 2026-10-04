@@ -702,7 +702,9 @@ writable, or the filesystem refuses the final replacement, the write exits
 **3** naming the directory or file, and nothing is written. If the command is stopped, the staging copy goes with it:
 the engine is told to unwind, and a later write in the same directory clears any
 copy left by a kill that could not be caught, which is the only case a signal
-handler cannot cover.
+handler cannot cover. A stop that lands while the ledger is being parsed ends
+the engine at once with its staging copies removed, so a stopped write never
+commits, with or without `--allow-errors`.
 
 For split ledgers, keep `--file` pointed at the root and choose the included
 destination with `--into`. Its path is relative to the root ledger's directory

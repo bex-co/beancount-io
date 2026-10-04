@@ -8,21 +8,12 @@ checkout works without installing the engine distribution at all.
 from __future__ import annotations
 
 import signal
-from types import FrameType
 
+from bea_engine import stopping
 from bea_engine.main import app
 
-
-def _terminate(number: int, _frame: FrameType | None) -> None:
-    """Unwind staged files and locks before reporting the shell's signal status."""
-    raise SystemExit(128 + number)
-
-
-_previous_handlers = {
-    number: signal.signal(number, _terminate)
-    for name in ("SIGTERM", "SIGHUP")
-    if (number := getattr(signal, name, None)) is not None
-}
+# Unwind staged files and locks before reporting the shell's signal status.
+_previous_handlers = stopping.install()
 try:
     app()
 finally:

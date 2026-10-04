@@ -236,6 +236,34 @@ def load_with_sources(
     fetches. A write snapshot may supply an absent included destination as an
     empty staged file, so reads and validation never need to create it.
     """
+    from bea_engine import stopping
+
+    # Beancount's parser swallows the exception a signal handler raises, so a
+    # termination signal during the load exits at once instead (w1/074).
+    with stopping.loading():
+        return _load_with_sources(
+            entry,
+            offline=offline,
+            strict=strict,
+            origins=origins,
+            root=root,
+            now=now,
+            opener=opener,
+            snapshot=snapshot,
+        )
+
+
+def _load_with_sources(
+    entry: Path,
+    *,
+    offline: bool | None,
+    strict: bool | None,
+    origins: tuple[str, ...] | None,
+    root: Path | None,
+    now: float | None,
+    opener: OpenerDirector | None,
+    snapshot: LedgerSnapshot | None,
+) -> LoadedLedger:
     from beancount import loader
     from beancount.loader import LoadError
 

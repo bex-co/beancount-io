@@ -12,6 +12,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from bea_engine import stopping
 from bea_engine.amounts import parse_decimal_number
 from bea_engine.ledger import write as ledger_write
 from bea_engine.protocol import ConflictError, UsageError
@@ -102,6 +103,7 @@ def answer(
     file.parent.mkdir(parents=True, exist_ok=True)
     with ledger_write.candidate_file(file, content) as candidate:
         ledger_write.validate_candidate(candidate, file)
+        stopping.check()
         try:
             # Atomic creation without replacing a file another process created.
             os.link(candidate, file)
