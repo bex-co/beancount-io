@@ -262,7 +262,7 @@ def query(
             elif ctx.no_input:
                 raise UsageError("A query is required with --no-input. Pass it as an argument or on stdin.")
             else:
-                raise typer.Exit(launch.run_engine_argv(["source-shell", *rendering, source], interactive=True))
+                raise typer.Exit(launch.run_engine_argv(["source-shell", *rendering, "--", source], interactive=True))
         if not query_string.strip():
             raise UsageError("A query is required as an argument or on stdin.")
         _refuse_one_shot_output(query_string)
@@ -311,8 +311,7 @@ def query(
     engine_format = output_format
     if ctx.json_output:
         engine_format = "text" if _is_shell_utility(query_string) else "json"
-    args = ["query", "--file", str(file), query_string]
-    args += ["--format", engine_format]
+    args = ["query", "--file", str(file), "--format", engine_format]
     if allow_errors or not ctx.strict_reads():
         args.append("--allow-errors")
     if output_file is not None:
@@ -321,6 +320,9 @@ def query(
         args.append("--numberify")
     if spreadsheet_safe:
         args.append("--spreadsheet-safe")
+    # After `--`, so a query that begins with a dash stays a query: the engine
+    # would otherwise parse `--output=main.bean` as its own option.
+    args += ["--", query_string]
 
     data = launch.helper_json(args)
     if not no_errors:

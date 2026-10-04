@@ -333,7 +333,17 @@ def _native_shell(source: str, *, interactive: bool, format: str, numberify: boo
             return _compiled(partial(super().execute, query, **kwargs), statement, list)
 
         def onecmd(self, line: str) -> Any:
-            return _recovering(self, super().onecmd, line)
+            return _recovering(self, self._dispatch, line)
+
+        def _dispatch(self, line: str) -> Any:
+            # Upstream runs nothing for a line with no leading identifier — a
+            # query opening with a comment, or a dash-leading string such as
+            # `--output=main.bean` — and the one-shot then exited 0 with no
+            # output. Hand it to the parser, which runs it or says why not.
+            command_name, _, parsed = self.parseline(line)
+            if parsed and not command_name:
+                return self.execute(parsed)
+            return super().onecmd(line)
 
     # Load before replaying init commands, so .output sees the include closure.
     return GuardedShell(dsn, sys.stdout, interactive, False, format, numberify, show_errors)
