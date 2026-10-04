@@ -370,9 +370,7 @@ def balance(
     _heading("Trial Balance", data)
     precision = _precision(data)
     trees = [data[name] for name in ("assets", "liabilities", "equity", "income", "expenses")]
-    if not any(trees):
-        output.note(f"No accounts match {' '.join(accounts or [])}.")
-        return
+    # `_heading` already said "No accounts match …" from `account_filter_empty`.
     for tree in trees:
         if tree is not None:
             typer.echo("")

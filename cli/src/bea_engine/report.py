@@ -117,7 +117,12 @@ def _balances(
     # holding must not make a USD checking balance fail.
     metadata = (
         _metadata(filtered, resolved_conversion, ledger_errors)
-        | {"account_filter": " ".join(accounts) if accounts else None}
+        # `_metadata` judges emptiness by a report `--account`, which balance
+        # never sets; here the filter is the substring terms.
+        | {
+            "account_filter": " ".join(accounts) if accounts else None,
+            "account_filter_empty": bool(accounts) and all(tree is None for tree in pruned.values()),
+        }
         | _valuation(
             resolved_conversion,
             (
