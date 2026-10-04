@@ -817,12 +817,20 @@ def _lines(text: str) -> list[str]:
     return lines[:-1] if lines[-1] == "" else lines
 
 
+def _indent_width(line: str) -> int:
+    """Columns of leading whitespace, a tab counting as a tab stop."""
+    return len(line.expandtabs()) - len(line.expandtabs().lstrip())
+
+
 def _indent_block(texts: list[str], indent: str) -> list[str]:
     """Re-indent appended entries to the destination's style without touching it.
 
     Posting lines keep a two-space gap before their amount; `appended_content`
     aligns the amounts afterwards with the code `bea format` runs. A line that
-    continues a multi-line string is string content and stays verbatim.
+    continues a multi-line string is string content and stays verbatim. A line
+    indented deeper than the entry's shallowest indented line — posting
+    metadata, which the printer nests under its posting — keeps that nesting
+    at twice the destination indent, so it still reads as the posting's.
     """
     from bea_engine.ledger.formatting import string_continuation_lines
 
@@ -830,8 +838,15 @@ def _indent_block(texts: list[str], indent: str) -> list[str]:
     for text in texts:
         block = text.rstrip()
         verbatim = string_continuation_lines(block)
+        source = _lines(block)
+        depths = [
+            _indent_width(line)
+            for index, line in enumerate(source)
+            if index > 0 and index not in verbatim and line.strip() and line[0].isspace()
+        ]
+        base = min(depths, default=0)
         lines = []
-        for index, line in enumerate(_lines(block)):
+        for index, line in enumerate(source):
             match = None if index == 0 else re.match(r"^\s*(\S+)(  +)(\S.*)$", line)
             if index in verbatim:
                 lines.append(line)
@@ -842,7 +857,8 @@ def _indent_block(texts: list[str], indent: str) -> list[str]:
                 # comment), not structure: only re-indent indented lines.
                 lines.append(line)
             else:
-                lines.append(f"{indent}{line.strip()}")
+                nested = indent * 2 if _indent_width(line) > base else indent
+                lines.append(f"{nested}{line.strip()}")
         rendered.append("\n".join(lines))
     return rendered
 
