@@ -61,7 +61,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [110](./110.md) — Bulk amounts accept `1_000`, Arabic-Indic and full-width digits that single `add` refuses — **minor**, CLI QA 2026-10-03.
 - [111](./111.md) — Bulk dates accept numeric strings as Unix timestamps and other non-ISO spellings — **minor**, CLI QA 2026-10-03.
 - [112](./112.md) — `add transactions --from -` leaks raw Python errors (exit 1) for undecodable, deeply nested or huge-integer stdin — **minor**, CLI QA 2026-10-03.
-- [157](./157.md) — Import blocks rows for account names with an unknown root and suggests a `bea add open` that cannot work — **major**, CLI QA 2026-10-03.
 - [160](./160.md) — CSV import-ids collapse amounts beyond 28 significant digits, so a new row is skipped as an exact duplicate — **minor**, CLI QA 2026-10-03.
 - [162](./162.md) — A malformed-CSV error names the last line of the file, not where the unclosed quote starts — **minor**, CLI QA 2026-10-03.
 - [164](./164.md) — The `--meta` invalid-date check misses slash and unpadded dates and stores them as strings — **minor**, CLI QA 2026-10-03.

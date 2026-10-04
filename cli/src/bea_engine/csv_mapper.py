@@ -12,7 +12,7 @@ import hashlib
 import re
 import unicodedata
 from collections import Counter
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -279,7 +279,7 @@ class CsvRule:
     expression: re.Pattern[str] = field(compare=False)
 
     @staticmethod
-    def compile(index: int, raw: Any) -> CsvRule:
+    def compile(index: int, raw: Any, roots: Collection[str] | None = None) -> CsvRule:
         match = raw.get("match") if isinstance(raw, dict) else None
         account = raw.get("account") if isinstance(raw, dict) else None
         if not isinstance(match, str) or not isinstance(account, str):
@@ -306,7 +306,7 @@ class CsvRule:
         from bea_engine.ledger.text import parse_account
 
         try:
-            account = parse_account(account)
+            account = parse_account(account, roots)
         except UsageError as exc:
             raise UsageError(f"Rule {index + 1}: {exc}") from None
         return CsvRule(pattern=match, account=account, expression=expression)
@@ -357,8 +357,11 @@ def parse_mapping(spec: str) -> CsvMapping:
     return CsvMapping(columns=columns, sign=sign)
 
 
-def load_rules(path: Path) -> list[CsvRule]:
-    """Load `--rules` TOML into ordered, compiled rules (exit 2 on misuse)."""
+def load_rules(path: Path, roots: Collection[str] | None = None) -> list[CsvRule]:
+    """Load `--rules` TOML into ordered, compiled rules (exit 2 on misuse).
+
+    With the ledger's ``roots``, a rule account under any other root is refused.
+    """
     import tomllib
 
     try:
@@ -371,7 +374,7 @@ def load_rules(path: Path) -> list[CsvRule]:
     if not isinstance(entries, list) or not entries:
         raise UsageError(f"Rules file {path} must hold a [[rule]] list with match and account each.")
     try:
-        return [CsvRule.compile(index, entry) for index, entry in enumerate(entries)]
+        return [CsvRule.compile(index, entry, roots) for index, entry in enumerate(entries)]
     except UsageError as exc:
         raise UsageError(f"Rules file {path}: {exc}") from exc
 
@@ -815,8 +818,11 @@ class CsvImporter:
         known_currencies: frozenset[str] | None = None,
         delimiter: str | None = None,
         encoding: str = "utf-8",
+        account_roots: Collection[str] | None = None,
     ) -> None:
         self._account = account
+        # The ledger's root names; a category under any other root is a label.
+        self._account_roots = account_roots
         self._mapping = mapping
         self._delimiter = delimiter
         self._encoding = encoding
@@ -1096,7 +1102,11 @@ class CsvImporter:
             if category_header not in row:
                 raise UsageError(f"{where}: the CSV lacks category column {category_header!r}.")
             category = row[category_header].strip()
-            if category and is_valid(category):
+            if (
+                category
+                and is_valid(category)
+                and (self._account_roots is None or category.split(":", 1)[0] in self._account_roots)
+            ):
                 return category, "*", category
             if category:
                 # A card export's own label ("Groceries", "Food & Drink") is

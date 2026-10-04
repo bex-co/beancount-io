@@ -146,7 +146,11 @@ the missing account and the `bea add open` line that fixes it, stays in the
 diff so the proposal stays visible, and `--apply` refuses with exit **4**
 while any row is blocked. A currency mismatch offers the currency setting
 first and widening the `open` directive last: widening it would book the
-foreign amounts as the wrong commodity.
+foreign amounts as the wrong commodity. An account under a root the ledger
+does not use (`Foo:Bar`; the roots are its `name_*` options) can never be
+opened: `--account`, `--default-account`, and rule accounts naming one exit
+**2**, a category cell naming one queues the row for review, and an importer
+posting to one is blocked without an `add open` suggestion.
 
 ### Reading the header row
 

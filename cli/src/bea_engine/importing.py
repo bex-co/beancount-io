@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from bea_engine.ledger import write as ledger_write
+from bea_engine.ledger.text import ledger_roots, unknown_root_message
 from bea_engine.ledger.writer import format_entry, normalize_entry_strings
 from bea_engine.protocol import ConflictError, EngineError, LedgerError, UsageError
 from bea_engine.query import format_error
@@ -111,6 +112,7 @@ def answer(
 
     logs = io.StringIO()
     notes: list[str] = []
+    roots = ledger_roots(options)
     csv_mode = csv_mapping is not None
     skipped_blank = 0
     if csv_mode:
@@ -121,8 +123,8 @@ def answer(
         mapping = parse_mapping(csv_mapping)
         # Before the preview, not after: an invalid name would otherwise block
         # every row with the wrong diagnosis instead of failing on the typo.
-        csv_account = _valid_account(csv_account, "--account")
-        default_account = _valid_account(default_account or "Expenses:Uncategorized", "--default-account")
+        csv_account = _valid_account(csv_account, "--account", roots)
+        default_account = _valid_account(default_account or "Expenses:Uncategorized", "--default-account", roots)
         resolved_date_format = date_format or "%Y-%m-%d"
         resolved_delimiter = parse_delimiter(delimiter) if delimiter is not None else None
         resolved_encoding = parse_encoding(encoding) if encoding is not None else "utf-8"
@@ -131,12 +133,13 @@ def answer(
             account=csv_account,
             mapping=mapping,
             date_format=resolved_date_format,
-            rules=load_rules(Path(rules_file)) if rules_file is not None else None,
+            rules=load_rules(Path(rules_file), roots) if rules_file is not None else None,
             default_account=default_account,
             currency=_row_currency(existing, csv_account, operating),
             known_currencies=_known_currencies(existing, operating),
             delimiter=resolved_delimiter,
             encoding=resolved_encoding,
+            account_roots=roots,
         )
         preview_config = csv_mapping
         try:
@@ -315,7 +318,7 @@ def answer(
             other_entries.add(text)
         include = status == "new" or (status == "possible_duplicate" and duplicates == "include")
         if include and isinstance(entry, Transaction):
-            blocked_reason = _blocked_reason(entry, open_currencies)
+            blocked_reason = _blocked_reason(entry, open_currencies, roots)
             if blocked_reason is not None:
                 status, reason, include = "blocked", blocked_reason, False
         if include:
@@ -562,7 +565,7 @@ def _same_row(
     return found_print == fingerprint
 
 
-def _valid_account(name: str, option: str) -> str:
+def _valid_account(name: str, option: str, roots: tuple[str, ...]) -> str:
     """Validate an account name the way the loader will, saying which option named it.
 
     Import used to skip this check entirely. An unopenable name — a space, a
@@ -575,7 +578,7 @@ def _valid_account(name: str, option: str) -> str:
     from bea_engine.ledger.text import parse_account
 
     try:
-        return parse_account(name)
+        return parse_account(name, roots)
     except UsageError as exc:
         raise UsageError(f"{option}: {exc}") from None
 
@@ -621,13 +624,18 @@ def _known_currencies(existing: list[Any], operating: list[str]) -> frozenset[st
     return frozenset(currency for currency in known if isinstance(currency, str))
 
 
-def _blocked_reason(entry: Any, open_currencies: dict[str, set[str] | None]) -> str | None:
+def _blocked_reason(entry: Any, open_currencies: dict[str, set[str] | None], roots: tuple[str, ...]) -> str | None:
     """Why a transaction cannot be written, or None when its accounts allow it.
 
     Names each unopened account with the `bea add open` line that fixes it,
-    and each currency the account's open directive does not allow.
+    and each currency the account's open directive does not allow. An account
+    under a root the ledger does not use (from a Python importer) gets no
+    `add open` remedy: that command would refuse it too.
     """
     missing = sorted({posting.account for posting in entry.postings if posting.account not in open_currencies})
+    foreign = [name for name in missing if name.split(":", 1)[0] not in roots]
+    if foreign:
+        return unknown_root_message(foreign[0], roots)
     if missing:
         remedies = []
         for name in missing:

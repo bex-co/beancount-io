@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -168,13 +168,27 @@ def syntax_errors(path: Path) -> list[str]:
     return [format_error(error) for error in errors]
 
 
-def parse_account(name: str) -> str:
+_ROOT_OPTIONS = ("name_assets", "name_liabilities", "name_equity", "name_income", "name_expenses")
+
+
+def ledger_roots(options: Mapping[str, object]) -> tuple[str, ...]:
+    """The five root account names a loaded ledger accepts (its `name_*` options)."""
+    defaults = ("Assets", "Liabilities", "Equity", "Income", "Expenses")
+    return tuple(str(options.get(key) or default) for key, default in zip(_ROOT_OPTIONS, defaults, strict=True))
+
+
+def parse_account(name: str, roots: Collection[str] | None = None) -> str:
     """Validate an account name the way the loader will, or explain the rules.
 
     Engine-side because only Beancount knows what a valid account is: the root
     names are ledger options and the segment rules are its own. The name is
     NFC-normalized first, because the loader reads the ledger NFC-normalized
     and `is_valid` rejects the identical NFD spelling outright.
+
+    `is_valid` checks only the shape, so `Foo:Bar` passes it and then every
+    `open` for it fails to load. With the ledger's ``roots`` the root is
+    checked too, so a caller can refuse the name instead of suggesting an
+    `add open` that can never succeed.
     """
     from beancount.core.account import is_valid
 
@@ -186,7 +200,17 @@ def parse_account(name: str) -> str:
             "Use letters, digits and hyphens within segments. Standard roots are "
             "Assets, Liabilities, Equity, Income and Expenses; configured root names are also supported."
         )
+    if roots is not None and name.split(":", 1)[0] not in roots:
+        raise protocol.UsageError(unknown_root_message(name, roots))
     return name
+
+
+def unknown_root_message(name: str, roots: Collection[str]) -> str:
+    root = name.split(":", 1)[0]
+    return (
+        f"Account {name!r} has root {root!r}, which this ledger does not use; its roots are "
+        f"{', '.join(roots)} (set by the name_* options). Use one of those roots."
+    )
 
 
 @dataclass(frozen=True)
