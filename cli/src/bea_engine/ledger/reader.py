@@ -80,7 +80,12 @@ def load_file(file_path: Path) -> tuple[list[Any], list[Any]]:
 #: `2024-01-06 txn"T"` and `2024-01-01open` all declare directives, so the
 #: whitespace after the date is optional and the directive word is matched at
 #: the start of what follows rather than as a whole whitespace-delimited token.
-_DATE_TOKEN = re.compile(r"^\s*\d{4}[-/]\d+[-/]\d+\s*(\S+)")
+#:
+#: The date is captured too: a plugin that clones a written entry to other
+#: dates (the bundled forecast and amortize plugins, via `_replace`) keeps the
+#: template's location, so only the copy whose date the line declares is the
+#: one on disk (w1/113).
+_DATE_TOKEN = re.compile(r"^\s*(\d{4})[-/](\d+)[-/](\d+)\s*(\S+)")
 
 # A transaction line carries a flag where the other directives carry their
 # own word: `txn`, `*`, the lexer's FLAG characters — all of which may run
@@ -112,9 +117,11 @@ def entry_generated(entry: Any, directive_type: str) -> bool:
 
     A synthesized entry either points nowhere real (`<auto_accounts>`) or
     borrows a real line that declares something else (an implicit price
-    stamped with its transaction's location). So the entry is on disk only
-    when its file exists and the line there starts this directive — exactly
-    what `grep` would find.
+    stamped with its transaction's location), or copies a real entry to
+    another date while keeping its location (a forecast or amortization
+    plugin). So the entry is on disk only when its file exists and the line
+    there starts this directive on this entry's date — exactly what `grep`
+    would find.
     """
     meta = getattr(entry, "meta", None) or {}
     filename = meta.get("filename")
@@ -127,7 +134,14 @@ def entry_generated(entry: Any, directive_type: str) -> bool:
     match = _DATE_TOKEN.match(lines[lineno - 1])
     if match is None:
         return True
-    token = match.group(1)
+    year, month, day, token = match.groups()
+    entry_date = getattr(entry, "date", None)
+    if isinstance(entry_date, datetime.date):
+        try:
+            if entry_date != datetime.date(int(year), int(month), int(day)):
+                return True
+        except ValueError:
+            return True
     if directive_type == "transaction":
         return _TXN_TOKEN.match(token) is None
     return not token.startswith(directive_type)

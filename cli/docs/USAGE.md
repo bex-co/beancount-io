@@ -617,7 +617,9 @@ the flag to leave the results unfiltered.
 
 A plugin can add directives the ledger file never declares — `auto_accounts`
 opens, `implicit_prices` prices, `currency_accounts` opens, `close_tree`
-closes. `list` marks those rows `generated`: a `SOURCE` column in human
+closes — or copy a written transaction to other dates, like the forecast and
+amortize plugins; only the copy dated as its source line declares is on disk.
+`list` marks those rows `generated`: a `SOURCE` column in human
 tables, a `"generated": true` field in JSON. The field is absent when false,
 so a plugin-free answer is unchanged. `--on-disk` drops the synthesized rows,
 answering exactly what `grep` would find in the file. `list pad` heads the
