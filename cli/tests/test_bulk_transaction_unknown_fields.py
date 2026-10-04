@@ -98,3 +98,92 @@ def test_documented_narration_row_still_writes(ledger: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["data"]["written"] == 1
     assert '2024-03-20 * "Groceries"' in ledger.read_text()
+
+
+LOT_LEDGER = """2026-01-01 open Assets:Cash USD
+2026-01-01 open Assets:Brokerage AAPL "FIFO"
+2026-01-01 open Income:Gains USD
+2026-01-02 * "buy cheap"
+  Assets:Brokerage  10 AAPL {100 USD}
+  Assets:Cash
+2026-01-03 * "buy dear"
+  Assets:Brokerage  10 AAPL {150 USD}
+  Assets:Cash
+"""
+
+
+def _sale(cost: dict[str, object], price: dict[str, object] | None = None) -> list[dict[str, object]]:
+    lot: dict[str, object] = {
+        "account": "Assets:Brokerage",
+        "units": {"number": "-10", "currency": "AAPL"},
+        "cost": {"currency": "USD", **cost},
+        "price": {"number": "160", "currency": "USD", **(price or {})},
+    }
+    cash = {"account": "Assets:Cash", "amount": "1600 USD"}
+    return [{"date": "2026-02-01", "narration": "sell", "postings": [lot, cash, {"account": "Income:Gains"}]}]
+
+
+@pytest.mark.parametrize(
+    ("rows", "path"),
+    [
+        (_sale({"number_per": "150"}), "postings.0.cost.number_per"),
+        (_sale({"number": "150", "lot_date": "2026-01-03"}), "postings.0.cost.lot_date"),
+        (_sale({"number": "150", "merge": True}), "postings.0.cost.merge"),
+        (_sale({"number": "150"}, {"total": True}), "postings.0.price.total"),
+        (
+            [
+                {
+                    "date": "2026-02-01",
+                    "narration": "x",
+                    "postings": [
+                        {"account": "Assets:Cash", "units": {"number": "5", "currency": "USD", "x": 1}},
+                        {"account": "Income:Gains"},
+                    ],
+                }
+            ],
+            "postings.0.units.x",
+        ),
+    ],
+    ids=["number_per", "lot_date", "merge", "price-total", "units"],
+)
+def test_nested_unknown_keys_are_refused_with_their_path(
+    tmp_path: Path, rows: list[dict[str, object]], path: str
+) -> None:
+    """w1/108: a dropped `number_per` used to leave `{USD}`, and FIFO sold the other lot."""
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LOT_LEDGER)
+    payload = tmp_path / "rows.json"
+    payload.write_text(json.dumps(rows))
+
+    result = _bea(tmp_path, "--json", "--file", str(ledger), "add", "transactions", "--from", str(payload))
+
+    assert result.returncode == 1, result.stdout
+    details = json.loads(result.stderr)["error"]["details"]
+    assert f"Row 1, {path}: Extra inputs are not permitted" in details
+    assert ledger.read_text() == LOT_LEDGER
+
+
+def test_numeric_cost_date_is_refused(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LOT_LEDGER)
+    payload = tmp_path / "rows.json"
+    payload.write_text(json.dumps(_sale({"number": "150", "date": 1767398400})))
+
+    result = _bea(tmp_path, "--json", "--file", str(ledger), "add", "transactions", "--from", str(payload))
+
+    assert result.returncode == 1, result.stdout
+    details = json.loads(result.stderr)["error"]["details"]
+    assert any(d.startswith("Row 1, postings.0.cost.date:") and "YYYY-MM-DD" in d for d in details)
+    assert ledger.read_text() == LOT_LEDGER
+
+
+def test_the_documented_cost_keys_still_sell_the_named_lot(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LOT_LEDGER)
+    payload = tmp_path / "rows.json"
+    payload.write_text(json.dumps(_sale({"number": "150", "date": "2026-01-03", "label": None})))
+
+    result = _bea(tmp_path, "--file", str(ledger), "add", "transactions", "--from", str(payload))
+
+    assert result.returncode == 0, result.stderr
+    assert "-10 AAPL {150 USD, 2026-01-03} @ 160 USD" in ledger.read_text()

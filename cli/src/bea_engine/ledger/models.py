@@ -84,6 +84,9 @@ AmountNumber = Annotated[
 
 
 class Amount(BaseModel):
+    # Unknown keys are refused, not dropped: a misspelled key inside a nested
+    # object would otherwise leave a valid but different amount or lot.
+    model_config = ConfigDict(extra="forbid")
     number: AmountNumber
     currency: Commodity
 
@@ -96,12 +99,17 @@ class Cost(BaseModel):
     `{{250.00 USD}}` states a total with no per-unit figure. A required number
     and currency meant the answer `bea add transaction` gives for such a posting
     could not be fed back in, though `USAGE.md` promises that round trip.
+
+    Because every field is optional, an unknown key must be refused: dropping
+    a misspelled `number_per` left the valid selector `{USD}`, and booking then
+    sold whichever lot it chose.
     """
 
+    model_config = ConfigDict(extra="forbid")
     number: AmountNumber | None = None
     number_total: AmountNumber | None = None
     currency: Commodity | None = None
-    date: datetime.date | None = None
+    date: LedgerDate | None = None
     label: str | None = None
 
 

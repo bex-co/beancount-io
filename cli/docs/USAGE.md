@@ -933,7 +933,8 @@ Every row is validated before anything is written. If any row is invalid the led
 
 A posting can also use `{"account":"Assets:Cash","amount":"-45 USD"}`.
 Omit `units`/`amount` for a balancing posting. Supplying both forms or unknown
-transaction or posting fields is rejected. Schema errors show a human row number, field path,
+fields — at the transaction or posting level, or inside `units`, `cost`,
+`price` and `price_total` — is rejected. Schema errors show a human row number, field path,
 and example; `bea add transactions --help` contains a complete minimal batch.
 
 Validation includes accounting errors, not just JSON shape. The whole batch is
