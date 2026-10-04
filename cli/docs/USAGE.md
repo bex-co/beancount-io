@@ -1056,7 +1056,11 @@ dated triples in `missing_price_dates` (`from`, `to`, `date`) alongside
 `missing_prices` for automation (a null date means no quote at any date).
 Partial JSON marks `valuation: "partial"`, lists `missing_prices`, retains
 amounts in their source currencies, and sets combined net profit/net worth to
-`null` in the requested currency. The same rule applies row by row: an income
+`null` in the requested currency when that total itself, at the report's
+as-of date, still holds a commodity it could not value. A gap only in an
+earlier row (a holding bought before its first quote) leaves the headline
+valued; `valuation: "partial"` and `missing_price_dates` still describe the
+rows. The same rule applies row by row: an income
 statement period and a net-worth series point whose balance still holds a
 commodity the report could not value read `null` too, so no interval series
 contradicts the headline above it with per-unit amounts. Rows that did convert

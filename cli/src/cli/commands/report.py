@@ -140,7 +140,7 @@ def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False)
     if metadata.get("account_filter_empty"):
         output.note(f"No accounts match {metadata['account_filter']}.")
     if metadata["missing_prices"]:
-        typer.echo("Partial valuation: some prices are missing; combined totals are unavailable.")
+        typer.echo("Partial valuation: some prices are missing; a total that cannot be valued reads Unavailable.")
         for line in metadata["missing_price_summary"]:
             output.note(line)
 

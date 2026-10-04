@@ -36,8 +36,10 @@ OPENS = """option "operating_currency" "USD"
 2026-01-01 open Income:Consult USD
 """
 PRICED = NOPRICE + "2026-01-10 price EUR 1.10 USD\n"
+# First quoted after the January row: a row-only gap (w1/125).
+LATE = NOPRICE + "2026-02-10 price EUR 1.10 USD\n"
 
-LEDGERS = {"noprice": NOPRICE, "opens": OPENS, "priced": PRICED}
+LEDGERS = {"noprice": NOPRICE, "opens": OPENS, "priced": PRICED, "late": LATE}
 
 
 def _bea(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:

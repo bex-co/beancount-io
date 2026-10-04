@@ -163,7 +163,7 @@ def _overview(
     liabilities = trees[1].balance_children if trees[1] is not None else empty
     income = trees[2].balance_children if trees[2] is not None else empty
     expenses = trees[3].balance_children if trees[3] is not None else empty
-    worth = _summary(_sum(assets, liabilities), conversion, incomplete=bool(valuation["missing_prices"]))
+    worth = _headline(_sum(assets, liabilities), conversion)
     return metadata | {
         "display_precision": _display_precision(filtered),
         "totals": {
@@ -200,7 +200,7 @@ def _income_statement(
     metadata = _metadata(filtered, conversion, ledger_errors, interval) | valuation
     empty = type(data.income_hierarchy.balance_children)()
     kept = [tree.balance_children if tree is not None else empty for tree in trees]
-    net = _summary(-_sum(*kept), conversion, incomplete=bool(valuation["missing_prices"]))
+    net = _headline(-_sum(*kept), conversion)
     periods: list[dict[str, Any]] = [
         {
             "date": profit.date,
@@ -280,20 +280,17 @@ def _balance_sheet(
     empty = type(data.assets_hierarchy.balance_children)()
     assets = trees[0].balance_children if trees[0] is not None else empty
     liabilities = trees[1].balance_children if trees[1] is not None else empty
-    worth = _summary(_sum(assets, liabilities), conversion, incomplete=incomplete)
+    worth = _headline(_sum(assets, liabilities), conversion)
     reconciled = not incomplete and not filtered.ledger.load_errors and conversion != "units" and not filtered.account
-    # The same rule as the income statement's `net_profit`: under a currency
-    # conversion the requested currency is always named, `null` when part of
-    # the earnings could not be valued and zero when there are none.
-    earnings_incomplete = _unvalued(earnings, conversion)
     return metadata | {
         "display_precision": _display_precision(filtered),
         "assets": _tree_json(trees[0]) if trees[0] is not None else None,
         "liabilities": _tree_json(trees[1]) if trees[1] is not None else None,
         "equity": _tree_json(trees[2]) if trees[2] is not None else None,
-        "current_earnings": _summary(earnings, conversion, incomplete=earnings_incomplete),
+        # The income statement's `net_profit` rule, so both reports agree.
+        "current_earnings": _headline(earnings, conversion),
         "current_earnings_signs": "negative_for_gain",
-        "net_profit": _summary(-earnings, conversion, incomplete=earnings_incomplete),
+        "net_profit": _headline(-earnings, conversion),
         "valuation_adjustment": data.valuation_adjustment if reconciled else None,
         "equity_total": data.equity_total if reconciled else None,
         "equity_reconciled": reconciled,
@@ -546,7 +543,7 @@ def _summary_series_json(series: Iterable[Any], conversion: str) -> list[dict[st
     return [
         {
             "date": point.date,
-            "balance": _summary(point.balance, conversion, incomplete=_unvalued(point.balance, conversion)),
+            "balance": _headline(point.balance, conversion),
         }
         for point in series
     ]
@@ -572,6 +569,19 @@ def _summary(balance: Mapping[str, Decimal], conversion: str, *, incomplete: boo
     if conversion in CONVERSIONS:
         return dict(balance.items())
     return {conversion: None if incomplete else balance.get(conversion, Decimal(0))}
+
+
+def _headline(balance: Mapping[str, Decimal], conversion: str) -> dict[str, Decimal | None]:
+    """A combined total, `null` only when this balance itself kept an unvalued commodity.
+
+    Judged on the total being shown, at its own date — not on whether any
+    report row lacked a price. Holding a commodity before its first quote is
+    common: the January row of a ledger first priced in February reads null,
+    but that gap says nothing about the as-of headline, where the quote
+    exists. `valuation: "partial"` and `missing_price_dates` still describe
+    the rows.
+    """
+    return _summary(balance, conversion, incomplete=_unvalued(balance, conversion))
 
 
 def _display_precision(filtered: Any) -> dict[str, int]:
