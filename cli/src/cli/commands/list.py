@@ -22,7 +22,7 @@ import typer
 
 from cli import context, output
 from cli.errors import UsageError
-from cli.utils import fold_account, parse_opt_date, refuse_blank_filter, single_line
+from cli.utils import fold_account, inert_text, parse_opt_date, refuse_blank_filter, single_line
 
 list_app = typer.Typer(help="List directives from a local .bean file", no_args_is_help=True, rich_markup_mode=None)
 
@@ -350,8 +350,8 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
         for item, rendered in zip(items, data["rendered"], strict=True):
             if item.get("source"):
                 suffix = " (generated)" if item.get("generated") else ""
-                typer.echo(f"{item['source']['filename']}:{item['source']['lineno']}{suffix}")
-            typer.echo(rendered)
+                typer.echo(single_line(f"{item['source']['filename']}:{item['source']['lineno']}{suffix}"))
+            typer.echo(inert_text(rendered))
     elif name == "transaction":
         account = fold_account(filters.get("account") or "")
         amounts = "MATCHING POSTING AMOUNTS" if account else "POSTING AMOUNTS"

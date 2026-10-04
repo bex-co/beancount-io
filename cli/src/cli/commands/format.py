@@ -31,7 +31,7 @@ import typer
 from cli import context, output
 from cli.engine import launch
 from cli.errors import BeaError, LedgerError, UsageError
-from cli.utils import decode_error_message
+from cli.utils import decode_error_message, single_line
 
 SUFFIXES = {".bean", ".beancount"}
 STDIN = "-"
@@ -202,7 +202,7 @@ def _format_in_place(
         output.emit(result, target=target)
         return
     for name in changed:
-        typer.echo(f"formatted: {name}")
+        typer.echo(single_line(f"formatted: {name}"))
     output.success(f"{len(changed)}/{len(files)} file(s) formatted.")
 
 
@@ -234,13 +234,14 @@ def _report(
     if not files:
         output.success("No .bean or .beancount files found.")
         return
+    # File names and parse errors are ledger-controlled text (w1/134).
     for name in changed:
-        typer.echo(f"would format: {name}")
+        typer.echo(single_line(f"would format: {name}"))
     for line in _problem_lines(failed, missing):
-        typer.echo(line)
+        typer.echo(single_line(line))
     if check:
         for file in files:
-            typer.echo(f"checked: {file}")
+            typer.echo(single_line(f"checked: {file}"))
         output.success(f"All {len(files)} file(s) are formatted.")
     else:
         output.success(f"Would format {len(changed)}/{len(files)} file(s) (dry run).")

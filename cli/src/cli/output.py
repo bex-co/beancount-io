@@ -24,7 +24,7 @@ import typer
 from cli import context
 from cli.config import package_version
 from cli.errors import BeaError, LedgerError, UsageError, to_bea_error
-from cli.utils import atomic_write, single_line
+from cli.utils import atomic_write, inert_text, single_line
 
 
 def _json_mode() -> bool:
@@ -40,7 +40,7 @@ _pending_warnings: list[str] = []
 def flush_warnings() -> None:
     """Print deferred loader warnings; called on the way out of a successful command."""
     for line in _pending_warnings:
-        print(line, file=sys.stderr)
+        print(inert_text(line), file=sys.stderr)
     _pending_warnings.clear()
 
 
@@ -53,7 +53,7 @@ def success(message: str | None = None) -> None:
 def note(message: str) -> None:
     """Progress and advice, on stderr so it never contaminates piped stdout."""
     if not _json_mode():
-        print(message, file=sys.stderr)
+        print(inert_text(message), file=sys.stderr)
 
 
 def error(exc: BaseException | str) -> NoReturn:
@@ -111,12 +111,17 @@ def failure(exc: BaseException | str) -> None:
 
 
 def _print_failure(err: BeaError, trace: str | None) -> None:
-    """The one text rendering of an error, shared by the fatal and recoverable paths."""
-    print(f"Error: {err}", file=sys.stderr)
+    """The one text rendering of an error, shared by the fatal and recoverable paths.
+
+    Messages quote ledger-controlled text — a document name, an include path —
+    so they are made inert before they reach the terminal (w1/134); JSON keeps
+    the exact values.
+    """
+    print(f"Error: {inert_text(str(err))}", file=sys.stderr)
     for detail in err.details:
-        print(f"  {detail}", file=sys.stderr)
+        print(f"  {inert_text(detail)}", file=sys.stderr)
     if trace:
-        print(trace, file=sys.stderr, end="")
+        print(inert_text(trace), file=sys.stderr, end="")
 
 
 def display_width(text: str) -> int:
@@ -581,7 +586,7 @@ def render_ledger_errors(
         _pending_warnings.extend(formatted)
         return
     for line in formatted:
-        print(line, file=sys.stderr)
+        print(inert_text(line), file=sys.stderr)
 
 
 def format_ledger_error(err: Any) -> str:
