@@ -33,6 +33,42 @@ describe("QueryView", () => {
     });
   });
 
+  describe("custom loading skeleton accessibility", () => {
+    it("announces a busy status and hides the skeleton table from assistive technology", () => {
+      render(
+        <QueryView
+          loading={true}
+          data={null}
+          loadingSlot={
+            <table>
+              <thead>
+                <tr>
+                  <th>&nbsp;</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>&nbsp;</td>
+                </tr>
+              </tbody>
+            </table>
+          }
+        >
+          {() => <div>data</div>}
+        </QueryView>,
+      );
+
+      const status = screen.getByRole("status");
+      expect(status).toHaveAttribute("aria-busy", "true");
+      expect(status).toHaveTextContent("common.loadingData");
+      // The phantom table is in the DOM for sighted users but not in the
+      // accessibility tree.
+      expect(screen.queryByRole("table")).toBeNull();
+      expect(screen.queryByRole("columnheader")).toBeNull();
+      expect(screen.getByRole("table", { hidden: true })).toBeInTheDocument();
+    });
+  });
+
   describe("error state", () => {
     it("renders error state when error is present", () => {
       render(

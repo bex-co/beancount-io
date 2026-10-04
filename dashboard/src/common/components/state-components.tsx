@@ -76,6 +76,22 @@ export function ReportLoadingIndicator({
 }
 
 /**
+ * Loading state that shows a layout-matching skeleton. The skeleton is hidden
+ * from assistive technology — an empty table of headers and cells is not
+ * content — and a busy status carries the loading announcement instead.
+ */
+export function SkeletonLoadingState({ children }: { children: ReactNode }) {
+  const { t } = useTranslations();
+
+  return (
+    <div role="status" aria-live="polite" aria-busy="true">
+      <span className="sr-only">{t("common.loadingData")}</span>
+      <div aria-hidden="true">{children}</div>
+    </div>
+  );
+}
+
+/**
  * Generic loading state for report cards
  * Features a modern animated spinner with smooth fade-in animation
  * Fully accessible with proper ARIA attributes

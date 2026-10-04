@@ -1,11 +1,19 @@
 import type { ReactNode } from "react";
-import { ReportErrorState, ReportLoadingState } from "./state-components";
+import {
+  ReportErrorState,
+  ReportLoadingState,
+  SkeletonLoadingState,
+} from "./state-components";
 
 interface QueryViewProps<T> {
   loading: boolean;
   error?: Error | null;
   data: T | null | undefined;
-  /** Custom skeleton that matches the page layout. Falls back to generic spinner. */
+  /**
+   * Custom skeleton that matches the page layout. Falls back to generic
+   * spinner. Rendered inside a busy status with the skeleton hidden from
+   * assistive technology.
+   */
   loadingSlot?: ReactNode;
   /**
    * Explicit error message override. When omitted, the error object itself is
@@ -31,7 +39,11 @@ export function QueryView<T>({
   children,
 }: QueryViewProps<T>) {
   if (loading) {
-    return loadingSlot ?? <ReportLoadingState />;
+    return loadingSlot ? (
+      <SkeletonLoadingState>{loadingSlot}</SkeletonLoadingState>
+    ) : (
+      <ReportLoadingState />
+    );
   }
 
   if (error) {
