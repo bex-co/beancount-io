@@ -126,10 +126,16 @@ def fold_account(name: str) -> str:
     where a reader sees one. Folding runs between the two normalizations
     because folding can itself denormalize.
 
+    Turkish dotted `İ` and dotless `ı` fold to plain `i` first (w1/132):
+    `casefold` turns `İ` into `i` plus a combining dot and leaves `ı` alone,
+    so `istanbul` never matched `İSTANBUL` — while `re.IGNORECASE`, which
+    import rules and report account filters use, treats them as equal.
+
     The frontend keeps its own copy (`cli.utils.fold_account`): neither side
     may import the other, and both have to compare the same names.
     """
-    return unicodedata.normalize("NFC", unicodedata.normalize("NFC", name).casefold())
+    turkish = unicodedata.normalize("NFC", name).replace("İ", "i").replace("ı", "i")
+    return unicodedata.normalize("NFC", turkish.casefold().replace("i\u0307", "i"))
 
 
 def decode_error_message(path: object, exc: UnicodeDecodeError) -> str:

@@ -241,7 +241,8 @@ def list_transactions(
     tags: list[str] | None = None,
     links: list[str] | None = None,
 ) -> list[TransactionHeader]:
-    terms = [_nfc(term or "").casefold() for term in search or []]
+    # The same fold account filters use, so Turkish `İ`/`ı` match `i` (w1/132).
+    terms = [fold_account(term or "") for term in search or []]
     wanted_tags = {_nfc(tag.lstrip("#")) for tag in tags or []}
     wanted_links = {_nfc(link.lstrip("^")) for link in links or []}
     results = []
@@ -255,8 +256,7 @@ def list_transactions(
         if account and not any(fold_account(account) in fold_account(p.account) for p in entry.postings):
             continue
         if terms and not all(
-            term in _nfc(entry.payee or "").casefold() or term in _nfc(entry.narration or "").casefold()
-            for term in terms
+            term in fold_account(entry.payee or "") or term in fold_account(entry.narration or "") for term in terms
         ):
             continue
         if wanted_tags and not wanted_tags.issubset({_nfc(tag) for tag in entry.tags or ()}):

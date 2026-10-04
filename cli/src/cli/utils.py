@@ -107,7 +107,8 @@ def fold_account(name: str) -> str:
     account the user can see. Neither side may import the other, and a filter
     applied here must agree with the one applied there.
     """
-    return unicodedata.normalize("NFC", unicodedata.normalize("NFC", name).casefold())
+    turkish = unicodedata.normalize("NFC", name).replace("İ", "i").replace("ı", "i")
+    return unicodedata.normalize("NFC", turkish.casefold().replace("i\u0307", "i"))
 
 
 def owner_and_name(full_name: str) -> tuple[str, str]:

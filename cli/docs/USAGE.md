@@ -595,7 +595,7 @@ without a Beancount.io login and never formats or commits them automatically.
 | `--link LINK` | Transactions: link with or without `^`; repeatable. |
 | `--from-date` | Only directives on or after this date (`YYYY-MM-DD`) |
 | `--to-date` | Only directives on or before this date (`YYYY-MM-DD`) |
-| `--account / -a` | Case-insensitive substring account filter (`transaction`, `note`, `balance`, `open`, `close`, `document`, `pad`). Matching ignores Unicode normalization, so the NFC and NFD spellings of one account name find each other. |
+| `--account / -a` | Case-insensitive substring account filter (`transaction`, `note`, `balance`, `open`, `close`, `document`, `pad`). Matching ignores Unicode normalization, so the NFC and NFD spellings of one account name find each other, and folds Turkish `İ`/`ı` to `i` like `--search` and `bea balance` do. |
 | `--currency / -c` | Exact symbol, case-insensitive (`price`, `commodity`); `eur` matches `EUR` |
 | `--type / -t` | Exact type, case-insensitive (`event`, `custom`); `Location` matches `location` |
 | `--allow-errors` | Return data even though the ledger has loader errors (they still print on stderr) |
