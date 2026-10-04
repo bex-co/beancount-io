@@ -93,7 +93,9 @@ def _source_lines(filename: str) -> tuple[str, ...] | None:
         text = (
             Path(filename).read_text(encoding="utf-8", errors="replace").removeprefix("\ufeff")
         )  # a BOM glued to the first line
-        return tuple(text.splitlines())
+        # The lexer numbers lines by `\n` alone; `splitlines` would also break
+        # on U+2028, U+0085, form feed and friends inside strings or comments.
+        return tuple(text.split("\n"))
     except OSError:
         return None
 

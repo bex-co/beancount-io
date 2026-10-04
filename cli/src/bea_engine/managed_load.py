@@ -710,7 +710,7 @@ def _export_attachments(
             attachments[canonical] = document
             continue
         line = int(entry.meta.get("lineno") or 0)
-        lines = contents[ledger].decode("utf-8", "replace").splitlines()
+        lines = contents[ledger].decode("utf-8", "replace").split("\n")
         text = lines[line - 1] if 0 < line <= len(lines) else ""
         quoted = text.split('"')[1] if text.count('"') >= 2 else ""
         # Beancount joins a relative name onto its file's directory and

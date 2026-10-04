@@ -118,6 +118,26 @@ def test_an_absolute_document_path_refuses_rather_than_pinning_this_machine(tmp_
     assert not out.exists()
 
 
+def test_an_absolute_document_path_refuses_after_a_unicode_line_separator(tmp_path: Path) -> None:
+    # U+2028 is a line break to `str.splitlines` but not to Beancount's lexer;
+    # counting it put the directive's line one early and let the path through (w1/049).
+    source = tmp_path / "source"
+    source.mkdir()
+    receipt = source / "receipt.pdf"
+    receipt.write_bytes(RECEIPT)
+    main = source / "main.bean"
+    main.write_text(
+        f'; pasted\u2028comment\n2024-01-01 open Assets:Cash USD\n2024-03-01 document Assets:Cash "{receipt}"\n',
+        encoding="utf-8",
+    )
+
+    out = tmp_path / "out"
+    refused = _export(tmp_path, main, out)
+    assert refused.returncode == 2, refused.stdout
+    assert "main.bean:3" in refused.stderr
+    assert not out.exists()
+
+
 def test_symlinked_documents_keep_the_name_the_directive_uses(tmp_path: Path) -> None:
     """w1/044: a symlinked file or folder was copied under its target's name.
 

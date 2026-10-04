@@ -1056,7 +1056,7 @@ def _plugin_directive(ledger_file: Path | str | None, name: str) -> tuple[str, i
         return None
     directive = re.compile(rf"^\s*plugin\s+[\"']{re.escape(name)}[\"']")
     try:
-        lines = Path(ledger_file).read_text(encoding="utf-8", errors="replace").splitlines()
+        lines = Path(ledger_file).read_text(encoding="utf-8", errors="replace").split("\n")
     except OSError:
         return None
     for lineno, line in enumerate(lines, start=1):
