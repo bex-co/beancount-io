@@ -696,15 +696,19 @@ def open_records(
     delim = detect_delimiter(source, encoding=encoding) if delimiter is None else delimiter
     with open(source, encoding=_read_codec(encoding), newline="") as stream:
         reader = csv.reader(stream, delimiter=delim, strict=True)
+        # A malformed record is reported where it starts: `line_num` has by
+        # then run to the end of the file when an unclosed quote swallowed it.
+        header_start = 1
         try:
             first = next(reader, None)
             # Blank lines before the header (some bank exports start with
             # one) are not the header; `detect_delimiter` skips them too, and
             # `line_num` keeps counting them, so file lines stay right.
             while first is not None and not any(cell.strip() for cell in first):
+                header_start = reader.line_num + 1
                 first = next(reader, None)
         except csv.Error as exc:
-            raise _malformed(source, reader.line_num, exc) from None
+            raise _malformed(source, header_start, exc) from None
         except UnicodeDecodeError as exc:
             raise _decode_usage_error(source, exc, encoding) from None
         headers = [cell.strip() for cell in first or []]
@@ -722,7 +726,7 @@ def open_records(
                     yield start, {name: record[i] if i < len(record) else "" for i, name in enumerate(headers)}
                     start = reader.line_num + 1
             except csv.Error as exc:
-                raise _malformed(source, reader.line_num, exc) from None
+                raise _malformed(source, start, exc) from None
             except UnicodeDecodeError as exc:
                 raise _decode_usage_error(source, exc, encoding) from None
 

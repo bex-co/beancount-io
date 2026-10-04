@@ -155,3 +155,34 @@ def test_the_row_ordinal_is_unchanged(tmp_path: Path, ledger: Path) -> None:
     message = _message(_import(tmp_path, ledger, MULTILINE + ",,\n2026-13-02,-7,Dinner\n"))
 
     assert message.startswith("Row 2 "), "the blank row still does not consume an ordinal"
+
+
+@pytest.mark.parametrize("trailing", [0, 1, 25])
+def test_an_unclosed_quote_names_the_line_it_opens_on(tmp_path: Path, ledger: Path, trailing: int) -> None:
+    """w1/162: the error named the last line of the file, wherever the quote opened."""
+    body = (
+        "2024-02-01,-1.00,Coffee\n"
+        + '2024-02-02,-2.00,"Tea\n'
+        + "".join(f"2024-02-{day + 3:02d},-1,Row\n" for day in range(trailing))
+    )
+    before = ledger.read_bytes()
+
+    message = _message(_import(tmp_path, ledger, body))
+
+    assert message.startswith("Line 3: bank.csv is not well-formed CSV"), message
+    assert ledger.read_bytes() == before
+
+
+@pytest.mark.parametrize("module", ["cli.csv_mapper", "bea_engine.csv_mapper"])
+def test_both_readers_name_the_opening_line(tmp_path: Path, module: str) -> None:
+    from importlib import import_module
+
+    reader = import_module(module)
+    source = tmp_path / "bank.csv"
+    source.write_text(HEADER + '2024-02-02,-2.00,"Tea\n2024-02-03,-1,A\n2024-02-04,-1,B\n')
+    with pytest.raises(Exception, match=r"^Line 2: "), reader.open_records(source) as (_headers, rows):
+        list(rows)
+    unclosed_header = tmp_path / "header.csv"
+    unclosed_header.write_text('\n"Date,Amount,Description\n2024-02-03,-1,A\n')
+    with pytest.raises(Exception, match=r"^Line 2: "), reader.open_records(unclosed_header, delimiter=","):
+        pass
