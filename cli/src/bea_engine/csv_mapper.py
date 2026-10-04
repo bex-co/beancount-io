@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from bea_engine.amounts import require_decimal_notation
+from bea_engine.ledger.text import is_commodity, require_commodity
 from bea_engine.protocol import UsageError
 
 _MAPPING_FIELDS = frozenset(
@@ -63,13 +64,6 @@ _UNAMBIGUOUS_SYMBOLS = {
     "₱": "PHP",
     "₦": "NGN",
 }
-
-_CURRENCY_CODE = re.compile(r"[A-Z][A-Z0-9'._-]*[A-Z0-9]|[A-Z]")
-
-
-def _is_currency_code(text: str) -> bool:
-    """Whether the text is a Beancount commodity name, so it can be a constant."""
-    return bool(_CURRENCY_CODE.fullmatch(text))
 
 
 def _cell_symbol_currency(value: str) -> tuple[str, str] | None:
@@ -836,7 +830,7 @@ class CsvImporter:
         if (
             constant is not None
             and counts[constant] == 0
-            and _is_currency_code(constant)
+            and is_commodity(constant)
             and _lookalike_header(constant, headers) is None
         ):
             # A constant relabels every row's money, so it must be a
@@ -1015,6 +1009,15 @@ class CsvImporter:
                         f"{where}: no currency column and the ledger has no single operating currency. "
                         "Name the commodity with --csv currency=CODE, or open the source account for one currency."
                     )
+                try:
+                    # The cell is printed bare into both postings, so anything
+                    # but one commodity token — a line break above all — would
+                    # write accounting syntax the bank row never meant.
+                    require_commodity(currency)
+                except ValueError as exc:
+                    raise UsageError(
+                        f"{where}, column {columns.get('currency')!r}: {exc} Nothing was written."
+                    ) from None
                 self._check_cell_symbols(row, where, currency, amount_columns)
                 # An unmapped or blank payee is absent, not empty: a bare `""`
                 # payee would be printed into every entry the mapping writes.

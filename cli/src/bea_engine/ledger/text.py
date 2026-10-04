@@ -98,7 +98,7 @@ def require_commodity(value: str) -> str:
     if not is_commodity(value):
         raise ValueError(
             f"{value!r} is not one commodity; use capital letters and digits, optionally "
-            "with ' . _ - inside, such as USD, VFINX, NT.TO or /6J. Repeat the option for several."
+            "with ' . _ - inside, such as USD, VFINX, NT.TO or /6J."
         )
     return value
 
