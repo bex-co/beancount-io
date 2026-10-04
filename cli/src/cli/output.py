@@ -215,8 +215,12 @@ def _glob_files(pattern: str) -> list[Path]:
     return [path for path in sorted(Path(p) for p in glob.glob(pattern, recursive=True)) if path.is_file()]
 
 
-def _walk_closure(root: Path) -> tuple[list[Path], list[MissingInclude]]:
-    """The root plus every reachable file, with the includes that resolve nowhere.
+def walk_closure(*roots: Path) -> tuple[list[Path], list[MissingInclude]]:
+    """The roots plus every reachable file, with the includes that resolve nowhere.
+
+    Several roots share one walk, so a file reachable from many of them is
+    read once: walking each root separately is quadratic on a long include
+    chain (w1/087).
 
     Read textually on purpose: this runs before the ledger is loaded (it is
     what keeps a `-o` from truncating the file the load is about to read, and
@@ -226,7 +230,7 @@ def _walk_closure(root: Path) -> tuple[list[Path], list[MissingInclude]]:
     members: list[Path] = []
     missing: list[MissingInclude] = []
     seen: set[Path] = set()
-    stack = [root]
+    stack = list(reversed(roots))
     while stack:
         current = stack.pop()
         try:
@@ -253,13 +257,13 @@ def _walk_closure(root: Path) -> tuple[list[Path], list[MissingInclude]]:
 
 def ledger_closure(root: Path) -> list[Path]:
     """The root ledger plus every file its `include` chain can reach."""
-    members, _ = _walk_closure(root)
+    members, _ = walk_closure(root)
     return members
 
 
 def missing_includes(root: Path) -> list[MissingInclude]:
     """The `include` strings in the root's reachable graph that match no file."""
-    _, missing = _walk_closure(root)
+    _, missing = walk_closure(root)
     return missing
 
 

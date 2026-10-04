@@ -54,7 +54,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [074](./074.md) — A signal during Beancount parsing is swallowed: a stopped write can still land, or staging copies leak — **minor**, CLI QA 2026-10-02.
 - [075](./075.md) — Write locks are case-sensitive on macOS, so writers using differently-cased paths can lose an add (partly verified) — **minor**, CLI QA 2026-10-02.
 - [085](./085.md) — Unexpected engine exceptions lose their type and traceback: a bad BQL date literal exits 1 and `--debug` cannot locate it — **minor**, CLI QA 2026-10-03.
-- [087](./087.md) — `bea format --check` is quadratic on long include chains (86 s for 1,500 files) — **minor**, CLI QA 2026-10-03.
 - [092](./092.md) — `add transaction --json` output for a `{{total}}` cost is refused when fed back if the balancing leg was omitted — **minor**, CLI QA 2026-10-03.
 - [093](./093.md) — `add transaction --json` output drops a `@@` total, so feeding it back writes a repeating `@` unit price — **minor**, CLI QA 2026-10-03.
 - [094](./094.md) — Bulk-added posting metadata is written at posting indentation, so it reads as transaction metadata — **minor**, CLI QA 2026-10-03.

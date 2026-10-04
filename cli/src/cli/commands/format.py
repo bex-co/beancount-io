@@ -359,7 +359,7 @@ def _targets(
         return None, []
 
     files: set[Path] = set()
-    missing: dict[tuple[str, Path], output.MissingInclude] = {}
+    roots: list[Path] = []
     for path in named:
         resolved = path.expanduser().resolve()
         if not resolved.exists():
@@ -388,20 +388,20 @@ def _targets(
             if resolved.suffix not in SUFFIXES:
                 raise UsageError("Expected a .bean or .beancount file, or a directory.")
             files.add(resolved)
-            if expand_includes:
-                # Every member, whatever its suffix: `SUFFIXES` says which files
-                # a directory walk treats as ledgers, but an `include` already
-                # made `entries.inc` part of this ledger (w1/041).
-                for member in output.ledger_closure(resolved):
-                    files.add(member.resolve())
-                for item in output.missing_includes(resolved):
-                    missing[(item.include, item.source)] = item
+            roots.append(resolved)
         else:
             raise UsageError(f"Not a regular file or directory: {resolved}")
-    if expand_includes:
-        for file in sorted(files):
-            for item in output.missing_includes(file):
-                missing[(item.include, item.source)] = item
+    if not expand_includes:
+        return sorted(files), []
+    # Every member, whatever its suffix: `SUFFIXES` says which files a
+    # directory walk treats as ledgers, but an `include` already made
+    # `entries.inc` part of this ledger (w1/041). One shared walk per set of
+    # roots — never one per file, which is quadratic on a long chain (w1/087).
+    members, _ = output.walk_closure(*roots)
+    files.update(member.resolve() for member in members)
+    missing: dict[tuple[str, Path], output.MissingInclude] = {}
+    for item in output.walk_closure(*sorted(files))[1]:
+        missing[(item.include, item.source)] = item
     return sorted(files), list(missing.values())
 
 
