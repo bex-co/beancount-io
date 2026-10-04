@@ -413,7 +413,8 @@ helper, and refuses bean-check options such as `-v` for it (exit **2**): drop
 the options, or re-save the file as NFC — `format -i` does not renormalize.
 Non-NFC text in comments and strings does not count. A file that
 is not UTF-8 at all fails with its path, the offending byte offset, and a hint
-to re-save as UTF-8.
+to re-save as UTF-8; piped input to `bea format -` fails the same way, naming
+`stdin`, before anything is written.
 
 A directory is walked for `.bean` and `.beancount` files, and a walked entry it
 cannot read stops the run (exit **2**) naming the path and where it points — a

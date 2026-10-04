@@ -511,13 +511,29 @@ def _render(file: Path | None, alignment: list[str], destination: Path | None) -
     """Keep every output mode on the engine's single formatting transformation."""
     data = launch.helper_json(
         ["format", "--render", *alignment, str(file) if file is not None else STDIN],
-        stdin=sys.stdin.read() if file is None else None,
+        stdin=_stdin_text() if file is None else None,
     )
     text = str(data["text"])
     if destination is None or str(destination) == STDIN:
         sys.stdout.write(text)
     else:
         destination.write_text(text, encoding="utf-8")
+
+
+def _stdin_text() -> str:
+    """Piped ledger text, held to the same UTF-8 rule as a named file (w1/166).
+
+    Text-mode stdin decodes with surrogateescape, which lets an invalid byte
+    through as a lone surrogate that only fails later, as an "encode" error
+    naming neither the input nor the remedy.
+    """
+    stream = getattr(sys.stdin, "buffer", None)
+    if stream is None:
+        return sys.stdin.read()
+    try:
+        return bytes(stream.read()).decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise LedgerError(decode_error_message("stdin", exc)) from exc
 
 
 def _require_json_destination(in_place: bool, output_file: Path | None) -> None:
