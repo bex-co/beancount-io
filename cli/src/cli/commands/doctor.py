@@ -9,6 +9,7 @@ from pathlib import Path
 
 import typer
 
+from cli import output
 from cli.engine import launch
 from cli.errors import BeaError, ConflictError, LedgerError, refuse_json
 from cli.native_command import ForwardingCommand
@@ -134,6 +135,27 @@ def _syntax_errors_of(filename: str) -> list[str]:
     return [str(error) for error in data.get("files", {}).get(filename, [])]
 
 
+def _closure_syntax_errors_of(filename: str) -> list[str]:
+    """Syntax errors anywhere in the ledger's include closure, root first.
+
+    `print-options` and `roundtrip` load the whole ledger, so an unparseable
+    include fails them just as surely as an unparseable root: the loader logs
+    the error and carries on with whatever it recovered. `lex` and `parse`
+    read only the named file upstream, and keep using `_syntax_errors_of`.
+    Fails open exactly like that helper does.
+    """
+    root = Path(filename)
+    if not root.is_file():
+        return []
+    members = [str(member) for member in output.ledger_closure(root)]
+    try:
+        data = launch.helper_json(["syntax", *members])
+    except BeaError:
+        return []
+    files = data.get("files", {})
+    return [str(error) for member in members for error in files.get(member, [])]
+
+
 def _refuse_json() -> None:
     """Doctor has no JSON output; every operation says so the same way."""
     refuse_json(
@@ -187,7 +209,7 @@ def _forward_print_options(ctx: typer.Context) -> None:
     args = list(ctx.args)
     positionals = _positionals(args)
     if positionals:
-        errors = _syntax_errors_of(positionals[0])
+        errors = _closure_syntax_errors_of(positionals[0])
         if errors:
             raise LedgerError(f"doctor print-options cannot load {positionals[0]}: {errors[0]}")
     code = launch.run_native("bean-doctor", ["print-options", *args])
@@ -240,7 +262,7 @@ def _forward_roundtrip(ctx: typer.Context) -> None:
     positionals = _positionals(args)
     if positionals:
         _refuse_roundtrip_collisions(positionals[0])
-    errors = _syntax_errors_of(positionals[0]) if positionals else []
+    errors = _closure_syntax_errors_of(positionals[0]) if positionals else []
     completed = launch.capture_native("bean-doctor", ["roundtrip", *args])
     if errors:
         _replay_without_congratulations(completed)

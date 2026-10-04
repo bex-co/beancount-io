@@ -50,7 +50,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 ## Inbox
 
 - [061](./061.md) — A ledger plugin or importer that prints to stdout corrupts the engine envelope: successful writes report exit 4 — **major**, CLI QA 2026-10-02.
-- [068](./068.md) — `doctor roundtrip` and `doctor print-options` ignore syntax errors in included files and exit 0 — **minor**, CLI QA 2026-10-02.
 - [071](./071.md) — `bea balance ACCOUNT` hides closed accounts that still hold money, so totals disagree with the trial balance — **major**, CLI QA 2026-10-02.
 - [072](./072.md) — Parents whose children cancel show `—` instead of the promised explicit zero for plain currencies and in filtered views — **minor**, CLI QA 2026-10-02.
 - [073](./073.md) — A read-only included directory blocks every write with a raw `Errno 13` reported as a validation error — **minor**, CLI QA 2026-10-02.
