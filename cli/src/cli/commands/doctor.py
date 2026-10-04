@@ -221,9 +221,11 @@ def _roundtrip_artifacts(ledger: str) -> list[Path]:
 
     Derived exactly as `beancount.scripts.doctor.roundtrip` does —
     `os.path.splitext` then `<base>.roundtrip1<ext>` — because the refusal
-    below is only worth as much as its agreement with upstream.
+    below is only worth as much as its agreement with upstream. Upstream's
+    `ledger_path` is `click.Path(resolve_path=True)`, so a symlinked ledger is
+    resolved first and the scratch files land beside its target (w1/156).
     """
-    base, extension = os.path.splitext(ledger)
+    base, extension = os.path.splitext(os.path.realpath(ledger))
     return [Path(f"{base}.roundtrip{index}{extension}") for index in (1, 2)]
 
 

@@ -79,6 +79,7 @@ def test_the_artifact_names_match_upstream(tmp_path: Path) -> None:
 
     from beancount.scripts import doctor
 
+    assert "click.Path(resolve_path=True" in inspect.getsource(doctor), "upstream no longer resolves the ledger"
     body = inspect.getsource(doctor.roundtrip.callback)
     assert "os.path.splitext(filename)" in body
     for index in (1, 2):
@@ -184,3 +185,39 @@ def test_an_invalid_ledger_keeps_its_own_diagnostic(tmp_path: Path) -> None:
     assert done.returncode == 1
     assert "Congratulations" not in done.stdout + done.stderr
     assert _digest(ledger) == before
+
+
+def _symlinked(tmp_path: Path, main_text: str) -> tuple[Path, Path]:
+    books = tmp_path / "books"
+    books.mkdir()
+    ledger = books / "main.bean"
+    ledger.write_text(main_text, encoding="utf-8")
+    link = tmp_path / "link.bean"
+    link.symlink_to(ledger)
+    return ledger, link
+
+
+def test_a_symlinked_ledger_guards_the_names_beside_its_target(tmp_path: Path) -> None:
+    """Upstream resolves the link, so its scratch files land beside the target (w1/156)."""
+    ledger, link = _symlinked(tmp_path, MAIN_WITH_INCLUDE)
+    include = ledger.parent / "main.roundtrip1.bean"
+    include.write_text(INCLUDED, encoding="utf-8")
+    before = _digest(include)
+
+    done = _bea(tmp_path, "doctor", "roundtrip", str(link))
+
+    assert done.returncode == 4, done.stdout + done.stderr
+    assert str(include.resolve()) in done.stderr
+    assert include.exists() and _digest(include) == before
+    assert _bea(tmp_path, "--json", "--file", str(ledger), "check").returncode == 0
+
+
+def test_a_symlinked_ledger_with_free_names_runs_and_leaves_nothing(tmp_path: Path) -> None:
+    ledger, link = _symlinked(tmp_path, SELF_CONTAINED)
+
+    done = _bea(tmp_path, "doctor", "roundtrip", str(link))
+
+    assert done.returncode == 0, done.stderr
+    assert "Congratulations" in done.stdout + done.stderr
+    assert sorted(path.name for path in ledger.parent.iterdir()) == ["main.bean"]
+    assert sorted(path.name for path in tmp_path.iterdir() if path.suffix == ".bean") == ["link.bean"]

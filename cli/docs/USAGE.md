@@ -258,7 +258,7 @@ upstream's output unchanged; these are the failure modes:
 |---|---|
 | `parse`, `lex` | The ledger has syntax errors (upstream's trace still prints) |
 | `print-options` | The ledger or any file it includes does not parse; no default options are printed |
-| `roundtrip` | The ledger or any file it includes does not parse (the trace prints without its congratulations), **or** the comparison reports `Entries differ!` — a valid ledger that does not survive upstream's own print/parse cycle. `roundtrip` exits **4** without running when `<stem>.roundtrip1<suffix>` or `.roundtrip2<suffix>` already exists, since upstream would overwrite and then delete them |
+| `roundtrip` | The ledger or any file it includes does not parse (the trace prints without its congratulations), **or** the comparison reports `Entries differ!` — a valid ledger that does not survive upstream's own print/parse cycle. `roundtrip` exits **4** without running when `<stem>.roundtrip1<suffix>` or `.roundtrip2<suffix>` already exists beside the ledger (beside its target, for a symlinked ledger), since upstream would overwrite and then delete them |
 | `linked`, `region` | The link or region matches no entries |
 | `missing-open` | Postings reference a closed account (upstream's missing opens still print) |
 | `directories` | Upstream reports an `ERROR:` line |
