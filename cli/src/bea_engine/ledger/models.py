@@ -188,8 +188,9 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
     if cost is not None:
         if cost.number_total is not None and cost.number_total is not MISSING:
             raise ValueError(
-                f"amount {amount!r} uses a total cost '{{{{...}}}}', which bulk input cannot express. "
-                "Split the lot into a per-unit cost '{...}', or use `add transaction` for a total cost."
+                f"amount {amount!r} uses a total cost '{{{{...}}}}', which the amount shorthand cannot express. "
+                'Split the lot into a per-unit cost \'{...}\', or use "units" with a structured "cost" '
+                'carrying "number_total" and "currency".'
             )
         if cost.number_per is MISSING or cost.currency is MISSING:
             refuse("incomplete cost")

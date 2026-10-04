@@ -299,6 +299,39 @@ class TestCostSpecWrites:
         posting = next(p for e in entries if isinstance(e, Transaction) and e.narration == "Buy2" for p in e.postings)
         assert posting.cost.number == Decimal("125.00")
 
+    @pytest.mark.parametrize("cash", [[], ["-p", "Assets:Cash -250.00 USD"]], ids=["inferred-cash", "explicit-cash"])
+    def test_a_total_cost_answer_with_an_inferred_leg_round_trips(self, tmp_path: Path, cash: list[str]) -> None:
+        """w1/092: `number: null` beside a total is the total cost `{{...}}`, not `{# ...}`.
+
+        Written as `{# total}`, the per-unit cost was left to interpolate, so
+        with an amount-less cash leg Beancount had two unknowns and refused it.
+        """
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(LOT_LEDGER)
+        added = _bea(
+            tmp_path,
+            *("--json", "--file", str(ledger), "add", "transaction", "--date", "2026-03-03"),
+            *("--narration", "Buy2", "-p", "Assets:Brokerage 2 HOOL {{250.00 USD}}"),
+            *(cash or ["-p", "Assets:Cash"]),
+        )
+        assert added.returncode == 0, added.stderr
+        first = ledger.read_text()[len(LOT_LEDGER) :]
+        directive = json.loads(added.stdout)["data"]["directive"]
+
+        ledger.write_text(LOT_LEDGER)
+        rows = tmp_path / "rows.json"
+        fields = ("date", "narration", "postings")
+        rows.write_text(json.dumps([{key: directive[key] for key in fields}]))
+        bulk = _bea(tmp_path, "--file", str(ledger), "add", "transactions", "--from", str(rows))
+
+        assert bulk.returncode == 0, bulk.stderr
+        assert ledger.read_text()[len(LOT_LEDGER) :] == first
+        assert "{0 # 250.00 USD}" in first
+        entries, errors, _ = loader.load_file(ledger)
+        assert not errors, errors
+        posting = next(p for e in entries if isinstance(e, Transaction) and e.narration == "Buy2" for p in e.postings)
+        assert posting.cost.number == Decimal("125.00")
+
     def test_nothing_is_written_when_the_answer_cannot_be_encoded(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:

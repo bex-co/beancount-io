@@ -315,13 +315,19 @@ def format_transaction(directive: TransactionHeader) -> str:
         if p.price_total is not None:
             price = None
             meta[TOTAL_PRICE_META] = BcAmount(p.price_total.number, p.price_total.currency)
+        cost = None
+        if p.cost is not None:
+            # A total with no per-unit number is a total cost, `{{total}}`, as
+            # `add transaction --json` reports one. Writing `{# total}` instead
+            # would leave the per-unit cost to interpolate, a second unknown
+            # beside an amount-less balancing leg.
+            per = Decimal(0) if p.cost.number is None and p.cost.number_total is not None else p.cost.number
+            cost = CostSpec(per, p.cost.number_total, p.cost.currency, p.cost.date, p.cost.label, False)
         postings.append(
             Posting(
                 account=p.account,
                 units=BcAmount(p.units.number, p.units.currency) if p.units else None,
-                cost=CostSpec(p.cost.number, p.cost.number_total, p.cost.currency, p.cost.date, p.cost.label, False)
-                if p.cost
-                else None,
+                cost=cost,
                 price=price,
                 flag=p.flag,
                 meta=meta,

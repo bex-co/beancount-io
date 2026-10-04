@@ -53,7 +53,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [073](./073.md) — A read-only included directory blocks every write with a raw `Errno 13` reported as a validation error — **minor**, CLI QA 2026-10-02.
 - [074](./074.md) — A signal during Beancount parsing is swallowed: a stopped write can still land, or staging copies leak — **minor**, CLI QA 2026-10-02.
 - [075](./075.md) — Write locks are case-sensitive on macOS, so writers using differently-cased paths can lose an add (partly verified) — **minor**, CLI QA 2026-10-02.
-- [092](./092.md) — `add transaction --json` output for a `{{total}}` cost is refused when fed back if the balancing leg was omitted — **minor**, CLI QA 2026-10-03.
 - [093](./093.md) — `add transaction --json` output drops a `@@` total, so feeding it back writes a repeating `@` unit price — **minor**, CLI QA 2026-10-03.
 - [094](./094.md) — Bulk-added posting metadata is written at posting indentation, so it reads as transaction metadata — **minor**, CLI QA 2026-10-03.
 - [099](./099.md) — Ledger writes keep only mode bits: group, ACLs, extended attributes and file flags are dropped — **major**, CLI QA 2026-10-03.

@@ -957,11 +957,13 @@ bea add transaction "Buy AAPL" --date 2026-08-02 \
 Per-unit and total prices (`@`, `@@`) and total costs (`{{...}}`) are supported.
 A `@@` total is written back with `@@` and its exact total, never divided
 into a repeating unit price. A cost is written whole: a total cost keeps its
-total (`{# 250.00 USD}`), a currency-only or date-only lot selector keeps its
-constraint (`{EUR}`, `{2026-03-01}`) instead of relaxing to `{}`, and the JSON
-answer reports the same constraint — `number`, `number_total`, `currency`,
-`date` and `label`, with `null` for the parts you left open — so it can be fed
-straight back to `bea add transactions`. JSON remains useful for batches and metadata.
+total (`{0 # 250.00 USD}`, the same lot as `{{250.00 USD}}`), a currency-only
+or date-only lot selector keeps its constraint (`{EUR}`, `{2026-03-01}`)
+instead of relaxing to `{}`, and the JSON answer reports the same constraint —
+`number`, `number_total`, `currency`, `date` and `label`, with `null` for the
+parts you left open — so it can be fed straight back to
+`bea add transactions`. In bulk input a `cost` with a `number_total` and a `null`
+`number` is that total cost. JSON remains useful for batches and metadata.
 Open `Assets:Brokerage` in AAPL and `Assets:Cash` in USD before applying this purchase:
 
 ```json
@@ -988,8 +990,9 @@ proceeds and realized gain postings. Use `"price_total"` instead of `"price"`
 for a total price; the two are mutually exclusive. Booking validates that the lot exists.
 Cost dates are optional; specify one to select a particular acquisition lot.
 Bulk `amount` shorthand accepts the same lot spelling: `"amount": "5 HOOL
-{10 USD}"`, with optional date, label, and `@`/`@@` price. Total costs
-(`{{...}}`) need `add transaction`; bulk costs are per-unit.
+{10 USD}"`, with optional date, label, and `@`/`@@` price. The shorthand
+cannot spell a total cost (`{{...}}`); use `units` with a structured `cost`
+carrying `number_total` instead.
 
 Round-trip guarantee: the `units`, `cost`, and `price` shapes in `add
 transaction --json` output are valid `add transactions` input, so a
