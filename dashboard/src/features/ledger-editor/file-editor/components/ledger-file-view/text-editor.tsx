@@ -180,8 +180,10 @@ export const TextEditor = ({
           },
         ],
       );
-    } else {
-      // No target line: scroll to end so users see the latest transactions
+    } else if (language === "beancount") {
+      // No target line: a ledger is chronological, so scroll to the end where
+      // the latest transactions are. Other text (a README, a config) reads
+      // from the top and keeps Monaco's line-1 start.
       const model = editor.getModel();
       if (model) {
         const lastLine = model.getLineCount();
@@ -194,6 +196,8 @@ export const TextEditor = ({
           editor.focus();
         }
       }
+    } else if (!readOnly) {
+      editor.focus();
     }
 
     onEditorMount?.(editor, monaco);
