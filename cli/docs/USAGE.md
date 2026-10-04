@@ -516,7 +516,8 @@ files untouched and exits **1** when formatting is needed, **0** when all
 scanned files are formatted.
 
 `format --check` gates on alignment, parseability, and the include graph:
-a named file stands for its whole include closure, a file the parser rejects
+a named file stands for its whole include closure — every file an `include`
+reaches, whatever its suffix (`entries.inc` too) — a file the parser rejects
 fails instead of reading as "already formatted", and an include that matches
 nothing fails naming the directive. `--in-place` formats every reachable file
 and skips the unparseable ones, exiting nonzero when anything was skipped.

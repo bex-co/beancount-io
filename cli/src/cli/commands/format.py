@@ -389,9 +389,11 @@ def _targets(
                 raise UsageError("Expected a .bean or .beancount file, or a directory.")
             files.add(resolved)
             if expand_includes:
+                # Every member, whatever its suffix: `SUFFIXES` says which files
+                # a directory walk treats as ledgers, but an `include` already
+                # made `entries.inc` part of this ledger (w1/041).
                 for member in output.ledger_closure(resolved):
-                    if member.suffix in SUFFIXES:
-                        files.add(member.resolve())
+                    files.add(member.resolve())
                 for item in output.missing_includes(resolved):
                     missing[(item.include, item.source)] = item
         else:
