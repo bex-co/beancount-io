@@ -108,7 +108,8 @@ carrying a symbol that names exactly one commodity (`€`, `£`, `₹`, …) and
 contradicts the resolved currency is refused naming the row and the symbol,
 rather than relabelled; `$` and `¥` name several commodities each and are
 accepted as before. `--account` names the source account and
-is required. The file may start with a BOM; header cells are stripped before
+is required. The file may start with a BOM and with blank lines before the
+header (error line numbers still count them); header cells are stripped before
 matching. Field separators are detected from the header among comma,
 semicolon, tab, and pipe — the one on which the header and the first rows
 split into the same number of fields, so quoted `;` or dates like

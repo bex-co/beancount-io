@@ -688,6 +688,11 @@ def open_records(
         reader = csv.reader(stream, delimiter=delim, strict=True)
         try:
             first = next(reader, None)
+            # Blank lines before the header (some bank exports start with
+            # one) are not the header; `detect_delimiter` skips them too, and
+            # `line_num` keeps counting them, so file lines stay right.
+            while first is not None and not any(cell.strip() for cell in first):
+                first = next(reader, None)
         except csv.Error as exc:
             raise _malformed(source, reader.line_num, exc) from None
         except UnicodeDecodeError as exc:
