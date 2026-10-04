@@ -983,7 +983,10 @@ def appended_content(original: bytes, texts: list[str]) -> str:
     text = original.decode("utf-8")
     ending = _dominant_ending(original)
     blocks = _indent_block(texts, _destination_indent(text))
-    draft = text + "".join("\n" + block + "\n" for block in blocks)
+    # Terminate the last line first: otherwise the separator's newline only
+    # ends it, and the first entry lands with no blank line before it (w1/100).
+    terminated = text if not text or text.endswith(("\n", "\r")) else text + "\n"
+    draft = terminated + "".join("\n" + block + "\n" for block in blocks)
     kept = len(_lines(text))
     tail = _lines(draft)[kept:]
     try:

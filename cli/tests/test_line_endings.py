@@ -47,6 +47,29 @@ def test_missing_final_newline_is_repaired(tmp_path: Path) -> None:
     assert runner.invoke(app, ["--file", str(file), "check"]).exit_code == 0
 
 
+@pytest.mark.parametrize("ending", ["\n", "\r\n"])
+def test_a_newlineless_append_matches_the_terminated_control(tmp_path: Path, ending: str) -> None:
+    """The repair keeps the blank line before the new entry (w1/100).
+
+    Without a final newline the separator's newline only ended the last line,
+    so the entry was glued to the last posting with no blank line between.
+    """
+    ledger = (
+        OPENS + "2020-01-01 open Equity:Opening USD\n\n"
+        '2020-01-02 * "Open"\n  Assets:Cash  100.00 USD\n  Equity:Opening\n'
+    ).replace("\n", ending)
+    bare, control = tmp_path / "bare.bean", tmp_path / "control.bean"
+    bare.write_bytes(ledger.removesuffix(ending).encode())
+    control.write_bytes(ledger.encode())
+
+    for file in (bare, control):
+        result = _add(file, "Expenses:Food 2 USD", "Assets:Cash")
+        assert result.exit_code == 0, result.output
+
+    assert bare.read_bytes() == control.read_bytes()
+    assert f"  Equity:Opening{ending}{ending}2026-03-01".encode() in bare.read_bytes()
+
+
 def test_failed_append_leaves_a_newlineless_file_untouched(tmp_path: Path) -> None:
     file = tmp_path / "main.bean"
     file.write_text(OPENS.rstrip("\n"))
