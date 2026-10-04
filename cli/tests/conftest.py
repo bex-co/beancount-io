@@ -360,7 +360,9 @@ def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., Te
     later prompt cannot accidentally match the one from an earlier turn.
     """
 
-    def run(argv: list[str], script: list[str], *, timeout: float = 120.0) -> TerminalRun:
+    def run(
+        argv: list[str], script: list[str], *, timeout: float = 120.0, env_overrides: dict[str, str] | None = None
+    ) -> TerminalRun:
         env = {k: v for k, v in os.environ.items() if not k.startswith("BEA_")}
         env.update(
             BEA_CONFIG_DIR=str(tmp_path / "config"),
@@ -376,6 +378,7 @@ def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., Te
             COLUMNS="100",
             LINES="40",
         )
+        env.update(env_overrides or {})
         pid, fd = pty.fork()
         if pid == 0:  # pragma: no cover - replaced by exec in the child
             os.chdir(tmp_path)

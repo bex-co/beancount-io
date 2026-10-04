@@ -281,7 +281,9 @@ def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | 
             continue
         messages = list(result.all_messages())
         console.print()
-        console.print(Markdown(inert_text(result.output)))
+        # No OSC 8 hyperlink: its visible text is the model's, so it could read
+        # one address and open another. The target is printed beside it instead.
+        console.print(Markdown(inert_text(result.output), hyperlinks=False))
 
 
 def _print_help() -> None:

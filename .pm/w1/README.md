@@ -59,7 +59,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [094](./094.md) — Bulk-added posting metadata is written at posting indentation, so it reads as transaction metadata — **minor**, CLI QA 2026-10-03.
 - [095](./095.md) — After an approved `ask` write, a failed turn claims "nothing was written to your ledger" and forgets the write — **major**, CLI QA 2026-10-03.
 - [096](./096.md) — One long cell bypasses `ask`'s ~12,000-character query-result limit — **minor**, CLI QA 2026-10-03.
-- [097](./097.md) — `ask` renders model Markdown links as disguised terminal hyperlinks — **minor**, CLI QA 2026-10-03.
 - [098](./098.md) — The engine imports Python modules from the current directory, so untrusted folders run code and `check` modes disagree — **major**, CLI QA 2026-10-03.
 - [099](./099.md) — Ledger writes keep only mode bits: group, ACLs, extended attributes and file flags are dropped — **major**, CLI QA 2026-10-03.
 - [100](./100.md) — Appending to a ledger without a final newline drops the blank line before the new entry — **minor**, CLI QA 2026-10-03.

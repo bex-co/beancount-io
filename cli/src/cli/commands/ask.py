@@ -84,8 +84,10 @@ def ask(
             result = agent.run_sync(question, deps=deps, usage_limits=usage_limits())
         # The answer is model-controlled text on its way to a terminal, so it
         # obeys the same invariant as every other untrusted string the CLI
-        # prints (w3/392): no control character reaches the screen raw.
-        console.print(Markdown(inert_text(result.output)))
+        # prints (w3/392): no control character reaches the screen raw. Rich
+        # would otherwise emit one itself — an OSC 8 hyperlink whose visible
+        # text the model chose — so a link is rendered with its target shown.
+        console.print(Markdown(inert_text(result.output), hyperlinks=False))
     else:
         from cli.ask.repl import print_welcome, run_repl
 

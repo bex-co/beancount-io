@@ -230,3 +230,45 @@ def test_the_answer_channel_is_neutralized_in_print_mode(
     assert run.status == 0, run.screen
     assert CSI.search(run.emitted) is None, f"raw CSI reached the terminal: {CSI.findall(run.emitted)[:4]}"
     assert "\\x1b[1A\\x1b[2KAPPROVED" in run.screen
+
+
+# ── a model's Markdown link cannot disguise its target (w1/097) ────────────
+
+#: A link whose visible text names one site and whose target is another.
+DISGUISED_LINK = "Log in at [https://beancount.io/login](https://evil.example/phish) now."
+OSC8 = b"\x1b]8;"
+#: A terminal that renders hyperlinks. The PTY default is `TERM=dumb`, under
+#: which Rich emits no styling at all, so the escape could never appear there.
+LINK_TERMINAL = {"TERM": "xterm-256color"}
+
+
+def _visible(run: Any) -> str:
+    return str(CSI.sub(b"", run.emitted).decode("utf-8", "replace"))
+
+
+def test_a_markdown_link_shows_its_target_in_print_mode(
+    split_ledger: Path, stub_model: StubModel, ask_on_a_terminal: Any
+) -> None:
+    stub_model.reply = lambda n: model_answer(DISGUISED_LINK)
+
+    run = ask_on_a_terminal(["--file", str(split_ledger), "ask", "--print", "link"], [], env_overrides=LINK_TERMINAL)
+
+    assert run.status == 0, run.screen
+    assert OSC8 not in run.emitted, "the answer opened a terminal hyperlink"
+    assert "https://evil.example/phish" in _visible(run)
+
+
+def test_a_markdown_link_shows_its_target_in_the_session(
+    split_ledger: Path, stub_model: StubModel, ask_on_a_terminal: Any
+) -> None:
+    stub_model.reply = lambda n: model_answer(DISGUISED_LINK)
+
+    run = ask_on_a_terminal(
+        ["--file", str(split_ledger), "ask"],
+        ["link", "@ENTER", "@WAIT:now.", "@WAIT:❯", "@CTRL_D"],
+        env_overrides=LINK_TERMINAL,
+    )
+
+    assert run.status == 0, run.screen
+    assert OSC8 not in run.emitted, "the answer opened a terminal hyperlink"
+    assert "https://evil.example/phish" in _visible(run)
