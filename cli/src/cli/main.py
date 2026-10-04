@@ -61,7 +61,13 @@ def _settle_stdout() -> None:
     ignored on flushing sys.stdout` and replaces the exit code with 120. Doing
     the flush inside the guard turns that into a `BrokenPipeError` we can still
     answer for.
+
+    With fd 1 closed (`>&-`) Python sets `sys.stdout` to None and every print
+    already went nowhere; there is nothing to settle, and failing here turned
+    a write that had landed into exit 1.
     """
+    if sys.stdout is None:
+        return
     sys.stdout.flush()
 
 
