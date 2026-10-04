@@ -234,10 +234,17 @@ def query(
         _check_source_scheme(source)
         if output_file is not None:
             _refuse_source_alias(source, Path(output_file))
-        if query_string is None and sys.stdin.isatty():
-            raise typer.Exit(launch.run_engine_argv(["source-shell", *rendering, source]))
-        if query_string is None:
-            query_string = sys.stdin.read()
+        if not query_string:
+            # The same missing-query policy as `--file`: a terminal opens the
+            # shell only when prompting is allowed, and a pipe must carry BQL.
+            if not sys.stdin.isatty():
+                query_string = sys.stdin.read()
+            elif ctx.no_input:
+                raise UsageError("A query is required with --no-input. Pass it as an argument or on stdin.")
+            else:
+                raise typer.Exit(launch.run_engine_argv(["source-shell", *rendering, source]))
+        if not query_string.strip():
+            raise UsageError("A query is required as an argument or on stdin.")
         _refuse_one_shot_output(query_string)
         native_args = [*rendering, source]
         native_args.append(query_string)

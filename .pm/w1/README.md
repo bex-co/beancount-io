@@ -49,7 +49,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 
 ## Inbox
 
-- [040](./040.md) — Native `query --source` ignores `--no-input` and waits at a prompt — **minor**, CLI QA 2026-10-02.
 - [042](./042.md) — Native and stored queries silently drop trailing statements — **minor**, CLI QA 2026-10-02.
 - [043](./043.md) — Native missing stored queries print an error but exit 0 — **minor**, CLI QA 2026-10-02.
 - [060](./060.md) — A bank CSV currency cell injects additional directives through import — **major**, CLI QA 2026-10-02.
