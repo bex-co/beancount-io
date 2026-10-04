@@ -1130,6 +1130,9 @@ bea --strict-prices check   # fail when a source is stale or unavailable
 Freshness is computed at read time from the latest observation: `recent`
 within ten minutes, `stale` beyond it, `unavailable` when no revision ever
 validated. This measures observation age, not exchange trading hours.
+`observed-at` stamps compare as instants; a stamp without an offset (or a bare
+date) reads as UTC, and one more than five minutes ahead of the clock reads
+`stale`.
 A failed refresh never replaces the last good revision. `--offline` never writes
 the price cache. A cache that cannot be written still loads its prices, with a
 `price cache not writable` warning and source error. Explicit `price refresh`

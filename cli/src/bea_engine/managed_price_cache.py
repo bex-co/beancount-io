@@ -35,7 +35,6 @@ import tempfile
 import time
 from contextlib import suppress
 from dataclasses import asdict, dataclass
-from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
@@ -50,6 +49,7 @@ from bea_engine.managed_prices import (
     check_feed_identity,
     feed_revision_id,
     fetch_managed_price_feed,
+    observed_instant,
     validate_managed_price_text,
 )
 from bea_engine.protocol import LedgerError
@@ -62,6 +62,9 @@ RETRY_SECONDS = 60
 
 STALE_SECONDS = 600
 """Observation age beyond which a source reads `stale` (ADR 015 section 8)."""
+
+FUTURE_SKEW_SECONDS = 300
+"""How far ahead of the clock an observation may claim to be and still read recent."""
 
 
 @dataclass(frozen=True)
@@ -219,15 +222,12 @@ def freshness(
     """
     if blob is None:
         return "unavailable"
-    stamp = blob.feed.latest_observed_at
-    if stamp is None:
+    instant = observed_instant(blob.feed.latest_observed_at)
+    if instant is None:
         return "stale"
-    moment = stamp[:-1] + "+00:00" if stamp.endswith("Z") else stamp
-    try:
-        age = now - datetime.fromisoformat(moment).timestamp()
-    except ValueError:
-        return "stale"
-    return "recent" if age <= stale_seconds else "stale"
+    age = now - instant
+    # An observation from well past the clock is not evidence of freshness.
+    return "recent" if -FUTURE_SKEW_SECONDS <= age <= stale_seconds else "stale"
 
 
 def resolve_feed(

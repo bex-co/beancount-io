@@ -2557,3 +2557,74 @@ class TestRelativeXdgHomes:
         assert result.returncode == 0, result.stderr
         assert not (elsewhere / "relcache").exists()
         assert list((tmp_path / "home" / ".cache" / "bea" / "managed-prices").rglob("*.effective.*"))
+
+
+def _mix_feed(*stamps: str) -> str:
+    lines = ["; alias: BTC-USD"]
+    for index, stamp in enumerate(stamps):
+        lines += [f"2026-10-0{index + 1} price BTC {index + 2} USD", f'  observed-at: "{stamp}"']
+    return "\n".join(lines) + "\n"
+
+
+def _blob_for(text: str) -> PriceFeedBlob:
+    validation = validate_managed_price_text(text)
+    assert isinstance(validation, ValidFeed)
+    return PriceFeedBlob(url="u", revision="r", etag=None, text=text, fetched_at=0.0, feed=validation.feed)
+
+
+@pytest.fixture
+def time_zone(monkeypatch: pytest.MonkeyPatch) -> Any:
+    """Switch the process time zone for one test, restoring it afterwards."""
+    if not hasattr(time, "tzset"):
+        pytest.skip("time.tzset is POSIX-only")
+
+    def switch(zone: str) -> None:
+        monkeypatch.setenv("TZ", zone)
+        time.tzset()
+
+    yield switch
+    monkeypatch.undo()
+    time.tzset()
+
+
+class TestObservedAtInstants:
+    """w1/133: observed-at compares as instants, and naive stamps read as UTC."""
+
+    def test_latest_is_chosen_by_instant_not_text(self) -> None:
+        now = time.time()
+        earlier_far_east = time.strftime("%Y-%m-%dT%H:%M:%S+14:00", time.gmtime(now - 13 * 3600 + 14 * 3600))
+        recent = _stamp(now - 60)
+
+        blob = _blob_for(_mix_feed(earlier_far_east, recent))
+
+        assert blob.feed.latest_observed_at == recent
+        assert freshness(blob, now) == "recent"
+
+    @pytest.mark.parametrize("zone", ["UTC", "Etc/GMT+12", "Pacific/Kiritimati", "Asia/Kathmandu"])
+    def test_naive_stamp_ages_the_same_in_every_time_zone(self, zone: str, time_zone: Any) -> None:
+        now = time.time()
+        time_zone(zone)
+
+        recent = _blob_for(_mix_feed(time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(now - 60))))
+        old = _blob_for(_mix_feed(time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(now - 3600))))
+        day = _blob_for(_mix_feed(time.strftime("%Y-%m-%d", time.gmtime(now - 2 * 86400))))
+
+        assert freshness(recent, now) == "recent"
+        assert freshness(old, now) == "stale"
+        assert freshness(day, now) == "stale"
+
+    def test_far_future_observation_is_not_recent(self) -> None:
+        now = time.time()
+
+        assert freshness(_blob_for(_mix_feed(_stamp(now + 60))), now) == "recent"
+        assert freshness(_blob_for(_mix_feed(_stamp(now + 3600))), now) == "stale"
+
+    def test_strict_resolve_accepts_a_mixed_offset_feed(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        earlier_far_east = time.strftime("%Y-%m-%dT%H:%M:%S+14:00", time.gmtime(now - 13 * 3600 + 14 * 3600))
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": _mix_feed(earlier_far_east, _stamp(now - 60)).encode()}
+
+        resolved = _resolve(feed_server, tmp_path / "cache", now=now, strict=True)
+
+        assert resolved.blob is not None
+        assert resolved.blob.feed.latest_observed_at == _stamp(now - 60)

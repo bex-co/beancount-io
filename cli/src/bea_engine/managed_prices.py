@@ -23,7 +23,7 @@ import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from hashlib import sha256
 from http.client import IncompleteRead
@@ -398,6 +398,23 @@ def _iso_date(text: str) -> bool:
     return True
 
 
+def observed_instant(stamp: str | None) -> float | None:
+    """An `observed-at` stamp as a POSIX instant, or None when unparseable.
+
+    A stamp without an offset, or a bare date, reads as UTC: the same feed
+    must age the same way whatever the machine's time zone is.
+    """
+    if stamp is None:
+        return None
+    try:
+        moment = datetime.fromisoformat(stamp[:-1] + "+00:00" if stamp.endswith("Z") else stamp)
+    except ValueError:
+        return None
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=UTC)
+    return moment.timestamp()
+
+
 def _unquote(value: str) -> str:
     if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
         return value[1:-1]
@@ -483,20 +500,14 @@ def validate_managed_price_text(text: str) -> ValidFeed | InvalidFeed:
     header_quote = headers.get("quote")
     if header_quote is not None and header_quote != quote:
         return InvalidFeed(reason=f"header quote {header_quote} does not match price directives ({quote})", line=None)
+    # Latest by instant, like the hosted parser: comparing the text would rank
+    # `10:09+14:00` after `20:08Z` although it happened thirteen hours sooner.
     latest: str | None = None
-    latest_key = ""
+    latest_instant = float("-inf")
     for point in prices:
-        if point.observed_at is None:
-            continue
-        stamp = point.observed_at
-        if stamp.endswith("Z"):
-            stamp = stamp[:-1] + "+00:00"
-        try:
-            key = datetime.fromisoformat(stamp).isoformat()
-        except ValueError:
-            continue
-        if key > latest_key:
-            latest_key = key
+        instant = observed_instant(point.observed_at)
+        if instant is not None and instant > latest_instant:
+            latest_instant = instant
             latest = point.observed_at
     return ValidFeed(
         feed=FeedSummary(

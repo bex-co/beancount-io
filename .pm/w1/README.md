@@ -94,7 +94,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [130](./130.md) — A comma-decimal bank amount like `0,125` is imported 1000× too large — **major**, CLI QA 2026-10-03.
 - [131](./131.md) — When no CSV date format fits the column, the error blames row 1 and an ISO format the user never chose — **minor**, CLI QA 2026-10-03.
 - [132](./132.md) — Case-insensitive filters never match Turkish `İ`/`ı` against `i`/`I`, unlike `report -a` and import rules — **minor**, CLI QA 2026-10-03.
-- [133](./133.md) — Managed price freshness compares `observed-at` as text and reads naive stamps in local time — **minor**, CLI QA 2026-10-03.
 - [134](./134.md) — Ledger-controlled paths and diagnostics reach the terminal raw through bea's error and warning output — **minor**, CLI QA 2026-10-03.
 - [135](./135.md) — `--allow-errors` treats an existing error as new when its message embeds a file path, blocking every write — **major**, CLI QA 2026-10-03.
 - [136](./136.md) — Appends rewrite text inside strings: U+2028/U+2029 become newlines and continuation lines are re-indented — **major**, CLI QA 2026-10-03.
