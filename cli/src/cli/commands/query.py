@@ -190,6 +190,14 @@ def query(
         bool, typer.Option("--numberify", "-m", help="Split amounts into one column per currency")
     ] = False,
     no_errors: Annotated[bool, typer.Option("--no-errors", "-q", help="Hide ledger load errors")] = False,
+    spreadsheet_safe: Annotated[
+        bool,
+        typer.Option(
+            "--spreadsheet-safe",
+            help="With --format csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets "
+            "do not run them as formulas",
+        ),
+    ] = False,
 ) -> None:
     """Run BQL queries against a local ledger.
 
@@ -222,6 +230,11 @@ def query(
         )
     if output_format is None:
         output_format = "text"
+    if spreadsheet_safe and (output_format != "csv" or ctx.json_output or source is not None):
+        raise UsageError(
+            "--spreadsheet-safe applies to CSV from a local --file: pass --format csv (or -o FILE.csv), "
+            "without --json or --source."
+        )
     if output_file is not None:
         # Resolve once before checking aliases, then carry that target through
         # the engine and JSON writer even if the original link changes.
@@ -280,6 +293,8 @@ def query(
             shell_argv = ["shell", "--file", str(file), *rendering]
             if allow_errors or not ctx.strict_reads():
                 shell_argv.append("--allow-errors")
+            if spreadsheet_safe:
+                shell_argv.append("--spreadsheet-safe")
             raise typer.Exit(launch.run_engine_argv(shell_argv, interactive=True))
     if not query_string.strip():
         raise UsageError("A query is required as an argument or on stdin.")
@@ -304,6 +319,8 @@ def query(
         args += ["--output", output_file]
     if numberify:
         args.append("--numberify")
+    if spreadsheet_safe:
+        args.append("--spreadsheet-safe")
 
     data = launch.helper_json(args)
     if not no_errors:

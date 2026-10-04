@@ -182,6 +182,7 @@ def text_answer(
     format: str = "text",
     numberify: bool = False,
     allow_errors: bool = False,
+    spreadsheet_safe: bool = False,
 ) -> dict[str, Any]:
     """Upstream's own rendering of one query, plus the ledger's load errors.
 
@@ -209,6 +210,7 @@ def text_answer(
     # `show_errors=False`: the load errors travel in the envelope, and
     # upstream printing them to stderr too would report each one twice.
     shell = build_shell(file, buffer, format=format, numberify=numberify, show_errors=False)
+    shell.spreadsheet_safe = spreadsheet_safe
     errors = _gate([format_error(error, ledger_file=file) for error in shell.context.errors], allow_errors)
     if output is not None:
         # Still before the query: refusing to write over the ledger being read
@@ -531,6 +533,7 @@ def interactive(
     numberify: bool = False,
     show_errors: bool = True,
     allow_errors: bool = False,
+    spreadsheet_safe: bool = False,
 ) -> None:
     """Upstream's interactive shell, on this process's terminal.
 
@@ -549,6 +552,7 @@ def interactive(
 
     warnings.filterwarnings("always")
     shell = build_shell(file, sys.stdout, interactive=True, format=format, numberify=numberify, show_errors=show_errors)
+    shell.spreadsheet_safe = spreadsheet_safe
     # After build_shell, which is what loads the ledger, and before cmdloop.
     _gate([format_error(error, ledger_file=file) for error in shell.context.errors], allow_errors)
     # The policy outlives startup: `.reload` swaps in whatever the file holds
@@ -585,6 +589,8 @@ def build_shell(
         # the load themselves before executing, so only `interactive()` turns
         # this off, once the startup load has passed its own gate.
         allow_errors: bool = True
+        # `--spreadsheet-safe`: neutralise formula-looking text in CSV cells.
+        spreadsheet_safe: bool = False
 
         def do_output(self, arg: str) -> None:
             """Send output to FILE or restore the original output stream."""
@@ -704,7 +710,7 @@ def build_shell(
                 if self.settings.format == "csv":
                     # Upstream CSV reuses text DecimalRenderer padding. Emit
                     # unpadded machine cells so spreadsheets and Decimal() parse.
-                    return _render_csv(description, rows, out)
+                    return _render_csv(description, rows, out, spreadsheet_safe=self.spreadsheet_safe)
                 if self.settings.format == "beancount":
                     return _render_beancount(rows, out)
                 if self.settings.format == "text":
@@ -802,14 +808,32 @@ def _render_beancount(rows: Any, out: TextIO) -> None:
         out.write(printer(entry))
 
 
-def _render_csv(description: Any, rows: Any, out: TextIO) -> None:
+def _render_csv(description: Any, rows: Any, out: TextIO, *, spreadsheet_safe: bool = False) -> None:
     """Write CSV without text-table decimal alignment padding."""
     import csv
 
     writer = csv.writer(out)
     writer.writerow([column.name for column in description or ()])
     for row in rows:
-        writer.writerow([_csv_cell(value) for value in row])
+        cells = [_csv_cell(value) for value in row]
+        if spreadsheet_safe:
+            pairs = zip(row, cells, strict=True)
+            cells = [_inert_formula(cell) if isinstance(value, str) else cell for value, cell in pairs]
+        writer.writerow(cells)
+
+
+#: What a spreadsheet reads as the start of a formula (OWASP's CSV-injection list).
+_FORMULA_TRIGGERS = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _inert_formula(cell: str) -> str:
+    """A text cell a spreadsheet shows as text: a leading `'` when it would start a formula.
+
+    Only for string values, under `--spreadsheet-safe`: payees and narrations
+    often come from imported bank exports, but numbers and amounts keep their
+    sign, and the default CSV keeps every value exactly as the ledger has it.
+    """
+    return "'" + cell if cell.startswith(_FORMULA_TRIGGERS) else cell
 
 
 def _csv_cell(value: Any) -> str:

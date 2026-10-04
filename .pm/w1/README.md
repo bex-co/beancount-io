@@ -80,7 +80,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [139](./139.md) — Close and ask skills detect recurring charges by `payee`, which `bea import` leaves empty for one-description CSVs — **minor**, CLI QA 2026-10-03.
 - [140](./140.md) — Close checklist's period-end balance query has no date bound, so later entries change the result — **minor**, CLI QA 2026-10-03.
 - [144](./144.md) — A partial `format -i` failure leads with "nothing was written" although earlier files were rewritten — **minor**, CLI QA 2026-10-03.
-- [147](./147.md) — CSV query export doesn't neutralise spreadsheet formulas, and the docs don't say so — **minor**, CLI QA 2026-10-03.
 - [148](./148.md) — Without a payee column, any same-day same-amount rows are "possible duplicates" and `--duplicates skip` drops real rows — **major**, CLI QA 2026-10-03.
 - [149](./149.md) — The generated `import-id` ignores payee, so a reordered export marks a new row as an exact duplicate — **major**, CLI QA 2026-10-03.
 - [150](./150.md) — A `sign=ledger` preview followed by the documented flag-free `--apply` writes the opposite sign — **minor**, CLI QA 2026-10-03.

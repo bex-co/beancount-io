@@ -465,6 +465,14 @@ or `__`-prefixed keys — in text, CSV, and JSON alike; a CSV metadata cell is
 the text table's cell, and a CSV directive cell is the directive's Beancount
 text. Native `--source` queries keep upstream's rendering.
 
+CSV cells hold the ledger's values verbatim, as `bean-query` writes them, so a
+payee or narration such as `=HYPERLINK(...)`, `+cmd|...` or `@SUM(...)` —
+common in imported bank exports — is evaluated as a formula if the file is
+opened in a spreadsheet. Pass `--spreadsheet-safe` with `--format csv` (local
+`--file` only) to prefix text cells that start with `=`, `+`, `-`, `@`, a tab
+or a carriage return with `'`; numbers and amounts keep their sign. Leave it
+off for files a program reads back, since it changes those text values.
+
 An `-o` destination that is the ledger under read is refused with exit 2 before
 anything is written, in one-shots and in the interactive shell's `.output`
 alike, including a `.output` line in Beanquery's `~/.config/beanquery/init`

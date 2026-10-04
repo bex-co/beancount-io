@@ -123,6 +123,9 @@ def query(
     allow_errors: Annotated[
         bool, typer.Option("--allow-errors", help="Answer even when the ledger has load errors.")
     ] = False,
+    spreadsheet_safe: Annotated[
+        bool, typer.Option("--spreadsheet-safe", help="Prefix formula-looking CSV text cells with '.")
+    ] = False,
 ) -> None:
     """Run one query and answer with its result.
 
@@ -150,6 +153,7 @@ def query(
                 format=format,
                 numberify=numberify,
                 allow_errors=allow_errors,
+                spreadsheet_safe=spreadsheet_safe,
             )
 
 
@@ -503,6 +507,9 @@ def shell(
     allow_errors: Annotated[
         bool, typer.Option("--allow-errors", help="Open the shell even when the ledger does not load cleanly.")
     ] = False,
+    spreadsheet_safe: Annotated[
+        bool, typer.Option("--spreadsheet-safe", help="Prefix formula-looking CSV text cells with '.")
+    ] = False,
 ) -> None:
     """Open the interactive query shell on this terminal.
 
@@ -526,6 +533,7 @@ def shell(
             numberify=numberify,
             show_errors=not no_errors,
             allow_errors=allow_errors,
+            spreadsheet_safe=spreadsheet_safe,
         )
     except protocol.EngineError as exc:
         # No envelope to put it in, so it reads like any other program's
