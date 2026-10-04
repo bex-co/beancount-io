@@ -3,9 +3,11 @@
 A fenced block tagged ```bash is runnable in order within its document; a
 block tagged ```bash norun is illustrative and must carry a `#` comment
 saying why (needs credentials, a browser, or network). Each runnable fence
-runs as a Bash script in a temporary directory with `bea` on PATH. Lines that
-are not commands (expected output, transcripts) are skipped; results the docs
-state ("leaves 987.50 USD in checking") are asserted in EXPECT below.
+runs as a Bash script (`-e -o pipefail`, so a failing `bea` before `| jq`
+still fails) in a temporary directory with `bea` on PATH. Lines that are not
+commands (expected output, transcripts) are skipped; results the docs state
+("leaves 987.50 USD in checking") are asserted in each plan's `expect`, and a
+`$ `-prompted transcript must have its shown output asserted there too.
 """
 
 from __future__ import annotations
@@ -173,7 +175,7 @@ def last_command_line(script: str) -> int:
 
 def run_script(script: str, cwd: Path, env: dict[str, str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["bash", "-e", "-c", script],
+        ["bash", "-e", "-o", "pipefail", "-c", script],
         cwd=cwd,
         env=env,
         stdin=subprocess.DEVNULL,
@@ -228,6 +230,15 @@ def run_doc(doc: str, path: Path, plan: DocPlan, tmp_path: Path, env: dict[str, 
             continue
         script = script_for(fence.body)
         assert script is not None, f"{doc} fence {fence.index} (line {fence.line}) runs nothing"
+        if any(line.startswith("$ ") for line in fence.body.splitlines()):
+            # A transcript shows output readers copy; skipping its output
+            # lines must not leave that output unchecked (w1/128).
+            shown = plan.expect.get(fence.index, (0, []))[1]
+            assert shown, f"{doc} fence {fence.index} (line {fence.line}) shows a transcript with no expected output"
+            for fragment in shown:
+                assert fragment in fence.body, (
+                    f"{doc} fence {fence.index} (line {fence.line}): expected {fragment!r} is not in its transcript"
+                )
         if plan.mode == "isolated":
             # Every fence starts from a pristine directory so examples stay
             # independent of each other; the setup seeds the ledger they assume.
@@ -304,4 +315,29 @@ def test_missing_expected_fragment_fails(tmp_path: Path, runner_env: dict[str, s
     path = write_doc(tmp_path, "```bash\nbea --version\n```\n")
     plan = DocPlan(expect={0: (0, ["no such fragment"])})
     with pytest.raises(AssertionError, match="missing 'no such fragment'"):
+        run_doc("SYN.md", path, plan, tmp_path, runner_env)
+
+
+@pytest.mark.parametrize(
+    "line",
+    ['bea --json query "SELEC broken" | jq .data.columns', "bea --json nosuchcommand | jq ."],
+    ids=["bad-query", "unknown-command"],
+)
+def test_a_failing_bea_before_a_pipe_fails_the_fence(tmp_path: Path, runner_env: dict[str, str], line: str) -> None:
+    # jq exits 0 on empty input, so without pipefail these fences passed (w1/128).
+    path = write_doc(tmp_path, f"```bash\n{line}\n```\n")
+    with pytest.raises(AssertionError, match=r"SYN\.md fence 0 \(line 1\): exit 2, expected 0"):
+        run_doc("SYN.md", path, DocPlan(), tmp_path, runner_env)
+
+
+def test_a_transcript_without_expected_output_fails(tmp_path: Path, runner_env: dict[str, str]) -> None:
+    path = write_doc(tmp_path, "```bash\n$ bea --version\nbea 0.0.0\n```\n")
+    with pytest.raises(AssertionError, match="transcript with no expected output"):
+        run_doc("SYN.md", path, DocPlan(), tmp_path, runner_env)
+
+
+def test_an_asserted_fragment_the_transcript_does_not_show_fails(tmp_path: Path, runner_env: dict[str, str]) -> None:
+    path = write_doc(tmp_path, "```bash\n$ bea --version\nbea 0.0.0\n```\n")
+    plan = DocPlan(expect={0: (0, ["bea 9.9.9"])})
+    with pytest.raises(AssertionError, match="is not in its transcript"):
         run_doc("SYN.md", path, plan, tmp_path, runner_env)
