@@ -41,7 +41,7 @@ def cloud_login() -> None:
 @cloud_app.command("logout")
 def cloud_logout() -> None:
     """Revoke the token and clear stored credentials."""
-    from cli.api.client import bearer_client, call, unwrap
+    from cli.api.client import bearer_client, call, unwrap_or_none
     from cli.api.rest_client.api.ledger_v_1 import logout
     from cli.auth.credentials import ENVIRONMENT, clear_credentials, load_credentials
 
@@ -59,13 +59,34 @@ def cloud_logout() -> None:
             "unchanged and does not revoke it. Unset BEA_TOKEN to stop using it."
         )
         return
+    import httpx
+
+    from cli.errors import BeaError, ConflictError, to_bea_error
+
+    failure: BeaError | None = None
     try:
-        unwrap(call(logout.sync_detailed, client=bearer_client(creds.token)))
-    except Exception:
-        # The local credential goes either way: a server that cannot be
-        # reached must not leave a token sitting on this disk.
-        pass
+        response = call(logout.sync_detailed, client=bearer_client(creds.token))
+        # A 401 means the server no longer accepts this token: it is already
+        # revoked (or expired), which is the outcome logout is after.
+        if response.status_code != 401:
+            unwrap_or_none(response)
+    except httpx.TimeoutException as exc:
+        failure = ConflictError(
+            f"Removed the local credential, but server revocation timed out ({type(exc).__name__}); "
+            "the outcome is unknown. The session may still be valid: revoke it from the dashboard."
+        )
+    except Exception as exc:
+        reason = to_bea_error(exc)
+        failure = BeaError(
+            f"Removed the local credential, but server revocation failed: {str(reason).rstrip('.')}. "
+            "The session may still be valid: revoke it from the dashboard.",
+            request_id=reason.request_id,
+        )
+    # The local credential goes either way: a server that cannot be reached
+    # must not leave a token sitting on this disk.
     clear_credentials()
+    if failure is not None:
+        raise failure
     output.success("Logged out.")
 
 

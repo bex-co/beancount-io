@@ -262,7 +262,7 @@ class TestLogout:
             return httpx.Response(200, json={}, request=httpx.Request("POST", "http://test/logout"))
 
         monkeypatch.setattr(logout, "sync_detailed", fake_sync_detailed)
-        monkeypatch.setattr("cli.api.client.unwrap", lambda response: response)
+        monkeypatch.setattr("cli.api.client.unwrap_or_none", lambda response: response)
         return revoked
 
     def test_environment_token_is_not_revoked(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -294,3 +294,78 @@ class TestLogout:
         assert result.exit_code == 0, result.output
         assert revoked == ["stored-token"]
         assert not (bea_config_dir / "credentials.json").exists()
+
+
+_LOGOUT_URL = "https://api.example/api-gateway/v1/logout"
+
+
+class TestLogoutRevocationOutcome:
+    """Exit 0 means the server revoked the session; anything else says so (w1/058)."""
+
+    @pytest.fixture(autouse=True)
+    def _stored_session(self, monkeypatch: pytest.MonkeyPatch, bea_config_dir: Path) -> None:
+        monkeypatch.setenv("BEA_API_URL", "https://api.example")
+        monkeypatch.delenv("BEA_TOKEN", raising=False)
+        save_credentials("synthetic-stored-token", "2099-01-01T00:00:00Z")
+
+    @pytest.mark.parametrize(
+        ("status", "body"),
+        [
+            (200, {"success": True}),
+            (401, {"ok": False, "error": {"code": "UNAUTHENTICATED", "message": "token revoked"}}),
+        ],
+        ids=["revoked", "already-revoked"],
+    )
+    def test_revoked_session_exits_zero(
+        self, httpx_mock: HTTPXMock, bea_config_dir: Path, status: int, body: dict[str, object]
+    ) -> None:
+        httpx_mock.add_response(method="POST", url=_LOGOUT_URL, status_code=status, json=body)
+
+        result = CliRunner().invoke(app, ["cloud", "logout"])
+
+        assert result.exit_code == 0, result.output
+        assert result.stdout == "Logged out.\n"
+        assert not (bea_config_dir / "credentials.json").exists()
+
+    @pytest.mark.parametrize("json_output", [False, True], ids=["human", "json"])
+    @pytest.mark.parametrize(
+        ("failure", "exit_code", "category", "reason"),
+        [
+            (httpx.ConnectError("refused"), 1, "validation", "Could not reach the server (ConnectError)"),
+            (500, 1, "validation", "Server error (boom)"),
+            (httpx.ReadTimeout("slow"), 4, "conflict", "timed out (ReadTimeout)"),
+        ],
+        ids=["unreachable", "server-error", "timeout"],
+    )
+    def test_failed_revocation_removes_the_file_and_exits_nonzero(
+        self,
+        httpx_mock: HTTPXMock,
+        bea_config_dir: Path,
+        json_output: bool,
+        failure: Exception | int,
+        exit_code: int,
+        category: str,
+        reason: str,
+    ) -> None:
+        if isinstance(failure, int):
+            httpx_mock.add_response(
+                method="POST",
+                url=_LOGOUT_URL,
+                status_code=failure,
+                json={"ok": False, "error": {"code": "INTERNAL", "message": "boom"}},
+            )
+        else:
+            httpx_mock.add_exception(failure, method="POST", url=_LOGOUT_URL)
+
+        result = CliRunner().invoke(app, [*(["--json"] if json_output else []), "cloud", "logout"])
+
+        assert result.exit_code == exit_code, result.output
+        assert result.stdout == ""
+        assert "Logged out." not in result.output
+        assert "Removed the local credential" in result.stderr
+        assert reason in result.stderr
+        assert "revoke it from the dashboard" in result.stderr
+        assert "synthetic-stored-token" not in result.output
+        assert not (bea_config_dir / "credentials.json").exists()
+        if json_output:
+            assert json.loads(result.stderr)["error"]["category"] == category
