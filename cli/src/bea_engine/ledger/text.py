@@ -61,6 +61,20 @@ def parse_iso_date(text: str) -> datetime.date:
     raise ValueError(f"date {text!r} must be a calendar date in YYYY-MM-DD form, such as '2026-02-01'.")
 
 
+def outside_ledger_tree(path: Path, root: Path) -> bool:
+    """Whether a document path resolves outside the root ledger's directory.
+
+    The one containment rule for `add document` (before writing) and `check`
+    (after loading): a path that leaves the tree — by `..` as much as by being
+    absolute — stops resolving once the ledger directory is copied elsewhere.
+    """
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return True
+    return False
+
+
 def refuse_control_characters(text: str, *, what: str) -> None:
     """Refuse raw directive text that carries a control character.
 

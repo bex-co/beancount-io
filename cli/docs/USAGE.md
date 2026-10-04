@@ -844,6 +844,10 @@ hint; the CLI never inserts a rate to force the postings to balance.
 Document paths resolve relative to the file containing the directive. With
 `--into years/2026.bean`, `--filename receipt.pdf` means `years/receipt.pdf`
 beside that included file. Missing-document errors name this directory.
+`add document` takes a relative path that stays inside the root ledger's
+directory: an absolute path or one that climbs out with `..` is refused, and
+`bea check` reports any document that resolves outside that directory,
+quoting the path as written.
 
 Use repeated `--meta` options for native Beancount transaction metadata:
 

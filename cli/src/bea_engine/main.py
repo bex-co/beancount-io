@@ -771,6 +771,23 @@ def _text(value: str) -> str:
     return sys.stdin.read() if value == "-" else value
 
 
+def _written_document_path(entry: Any) -> str | None:
+    """The path string a document directive's source line spells, or None when unreadable."""
+    import re
+
+    source, lineno = entry.meta.get("filename"), entry.meta.get("lineno")
+    if not isinstance(source, str) or not isinstance(lineno, int) or lineno < 1:
+        return None
+    try:
+        lines = Path(source).read_text(encoding="utf-8-sig").split("\n")
+    except (OSError, UnicodeDecodeError):
+        return None
+    if lineno > len(lines):
+        return None
+    match = re.search(r'\bdocument\s+\S+\s+"((?:[^"\\]|\\.)*)"', lines[lineno - 1])
+    return match.group(1).replace('\\"', '"').replace("\\\\", "\\") if match else None
+
+
 def _validate(file: Path) -> dict[str, Any]:
     from beancount.core.data import Document
 
@@ -785,22 +802,26 @@ def _validate(file: Path) -> dict[str, Any]:
             details=[format_error(error, ledger_file=file) for error in errors],
         )
 
+    from bea_engine.ledger.text import outside_ledger_tree
+
     root = file.parent.resolve()
     portable: list[str] = []
     for entry in entries:
         if not isinstance(entry, Document):
             continue
         path = Path(entry.filename)
-        if not path.is_absolute():
+        # Beancount makes every document path absolute on load, so a relative
+        # `../x.pdf` arrives here resolved too; the containment rule is the
+        # one `add document` applies, and the message quotes the source text.
+        if not path.is_absolute() or not outside_ledger_tree(path, root):
             continue
-        try:
-            path.resolve().relative_to(root)
-        except ValueError:
-            portable.append(
-                f"{entry.meta.get('filename', file)}:{entry.meta.get('lineno', '?')}: "
-                f"Document path {entry.filename!r} is absolute and outside the ledger "
-                f"directory {root}. Prefer a path relative to the ledger file so copies stay portable."
-            )
+        written = _written_document_path(entry) or entry.filename
+        portable.append(
+            f"{entry.meta.get('filename', file)}:{entry.meta.get('lineno', '?')}: "
+            f"Document path {written!r} resolves to {str(path.resolve())!r}, outside the ledger "
+            f"directory {root}. Move the file under the ledger directory and use a relative path "
+            "so copies stay portable."
+        )
     if portable:
         raise protocol.LedgerError(
             f"{file}: {len(portable)} portable-document warning(s).",

@@ -16,6 +16,7 @@ date arithmetic, and the messages a person reads.
 from __future__ import annotations
 
 import datetime
+import os
 import re
 import unicodedata
 from decimal import Decimal, InvalidOperation
@@ -25,7 +26,7 @@ from typing import Any
 from bea_engine import protocol
 from bea_engine.amounts import parse_decimal_number
 from bea_engine.ledger import write, writer
-from bea_engine.ledger.text import parse_account, single_line
+from bea_engine.ledger.text import outside_ledger_tree, parse_account, single_line
 
 TYPES = (
     "transaction",
@@ -67,7 +68,10 @@ def answer(
             return build(file, request, into=into, allow_errors=allow_errors, strict_read=strict_read)
         if directive_type not in TYPES:
             raise protocol.UsageError(f"Unknown directive type {directive_type!r}. Use one of: {', '.join(TYPES)}.")
-        return _appended(file, _simple(directive_type, request), allow_errors=allow_errors, into=into)
+        directive = _simple(directive_type, request)
+        if directive_type == "document":
+            _require_document_in_tree(file, into, directive.filename)
+        return _appended(file, directive, allow_errors=allow_errors, into=into)
     except ValidationError as exc:
         # A typed field the models refused — a tag, link, flag or commodity that
         # is not one Beancount token — is bad input, refused before any write.
@@ -77,6 +81,24 @@ def answer(
             else f"Invalid {directive_type} options. Nothing was written."
         )
         raise protocol.UsageError(message, details=_validation_details(exc)) from None
+
+
+def _require_document_in_tree(file: Path, into: Path | None, filename: str) -> None:
+    """Refuse a relative path that climbs out of the ledger tree, as `check` would.
+
+    Beancount resolves a document path against the directory of the file that
+    holds it, and `check` refuses one that lands outside the root ledger's
+    directory; checking only for an absolute path let `../elsewhere.pdf` write
+    a ledger the very next `check` failed.
+    """
+    root = Path(os.path.abspath(file)).parent
+    holder = root if into is None else write.destination(file, into).parent
+    if outside_ledger_tree(holder / filename, root):
+        raise protocol.UsageError(
+            f"Document path {filename!r} resolves outside the ledger directory {root.resolve()}, which "
+            "`bea check` refuses because copies of the ledger would lose it. Move the file under the "
+            "ledger directory and pass a relative --path."
+        )
 
 
 _HEADER_ERROR = (

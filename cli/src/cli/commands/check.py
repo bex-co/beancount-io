@@ -62,7 +62,7 @@ def check(ctx: typer.Context) -> None:
     code = launch.run_native("bean-check", [str(file), *ctx.args])
     if code != 0:
         raise typer.Exit(code)
-    # bean-check does not cover absolute document paths outside the ledger tree;
+    # bean-check does not cover document paths that resolve outside the ledger tree;
     # the helper check does, so copies that still resolve against another tree fail.
     launch.helper_json(["check", "--file", str(file)])
     raise typer.Exit(0)
