@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import os
 import sys
 import traceback
 from collections.abc import Iterator
@@ -105,7 +106,8 @@ def answering(command: str) -> Iterator[Answer]:
     """
     answer = Answer()
     try:
-        yield answer
+        with _stdout_reserved():
+            yield answer
     except EngineError as exc:
         _write(_failure(command, exc))
         raise SystemExit(exc.exit_code) from None
@@ -117,6 +119,42 @@ def answering(command: str) -> Iterator[Answer]:
         _write(_failure(command, EngineError(message, traceback=traceback.format_exc())))
         raise SystemExit(EXIT_VALIDATION) from None
     _write({"engine": _version(), "command": command, "ok": True, "data": answer.data})
+
+
+@contextmanager
+def _stdout_reserved() -> Iterator[None]:
+    """Point file descriptor 1 at stderr while a command body runs.
+
+    The body runs user code — ledger plugins, importer configurations — and
+    whatever it prints, through `print`, a child process or `os.write(1, …)`,
+    would land in front of the envelope; the frontend then cannot parse the
+    answer and reports a write that happened as an unknown outcome (w1/061).
+    Swapping `sys.stdout` alone is not enough: a child process or a raw write
+    inherits the descriptor, not the Python object. The descriptor comes back
+    before the envelope is written, so the envelope is the only thing stdout
+    carries. A stdout that is not descriptor 1 (an in-process caller that
+    captured it) is left as it is.
+    """
+    try:
+        reserved = sys.stdout.fileno() == 1
+        diverted = sys.stderr.fileno()
+    except (AttributeError, OSError, ValueError):
+        reserved = False
+    if not reserved:
+        yield
+        return
+    sys.stdout.flush()
+    saved = os.dup(1)
+    try:
+        os.dup2(diverted, 1)
+        yield
+    finally:
+        try:
+            sys.stdout.flush()
+        except (OSError, ValueError):
+            pass
+        os.dup2(saved, 1)
+        os.close(saved)
 
 
 def note(message: str) -> None:

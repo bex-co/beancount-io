@@ -16,8 +16,10 @@ import re
 import runpy
 import shlex
 import sys
+import tempfile
 import unicodedata
-from contextlib import redirect_stderr, redirect_stdout
+from collections.abc import Iterator
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from decimal import Context, Decimal
 from pathlib import Path
@@ -37,6 +39,37 @@ _IDENTITY_KINDS = {
 }
 
 _DEFAULT_ID_KEYS = ["bank_id", "fitid", "transaction_id", "imported_id"]
+
+
+@contextmanager
+def _capturing(logs: io.StringIO) -> Iterator[None]:
+    """Collect everything the importer prints into `importer_output`.
+
+    `redirect_stdout` swaps only the Python objects; a `subprocess.run` or an
+    `os.write(1, …)` inside the importer writes to the inherited descriptors,
+    which bypassed the capture (w1/061). Descriptors 1 and 2 point at a
+    scratch file for the duration and its bytes are appended afterwards.
+    """
+    with tempfile.TemporaryFile() as sink:
+        saved: list[tuple[int, int]] = []
+        for stream in (sys.stdout, sys.stderr):
+            try:
+                stream.flush()
+                fd = stream.fileno()
+            except (AttributeError, OSError, ValueError):
+                continue
+            if fd in (1, 2) and all(fd != kept for kept, _ in saved):
+                saved.append((fd, os.dup(fd)))
+                os.dup2(sink.fileno(), fd)
+        try:
+            with redirect_stdout(logs), redirect_stderr(logs):
+                yield
+        finally:
+            for fd, copy_fd in saved:
+                os.dup2(copy_fd, fd)
+                os.close(copy_fd)
+            sink.seek(0)
+            logs.write(sink.read().decode("utf-8", "replace"))
 
 
 def _effective_id_keys(id_keys: list[str] | None) -> list[str]:
@@ -144,7 +177,7 @@ def answer(
         preview_config = csv_mapping
         try:
             account = str(importer.account(str(source)))
-            with redirect_stdout(logs), redirect_stderr(logs):
+            with _capturing(logs):
                 entries = copy.deepcopy(list(importer.extract(str(source), existing)))
         except EngineError:
             raise
@@ -174,7 +207,7 @@ def answer(
         preview_config = str(config)
         sys.path.insert(0, str(config.parent))
         try:
-            with redirect_stdout(logs), redirect_stderr(logs):
+            with _capturing(logs):
                 importer = _importer(config, source, importer_name)
                 account = str(importer.account(str(source)))
                 entries = copy.deepcopy(list(importer.extract(str(source), existing)))

@@ -23,7 +23,9 @@ path and resolves every `include` against it. The helper reads and writes only
 the paths it is given, inherits the caller's working directory, and never
 prompts: there is no interactive mode and no terminal detection.
 
-**stdout** carries exactly one JSON object per invocation and nothing else:
+**stdout** carries exactly one JSON object per invocation and nothing else.
+While a command body runs, descriptor 1 points at stderr, so a ledger plugin
+or importer that prints cannot corrupt it:
 
 ```json
 {"engine": "0.1.0", "command": "check", "ok": true, "data": {"valid": true, "errors": []}}

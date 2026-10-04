@@ -281,8 +281,9 @@ includes the path in `config` and its source in `config_source`.
 If multiple importers recognize the export, select one with `--importer NAME`.
 An unknown name lists the available importer names; a recognized name whose
 importer rejects the file reports that separately.
-The configuration can import sibling modules. Importer output is captured in
-the preview's `importer_output` field so it does not corrupt JSON.
+The configuration can import sibling modules. Importer output — including what a child
+process it runs prints — is captured in the preview's `importer_output` field
+so it does not corrupt JSON.
 For importer exceptions, put `--debug` before the command to see the traceback:
 
 ```bash norun

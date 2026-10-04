@@ -1563,4 +1563,6 @@ whitespace. The configuration directory holds `credentials.json` (mode 0600 on
 POSIX), `ask_history`, user `skills/`, remembered importer paths and column
 mappings under `importers/`, and channel-specific update-check caches.
 Ledger plugins and importer configurations run their own Python code and
-control any I/O they perform.
+control any I/O they perform. What they print — including from a child process
+or a raw write to descriptor 1 — never reaches bea's machine output: plugin
+output goes to stderr and importer output to `importer_output`.
