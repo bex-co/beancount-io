@@ -58,7 +58,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [073](./073.md) — A read-only included directory blocks every write with a raw `Errno 13` reported as a validation error — **minor**, CLI QA 2026-10-02.
 - [074](./074.md) — A signal during Beancount parsing is swallowed: a stopped write can still land, or staging copies leak — **minor**, CLI QA 2026-10-02.
 - [075](./075.md) — Write locks are case-sensitive on macOS, so writers using differently-cased paths can lose an add (partly verified) — **minor**, CLI QA 2026-10-02.
-- [078](./078.md) — The managed-price 5-second fetch limit is per socket read, so a slow server stalls every command — **minor**, CLI QA 2026-10-03.
 - [079](./079.md) — `--offline` writes to the managed-price cache, and a read-only cache crashes loads with a raw `[Errno 13]` — **minor**, CLI QA 2026-10-03.
 - [080](./080.md) — Every write and import preview leaves another full copy of each managed price feed in the cache — **minor**, CLI QA 2026-10-03.
 - [081](./081.md) — Managed price feed validation accepts Unicode whitespace Beancount cannot parse, and replaces the last good revision — **minor**, CLI QA 2026-10-03.

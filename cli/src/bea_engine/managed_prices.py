@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import os
 import re
+import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
@@ -194,12 +196,23 @@ class _RefuseRedirect(HTTPRedirectHandler):
         return None
 
 
-def _read_capped(fp: BinaryIO, limit: int) -> bytes | None:
-    """Read `fp` up to `limit` bytes; None when the body would exceed it."""
+def _read_capped(fp: BinaryIO, limit: int, deadline: float | None = None) -> bytes | None:
+    """Read `fp` up to `limit` bytes; None when the body would exceed it.
+
+    With a `deadline` (a `time.monotonic()` instant) the whole body must
+    arrive by then or `TimeoutError` is raised: the socket timeout bounds a
+    single read, so a server dripping bytes would otherwise stall the load
+    for as long as it likes. `read1` returns whatever one receive delivered,
+    which lets the loop check the clock between trickles; a plain `read`
+    would block until the declared length arrived.
+    """
+    read: Callable[[int], bytes] = getattr(fp, "read1", fp.read) if hasattr(type(fp), "read1") else fp.read
     chunks: list[bytes] = []
     total = 0
     while True:
-        chunk = fp.read(_CHUNK_BYTES)
+        if deadline is not None and time.monotonic() > deadline:
+            raise TimeoutError("the response body did not arrive in time")
+        chunk = read(_CHUNK_BYTES)
         if not chunk:
             return b"".join(chunks)
         total += len(chunk)
@@ -263,6 +276,7 @@ def fetch_managed_price_feed(
     if etag:
         request.add_header("If-None-Match", etag)
     dial = opener or build_opener(_RefuseRedirect)
+    deadline = time.monotonic() + timeout_seconds
     try:
         response = dial.open(request, timeout=timeout_seconds)
     except HTTPError as error:
@@ -307,7 +321,7 @@ def fetch_managed_price_feed(
     # redirect handler turns 3xx into that error instead of following it.
     try:
         with response:
-            body = _read_capped(response, max_body_bytes)
+            body = _read_capped(response, max_body_bytes, deadline)
     except TimeoutError:
         return FetchFailed(reason="timeout", message=f"timed out after {timeout_seconds} seconds")
     except (OSError, IncompleteRead):

@@ -349,6 +349,16 @@ class _FeedHandler(BaseHTTPRequestHandler):
         # `short_by` declares more bytes than it sends, then closes: an early EOF.
         self.send_header("Content-Length", str(len(body) + route.get("short_by", 0)))
         self.end_headers()
+        if "drip" in route:
+            # One byte per `drip` seconds: every socket read succeeds quickly.
+            try:
+                for index in range(len(body)):
+                    self.wfile.write(body[index : index + 1])
+                    self.wfile.flush()
+                    time.sleep(route["drip"])
+            except OSError:
+                pass
+            return
         self.wfile.write(body)
         if route.get("short_by"):
             self.close_connection = True
@@ -425,6 +435,18 @@ class TestManagedPriceFetch:
 
         assert isinstance(result, FetchFailed)
         assert result.reason == "timeout"
+
+    def test_dripping_body_times_out_within_the_whole_exchange_budget(self, feed_server: str) -> None:
+        """w1/078: the budget covers the whole exchange, not each socket read."""
+        _FeedHandler.routes["/prices/DRIP"] = {"body": FEED.encode("utf-8"), "drip": 0.05}
+        started = time.monotonic()
+
+        result = fetch_managed_price_feed(f"{feed_server}/prices/DRIP", timeout_seconds=1)
+
+        assert time.monotonic() - started < 3
+        assert isinstance(result, FetchFailed)
+        assert result.reason == "timeout"
+        assert result.message == "timed out after 1 seconds"
 
     def test_non_utf8_body_is_refused(self, feed_server: str) -> None:
         result = fetch_managed_price_feed(f"{feed_server}/prices/BINARY")
