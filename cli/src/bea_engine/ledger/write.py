@@ -1059,10 +1059,11 @@ def _exact_metadata_number(number: Any) -> Any:
 
 def metadata_for_write(meta: dict[str, Any]) -> dict[str, Any]:
     """Restore typed JSON metadata; source locations never become ledger metadata."""
-    import datetime
     from decimal import Decimal, InvalidOperation
 
     from beancount.core.amount import Amount
+
+    from bea_engine.ledger.text import parse_iso_date
 
     result = {}
     for key, value in meta.items():
@@ -1074,7 +1075,7 @@ def metadata_for_write(meta: dict[str, Any]) -> dict[str, Any]:
                 if kind == "number":
                     value = Decimal(_exact_metadata_number(value["value"]))
                 elif kind == "date":
-                    value = datetime.date.fromisoformat(value["value"])
+                    value = parse_iso_date(value["value"])
                 elif kind == "amount":
                     value = Amount(Decimal(_exact_metadata_number(value["number"])), value["currency"])
                 else:

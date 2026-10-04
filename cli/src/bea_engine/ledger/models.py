@@ -19,7 +19,7 @@ from pydantic import (
 )
 
 from bea_engine.amounts import require_plain_decimal, split_total_price
-from bea_engine.ledger.text import require_commodity, require_flag, require_tag_or_link
+from bea_engine.ledger.text import parse_iso_date, require_commodity, require_flag, require_tag_or_link
 
 
 def _strip_sigil(sigil: str) -> Callable[[Any], Any]:
@@ -68,6 +68,10 @@ def _require_calendar_date(value: Any) -> Any:
         return value
     if isinstance(value, bool) or isinstance(value, int | float):
         raise ValueError("date must be a string in YYYY-MM-DD form, not a number.")
+    if isinstance(value, str):
+        # Strictly `YYYY-MM-DD`: Pydantic would read "1769904000" as a Unix
+        # timestamp. Loaded rows arrive as date objects and never reach here.
+        return parse_iso_date(value)
     return value
 
 

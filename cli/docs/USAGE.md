@@ -1009,7 +1009,10 @@ tagged `value` or `number` rejects the row, because the float cannot hold the
 decimal exactly; send a decimal string. An array, an untagged object, a tagged
 object with other keys, or the reserved keys `filename`/`lineno` likewise
 reject their row, reported as `Row N, meta.<key>` (or
-`postings.<i>.meta.<key>`), so `--partial` still writes the others. JSON listing includes
+`postings.<i>.meta.<key>`), so `--partial` still writes the others. A row
+`date`, a cost `date` and a tagged date `value` must be `YYYY-MM-DD` strings,
+like every `--date` flag; Unix timestamps, `20260201`, week dates
+(`2026-W05-7`) and times are refused. JSON listing includes
 `source.filename`/`source.lineno` separately; those locations are never written
 back as transaction metadata.
 

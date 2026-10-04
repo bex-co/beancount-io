@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 import re
 import unicodedata
 from collections.abc import Collection, Iterator, Mapping
@@ -38,6 +39,26 @@ def single_line(text: str) -> str:
     pins that they agree.
     """
     return CONTROL_CHARACTERS.sub(lambda m: f"\\x{ord(m.group()):02x}", re.sub(r"[\r\n]+", " ", text))
+
+
+ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+"""The one date spelling write input accepts.
+
+`date.fromisoformat` also reads ISO basic (`20260201`) and week dates
+(`2026-W05-7`), and Pydantic reads numeric strings as Unix timestamps, so
+a typo could silently become another day. The frontend's `parse_date`
+holds flags to the same rule.
+"""
+
+
+def parse_iso_date(text: str) -> datetime.date:
+    """A `YYYY-MM-DD` calendar date, or ValueError naming the expected form."""
+    if ISO_DATE.fullmatch(text):
+        try:
+            return datetime.date.fromisoformat(text)
+        except ValueError:
+            pass
+    raise ValueError(f"date {text!r} must be a calendar date in YYYY-MM-DD form, such as '2026-02-01'.")
 
 
 def refuse_control_characters(text: str, *, what: str) -> None:

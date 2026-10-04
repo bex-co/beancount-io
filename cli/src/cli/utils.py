@@ -171,7 +171,15 @@ def snake_keys(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def parse_date(date_str: str) -> Date:
+    """A `YYYY-MM-DD` calendar date only.
+
+    `date.fromisoformat` also reads ISO basic (`20260102`) and week dates
+    (`2026-W01-1` is 2025-12-29), so a typo could start books in another year.
+    The engine holds JSON dates to the same rule (`bea_engine.ledger.text`).
+    """
     try:
+        if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", date_str):
+            raise ValueError(date_str)
         return Date.fromisoformat(date_str)
     except ValueError as err:
         raise typer.BadParameter(f"Invalid date '{date_str}'. Use YYYY-MM-DD format.") from err
