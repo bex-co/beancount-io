@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -148,12 +149,21 @@ def _read_blob(directory: Path, revision: str) -> PriceFeedBlob | None:
         return None
 
 
-def _write_text(path: Path, text: str) -> None:
-    """Write atomically, so a crash never leaves a half-written cache file."""
+def write_text_atomic(path: Path, text: str) -> None:
+    """Write atomically, so a crash never leaves a half-written cache file.
+
+    The temp file is unique per write: concurrent loads racing on the same
+    feed must never share (and so consume or truncate) each other's temp.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.tmp")
-    tmp.write_text(text, encoding="utf-8")
-    os.replace(tmp, path)
+    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
 
 
 def freshness(
@@ -225,7 +235,7 @@ def resolve_feed(
     )
     if result.kind == "not-modified" and previous is not None:
         refreshed = PriceFeedHead(revision=previous.revision, next_refresh_at=at + refresh_seconds, last_error=None)
-        _write_text(directory / "head.json", json.dumps(asdict(refreshed)))
+        write_text_atomic(directory / "head.json", json.dumps(asdict(refreshed)))
         resolved = ResolvedFeed(blob=previous, head=refreshed)
         _enforce_strict(url, resolved, at, stale_seconds, strict)
         return resolved
@@ -247,8 +257,8 @@ def resolve_feed(
             )
             # The blob must exist before the head points at it; the superseded
             # blob can go while the head is written.
-            _write_text(directory / f"{revision}.beancount", result.text)
-            _write_text(
+            write_text_atomic(directory / f"{revision}.beancount", result.text)
+            write_text_atomic(
                 directory / f"{revision}.json",
                 json.dumps(
                     {
@@ -264,7 +274,7 @@ def resolve_feed(
                 ),
             )
             refreshed = PriceFeedHead(revision=revision, next_refresh_at=at + refresh_seconds, last_error=None)
-            _write_text(directory / "head.json", json.dumps(asdict(refreshed)))
+            write_text_atomic(directory / "head.json", json.dumps(asdict(refreshed)))
             if previous is not None and previous.revision != revision:
                 (directory / f"{previous.revision}.beancount").unlink(missing_ok=True)
                 (directory / f"{previous.revision}.json").unlink(missing_ok=True)
@@ -285,7 +295,7 @@ def resolve_feed(
         message = f"fetch failed ({result.reason}): {result.message}"
 
     degraded = PriceFeedHead(revision=head.revision, next_refresh_at=at + retry_seconds, last_error=message)
-    _write_text(directory / "head.json", json.dumps(asdict(degraded)))
+    write_text_atomic(directory / "head.json", json.dumps(asdict(degraded)))
     resolved = ResolvedFeed(blob=previous, head=degraded)
     _enforce_strict(url, resolved, at, stale_seconds, strict)
     return resolved
@@ -336,5 +346,5 @@ def zero_next_refresh(url: str, root: Path | None = None) -> PriceFeedHead:
     directory = feed_dir(url, root)
     head = _read_head(directory)
     refreshed = PriceFeedHead(revision=head.revision, next_refresh_at=0.0, last_error=head.last_error)
-    _write_text(directory / "head.json", json.dumps(asdict(refreshed)))
+    write_text_atomic(directory / "head.json", json.dumps(asdict(refreshed)))
     return refreshed

@@ -2135,3 +2135,60 @@ def test_body_read_failure_preserves_cached_feed(tmp_path: Path, failure: OSErro
     assert failed.blob is not None and failed.blob.text == first.blob.text
     assert failed.head.revision == "r1"
     assert f"fetch failed ({reason})" in (failed.head.last_error or "")
+
+
+# --------------------------------------------------------------------------- #
+# Feed cache robustness (w1/076 onward)
+# --------------------------------------------------------------------------- #
+
+
+def _lapsed_resolve_rounds(url: str, root: str, rounds: int) -> list[str]:
+    """Child-process body: resolve `rounds` times with the window lapsed."""
+    failures: list[str] = []
+    for _ in range(rounds):
+        head = feed_dir(url, Path(root)) / "head.json"
+        try:
+            data = json.loads(head.read_text())
+            data["next_refresh_at"] = 0
+            head.write_text(json.dumps(data))
+        except (OSError, ValueError):
+            pass
+        try:
+            resolved = resolve_feed(url, "BTC-USD", root=Path(root))
+        except OSError as error:
+            failures.append(repr(error))
+            continue
+        if resolved.blob is None:
+            failures.append(f"no blob: {resolved.head.last_error}")
+    return failures
+
+
+class TestConcurrentCacheWrites:
+    """w1/076: racing loads share nothing but the cache's atomic renames."""
+
+    def test_a_write_never_consumes_another_writers_temp_file(self, tmp_path: Path) -> None:
+        from bea_engine.managed_price_cache import write_text_atomic
+
+        target = tmp_path / "head.json"
+        other_writer = tmp_path / ".head.json.tmp"
+        other_writer.write_text("another process's half-finished write")
+
+        write_text_atomic(target, '{"revision": "r1"}')
+
+        assert target.read_text() == '{"revision": "r1"}'
+        assert other_writer.read_text() == "another process's half-finished write"
+        assert sorted(path.name for path in tmp_path.iterdir()) == [".head.json.tmp", "head.json"]
+
+    def test_parallel_lapsed_refreshes_all_succeed(self, feed_server: str, tmp_path: Path) -> None:
+        import multiprocessing
+        from concurrent.futures import ProcessPoolExecutor
+
+        url = f"{feed_server}/prices/BTC-USD"
+        root = tmp_path / "cache"
+        assert resolve_feed(url, "BTC-USD", root=root).blob is not None
+
+        with ProcessPoolExecutor(8, mp_context=multiprocessing.get_context("spawn")) as pool:
+            outcomes = list(pool.map(_lapsed_resolve_rounds, [url] * 8, [str(root)] * 8, [15] * 8))
+
+        assert [failure for failures in outcomes for failure in failures] == []
+        assert not list(feed_dir(url, root).glob("*.tmp"))

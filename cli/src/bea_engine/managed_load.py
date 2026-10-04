@@ -45,6 +45,7 @@ from bea_engine.managed_price_cache import (
     feed_dir,
     freshness,
     resolve_feed,
+    write_text_atomic,
 )
 from bea_engine.managed_prices import (
     DEFAULT_ORIGINS,
@@ -256,7 +257,8 @@ def load_with_sources(
         precedence = apply_ledger_price_precedence(blob.text, blob.feed.prices, pairs)
         path = feed_dir(url, cache) / f"{blob.revision}.effective.{ledger_key}.beancount"
         if not path.is_file() or path.read_text(encoding="utf-8") != precedence.text:
-            path.write_text(precedence.text, encoding="utf-8")
+            # Atomic: a concurrent load may be parsing this very file.
+            write_text_atomic(path, precedence.text)
         effective[url] = (blob, precedence, path)
 
     primary: set[tuple[str, int]] = set()
