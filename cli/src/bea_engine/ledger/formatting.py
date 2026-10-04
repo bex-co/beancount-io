@@ -37,6 +37,19 @@ BOM_CHARACTER = "\ufeff"
 # Match the frontend's explicit-width ceiling without importing frontend code.
 _MAX_ALIGNMENT_WIDTH = 200
 
+#: Characters `str.splitlines` treats as line breaks besides `\n` and `\r`.
+#: Beancount's lexer counts only `\n`, and upstream's aligner splits with
+#: `splitlines`, so a line holding one of these is numbered differently by
+#: each — and upstream would turn the character into a newline.
+_FOREIGN_LINE_BREAKS = frozenset("\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029")
+
+
+def _split_lines(text: str) -> list[str]:
+    """Split on `\n` alone, keeping the ends — the lexer's idea of a line."""
+    lines = [line + "\n" for line in text.split("\n")]
+    lines[-1] = lines[-1][:-1]
+    return lines if lines[-1] else lines[:-1]
+
 
 def format_files(
     files: list[Path],
@@ -129,7 +142,7 @@ def _aligned(file: Path, text: str, widths: tuple[int | None, int | None, int | 
     from beancount.parser.lexer import lex_iter_string
 
     text = text.removeprefix(BOM_CHARACTER).replace("\r\n", "\n").replace("\r", "\n")
-    lines = text.splitlines(keepends=True)
+    lines = _split_lines(text)
     protected: dict[int, str] = {}
     indented: int | None = None
     lex: Callable[[str], Iterator[tuple[str, int, bytes, object]]] = lex_iter_string
@@ -148,6 +161,11 @@ def _aligned(file: Path, text: str, widths: tuple[int | None, int | None, int | 
             if kind == "ACCOUNT" and indented == lineno:
                 lines[lineno - 1] = "  " + lines[lineno - 1].lstrip(" \t")
             indented = None
+    for index, line in enumerate(lines):
+        if not _FOREIGN_LINE_BREAKS.isdisjoint(line):
+            # Upstream would split this line where the lexer does not; keep it
+            # whole and out of the aligner instead.
+            protected[index] = line
     for index in protected:
         lines[index] = ";\n"
 
@@ -160,7 +178,7 @@ def _aligned(file: Path, text: str, widths: tuple[int | None, int | None, int | 
             f"bean-format could not align {file}: it would have changed more than whitespace. Nothing was written.",
             traceback=str(exc)[:2000],
         ) from None
-    formatted = aligned.splitlines(keepends=True)
+    formatted = _split_lines(aligned)
     for index, original in protected.items():
         formatted[index] = original if original.endswith("\n") else original + "\n"
     return "".join(formatted)
