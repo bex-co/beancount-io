@@ -1130,7 +1130,9 @@ bea --strict-prices check   # fail when a source is stale or unavailable
 Freshness is computed at read time from the latest observation: `recent`
 within ten minutes, `stale` beyond it, `unavailable` when no revision ever
 validated. This measures observation age, not exchange trading hours.
-A failed refresh never replaces the last good revision. Explicit `price refresh`
+A failed refresh never replaces the last good revision. `--offline` never writes
+the price cache. A cache that cannot be written still loads its prices, with a
+`price cache not writable` warning and source error. Explicit `price refresh`
 exits 1 if any source fails (including when a cached revision can still serve).
 Text errors describe every source; JSON errors carry all `sources` and `changed`
 records under `error.result`. `--strict-prices` also rejects stale refresh results.

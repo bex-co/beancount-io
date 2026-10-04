@@ -2274,3 +2274,111 @@ class TestFeedIntegrity:
         assert "if-none-match" not in _FeedHandler.seen_headers["/prices/BTC-USD"]
         assert healed.blob is not None and healed.blob.text == FEED
         assert blob.read_text() == FEED
+
+
+def _tree(root: Path) -> dict[str, bytes]:
+    return {str(path.relative_to(root)): path.read_bytes() for path in sorted(root.rglob("*")) if path.is_file()}
+
+
+@pytest.fixture
+def read_only() -> Any:
+    """chmod directories read-only for one test, restoring them afterwards."""
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        pytest.skip("root ignores directory permissions")
+    locked: list[Path] = []
+
+    def lock(directory: Path) -> None:
+        directory.chmod(0o555)
+        locked.append(directory)
+
+    yield lock
+    for directory in locked:
+        directory.chmod(0o755)
+
+
+class TestOfflineAndReadOnlyCache:
+    """w1/079: --offline writes nothing, and an unwritable cache degrades."""
+
+    def _seed(self, feed_server: str, tmp_path: Path, extra: str = "") -> tuple[Path, Path]:
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(_managed_ledger(feed_server) + extra)
+        assert _load(feed_server, tmp_path, ledger.read_text()).errors == []
+        directory = feed_dir(f"{feed_server}/prices/BTC-USD", tmp_path / "cache")
+        for effective in directory.glob("*.effective.*"):
+            effective.unlink()
+        return ledger, directory
+
+    def test_offline_load_leaves_the_cache_byte_identical(self, feed_server: str, tmp_path: Path) -> None:
+        ledger, _ = self._seed(feed_server, tmp_path)
+        before = _tree(tmp_path / "cache")
+
+        plain = _load(feed_server, tmp_path, ledger.read_text(), offline=True)
+        shadowing = _load(feed_server, tmp_path, ledger.read_text() + "2026-09-10 price BTC 1 USD\n", offline=True)
+
+        assert _tree(tmp_path / "cache") == before
+        assert plain.errors == [] and shadowing.errors == []
+        assert _price_numbers(plain) == ["112000.00", "113500.50"]
+        assert _price_numbers(shadowing) == ["1", "113500.50"]
+        assert all(
+            "effective" in str(entry.meta["filename"]) and str(tmp_path / "cache") in str(entry.meta["filename"])
+            for entry in plain.entries
+            if type(entry).__name__ == "Price"
+        )
+        assert not list(tmp_path.glob(".bea-*.tmp"))
+
+    def test_offline_load_from_a_read_only_cache(self, feed_server: str, tmp_path: Path, read_only: Any) -> None:
+        ledger, directory = self._seed(feed_server, tmp_path)
+        read_only(directory)
+
+        loaded = _load(feed_server, tmp_path, ledger.read_text(), offline=True)
+
+        assert loaded.errors == []
+        assert _price_numbers(loaded) == ["112000.00", "113500.50"]
+        assert loaded.sources[0].error is None
+
+    def test_lapsed_window_with_a_read_only_cache_degrades_with_a_warning(
+        self, feed_server: str, tmp_path: Path, read_only: Any, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        ledger, directory = self._seed(feed_server, tmp_path)
+        read_only(directory)
+
+        loaded = _load(feed_server, tmp_path, ledger.read_text(), now=time.time() + 301)
+
+        assert loaded.errors == []
+        assert _price_numbers(loaded) == ["112000.00", "113500.50"]
+        assert (loaded.sources[0].error or "").startswith("price cache not writable (Permission denied)")
+        assert "warning: price cache not writable" in capsys.readouterr().err
+
+    def test_offline_export_reads_the_text_the_load_parsed(self, feed_server: str, tmp_path: Path) -> None:
+        from bea_engine.managed_load import export_portable
+
+        ledger, _ = self._seed(feed_server, tmp_path)
+        origins = (f"http://127.0.0.1:{feed_server.rsplit(':', 1)[1]}",)
+
+        exported = export_portable(ledger, tmp_path / "out", offline=True, origins=origins, root=tmp_path / "cache")
+
+        assert "113500.50" in (tmp_path / "out" / "prices" / "BTC-USD.beancount").read_text()
+        assert exported.errors == []
+
+    def test_cli_commands_exit_zero_on_a_read_only_cache(
+        self, feed_server: str, tmp_path: Path, read_only: Any
+    ) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server)
+        assert _run_bea(tmp_path, feed_server, "--file", str(ledger), "check").returncode == 0
+        directory = next((tmp_path / "cache" / "bea" / "managed-prices").iterdir())
+        head = directory / "head.json"
+        head.write_text(json.dumps({**json.loads(head.read_text()), "next_refresh_at": 0}))
+        for effective in directory.glob("*.effective.*"):
+            effective.unlink()
+        read_only(directory)
+
+        offline = _run_bea(tmp_path, feed_server, "--offline", "--file", str(ledger), "check")
+        online = _run_bea(tmp_path, feed_server, "--file", str(ledger), "check")
+        refresh = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "refresh")
+
+        assert offline.returncode == 0, offline.stderr
+        assert online.returncode == 0, online.stderr
+        assert "Errno" not in offline.stderr + online.stderr + refresh.stderr
+        assert "price cache not writable" in online.stderr
+        assert refresh.returncode == 1
+        assert "Cannot refresh" in refresh.stderr

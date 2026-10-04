@@ -637,7 +637,7 @@ def price_refresh(
     """
     with protocol.answering("price-refresh") as answer:
         from bea_engine import managed_load
-        from bea_engine.managed_price_cache import zero_next_refresh
+        from bea_engine.managed_price_cache import cache_write_problem, feed_dir, zero_next_refresh
         from bea_engine.query import format_error
 
         root = _ledger(file)
@@ -650,7 +650,12 @@ def price_refresh(
         if managed_load._env_flag(managed_load.OFFLINE_ENV):
             raise protocol.UsageError("price refresh requires network access; remove --offline.")
         for url in before:
-            zero_next_refresh(url)
+            try:
+                zero_next_refresh(url)
+            except OSError as error:
+                raise protocol.LedgerError(
+                    f"Cannot refresh {url}: {cache_write_problem(error, feed_dir(url) / 'head.json')}."
+                ) from error
         # Collect every source outcome even in strict mode. The frontend fails
         # explicit refreshes with the full result instead of losing later sources.
         loaded = managed_load.load_with_sources(root, strict=False)

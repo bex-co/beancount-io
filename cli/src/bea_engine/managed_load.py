@@ -29,6 +29,7 @@ from __future__ import annotations
 import os
 import re
 import shutil
+import sys
 import time
 from collections.abc import Callable
 from contextlib import ExitStack
@@ -40,8 +41,10 @@ from typing import TYPE_CHECKING, Any
 from urllib.request import OpenerDirector
 
 from bea_engine.managed_price_cache import (
+    CACHE_WRITE_PROBLEM,
     PriceFeedBlob,
     cache_root,
+    cache_write_problem,
     feed_dir,
     freshness,
     resolve_feed,
@@ -107,6 +110,7 @@ class ManagedSource:
     shadowed_count: int
     effective_dates: tuple[str, ...]
     effective_path: str | None = None
+    effective_text: str | None = None
 
 
 @dataclass(frozen=True)
@@ -192,6 +196,14 @@ def _iso(moment: float | None) -> str | None:
     return datetime.fromtimestamp(moment, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _holds(path: Path, text: str) -> bool:
+    """Whether `path` already holds exactly `text` (unreadable reads as no)."""
+    try:
+        return path.read_text(encoding="utf-8") == text
+    except (OSError, ValueError):
+        return False
+
+
 def _remap(value: str, staged: dict[str, str]) -> str:
     return staged.get(value, value)
 
@@ -252,14 +264,6 @@ def load_with_sources(
     texts = [content.decode("utf-8", errors="replace") for content in snapshot.contents.values()]
     pairs = collect_ledger_price_pairs(*texts) if blobs else set()
     ledger_key = sha256(str(entry.resolve()).encode("utf-8")).hexdigest()[:16]
-    effective: dict[str, tuple[PriceFeedBlob, EffectiveFeed, Path]] = {}
-    for url, blob in blobs.items():
-        precedence = apply_ledger_price_precedence(blob.text, blob.feed.prices, pairs)
-        path = feed_dir(url, cache) / f"{blob.revision}.effective.{ledger_key}.beancount"
-        if not path.is_file() or path.read_text(encoding="utf-8") != precedence.text:
-            # Atomic: a concurrent load may be parsing this very file.
-            write_text_atomic(path, precedence.text)
-        effective[url] = (blob, precedence, path)
 
     primary: set[tuple[str, int]] = set()
     for source in pending:
@@ -267,7 +271,35 @@ def load_with_sources(
             first = source.includes[0]
             primary.add((first.file, first.line))
 
+    cache_problems: dict[str, str] = {}
     with ExitStack() as stack:
+        # Each feed's effective text is cached per (revision, ledger) so export
+        # reads what the load parsed. Offline loads write nothing to the cache
+        # (ADR 015 section 8) and an unwritable cache degrades, so either stages
+        # the text beside the ledger for this load only; its entries still
+        # carry the cache path, like every other feed entry.
+        effective: dict[str, tuple[PriceFeedBlob, EffectiveFeed, Path]] = {}
+        staged_feeds: dict[str, str] = {}
+        for url, blob in blobs.items():
+            precedence = apply_ledger_price_precedence(blob.text, blob.feed.prices, pairs)
+            path = feed_dir(url, cache) / f"{blob.revision}.effective.{ledger_key}.beancount"
+            if not _holds(path, precedence.text):
+                problem: str | None = None
+                if not want_offline:
+                    try:
+                        # Atomic: a concurrent load may be parsing this very file.
+                        write_text_atomic(path, precedence.text)
+                    except OSError as error:
+                        problem = cache_write_problem(error, path)
+                if want_offline or problem is not None:
+                    if problem is not None:
+                        cache_problems[url] = problem
+                    stand_in = stack.enter_context(candidate_file(snapshot.root, precedence.text))
+                    staged_feeds[str(stand_in)] = str(path)
+                    effective[url] = (blob, precedence, stand_in)
+                    continue
+            effective[url] = (blob, precedence, path)
+
         staged = {path: stack.enter_context(candidate_file(path, "")) for path in snapshot.contents}
         unavailable: list[Any] = []
         for path, original in snapshot.contents.items():
@@ -286,9 +318,16 @@ def load_with_sources(
             staged[path].write_bytes(content)
         entries, errors, options = loader.load_file(str(staged[snapshot.root]))
         back = {str(staged_path): str(original) for original, staged_path in staged.items()}
+        back.update(staged_feeds)
         entries = [_remap_entry(entry, back) for entry in entries]
         errors = [_remap_error(error, back) for error in errors]
     errors.extend(unavailable)
+
+    for url, result in resolved.items():
+        if result.head.last_error and result.head.last_error.startswith(CACHE_WRITE_PROBLEM):
+            cache_problems.setdefault(url, result.head.last_error)
+    for problem in sorted(set(cache_problems.values())):
+        print(f"warning: {problem}; managed prices still load, but nothing was cached.", file=sys.stderr)
 
     sources: list[ManagedSource] = []
     for source in pending:
@@ -314,10 +353,13 @@ def load_with_sources(
                 next_refresh_at=_iso(result.head.next_refresh_at) if result.head.next_refresh_at > 0 else None,
                 freshness=freshness(serving, at),
                 # The same cause the load's unavailable-include error names.
-                error=result.head.last_error or (None if serving else _NO_CACHED_REVISION),
+                error=result.head.last_error
+                or cache_problems.get(source.url)
+                or (None if serving else _NO_CACHED_REVISION),
                 shadowed_count=applied.shadowed_count if applied else 0,
                 effective_dates=applied.effective_dates if applied else (),
-                effective_path=str(feed_path) if feed_path else None,
+                effective_path=_remap(str(feed_path), staged_feeds) if feed_path else None,
+                effective_text=applied.text if applied else None,
             )
         )
     remapped_options = dict(options)
@@ -798,7 +840,7 @@ def _export_feed_text(source: ManagedSource, at: float) -> str:
         marker = f'{day} custom "bea-managed-source" "{source.alias}" "{source.url}" "none" "unknown" "unknown" 0\n'
         cause = source.error or _NO_CACHED_REVISION
         return f"; bea-managed-error: {cause}\n{marker}"
-    effective = Path(source.effective_path).read_text(encoding="utf-8") if source.effective_path else ""
+    effective = source.effective_text or ""
     day = max(source.effective_dates) if source.effective_dates else _iso_day(source.fetched_at, at)
     marker = (
         f'{day} custom "bea-managed-source" "{source.alias}" "{source.url}" '
