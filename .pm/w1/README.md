@@ -53,7 +53,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [041](./041.md) — Root formatting skips included `.inc`/other suffixes and reports false success — **minor**, CLI QA 2026-10-02.
 - [042](./042.md) — Native and stored queries silently drop trailing statements — **minor**, CLI QA 2026-10-02.
 - [043](./043.md) — Native missing stored queries print an error but exit 0 — **minor**, CLI QA 2026-10-02.
-- [045](./045.md) — Bulk typed metadata writes binary floating-point artifacts — **minor**, CLI QA 2026-10-02.
 - [060](./060.md) — A bank CSV currency cell injects additional directives through import — **major**, CLI QA 2026-10-02.
 - [046](./046.md) — Tags, links, flags and currencies are not validated as tokens, so one value splits or injects directives — **major**, CLI QA 2026-10-02.
 - [048](./048.md) — `bea format` corrupts multi-line strings containing U+2028/U+0085/form feed and never converges — **major**, CLI QA 2026-10-02.

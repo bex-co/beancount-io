@@ -770,12 +770,29 @@ def _transactions(
     rejected_rows: list[int] = []
     for index, item in enumerate(rows):
         try:
-            valid.append((index, TransactionDirective.model_validate(item)))
+            directive = TransactionDirective.model_validate(item)
         except ValidationError as exc:
             for error in exc.errors(include_url=False, include_input=False):
                 location = ".".join(str(part) for part in error["loc"]) or "transaction"
                 rejected.append(f"Row {index + 1}, {location}: {error['msg']}")
             rejected_rows.append(index)
+            continue
+        # Typed metadata is only converted when rendered; check it here so a
+        # bad value (such as a JSON float) is refused per row, not mid-batch.
+        meta_errors = []
+        for location, meta in [
+            ("meta", directive.meta),
+            *((f"postings.{n}.meta", p.meta) for n, p in enumerate(directive.postings)),
+        ]:
+            try:
+                write.metadata_for_write(meta)
+            except protocol.LedgerError as exc:
+                meta_errors.append(f"Row {index + 1}, {location}: {exc}")
+        if meta_errors:
+            rejected.extend(meta_errors)
+            rejected_rows.append(index)
+        else:
+            valid.append((index, directive))
 
     if rejected:
         rejected.append(

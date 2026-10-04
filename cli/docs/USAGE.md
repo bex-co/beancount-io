@@ -907,7 +907,9 @@ returned posting pipes back into `--from -` unedited.
 Transaction and posting `meta` preserve text and booleans; numeric, date and
 amount metadata use tagged objects: `{"kind":"number","value":"1.125"}`,
 `{"kind":"date","value":"2026-08-03"}`, or
-`{"kind":"amount","number":"5.25","currency":"USD"}`. JSON listing includes
+`{"kind":"amount","number":"5.25","currency":"USD"}`. A JSON float in a
+tagged `value` or `number` rejects the row, because the float cannot hold the
+decimal exactly; send a decimal string. JSON listing includes
 `source.filename`/`source.lineno` separately; those locations are never written
 back as transaction metadata.
 

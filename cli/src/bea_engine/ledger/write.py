@@ -881,6 +881,18 @@ def append(
     return warnings
 
 
+def _exact_metadata_number(number: Any) -> Any:
+    """Refuse a JSON float in typed metadata: `Decimal(0.1)` would persist its binary expansion."""
+    if isinstance(number, bool):
+        raise ValueError(f"expected a decimal string, got {number!r}")
+    if isinstance(number, float):
+        raise ValueError(
+            f"JSON float {number!r} cannot represent a decimal exactly. "
+            f"Send the number as a decimal string, such as '{number}'."
+        )
+    return number
+
+
 def metadata_for_write(meta: dict[str, Any]) -> dict[str, Any]:
     """Restore typed JSON metadata; source locations never become ledger metadata."""
     import datetime
@@ -896,11 +908,11 @@ def metadata_for_write(meta: dict[str, Any]) -> dict[str, Any]:
             kind = value.get("kind")
             try:
                 if kind == "number":
-                    value = Decimal(value["value"])
+                    value = Decimal(_exact_metadata_number(value["value"]))
                 elif kind == "date":
                     value = datetime.date.fromisoformat(value["value"])
                 elif kind == "amount":
-                    value = Amount(Decimal(value["number"]), value["currency"])
+                    value = Amount(Decimal(_exact_metadata_number(value["number"])), value["currency"])
                 else:
                     raise LedgerError(f"Unsupported metadata value for {key!r}.")
             except (KeyError, TypeError, ValueError, InvalidOperation) as exc:
