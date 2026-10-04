@@ -55,7 +55,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [075](./075.md) — Write locks are case-sensitive on macOS, so writers using differently-cased paths can lose an add (partly verified) — **minor**, CLI QA 2026-10-02.
 - [099](./099.md) — Ledger writes keep only mode bits: group, ACLs, extended attributes and file flags are dropped — **major**, CLI QA 2026-10-03.
 - [100](./100.md) — Appending to a ledger without a final newline drops the blank line before the new entry — **minor**, CLI QA 2026-10-03.
-- [109](./109.md) — Bulk metadata errors abort the whole batch, ignore `--partial`, and name no row — **minor**, CLI QA 2026-10-03.
 - [110](./110.md) — Bulk amounts accept `1_000`, Arabic-Indic and full-width digits that single `add` refuses — **minor**, CLI QA 2026-10-03.
 - [111](./111.md) — Bulk dates accept numeric strings as Unix timestamps and other non-ISO spellings — **minor**, CLI QA 2026-10-03.
 - [112](./112.md) — `add transactions --from -` leaks raw Python errors (exit 1) for undecodable, deeply nested or huge-integer stdin — **minor**, CLI QA 2026-10-03.

@@ -1079,7 +1079,12 @@ def metadata_for_write(meta: dict[str, Any]) -> dict[str, Any]:
                     value = Amount(Decimal(_exact_metadata_number(value["number"])), value["currency"])
                 else:
                     raise LedgerError(f"Unsupported metadata value for {key!r}.")
-            except (KeyError, TypeError, ValueError, InvalidOperation) as exc:
+            except InvalidOperation as exc:
+                # Decimal's own message is a bare exception class list.
+                raise LedgerError(
+                    f"Invalid {kind!r} metadata for {key!r}: expected a decimal string such as '1.25'."
+                ) from exc
+            except (KeyError, TypeError, ValueError) as exc:
                 raise LedgerError(f"Invalid {kind!r} metadata for {key!r}: {exc}") from exc
         elif isinstance(value, bool):
             pass

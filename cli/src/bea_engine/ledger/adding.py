@@ -902,6 +902,54 @@ def _parse_metadata(items: list[str]) -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
+_TAGGED_META_KEYS = {
+    "number": {"kind", "value"},
+    "date": {"kind", "value"},
+    "amount": {"kind", "number", "currency"},
+}
+
+_META_VALUE_HELP = (
+    'use text, a boolean, a number, or a tagged object such as {"kind":"number","value":"1.25"}, '
+    '{"kind":"date","value":"2026-08-03"} or {"kind":"amount","number":"5.25","currency":"USD"}.'
+)
+
+
+def _bulk_meta_problems(location: str, meta: dict[str, Any]) -> list[str]:
+    """Each bulk metadata value Beancount cannot write as asked, as `location.key: reason`.
+
+    Write input only — listings convert loaded metadata without this check.
+    Reserved source-location keys used to be dropped silently, and a value the
+    printer cannot render (an array) escaped per-row handling, aborting the
+    whole batch with no row number even under `--partial`.
+    """
+    problems = []
+    for key, value in meta.items():
+        path = f"{location}.{key}"
+        if key in {"filename", "lineno"}:
+            problems.append(
+                f"{path}: Metadata key {key!r} is reserved for Beancount source location; choose another key."
+            )
+            continue
+        if isinstance(value, dict):
+            kind = value.get("kind")
+            expected = _TAGGED_META_KEYS.get(kind) if isinstance(kind, str) else None
+            if expected is None:
+                problems.append(f"{path}: Unsupported metadata value; {_META_VALUE_HELP}")
+                continue
+            if set(value) != expected:
+                keys = ", ".join(sorted(expected))
+                problems.append(f"{path}: A {kind!r} metadata object takes exactly the keys {keys}.")
+                continue
+        elif value is not None and not isinstance(value, str | bool | int | float):
+            problems.append(f"{path}: Unsupported metadata value of type {type(value).__name__}; {_META_VALUE_HELP}")
+            continue
+        try:
+            write.metadata_for_write({key: value})
+        except protocol.LedgerError as exc:
+            problems.append(f"{path}: {exc}")
+    return problems
+
+
 def _transactions(
     file: Path, request: dict[str, Any], *, into: Path | None, allow_errors: bool, strict_read: bool
 ) -> dict[str, Any]:
@@ -927,15 +975,19 @@ def _transactions(
             continue
         # Typed metadata is only converted when rendered; check it here so a
         # bad value (such as a JSON float) is refused per row, not mid-batch.
-        meta_errors = []
+        meta_errors: list[str] = []
         for location, meta in [
             ("meta", directive.meta),
             *((f"postings.{n}.meta", p.meta) for n, p in enumerate(directive.postings)),
         ]:
+            meta_errors.extend(f"Row {index + 1}, {problem}" for problem in _bulk_meta_problems(location, meta))
+        if not meta_errors:
+            # Every later step renders the row; a failure there would abort
+            # the whole batch and ignore --partial, so it is judged here.
             try:
-                write.metadata_for_write(meta)
-            except protocol.LedgerError as exc:
-                meta_errors.append(f"Row {index + 1}, {location}: {exc}")
+                writer.format_transaction(directive)
+            except (protocol.LedgerError, ValueError, TypeError) as exc:
+                meta_errors.append(f"Row {index + 1}: {exc}")
         if meta_errors:
             rejected.extend(meta_errors)
             rejected_rows.append(index)

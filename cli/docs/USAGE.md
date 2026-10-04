@@ -1004,7 +1004,10 @@ amount metadata use tagged objects: `{"kind":"number","value":"1.125"}`,
 `{"kind":"date","value":"2026-08-03"}`, or
 `{"kind":"amount","number":"5.25","currency":"USD"}`. A JSON float in a
 tagged `value` or `number` rejects the row, because the float cannot hold the
-decimal exactly; send a decimal string. JSON listing includes
+decimal exactly; send a decimal string. An array, an untagged object, a tagged
+object with other keys, or the reserved keys `filename`/`lineno` likewise
+reject their row, reported as `Row N, meta.<key>` (or
+`postings.<i>.meta.<key>`), so `--partial` still writes the others. JSON listing includes
 `source.filename`/`source.lineno` separately; those locations are never written
 back as transaction metadata.
 
