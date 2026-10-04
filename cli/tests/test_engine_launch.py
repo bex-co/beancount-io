@@ -376,6 +376,73 @@ class TestProvision:
         assert provision._find_uv() == str(override)
 
 
+class _ZippedLock:
+    """A package resource that is not a real file, as in a zipped install."""
+
+    def __init__(self, data: bytes) -> None:
+        self.data = data
+
+    def joinpath(self, name: str) -> _ZippedLock:
+        return self
+
+    def is_file(self) -> bool:
+        return True
+
+    def read_bytes(self) -> bytes:
+        return self.data
+
+
+class TestReleaseLocks:
+    """w1/121: an installed artifact's lock must reach uv, or the install must stop."""
+
+    LOCK = "engine-requirements.lock"
+    SHIPPED = b"beancount==3.2.3 --hash=sha256:abc\n"
+
+    @pytest.fixture(autouse=True)
+    def installed(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
+        monkeypatch.setattr(paths, "checkout_source_root", lambda: None)
+        root = tmp_path / "engines" / "0.3.1"
+        monkeypatch.setenv(paths.DIR_ENV, str(root))
+        stale = root.parent / self.LOCK
+        stale.parent.mkdir(parents=True)
+        stale.write_bytes(b"# a different bea version's lock\n")
+        stale.chmod(0o444)
+        return root
+
+    def test_a_lock_inside_the_installed_package_is_used_in_place(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        package = tmp_path / "site-packages" / "cli"
+        package.mkdir(parents=True)
+        (package / self.LOCK).write_bytes(self.SHIPPED)
+        monkeypatch.setattr(provision.resources, "files", lambda _name: package)
+
+        assert provision._lockfile() == package / self.LOCK
+
+    def test_a_zipped_lock_is_materialized_beside_a_stale_read_only_copy(
+        self, monkeypatch: pytest.MonkeyPatch, installed: Path
+    ) -> None:
+        monkeypatch.setattr(provision.resources, "files", lambda _name: _ZippedLock(self.SHIPPED))
+
+        lock = provision._lockfile()
+
+        assert lock is not None
+        assert lock.read_bytes() == self.SHIPPED
+        assert lock.parent == installed.parent
+
+    @pytest.mark.skipif(sys.platform == "win32" or os.geteuid() == 0, reason="needs POSIX permissions")
+    def test_a_lock_that_cannot_be_materialized_refuses_the_unhashed_fallback(
+        self, monkeypatch: pytest.MonkeyPatch, installed: Path
+    ) -> None:
+        monkeypatch.setattr(provision.resources, "files", lambda _name: _ZippedLock(self.SHIPPED))
+        installed.parent.chmod(0o555)
+        try:
+            with pytest.raises(BeaError, match="hash-pinned"):
+                provision._lockfile()
+        finally:
+            installed.parent.chmod(0o755)
+
+
 class TestFrontendIsolation:
     """ADR014's central promise, checked where it can actually fail: a fresh process."""
 

@@ -100,7 +100,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [116](./116.md) — `add balance --pad-from` treats any "Unused Pad" error as "book balance already matches", hiding real padding — **minor**, CLI QA 2026-10-03.
 - [117](./117.md) — A failed assertion on a parent account offers a ready-to-run opening adjustment despite subaccount activity — **minor**, CLI QA 2026-10-03.
 - [118](./118.md) — The error collapser repeats identical messages for the same line — **minor**, CLI QA 2026-10-03.
-- [121](./121.md) — Engine installs silently drop hash verification when the cached lockfile can't be refreshed — **major**, CLI QA 2026-10-03.
 - [122](./122.md) — A damaged managed engine reports `Provisioned: yes` and every command prints a raw traceback — **minor**, CLI QA 2026-10-03.
 - [123](./123.md) — An interrupted first-use engine install leaves a ~25 MB `.partial` directory forever — **minor**, CLI QA 2026-10-03.
 - [124](./124.md) — Balance-sheet `net_profit` follows a different rule from the income statement's — **minor**, CLI QA 2026-10-03.
