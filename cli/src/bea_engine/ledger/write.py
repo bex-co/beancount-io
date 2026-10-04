@@ -801,6 +801,33 @@ def _appended_or_report(target: Path, original: bytes, texts: list[str]) -> str:
         raise LedgerError(decode_error_message(target, exc)) from exc
 
 
+#: Lexer kinds of the lines that configure a ledger rather than record into it.
+CONFIG_TOKENS = frozenset({"INCLUDE", "PLUGIN", "OPTION", "PUSHTAG", "POPTAG", "PUSHMETA", "POPMETA"})
+
+
+def require_one_entry_each(texts: list[str]) -> None:
+    """Refuse a rendered directive that reads back as anything but one directive.
+
+    Every writer renders one requested directive per text. A field that slipped
+    a line break or a second token past its own validation would print as
+    extra directives — or an option, include or plugin — that a whole-ledger
+    check happily accepts, since the injected text is itself valid. Reading
+    each text back on its own is the last line of defence: it costs one parse
+    per directive and never consults the ledger.
+    """
+    from beancount.parser import lexer, parser
+
+    for number, text in enumerate(texts, start=1):
+        entries, _, _ = parser.parse_string(text)
+        kinds = {kind for kind, *_ in lexer.lex_iter_string(text)}  # type: ignore[no-untyped-call]
+        if len(entries) != 1 or kinds & CONFIG_TOKENS:
+            raise UsageError(
+                f"Directive {number} of {len(texts)} would be written as {len(entries)} directive(s)"
+                f"{' plus ledger configuration' if kinds & CONFIG_TOKENS else ''}; a field holds a line break "
+                "or a value that is not one token. Nothing was written."
+            )
+
+
 def validate_append(
     file: Path,
     texts: list[str],
@@ -808,8 +835,15 @@ def validate_append(
     allow_errors: bool = False,
     into: Path | None = None,
     snapshot: LedgerSnapshot | None = None,
+    one_entry_each: bool = True,
 ) -> list[str]:
-    """Validate the append without writing; returns the errors `allow_errors` tolerated."""
+    """Validate the append without writing; returns the errors `allow_errors` tolerated.
+
+    Each text is one requested directive unless `one_entry_each` is off, which
+    only raw directive text (`bea-engine append`) does: it counts its own.
+    """
+    if one_entry_each:
+        require_one_entry_each(texts)
     snapshot = snapshot or LedgerSnapshot.capture(file)
     target = destination(file, into)
     original = snapshot.require_target(target)
@@ -853,9 +887,12 @@ def append(
     expected: bytes | None = None,
     into: Path | None = None,
     snapshot: LedgerSnapshot | None = None,
+    one_entry_each: bool = True,
 ) -> list[str]:
     if not texts:
         return []
+    if one_entry_each:
+        require_one_entry_each(texts)
     file = Path(os.path.abspath(file))
     target = destination(file, into)
     with ExitStack() as stack:

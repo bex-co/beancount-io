@@ -765,6 +765,17 @@ symbol. Other directive types keep their explicit dates. Only `add transaction`
 defaults the date to today; the other types require it. The transaction flag
 defaults to `*`; `!` marks an entry for review.
 
+Tags, links, flags and commodities are written as bare tokens, so each value
+must be exactly one. A tag or link takes an optional leading `#` or `^`, then
+letters, digits and `- _ / .`; a flag is one of `* ! & # ? %`, a capital
+letter, or `txn`; a commodity is Beancount's commodity name, such as `USD`,
+`NT.TO` or `/6J`. Repeat the option for several values. A space, a second
+sigil (`--tag 'a ^b'`), a comma (`-c EUR,GBP`) or a line break is refused with
+exit **2** naming the option, and the file is unchanged; `add transactions`
+rejects such a row the same way it rejects any other invalid row. As a last
+check, every write reads each rendered directive back and refuses one that
+would land as more than one directive.
+
 Narration is optional. Omitting `--narration` records empty text, displayed as
 `(no narration)` in the table; `--payee` can still identify the other party.
 Supply `--narration "Coffee"` when the purpose would otherwise be unclear.

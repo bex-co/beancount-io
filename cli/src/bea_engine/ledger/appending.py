@@ -22,8 +22,6 @@ from bea_engine.ledger import write as ledger_write
 from bea_engine.ledger.text import refuse_control_characters
 from bea_engine.query import format_error
 
-_CONFIG_KINDS = frozenset({"INCLUDE", "PLUGIN", "OPTION", "PUSHTAG", "POPTAG", "PUSHMETA", "POPMETA"})
-
 
 def answer(
     file: Path,
@@ -38,7 +36,9 @@ def answer(
     entries = _parse_directives(text)
     snapshot = _snapshot_for(file, token)
     target = ledger_write.destination(file, into)
-    warnings = ledger_write.validate_append(file, [text], allow_errors=allow_errors, into=into, snapshot=snapshot)
+    warnings = ledger_write.validate_append(
+        file, [text], allow_errors=allow_errors, into=into, snapshot=snapshot, one_entry_each=False
+    )
     if dry_run:
         return {
             "count": len(entries),
@@ -46,7 +46,7 @@ def answer(
             "warnings": warnings,
             "token": _token(snapshot),
         }
-    ledger_write.append(file, [text], allow_errors=allow_errors, into=into, snapshot=snapshot)
+    ledger_write.append(file, [text], allow_errors=allow_errors, into=into, snapshot=snapshot, one_entry_each=False)
     return {"written": len(entries), "target": str(target), "warnings": warnings}
 
 
@@ -55,7 +55,7 @@ def _parse_directives(text: str) -> list[Any]:
     from beancount.parser import lexer, parser
 
     refuse_control_characters(text, what="the directive text")
-    if any(kind in _CONFIG_KINDS for kind, *_ in lexer.lex_iter_string(text)):  # type: ignore[no-untyped-call]
+    if any(kind in ledger_write.CONFIG_TOKENS for kind, *_ in lexer.lex_iter_string(text)):  # type: ignore[no-untyped-call]
         raise protocol.UsageError(
             "Write rejected: provide dated ledger directives only; configure options, plugins and includes separately."
         )

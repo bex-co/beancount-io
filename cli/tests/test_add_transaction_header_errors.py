@@ -74,9 +74,11 @@ def _base(ledger: Path) -> list[str]:
 @pytest.mark.parametrize(
     ("extra", "needle"),
     [
-        (["--tag", "has space"], "Invalid token: 'space'"),
-        (["--link", "bad link"], "Invalid token: 'link'"),
-        (["--flag", "??"], "FLAG"),
+        (["--tag", "has space"], "--tag: 'has space' is not one tag or link"),
+        (["--link", "bad link"], "--link: 'bad link' is not one tag or link"),
+        (["--flag", "??"], "--flag: '??' is not a flag"),
+        # A line break no longer reaches the parser, where it blamed --posting 1 (w1/046).
+        (["--tag", "a\n2024-01-01 open Assets:Evil"], "--tag: 'a\\n2024-01-01 open Assets:Evil' is not one tag"),
     ],
 )
 def test_bad_header_options_do_not_recommend_postings(ledger: Path, extra: list[str], needle: str) -> None:
@@ -87,7 +89,8 @@ def test_bad_header_options_do_not_recommend_postings(ledger: Path, extra: list[
     assert "transaction header" in error["message"]
     assert "Assets:Checking -30 USD" not in error["message"]
     assert any(needle in detail for detail in error["details"])
-    assert all(detail.startswith("Transaction options:") for detail in error["details"])
+    assert not any(detail.startswith("--posting") for detail in error["details"])
+    assert ledger.read_text() == LEDGER
 
 
 def test_bad_posting_still_recommends_posting_examples(ledger: Path) -> None:

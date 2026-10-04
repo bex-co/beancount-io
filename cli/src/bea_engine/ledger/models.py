@@ -7,9 +7,19 @@ from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any, Literal, NoReturn
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, PlainSerializer, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    PlainSerializer,
+    ValidationInfo,
+    model_validator,
+)
 
 from bea_engine.amounts import require_decimal_notation, split_total_price
+from bea_engine.ledger.text import require_commodity, require_flag, require_tag_or_link
 
 
 def _strip_sigil(sigil: str) -> Callable[[Any], Any]:
@@ -26,8 +36,28 @@ def _strip_sigil(sigil: str) -> Callable[[Any], Any]:
     return strip
 
 
-Tag = Annotated[str, BeforeValidator(_strip_sigil("#"))]
-Link = Annotated[str, BeforeValidator(_strip_sigil("^"))]
+#: Validation context for a directive built from a write request — `bea add`,
+#: a bulk row. Only then are the single-token fields held to Beancount's
+#: grammar; a row read back from a ledger is never refused for what a plugin
+#: put in it, so one odd generated entry cannot fail a whole listing.
+WRITE_INPUT: dict[str, bool] = {"write_input": True}
+
+
+def _on_write(check: Callable[[str], str]) -> Callable[[Any, ValidationInfo], Any]:
+    def validate(value: Any, info: ValidationInfo) -> Any:
+        context = info.context
+        return check(value) if isinstance(context, dict) and context.get("write_input") else value
+
+    return validate
+
+
+# Each is written as one bare token, so a write must supply exactly one: a
+# value such as `a ^b` or one with a line break would otherwise print as extra
+# tags, links or whole directives the caller never asked for.
+Tag = Annotated[str, BeforeValidator(_strip_sigil("#")), AfterValidator(_on_write(require_tag_or_link))]
+Link = Annotated[str, BeforeValidator(_strip_sigil("^")), AfterValidator(_on_write(require_tag_or_link))]
+Commodity = Annotated[str, AfterValidator(_on_write(require_commodity))]
+Flag = Annotated[str, AfterValidator(_on_write(require_flag))]
 
 
 def _require_calendar_date(value: Any) -> Any:
@@ -55,7 +85,7 @@ AmountNumber = Annotated[
 
 class Amount(BaseModel):
     number: AmountNumber
-    currency: str
+    currency: Commodity
 
 
 class Cost(BaseModel):
@@ -70,7 +100,7 @@ class Cost(BaseModel):
 
     number: AmountNumber | None = None
     number_total: AmountNumber | None = None
-    currency: str | None = None
+    currency: Commodity | None = None
     date: datetime.date | None = None
     label: str | None = None
 
@@ -82,7 +112,7 @@ class Posting(BaseModel):
     cost: Cost | None = None
     price: Amount | None = None
     price_total: Amount | None = None
-    flag: str | None = None
+    flag: Flag | None = None
     meta: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="before")
@@ -199,7 +229,7 @@ class TransactionHeader(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     date: LedgerDate
-    flag: str = "*"
+    flag: Flag = "*"
     payee: str | None = None
     narration: str | None = None
     postings: list[Posting] = Field(default_factory=list)
@@ -225,7 +255,7 @@ class OpenDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
     date: LedgerDate
     account: str
-    currencies: list[str] = Field(default_factory=list)
+    currencies: list[Commodity] = Field(default_factory=list)
     booking: str | None = None
     meta: dict[str, Any] = Field(default_factory=dict)
     generated: bool = Field(default=False, exclude=True)
@@ -279,7 +309,7 @@ class EventDirective(BaseModel):
 class PriceDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
     date: LedgerDate
-    currency: str
+    currency: Commodity
     amount: Amount
     meta: dict[str, Any] = Field(default_factory=dict)
     generated: bool = Field(default=False, exclude=True)
@@ -288,7 +318,7 @@ class PriceDirective(BaseModel):
 class CommodityDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
     date: LedgerDate
-    currency: str
+    currency: Commodity
     meta: dict[str, Any] = Field(default_factory=dict)
     generated: bool = Field(default=False, exclude=True)
 
@@ -317,7 +347,7 @@ class CustomDirectiveValueNumber(BaseModel):
 class CustomDirectiveValueAmount(BaseModel):
     kind: Literal["amount"]
     number: Decimal
-    currency: str
+    currency: Commodity
 
 
 class CustomDirectiveValueAccount(BaseModel):

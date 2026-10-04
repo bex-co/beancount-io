@@ -58,12 +58,40 @@ def answer(
         "balance": _balance,
         "price": _price,
     }
+    from pydantic import ValidationError
+
     build = builders.get(directive_type)
-    if build is not None:
-        return build(file, request, into=into, allow_errors=allow_errors, strict_read=strict_read)
-    if directive_type not in TYPES:
-        raise protocol.UsageError(f"Unknown directive type {directive_type!r}. Use one of: {', '.join(TYPES)}.")
-    return _appended(file, _simple(directive_type, request), allow_errors=allow_errors, into=into)
+    try:
+        if build is not None:
+            return build(file, request, into=into, allow_errors=allow_errors, strict_read=strict_read)
+        if directive_type not in TYPES:
+            raise protocol.UsageError(f"Unknown directive type {directive_type!r}. Use one of: {', '.join(TYPES)}.")
+        return _appended(file, _simple(directive_type, request), allow_errors=allow_errors, into=into)
+    except ValidationError as exc:
+        # A typed field the models refused — a tag, link, flag or commodity that
+        # is not one Beancount token — is bad input, refused before any write.
+        message = (
+            _HEADER_ERROR
+            if directive_type == "transaction"
+            else f"Invalid {directive_type} options. Nothing was written."
+        )
+        raise protocol.UsageError(message, details=_validation_details(exc)) from None
+
+
+_HEADER_ERROR = (
+    "Invalid transaction header (--tag, --link, --flag, --payee, --narration, or --meta). Nothing was written."
+)
+_OPTION_NAMES = {"tags": "--tag", "links": "--link", "flag": "--flag", "currencies": "--currency", "values": "--value"}
+
+
+def _validation_details(exc: Any) -> list[str]:
+    """One `--option: reason` line per refused field."""
+    details = []
+    for error in exc.errors(include_url=False, include_input=False):
+        field = str(error["loc"][0]) if error["loc"] else ""
+        option = _OPTION_NAMES.get(field, f"--{field.replace('_', '-')}" if field else "input")
+        details.append(f"{option}: {str(error['msg']).removeprefix('Value error, ')}")
+    return details
 
 
 # --------------------------------------------------------------------------- #
@@ -73,6 +101,7 @@ def answer(
 
 def _simple(directive_type: str, request: dict[str, Any]) -> Any:
     from bea_engine.ledger.models import (
+        WRITE_INPUT,
         CloseDirective,
         CommodityDirective,
         CustomDirective,
@@ -94,11 +123,14 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
             raise protocol.UsageError(
                 "Every --currency value is blank after trimming; supply a currency symbol or omit -c."
             )
-        return OpenDirective(
-            date=date,
-            account=parse_account(_text(request, "account")),
-            currencies=currencies,
-            booking=booking,
+        return OpenDirective.model_validate(
+            {
+                "date": date,
+                "account": parse_account(_text(request, "account")),
+                "currencies": currencies,
+                "booking": booking,
+            },
+            context=WRITE_INPUT,
         )
     if directive_type == "close":
         return CloseDirective(date=date, account=parse_account(_text(request, "account")))
@@ -121,10 +153,13 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
             description=single_line(_text(request, "description")),
         )
     if directive_type == "commodity":
-        return CommodityDirective(
-            date=date,
-            currency=_text(request, "currency"),
-            meta=_parse_metadata([str(item) for item in request.get("meta") or []]),
+        return CommodityDirective.model_validate(
+            {
+                "date": date,
+                "currency": _text(request, "currency"),
+                "meta": _parse_metadata([str(item) for item in request.get("meta") or []]),
+            },
+            context=WRITE_INPUT,
         )
     if directive_type == "document":
         filename = _text(request, "filename")
@@ -133,12 +168,15 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
                 f"Document path {filename!r} must be relative to the destination ledger file's "
                 "directory so copies of the ledger stay portable. Pass a relative --path."
             )
-        return DocumentDirective(
-            date=date,
-            account=parse_account(_text(request, "account")),
-            filename=filename,
-            tags=list(request.get("tags") or []),
-            links=list(request.get("links") or []),
+        return DocumentDirective.model_validate(
+            {
+                "date": date,
+                "account": parse_account(_text(request, "account")),
+                "filename": filename,
+                "tags": list(request.get("tags") or []),
+                "links": list(request.get("links") or []),
+            },
+            context=WRITE_INPUT,
         )
     values = list(request.get("values") or [])
     if not values:
@@ -153,7 +191,9 @@ def _simple(directive_type: str, request: dict[str, Any]) -> Any:
             parse_account(str(value.get("value", "")))
         if isinstance(value, dict) and value.get("kind") == "text" and isinstance(value.get("value"), str):
             value["value"] = single_line(value["value"])
-    return CustomDirective.model_validate({"date": date, "type": single_line(_text(request, "type")), "values": values})
+    return CustomDirective.model_validate(
+        {"date": date, "type": single_line(_text(request, "type")), "values": values}, context=WRITE_INPUT
+    )
 
 
 def _appended(file: Path, directive: Any, *, allow_errors: bool, into: Path | None) -> dict[str, Any]:
@@ -370,15 +410,16 @@ def _price(
     from beancount.core.data import Price
 
     from bea_engine import managed_load
-    from bea_engine.ledger.models import Amount, PriceDirective
+    from bea_engine.ledger.models import WRITE_INPUT, PriceDirective
     from bea_engine.managed_price_cache import managed_source_for_path
     from bea_engine.query import format_error
 
     currency = _text(request, "currency")
     number = _decimal(request, "number")
     amount_currency = _text(request, "amount_currency")
-    directive = PriceDirective(
-        date=_date(request), currency=currency, amount=Amount(number=number, currency=amount_currency)
+    directive = PriceDirective.model_validate(
+        {"date": _date(request), "currency": currency, "amount": {"number": number, "currency": amount_currency}},
+        context=WRITE_INPUT,
     )
     snapshot = write.LedgerSnapshot.capture(file)
     target = write.destination(file, into)
@@ -457,7 +498,7 @@ def _transaction(
     from beancount.parser.grammar import ParserError
 
     from bea_engine import managed_load
-    from bea_engine.ledger.models import TransactionHeader
+    from bea_engine.ledger.models import WRITE_INPUT, TransactionHeader
     from bea_engine.ledger.reader import metadata_to_json
 
     postings: list[str] = [str(posting) for posting in request.get("postings") or []]
@@ -467,15 +508,18 @@ def _transaction(
         if parts and len(parts[0]) == 1:
             parts = parts[1:]
         parse_account(parts[0] if parts else "")
-    header = TransactionHeader(
-        date=_date(request),
-        flag=str(request.get("flag") or "*"),
-        payee=request.get("payee"),
-        narration=request.get("narration"),
-        postings=[],
-        tags=list(request.get("tags") or []),
-        links=list(request.get("links") or []),
-        meta=_parse_metadata([str(item) for item in request.get("meta") or []]),
+    header = TransactionHeader.model_validate(
+        {
+            "date": _date(request),
+            "flag": str(request.get("flag") or "*"),
+            "payee": request.get("payee"),
+            "narration": request.get("narration"),
+            "postings": [],
+            "tags": list(request.get("tags") or []),
+            "links": list(request.get("links") or []),
+            "meta": _parse_metadata([str(item) for item in request.get("meta") or []]),
+        },
+        context=WRITE_INPUT,
     )
     header_text = writer.format_transaction(header)
     text = header_text + "".join(f"  {item.strip()}\n" for item in postings)
@@ -490,10 +534,7 @@ def _transaction(
             location = f"--posting {posting_number}" if 0 < posting_number <= len(postings) else "Transaction options"
             details.append(f"{location}: {error.message}")
         if details and all(detail.startswith("Transaction options:") for detail in details):
-            message = (
-                "Invalid transaction header (--tag, --link, --flag, --payee, --narration, or --meta). "
-                "Nothing was written."
-            )
+            message = _HEADER_ERROR
         else:
             message = (
                 "Invalid transaction options; use postings such as 'Assets:Checking -30 USD'. Nothing was written."
@@ -760,7 +801,7 @@ def _transactions(
     del strict_read
     from pydantic import ValidationError
 
-    from bea_engine.ledger.models import TransactionDirective
+    from bea_engine.ledger.models import WRITE_INPUT, TransactionDirective
 
     rows = list(request.get("rows") or [])
     partial = bool(request.get("partial"))
@@ -770,7 +811,7 @@ def _transactions(
     rejected_rows: list[int] = []
     for index, item in enumerate(rows):
         try:
-            directive = TransactionDirective.model_validate(item)
+            directive = TransactionDirective.model_validate(item, context=WRITE_INPUT)
         except ValidationError as exc:
             for error in exc.errors(include_url=False, include_input=False):
                 location = ".".join(str(part) for part in error["loc"]) or "transaction"

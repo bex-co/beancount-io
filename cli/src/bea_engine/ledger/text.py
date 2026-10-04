@@ -66,6 +66,52 @@ def refuse_control_characters(text: str, *, what: str) -> None:
     )
 
 
+#: Beancount's lexer rules for the fields a directive writes as one bare token
+#: (`lexer.l`): a tag or link body after its sigil, and a commodity — a capital
+#: letter or a slash, then capitals, digits and `'._-`, ending alphanumeric.
+#: These fields are printed unquoted, so a value outside the grammar is not
+#: one token: `a ^b` becomes a tag and a link, and a line break starts a
+#: directive the caller never asked for.
+_TAG_OR_LINK = re.compile(r"[A-Za-z0-9\-_/.]+")
+_COMMODITY = re.compile(r"[A-Z](?:[A-Z0-9'._-]*[A-Z0-9])?|/[A-Z0-9'._-]*[A-Z](?:[A-Z0-9'._-]*[A-Z0-9])?")
+#: A flag is one of these characters, a capital letter, or the `txn` keyword.
+_FLAGS = frozenset("*!&#?%ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+
+def is_commodity(text: str) -> bool:
+    """Whether the text is exactly one Beancount commodity token."""
+    return bool(_COMMODITY.fullmatch(text))
+
+
+def require_tag_or_link(value: str) -> str:
+    """One tag or link body, or a ValueError naming the allowed characters."""
+    if not _TAG_OR_LINK.fullmatch(value):
+        raise ValueError(
+            f"{value!r} is not one tag or link; use only letters, digits and - _ / . "
+            "after an optional leading # or ^ (no spaces, sigils or line breaks inside)."
+        )
+    return value
+
+
+def require_commodity(value: str) -> str:
+    """One commodity token, or a ValueError giving examples of the grammar."""
+    if not is_commodity(value):
+        raise ValueError(
+            f"{value!r} is not one commodity; use capital letters and digits, optionally "
+            "with ' . _ - inside, such as USD, VFINX, NT.TO or /6J. Repeat the option for several."
+        )
+    return value
+
+
+def require_flag(value: str) -> str:
+    """One transaction or posting flag; the `txn` keyword is stored as `*`, as Beancount does."""
+    if value == "txn":
+        return "*"
+    if value not in _FLAGS:
+        raise ValueError(f"{value!r} is not a flag; use one of * ! & # ? % or a single capital letter.")
+    return value
+
+
 def fold_account(name: str) -> str:
     """The key two account names must share to match in a filter.
 
