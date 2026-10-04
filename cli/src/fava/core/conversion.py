@@ -49,7 +49,8 @@ def get_market_value(
 
     Returns:
         An Amount, with value converted or if the conversion failed just the
-        cost value (or the units if the position has no cost).
+        cost value. A position without cost is valued in the first operating
+        currency that has a price, or left in its units.
     """
     units_ = pos.units
     cost_ = pos.cost
@@ -65,15 +66,18 @@ def get_market_value(
             )
         return _Amount(units_.number * cost_.number, value_currency)
 
-    # Costless lots (e.g. `2 HOOL @ 10.5 USD` with a `price HOOL`) still have a
-    # market value when a price directive exists; look it up the same way a
-    # currency conversion would, instead of leaving the commodity units bare.
-    for base, quote in prices._forward_pairs:
-        if base != units_.currency:
-            continue
-        price_number = prices.get_price((base, quote), date)
+    # Cost-less holdings (cash, `2 HOOL @ 10.5 USD`) have no cost currency to
+    # value into. Amounts already in an operating currency stay as they are;
+    # otherwise value into the first operating currency with a quote, and
+    # leave the units bare rather than guessing an arbitrary price pair.
+    currency = units_.currency
+    operating = prices.operating_currencies
+    if currency in operating:
+        return units_
+    for target in operating:
+        price_number = prices.get_price((currency, target), date)
         if price_number is not None:
-            return _Amount(units_.number * price_number, quote)
+            return _Amount(units_.number * price_number, target)
     return units_
 
 

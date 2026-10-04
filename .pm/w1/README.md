@@ -56,7 +56,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [046](./046.md) — Tags, links, flags and currencies are not validated as tokens, so one value splits or injects directives — **major**, CLI QA 2026-10-02.
 - [048](./048.md) — `bea format` corrupts multi-line strings containing U+2028/U+0085/form feed and never converges — **major**, CLI QA 2026-10-02.
 - [049](./049.md) — One U+2028 in a string marks every later directive in that file `generated`, and `--on-disk` hides them — **major**, CLI QA 2026-10-02.
-- [050](./050.md) — `--conversion at_value` revalues cost-less holdings with the first price pair seen, even converting the operating currency — **major**, CLI QA 2026-10-02.
 - [051](./051.md) — `-a/--account` interval series stop at the filtered account's last entry while the headline covers the whole ledger — **minor**, CLI QA 2026-10-02.
 - [052](./052.md) — One long price quote makes every amount in that currency print with that many decimals in report tables — **minor**, CLI QA 2026-10-02.
 - [053](./053.md) — Query, balance and report JSON/CSV print tiny amounts in scientific notation (`1E-8`, `0E-8`) — **minor**, CLI QA 2026-10-02.

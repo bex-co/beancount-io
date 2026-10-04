@@ -69,9 +69,16 @@ class FavaPriceMap:
 
     Args:
         price_entries: A sorted list of price entries.
+        operating_currencies: The ledger's operating currencies, in option
+            order; ``at_value`` values cost-less holdings into these.
     """
 
-    def __init__(self, price_entries: Iterable[Price]) -> None:
+    def __init__(
+        self,
+        price_entries: Iterable[Price],
+        operating_currencies: Sequence[str] = (),
+    ) -> None:
+        self.operating_currencies = tuple(operating_currencies)
         raw_map: dict[BaseQuote, list[PricePoint]] = defaultdict(list)
         counts: Counter[BaseQuote] = Counter()
 
