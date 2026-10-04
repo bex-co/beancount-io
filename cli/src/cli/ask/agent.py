@@ -277,7 +277,7 @@ def make_agent(
         try:
             # Rows and columns, not the rendered table: the row count, a visible
             # zero and a bounded result all need the typed shape (`ask.results`).
-            data = launch.helper_json(["query", "--file", str(ctx.deps.file.resolve()), query, "--format", "json"])
+            data = launch.helper_json(["query", "--file", str(ctx.deps.file), query, "--format", "json"])
         except LedgerError as exc:
             detail = "; ".join(exc.details) if exc.details else str(exc)
             raise ModelRetry("Ledger is invalid: " + detail) from exc
@@ -297,7 +297,7 @@ def make_agent(
         perm = ctx.deps.write_permission
         if perm.deny_all:
             return "Write denied (you denied all writes this session)."
-        argv = ["append", "--file", str(ctx.deps.file.resolve()), "--text", "-"]
+        argv = ["append", "--file", str(ctx.deps.file), "--text", "-"]
         if ctx.deps.into is not None:
             argv += ["--into", str(ctx.deps.into)]
         try:

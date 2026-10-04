@@ -62,7 +62,9 @@ class LedgerSnapshot:
 
     @classmethod
     def capture(cls, root: Path) -> LedgerSnapshot:
-        snapshot = cls(root.resolve())
+        # Lexical, like Beancount's loader: a symlinked root's includes sit
+        # beside the link, not beside its target (w1/056).
+        snapshot = cls(Path(os.path.abspath(root)))
         pending = [snapshot.root]
         while pending:
             path = pending.pop(0)
@@ -854,10 +856,10 @@ def append(
 ) -> list[str]:
     if not texts:
         return []
-    file = file.resolve()
+    file = Path(os.path.abspath(file))
     target = destination(file, into)
     with ExitStack() as stack:
-        for path in sorted({file, target}):
+        for path in sorted({file.resolve(), target}):
             stack.enter_context(lock_file(path))
         sweep_abandoned_candidates(target.parent)
         snapshot = snapshot or LedgerSnapshot.capture(file)

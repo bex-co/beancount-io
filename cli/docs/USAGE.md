@@ -111,6 +111,10 @@ If the resolved file does not exist, the command exits **2** and names those sou
 Passing a directory also exits **2** with a hint to select its root ledger file.
 An unreadable ledger exits **2**, naming the path and the source that selected
 it. Choose a readable ledger or correct its permissions.
+A root ledger that is a symlink keeps the path you named, as `bean-check` does:
+its relative `include` and `--into` paths resolve beside the link, not beside
+the file it points to, and writes such as `add` land in that file through the
+link. A layout whose includes sit only beside the target fails in both.
 Hosted commands name ledgers as `owner/name`; local files are never implicitly
 uploaded. Each segment must match the service's own rule (owner: letters,
 digits, `.`, `-`, `_`, but not `.` or `..`; name: a lowercase ledger slug), so

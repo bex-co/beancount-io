@@ -120,8 +120,10 @@ class RunContext:
         if not os.access(candidate, os.R_OK):
             raise UsageError(f"Ledger path '{candidate}' (from {source}) is not readable.")
         # Absolute from here on: the beancount loader asserts on a relative
-        # entry path, and every include is resolved against this one.
-        return candidate.resolve()
+        # entry path, and every include is resolved against this one. Lexical
+        # like the loader's own `abspath`: a symlinked root resolves its
+        # includes beside the link, as `bean-check` does (w1/056).
+        return Path(os.path.abspath(candidate))
 
     def confirm(self, prompt: str) -> bool:
         """Ask before something destructive; refuse to guess when nobody can answer."""

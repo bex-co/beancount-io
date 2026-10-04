@@ -16,6 +16,7 @@ Ask's raw-text writes live as `append` (t022).
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -684,14 +685,15 @@ def price_export(
 def _ledger(file: Path) -> Path:
     """The ledger as an absolute path, or a usage failure naming what is wrong.
 
-    Resolved because Beancount's loader asserts on a relative entry path and
-    resolves every `include` against it.
+    Absolute because Beancount's loader asserts on a relative entry path and
+    resolves every `include` against it — lexically, like the loader's own
+    `abspath`, so a symlinked root keeps its includes beside the link (w1/056).
     """
     if not file.exists():
         raise protocol.UsageError(f"No ledger file at '{file}'.")
     if not file.is_file():
         raise protocol.UsageError(f"Ledger path '{file}' is not a regular file.")
-    return file.resolve()
+    return Path(os.path.abspath(file))
 
 
 def _date(option: str, value: str | None) -> Any:
@@ -743,7 +745,7 @@ def _validate(file: Path) -> dict[str, Any]:
             details=[format_error(error, ledger_file=file) for error in errors],
         )
 
-    root = file.resolve().parent
+    root = file.parent.resolve()
     portable: list[str] = []
     for entry in entries:
         if not isinstance(entry, Document):

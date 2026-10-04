@@ -226,7 +226,7 @@ def load_with_sources(
         allowed_origins = DEFAULT_ORIGINS
     cache = root or cache_root()
 
-    snapshot = snapshot or LedgerSnapshot.capture(entry.resolve())
+    snapshot = snapshot or LedgerSnapshot.capture(entry)
     managed = _collect_managed(snapshot, allowed_origins)
     if not managed and all(state is not None for state in snapshot.stats.values()):
         entries, errors, options = loader.load_file(str(entry))
@@ -551,7 +551,7 @@ def export_portable(
             "Retry, or pass --allow-errors to export with its marker only."
         )
     target = (output or entry.parent / f"{entry.stem}-export").expanduser()
-    snapshot = LedgerSnapshot.capture(entry.resolve())
+    snapshot = LedgerSnapshot.capture(entry)
     # `resolve()` for a destination that does not exist yet, too: `absolute()`
     # leaves `..` in place, so `books/not-created/..` compared unequal to
     # `books` and slipped past the guard below — then `mkdir(parents=True)`
@@ -578,6 +578,10 @@ def export_portable(
     # pointing outside the snapshot.
     home = snapshot.root.parent.resolve()
     for path in snapshot.contents:
+        if path == snapshot.root:
+            # The root keeps its own name even when it is a link elsewhere.
+            destinations[path] = target / path.name
+            continue
         try:
             destinations[path] = target / path.resolve().relative_to(home)
         except ValueError:
@@ -602,7 +606,7 @@ def export_portable(
     # already one of the ledger's own files — through a symlink, or a hard
     # link no path comparison can see — would be written straight through
     # into the books, so identity is compared, not spelling.
-    attachments = _export_attachments(loaded, snapshot.contents, destinations, target, home)
+    attachments = _export_attachments(loaded, snapshot, destinations, target, home)
     planned = [*destinations.values(), *feed_files.values(), *attachments]
     for dest in planned:
         if not dest.exists():
@@ -657,7 +661,7 @@ def export_portable(
 
 def _export_attachments(
     loaded: LoadedLedger,
-    contents: dict[Path, bytes],
+    snapshot: LedgerSnapshot,
     destinations: dict[Path, Path],
     target: Path,
     home: Path,
@@ -677,6 +681,7 @@ def _export_attachments(
 
     from bea_engine.protocol import UsageError
 
+    contents = snapshot.contents
     ledger_files = {path.resolve(): path for path in contents}
     unsupported: list[str] = []
     for option_dir in loaded.options.get("documents") or []:
@@ -714,7 +719,7 @@ def _export_attachments(
         spelled = os.path.relpath(os.path.normpath(entry.filename), os.path.dirname(os.path.abspath(named_by)))
         dest = Path(os.path.normpath(destinations[ledger].parent / spelled))
         try:
-            relocated = destinations[ledger] != target / ledger.resolve().relative_to(home)
+            relocated = ledger != snapshot.root and destinations[ledger] != target / ledger.resolve().relative_to(home)
         except ValueError:
             relocated = True
         if os.path.isabs(quoted) or relocated or not dest.is_relative_to(target):

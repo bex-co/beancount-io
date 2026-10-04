@@ -60,7 +60,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [052](./052.md) — One long price quote makes every amount in that currency print with that many decimals in report tables — **minor**, CLI QA 2026-10-02.
 - [053](./053.md) — Query, balance and report JSON/CSV print tiny amounts in scientific notation (`1E-8`, `0E-8`) — **minor**, CLI QA 2026-10-02.
 - [055](./055.md) — Cloud JSON error bodies without the `{ok, error}` envelope surface as `'ok'` and lose 401/403/409 exit codes — **major**, CLI QA 2026-10-02.
-- [056](./056.md) — A symlinked root ledger resolves includes from the link target's directory, unlike `bean-check` — **minor**, CLI QA 2026-10-02.
 - [057](./057.md) — A non-ASCII `BEA_TOKEN` or stored token fails with a raw `UnicodeEncodeError` (exit 1) instead of the auth error — **minor**, CLI QA 2026-10-02.
 - [058](./058.md) — `bea cloud logout` prints "Logged out." and exits 0 when server-side revocation failed — **minor**, CLI QA 2026-10-02.
 - [059](./059.md) — Empty or scheme-less `BEA_API_URL` is reported as a network outage — **minor**, CLI QA 2026-10-02.

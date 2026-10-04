@@ -11,6 +11,7 @@ import copy
 import difflib
 import hashlib
 import io
+import os
 import re
 import runpy
 import shlex
@@ -91,7 +92,7 @@ def answer(
     if csv_mapping is not None and config is not None:
         raise UsageError("Pass --csv or --config, not both.")
 
-    file = file.resolve()
+    file = Path(os.path.abspath(file))
     source = source.expanduser().resolve()
     if not source.is_file():
         raise UsageError(f"Export file not found: {source}")
