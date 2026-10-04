@@ -116,3 +116,69 @@ def test_an_account_with_no_balance_still_reads_empty(tmp_path: Path) -> None:
 def test_a_funded_parent_is_unchanged(tmp_path: Path) -> None:
     data = _assets(tmp_path, OFFSETTING_COSTS, "at_cost")
     assert data["assets"]["balance_children"] == {"USD": "10000.00"}
+
+
+# w1/072: a plain currency nets to zero before conversion sees it, and the
+# filtered views recompute totals from the kept children; both read `—`.
+PLAIN_CANCEL = """option "operating_currency" "USD"
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Expenses:Food:Groceries USD
+2024-01-01 open Expenses:Food:Refunds USD
+2024-01-01 open Equity:Opening
+2024-01-02 * "fund"
+  Assets:Cash 100.00 USD
+  Equity:Opening
+2024-01-03 * "buy"
+  Expenses:Food:Groceries 10.00 USD
+  Assets:Cash
+2024-01-04 * "refund"
+  Expenses:Food:Refunds -10.00 USD
+  Assets:Cash
+"""
+OFFSETTING_LOTS = """option "operating_currency" "USD"
+option "booking_method" "NONE"
+2024-01-01 open Assets:Inv:Long
+2024-01-01 open Assets:Inv:Short
+2024-01-02 * "lots"
+  Assets:Inv:Long 5 STK {10.00 USD}
+  Assets:Inv:Short -5 STK {10.00 USD}
+"""
+
+
+def _json(tmp_path: Path, ledger_text: str, *args: str) -> dict:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(ledger_text)
+    result = _bea(tmp_path, "--json", "--file", str(ledger), *args)
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)["data"]
+
+
+def test_cancelling_plain_currency_children_roll_up_to_zero(tmp_path: Path) -> None:
+    for args in (
+        ("report", "income-statement"),
+        ("report", "income-statement", "-a", "Expenses:Food"),
+        ("balance", "Food"),
+    ):
+        expenses = _json(tmp_path, PLAIN_CANCEL, *args)["expenses"]
+        assert expenses["balance_children"] == {"USD": "0"}, args
+        assert _node(expenses, "Expenses:Food")["balance_children"] == {"USD": "0"}, args
+        assert _node(expenses, "Expenses:Food:Groceries")["balance_children"] == {"USD": "10.00"}, args
+
+
+def test_cancelling_lots_roll_up_to_zero_in_filtered_views(tmp_path: Path) -> None:
+    for args in (
+        ("balance", "Inv", "-x", "at_cost"),
+        ("report", "trial-balance", "-a", "Assets:Inv", "-x", "at_cost"),
+        ("report", "balance-sheet", "-a", "Assets:Inv", "-x", "at_cost"),
+    ):
+        assets = _json(tmp_path, OFFSETTING_LOTS, *args)["assets"]
+        assert _node(assets, "Assets:Inv")["balance_children"] == {"USD": "0"}, args
+
+
+def test_the_text_tree_shows_a_plain_currency_zero(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(PLAIN_CANCEL)
+    result = _bea(tmp_path, "--file", str(ledger), "report", "income-statement")
+    assert result.returncode == 0, result.stderr
+    line = next(line for line in result.stdout.splitlines() if line.strip().startswith("Food"))
+    assert "0.00 USD" in line

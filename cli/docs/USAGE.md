@@ -1028,7 +1028,8 @@ balance` argument — is refused (exit 2) naming the flag rather than silently
 falling back to the unfiltered default.
 
 A parent whose children cancel under the conversion — a long and a short lot at
-the same cost, two funds whose cost bases offset — reports an explicit zero
+the same cost, two funds whose cost bases offset, or a 10.00 USD expense and its
+-10.00 USD refund — reports an explicit zero, in filtered views too,
 (`0.00 USD` / `{"USD": "0"}`) rather than the `—` / `{}` of an account with no
 balance. An inventory drops a position the moment it nets to zero, which would
 otherwise render a real cancelling rollup as missing data beside the children

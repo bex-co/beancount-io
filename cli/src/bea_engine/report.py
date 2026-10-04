@@ -693,11 +693,14 @@ def _prune_tree(node: Any, matches: Callable[[str], bool], closed: set[str] | No
     in_scope = not is_closed and matches(node.account)
     if not (in_scope or kept):
         return None
+    from fava.core.tree import zero_filled
+
     own = node.balance if in_scope else type(node.balance)()
+    parts = [own, *(child.balance_children for child in kept)]
     return dataclasses.replace(
         node,
         balance=own,
         has_txns=node.has_txns if in_scope else False,
         children=kept,
-        balance_children=_sum(own, *(child.balance_children for child in kept)),
+        balance_children=zero_filled(_sum(*parts), parts),
     )

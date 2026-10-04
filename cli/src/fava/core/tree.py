@@ -56,6 +56,26 @@ def _converted(
     return SimpleCounterInventory({currency: ZERO for currency in sorted(currencies)})
 
 
+def zero_filled(
+    total: SimpleCounterInventory,
+    parts: Iterable[SimpleCounterInventory],
+) -> SimpleCounterInventory:
+    """A subtree total that reads an explicit zero when its parts cancel.
+
+    `_converted` covers offsetting lots, but a plain currency nets to zero
+    before conversion ever sees it: two children holding 10.00 and -10.00 USD
+    leave the parent's inventory empty, indistinguishable from a parent that
+    never had activity. When the total is empty but a part (the node's own
+    balance or a kept child's total) produced a currency, report zero in each.
+    """
+    if total:
+        return total
+    currencies = {currency for part in parts for currency, _ in part.items()}
+    if not currencies:
+        return total
+    return SimpleCounterInventory({currency: ZERO for currency in sorted(currencies)})
+
+
 @dataclass(frozen=True)
 class SerialisedTreeNode:
     """A serialised TreeNode."""
@@ -106,11 +126,16 @@ class TreeNode:
             child.serialise(conversion, prices, end, with_cost=with_cost)
             for child in sorted(self.children, key=attrgetter("name"))
         ]
+        own = _converted(self.balance, conversion, prices, end)
+        total = zero_filled(
+            _converted(self.balance_children, conversion, prices, end),
+            [own, *(child.balance_children for child in children)],
+        )
         return (
             SerialisedTreeNode(
                 self.name,
-                _converted(self.balance, conversion, prices, end),
-                _converted(self.balance_children, conversion, prices, end),
+                own,
+                total,
                 children,
                 self.has_txns,
                 self.balance.reduce(get_cost),
@@ -119,8 +144,8 @@ class TreeNode:
             if with_cost
             else SerialisedTreeNode(
                 self.name,
-                _converted(self.balance, conversion, prices, end),
-                _converted(self.balance_children, conversion, prices, end),
+                own,
+                total,
                 children,
                 self.has_txns,
             )
