@@ -168,9 +168,17 @@ describe("LedgerSidebar", () => {
       expect(screen.getByRole("link", { name: label })).toBeInTheDocument();
     }
 
-    // Group headers stay buttons: they toggle disclosure, they do not navigate.
+    // Group headers toggle disclosure; every group keeps a button for that.
     for (const label of ["Reports", "Import", "Advanced"]) {
       expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
+    }
+    // Only Reports has an obvious first read, so only its label navigates.
+    expect(screen.getByRole("link", { name: "Reports" })).toHaveAttribute(
+      "href",
+      "/ledger/alice/book/income-statement",
+    );
+    for (const label of ["Import", "Advanced"]) {
+      expect(screen.queryByRole("link", { name: label })).toBeNull();
     }
 
     expect(screen.queryByText("Income Statement")).not.toBeInTheDocument();

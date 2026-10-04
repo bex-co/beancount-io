@@ -9,14 +9,7 @@ import {
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
-import {
-  AlertCircle,
-  BarChart3,
-  BookOpenText,
-  FileUp,
-  Filter,
-  SearchCode,
-} from "lucide-react";
+import { AlertCircle, BarChart3, FileUp, Filter } from "lucide-react";
 import { useQuery } from "@apollo/client/react";
 import {
   GetLedgerOverviewDocument,
@@ -67,14 +60,12 @@ function PublicLedgerIntroduction({
   name,
   description,
   readmeVisible,
-  reportsHref,
 }: {
   ledgerId: string;
   initialReadme?: InitialLedgerReadme;
   name: string;
   description?: string | null;
   readmeVisible: boolean;
-  reportsHref?: string;
 }) {
   const { t } = useTranslations();
   const { content } = useLedgerReadme(ledgerId, initialReadme);
@@ -87,26 +78,20 @@ function PublicLedgerIntroduction({
     }),
   });
   return (
-    <>
-      <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-        {presentation.description}
-      </p>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-        {readmeVisible && content && (
+    <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+      {presentation.description}
+      {readmeVisible && content && (
+        <>
+          {" "}
           <a
             href="#overview-ledger-notes"
-            className="underline underline-offset-4"
+            className="whitespace-nowrap text-foreground underline underline-offset-4"
           >
             {t("page.overview.ledgerNotes")}
           </a>
-        )}
-        {reportsHref && (
-          <a href={reportsHref} className="underline underline-offset-4">
-            {t("common.reports")}
-          </a>
-        )}
-      </div>
-    </>
+        </>
+      )}
+    </p>
   );
 }
 
@@ -446,12 +431,6 @@ export default function LedgerOverviewPage() {
     (id) => !layout.hidden.includes(id),
   );
   const narrativeOnly = Boolean(reportState) || !hasActivity;
-  const firstReport = visibleWidgetIds.find((id) => id !== "readme");
-  const reportsHref = narrativeOnly
-    ? "#overview-report-state"
-    : firstReport
-      ? `#overview-widget-${firstReport}`
-      : undefined;
 
   return (
     <div className="space-y-6 pb-4 md:space-y-8">
@@ -459,55 +438,33 @@ export default function LedgerOverviewPage() {
         <div className="pointer-events-none absolute -top-32 -left-24 size-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="pointer-events-none absolute -top-24 right-0 size-64 rounded-full bg-chart-4/10 blur-3xl" />
         <div className="relative p-4 sm:px-5 sm:py-4">
-          <div className="grid gap-3 xl:grid-cols-[minmax(16rem,1fr)_auto] xl:items-start">
-            <div className="flex min-w-0 items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                  {t("common.overview")}
-                </p>
-                <h1
-                  className={`mt-1 text-xl font-semibold tracking-tight sm:text-2xl ${publicReader ? "" : "truncate"}`}
-                >
-                  {displayName}
-                </h1>
-                {publicReader ? (
-                  <PublicLedgerIntroduction
-                    ledgerId={ledgerId}
-                    initialReadme={initialReadme}
-                    name={displayName}
-                    description={ledgerData.description}
-                    readmeVisible={visibleWidgetIds.includes("readme")}
-                    reportsHref={reportsHref}
-                  />
-                ) : (
-                  <p className="mt-1 max-w-2xl text-xs leading-snug text-muted-foreground sm:text-sm">
-                    {t("common.pageDescription.overview", {
-                      ledgerName: displayName,
-                    })}
-                  </p>
-                )}
-              </div>
-              {showStarButton && (
-                <StarButton
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                {t("common.overview")}
+              </p>
+              <h1
+                className={`mt-1 text-xl font-semibold tracking-tight sm:text-2xl ${publicReader ? "" : "truncate"}`}
+              >
+                {displayName}
+              </h1>
+              {publicReader ? (
+                <PublicLedgerIntroduction
                   ledgerId={ledgerId}
-                  isStarred={isStarred}
-                  className="shrink-0"
-                  starLabel={t("page.overview.starButton.star")}
-                  starredLabel={t("page.overview.starButton.starred")}
+                  initialReadme={initialReadme}
+                  name={displayName}
+                  description={ledgerData.description}
+                  readmeVisible={visibleWidgetIds.includes("readme")}
                 />
+              ) : (
+                <p className="mt-1 max-w-2xl text-xs leading-snug text-muted-foreground sm:text-sm">
+                  {t("common.pageDescription.overview", {
+                    ledgerName: displayName,
+                  })}
+                </p>
               )}
             </div>
-
-            <div className="flex flex-wrap items-center gap-1.5 xl:max-w-[35rem] xl:justify-end">
-              <Button asChild size="sm" className="rounded-full px-3">
-                <Link
-                  to="/ledger/$ledgerOwner/$ledgerName/income-statement"
-                  params={{ ledgerOwner, ledgerName }}
-                >
-                  <BarChart3 />
-                  {t("common.relatedLinks.incomeStatement")}
-                </Link>
-              </Button>
+            <div className="flex shrink-0 items-center gap-1.5">
               <LedgerWritePermission>
                 <Button
                   asChild
@@ -524,35 +481,16 @@ export default function LedgerOverviewPage() {
                   </Link>
                 </Button>
               </LedgerWritePermission>
-              <Button
-                asChild
-                size="sm"
-                variant="secondary"
-                className="rounded-full px-3"
-              >
-                <Link
-                  to="/ledger/$ledgerOwner/$ledgerName/query"
-                  params={{ ledgerOwner, ledgerName }}
-                >
-                  <SearchCode />
-                  {t("common.relatedLinks.query")}
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="sm"
-                variant="secondary"
-                className="rounded-full px-3"
-              >
-                <Link
-                  to="/ledger/$ledgerOwner/$ledgerName/journal"
-                  params={{ ledgerOwner, ledgerName }}
-                >
-                  <BookOpenText />
-                  {t("common.relatedLinks.journal")}
-                </Link>
-              </Button>
+              {showStarButton && (
+                <StarButton
+                  ledgerId={ledgerId}
+                  isStarred={isStarred}
+                  starLabel={t("page.overview.starButton.star")}
+                  starredLabel={t("page.overview.starButton.starred")}
+                />
+              )}
               <DashboardCustomizer
+                showTrigger={!publicReader}
                 layout={layout}
                 setVisible={setVisible}
                 move={move}

@@ -69,6 +69,11 @@ interface MenuGroup {
   label: string;
   icon: React.ElementType;
   items: MenuItem[];
+  /**
+   * Where the group's own label navigates. Only a group with one obvious first
+   * read declares it; the rest keep a label that just discloses their items.
+   */
+  landingPath?: string;
   badge?: number;
   destructiveBadge?: boolean;
 }
@@ -265,6 +270,7 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
       label: t("common.reports"),
       icon: FileSpreadsheet,
       items: reportMenuItems,
+      landingPath: `${ledgerPath}/income-statement`,
     },
     {
       id: "import",
@@ -353,6 +359,59 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
     const Icon = group.icon;
     const submenuId = `ledger-sidebar-${group.id}`;
 
+    const submenu = isOpen && (
+      <SidebarMenuSub id={submenuId}>
+        {visibleItems.map((item) => (
+          <SidebarMenuSubItem key={item.id}>
+            <SidebarMenuSubButton asChild isActive={currentPath === item.path}>
+              <Link
+                to={item.path}
+                onClick={handleNavigate}
+                {...EXACT_PAGE_LINK}
+              >
+                <span>{item.label}</span>
+              </Link>
+            </SidebarMenuSubButton>
+            {item.rightContent}
+          </SidebarMenuSubItem>
+        ))}
+      </SidebarMenuSub>
+    );
+
+    // A label that navigates cannot also be the disclosure control, so the
+    // chevron becomes its own button beside the link.
+    if (group.landingPath) {
+      return (
+        <SidebarMenuItem key={group.id}>
+          <SidebarMenuButton
+            asChild
+            isActive={hasActiveItem}
+            tooltip={group.label}
+          >
+            <Link
+              to={group.landingPath}
+              onClick={handleNavigate}
+              {...EXACT_PAGE_LINK}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{group.label}</span>
+            </Link>
+          </SidebarMenuButton>
+          <SidebarMenuAction
+            onClick={() => toggleGroup(group.id)}
+            aria-label={group.label}
+            aria-expanded={isOpen}
+            aria-controls={submenuId}
+          >
+            <ChevronDown
+              className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+            />
+          </SidebarMenuAction>
+          {submenu}
+        </SidebarMenuItem>
+      );
+    }
+
     return (
       <SidebarMenuItem key={group.id}>
         <SidebarMenuButton
@@ -381,27 +440,7 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
             className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
           />
         </SidebarMenuButton>
-        {isOpen && (
-          <SidebarMenuSub id={submenuId}>
-            {visibleItems.map((item) => (
-              <SidebarMenuSubItem key={item.id}>
-                <SidebarMenuSubButton
-                  asChild
-                  isActive={currentPath === item.path}
-                >
-                  <Link
-                    to={item.path}
-                    onClick={handleNavigate}
-                    {...EXACT_PAGE_LINK}
-                  >
-                    <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuSubButton>
-                {item.rightContent}
-              </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
-        )}
+        {submenu}
       </SidebarMenuItem>
     );
   };

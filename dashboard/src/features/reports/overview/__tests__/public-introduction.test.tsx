@@ -176,9 +176,10 @@ describe("public overview introduction", () => {
     expect(
       container.querySelector('a[href="#overview-ledger-notes"]'),
     ).toHaveTextContent("Ledger notes");
+    // The reports start one scroll below; the header offers no jump to them.
     expect(
       container.querySelector('a[href="#overview-widget-financial-position"]'),
-    ).toHaveTextContent("Reports");
+    ).toBeNull();
   });
 
   it.each(["empty", "filtered", "error", "loading"])(

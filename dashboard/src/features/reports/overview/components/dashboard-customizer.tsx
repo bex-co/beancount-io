@@ -31,9 +31,29 @@ function useWidgetLabels(): Record<DashboardWidgetId, string> {
   };
 }
 
-/** A button that opens the customizer; the header's one is its own trigger. */
-export function CustomizeButton(props: ComponentProps<typeof Button>) {
+/**
+ * A button that opens the customizer; the header's one is its own trigger and
+ * is icon-only, so it reads as a page utility rather than another destination.
+ */
+export function CustomizeButton({
+  iconOnly = false,
+  ...props
+}: ComponentProps<typeof Button> & { iconOnly?: boolean }) {
   const { t } = useTranslations();
+  if (iconOnly) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-8 rounded-full"
+        aria-label={t("page.overview.customize")}
+        title={t("page.overview.customize")}
+        {...props}
+      >
+        <Settings2 className="size-4" />
+      </Button>
+    );
+  }
   return (
     <Button variant="outline" size="sm" className="rounded-full" {...props}>
       <Settings2 className="size-4" />
@@ -43,10 +63,14 @@ export function CustomizeButton(props: ComponentProps<typeof Button>) {
 }
 
 /**
- * The one customization panel, rendered with the always-present header
- * trigger. Its open state belongs to the page so other entry points (the
- * all-hidden prompt) open this same panel: a panel owned by the prompt was
- * unmounted — and closed — the moment its first switch brought a module back.
+ * The one customization panel, rendered with its header trigger. Its open
+ * state belongs to the page so other entry points (the all-hidden prompt) open
+ * this same panel: a panel owned by the prompt was unmounted — and closed — the
+ * moment its first switch brought a module back.
+ *
+ * Public readers get no header trigger (`showTrigger` false): arranging modules
+ * is the owner's job. The panel stays mounted so the all-hidden prompt still
+ * opens it for a reader whose saved layout hides everything.
  *
  * On close, focus returns to `returnFocus` when that element is still on the
  * page, and to the header trigger otherwise.
@@ -59,6 +83,7 @@ export function DashboardCustomizer({
   open,
   onOpenChange,
   returnFocus,
+  showTrigger = true,
 }: {
   layout: DashboardLayout;
   setVisible: (id: DashboardWidgetId, visible: boolean) => void;
@@ -67,15 +92,18 @@ export function DashboardCustomizer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   returnFocus?: RefObject<HTMLElement | null>;
+  showTrigger?: boolean;
 }) {
   const labels = useWidgetLabels();
   const { t } = useTranslations();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
-        <CustomizeButton />
-      </SheetTrigger>
+      {showTrigger && (
+        <SheetTrigger asChild>
+          <CustomizeButton iconOnly />
+        </SheetTrigger>
+      )}
       <SheetContent
         className="sm:max-w-md"
         onCloseAutoFocus={(event) => {
