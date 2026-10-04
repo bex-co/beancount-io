@@ -123,7 +123,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [160](./160.md) — CSV import-ids collapse amounts beyond 28 significant digits, so a new row is skipped as an exact duplicate — **minor**, CLI QA 2026-10-03.
 - [161](./161.md) — A stored `.run` query with `DISTINCT tags`/`GROUP BY tags` still leaks the raw compile error — **minor**, CLI QA 2026-10-03.
 - [162](./162.md) — A malformed-CSV error names the last line of the file, not where the unclosed quote starts — **minor**, CLI QA 2026-10-03.
-- [163](./163.md) — A ledger price written with a slash or unpadded date doesn't override the managed-feed price for that date — **major**, CLI QA 2026-10-03.
 - [164](./164.md) — The `--meta` invalid-date check misses slash and unpadded dates and stores them as strings — **minor**, CLI QA 2026-10-03.
 - [165](./165.md) — `add document` accepts a `../` path outside the ledger directory that the next `bea check` rejects (as "absolute") — **minor**, CLI QA 2026-10-03.
 - [166](./166.md) — `bea format -` with non-UTF-8 stdin leaks a raw "can't encode … surrogates" error instead of the decode error — **minor**, CLI QA 2026-10-03.

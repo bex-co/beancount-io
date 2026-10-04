@@ -104,6 +104,21 @@ describe("overlayManagedPrices", () => {
     expect(out.managedPrices[0].effectiveDates).toEqual([]);
   });
 
+  it.each(["2026-09-14", "2026/09/14", "2026-9-14", "2026/9/14", "2026/9-14"])(
+    "lets a ledger price dated %s shadow the managed point (w1/163)",
+    async (spelling) => {
+      const text = feedText([
+        ["2026-09-14", "76000"],
+        ["2026-09-15", "77000"],
+      ]);
+      const { deps } = feedDeps([feedResponse(text)]);
+      const files = { "main.bean": `include "${URL_BTC}"\n${spelling} price BTC 5 USD\n` };
+      const out = await overlay(files, deps);
+      expect(out.managedPrices[0].shadowedCount).toBe(1);
+      expect(out.managedPrices[0].effectiveDates).toEqual(["2026-09-15"]);
+    },
+  );
+
   it("does not shadow a managed price on a date the ledger does not price", async () => {
     const text = feedText([
       ["2026-09-14", "76000"],
@@ -237,6 +252,21 @@ describe("precedence helpers", () => {
     expect([...pairs].sort()).toEqual([
       "2026-01-01\0BTC\0USD",
       "2026-01-03\0ETH\0EUR",
+    ]);
+  });
+
+  it("normalises slash and unpadded ledger dates and skips impossible ones (w1/163)", () => {
+    const pairs = collectLedgerPricePairs(
+      {
+        "a.bean":
+          "2026/01/02 price X 5 USD\n2026-1-3 price X 6 USD\n2026/1-4 price X 7 USD\n2026/02/30 price X 8 USD\n",
+      },
+      ["a.bean"],
+    );
+    expect([...pairs].sort()).toEqual([
+      "2026-01-02\0X\0USD",
+      "2026-01-03\0X\0USD",
+      "2026-01-04\0X\0USD",
     ]);
   });
 

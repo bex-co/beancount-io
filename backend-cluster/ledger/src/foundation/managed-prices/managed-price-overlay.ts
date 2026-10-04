@@ -4,6 +4,7 @@ import {
   isUrlIncludeTarget,
   resolveIncludeTarget,
 } from "@/foundation/rustledger/file-map-loader";
+import { isIsoDate } from "@/foundation/rustledger/directive-filter";
 import { OperationNotAllowedError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import { parseManagedPriceUrl } from "./managed-price-policy";
@@ -67,8 +68,10 @@ interface ManagedPriceOverlay {
 export const MANAGED_PRICE_PLACEHOLDER =
   "; managed price feed already included from another file\n";
 const SHADOWED_LINE = "; shadowed by a ledger-authored price for the same date";
+// Ledger dates may be spelled `YYYY-M-D` or `YYYY/M/D` (mixed separators, one
+// or two digit month and day); feed dates are always ISO, so normalise first.
 const LEDGER_PRICE_RE =
-  /^(\d{4}-\d{2}-\d{2})[ \t]+price[ \t]+([A-Z][A-Z0-9'._-]*)[ \t]+\S+[ \t]+([A-Z][A-Z0-9'._-]*)/gmu;
+  /^([0-9]{4})[-/]([0-9]{1,2})[-/]([0-9]{1,2})[ \t]+price[ \t]+([A-Z][A-Z0-9'._-]*)[ \t]+\S+[ \t]+([A-Z][A-Z0-9'._-]*)/gmu;
 const METADATA_LINE_RE = /^[ \t]+[a-z][A-Za-z0-9_-]*\s*:/u;
 
 const pairKey = (date: string, base: string, quote: string): string =>
@@ -86,7 +89,10 @@ export function collectLedgerPricePairs(
   const pairs = new Set<string>();
   for (const path of paths) {
     for (const match of (files[path] ?? "").matchAll(LEDGER_PRICE_RE)) {
-      pairs.add(pairKey(match[1], match[2], match[3]));
+      const [, year, month, day, base, quote] = match;
+      const date = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      // An impossible date is a parse error for the engine too: nothing to shadow.
+      if (isIsoDate(date)) pairs.add(pairKey(date, base, quote));
     }
   }
   return pairs;

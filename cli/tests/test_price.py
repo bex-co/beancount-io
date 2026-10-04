@@ -2628,3 +2628,41 @@ class TestObservedAtInstants:
 
         assert resolved.blob is not None
         assert resolved.blob.feed.latest_observed_at == _stamp(now - 60)
+
+
+class TestLedgerPriceDateSpellings:
+    """w1/163: a ledger price wins however Beancount lets it spell the date."""
+
+    def test_collect_normalises_slash_and_unpadded_dates(self) -> None:
+        text = "2026/01/02 price X 5 USD\n2026-1-3 price X 6 USD\n2026/1-4 price X 7 USD\n2026/02/30 price X 8 USD\n"
+
+        assert collect_ledger_price_pairs(text) == {
+            ("2026-01-02", "X", "USD"),
+            ("2026-01-03", "X", "USD"),
+            ("2026-01-04", "X", "USD"),
+        }
+
+    @pytest.mark.parametrize("spelling", ["2026-09-10", "2026/09/10", "2026-9-10", "2026/9/10"])
+    def test_each_spelling_shadows_the_feed_point(self, spelling: str, feed_server: str, tmp_path: Path) -> None:
+        loaded = _load(feed_server, tmp_path, _managed_ledger(feed_server) + f"{spelling} price BTC 5 USD\n")
+
+        assert loaded.errors == []
+        assert _price_numbers(loaded) == ["113500.50", "5"]
+        assert loaded.sources[0].shadowed_count == 1
+        assert loaded.sources[0].effective_dates == ("2026-09-11",)
+
+    def test_getprice_returns_the_slash_dated_ledger_price(self, feed_server: str, tmp_path: Path) -> None:
+        ledger = _write_managed_ledger(tmp_path, feed_server, "2026/09/10 price BTC 5 USD\n")
+
+        result = _run_bea(
+            tmp_path,
+            feed_server,
+            "--json",
+            "--file",
+            str(ledger),
+            "query",
+            "SELECT getprice('BTC', 'USD', 2026-09-10) AS p FROM #prices LIMIT 1",
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert "5" in result.stdout and "112000" not in result.stdout

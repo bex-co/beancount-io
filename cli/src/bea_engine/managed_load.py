@@ -34,7 +34,7 @@ import time
 from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -71,8 +71,12 @@ OFFLINE_ENV = "MANAGED_PRICE_OFFLINE"
 STRICT_ENV = "MANAGED_PRICE_STRICT"
 """Set to fail the load on a stale or unavailable managed source."""
 
+# Beancount spells a date `YYYY-M-D` or `YYYY/M/D` (mixed separators, one or
+# two digit month and day); feed dates are always ISO, so normalise before
+# comparing.
 _LEDGER_PRICE_RE = re.compile(
-    r"^(\d{4}-\d{2}-\d{2})[ \t]+price[ \t]+([A-Z][A-Z0-9'._-]*)[ \t]+\S+[ \t]+([A-Z][A-Z0-9'._-]*)",
+    r"^([0-9]{4})[-/]([0-9]{1,2})[-/]([0-9]{1,2})[ \t]+price[ \t]+([A-Z][A-Z0-9'._-]*)[ \t]+\S+[ \t]+"
+    r"([A-Z][A-Z0-9'._-]*)",
     re.MULTILINE,
 )
 _METADATA_LINE_RE = re.compile(r"^[ \t]+[a-z][A-Za-z0-9_-]*\s*:")
@@ -133,7 +137,12 @@ def collect_ledger_price_pairs(*texts: str) -> set[tuple[str, str, str]]:
     pairs: set[tuple[str, str, str]] = set()
     for text in texts:
         for match in _LEDGER_PRICE_RE.finditer(text):
-            pairs.add((match.group(1), match.group(2), match.group(3)))
+            year, month, day, base, quote = match.groups()
+            try:
+                when = date(int(year), int(month), int(day))
+            except ValueError:
+                continue  # Beancount rejects it too; nothing to shadow.
+            pairs.add((when.isoformat(), base, quote))
     return pairs
 
 
