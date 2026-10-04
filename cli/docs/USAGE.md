@@ -1277,11 +1277,15 @@ In a session, one turn is one unit of failure. Ctrl-C clears the line you are
 typing, or abandons the turn in flight, and returns to the prompt with the
 conversation intact; Ctrl-D (or `/exit`) ends the session. A failed turn — a
 server error, a question the assistant cannot complete — prints the failure and
-returns to the prompt with the earlier history still loaded. A rejected
+returns to the prompt with the earlier history still loaded. A turn that fails
+or is cancelled after an approved write names the directives it already wrote
+and the file they went to — they stay in the ledger — and the conversation keeps
+that turn, so the assistant knows the entry exists. A rejected
 credential is the one exception: it ends the session with exit **3**, because
 every later turn would fail the same way. Each question also has a fixed budget
 of hosted requests and ledger queries; a model that keeps querying without
-answering stops there, reports that nothing was written, and costs no more.
+answering stops there, reports what was written (nothing, unless you approved a
+write), and costs no more.
 Each answer also carries an explicit output cap rather than reserving the
 model's default allowance.
 

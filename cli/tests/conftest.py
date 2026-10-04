@@ -248,16 +248,21 @@ def model_answer(text: str) -> dict[str, object]:
     return {"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": text}}
 
 
+#: A choice to answer with, a status to fail with, or a status with its body.
+StubReply = dict[str, object] | int | tuple[int, dict[str, object]]
+
+
 @dataclass
 class StubModel:
     """A model that answers from localhost: what it replies, and what it was asked.
 
     `reply` is called with the 1-based request number and returns either a
-    `model_answer`/`model_tool_call` choice or an HTTP status to fail with.
+    `model_answer`/`model_tool_call` choice, an HTTP status to fail with, or a
+    `(status, body)` pair when the failure's body is what is under test.
     """
 
     url: str = ""
-    reply: Callable[[int], dict[str, object] | int] = field(default=lambda n: model_answer("stub answer"))
+    reply: Callable[[int], StubReply] = field(default=lambda n: model_answer("stub answer"))
     requests: list[dict[str, object]] = field(default_factory=list)
 
     @property
@@ -287,6 +292,9 @@ class _ModelHandler(BaseHTTPRequestHandler):
         outcome = stub.reply(len(stub.requests))
         if isinstance(outcome, int):
             self._send(outcome, {"message": "Upstream model provider failed."})
+            return
+        if isinstance(outcome, tuple):
+            self._send(*outcome)
             return
         self._send(
             200,
@@ -358,6 +366,9 @@ def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., Te
     A script entry is literal text, `@NAME` from `KEYS`, or `@WAIT:text` to
     await output before the next keystroke. Wait markers match in order, so a
     later prompt cannot accidentally match the one from an earlier turn.
+    `@REQUESTS:n` awaits the stub's n-th request — the one point a turn can be
+    observed between its tool calls, since a tool's work ends before the next
+    request is sent.
     """
 
     def run(
@@ -406,7 +417,11 @@ def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., Te
                 # the terminal, and a Ctrl-C then lands on startup instead of on
                 # the prompt under test.
                 ready_to_type = step > 0 or PROMPT_ARROW in emitted
-                if step < len(script) and script[step].startswith("@WAIT:"):
+                if step < len(script) and script[step].startswith("@REQUESTS:"):
+                    if stub_model.count >= int(script[step].removeprefix("@REQUESTS:")):
+                        step += 1
+                        last = time.time()
+                elif step < len(script) and script[step].startswith("@WAIT:"):
                     marker = script[step].removeprefix("@WAIT:").encode()
                     match = emitted.find(marker, matched_output)
                     if match >= 0:

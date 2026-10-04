@@ -204,7 +204,9 @@ def print_welcome() -> None:
 
 
 def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | None = None) -> None:
-    from cli.ask.agent import WritePermission, translated_failures, usage_limits
+    from pydantic_ai import capture_run_messages
+
+    from cli.ask.agent import WritePermission, translated_failures, usage_limits, written_so_far
 
     hint = random.choice(_PLACEHOLDER_HINTS)
     first_turn = [True]
@@ -250,8 +252,9 @@ def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | 
         try:
             # The spinner is stopped before any arm below prints: a live display
             # left running would overwrite the line it is reporting on.
+            turn: list[Any] = []
             try:
-                with translated_failures():
+                with capture_run_messages() as turn, translated_failures(deps):
                     result = agent.run_sync(
                         user_input,
                         deps=deps,
@@ -263,8 +266,12 @@ def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | 
                 active_status[0] = None
         except KeyboardInterrupt:
             # A turn costs one Ctrl-C, not the session. `messages` is left as it
-            # was before the turn, so the next question still carries the history.
-            console.print("\n[dim](cancelled)[/dim]")
+            # was before the turn, so the next question still carries the history
+            # — and keeps this turn too if it wrote to the ledger.
+            messages = _history_after_a_failed_turn(messages, turn, deps)
+            done = f": {inert_text(written_so_far(deps))}" if deps.writes else ""
+            # Text, not markup: the file name is not ours to have interpreted.
+            console.print(Text(f"\n(cancelled{done})", style="dim"))
             continue
         except AuthError as exc:
             # The one failure worth ending on: the credential is rejected, so
@@ -276,6 +283,7 @@ def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | 
             # Anything else costs this turn only — a 5xx from the proxy, a tool
             # the model cannot get right, the per-question budget. Before this,
             # one such failure ended the process and discarded the conversation.
+            messages = _history_after_a_failed_turn(messages, turn, deps)
             console.print()
             output.failure(exc)
             continue
@@ -284,6 +292,27 @@ def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | 
         # No OSC 8 hyperlink: its visible text is the model's, so it could read
         # one address and open another. The target is printed beside it instead.
         console.print(Markdown(inert_text(result.output), hyperlinks=False))
+
+
+def _history_after_a_failed_turn(before: list[Any], turn: list[Any], deps: BqlDeps) -> list[Any]:
+    """The conversation a failed or cancelled turn leaves behind.
+
+    A turn that wrote nothing is dropped, as it always was. One that wrote is
+    kept as far as the model got (w1/095): dropping it left the next question
+    without the "Added …" tool result, so the model did not know the entry
+    existed and would happily add it again. `turn` is the SDK's capture of the
+    whole run, prior history included. It is cut back to its last request,
+    because a response whose tool calls were never answered is history the
+    next run refuses to continue from.
+    """
+    if not deps.writes or not turn:
+        return before
+    from pydantic_ai.messages import ModelResponse
+
+    kept = list(turn)
+    while kept and isinstance(kept[-1], ModelResponse):
+        kept.pop()
+    return kept
 
 
 def _print_help() -> None:

@@ -80,7 +80,7 @@ def ask(
         from cli.utils import inert_text
 
         console = Console()
-        with console.status("[dim]Thinking…[/dim]", spinner="dots"), translated_failures():
+        with console.status("[dim]Thinking…[/dim]", spinner="dots"), translated_failures(deps):
             result = agent.run_sync(question, deps=deps, usage_limits=usage_limits())
         # The answer is model-controlled text on its way to a terminal, so it
         # obeys the same invariant as every other untrusted string the CLI

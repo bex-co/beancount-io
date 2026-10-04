@@ -142,10 +142,26 @@ class BqlDeps:
     write_permission: WritePermission = field(default_factory=WritePermission)
     skills: dict[str, AgentSkill] = field(default_factory=dict)
     into: Path | None = None
+    #: What this question has written: one (directive count, file) per approved
+    #: write that landed. A failure report must not deny a write that happened —
+    #: told "nothing was written", a user retries and duplicates the entry
+    #: (w1/095). `translated_failures` resets it at the start of every turn.
+    writes: list[tuple[int, str]] = field(default_factory=list)
+
+
+def written_so_far(deps: BqlDeps | None) -> str:
+    """What this question wrote, as the clause a failure report ends with."""
+    if deps is None or not deps.writes:
+        return "nothing was written to your ledger"
+    per_file: dict[str, int] = {}
+    for count, target in deps.writes:
+        per_file[target] = per_file.get(target, 0) + count
+    landed = ", ".join(f"{count} directive(s) to {target}" for target, count in per_file.items())
+    return f"this question had already written {landed}, which stay in your ledger"
 
 
 @contextmanager
-def translated_failures() -> Iterator[None]:
+def translated_failures(deps: BqlDeps | None = None) -> Iterator[None]:
     """Report the proxy's HTTP failures the way every other command reports them.
 
     `ask` reaches the service over the OpenAI protocol through the AI SDK
@@ -165,16 +181,23 @@ def translated_failures() -> Iterator[None]:
     which printed them verbatim: the user read a third-party limit name
     (`request_limit`), a knob `bea` does not expose (the tool retry count), and a
     link to another project's documentation. Every arm below says what happened,
-    that nothing was written, and what to try instead — and none of them quotes
+    what was written, and what to try instead — and none of them quotes
     the SDK's sentence, because that sentence is the defect.
+
+    `deps` is the turn's state: its record of writes is cleared on entry, so
+    every arm can say what this question actually wrote — "nothing" only when
+    that is true — instead of a claim written for `--print`, where writes are
+    impossible (w1/095).
     """
+    if deps is not None:
+        deps.writes.clear()
     try:
         yield
     except ModelHTTPError as exc:
-        quota = _quota_refusal(exc.body)
+        quota = _quota_refusal(exc.body, written_so_far(deps))
         if quota is not None:
             raise BeaError(quota) from exc
-        raise error_from_status(exc.status_code, _server_message(exc.body)) from exc
+        raise _naming_writes(error_from_status(exc.status_code, _server_message(exc.body)), deps) from exc
     except ModelAPIError as exc:
         # A connection-level failure: the AI SDK wraps the HTTP client's error
         # rather than answering with a status, so it never reached the status
@@ -182,20 +205,33 @@ def translated_failures() -> Iterator[None]:
         # `bea cloud status` says `Could not reach the server (ConnectError).`
         # `USAGE.md` promises those read the same, so the same translation the
         # rest of the CLI uses is applied to whatever the SDK was hiding.
-        raise _unreachable(exc) from exc
+        raise _naming_writes(_unreachable(exc), deps) from exc
     except UsageLimitExceeded as exc:
         raise BeaError(
             f"The assistant kept querying without reaching an answer and stopped at this question's "
             f"budget ({REQUEST_LIMIT} model requests, {TOOL_CALLS_LIMIT} ledger queries); "
-            "nothing was written to your ledger. "
+            f"{written_so_far(deps)}. "
             "Ask a narrower question, or run the query yourself with 'bea query'."
         ) from exc
     except AgentRunError as exc:
         raise BeaError(
             f"The assistant could not complete this question ({type(exc).__name__}); "
-            "nothing was written to your ledger. Rephrase the question and retry, "
+            f"{written_so_far(deps)}. Rephrase the question and retry, "
             "or run the query yourself with 'bea query'."
         ) from exc
+
+
+def _naming_writes(error: BeaError, deps: BqlDeps | None) -> BeaError:
+    """The status table's sentence, plus the write it would otherwise leave out.
+
+    Those sentences make no claim about the ledger, so nothing is added when the
+    question wrote nothing; after a write, silence reads as "nothing happened"
+    and invites the retry that duplicates the entry.
+    """
+    if deps is not None and deps.writes:
+        clause = written_so_far(deps)
+        error.args = (f"{error} Note: {clause[0].upper()}{clause[1:]}.",)
+    return error
 
 
 def _unreachable(exc: BaseException) -> BeaError:
@@ -220,7 +256,7 @@ def _unreachable(exc: BaseException) -> BeaError:
     return BeaError(f"Could not reach the server ({type(exc).__name__}).")
 
 
-def _quota_refusal(body: object) -> str | None:
+def _quota_refusal(body: object, written: str = "nothing was written to your ledger") -> str | None:
     """The account's AI budget, refused: which quota, and when it comes back.
 
     The proxy answers a quota rejection with its own code and, when it knows it,
@@ -238,7 +274,7 @@ def _quota_refusal(body: object) -> str | None:
     when = f" It resets at {until.group(1)}." if until else ""
     return (
         "This account's hosted AI quota is used up, so the question was refused; "
-        f"nothing was written to your ledger.{when} "
+        f"{written}.{when} "
         "Run the query yourself with 'bea query' in the meantime."
     )
 
@@ -327,6 +363,7 @@ def make_agent(
             )
         except BeaError as exc:
             return _write_rejection(exc)
+        ctx.deps.writes.append((int(result["written"]), str(result["target"])))
         return f"Added {result['written']} directive(s) to {result['target']}."
 
     @agent.tool()
