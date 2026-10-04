@@ -64,7 +64,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [058](./058.md) — `bea cloud logout` prints "Logged out." and exits 0 when server-side revocation failed — **minor**, CLI QA 2026-10-02.
 - [059](./059.md) — Empty or scheme-less `BEA_API_URL` is reported as a network outage — **minor**, CLI QA 2026-10-02.
 - [061](./061.md) — A ledger plugin or importer that prints to stdout corrupts the engine envelope: successful writes report exit 4 — **major**, CLI QA 2026-10-02.
-- [065](./065.md) — UTF-16 bank exports are misdiagnosed as cp1252, and BOM-prefixed rules files are refused — **minor**, CLI QA 2026-10-02.
 - [066](./066.md) — Ctrl-C ends the interactive `bea query` shell (exit 130) and loses its history — **major**, CLI QA 2026-10-02.
 - [067](./067.md) — The interactive query shell prints raw Python tracebacks for errors the one-shot path already explains — **minor**, CLI QA 2026-10-02.
 - [068](./068.md) — `doctor roundtrip` and `doctor print-options` ignore syntax errors in included files and exit 0 — **minor**, CLI QA 2026-10-02.

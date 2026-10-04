@@ -291,3 +291,73 @@ def test_explicit_utf8_refuses_with_suggestion(books: Path, tmp_path: Path) -> N
     assert result.returncode == 2, result.stdout
     assert "not valid UTF-8" in result.stderr
     assert "encoding=cp1252" in result.stderr
+
+
+UTF16_TEXT = "Date,Description,Amount\n2024-03-10,Coffee,-4.50\n"
+
+
+@pytest.mark.parametrize("codec", ["utf-16", "utf-16-le", "utf-16-be"])
+@pytest.mark.parametrize("csv_arg", ["auto", f"{FULL_MAPPING}", f"{FULL_MAPPING},encoding=cp1252"])
+def test_utf16_export_names_utf16_never_cp1252(books: Path, tmp_path: Path, codec: str, csv_arg: str) -> None:
+    """Excel "Unicode Text" is UTF-16: say so, and never suggest cp1252 (w1/065)."""
+    export = tmp_path / "unicode.csv"
+    export.write_bytes(UTF16_TEXT.encode(codec))
+    before = books.read_bytes()
+    result = _bea(
+        tmp_path, "--file", str(books), "import", str(export), "--csv", csv_arg, "--account", "Assets:Checking"
+    )
+    assert result.returncode == 2, result.stdout
+    assert "is UTF-16 text" in result.stderr and "re-save it as UTF-8" in result.stderr
+    assert "cp1252" not in result.stderr
+    assert books.read_bytes() == before
+
+
+def test_nul_bytes_without_utf16_shape_are_called_binary(books: Path, tmp_path: Path) -> None:
+    export = tmp_path / "sheet.csv"
+    export.write_bytes(b"PK\x03\x04\x14\x00\x06\x00\x08\x00\x00\x00!\x00binary spreadsheet body")
+    result = _bea(
+        tmp_path, "--file", str(books), "import", str(export), "--csv", FULL_MAPPING, "--account", "Assets:Checking"
+    )
+    assert result.returncode == 2, result.stdout
+    assert "NUL bytes" in result.stderr and "cp1252" not in result.stderr
+
+
+def test_bom_prefixed_rules_file_loads(books: Path, tmp_path: Path) -> None:
+    export = tmp_path / "bank.csv"
+    export.write_bytes(b"Date,Description,Amount\n2024-03-10,Coffee,-4.50\n")
+    rules = tmp_path / "rules.toml"
+    rules.write_bytes(b'\xef\xbb\xbf[[rule]]\nmatch = "coffee"\naccount = "Expenses:Food"\n')
+    result = _bea(
+        tmp_path,
+        "--json",
+        "--file",
+        str(books),
+        "import",
+        str(export),
+        "--csv",
+        FULL_MAPPING,
+        "--account",
+        "Assets:Checking",
+        "--rules",
+        str(rules),
+    )
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert '"rule": "coffee"' in result.stdout
+
+
+def test_engine_reads_bom_prefixed_rules(tmp_path: Path) -> None:
+    from bea_engine.csv_mapper import load_rules
+
+    rules = tmp_path / "rules.toml"
+    rules.write_bytes(b'\xef\xbb\xbf[[rule]]\nmatch = "coffee"\naccount = "Expenses:Food"\n')
+    assert [rule.pattern for rule in load_rules(rules)] == ["coffee"]
+
+
+def test_engine_refuses_utf16_before_decoding(tmp_path: Path) -> None:
+    from bea_engine.csv_mapper import read_header
+    from bea_engine.protocol import UsageError as EngineUsageError
+
+    export = tmp_path / "unicode.csv"
+    export.write_bytes(UTF16_TEXT.encode("utf-16"))
+    with pytest.raises(EngineUsageError, match="is UTF-16 text"):
+        read_header(export, encoding="cp1252")

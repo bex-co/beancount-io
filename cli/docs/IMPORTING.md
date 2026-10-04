@@ -113,7 +113,10 @@ cp1252 or latin-1 — Windows exports with accented payees need
 and then infers the mapping like `auto`. Without the key, a non-UTF-8 file
 fails before anything is read: the error names the byte offset and, when the
 file decodes as cp1252, says so with the override to pass. A file no
-candidate decodes lists the encodings tried instead. Unknown fields, missing columns, bad dates, and bad amounts fail
+candidate decodes lists the encodings tried instead. UTF-16 text (Excel's
+"Unicode Text", recognized by its byte-order mark or NUL bytes) is refused
+under any `encoding=` with a request to re-save it as UTF-8, and a `--rules`
+file may start with a UTF-8 BOM. Unknown fields, missing columns, bad dates, and bad amounts fail
 with the row number and column name, as `Row 2 (line 5)`: the row is the one
 the preview's `ROW` column shows, and the physical file line follows it for
 hand-editing. Rows whose mapped cells are all empty or

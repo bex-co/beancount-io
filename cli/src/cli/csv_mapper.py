@@ -188,7 +188,7 @@ def load_rules(path: Path) -> list[CsvRule]:
     import tomllib
 
     try:
-        raw = tomllib.loads(path.read_text(encoding="utf-8"))
+        raw = tomllib.loads(path.read_text(encoding="utf-8-sig"))
     except OSError as exc:
         raise UsageError(f"Cannot read rules file {path}: {exc}.") from exc
     except ValueError as exc:
@@ -309,6 +309,33 @@ def _read_codec(encoding: str) -> str:
     return "utf-8-sig" if encoding == "utf-8" else encoding
 
 
+_UTF16_BOMS = (b"\xff\xfe", b"\xfe\xff")
+
+
+def _refuse_utf16(source: Path) -> None:
+    """Refuse UTF-16 text (Excel's "Unicode Text") and binaries before any codec reads them.
+
+    cp1252 and latin-1 decode nearly any bytes, so a UTF-16 export used to be
+    diagnosed as cp1252 and then read as a header of `ÿþD a t e`. No supported
+    encoding reads a file with a UTF-16 byte-order mark or NUL bytes; say what
+    can. NULs all on one byte parity are BOM-less UTF-16; scattered ones are a
+    binary file such as a spreadsheet.
+    """
+    with open(source, "rb") as stream:
+        head = stream.read(4096)
+    if b"\x00" not in head and not head.startswith(_UTF16_BOMS):
+        return
+    even, odd = head[0::2].count(0), head[1::2].count(0)
+    if head.startswith(_UTF16_BOMS) or (min(even, odd) == 0 and 4 * max(even, odd) >= len(head) // 2):
+        raise UsageError(
+            f"{source.name} is UTF-16 text, which import cannot read; re-save it as UTF-8 (Excel: CSV UTF-8) and retry."
+        )
+    raise UsageError(
+        f"{source.name} contains NUL bytes, so it is not a CSV text file (a spreadsheet or other binary?); "
+        "export it as CSV UTF-8 and retry."
+    )
+
+
 def probe_decoding(source: Path) -> str:
     """First of utf-8, cp1252, latin-1 that decodes this file.
 
@@ -386,6 +413,7 @@ def detect_delimiter(source: Path, encoding: str = "utf-8") -> str:
     not a vote), and when no candidate is consistent the most fields on the
     header line wins as before.
     """
+    _refuse_utf16(source)
     try:
         with open(source, encoding=_read_codec(encoding), newline="") as stream:
             sample = []
@@ -444,6 +472,7 @@ def open_records(
     folding every later row into one field. When ``delimiter`` is omitted the
     sampled rows choose among comma, semicolon, tab, and pipe.
     """
+    _refuse_utf16(source)
     delim = detect_delimiter(source, encoding=encoding) if delimiter is None else delimiter
     with open(source, encoding=_read_codec(encoding), newline="") as stream:
         reader = csv.reader(stream, delimiter=delim, strict=True)
