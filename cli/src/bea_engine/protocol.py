@@ -19,6 +19,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import sys
+import traceback
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -109,7 +110,11 @@ def answering(command: str) -> Iterator[Answer]:
         _write(_failure(command, exc))
         raise SystemExit(exc.exit_code) from None
     except Exception as exc:  # noqa: BLE001 - the protocol owes the caller an envelope
-        _write(_failure(command, EngineError(str(exc) or type(exc).__name__)))
+        # The type and the engine-side traceback travel too: without them a
+        # bare "month must be in 1..12" names neither what failed nor where,
+        # and `--debug` could only show the frontend's own frames (w1/085).
+        message = f"{type(exc).__name__}: {exc}" if str(exc) else type(exc).__name__
+        _write(_failure(command, EngineError(message, traceback=traceback.format_exc())))
         raise SystemExit(EXIT_VALIDATION) from None
     _write({"engine": _version(), "command": command, "ok": True, "data": answer.data})
 

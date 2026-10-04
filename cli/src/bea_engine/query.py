@@ -943,6 +943,22 @@ def _executed(conn: Any, query_string: str, run: Any, ledger_errors: list[str]) 
         return _compiled(lambda: run(statement), statement, lambda: ledger_errors)
     except BeanqueryError as exc:
         raise _usage_error(exc, query_string, conn, ledger_errors) from None
+    except ValueError as exc:
+        # The parser converts literals as it reads them, so `2020-99-01`
+        # surfaces as a bare ValueError from `date.fromisoformat` — a typo in
+        # the query, not an engine failure (w1/085). Only an error raised
+        # inside the parser is the query's; anything later propagates.
+        literal = _parse_literal_error(exc)
+        if literal is None:
+            raise
+        details = [f"  {query_string}"]
+        if literal == "date":
+            details.append("Write dates as YYYY-MM-DD with a real month and day, for example 2020-02-29.")
+        raise protocol.UsageError(
+            f"Cannot run this BQL query: invalid {literal} literal: {exc}.",
+            details=details,
+            ledger_errors=ledger_errors,
+        ) from None
 
 
 def _compiled(
@@ -1097,6 +1113,17 @@ def _refuse_window(begin: Any, end: Any, ledger_errors: list[str]) -> None:
         message = f"This BQL window covers no days: OPEN ON {begin} starts after the exclusive CLOSE ON {end}."
         details = [f"Did you mean OPEN ON {end} CLOSE ON {begin + timedelta(days=1)}?"]
     raise protocol.UsageError(message, details=details, ledger_errors=ledger_errors)
+
+
+def _parse_literal_error(exc: BaseException) -> str | None:
+    """The literal kind (`date`, ...) a ValueError came from, if beanquery's parser raised it."""
+    import traceback
+
+    for frame in reversed(traceback.extract_tb(exc.__traceback__)):
+        where = Path(frame.filename).parent
+        if where.name == "parser" and where.parent.name == "beanquery":
+            return frame.name if frame.name in {"date", "decimal", "integer"} else "literal"
+    return None
 
 
 def _usage_error(exc: Exception, query_string: str, conn: Any, ledger_errors: list[str]) -> protocol.UsageError:
