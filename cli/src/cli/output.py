@@ -200,7 +200,21 @@ def file_target(path: Path) -> dict[str, Any]:
     return {"file": str(path.resolve())}
 
 
-_INCLUDE_DIRECTIVE = re.compile(r'^\s*include\s+"([^"]+)"', re.MULTILINE)
+# Spelled the way Beancount's lexer reads it: the keyword may touch its string
+# (`include"x"`), and the string may carry backslash escapes (w1/159).
+_INCLUDE_DIRECTIVE = re.compile(r'^\s*include\s*"((?:[^"\\]|\\.)+)"', re.MULTILINE | re.DOTALL)
+_STRING_ESCAPE = re.compile(r"\\(.)", re.DOTALL)
+_ESCAPED = {"n": "\n", "t": "\t", "r": "\r", "f": "\f", "b": "\b"}
+
+
+def _unescape(raw: str) -> str:
+    """A quoted string's value, as the lexer unescapes it.
+
+    `\\n`, `\\t`, `\\r`, `\\f` and `\\b` are control characters; a backslash
+    before anything else yields that character, so `"d\\ata.bean"` and
+    `"data\\.bean"` both name `data.bean`.
+    """
+    return _STRING_ESCAPE.sub(lambda match: _ESCAPED.get(match.group(1), match.group(1)), raw)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -264,7 +278,7 @@ def walk_closure(*roots: Path) -> tuple[list[Path], list[MissingInclude]]:
             continue
         for match in _INCLUDE_DIRECTIVE.finditer(text):
             raw = match.group(1)
-            matches = _include_matches(current, raw)
+            matches = _include_matches(current, _unescape(raw))
             if matches:
                 stack.extend(matches)
             else:
