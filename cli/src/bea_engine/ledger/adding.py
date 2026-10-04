@@ -508,6 +508,7 @@ def _price(
 
     from bea_engine import managed_load
     from bea_engine.ledger.models import WRITE_INPUT, PriceDirective
+    from bea_engine.ledger.reader import entry_generated
     from bea_engine.managed_price_cache import managed_source_for_path
     from bea_engine.query import format_error
 
@@ -541,7 +542,9 @@ def _price(
         managed_source = managed_source_for_path(Path(filename)) if isinstance(filename, str) and filename else None
         if managed_source is not None:
             managed_sources.add(managed_source)
-        elif entry_pair == pair:
+        elif entry_pair == pair and not entry_generated(entry, "price"):
+            # A plugin-made price (implicit_prices) borrows its transaction's
+            # location; it is no ledger-authored quote to match or conflict with.
             local_prices.append(entry)
 
     match = next((entry for entry in local_prices if entry.amount.number == number), None)

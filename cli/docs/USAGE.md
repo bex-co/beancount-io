@@ -843,7 +843,8 @@ response can be sent again unchanged.
 ledger's includes. It reports the existing location and exits **0** with
 `written: 0` and `duplicate: true` in JSON. A different amount for the same
 date and commodity is refused naming both values; pass `--force` to record a
-corrected quote. `add balance` is idempotent the same way: re-running an
+corrected quote. Only written price directives count: a price a plugin such as
+`implicit_prices` generates is neither a duplicate nor a conflict. `add balance` is idempotent the same way: re-running an
 identical assertion reports the existing location and writes nothing, and a
 different value for the same date, account, and currency needs `--force`
 (ledger validation still applies, so a conflicting value cannot land). Without

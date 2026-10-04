@@ -184,6 +184,35 @@ def test_precision_change_is_a_different_assertion(tmp_path: Path) -> None:
     assert json.loads(same.stdout)["data"]["duplicate"] is True
 
 
+@pytest.mark.parametrize("amount", ["100 USD", "101 USD"])
+def test_plugin_generated_prices_are_not_ledger_quotes(tmp_path: Path, amount: str) -> None:
+    # w1/138: implicit_prices stamps its price with the transaction's line;
+    # that is no written price directive to match or conflict with.
+    file = tmp_path / "ip.bean"
+    file.write_text(
+        'option "operating_currency" "USD"\n'
+        'plugin "beancount.plugins.implicit_prices"\n'
+        "2020-01-01 open Assets:Cash USD\n"
+        "2020-01-01 open Assets:Broker HOOL\n"
+        '2020-03-01 * "buy"\n'
+        "  Assets:Broker 1 HOOL @ 100 USD\n"
+        "  Assets:Cash\n"
+    )
+    args = ["--json", "--file", str(file), "add", "price", "--date", "2020-03-01", "-c", "HOOL", "--amount", amount]
+
+    first = _bea(tmp_path, *args)
+
+    assert first.returncode == 0, first.stderr
+    data = json.loads(first.stdout)["data"]
+    assert data["written"] == 1 and data["duplicate"] is False
+    assert "2020-03-01 price HOOL" in file.read_text()
+    # The written directive is a real quote: repeating it is now a duplicate.
+    again = _bea(tmp_path, *args)
+    assert again.returncode == 0, again.stderr
+    repeated = json.loads(again.stdout)["data"]
+    assert repeated["duplicate"] is True and repeated["source"]["lineno"] == 9
+
+
 def test_repeated_amount_is_refused_on_balance_and_price(ledger: Path) -> None:
     repeated = _bea(
         ledger.parent,
