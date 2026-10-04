@@ -75,11 +75,18 @@ def load_file(file_path: Path) -> tuple[list[Any], list[Any]]:
 #: reuse). Being permissive is the safe direction here: what actually
 #: distinguishes a synthesized entry is the directive word after the date, and
 #: that check is unchanged.
-_DATE_TOKEN = re.compile(r"^\s*\d{4}[-/]\d+[-/]\d+\s+(\S+)")
+#:
+#: The lexer needs no whitespace between tokens either: `2024-01-07*"P"`,
+#: `2024-01-06 txn"T"` and `2024-01-01open` all declare directives, so the
+#: whitespace after the date is optional and the directive word is matched at
+#: the start of what follows rather than as a whole whitespace-delimited token.
+_DATE_TOKEN = re.compile(r"^\s*\d{4}[-/]\d+[-/]\d+\s*(\S+)")
 
 # A transaction line carries a flag where the other directives carry their
-# own word: `txn`, `*`, the lexer's FLAG characters, or one capital letter.
-_TXN_TOKEN = re.compile(r"\*|txn|[!&#?%]|[A-Z]")
+# own word: `txn`, `*`, the lexer's FLAG characters — all of which may run
+# straight into the payee string — or one capital letter, which the lexer
+# reads as a flag only when it stands alone (`P"x"` is a lexing error).
+_TXN_TOKEN = re.compile(r"txn|[*!&#?%]|[A-Z]\Z")
 
 
 @lru_cache(maxsize=64)
@@ -122,8 +129,8 @@ def entry_generated(entry: Any, directive_type: str) -> bool:
         return True
     token = match.group(1)
     if directive_type == "transaction":
-        return _TXN_TOKEN.fullmatch(token) is None
-    return token != directive_type
+        return _TXN_TOKEN.match(token) is None
+    return not token.startswith(directive_type)
 
 
 def _in_date_range(

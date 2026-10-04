@@ -104,7 +104,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [111](./111.md) — Bulk dates accept numeric strings as Unix timestamps and other non-ISO spellings — **minor**, CLI QA 2026-10-03.
 - [112](./112.md) — `add transactions --from -` leaks raw Python errors (exit 1) for undecodable, deeply nested or huge-integer stdin — **minor**, CLI QA 2026-10-03.
 - [113](./113.md) — Bundled forecast/amortize plugin copies count as written rows, so `list --on-disk` disagrees with grep — **major**, CLI QA 2026-10-03.
-- [114](./114.md) — A flag or keyword written without a following space marks a real directive `generated`, and `--on-disk` hides it — **minor**, CLI QA 2026-10-03.
 - [115](./115.md) — `list pad` shows two columns both headed `SOURCE` when any pad is generated — **minor**, CLI QA 2026-10-03.
 - [116](./116.md) — `add balance --pad-from` treats any "Unused Pad" error as "book balance already matches", hiding real padding — **minor**, CLI QA 2026-10-03.
 - [117](./117.md) — A failed assertion on a parent account offers a ready-to-run opening adjustment despite subaccount activity — **minor**, CLI QA 2026-10-03.
