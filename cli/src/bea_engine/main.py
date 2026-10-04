@@ -5,7 +5,7 @@ arguments, and answers with one JSON envelope (see `protocol`). Nothing here
 knows about the frontend's terminal rendering, credentials or AI clients — the
 frontend reads the envelope and decides how to show it.
 
-`shell`, `source-shell` and `scoped` stream terminal output instead of an
+`shell`, `source-shell`, `source-query` and `scoped` stream terminal output instead of an
 envelope. Every other command answers exactly one JSON object.
 
 Init and import accounting operations live here as `init` / `import` (t021).
@@ -549,6 +549,30 @@ def source_shell(
         bql.native_interactive(source, format=format, output=output, numberify=numberify, show_errors=not no_errors)
     except protocol.EngineError as exc:
         protocol.note(str(exc))
+        raise SystemExit(exc.exit_code) from None
+
+
+@app.command("source-query")
+def source_query(
+    source: Annotated[str, typer.Argument(help="Native Beanquery source URI or ledger path.")],
+    query_string: Annotated[str, typer.Argument(help="The BQL statement, dot command or stored query to run.")],
+    format: Annotated[str, typer.Option("--format", help="Query output format.")] = "text",
+    output: Annotated[Path | None, typer.Option("--output", "-o", help="Query output file.")] = None,
+    numberify: Annotated[bool, typer.Option("--numberify", "-m")] = False,
+    no_errors: Annotated[bool, typer.Option("--no-errors", "-q")] = False,
+) -> None:
+    """Run one native query, streaming upstream's rendering, with a failing status for usage errors."""
+    from bea_engine import query as bql
+
+    try:
+        bql.native_one_shot(
+            source, query_string, format=format, output=output, numberify=numberify, show_errors=not no_errors
+        )
+    except protocol.EngineError as exc:
+        # Upstream's own spelling of a failure, now with a failing status.
+        protocol.note(f"error: {exc}")
+        for detail in exc.details or ():
+            protocol.note(f"  {detail}")
         raise SystemExit(exc.exit_code) from None
 
 

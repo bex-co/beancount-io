@@ -170,7 +170,7 @@ def query(
         str | None,
         typer.Option(
             "--source",
-            help="Native Beanquery source URI (beancount:<path>, csv:..., or a bare path); delegates to bean-query",
+            help="Native Beanquery source URI (beancount:<path>, csv:..., or a bare path); native bean-query rendering",
         ),
     ] = None,
     allow_errors: Annotated[
@@ -246,11 +246,12 @@ def query(
         if not query_string.strip():
             raise UsageError("A query is required as an argument or on stdin.")
         _refuse_one_shot_output(query_string)
-        # Native `bean-query` runs the first statement and drops the rest too.
+        # Refused before the engine starts, exactly as on the `--file` branch.
         _refuse_multi_statement(query_string)
-        native_args = [*rendering, source]
-        native_args.append(query_string)
-        raise typer.Exit(launch.run_native("bean-query", native_args))
+        # The engine runs upstream's shell on the native source the way
+        # `bean-query` does, but a missing stored query exits 2 instead of
+        # printing an error and reporting success.
+        raise typer.Exit(launch.run_engine_argv(["source-query", *rendering, "--", source, query_string]))
 
     file = ctx.entry_file()
     if output_file is not None:

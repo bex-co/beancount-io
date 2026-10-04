@@ -79,6 +79,7 @@ doing money arithmetic, and a float would silently round.
 | `format --render PATH`             | `{"text": "..."}` — same formatting for a file or `-` for stdin |
 | `shell --file PATH`                 | interactive query streams (see below)                     |
 | `source-shell SOURCE`               | native Beanquery streams, with input-file protection      |
+| `source-query SOURCE BQL`           | one native query's rendering; exit 2 on a usage error     |
 | `report --file PATH --kind KIND`    | one financial report (trees, series, valuation metadata)   |
 | `balance --file PATH [ACCOUNT...]`  | filtered balances or the trial balance                     |
 | `init --file PATH --currency CCY --date DATE` | starter ledger creation                          |
@@ -87,7 +88,9 @@ doing money arithmetic, and a float would silently round.
 
 `shell` and `source-shell` are exceptions to the envelope contract: a terminal session
 cannot be summarised in an envelope, so it streams and answers with its exit
-status.
+status. `source-query` streams the same way, because native `--source` output
+is upstream's rendering rather than bea's envelope; a missing stored query or a
+dropped statement tail still exits 2.
 
 ### `list`
 

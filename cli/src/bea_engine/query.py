@@ -32,7 +32,7 @@ import re
 import stat
 import sys
 import unicodedata
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from decimal import Decimal, localcontext
 from pathlib import Path
 from typing import Any, TextIO
@@ -215,26 +215,9 @@ def text_answer(
         _refuse_alias(output, file, shell.context)
     _executed(shell.context, query_string, shell.onecmd, errors)
     if output is not None:
-        # Rendered whole, then swapped in. Opening the destination itself
-        # truncated it before the bytes were safely down, so a write that
-        # failed partway — a full disk, a size limit — left a fragment of the
-        # new result where the last good export had been. w3/380 moved this
-        # past the *query*; the write itself still had to become atomic.
-        #
-        # `candidate_file` is the engine's own sibling-temp primitive: same
-        # directory, so the replace is atomic, with fsync and cleanup already
-        # handled. The frontend has its own `cli.utils.atomic_write` for the
-        # JSON path, which is why that path already preserved.
-        from bea_engine.ledger.write import candidate_file
-
-        try:
-            mode = stat.S_IMODE(output.stat().st_mode)
-        except FileNotFoundError:
-            mode = None
-        with candidate_file(output, buffer.getvalue(), mode=0o666 if mode is None else 0o600) as candidate:
-            if mode is not None:
-                candidate.chmod(mode)
-            os.replace(candidate, output)
+        # Rendered whole, then swapped in atomically. w3/380 moved this past
+        # the *query*; the write itself still had to become atomic.
+        _write_export(output, buffer.getvalue())
         # The export is the result; the frontend has nothing left to print.
         return {"text": "", "errors": errors}
     return {"text": buffer.getvalue(), "errors": errors}
@@ -311,6 +294,56 @@ def _redirect_output(shell: Any, arg: str, stream: TextIO, file: Path | None) ->
     shell.outfile = destination
 
 
+def _native_shell(source: str, *, interactive: bool, format: str, numberify: bool, show_errors: bool) -> Any:
+    """Upstream's `BQLShell` on a native source, with bea's input and exit-status guards.
+
+    Sources and rendering stay upstream's. What changes is what upstream only
+    prints: `.run` naming no stored query, and a statement tail Beanquery would
+    drop, are usage errors here, so a one-shot exits 2 instead of 0 and an
+    interactive session reports them and carries on. `.output` keeps refusing
+    the files the source reads.
+    """
+    from urllib.parse import urlparse
+
+    from beanquery.shell import BQLShell
+
+    dsn = source if re.match("[a-z]{2,}:", source) else "beancount:" + source
+    parts = urlparse(dsn)
+    file = Path(parts.path) if parts.scheme in {"beancount", "csv"} and parts.path else None
+
+    class GuardedShell(BQLShell):  # type: ignore[misc]
+        source_file = file
+
+        def do_output(self, arg: str) -> None:
+            """Send output to FILE or restore stdout, preserving source files."""
+            _redirect_output(self, arg, sys.stdout, file)
+
+        def do_run(self, arg: str) -> None:
+            """Run a named stored query, or list them; missing names are usage errors."""
+            _run_stored(self, arg)
+
+        def execute(self, query: Any, **kwargs: Any) -> Any:
+            if isinstance(query, str):
+                _refuse_statement_tail(query)
+            return super().execute(query, **kwargs)
+
+        def onecmd(self, line: str) -> Any:
+            return _recovering(self, super().onecmd, line)
+
+    # Load before replaying init commands, so .output sees the include closure.
+    return GuardedShell(dsn, sys.stdout, interactive, False, format, numberify, show_errors)
+
+
+def _replay_init(shell: Any) -> None:
+    """Replay Beanquery's init file, as `bean-query` does, once the source is loaded."""
+    from beanquery.shell import INIT_FILENAME
+
+    init = Path(INIT_FILENAME).expanduser()
+    if init.is_file():
+        for line in init.read_text(encoding="utf-8").splitlines():
+            shell.onecmd(line)
+
+
 def native_interactive(
     source: str,
     *,
@@ -321,35 +354,138 @@ def native_interactive(
 ) -> None:
     """Native Beanquery sources and rendering, with bea's destination protection."""
     import warnings
-    from urllib.parse import urlparse
-
-    from beanquery.shell import INIT_FILENAME, BQLShell
-
-    dsn = source if re.match("[a-z]{2,}:", source) else "beancount:" + source
-    parts = urlparse(dsn)
-    file = Path(parts.path) if parts.scheme in {"beancount", "csv"} and parts.path else None
-
-    class GuardedShell(BQLShell):  # type: ignore[misc]
-        def do_output(self, arg: str) -> None:
-            """Send output to FILE or restore stdout, preserving source files."""
-            _redirect_output(self, arg, sys.stdout, file)
 
     warnings.filterwarnings("always")
-    # Load before replaying init commands, so .output sees the include closure.
-    shell = GuardedShell(dsn, sys.stdout, True, False, format, numberify, show_errors)
+    shell = _native_shell(source, interactive=True, format=format, numberify=numberify, show_errors=show_errors)
     try:
         if output is not None:
-            if file is not None:
-                _refuse_alias(output, file, shell.context)
+            if shell.source_file is not None:
+                _refuse_alias(output, shell.source_file, shell.context)
             shell.outfile = output.open("w", encoding="utf-8")
-        init = Path(INIT_FILENAME).expanduser()
-        if init.is_file():
-            for line in init.read_text(encoding="utf-8").splitlines():
-                shell.onecmd(line)
+        _replay_init(shell)
         shell.cmdloop()
     finally:
         if shell.outfile is not sys.stdout:
             shell.outfile.close()
+
+
+def native_one_shot(
+    source: str,
+    query_string: str,
+    *,
+    format: str = "text",
+    output: Path | None = None,
+    numberify: bool = False,
+    show_errors: bool = True,
+) -> None:
+    """One native query, the way `bean-query SOURCE QUERY` runs it, with a truthful exit status.
+
+    `bean-query` printed `error: query "x" not found` for a missing stored
+    query and still exited 0, so automation could not tell an unavailable
+    query from an empty answer. Here that failure raises, and the caller exits
+    2. An `--output` export is written only after the query succeeds, so a
+    refused query leaves an existing export as it was.
+    """
+    import io
+
+    shell = _native_shell(source, interactive=False, format=format, numberify=numberify, show_errors=show_errors)
+    buffer = io.StringIO()
+    if output is not None:
+        output = output.resolve()
+        if shell.source_file is not None:
+            _refuse_alias(output, shell.source_file, shell.context)
+        shell.outfile = buffer
+    _replay_init(shell)
+    from beanquery import Error as BeanqueryError
+
+    try:
+        shell.onecmd(query_string)
+    except BeanqueryError as exc:
+        # `bean-query` let these escape as a Python traceback; name the problem instead.
+        raise _usage_error(exc, query_string, shell.context, []) from None
+    if output is not None:
+        _write_export(output, buffer.getvalue())
+
+
+def _run_stored(shell: Any, arg: str) -> None:
+    """`.run`: list stored queries, run one or all; a missing name is a usage error.
+
+    Upstream prints `error: query "x" not found` and returns, which a one-shot
+    then reports as success.
+    """
+    import shlex
+
+    cleaned = arg.rstrip("; \t")
+    if not cleaned:
+        if shell.queries:
+            print("\n".join(name for name in sorted(shell.queries)), file=shell.outfile)
+        return
+    if cleaned == "*":
+        for name, query in sorted(shell.queries.items()):
+            print(f"{name}:", file=shell.outfile)
+            shell.execute(query.query_string, default_close_date=query.date)
+            print(file=shell.outfile)
+            print(file=shell.outfile)
+        return
+    parts = shlex.split(cleaned)
+    if len(parts) != 1:
+        raise protocol.UsageError('too many arguments for "run" command')
+    name = parts[0]
+    query = shell.queries.get(name)
+    if query is None:
+        known = ", ".join(sorted(shell.queries)) or "(none)"
+        raise protocol.UsageError(
+            f'query "{name}" not found.',
+            details=[f"Stored queries in this ledger: {known}."],
+        )
+    shell.execute(query.query_string, default_close_date=query.date)
+
+
+def _recovering(shell: Any, dispatch: Callable[[str], Any], line: str) -> Any:
+    """Dispatch one shell line; an interactive mistake is reported, not raised.
+
+    A mistake typed at the prompt is ordinary input, not a crash. Upstream's
+    `cmdloop` catches everything and renders anything it does not recognize
+    with `traceback.format_exc()`, so `.run` naming no stored query printed a
+    Python stack — and threw away the `details` line listing the queries that
+    do exist, which the one-shot form shows. `--debug` is the documented way
+    to ask for a traceback.
+
+    One-shot execution must still propagate: its exit code and its JSON error
+    envelope are built from this exception.
+    """
+    try:
+        return dispatch(line)
+    except protocol.EngineError as exc:
+        if not shell.interactive:
+            raise
+        protocol.note(str(exc))
+        for detail in exc.details or ():
+            protocol.note(detail)
+        return False
+
+
+def _write_export(output: Path, text: str) -> None:
+    """Replace `output` with `text` atomically, keeping an existing file's mode.
+
+    Opening the destination itself truncated it before the bytes were safely
+    down, so a write that failed partway — a full disk, a size limit — left a
+    fragment of the new result where the last good export had been.
+    `candidate_file` is the engine's own sibling-temp primitive: same
+    directory, so the replace is atomic, with fsync and cleanup already
+    handled. The frontend has its own `cli.utils.atomic_write` for the JSON
+    path.
+    """
+    from bea_engine.ledger.write import candidate_file
+
+    try:
+        mode = stat.S_IMODE(output.stat().st_mode)
+    except FileNotFoundError:
+        mode = None
+    with candidate_file(output, text, mode=0o666 if mode is None else 0o600) as candidate:
+        if mode is not None:
+            candidate.chmod(mode)
+        os.replace(candidate, output)
 
 
 def _gate(errors: list[str], allow_errors: bool) -> list[str]:
@@ -475,32 +611,7 @@ def build_shell(
 
         def do_run(self, arg: str) -> None:
             """Run a named stored query, or list them; missing names are usage errors."""
-            import shlex
-
-            cleaned = arg.rstrip("; \t")
-            if not cleaned:
-                if self.queries:
-                    print("\n".join(name for name in sorted(self.queries)), file=self.outfile)
-                return
-            if cleaned == "*":
-                for name, query in sorted(self.queries.items()):
-                    print(f"{name}:", file=self.outfile)
-                    self.execute(query.query_string, default_close_date=query.date)
-                    print(file=self.outfile)
-                    print(file=self.outfile)
-                return
-            parts = shlex.split(cleaned)
-            if len(parts) != 1:
-                raise protocol.UsageError('too many arguments for "run" command')
-            name = parts[0]
-            query = self.queries.get(name)
-            if query is None:
-                known = ", ".join(sorted(self.queries)) or "(none)"
-                raise protocol.UsageError(
-                    f'query "{name}" not found.',
-                    details=[f"Stored queries in this ledger: {known}."],
-                )
-            self.execute(query.query_string, default_close_date=query.date)
+            _run_stored(self, arg)
 
         def execute(self, query: Any, **kwargs: Any) -> Any:
             """Prepare BQL here, where every entry path actually arrives.
@@ -533,25 +644,7 @@ def build_shell(
             return super().execute(query, **kwargs)
 
         def onecmd(self, line: str) -> Any:
-            try:
-                return self._dispatch(line)
-            except protocol.EngineError as exc:
-                # A mistake typed at the prompt is ordinary input, not a crash.
-                # Upstream's `cmdloop` catches everything and renders anything
-                # it does not recognize with `traceback.format_exc()`, so
-                # `.run` naming no stored query printed a Python stack — and
-                # threw away the `details` line listing the queries that do
-                # exist, which the one-shot form shows. `--debug` is the
-                # documented way to ask for a traceback.
-                #
-                # One-shot execution must still propagate: its exit code and
-                # its JSON error envelope are built from this exception.
-                if not self.interactive:
-                    raise
-                protocol.note(str(exc))
-                for detail in exc.details or ():
-                    protocol.note(detail)
-                return False
+            return _recovering(self, self._dispatch, line)
 
         def _dispatch(self, line: str) -> Any:
             # Ledger text loads NFC-normalized, so interactive input is too; a
