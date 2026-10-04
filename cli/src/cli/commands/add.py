@@ -475,13 +475,20 @@ def _parse_custom_value(raw: str) -> dict[str, Any]:
 
 
 def _load_transactions_json(from_file: Path) -> Any:
-    """Read and parse `--from`; unreadable input is a usage error, phrased like `--file`'s."""
-    if str(from_file) == "-":
-        text = sys.stdin.read()
+    """Read and parse `--from`; unreadable input is a usage error, phrased like `--file`'s.
+
+    Stdin is read as bytes and decoded exactly like a file: the text stream
+    would decode with the locale's codec (and its error handler), so the same
+    bytes could pass on one machine and fail with a raw codec error on another.
+    """
+    stdin = str(from_file) == "-"
+    name = "stdin" if stdin else str(from_file)
+    if stdin:
+        buffer = getattr(sys.stdin, "buffer", None)
+        data = buffer.read() if buffer is not None else sys.stdin.read().encode("utf-8")
     else:
         try:
-            # utf-8-sig matches CSV import: editors that emit a BOM stay valid.
-            text = from_file.read_text(encoding="utf-8-sig")
+            data = from_file.read_bytes()
         except FileNotFoundError as exc:
             raise UsageError(
                 f"No transactions file at '{from_file}' (from --from). "
@@ -493,13 +500,45 @@ def _load_transactions_json(from_file: Path) -> Any:
             ) from exc
         except OSError as exc:
             raise UsageError(f"Cannot read transactions file '{from_file}' (from --from): {exc.strerror}.") from exc
-        except UnicodeDecodeError as exc:
-            raise UsageError(decode_error_message(from_file, exc)) from exc
-    text = text.removeprefix("\ufeff")
+    utf16 = f"'{name}' (from --from) looks like UTF-16 text; re-save it as UTF-8 and retry."
     try:
-        return json.loads(text)
+        # utf-8-sig matches CSV import: editors that emit a BOM stay valid.
+        text = data.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        message = decode_error_message(name, exc)
+        if data.startswith((b"\xff\xfe", b"\xfe\xff")):
+            message = f"{message} {utf16}"
+        raise UsageError(message) from exc
+    if "\x00" in text:
+        # BOM-less UTF-16 decodes as UTF-8 with a NUL beside every ASCII byte;
+        # JSON text can never hold a raw NUL.
+        raise UsageError(utf16)
+    try:
+        return json.loads(text, object_pairs_hook=_unique_keys)
     except json.JSONDecodeError as exc:
         raise UsageError(f"Invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}.") from exc
+    except RecursionError as exc:
+        raise UsageError(f"'{name}' (from --from) nests JSON too deeply; send a flat array of rows.") from exc
+    except ValueError as exc:
+        # A duplicate key, or an integer longer than Python will convert.
+        raise UsageError(f"Invalid JSON in '{name}' (from --from): {_json_value_problem(exc)}") from exc
+
+
+def _unique_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """A JSON object whose keys are distinct; a repeated key would silently keep only the last value."""
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"key {key!r} appears more than once in one object; keep one.")
+        result[key] = value
+    return result
+
+
+def _json_value_problem(exc: ValueError) -> str:
+    message = str(exc)
+    if "integer string conversion" in message:
+        return "a number has too many digits; send amounts as decimal strings such as '1538.25'."
+    return message
 
 
 @add_app.command("transactions")
