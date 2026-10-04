@@ -346,9 +346,12 @@ class _FeedHandler(BaseHTTPRequestHandler):
         for key, value in route.get("headers", {}).items():
             self.send_header(key, value)
         body = route.get("body", b"")
-        self.send_header("Content-Length", str(len(body)))
+        # `short_by` declares more bytes than it sends, then closes: an early EOF.
+        self.send_header("Content-Length", str(len(body) + route.get("short_by", 0)))
         self.end_headers()
         self.wfile.write(body)
+        if route.get("short_by"):
+            self.close_connection = True
 
 
 @pytest.fixture
@@ -2192,3 +2195,60 @@ class TestConcurrentCacheWrites:
 
         assert [failure for failures in outcomes for failure in failures] == []
         assert not list(feed_dir(url, root).glob("*.tmp"))
+
+
+class TestFeedIntegrity:
+    """w1/077: a short body never becomes a revision, and a bad blob heals."""
+
+    @staticmethod
+    def _route(body: str, etag: str, short_by: int = 0) -> dict[str, Any]:
+        return {
+            "body": body.encode("utf-8"),
+            "headers": {"ETag": etag},
+            "etag": etag,
+            "etag_match": True,
+            "short_by": short_by,
+        }
+
+    def test_body_shorter_than_content_length_is_a_network_failure(self, feed_server: str) -> None:
+        _FeedHandler.routes["/prices/BTC-USD"]["short_by"] = 100
+
+        result = fetch_managed_price_feed(f"{feed_server}/prices/BTC-USD")
+
+        assert isinstance(result, FetchFailed)
+        assert result.reason == "network"
+        assert "ended early" in result.message
+
+    def test_truncated_refresh_keeps_last_good_and_is_not_pinned(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        root = tmp_path / "cache"
+        good = _resolve(feed_server, root, now=now)
+        assert good.blob is not None
+        full = _feed_text(_stamp(now), _stamp(now + 1), revision="t3")
+        _FeedHandler.routes["/prices/BTC-USD"] = self._route(full[: full.index("2026-09-11")], '"t3"', short_by=100)
+
+        truncated = _resolve(feed_server, root, now=now + 301)
+
+        assert truncated.blob is not None and truncated.blob.text == FEED
+        assert truncated.head.revision == "r1"
+        assert "ended early" in (truncated.head.last_error or "")
+        _FeedHandler.routes["/prices/BTC-USD"] = self._route(full, '"t3"')
+
+        healed = _resolve(feed_server, root, now=now + 400)
+
+        assert healed.blob is not None and healed.blob.text == full
+        assert healed.head.revision == "t3"
+
+    def test_corrupted_blob_is_refetched_without_an_etag(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        root = tmp_path / "cache"
+        assert _resolve(feed_server, root, now=now).blob is not None
+        blob = feed_dir(f"{feed_server}/prices/BTC-USD", root) / "r1.beancount"
+        blob.write_text(FEED[: FEED.index("113500") + 3])
+        _FeedHandler.seen_headers.clear()
+
+        healed = _resolve(feed_server, root, now=now + 301)
+
+        assert "if-none-match" not in _FeedHandler.seen_headers["/prices/BTC-USD"]
+        assert healed.blob is not None and healed.blob.text == FEED
+        assert blob.read_text() == FEED

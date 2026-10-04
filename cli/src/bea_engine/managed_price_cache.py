@@ -13,7 +13,7 @@ use in `ledger/write.py`):
 <sha256(url)[:32]>/
   head.json              # revision, next_refresh_at, last_error
   <revision>.beancount   # exact validated bytes
-  <revision>.json        # etag, fetched_at, and the feed summary
+  <revision>.json        # etag, sha256 of the text, fetched_at, feed summary
 ```
 
 The ETag lives on the blob, not the head, exactly as hosted: a head whose
@@ -119,6 +119,11 @@ def _read_blob(directory: Path, revision: str) -> PriceFeedBlob | None:
     try:
         text = (directory / f"{revision}.beancount").read_text(encoding="utf-8")
         raw = json.loads((directory / f"{revision}.json").read_text(encoding="utf-8"))
+        digest = raw.get("sha256")
+        if digest is not None and digest != _digest(text):
+            # The bytes are not what was validated: treat the blob as missing
+            # so the next refresh fetches in full (no ETag) and heals it.
+            return None
         feed = raw["feed"]
         return PriceFeedBlob(
             url=raw["url"],
@@ -147,6 +152,10 @@ def _read_blob(directory: Path, revision: str) -> PriceFeedBlob | None:
         )
     except (OSError, ValueError, TypeError, KeyError, AttributeError):
         return None
+
+
+def _digest(text: str) -> str:
+    return sha256(text.encode("utf-8")).hexdigest()
 
 
 def write_text_atomic(path: Path, text: str) -> None:
@@ -265,6 +274,7 @@ def resolve_feed(
                         "url": url,
                         "revision": revision,
                         "etag": result.etag,
+                        "sha256": _digest(result.text),
                         "fetched_at": at,
                         "feed": {
                             **asdict(validation.feed),

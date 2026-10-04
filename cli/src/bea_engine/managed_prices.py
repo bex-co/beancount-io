@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from hashlib import sha256
+from http.client import IncompleteRead
 from typing import BinaryIO, Literal
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
@@ -309,10 +310,19 @@ def fetch_managed_price_feed(
             body = _read_capped(response, max_body_bytes)
     except TimeoutError:
         return FetchFailed(reason="timeout", message=f"timed out after {timeout_seconds} seconds")
-    except OSError:
+    except (OSError, IncompleteRead):
         return FetchFailed(reason="network", message="Could not read the price response")
     if body is None:
         return FetchFailed(reason="too-large", message=f"body exceeds {max_body_bytes} bytes")
+    # A connection that closes early reads as a short body, not an error, so
+    # compare with the declared length: a truncated feed is a failed fetch,
+    # never a new revision the next 304 would pin.
+    declared = (response.headers.get("Content-Length") or "").strip()
+    if declared.isdigit() and len(body) < int(declared):
+        return FetchFailed(
+            reason="network",
+            message=f"response ended early ({len(body)} of {int(declared)} bytes)",
+        )
     try:
         text = body.decode("utf-8")
     except UnicodeDecodeError:
