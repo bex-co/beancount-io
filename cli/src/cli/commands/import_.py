@@ -159,6 +159,13 @@ def _stored_sources(record: Path) -> list[dict[str, Any]]:
     ]
 
 
+def _source_sha256(source: Path) -> str | None:
+    try:
+        return hashlib.sha256(source.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
 def _find_csv_entry(file: Path, headers: list[str] | None, account: str) -> dict[str, Any] | None:
     """The remembered entry for a header row and account, without side effects."""
     from cli.csv_mapper import header_signature
@@ -374,6 +381,7 @@ def import_entries(
     csv_run_account: str | None = csv_account
     csv_rules_arg: Path | None = rules_file.expanduser().resolve() if rules_file is not None else None
     remembered_run = False
+    recalled_sign_ledger = False
     inferred_notes: list[str] = []
     recall_notes: list[str] = []
     recalled_date_format: str | None = None
@@ -430,6 +438,24 @@ def import_entries(
                 recalled_date_format = remembered["date_format"]
             if csv_delimiter is None and isinstance(remembered.get("delimiter"), str):
                 csv_delimiter = remembered["delimiter"]
+            sign_file = remembered.get("sign_ledger_sha256")
+            if isinstance(sign_file, str):
+                # `sign=ledger` belongs to the file it was chosen for. Replaying
+                # that same file keeps it, so `--apply` writes what the preview
+                # showed; any other file sharing the header must say its sign.
+                seeded_from = recalled_source or "the remembered file"
+                if _source_sha256(source) == sign_file:
+                    recalled_sign_ledger = True
+                    csv_request = f"{csv_request},sign=ledger"
+                    recall_notes.append(
+                        f"Re-applied sign=ledger: {source.name} is the file it was chosen for. "
+                        "Pass --csv sign=bank to override."
+                    )
+                else:
+                    recall_notes.append(
+                        f"{seeded_from} was imported with sign=ledger, but sign is never carried to another "
+                        f"file: {source.name} is read bank-signed. Pass --csv sign=ledger if it is ledger-signed."
+                    )
         elif config is None and _config_available(file) is None:
             csv_request = _inferred_mapping(
                 source, explicit=False, notes=inferred_notes, delimiter=csv_delimiter, encoding=csv_encoding
@@ -524,6 +550,8 @@ def import_entries(
         frontend_notes: list[str] = []
         if remembered_run:
             columns_only = _strip_spec_keys(csv_request or "", {"delimiter", "encoding", "sign"})
+            if recalled_sign_ledger:
+                columns_only = f"{columns_only},sign=ledger"
             settings = [f"--csv {columns_only}"]
             if date_format is not None:
                 settings.append(f"--date-format {date_format}")
@@ -605,6 +633,9 @@ def import_entries(
                 "default_account": default_account,
                 "date_format": chosen_date_format,
                 "delimiter": csv_delimiter,
+                # Sign itself is never remembered; only which file it was
+                # chosen for, so replaying that file cannot flip its sign.
+                "sign_ledger_sha256": _source_sha256(source) if mapping.sign == "ledger" else None,
             }
     else:
         frontend_notes = []

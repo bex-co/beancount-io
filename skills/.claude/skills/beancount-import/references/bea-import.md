@@ -13,7 +13,8 @@ Set `mapping` to the confirmed `--csv` specification, **including**
 negates them. Choose by inspecting the source rows, not the account type or
 the option's name. Preserve this decision in the skill's per-source config.
 
-`bea` remembers column mappings but deliberately **does not remember sign**.
+`bea` remembers column mappings but deliberately **does not remember sign**
+(it re-applies `sign=ledger` only to a byte-identical re-run of the same file).
 Pass the full mapping, source `account`, `date_format`, `rules`, and `target`
 on every preview and apply, including repeat imports. Matching headers alone
 do not establish which account a file belongs to.

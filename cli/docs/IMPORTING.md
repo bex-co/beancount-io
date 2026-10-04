@@ -217,8 +217,11 @@ bea --file books/main.bean import category.csv --csv date=Date,amount=Amount,nar
 
 The mapping is remembered per root ledger, CSV header row, and source account,
 along with the `--rules` path, `--default-account`, an explicit
-`--date-format`, and the delimiter — but never `sign=`, which always needs an
-explicit pass. When only one account uses those headers, the next import needs
+`--date-format`, and the delimiter — but never `sign=`, which a different file
+always needs passed explicitly. The one exception keeps a preview honest: after
+`sign=ledger`, a flag-free `--apply` of the byte-identical file re-applies it
+and says so; another file sharing the header is read bank-signed, with a note
+naming the file that used `sign=ledger`. When only one account uses those headers, the next import needs
 no flags. If checking and savings exports share headers, their mappings are
 kept separately and subsequent previews and applies require
 `--account ACCOUNT`; bea refuses to choose between them. Always specify

@@ -3,6 +3,7 @@
 import datetime
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from decimal import Decimal
@@ -1630,6 +1631,31 @@ class TestStickyRecall:
         assert repeat.exit_code == 0, repeat.output
         (row,) = json.loads(repeat.stdout)["data"]["rows"]
         assert row["amount"] == "-4.50 USD"
+        notes = " ".join(json.loads(repeat.stdout)["data"]["notes"])
+        assert "ledger-sign.csv was imported with sign=ledger" in notes
+        assert "bank.csv is read bank-signed" in notes
+
+    def test_flag_free_apply_of_the_previewed_file_keeps_sign_ledger(self, book: Path, isolated_config: Path) -> None:
+        """w1/150: the documented preview-then-flag-free-apply wrote the opposite sign."""
+        source = book.parent / "cc.csv"
+        source.write_text("Date,Description,Amount\n2026-08-02,Grocery,25.00\n")
+        preview = run_csv(book, source, "--csv", f"{self.MAPPING},sign=ledger", "--account", "Assets:Checking")
+        assert preview.exit_code == 0, preview.output
+        (previewed,) = json.loads(preview.stdout)["data"]["rows"]
+        assert previewed["amount"] == "-25.00 USD"
+        stored = json.loads(self._record(book, isolated_config).read_text())["sources"][0]
+        assert "sign=" not in stored["mapping"]
+
+        applied = run_csv(book, source, "--apply")
+
+        assert applied.exit_code == 0, applied.output
+        data = json.loads(applied.stdout)["data"]
+        (row,) = data["rows"]
+        assert row["amount"] == "-25.00 USD"
+        assert data["written"] == 1
+        assert data["remembered"]["mapping"].endswith(",sign=ledger")
+        assert any("Re-applied sign=ledger: cc.csv" in note for note in data["notes"])
+        assert re.search(r"^\s+Assets:Checking\s+-25\.00 USD$", book.read_text(), re.MULTILINE)
 
     def test_explicit_sign_ledger_still_works(self, book: Path, isolated_config: Path) -> None:
         source = book.parent / "bank.csv"
