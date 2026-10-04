@@ -1049,10 +1049,16 @@ def _transactions(
     valid = kept
 
     if rejected and not partial:
-        raise protocol.LedgerError(
-            f"{len(rejected_rows)} of {len(rows)} row(s) failed validation; nothing was written. "
+        # `--partial` only helps when some row passed; with none, the advice
+        # would cost a round trip that writes nothing.
+        remedy = (
             f"Fix them, or pass --partial to try appending schema-valid rows "
-            f"(ledger validation may still reject some of the {len(valid)}).",
+            f"(ledger validation may still reject some of the {len(valid)})."
+            if valid
+            else "Fix them and retry."
+        )
+        raise protocol.LedgerError(
+            f"{len(rejected_rows)} of {len(rows)} row(s) failed validation; nothing was written. {remedy}",
             details=rejected,
             result={"written": 0, "written_rows": [], "rejected_rows": rejected_rows},
         )

@@ -80,3 +80,21 @@ def test_non_partial_does_not_promise_two_writes(tmp_path: Path) -> None:
     pdata = json.loads(partial.stderr)["error"]
     assert pdata["result"]["written"] == 1
     assert set(pdata["result"]["rejected_rows"]) == {1, 2}
+
+
+def test_no_partial_advice_when_no_row_is_schema_valid(tmp_path: Path) -> None:
+    """w1/169: postings given as strings fail the schema; --partial could only write nothing."""
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    rows = tmp_path / "rows.json"
+    rows.write_text(
+        json.dumps([{"date": "2024-06-01", "narration": "x", "postings": ["Expenses:Food 5 USD", "Assets:Bank"]}])
+    )
+
+    result = _bea(tmp_path, "--json", "--file", str(ledger), "add", "transactions", "--from", str(rows))
+
+    assert result.returncode == 1, result.stderr
+    message = json.loads(result.stderr)["error"]["message"]
+    assert "--partial" not in message and "some of the 0" not in message
+    assert "1 of 1 row(s) failed validation" in message
+    assert ledger.read_text() == LEDGER
