@@ -139,7 +139,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [126](./126.md) — `bea balance --json` always reports `account_filter_empty: false` — **minor**, CLI QA 2026-10-03.
 - [127](./127.md) — USAGE.md's JSON automation examples show output the CLI doesn't produce — **minor**, CLI QA 2026-10-03.
 - [128](./128.md) — Docs-example tests pass when a piped `bea` command fails and never check documented output — **minor**, CLI QA 2026-10-03.
-- [129](./129.md) — IMPORTING.md's link to the `import-id` convention points outside the repository — **minor**, CLI QA 2026-10-03.
 - [130](./130.md) — A comma-decimal bank amount like `0,125` is imported 1000× too large — **major**, CLI QA 2026-10-03.
 - [131](./131.md) — When no CSV date format fits the column, the error blames row 1 and an ISO format the user never chose — **minor**, CLI QA 2026-10-03.
 - [132](./132.md) — Case-insensitive filters never match Turkish `İ`/`ı` against `i`/`I`, unlike `report -a` and import rules — **minor**, CLI QA 2026-10-03.

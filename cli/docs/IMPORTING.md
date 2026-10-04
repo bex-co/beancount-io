@@ -292,7 +292,7 @@ configuration; the CLI calls the current interface directly.
 
 ## Duplicate decisions
 
-`bea import` follows the [`import-id` convention](../../../skills/.claude/skills/beancount-import/references/dedup.md),
+`bea import` follows the [`import-id` convention](../../skills/.claude/skills/beancount-import/references/dedup.md),
 so entries written by the CLI and by the `beancount-import` / `beancount-migrate`
 skills deduplicate against each other: the ledger itself is the dedup database.
 

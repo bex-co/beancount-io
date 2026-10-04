@@ -26,7 +26,7 @@ help:
 	@echo "  make engine-optional-locks - Export hash-pinned Beangulp/Beanprice engine feature locks"
 	@echo "  make release-artifacts - Build beancount-io wheel/sdist into dist/"
 	@echo "  make docs             - Regenerate docs/REFERENCE.md from the command tree"
-	@echo "  make docs-check       - Fail if docs/REFERENCE.md drifted from the command tree"
+	@echo "  make docs-check       - Fail if docs/REFERENCE.md drifted or a docs link is broken"
 	@echo "  make check-all        - Run lint + format-check + typecheck + test + spec-check + docs-check"
 
 install:
@@ -125,6 +125,7 @@ docs:
 
 docs-check:
 	uv run python scripts/gen_reference.py --check
+	uv run python scripts/check_doc_links.py
 
 codegen:
 	uv run openapi-python-client generate --path openapi/v1.json \
