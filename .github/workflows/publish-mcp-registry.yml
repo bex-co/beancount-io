@@ -9,11 +9,13 @@ name: Publish (mcp registry)
 #   `publish` set, publishes.
 # - A published version is immutable, so the publish job refuses a version the
 #   registry already has: a listing change must bump `version`.
-# - Authentication is the registry's HTTP domain proof. MCP_REGISTRY_PRIVATE_KEY,
+# - Authentication is the registry's domain proof. MCP_REGISTRY_PRIVATE_KEY,
 #   an environment secret on `mcp-registry-publish`, signs the login; the
-#   registry checks the matching public record that production backend-v2 serves
-#   at https://beancount.io/.well-known/mcp-registry-auth from
-#   MCP_REGISTRY_AUTH_PROOF. See backend-cluster/backend-v2/docs/mcp.md.
+#   registry checks the matching public record. The job uses the HTTP proof when
+#   production backend-v2 serves it at
+#   https://beancount.io/.well-known/mcp-registry-auth (MCP_REGISTRY_AUTH_PROOF),
+#   and otherwise the TXT record at the beancount.io apex in Cloudflare DNS.
+#   See backend-cluster/backend-v2/docs/mcp.md.
 
 on:
   push:
@@ -108,16 +110,21 @@ jobs:
       - name: Resolve this version's registry URL
         run: echo "VERSION_URL=${REGISTRY_URL}/v0.1/servers/$(jq -rn --arg n "$NAME" '$n | @uri')/versions/${VERSION}" >> "$GITHUB_ENV"
 
-      - name: Require the domain proof to be served
+      - name: Find the served domain proof
+        id: proof
         run: |
-          if ! record=$(curl -sSf "$PROOF_URL"); then
-            echo "::error::${PROOF_URL} is not served — set MCP_REGISTRY_AUTH_PROOF on the production backend (backend-cluster/backend-v2/README.md)"
+          # HTTP first; the apex TXT record (read over DNS-over-HTTPS) otherwise.
+          if record=$(curl -sSf "$PROOF_URL" 2>/dev/null) && [[ "$record" == "v=MCPv1; k="* ]]; then
+            echo "method=http" >> "$GITHUB_OUTPUT"
+            echo "domain proof is served at ${PROOF_URL}"
+          elif curl -sSf -H 'accept: application/dns-json' "https://cloudflare-dns.com/dns-query?name=${PROOF_DOMAIN}&type=TXT" \
+              | jq -e '[.Answer[]?.data | gsub("\""; "")] | any(startswith("v=MCPv1; k="))' >/dev/null; then
+            echo "method=dns" >> "$GITHUB_OUTPUT"
+            echo "domain proof is the ${PROOF_DOMAIN} TXT record"
+          else
+            echo "::error::no domain proof — serve MCP_REGISTRY_AUTH_PROOF at ${PROOF_URL} or add the TXT record at the ${PROOF_DOMAIN} apex (backend-cluster/backend-v2/docs/mcp.md)"
             exit 1
           fi
-          case "$record" in
-            "v=MCPv1; k="*) echo "domain proof is served" ;;
-            *) echo "::error::unexpected record at ${PROOF_URL}"; exit 1 ;;
-          esac
 
       - name: Refuse to republish an existing version
         run: |
@@ -131,12 +138,13 @@ jobs:
       - name: Sign in with the domain proof
         env:
           MCP_REGISTRY_PRIVATE_KEY: ${{ secrets.MCP_REGISTRY_PRIVATE_KEY }}
+          PROOF_METHOD: ${{ steps.proof.outputs.method }}
         run: |
           if [ -z "$MCP_REGISTRY_PRIVATE_KEY" ]; then
             echo "::error::MCP_REGISTRY_PRIVATE_KEY is not set on the mcp-registry-publish environment"
             exit 1
           fi
-          ./mcp-publisher login http --domain "$PROOF_DOMAIN" --private-key "$MCP_REGISTRY_PRIVATE_KEY"
+          ./mcp-publisher login "$PROOF_METHOD" --domain "$PROOF_DOMAIN" --private-key "$MCP_REGISTRY_PRIVATE_KEY"
 
       - name: Publish
         run: ./mcp-publisher publish "$SERVER_JSON"

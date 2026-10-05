@@ -824,14 +824,16 @@ fails if its remote URL or version drifts from what `/.well-known/mcp.json`
 advertises.
 
 The registry grants the `io.beancount/*` namespace to whoever proves control of
-`beancount.io`. This deployment proves it over HTTP: `MCP_REGISTRY_AUTH_PROOF`
+`beancount.io`. The backend can prove it over HTTP: `MCP_REGISTRY_AUTH_PROOF`
 holds the public half of an Ed25519 key as the record
 `v=MCPv1; k=ed25519; p=<base64 public key>`, and the backend serves it at
 `GET /.well-known/mcp-registry-auth`. Unset, the route answers 404 — a self-host
 must not serve Beancount.io's key, because that would let Beancount.io publish
 under the self-host's namespace. The registry also accepts a DNS TXT record with
-the same content at the domain apex; this repository documents only the HTTP
-path.
+the same content at the domain apex. Production currently proves control that
+way: the `beancount.io` zone in Cloudflare carries the record as an apex TXT, so
+publishing does not depend on a backend redeploy. Either proof may be served;
+both must hold the same public key.
 
 Generate the key pair with OpenSSL 3 (macOS's system LibreSSL lacks Ed25519 in
 `genpkey`; `brew install openssl@3` and call that binary):
@@ -853,8 +855,10 @@ publishes on a push to `main` whose commits changed it, or on a
 `workflow_dispatch` with `publish` set. The publish job runs under the
 `mcp-registry-publish` environment, whose secret `MCP_REGISTRY_PRIVATE_KEY` is
 the hex private key; restrict that environment to `main` and add a required
-reviewer. Before signing in, the job checks that production serves the proof
-record and that the registry does not already have this version.
+reviewer. Before signing in, the job finds the proof — the HTTP record if
+production serves it, otherwise the apex TXT record — and checks that the
+registry does not already have this version; it then signs in with the
+matching `mcp-publisher login http` or `login dns`.
 
 Published versions are immutable. To change anything in the listing, bump
 `version` in `server.json` — the registry marks the highest semantic version
@@ -864,6 +868,7 @@ To publish by hand instead, from `backend-cluster/backend-v2/`:
 
 ```bash
 mcp-publisher validate server.json
+# `login dns` while production does not serve the HTTP record
 mcp-publisher login http --domain beancount.io --private-key "$MCP_REGISTRY_PRIVATE_KEY"
 mcp-publisher publish server.json
 ```
@@ -871,7 +876,7 @@ mcp-publisher publish server.json
 Verify either path:
 
 ```bash
-curl -fsS https://beancount.io/.well-known/mcp-registry-auth
+curl -fsS https://beancount.io/.well-known/mcp-registry-auth  # or: dig +short TXT beancount.io
 curl -fsS "https://registry.modelcontextprotocol.io/v0.1/servers/io.beancount%2Fbeancount/versions/latest" \
   | jq '{_meta, server: (.server | {name, version, remotes})}'
 ```
