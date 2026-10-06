@@ -1205,6 +1205,59 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(after?.exp).toBe(lastExp);
   });
 
+  // ── Third-party lifecycle on a moving clock (ADR 019 D5) ───────────────────
+  //
+  // oidc-provider and the memory adapter both read `Date.now()`, so moving it
+  // moves the whole system's clock: token and grant expiry, re-saves, and
+  // rotation run exactly as they would across months of real use.
+
+  describe("third-party lifecycle on a moving clock", () => {
+    let clock: number;
+    const advanceTo = (day: number, start: number) => {
+      clock = start + day * DAY_SECONDS * 1000;
+    };
+    beforeEach(() => {
+      clock = Date.now();
+      jest.spyOn(Date, "now").mockImplementation(() => clock);
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    /** Refreshes on each listed day, carrying the rotated token; returns each status. */
+    async function useOn(days: number[]) {
+      const start = clock;
+      let { clientId, refreshToken } = await connectThirdParty();
+      const statuses: Record<number, number> = {};
+      for (const day of days) {
+        advanceTo(day, start);
+        const res = await refresh(clientId, refreshToken);
+        statuses[day] = res.status;
+        if (res.status === 200) {
+          refreshToken = ((await res.json()) as { refresh_token: string })
+            .refresh_token;
+        }
+      }
+      return statuses;
+    }
+
+    it("keeps a connection used at least every 45 days through day 300", async () => {
+      const days = [13, 44, 74, 104, 134, 164, 194, 224, 254, 284, 300];
+      const statuses = await useOn(days);
+      expect(Object.values(statuses).every((s) => s === 200)).toBe(true);
+    });
+
+    it("ends a connection left idle for more than 45 days", async () => {
+      expect(await useOn([47])).toEqual({ 47: 400 });
+    });
+
+    it("ends a connection one year after authorization even when used daily", async () => {
+      const monthly = Array.from({ length: 12 }, (_, i) => 30 * (i + 1)); // 30 … 360
+      const statuses = await useOn([...monthly, 364, 366]);
+      expect(monthly.every((d) => statuses[d] === 200)).toBe(true);
+      expect(statuses[364]).toBe(200);
+      expect(statuses[366]).toBe(400);
+    });
+  });
+
   it("mobile flow: a session issued before the long window keeps working and upgrades on its next refresh", async () => {
     const resource = `${ISSUER}/v1`;
     const redirectUri = MOBILE_REDIRECT_URIS[0];
