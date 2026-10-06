@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { bankAccountQuery } from "@/features/ledger/api/rest/v1/banks-handler";
 import { logger } from "@/shared/logger";
 import type { ToolContext } from "../tools/types";
 import { toolOutputSchema } from "../tools/types";
@@ -47,5 +48,35 @@ export async function executeListBankConnections(
       ]);
       return { connections, accounts };
     },
+  });
+}
+
+// --- listStagedBankTransactions ---------------------------------------------
+
+export const listStagedBankTransactionsDescription =
+  "List bank transactions staged for import (ids for manageBankImport submit/discard); optional accountId filter.";
+
+export const listStagedBankTransactionsInput = bankAccountQuery.strict();
+
+export const listStagedBankTransactionsOutput = toolOutputSchema(
+  z.array(z.unknown()),
+);
+
+export async function executeListStagedBankTransactions(
+  ctx: ToolContext,
+  input: z.infer<typeof listStagedBankTransactionsInput>,
+) {
+  const { services, identity, ledgerId } = ctx;
+  return runToolSafely({
+    logger: toolLogger,
+    message: "Listing staged bank transactions failed",
+    context: { tool: "listStagedBankTransactions" },
+    // The `bankUnsyncedTransactions` resource's call, with its account filter.
+    execute: () =>
+      services.plaidItem.getUnsyncedTransactions(
+        identity,
+        listStagedBankTransactionsInput.parse(input).accountId,
+        ledgerId,
+      ),
   });
 }

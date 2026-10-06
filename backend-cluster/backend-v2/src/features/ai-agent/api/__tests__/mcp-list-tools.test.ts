@@ -20,11 +20,13 @@ const config = { api: { scopeEnforcement: "shadow" } } as AppConfig;
 const LEDGER = "alice/main";
 const CONNECTIONS = [{ id: "pitm_1", institutionName: "Bank A" }];
 const ACCOUNTS = [{ id: "pacc_1", itemId: "pitm_1", mappedAccount: null }];
+const STAGED = [{ id: "ptxn_1", accountId: "pacc_1", amount: 12.5 }];
 
 const fakeServices = () => ({
   plaidItem: {
     getItems: jest.fn().mockResolvedValue(CONNECTIONS),
     getAccountsForLedger: jest.fn().mockResolvedValue(ACCOUNTS),
+    getUnsyncedTransactions: jest.fn().mockResolvedValue(STAGED),
   },
 });
 
@@ -102,6 +104,41 @@ describe("listBankConnections", () => {
     const result = await client.callTool({
       name: "listBankConnections",
       arguments: {},
+    });
+    expect(result.isError).toBe(true);
+    await close();
+  });
+});
+
+describe("listStagedBankTransactions", () => {
+  it.each([
+    [undefined, "bank-transactions/unsynced"],
+    ["pacc_1", "bank-transactions/unsynced?accountId=pacc_1"],
+  ])(
+    "returns what the unsynced resource returns (accountId %s)",
+    async (accountId, path) => {
+      const services = fakeServices();
+      const { client, close } = await connect(services);
+      const result = await client.callTool({
+        name: "listStagedBankTransactions",
+        arguments: accountId ? { accountId } : {},
+      });
+      expect(result.structuredContent).toEqual({
+        ok: true,
+        result: await readJson(client, path),
+      });
+      expect(
+        services.plaidItem.getUnsyncedTransactions,
+      ).toHaveBeenNthCalledWith(1, identity, accountId, LEDGER);
+      await close();
+    },
+  );
+
+  it("refuses an argument the resource does not take", async () => {
+    const { client, close } = await connect(fakeServices());
+    const result = await client.callTool({
+      name: "listStagedBankTransactions",
+      arguments: { itemId: "pitm_1" },
     });
     expect(result.isError).toBe(true);
     await close();

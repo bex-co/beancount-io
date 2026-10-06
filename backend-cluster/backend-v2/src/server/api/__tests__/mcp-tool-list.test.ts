@@ -83,9 +83,11 @@ describe("MCP tool list", () => {
     // 66 KB since w1/m33 (ADR 019 D7) added `listBankConnections` (1.2 KB):
     // a tools-only host cannot otherwise reach the ids the bank tools need.
     // Its description names only the ids and the tools that take them.
+    // 67 KB with `listStagedBankTransactions` (1.1 KB), the staged ids
+    // `manageBankImport` submit/discard need and `sync` never returns.
     const { tools } = await listTools();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(66 * 1024);
+    expect(bytes).toBeLessThan(67 * 1024);
   });
 
   it("publishes all four annotations on every tool", async () => {

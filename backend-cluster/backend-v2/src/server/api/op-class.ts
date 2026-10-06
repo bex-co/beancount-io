@@ -1705,9 +1705,8 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     class: "read",
     gql: "Query.getUnsyncedPlaidTransactions",
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/unsynced",
+    mcp: "listStagedBankTransactions",
     mcpResource: "bankUnsyncedTransactions",
-    mcpExempt:
-      "Reachable as the `bankUnsyncedTransactions` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     authorizationAction: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_READ,
   },
   {

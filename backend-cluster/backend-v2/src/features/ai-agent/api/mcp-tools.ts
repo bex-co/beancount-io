@@ -61,6 +61,10 @@ import {
   listBankConnectionsInput,
   listBankConnectionsOutput,
   executeListBankConnections,
+  listStagedBankTransactionsDescription,
+  listStagedBankTransactionsInput,
+  listStagedBankTransactionsOutput,
+  executeListStagedBankTransactions,
 } from "./mcp-list-tools";
 import { z, type ZodTypeAny } from "zod";
 import type { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
@@ -624,6 +628,17 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     inputSchema: listBankConnectionsInput.extend({ ledger: ledgerSelection }),
     outputSchema: mcpOutputSchema(listBankConnectionsOutput),
     execute: withLedger(executeListBankConnections),
+  },
+  {
+    name: "listStagedBankTransactions",
+    title: "List Bank Transactions Staged For Import",
+    annotations: READ_ONLY,
+    description: listStagedBankTransactionsDescription,
+    inputSchema: listStagedBankTransactionsInput.extend({
+      ledger: ledgerSelection,
+    }),
+    outputSchema: mcpOutputSchema(listStagedBankTransactionsOutput),
+    execute: withLedger(executeListStagedBankTransactions),
   },
   {
     name: "managePullRequests",
