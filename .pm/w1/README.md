@@ -4,7 +4,7 @@
 
 ## Milestones
 
-Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain from that run. The block m23–m27 and m29 was materialized on 2026-09-16 from `/pm-brainstorm for w1`: five of them absorb the 2026-09-15/16 continuous CLI QA sweep by shared root cause rather than one note at a time, and m29 carries promoted work from w2/027. m23–m27 and m29 have shipped. There is no m28 — see `## Dropped`. The block m30–m34 plus note [170](./170.md) was materialized on 2026-10-06 from `/pm-brainstorm for w1`: it implements [ADR 019](../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D2–D9, the technical prerequisites for curated MCP directory listings (Claude, ChatGPT, Muse).
+Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain from that run. The block m23–m27 and m29 was materialized on 2026-09-16 from `/pm-brainstorm for w1`: five of them absorb the 2026-09-15/16 continuous CLI QA sweep by shared root cause rather than one note at a time, and m29 carries promoted work from w2/027. m23–m27 and m29 have shipped. There is no m28 — see `## Dropped`. The block m30–m34 plus note [170](./done/170.md) was materialized on 2026-10-06 from `/pm-brainstorm for w1`: it implements [ADR 019](../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D2–D9, the technical prerequisites for curated MCP directory listings (Claude, ChatGPT, Muse).
 
 **Suggested order:** m30 → m31 → m34, with m32, m33, and note 170 in parallel. ADR 019 requires D3 and D4 (m30) before D6 (m31): enabling CIMD first breaks Claude Code's sign-in. m34 drives real hosts and needs m30, m31, and m33 on production. Every milestone's production checks wait on an operator deploy of backend-v2 (and dashboard for m30).
 
@@ -53,8 +53,6 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [x] **m18** — [Ledger skills converge on `bea`](./done/m18/README.md) (8 tasks) ← CLI UX review 2026-09-08; completed baseline; ADR014 installation/skills follow-up is tracked in m21
 
 ## Inbox
-
-- [170](./170.md) — D9: OAuth, MCP, and well-known paths are never challenged at the Cloudflare edge (~45m, no code; ADR 019)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
