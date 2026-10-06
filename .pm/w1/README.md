@@ -13,7 +13,7 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [ ] **m30** — [Every named MCP host can register and reach a consent page that says who is asking](./blocked/m30/README.md) (11 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 1; ADR 019 D3 + D4 + D8 — **blocked:** t001–t006 shipped; production verification waits on an operator deploy of backend-v2 and dashboard
 - [ ] **m31** — [Advertise CIMD so Claude and ChatGPT identify themselves without registering](./blocked/m31/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 2; ADR 019 D6, after m30 — **blocked:** t001–t003 and the CIMD conformance check shipped; production verification waits on the same deploy as m30
 - [x] **m32** — [A connector stays connected while it is used](./done/m32/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 3; ADR 019 D5
-- [ ] **m33** — [Tools-only hosts can finish the bank flow and key management](./m33/README.md) (10 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 4; ADR 019 D7 + D2
+- [x] **m33** — [Tools-only hosts can finish the bank flow and key management](./done/m33/README.md) (10 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 4; ADR 019 D7 + D2
 - [ ] **m34** — [Drive every named host through a real sign-in on the hosted endpoint](./m34/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 6; after m30, m31, m33 are on production
 - [x] **m25** — [Every failure is a JSON envelope, and empty inputs are errors](./done/m25/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 3; absorbs 24 CLI QA notes from w3 plus w5/004
 - [x] **m26** — [Ledgers survive Windows editors and Unicode](./done/m26/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 4; absorbs 9 CLI QA notes from w3

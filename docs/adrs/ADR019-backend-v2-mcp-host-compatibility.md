@@ -270,7 +270,9 @@ Nothing has landed. D3, D4, and D6 land in that order, each depending on the one
 | D5 | Landed: 45-day idle window and 46-day grant (`127589ed`), grant slides on refresh up to one year after consent (`d5d46d8c`), public clients always rotate (`59810c3e`); README and `docs/mcp.md` updated. |
 | D6 | Landed (`ea0d8d23`), with CIMD fixtures for Claude Code, VS Code, and a ChatGPT shape, and refusal cases. |
 | D8 | Host fixtures in `oidc-route.test.ts`; `yarn mcp:conformance` checks 11–16. Checks 11–15 pass against production; 16 (CIMD) waits on the deploy. |
-| D7, D9 | Not started (`.pm/w1/m33`, note `w1/170`). |
+| D7 | Landed: `listBankConnections` (`e3df700e`), `listStagedBankTransactions` (`b6332c0a`), `listPublicKeys` (`f7786884`), each beside its resource twin and its verb's REST and GraphQL rows; a tools-only journey test (`16b65818`); ADR 0008 amended. **Deviation:** the two `admin`-class lists are annotated `readOnlyHint: false` (a non-destructive, idempotent `ADMIN_READ` preset), not read-only — the annotation guard keeps `readOnlyHint` for `read`-class verbs because hosts auto-approve read-only tools, and these expose bank connections and keys. `tools/list`: 30 tools. |
+| D2 | Landed (`bc2acded`): every tool's `securitySchemes`, derived from `VERB_TABLE`, top-level and in `_meta`. |
+| D9 | Not started (note `w1/170`). |
 | Listing | `backend-cluster/backend-v2/server.json`, the `/.well-known/mcp-registry-auth` route behind `MCP_REGISTRY_AUTH_PROOF`, and `.github/workflows/publish-mcp-registry.yml` — see [Amendments](#amendments) (2026-10-02); tracked as `.pm/w2/m36` |
 
 ## Open Questions
