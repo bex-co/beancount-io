@@ -1225,7 +1225,9 @@ describe("oidc-route: unified MCP + identity provider", () => {
     /** Refreshes on each listed day, carrying the rotated token; returns each status. */
     async function useOn(days: number[]) {
       const start = clock;
-      let { clientId, refreshToken } = await connectThirdParty();
+      const connection = await connectThirdParty();
+      const { clientId } = connection;
+      let { refreshToken } = connection;
       const statuses: Record<number, number> = {};
       for (const day of days) {
         advanceTo(day, start);
