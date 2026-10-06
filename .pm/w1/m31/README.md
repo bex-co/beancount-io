@@ -1,13 +1,13 @@
 # w1 · m31 — Advertise CIMD so Claude and ChatGPT identify themselves without registering
 
-**Worker:** worker1 **Goal:** Production advertises Client ID Metadata Documents — the registration method the MCP spec prefers and Claude and ChatGPT choose — without breaking any DCR host, ending per-connection client-row growth from directory traffic **Status:** in progress (t001 done)
+**Worker:** worker1 **Goal:** Production advertises Client ID Metadata Documents — the registration method the MCP spec prefers and Claude and ChatGPT choose — without breaking any DCR host, ending per-connection client-row growth from directory traffic **Status:** in progress (t001, t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | [t001](./done/t001.md) | D6: advertise CIMD with the draft acknowledged — **DONE** | 30m | — |
-| t002 | CIMD fixtures: Claude Code's published document and a ChatGPT-style document | 45m | t001 |
+| [t002](./done/t002.md) | CIMD fixtures: Claude Code's published document and a ChatGPT-style document — **DONE** | 45m | t001 |
 | t003 | Consent and failure modes for CIMD clients | 30m | t002 |
 | t004 | Conformance requires CIMD; verify on production | 20m | t003 |
 | t005 | Adoption surface | 30m | t004 |

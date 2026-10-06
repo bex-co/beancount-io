@@ -1765,6 +1765,119 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(body.registration_endpoint).toBeTruthy();
   });
 
+  // Hosts' metadata documents as published (re-verified 2026-10-06, ADR 019
+  // Amendments). oidc-provider fetches them through its configurable `fetch`,
+  // which defaults to the global one; tests answer these URLs locally and pass
+  // every other request through, so nothing reaches the network.
+  const CIMD_DOCUMENTS: Record<string, Record<string, unknown>> = {
+    "https://claude.ai/oauth/claude-code-client-metadata": {
+      client_id: "https://claude.ai/oauth/claude-code-client-metadata",
+      client_name: "Claude Code",
+      client_uri: "https://claude.ai",
+      redirect_uris: ["http://localhost/callback", "http://127.0.0.1/callback"],
+      grant_types: ["authorization_code", "refresh_token"],
+      response_types: ["code"],
+      token_endpoint_auth_method: "none",
+    },
+    "https://vscode.dev/oauth/client-metadata.json": {
+      client_id: "https://vscode.dev/oauth/client-metadata.json",
+      client_name: "Visual Studio Code",
+      application_type: "native",
+      redirect_uris: ["http://127.0.0.1:33418/", "https://vscode.dev/redirect"],
+      grant_types: ["authorization_code", "refresh_token"],
+      response_types: ["code"],
+      token_endpoint_auth_method: "none",
+    },
+    // ChatGPT's document URL is not published; the shape follows its auth docs.
+    "https://chatgpt.example.test/oauth/client-metadata.json": {
+      client_id: "https://chatgpt.example.test/oauth/client-metadata.json",
+      client_name: "ChatGPT",
+      redirect_uris: ["https://chatgpt.com/connector_platform_oauth_redirect"],
+      grant_types: ["authorization_code", "refresh_token"],
+      response_types: ["code"],
+      token_endpoint_auth_method: "none",
+    },
+  };
+
+  describe("CIMD hosts reach consent without registering", () => {
+    const realFetch = globalThis.fetch;
+    let served: Record<string, () => Response>;
+
+    beforeEach(() => {
+      served = Object.fromEntries(
+        Object.entries(CIMD_DOCUMENTS).map(([url, doc]) => [
+          url,
+          () => Response.json(doc),
+        ]),
+      );
+      jest
+        .spyOn(globalThis, "fetch")
+        .mockImplementation(
+          (input: string | URL | Request, init?: RequestInit) => {
+            const url =
+              typeof input === "string"
+                ? input
+                : input instanceof URL
+                  ? input.href
+                  : input.url;
+            const serve = served[url];
+            return serve ? Promise.resolve(serve()) : realFetch(input, init);
+          },
+        );
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    it.each([
+      [
+        "Claude Code",
+        "https://claude.ai/oauth/claude-code-client-metadata",
+        "http://localhost:51999/callback",
+        "claude.ai",
+        true,
+      ],
+      [
+        "VS Code (preferred port)",
+        "https://vscode.dev/oauth/client-metadata.json",
+        "http://127.0.0.1:33418/",
+        "vscode.dev",
+        false,
+      ],
+      [
+        "VS Code (fallback port)",
+        "https://vscode.dev/oauth/client-metadata.json",
+        "http://127.0.0.1:50123/",
+        "vscode.dev",
+        false,
+      ],
+      [
+        "ChatGPT-shaped",
+        "https://chatgpt.example.test/oauth/client-metadata.json",
+        "https://chatgpt.com/connector_platform_oauth_redirect",
+        "chatgpt.example.test",
+        false,
+      ],
+    ])(
+      "%s reaches consent naming its vouching domain",
+      async (_host, clientId, redirectUri, vouchedBy, loopbackOnly) => {
+        const auth = await authorizeHost(clientId, redirectUri);
+        expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
+        const details = await interactionFor(clientId, redirectUri);
+        expect(details).toMatchObject({
+          client: clientId,
+          redirect_uri: redirectUri,
+          client_name: (CIMD_DOCUMENTS[clientId] as { client_name: string })
+            .client_name,
+          client_id_host: vouchedBy,
+          loopback_only: loopbackOnly,
+        });
+        // Identified by URL, not registered: no row in the client store.
+        expect(
+          await new MemoryAdapter("Client").find(clientId),
+        ).toBeUndefined();
+      },
+    );
+  });
+
   // ── Discovery (consumed by Discourse's openid_connect_discovery_document) ──
 
   it("discovery document advertises profile/email scopes and the userinfo endpoint", async () => {
