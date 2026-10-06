@@ -532,6 +532,10 @@ must select a ledger per call; account tools need no ledger.
 }
 ```
 
+Beancount.io's hosted endpoint is listed on the official MCP Registry as
+`io.beancount/beancount`, so registry-aware clients add it from a list and sign
+in with OAuth; see [From the MCP Registry](./docs/mcp.md#from-the-mcp-registry).
+
 Every result carries a readable text block and a typed `structuredContent`;
 every failure carries `{code, message, hint}` with `isError` set, so an agent
 branches on a code rather than on prose.
