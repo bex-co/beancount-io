@@ -4,16 +4,21 @@
 
 ## Milestones
 
-Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain from that run. The block m23–m27 and m29 was materialized on 2026-09-16 from `/pm-brainstorm for w1`: five of them absorb the 2026-09-15/16 continuous CLI QA sweep by shared root cause rather than one note at a time, and m29 carries promoted work from w2/027. m23–m27 and m29 have shipped. There is no m28 — see `## Dropped`.
+Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain from that run. The block m23–m27 and m29 was materialized on 2026-09-16 from `/pm-brainstorm for w1`: five of them absorb the 2026-09-15/16 continuous CLI QA sweep by shared root cause rather than one note at a time, and m29 carries promoted work from w2/027. m23–m27 and m29 have shipped. There is no m28 — see `## Dropped`. The block m30–m34 plus note [170](./170.md) was materialized on 2026-10-06 from `/pm-brainstorm for w1`: it implements [ADR 019](../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D2–D9, the technical prerequisites for curated MCP directory listings (Claude, ChatGPT, Muse).
 
-**Suggested order:** m25 → m26 → m27 → m29. The five CLI-sweep milestones are independent of one another and can be taken in any order; m23 shipped first because it fixes a silent ledger-wipe path (`w3/300`, critical) and establishes the exit contract the others are tested against. m29 is the non-sweep item and depends on nothing in this queue.
+**Suggested order:** m30 → m31 → m34, with m32, m33, and note 170 in parallel. ADR 019 requires D3 and D4 (m30) before D6 (m31): enabling CIMD first breaks Claude Code's sign-in. m34 drives real hosts and needs m30, m31, and m33 on production. Every milestone's production checks wait on an operator deploy of backend-v2 (and dashboard for m30).
 
 ### Open
 
+- [ ] **m30** — [Every named MCP host can register and reach a consent page that says who is asking](./m30/README.md) (11 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 1; ADR 019 D3 + D4 + D8
+- [ ] **m31** — [Advertise CIMD so Claude and ChatGPT identify themselves without registering](./m31/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 2; ADR 019 D6, after m30
+- [ ] **m32** — [A connector stays connected while it is used](./m32/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 3; ADR 019 D5
+- [ ] **m33** — [Tools-only hosts can finish the bank flow and key management](./m33/README.md) (10 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 4; ADR 019 D7 + D2
+- [ ] **m34** — [Drive every named host through a real sign-in on the hosted endpoint](./m34/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 6; after m30, m31, m33 are on production
 - [x] **m25** — [Every failure is a JSON envelope, and empty inputs are errors](./done/m25/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 3; absorbs 24 CLI QA notes from w3 plus w5/004
 - [x] **m26** — [Ledgers survive Windows editors and Unicode](./done/m26/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 4; absorbs 9 CLI QA notes from w3
 - [x] **m27** — [Amounts are exact on the way in and out](./done/m27/README.md) (10 tasks) ← `/pm-brainstorm for w1` 2026-09-16 item 5; absorbs 10 CLI QA notes from w3
-- [x] **m29** — [`bea` resolves managed price includes locally](./done/m29/README.md) (10 tasks) ← promoted [w2/027](../w2/027.md); ADR 015 + PRFAQ002
+- [x] **m29** — [`bea` resolves managed price includes locally](./done/m29/README.md) (10 tasks) ← promoted [w2/027](../w2/done/027.md); ADR 015 + PRFAQ002
 
 ## Dropped
 
@@ -48,6 +53,8 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 - [x] **m18** — [Ledger skills converge on `bea`](./done/m18/README.md) (8 tasks) ← CLI UX review 2026-09-08; completed baseline; ADR014 installation/skills follow-up is tracked in m21
 
 ## Inbox
+
+- [170](./170.md) — D9: OAuth, MCP, and well-known paths are never challenged at the Cloudflare edge (~45m, no code; ADR 019)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
