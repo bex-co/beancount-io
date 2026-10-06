@@ -2086,7 +2086,8 @@ export type McpSecurityScheme =
   | { type: "noauth" }
   | { type: "oauth2"; scopes?: string[] };
 
-const CLASS_PRIVILEGE: readonly OpClass[] = ["read", "write", "admin"];
+/** Scoped classes, most privileged first. */
+const STRONGEST_FIRST: readonly OpClass[] = ["admin", "write", "read"];
 
 /**
  * What a tool declares it needs, derived from `VERB_TABLE` and never written
@@ -2105,9 +2106,7 @@ export function mcpToolSecuritySchemes(
   const classes = new Set(
     table.filter((entry) => entry.mcp === tool).map((entry) => entry.class),
   );
-  const strongest = [...CLASS_PRIVILEGE]
-    .reverse()
-    .find((opClass) => classes.has(opClass));
+  const strongest = STRONGEST_FIRST.find((opClass) => classes.has(opClass));
   const scope = strongest ? SCOPE_FOR_CLASS[strongest] : null;
   const oauth: McpSecurityScheme = scope
     ? { type: "oauth2", scopes: [scope] }
