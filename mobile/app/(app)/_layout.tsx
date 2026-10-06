@@ -58,6 +58,7 @@ export default function AppLayout() {
           }}
         />
         <Stack.Screen name="settings" />
+        <Stack.Screen name="profile" />
         <Stack.Screen name="notifications" />
         {/* The screen supplies its own title and New-chat action. */}
         <Stack.Screen name="agent" />

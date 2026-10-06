@@ -7,8 +7,11 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format. */
   DateTimeISO: { input: unknown; output: unknown; }
+  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSON: { input: unknown; output: unknown; }
+  /** The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSONObject: { input: Record<string, number | string>; output: Record<string, number | string>; }
 };
 
@@ -2687,6 +2690,8 @@ export type UserProfile = {
 
 export type UserProfileResponse = {
   __typename?: 'UserProfileResponse';
+  /** Uploaded avatar, falling back to the email's Gravatar */
+  avatarUrl?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
   emailReportStatus?: Maybe<ReportStatus>;
   firstName?: Maybe<Scalars['String']['output']>;

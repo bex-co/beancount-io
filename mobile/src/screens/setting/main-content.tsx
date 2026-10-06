@@ -26,6 +26,8 @@ import {
 import { Theme } from "@/common/vars/theme";
 import { useTheme } from "@/common/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useCurrentUser } from "@/common/hooks/use-current-user";
+import { UserAvatar } from "@/components/user-avatar";
 
 export const MainContent = () => {
   const session = useSession();
@@ -34,6 +36,7 @@ export const MainContent = () => {
   const currentTheme = useReactiveVar(themeVar);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
+  const { user, displayName } = useCurrentUser();
   const [languageModalVisible, setLanguageModalVisible] = useState(false);
   const [themeModalVisible, setThemeModalVisible] = useState(false);
   const [deleteAccountModalVisible, setDeleteAccountModalVisible] =
@@ -107,6 +110,18 @@ export const MainContent = () => {
   return (
     <>
       <List2>
+        {user && <SectionHeader title={t("accountSettings")} />}
+        {user && (
+          <ListItemHorizontal
+            testID="setting-profile"
+            icon={
+              <UserAvatar uri={user.avatarUrl} name={displayName} size={28} />
+            }
+            title={displayName}
+            content={user.email}
+            onPress={() => router.push("/(app)/profile")}
+          />
+        )}
         <SectionHeader title={t("appSettings")} />
         <ListItemHorizontal
           icon={<Ionicons name="language" size={22} color={theme.black80} />}

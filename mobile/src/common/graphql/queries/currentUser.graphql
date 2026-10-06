@@ -1,0 +1,25 @@
+fragment CurrentUserFields on UserProfileResponse {
+  id
+  email
+  firstName
+  lastName
+  username
+}
+
+query CurrentUser {
+  userProfile { ...CurrentUserFields }
+}
+
+# Separate from CurrentUser on purpose: servers that predate `avatarUrl`
+# reject any query naming it, and the account's name and email must still load.
+query CurrentUserAvatar {
+  userProfile { id avatarUrl }
+}
+
+mutation UpdateProfile($firstName: String!, $lastName: String!) {
+  updateProfile(firstName: $firstName, lastName: $lastName) { ...CurrentUserFields }
+}
+
+mutation UpdateUsername($username: String!) {
+  updateUsername(username: $username) { ...CurrentUserFields }
+}

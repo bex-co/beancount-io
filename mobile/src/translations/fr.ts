@@ -607,4 +607,21 @@ export const fr: Translations = {
   feedSourceLedger: "Livre",
   feedSourceBlog: "Blog",
   feedSourceRelease: "Version",
+  profile: "Profil",
+  signedInAs: "Connecté en tant que {{name}}, {{email}}",
+  openSettings: "Ouvre les paramètres",
+  profileFirstName: "Prénom",
+  profileLastName: "Nom",
+  profileUsername: "Nom d’utilisateur",
+  profileUsernameHint:
+    "Les adresses web de vos grands livres commencent par votre nom d’utilisateur : le changer les modifie aussi.",
+  profileUsernameRequired: "Saisissez un nom d’utilisateur",
+  profileUsernameNoSpaces:
+    "Le nom d’utilisateur ne peut pas contenir d’espaces",
+  profileUsernameTaken: "Ce nom d’utilisateur est déjà pris",
+  profileEmail: "E-mail",
+  profileEmailReadOnly: "L’e-mail ne peut pas être modifié ici",
+  profileNotSet: "Non renseigné",
+  profilePhotoFromGravatar: "Photo depuis Gravatar",
+  profileUpdated: "Profil mis à jour",
 };

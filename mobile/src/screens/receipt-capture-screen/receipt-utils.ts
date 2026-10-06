@@ -1,4 +1,5 @@
 import { getFormatDate } from "../../common/format-util";
+import { graphQLErrorCodes } from "../../common/graphql-error-codes";
 
 /**
  * Resolve the receipt's transaction date. The server may now return an
@@ -40,18 +41,6 @@ export const parseErrorCode = (
   if (codes.includes("RESOURCE_LIMIT_REACHED")) return "quota_exhausted";
   return "parse_failed";
 };
-
-function graphQLErrorCodes(err: unknown): string[] {
-  if (typeof err !== "object" || err === null) return [];
-  const gqlErrors = (err as { graphQLErrors?: unknown }).graphQLErrors;
-  if (!Array.isArray(gqlErrors)) return [];
-  return gqlErrors
-    .map((e) => {
-      const code = (e as { extensions?: { code?: unknown } })?.extensions?.code;
-      return typeof code === "string" ? code : undefined;
-    })
-    .filter((c): c is string => c !== undefined);
-}
 
 /** Derive file extension from a MIME type, falling back to jpg. */
 export const mimeToExt = (mimeType: string): string =>

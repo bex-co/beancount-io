@@ -586,4 +586,20 @@ export const en = {
   breakdownRowShare: "{{amount}}, {{percent}}% of total",
   budgetChartSummary:
     "Budget versus actual for {{span}}. Actual {{actual}} of {{budget}} budgeted across {{count}} periods, {{over}} over target.",
+  profile: "Profile",
+  signedInAs: "Signed in as {{name}}, {{email}}",
+  openSettings: "Opens Settings",
+  profileFirstName: "First name",
+  profileLastName: "Last name",
+  profileUsername: "Username",
+  profileUsernameHint:
+    "Your ledgers’ web addresses start with your username, so changing it changes them too.",
+  profileUsernameRequired: "Enter a username",
+  profileUsernameNoSpaces: "Usernames can't contain spaces",
+  profileUsernameTaken: "That username is already taken",
+  profileEmail: "Email",
+  profileEmailReadOnly: "Email can't be changed here",
+  profileNotSet: "Not set",
+  profilePhotoFromGravatar: "Photo from Gravatar",
+  profileUpdated: "Profile updated",
 };

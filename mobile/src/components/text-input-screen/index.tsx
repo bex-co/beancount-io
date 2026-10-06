@@ -19,18 +19,15 @@ import {
 import { i18n } from "@/translations";
 import { ColorTheme } from "@/types/theme-props";
 import { router, Stack } from "expo-router";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+import { useStackKeyboardOffset } from "@/common/hooks/use-stack-keyboard-offset";
 
 const MAX_SUGGESTIONS = 30;
 const SKELETON_ROW_WIDTHS = [176, 128, 200, 144];
-const STACK_HEADER_HEIGHT = 44;
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -145,9 +142,7 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
 }) => {
   const theme = useTheme().colorTheme;
   const styles = getStyles(theme);
-  const insets = useSafeAreaInsets();
-  const keyboardVerticalOffset =
-    Platform.OS === "ios" ? insets.top + STACK_HEADER_HEIGHT : 0;
+  const keyboardVerticalOffset = useStackKeyboardOffset();
   const [value, setValue] = useState<string>(initialValue);
 
   const query = value.trim().toLowerCase();

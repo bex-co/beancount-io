@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 /**
- * Static guardrail (w1/032): the three live entry forms must navigate
+ * Static guardrail (w1/032): the live entry forms must navigate
  * post-save with a fallback instead of a bare `router.back()`. A form opened
  * as the root route by a cold deep link has no back stack, so a bare back
  * raises an unhandled GO_BACK and strands the user on a live form after a
@@ -26,6 +26,11 @@ const FORMS = [
     file: "screens/open-account-screen/open-account-screen.tsx",
     fallback: 'router.replace("/(app)/(tabs)/accounts")',
     guard: "canSubmit",
+  },
+  {
+    file: "screens/profile/profile-screen.tsx",
+    fallback: 'router.replace("/(app)/settings")',
+    guard: "canSave",
   },
 ] as const;
 

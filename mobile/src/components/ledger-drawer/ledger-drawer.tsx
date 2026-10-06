@@ -54,9 +54,12 @@ import { clampProgress, settleTarget } from "./drawer-motion";
 import { LoadingTile } from "@/components/loading-tile";
 import { MenuButton } from "@/components/menu-button";
 import { SearchBar } from "@/components/search-bar";
+import { UserAvatar } from "@/components/user-avatar";
+import { useCurrentUser } from "@/common/hooks/use-current-user";
 import { type DrawerLedger, getDrawerSections } from "./drawer-ledgers";
 
 const skeletonWidths = [140, 112, 160];
+const IDENTITY_AVATAR_SIZE = 24;
 
 // A collection this size no longer fits the drawer on any phone, so finding a
 // book means scrolling for it. Below the threshold the whole list is already
@@ -306,7 +309,79 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.regular,
       color: theme.text01,
     },
+    // The avatar takes the icon's place in a menu row. It is drawn a little
+    // larger than the 20pt icons so initials stay legible, but lays out at
+    // the icon's width so the name lines up with the labels above it.
+    identityAvatarSlot: {
+      width: 20,
+      alignItems: "center",
+    },
+    identityAvatarSkeleton: { borderRadius: IDENTITY_AVATAR_SIZE / 2 },
+    // A 16pt tile centered in the label's 24pt line box.
+    identityNameSkeleton: { flex: 1, paddingVertical: 4 },
   });
+
+/** Who is signed in, pinned under the drawer's menu. It is also the drawer's
+ * way into Settings (Profile lives there), so it opens Settings in every
+ * state: a skeleton while the profile loads, a plain Settings row if it can't. */
+function DrawerIdentityRow({ onPress }: { onPress: () => void }): JSX.Element {
+  const styles = useThemeStyle(getStyles);
+  const { t } = useTranslations();
+  const { user, displayName, loading } = useCurrentUser();
+
+  if (!user && !loading) {
+    return (
+      <DrawerMenuRow
+        testID="drawer-settings-row"
+        icon="settings-outline"
+        label={t("settings")}
+        onPress={onPress}
+      />
+    );
+  }
+
+  // Loading: a skeleton in the same row, still a working way into Settings.
+  return (
+    <TouchableOpacity
+      testID={user ? "drawer-identity-row" : "drawer-identity-skeleton"}
+      style={styles.menuItem}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={
+        user
+          ? t("signedInAs", { name: displayName, email: user.email })
+          : t("settings")
+      }
+      accessibilityHint={user ? t("openSettings") : undefined}
+    >
+      <View style={styles.identityAvatarSlot}>
+        {user ? (
+          <UserAvatar
+            uri={user.avatarUrl}
+            name={displayName}
+            size={IDENTITY_AVATAR_SIZE}
+          />
+        ) : (
+          <LoadingTile
+            width={IDENTITY_AVATAR_SIZE}
+            height={IDENTITY_AVATAR_SIZE}
+            style={styles.identityAvatarSkeleton}
+          />
+        )}
+      </View>
+      {user ? (
+        <Text style={styles.menuItemText} numberOfLines={1}>
+          {displayName}
+        </Text>
+      ) : (
+        <View style={styles.identityNameSkeleton}>
+          <LoadingTile width={96} height={16} />
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+}
 
 /** One row of the drawer's pinned bottom menu. */
 function DrawerMenuRow({
@@ -672,12 +747,7 @@ export function LedgerDrawer({
               onPress={handleMerchantsPress}
             />
           ) : null}
-          <DrawerMenuRow
-            testID="drawer-settings-row"
-            icon="settings-outline"
-            label={t("settings")}
-            onPress={handleSettingsPress}
-          />
+          <DrawerIdentityRow onPress={handleSettingsPress} />
         </>
       )}
     </View>

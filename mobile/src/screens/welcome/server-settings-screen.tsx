@@ -9,10 +9,7 @@ import {
   View,
 } from "react-native";
 import { Stack, router } from "expo-router";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useReactiveVar } from "@apollo/client";
 import { useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
@@ -32,6 +29,7 @@ import { serverUrlOverrideVar } from "@/common/vars/server-url";
 import { Button } from "@/components/button";
 import { PressableScale } from "@/components/pressable-scale";
 import { createConnectionTestGate } from "./connection-test-gate";
+import { useStackKeyboardOffset } from "@/common/hooks/use-stack-keyboard-offset";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -144,16 +142,11 @@ function connectionMessage(
   }
 }
 
-/** Native stack header content height — paired with top inset for KAV offset. */
-const STACK_HEADER_HEIGHT = 44;
-
 export function ServerSettingsScreen(): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = getStyles(theme);
   const { t } = useTranslations();
-  const insets = useSafeAreaInsets();
-  const keyboardVerticalOffset =
-    Platform.OS === "ios" ? insets.top + STACK_HEADER_HEIGHT : 0;
+  const keyboardVerticalOffset = useStackKeyboardOffset();
   const override = useReactiveVar(serverUrlOverrideVar);
   const activeUrl = override ?? defaultRuntimeServerUrl();
   const [url, setUrl] = useState(activeUrl);

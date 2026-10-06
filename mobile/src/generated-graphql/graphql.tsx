@@ -97,6 +97,33 @@ export type CreateSubscriptionSessionMutationVariables = Exact<{
 
 export type CreateSubscriptionSessionMutation = { createSubscriptionSession: { success: boolean, sessionId: string | null, sessionUrl: string | null, message: string | null } };
 
+export type CurrentUserFieldsFragment = { id: string, email: string, firstName: string | null, lastName: string | null, username: string | null };
+
+export type CurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CurrentUserQuery = { userProfile: { id: string, email: string, firstName: string | null, lastName: string | null, username: string | null } | null };
+
+export type CurrentUserAvatarQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CurrentUserAvatarQuery = { userProfile: { id: string, avatarUrl: string | null } | null };
+
+export type UpdateProfileMutationVariables = Exact<{
+  firstName: string;
+  lastName: string;
+}>;
+
+
+export type UpdateProfileMutation = { updateProfile: { id: string, email: string, firstName: string | null, lastName: string | null, username: string | null } };
+
+export type UpdateUsernameMutationVariables = Exact<{
+  username: string;
+}>;
+
+
+export type UpdateUsernameMutation = { updateUsername: { id: string, email: string, firstName: string | null, lastName: string | null, username: string | null } };
+
 export type DeleteAccountMutationVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -400,6 +427,15 @@ export type UpdateLedgerFileMutationVariables = Exact<{
 
 export type UpdateLedgerFileMutation = { updateLedgerFile: { content: string | null, name: string, path: string, sha: string, size: number, type: string } };
 
+export const CurrentUserFieldsFragmentDoc = gql`
+    fragment CurrentUserFields on UserProfileResponse {
+  id
+  email
+  firstName
+  lastName
+  username
+}
+    `;
 export const DiscoveryLedgerFragmentDoc = gql`
     fragment DiscoveryLedger on Ledger {
   id
@@ -901,6 +937,158 @@ export function useCreateSubscriptionSessionMutation(baseOptions?: Apollo.Mutati
 export type CreateSubscriptionSessionMutationHookResult = ReturnType<typeof useCreateSubscriptionSessionMutation>;
 export type CreateSubscriptionSessionMutationResult = Apollo.MutationResult<CreateSubscriptionSessionMutation>;
 export type CreateSubscriptionSessionMutationOptions = Apollo.BaseMutationOptions<CreateSubscriptionSessionMutation, CreateSubscriptionSessionMutationVariables>;
+export const CurrentUserDocument = gql`
+    query CurrentUser {
+  userProfile {
+    ...CurrentUserFields
+  }
+}
+    ${CurrentUserFieldsFragmentDoc}`;
+
+/**
+ * __useCurrentUserQuery__
+ *
+ * To run a query within a React component, call `useCurrentUserQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCurrentUserQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCurrentUserQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useCurrentUserQuery(baseOptions?: Apollo.QueryHookOptions<CurrentUserQuery, CurrentUserQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CurrentUserQuery, CurrentUserQueryVariables>(CurrentUserDocument, options);
+      }
+export function useCurrentUserLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CurrentUserQuery, CurrentUserQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CurrentUserQuery, CurrentUserQueryVariables>(CurrentUserDocument, options);
+        }
+// @ts-ignore
+export function useCurrentUserSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<CurrentUserQuery, CurrentUserQueryVariables>): Apollo.UseSuspenseQueryResult<CurrentUserQuery, CurrentUserQueryVariables>;
+export function useCurrentUserSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CurrentUserQuery, CurrentUserQueryVariables>): Apollo.UseSuspenseQueryResult<CurrentUserQuery | undefined, CurrentUserQueryVariables>;
+export function useCurrentUserSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CurrentUserQuery, CurrentUserQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CurrentUserQuery, CurrentUserQueryVariables>(CurrentUserDocument, options);
+        }
+export type CurrentUserQueryHookResult = ReturnType<typeof useCurrentUserQuery>;
+export type CurrentUserLazyQueryHookResult = ReturnType<typeof useCurrentUserLazyQuery>;
+export type CurrentUserSuspenseQueryHookResult = ReturnType<typeof useCurrentUserSuspenseQuery>;
+export type CurrentUserQueryResult = Apollo.QueryResult<CurrentUserQuery, CurrentUserQueryVariables>;
+export const CurrentUserAvatarDocument = gql`
+    query CurrentUserAvatar {
+  userProfile {
+    id
+    avatarUrl
+  }
+}
+    `;
+
+/**
+ * __useCurrentUserAvatarQuery__
+ *
+ * To run a query within a React component, call `useCurrentUserAvatarQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCurrentUserAvatarQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCurrentUserAvatarQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useCurrentUserAvatarQuery(baseOptions?: Apollo.QueryHookOptions<CurrentUserAvatarQuery, CurrentUserAvatarQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CurrentUserAvatarQuery, CurrentUserAvatarQueryVariables>(CurrentUserAvatarDocument, options);
+      }
+export function useCurrentUserAvatarLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CurrentUserAvatarQuery, CurrentUserAvatarQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CurrentUserAvatarQuery, CurrentUserAvatarQueryVariables>(CurrentUserAvatarDocument, options);
+        }
+// @ts-ignore
+export function useCurrentUserAvatarSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<CurrentUserAvatarQuery, CurrentUserAvatarQueryVariables>): Apollo.UseSuspenseQueryResult<CurrentUserAvatarQuery, CurrentUserAvatarQueryVariables>;
+export function useCurrentUserAvatarSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CurrentUserAvatarQuery, CurrentUserAvatarQueryVariables>): Apollo.UseSuspenseQueryResult<CurrentUserAvatarQuery | undefined, CurrentUserAvatarQueryVariables>;
+export function useCurrentUserAvatarSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CurrentUserAvatarQuery, CurrentUserAvatarQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CurrentUserAvatarQuery, CurrentUserAvatarQueryVariables>(CurrentUserAvatarDocument, options);
+        }
+export type CurrentUserAvatarQueryHookResult = ReturnType<typeof useCurrentUserAvatarQuery>;
+export type CurrentUserAvatarLazyQueryHookResult = ReturnType<typeof useCurrentUserAvatarLazyQuery>;
+export type CurrentUserAvatarSuspenseQueryHookResult = ReturnType<typeof useCurrentUserAvatarSuspenseQuery>;
+export type CurrentUserAvatarQueryResult = Apollo.QueryResult<CurrentUserAvatarQuery, CurrentUserAvatarQueryVariables>;
+export const UpdateProfileDocument = gql`
+    mutation UpdateProfile($firstName: String!, $lastName: String!) {
+  updateProfile(firstName: $firstName, lastName: $lastName) {
+    ...CurrentUserFields
+  }
+}
+    ${CurrentUserFieldsFragmentDoc}`;
+export type UpdateProfileMutationFn = Apollo.MutationFunction<UpdateProfileMutation, UpdateProfileMutationVariables>;
+
+/**
+ * __useUpdateProfileMutation__
+ *
+ * To run a mutation, you first call `useUpdateProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProfileMutation, { data, loading, error }] = useUpdateProfileMutation({
+ *   variables: {
+ *      firstName: // value for 'firstName'
+ *      lastName: // value for 'lastName'
+ *   },
+ * });
+ */
+export function useUpdateProfileMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfileMutation, UpdateProfileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateProfileMutation, UpdateProfileMutationVariables>(UpdateProfileDocument, options);
+      }
+export type UpdateProfileMutationHookResult = ReturnType<typeof useUpdateProfileMutation>;
+export type UpdateProfileMutationResult = Apollo.MutationResult<UpdateProfileMutation>;
+export type UpdateProfileMutationOptions = Apollo.BaseMutationOptions<UpdateProfileMutation, UpdateProfileMutationVariables>;
+export const UpdateUsernameDocument = gql`
+    mutation UpdateUsername($username: String!) {
+  updateUsername(username: $username) {
+    ...CurrentUserFields
+  }
+}
+    ${CurrentUserFieldsFragmentDoc}`;
+export type UpdateUsernameMutationFn = Apollo.MutationFunction<UpdateUsernameMutation, UpdateUsernameMutationVariables>;
+
+/**
+ * __useUpdateUsernameMutation__
+ *
+ * To run a mutation, you first call `useUpdateUsernameMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateUsernameMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateUsernameMutation, { data, loading, error }] = useUpdateUsernameMutation({
+ *   variables: {
+ *      username: // value for 'username'
+ *   },
+ * });
+ */
+export function useUpdateUsernameMutation(baseOptions?: Apollo.MutationHookOptions<UpdateUsernameMutation, UpdateUsernameMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateUsernameMutation, UpdateUsernameMutationVariables>(UpdateUsernameDocument, options);
+      }
+export type UpdateUsernameMutationHookResult = ReturnType<typeof useUpdateUsernameMutation>;
+export type UpdateUsernameMutationResult = Apollo.MutationResult<UpdateUsernameMutation>;
+export type UpdateUsernameMutationOptions = Apollo.BaseMutationOptions<UpdateUsernameMutation, UpdateUsernameMutationVariables>;
 export const DeleteAccountDocument = gql`
     mutation deleteAccount {
   deleteAccount

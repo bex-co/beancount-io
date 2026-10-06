@@ -8,7 +8,10 @@
       "name": "Mutation",
       "kind": "OBJECT"
     },
-    "subscriptionType": null,
+    "subscriptionType": {
+      "name": "Subscription",
+      "kind": "OBJECT"
+    },
     "types": [
       {
         "kind": "OBJECT",
@@ -21846,6 +21849,18 @@
         "description": null,
         "isOneOf": null,
         "fields": [
+          {
+            "name": "avatarUrl",
+            "description": "Uploaded avatar, falling back to the email's Gravatar",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "email",
             "description": null,

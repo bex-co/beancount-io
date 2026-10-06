@@ -1,6 +1,7 @@
 schema {
   query: Query
   mutation: Mutation
+  subscription: Subscription
 }
 
 type AccountBalance {
@@ -1888,6 +1889,8 @@ type UserProfile {
 }
 
 type UserProfileResponse {
+  """Uploaded avatar, falling back to the email's Gravatar"""
+  avatarUrl: String
   email: String!
   emailReportStatus: ReportStatus
   firstName: String
