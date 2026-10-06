@@ -128,7 +128,7 @@ yarn mcp:conformance <base-url>
 
 `yarn lint` fixes eligible ESLint findings and then runs Knip dead-code detection. Review its diff. `yarn lint:deadcode:fix` also removes unused files, exports, and exported types; review those removals before keeping them. Unit tests live beside features in `__tests__/` — and beside the scripts in `scripts/__tests__/`, which is why Jest's `roots` covers both; integration tests use `*.integration.test.ts`.
 
-`yarn mcp:conformance <base-url> [--token …] [--read-only-token …]` runs ADR 0007's checklist against a deployment and names the check that failed. It only observes, so it is safe to point at production; checks needing a credential skip rather than fail without one.
+`yarn mcp:conformance <base-url> [--token …] [--read-only-token …]` runs ADR 0007's checklist plus the authorization-server metadata hosts gate on (ADR 019 D8) against a deployment and names the check that failed. It only observes, so it is safe to point at production; checks needing a credential skip rather than fail without one.
 
 Code generation:
 

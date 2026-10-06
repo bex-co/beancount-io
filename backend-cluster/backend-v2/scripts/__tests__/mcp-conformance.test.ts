@@ -32,6 +32,11 @@ const [
   checkOptionalUserId,
   checkDiscoveryWorkload,
   checkResultShape,
+  checkPkceS256,
+  checkIssParameter,
+  checkRegistrationEndpoint,
+  checkPublicClientAuth,
+  checkResourceMatches,
 ] = CHECKS;
 
 const ledgerScoped: Identity = {
@@ -233,5 +238,110 @@ describe("MCP conformance checks", () => {
     const result = await checkDiscovery({ baseUrl });
     expect(result.outcome).toBe("fail");
     expect(result.detail).toContain("oauth-protected-resource");
+  });
+});
+
+/**
+ * Checks 11–15 read only discovery documents, so a stub that serves the chain a
+ * host follows — 401 pointer, protected resource, authorization-server
+ * metadata — is the whole surface. Each case breaks exactly one field.
+ */
+describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
+  const GOOD = {
+    code_challenge_methods_supported: ["S256"],
+    authorization_response_iss_parameter_supported: true,
+    registration_endpoint: "REG",
+    token_endpoint_auth_methods_supported: ["client_secret_basic", "none"],
+  };
+  let stub: http.Server;
+  let stubUrl: string;
+  let serverMeta: Record<string, unknown>;
+  let resourceOverride: unknown;
+  let issuerPath: string;
+  let pointer: boolean;
+
+  beforeAll(async () => {
+    stub = http.createServer((req, res) => {
+      const url = req.url ?? "";
+      const json = (body: unknown) => {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify(body));
+      };
+      if (url === "/api-gateway/mcp") {
+        res.writeHead(401, pointer
+          ? { "www-authenticate": `Bearer resource_metadata="${stubUrl}/.well-known/oauth-protected-resource"` }
+          : {});
+        return res.end();
+      }
+      if (url === "/.well-known/oauth-protected-resource") {
+        return json({
+          resource: resourceOverride ?? `${stubUrl}/api-gateway/mcp`,
+          authorization_servers: [`${stubUrl}${issuerPath}`],
+        });
+      }
+      if (url === `/.well-known/oauth-authorization-server${issuerPath}`) {
+        return json(serverMeta);
+      }
+      res.writeHead(404);
+      res.end();
+    });
+    await new Promise<void>((r) => stub.listen(0, "127.0.0.1", r));
+    stubUrl = `http://127.0.0.1:${(stub.address() as { port: number }).port}`;
+  });
+  afterAll(() => new Promise<void>((r) => stub.close(() => r())));
+  beforeEach(() => {
+    serverMeta = { ...GOOD };
+    resourceOverride = undefined;
+    issuerPath = "";
+    pointer = true;
+  });
+
+  const all = [
+    checkPkceS256,
+    checkIssParameter,
+    checkRegistrationEndpoint,
+    checkPublicClientAuth,
+    checkResourceMatches,
+  ];
+
+  it("passes every check against complete metadata", async () => {
+    for (const check of all) {
+      expect((await check({ baseUrl: stubUrl })).outcome).toBe("pass");
+    }
+  });
+
+  it("finds the metadata of a path-prefixed issuer by RFC 8414 path insertion", async () => {
+    issuerPath = "/auth";
+    for (const check of all) {
+      expect((await check({ baseUrl: stubUrl })).outcome).toBe("pass");
+    }
+  });
+
+  it.each([
+    ["11 pkce-s256", () => checkPkceS256, { code_challenge_methods_supported: ["plain"] }, /every OAuth host/],
+    ["12 iss-parameter", () => checkIssParameter, { authorization_response_iss_parameter_supported: false }, /ChatGPT/],
+    ["13 registration-endpoint", () => checkRegistrationEndpoint, { registration_endpoint: undefined }, /Cursor/],
+    ["14 public-client-auth", () => checkPublicClientAuth, { token_endpoint_auth_methods_supported: ["client_secret_basic"] }, /Claude/],
+  ])("%s fails, naming the hosts it locks out, when its field is wrong", async (_id, check, patch, hosts) => {
+    serverMeta = { ...GOOD, ...patch };
+    const result = await check()({ baseUrl: stubUrl });
+    expect(result.outcome).toBe("fail");
+    expect(result.detail).toMatch(hosts);
+  });
+
+  it("15 resource-matches fails when the resource names another URL", async () => {
+    resourceOverride = "https://elsewhere.example/api-gateway/mcp";
+    const result = await checkResourceMatches({ baseUrl: stubUrl });
+    expect(result.outcome).toBe("fail");
+    expect(result.detail).toContain("elsewhere.example");
+  });
+
+  it("skips rather than fails when the endpoint offers no pointer to follow", async () => {
+    pointer = false;
+    for (const check of all) {
+      const result = await check({ baseUrl: stubUrl });
+      expect(result.outcome).toBe("skip");
+      expect(result.detail).toMatch(/check 1/);
+    }
   });
 });

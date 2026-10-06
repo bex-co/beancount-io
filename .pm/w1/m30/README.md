@@ -1,6 +1,6 @@
 # w1 · m30 — Every named MCP host can register and reach a consent page that says who is asking
 
-**Worker:** worker1 **Goal:** Cursor and VS Code Copilot stop failing at registration, the consent page names the requester as the MCP spec requires, and CI and `mcp:conformance` catch the host-gating failures ADR 019 found — the first link in ADR 019's D3 → D4 → D6 chain **Status:** in progress (t001 done)
+**Worker:** worker1 **Goal:** Cursor and VS Code Copilot stop failing at registration, the consent page names the requester as the MCP spec requires, and CI and `mcp:conformance` catch the host-gating failures ADR 019 found — the first link in ADR 019's D3 → D4 → D6 chain **Status:** in progress (t001, t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | D3: registrations that state no application_type are native | 30m | t002 |
 | t004 | D4 backend: the interaction endpoint names who is asking | 45m | t003 |
 | t005 | D4 dashboard: consent shows the redirect host, the self-asserted name, and a loopback warning | 60m | t004 |
-| t006 | D8: conformance checks what hosts gate on | 30m | — |
+| [t006](./done/t006.md) | D8: conformance checks what hosts gate on — **DONE** | 30m | — |
 | t007 | Verify on production after the deploy | 30m | t005, t006 |
 | t008 | Adoption surface | 30m | t007 |
 | t009 | Simplify | 30m | t008 |

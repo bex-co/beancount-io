@@ -4,7 +4,7 @@
  *   yarn mcp:conformance <base-url> [--token <bcio_…>] [--read-only-token <bcio_…>]
  *
  * Answers one question — "is this deployment's MCP endpoint actually
- * connectable?" — and, when it is not, names which of the nine checks failed
+ * connectable?" — and, when it is not, names which check failed
  * rather than leaving an operator to infer it from a curl transcript. The
  * checks exist because each has been observed failing in a real deployment
  * while every unit test passed; see `docs/adrs/ADR007-backend-v2-mcp-surface.md`.
@@ -601,6 +601,148 @@ async function checkOptionalUserId(o: Options): Promise<CheckResult> {
   return v.pass("feature-flags read without userId");
 }
 
+// --- what hosts gate on (ADR 019 D8) ----------------------------------------
+
+/**
+ * The protected-resource document and the authorization-server metadata, found
+ * the way a host finds them: the 401's pointer, then the first authorization
+ * server it names, at its RFC 8414 address (path inserted after
+ * `/.well-known/…` for a path-prefixed issuer), falling back to OIDC discovery.
+ *
+ * Hosts refuse to start a sign-in when a field below is missing, and they do it
+ * before any request reaches the MCP endpoint — so no other check sees it.
+ */
+async function hostMetadata(baseUrl: string): Promise<
+  | { ok: true; resource: Record<string, unknown>; server: Record<string, unknown> }
+  | { ok: false; reason: string }
+> {
+  const { pointer } = await discoverPointer(baseUrl);
+  if (!pointer) return { ok: false, reason: "check 1 produced no pointer to follow" };
+  const res = await probe(pointer);
+  if (!res.ok || res.status !== 200) {
+    return { ok: false, reason: `${pointer} did not resolve (check 2)` };
+  }
+  let resource: Record<string, unknown>;
+  try {
+    resource = JSON.parse(res.body) as Record<string, unknown>;
+  } catch {
+    return { ok: false, reason: `${pointer} is not valid JSON (check 2)` };
+  }
+  const issuer = (resource.authorization_servers as unknown[] | undefined)?.[0];
+  if (typeof issuer !== "string") {
+    return { ok: false, reason: `${pointer} names no authorization_servers` };
+  }
+  const { origin, pathname } = new URL(issuer);
+  const suffix = pathname === "/" ? "" : pathname.replace(/\/+$/, "");
+  const candidates = [
+    `${origin}/.well-known/oauth-authorization-server${suffix}`,
+    `${origin}${suffix}/.well-known/openid-configuration`,
+  ];
+  for (const url of candidates) {
+    const meta = await probe(url);
+    if (!meta.ok || meta.status !== 200) continue;
+    try {
+      return {
+        ok: true,
+        resource,
+        server: JSON.parse(meta.body) as Record<string, unknown>,
+      };
+    } catch {
+      continue;
+    }
+  }
+  return {
+    ok: false,
+    reason: `no authorization-server metadata for ${issuer} at ${candidates.join(" or ")}`,
+  };
+}
+
+/**
+ * One metadata field a host gates on. `hosts` names who stops at the sign-in
+ * screen when it fails, so the operator knows the blast radius from the line.
+ */
+function metadataCheck(
+  id: string,
+  title: string,
+  hosts: string,
+  judge: (
+    m: { resource: Record<string, unknown>; server: Record<string, unknown> },
+    o: Options,
+  ) => string | undefined,
+  passDetail: string,
+) {
+  return async (o: Options): Promise<CheckResult> => {
+    const v = verdict(id, title);
+    const m = await hostMetadata(o.baseUrl);
+    if (!m.ok) return v.skip(m.reason);
+    const problem = judge(m, o);
+    return problem ? v.fail(`${problem} — ${hosts} cannot sign in`) : v.pass(passDetail);
+  };
+}
+
+const listed = (value: unknown, item: string) =>
+  Array.isArray(value) && value.includes(item);
+
+/** 11 — PKCE with S256, which every OAuth host requires. */
+const checkPkceS256 = metadataCheck(
+  "11 pkce-s256",
+  "The authorization server advertises PKCE S256",
+  "every OAuth host",
+  ({ server }) =>
+    listed(server.code_challenge_methods_supported, "S256")
+      ? undefined
+      : `code_challenge_methods_supported is ${JSON.stringify(server.code_challenge_methods_supported ?? null)}, not including S256`,
+  "S256 is advertised",
+);
+
+/** 12 — RFC 9207 `iss`, on which ChatGPT's stable redirect URI depends. */
+const checkIssParameter = metadataCheck(
+  "12 iss-parameter",
+  "The authorization server returns `iss` in authorization responses (RFC 9207)",
+  "ChatGPT (its stable redirect URI)",
+  ({ server }) =>
+    server.authorization_response_iss_parameter_supported === true
+      ? undefined
+      : "authorization_response_iss_parameter_supported is not true",
+  "iss is returned with authorization responses",
+);
+
+/** 13 — a registration endpoint, the only way DCR hosts get a client. */
+const checkRegistrationEndpoint = metadataCheck(
+  "13 registration-endpoint",
+  "The authorization server offers dynamic client registration",
+  "Cursor, VS Code, and every other DCR host",
+  ({ server }) =>
+    typeof server.registration_endpoint === "string"
+      ? undefined
+      : "no registration_endpoint is advertised",
+  "registration_endpoint is advertised",
+);
+
+/** 14 — `none` at the token endpoint, for public (native and CIMD) clients. */
+const checkPublicClientAuth = metadataCheck(
+  "14 public-client-auth",
+  "The token endpoint accepts public clients (`none`)",
+  "Claude (its CIMD condition) and every native host",
+  ({ server }) =>
+    listed(server.token_endpoint_auth_methods_supported, "none")
+      ? undefined
+      : `token_endpoint_auth_methods_supported is ${JSON.stringify(server.token_endpoint_auth_methods_supported ?? null)}, without none`,
+  "none is accepted",
+);
+
+/** 15 — the protected resource names the URL a host actually connects to. */
+const checkResourceMatches = metadataCheck(
+  "15 resource-matches",
+  "The protected-resource `resource` is the probed MCP URL",
+  "every host (tokens are minted for the wrong audience)",
+  ({ resource }, o) =>
+    resource.resource === `${o.baseUrl}${MCP_PATH}`
+      ? undefined
+      : `resource is ${JSON.stringify(resource.resource ?? null)}, expected "${o.baseUrl}${MCP_PATH}"`,
+  "resource matches the probed URL",
+);
+
 // --- runner ---------------------------------------------------------------
 
 function parseArgs(argv: string[]): Options {
@@ -643,6 +785,11 @@ export const CHECKS = [
   checkOptionalUserId,
   checkDiscoveryWorkload,
   checkResultShape,
+  checkPkceS256,
+  checkIssParameter,
+  checkRegistrationEndpoint,
+  checkPublicClientAuth,
+  checkResourceMatches,
 ] as const;
 
 export type { CheckResult, Options, Outcome };
