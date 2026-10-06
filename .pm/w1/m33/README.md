@@ -1,6 +1,6 @@
 # w1 · m33 — Tools-only hosts can finish the bank flow and key management
 
-**Worker:** worker1 **Goal:** ChatGPT and GitHub Copilot's cloud agent — hosts that consume tools, not resources — can complete every write whose required id is today listed only by a resource, and every tool declares the credential it needs (ADR 019 D7 + D2) **Status:** in progress (t001–t008 done)
+**Worker:** worker1 **Goal:** ChatGPT and GitHub Copilot's cloud agent — hosts that consume tools, not resources — can complete every write whose required id is today listed only by a resource, and every tool declares the credential it needs (ADR 019 D7 + D2) **Status:** in progress (t001–t009 done)
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | [t006](./done/t006.md) | D2: securitySchemes on every MCP tool descriptor — **DONE** | 45m | — |
 | [t007](./done/t007.md) | Adoption surface — **DONE** | 30m | t005, t006 |
 | [t008](./done/t008.md) | Simplify — **DONE** | 30m | t007 |
-| t009 | Test coverage | 45m | t007, t008 |
+| [t009](./done/t009.md) | Test coverage — **DONE** | 45m | t007, t008 |
 | t010 | Closeout | 15m | t009 |
 
 ## Definition of done

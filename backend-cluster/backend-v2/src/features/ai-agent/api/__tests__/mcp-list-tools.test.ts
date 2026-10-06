@@ -7,6 +7,12 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { RESOURCE_SCHEME } from "../mcp-resources";
+import {
+  authorizationActionForOp,
+  classifyOp,
+  mcpOpId,
+  mcpResourceOpId,
+} from "@/server/api/op-class";
 import type { AppConfig } from "@/config/config";
 import type { McpRequestContext } from "../mcp-context";
 
@@ -187,5 +193,58 @@ describe("listPublicKeys", () => {
     });
     expect(result.isError).toBe(true);
     await close();
+  });
+});
+
+/**
+ * Each tool is authorized the way its resource twin is. Bank and key reads are
+ * PDP-routed: the transport gate defers to the service's own policy check. A
+ * single-row tool therefore carries exactly its resource's PDP action. The
+ * two-row `listBankConnections` has no single action at the transport, so the
+ * legacy gate holds it to its class (`admin`) before either service runs its
+ * own check — never weaker than the resources it reads.
+ */
+describe("list tools are authorized like their resource twins", () => {
+  it.each([
+    ["listStagedBankTransactions", "bankUnsyncedTransactions"],
+    ["listPublicKeys", "publicKeys"],
+  ])(
+    "%s defers to the same PDP action as the %s resource",
+    (tool, resource) => {
+      const action = authorizationActionForOp(mcpOpId(tool));
+      expect(action).toBeDefined();
+      expect(action).toBe(authorizationActionForOp(mcpResourceOpId(resource)));
+    },
+  );
+
+  it("holds listBankConnections to admin, the class of both resources it reads", async () => {
+    expect(
+      authorizationActionForOp(mcpOpId("listBankConnections")),
+    ).toBeUndefined();
+    for (const resource of ["bankList", "bankAccounts"]) {
+      expect(classifyOp(mcpResourceOpId(resource)).class).toBe("admin");
+      expect(authorizationActionForOp(mcpResourceOpId(resource))).toBeDefined();
+    }
+
+    const services = fakeServices();
+    const server = assembleMcpRegistry(
+      {
+        ...ctx(services),
+        identity: { ...identity, scopes: new Set(["ledger.read"]) },
+      } as unknown as McpRequestContext,
+      { api: { scopeEnforcement: "enforce" } } as AppConfig,
+    );
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: "test", version: "1.0.0" });
+    await Promise.all([client.connect(a), server.connect(b)]);
+    const result = await client.callTool({
+      name: "listBankConnections",
+      arguments: {},
+    });
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.structuredContent)).toContain("ledger.admin");
+    expect(services.plaidItem.getItems).not.toHaveBeenCalled();
+    await client.close();
+    await server.close();
   });
 });
