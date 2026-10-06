@@ -260,6 +260,17 @@ Nothing has landed. D3, D4, and D6 land in that order, each depending on the one
 | D8 | Host fixtures in `oidc-route.test.ts`; metadata checks in `scripts/mcp-conformance.ts` |
 | D9 | Edge-rule review for `/.well-known/*`, `/api-gateway/oauth/*`, and `/api-gateway/mcp` |
 | Docs | Per-host setup notes in `docs/mcp.md` under "Connect a client", once each host has a fixture |
+
+**Progress (2026-10-06).** On `main`, not yet deployed to production unless stated:
+
+| Decision | State |
+| --- | --- |
+| D3 | Landed (`e65236f0`): unstated `application_type` is native; Discourse states `web`. |
+| D4 | Landed: interaction details name the requester (`1cc1e61a`); the consent page shows them and blocks approval until it can (`def491ca`). |
+| D5 | Landed: 45-day idle window and 46-day grant (`127589ed`), grant slides on refresh up to one year after consent (`d5d46d8c`), public clients always rotate (`59810c3e`); README and `docs/mcp.md` updated. |
+| D6 | Landed (`ea0d8d23`), with CIMD fixtures for Claude Code, VS Code, and a ChatGPT shape, and refusal cases. |
+| D8 | Host fixtures in `oidc-route.test.ts`; `yarn mcp:conformance` checks 11–16. Checks 11–15 pass against production; 16 (CIMD) waits on the deploy. |
+| D7, D9 | Not started (`.pm/w1/m33`, note `w1/170`). |
 | Listing | `backend-cluster/backend-v2/server.json`, the `/.well-known/mcp-registry-auth` route behind `MCP_REGISTRY_AUTH_PROOF`, and `.github/workflows/publish-mcp-registry.yml` — see [Amendments](#amendments) (2026-10-02); tracked as `.pm/w2/m36` |
 
 ## Open Questions
