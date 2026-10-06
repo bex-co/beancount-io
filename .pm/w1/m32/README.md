@@ -1,6 +1,6 @@
 # w1 · m32 — A connector stays connected while it is used
 
-**Worker:** worker1 **Goal:** Third-party MCP connections stop expiring on day 14 regardless of use: they last while used at least every 45 days, are re-approved yearly, and public-client refresh tokens always rotate (ADR 019 D5) **Status:** in progress (t001–t007 done)
+**Worker:** worker1 **Goal:** Third-party MCP connections stop expiring on day 14 regardless of use: they last while used at least every 45 days, are re-approved yearly, and public-client refresh tokens always rotate (ADR 019 D5) **Status:** in progress (t001–t008 done)
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | [t005](./done/t005.md) | Lifetime table and ADR status — **DONE** | 15m | t004 |
 | [t006](./done/t006.md) | Adoption surface — **DONE** | 30m | t005 |
 | [t007](./done/t007.md) | Simplify — **DONE** | 30m | t006 |
-| t008 | Test coverage | 45m | t006, t007 |
+| [t008](./done/t008.md) | Test coverage — **DONE** | 45m | t006, t007 |
 | t009 | Closeout | 15m | t008 |
 
 ## Definition of done

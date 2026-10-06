@@ -1247,8 +1247,26 @@ describe("oidc-route: unified MCP + identity provider", () => {
       expect(Object.values(statuses).every((s) => s === 200)).toBe(true);
     });
 
-    it("ends a connection left idle for more than 45 days", async () => {
-      expect(await useOn([47])).toEqual({ 47: 400 });
+    it("ends a connection left idle for more than 45 days with invalid_grant", async () => {
+      const start = clock;
+      const { clientId, refreshToken } = await connectThirdParty();
+      advanceTo(47, start);
+      const res = await refresh(clientId, refreshToken);
+      expect(res.status).toBe(400);
+      expect(await res.json()).toMatchObject({ error: "invalid_grant" });
+    });
+
+    it("rotates the refresh token on every refresh, retiring the old one", async () => {
+      const start = clock;
+      const { clientId, refreshToken: first } = await connectThirdParty();
+      advanceTo(13, start);
+      const res = await refresh(clientId, first);
+      const second = ((await res.json()) as { refresh_token: string })
+        .refresh_token;
+      expect(second).toEqual(expect.any(String));
+      expect(second).not.toBe(first);
+      // Reusing a rotated-out token is refused.
+      expect((await refresh(clientId, first)).status).toBe(400);
     });
 
     it("ends a connection one year after authorization even when used daily", async () => {
