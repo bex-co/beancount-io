@@ -37,6 +37,7 @@ const [
   checkRegistrationEndpoint,
   checkPublicClientAuth,
   checkResourceMatches,
+  checkCimd,
 ] = CHECKS;
 
 const ledgerScoped: Identity = {
@@ -252,6 +253,7 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
     authorization_response_iss_parameter_supported: true,
     registration_endpoint: "REG",
     token_endpoint_auth_methods_supported: ["client_secret_basic", "none"],
+    client_id_metadata_document_supported: true,
   };
   let stub: http.Server;
   let stubUrl: string;
@@ -302,6 +304,7 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
     checkRegistrationEndpoint,
     checkPublicClientAuth,
     checkResourceMatches,
+    checkCimd,
   ];
 
   it("passes every check against complete metadata", async () => {
@@ -327,6 +330,13 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
     const result = await check()({ baseUrl: stubUrl });
     expect(result.outcome).toBe("fail");
     expect(result.detail).toMatch(hosts);
+  });
+
+  it("16 cimd fails when client ID metadata documents are not advertised", async () => {
+    serverMeta = { ...GOOD, client_id_metadata_document_supported: undefined };
+    const result = await checkCimd({ baseUrl: stubUrl });
+    expect(result.outcome).toBe("fail");
+    expect(result.detail).toMatch(/register.*per connection/);
   });
 
   it("15 resource-matches fails when the resource names another URL", async () => {

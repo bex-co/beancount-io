@@ -805,9 +805,11 @@ and canonical path. It also reads the authorization-server metadata the way a
 host does and checks what hosts refuse to start a sign-in without: PKCE `S256`,
 `authorization_response_iss_parameter_supported` (ChatGPT's stable redirect), a
 registration endpoint (DCR hosts such as Cursor), `none` at the token endpoint
-(public clients, and Claude's CIMD condition), and a protected-resource
-`resource` equal to the probed URL ([ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md)
-D8). Checks requiring absent credentials are **skipped**, not passed. It
+(public clients, and Claude's CIMD condition), a protected-resource
+`resource` equal to the probed URL, and `client_id_metadata_document_supported`
+(Claude, ChatGPT, and VS Code otherwise register a client per connection)
+([ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md)
+D6, D8). Checks requiring absent credentials are **skipped**, not passed. It
 registers no client, does not complete browser OAuth, and does not verify all
 resource reads.
 

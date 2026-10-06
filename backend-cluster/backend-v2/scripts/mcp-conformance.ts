@@ -658,13 +658,13 @@ async function hostMetadata(baseUrl: string): Promise<
 }
 
 /**
- * One metadata field a host gates on. `hosts` names who stops at the sign-in
- * screen when it fails, so the operator knows the blast radius from the line.
+ * One metadata field a host gates on. `impact` says who is affected and how
+ * when it fails, so the operator knows the blast radius from the line.
  */
 function metadataCheck(
   id: string,
   title: string,
-  hosts: string,
+  impact: string,
   judge: (
     m: { resource: Record<string, unknown>; server: Record<string, unknown> },
     o: Options,
@@ -676,7 +676,7 @@ function metadataCheck(
     const m = await hostMetadata(o.baseUrl);
     if (!m.ok) return v.skip(m.reason);
     const problem = judge(m, o);
-    return problem ? v.fail(`${problem} — ${hosts} cannot sign in`) : v.pass(passDetail);
+    return problem ? v.fail(`${problem} — ${impact}`) : v.pass(passDetail);
   };
 }
 
@@ -687,7 +687,7 @@ const listed = (value: unknown, item: string) =>
 const checkPkceS256 = metadataCheck(
   "11 pkce-s256",
   "The authorization server advertises PKCE S256",
-  "every OAuth host",
+  "every OAuth host refuses to start a sign-in",
   ({ server }) =>
     listed(server.code_challenge_methods_supported, "S256")
       ? undefined
@@ -699,7 +699,7 @@ const checkPkceS256 = metadataCheck(
 const checkIssParameter = metadataCheck(
   "12 iss-parameter",
   "The authorization server returns `iss` in authorization responses (RFC 9207)",
-  "ChatGPT (its stable redirect URI)",
+  "ChatGPT cannot use its stable redirect URI",
   ({ server }) =>
     server.authorization_response_iss_parameter_supported === true
       ? undefined
@@ -711,7 +711,7 @@ const checkIssParameter = metadataCheck(
 const checkRegistrationEndpoint = metadataCheck(
   "13 registration-endpoint",
   "The authorization server offers dynamic client registration",
-  "Cursor, VS Code, and every other DCR host",
+  "Cursor, VS Code, and every other DCR host cannot get a client",
   ({ server }) =>
     typeof server.registration_endpoint === "string"
       ? undefined
@@ -723,7 +723,7 @@ const checkRegistrationEndpoint = metadataCheck(
 const checkPublicClientAuth = metadataCheck(
   "14 public-client-auth",
   "The token endpoint accepts public clients (`none`)",
-  "Claude (its CIMD condition) and every native host",
+  "Claude (its CIMD condition) and every native host cannot sign in",
   ({ server }) =>
     listed(server.token_endpoint_auth_methods_supported, "none")
       ? undefined
@@ -735,12 +735,24 @@ const checkPublicClientAuth = metadataCheck(
 const checkResourceMatches = metadataCheck(
   "15 resource-matches",
   "The protected-resource `resource` is the probed MCP URL",
-  "every host (tokens are minted for the wrong audience)",
+  "every host gets tokens minted for the wrong audience",
   ({ resource }, o) =>
     resource.resource === `${o.baseUrl}${MCP_PATH}`
       ? undefined
       : `resource is ${JSON.stringify(resource.resource ?? null)}, expected "${o.baseUrl}${MCP_PATH}"`,
   "resource matches the probed URL",
+);
+
+/** 16 — CIMD, which Claude, ChatGPT, and VS Code choose when it is advertised. */
+const checkCimd = metadataCheck(
+  "16 cimd",
+  "The authorization server accepts client ID metadata documents",
+  "Claude, ChatGPT, and VS Code fall back to registering a client per connection",
+  ({ server }) =>
+    server.client_id_metadata_document_supported === true
+      ? undefined
+      : "client_id_metadata_document_supported is not true",
+  "client ID metadata documents are accepted",
 );
 
 // --- runner ---------------------------------------------------------------
@@ -790,6 +802,7 @@ export const CHECKS = [
   checkRegistrationEndpoint,
   checkPublicClientAuth,
   checkResourceMatches,
+  checkCimd,
 ] as const;
 
 export type { CheckResult, Options, Outcome };
