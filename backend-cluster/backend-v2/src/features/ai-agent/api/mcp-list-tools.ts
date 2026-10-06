@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { bankAccountQuery } from "@/features/ledger/api/rest/v1/banks-handler";
+import { publicKeyListQuery } from "@/features/ledger/api/rest/v1/public-keys-handler";
+import type { McpRequestContext } from "./mcp-context";
 import { logger } from "@/shared/logger";
 import type { ToolContext } from "../tools/types";
 import { toolOutputSchema } from "../tools/types";
@@ -77,6 +79,32 @@ export async function executeListStagedBankTransactions(
         identity,
         listStagedBankTransactionsInput.parse(input).accountId,
         ledgerId,
+      ),
+  });
+}
+
+// --- listPublicKeys -----------------------------------------------------------
+
+export const listPublicKeysDescription =
+  "List your SSH public keys (keyId for managePublicKeys delete); optional page and limit.";
+
+export const listPublicKeysInput = publicKeyListQuery;
+
+export const listPublicKeysOutput = toolOutputSchema(z.array(z.unknown()));
+
+export async function executeListPublicKeys(
+  ctx: McpRequestContext,
+  input: z.infer<typeof listPublicKeysInput>,
+) {
+  return runToolSafely({
+    logger: toolLogger,
+    message: "Listing SSH public keys failed",
+    context: { tool: "listPublicKeys" },
+    // The `publicKeys` resource's call; no ledger target.
+    execute: () =>
+      ctx.publicKeyService.listPublicKeys(
+        ctx.identity,
+        listPublicKeysInput.parse(input),
       ),
   });
 }

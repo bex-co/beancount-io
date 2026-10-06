@@ -230,7 +230,8 @@ describe("op-class coverage", () => {
     // manageBankConnection and manageBankImport require. The 29th,
     // listStagedBankTransactions, does the same for the staged transaction
     // ids `manageBankImport` submit and discard take: `sync` returns counts.
-    expect(tools).toHaveLength(29);
+    // The 30th, listPublicKeys, lists the keyId managePublicKeys delete needs.
+    expect(tools).toHaveLength(30);
 
     // Resources are counted apart on purpose. They do not compete for tool
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can

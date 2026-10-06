@@ -85,9 +85,11 @@ describe("MCP tool list", () => {
     // Its description names only the ids and the tools that take them.
     // 67 KB with `listStagedBankTransactions` (1.1 KB), the staged ids
     // `manageBankImport` submit/discard need and `sync` never returns.
+    // 68 KB with `listPublicKeys` (0.9 KB), the keyId `managePublicKeys`
+    // delete needs.
     const { tools } = await listTools();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(67 * 1024);
+    expect(bytes).toBeLessThan(68 * 1024);
   });
 
   it("publishes all four annotations on every tool", async () => {

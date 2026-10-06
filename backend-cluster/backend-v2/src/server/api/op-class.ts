@@ -642,9 +642,8 @@ const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
     class: "admin",
     authorizationAction: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST,
     rest: "GET /api-gateway/v1/public-keys",
+    mcp: "listPublicKeys",
     mcpResource: "publicKeys",
-    mcpExempt:
-      "Exposed through an administrative MCP resource for the authenticated user. Public-key inspection does not need a model-selected action tool.",
   },
   {
     verb: "Query.getPublicKey",
