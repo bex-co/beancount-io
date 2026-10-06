@@ -179,7 +179,15 @@ export function oauthLifetimes(): {
   };
 }
 
-/** Whether a refresh exchange should mint a replacement refresh token. */
+/**
+ * Whether a refresh exchange should mint a replacement refresh token.
+ *
+ * Public clients (no client authentication — the native app, and the DCR and
+ * CIMD hosts that register as public) always rotate unless the token is
+ * sender-constrained: the MCP spec requires it, and oidc-provider's default
+ * stops rotating once a chain is a year old (ADR 019 D5). Only confidential
+ * clients fall back to the provider's age and percentage rules.
+ */
 export function shouldRotateRefreshToken(
   client: { clientId?: string; clientAuthMethod?: string },
   refreshToken: {
@@ -190,16 +198,16 @@ export function shouldRotateRefreshToken(
 ): boolean {
   if (isMobileOAuthClient(client.clientId)) return true;
   if (
-    refreshToken.totalLifetime() >=
-    OAUTH_CONFIG.refreshRotation.defaultLifetimeCutoffSeconds
-  ) {
-    return false;
-  }
-  if (
     client.clientAuthMethod === "none" &&
     !refreshToken.isSenderConstrained()
   ) {
     return true;
+  }
+  if (
+    refreshToken.totalLifetime() >=
+    OAUTH_CONFIG.refreshRotation.defaultLifetimeCutoffSeconds
+  ) {
+    return false;
   }
   return (
     refreshToken.ttlPercentagePassed() >=

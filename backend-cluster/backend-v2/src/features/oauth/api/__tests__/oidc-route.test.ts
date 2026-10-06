@@ -255,14 +255,30 @@ describe("OAuth refresh-token rotation", () => {
     ).toBe(true);
   });
 
-  it("leaves other clients on oidc-provider's default policy", () => {
+  it("rotates a public client's token at any chain age (ADR 019 D5)", () => {
+    // The MCP spec requires rotation for public clients; oidc-provider's
+    // default stops once a chain is a year old.
     const publicClient = { clientId: "mcp-public", clientAuthMethod: "none" };
+    expect(shouldRotateRefreshToken(publicClient, fresh)).toBe(true);
+    expect(shouldRotateRefreshToken(publicClient, ancient)).toBe(true);
+  });
+
+  it("does not rotate a sender-constrained public token", () => {
+    // Binding the token to a key is the accepted alternative to rotation.
+    const publicClient = { clientId: "mcp-public", clientAuthMethod: "none" };
+    expect(
+      shouldRotateRefreshToken(publicClient, {
+        ...fresh,
+        isSenderConstrained: () => true,
+      }),
+    ).toBe(false);
+  });
+
+  it("leaves confidential clients on oidc-provider's default policy", () => {
     const confidential = {
       clientId: "mcp-confidential",
       clientAuthMethod: "client_secret_basic",
     };
-    expect(shouldRotateRefreshToken(publicClient, fresh)).toBe(true);
-    expect(shouldRotateRefreshToken(publicClient, ancient)).toBe(false);
     expect(shouldRotateRefreshToken(confidential, fresh)).toBe(false);
     expect(
       shouldRotateRefreshToken(confidential, {
@@ -270,6 +286,12 @@ describe("OAuth refresh-token rotation", () => {
         ttlPercentagePassed: () => 70,
       }),
     ).toBe(true);
+    expect(
+      shouldRotateRefreshToken(confidential, {
+        ...ancient,
+        ttlPercentagePassed: () => 70,
+      }),
+    ).toBe(false);
   });
 });
 
