@@ -201,7 +201,7 @@ The hosted service is also listed on the official
 `io.beancount/beancount`, so clients that read the registry add it from there
 and sign in with OAuth ([details](./backend-cluster/backend-v2/docs/mcp.md#from-the-mcp-registry)).
 
-Twenty-six tools — BQL queries, file listing, reads, edits, entry and receipt
+Thirty tools — BQL queries, file listing, reads, edits, entry and receipt
 insertion, appending directives as plain Beancount text, statement parsing,
 pull requests, collaborators, API-key management, and bank import — plus
 sixty-four URI-addressed **resources** an agent fetches without spending a tool

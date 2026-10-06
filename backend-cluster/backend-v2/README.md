@@ -553,7 +553,7 @@ every failure carries `{code, message, hint}` with `isError` set, so an agent
 branches on a code rather than on prose.
 
 The [Beancount.io MCP guide](./docs/mcp.md) explains setup, OAuth and API-key
-permissions, how requests reach the ledger, all 26 tools and 64 resource
+permissions, how requests reach the ledger, all 30 tools and 64 resource
 templates, the four accounting prompts and how Claude Code and Codex use them,
 the result envelope and its failure codes, writing directives as
 Beancount text, file-edit previews, bank imports, protocol examples, and

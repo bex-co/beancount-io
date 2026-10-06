@@ -207,25 +207,38 @@ This is compatible with the optional GET stream in the
 Call `tools/list` for the deployed input and output schemas. Arguments below are
 the principal inputs; inspect the schema before constructing a call.
 
-| Tool                    | Inputs and behavior                                                                                                                                                       | Capability |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `runBqlQuery`           | `{ "query": "BALANCES" }`; returns formatted query output as a string.                                                                                                    | Read       |
-| `runBqlQueryStructured` | `{ "query": "BALANCES" }`; returns typed column metadata and rows, or a structured text result, matching REST JSON and GraphQL `queryShell`.                              | Read       |
-| `listLedgers`           | Optional `page`, `limit` (at most 100); omit both for every ledger. A pinned credential returns its one ledger. Start here, then `getLedgerContext`.                      | Read       |
-| `checkLedger`           | `{}`; bean-check errors with file and line, entry counts, and the latest commit, in one call. Call after any write.                                                       | Read       |
-| `getLedgerContext`      | Optional `payeeLimit`; attributes, open accounts, currencies, payees, years, and source files with counts.                                                                | Read       |
-| `getEntryContext`       | `entryHash`; the source context around one entry — read before editing it.                                                                                                | Read       |
-| `listLedgerFiles`       | Optional `dir_path`; lists one directory level, directories first.                                                                                                        | Read       |
-| `readLedgerFiles`       | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                                                        | Read       |
-| `appendLedgerText`      | `text`, optional `path`, `dry_run`, `allowInvalid`; appends Beancount directive text, routed by type and date and inserted in date order.                                 | Write      |
-| `refreshManagedPrices`  | Optional `ledger`; re-fetches every managed price include (`include "https://beancount.io/prices/BTC-USD"`) now and returns each source's status. Never edits the ledger. | Write      |
-| `editLedgerFiles`       | `description`, `files`, optional `dry_run`; batches create/update/replace/delete operations into one commit.                                                              | Write      |
-| `manageApiKeys`         | `operation: list / create / revoke`, operation-specific arguments. `create` returns plaintext once; requires OAuth on MCP and a paid plan.                                | Admin      |
-| `manageBankImport`      | `operation: sync / submit / discard`, operation-specific arguments, optional `dry_run`.                                                                                   | Write      |
-| `manageBankConnection`  | `operation: reconcile / map_account / set_currency / refresh / unlink`, operation-specific arguments.                                                                     | Admin      |
+| Tool                         | Inputs and behavior                                                                                                                                                       | Capability |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `runBqlQuery`                | `{ "query": "BALANCES" }`; returns formatted query output as a string.                                                                                                    | Read       |
+| `runBqlQueryStructured`      | `{ "query": "BALANCES" }`; returns typed column metadata and rows, or a structured text result, matching REST JSON and GraphQL `queryShell`.                              | Read       |
+| `listLedgers`                | Optional `page`, `limit` (at most 100); omit both for every ledger. A pinned credential returns its one ledger. Start here, then `getLedgerContext`.                      | Read       |
+| `checkLedger`                | `{}`; bean-check errors with file and line, entry counts, and the latest commit, in one call. Call after any write.                                                       | Read       |
+| `getLedgerContext`           | Optional `payeeLimit`; attributes, open accounts, currencies, payees, years, and source files with counts.                                                                | Read       |
+| `getEntryContext`            | `entryHash`; the source context around one entry — read before editing it.                                                                                                | Read       |
+| `listLedgerFiles`            | Optional `dir_path`; lists one directory level, directories first.                                                                                                        | Read       |
+| `readLedgerFiles`            | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                                                        | Read       |
+| `appendLedgerText`           | `text`, optional `path`, `dry_run`, `allowInvalid`; appends Beancount directive text, routed by type and date and inserted in date order.                                 | Write      |
+| `refreshManagedPrices`       | Optional `ledger`; re-fetches every managed price include (`include "https://beancount.io/prices/BTC-USD"`) now and returns each source's status. Never edits the ledger. | Write      |
+| `editLedgerFiles`            | `description`, `files`, optional `dry_run`; batches create/update/replace/delete operations into one commit.                                                              | Write      |
+| `manageApiKeys`              | `operation: list / create / revoke`, operation-specific arguments. `create` returns plaintext once; requires OAuth on MCP and a paid plan.                                | Admin      |
+| `manageBankImport`           | `operation: sync / submit / discard`, operation-specific arguments, optional `dry_run`.                                                                                   | Write      |
+| `manageBankConnection`       | `operation: reconcile / map_account / set_currency / refresh / unlink`, operation-specific arguments.                                                                     | Admin      |
+| `listBankConnections`        | `{}`; linked bank connections (`item_id`) and their accounts (`account_id`, mapping) — the `banks` and `bank-accounts` resources as a tool.                               | Admin      |
+| `listStagedBankTransactions` | Optional `accountId`; transactions staged for import, with the ids `manageBankImport` submit/discard take — the `bank-transactions/unsynced` resource as a tool.          | Read       |
+| `listPublicKeys`             | Optional `page`, `limit`; your SSH public keys with the `keyId` `managePublicKeys` delete takes — the `account/public-keys` resource as a tool.                           | Admin      |
 
 The implementation is listed in
 [`mcp-tools.ts`](../src/features/ai-agent/api/mcp-tools.ts).
+
+The three `list…` tools exist for hosts that call tools but never read
+resources, such as ChatGPT and GitHub Copilot's cloud agent: every id a tool
+takes is also returned by some tool
+([ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D7).
+Each `tools/list` entry also declares `securitySchemes` — OAuth 2 with the
+scope its most privileged operation needs (`ledger.read`, `ledger.write`, or
+`ledger.admin`) — top-level and mirrored in `_meta`, as OpenAI's Apps SDK
+reads it to decide when to link an account (D2). The declarations are derived
+from the authorization table, never written by hand.
 MCP key creation advertises camelCase `ledgerScope` and ISO 8601 `expiresAt`
 (`format: date-time`). The snake_case spellings stay accepted on input for one
 release; when both spellings arrive, the documented one wins.
@@ -324,12 +337,13 @@ The connection/account metadata reads below require `ledger.admin`. A
 mappings are already known. Both still require the current bank relationships.
 After linking:
 
-1. Read the `banks` and `bank-accounts` resources to find connection IDs and
-   ledger-account mappings.
+1. Read the `banks` and `bank-accounts` resources, or call
+   `listBankConnections`, to find connection IDs and ledger-account mappings.
 2. Call `manageBankImport` with `operation: "sync"` and `item_id` to pull bank
    transactions into staging.
-3. Read `bank-transactions/unsynced` (optionally `?accountId=...` to select one
-   bank account). Select the transactions and accounts to
+3. Read `bank-transactions/unsynced` or call `listStagedBankTransactions`
+   (optionally with `accountId` to select one bank account). Select the
+   transactions and accounts to
    book; the suggestion resources can help categorize them.
 4. Call `manageBankImport` with `operation: "submit"` and
    `transactions: [{ transaction_id, target_account, source_account? }]`.
@@ -434,7 +448,8 @@ These account operations use the authenticated caller and require administrative
 account authority. They accept no user or ledger selector. A ledger pin does
 not prevent the caller from managing their own SSH public keys.
 
-- Read `beancount://account/public-keys{?page,limit}` to list keys.
+- Read `beancount://account/public-keys{?page,limit}`, or call `listPublicKeys`,
+  to list keys.
 - Read `beancount://account/public-key{?keyId}` to inspect a key by ID.
 - Call `managePublicKeys` with `operation: "create"`, `key`, and `title` to add
   an SSH public key. Optional `readOnly` defaults to `false`.
