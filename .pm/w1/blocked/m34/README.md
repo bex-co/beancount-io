@@ -1,6 +1,6 @@
 # w1 · m34 — Drive every named host through a real sign-in on the hosted endpoint
 
-**Worker:** worker1 **Goal:** Dated, first-hand proof that each host ADR 019 names completes a real browser sign-in, a read, and a dry-run write against `https://beancount.io/api-gateway/mcp` — the evidence a curated directory submission needs **Status:** todo
+**Worker:** worker1 **Goal:** Dated, first-hand proof that each host ADR 019 names completes a real browser sign-in, a read, and a dry-run write against `https://beancount.io/api-gateway/mcp` — the evidence a curated directory submission needs **Status:** blocked — needs the deploy and the user's host accounts — see [Blocked](#blocked)
 
 ## Tasks (in order)
 
@@ -24,7 +24,16 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm` for w1, 2026-10-06 — [ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D3–D9; code and production re-checked the same day: none of D3–D8 has landed, ADR status is Proposed, production discovery lacks `client_id_metadata_document_supported`.
+- **Source:** `/pm-brainstorm` for w1, 2026-10-06 — [ADR 019](../../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D3–D9; code and production re-checked the same day: none of D3–D8 has landed, ADR status is Proposed, production discovery lacks `client_id_metadata_document_supported`.
 - **Goal linkage:** **A3 — Community & distribution**: ADR 019 notes no host was driven through a full browser sign-in; a directory reviewer will do exactly that, so this is the last gate before submitting. Secondary **A1**.
 - **Expected outcome:** Users of each named host have a documented, verified connection path; the project can submit to Claude's and ChatGPT's directories with evidence; signals: per-host MCP sessions.
 - **Why now:** Runs after w1/m30, w1/m31, and w1/m33 are on production. Needs the user for browser consent and host accounts, and follows `.pm/DO_NOT_DO.md` (hosted endpoint, QA account, synthetic ledgers — no second stack). Adoption surface is included: per-host docs change.
+
+## Blocked
+
+**Blocked 2026-10-06** — nothing in this milestone can run yet:
+
+1. **Production does not carry the work it verifies.** w1/m30 (D3, D4), w1/m31 (D6), and w1/m33 (D7, D2) are on `main` (through `5cb8f83e`) but not deployed: on 2026-10-06 `https://beancount.io/oauth/consent/requester` answered the site's HTML 404 and discovery still lacked `client_id_metadata_document_supported`.
+2. **Every task is a real browser sign-in** with the dedicated QA account: consent in a browser, and host accounts (claude.ai, Claude Code, ChatGPT with developer mode, Cursor, VS Code with Copilot) that belong to the user.
+
+**Unblock:** the operator deploys backend-v2 and dashboard from `main` at or after `5cb8f83e` (`yarn mcp:conformance https://beancount.io` passes checks 11–16), and the user is available to complete the browser consents with those accounts — or supplies a way to drive them. w1/m30 t007 and w1/m31 t004 clear with the same deploy. **Who can clear it:** the deployment operator and account holder (the user).
