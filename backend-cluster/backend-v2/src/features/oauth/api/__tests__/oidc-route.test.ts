@@ -53,6 +53,18 @@ const PORT = 47592; // fixed — issuer must be known before the Provider is con
 const DAY_SECONDS = 24 * 60 * 60;
 const ISSUER = `http://127.0.0.1:${PORT}`;
 const DISCOURSE_CLIENT_SECRET = "test-client-secret-value";
+// The URIs these hosts register in one DCR request (ADR 019 host table).
+const VSCODE_REDIRECTS = [
+  "https://insiders.vscode.dev/redirect",
+  "https://vscode.dev/redirect",
+  "http://127.0.0.1/",
+  "http://127.0.0.1:33418/",
+];
+const CURSOR_REDIRECTS = [
+  "http://localhost:8787/callback",
+  "cursor://anysphere.cursor-mcp/oauth/callback",
+  "https://www.cursor.com/agents/mcp/oauth/callback",
+];
 const TEST_TOKEN = "test-bearer-token";
 // A token-shaped credential: scoped, ledger-pinned, and NOT capability-exempt —
 // the shape an API key or a third-party OAuth grant resolves to. It authenticates
@@ -1188,6 +1200,125 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const body = (await res.json()) as { client_id: string };
     return { clientId: body.client_id, redirectUri };
   }
+
+  // ── Named MCP hosts (ADR 019 D8) ──────────────────────────────────────────
+  //
+  // Each host's documented DCR payload, registered and then authorized with the
+  // redirect the host really uses. Registration and authorization happen before
+  // any MCP request, so these failures are invisible to every MCP test. Payloads
+  // re-verified against the hosts' docs on 2026-10-06 (ADR 019 Amendments).
+
+  interface HostFixture {
+    readonly host: string;
+    readonly redirectUris: readonly string[];
+    /** The redirect the host sends at authorization — may differ from the registered one. */
+    readonly authorizeWith: string;
+  }
+
+  const HOSTS: readonly HostFixture[] = [
+    {
+      host: "Claude (hosted)",
+      redirectUris: ["https://claude.ai/api/mcp/auth_callback"],
+      authorizeWith: "https://claude.ai/api/mcp/auth_callback",
+    },
+    {
+      host: "Claude Code via DCR",
+      redirectUris: ["http://localhost:51234/callback"],
+      authorizeWith: "http://localhost:51234/callback",
+    },
+    {
+      host: "ChatGPT",
+      redirectUris: ["https://chatgpt.com/connector_platform_oauth_redirect"],
+      authorizeWith: "https://chatgpt.com/connector_platform_oauth_redirect",
+    },
+    {
+      host: "VS Code (preferred port)",
+      redirectUris: VSCODE_REDIRECTS,
+      authorizeWith: "http://127.0.0.1:33418/",
+    },
+  ];
+
+  async function registerHost(
+    redirectUris: readonly string[],
+  ): Promise<{ status: number; clientId?: string; error?: string }> {
+    const res = await fetch(`${ISSUER}/api-gateway/oauth/reg`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      // No `application_type`: none of these hosts sends one.
+      body: JSON.stringify({
+        redirect_uris: redirectUris,
+        token_endpoint_auth_method: "none",
+        grant_types: ["authorization_code", "refresh_token"],
+        response_types: ["code"],
+      }),
+    });
+    const body = (await res.json()) as {
+      client_id?: string;
+      error_description?: string;
+    };
+    return {
+      status: res.status,
+      clientId: body.client_id,
+      error: body.error_description,
+    };
+  }
+
+  /** Where `/auth` sends the browser — the consent page when the redirect is accepted. */
+  async function authorizeHost(clientId: string, redirectUri: string) {
+    const { codeChallenge } = pkce();
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    authUrl.search = new URLSearchParams({
+      client_id: clientId,
+      response_type: "code",
+      scope: "openid ledger.read",
+      redirect_uri: redirectUri,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
+      state: "host-state",
+    }).toString();
+    const res = await fetch(authUrl, { redirect: "manual" });
+    const location = res.headers.get("location");
+    return {
+      status: res.status,
+      path: location ? new URL(location, ISSUER).pathname : undefined,
+    };
+  }
+
+  it.each(HOSTS)("$host registers and reaches consent", async (h) => {
+    const reg = await registerHost(h.redirectUris);
+    expect(reg).toMatchObject({ status: 201 });
+    const auth = await authorizeHost(reg.clientId!, h.authorizeWith);
+    expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
+  });
+
+  // ADR 019 found these two failing under the provider's `web` default; D3
+  // (w1/m30 t003) makes them pass and removes `.failing`.
+  it.failing(
+    "Cursor registers its three URIs without stating application_type",
+    async () => {
+      const reg = await registerHost(CURSOR_REDIRECTS);
+      expect(reg.error).toBeUndefined();
+      expect(reg.status).toBe(201);
+      const auth = await authorizeHost(
+        reg.clientId!,
+        "cursor://anysphere.cursor-mcp/oauth/callback",
+      );
+      expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
+    },
+  );
+
+  it.failing(
+    "VS Code reaches consent from a loopback port other than 33418",
+    async () => {
+      const reg = await registerHost(VSCODE_REDIRECTS);
+      expect(reg.status).toBe(201);
+      const auth = await authorizeHost(
+        reg.clientId!,
+        "http://127.0.0.1:50123/",
+      );
+      expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
+    },
+  );
 
   it("resource indicators: dynamic clients cannot request an API token", async () => {
     const { clientId, redirectUri } = await registerMcpClient();
