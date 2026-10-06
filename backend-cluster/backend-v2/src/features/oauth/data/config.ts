@@ -53,6 +53,8 @@ export const OAUTH_CONFIG = {
     discourse: {
       registration: "static",
       clientId: "discourse-forum",
+      // Stated, not defaulted: dynamic clients default to native (ADR 019 D3).
+      applicationType: "web",
       redirectUris: ["https://beancount.io/forum/auth/oidc/callback"],
       grantTypes: ["authorization_code"],
       responseTypes: ["code"],
@@ -202,6 +204,7 @@ export function buildStaticOAuthClients(input: {
   clients.push({
     client_id: discourse.clientId,
     client_secret: input.discourseClientSecret,
+    application_type: discourse.applicationType,
     redirect_uris: [...discourse.redirectUris],
     grant_types: [...discourse.grantTypes],
     response_types: [...discourse.responseTypes],

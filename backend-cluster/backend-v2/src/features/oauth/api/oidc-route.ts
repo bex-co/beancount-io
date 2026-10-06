@@ -266,6 +266,14 @@ export function setOidcRoutes(
 
     clientDefaults: {
       id_token_signed_response_alg: "ES256",
+      // ADR 019 D3: a registration that states no `application_type` is
+      // native. OIDC's default is `web`, which refuses Cursor's private-use
+      // redirect and matches loopback redirects only on the registered port,
+      // so Cursor fails before consent and VS Code fails whenever its
+      // preferred port is busy. Native clients always see consent
+      // (oidc-provider's `native_client_prompt`); a client that states `web`
+      // keeps web rules, and so does the Discourse static client.
+      application_type: "native",
     },
 
     cookies: { keys: [config.jwt.secret] },

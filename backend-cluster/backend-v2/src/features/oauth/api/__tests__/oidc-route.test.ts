@@ -15,6 +15,7 @@ import {
   MOBILE_CLIENT_ID,
   MOBILE_REDIRECT_URIS,
   OAUTH_CONFIG,
+  buildStaticOAuthClients,
   oauthLifetimes,
   shouldRotateRefreshToken,
 } from "../../data/config";
@@ -118,6 +119,24 @@ describe("OAuth resource selection", () => {
         "https://books.example.test/v1",
       ]),
     ).toThrow("invalid_target");
+  });
+});
+
+describe("OAuth static clients", () => {
+  // Dynamic clients default to native (ADR 019 D3), so each static client
+  // states its type rather than inheriting the default.
+  it("states each static client's application_type", () => {
+    const clients = buildStaticOAuthClients({
+      apiScopes: ["ledger.read"],
+      discourseClientSecret: "secret",
+    });
+    const byId = Object.fromEntries(clients.map((c) => [c.client_id, c]));
+    expect(
+      byId[OAUTH_CONFIG.clients.discourse.clientId]?.application_type,
+    ).toBe("web");
+    expect(byId[OAUTH_CONFIG.clients.mobile.clientId]?.application_type).toBe(
+      "native",
+    );
   });
 });
 
@@ -1292,33 +1311,52 @@ describe("oidc-route: unified MCP + identity provider", () => {
   });
 
   // ADR 019 found these two failing under the provider's `web` default; D3
-  // (w1/m30 t003) makes them pass and removes `.failing`.
-  it.failing(
-    "Cursor registers its three URIs without stating application_type",
-    async () => {
-      const reg = await registerHost(CURSOR_REDIRECTS);
-      expect(reg.error).toBeUndefined();
-      expect(reg.status).toBe(201);
-      const auth = await authorizeHost(
-        reg.clientId!,
-        "cursor://anysphere.cursor-mcp/oauth/callback",
-      );
-      expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
-    },
-  );
+  // (an unstated `application_type` is native) is what lets them through.
+  it("Cursor registers its three URIs without stating application_type", async () => {
+    const reg = await registerHost(CURSOR_REDIRECTS);
+    expect(reg.error).toBeUndefined();
+    expect(reg.status).toBe(201);
+    const auth = await authorizeHost(
+      reg.clientId!,
+      "cursor://anysphere.cursor-mcp/oauth/callback",
+    );
+    expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
+  });
 
-  it.failing(
-    "VS Code reaches consent from a loopback port other than 33418",
-    async () => {
-      const reg = await registerHost(VSCODE_REDIRECTS);
-      expect(reg.status).toBe(201);
-      const auth = await authorizeHost(
-        reg.clientId!,
-        "http://127.0.0.1:50123/",
-      );
-      expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
-    },
-  );
+  it("VS Code reaches consent from a loopback port other than 33418", async () => {
+    const reg = await registerHost(VSCODE_REDIRECTS);
+    expect(reg.status).toBe(201);
+    const auth = await authorizeHost(reg.clientId!, "http://127.0.0.1:50123/");
+    expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
+  });
+
+  // What D3 newly refuses: neither is a legitimate host redirect, and native
+  // rules forbid both.
+  it.each([
+    [
+      "plain http to a non-loopback host",
+      "http://mcp-client.example.test/callback",
+    ],
+    ["https to a loopback address", "https://127.0.0.1:8443/callback"],
+  ])("refuses to register %s", async (_case, redirectUri) => {
+    const reg = await registerHost([redirectUri]);
+    expect(reg.status).toBe(400);
+  });
+
+  it("keeps web rules for a dynamic client that states application_type web", async () => {
+    const res = await fetch(`${ISSUER}/api-gateway/oauth/reg`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        application_type: "web",
+        redirect_uris: CURSOR_REDIRECTS,
+        token_endpoint_auth_method: "none",
+        grant_types: ["authorization_code"],
+        response_types: ["code"],
+      }),
+    });
+    expect(res.status).toBe(400);
+  });
 
   it("resource indicators: dynamic clients cannot request an API token", async () => {
     const { clientId, redirectUri } = await registerMcpClient();
