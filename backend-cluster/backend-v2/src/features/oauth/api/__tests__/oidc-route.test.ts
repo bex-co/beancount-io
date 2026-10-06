@@ -195,6 +195,31 @@ describe("OAuth token lifetimes", () => {
     );
   });
 
+  it("caps a re-saved third-party grant at one year after authorization", () => {
+    const now = 1_000 * DAY_SECONDS;
+    const ceiling = OAUTH_CONFIG.thirdParty.grantCeilingSeconds;
+    // Fresh grant (no issue time yet): the full term.
+    expect(lifetimes.grant("some-mcp-client", undefined, now)).toBe(
+      46 * DAY_SECONDS,
+    );
+    // Early in the year: still the full term.
+    expect(
+      lifetimes.grant("some-mcp-client", now - 30 * DAY_SECONDS, now),
+    ).toBe(46 * DAY_SECONDS);
+    // Ten days from the ceiling: only what is left.
+    expect(
+      lifetimes.grant("some-mcp-client", now - ceiling + 10 * DAY_SECONDS, now),
+    ).toBe(10 * DAY_SECONDS);
+    // Past it: nothing left to extend.
+    expect(
+      lifetimes.grant("some-mcp-client", now - ceiling - 1, now),
+    ).toBeLessThanOrEqual(0);
+    // The native app has no ceiling.
+    expect(lifetimes.grant(MOBILE_CLIENT_ID, now - 2 * ceiling, now)).toBe(
+      OAUTH_CONFIG.clients.mobile.grantTtlSeconds,
+    );
+  });
+
   it("uses the values declared by the centralized client catalog", () => {
     expect(lifetimes.refreshToken(MOBILE_CLIENT_ID)).toBe(
       OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds,
@@ -1066,6 +1091,96 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect((afterRefresh?.exp as number) - now()).toBeGreaterThan(
       OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds,
     );
+  });
+
+  // ── Third-party connections (ADR 019 D5) ──────────────────────────────────
+
+  /** A DCR host signed in with a refresh token; returns what the clock tests need. */
+  async function connectThirdParty() {
+    const { clientId, redirectUri } = await registerMcpClient();
+    const { code, verifier } = await driveAuthorizationCode({
+      clientId,
+      clientAuth: "",
+      scope: "openid offline_access ledger.read",
+      redirectUri,
+      loginBody: { ledgerId: "ada/personal" },
+      prompt: "consent",
+    });
+    const tokens = await exchangeToken({
+      code,
+      verifier,
+      clientId,
+      redirectUri,
+    });
+    const refreshToken = tokens.refresh_token as string;
+    const issued = await new MemoryAdapter("RefreshToken").find(refreshToken);
+    return { clientId, refreshToken, grantId: issued?.grantId as string };
+  }
+
+  async function refresh(clientId: string, refreshToken: string) {
+    return fetch(`${ISSUER}/api-gateway/oauth/token`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+        client_id: clientId,
+      }),
+    });
+  }
+
+  const epoch = () => Math.floor(Date.now() / 1000);
+
+  /** Rewrites the stored grant as if it had been issued and last extended at other times. */
+  async function ageGrant(grantId: string, iat: number, exp: number) {
+    const grants = new MemoryAdapter("Grant");
+    const stored = await grants.find(grantId);
+    await grants.upsert(grantId, { ...stored!, iat, exp }, exp - epoch());
+  }
+
+  it("third-party flow: refreshing slides the grant a full idle window", async () => {
+    const { clientId, refreshToken, grantId } = await connectThirdParty();
+    const atSignIn = await new MemoryAdapter("Grant").find(grantId);
+    expect((atSignIn?.exp as number) - epoch()).toBeGreaterThan(
+      OAUTH_CONFIG.thirdParty.refreshTokenTtlSeconds,
+    );
+
+    // Quiet for most of the window, then used once.
+    await ageGrant(
+      grantId,
+      epoch() - 40 * DAY_SECONDS,
+      epoch() + 6 * DAY_SECONDS,
+    );
+    expect((await refresh(clientId, refreshToken)).status).toBe(200);
+
+    const after = await new MemoryAdapter("Grant").find(grantId);
+    expect((after?.exp as number) - epoch()).toBeGreaterThan(
+      OAUTH_CONFIG.thirdParty.refreshTokenTtlSeconds,
+    );
+  });
+
+  it("third-party flow: a slide never passes one year after authorization", async () => {
+    const { clientId, refreshToken, grantId } = await connectThirdParty();
+    const authorizedAt = epoch() - 360 * DAY_SECONDS;
+    await ageGrant(grantId, authorizedAt, epoch() + 2 * DAY_SECONDS);
+
+    expect((await refresh(clientId, refreshToken)).status).toBe(200);
+
+    const after = await new MemoryAdapter("Grant").find(grantId);
+    const ceiling = authorizedAt + OAUTH_CONFIG.thirdParty.grantCeilingSeconds;
+    expect(after?.exp as number).toBeGreaterThan(epoch() + 4 * DAY_SECONDS);
+    expect(after?.exp as number).toBeLessThanOrEqual(ceiling + 1);
+  });
+
+  it("third-party flow: a grant past the ceiling is not extended", async () => {
+    const { clientId, refreshToken, grantId } = await connectThirdParty();
+    const lastExp = epoch() + 2 * DAY_SECONDS;
+    await ageGrant(grantId, epoch() - 366 * DAY_SECONDS, lastExp);
+
+    expect((await refresh(clientId, refreshToken)).status).toBe(200);
+
+    const after = await new MemoryAdapter("Grant").find(grantId);
+    expect(after?.exp).toBe(lastExp);
   });
 
   it("mobile flow: a session issued before the long window keeps working and upgrades on its next refresh", async () => {

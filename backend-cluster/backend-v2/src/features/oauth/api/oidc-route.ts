@@ -16,10 +16,10 @@ import { CATEGORY_HTTP_STATUS, DomainError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import {
   OAUTH_CONFIG,
-  MOBILE_CLIENT_ID,
   buildStaticOAuthClients,
   isIdentityOAuthClient,
   isMobileOAuthClient,
+  isThirdPartyOAuthClient,
   oauthLifetimes,
   oauthResources,
   shouldRotateRefreshToken,
@@ -129,7 +129,6 @@ export function setOidcRoutes(
 
   const resources = oauthResources(config.oauth.issuer);
   const lifetimes = oauthLifetimes();
-  const mobileRefreshTokenTtl = lifetimes.refreshToken(MOBILE_CLIENT_ID);
   const resourceForClient = (clientId: unknown): string | undefined => {
     if (isIdentityOAuthClient(clientId)) return undefined;
     const resource = isMobileOAuthClient(clientId)
@@ -337,7 +336,7 @@ export function setOidcRoutes(
       // and unrelated to how long an app stays signed in. It only decides
       // whether a *new* authorization has to re-enter credentials.
       Session: OAUTH_CONFIG.ttl.authorizationServerSessionSeconds,
-      Grant: (_ctx, grant) => lifetimes.grant(grant.clientId),
+      Grant: (_ctx, grant) => lifetimes.grant(grant.clientId, grant.iat),
     },
 
     rotateRefreshToken: (ctx) => {
@@ -357,17 +356,24 @@ export function setOidcRoutes(
 
   // oidc-provider writes a Grant only at authorization time, and every refresh
   // runs `validateGrant` first — so the Grant's expiry, not the refresh token's,
-  // is what actually caps a session. Re-save the native app's grant after a
-  // successful refresh so its expiry slides forward with the rotated token;
-  // without this an actively used phone would still be signed out a fixed term
-  // after it last logged in. `provider.use` inserts ahead of the provider's own
-  // dispatch, so `next()` here is the token endpoint itself.
+  // is what actually caps a session. Re-save the grant after a successful
+  // refresh so its expiry slides forward with the rotated token; without this
+  // an actively used phone, or a connector used every month (ADR 019 D5), would
+  // still be signed out a fixed term after it last authorized. Third-party
+  // grants slide only up to one year after authorization (`ttl.Grant` caps the
+  // term), then the host re-authorizes. Discourse never slides. `provider.use`
+  // inserts ahead of the provider's own dispatch, so `next()` here is the token
+  // endpoint itself.
   provider.use(async (ctx, next) => {
     await next();
     const { oidc } = ctx as unknown as KoaContextWithOIDC;
     if (oidc?.route !== "token" || ctx.status !== 200) return;
     const refreshToken = oidc.entities.RefreshToken;
-    if (!refreshToken?.grantId || !isMobileOAuthClient(refreshToken.clientId))
+    const clientId = refreshToken?.clientId;
+    if (
+      !refreshToken?.grantId ||
+      !(isMobileOAuthClient(clientId) || isThirdPartyOAuthClient(clientId))
+    )
       return;
 
     try {
@@ -378,7 +384,10 @@ export function setOidcRoutes(
       // token. Compare the two policies directly rather than assuming a fixed
       // amount of slack between independently configured lifetimes.
       const now = Math.floor(Date.now() / 1000);
-      if (grant.exp && grant.exp - now > mobileRefreshTokenTtl) return;
+      if (grant.exp && grant.exp - now > lifetimes.refreshToken(clientId))
+        return;
+      // Past the yearly ceiling there is nothing left to extend.
+      if (lifetimes.grant(clientId, grant.iat, now) <= 0) return;
       // `save()` persists `remainingTTL`, which is whatever is *left* once exp
       // is set. Clearing both cached values makes it compute a fresh full term
       // from `ttl.Grant` instead of re-saving the time already served.
@@ -389,7 +398,7 @@ export function setOidcRoutes(
       // The refresh itself already succeeded — the client keeps its new tokens
       // and the grant simply does not slide this time. Never turn a bookkeeping
       // failure into a failed sign-in.
-      oidcLogger.warn("could not extend the mobile grant lifetime", {
+      oidcLogger.warn("could not extend the grant lifetime", {
         error: error instanceof Error ? error.message : String(error),
       });
     }

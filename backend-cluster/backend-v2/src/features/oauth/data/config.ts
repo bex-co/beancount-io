@@ -138,16 +138,23 @@ export const isIdentityOAuthClient = (clientId: unknown): boolean =>
   clientId === DISCOURSE_CLIENT_ID;
 
 /** A DCR or CIMD host — any client that is not one of the static clients. */
-const isThirdPartyOAuthClient = (clientId: unknown): boolean =>
+export const isThirdPartyOAuthClient = (clientId: unknown): boolean =>
   typeof clientId === "string" &&
   clientId !== "" &&
   !isMobileOAuthClient(clientId) &&
   !isIdentityOAuthClient(clientId);
 
-/** Refresh-token and grant lifetimes in seconds, selected by client. */
+/**
+ * Refresh-token and grant lifetimes in seconds, selected by client.
+ *
+ * `grant` takes the grant's original issue time when it has one: a third-party
+ * grant re-saved on refresh (ADR 019 D5) never extends past one year after the
+ * authorization, so its term shrinks to what is left of that year. A grant
+ * being created has no issue time yet and gets the full term.
+ */
 export function oauthLifetimes(): {
   refreshToken: (clientId: unknown) => number;
-  grant: (clientId: unknown) => number;
+  grant: (clientId: unknown, issuedAt?: number, now?: number) => number;
 } {
   return {
     refreshToken: (clientId) =>
@@ -156,12 +163,19 @@ export function oauthLifetimes(): {
         : isThirdPartyOAuthClient(clientId)
           ? OAUTH_CONFIG.thirdParty.refreshTokenTtlSeconds
           : OAUTH_CONFIG.ttl.defaultRefreshTokenSeconds,
-    grant: (clientId) =>
-      isMobileOAuthClient(clientId)
-        ? OAUTH_CONFIG.clients.mobile.grantTtlSeconds
-        : isThirdPartyOAuthClient(clientId)
-          ? OAUTH_CONFIG.thirdParty.grantTtlSeconds
-          : OAUTH_CONFIG.ttl.defaultGrantSeconds,
+    grant: (clientId, issuedAt, now = Math.floor(Date.now() / 1000)) => {
+      if (isMobileOAuthClient(clientId)) {
+        return OAUTH_CONFIG.clients.mobile.grantTtlSeconds;
+      }
+      if (!isThirdPartyOAuthClient(clientId)) {
+        return OAUTH_CONFIG.ttl.defaultGrantSeconds;
+      }
+      const term = OAUTH_CONFIG.thirdParty.grantTtlSeconds;
+      if (issuedAt === undefined) return term;
+      const leftInCeiling =
+        issuedAt + OAUTH_CONFIG.thirdParty.grantCeilingSeconds - now;
+      return Math.min(term, leftInCeiling);
+    },
   };
 }
 
