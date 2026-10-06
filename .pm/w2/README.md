@@ -38,7 +38,7 @@
 - [x] **m32** — [Managed price status on every client surface](./done/m32/README.md) (9 tasks) ← promoted [w2/026](./done/026.md) 2026-09-23; ADR 015 follow-up to m31
 - [ ] **m34** — [Ledger catalogs list every ledger, not the first upstream page](./blocked/m34/README.md) (6 tasks) ← from user report 2026-10-01 (dashboard ledger switcher could not find `open_ledger/stock-example`), reproduced against the deployed site; user routed to w2 — **blocked:** t001–t005 shipped; closeout needs production backend-v2 deployed with the fix
 - [ ] **m35** — [Public ledgers that explain themselves in search and on first visit](./blocked/m35/README.md) (13 tasks) ← public-ledger SEO research; materialized 2026-10-02 at user request — **blocked:** implementation pushed; deployed closeout needs the production target and access
-- [ ] **m36** — [List the hosted MCP server on the official MCP Registry](./blocked/m36/README.md) (10 tasks) ← [ADR 019](../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) open question "which directory comes first"; user decision 2026-10-02 to start with the easiest marketplace; registry research 2026-10-03 — **blocked:** t001–t005 and t007–t009 shipped; t006 needs the operator to set the production proof and the GitHub secret and publish, then t010 closes out
+- [x] **m36** — [List the hosted MCP server on the official MCP Registry](./done/m36/README.md) (10 tasks) ← [ADR 019](../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) open question "which directory comes first"; user decision 2026-10-02 to start with the easiest marketplace; registry research 2026-10-03
 
 ## Dropped
 
@@ -47,7 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
-- [036](./blocked/036.md) — Mention the MCP Registry listing in the root and backend READMEs once `io.beancount/beancount` is live. Found during m36 t007 — **blocked:** waits on m36/t006 (the registry still answers 404)
+- [037](./037.md) — Serve the MCP Registry domain proof over HTTP on production too (optional; publishing uses the apex DNS TXT today). Found during m36 closeout — operator-only
 - [034](./blocked/034.md) — Ledger counts read from one upstream page: the tier ledger-limit check counts owned ledgers inside the first 10 accessible ones, and `ledgersUsed` and the activity feed stop at 50. Found during m34. — **blocked:** repository owner must decide grandfathering before accurate counts tighten creation eligibility.
 - [008](./done/008.md) — MCP prompts from the ledger skills: implemented on 2026-09-12. [w5/m5](../w5/blocked/m5/README.md) retains the approved proposal's remaining real-client verification and repairs for demonstrated workflow gaps; the completed implementation remains archived here.
 - [009](./blocked/009.md) — Agent eval harness: core scope promoted to [w5/m4](../w5/done/m4/README.md) on 2026-09-12. Only the larger Plaid sandbox journey remains open here as a deferred follow-up. — **blocked:** needs sizing approval and a hosted QA-account path to link a Plaid sandbox item
