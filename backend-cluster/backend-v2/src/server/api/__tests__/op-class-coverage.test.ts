@@ -224,7 +224,11 @@ describe("op-class coverage", () => {
     // earns its selection slot by replacing a worse use of an existing slot.
     // w2/m32 adds the 27th, refreshManagedPrices: the one action on managed
     // price feeds (ADR 015 §5). Its status read stays a resource.
-    expect(tools).toHaveLength(27);
+    // w1/m33 adds the 28th, listBankConnections, under ADR 019 D7: a host
+    // that consumes only tools (ChatGPT, Copilot's cloud agent) cannot read
+    // the `banks` resource, so without it no tool output carries the ids
+    // manageBankConnection and manageBankImport require.
+    expect(tools).toHaveLength(28);
 
     // Resources are counted apart on purpose. They do not compete for tool
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can

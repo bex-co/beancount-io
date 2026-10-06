@@ -311,11 +311,7 @@ const SURFACE_IMPOSSIBLE: Record<
   rest: new Set<string>(),
   // These *are* the agent transports. A tool for reaching one from inside a
   // tool call is circular.
-  mcp: new Set([
-    "ai.agent",
-    "ai.sandboxAgent",
-    "ai.openaiChatCompletions",
-  ]),
+  mcp: new Set(["ai.agent", "ai.sandboxAgent", "ai.openaiChatCompletions"]),
 };
 
 /** Whether `surface` could carry this verb if someone did the work. */
@@ -1604,9 +1600,8 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     class: "admin",
     gql: "Query.getPlaidItems",
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/banks",
+    mcp: "listBankConnections",
     mcpResource: "bankList",
-    mcpExempt:
-      "Reachable as the `bankList` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     authorizationAction: AUTHORIZATION_ACTIONS.BANK_CONNECTIONS_LIST,
   },
   {
@@ -1634,9 +1629,8 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     class: "admin",
     gql: "Query.getPlaidAccountsForLedger",
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/bank-accounts",
+    mcp: "listBankConnections",
     mcpResource: "bankAccounts",
-    mcpExempt:
-      "Reachable as the `bankAccounts` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     authorizationAction: AUTHORIZATION_ACTIONS.BANK_ACCOUNTS_READ,
   },
   {

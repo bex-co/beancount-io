@@ -56,6 +56,12 @@ import {
   collaboratorToolOutput,
   executeCollaboratorTool,
 } from "./mcp-collaborators";
+import {
+  listBankConnectionsDescription,
+  listBankConnectionsInput,
+  listBankConnectionsOutput,
+  executeListBankConnections,
+} from "./mcp-list-tools";
 import { z, type ZodTypeAny } from "zod";
 import type { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import {
@@ -197,6 +203,18 @@ function withLedger(
  */
 const READ_ONLY: ToolAnnotations = {
   readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
+  openWorldHint: false,
+};
+/**
+ * A read that needs `admin` authority (bank connections, SSH keys). It changes
+ * nothing, but the annotation guard keeps `readOnlyHint` for `read`-class
+ * verbs only: hosts auto-approve read-only tools, and these lists expose
+ * credentials-adjacent data a person should see being read (ADR 019 D7).
+ */
+const ADMIN_READ: ToolAnnotations = {
+  readOnlyHint: false,
   destructiveHint: false,
   idempotentHint: true,
   openWorldHint: false,
@@ -595,6 +613,17 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     inputSchema: bankConnectionInputSchema.extend({ ledger: ledgerSelection }),
     outputSchema: mcpOutputSchema(bankConnectionOutputSchema),
     execute: withLedger(executeBankConnection),
+  },
+  // The ids the two tools above need, for hosts that only call tools (ADR 019
+  // D7). The `banks` and `bank-accounts` resources carry the same data.
+  {
+    name: "listBankConnections",
+    title: "List Linked Banks And Their Accounts",
+    annotations: ADMIN_READ,
+    description: listBankConnectionsDescription,
+    inputSchema: listBankConnectionsInput.extend({ ledger: ledgerSelection }),
+    outputSchema: mcpOutputSchema(listBankConnectionsOutput),
+    execute: withLedger(executeListBankConnections),
   },
   {
     name: "managePullRequests",

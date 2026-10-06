@@ -79,9 +79,13 @@ describe("MCP tool list", () => {
     // an action, so it cannot be a resource. Its output schema types only the
     // three fields an agent acts on and defers the rest to the resource
     // template, which is what kept the growth to 1.5 KB instead of 2.6 KB.
+    //
+    // 66 KB since w1/m33 (ADR 019 D7) added `listBankConnections` (1.2 KB):
+    // a tools-only host cannot otherwise reach the ids the bank tools need.
+    // Its description names only the ids and the tools that take them.
     const { tools } = await listTools();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(64 * 1024);
+    expect(bytes).toBeLessThan(66 * 1024);
   });
 
   it("publishes all four annotations on every tool", async () => {
