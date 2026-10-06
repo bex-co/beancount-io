@@ -38,6 +38,8 @@ export type UserProfile = {
   locale: string;
   firstName: string;
   lastName: string;
+  /** Uploaded avatar, falling back to the email's Gravatar. */
+  avatarUrl: string;
   emailReportStatus: ReportStatus;
   username: string;
   tier: string;
@@ -135,6 +137,7 @@ export class AccountService implements IAccountService {
       locale: user.locale,
       firstName: user.firstName ?? "",
       lastName: user.lastName ?? "",
+      avatarUrl: user.avatarUrl,
       // Report subscription has been removed - return OFF for API compatibility
       emailReportStatus: ReportStatus.OFF,
       username: user.ledger_username ?? "",

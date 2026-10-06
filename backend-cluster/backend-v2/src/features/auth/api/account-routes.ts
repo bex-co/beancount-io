@@ -19,6 +19,7 @@ const profileSchema = z
     locale: z.string(),
     firstName: z.string().nullable().optional(),
     lastName: z.string().nullable().optional(),
+    avatarUrl: z.string().nullable().optional(),
     emailReportStatus: z
       .enum(["OFF", "WEEKLY", "MONTHLY"])
       .nullable()

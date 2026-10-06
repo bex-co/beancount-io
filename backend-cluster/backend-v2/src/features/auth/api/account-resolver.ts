@@ -55,6 +55,10 @@ class UserProfileResponse {
   @Field(() => String, { nullable: true })
   lastName?: string;
 
+  /** Uploaded avatar, falling back to the email's Gravatar */
+  @Field(() => String, { nullable: true })
+  avatarUrl?: string;
+
   @Field(() => ReportStatus, { nullable: true })
   emailReportStatus?: ReportStatus;
 

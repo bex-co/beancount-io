@@ -18633,6 +18633,10 @@
                       "type": "string",
                       "nullable": true
                     },
+                    "avatarUrl": {
+                      "type": "string",
+                      "nullable": true
+                    },
                     "emailReportStatus": {
                       "type": "string",
                       "nullable": true,

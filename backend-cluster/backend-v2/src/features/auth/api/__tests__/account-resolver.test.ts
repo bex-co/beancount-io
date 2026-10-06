@@ -24,6 +24,7 @@ describe("AccountResolver", () => {
     locale: "en",
     firstName: "John",
     lastName: "Doe",
+    avatarUrl: "https://www.gravatar.com/avatar/x?size=48",
     emailReportStatus: ReportStatus.OFF,
     username: "johndoe",
     tier: "FREE",

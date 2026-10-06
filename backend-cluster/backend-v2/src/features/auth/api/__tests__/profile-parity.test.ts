@@ -34,9 +34,10 @@ const user = {
   firstName: "Ada",
   lastName: null,
   ledger_username: "ada",
+  avatarUrl: "https://www.gravatar.com/avatar/ada?size=48",
 };
 const fields =
-  "id email locale firstName lastName emailReportStatus username tier hasEverSubscribed limits{ledgersUsed ledgersMax collaboratorsPerLedgerMax maxDirectives}";
+  "id email locale firstName lastName avatarUrl emailReportStatus username tier hasEverSubscribed limits{ledgersUsed ledgersMax collaboratorsPerLedgerMax maxDirectives}";
 let resolver: AccountResolver;
 let schemaPromise: ReturnType<typeof buildSchema>;
 registerEnumType(ReportStatus, { name: "ReportStatus" });
@@ -143,6 +144,7 @@ describe("profile reads through actual adapters and exact-self authorization", (
           id: "usr_ada",
           locale: "fr",
           lastName: "",
+          avatarUrl: "https://www.gravatar.com/avatar/ada?size=48",
           emailReportStatus: "OFF",
           tier: "FREE",
           hasEverSubscribed: true,
