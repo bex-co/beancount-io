@@ -1827,6 +1827,71 @@ describe("oidc-route: unified MCP + identity provider", () => {
     });
     afterEach(() => jest.restoreAllMocks());
 
+    /** A refused metadata document is an OAuth error page, never a 500 or a consent page. */
+    async function expectRefused(
+      clientId: string,
+      redirectUri: string,
+      error: "invalid_client" | "invalid_redirect_uri",
+    ) {
+      const { codeChallenge } = pkce();
+      const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+      authUrl.search = new URLSearchParams({
+        client_id: clientId,
+        response_type: "code",
+        scope: "openid ledger.read",
+        redirect_uri: redirectUri,
+        code_challenge: codeChallenge,
+        code_challenge_method: "S256",
+      }).toString();
+      const res = await fetch(authUrl, { redirect: "manual" });
+      expect(res.status).toBe(400);
+      expect(res.headers.get("location")).toBeNull();
+      expect(await res.text()).toContain(error);
+    }
+
+    it("refuses a client whose metadata document cannot be fetched", async () => {
+      const id = "https://gone.example.test/oauth/client-metadata.json";
+      served[id] = () => new Response("not found", { status: 404 });
+      await expectRefused(
+        id,
+        "https://gone.example.test/callback",
+        "invalid_client",
+      );
+    });
+
+    it("refuses a document that names a different client_id", async () => {
+      const id = "https://impostor.example.test/oauth/client-metadata.json";
+      served[id] = () =>
+        Response.json({
+          ...CIMD_DOCUMENTS[
+            "https://claude.ai/oauth/claude-code-client-metadata"
+          ],
+        });
+      await expectRefused(
+        id,
+        "http://localhost:51999/callback",
+        "invalid_client",
+      );
+    });
+
+    it("refuses a redirect the document does not list", async () => {
+      await expectRefused(
+        "https://chatgpt.example.test/oauth/client-metadata.json",
+        "https://attacker.example.test/callback",
+        "invalid_redirect_uri",
+      );
+    });
+
+    it("refuses a client_id on a special-use address without fetching it", async () => {
+      // Not in `served`: the request reaches oidc-provider's SSRF-protected
+      // dispatcher, which refuses loopback before connecting.
+      await expectRefused(
+        "https://127.0.0.1/oauth/client-metadata.json",
+        "http://localhost:51999/callback",
+        "invalid_client",
+      );
+    });
+
     it.each([
       [
         "Claude Code",
