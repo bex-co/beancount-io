@@ -68,24 +68,39 @@ create another API key, including through MCP's `manageApiKeys` tool.
 
 ### OAuth
 
-For clients supporting OAuth discovery and dynamic client registration, configure
-the same MCP URL and start the client's authorization flow:
+For clients supporting OAuth discovery, configure the same MCP URL and start the
+client's authorization flow:
 
 1. An unauthenticated MCP request receives `401` and a `WWW-Authenticate` header
    pointing to `{issuer}/.well-known/oauth-protected-resource`.
 2. That document identifies the MCP resource and authorization server. The
    client discovers the authorization, registration, and token endpoints.
-3. The client registers, then requests scopes in authorization code flow with
-   PKCE. In the browser, sign in and review the requested permissions on
-   `/oauth/consent`. Select one ledger or explicitly choose **All accessible
-   ledgers**, then approve. The client chooses the requested scopes; the page
-   displays them and lets you approve or cancel.
+3. The client identifies itself — by the URL of a published client metadata
+   document (CIMD) when it supports one, as Claude, ChatGPT, and VS Code do, or
+   by dynamic client registration otherwise — then requests scopes in
+   authorization code flow with PKCE. In the browser, sign in and review the
+   request on `/oauth/consent`: the page shows where you will be returned, the
+   name the app gave itself, the domain publishing its metadata when it used
+   CIMD, and a warning when the app only returns to your own computer. Select
+   one ledger or explicitly choose **All accessible ledgers**, then approve. The
+   client chooses the requested scopes; the page displays them and lets you
+   approve or cancel.
 4. The client exchanges the code and sends the access token as a bearer on
    subsequent MCP requests. Clients requesting `offline_access` can use refresh
    tokens to obtain new access tokens.
 
+A connection lasts while it is used. Access tokens expire after an hour; a
+refresh token lasts 45 days and is replaced on every refresh, so a client that
+refreshes at least every 45 days — a monthly close is enough — stays connected
+without asking you again. A connection is re-approved once a year: one year
+after you consented, the client sends you back to `/oauth/consent`. Unused for
+45 days, it does the same sooner. Revoking the connection stops it refreshing
+at once; an access token already issued still runs out its hour.
+The full lifetime table is in the backend
+[README](../README.md#session-lifetimes).
+
 This discovery sequence follows the
-[MCP authorization specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization).
+[MCP authorization specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization).
 Beancount's provider implements it in
 [`oidc-route.ts`](../src/features/oauth/api/oidc-route.ts).
 
