@@ -356,20 +356,22 @@ names their shared authorization boundary even though no endpoint is mounted
 at that URL. It remains stable because released native clients and persisted
 refresh grants are bound to that exact audience.
 
-| Client/profile         | Registration | Credential at token endpoint | Resource audience                |
-| ---------------------- | ------------ | ---------------------------- | -------------------------------- |
-| Beancount Mobile       | Static       | Public client + PKCE         | Application API (`<issuer>/v1`)  |
-| Discourse forum        | Static       | `client_secret_basic` + PKCE | UserInfo only (no API resource)  |
-| MCP/agent integrations | Dynamic      | Registered client metadata   | MCP (`<issuer>/api-gateway/mcp`) |
+| Client/profile         | Registration | Credential at token endpoint                             | Resource audience                |
+| ---------------------- | ------------ | -------------------------------------------------------- | -------------------------------- |
+| Beancount Mobile       | Static       | Public client + PKCE                                     | Application API (`<issuer>/v1`)  |
+| Discourse forum        | Static       | `client_secret_basic` + PKCE                             | UserInfo only (no API resource)  |
+| MCP/agent integrations | DCR or CIMD  | Registered or published metadata (usually public + PKCE) | MCP (`<issuer>/api-gateway/mcp`) |
 
-| Credential                    | Lifetime               | Notes                                               |
-| ----------------------------- | ---------------------- | --------------------------------------------------- |
-| Access token (all clients)    | 1 hour                 | Self-contained; revocation cannot cut it short.     |
-| Refresh token (native app)    | 365 days               | Re-issued in full on every refresh.                 |
-| Refresh token (other clients) | 30 days                | Unchanged; oidc-provider's default rotation policy. |
-| Grant (native app)            | session window + 1 day | Slid forward on every refresh.                      |
-| Grant (other clients)         | 14 days                | Unchanged.                                          |
-| Authorization-server session  | 14 days                | The browser SSO cookie, not an app session.         |
+| Credential                   | Lifetime               | Notes                                               |
+| ---------------------------- | ---------------------- | --------------------------------------------------- |
+| Access token (all clients)   | 1 hour                 | Self-contained; revocation cannot cut it short.     |
+| Refresh token (native app)   | 365 days               | Re-issued in full on every refresh.                 |
+| Refresh token (MCP hosts)    | 45 days                | Rotated on every refresh for public clients.        |
+| Refresh token (Discourse)    | 30 days                | oidc-provider's default rotation policy.            |
+| Grant (native app)           | session window + 1 day | Slid forward on every refresh.                      |
+| Grant (MCP hosts)            | 46 days, ≤ 1 year      | Slid on refresh; never past one year after consent. |
+| Grant (Discourse)            | 14 days                | Not slid.                                           |
+| Authorization-server session | 14 days                | The browser SSO cookie, not an app session.         |
 
 A native-app session is an **idle window, not a fixed term**. Its refresh token
 rotates on every refresh and the grant behind it is re-saved with a full fresh
@@ -379,11 +381,21 @@ the system browser. This is deliberate: oidc-provider writes a Grant only at
 authorization time and rejects any refresh whose grant has expired, so a fixed
 grant lifetime — not the refresh token's — is what would otherwise cap the
 session, and its own rotation default stops rotating a chain older than 365.25
-days. Both are overridden for this one client by the policy functions in
-`features/oauth/data/config.ts`; every other client keeps oidc-provider's
-defaults. The window is a reviewed code value in that catalog, not an
-environment variable, because deployments should not silently disagree about
-credential lifetime.
+days. Both are overridden by the policy functions in
+`features/oauth/data/config.ts`. The windows are reviewed code values in that
+catalog, not environment variables, because deployments should not silently
+disagree about credential lifetime.
+
+An MCP host's connection (any DCR or CIMD client) works the same way with two
+differences ([ADR 019](../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md)
+D5). Its idle window is **45 days** — a bookkeeping connector's rhythm is the
+monthly close, and a 30-day window lapses for anyone whose closes fall 31 days
+apart. And it is **re-approved yearly**: the grant slides on each refresh but
+never past one year after the person consented, because these hosts keep
+refresh tokens with ledger write authority on their own servers. Public
+clients' refresh tokens rotate on every refresh at any age, as the MCP
+specification requires (a sender-constrained token is the one exception).
+Discourse keeps oidc-provider's defaults.
 
 Revocation is what ends a long session early: logout revokes the refresh
 credential, which revokes the grant with it.
