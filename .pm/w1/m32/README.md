@@ -1,12 +1,12 @@
 # w1 · m32 — A connector stays connected while it is used
 
-**Worker:** worker1 **Goal:** Third-party MCP connections stop expiring on day 14 regardless of use: they last while used at least every 45 days, are re-approved yearly, and public-client refresh tokens always rotate (ADR 019 D5) **Status:** todo
+**Worker:** worker1 **Goal:** Third-party MCP connections stop expiring on day 14 regardless of use: they last while used at least every 45 days, are re-approved yearly, and public-client refresh tokens always rotate (ADR 019 D5) **Status:** in progress (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Lifetimes for third-party connections as reviewed code values | 30m | — |
+| [t001](./done/t001.md) | Lifetimes for third-party connections as reviewed code values — **DONE** | 30m | — |
 | t002 | Re-save the grant on refresh for every non-static client, capped at one year | 45m | t001 |
 | t003 | Rotate refresh tokens unconditionally for public clients | 30m | t001 |
 | t004 | Clock-driven lifetime tests | 45m | t002, t003 |

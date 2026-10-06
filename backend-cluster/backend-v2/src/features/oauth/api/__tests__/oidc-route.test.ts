@@ -164,19 +164,35 @@ describe("OAuth CIMD draft", () => {
 describe("OAuth token lifetimes", () => {
   const lifetimes = oauthLifetimes();
 
-  it("gives the native app a year-long idle window, others 30 days", () => {
+  it("gives the native app a year-long idle window and third-party hosts 45 days", () => {
     expect(lifetimes.refreshToken(MOBILE_CLIENT_ID)).toBe(365 * DAY_SECONDS);
-    expect(lifetimes.refreshToken("some-mcp-client")).toBe(30 * DAY_SECONDS);
+    expect(lifetimes.refreshToken("some-mcp-client")).toBe(45 * DAY_SECONDS);
+    expect(
+      lifetimes.refreshToken(
+        "https://claude.ai/oauth/claude-code-client-metadata",
+      ),
+    ).toBe(45 * DAY_SECONDS);
   });
 
-  it("keeps the native grant alive longer than the token it backs", () => {
+  it("keeps every grant alive longer than the refresh token it backs", () => {
     // `validateGrant` runs before the refresh token is consumed, so a grant
     // that expires first fails the refresh with invalid_grant even while the
     // token itself is still valid. The grant must never be the binding cap.
-    expect(lifetimes.grant(MOBILE_CLIENT_ID)).toBeGreaterThan(
-      lifetimes.refreshToken(MOBILE_CLIENT_ID),
+    for (const clientId of [MOBILE_CLIENT_ID, "some-mcp-client"]) {
+      expect(lifetimes.grant(clientId)).toBeGreaterThan(
+        lifetimes.refreshToken(clientId),
+      );
+    }
+    expect(lifetimes.grant("some-mcp-client")).toBe(46 * DAY_SECONDS);
+  });
+
+  it("leaves the identity client on the provider defaults", () => {
+    expect(lifetimes.refreshToken(DISCOURSE_CLIENT_ID)).toBe(
+      OAUTH_CONFIG.ttl.defaultRefreshTokenSeconds,
     );
-    expect(lifetimes.grant("some-mcp-client")).toBe(14 * DAY_SECONDS);
+    expect(lifetimes.grant(DISCOURSE_CLIENT_ID)).toBe(
+      OAUTH_CONFIG.ttl.defaultGrantSeconds,
+    );
   });
 
   it("uses the values declared by the centralized client catalog", () => {
@@ -187,10 +203,10 @@ describe("OAuth token lifetimes", () => {
       OAUTH_CONFIG.clients.mobile.grantTtlSeconds,
     );
     expect(lifetimes.refreshToken("some-mcp-client")).toBe(
-      OAUTH_CONFIG.ttl.defaultRefreshTokenSeconds,
+      OAUTH_CONFIG.thirdParty.refreshTokenTtlSeconds,
     );
     expect(lifetimes.grant("some-mcp-client")).toBe(
-      OAUTH_CONFIG.ttl.defaultGrantSeconds,
+      OAUTH_CONFIG.thirdParty.grantTtlSeconds,
     );
   });
 });

@@ -66,6 +66,18 @@ export const OAUTH_CONFIG = {
     enabled: true,
     resource: OAUTH_RESOURCE_BINDINGS.mcp,
   },
+  // Every client that is not one of the static clients above: DCR and CIMD
+  // hosts (Claude, ChatGPT, Cursor, VS Code, …). ADR 019 D5: a connector's
+  // rhythm is the monthly close, so a connection lasts while it is used at
+  // least every 45 days, and is re-approved a year after authorization —
+  // these hosts keep refresh tokens with ledger write authority on their own
+  // servers. Reviewed code values, never environment variables.
+  thirdParty: {
+    refreshTokenTtlSeconds: 45 * DAY_SECONDS,
+    // A day of slack over the refresh token, as the mobile client keeps.
+    grantTtlSeconds: 46 * DAY_SECONDS,
+    grantCeilingSeconds: 365 * DAY_SECONDS,
+  },
   ttl: {
     accessTokenSeconds: 60 * 60,
     authorizationCodeSeconds: 10 * 60,
@@ -125,6 +137,13 @@ export const isMobileOAuthClient = (clientId: unknown): boolean =>
 export const isIdentityOAuthClient = (clientId: unknown): boolean =>
   clientId === DISCOURSE_CLIENT_ID;
 
+/** A DCR or CIMD host — any client that is not one of the static clients. */
+const isThirdPartyOAuthClient = (clientId: unknown): boolean =>
+  typeof clientId === "string" &&
+  clientId !== "" &&
+  !isMobileOAuthClient(clientId) &&
+  !isIdentityOAuthClient(clientId);
+
 /** Refresh-token and grant lifetimes in seconds, selected by client. */
 export function oauthLifetimes(): {
   refreshToken: (clientId: unknown) => number;
@@ -134,11 +153,15 @@ export function oauthLifetimes(): {
     refreshToken: (clientId) =>
       isMobileOAuthClient(clientId)
         ? OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds
-        : OAUTH_CONFIG.ttl.defaultRefreshTokenSeconds,
+        : isThirdPartyOAuthClient(clientId)
+          ? OAUTH_CONFIG.thirdParty.refreshTokenTtlSeconds
+          : OAUTH_CONFIG.ttl.defaultRefreshTokenSeconds,
     grant: (clientId) =>
       isMobileOAuthClient(clientId)
         ? OAUTH_CONFIG.clients.mobile.grantTtlSeconds
-        : OAUTH_CONFIG.ttl.defaultGrantSeconds,
+        : isThirdPartyOAuthClient(clientId)
+          ? OAUTH_CONFIG.thirdParty.grantTtlSeconds
+          : OAUTH_CONFIG.ttl.defaultGrantSeconds,
   };
 }
 
