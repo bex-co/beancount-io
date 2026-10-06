@@ -144,6 +144,32 @@ export const isThirdPartyOAuthClient = (clientId: unknown): boolean =>
   !isMobileOAuthClient(clientId) &&
   !isIdentityOAuthClient(clientId);
 
+/** The lifetimes one class of client gets, in seconds. */
+function lifetimeProfile(clientId: unknown): {
+  refreshToken: number;
+  grant: number;
+  grantCeiling?: number;
+} {
+  if (isMobileOAuthClient(clientId)) {
+    const { refreshTokenTtlSeconds, grantTtlSeconds } =
+      OAUTH_CONFIG.clients.mobile;
+    return { refreshToken: refreshTokenTtlSeconds, grant: grantTtlSeconds };
+  }
+  if (isThirdPartyOAuthClient(clientId)) {
+    const { refreshTokenTtlSeconds, grantTtlSeconds, grantCeilingSeconds } =
+      OAUTH_CONFIG.thirdParty;
+    return {
+      refreshToken: refreshTokenTtlSeconds,
+      grant: grantTtlSeconds,
+      grantCeiling: grantCeilingSeconds,
+    };
+  }
+  return {
+    refreshToken: OAUTH_CONFIG.ttl.defaultRefreshTokenSeconds,
+    grant: OAUTH_CONFIG.ttl.defaultGrantSeconds,
+  };
+}
+
 /**
  * Refresh-token and grant lifetimes in seconds, selected by client.
  *
@@ -157,24 +183,12 @@ export function oauthLifetimes(): {
   grant: (clientId: unknown, issuedAt?: number, now?: number) => number;
 } {
   return {
-    refreshToken: (clientId) =>
-      isMobileOAuthClient(clientId)
-        ? OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds
-        : isThirdPartyOAuthClient(clientId)
-          ? OAUTH_CONFIG.thirdParty.refreshTokenTtlSeconds
-          : OAUTH_CONFIG.ttl.defaultRefreshTokenSeconds,
+    refreshToken: (clientId) => lifetimeProfile(clientId).refreshToken,
     grant: (clientId, issuedAt, now = Math.floor(Date.now() / 1000)) => {
-      if (isMobileOAuthClient(clientId)) {
-        return OAUTH_CONFIG.clients.mobile.grantTtlSeconds;
-      }
-      if (!isThirdPartyOAuthClient(clientId)) {
-        return OAUTH_CONFIG.ttl.defaultGrantSeconds;
-      }
-      const term = OAUTH_CONFIG.thirdParty.grantTtlSeconds;
-      if (issuedAt === undefined) return term;
-      const leftInCeiling =
-        issuedAt + OAUTH_CONFIG.thirdParty.grantCeilingSeconds - now;
-      return Math.min(term, leftInCeiling);
+      const { grant, grantCeiling } = lifetimeProfile(clientId);
+      return grantCeiling === undefined || issuedAt === undefined
+        ? grant
+        : Math.min(grant, issuedAt + grantCeiling - now);
     },
   };
 }
