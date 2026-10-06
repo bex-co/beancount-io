@@ -58,6 +58,9 @@ export function selectOAuthResource(
   );
 }
 
+/** The CIMD draft this deployment has reviewed (ADR 019 D6). */
+export const CIMD_DRAFT = "draft-02";
+
 /** The host of a CIMD client id (an https URL), or null for an opaque id. */
 function cimdHost(clientId: string): string | null {
   if (!clientId.startsWith("https://")) return null;
@@ -164,6 +167,16 @@ export function setOidcRoutes(
     features: {
       devInteractions: { enabled: false },
       registration: { enabled: OAUTH_CONFIG.dynamicRegistration.enabled },
+      // ADR 019 D6: Client ID Metadata Documents — the registration the MCP
+      // spec prefers over (deprecated) DCR, and the one Claude, ChatGPT, and
+      // VS Code choose once discovery advertises it. A host identifies itself
+      // by an https URL instead of registering a new client per connection.
+      // Safe only because D3 (native default) and D4 (consent names the
+      // requester and the vouching domain) are in place: Claude Code's
+      // document states no application_type and needs any-port loopback.
+      // oidc-provider ships it as experimental; when an upgrade moves the
+      // draft, construction fails until this ack is re-reviewed. DCR stays on.
+      clientIdMetadataDocument: { enabled: true, ack: CIMD_DRAFT },
       resourceIndicators: {
         enabled: true,
         // The identity client (Discourse) never gets a resource — leaving it

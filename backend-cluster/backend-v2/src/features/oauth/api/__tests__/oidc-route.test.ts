@@ -1,5 +1,6 @@
 import * as http from "node:http";
 import * as crypto from "node:crypto";
+import * as fs from "node:fs";
 import Koa from "koa";
 import Router from "@koa/router";
 import bodyParser from "koa-bodyparser";
@@ -20,6 +21,7 @@ import {
   shouldRotateRefreshToken,
 } from "../../data/config";
 import {
+  CIMD_DRAFT,
   oauthWellKnownPath,
   selectOAuthResource,
   setOidcRoutes,
@@ -137,6 +139,25 @@ describe("OAuth static clients", () => {
     expect(byId[OAUTH_CONFIG.clients.mobile.clientId]?.application_type).toBe(
       "native",
     );
+  });
+});
+
+describe("OAuth CIMD draft", () => {
+  // oidc-provider ships CIMD as experimental. When an upgrade moves the draft,
+  // the provider refuses to start; this names what to re-review (ADR 019 D6)
+  // instead of failing every OAuth test at construction.
+  it("acknowledges the CIMD draft the installed oidc-provider implements", () => {
+    const features = fs.readFileSync(
+      require.resolve("oidc-provider/lib/helpers/features.js"),
+      "utf8",
+    );
+    const installed = features.match(
+      /clientIdMetadataDocument:\s*\{[^}]*version:\s*'([^']+)'/,
+    )?.[1];
+    expect({ reviewed: CIMD_DRAFT, installed }).toEqual({
+      reviewed: CIMD_DRAFT,
+      installed: CIMD_DRAFT,
+    });
   });
 });
 
@@ -1730,6 +1751,18 @@ describe("oidc-route: unified MCP + identity provider", () => {
       await fetch(`${ISSUER}/.well-known/oauth-protected-resource`)
     ).json()) as { resource?: string };
     expect(metadata.resource).toBe(resource);
+  });
+
+  // ── CIMD (ADR 019 D6) ─────────────────────────────────────────────────────
+
+  it("advertises client ID metadata documents alongside dynamic registration", async () => {
+    const body = (await (
+      await fetch(`${ISSUER}/.well-known/oauth-authorization-server`)
+    ).json()) as Record<string, unknown>;
+    expect(body.client_id_metadata_document_supported).toBe(true);
+    // Claude uses CIMD only when `none` is also accepted; DCR hosts still need registration.
+    expect(body.token_endpoint_auth_methods_supported).toContain("none");
+    expect(body.registration_endpoint).toBeTruthy();
   });
 
   // ── Discovery (consumed by Discourse's openid_connect_discovery_document) ──
