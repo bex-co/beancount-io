@@ -1358,6 +1358,83 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(res.status).toBe(400);
   });
 
+  // ── Consent names who is asking (ADR 019 D4) ──────────────────────────────
+
+  /** Starts an authorization and returns the interaction's details as the consent page reads them. */
+  async function interactionFor(
+    clientId: string,
+    redirectUri: string,
+    scope = "openid ledger.read",
+  ): Promise<Record<string, unknown>> {
+    const jar = new CookieJar();
+    const { codeChallenge } = pkce();
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    authUrl.search = new URLSearchParams({
+      client_id: clientId,
+      response_type: "code",
+      scope,
+      redirect_uri: redirectUri,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
+      state: "consent-details",
+    }).toString();
+    const authRes = await fetch(authUrl, { redirect: "manual" });
+    jar.absorb(authRes);
+    const uid = new URL(authRes.headers.get("location")!).searchParams.get(
+      "uid",
+    )!;
+    const res = await fetch(`${ISSUER}/api-gateway/oauth/interaction/${uid}`, {
+      headers: { cookie: jar.header() },
+    });
+    expect(res.status).toBe(200);
+    return (await res.json()) as Record<string, unknown>;
+  }
+
+  it("names a dynamic client by its redirect and self-asserted name", async () => {
+    const { clientId, redirectUri } = await registerMcpClient();
+    const details = await interactionFor(clientId, redirectUri);
+    expect(details).toMatchObject({
+      client: clientId,
+      redirect_uri: redirectUri,
+      client_name: "mcp-test-client",
+      client_id_host: null,
+      loopback_only: false,
+    });
+  });
+
+  it("flags a client whose every redirect is loopback", async () => {
+    const reg = await registerHost([
+      "http://localhost:51234/callback",
+      "http://127.0.0.1/cb",
+    ]);
+    const details = await interactionFor(
+      reg.clientId!,
+      "http://127.0.0.1:61000/cb",
+    );
+    expect(details).toMatchObject({
+      redirect_uri: "http://127.0.0.1:61000/cb",
+      client_name: null,
+      loopback_only: true,
+    });
+  });
+
+  it("does not flag a client with any non-loopback redirect", async () => {
+    const reg = await registerHost(VSCODE_REDIRECTS);
+    const details = await interactionFor(
+      reg.clientId!,
+      "http://127.0.0.1:33418/",
+    );
+    expect(details.loopback_only).toBe(false);
+  });
+
+  it("answers interaction_not_found for an unknown interaction", async () => {
+    const res = await fetch(
+      `${ISSUER}/api-gateway/oauth/interaction/does-not-exist`,
+    );
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "interaction_not_found" });
+  });
+
   it("resource indicators: dynamic clients cannot request an API token", async () => {
     const { clientId, redirectUri } = await registerMcpClient();
     const { codeChallenge } = pkce();

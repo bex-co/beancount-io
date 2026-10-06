@@ -58,6 +58,36 @@ export function selectOAuthResource(
   );
 }
 
+/** The host of a CIMD client id (an https URL), or null for an opaque id. */
+function cimdHost(clientId: string): string | null {
+  if (!clientId.startsWith("https://")) return null;
+  try {
+    return new URL(clientId).host;
+  } catch {
+    return null;
+  }
+}
+
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/**
+ * Every registered redirect lands on this machine. Any local process can bind
+ * a loopback port, so the MCP spec asks for a warning (ADR 019 D4).
+ */
+function isLoopbackOnly(redirectUris: readonly string[]): boolean {
+  return (
+    redirectUris.length > 0 &&
+    redirectUris.every((uri) => {
+      try {
+        const url = new URL(uri);
+        return url.protocol === "http:" && LOOPBACK_HOSTS.has(url.hostname);
+      } catch {
+        return false;
+      }
+    })
+  );
+}
+
 export function setOidcRoutes(
   router: Router,
   layers: { database: DatabaseLayer; clients: ClientFactoryLayer },
@@ -383,11 +413,25 @@ export function setOidcRoutes(
     try {
       pinRequestToIssuer(ctx.req);
       const interaction = await provider.interactionDetails(ctx.req, ctx.res);
+      const clientId = String(interaction.params.client_id ?? "");
+      const client = clientId
+        ? await provider.Client.find(clientId)
+        : undefined;
       ctx.body = {
         uid: interaction.uid,
         client: interaction.params.client_id,
         scope: interaction.params.scope,
         resource: interaction.params.resource,
+        // ADR 019 D4: what the consent page shows so a person can tell who is
+        // asking. The redirect host is the one thing a requester cannot choose
+        // freely — the code goes there; the name is whatever the app called
+        // itself; a CIMD client's id host is the domain vouching for it.
+        redirect_uri: interaction.params.redirect_uri ?? null,
+        client_name: client?.clientName ?? null,
+        client_id_host: cimdHost(clientId),
+        loopback_only: client
+          ? isLoopbackOnly(client.redirectUris ?? [])
+          : false,
       };
     } catch (err) {
       oidcLogger.warn("Failed to get interaction details", {
