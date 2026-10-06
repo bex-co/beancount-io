@@ -417,6 +417,43 @@ const caAuth: Record<string, TranslationEntry> = {
     message: "Una aplicació vol accedir al vostre llibre de Beancount.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "Qui ho sol·licita",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "Després d’aprovar, tornaràs a {host}.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "L’aplicació s’anomena a si mateixa «{name}». Les aplicacions trien el seu propi nom, així que comprova l’adreça de dalt.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message: "L’aplicació no ha indicat cap nom. Comprova l’adreça de dalt.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "Les seves dades les publica {host}.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "Aquesta aplicació només torna al teu propi ordinador. Qualsevol programa que s’hi executi podria haver iniciat aquesta sol·licitud: aprova-la només si acabes de començar a connectar una aplicació.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "No s’ha pogut identificar aquesta sol·licitud. Potser ha caducat: torna a la teva aplicació i connecta’t de nou.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "Tots els llibres accessibles",
     description: "MCP account-wide consent option",

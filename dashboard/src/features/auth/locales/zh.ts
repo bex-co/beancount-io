@@ -405,6 +405,41 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "某个应用想要访问你的 Beancount 账本。",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "谁在请求",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "批准后，你将返回到 {host}。",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message: "它自称“{name}”。应用名称由应用自行填写，请核对上面的地址。",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message: "它没有提供名称。请核对上面的地址。",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "它的信息由 {host} 发布。",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "此应用只会返回到你自己的电脑。电脑上运行的任何程序都可能发起此请求——仅当你刚刚开始连接某个应用时才批准。",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message: "无法识别此请求，可能已过期。请回到你的应用重新连接。",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "所有可访问的账本",
     description: "MCP account-wide consent option",

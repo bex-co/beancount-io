@@ -414,6 +414,43 @@ const bgAuth: Record<string, TranslationEntry> = {
     message: "Приложение иска достъп до вашата книга в Beancount.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "Кой иска достъп",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "След одобрение ще се върнете към {host}.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "Приложението се представя като „{name}“. Приложенията сами избират името си, затова проверете адреса по-горе.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message: "Приложението не е посочило име. Проверете адреса по-горе.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "Данните му се публикуват от {host}.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "Това приложение връща само към вашия собствен компютър. Всяка програма на него може да е стартирала тази заявка — одобрете само ако току-що сте започнали да свързвате приложение.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "Тази заявка не може да бъде разпозната. Може да е изтекла — върнете се в приложението и се свържете отново.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "Всички достъпни книги",
     description: "MCP account-wide consent option",

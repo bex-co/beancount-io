@@ -412,6 +412,43 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "یک برنامه می‌خواهد به دفتر Beancount شما دسترسی پیدا کند.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "چه کسی درخواست می‌دهد",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "پس از تأیید، به {host} بازمی‌گردید.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "این برنامه خود را «{name}» می‌نامد. برنامه‌ها نام خود را خودشان انتخاب می‌کنند، پس نشانی بالا را بررسی کنید.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message: "این برنامه نامی ارائه نکرده است. نشانی بالا را بررسی کنید.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "اطلاعات آن توسط {host} منتشر می‌شود.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "این برنامه فقط به رایانهٔ خود شما بازمی‌گردد. هر برنامه‌ای که روی آن اجرا می‌شود ممکن است این درخواست را آغاز کرده باشد — فقط اگر همین حالا اتصال برنامه‌ای را شروع کرده‌اید تأیید کنید.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "این درخواست شناسایی نشد. ممکن است منقضی شده باشد — به برنامهٔ خود برگردید و دوباره متصل شوید.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "همه دفترهای قابل دسترسی",
     description: "MCP account-wide consent option",

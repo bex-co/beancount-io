@@ -415,6 +415,43 @@ const ptAuth: Record<string, TranslationEntry> = {
     message: "Um aplicativo quer acessar o seu livro do Beancount.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "Quem está pedindo",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "Depois de aprovar, você voltará para {host}.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "O app se identifica como “{name}”. Os apps escolhem o próprio nome, então confira o endereço acima.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message: "O app não informou um nome. Confira o endereço acima.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "Os dados dele são publicados por {host}.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "Este app só retorna ao seu próprio computador. Qualquer programa em execução nele pode ter iniciado este pedido — aprove apenas se você acabou de começar a conectar um app.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "Não foi possível identificar este pedido. Ele pode ter expirado — volte ao seu app e conecte novamente.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "Todos os livros acessíveis",
     description: "MCP account-wide consent option",

@@ -419,6 +419,44 @@ const frAuth: Record<string, TranslationEntry> = {
     message: "Une application souhaite accéder à votre grand livre Beancount.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "Qui fait la demande",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "Après votre approbation, vous serez renvoyé vers {host}.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "L’application se présente comme « {name} ». Les applications choisissent leur propre nom : vérifiez l’adresse ci-dessus.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message:
+      "L’application n’a pas indiqué de nom. Vérifiez l’adresse ci-dessus.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "Ses informations sont publiées par {host}.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "Cette application ne renvoie que vers votre propre ordinateur. N’importe quel programme qui y tourne a pu lancer cette demande : n’approuvez que si vous venez de connecter une application.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "Impossible d’identifier cette demande. Elle a peut-être expiré : revenez à votre application et reconnectez-vous.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "Tous les livres accessibles",
     description: "MCP account-wide consent option",

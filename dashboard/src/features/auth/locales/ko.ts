@@ -406,6 +406,43 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "앱이 회원님의 Beancount 장부에 접근하려고 합니다.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "요청하는 앱",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "승인하면 {host}(으)로 돌아갑니다.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "이 앱은 자신을 “{name}”(이)라고 소개합니다. 앱 이름은 앱이 직접 정하므로 위 주소를 확인하세요.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message: "이 앱은 이름을 제공하지 않았습니다. 위 주소를 확인하세요.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "이 앱의 정보는 {host}에서 게시합니다.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "이 앱은 사용자의 컴퓨터로만 돌아갑니다. 컴퓨터에서 실행 중인 어떤 프로그램이든 이 요청을 시작할 수 있으니, 방금 앱 연결을 시작한 경우에만 승인하세요.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "이 요청을 확인할 수 없습니다. 만료되었을 수 있습니다. 앱으로 돌아가 다시 연결하세요.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "접근 가능한 모든 장부",
     description: "MCP account-wide consent option",

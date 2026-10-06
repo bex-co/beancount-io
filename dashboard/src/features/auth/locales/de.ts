@@ -415,6 +415,43 @@ const deAuth: Record<string, TranslationEntry> = {
     message: "Eine App möchte auf Ihr Beancount-Hauptbuch zugreifen.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "Wer fragt an",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "Nach der Freigabe kehren Sie zu {host} zurück.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "Die App nennt sich „{name}“. Apps wählen ihren Namen selbst – prüfen Sie daher die Adresse oben.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message: "Die App hat keinen Namen angegeben. Prüfen Sie die Adresse oben.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "Ihre Angaben werden von {host} veröffentlicht.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "Diese App kehrt nur zu Ihrem eigenen Computer zurück. Jedes dort laufende Programm könnte diese Anfrage gestartet haben – geben Sie sie nur frei, wenn Sie gerade eine App verbinden.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "Diese Anfrage konnte nicht zugeordnet werden. Sie ist möglicherweise abgelaufen – kehren Sie zu Ihrer App zurück und verbinden Sie erneut.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "Alle zugänglichen Bücher",
     description: "MCP account-wide consent option",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useApolloClient } from "@apollo/client/react";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import { ListLedgersDocument } from "@/graphql/definitions";
@@ -15,6 +15,7 @@ import { RegisterForm } from "@/features/auth/components/register-form";
 import { OtpForm } from "@/features/auth/components/otp-form";
 
 import { describeMobileScopes } from "@/features/oauth/funcs/mobile-scope-copy";
+import type { ConsentRequester } from "@/features/oauth/funcs/consent-requester";
 
 const routeApi = getRouteApi("/oauth/consent");
 
@@ -134,12 +135,93 @@ function OtpStep({
   );
 }
 
+type RequesterState =
+  | { status: "loading" }
+  | { status: "ready"; requester: ConsentRequester }
+  | { status: "unavailable" };
+
+/** Who is asking, read through the dashboard server (the interaction cookie is scoped to `/oauth/consent`). */
+function useConsentRequester(uid: string): RequesterState {
+  const [state, setState] = useState<RequesterState>({ status: "loading" });
+  useEffect(() => {
+    let cancelled = false;
+    void fetch(`/oauth/consent/requester?${new URLSearchParams({ uid })}`, {
+      credentials: "same-origin",
+    })
+      .then(async (res) =>
+        res.ok ? ((await res.json()) as ConsentRequester | null) : null,
+      )
+      .catch(() => null)
+      .then((requester) => {
+        if (cancelled) return;
+        setState(
+          requester
+            ? { status: "ready", requester }
+            : { status: "unavailable" },
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [uid]);
+  return state;
+}
+
+/**
+ * ADR 019 D4: before approval, say where the code goes, what the app calls
+ * itself (labelled as its own claim), who vouches for a CIMD client, and warn
+ * when every redirect is this computer.
+ */
+function RequesterSummary({ state }: { state: RequesterState }) {
+  const { t } = useTranslations();
+  if (state.status === "loading") return null;
+  if (state.status === "unavailable") {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>
+          {t("auth.oauthRequesterUnavailable")}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  const { redirect, clientName, vouchedBy, loopbackOnly } = state.requester;
+  return (
+    <section
+      aria-label={t("auth.oauthRequesterHeading")}
+      className="space-y-2 rounded-md border p-3 text-sm"
+    >
+      <p className="font-medium">
+        {t("auth.oauthRequesterRedirect", { host: redirect })}
+      </p>
+      <p className="text-muted-foreground">
+        {clientName
+          ? t("auth.oauthRequesterName", { name: clientName })
+          : t("auth.oauthRequesterUnnamed")}
+      </p>
+      {vouchedBy && (
+        <p className="text-muted-foreground">
+          {t("auth.oauthRequesterVouchedBy", { host: vouchedBy })}
+        </p>
+      )}
+      {loopbackOnly && (
+        <Alert>
+          <AlertDescription>
+            {t("auth.oauthRequesterLoopbackWarning")}
+          </AlertDescription>
+        </Alert>
+      )}
+    </section>
+  );
+}
+
 function LedgerStep({ uid, scope }: { uid: string; scope?: string }) {
   const { t } = useTranslations();
   const [selected, setSelected] = useState<string | null>(null);
   const [accountWide, setAccountWide] = useState(false);
   const [error, setError] = useState("");
   const { data, loading } = useQuery(ListLedgersDocument);
+  const requester = useConsentRequester(uid);
+  const identified = requester.status === "ready";
 
   const ledgers = data?.listLedgers ?? [];
 
@@ -151,6 +233,7 @@ function LedgerStep({ uid, scope }: { uid: string; scope?: string }) {
           {t("auth.oauthSelectLedger")}
         </p>
       </div>
+      <RequesterSummary state={requester} />
       {loading ? (
         <p className="text-sm text-muted-foreground">
           {t("page.dashboard.loadingLedgers")}
@@ -241,6 +324,10 @@ function LedgerStep({ uid, scope }: { uid: string; scope?: string }) {
           method="POST"
           action={`/oauth/consent?${new URLSearchParams({ uid })}`}
           onSubmit={(e) => {
+            if (!identified) {
+              e.preventDefault();
+              return;
+            }
             if (!selected && !accountWide) {
               e.preventDefault();
               setError(t("auth.oauthLedgerRequired"));
@@ -255,7 +342,7 @@ function LedgerStep({ uid, scope }: { uid: string; scope?: string }) {
           {scope && <input type="hidden" name="scope" value={scope} />}
           <Button
             type="submit"
-            disabled={!selected && !accountWide}
+            disabled={!identified || (!selected && !accountWide)}
             className="w-full"
           >
             {t("auth.oauthApproveAccess")}

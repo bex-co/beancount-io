@@ -410,6 +410,44 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "アプリがあなたの Beancount 台帳へのアクセスを求めています。",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "リクエスト元",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "承認すると {host} に戻ります。",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "このアプリは自身を「{name}」と名乗っています。名前はアプリが自由に付けるため、上のアドレスを確認してください。",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message:
+      "このアプリは名前を示していません。上のアドレスを確認してください。",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "このアプリの情報は {host} が公開しています。",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "このアプリはお使いのコンピューターにのみ戻ります。コンピューター上のどのプログラムでもこのリクエストを開始できるため、アプリの接続を始めたばかりの場合のみ承認してください。",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "このリクエストを識別できませんでした。期限切れの可能性があります。アプリに戻って接続し直してください。",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "アクセス可能なすべての帳簿",
     description: "MCP account-wide consent option",

@@ -419,6 +419,44 @@ const esAuth: Record<string, TranslationEntry> = {
     message: "Una aplicación quiere acceder a tu libro de Beancount.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "Quién lo solicita",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "Después de aprobar, volverás a {host}.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "La aplicación se llama a sí misma «{name}». Las aplicaciones eligen su propio nombre, así que comprueba la dirección de arriba.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message:
+      "La aplicación no indicó un nombre. Comprueba la dirección de arriba.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "Sus datos los publica {host}.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "Esta aplicación solo vuelve a tu propio ordenador. Cualquier programa que se ejecute en él podría haber iniciado esta solicitud: apruébala solo si acabas de empezar a conectar una aplicación.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "No se pudo identificar esta solicitud. Puede que haya caducado: vuelve a tu aplicación y conéctate de nuevo.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "Todos los libros accesibles",
     description: "MCP account-wide consent option",

@@ -413,6 +413,43 @@ const ukAuth: Record<string, TranslationEntry> = {
     message: "Застосунок запитує доступ до вашої книги Beancount.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "Хто запитує доступ",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "Після підтвердження ви повернетеся на {host}.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "Застосунок називає себе «{name}». Застосунки самі обирають собі назву, тож перевірте адресу вище.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message: "Застосунок не вказав назву. Перевірте адресу вище.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "Його дані опубліковано {host}.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "Цей застосунок повертає лише на ваш власний комп’ютер. Цей запит міг запустити будь-яка програма на ньому — підтверджуйте, лише якщо ви щойно почали підключати застосунок.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "Не вдалося визначити цей запит. Можливо, термін його дії минув — поверніться до застосунку й підключіться знову.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "Усі доступні книги",
     description: "MCP account-wide consent option",

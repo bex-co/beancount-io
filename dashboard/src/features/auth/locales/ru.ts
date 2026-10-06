@@ -415,6 +415,43 @@ const ruAuth: Record<string, TranslationEntry> = {
     message: "Приложение запрашивает доступ к вашей книге Beancount.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "Кто запрашивает доступ",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "После подтверждения вы вернётесь на {host}.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "Приложение называет себя «{name}». Приложения сами выбирают себе имя, поэтому проверьте адрес выше.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message: "Приложение не указало имя. Проверьте адрес выше.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "Его данные опубликованы {host}.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "Это приложение возвращает только на ваш собственный компьютер. Этот запрос могла запустить любая программа на нём — подтверждайте, только если вы только что начали подключать приложение.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "Не удалось определить этот запрос. Возможно, срок его действия истёк — вернитесь в приложение и подключитесь снова.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "Все доступные книги",
     description: "MCP account-wide consent option",

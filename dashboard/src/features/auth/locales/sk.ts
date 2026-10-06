@@ -412,6 +412,43 @@ const skAuth: Record<string, TranslationEntry> = {
     message: "Aplikácia chce získať prístup k vašej knihe Beancount.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "Kto žiada o prístup",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "Po schválení sa vrátite na {host}.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "Aplikácia sa nazýva „{name}“. Aplikácie si názov volia samy, preto skontrolujte adresu vyššie.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message: "Aplikácia neuviedla názov. Skontrolujte adresu vyššie.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "Jej údaje zverejňuje {host}.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "Táto aplikácia sa vracia iba do vášho vlastného počítača. Túto požiadavku mohol spustiť akýkoľvek program, ktorý na ňom beží — schváľte ju, iba ak ste práve začali pripájať aplikáciu.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "Túto požiadavku sa nepodarilo identifikovať. Možno vypršala — vráťte sa do aplikácie a pripojte sa znova.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "Všetky dostupné knihy",
     description: "MCP account-wide consent option",

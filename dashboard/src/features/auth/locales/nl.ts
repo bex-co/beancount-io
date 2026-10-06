@@ -413,6 +413,44 @@ const nlAuth: Record<string, TranslationEntry> = {
     message: "Een app wil toegang tot je Beancount-grootboek.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthRequesterHeading": {
+    message: "Wie vraagt toegang",
+    description:
+      "OAuth consent: label of the section naming the requesting app",
+  },
+  "auth.oauthRequesterRedirect": {
+    message: "Na goedkeuring keer je terug naar {host}.",
+    description:
+      "OAuth consent: where the authorization code is sent ({host} is the redirect host)",
+  },
+  "auth.oauthRequesterName": {
+    message:
+      "De app noemt zichzelf ‘{name}’. Apps kiezen hun eigen naam, controleer dus het adres hierboven.",
+    description:
+      "OAuth consent: the app's self-asserted name ({name}), labelled as its own claim",
+  },
+  "auth.oauthRequesterUnnamed": {
+    message:
+      "De app heeft geen naam opgegeven. Controleer het adres hierboven.",
+    description: "OAuth consent: shown when the app gave no name",
+  },
+  "auth.oauthRequesterVouchedBy": {
+    message: "De gegevens worden gepubliceerd door {host}.",
+    description:
+      "OAuth consent: the domain publishing a CIMD client's metadata ({host})",
+  },
+  "auth.oauthRequesterLoopbackWarning": {
+    message:
+      "Deze app keert alleen terug naar je eigen computer. Elk programma dat daarop draait kan dit verzoek hebben gestart — keur het alleen goed als je net een app aan het koppelen bent.",
+    description:
+      "OAuth consent: warning when every redirect is the user's own computer (loopback)",
+  },
+  "auth.oauthRequesterUnavailable": {
+    message:
+      "Dit verzoek kon niet worden herkend. Het is mogelijk verlopen — ga terug naar je app en maak opnieuw verbinding.",
+    description:
+      "OAuth consent: the requesting app could not be identified; approval is disabled",
+  },
   "auth.oauthAllLedgers": {
     message: "Alle toegankelijke boeken",
     description: "MCP account-wide consent option",
