@@ -26,8 +26,10 @@ import { UriTemplate } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
 import {
   CallToolRequestSchema,
   GetPromptRequestSchema,
+  ListToolsRequestSchema,
   ReadResourceRequestSchema,
   type GetPromptResult,
+  type ListToolsResult,
 } from "@modelcontextprotocol/sdk/types.js";
 import type {
   CallToolResult,
@@ -105,6 +107,7 @@ import {
   gqlOpId,
   mcpOpId,
   mcpResourceOpId,
+  mcpToolSecuritySchemes,
   requireScopeClass,
   restOpId,
 } from "./op-class";
@@ -443,6 +446,40 @@ function listMcpOps(): string[] {
 }
 
 /**
+ * Adds each tool's `securitySchemes` as a top-level field of its `tools/list`
+ * entry (ADR 019 D2), where OpenAI's Apps SDK reference places it. The SDK
+ * builds that list from its own private registry and its descriptor has no
+ * slot for the field, so this wraps the list handler as the SDK installs it —
+ * through the public `setRequestHandler` — and leaves every other field the
+ * SDK's own. It must run before the first `registerTool`, which is when the
+ * SDK installs the handler.
+ */
+function publishToolSecuritySchemes(server: McpServer): void {
+  // The SDK's handler generics do not survive a wrapper; the schema is
+  // matched by identity and the result typed where it is read.
+  type Handler = (request: unknown, extra: unknown) => unknown;
+  type SetHandler = (schema: unknown, handler: Handler) => void;
+  const inner = server.server as unknown as { setRequestHandler: SetHandler };
+  const setRequestHandler = inner.setRequestHandler.bind(inner);
+  inner.setRequestHandler = (schema, handler) => {
+    if (schema !== ListToolsRequestSchema) {
+      setRequestHandler(schema, handler);
+      return;
+    }
+    setRequestHandler(schema, async (request, extra) => {
+      const listed = (await handler(request, extra)) as ListToolsResult;
+      return {
+        ...listed,
+        tools: listed.tools.map((tool) => ({
+          ...tool,
+          securitySchemes: mcpToolSecuritySchemes(tool.name),
+        })),
+      };
+    });
+  };
+}
+
+/**
  * Assemble the one MCP registry for a caller.
  *
  * Per tool call, not per session: the scope gate runs inside the handler, so a
@@ -457,6 +494,8 @@ export function assembleMcpRegistry(
     { name: "beancount-mcp", version: "1.0.0" },
     { instructions: buildInstructions(toolCtx.identity) },
   );
+
+  publishToolSecuritySchemes(server);
 
   const toolHandlers = new Map<
     string,
@@ -476,6 +515,9 @@ export function assembleMcpRegistry(
         inputSchema: descriptor.inputSchema,
         outputSchema: descriptor.outputSchema,
         annotations: descriptor.annotations,
+        // OpenAI's back-compat mirror; `publishToolSecuritySchemes` adds the
+        // top-level field the SDK's descriptor has no slot for.
+        _meta: { securitySchemes: mcpToolSecuritySchemes(descriptor.name) },
       },
       handle as unknown as ToolCallback<ZodTypeAny>,
     );

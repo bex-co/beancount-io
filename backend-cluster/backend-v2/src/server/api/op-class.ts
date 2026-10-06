@@ -2076,3 +2076,43 @@ function audit(
     at: new Date(),
   });
 }
+
+// ---------------------------------------------------------------------------
+// Per-tool security schemes (ADR 019 D2)
+// ---------------------------------------------------------------------------
+
+/** One entry of a tool's `securitySchemes`, as OpenAI's Apps SDK reads it. */
+export type McpSecurityScheme =
+  | { type: "noauth" }
+  | { type: "oauth2"; scopes?: string[] };
+
+const CLASS_PRIVILEGE: readonly OpClass[] = ["read", "write", "admin"];
+
+/**
+ * What a tool declares it needs, derived from `VERB_TABLE` and never written
+ * by hand (ADR 019 D2, the rule ADR 0007 D8 applied to output schemas).
+ *
+ * A grouped tool declares its most privileged branch's scope. A tool whose
+ * only verbs are `session-only` (callable by an OAuth grant, never by a
+ * scoped key) needs OAuth with no particular scope; a `public` verb also
+ * allows anonymous calls. ChatGPT uses the declaration to decide when to link
+ * an account and when to ask for a broader scope; other hosts ignore it.
+ */
+export function mcpToolSecuritySchemes(
+  tool: string,
+  table: readonly Pick<VerbEntry, "mcp" | "class">[] = VERB_TABLE,
+): McpSecurityScheme[] {
+  const classes = new Set(
+    table.filter((entry) => entry.mcp === tool).map((entry) => entry.class),
+  );
+  const strongest = [...CLASS_PRIVILEGE]
+    .reverse()
+    .find((opClass) => classes.has(opClass));
+  const scope = strongest ? SCOPE_FOR_CLASS[strongest] : null;
+  const oauth: McpSecurityScheme = scope
+    ? { type: "oauth2", scopes: [scope] }
+    : { type: "oauth2" };
+  return classes.has("public") && !strongest
+    ? [{ type: "noauth" }, oauth]
+    : [oauth];
+}

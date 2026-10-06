@@ -1,6 +1,6 @@
 # w1 · m33 — Tools-only hosts can finish the bank flow and key management
 
-**Worker:** worker1 **Goal:** ChatGPT and GitHub Copilot's cloud agent — hosts that consume tools, not resources — can complete every write whose required id is today listed only by a resource, and every tool declares the credential it needs (ADR 019 D7 + D2) **Status:** in progress (t001–t005 done)
+**Worker:** worker1 **Goal:** ChatGPT and GitHub Copilot's cloud agent — hosts that consume tools, not resources — can complete every write whose required id is today listed only by a resource, and every tool declares the credential it needs (ADR 019 D7 + D2) **Status:** in progress (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | [t003](./done/t003.md) | listPublicKeys tool — **DONE** | 30m | — |
 | [t004](./done/t004.md) | tools/list size gate and ADR 0008 pointer — **DONE** | 20m | t001, t002, t003 |
 | [t005](./done/t005.md) | Tools-only end-to-end journey test — **DONE** | 45m | t004 |
-| t006 | D2: securitySchemes on every MCP tool descriptor | 45m | — |
+| [t006](./done/t006.md) | D2: securitySchemes on every MCP tool descriptor — **DONE** | 45m | — |
 | t007 | Adoption surface | 30m | t005, t006 |
 | t008 | Simplify | 30m | t007 |
 | t009 | Test coverage | 45m | t007, t008 |

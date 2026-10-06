@@ -12,6 +12,8 @@ import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "../identity";
+import { z } from "zod";
+import { mcpToolSecuritySchemes, VERB_TABLE } from "../op-class";
 
 /**
  * The lean, use-ordered tool list (w2/m27:t005).
@@ -29,6 +31,30 @@ const identity: Identity = {
   scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
   tokenId: "tok_1",
 };
+
+/**
+ * `tools/list` as it crosses the wire. The client SDK's own parse drops fields
+ * its `Tool` type does not know — the top-level `securitySchemes` among them —
+ * so byte budgets and wire checks read the raw response.
+ */
+async function listToolsRaw() {
+  const ctx = { identity } as unknown as McpRequestContext;
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+  const server = assembleMcpRegistry(ctx, config);
+  await server.connect(serverTransport);
+  const client = new Client({ name: "test", version: "1.0.0" });
+  await client.connect(clientTransport);
+  try {
+    return (await client.request(
+      { method: "tools/list" },
+      z.looseObject({ tools: z.array(z.looseObject({ name: z.string() })) }),
+    )) as { tools: Record<string, unknown>[] };
+  } finally {
+    await client.close();
+    await server.close();
+  }
+}
 
 async function listTools() {
   const ctx = { identity } as unknown as McpRequestContext;
@@ -87,9 +113,16 @@ describe("MCP tool list", () => {
     // `manageBankImport` submit/discard need and `sync` never returns.
     // 68 KB with `listPublicKeys` (0.9 KB), the keyId `managePublicKeys`
     // delete needs.
-    const { tools } = await listTools();
+    //
+    // 72 KB since w1/m33 (ADR 019 D2) published each tool's `securitySchemes`
+    // twice — top level, where OpenAI's Apps SDK reference places it, and in
+    // `_meta`, its documented mirror for clients that read only `_meta` (the
+    // official client SDK strips unknown top-level fields): 4.1 KB across 30
+    // tools. Measured on the raw response from here on, since the parsed one
+    // no longer shows everything an agent pays for.
+    const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(68 * 1024);
+    expect(bytes).toBeLessThan(72 * 1024);
   });
 
   it("publishes all four annotations on every tool", async () => {
@@ -162,5 +195,58 @@ describe("MCP tool list", () => {
       "operation",
       "scopes",
     ]);
+  });
+});
+
+/**
+ * Per-tool `securitySchemes` (ADR 019 D2): derived from `VERB_TABLE`, never
+ * hand-written, published top-level and mirrored in `_meta`.
+ */
+describe("MCP tool security schemes", () => {
+  it("publishes each tool's derived scheme top-level and in _meta", async () => {
+    const { tools } = await listToolsRaw();
+    expect(tools).toHaveLength(MCP_TOOLS.length);
+    for (const tool of tools) {
+      const expected = mcpToolSecuritySchemes(String(tool.name));
+      expect(tool.securitySchemes).toEqual(expected);
+      expect(
+        (tool._meta as { securitySchemes?: unknown }).securitySchemes,
+      ).toEqual(expected);
+    }
+  });
+
+  it("asks for the scope of the tool's most privileged verb", () => {
+    expect(mcpToolSecuritySchemes("runBqlQuery")).toEqual([
+      { type: "oauth2", scopes: ["ledger.read"] },
+    ]);
+    expect(mcpToolSecuritySchemes("manageBankImport")).toEqual([
+      { type: "oauth2", scopes: ["ledger.write"] },
+    ]);
+    // A grouped tool whose branches span classes declares the strongest.
+    const classes = new Set(
+      VERB_TABLE.filter((e) => e.mcp === "manageLedgers").map((e) => e.class),
+    );
+    expect(classes.has("admin")).toBe(true);
+    expect(mcpToolSecuritySchemes("manageLedgers")).toEqual([
+      { type: "oauth2", scopes: ["ledger.admin"] },
+    ]);
+    expect(
+      mcpToolSecuritySchemes("mixed", [
+        { mcp: "mixed", class: "read" },
+        { mcp: "mixed", class: "admin" },
+        { mcp: "mixed", class: "write" },
+      ]),
+    ).toEqual([{ type: "oauth2", scopes: ["ledger.admin"] }]);
+  });
+
+  it("declares OAuth without a scope for session-only tools, and allows anonymous public ones", () => {
+    expect(
+      mcpToolSecuritySchemes("sessionOnly", [
+        { mcp: "sessionOnly", class: "session-only" },
+      ]),
+    ).toEqual([{ type: "oauth2" }]);
+    expect(
+      mcpToolSecuritySchemes("open", [{ mcp: "open", class: "public" }]),
+    ).toEqual([{ type: "noauth" }, { type: "oauth2" }]);
   });
 });
