@@ -42,6 +42,12 @@ const unpinned: Identity = {
 
 const pinned: Identity = { ...unpinned, ledgerScope: "alice/personal" };
 
+/**
+ * A playbook's prose with line breaks and indentation collapsed, so phrase
+ * assertions survive the source being rewrapped.
+ */
+const prose = (text: string): string => text.replace(/\s+/g, " ");
+
 /** A prompt message carries text or it is not a playbook. */
 function textOf(content: { type: string }): string {
   expect(content.type).toBe("text");
@@ -121,9 +127,11 @@ describe("MCP prompts", () => {
   });
 
   it("points the import playbook at the bank resources it needs", () => {
-    const text = MCP_PROMPTS.find(
-      (descriptor) => descriptor.name === "categorize-imports",
-    )!.build({}, pinned);
+    const text = prose(
+      MCP_PROMPTS.find(
+        (descriptor) => descriptor.name === "categorize-imports",
+      )!.build({}, pinned),
+    );
     expect(text).toContain("beancount://{owner}/{name}/banks");
     expect(text).toContain(
       "beancount://{owner}/{name}/bank-transactions/unsynced",
@@ -224,9 +232,11 @@ describe("MCP prompts", () => {
   });
 
   it("makes the close report state whether the month is actually closed", () => {
-    const text = MCP_PROMPTS.find(
-      (descriptor) => descriptor.name === "close-month",
-    )!.build({}, pinned);
+    const text = prose(
+      MCP_PROMPTS.find(
+        (descriptor) => descriptor.name === "close-month",
+      )!.build({}, pinned),
+    );
     expect(text).toContain("`Close status: incomplete`");
     expect(text).toMatch(/any unverified account is incomplete/);
     expect(text).not.toMatch(
@@ -250,7 +260,7 @@ describe("MCP prompts", () => {
 
   it("carries the refusals that make a playbook safe to hand an agent", async () => {
     for (const descriptor of MCP_PROMPTS) {
-      const text = descriptor.build({}, pinned);
+      const text = prose(descriptor.build({}, pinned));
       if (descriptor.name === "spending-report") {
         expect(text).toMatch(/read-only/i);
         expect(text).toMatch(/never estimate/i);
