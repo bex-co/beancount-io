@@ -1,17 +1,28 @@
 # ADR 001: Self-Built Cross-Platform Mobile Billing
 
-- Status: Proposed
+- Status: Deferred (2026-10-03) — shelved by owner decision; nothing in this record is implemented, and reviving it requires an explicit owner decision
 - Date: 2026-07-27
 - Decision owners: Mobile and Backend
 - Scope: Beancount Web, iOS, and Android subscription entitlements
 
+## Current State
+
+In-app purchase is not being built. The direction in force is:
+
+- **The mobile app is consumption-only.** It does not sell subscriptions, and it carries no native purchase library, purchase screen, or subscription-management surface. A subscriber who bought on the Web signs in and uses their tier.
+- **The app does not prompt for an upgrade.** Commit `abfc55c1` removed the plan-upgrade calls to action from the quota and ledger-limit errors in all 13 locales and replaced them with neutral explanations (for example, the agent quota notice in `mobile/src/translations/en.ts` now only says the allowance resets next month). It also hid "Open in browser" from the iOS ledger menu (`mobile/src/components/ledger-drawer/ledger-drawer.tsx`).
+- **Billing stays Stripe-only on the backend.** `paid_customers` requires a Stripe customer ID (`backend-cluster/backend-v2/src/features/stripe/data/paid-customer-model/schema.ts`), and tier resolution reads that table and calls Stripe (`backend-cluster/backend-v2/src/features/stripe/operations/get-user-tier.ts`). None of the provider-neutral tables, services, or callbacks described below exist.
+- **Residue.** Three GraphQL operation documents — `SubscriptionStatus`, `CreateSubscriptionSession`, and `CancelSubscription` in `mobile/src/common/graphql/queries/` — have no caller in the app. They are kept on `mobile/scripts/graphql-operations-allowlist.json` with this record as the stated reason. They are Stripe-shaped (a Checkout session and a Stripe cancellation), so they are not the provider-neutral operations this design calls for; a revival replaces them rather than building on them.
+
+The rest of this record is the design to pick up if in-app purchase is revived. It is kept because the analysis still holds; it is not a commitment or a schedule. See [Revival Prerequisites](#revival-prerequisites) for what must be settled before any of it starts.
+
 ## Context
 
-Beancount currently sells subscriptions on the Web through Stripe Checkout. The backend creates Checkout sessions, receives Stripe webhooks, stores Stripe customer records, and derives a user's subscription tier from Stripe subscriptions and Price IDs.
+Beancount sells subscriptions on the Web through Stripe Checkout. The backend creates Checkout sessions, receives Stripe webhooks, stores Stripe customer records, and derives a user's subscription tier from Stripe subscriptions and Price IDs.
 
-The mobile application needs to sell the same digital service on iOS and Android. For a globally distributed application, consumer purchases that unlock features in the app must use Apple In-App Purchase and Google Play Billing by default. Stripe Checkout may remain available on the Web and may be offered from a mobile app only in storefronts and programs where external purchasing is explicitly allowed. A region-specific external-purchase implementation is not part of this decision.
+Selling the same digital service inside the iOS and Android apps would be subject to store payment rules. For a globally distributed application, consumer purchases that unlock features in the app must use Apple In-App Purchase and Google Play Billing by default. Stripe Checkout may remain available on the Web and may be offered from a mobile app only in storefronts and programs where external purchasing is explicitly allowed. A region-specific external-purchase implementation is not part of this decision.
 
-The desired product behavior is:
+If mobile purchase is revived, the desired product behavior is:
 
 - A subscription purchased through Stripe, the App Store, or Google Play unlocks the same Beancount account entitlement.
 - Existing Stripe subscribers retain their subscriptions without migration of payment credentials, renewal dates, invoices, or customer management.
@@ -19,7 +30,7 @@ The desired product behavior is:
 - Users are prevented, where possible, from buying the same entitlement through more than one provider.
 - Subscription management remains with the provider that created the subscription.
 
-The current backend billing model is Stripe-specific. In particular, `paid_customers` requires a Stripe customer ID, full subscription reads call Stripe, and tier resolution maps Stripe Price IDs directly to Beancount tiers. That model cannot safely represent App Store or Google Play subscriptions.
+The backend billing model is Stripe-specific. In particular, `paid_customers` requires a Stripe customer ID, full subscription reads call Stripe, and tier resolution maps Stripe Price IDs directly to Beancount tiers. That model cannot safely represent App Store or Google Play subscriptions.
 
 ## Decision Drivers
 
@@ -34,7 +45,9 @@ The current backend billing model is Stripe-specific. In particular, `paid_custo
 
 ## Decision
 
-Beancount will build and operate a provider-neutral billing service in the existing backend.
+This decision is deferred; the sections from here to [Rollback and Failure Containment](#rollback-and-failure-containment) describe the intended design, not work in progress.
+
+If in-app purchase is revived, Beancount will build and operate a provider-neutral billing service in the existing backend.
 
 The payment providers will be:
 
@@ -387,7 +400,7 @@ Rejected as the default because external digital-goods purchasing is not globall
 
 ### Consumption-Only Mobile App
 
-The mobile app could allow existing Web subscribers to sign in without offering mobile purchases. This is simpler but does not satisfy the requirement to sell a subscription in the app.
+The mobile app allows existing Web subscribers to sign in without offering mobile purchases. This is the state in force while this record is deferred (see [Current State](#current-state)). It is simpler and needs no store integration, but it does not sell a subscription in the app; that requirement is what a revival of this record would serve.
 
 ## Rollback and Failure Containment
 
@@ -396,6 +409,16 @@ The mobile app could allow existing Web subscribers to sign in without offering 
 - During migration, the existing Stripe authorization path remains available until shadow comparison is accepted.
 - If notification processing is degraded, cached entitlements continue only until their verified access end; the system does not extend access indefinitely based solely on a failed provider read.
 - Reconciliation is safe to repeat and is the recovery path for missed events.
+
+## Revival Prerequisites
+
+Reviving this record takes an explicit owner decision. The design above also has gaps that must be closed before implementation starts:
+
+- **API parity.** The [Backend API Surface](#backend-api-surface) is specified as GraphQL operations plus REST provider callbacks only. The repository requires every customer-facing capability on REST, GraphQL, and MCP wherever protocol and credential policy permit (`backend-cluster/backend-v2/docs/api-parity.md`). Each new operation — entitlement read, purchase confirmation, restore, management destination — needs all three surfaces or a documented exemption.
+- **Refunds and chargebacks.** The access rules stop a refunded or revoked subscription "according to the provider's verified effective time" and go no further. Still undefined: Stripe disputes and chargebacks, partial refunds, whether access already consumed is clawed back, and what the user sees when access is removed.
+- **Reconciliation cadence.** The scheduled reconciliation job has no stated frequency, lookback window, or objective for how long a missed notification may leave an entitlement wrong.
+- **Unowned open questions.** None of the items under [Open Questions and Release Gates](#open-questions-and-release-gates) has an owner.
+- **Residue.** Decide whether the three allowlisted Stripe-shaped mobile GraphQL operations are deleted or replaced (see [Current State](#current-state)).
 
 ## Open Questions and Release Gates
 

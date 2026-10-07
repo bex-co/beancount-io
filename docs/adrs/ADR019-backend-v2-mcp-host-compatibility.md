@@ -1,6 +1,6 @@
 # ADR 0019: MCP hosts — one endpoint for ChatGPT, Claude, Cursor, Copilot, and Muse, and what the authorization server must accept to let them in
 
-- Status: Accepted (2026-10-06, after the facts were re-verified — see [Amendments](#2026-10-06--facts-re-verified-and-accepted)). D1 and D2 write down what is already true; D3–D9 are being implemented as `.pm/w1/m30`–`m34` and note `w1/170` — see [Implementation status](#implementation-status-2026-09-25).
+- Status: Accepted (2026-10-06, after the facts were re-verified — see [Amendments](#2026-10-06--facts-re-verified-and-accepted)). D1–D8 are on `main` and D9 is done at the edge; verifying them on production waits on a deploy, and the real-host sign-ins have not been run — see [Implementation status](#implementation-status).
 - Date: 2026-09-25
 - Decision owners: Backend (`backend-cluster/backend-v2`: OAuth provider, MCP surface), Dashboard (`dashboard/`: the consent page), Deploy (edge rules)
 - Scope: which third-party MCP hosts the `POST /api-gateway/mcp` endpoint serves, the credential path each one uses, what the authorization server must accept for each to register, sign in, and stay signed in, and which parts of the surface a host that only calls tools can reach. The transport stays [ADR 0007](./ADR007-backend-v2-mcp-surface.md); the tool/resource split stays [ADR 0008](./ADR008-backend-v2-surface-parity.md), amended by D7; the well-known paths stay [ADR 0009](./ADR009-backend-v2-well-known-paths.md).
@@ -71,7 +71,7 @@ No host was driven through a full browser sign-in for this record. "Registers" a
 - **We do not control hosts.** The specification tells clients to state `application_type`; Cursor's documented registration does not show it. Waiting for every host to comply is waiting indefinitely.
 - **Letting more hosts in must not weaken consent.** Every host payload we accept is also a template an attacker can copy, and the consent screen is the only place a person can tell them apart.
 - **A tools-only host is a named host,** not a degraded client to ignore. Two of the hosts in scope consume nothing else.
-- **Host-specific code is where parity erodes.** ADR 0006 and ADR 0008 made one decision serve three surfaces; one surface must not fork per host.
+- **Host-specific code is where parity erodes.** ADR 0008, and the three-surface model it extends, made one decision serve three surfaces; one surface must not fork per host.
 
 ## Decision
 
@@ -86,12 +86,12 @@ No host was driven through a full browser sign-in for this record. "Registers" a
 - **OAuth** for a person at a browser: Claude, ChatGPT, Copilot in VS Code, Cursor, Muse. The grant is the person's own, approved on our consent page and bound to the MCP audience.
 - **A `bcio_` API key in the `Authorization` header** for hosts that cannot run OAuth or run unattended: Copilot's cloud agent and code review, Muse Code, CI; and Cursor, until D3 lands.
 
-ChatGPT has only the first path, and Copilot's cloud agent only the second. Both paths exist today; this record makes them the contract. Two consequences, stated rather than changed:
+ChatGPT has only the first path, and Copilot's cloud agent only the second. Both paths exist today; this record makes them the contract. The per-tool declaration at the end of this decision does not exist yet. Two consequences, stated rather than changed:
 
 - Minting a key requires a paid plan (w1/m22), so a free user cannot use a header-only host at all. That pricing decision is out of scope here; this records that it gates a host.
 - Claude's `static_headers` (beta) sends one Owner-entered key for everyone in an organization. A `bcio_` key is one person's credential and carries that person's ledger authority, so we do not recommend `static_headers` for Beancount.io; Claude users connect with OAuth.
 
-Tools also declare OpenAI's per-tool `securitySchemes`: OAuth 2 with the scope the tool's op class requires (`read` → `ledger.read`, `write` → `ledger.write`, `admin` → `ledger.admin`; a grouped tool declares its most privileged branch). ChatGPT uses the declaration to decide when to link an account and when to ask for a broader scope; other hosts ignore it. The declaration is derived from `VERB_TABLE` and never hand-written — the rule ADR 0007 D8 applied to output schemas. Where the field sits on the wire follows OpenAI's current Apps SDK reference.
+Tools are also to declare OpenAI's per-tool `securitySchemes`: OAuth 2 with the scope the tool's op class requires (`read` → `ledger.read`, `write` → `ledger.write`, `admin` → `ledger.admin`; a grouped tool declares its most privileged branch). ChatGPT uses the declaration to decide when to link an account and when to ask for a broader scope; other hosts ignore it. The declaration is to be derived from `VERB_TABLE` and never hand-written — the rule ADR 0007 D8 applied to output schemas. Where the field sits on the wire follows OpenAI's current Apps SDK reference.
 
 ### D3 — A registration that does not state `application_type` is native
 
@@ -100,7 +100,7 @@ Tools also declare OpenAI's per-tool `securitySchemes`: OAuth 2 with the scope t
 - Cursor's three-URI registration is accepted.
 - Loopback redirects match on any port, as RFC 8252 §7.3 requires of the authorization server. VS Code's fallback port works, and so do Claude Code's port-less CIMD redirects (D6).
 - Hosted apps' `https` redirects register exactly as before.
-- Every authorization by such a client shows our consent page, even when a grant already exists. This is oidc-provider's `native_client_prompt` check (`lib/helpers/interaction_policy/prompts/consent.js:11–22`), RFC 8252 §8.6's rule for redirects another app could claim. Consent should identify the client and requested operation scopes, with access to all authorized ledgers as [decided on 2026-09-27](./ADR007-backend-v2-mcp-surface.md#rejection-rationale-2026-09-27); a returning user sees one screen per re-authorization.
+- Every authorization by such a client shows our consent page, even when a grant already exists. This is oidc-provider's `native_client_prompt` check (`lib/helpers/interaction_policy/prompts/consent.js:11–22`), RFC 8252 §8.6's rule for redirects another app could claim. Consent should identify the client and requested operation scopes, with access to all authorized ledgers and no ledger choice, as [ADR 0007's rejection of ledger pinning](./ADR007-backend-v2-mcp-surface.md#rejection-rationale-2026-09-27) decides; a returning user sees one screen per re-authorization. The rule has no exception: [ADR 013](./ADR013-mobile-verified-https-oauth-redirect.md), which would have let a verified `https` redirect skip the interaction, is rejected.
 - Newly refused: `http://` redirects to a non-loopback host, and `https` redirects to a loopback address. Neither is a legitimate host redirect in production.
 
 **This deviates from one MCP requirement, on purpose.** The specification's security section says every redirect URI MUST be `localhost` or HTTPS, and `cursor://…` is neither. We admit it for three reasons. RFC 8252 §7.1 and OAuth 2.1 allow private-use schemes for native apps, and the specification's own client-registration section anticipates "native-style redirect URIs". The risk such a scheme adds — another app claiming it — is exactly what `native_client_prompt` and D4 answer. And refusing it does not make Cursor compliant; it makes Cursor fail before consent, invisibly. oidc-provider still refuses `javascript:`, `data:`, and its other forbidden schemes.
@@ -193,12 +193,16 @@ Everything in this section is third-party reporting; Meta has published no conne
 
 Stance: no Muse-specific code. A submission uses D1's URL, offers both paths — OAuth with PKCE, and API keys for paid plans — and names `/.well-known/oauth-protected-resource` as the starting point in its documentation. If Muse's redirect turns out to be a private-use scheme, D3 already covers it. Re-check this section when Meta publishes a specification.
 
+## The official MCP Registry listing
+
+The first directory is one the host tables above do not name. The hosted endpoint is published to the official MCP Registry (`registry.modelcontextprotocol.io`) as `io.beancount/beancount`, from `backend-cluster/backend-v2/server.json`, by `.github/workflows/publish-mcp-registry.yml`. It goes first because it depends on none of D3–D9: the listing names D1's URL and nothing else — no header, no package — so a client that installs from it meets the same `401` and discovery chain as one configured by hand; the registry checks only that the remote is HTTPS and that the publisher controls `beancount.io`; and subregistries and aggregators — Smithery and PulseMCP among those the registry's own documentation names — read its API, so one listing reaches several hosts at once. Domain control is proven over HTTP: `GET /.well-known/mcp-registry-auth` serves the signing key's public record from `MCP_REGISTRY_AUTH_PROOF`, and answers 404 when unset so a self-host never vouches for Beancount.io's key (ADR 0009 indexes the path). Published versions are immutable, so a listing change bumps `version`. The code is on `main`; the listing is not live until the operator configures the key and proof (see [Implementation status](#implementation-status)). Claude's, ChatGPT's, and Muse's directories still wait on D3–D9 and on each host's own review.
+
 ## Non-goals
 
 - **In-chat UI for ChatGPT** (MCP Apps `ui://` resources, Apps SDK components). That is a product decision needing its own record; ChatGPT gets the tool surface.
 - **Host-specific tools, descriptions, or endpoints** — see D1.
 - **Anthropic-held credentials or a predefined ChatGPT client.** Both end per-connection registration, but each is a per-host secret to hold and rotate, and CIMD ends it with no secret. Revisit if a directory requires one.
-- **Submitting directory listings.** Listing on Claude's directory, ChatGPT's app directory, or Muse's is a product decision; this record makes the technical prerequisites true. The official MCP Registry is the one exception, taken up in [Amendments](#amendments): it needs none of this record's decisions.
+- **Submitting directory listings.** Listing on Claude's directory, ChatGPT's app directory, or Muse's is a product decision; this record makes the technical prerequisites true. The official MCP Registry is the one exception, taken up in [The official MCP Registry listing](#the-official-mcp-registry-listing): it needs none of this record's decisions.
 - **The paid-plan rule for API keys.** D2 records its effect; it does not change it.
 
 ## Alternatives Considered
@@ -209,7 +213,7 @@ The specification is on this side: a client MUST state it. But the cost of waiti
 
 ### Infer `application_type` from the redirect URIs (rejected)
 
-This would treat a registration as native only when it names a private-use scheme or a loopback redirect, leaving `https`-only hosts on web rules. The difference from D3 that matters is that Claude's and ChatGPT's users would skip the consent screen on re-authorization. We want that screen — it is the point of D4 — and the inference needs code ahead of oidc-provider's own parsing of the registration body. `src/server/start-server.ts:64–67` deliberately routes `/api-gateway/oauth/*` past the app's body parser, and that is a path where a parsing mistake is a security bug.
+This would treat a registration as native only when it names a private-use scheme or a loopback redirect, leaving `https`-only hosts on web rules. The difference from D3 that matters is that Claude's and ChatGPT's users would skip the consent screen on re-authorization. We want that screen — it is the point of D4 — and the inference needs code ahead of oidc-provider's own parsing of the registration body. `src/server/middleware/body-parser-middleware.ts:40–41` deliberately routes `/api-gateway/oauth/*` past the app's body parser, and that is a path where a parsing mistake is a security bug.
 
 ### Allowlist the hosts whose CIMD documents we fetch (rejected)
 
@@ -245,9 +249,11 @@ ADR 0007 D1 already rules this out, and each host would need its own discovery d
 - Three more tools, and a higher `tools/list` size gate.
 - The host tables here age quickly. The fixtures in D8 are what keep this record honest.
 
-## Implementation status (2026-09-25)
+## Implementation status
 
-Nothing has landed. D3, D4, and D6 land in that order, each depending on the one before. D5 and D7 are independent. D8's fixtures grow with each change. D9 is a deployment check: the edge rules on the three path families have not been reviewed.
+Every decision has landed on `main`, and D9 is done at the edge. What remains is verification: the production checks for D3, D4, D6, and D8 wait on a deploy (`.pm/w1/blocked/m30`, `.pm/w1/blocked/m31`), and the real-host sign-ins need that deploy and the owner's host accounts (`.pm/w1/blocked/m34`). D5 and D7 with D2's declaration are closed as `.pm/w1/done/m32` and `.pm/w1/done/m33`.
+
+The table below names where each decision lives; the one after it gives its state.
 
 | Decision | Change |
 | --- | --- |
@@ -261,7 +267,7 @@ Nothing has landed. D3, D4, and D6 land in that order, each depending on the one
 | D9 | Edge-rule review for `/.well-known/*`, `/api-gateway/oauth/*`, and `/api-gateway/mcp` |
 | Docs | Per-host setup notes in `docs/mcp.md` under "Connect a client", once each host has a fixture |
 
-**Progress (2026-10-06).** On `main`, not yet deployed to production unless stated:
+State on `main`, not yet deployed to production unless stated:
 
 | Decision | State |
 | --- | --- |
@@ -273,21 +279,17 @@ Nothing has landed. D3, D4, and D6 land in that order, each depending on the one
 | D7 | Landed: `listBankConnections` (`e3df700e`), `listStagedBankTransactions` (`b6332c0a`), `listPublicKeys` (`f7786884`), each beside its resource twin and its verb's REST and GraphQL rows; a tools-only journey test (`16b65818`); ADR 0008 amended. **Deviation:** the two `admin`-class lists are annotated `readOnlyHint: false` (a non-destructive, idempotent `ADMIN_READ` preset), not read-only — the annotation guard keeps `readOnlyHint` for `read`-class verbs because hosts auto-approve read-only tools, and these expose bank connections and keys. `tools/list`: 30 tools. |
 | D2 | Landed (`bc2acded`): every tool's `securitySchemes`, derived from `VERB_TABLE`, top-level and in `_meta`. |
 | D9 | Done at the edge (2026-10-06): the zone had no custom WAF or rate-limit rules and Bot Fight mode off, but Browser Integrity Check was on and Security Level medium — both can challenge a host's server-side calls by User-Agent or source-IP reputation. A WAF custom rule now skips exactly those two for `/.well-known/*`, `/api-gateway/oauth/*`, and `/api-gateway/mcp`; Cloudflare's managed rules still apply and throttling stays in the backend. Verified with server-side requests carrying no User-Agent, `python-httpx`, and `Go-http-client`: discovery 200, MCP 401 with its pointer, OAuth endpoints answering JSON, no challenge pages. |
-| Listing | `backend-cluster/backend-v2/server.json`, the `/.well-known/mcp-registry-auth` route behind `MCP_REGISTRY_AUTH_PROOF`, and `.github/workflows/publish-mcp-registry.yml` — see [Amendments](#amendments) (2026-10-02); tracked as `.pm/w2/m36` |
+| Listing | Published: `backend-cluster/backend-v2/server.json`, the `/.well-known/mcp-registry-auth` route behind `MCP_REGISTRY_AUTH_PROOF`, and `.github/workflows/publish-mcp-registry.yml` — see [The official MCP Registry listing](#the-official-mcp-registry-listing); closed as `.pm/w2/done/m36` |
 
 ## Open Questions
 
-Ledger scope was settled on 2026-09-27: [MCP connections should access all authorized ledgers](./ADR007-backend-v2-mcp-surface.md#rejection-rationale-2026-09-27), without choosing one ledger or a subset. The current consent selector predates that decision; removing it and handling existing pinned credentials remain implementation work.
+Ledger scope is settled in ADR 0007: [every credential reaches all the ledgers its user is authorized for](./ADR007-backend-v2-mcp-surface.md#rejection-rationale-2026-09-27), and no credential type supports choosing one ledger or a subset. The consent page's ledger selector is still in the code and goes with that work, which ADR 0007 tracks; nothing in this record depends on it.
 
 - **Is Codex a fair stand-in for a tools-only host** in `yarn mcp:agent-eval`? ChatGPT cannot be driven by the harness, and D7's deferred bridge needs transcripts from a host that never reads resources.
 - **Does ChatGPT surface MCP resources to the model at all?** OpenAI's documentation describes integrations as tool-driven and resources as carriers for UI, but nobody has examined a transcript.
-- **Which directory comes first** — answered in part on 2026-10-02 ([Amendments](#amendments)): the official MCP Registry listing ships first, because it needs none of D3–D9. The order among Claude's, ChatGPT's, and Muse's directories remains open.
+- **Which directory comes next?** [The official MCP Registry listing](#the-official-mcp-registry-listing) ships first, because it needs none of D3–D9. The order among Claude's, ChatGPT's, and Muse's directories remains open.
 
 ## Amendments
-
-### 2026-10-02 — The official MCP Registry listing goes first
-
-The open question "which directory comes first" is answered for a directory this record did not name. The hosted endpoint is published to the official MCP Registry (`registry.modelcontextprotocol.io`) as `io.beancount/beancount`, from `backend-cluster/backend-v2/server.json`, by `.github/workflows/publish-mcp-registry.yml`; the work is tracked as `.pm/w2/m36`. It goes first because it depends on none of D3–D9: the listing names D1's URL and nothing else — no header, no package — so a client that installs from it meets the same `401` and discovery chain as one configured by hand; the registry checks only that the remote is HTTPS and that the publisher controls `beancount.io`; and subregistries and aggregators — Smithery and PulseMCP among those the registry's own documentation names — read its API, so one listing reaches several hosts at once. Domain control is proven over HTTP: `GET /.well-known/mcp-registry-auth` serves the signing key's public record from `MCP_REGISTRY_AUTH_PROOF`, and answers 404 when unset so a self-host never vouches for Beancount.io's key (ADR 0009 indexes the path). Published versions are immutable, so a listing change bumps `version`. Claude's, ChatGPT's, and Muse's directories still wait on D3–D9 and on each host's own review; their order remains open.
 
 ### 2026-10-06 — Facts re-verified, and accepted
 
@@ -310,7 +312,7 @@ Internal:
 - `src/features/oauth/data/oauth-adapter-model/postgres-impl.ts` — which OAuth rows the cleanup job never sweeps
 - `dashboard/src/features/oauth/pages/consent.tsx` — the third-party consent page
 - `src/features/ai-agent/api/mcp-tools.ts`, `src/features/ai-agent/api/mcp-resources.ts`, `src/features/ai-agent/tools/bank-import-tool.ts` — the tool and resource surface D7 audits
-- `src/server/start-server.ts` — which OAuth routes bypass the app's body parser
+- `src/server/middleware/body-parser-middleware.ts` — which OAuth routes bypass the app's body parser
 - `scripts/mcp-conformance.ts` — the read-only deployment checks D8 extends
 - oidc-provider 9.12.0 — `lib/consts/client_attributes.js`, `lib/helpers/client_schema.js`, `lib/models/client.js`, `lib/helpers/interaction_policy/prompts/consent.js`, `lib/helpers/features.js`, `lib/helpers/fetch_request.js`
 - [ADR 0007](./ADR007-backend-v2-mcp-surface.md) — transport contract; D1 (address), D4 (discovery), and the 2026-09-27 rejection of ledger pinning

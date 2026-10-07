@@ -1,23 +1,43 @@
 # ADR 0007: The MCP surface — one stateless endpoint, and the rules that keep it honest
 
-- Status: Rejected (2026-09-27) — the ledger-pinning policy in D3/D11 is rejected in favor of access to all authorized ledgers for simplicity. See [Rejection rationale](#rejection-rationale-2026-09-27). Cross-surface parity remains in [ADR 0008](./ADR008-backend-v2-surface-parity.md).
+- Status: Rejected (2026-09-27) — the ledger-pinning policy in D3/D11 is rejected for every credential type, OAuth grants and API keys alike, in favor of access to all authorized ledgers. The code still enforces pins; see [Rejection rationale](#rejection-rationale-2026-09-27). Cross-surface parity remains in [ADR 0008](./ADR008-backend-v2-surface-parity.md).
 - Date: 2026-08-24
 - Decision owners: Backend (route, registry, transport, error translation), Deploy (routing, secrets, migrations)
-- Scope: `POST /api-gateway/mcp` — the Model Context Protocol endpoint an external agent connects to. What its address is, which HTTP methods it answers, which credentials reach it, how a refusal is phrased, and which deployment facts are part of its contract rather than tribal knowledge. Extends ADR 0006, which established the three-surface model; this ADR is about the third surface specifically.
+- Scope: `POST /api-gateway/mcp` — the Model Context Protocol endpoint an external agent connects to. What its address is, which HTTP methods it answers, which credentials reach it, how a refusal is phrased, and which deployment facts are part of its contract rather than tribal knowledge. Extends ADR 0006, which established the three-surface model; this ADR is about the third surface specifically. ADR 0006 was written before backend-v2 was imported into this repository and was never committed here; its decisions survive in the code this record cites (`composition-root.ts`, `identity.ts`, `op-class.ts`) and in ADR 0008.
 
 ## Rejection rationale (2026-09-27)
 
-An MCP connection should access **all ledgers the authenticated user is authorized to use**, subject to its granted operation scopes. Connection setup and consent should not require choosing one ledger or a subset. One connection that follows the user's ledger access is simpler to configure and maintain.
+A credential should access **all ledgers the authenticated user is authorized to use**, subject to its granted operation scopes. Connection setup, consent, and key creation should not require choosing one ledger or a subset. One connection that follows the user's ledger access is simpler to configure and maintain.
 
-This rejects D3's required ledger pin and D11's policy of keeping pins as the default with all-ledger access as an opt-in. Ledger-specific calls still identify their target through a `ledger` argument or resource URI; `listLedgers` provides discovery. Each operation still checks scopes and ledger permissions, including revocation, on every call.
+This rejects D3's required ledger pin and D11's policy of keeping pins as the default with all-ledger access as an opt-in. The rejection covers **both credential types**: an OAuth grant approved on the consent page and a `bcio_` API key. No credential type supports pinning going forward. Ledger-specific calls still identify their target through a `ledger` argument or resource URI; `listLedgers` provides discovery. Each operation still checks scopes and ledger permissions, including revocation, on every call.
 
-The independent transport, OAuth resource separation, error handling, and schema rules remain valid. The original decisions and diagrams below are retained as history; their ledger-pinning rules no longer describe the intended policy.
+**Credentials already issued with a pin keep it** until they expire or are revoked. A pinned grant or key is never silently widened to the user's other ledgers, and its holder is not forced to re-authorize.
 
-**Implementation follow-up:** the current consent flow still offers ledger selection, and target resolution still enforces existing credential pins. This documentation change does not implement the new policy. Removing the MCP ledger-selection flow and handling existing pinned credentials remain implementation work.
+The independent transport, OAuth resource separation, error handling, and schema rules remain valid. The decisions and diagrams below are retained because they explain the endpoint; their ledger-pinning rules describe what the code does today, not the intended policy.
+
+### Not yet implemented
+
+The code still issues and enforces pins. Removing issuance is the work; enforcement stays for the credentials that already carry one (see [Open Questions](#open-questions)). Paths that start with `src/` are relative to `backend-cluster/backend-v2/`.
+
+Still issuing pins:
+
+- `src/features/oauth/api/oidc-route.ts` — the third-party consent handler requires "either one ledger or explicit account-wide access" and encodes a chosen ledger into the grant's account id.
+- `dashboard/src/features/oauth/pages/consent.tsx` — the consent page renders the ledger picker beside the all-ledgers option.
+- `src/features/apikeys/service/api-key-service.ts` and `src/features/ai-agent/tools/api-key-tools.ts` — key creation accepts `ledgerScope`, and a pinned caller's new key inherits its pin.
+
+Still enforcing pins:
+
+- `src/server/api/identity.ts` — `identityAllowsLedgerScope`, and the `ledgerScope` each credential kind resolves to.
+- `src/features/ai-agent/api/mcp-context.ts` — `resolveMcpLedger` defaults to the pin and refuses any other ledger.
+- `src/features/ai-agent/api/mcp-resources.ts` and `mcp-prompts.ts` — a pinned credential lists only its ledger and gets pin-specific prompt text.
+- `src/features/ledger/workflow/ledger-workflow.ts` — `restrictToPin` and the one-item `listLedgers` catalog.
+- `src/features/ledger/utils/resolve-legacy-ledger.ts` — the legacy default ledger falls back to the pin.
+
+Two board milestones were designed while pins were expected to persist and need redesign before they resume: `.pm/w2/blocked/m34` (its definition of done includes "a pinned credential still sees only its ledger") and `.pm/w5/blocked/m5` (its evaluation uses keys pinned to the eval ledger). No board item tracks the removal itself.
 
 ## Context
 
-ADR 0006 settled that GraphQL, REST, and MCP are three dialects of one decision: one identity gate (`resolveIdentity`), one op-class table (`op-class.ts`), one rate limiter, one audit hook, and per-feature fragments assembled by `composition-root.ts`. MCP's fragment is `MCP_TOOLS` — seven tools (`runBqlQuery`, `listLedgerFiles`, `readLedgerFiles`, `editLedgerFiles`, `listApiKeys`, `createApiKey`, `revokeApiKey`) — turned into an `McpServer` named `beancount-mcp` by `assembleMcpRegistry`, and served over `StreamableHTTPServerTransport` by `mcp-route.ts`.
+ADR 0006 settled that GraphQL, REST, and MCP are three dialects of one decision: one identity gate (`resolveIdentity`), one op-class table (`op-class.ts`), one rate limiter, one audit hook, and per-feature fragments assembled by `composition-root.ts`. MCP's fragment is `MCP_TOOLS` — at the time of the probe below, seven tools (`runBqlQuery`, `listLedgerFiles`, `readLedgerFiles`, `editLedgerFiles`, `listApiKeys`, `createApiKey`, `revokeApiKey`) — turned into an `McpServer` named `beancount-mcp` by `assembleMcpRegistry`, and served over `StreamableHTTPServerTransport` by `mcp-route.ts`.
 
 That much was decided. What was never written down is everything _around_ the tools: the endpoint's address, its method set, what happens when a credential is refused, and which deployment facts the endpoint silently depends on. Those gaps do not show up in unit tests — the backend's 2596 tests all passed while every one of the following was true in production.
 
@@ -44,7 +64,7 @@ Read together these are not six unrelated bugs. They are one omission repeated: 
 
 ## Decision
 
-Ten rules. D1–D3 fix the shape of the endpoint, D4–D7 fix what it says when it refuses, D8–D10 fix what must be true before it is considered deployed.
+Eleven rules. D1–D3 fix the shape of the endpoint, D4–D7 fix what it says when it refuses, D8–D10 fix what must be true before it is considered deployed. D11 is the multi-ledger design that replaced D3's pin and was itself rejected.
 
 ### D1 — One endpoint, one address, and the address is part of the contract
 
@@ -72,13 +92,11 @@ This is what the Streamable HTTP spec prescribes for both — `405` for `GET` wh
 `mcp-route.ts` does not authenticate. It calls `resolveIdentity` with the MCP resource binding from the shared OAuth catalog — the one seam (ADR 0006 D2) — and then decides what an unacceptable _MCP_ credential looks like:
 
 - **A browser session is not an MCP credential.** MCP clients are agents that completed an OAuth ceremony. A session is refused exactly as no credential is, discovery hint included, so a browser-hosted client goes and gets a real token instead of half-working.
-- **The credential must be pinned to one ledger.** MCP has no per-call ledger argument to fall back on, so an unpinned token — legitimate on GraphQL and REST — is refused here with a `ForbiddenError` rather than guessed at. API keys are minted with `ledgerScope: "owner/name"` for this reason.
+- **The credential must be pinned to one ledger — rejected.** As first decided, MCP had no per-call ledger argument to fall back on, so an unpinned token — legitimate on GraphQL and REST — was refused with a `ForbiddenError` rather than guessed at, and API keys were minted with `ledgerScope: "owner/name"` for this reason. [D11](#d11--a-credential-may-reach-more-than-one-ledger-and-the-call-says-which) added the `ledger` argument, the route stopped refusing unpinned credentials, and pinning was then [rejected for every credential type](#rejection-rationale-2026-09-27).
 
-Both refusals are decided _before_ the tool context is built, so an unusable credential never reaches a registry.
+The session refusal is decided _before_ the tool context is built, so an unusable credential never reaches a registry.
 
 MCP and the application API intentionally remain separate OAuth resources. MCP tokens carry `{issuer}/api-gateway/mcp`; Mobile tokens for GraphQL and REST carry the historical `{issuer}/v1` audience. The latter is a protocol identifier, not an HTTP endpoint. An earlier migration direction proposed converging MCP on the application audience, but that would let a credential minted for one trust boundary be replayed at the other. The split is therefore permanent, while `{issuer}/v1` remains stable for released native clients and their persisted refresh grants despite its version-shaped name.
-
-> **Historical amendment:** [D11](#d11--a-credential-may-reach-more-than-one-ledger-and-the-call-says-which) added an optional `ledger` argument and allowed unpinned credentials when a call names its target. Both D3's required pin and D11's default pin were subsequently [rejected on 2026-09-27](#rejection-rationale-2026-09-27). The session-is-not-a-credential rule remains valid.
 
 ### D4 — A `401` must hand back a pointer that resolves
 
@@ -97,13 +115,13 @@ A deployment that serves the `401` correctly but answers the URL it names with `
 
 ### D5 — Authorization is per call, never per session
 
-Restating ADR 0006 D4/D9 because the stateless transport is what makes it cheap: every tool authorizes itself, per call, through its service's own `authorizeLedger` seam. `resolveMcpLedgerId` deliberately touches no database — a once-at-connect check could not make a mid-session revocation bite on the next call, and this one does. The scope gate (`requireScopeClass`) and the rate limiter run per call in the handler for the same reason.
+Restating ADR 0006 D4/D9 because the stateless transport is what makes it cheap: every tool authorizes itself, per call, through its service's own `authorizeLedger` seam. Target resolution (`resolveMcpLedger`) deliberately touches no database — a once-at-connect check could not make a mid-session revocation bite on the next call, and this one does. The scope gate (`requireScopeClass`) and the rate limiter run per call in the handler for the same reason.
 
 ### D6 — Every refusal speaks MCP's dialect, and a payload that says `ok:false` **is** a refusal
 
 There are exactly two boundaries, and they use different vocabularies:
 
-- **Before a session exists** — bad address, bad method, no credential, unpinned credential — the answer is an **HTTP status**. The client is not yet in a conversation; there is nothing to interrupt.
+- **Before a session exists** — bad address, bad method, no credential — the answer is an **HTTP status**. The client is not yet in a conversation; there is nothing to interrupt.
 - **Inside a tool call** — scope denied, rate limited, ledger revoked, query invalid, file missing — the answer is a **`CallToolResult` with `isError: true`**. A thrown transport error would end the session instead of telling the agent what it lacked, and an agent that is told what it lacked can often fix it.
 
 The rule that was missing: **`isError` must be derived from the result, not only from the control flow.** `runToolSafely` is the tools' error boundary and it _returns_ `{ ok: false, error }` rather than throwing, so a handler that sets `isError` only in its `catch` classifies half the refusals as successes. The two dialects then disagreed with each other — a scope denial (thrown by the gate, outside the boundary) set `isError`, while a revoked ledger grant (thrown inside a service, caught by the boundary) did not. The wrapper must inspect the returned value:
@@ -136,7 +154,7 @@ Note the interaction with D6: an `isError` result skips output validation in the
 
 Three properties must be guarded, in the style ADR 0006 D9 set:
 
-1. **Method set** — `GET` and `DELETE` return `405` + `Allow: POST`; an _unauthenticated_ `GET` still returns `401` with the discovery hint, not `405`, so discovery is not lost to the method check; an unpinned credential still returns `403`.
+1. **Method set** — `GET` and `DELETE` return `405` + `Allow: POST`; an _unauthenticated_ `GET` still returns `401` with the discovery hint, not `405`, so discovery is not lost to the method check.
 2. **Refusal dialect** — both a gate denial and an in-tool refusal produce `isError: true`. One test per dialect, in the same suite, because a surface that quietly stopped enforcing looks identical to one where the caller happened to be allowed.
 3. **Error masking** — an unexpected error is masked in production; a `DomainError` is not.
 
@@ -153,13 +171,13 @@ Both fell through the same crack: `backend-v2/AGENTS.md` already requires a new 
 
 ### D11 — A credential may reach more than one ledger, and the call says which
 
-> **Ledger-pinning policy rejected on 2026-09-27.** The following describes the earlier design and its tradeoffs. See [Rejection rationale](#rejection-rationale-2026-09-27) for the intended all-ledger policy.
+> **Rejected.** This is the design the code implements today (shipped with [w1/m10](../../.pm/w1/done/m10/README.md)), kept for its tradeoffs. The intended policy has no pins on any credential type; see [Rejection rationale](#rejection-rationale-2026-09-27).
 
 D3's pin is kept as the default and stops being the only mode. The four ledger tools take an optional `ledger` argument (`owner/name`), resolved in this order:
 
 | Credential | `ledger` argument | Result                                       |
 | ---------- | ----------------- | -------------------------------------------- |
-| pinned     | absent            | the pin — **today's behaviour, bit for bit** |
+| pinned     | absent            | the pin                                      |
 | pinned     | equals the pin    | allowed                                      |
 | pinned     | any other ledger  | **refused.** A pin never widens              |
 | unpinned   | present           | that ledger, authorized on this call         |
@@ -168,7 +186,7 @@ D3's pin is kept as the default and stops being the only mode. The four ledger t
 Three things make this smaller than it looks:
 
 - **`authorizeLedger` needs no change.** It already takes the ledger id as a per-call argument (D5) — the seam that makes mid-session revocation bite is the same seam that makes a per-call ledger safe. Nothing about authorization moves.
-- **`resolveMcpLedgerId` stops being a gate and becomes a default.** It is the only place in the route that has to change.
+- **Target resolution stops being a gate and becomes a default.** `resolveMcpLedger` in `mcp-context.ts` is the only place that had to change.
 - **Nothing existing breaks.** A pinned credential that never sends the argument behaves exactly as it does today, so every live client keeps working and the change is purely additive.
 
 **`listLedgers` becomes a tool**, reversing its `mcpExempt` — which read _"Not agent-shaped: no agent workflow reaches for it."_ That was true, and it was true **only because of D3's pin**: with exactly one reachable ledger, listing them is a tool that can only ever return the answer the agent already had. The moment a credential can reach several, it is the first call an agent has to make. See ADR 0008 D3 — an exemption inherited from a constraint has to be re-derived when that constraint moves, and this is the worked example.
@@ -199,7 +217,6 @@ flowchart TB
   subgraph route["mcp-route.ts — per request"]
     id["resolveIdentity(MCP resource binding)<br/>the one gate — ADR 0006 D2"]
     sess{"session or<br/>no credential?"}
-    pin{"ledgerScope<br/>pinned?"}
     meth{"method<br/>= POST?"}
     build["build ToolContext + stateless transport<br/>sessionIdGenerator: undefined"]
   end
@@ -207,15 +224,13 @@ flowchart TB
   subgraph reg["assembleMcpRegistry — per tool call"]
     rl["enforceRateLimit — keyed on credential"]
     scope["requireScopeClass — op-class table"]
-    exec["descriptor.execute → service → authorizeLedger"]
+    exec["resolveMcpLedger → descriptor.execute → service → authorizeLedger"]
     wrap["classify result: ok:false ⇒ isError — D6"]
   end
 
   client --> edge --> id --> sess
   sess -- yes --> u401["401 + WWW-Authenticate<br/>resource_metadata=… — D4"]
-  sess -- no --> pin
-  pin -- no --> f403["403 ForbiddenError — D3"]
-  pin -- yes --> meth
+  sess -- no --> meth
   meth -- "GET / DELETE" --> m405["405 + Allow: POST — D2"]
   meth -- POST --> build --> rl --> scope --> exec --> wrap --> ok["CallToolResult"]
 
@@ -278,63 +293,39 @@ MCP's authorization is the backend's authorization; a second implementation is a
 
 ## Conformance checklist
 
-A deploy is not "MCP-ready" until all seven hold. `yarn mcp:conformance <base-url>` checks them:
+A deploy is not "MCP-ready" until these hold. `yarn mcp:conformance <base-url> [--token …] [--read-only-token …]` (`backend-cluster/backend-v2/scripts/mcp-conformance.ts`) runs them against any deployment, names the check that failed, skips (rather than fails) what it has no credential for, and only observes:
 
-1. `POST {issuer}/api-gateway/mcp` returns `401` with a `WWW-Authenticate: Bearer resource_metadata=…` header.
-2. The URL that header names returns `200` with a valid RFC 9728 document.
+1. `POST {issuer}/api-gateway/mcp` refuses an anonymous caller with `401` and a `WWW-Authenticate: Bearer resource_metadata=…` header.
+2. The URL that header names returns `200` with a usable RFC 9728 document.
 3. `GET` and `DELETE` on the endpoint return `405` with `Allow: POST` for an authenticated caller, and complete.
-4. A ledger-scoped `bcio_` key reaches `initialize` and `tools/list`, returning 7 tools.
-5. A ledger-scoped key with `ledger.read` only receives `isError: true` for `editLedgerFiles`.
-6. An unexpected internal error returns `"Internal server error"`, with the detail in logs only.
-7. The public URL advertised to users is one of the addresses above, verified by requesting it.
+4. A credential reaches `initialize` and `tools/list`, and every listed tool publishes an `outputSchema`. The check asserts no particular tool count.
+5. A credential with `ledger.read` only receives `isError: true` for `editLedgerFiles`.
+6. A BQL result leads with its row count and carries typed structured content.
+7. An internal failure does not leak its message; the detail is in logs only.
+8. The public URL advertised to users reaches the MCP handler, verified by requesting it.
+9. Instructions, hero tools, and concrete resources list cleanly.
+10. The feature-flags resource reads without a `userId`.
 
-## Implementation review (2026-09-27)
+## Implementation status
 
-- **D1's canonical address is established.** [Client documentation](../../backend-cluster/backend-v2/docs/mcp.md) uses `/api-gateway/mcp`, and [ADR 019's 2026-09-25 probe](./ADR019-backend-v2-mcp-host-compatibility.md#what-a-probe-found-2026-09-25) records the public endpoint and its working discovery chain. The optional `/mcp` alias is not required for completion.
-- **D11's earlier design is implemented.** [MCP tools](../../backend-cluster/backend-v2/src/features/ai-agent/api/mcp-tools.ts) expose `listLedgers` and optional per-call ledger selection; [target resolution](../../backend-cluster/backend-v2/src/features/ai-agent/api/mcp-context.ts) preserves pins and refuses an omitted unpinned target. This shipped with [w1/m10](../../.pm/w1/done/m10/README.md), before the ledger-pinning policy was rejected above.
-- **D10 deployment closeout is not verified by this review.** The migrations and conformance script are present, but a source review and passing local tests do not establish that the production database has both tables or that authenticated production conformance passes. This remains a deployment verification item, separate from the rejection of ledger pinning.
+Every transport, refusal, and schema decision is in the code. What remains is the pin removal and one deployment verification.
 
-The dated implementation account below is historical, including its statements that D11 is unimplemented and production API keys do not work; neither is a current finding from this review.
-
-## Implementation status (2026-08-24)
-
-**Already in force before this ADR** — written down here rather than newly decided: D3 (the credential rules in `mcp-route.ts`) and D5 (per-call authorization, from ADR 0006 D4/D9).
-
-**Landed in this change:**
-
-- D2 — `GET`/`DELETE` refused `405 + Allow: POST` before a transport exists (`mcp-route.ts`), with the socket-level regression test D9 requires.
-- D6 — `isError` derived from the result payload (`composition-root.ts`), with a test covering the in-tool refusal dialect alongside the existing gate-denial one.
-- D7 — production masking in `restErrorMiddleware`, mirroring `format-error.ts`, with tests for both the masked and unmasked cases.
-- D9 — all three properties now guarded; each test was verified to fail against the code as it stood before its fix.
-- D10 (partial) — `OAUTH_JWKS` declared in `bex.yaml`, `deploy/docker/docker-compose.yml`, and `.env.example`, completing the checklist it had half-followed.
-
-**Landed with w3/m4 (2026-08-24):**
-
-- D8 — `mcpOutputSchema` in `tools/types.ts`, an `outputSchema` on every descriptor, passed through `assembleMcpRegistry`.
-- The conformance checklist below is now executable: `yarn mcp:conformance <base-url> [--token …] [--read-only-token …]` runs all seven checks against any deployment, names the check that failed, skips (rather than fails) what it has no credential for, and only observes. Credential-gated checks that an operator often cannot exercise by hand are covered by tests against a real socket.
-- `backend-cluster/backend-v2/README.md` documents connecting a client; the root `README.md` surfaces it.
-
-**Landed with w5/028 (2026-10-03):**
-
-- D7 on MCP — the masking the rule requires of all three surfaces had landed only on REST. The MCP boundary (`mcp-errors.ts`, applied in `composition-root.ts`) now replaces the message of an unexpected failure with `"Internal server error"` in production on tool calls, resource reads, and prompt fetches, keeping its category and hint. A `DomainError`, an argument refusal, and a tool guard's own not-found keep their message; the full message still goes to the logger. Covered through the real registry in `mcp-unexpected-error-masking.test.ts`.
-
-**Landed on the deployment side (verified 2026-08-25):**
-
-- D4 — `OAUTH_JWKS` is seeded. `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server` both return `200`, `/api-gateway/oauth/jwks` serves an ES256 key, and dynamic client registration works. An MCP client can now complete the OAuth ceremony end to end; a browser consent step is the only part a script cannot drive.
-
-**Outstanding — requires production access or a follow-up change:**
-
-- D1 — a working public path for `/mcp`, either as an edge alias or by leaving `/api-gateway/mcp` as the documented address. The REST surface hit the same problem — the edge routes only `/api-gateway/*` — and `fix(backend-v2): move REST v1 under API gateway` settled it by moving the mount under the gateway rather than widening the edge, making `/api-gateway/v1/…` the one correct address. That move is not available to MCP, which already sits there, so this one is genuinely an edge decision.
-- D10 — apply migrations `0018`/`0019` to the production database, and run `yarn mcp:conformance` as a post-deploy step.
-- D11 — the optional `ledger` argument on the four ledger tools, the `listLedgers` tool, and turning `resolveMcpLedgerId` from a gate into a default. Additive: no live client changes behaviour. Reversing `Query.listLedgers`'s `mcpExempt` is part of this, not a separate cleanup.
-
-The remaining production gap is D10 alone, and it is narrower than it was: **OAuth works, API keys do not.** `resolveApiKeyIdentity` queries `api_keys` only for `bcio_`-prefixed tokens, so a `bcio_` credential still returns `500` on the missing table while an OAuth token never touches that path. A human at a browser can connect today; CI, cron, and unattended clients cannot until the migration runs.
+- **D1 — in force.** [Client documentation](../../backend-cluster/backend-v2/docs/mcp.md) uses `/api-gateway/mcp`, and [ADR 019's probe](./ADR019-backend-v2-mcp-host-compatibility.md#what-a-probe-found-2026-09-25) records the public endpoint and its working discovery chain. `/mcp` is not an alias and is not required to be one.
+- **D2 — in force.** `GET`/`DELETE` are refused `405 + Allow: POST` before a transport exists (`mcp-route.ts`), with the socket-level regression test D9 requires.
+- **D3 — in force for sessions; its pin is rejected.** `mcp-route.ts` refuses a browser session and no longer refuses an unpinned credential.
+- **D4 — in force.** `OAUTH_JWKS` is seeded on the hosted deployment: both metadata documents return `200`, `/api-gateway/oauth/jwks` serves an ES256 key, and dynamic client registration works. An MCP client can complete the OAuth ceremony end to end; a browser consent step is the only part a script cannot drive.
+- **D5 — in force**, as it was before this record (per-call authorization, from ADR 0006 D4/D9).
+- **D6 — in force.** `isError` is derived from the result payload (`composition-root.ts`), with a test covering the in-tool refusal dialect alongside the gate-denial one.
+- **D7 — in force on all three surfaces.** `restErrorMiddleware` masks as `format-error.ts` does. The MCP boundary (`mcp-errors.ts`, applied in `composition-root.ts`) replaces the message of an unexpected failure with `"Internal server error"` in production on tool calls, resource reads, and prompt fetches, keeping its category and hint. A `DomainError`, an argument refusal, and a tool guard's own not-found keep their message; the full message still goes to the logger. Covered through the real registry in `mcp-unexpected-error-masking.test.ts`.
+- **D8 — in force.** `mcpOutputSchema` in `tools/types.ts`, an `outputSchema` on every descriptor, passed through `assembleMcpRegistry`.
+- **D9 — in force.** All three properties are guarded; each test was verified to fail against the code as it stood before its fix.
+- **D10 — declared, not verified in production.** `OAUTH_JWKS` is declared in `bex.yaml`, `deploy/docker/docker-compose.yml`, and `backend-cluster/backend-v2/.env.example`. Migrations `0018` and `0019` and the conformance script are in the repository, but a source review and passing local tests do not establish that the production database has both tables or that an authenticated production conformance run passes. This is a deployment verification item, separate from the rejection of ledger pinning.
+- **D11 — implemented, then rejected.** [MCP tools](../../backend-cluster/backend-v2/src/features/ai-agent/api/mcp-tools.ts) expose `listLedgers` and optional per-call ledger selection; [target resolution](../../backend-cluster/backend-v2/src/features/ai-agent/api/mcp-context.ts) preserves pins and refuses an omitted unpinned target. The per-call `ledger` argument and `listLedgers` stay under the all-ledger policy; pin issuance goes — see [Not yet implemented](#not-yet-implemented).
 
 ## Open Questions
 
-- Should `scopeEnforcement` flip from `"shadow"` to `"enforce"` before or after MCP is publicly advertised? Advertising first means the first external clients are the traffic the shadow mode is meant to observe — which is either the point or exactly backwards.
-- Is a `/mcp` alias worth the edge configuration, or is `/api-gateway/mcp` fine as the documented address? The alias is friendlier in a config file a human types once.
-- Should the conformance checklist run as an automated post-deploy smoke test rather than a document?
+- **How do pinned API keys end?** Existing pins are honoured until the credential expires or is revoked. A pinned OAuth grant ages out with its grant lifetime, but an API key created without `expiresAt` never expires, so its pin — and the enforcement code listed under [Not yet implemented](#not-yet-implemented) — would live forever. Before implementation, choose one: a sunset date after which remaining pinned keys must be replaced, or permanent enforcement code for a credential shape that can no longer be created.
+- Should the conformance checklist run as an automated post-deploy smoke test rather than an operator command?
 
 ## References
 
@@ -342,6 +333,8 @@ Internal:
 
 - `src/features/ai-agent/api/mcp-route.ts` — transport, method set, credential requirements
 - `src/features/ai-agent/api/mcp-tools.ts` — the `MCP_TOOLS` fragment
+- `src/features/ai-agent/api/mcp-context.ts` — `resolveMcpLedger`, per-call target resolution and the pin ceiling
+- `src/features/ai-agent/api/mcp-errors.ts` — MCP's half of D7's masking
 - `src/server/api/composition-root.ts` — `assembleMcpRegistry`, `makeMcpToolHandler`, per-call gate and rate limit
 - `src/server/api/identity.ts` — `resolveIdentity`, the one gate (ADR 0006 D2)
 - `src/server/api/op-class.ts` — op ids and read/write/admin classification

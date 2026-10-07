@@ -36,7 +36,7 @@ Accept account classifications declared directly in the ledger as **`cash-flow-r
 - **Precedence: declared beats heuristic.** Resolution order is (1) `cash-flow-role` metadata, then (2) the published `config.ts` heuristics, which remain the single definition of the defaults.
 - **Invalid values fall back, visibly.** An unrecognized value (typo, wrong case, non-string) is treated as absent: resolution falls through to the heuristic and the account is flagged in the status panel ("unknown value, using default"). Nothing fails to render; nothing is silently accepted.
 - **Not date-effective.** A statement for any period uses the declarations as they stand today; changing a classification means editing the `open` directive, and the ledger's version control is the audit trail.
-- **One shared resolver.** `dashboard/src/features/reports/cash-flow/lib/role-resolver.ts` (`resolveCashFlowRole`) produces the final role and its source (`declared` | `heuristic`, plus the raw invalid value for flagging). Every consumer reads from it: the cash-flow report (sections, CCE set, bottom line), CSV/Markdown/print exports (the inferred-classification disclosure is gated per-row on heuristic-resolved rows), and the overview Sankey (`"cash"` excludes the account from flow nodes; activity roles honored for non-`Income` accounts; `Income` stays the source side and `Equity` stays excluded — declarations never remap those two).
+- **One shared resolver.** `dashboard/src/features/reports/cash-flow/lib/role-resolver.ts` (`resolveCashFlowRole`) produces the final role and its source (`declared` | `heuristic`, plus the raw invalid value for flagging). Every consumer reads from it: the cash-flow report (sections, CCE set, bottom line), CSV/Markdown/print exports (the Markdown and print inferred-classification disclosures appear only while at least one row is still heuristic-resolved; CSV carries no notices), and the overview Sankey (`"cash"` excludes the account from flow nodes; activity roles honored for non-`Income` accounts; `Income` stays the source side and `Equity` stays excluded — declarations never remap those two).
 - **Backend surface.** The existing `getLedgerAccountDirectives` GraphQL query gains a `meta` field carrying each account's `open`-directive metadata; the cash-flow page already fetches those directives for its cash-account status panel, so declared roles arrive in the same request and are merged ahead of the heuristics. This is a deliberate, scoped exception to ADR002's "no backend changes" driver: the ledger service's open entries already carry `meta`, so the backend work is one mapped field, not new computation or a new endpoint.
 
 ## Alternatives Considered
@@ -69,14 +69,14 @@ The ledger is the source of truth; plain text is diffable, greppable, and script
 
 ### Negative
 
-- **Breaks ADR002's zero-backend-change boundary.** Exposing `open` metadata needs a new GraphQL query in the private backend repo — scoped (exposure of already-returned data), but real cross-repo coordination that v1 deliberately avoided.
+- **Breaks ADR002's zero-backend-change boundary.** Exposing `open` metadata added a `meta` field to the existing `getLedgerAccountDirectives` query in `backend-cluster/backend-v2` — scoped (exposure of already-returned data) and in this monorepo, but a backend change of the kind v1 deliberately avoided.
 - **Key collision risk.** A user already using `cash-flow-role` for something else would see it interpreted by this report; mitigated by the key being namespaced by report, documented, and read only by this feature.
-- **Declared-vs-inferred confusion risk.** Mitigated by per-row declared/inferred indicators and the per-row export disclosure gating.
+- **Declared-vs-inferred confusion risk.** Mitigated by a per-row "declared" marker (heuristic rows carry no marker; a separate "inferred" marker was not built) and the export disclosure gating.
 - **Support load from typos.** Mitigated by status-panel flagging rather than silent fallback.
 
 ## Open Questions
 
-- Adoption and trust metrics per the PRFAQ: share of active ledgers with ≥1 `cash-flow-role` annotation after 90 days; reduction in misclassification reports; share of exports no longer carrying the inferred-classification disclaimer.
+- Adoption and trust metrics per the PRFAQ, none of which is instrumented: share of active ledgers with ≥1 `cash-flow-role` annotation after 90 days; reduction in misclassification reports; share of exports no longer carrying the inferred-classification disclaimer.
 - Whether a settings/editor UI that writes the metadata (autocomplete on `open` directives) is worth building on top of this storage format.
 - Whether subtree defaults via dated `custom` directives ever earn their complexity.
 

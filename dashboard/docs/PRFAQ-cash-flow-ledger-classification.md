@@ -1,8 +1,8 @@
 # PRFAQ — Declare Your Cash-Flow Classification in the Ledger
 
-Status: Draft (working-backwards document, pre-implementation)
+Status: Shipped as [w4/m3](../../.pm/w4/done/m3/README.md); the design is recorded in [ADR003](../../docs/adrs/ADR003-dashboard-cash-flow-ledger-roles.md). This document describes the feature as built. Two parts of the original working-backwards draft were not built: an "inferred" row marker (only a "declared" marker exists) and instrumentation for the success measures.
 Date: 2026-08-25
-Related: [ADR002 — Cash-Flow Report](../../docs/adrs/ADR002-dashboard-cash-flow-report.md)
+Related: [ADR002 — Cash-Flow Report](../../docs/adrs/ADR002-dashboard-cash-flow-report.md), [ADR003 — Cash-Flow Classification Declared in the Ledger](../../docs/adrs/ADR003-dashboard-cash-flow-ledger-roles.md)
 
 ---
 
@@ -26,9 +26,9 @@ One key, four values — `cash`, `operating`, `investing`, `financing` — and t
 
 "I keep my ledger in git because I want every number to have a reason I can read later," said an early user. "The cash-flow report used to be the one place where a rule I never wrote decided how my money moved. Now the rule is in the ledger, in plain text, next to the account it describes — where I can grep it, diff it, and blame it."
 
-Classifications are per-account, declared on the account's `open` directive, and nothing else. An account with no metadata falls back to the same published heuristics the report has always used, so existing ledgers render identically before and after. When the report does rely on a heuristic, it says so; when it uses your declared metadata, the disclosure line in exports disappears, because the classification is no longer an inference — it is part of your books.
+Classifications are per-account, declared on the account's `open` directive, and nothing else. An account with no metadata falls back to the same published heuristics the report has always used, so existing ledgers render identically before and after. When a Markdown or printed statement relies on a heuristic, it says so; once every account behind a disclosure is declared, that disclosure disappears, because the classification is no longer an inference — it is part of your books.
 
-The feature works everywhere the cash-flow report does: the web dashboard, CSV and Markdown exports, and printed statements. Declared roles also feed the account-status panel, so an account you marked as cash stops showing up as an "unclassified asset" in review views — and the overview Sankey diagram reads the same declarations, so every view of your cash agrees with every other.
+The feature works everywhere the dashboard's cash-flow report does: the web page, CSV and Markdown exports, and printed statements. Declared roles also feed the "Cash & cash equivalents in this report" panel, so an account you marked as cash is listed there with its status and closing balance — and the overview Sankey diagram reads the same declarations, so every dashboard view of your cash agrees with every other.
 
 Availability: rolling out to all ledgers. Declaring a role requires only a text editor; the report picks it up on the next load.
 
@@ -54,7 +54,7 @@ Accepted values are `"cash"`, `"operating"`, `"investing"`, and `"financing"`. A
 - `"cash"` — the account belongs to the cash-and-equivalents pile. Cash accounts never appear as line items; the statement explains the *change* in their combined balance, and transfers between two cash accounts cancel out.
 - `"operating"` / `"investing"` / `"financing"` — the account is not cash, and its period change appears as a line under that activity section.
 
-By default the report treats asset accounts whose names contain `Cash`, `Checking`, `Savings`, or `Bank` as cash. Declaring a role overrides that in both directions: `cash-flow-role: "cash"` pulls in an account the name rule misses (a money-market fund, a stablecoin wallet), and `cash-flow-role: "investing"` on `Assets:US:Bank:CD` both excludes the CD from cash and files it under investing — one line does both.
+By default the report treats asset accounts whose names end in `Cash`, `Checking`, or `Savings`, or contain `Bank`, as cash. Declaring a role overrides that in both directions: `cash-flow-role: "cash"` pulls in an account the name rule misses (a money-market fund, a stablecoin wallet), and `cash-flow-role: "investing"` on `Assets:US:Bank:CD` both excludes the CD from cash and files it under investing — one line does both.
 
 **Q: Do I have to annotate every account?**
 
@@ -66,7 +66,7 @@ Nothing. The report renders exactly as it does today, including the disclosure n
 
 **Q: How do I know the report picked up my metadata?**
 
-The cash-flow page marks declared accounts with a small "declared" indicator (vs. "inferred" for heuristic-classified rows). The export disclosure changes accordingly: a statement built entirely from declared roles no longer carries the "classification is inferred" disclaimer.
+The cash-flow page marks declared accounts with a small "declared" indicator. Heuristic-classified rows carry no marker — a separate "inferred" indicator was not built, so an unmarked row is an inferred one. The Markdown and print disclosures change accordingly: the "activities are inferred" notice appears only while at least one activity row is still heuristic, and the "cash and cash equivalents set is inferred" notice only while at least one cash account is; a statement built entirely from declared roles carries neither. CSV exports carry the figures without notices.
 
 **Q: Can I set a default for a whole subtree at once?**
 
@@ -74,7 +74,7 @@ No — deliberately. We considered a `custom`-directive mechanism for subtree de
 
 **Q: What if I typo the value?**
 
-`cash-flow-role: "invsting"` is not silently accepted. The report flags the account in the status panel ("unknown cash-flow-role value, using default") so the mistake is visible where you look, not buried in a log.
+`cash-flow-role: "invsting"` is not silently accepted. The report flags the account in the status panel ("Unknown cash-flow-role value, using default") — including accounts that are not cash, which are added to the panel for the note — so the mistake is visible where you look, not buried in a log.
 
 **Q: Does this break `bean-check` or other tools?**
 
@@ -114,19 +114,21 @@ It moves the *policy* to the user and keeps the *defaults* in code. `config.ts` 
 - Date-effective classification changes.
 - A settings UI that writes the metadata for you (possible follow-up; the storage format is designed so a UI could edit it later).
 - Reclassifying individual *transactions* (e.g., "this one expense is really an investment"). Beancount models that as account structure; per-transaction overrides would fight the double-entry identity the report is built on.
-- Mobile editing of the metadata (viewing works automatically once the API exposes it).
+- Mobile: the mobile app does not read `cash-flow-role`, and offers no editing of it. The key is honored by the web dashboard only.
 
-**Q: What does the backend need to do?**
+**Q: What did the backend need to do?**
 
-Almost nothing new. The ledger service already returns per-account `open` metadata, and the API layer already maps it — the work is exposing it through GraphQL and merging it in the cash-flow loader ahead of the heuristics.
+Almost nothing new. The ledger service already returned per-account `open` metadata; the work was one mapped field — `meta` on the existing `getLedgerAccountDirectives` query — which the cash-flow page reads in the request it already made for the status panel and merges ahead of the heuristics.
 
 **Q: What are the risks?**
 
 - **Collision**: a user already using `cash-flow-role` for something else. Mitigation: the key is namespaced by report, documented, and only read by this report.
-- **Confusion between declared and inferred**: mitigated by per-row indicators and export disclosure that distinguishes the two.
+- **Confusion between declared and inferred**: mitigated by the per-row "declared" marker and export disclosures that appear only while heuristics are in play. Heuristic rows have no marker of their own.
 - **Support load from typos**: mitigated by visible validation in the status panel rather than silent fallback.
 
 **Q: How do we measure success?**
+
+Three measures were proposed. None is instrumented — the dashboard records no event for declared roles or for which disclosures an export carried — so there is no data on any of them:
 
 - Adoption: share of active ledgers with ≥1 `cash-flow-role` annotation after 90 days.
 - Correction rate: reduction in "cash-flow misclassified" support/feedback volume.
@@ -187,20 +189,28 @@ declared `operating` is honored verbatim.
 
 **Invalid values.** Any unrecognized value (a typo like `"invsting"`, a
 non-string, wrong case) is treated as absent: resolution falls through to the
-heuristic, and the account is flagged in the status panel ("unknown value,
-using default"). Nothing fails to render; nothing is silently accepted.
+heuristic, and the account is flagged in the status panel ("Unknown
+cash-flow-role value, using default"). A flagged account that is not a cash
+equivalent is added to the panel so the note is never dropped. Nothing fails
+to render; nothing is silently accepted.
 
 **Date behavior.** Classifications are intentionally not date-effective: a
 statement for any period uses the declarations as they stand today. Changing a
 classification means editing the `open` directive; the ledger's version
 control is the audit trail.
 
-**Consumers.** One shared resolver produces the final role; every consumer
-reads from it:
+**Consumers.** One shared resolver
+(`src/features/reports/cash-flow/lib/role-resolver.ts`) produces the final
+role and whether it was declared or heuristic; every consumer reads from it:
 
-- Cash-flow report (activity sections + CCE set + bottom line).
-- CSV / Markdown / print exports (same numbers; the "classification is
-  inferred" disclosure appears only for rows still resolved by the heuristic).
+- Cash-flow report (activity sections + CCE set + bottom line). Rows whose
+  role was declared carry a "declared" marker; heuristic rows carry none.
+- Status panel (the CCE accounts the statement counted, plus any account
+  flagged for an invalid value).
+- CSV / Markdown / print exports (same numbers). Markdown and print carry two
+  disclosures, each shown only while a heuristic is still in play: the
+  activity-classification notice while any activity row is heuristic, and the
+  cash-equivalents notice while any CCE account is. CSV carries no notices.
 - Overview Sankey: `"cash"` excludes the account from flow nodes, and from any
   ancestor's total — every descendant resolves its own role, so a cash account
   nested under an investing parent stays out of the investing figure;

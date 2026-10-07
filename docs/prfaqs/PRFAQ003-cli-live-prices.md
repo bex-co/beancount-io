@@ -1,6 +1,6 @@
 # PRFAQ003 — Live Prices in the bea CLI
 
-Status: CLI support released in [bea 0.3.0](https://github.com/bex-co/beancount-io/releases/tag/cli-v0.3.0) on 2026-09-21. Authenticated production workflows, packaged installation and both public distribution channels are verified. Marketing copy remains a proposal; no adoption measurements are implied.
+Status: CLI support released in [bea 0.3.0](https://github.com/bex-co/beancount-io/releases/tag/cli-v0.3.0) on 2026-09-21; the current release is 0.3.1, a bug-fix release ([package metadata](../../cli/pyproject.toml)). Authenticated production workflows, packaged installation and both public distribution channels are verified for 0.3.0. The launch copy is unpublished, and the product work in FAQ 15 is open with no owner assigned. No adoption measurements are implied.
 
 Date: 2026-09-20 (America/Los_Angeles)
 
@@ -8,21 +8,21 @@ Scope: Authenticated managed price includes for local `bea` ledgers, using the e
 
 Evidence baseline: repository commit `04f274d2`, the local `cli-v0.2.0` tag, and read-only production probes performed during this review. No customer interviews, adoption measurements, or new pricing commitments are implied.
 
-**Recommendation:** Ship the existing managed-price loader with reuse of the customer's CLI login. Let the live-prices page supply the include lines, so customers can reach a useful local valuation without a new setup command or quote-provider account.
+**Decision:** The managed-price loader ships with reuse of the customer's CLI login. The live-prices page supplies the include lines, so customers can reach a useful local valuation without a new setup command or quote-provider account.
 
-This proposal builds on [PRFAQ002](PRFAQ002-include-live-price.md), [ADR015](../adrs/ADR015-ledger-managed-price-includes.md), and [ADR016](../adrs/ADR016-backend-cluster-forwarded-request-context.md). For this CLI launch, it replaces PRFAQ002 FAQ 10's proposed anonymous-access prerequisite with an explicit Beancount.io login requirement. It does not require making the price feeds public.
+This document builds on [PRFAQ002](PRFAQ002-include-live-price.md), [ADR015](../adrs/ADR015-ledger-managed-price-includes.md), [ADR016](../adrs/ADR016-backend-cluster-forwarded-request-context.md), and [ADR018](../adrs/ADR018-cli-managed-price-includes.md). It uses the access model in PRFAQ002 FAQ 10: price feeds require a Beancount.io login and are not public.
 
 ## Release evidence — 2026-09-21
 
 - Implementation: `3c86426b`; release: `c80a49fd` / `cli-v0.3.0`.
 - [Release workflow](https://github.com/bex-co/beancount-io/actions/runs/35575551718): all 21 jobs passed, including all 12 wheel/sdist combinations across Linux, macOS and Windows with Python 3.12/3.14, two Homebrew rehearsals, publication, and five post-publication installation jobs.
 - [PyPI 0.3.0](https://pypi.org/project/beancount-io/0.3.0/) wheel and sdist hashes match the validated GitHub artifacts. The public Homebrew tap points to the same 0.3.0 sdist.
-- The exact GitHub-built wheel passed the authenticated production refresh, check, valuation, offline replay, export and manual-price-precedence journey. The [smoke record](../../cli/tests/managed_prices_live_status.json) stores only public feed metadata.
+- The exact GitHub-built wheel passed the authenticated production refresh, check, valuation, offline replay, export and manual-price-precedence journey. The [smoke record](../../cli/tests/managed_prices_live_status.json) stores only public feed metadata and was produced with 0.3.0.
 - Deterministic installed smokes cover saved login, `BEA_TOKEN`, cached service failure and offline export without production credentials. Local package checks passed, and final price regressions passed 167 tests with one explicit anonymous-network probe skipped by default.
 
 ## Press release
 
-*Proposed launch copy, written as if released. Publish only after the release gates below pass and the supported CLI version is named.*
+*Proposed launch copy, written as if released. The engineering gates in FAQ 13 passed for 0.3.0 and the copy names that version. It is unpublished until the product work in FAQ 15 is done.*
 
 **Beancount.io brings live prices to bea: keep your portfolio valued from the terminal**
 
@@ -54,7 +54,7 @@ The first useful result is a local valuation with a known source and observation
 
 ### 2. How do I start?
 
-Install the release identified in the launch notes, then sign in:
+Install `bea` 0.3.0 or later, then sign in:
 
 ```bash
 bea cloud login
@@ -81,7 +81,7 @@ The include supplies prices; the ledger must already contain the holdings. One i
 
 An account and a valid CLI login are required to retrieve the authenticated feeds. A hosted ledger is not required. `bea cloud login` authorizes the CLI; it does not upload the local ledger.
 
-The launch reuses the current price service's access policy. It introduces no new CLI-specific fee, but does not promise that every account or future instrument has identical entitlements. Product must confirm the launch catalog and applicable access requirements before publishing availability claims.
+The launch reuses the current price service's access policy. It introduces no new CLI-specific fee, but does not promise that every account or future instrument has identical entitlements. Product must confirm the launch catalog and applicable access requirements before publishing availability claims; that confirmation is outstanding.
 
 Customers do not paste a token into an include, a Git repository, or a price-provider configuration. Existing automation can supply `BEA_TOKEN` using the CLI's established credential mechanism.
 
@@ -108,7 +108,7 @@ bea --file main.bean --strict-prices check
 
 `--offline` makes no price requests and does not require a fresh login to read a saved cache. `--strict-prices` fails when a managed source is stale or unavailable. Without usable prices, normal reads preserve access to the books and identify missing valuation inputs, subject to the command's existing partial-result rules. They must not present acquisition cost or zero as a successfully refreshed market value.
 
-An explicit `price refresh` that cannot refresh a source must report failure even if a previous cache remains usable. The launch must close the current gap where a displayed refresh problem can still produce a success exit status.
+An explicit `price refresh` that cannot refresh a source exits nonzero and names each failed source, even if a previous cache remains usable.
 
 ### 6. Does refreshing change my accounting records?
 
@@ -142,30 +142,22 @@ Source status includes revision, freshness, observation time, refresh timing, an
 
 ## Internal FAQ
 
-### 9. What did we verify, and what remains unshipped?
+### 9. What did the review find, and how did the release resolve it?
 
-Implementation update (2026-09-21): `3c86426b` adds scoped credential relay,
-accurate refresh failure results and ordinary report provenance. The CLI suite
-passed 1506 tests; the expanded managed-price suite passed 166 tests. The
-explicit production smoke verifies authenticated refresh, check, valuation,
-offline replay, portable export and manual price precedence. Release candidate
-0.3.0 adds the same authentication/cache/export journey to installed-artifact
-smokes. The table below records the original evidence baseline, not current
-implementation gaps; the final publication evidence is recorded below.
+The review at `04f274d2` found a working loader that could not authenticate. Implementation `3c86426b` added scoped credential relay, accurate refresh failure results and ordinary report provenance, and 0.3.0 added the authentication, cache and export journey to the installed-artifact smokes. No engineering gap from the review remains open.
 
-
-| Area | Evidence from this review | Launch implication |
+| Area | Finding before the release | State in 0.3.0 and later |
 | --- | --- | --- |
-| Public discovery | Anonymous `GET /prices/options.json` returned 200; the live-prices page generates includes from that catalog. | Reuse the existing discovery experience for the first release. |
-| Feed access | Anonymous `GET /prices/BTC-USD` returned 302 to login. | The CLI must support authentication; anonymous access is not a release prerequisite. |
-| Existing CLI login | The stored `bea cloud` credential was present and unexpired. Both Bearer and session-cookie requests returned 200, `text/plain`, an ETag, and 93 price directives. | Bearer authentication is a verified integration path for this credential and pair. |
-| Loader and cache | [Managed loader](../../cli/src/bea_engine/managed_load.py), [feed validation](../../cli/src/bea_engine/managed_prices.py), and [disk cache](../../cli/src/bea_engine/managed_price_cache.py) exist in the checkout. | Extend the common path rather than building a report-only downloader. |
-| Command surfaces | [Price commands](../../cli/src/cli/commands/price.py) already dispatch status, refresh, and export; [global options](../../cli/src/cli/main.py) include offline and strict-price modes. | Preserve these names and close credential/error-handling gaps. |
-| Missing credential handoff | The price fetcher constructs requests without authorization or cookies. | A successful standalone HTTP probe does not establish that installed `bea` can fetch the feed yet. |
-| Release boundary | The inspected `cli-v0.2.0` tag predates managed includes and has the older `bean-price` forwarding command. | Publish a new version and name it in every launch instruction. |
-| Recorded live test | [Existing probe record](../../cli/tests/managed_prices_live_status.json) still records the earlier anonymous 302 as pending. | Update live acceptance coverage for authenticated and unauthenticated behavior during implementation. |
+| Public discovery | Anonymous `GET /prices/options.json` returned 200; the live-prices page generates includes from that catalog. | The page remains the discovery path. No terminal picker was added. |
+| Feed access | Anonymous `GET /prices/BTC-USD` returned 302 to login. | The CLI authenticates. A redirect to login is reported as an authentication problem, not followed. |
+| Existing CLI login | The stored `bea cloud` credential was present and unexpired. Both Bearer and session-cookie requests returned 200, `text/plain`, an ETag, and 93 price directives. | Bearer authentication is the shipped path. [Fetcher](../../cli/src/bea_engine/managed_prices.py). |
+| Loader and cache | [Managed loader](../../cli/src/bea_engine/managed_load.py), [feed validation](../../cli/src/bea_engine/managed_prices.py), and [disk cache](../../cli/src/bea_engine/managed_price_cache.py) existed in the checkout. | The common path was extended; there is no report-only downloader. |
+| Command surfaces | [Price commands](../../cli/src/cli/commands/price.py) dispatched status, refresh, and export; [global options](../../cli/src/cli/main.py) included offline and strict-price modes. | The names are unchanged. |
+| Credential handoff | The price fetcher constructed requests without authorization or cookies. | Closed. The fetcher attaches `Authorization: Bearer` to feed requests. |
+| Release boundary | The inspected `cli-v0.2.0` tag predated managed includes and had the older `bean-price` forwarding command. | 0.3.0 is the minimum version; 0.3.1 is current. |
+| Recorded live test | The [probe record](../../cli/tests/managed_prices_live_status.json) held the earlier anonymous 302 as pending. | Replaced. The record holds the authenticated 0.3.0 smoke and its six checks. |
 
-The HTTP probe did not execute the complete CLI flow, write cache files, refresh credentials, or establish access for every token type, account, or asset. No secret values were recorded. Broader compatibility is a launch test obligation, not an inference from one successful request.
+The authenticated smoke covers one account and BTC-USD. It does not establish access for every token type, account, or asset, and it has not been re-recorded for 0.3.1. No secret values were recorded.
 
 ### 10. How should credential reuse work?
 
@@ -211,24 +203,28 @@ The catalog defines which pairs are selectable; launch examples must also pass a
 | Machine contract | JSON status and refresh expose source outcomes, normal stdout contains no progress text, and noninteractive failure never opens a browser. |
 | Release and discovery | Pass `make check-all` and package release checks, update the frontend/helper version pins together, publish both channels, and verify the public installation instructions name a version containing the change. |
 
+The release evidence above records these gates passing for 0.3.0.
+
 The live authenticated smoke test uses a designated test account supplied through protected credentials. It never commits a token. Interactive verification may explicitly reuse an authorized cloud login; unattended runs supply a protected test credential instead of relying on a developer login. The general test suite uses synthetic feeds and credentials; the release smoke establishes actual production compatibility.
 
 ### 14. How do we roll it out and measure success?
 
-First, complete the credential and failure-handling changes and verify the release candidate with a small opt-in group using local investment ledgers. Then publish the CLI release to both channels and add a CLI setup path to the existing marketing page and documentation. That path leads from selecting assets to login, include placement, status, and the first valuation.
+The credential and failure-handling changes are complete, and the release is on both channels. Two rollout steps are not done: verifying the release with a small opt-in group using local investment ledgers, and adding a CLI setup path to the existing marketing page. That path leads from selecting assets to login, include placement, status, and the first valuation. The [CLI README](../../cli/README.md) already carries those steps.
 
 Use the same installation and first-valuation script against the publicly distributed release after publication. A successful package upload or source commit alone does not complete launch. If authenticated retrieval fails after launch, pause promotion, preserve cached/offline access, and release a fix; do not erase customer includes or weaken authentication to make the demo pass.
 
-Proposed pilot targets, not measured results: at least 8 of 10 participants complete login-to-first-priced-report without help, with a median of five minutes or less after installation. Every acceptance fixture must preserve source bytes and produce the expected valuation and export. Investigate repeated refresh failures before widening promotion.
+The pilot has not been run. Proposed targets, not measured results: at least 8 of 10 participants complete login-to-first-priced-report without help, with a median of five minutes or less after installation. Every acceptance fixture must preserve source bytes and produce the expected valuation and export. Investigate repeated refresh failures before widening promotion.
 
 Measure onboarding through consented pilot observation and aggregate service health where available. Do not add silent ledger telemetry. Record whether participants return for a later valuation and whether they still need a manual download script; these answer the retention question better than counting installed packages alone.
 
-### 15. Who owns the remaining decisions?
+### 15. What remains, and who owns it?
 
-| Owner | Decision or deliverable |
-| --- | --- |
-| CLI | Credential handoff, actionable authentication errors, refresh exit semantics, shared-loader regression coverage, generated command docs, and packaged release. |
-| Price service / edge | Stable Bearer access, conditional GET behavior, source-specific access rules, and the relationship between listed pairs and retrievable feeds. |
-| Product / growth | Approved launch catalog and access claims, pilot results, minimum-version messaging, and the marketing-page CLI setup path. |
+The CLI deliverables are complete: credential handoff, actionable authentication errors, refresh exit semantics, shared-loader regression coverage, generated command docs, and the packaged release. The remaining work is not scheduled and has no owner assigned.
 
-The recommendation is to keep today's account gate, reuse the user's existing CLI identity, and launch the smallest complete local workflow. A new authentication system, anonymous feeds, and new terminal discovery commands are not required to deliver that outcome.
+| Remaining work | Area | Owner |
+| --- | --- | --- |
+| Add the CLI setup path to the marketing page and publish the launch copy with its minimum-version messaging. | Product / growth | Unassigned |
+| Confirm the launch catalog and the access claims in FAQ 3 and FAQ 11, including the relationship between listed pairs and retrievable feeds. | Product / growth; price service | Unassigned |
+| Run the 10-person pilot in FAQ 14 and record its results. | Product / growth | Unassigned |
+
+The release kept the existing account gate, reused the customer's CLI identity, and shipped the smallest complete local workflow. A new authentication system, anonymous feeds, and new terminal discovery commands were not needed.
