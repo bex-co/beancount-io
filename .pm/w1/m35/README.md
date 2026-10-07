@@ -1,12 +1,12 @@
 # w1 · m35 — Verify and resolve the review findings on the ADR 019 work
 
-**Worker:** worker1 **Goal:** every finding from the 2026-10-07 review of w1/m30–m33 is verified, then either fixed with a regression test or abandoned with its evidence on record **Status:** todo
+**Worker:** worker1 **Goal:** every finding from the 2026-10-07 review of w1/m30–m33 is verified, then either fixed with a regression test or abandoned with its evidence on record **Status:** in progress (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| [t001](./t001.md) | Consent requester survives a non-JSON backend reply | 30m | — |
+| [t001](./done/t001.md) | Consent requester survives a non-JSON backend reply — **DONE** | 30m | — |
 | [t002](./t002.md) | Prompt assertions match wording, not line wrapping | 30m | — |
 | [t003](./t003.md) | One lifetime profile per client class decides whether a grant slides | 45m | — |
 | [t004](./t004.md) | Is the mobile special case in shouldRotateRefreshToken still needed? | 20m | — |

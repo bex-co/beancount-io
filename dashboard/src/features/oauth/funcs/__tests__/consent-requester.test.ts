@@ -109,4 +109,16 @@ describe("handleConsentRequesterGet", () => {
     const res = await handleConsentRequesterGet({ request: request() });
     expect(res.status).toBe(404);
   });
+
+  it("answers 404 when a 200 reply is not JSON", async () => {
+    fetchMock.mockResolvedValue(
+      new Response("<html>Bad gateway</html>", {
+        status: 200,
+        headers: { "content-type": "text/html" },
+      }),
+    );
+    const res = await handleConsentRequesterGet({ request: request() });
+    expect(res.status).toBe(404);
+    expect(await res.json()).toBeNull();
+  });
 });

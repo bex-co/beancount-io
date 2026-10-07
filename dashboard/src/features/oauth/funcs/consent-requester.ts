@@ -70,8 +70,11 @@ export async function handleConsentRequesterGet({
       },
     },
   ).catch(() => null);
-  const requester =
-    upstream?.ok === true ? toConsentRequester(await upstream.json()) : null;
+  // A 200 with a non-JSON body (a proxy's error page) is as unidentified as a
+  // failed request — it must not become a 500.
+  const details =
+    upstream?.ok === true ? await upstream.json().catch(() => null) : null;
+  const requester = toConsentRequester(details);
   return Response.json(requester, {
     status: requester ? 200 : 404,
     headers: { "cache-control": "no-store" },
