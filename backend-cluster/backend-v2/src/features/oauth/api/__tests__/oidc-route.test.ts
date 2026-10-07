@@ -195,6 +195,16 @@ describe("OAuth token lifetimes", () => {
     );
   });
 
+  it("slides the native app's and third-party hosts' grants, never the identity client's", () => {
+    expect(lifetimes.slides(MOBILE_CLIENT_ID)).toBe(true);
+    expect(lifetimes.slides("some-mcp-client")).toBe(true);
+    expect(
+      lifetimes.slides("https://claude.ai/oauth/mcp-oauth-client-metadata"),
+    ).toBe(true);
+    expect(lifetimes.slides(DISCOURSE_CLIENT_ID)).toBe(false);
+    expect(lifetimes.slides(undefined)).toBe(false);
+  });
+
   it("caps a re-saved third-party grant at one year after authorization", () => {
     const now = 1_000 * DAY_SECONDS;
     const ceiling = OAUTH_CONFIG.thirdParty.grantCeilingSeconds;

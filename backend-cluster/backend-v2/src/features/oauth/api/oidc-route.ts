@@ -19,7 +19,6 @@ import {
   buildStaticOAuthClients,
   isIdentityOAuthClient,
   isMobileOAuthClient,
-  isThirdPartyOAuthClient,
   oauthLifetimes,
   oauthResources,
   shouldRotateRefreshToken,
@@ -370,11 +369,7 @@ export function setOidcRoutes(
     if (oidc?.route !== "token" || ctx.status !== 200) return;
     const refreshToken = oidc.entities.RefreshToken;
     const clientId = refreshToken?.clientId;
-    if (
-      !refreshToken?.grantId ||
-      !(isMobileOAuthClient(clientId) || isThirdPartyOAuthClient(clientId))
-    )
-      return;
+    if (!refreshToken?.grantId || !lifetimes.slides(clientId)) return;
 
     try {
       const grant = await provider.Grant.find(refreshToken.grantId);

@@ -138,22 +138,31 @@ export const isIdentityOAuthClient = (clientId: unknown): boolean =>
   clientId === DISCOURSE_CLIENT_ID;
 
 /** A DCR or CIMD host — any client that is not one of the static clients. */
-export const isThirdPartyOAuthClient = (clientId: unknown): boolean =>
+const isThirdPartyOAuthClient = (clientId: unknown): boolean =>
   typeof clientId === "string" &&
   clientId !== "" &&
   !isMobileOAuthClient(clientId) &&
   !isIdentityOAuthClient(clientId);
 
-/** The lifetimes one class of client gets, in seconds. */
+/**
+ * The lifetimes one class of client gets, in seconds, and whether its grant
+ * slides forward on each refresh (ADR 019 D5). The identity client never
+ * slides: it gets no refresh token.
+ */
 function lifetimeProfile(clientId: unknown): {
   refreshToken: number;
   grant: number;
   grantCeiling?: number;
+  slides: boolean;
 } {
   if (isMobileOAuthClient(clientId)) {
     const { refreshTokenTtlSeconds, grantTtlSeconds } =
       OAUTH_CONFIG.clients.mobile;
-    return { refreshToken: refreshTokenTtlSeconds, grant: grantTtlSeconds };
+    return {
+      refreshToken: refreshTokenTtlSeconds,
+      grant: grantTtlSeconds,
+      slides: true,
+    };
   }
   if (isThirdPartyOAuthClient(clientId)) {
     const { refreshTokenTtlSeconds, grantTtlSeconds, grantCeilingSeconds } =
@@ -162,11 +171,13 @@ function lifetimeProfile(clientId: unknown): {
       refreshToken: refreshTokenTtlSeconds,
       grant: grantTtlSeconds,
       grantCeiling: grantCeilingSeconds,
+      slides: true,
     };
   }
   return {
     refreshToken: OAUTH_CONFIG.ttl.defaultRefreshTokenSeconds,
     grant: OAUTH_CONFIG.ttl.defaultGrantSeconds,
+    slides: false,
   };
 }
 
@@ -181,6 +192,7 @@ function lifetimeProfile(clientId: unknown): {
 export function oauthLifetimes(): {
   refreshToken: (clientId: unknown) => number;
   grant: (clientId: unknown, issuedAt?: number, now?: number) => number;
+  slides: (clientId: unknown) => boolean;
 } {
   return {
     refreshToken: (clientId) => lifetimeProfile(clientId).refreshToken,
@@ -190,6 +202,7 @@ export function oauthLifetimes(): {
         ? grant
         : Math.min(grant, issuedAt + grantCeiling - now);
     },
+    slides: (clientId) => lifetimeProfile(clientId).slides,
   };
 }
 
