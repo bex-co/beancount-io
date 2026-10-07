@@ -817,8 +817,8 @@ describe("executeEditLedgerFiles", () => {
  * Tool-annotation guard (w2/m27:t002).
  *
  * Clients decide what to auto-approve from the four hints, so a descriptor
- * without them — or a `readOnlyHint: true` tool whose op-class is `write` or
- * `admin` — fails CI here rather than misleading a client in production.
+ * without them — or a `readOnlyHint` that disagrees with the tool's op-class —
+ * fails CI here rather than misleading a client in production.
  */
 describe("MCP tool annotations", () => {
   it("declares all four hints on every tool", () => {
@@ -830,7 +830,11 @@ describe("MCP tool annotations", () => {
     }
   });
 
-  it("pairs readOnlyHint: true only with read-class verbs", () => {
+  it("marks a tool read-only exactly when every verb it carries is a read", () => {
+    // Both directions: a read-only hint on a write would let hosts
+    // auto-approve it, and a pure read left unmarked makes every host ask
+    // before a lookup. `admin`-class reads (bank connections, SSH keys) are
+    // deliberately not read-only (ADR 019 D7).
     const classesByTool = new Map<string, Set<string>>();
     for (const entry of VERB_TABLE) {
       if (!entry.mcp) continue;
@@ -839,10 +843,15 @@ describe("MCP tool annotations", () => {
       classesByTool.set(entry.mcp, classes);
     }
     for (const tool of MCP_TOOLS) {
-      if (tool.annotations.readOnlyHint !== true) continue;
-      const classes = classesByTool.get(tool.name);
-      expect(classes?.size).toBeGreaterThan(0);
-      expect([...(classes ?? [])]).toEqual(["read"]);
+      const classes = [...(classesByTool.get(tool.name) ?? [])];
+      expect(classes.length).toBeGreaterThan(0);
+      expect({
+        tool: tool.name,
+        readOnly: tool.annotations.readOnlyHint,
+      }).toEqual({
+        tool: tool.name,
+        readOnly: classes.every((opClass) => opClass === "read"),
+      });
     }
   });
 

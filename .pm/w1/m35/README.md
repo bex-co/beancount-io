@@ -1,6 +1,6 @@
 # w1 · m35 — Verify and resolve the review findings on the ADR 019 work
 
-**Worker:** worker1 **Goal:** every finding from the 2026-10-07 review of w1/m30–m33 is verified, then either fixed with a regression test or abandoned with its evidence on record **Status:** in progress (t001–t005 done)
+**Worker:** worker1 **Goal:** every finding from the 2026-10-07 review of w1/m30–m33 is verified, then either fixed with a regression test or abandoned with its evidence on record **Status:** in progress (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | [t003](./done/t003.md) | One lifetime profile per client class decides whether a grant slides — **DONE** | 45m | — |
 | [t004](./done/t004.md) | Is the mobile special case in shouldRotateRefreshToken still needed? — **DONE** | 20m | — |
 | [t005](./done/t005.md) | List-tool executors match their siblings' idioms — **DONE** | 20m | — |
-| [t006](./t006.md) | Derive read-only annotations from the op class | 45m | — |
+| [t006](./done/t006.md) | Derive read-only annotations from the op class — **DONE** | 45m | — |
 | [t007](./t007.md) | securitySchemes: pin the SDK hook and compute once | 30m | — |
 | [t008](./t008.md) | Conformance checks share one metadata discovery | 30m | — |
 | [t009](./t009.md) | Split oidc-route.test.ts by flow and dedupe its helpers | 60m | — |
