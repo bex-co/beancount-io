@@ -38,6 +38,11 @@ const ruCashFlow: Record<string, TranslationEntry> = {
     message: "Денежные средства и эквиваленты в этом отчёте",
     description: "Title for the cash and equivalents status panel",
   },
+  "page.cashFlow.classificationDocLink": {
+    message: "Как классифицируются счета",
+    description:
+      "Link text in the cash flow page header that opens the documentation on classifying accounts with cash-flow-role",
+  },
   "page.cashFlow.closingCash": {
     message: "Денежные средства и эквиваленты на конец периода",
     description: "Label for the closing cash and cash equivalents balance",

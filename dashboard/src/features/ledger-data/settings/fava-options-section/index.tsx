@@ -1,4 +1,5 @@
 import { useTranslations } from "@/common/hooks/use-translations";
+import { docsUrl } from "@/common/lib/docs-url";
 import type { GetLedgerQuery } from "@/graphql/definitions";
 import {
   OptionsTableSection,
@@ -14,8 +15,6 @@ export function FavaOptionsSection({
   const favaOptions = ledger.favaOptions;
 
   if (!favaOptions) return null;
-
-  const localePrefix = i18n.language === "en" ? "" : `/${i18n.language}`;
 
   const optionEntries: OptionEntry[] = [
     {
@@ -61,7 +60,7 @@ export function FavaOptionsSection({
     <OptionsTableSection
       title={t("page.settings.favaOptions")}
       description={t("page.settings.favaOptionsDescription")}
-      docUrl={`https://beancount.io${localePrefix}/docs/Basics/fava-options`}
+      docUrl={docsUrl(i18n.language, "Basics/fava-options")}
       entries={optionEntries}
     />
   );

@@ -56,6 +56,20 @@ describe("CashAccountStatusPanel", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("links the description to the cash-flow-role documentation", () => {
+    render(
+      <CashAccountStatusPanel
+        rows={rows}
+        primaryCurrency="USD"
+        defaultShowClosed={false}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "common.learnMore" }),
+    ).toHaveAttribute("href", "https://beancount.io/docs/cash-flow-roles");
+  });
+
   it("honors the fava showClosedAccounts option as the initial state", () => {
     render(
       <CashAccountStatusPanel

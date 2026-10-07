@@ -38,6 +38,11 @@ const bgCashFlow: Record<string, TranslationEntry> = {
     message: "Парични средства и еквиваленти в този отчет",
     description: "Title for the cash and equivalents status panel",
   },
+  "page.cashFlow.classificationDocLink": {
+    message: "Как се класифицират сметките",
+    description:
+      "Link text in the cash flow page header that opens the documentation on classifying accounts with cash-flow-role",
+  },
   "page.cashFlow.closingCash": {
     message: "Парични средства и еквиваленти в края на периода",
     description: "Label for the closing cash and cash equivalents balance",

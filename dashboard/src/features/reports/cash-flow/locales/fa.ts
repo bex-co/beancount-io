@@ -38,6 +38,11 @@ const faCashFlow: Record<string, TranslationEntry> = {
     message: "وجه نقد و معادل‌های آن در این گزارش",
     description: "Title for the cash and equivalents status panel",
   },
+  "page.cashFlow.classificationDocLink": {
+    message: "نحوهٔ دسته‌بندی حساب‌ها",
+    description:
+      "Link text in the cash flow page header that opens the documentation on classifying accounts with cash-flow-role",
+  },
   "page.cashFlow.closingCash": {
     message: "وجه نقد و معادل‌های آن در پایان دوره",
     description: "Label for the closing cash and cash equivalents balance",

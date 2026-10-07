@@ -38,6 +38,11 @@ const jaCashFlow: Record<string, TranslationEntry> = {
     message: "このレポートの現金および現金同等物",
     description: "Title for the cash and equivalents status panel",
   },
+  "page.cashFlow.classificationDocLink": {
+    message: "勘定科目の分類方法",
+    description:
+      "Link text in the cash flow page header that opens the documentation on classifying accounts with cash-flow-role",
+  },
   "page.cashFlow.closingCash": {
     message: "期末の現金および現金同等物",
     description: "Label for the closing cash and cash equivalents balance",

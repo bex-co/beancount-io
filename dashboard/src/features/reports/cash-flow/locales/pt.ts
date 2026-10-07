@@ -38,6 +38,11 @@ const ptCashFlow: Record<string, TranslationEntry> = {
     message: "Caixa e equivalentes neste relatório",
     description: "Title for the cash and equivalents status panel",
   },
+  "page.cashFlow.classificationDocLink": {
+    message: "Como as contas são classificadas",
+    description:
+      "Link text in the cash flow page header that opens the documentation on classifying accounts with cash-flow-role",
+  },
   "page.cashFlow.closingCash": {
     message: "Caixa e equivalentes no fim do período",
     description: "Label for the closing cash and cash equivalents balance",

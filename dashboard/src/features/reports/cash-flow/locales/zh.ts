@@ -36,6 +36,11 @@ const zhCashFlow: Record<string, TranslationEntry> = {
     message: "本报表中的现金及现金等价物",
     description: "Title for the cash and equivalents status panel",
   },
+  "page.cashFlow.classificationDocLink": {
+    message: "账户如何分类",
+    description:
+      "Link text in the cash flow page header that opens the documentation on classifying accounts with cash-flow-role",
+  },
   "page.cashFlow.closingCash": {
     message: "期末现金及现金等价物",
     description: "Label for the closing cash and cash equivalents balance",

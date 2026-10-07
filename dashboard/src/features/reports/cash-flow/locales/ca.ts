@@ -38,6 +38,11 @@ const caCashFlow: Record<string, TranslationEntry> = {
     message: "Efectiu i equivalents en aquest informe",
     description: "Title for the cash and equivalents status panel",
   },
+  "page.cashFlow.classificationDocLink": {
+    message: "Com es classifiquen els comptes",
+    description:
+      "Link text in the cash flow page header that opens the documentation on classifying accounts with cash-flow-role",
+  },
   "page.cashFlow.closingCash": {
     message: "Efectiu i equivalents al final del període",
     description: "Label for the closing cash and cash equivalents balance",

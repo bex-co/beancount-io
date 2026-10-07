@@ -10,7 +10,10 @@ import {
 } from "@/common/components/ui/card";
 import { Badge } from "@/common/components/ui/badge";
 import { Button } from "@/common/components/ui/button";
+import { DocLink } from "@/common/components/doc-link";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { docsUrl } from "@/common/lib/docs-url";
+import { CASH_FLOW_ROLES_DOC_PATH } from "./constants";
 import { StatementAmounts } from "./cash-flow-content";
 import {
   filterCashAccountStatus,
@@ -76,7 +79,10 @@ export function CashAccountStatusPanel({
       <CardHeader>
         <CardTitle>{t("page.cashFlow.cashAccountsTitle")}</CardTitle>
         <CardDescription>
-          {t("page.cashFlow.cashAccountsDescription")}
+          {t("page.cashFlow.cashAccountsDescription")}{" "}
+          <DocLink href={docsUrl(i18n.language, CASH_FLOW_ROLES_DOC_PATH)}>
+            {t("common.learnMore")}
+          </DocLink>
         </CardDescription>
         {hiddenCount > 0 || showClosed ? (
           <CardAction>

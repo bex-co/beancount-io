@@ -38,6 +38,11 @@ const frCashFlow: Record<string, TranslationEntry> = {
     message: "Trésorerie et équivalents dans ce rapport",
     description: "Title for the cash and equivalents status panel",
   },
+  "page.cashFlow.classificationDocLink": {
+    message: "Comment les comptes sont classés",
+    description:
+      "Link text in the cash flow page header that opens the documentation on classifying accounts with cash-flow-role",
+  },
   "page.cashFlow.closingCash": {
     message: "Trésorerie et équivalents en fin de période",
     description: "Label for the closing cash and cash equivalents balance",

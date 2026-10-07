@@ -38,6 +38,11 @@ const deCashFlow: Record<string, TranslationEntry> = {
     message: "Zahlungsmittel und -äquivalente in diesem Bericht",
     description: "Title for the cash and equivalents status panel",
   },
+  "page.cashFlow.classificationDocLink": {
+    message: "So werden Konten klassifiziert",
+    description:
+      "Link text in the cash flow page header that opens the documentation on classifying accounts with cash-flow-role",
+  },
   "page.cashFlow.closingCash": {
     message: "Zahlungsmittel und -äquivalente am Periodenende",
     description: "Label for the closing cash and cash equivalents balance",

@@ -1,4 +1,5 @@
 import { useTranslations } from "@/common/hooks/use-translations";
+import { docsUrl } from "@/common/lib/docs-url";
 import type { GetLedgerQuery } from "@/graphql/definitions";
 import {
   OptionsTableSection,
@@ -14,8 +15,6 @@ export function BeancountOptionsSection({
   const options = ledger.options;
 
   if (!options) return null;
-
-  const localePrefix = i18n.language === "en" ? "" : `/${i18n.language}`;
 
   const optionEntries: OptionEntry[] = [
     { name: "title", value: options.title },
@@ -37,7 +36,7 @@ export function BeancountOptionsSection({
     <OptionsTableSection
       title={t("page.settings.beancountOptions")}
       description={t("page.settings.beancountOptionsDescription")}
-      docUrl={`https://beancount.io${localePrefix}/docs/Basics/options-configuration`}
+      docUrl={docsUrl(i18n.language, "Basics/options-configuration")}
       entries={optionEntries}
     />
   );

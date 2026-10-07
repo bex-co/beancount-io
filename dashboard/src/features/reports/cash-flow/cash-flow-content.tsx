@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { DollarSign, Layers } from "lucide-react";
+import { DocLink } from "@/common/components/doc-link";
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
@@ -13,6 +14,7 @@ import {
 } from "../components/collapsible-charts-section";
 import { useChartsVisibility } from "../components/use-charts-visibility";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { docsUrl } from "@/common/lib/docs-url";
 import { sortUsdFirst } from "@/common/lib/utils/sort";
 import { cn } from "@/common/lib/utils/utils";
 import type { ChartInterval, ConversionOption } from "@/common/types/chart";
@@ -26,6 +28,7 @@ import {
 import type { FiscalYearEnd } from "../export/reporting-period";
 import { ActivityBreakdownChart, NetCashFlowChart } from "./cash-flow-charts";
 import { CashAccountStatusPanel } from "./cash-account-status-panel";
+import { CASH_FLOW_ROLES_DOC_PATH } from "./constants";
 import { HierarchyListCard } from "../balance-sheet/hierarchy-list-card";
 import type { HierarchyListNode } from "../balance-sheet/hierarchy-list-types";
 import { cashFlowSummaryLabelKey } from "../export/presentation";
@@ -116,7 +119,7 @@ export function CashFlowContent({
   collapsePatterns,
   exportReady = true,
 }: CashFlowContentProps) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
   const activityTitles: Record<CashFlowActivity, string> = {
     operating: t("page.cashFlow.operating"),
     investing: t("page.cashFlow.investing"),
@@ -197,9 +200,16 @@ export function CashFlowContent({
         <PageHeader
           className="min-w-0"
           title={t("common.cashFlow")}
-          description={t("common.pageDescription.cashFlow", {
-            ledgerName: ledgerDisplayName,
-          })}
+          description={
+            <>
+              {t("common.pageDescription.cashFlow", {
+                ledgerName: ledgerDisplayName,
+              })}{" "}
+              <DocLink href={docsUrl(i18n.language, CASH_FLOW_ROLES_DOC_PATH)}>
+                {t("page.cashFlow.classificationDocLink")}
+              </DocLink>
+            </>
+          }
         />
         <ClientOnly>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">

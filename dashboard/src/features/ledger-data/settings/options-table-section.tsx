@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { ExternalLink } from "lucide-react";
+import { DocLink } from "@/common/components/doc-link";
 import {
   Card,
   CardContent,
@@ -65,16 +65,7 @@ export function OptionsTableSection({
       <CardHeader>
         <CardTitle id={titleId}>{title}</CardTitle>
         <CardDescription>
-          {description}{" "}
-          <a
-            href={docUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline inline-flex items-center gap-1"
-          >
-            {t("common.learnMore")}
-            <ExternalLink className="h-3 w-3" />
-          </a>
+          {description} <DocLink href={docUrl}>{t("common.learnMore")}</DocLink>
         </CardDescription>
       </CardHeader>
       <CardContent>

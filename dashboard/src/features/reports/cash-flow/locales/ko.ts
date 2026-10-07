@@ -36,6 +36,11 @@ const koCashFlow: Record<string, TranslationEntry> = {
     message: "이 보고서의 현금 및 현금성자산",
     description: "Title for the cash and equivalents status panel",
   },
+  "page.cashFlow.classificationDocLink": {
+    message: "계정 분류 방식",
+    description:
+      "Link text in the cash flow page header that opens the documentation on classifying accounts with cash-flow-role",
+  },
   "page.cashFlow.closingCash": {
     message: "기말 현금 및 현금성자산",
     description: "Label for the closing cash and cash equivalents balance",
