@@ -261,10 +261,12 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
   let resourceOverride: unknown;
   let issuerPath: string;
   let pointer: boolean;
+  let hits: string[];
 
   beforeAll(async () => {
     stub = http.createServer((req, res) => {
       const url = req.url ?? "";
+      hits.push(url);
       const json = (body: unknown) => {
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(body));
@@ -296,6 +298,7 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
     resourceOverride = undefined;
     issuerPath = "";
     pointer = true;
+    hits = [];
   });
 
   const all = [
@@ -311,6 +314,19 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
     for (const check of all) {
       expect((await check({ baseUrl: stubUrl })).outcome).toBe("pass");
     }
+  });
+
+  it("discovers the metadata once for a whole run", async () => {
+    // `main` hands every check the same options object.
+    const run = { baseUrl: stubUrl };
+    for (const check of all) {
+      expect((await check(run)).outcome).toBe("pass");
+    }
+    expect(hits).toEqual([
+      "/api-gateway/mcp",
+      "/.well-known/oauth-protected-resource",
+      "/.well-known/oauth-authorization-server",
+    ]);
   });
 
   it("finds the metadata of a path-prefixed issuer by RFC 8414 path insertion", async () => {

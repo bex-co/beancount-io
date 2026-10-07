@@ -658,6 +658,25 @@ async function hostMetadata(baseUrl: string): Promise<
 }
 
 /**
+ * `hostMetadata` once per run: `main` hands every check the same options, so
+ * checks 11–16 judge one snapshot of the metadata — not six, possibly from
+ * both sides of a rollout — and the run fetches it once instead of six times.
+ */
+const hostMetadataByRun = new WeakMap<
+  Options,
+  ReturnType<typeof hostMetadata>
+>();
+
+function hostMetadataFor(o: Options): ReturnType<typeof hostMetadata> {
+  let metadata = hostMetadataByRun.get(o);
+  if (!metadata) {
+    metadata = hostMetadata(o.baseUrl);
+    hostMetadataByRun.set(o, metadata);
+  }
+  return metadata;
+}
+
+/**
  * One metadata field a host gates on. `impact` says who is affected and how
  * when it fails, so the operator knows the blast radius from the line.
  */
@@ -673,7 +692,7 @@ function metadataCheck(
 ) {
   return async (o: Options): Promise<CheckResult> => {
     const v = verdict(id, title);
-    const m = await hostMetadata(o.baseUrl);
+    const m = await hostMetadataFor(o);
     if (!m.ok) return v.skip(m.reason);
     const problem = judge(m, o);
     return problem ? v.fail(`${problem} — ${impact}`) : v.pass(passDetail);
