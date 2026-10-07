@@ -687,7 +687,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     description: listPublicKeysDescription,
     inputSchema: listPublicKeysInput,
     outputSchema: mcpOutputSchema(listPublicKeysOutput),
-    execute: async (context, input) => executeListPublicKeys(context, input),
+    execute: executeListPublicKeys,
   },
   {
     name: "managePublicKeys",

@@ -69,17 +69,14 @@ export async function executeListStagedBankTransactions(
   input: z.infer<typeof listStagedBankTransactionsInput>,
 ) {
   const { services, identity, ledgerId } = ctx;
+  const { accountId } = listStagedBankTransactionsInput.parse(input);
   return runToolSafely({
     logger: toolLogger,
     message: "Listing staged bank transactions failed",
     context: { tool: "listStagedBankTransactions" },
     // The `bankUnsyncedTransactions` resource's call, with its account filter.
     execute: () =>
-      services.plaidItem.getUnsyncedTransactions(
-        identity,
-        listStagedBankTransactionsInput.parse(input).accountId,
-        ledgerId,
-      ),
+      services.plaidItem.getUnsyncedTransactions(identity, accountId, ledgerId),
   });
 }
 
@@ -96,15 +93,12 @@ export async function executeListPublicKeys(
   ctx: McpRequestContext,
   input: z.infer<typeof listPublicKeysInput>,
 ) {
+  const query = listPublicKeysInput.parse(input);
   return runToolSafely({
     logger: toolLogger,
     message: "Listing SSH public keys failed",
     context: { tool: "listPublicKeys" },
     // The `publicKeys` resource's call; no ledger target.
-    execute: () =>
-      ctx.publicKeyService.listPublicKeys(
-        ctx.identity,
-        listPublicKeysInput.parse(input),
-      ),
+    execute: () => ctx.publicKeyService.listPublicKeys(ctx.identity, query),
   });
 }
