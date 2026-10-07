@@ -223,6 +223,9 @@ export function shouldRotateRefreshToken(
     ttlPercentagePassed(): number;
   },
 ): boolean {
+  // Not covered by the public-client rule below: oidc-provider enables DPoP by
+  // default, and a sender-constrained phone token must still rotate, because
+  // rotation is what keeps the native app's idle window sliding.
   if (isMobileOAuthClient(client.clientId)) return true;
   if (
     client.clientAuthMethod === "none" &&

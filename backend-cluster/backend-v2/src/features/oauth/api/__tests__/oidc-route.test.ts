@@ -265,6 +265,17 @@ describe("OAuth refresh-token rotation", () => {
     ).toBe(true);
   });
 
+  it("rotates the native credential even when it is sender-constrained", () => {
+    // oidc-provider enables DPoP by default; a DPoP-bound phone token must
+    // not stop rotating the way a bound third-party token does.
+    expect(
+      shouldRotateRefreshToken(
+        { clientId: MOBILE_CLIENT_ID, clientAuthMethod: "none" },
+        { ...ancient, isSenderConstrained: () => true },
+      ),
+    ).toBe(true);
+  });
+
   it("rotates a public client's token at any chain age (ADR 019 D5)", () => {
     // The MCP spec requires rotation for public clients; oidc-provider's
     // default stops once a chain is a year old.
