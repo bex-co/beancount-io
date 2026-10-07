@@ -1,6 +1,6 @@
 # w1 · m35 — Verify and resolve the review findings on the ADR 019 work
 
-**Worker:** worker1 **Goal:** every finding from the 2026-10-07 review of w1/m30–m33 is verified, then either fixed with a regression test or abandoned with its evidence on record **Status:** in progress (t001–t008 done)
+**Worker:** worker1 **Goal:** every finding from the 2026-10-07 review of w1/m30–m33 is verified, then either fixed with a regression test or abandoned with its evidence on record **Status:** in progress (t001–t009 done)
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | [t006](./done/t006.md) | Derive read-only annotations from the op class — **DONE** | 45m | — |
 | [t007](./done/t007.md) | securitySchemes: pin the SDK hook and compute once — **DONE** | 30m | — |
 | [t008](./done/t008.md) | Conformance checks share one metadata discovery — **DONE** | 30m | — |
-| [t009](./t009.md) | Split oidc-route.test.ts by flow and dedupe its helpers | 60m | — |
+| [t009](./done/t009.md) | Split oidc-route.test.ts by flow and dedupe its helpers — **DONE** | 60m | — |
 | [t010](./t010.md) | Simplify | 30m | t001–t009 |
 | [t011](./t011.md) | Test coverage | 45m | t001–t009, t010 |
 | [t012](./t012.md) | Closeout | 15m | t011 |

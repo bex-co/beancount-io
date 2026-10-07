@@ -1472,20 +1472,11 @@ describe("oidc-route: unified MCP + identity provider", () => {
     redirectUri: string;
   }> {
     const redirectUri = "https://mcp-client.example.test/callback";
-    const res = await fetch(`${ISSUER}/api-gateway/oauth/reg`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        client_name: "mcp-test-client",
-        redirect_uris: [redirectUri],
-        token_endpoint_auth_method: "none",
-        grant_types: ["authorization_code", "refresh_token"],
-        response_types: ["code"],
-      }),
+    const reg = await registerHost([redirectUri], {
+      client_name: "mcp-test-client",
     });
-    expect(res.status).toBe(201);
-    const body = (await res.json()) as { client_id: string };
-    return { clientId: body.client_id, redirectUri };
+    expect(reg.status).toBe(201);
+    return { clientId: reg.clientId!, redirectUri };
   }
 
   // ── Named MCP hosts (ADR 019 D8) ──────────────────────────────────────────
@@ -1525,18 +1516,21 @@ describe("oidc-route: unified MCP + identity provider", () => {
     },
   ];
 
+  /** A public DCR registration; `overrides` replace or add metadata fields. */
   async function registerHost(
     redirectUris: readonly string[],
+    overrides: Record<string, unknown> = {},
   ): Promise<{ status: number; clientId?: string; error?: string }> {
     const res = await fetch(`${ISSUER}/api-gateway/oauth/reg`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      // No `application_type`: none of these hosts sends one.
+      // No `application_type` by default: none of the named hosts sends one.
       body: JSON.stringify({
         redirect_uris: redirectUris,
         token_endpoint_auth_method: "none",
         grant_types: ["authorization_code", "refresh_token"],
         response_types: ["code"],
+        ...overrides,
       }),
     });
     const body = (await res.json()) as {
@@ -1612,18 +1606,11 @@ describe("oidc-route: unified MCP + identity provider", () => {
   });
 
   it("keeps web rules for a dynamic client that states application_type web", async () => {
-    const res = await fetch(`${ISSUER}/api-gateway/oauth/reg`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        application_type: "web",
-        redirect_uris: CURSOR_REDIRECTS,
-        token_endpoint_auth_method: "none",
-        grant_types: ["authorization_code"],
-        response_types: ["code"],
-      }),
+    const reg = await registerHost(CURSOR_REDIRECTS, {
+      application_type: "web",
+      grant_types: ["authorization_code"],
     });
-    expect(res.status).toBe(400);
+    expect(reg.status).toBe(400);
   });
 
   // ── Consent names who is asking (ADR 019 D4) ──────────────────────────────
