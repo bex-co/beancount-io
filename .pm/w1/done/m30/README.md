@@ -1,6 +1,6 @@
 # w1 · m30 — Every named MCP host can register and reach a consent page that says who is asking
 
-**Worker:** worker1 **Goal:** Cursor and VS Code Copilot stop failing at registration, the consent page names the requester as the MCP spec requires, and CI and `mcp:conformance` catch the host-gating failures ADR 019 found — the first link in ADR 019's D3 → D4 → D6 chain **Status:** in progress — t001–t010 done; t011 next
+**Worker:** worker1 **Goal:** Cursor and VS Code Copilot stop failing at registration, the consent page names the requester as the MCP spec requires, and CI and `mcp:conformance` catch the host-gating failures ADR 019 found — the first link in ADR 019's D3 → D4 → D6 chain **Status:** done
 
 ## Tasks (in order)
 
@@ -16,7 +16,7 @@
 | [t008](./done/t008.md) | Adoption surface — **DONE** | 30m | t007 |
 | [t009](./done/t009.md) | Simplify — **DONE** | 30m | t008 |
 | [t010](./done/t010.md) | Test coverage — **DONE** | 45m | t008, t009 |
-| t011 | Closeout | 15m | t010 |
+| [t011](./done/t011.md) | Closeout — **DONE** | 15m | t010 |
 
 ## Definition of done
 
@@ -28,7 +28,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm` for w1, 2026-10-06 — [ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D3–D9; code and production re-checked the same day: none of D3–D8 has landed, ADR status is Proposed, production discovery lacks `client_id_metadata_document_supported`.
+- **Source:** `/pm-brainstorm` for w1, 2026-10-06 — [ADR 019](../../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D3–D9; code and production re-checked the same day: none of D3–D8 has landed, ADR status is Proposed, production discovery lacks `client_id_metadata_document_supported`.
 - **Goal linkage:** **A1 — Agent-native accounting** (primary): coding-agent hosts that use DCR — Cursor today fails before reaching consent, VS Code whenever its preferred port is busy — can connect. **A3** (secondary): the consent display is a spec requirement every curated directory review will check.
 - **Expected outcome:** A developer adds `https://beancount.io/api-gateway/mcp` in Cursor or VS Code Copilot and lands on a consent page that says which app is asking; signals: successful DCR registrations and MCP sessions from those hosts.
 - **Why now:** D6 (CIMD, w1/m31) must not land before D3 and D4 — enabling CIMD first breaks Claude Code's sign-in — so this is the head of the chain. Adoption surface is included: the milestone changes a page every connecting user sees and adds per-host setup docs.
