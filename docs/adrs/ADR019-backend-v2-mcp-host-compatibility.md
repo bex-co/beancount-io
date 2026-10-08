@@ -251,7 +251,7 @@ ADR 0007 D1 already rules this out, and each host would need its own discovery d
 
 ## Implementation status
 
-Every decision has landed on `main`, and D9 is done at the edge. What remains is verification: the production checks for D3, D4, D6, and D8 wait on a deploy (`.pm/w1/blocked/m30`, `.pm/w1/blocked/m31`), and the real-host sign-ins need that deploy and the owner's host accounts (`.pm/w1/blocked/m34`). D5 and D7 with D2's declaration are closed as `.pm/w1/done/m32` and `.pm/w1/done/m33`.
+Every decision has landed on `main`, and D9 is done at the edge. What remains is verification: the production checks for D3, D4, D6, and D8 wait on a deploy (`.pm/w1/m30`, `.pm/w1/blocked/m31`), and the real-host sign-ins need that deploy and the owner's host accounts (`.pm/w1/blocked/m34`). D5 and D7 with D2's declaration are closed as `.pm/w1/done/m32` and `.pm/w1/done/m33`.
 
 The table below names where each decision lives; the one after it gives its state.
 
