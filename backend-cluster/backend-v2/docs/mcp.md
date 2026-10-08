@@ -110,6 +110,31 @@ carries its selected `ledger_id`. Application API/mobile tokens targeting
 does not authenticate to MCP, even though a browser session is used to approve
 the OAuth grant.
 
+### Per-host notes
+
+Each host below has a fixture in
+[`oidc-route.test.ts`](../src/features/oauth/api/__tests__/oidc-route.test.ts).
+The fixture registers the host the way the host documents, then authorizes
+with the redirect the host really uses. A host without a fixture is not called
+supported here
+([ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D8).
+None of these hosts has been verified with a real sign-in against
+`https://beancount.io` yet.
+
+| Host | Identifies itself by | Redirect the fixture authorizes with | Notes |
+| --- | --- | --- | --- |
+| Claude (claude.ai, Desktop, mobile) | CIMD; the fixture covers its DCR fallback | `https://claude.ai/api/mcp/auth_callback` | Add the endpoint as a custom connector. |
+| Claude Code | Its CIMD document, or DCR | Loopback on an ephemeral port | `claude mcp add --transport http beancount <endpoint>`, then sign in from `/mcp`. |
+| ChatGPT | CIMD; DCR otherwise | `https://chatgpt.com/connector_platform_oauth_redirect` | Calls tools only. Every id a tool argument needs is returned by another tool. ChatGPT cannot send an API key. |
+| Cursor | DCR, with no `application_type` | `cursor://anysphere.cursor-mcp/oauth/callback` (also registers `localhost:8787` and `www.cursor.com`) | Add the endpoint as a remote server in `mcp.json`. |
+| GitHub Copilot in VS Code | CIMD, or DCR with no `application_type` | `http://127.0.0.1:33418/`, or any loopback port when 33418 is busy | Add the endpoint as an `http` server in `mcp.json`. |
+
+A host that registers through DCR without stating `application_type` is
+treated as a native app. That is what lets custom-scheme and loopback
+redirects such as Cursor's and VS Code's register. GitHub Copilot's cloud
+agent does not support OAuth for remote servers, so use a personal API key in
+a header there.
+
 ### From the MCP Registry
 
 Beancount.io publishes the hosted endpoint to the official MCP Registry

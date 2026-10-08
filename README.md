@@ -200,6 +200,8 @@ The hosted service is also listed on the official
 [MCP Registry](https://registry.modelcontextprotocol.io) as
 `io.beancount/beancount`, so clients that read the registry add it from there
 and sign in with OAuth ([details](./backend-cluster/backend-v2/docs/mcp.md#from-the-mcp-registry)).
+There are [per-host notes](./backend-cluster/backend-v2/docs/mcp.md#per-host-notes)
+for Claude, Claude Code, ChatGPT, Cursor, and GitHub Copilot in VS Code.
 
 Thirty tools — BQL queries, file listing, reads, edits, entry and receipt
 insertion, appending directives as plain Beancount text, statement parsing,
