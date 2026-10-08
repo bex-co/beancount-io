@@ -1,4 +1,7 @@
-import { getBackendBase } from "@/common/lib/oauth/forward-to-backend";
+import {
+  getBackendBase,
+  interactionForwardHeaders,
+} from "@/common/lib/oauth/forward-to-backend";
 
 /**
  * Who is asking for consent, as the page shows it (ADR 019 D4).
@@ -58,17 +61,10 @@ export async function handleConsentRequesterGet({
 }: {
   request: Request;
 }): Promise<Response> {
-  const url = new URL(request.url);
-  const uid = url.searchParams.get("uid") ?? "";
+  const uid = new URL(request.url).searchParams.get("uid") ?? "";
   const upstream = await fetch(
     `${getBackendBase()}/api-gateway/oauth/interaction/${encodeURIComponent(uid)}`,
-    {
-      headers: {
-        cookie: request.headers.get("cookie") ?? "",
-        "x-forwarded-host": url.host,
-        "x-forwarded-proto": url.protocol.replace(":", ""),
-      },
-    },
+    { headers: interactionForwardHeaders(request) },
   ).catch(() => null);
   // A 200 with a non-JSON body (a proxy's error page) is as unidentified as a
   // failed request — it must not become a 500.

@@ -45,22 +45,22 @@ function approvalForm() {
     .closest("form")!;
 }
 
-describe("MCP consent", () => {
-  beforeEach(() => {
-    state.scope = "openid ledger.read";
-    state.ledgers = [{ id: "1", fullName: "ada/personal", name: "Personal" }];
-    state.requester = CURSOR;
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (url: string) => {
-        expect(url).toBe("/oauth/consent/requester?uid=interaction-1");
-        return state.requester
-          ? Response.json(state.requester)
-          : Response.json(null, { status: 404 });
-      }),
-    );
-  });
+beforeEach(() => {
+  state.scope = "openid ledger.read";
+  state.ledgers = [{ id: "1", fullName: "ada/personal", name: "Personal" }];
+  state.requester = CURSOR;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => {
+      expect(url).toBe("/oauth/consent/requester?uid=interaction-1");
+      return state.requester
+        ? Response.json(state.requester)
+        : Response.json(null, { status: 404 });
+    }),
+  );
+});
 
+describe("MCP consent", () => {
   it("requires a choice and submits exactly the selected restriction", async () => {
     render(<OAuthConsentPage />);
     await whoIsAsking();
@@ -135,21 +135,8 @@ describe("MCP consent", () => {
 });
 
 describe("MCP consent names who is asking (ADR 019 D4)", () => {
-  beforeEach(() => {
-    state.scope = "openid ledger.read";
-    state.ledgers = [{ id: "1", fullName: "ada/personal", name: "Personal" }];
-  });
-
   function serve(requester: Record<string, unknown> | null) {
     state.requester = requester;
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        requester
-          ? Response.json(requester)
-          : Response.json(null, { status: 404 }),
-      ),
-    );
   }
 
   it("shows where the code goes and labels the name as the app's own", async () => {

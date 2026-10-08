@@ -26,6 +26,22 @@ export function getBackendBase(): string {
 
 // The consent form is a handful of small fields; capping the proxied body
 // keeps an unauthenticated client from buffering arbitrary memory here.
+/**
+ * The headers that let the backend resolve a forwarded OAuth interaction: the
+ * browser's interaction cookie, and the public host and scheme it pins the
+ * issuer from.
+ */
+export function interactionForwardHeaders(
+  request: Request,
+): Record<string, string> {
+  const url = new URL(request.url);
+  return {
+    cookie: request.headers.get("cookie") ?? "",
+    "x-forwarded-host": url.host,
+    "x-forwarded-proto": url.protocol.replace(":", ""),
+  };
+}
+
 const MAX_CONSENT_BODY_BYTES = 64 * 1024;
 
 async function readBodyWithinLimit(
@@ -91,12 +107,10 @@ export async function proxyOauthInteractionLogin(
       "content-type":
         request.headers.get("content-type") ??
         "application/x-www-form-urlencoded",
-      cookie: request.headers.get("cookie") ?? "",
+      ...interactionForwardHeaders(request),
       ...(request.headers.get("authorization")
         ? { authorization: request.headers.get("authorization")! }
         : {}),
-      "x-forwarded-host": new URL(request.url).host,
-      "x-forwarded-proto": new URL(request.url).protocol.replace(":", ""),
     },
     body,
     redirect: "manual",
