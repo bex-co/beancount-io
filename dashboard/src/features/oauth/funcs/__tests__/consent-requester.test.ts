@@ -90,9 +90,13 @@ describe("handleConsentRequesterGet", () => {
     });
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toMatch(/\/api-gateway\/oauth\/interaction\/a%2Fb$/);
-    expect((init.headers as Record<string, string>).cookie).toBe(
-      "_interaction=xyz",
-    );
+    // The backend resolves the interaction only with the browser's cookie, and
+    // pins the issuer from the public host and scheme.
+    expect(init.headers).toEqual({
+      cookie: "_interaction=xyz",
+      "x-forwarded-host": "beancount.io",
+      "x-forwarded-proto": "https",
+    });
   });
 
   it("answers 404 when the backend does not know the interaction", async () => {

@@ -1,6 +1,6 @@
 # w1 · m30 — Every named MCP host can register and reach a consent page that says who is asking
 
-**Worker:** worker1 **Goal:** Cursor and VS Code Copilot stop failing at registration, the consent page names the requester as the MCP spec requires, and CI and `mcp:conformance` catch the host-gating failures ADR 019 found — the first link in ADR 019's D3 → D4 → D6 chain **Status:** in progress — t001–t009 done; t010 next
+**Worker:** worker1 **Goal:** Cursor and VS Code Copilot stop failing at registration, the consent page names the requester as the MCP spec requires, and CI and `mcp:conformance` catch the host-gating failures ADR 019 found — the first link in ADR 019's D3 → D4 → D6 chain **Status:** in progress — t001–t010 done; t011 next
 
 ## Tasks (in order)
 
@@ -15,7 +15,7 @@
 | [t007](./done/t007.md) | Verify on production after the deploy — **DONE** | 30m | t005, t006 |
 | [t008](./done/t008.md) | Adoption surface — **DONE** | 30m | t007 |
 | [t009](./done/t009.md) | Simplify — **DONE** | 30m | t008 |
-| t010 | Test coverage | 45m | t008, t009 |
+| [t010](./done/t010.md) | Test coverage — **DONE** | 45m | t008, t009 |
 | t011 | Closeout | 15m | t010 |
 
 ## Definition of done
