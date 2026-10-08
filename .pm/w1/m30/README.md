@@ -1,6 +1,6 @@
 # w1 · m30 — Every named MCP host can register and reach a consent page that says who is asking
 
-**Worker:** worker1 **Goal:** Cursor and VS Code Copilot stop failing at registration, the consent page names the requester as the MCP spec requires, and CI and `mcp:conformance` catch the host-gating failures ADR 019 found — the first link in ADR 019's D3 → D4 → D6 chain **Status:** in progress — t001–t006 done; t007 next
+**Worker:** worker1 **Goal:** Cursor and VS Code Copilot stop failing at registration, the consent page names the requester as the MCP spec requires, and CI and `mcp:conformance` catch the host-gating failures ADR 019 found — the first link in ADR 019's D3 → D4 → D6 chain **Status:** in progress — t001–t007 done; t008 next
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | [t004](./done/t004.md) | D4 backend: the interaction endpoint names who is asking — **DONE** | 45m | t003 |
 | [t005](./done/t005.md) | D4 dashboard: consent shows the redirect host, the self-asserted name, and a loopback warning — **DONE** | 60m | t004 |
 | [t006](./done/t006.md) | D8: conformance checks what hosts gate on — **DONE** | 30m | — |
-| t007 | Verify on production after the deploy | 30m | t005, t006 |
+| [t007](./done/t007.md) | Verify on production after the deploy — **DONE** | 30m | t005, t006 |
 | t008 | Adoption surface | 30m | t007 |
 | t009 | Simplify | 30m | t008 |
 | t010 | Test coverage | 45m | t008, t009 |
@@ -32,6 +32,10 @@
 - **Goal linkage:** **A1 — Agent-native accounting** (primary): coding-agent hosts that use DCR — Cursor today fails before reaching consent, VS Code whenever its preferred port is busy — can connect. **A3** (secondary): the consent display is a spec requirement every curated directory review will check.
 - **Expected outcome:** A developer adds `https://beancount.io/api-gateway/mcp` in Cursor or VS Code Copilot and lands on a consent page that says which app is asking; signals: successful DCR registrations and MCP sessions from those hosts.
 - **Why now:** D6 (CIMD, w1/m31) must not land before D3 and D4 — enabling CIMD first breaks Claude Code's sign-in — so this is the head of the chain. Adoption surface is included: the milestone changes a page every connecting user sees and adds per-host setup docs.
+
+## Production verification
+
+- **2026-10-08, `main` at `5734b8eb`:** conformance passes 10/10 runnable checks (11–16 included). Cursor- and VS Code-shaped DCR registrations (no `application_type`; VS Code from port 50123) reach a signed-in consent page showing the redirect host and the labelled self-asserted name. Both were cancelled, so no grant exists. Details in [t007](./done/t007.md).
 
 ## Unblocked
 
