@@ -829,6 +829,21 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "نمایش این بخش ممکن نشد. بقیه صفحه باید همچنان کار کند.",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "نسخهٔ جدیدی در دسترس است",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "این صفحه در زمانی که باز بود به‌روزرسانی شد. برای ادامه، آن را دوباره بارگیری کنید.",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "بارگیری دوبارهٔ صفحه",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "کپی کد",
     description: "Aria label for the copy button on code blocks",

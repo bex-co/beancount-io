@@ -836,6 +836,21 @@ const deCommon: Record<string, TranslationEntry> = {
       "Dieser Bereich konnte nicht angezeigt werden. Der Rest der Seite sollte weiterhin funktionieren.",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "Eine neue Version ist verfügbar",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "Diese Seite wurde aktualisiert, während sie geöffnet war. Laden Sie sie neu, um fortzufahren.",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "Seite neu laden",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "Code kopieren",
     description: "Aria label for the copy button on code blocks",

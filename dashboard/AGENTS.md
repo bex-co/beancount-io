@@ -131,6 +131,14 @@ For Search Console evidence, run `yarn search-console-report --markdown --days 2
 - Reuse common responsive and accessibility primitives before adding another abstraction.
 - Charts use ECharts 6; keep report-specific transformation close to its feature and test transformations independently from rendering.
 
+## Deploy skew and error details
+
+Every deploy replaces the hashed files under `/lgassets/`, so a page opened before the deploy can ask for a chunk that no longer exists.
+
+- `src/server.ts` wraps the default server entry with `applyCacheHeaders` (`src/common/lib/http/cache-headers.ts`): a 404 under `/lgassets/` is `no-store`, and HTML without its own policy is `no-cache`. A cached 404 survives a normal reload, because reloads reuse fresh subresources; never let one be stored. Existing hashed assets are served as static files before this entry and stay `immutable`.
+- A chunk-load failure (`isChunkLoadError` in `src/common/lib/errors/chunk-load-error.ts`) is fixed by a full reload, not a retry: the router keeps the failed import. The root component reloads once per minute on `vite:preloadError`, and the `ErrorBoundary` fallback swaps "Try Again" for "Reload page".
+- Error fallbacks show `ErrorDetails` (`src/common/components/error-details.tsx`) in production: a collapsed, copyable report of the error, URL, time, browser, and truncated stacks, so a customer can send it to support. Headline copy stays localized, and the report must never include cookies, tokens, or request variables.
+
 ## Dashboard home (`/ledger`)
 
 `src/features/ledger-list/pages/dashboard-page/` composes two sections, each backed by one `source` of the `getFeed` operation:

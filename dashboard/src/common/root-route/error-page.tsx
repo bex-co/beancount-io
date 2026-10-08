@@ -7,6 +7,7 @@ import type { ErrorComponentProps } from "@tanstack/react-router";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { isUnauthenticatedError } from "@/common/apollo/links/auth-error-link";
 import { useLoginNextPath } from "@/common/hooks/use-login-next-path";
+import { ErrorDetails } from "@/common/components/error-details";
 
 /**
  * Global error page component
@@ -90,7 +91,6 @@ export default function ErrorPage({ error, reset }: ErrorComponentProps) {
                   : t("common.errorDescription")}
             </p>
           </div>
-          <div className="hidden">{error.message}</div>
 
           {/* Action Buttons */}
           {!unauthenticated && (
@@ -124,6 +124,9 @@ export default function ErrorPage({ error, reset }: ErrorComponentProps) {
                 {t("common.tryAgain")}
               </Button>
             </div>
+          )}
+          {!unauthenticated && (
+            <ErrorDetails error={error} className="mx-auto max-w-md" />
           )}
         </div>
       </div>

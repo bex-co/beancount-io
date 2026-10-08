@@ -831,6 +831,21 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Тази секция не можа да бъде показана. Останалата част от страницата би трябвало да работи.",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "Налична е нова версия",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "Страницата беше обновена, докато я държахте отворена. Презаредете, за да продължите.",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "Презареждане на страницата",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "Копиране на кода",
     description: "Aria label for the copy button on code blocks",

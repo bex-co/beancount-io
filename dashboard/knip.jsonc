@@ -6,6 +6,8 @@
     "scripts/codegen-schema-loader.cjs",
     // Vitest resolves this test double through its monaco-editor alias.
     "src/test/mocks/monaco-editor.ts",
+    // TanStack Start discovers the server entry by file name.
+    "src/server.ts",
   ],
   "ignoreIssues": {
     // TanStack Start discovers and calls the exported router factory.

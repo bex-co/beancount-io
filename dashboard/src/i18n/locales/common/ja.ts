@@ -832,6 +832,21 @@ const jaCommon: Record<string, TranslationEntry> = {
       "このセクションを表示できませんでした。ページの他の部分は引き続き利用できます。",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "新しいバージョンがあります",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "このページは開いている間に更新されました。続けるには再読み込みしてください。",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "ページを再読み込み",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "コードをコピー",
     description: "Aria label for the copy button on code blocks",

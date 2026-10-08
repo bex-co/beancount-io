@@ -829,6 +829,21 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Не вдалося відобразити цей розділ. Решта сторінки має працювати.",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "Доступна нова версія",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "Цю сторінку оновлено, поки вона була відкрита. Перезавантажте її, щоб продовжити.",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "Перезавантажити сторінку",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "Копіювати код",
     description: "Aria label for the copy button on code blocks",

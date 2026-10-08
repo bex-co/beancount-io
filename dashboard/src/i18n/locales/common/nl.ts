@@ -832,6 +832,21 @@ const nlCommon: Record<string, TranslationEntry> = {
       "Deze sectie kon niet worden weergegeven. De rest van de pagina zou moeten blijven werken.",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "Er is een nieuwe versie beschikbaar",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "Deze pagina is bijgewerkt terwijl je hem open had. Laad hem opnieuw om verder te gaan.",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "Pagina opnieuw laden",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "Code kopiëren",
     description: "Aria label for the copy button on code blocks",

@@ -814,6 +814,20 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "此区域无法显示，页面的其他部分应可正常使用。",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "有新版本可用",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message: "此页面在你打开期间已更新。请重新加载以继续。",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "重新加载页面",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "复制代码",
     description: "Aria label for the copy button on code blocks",

@@ -3,6 +3,8 @@ import { AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { ErrorDetails } from "@/common/components/error-details";
+import { isChunkLoadError } from "@/common/lib/errors/chunk-load-error";
 
 interface ErrorBoundaryFallbackProps {
   error: Error | null;
@@ -11,8 +13,12 @@ interface ErrorBoundaryFallbackProps {
 }
 
 /**
- * Default ErrorBoundary fallback: localized, panel-sized, and safe for end
- * users — stack traces are only rendered in dev builds.
+ * Default ErrorBoundary fallback: localized and panel-sized. The failure
+ * itself stays behind a collapsed disclosure the reader can copy to support.
+ *
+ * A chunk that failed to load means the page predates the current deploy.
+ * Retrying cannot help — the router keeps the failed import — so that case
+ * offers a full reload instead.
  */
 export function ErrorBoundaryFallback({
   error,
@@ -20,6 +26,7 @@ export function ErrorBoundaryFallback({
   onRetry,
 }: ErrorBoundaryFallbackProps) {
   const { t } = useTranslations();
+  const staleBuild = isChunkLoadError(error);
 
   return (
     <Card className="overflow-hidden">
@@ -37,24 +44,34 @@ export function ErrorBoundaryFallback({
               />
             </div>
             <h3 className="text-base sm:text-lg font-semibold text-foreground">
-              {t("common.errorBoundary.title")}
+              {staleBuild
+                ? t("common.errorBoundary.updateTitle")
+                : t("common.errorBoundary.title")}
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground">
-              {t("common.errorBoundary.description")}
+              {staleBuild
+                ? t("common.errorBoundary.updateDescription")
+                : t("common.errorBoundary.description")}
             </p>
-            <Button variant="outline" size="sm" onClick={onRetry}>
-              {t("common.tryAgain")}
-            </Button>
-            {import.meta.env.DEV && error && (
-              <details className="text-left whitespace-pre-wrap mt-4">
-                <summary className="cursor-pointer text-sm text-muted-foreground">
-                  {t("common.errorDetails")}
-                </summary>
-                <pre className="text-xs overflow-auto mt-2">
-                  {error.stack || error.toString()}
-                  {errorInfo?.componentStack}
-                </pre>
-              </details>
+            {staleBuild ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.reload()}
+              >
+                {t("common.reloadPage")}
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={onRetry}>
+                {t("common.tryAgain")}
+              </Button>
+            )}
+            {error && (
+              <ErrorDetails
+                error={error}
+                componentStack={errorInfo?.componentStack}
+                className="mt-4"
+              />
             )}
           </div>
         </div>

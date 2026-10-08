@@ -832,6 +832,21 @@ const esCommon: Record<string, TranslationEntry> = {
       "No se pudo mostrar esta sección. El resto de la página debería seguir funcionando.",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "Hay una nueva versión disponible",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "Esta página se actualizó mientras la tenías abierta. Recárgala para continuar.",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "Recargar página",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "Copiar código",
     description: "Aria label for the copy button on code blocks",

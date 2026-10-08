@@ -835,6 +835,21 @@ const caCommon: Record<string, TranslationEntry> = {
       "No s'ha pogut mostrar aquesta secció. La resta de la pàgina hauria de continuar funcionant.",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "Hi ha una versió nova disponible",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "Aquesta pàgina s'ha actualitzat mentre la teníeu oberta. Torneu-la a carregar per continuar.",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "Torna a carregar la pàgina",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "Copia el codi",
     description: "Aria label for the copy button on code blocks",

@@ -826,6 +826,21 @@ const koCommon: Record<string, TranslationEntry> = {
       "이 섹션을 표시할 수 없습니다. 페이지의 나머지 부분은 계속 사용할 수 있습니다.",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "새 버전을 사용할 수 있습니다",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "이 페이지를 열어 둔 동안 업데이트되었습니다. 계속하려면 새로 고치세요.",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "페이지 새로 고침",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "코드 복사",
     description: "Aria label for the copy button on code blocks",

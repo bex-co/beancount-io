@@ -831,6 +831,21 @@ const ruCommon: Record<string, TranslationEntry> = {
       "Не удалось отобразить этот раздел. Остальная часть страницы должна работать.",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "Доступна новая версия",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "Эта страница обновилась, пока была открыта. Перезагрузите её, чтобы продолжить.",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "Перезагрузить страницу",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "Копировать код",
     description: "Aria label for the copy button on code blocks",

@@ -15,8 +15,8 @@ interface State {
 
 /**
  * Error boundary that degrades a single panel instead of blanking the app.
- * Logs the full error for debugging; users only ever see the localized
- * fallback (dev builds additionally expose the stack behind a disclosure).
+ * Logs the full error for debugging; the localized fallback keeps the same
+ * details behind a disclosure the reader can copy to support.
  */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {

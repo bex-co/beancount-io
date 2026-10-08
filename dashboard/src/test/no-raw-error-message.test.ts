@@ -32,6 +32,8 @@ const ALLOWLIST: Record<string, string> = {
     "console.error logging only; the fallback renders localized copy",
   "common/lib/errors/error-message.ts":
     "the mapping helper itself inspects fetch-failure messages",
+  "common/lib/errors/error-report.ts":
+    "builds the support report behind the collapsed Error Details disclosure, which exists to hand the reader the raw failure; headline copy stays localized",
   "features/importer/components/steps/finish/index.tsx":
     "importResult errors carry only localized strings or intentional mutation-payload feedback (populated exclusively by use-import-submit)",
   "features/importer/components/steps/preview/editable-preview-row.tsx":

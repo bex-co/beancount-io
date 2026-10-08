@@ -830,6 +830,21 @@ const skCommon: Record<string, TranslationEntry> = {
       "Túto sekciu sa nepodarilo zobraziť. Zvyšok stránky by mal fungovať.",
     description: "Body of the error boundary fallback panel",
   },
+  "common.errorBoundary.updateTitle": {
+    message: "K dispozícii je nová verzia",
+    description:
+      "Title of the error boundary fallback when the page predates a deploy",
+  },
+  "common.errorBoundary.updateDescription": {
+    message:
+      "Táto stránka bola aktualizovaná, kým ste ju mali otvorenú. Ak chcete pokračovať, načítajte ju znova.",
+    description:
+      "Body of the error boundary fallback when the page predates a deploy",
+  },
+  "common.reloadPage": {
+    message: "Znova načítať stránku",
+    description: "Button that reloads the whole page",
+  },
   "common.copyCode": {
     message: "Kopírovať kód",
     description: "Aria label for the copy button on code blocks",

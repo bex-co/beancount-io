@@ -13,6 +13,7 @@ import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { Button } from "@/common/components/ui/button.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
+import { ErrorDetails } from "@/common/components/error-details";
 
 type ErrorVariant =
   | "not-found"
@@ -212,6 +213,11 @@ export function LedgerLayoutError({
               </>
             )}
           </div>
+
+          {/* Not for the two outcomes that are not failures of the app. */}
+          {error &&
+            variant !== "unauthenticated" &&
+            variant !== "not-found" && <ErrorDetails error={error} />}
         </div>
       </main>
     </div>

@@ -11,6 +11,9 @@ vi.mock("@/common/hooks/use-translations", () => ({
           "This section couldn't be displayed. The rest of the page should still work.",
         "common.tryAgain": "Try Again",
         "common.errorDetails": "Error Details",
+        "common.copy": "Copy",
+        "common.reloadPage": "Reload page",
+        "common.errorBoundary.updateTitle": "A new version is available",
       };
       return translations[key] || key;
     },
@@ -53,19 +56,59 @@ describe("ErrorBoundary", () => {
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
 
-  it("never renders the raw error message to the user", () => {
+  it("keeps the raw error out of the fallback copy", () => {
     render(
       <ErrorBoundary>
         <Bomb shouldThrow />
       </ErrorBoundary>,
     );
-    // The raw message may appear inside the dev-only <details> disclosure,
-    // but must never be part of the visible fallback copy.
     const alert = screen.getByRole("alert");
     const visibleText = Array.from(alert.querySelectorAll("h3, p, button")).map(
       (node) => node.textContent,
     );
     expect(visibleText.join(" ")).not.toContain("secret internal failure");
+  });
+
+  it("offers the error behind a collapsed disclosure the reader can copy", () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+
+    render(
+      <ErrorBoundary>
+        <Bomb shouldThrow />
+      </ErrorBoundary>,
+    );
+    const details = screen.getByText("Error Details").closest("details");
+    expect(details).not.toHaveAttribute("open");
+    expect(details).toHaveTextContent("Error: secret internal failure");
+
+    fireEvent.click(screen.getByText("Copy"));
+    expect(writeText).toHaveBeenCalledWith(
+      expect.stringContaining("Error: secret internal failure"),
+    );
+    vi.unstubAllGlobals();
+  });
+
+  it("offers a full reload when the page predates the current build", () => {
+    const reload = vi.fn();
+    vi.stubGlobal("location", { ...window.location, reload });
+    function StaleChunk(): never {
+      throw new TypeError(
+        "Failed to fetch dynamically imported module: /lgassets/a.js",
+      );
+    }
+
+    render(
+      <ErrorBoundary>
+        <StaleChunk />
+      </ErrorBoundary>,
+    );
+    expect(screen.getByText("A new version is available")).toBeInTheDocument();
+    expect(screen.queryByText("Try Again")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Reload page"));
+    expect(reload).toHaveBeenCalledTimes(1);
+    vi.unstubAllGlobals();
   });
 
   it("leaves sibling content outside the boundary intact", () => {
