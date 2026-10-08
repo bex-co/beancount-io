@@ -31,9 +31,9 @@
 
 ## Blocked
 
-**Blocked 2026-10-06** — nothing in this milestone can run yet:
+**Blocked 2026-10-06** — nothing in this milestone can run yet. *Update 2026-10-08: condition 1 is cleared. The deploy landed, w1/m30 was verified on production and closed, and conformance passes checks 11–16. Condition 2 still holds.*
 
 1. **Production does not carry the work it verifies.** w1/m30 (D3, D4), w1/m31 (D6), and w1/m33 (D7, D2) are on `main` (through `5cb8f83e`) but not deployed: on 2026-10-06 `https://beancount.io/oauth/consent/requester` answered the site's HTML 404 and discovery still lacked `client_id_metadata_document_supported`.
 2. **Every task is a real browser sign-in** with the dedicated QA account: consent in a browser, and host accounts (claude.ai, Claude Code, ChatGPT with developer mode, Cursor, VS Code with Copilot) that belong to the user.
 
-**Unblock:** the operator deploys backend-v2 and dashboard from `main` at or after `5cb8f83e` (`yarn mcp:conformance https://beancount.io` passes checks 11–16), and the user is available to complete the browser consents with those accounts — or supplies a way to drive them. w1/m30 t007 and w1/m31 t004 clear with the same deploy. **Who can clear it:** the deployment operator and account holder (the user).
+**Unblock:** ~~the operator deploys backend-v2 and dashboard from `main` at or after `5cb8f83e`~~ (done 2026-10-08), and the user is available to complete the browser consents with those accounts — or supplies a way to drive them. w1/m30 t007 and w1/m31 t004 clear with the same deploy. **Who can clear it:** the deployment operator and account holder (the user).
