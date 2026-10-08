@@ -446,9 +446,7 @@ export function setOidcRoutes(
         redirect_uri: interaction.params.redirect_uri ?? null,
         client_name: client?.clientName ?? null,
         client_id_host: cimdHost(clientId),
-        loopback_only: client
-          ? isLoopbackOnly(client.redirectUris ?? [])
-          : false,
+        loopback_only: isLoopbackOnly(client?.redirectUris ?? []),
       };
     } catch (err) {
       oidcLogger.warn("Failed to get interaction details", {

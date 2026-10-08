@@ -1489,30 +1489,39 @@ describe("oidc-route: unified MCP + identity provider", () => {
   interface HostFixture {
     readonly host: string;
     readonly redirectUris: readonly string[];
-    /** The redirect the host sends at authorization — may differ from the registered one. */
-    readonly authorizeWith: string;
+    /** The redirect the host sends at authorization, when it is not the first registered one. */
+    readonly authorizeWith?: string;
   }
 
   const HOSTS: readonly HostFixture[] = [
     {
       host: "Claude (hosted)",
       redirectUris: ["https://claude.ai/api/mcp/auth_callback"],
-      authorizeWith: "https://claude.ai/api/mcp/auth_callback",
     },
     {
       host: "Claude Code via DCR",
       redirectUris: ["http://localhost:51234/callback"],
-      authorizeWith: "http://localhost:51234/callback",
     },
     {
       host: "ChatGPT",
       redirectUris: ["https://chatgpt.com/connector_platform_oauth_redirect"],
-      authorizeWith: "https://chatgpt.com/connector_platform_oauth_redirect",
     },
     {
       host: "VS Code (preferred port)",
       redirectUris: VSCODE_REDIRECTS,
       authorizeWith: "http://127.0.0.1:33418/",
+    },
+    // ADR 019 found these two failing under the provider's `web` default; D3
+    // (an unstated `application_type` is native) is what lets them through.
+    {
+      host: "Cursor (three URIs, no application_type)",
+      redirectUris: CURSOR_REDIRECTS,
+      authorizeWith: "cursor://anysphere.cursor-mcp/oauth/callback",
+    },
+    {
+      host: "VS Code (a loopback port other than 33418)",
+      redirectUris: VSCODE_REDIRECTS,
+      authorizeWith: "http://127.0.0.1:50123/",
     },
   ];
 
@@ -1544,20 +1553,31 @@ describe("oidc-route: unified MCP + identity provider", () => {
     };
   }
 
-  /** Where `/auth` sends the browser — the consent page when the redirect is accepted. */
-  async function authorizeHost(clientId: string, redirectUri: string) {
+  /** A PKCE authorization request for a public client. */
+  function authUrlFor(
+    clientId: string,
+    redirectUri: string,
+    scope = "openid ledger.read",
+  ): URL {
     const { codeChallenge } = pkce();
     const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
     authUrl.search = new URLSearchParams({
       client_id: clientId,
       response_type: "code",
-      scope: "openid ledger.read",
+      scope,
       redirect_uri: redirectUri,
       code_challenge: codeChallenge,
       code_challenge_method: "S256",
       state: "host-state",
     }).toString();
-    const res = await fetch(authUrl, { redirect: "manual" });
+    return authUrl;
+  }
+
+  /** Where `/auth` sends the browser — the consent page when the redirect is accepted. */
+  async function authorizeHost(clientId: string, redirectUri: string) {
+    const res = await fetch(authUrlFor(clientId, redirectUri), {
+      redirect: "manual",
+    });
     const location = res.headers.get("location");
     return {
       status: res.status,
@@ -1567,28 +1587,11 @@ describe("oidc-route: unified MCP + identity provider", () => {
 
   it.each(HOSTS)("$host registers and reaches consent", async (h) => {
     const reg = await registerHost(h.redirectUris);
-    expect(reg).toMatchObject({ status: 201 });
-    const auth = await authorizeHost(reg.clientId!, h.authorizeWith);
-    expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
-  });
-
-  // ADR 019 found these two failing under the provider's `web` default; D3
-  // (an unstated `application_type` is native) is what lets them through.
-  it("Cursor registers its three URIs without stating application_type", async () => {
-    const reg = await registerHost(CURSOR_REDIRECTS);
-    expect(reg.error).toBeUndefined();
-    expect(reg.status).toBe(201);
+    expect(reg).toMatchObject({ status: 201, error: undefined });
     const auth = await authorizeHost(
       reg.clientId!,
-      "cursor://anysphere.cursor-mcp/oauth/callback",
+      h.authorizeWith ?? h.redirectUris[0],
     );
-    expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
-  });
-
-  it("VS Code reaches consent from a loopback port other than 33418", async () => {
-    const reg = await registerHost(VSCODE_REDIRECTS);
-    expect(reg.status).toBe(201);
-    const auth = await authorizeHost(reg.clientId!, "http://127.0.0.1:50123/");
     expect(auth).toEqual({ status: 303, path: "/oauth/consent" });
   });
 
@@ -1622,18 +1625,9 @@ describe("oidc-route: unified MCP + identity provider", () => {
     scope = "openid ledger.read",
   ): Promise<Record<string, unknown>> {
     const jar = new CookieJar();
-    const { codeChallenge } = pkce();
-    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
-    authUrl.search = new URLSearchParams({
-      client_id: clientId,
-      response_type: "code",
-      scope,
-      redirect_uri: redirectUri,
-      code_challenge: codeChallenge,
-      code_challenge_method: "S256",
-      state: "consent-details",
-    }).toString();
-    const authRes = await fetch(authUrl, { redirect: "manual" });
+    const authRes = await fetch(authUrlFor(clientId, redirectUri, scope), {
+      redirect: "manual",
+    });
     jar.absorb(authRes);
     const uid = new URL(authRes.headers.get("location")!).searchParams.get(
       "uid",

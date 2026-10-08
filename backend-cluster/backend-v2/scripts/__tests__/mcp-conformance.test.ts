@@ -310,7 +310,9 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
     checkCimd,
   ];
 
-  it("passes every check against complete metadata", async () => {
+  // An issuer under a path prefix is found by RFC 8414 path insertion.
+  it.each(["", "/auth"])("passes every check against complete metadata (issuer path %j)", async (path) => {
+    issuerPath = path;
     for (const check of all) {
       expect((await check({ baseUrl: stubUrl })).outcome).toBe("pass");
     }
@@ -329,30 +331,17 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
     ]);
   });
 
-  it("finds the metadata of a path-prefixed issuer by RFC 8414 path insertion", async () => {
-    issuerPath = "/auth";
-    for (const check of all) {
-      expect((await check({ baseUrl: stubUrl })).outcome).toBe("pass");
-    }
-  });
-
   it.each([
     ["11 pkce-s256", () => checkPkceS256, { code_challenge_methods_supported: ["plain"] }, /every OAuth host/],
     ["12 iss-parameter", () => checkIssParameter, { authorization_response_iss_parameter_supported: false }, /ChatGPT/],
     ["13 registration-endpoint", () => checkRegistrationEndpoint, { registration_endpoint: undefined }, /Cursor/],
     ["14 public-client-auth", () => checkPublicClientAuth, { token_endpoint_auth_methods_supported: ["client_secret_basic"] }, /Claude/],
+    ["16 cimd", () => checkCimd, { client_id_metadata_document_supported: undefined }, /register.*per connection/],
   ])("%s fails, naming the hosts it locks out, when its field is wrong", async (_id, check, patch, hosts) => {
     serverMeta = { ...GOOD, ...patch };
     const result = await check()({ baseUrl: stubUrl });
     expect(result.outcome).toBe("fail");
     expect(result.detail).toMatch(hosts);
-  });
-
-  it("16 cimd fails when client ID metadata documents are not advertised", async () => {
-    serverMeta = { ...GOOD, client_id_metadata_document_supported: undefined };
-    const result = await checkCimd({ baseUrl: stubUrl });
-    expect(result.outcome).toBe("fail");
-    expect(result.detail).toMatch(/register.*per connection/);
   });
 
   it("15 resource-matches fails when the resource names another URL", async () => {
