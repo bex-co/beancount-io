@@ -7,7 +7,11 @@ import { Keyboard, Platform } from "react-native";
  * import-free for the unit-test runner; this hook needs react-native.
  */
 export function useKeyboardHeight(): number {
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  // Seeded from the keyboard already on screen: a view mounted while typing
+  // (Transactions' no-results state) gets no show event of its own.
+  const [keyboardHeight, setKeyboardHeight] = useState(
+    () => Keyboard.metrics()?.height ?? 0,
+  );
 
   useEffect(() => {
     const show = Keyboard.addListener(
