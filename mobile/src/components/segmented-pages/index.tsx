@@ -6,12 +6,16 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import PagerView from "react-native-pager-view";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
-import { tabStripHasMoreAfter } from "./tab-strip-overflow";
+import {
+  tabStripHasMoreAfter,
+  trailingNeedsOwnRow,
+} from "./tab-strip-overflow";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 
@@ -31,6 +35,12 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
       marginBottom: 12,
     },
+    // Enlarged or long translated text: the action takes its own row above
+    // the tabs rather than squeezing them to a sliver.
+    headerRowStacked: {
+      flexDirection: "column-reverse",
+      alignItems: "stretch",
+    },
     // The tab strip scrolls horizontally: at 16px three labels can outrun the
     // screen in longer locales (de: "Net Worth" + "Vermögen" +
     // "Verbindlichkeiten"), and truncating a tab name reads worse than a nudge.
@@ -39,6 +49,9 @@ const getStyles = (theme: ColorTheme) =>
     },
     tabsWrap: {
       flex: 1,
+    },
+    tabsWrapStacked: {
+      flex: 0,
     },
     // A few solid steps rather than a gradient (no gradient dependency): enough
     // to read as "the row continues" at the trailing edge.
@@ -67,6 +80,10 @@ const getStyles = (theme: ColorTheme) =>
       justifyContent: "center",
       paddingEnd: 16,
       paddingStart: 4,
+    },
+    trailingStacked: {
+      alignSelf: "flex-end",
+      marginBottom: 8,
     },
     tab: {
       paddingHorizontal: 12,
@@ -136,6 +153,20 @@ export function SegmentedPages({
     viewportWidth: 0,
     offset: 0,
   });
+  // Keys the labels so a live text-size change remeasures them, and with them
+  // the widths that decide whether the trailing action needs its own row.
+  const { fontScale } = useWindowDimensions();
+  const [rowWidth, setRowWidth] = useState(0);
+  const [trailingWidth, setTrailingWidth] = useState(0);
+  const [tabWidths, setTabWidths] = useState<Record<number, number>>({});
+  const stacked =
+    trailing != null &&
+    trailingNeedsOwnRow({
+      rowWidth,
+      trailingWidth,
+      tabsContentWidth: strip.contentWidth,
+      widestTabWidth: Math.max(0, ...Object.values(tabWidths)),
+    });
   const pagerRef = useRef<PagerView>(null);
   const [activeIndex, setActiveIndex] = useState(initialIndex);
 
@@ -163,8 +194,11 @@ export function SegmentedPages({
     <View>
       {/* Owner marker: a horizontal drag across the tab strip scrolls it,
           never opens the ledger drawer's edge swipe. */}
-      <View style={styles.headerRow}>
-        <View style={styles.tabsWrap}>
+      <View
+        style={[styles.headerRow, stacked && styles.headerRowStacked]}
+        onLayout={(event) => setRowWidth(event.nativeEvent.layout.width)}
+      >
+        <View style={[styles.tabsWrap, stacked && styles.tabsWrapStacked]}>
           <GestureDetector gesture={swipeOwner}>
             <ScrollView
               horizontal
@@ -188,7 +222,7 @@ export function SegmentedPages({
               scrollEventThrottle={16}
               contentContainerStyle={[
                 styles.tabsContent,
-                trailing != null && styles.tabsContentWithTrailing,
+                trailing != null && !stacked && styles.tabsContentWithTrailing,
               ]}
               accessibilityRole="tablist"
             >
@@ -199,10 +233,19 @@ export function SegmentedPages({
                     key={tab}
                     style={[styles.tab, active && styles.tabActive]}
                     onPress={() => handleTabPress(index)}
+                    onLayout={(event) => {
+                      const width = event.nativeEvent.layout.width;
+                      setTabWidths((previous) =>
+                        previous[index] === width
+                          ? previous
+                          : { ...previous, [index]: width },
+                      );
+                    }}
                     accessibilityRole="tab"
                     accessibilityState={{ selected: active }}
                   >
                     <Text
+                      key={fontScale}
                       style={[styles.label, active && styles.labelActive]}
                       numberOfLines={1}
                     >
@@ -228,7 +271,14 @@ export function SegmentedPages({
           ) : null}
         </View>
         {trailing != null ? (
-          <View style={styles.trailing}>{trailing}</View>
+          <View
+            style={[styles.trailing, stacked && styles.trailingStacked]}
+            onLayout={(event) =>
+              setTrailingWidth(event.nativeEvent.layout.width)
+            }
+          >
+            {trailing}
+          </View>
         ) : null}
       </View>
       {header?.(activeIndex)}

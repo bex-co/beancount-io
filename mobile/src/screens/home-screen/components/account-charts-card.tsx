@@ -198,7 +198,10 @@ export function AccountChartsCard({
       accessibilityRole="button"
       accessibilityLabel={t("seeAll")}
     >
-      <Text style={[styles.seeAllText, { color: theme.primary }]}>
+      <Text
+        key={fontScale}
+        style={[styles.seeAllText, { color: theme.primary }]}
+      >
         {t("seeAll")}
       </Text>
       <Ionicons
