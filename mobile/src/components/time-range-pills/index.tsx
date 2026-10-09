@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -23,6 +22,7 @@ import {
 } from "@/common/theme";
 import { easeStandard } from "@/common/theme/motion-easing";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
+import { selectedPillRevealOffset } from "./reveal-offset";
 
 /**
  * A pill's key. `null` is a legal key so a row can carry an "All" sentinel
@@ -42,9 +42,12 @@ type TimeRangePillsProps<T extends PillKey> = {
   options: PillOption<T>[];
   onChange: (key: T) => void;
   /**
-   * Put the row in a horizontal scroller. Off by default: a time-range row is
-   * a fixed set of short labels that should stay centred, while a row built
-   * from ledger data (the account picker's roots) has no bound on its width.
+   * Lay the row out as a left-aligned, gutter-inset filter strip. Off by
+   * default: a time-range row is a fixed set of short labels that stays
+   * centred while it fits, while a row built from ledger data (the account
+   * picker's roots) has no bound on its width. Either way the row scrolls
+   * once its pills outgrow the viewport — enlarged text and long localized
+   * labels overflow even a fixed set.
    */
   scrollable?: boolean;
   /**
@@ -93,6 +96,13 @@ const getStyles = (theme: ColorTheme) =>
       justifyContent: "flex-start",
       paddingHorizontal: gutter,
       paddingBottom: space.sm,
+    },
+    // Fills the viewport so a row that fits stays centred; once the pills
+    // outgrow it the container takes their width and the ends scroll into
+    // reach instead of being centred off both edges.
+    fitRow: {
+      flexGrow: 1,
+      paddingHorizontal: space.sm,
     },
     // A horizontal ScrollView defaults to grow+shrink, so an overflowing
     // column would squeeze this band until it clipped its own pills. The
@@ -205,7 +215,7 @@ export function TimeRangePills<T extends PillKey>({
   }, [value, moveTo]);
 
   /**
-   * In a scrolling row the selection can start past the right edge — the
+   * In an overflowing row the selection can start past the right edge — the
    * indicator lands correctly on content nobody can see. Bring it into view
    * once, on first paint.
    *
@@ -222,13 +232,10 @@ export function TimeRangePills<T extends PillKey>({
       return;
     }
     revealedRef.current = true;
-    if (layout.x + layout.width <= viewport) {
-      return;
+    const offset = selectedPillRevealOffset(layout, viewport);
+    if (offset !== null) {
+      scrollRef.current?.scrollTo({ x: offset, animated: false });
     }
-    scrollRef.current?.scrollTo({
-      x: Math.max(0, layout.x - gutter),
-      animated: false,
-    });
   }, [value]);
 
   const handleLayout = (key: T) => (event: LayoutChangeEvent) => {
@@ -293,15 +300,13 @@ export function TimeRangePills<T extends PillKey>({
     </>
   );
 
-  if (!scrollable) {
-    return <View style={styles.row}>{content}</View>;
-  }
-
   return (
     <ScrollView
       ref={scrollRef}
       horizontal
       showsHorizontalScrollIndicator={false}
+      // A row that fits should not rubber-band under a stray drag.
+      alwaysBounceHorizontal={scrollable}
       keyboardShouldPersistTaps="handled"
       style={styles.scrollView}
       onLayout={(event) => {
@@ -311,7 +316,10 @@ export function TimeRangePills<T extends PillKey>({
       // The indicator is `position: absolute` against this content view, so
       // the `onLayout` x it reads and the origin it paints from are the same
       // box — the invariant the non-scrolling row relies on too.
-      contentContainerStyle={[styles.row, styles.scrollRow]}
+      contentContainerStyle={[
+        styles.row,
+        scrollable ? styles.scrollRow : styles.fitRow,
+      ]}
     >
       {content}
     </ScrollView>
