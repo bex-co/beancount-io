@@ -28,6 +28,7 @@ import { AmountText, RollingAmount } from "@/components/amount-text";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
+import { selectedPeriodLabel } from "@/common/series-util";
 import { ColorTheme } from "@/types/theme-props";
 import { polylineLength } from "./utils";
 import { useEntranceProgress } from "./use-entrance-progress";
@@ -75,6 +76,11 @@ type InteractiveLineChartProps = {
    */
   footnote?: string;
   labels: string[];
+  /**
+   * Each point's full period ("YYYY-MM", from `seriesToChartArray`), so the
+   * selected point names its year as well as its month.
+   */
+  periods?: string[];
   numbers: number[];
   /**
    * The balance when the charted window opened, which the change row and the
@@ -332,6 +338,7 @@ const getStyles = (theme: ColorTheme) =>
 type ScrubHeaderProps = {
   footnote?: string;
   labels: string[];
+  periods?: string[];
   numbers: number[];
   baseline?: number;
   currency: string;
@@ -362,6 +369,7 @@ type ScrubHeaderProps = {
 function ScrubHeader({
   footnote,
   labels,
+  periods,
   numbers,
   baseline: windowBaseline,
   currency,
@@ -433,7 +441,7 @@ function ScrubHeader({
   // "period start → this month" rather than as a replacement identity.
   const scrubLabel =
     scrubbing && labels[shownIndex] !== undefined
-      ? t(labels[shownIndex])
+      ? selectedPeriodLabel(t(labels[shownIndex]), periods?.[shownIndex])
       : null;
 
   return (
@@ -469,6 +477,7 @@ function InteractiveLineChart({
   label,
   footnote,
   labels,
+  periods,
   numbers,
   baseline: windowBaseline,
   currency,
@@ -731,6 +740,7 @@ function InteractiveLineChart({
           <ScrubHeader
             footnote={footnote}
             labels={labels}
+            periods={periods}
             numbers={numbers}
             baseline={windowBaseline}
             currency={currency}

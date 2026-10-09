@@ -89,7 +89,11 @@ function loadCard(): (props: Record<string, unknown>) => Node {
       TIME_RANGES: [],
       balanceSeriesBaseline: () => 0,
       filterBalanceSeriesByRange: () => [],
-      seriesToChartArray: () => ({ labels: [], numbers: [] }),
+      seriesToChartArray: () => ({
+        labels: ["03", "03"],
+        numbers: [1, 2],
+        periods: ["2024-03", "2025-03"],
+      }),
     },
     "./chart-page-height": { chartPageHeight },
     "@/common/guest/guest-context": { useGuest: () => null },
@@ -139,6 +143,9 @@ function render(ledgerId: string, captions: Record<string, string>) {
     pageHeight: pager.props.height as number,
     captionSlot: header.props.style.minHeight as number,
     pageKeys: (pager.props.pages as Node[]).map((page) => page.props.key),
+    pagePeriods: (pager.props.pages as Node[]).map(
+      (page) => page.props.periods,
+    ),
     reportCaption: (height: number) =>
       caption!.props.onLayout({ nativeEvent: { layout: { height } } }),
     reportHeader: (page: number, height: number) =>
@@ -191,5 +198,13 @@ describe("AccountChartsCard measurement scope", () => {
     expect(restored.captionSlot).toBe(0);
     expect(restored.pageHeight).toBe(240);
     expect(restored.pageKeys).not.toEqual(enlarged.pageKeys);
+  });
+
+  it("hands every chart page its points' full periods", () => {
+    const card = render("open_ledger/stock-example", {});
+    expect(card.pagePeriods.length).toBe(3);
+    for (const periods of card.pagePeriods) {
+      expect(periods).toEqual(["2024-03", "2025-03"]);
+    }
   });
 });

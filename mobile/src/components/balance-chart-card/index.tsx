@@ -84,6 +84,7 @@ export function BalanceChartCard({
         <InteractiveLineChartD3
           label={label}
           labels={chart.labels}
+          periods={chart.periods}
           numbers={chart.numbers}
           baseline={balanceSeriesBaseline(series, range)}
           currency={currency}

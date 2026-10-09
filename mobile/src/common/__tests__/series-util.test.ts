@@ -7,6 +7,8 @@ import {
   alignMonthlySeries,
   DateBalancePoint,
   SeriesPoint,
+  seriesToChartArray,
+  selectedPeriodLabel,
 } from "../series-util";
 
 describe("pointsToMonthlySeries", () => {
@@ -254,5 +256,65 @@ describe("alignMonthlySeries", () => {
       expense: [0, 0],
       net: [-40, 20],
     });
+  });
+});
+
+describe("chart selection periods", () => {
+  // Stock's Assets/ALL window holds a March in 2024, 2025 and 2026; holding
+  // any of them used to read only "MAR".
+  const series = [
+    { date: "2024-03-31", value: 10 },
+    { date: "2024-12-31", value: 11 },
+    { date: "2025-01-31", value: 12 },
+    { date: "2025-03-31", value: 13 },
+    { date: "2026-03-31", value: 14 },
+  ];
+
+  it("keeps each point's full period beside its month label", () => {
+    const chart = seriesToChartArray(series, "noData");
+    expect(chart.labels).toEqual(["03", "12", "01", "03", "03"]);
+    expect(chart.periods).toEqual([
+      "2024-03",
+      "2024-12",
+      "2025-01",
+      "2025-03",
+      "2026-03",
+    ]);
+    expect(chart.numbers).toEqual([10, 11, 12, 13, 14]);
+  });
+
+  it("names the year of each repeated month and across New Year", () => {
+    const chart = seriesToChartArray(series, "noData");
+    const shown = chart.labels.map((label, index) =>
+      selectedPeriodLabel(label === "03" ? "MAR" : label, chart.periods[index]),
+    );
+    expect([shown[0], shown[3], shown[4]]).toEqual([
+      "MAR 2024",
+      "MAR 2025",
+      "MAR 2026",
+    ]);
+    expect(selectedPeriodLabel("DEC", chart.periods[1])).toBe("DEC 2024");
+    expect(selectedPeriodLabel("JAN", chart.periods[2])).toBe("JAN 2025");
+  });
+
+  it("leaves the no-data entry without a year", () => {
+    const empty = seriesToChartArray([], "noData");
+    expect(empty.periods).toEqual([]);
+    expect(selectedPeriodLabel("noData", empty.periods[0])).toBe("noData");
+  });
+});
+
+describe("account balance chart periods", () => {
+  // The other producer of the shared interactive chart (account detail).
+  it("passes the series periods to the chart", () => {
+    const source = require("fs").readFileSync(
+      require("path").join(
+        __dirname,
+        "../../components/balance-chart-card/index.tsx",
+      ),
+      "utf8",
+    );
+    expect(source.includes("periods={chart.periods}")).toBe(true);
+    expect(source.includes("seriesToChartArray(")).toBe(true);
   });
 });

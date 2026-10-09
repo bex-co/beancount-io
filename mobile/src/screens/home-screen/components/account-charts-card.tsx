@@ -257,6 +257,7 @@ export function AccountChartsCard({
         key={`${key}|${scope}`}
         footnote={footnotes[key]}
         labels={chart.labels}
+        periods={chart.periods}
         numbers={chart.numbers}
         baseline={balanceSeriesBaseline(series, range)}
         currency={currency}

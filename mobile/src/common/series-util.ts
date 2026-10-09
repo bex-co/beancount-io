@@ -174,20 +174,36 @@ export function balanceSeriesBaseline(
 }
 
 /**
- * Convert a series to the `{ labels, numbers }` shape the charts consume,
- * with month labels ("MM"). Returns a single zero "no data" entry when empty.
+ * Convert a series to the `{ labels, numbers, periods }` shape the charts
+ * consume: month labels ("MM") for the axis, and each point's full period
+ * ("YYYY-MM") so a selection can name its year — an ALL window has a March in
+ * every year. Returns a single zero "no data" entry when empty.
  */
 export function seriesToChartArray(
   series: SeriesPoint[],
   emptyLabel: string,
-): { labels: string[]; numbers: number[] } {
+): { labels: string[]; numbers: number[]; periods: string[] } {
   if (series.length === 0) {
-    return { labels: [emptyLabel], numbers: [0] };
+    return { labels: [emptyLabel], numbers: [0], periods: [] };
   }
   return {
     labels: series.map((point) => point.date.slice(5, 7)),
     numbers: series.map((point) => point.value),
+    periods: series.map((point) => point.date.slice(0, 7)),
   };
+}
+
+/**
+ * The label for a selected chart point: its translated month, plus the year
+ * when the point's period is known ("MAR 2024"). Without a period (the
+ * "no data" entry) the month label stands alone.
+ */
+export function selectedPeriodLabel(
+  monthLabel: string,
+  period: string | undefined,
+): string {
+  const year = period?.slice(0, 4);
+  return year && /^\d{4}$/.test(year) ? `${monthLabel} ${year}` : monthLabel;
 }
 
 /**
