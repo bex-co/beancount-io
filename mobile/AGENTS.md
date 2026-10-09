@@ -133,6 +133,19 @@ Test new screens in light **and** dark, and set background colors on loading sta
 
 Every icon-only `Pressable` / `TouchableOpacity` needs `accessibilityRole="button"` and an `accessibilityLabel` (prefer an existing `t("…")` key). Charts need a summarizing `accessibilityLabel` instead of exposing SVG nodes. The guardrail `src/__tests__/accessibility-labels.test.ts` fails the unit suite when a new unlabeled icon-only control appears; add an allowlist entry only with a written reason.
 
+### Live text-size changes — key the Text on `fontScale`
+
+On iOS, a Text whose props don't change keeps its old native measurement when the
+user changes text size while the app is open: enlarged glyphs clip into the old
+frame, and shrinking leaves blank space. Rebuilding equal styles does not help;
+an appearance change only appears to, because it changes colors. Where a label must
+survive the change, key it on `useWindowDimensions().fontScale` (see
+`DateSectionHeader`, `TimeRangePills`, the account picker rows, and the file
+editor's read-only notice). Key only the Text, never a list or screen, so query,
+scroll, and editor state survive. Verify by changing `xcrun simctl ui <udid>
+content_size` in both directions while the screen stays open, and compare with a
+cold launch at each size.
+
 ### Loading states — skeleton preloaders, not spinners
 
 Content areas that wait on a query render a skeleton built from `LoadingTile`
