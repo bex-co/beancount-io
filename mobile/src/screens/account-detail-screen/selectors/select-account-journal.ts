@@ -272,9 +272,13 @@ export function selectAccountJournalRows(
       directiveType: asString(item.entry.directive_type) || undefined,
     };
     if (!units) {
-      const key = operatingKey(item.change, currency);
-      const change = amountIn(item.change, key);
-      const balance = amountIn(item.balance, key);
+      // Each map resolves its own key: an empty change map falls back to USD,
+      // and borrowing that key would read a non-USD running balance as zero.
+      const change = amountIn(item.change, operatingKey(item.change, currency));
+      const balance = amountIn(
+        item.balance,
+        operatingKey(item.balance, currency),
+      );
       return {
         ...row,
         change: change.number,

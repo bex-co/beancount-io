@@ -149,6 +149,86 @@ describe("selectAccountJournalRows", () => {
     expect(row.balance).toBe(930.904);
   });
 
+  // Note w2/047: a Balance directive's change map is empty, so its key falls
+  // back to USD; the running balance must not borrow that key.
+  it("keeps a non-USD running balance on a zero-change row", () => {
+    const rows = selectAccountJournalRows("MRMB", [
+      item(
+        {
+          entry_hash: "bd7f4d5235521be0c380ee15fef0a38e",
+          date: "2026-06-30",
+          directive_type: "Balance",
+        },
+        {},
+        { MRMB: -532257 },
+      ),
+      item(
+        { entry_hash: "9f04e0e3", date: "2026-06-29", payee: "Padding" },
+        { MRMB: -2021 },
+        { MRMB: -532257 },
+      ),
+    ]);
+    expect(rows[0].change).toBe(0);
+    expect(rows[0].balance).toBe(-532257);
+    expect(rows[1].change).toBe(-2021);
+    expect(rows[1].balance).toBe(-532257);
+
+    const [balanceDay] = groupAccountJournalRowsToSections([rows[0]], "MRMB");
+    const [zeroDay] = groupAccountJournalRowsToSections(
+      [row("2026-06-30", "Balance", 0, 0)],
+      "MRMB",
+    );
+    expect(balanceDay.totalChange).toBe(zeroDay.totalChange);
+  });
+
+  it("keeps a non-USD running balance when the change map is sparse", () => {
+    const [row] = selectAccountJournalRows("MSEK", [
+      item(
+        { entry_hash: "z", date: "2026-05-01", payee: "Zero-net transfer" },
+        { EUR: 0 },
+        { MSEK: "1200.5" },
+      ),
+    ]);
+    expect(row.change).toBe(0);
+    expect(row.balance).toBe(1200.5);
+  });
+
+  it("falls back to USD per map, independently", () => {
+    const [usdBalance] = selectAccountJournalRows("MRMB", [
+      item(
+        { entry_hash: "u1", date: "2026-07-01", directive_type: "Balance" },
+        {},
+        { USD: "55911000000.00" },
+      ),
+    ]);
+    expect(usdBalance.change).toBe(0);
+    expect(usdBalance.balance).toBe(55911000000);
+    expect(usdBalance.moneyScale).toBe(2);
+
+    const [usdChange] = selectAccountJournalRows("MRMB", [
+      item(
+        { entry_hash: "u2", date: "2026-07-02", payee: "Mixed" },
+        { USD: -7 },
+        { MRMB: -40 },
+      ),
+    ]);
+    expect(usdChange.change).toBe(-7);
+    expect(usdChange.balance).toBe(-40);
+  });
+
+  it("takes the wider recorded scale from a zero-change row's balance", () => {
+    const [row] = selectAccountJournalRows("MUSD", [
+      item(
+        { entry_hash: "s", date: "2026-06-30", directive_type: "Balance" },
+        {},
+        { MUSD: "-930.904" },
+      ),
+    ]);
+    expect(row.change).toBe(0);
+    expect(row.balance).toBe(-930.904);
+    expect(row.moneyScale).toBe(3);
+  });
+
   it("collects posting accounts and amounts for the row icon", () => {
     const [row] = selectAccountJournalRows("USD", [
       item({
