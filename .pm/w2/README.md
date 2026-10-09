@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [055](./055.md) — Make unavailable-detail explanations readable in light mode; both settled native messages measure1.78:1, while fresh dark controls and not-found semantics pass (25–40 minutes).
 - [054](./054.md) — Clear retained transaction actions when the ledger route becomes unavailable; fresh native Back removes the old body but leaves an active Example Share/Copy menu under Crypto (25–40 minutes).
 - [053](./053.md) — Make account-journal balances and cost captions legible in light mode; fresh native Stock captions measure1.78:1 while their dark control and numeric API checks pass (20–30 minutes).
 - [037](./blocked/037.md) — Serve the MCP Registry domain proof over HTTP on production too (optional; publishing uses the apex DNS TXT today). Found during m36 closeout — operator-only — **blocked:** needs production access to set `MCP_REGISTRY_AUTH_PROOF` and redeploy.
