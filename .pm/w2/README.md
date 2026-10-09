@@ -48,6 +48,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [075](./075.md) — Name native account navigation separately from disclosure; fresh collapsed/expanded Assets Buttons begin Expand/Collapse while ordinary activation opens detail, with chevron and numeric controls passing (35–50 minutes).
 - [074](./074.md) — Keep valuation-sheet holding quantities visible at enlarged text; fresh light/dark native holding Text widths are0 while the price column consumes346 points, and default235.7-point quantities recover (35–50 minutes).
 - [073](./073.md) — Expose native valuation-sheet contents to accessibility; fresh light/dark Stock shows correct holdings while native queries expose a full-screen Done grouping and omit the existing child names (35–50 minutes).
 - [072](./072.md) — Start native Persian commit diffs at the source's left edge; fresh59-line change begins95 points past its prefixes, actual horizontal pan recovers them, and English/native API controls pass (45–60 minutes).
