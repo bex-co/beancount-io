@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [061](./061.md) — Make shared transaction narrations readable in light mode; native Home, Transactions and merchant journals are faint at1.62–1.78:1, while fresh dark and actual detail-navigation controls pass (25–40 minutes).
 - [060](./060.md) — Reflow enlarged Home card titles beside See all; fresh German maximum text gives Recent Transactions a26.67-point column and1457.67-point height, with Spending/Budget also affected and default-size controls passing (35–50 minutes).
 - [059](./059.md) — Keep Home's chart tabs readable beside enlarged translated See all; fresh German maximum-text runs leave a38.67-point viewport, while default scrolling/taps and the completed overflow fade controls pass (35–50 minutes).
 - [058](./058.md) — Scope Home chart measurements to the current ledger/text layout; fresh default Example → Alibaba retains a blank caption slot, and maximum → large repeats a much larger gap in both themes (45–60 minutes).
