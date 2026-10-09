@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [045](./045.md) — Preserve both quote kinds in transaction search; native `E.B.'s "Beer"` silently drops double quotes and returns four false matches (30–45 minutes).
 - [044](./044.md) — Make the file reader's permission notice legible in light mode; its 13-point informational text measures1.62:1 versus a passing dark control (20–30 minutes).
 - [043](./043.md) — Give mixed commodity trades an explicit native summary; a financed $80,000 down payment reads −$400,000 and a disposal mixes cash with noncash adjustments (45–60 minutes).
 - [042](./042.md) — Keep retained merchant details bound to their original ledger; native Back silently turns Example's 44-transaction Cafe detail into Crypto's empty match after file links (35–55 minutes).
