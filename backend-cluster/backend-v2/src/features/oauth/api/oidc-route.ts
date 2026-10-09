@@ -60,14 +60,18 @@ export function selectOAuthResource(
 /** The CIMD draft this deployment has reviewed (ADR 019 D6). */
 export const CIMD_DRAFT = "draft-02";
 
-/** The host of a CIMD client id (an https URL), or null for an opaque id. */
-function cimdHost(clientId: string): string | null {
-  if (!clientId.startsWith("https://")) return null;
-  try {
-    return new URL(clientId).host;
-  } catch {
-    return null;
-  }
+/**
+ * The domain publishing a CIMD client's metadata, or null for any other client.
+ * oidc-provider marks every client it builds from a metadata document with a
+ * non-enumerable `clientIdMetadataDocument`, so this never guesses from the
+ * shape of the id.
+ */
+function cimdHost(
+  client: { clientId: string; clientIdMetadataDocument?: boolean } | undefined,
+): string | null {
+  return client?.clientIdMetadataDocument
+    ? new URL(client.clientId).host
+    : null;
 }
 
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
@@ -445,7 +449,7 @@ export function setOidcRoutes(
         // itself; a CIMD client's id host is the domain vouching for it.
         redirect_uri: interaction.params.redirect_uri ?? null,
         client_name: client?.clientName ?? null,
-        client_id_host: cimdHost(clientId),
+        client_id_host: cimdHost(client),
         loopback_only: isLoopbackOnly(client?.redirectUris ?? []),
       };
     } catch (err) {

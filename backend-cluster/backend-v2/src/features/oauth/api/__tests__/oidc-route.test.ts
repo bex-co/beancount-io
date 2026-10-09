@@ -154,10 +154,7 @@ describe("OAuth CIMD draft", () => {
     const installed = features.match(
       /clientIdMetadataDocument:\s*\{[^}]*version:\s*'([^']+)'/,
     )?.[1];
-    expect({ reviewed: CIMD_DRAFT, installed }).toEqual({
-      reviewed: CIMD_DRAFT,
-      installed: CIMD_DRAFT,
-    });
+    expect(installed).toBe(CIMD_DRAFT);
   });
 });
 
@@ -2042,12 +2039,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
         .spyOn(globalThis, "fetch")
         .mockImplementation(
           (input: string | URL | Request, init?: RequestInit) => {
-            const url =
-              typeof input === "string"
-                ? input
-                : input instanceof URL
-                  ? input.href
-                  : input.url;
+            const url = input instanceof Request ? input.url : String(input);
             const serve = served[url];
             return serve ? Promise.resolve(serve()) : realFetch(input, init);
           },
@@ -2061,63 +2053,61 @@ describe("oidc-route: unified MCP + identity provider", () => {
       redirectUri: string,
       error: "invalid_client" | "invalid_redirect_uri",
     ) {
-      const { codeChallenge } = pkce();
-      const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
-      authUrl.search = new URLSearchParams({
-        client_id: clientId,
-        response_type: "code",
-        scope: "openid ledger.read",
-        redirect_uri: redirectUri,
-        code_challenge: codeChallenge,
-        code_challenge_method: "S256",
-      }).toString();
-      const res = await fetch(authUrl, { redirect: "manual" });
+      const res = await fetch(authUrlFor(clientId, redirectUri), {
+        redirect: "manual",
+      });
       expect(res.status).toBe(400);
       expect(res.headers.get("location")).toBeNull();
       expect(await res.text()).toContain(error);
     }
 
-    it("refuses a client whose metadata document cannot be fetched", async () => {
-      const id = "https://gone.example.test/oauth/client-metadata.json";
-      served[id] = () => new Response("not found", { status: 404 });
-      await expectRefused(
-        id,
+    it.each<
+      [
+        string,
+        string,
+        string,
+        "invalid_client" | "invalid_redirect_uri",
+        (() => Response) | undefined,
+      ]
+    >([
+      [
+        "a client whose metadata document cannot be fetched",
+        "https://gone.example.test/oauth/client-metadata.json",
         "https://gone.example.test/callback",
         "invalid_client",
-      );
-    });
-
-    it("refuses a document that names a different client_id", async () => {
-      const id = "https://impostor.example.test/oauth/client-metadata.json";
-      served[id] = () =>
-        Response.json({
-          ...CIMD_DOCUMENTS[
-            "https://claude.ai/oauth/claude-code-client-metadata"
-          ],
-        });
-      await expectRefused(
-        id,
+        () => new Response("not found", { status: 404 }),
+      ],
+      [
+        "a document that names a different client_id",
+        "https://impostor.example.test/oauth/client-metadata.json",
         "http://localhost:51999/callback",
         "invalid_client",
-      );
-    });
-
-    it("refuses a redirect the document does not list", async () => {
-      await expectRefused(
+        () =>
+          Response.json(
+            CIMD_DOCUMENTS[
+              "https://claude.ai/oauth/claude-code-client-metadata"
+            ],
+          ),
+      ],
+      [
+        "a redirect the document does not list",
         "https://chatgpt.example.test/oauth/client-metadata.json",
         "https://attacker.example.test/callback",
         "invalid_redirect_uri",
-      );
-    });
-
-    it("refuses a client_id on a special-use address without fetching it", async () => {
-      // Not in `served`: the request reaches oidc-provider's SSRF-protected
+        undefined,
+      ],
+      // Not served: the request reaches oidc-provider's SSRF-protected
       // dispatcher, which refuses loopback before connecting.
-      await expectRefused(
+      [
+        "a client_id on a special-use address without fetching it",
         "https://127.0.0.1/oauth/client-metadata.json",
         "http://localhost:51999/callback",
         "invalid_client",
-      );
+        undefined,
+      ],
+    ])("refuses %s", async (_case, clientId, redirectUri, error, serve) => {
+      if (serve) served[clientId] = serve;
+      await expectRefused(clientId, redirectUri, error);
     });
 
     it.each([
