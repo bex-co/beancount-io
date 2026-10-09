@@ -1,4 +1,10 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
@@ -18,6 +24,7 @@ import {
   directiveTypeLabelKey,
 } from "@/screens/account-detail-screen/selectors/select-account-journal";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+import { prefersStackedLayout } from "@/common/theme/dynamic-type";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -27,6 +34,21 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 16,
       paddingVertical: 12,
       backgroundColor: theme.white,
+    },
+    // Accessibility text sizes (see `prefersStackedLayout`), as in the
+    // Transactions EntryRow: change, cost and balance move under the icon and
+    // name, so the name can wrap whole instead of shrinking to "Hoo…".
+    rowStacked: {
+      flexDirection: "column",
+      alignItems: "stretch",
+    },
+    stackedMain: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    trailingStacked: {
+      alignItems: "flex-start",
+      marginTop: 4,
     },
     middle: {
       flex: 1,
@@ -89,6 +111,8 @@ export function AccountEntryRow({
   onPress,
 }: AccountEntryRowProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
 
@@ -111,12 +135,12 @@ export function AccountEntryRow({
         ? theme.error
         : theme.black60;
 
-  const content = (
+  const leading = (
     <>
       <AccountTypeIcon postings={row.postings} payee={row.payee} />
 
       <View style={styles.middle}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={styles.title} numberOfLines={stacked ? undefined : 1}>
           {row.title || t("transactions")}
         </Text>
         {typeLabelKey && (
@@ -130,8 +154,13 @@ export function AccountEntryRow({
           </View>
         )}
       </View>
+    </>
+  );
 
-      <View style={styles.trailing}>
+  const content = (
+    <>
+      {stacked ? <View style={styles.stackedMain}>{leading}</View> : leading}
+      <View style={[styles.trailing, stacked && styles.trailingStacked]}>
         <AmountText
           mono="medium"
           style={[styles.change, { color: changeColor }]}
@@ -155,7 +184,7 @@ export function AccountEntryRow({
   if (onPress) {
     return (
       <TouchableOpacity
-        style={styles.row}
+        style={[styles.row, stacked && styles.rowStacked]}
         onPress={onPress}
         activeOpacity={0.7}
       >
@@ -164,5 +193,7 @@ export function AccountEntryRow({
     );
   }
 
-  return <View style={styles.row}>{content}</View>;
+  return (
+    <View style={[styles.row, stacked && styles.rowStacked]}>{content}</View>
+  );
 }
