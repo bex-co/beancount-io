@@ -39,7 +39,7 @@
 - [ ] **m34** — [Ledger catalogs list every ledger, not the first upstream page](./blocked/m34/README.md) (6 tasks) ← from user report 2026-10-01 (dashboard ledger switcher could not find `open_ledger/stock-example`), reproduced against the deployed site; user routed to w2 — **blocked:** t001–t005 shipped; closeout needs production backend-v2 deployed with the fix
 - [ ] **m35** — [Public ledgers that explain themselves in search and on first visit](./blocked/m35/README.md) (13 tasks) ← public-ledger SEO research; materialized 2026-10-02 at user request — **blocked:** implementation pushed; deployed closeout needs the production target and access
 - [x] **m36** — [List the hosted MCP server on the official MCP Registry](./done/m36/README.md) (10 tasks) ← [ADR 019](../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) open question "which directory comes first"; user decision 2026-10-02 to start with the easiest marketplace; registry research 2026-10-03
-- [ ] **m37** — [Refresh native measurements after live Dynamic Type changes](./m37/README.md) (6 tasks) ← promoted [w2/062](./062.md), extended by independently verified picker rows/sections, root pills and file permission notice,2026-10-09
+- [x] **m37** — [Refresh native measurements after live Dynamic Type changes](./done/m37/README.md) (6 tasks) ← promoted [w2/062](./done/062.md), extended by independently verified picker rows/sections, root pills and file permission notice,2026-10-09
 
 ## Dropped
 
