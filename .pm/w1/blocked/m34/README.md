@@ -6,7 +6,7 @@
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Claude (claude.ai connector) and Claude Code: real sign-in and a short journey | 45m | — |
+| t001 | Claude (claude.ai connector) and Claude Code: real sign-in and a short journey — *Claude Code done 2026-10-08; claude.ai open* | 45m | — |
 | t002 | ChatGPT developer-mode connector: real sign-in and a tools-only journey | 45m | — |
 | t003 | Cursor and VS Code Copilot: real sign-in, including the VS Code fallback port | 45m | — |
 | t004 | Record per-host status and update the docs | 30m | t001, t002, t003 |
@@ -37,3 +37,5 @@
 2. **Every task is a real browser sign-in** with the dedicated QA account: consent in a browser, and host accounts (claude.ai, Claude Code, ChatGPT with developer mode, Cursor, VS Code with Copilot) that belong to the user.
 
 **Unblock:** ~~the operator deploys backend-v2 and dashboard from `main` at or after `5cb8f83e`~~ (done 2026-10-08), and the user is available to complete the browser consents with those accounts — or supplies a way to drive them. w1/m30 t007 and w1/m31 t004 clear with the same deploy. **Who can clear it:** the deployment operator and account holder (the user).
+
+- **Progress 2026-10-08:** condition 1 is cleared, and Claude Code's run is done (CIMD sign-in, a read, and a dry-run write; see [t001](./t001.md)). Still waiting on the user's accounts: claude.ai (t001), ChatGPT developer mode (t002), Cursor and VS Code Copilot (t003).
