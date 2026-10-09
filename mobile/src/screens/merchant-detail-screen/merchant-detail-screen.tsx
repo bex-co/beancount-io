@@ -29,6 +29,8 @@ import {
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { AccountTypeIcon } from "@/components/account-type-icon";
+import { AmountText } from "@/components/amount-text";
+import { HERO_AMOUNT_FIT } from "@/components/amount-text/hero-amount-fit";
 import {
   merchantRecurringOverridesVar,
   overrideFor,
@@ -132,8 +134,6 @@ const getStyles = (theme: ColorTheme) =>
       lineHeight: 22,
       fontWeight: fontWeights.medium,
       color: theme.black90,
-      fontVariant: ["tabular-nums"],
-      textAlign: LEADING_TEXT_ALIGN,
     },
     dateRange: {
       fontSize: fontSizes.sm,
@@ -467,9 +467,16 @@ function MerchantDetailBody({ payee }: { payee: string }) {
       ) : null}
 
       {stats?.totalsByCurrency.map((row) => (
-        <Text key={row.currency} style={styles.totalLine} numberOfLines={1}>
+        // A total must never ellipsize — "51,230.00…" loses its currency at
+        // accessibility text sizes. AmountText caps the scale like every other
+        // amount, and the hero fit shrinks a still-too-wide figure instead.
+        <AmountText
+          key={row.currency}
+          style={styles.totalLine}
+          {...HERO_AMOUNT_FIT}
+        >
           {formatMerchantTotal(row)}
-        </Text>
+        </AmountText>
       ))}
 
       {stats?.firstDate && stats?.lastDate ? (
