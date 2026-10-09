@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [043](./043.md) — Give mixed commodity trades an explicit native summary; a financed $80,000 down payment reads −$400,000 and a disposal mixes cash with noncash adjustments (45–60 minutes).
 - [042](./042.md) — Keep retained merchant details bound to their original ledger; native Back silently turns Example's 44-transaction Cafe detail into Crypto's empty match after file links (35–55 minutes).
 - [041](./041.md) — Preserve negative per-currency totals in merchant headers; native Broker/Hoogle headers strip USD and VACHR minus signs while positive controls remain correct (25–40 minutes).
 - [040](./040.md) — Keep retained transaction details bound to their original ledger; Back after a cross-ledger App Link opens an Example posting in Crypto as a false zero/empty account (55–60 minutes).
