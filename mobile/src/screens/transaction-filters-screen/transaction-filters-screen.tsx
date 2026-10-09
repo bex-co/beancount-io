@@ -172,15 +172,26 @@ const FilterChip = ({
  *
  * Edits a draft — nothing reaches `transactionFiltersVar` (and so nothing
  * refetches) until Apply, and dismissing the modal drops the draft.
+ *
+ * The draft belongs to the ledger it was seeded from. An app link can select
+ * another ledger while this sheet stays in the history behind it, and native
+ * Back then revives the sheet; keying the sheet by ledger remounts it there,
+ * discarding the old draft (and making an outstanding picker callback inert)
+ * and seeding only the new ledger's own saved filters. Without the boundary,
+ * Apply would stamp one ledger's account onto another's saved filter. See
+ * `TransactionFiltersScreen` below.
  */
-export const TransactionFiltersScreen = (): JSX.Element => {
+const TransactionFiltersSheet = ({
+  ledgerId,
+}: {
+  ledgerId: string;
+}): JSX.Element => {
   const router = useRouter();
   const guest = useGuest();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
 
-  const ledgerId = useLedgerGuard();
   const filtersVar = guest?.transactionFilters ?? transactionFiltersVar;
 
   const [draft, setDraft] = useState<TransactionFilters>(() =>
@@ -373,4 +384,14 @@ export const TransactionFiltersScreen = (): JSX.Element => {
       />
     </SafeAreaView>
   );
+};
+
+/**
+ * The sheet, keyed by the selected ledger: a ledger switch while the sheet is
+ * retained remounts it, so a draft (or a pending account-picker callback) from
+ * the previous ledger can never be applied under the new one.
+ */
+export const TransactionFiltersScreen = (): JSX.Element => {
+  const ledgerId = useLedgerGuard();
+  return <TransactionFiltersSheet key={ledgerId} ledgerId={ledgerId} />;
 };
