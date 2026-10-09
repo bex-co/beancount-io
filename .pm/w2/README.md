@@ -49,6 +49,7 @@
 ## Cross-queue promotions and follow-ups
 
 - [070](./070.md) — Keep Explore paging usable when one ledger's star status is denied; fresh third-page native retry blocks30 returned records, while optional-field isolation and actual Stock search/open controls pass (45–60 minutes).
+- [071](./071.md) — Make New Ledger explanations readable in light mode; template and normalized-name hints measure1.62–1.78:1, while dark and actual local selection/preview controls pass (20–30 minutes).
 - [069](./069.md) — Exclude decorative account-picker icons from native row names; fresh unselected/selected Buttons include U+F23B/U+F21D, while selection flags and pick/Cancel behavior pass (25–40 minutes).
 - [068](./068.md) — Make transaction-filter group captions readable in light mode; STATUS, DATE RANGE and ACCOUNT measure1.78:1, while fresh dark and filter-behavior controls pass (20–30 minutes).
 - [067](./067.md) — Give Filters Cancel and Reset native button roles; fresh header actions are Other while enabled/disabled Apply and filter choices pass the Button controls (20–30 minutes).
