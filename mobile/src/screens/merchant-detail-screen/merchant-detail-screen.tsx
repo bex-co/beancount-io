@@ -27,6 +27,8 @@ import {
   useQueryShellQuery,
 } from "@/generated-graphql/graphql";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
+import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
+import { bindRouteLedger } from "@/common/route-ledger";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { AmountText } from "@/components/amount-text";
@@ -611,8 +613,37 @@ function MerchantDetailBody({ payee }: { payee: string }) {
   );
 }
 
+function MerchantDetailRoute({
+  payee,
+  ledger,
+}: {
+  payee: string;
+  ledger?: string | string[];
+}) {
+  const { t } = useTranslations();
+  const binding = bindRouteLedger(ledger, useLedgerGuard());
+
+  if (binding.status === "mismatch") {
+    // A revived merchant from another ledger: its stats and journal would be
+    // the new ledger's (usually empty) results under this payee's name, and
+    // its recurring toggle would write the new ledger's override.
+    return (
+      <RouteLedgerUnavailable
+        title={payee}
+        message={t("merchantDetailUnavailable")}
+      />
+    );
+  }
+  return <MerchantDetailBody payee={payee} />;
+}
+
 export function MerchantDetailScreen() {
-  const params = useLocalSearchParams<{ payee?: string | string[] }>();
+  // `ledger` binds the entry to the ledger it was opened for; see
+  // `common/route-ledger` for why the ambient selection is not enough.
+  const params = useLocalSearchParams<{
+    payee?: string | string[];
+    ledger?: string | string[];
+  }>();
   const raw = params.payee;
   const payee = Array.isArray(raw) ? raw[0] : raw;
   const theme = useTheme().colorTheme;
@@ -634,7 +665,7 @@ export function MerchantDetailScreen() {
           contentStyle: { backgroundColor: theme.white },
         }}
       />
-      <MerchantDetailBody payee={payee} />
+      <MerchantDetailRoute payee={payee} ledger={params.ledger} />
     </LedgerGuard>
   );
 }

@@ -330,6 +330,8 @@ export const sk: Translations = {
   accountDetailUnavailable: "Tento účet nie je vo zvolenej knihe dostupný.",
   transactionDetailUnavailable:
     "Táto transakcia nie je vo zvolenej knihe dostupná.",
+  merchantDetailUnavailable:
+    "Tento obchodník nie je vo zvolenej knihe dostupný.",
   journalLoadError: "Načítanie denníka zlyhalo: ",
   // entry context (transactions screen)
   journalError: "Chyba",

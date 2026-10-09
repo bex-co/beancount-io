@@ -198,20 +198,64 @@ describe("transaction detail is bound to its ledger (w2/040)", () => {
   });
 
   it("the screen resolves the route ledger before mounting its query body", () => {
-    const source = read(
-      "screens/transaction-detail-screen/transaction-detail-screen.tsx",
-    );
-    const route = source.slice(source.indexOf("const TransactionDetailRoute"));
-    const guard = route.indexOf("bindRouteLedger(ledger");
-    const mismatch = route.indexOf('binding.status === "mismatch"');
-    const body = route.indexOf("<TransactionDetailImpl");
-    expect(guard > 0 && mismatch > guard && body > mismatch).toBe(true);
-    // The exported screen mounts the guarded route, never the body directly.
-    const screen = source.slice(
-      source.indexOf("export const TransactionDetailScreen"),
-    );
-    expect(screen.includes("<TransactionDetailRoute")).toBe(true);
-    expect(screen.includes("<TransactionDetailImpl")).toBe(false);
-    expect(screen.includes("ledger={params.ledger}")).toBe(true);
+    expectGuardedScreen({
+      file: "screens/transaction-detail-screen/transaction-detail-screen.tsx",
+      route: "TransactionDetailRoute",
+      body: "TransactionDetailImpl",
+      screen: "export const TransactionDetailScreen",
+    });
   });
 });
+
+describe("merchant detail is bound to its ledger (w2/042)", () => {
+  it("every push to /merchant-detail passes a ledger param", () => {
+    expect(pushesMissingLedger("merchant-detail", "payee")).toEqual([]);
+  });
+
+  it("the same payee opened in two ledgers stays distinguishable", () => {
+    // Cafe Modagor from Example, revived after a Crypto file link: refused.
+    const fromExample = { payee: "Cafe Modagor", ledger: EXAMPLE };
+    expect(bindRouteLedger(fromExample.ledger, CRYPTO).status).toBe("mismatch");
+    expect(bindRouteLedger(fromExample.ledger, EXAMPLE).status).toBe("ready");
+    const fromCrypto = { payee: "Cafe Modagor", ledger: CRYPTO };
+    expect(bindRouteLedger(fromCrypto.ledger, CRYPTO).status).toBe("ready");
+  });
+
+  it("the screen resolves the route ledger before mounting its query body", () => {
+    // The body owns the metadata/totals/journal queries and the recurring
+    // toggle, so a mismatched route must never reach it.
+    expectGuardedScreen({
+      file: "screens/merchant-detail-screen/merchant-detail-screen.tsx",
+      route: "MerchantDetailRoute",
+      body: "MerchantDetailBody",
+      screen: "export function MerchantDetailScreen",
+    });
+  });
+});
+
+/**
+ * `route` resolves `bindRouteLedger` and returns early on a mismatch before it
+ * renders `body`; the exported `screen` mounts `route` (passing the `ledger`
+ * param) and never `body` directly.
+ */
+function expectGuardedScreen(args: {
+  file: string;
+  route: string;
+  body: string;
+  screen: string;
+}): void {
+  const source = read(args.file);
+  const routeStart = source.search(
+    new RegExp(`(?:const|function) ${args.route}\\b`),
+  );
+  expect(routeStart >= 0).toBe(true);
+  const route = source.slice(routeStart);
+  const guard = route.indexOf("bindRouteLedger(ledger");
+  const mismatch = route.indexOf('binding.status === "mismatch"');
+  const body = route.indexOf(`<${args.body}`);
+  expect(guard > 0 && mismatch > guard && body > mismatch).toBe(true);
+  const screen = source.slice(source.indexOf(args.screen));
+  expect(screen.includes(`<${args.route}`)).toBe(true);
+  expect(screen.includes(`<${args.body}`)).toBe(false);
+  expect(screen.includes("ledger={params.ledger}")).toBe(true);
+}

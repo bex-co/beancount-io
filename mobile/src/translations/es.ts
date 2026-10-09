@@ -328,6 +328,8 @@ export const es: Translations = {
     "Esta cuenta no está disponible en el libro seleccionado.",
   transactionDetailUnavailable:
     "Esta transacción no está disponible en el libro seleccionado.",
+  merchantDetailUnavailable:
+    "Este comercio no está disponible en el libro seleccionado.",
   journalLoadError: "Error al cargar el diario: ",
   // entry context (transactions screen)
   journalError: "Error",

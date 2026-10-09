@@ -221,10 +221,12 @@ function MerchantsDirectory() {
     (item: MerchantListItem) => {
       router.push({
         pathname: "/merchant-detail",
-        params: { payee: item.merchant.payee },
+        // `ledger` binds the entry to this ledger, so a later ledger switch
+        // cannot revive the merchant under a different one.
+        params: { payee: item.merchant.payee, ledger: ledgerId },
       });
     },
-    [router],
+    [router, ledgerId],
   );
 
   const searchPlaceholder = t("merchantsSearchPlaceholder", {

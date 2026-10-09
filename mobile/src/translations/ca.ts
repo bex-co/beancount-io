@@ -329,6 +329,8 @@ export const ca: Translations = {
     "Aquest compte no està disponible al llibre seleccionat.",
   transactionDetailUnavailable:
     "Aquesta transacció no està disponible al llibre seleccionat.",
+  merchantDetailUnavailable:
+    "Aquest comerç no està disponible al llibre seleccionat.",
   journalLoadError: "Error en carregar el diari: ",
   // entry context (transactions screen)
   journalError: "Error",

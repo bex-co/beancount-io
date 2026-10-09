@@ -322,6 +322,7 @@ export const bg: Translations = {
   accountDetailUnavailable: "Тази сметка не е налична в избраната книга.",
   transactionDetailUnavailable:
     "Тази транзакция не е налична в избраната книга.",
+  merchantDetailUnavailable: "Този търговец не е наличен в избраната книга.",
   journalLoadError: "Неуспешно зареждане на журнала: ",
   // entry context (transactions screen)
   journalError: "Грешка",

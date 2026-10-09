@@ -327,6 +327,7 @@ export const uk: Translations = {
   noEntries: "Немає записів",
   accountDetailUnavailable: "Цей рахунок недоступний у вибраній книзі.",
   transactionDetailUnavailable: "Ця транзакція недоступна у вибраній книзі.",
+  merchantDetailUnavailable: "Цей продавець недоступний у вибраній книзі.",
   journalLoadError: "Помилка завантаження журналу: ",
   // entry context (transactions screen)
   journalError: "Помилка",

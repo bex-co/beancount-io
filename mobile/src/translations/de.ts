@@ -328,6 +328,8 @@ export const de: Translations = {
     "Dieses Konto ist im ausgewählten Hauptbuch nicht verfügbar.",
   transactionDetailUnavailable:
     "Diese Buchung ist im ausgewählten Hauptbuch nicht verfügbar.",
+  merchantDetailUnavailable:
+    "Dieser Händler ist im ausgewählten Hauptbuch nicht verfügbar.",
   journalLoadError: "Fehler beim Laden des Journals: ",
   // entry context (transactions screen)
   journalError: "Fehler",
