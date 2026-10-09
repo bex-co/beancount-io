@@ -1,5 +1,11 @@
 import { ReactNode } from "react";
-import { StyleSheet, Text, View, ViewStyle } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+  useWindowDimensions,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { PressableScale } from "@/components/pressable-scale";
 import { ColorTheme } from "@/types/theme-props";
@@ -13,6 +19,7 @@ import {
 } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
+import { prefersStackedLayout } from "@/common/theme/dynamic-type";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -30,6 +37,20 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
       paddingHorizontal: gutter,
       marginBottom: space.md,
+    },
+    // Accessibility text sizes: the title gets the whole line instead of a
+    // sliver beside its actions, which move below it at the trailing edge.
+    headerStacked: {
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: space.xs,
+    },
+    actions: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    actionsStacked: {
+      alignSelf: "flex-end",
     },
     title: {
       flex: 1,
@@ -89,33 +110,46 @@ export function DashboardCard({
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
   const hasHeader = Boolean(title || onSeeAll || right);
+  const { fontScale } = useWindowDimensions();
+  const stacked = Boolean(title) && prefersStackedLayout(fontScale);
 
   return (
     <View style={[styles.card, style]} testID={testID}>
       {hasHeader && (
-        <View style={styles.header}>
+        <View style={[styles.header, stacked && styles.headerStacked]}>
+          {/* Keyed on the live scale so a text-size change while open
+              remeasures the heading (see DateSectionHeader). */}
           {title ? (
-            <Text style={styles.title}>{title}</Text>
+            <Text
+              key={fontScale}
+              style={[styles.title, stacked && { flex: 0 }]}
+            >
+              {title}
+            </Text>
           ) : (
             <View style={{ flex: 1 }} />
           )}
-          {right}
-          {onSeeAll && (
-            <PressableScale
-              style={styles.seeAll}
-              onPress={onSeeAll}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t("seeAll")}
-            >
-              <Text style={styles.seeAllText}>{t("seeAll")}</Text>
-              <Ionicons
-                name={directionalIcon("chevron-forward")}
-                size={16}
-                color={theme.primary}
-              />
-            </PressableScale>
-          )}
+          <View style={[styles.actions, stacked && styles.actionsStacked]}>
+            {right}
+            {onSeeAll && (
+              <PressableScale
+                style={styles.seeAll}
+                onPress={onSeeAll}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t("seeAll")}
+              >
+                <Text key={fontScale} style={styles.seeAllText}>
+                  {t("seeAll")}
+                </Text>
+                <Ionicons
+                  name={directionalIcon("chevron-forward")}
+                  size={16}
+                  color={theme.primary}
+                />
+              </PressableScale>
+            )}
+          </View>
         </View>
       )}
       <View style={bleed ? undefined : styles.content}>{children}</View>
