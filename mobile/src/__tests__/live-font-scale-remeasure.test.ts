@@ -3,13 +3,8 @@ import path from "path";
 import vm from "vm";
 import ts from "typescript";
 
-// iOS Fabric keeps a Text's cached paragraph measurement when the system text
-// size changes while the app is open: glyphs grow or shrink, but the frame
-// stays at the old size (clipped dates, or tall blank bands after shrinking).
-// The owners below key their native Text on the live font scale so a size
-// change mounts fresh text that measures at the new scale. These tests execute
-// the real component bodies with native hosts substituted and assert the keys
-// that drive that remount; they do not replace native geometry checks.
+// Asserts the font-scale keys that make iOS remeasure text after a live
+// text-size change (see DateSectionHeader); not a native geometry check.
 type Node = {
   type: unknown;
   props: Record<string, any>;
@@ -19,11 +14,11 @@ type Node = {
 let fontScale = 1;
 
 const react = {
-  createElement(type: any, props: any, ...children: any[]) {
-    return typeof type === "function"
-      ? type({ ...props, children })
-      : { type, props: props ?? {}, children: children.flat().filter(Boolean) };
-  },
+  createElement: (type: unknown, props: any, ...children: any[]): Node => ({
+    type,
+    props: props ?? {},
+    children: children.flat().filter(Boolean),
+  }),
 };
 
 function load(file: string, modules: Record<string, unknown>): any {
@@ -39,7 +34,6 @@ function load(file: string, modules: Record<string, unknown>): any {
   ).outputText;
   vm.runInNewContext(source, {
     exports,
-    React: react,
     require(id: string) {
       if (id === "react") return { __esModule: true, default: react, ...react };
       if (id in modules) return modules[id];
@@ -47,12 +41,6 @@ function load(file: string, modules: Record<string, unknown>): any {
     },
   });
   return exports;
-}
-
-function findAll(node: Node | string, type: string): Node[] {
-  if (typeof node === "string") return [];
-  const own = node.type === type ? [node] : [];
-  return own.concat(...node.children.map((child) => findAll(child, type)));
 }
 
 const reactNative = {
@@ -84,30 +72,25 @@ describe("DateSectionHeader live font-scale remeasurement", () => {
     fontScale = 1;
   });
 
-  it("mounts a new date text when the font scale changes", () => {
-    const [before] = findAll(render(), "Text");
+  it("remounts the date and daily total when the scale changes either way", () => {
+    const before = render("-$33.71");
     fontScale = 3.12;
-    const [after] = findAll(render(), "Text");
-
-    expect(after.children).toEqual(["September 8, 2017"]);
-    expect(after.props.key).not.toEqual(before.props.key);
+    const enlarged = render("-$33.71");
     fontScale = 1;
-    expect(findAll(render(), "Text")[0].props.key).toEqual(before.props.key);
+    const restored = render("-$33.71");
+
+    expect(enlarged.props.key).not.toEqual(before.props.key);
+    expect(restored.props.key).toEqual(before.props.key);
+    expect(enlarged.children.map((child) => (child as Node).type)).toEqual([
+      "Text",
+      "AmountText",
+    ]);
+    expect((enlarged.children[0] as Node).children).toEqual([
+      "September 8, 2017",
+    ]);
   });
 
-  it("remeasures the optional daily total with its date", () => {
-    const [before] = findAll(render("-$33.71"), "AmountText");
-    fontScale = 3.12;
-    const [after] = findAll(render("-$33.71"), "AmountText");
-
-    expect(after.children).toEqual(["-$33.71"]);
-    expect(after.props.key).not.toEqual(before.props.key);
-    expect(findAll(render(), "AmountText").length).toBe(0);
-  });
-
-  it("keeps the same text mounted while the scale is unchanged", () => {
-    expect(findAll(render("-$1"), "Text")[0].props.key).toEqual(
-      findAll(render("-$2"), "Text")[0].props.key,
-    );
+  it("keeps the header mounted when only its data changes", () => {
+    expect(render("-$1").props.key).toEqual(render().props.key);
   });
 });

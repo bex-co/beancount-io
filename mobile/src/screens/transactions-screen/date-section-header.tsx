@@ -50,20 +50,14 @@ export const DateSectionHeader: React.FC<DateSectionHeaderProps> = ({
   const styles = useThemeStyle(getStyles);
   // iOS keeps a Text's cached measurement when the system text size changes
   // while the app is open, clipping enlarged dates or leaving tall blank bands
-  // after shrinking. Keying the text on the live scale mounts a fresh,
-  // correctly measured node without disturbing the surrounding list.
+  // after shrinking. Keying the header on the live scale mounts fresh,
+  // correctly measured text without disturbing the surrounding list.
   const { fontScale } = useWindowDimensions();
 
   return (
-    <View style={styles.container}>
-      <Text key={fontScale} style={styles.date}>
-        {displayDate}
-      </Text>
-      {total ? (
-        <AmountText key={fontScale} style={styles.total}>
-          {total}
-        </AmountText>
-      ) : null}
+    <View key={fontScale} style={styles.container}>
+      <Text style={styles.date}>{displayDate}</Text>
+      {total ? <AmountText style={styles.total}>{total}</AmountText> : null}
     </View>
   );
 };

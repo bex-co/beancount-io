@@ -194,6 +194,8 @@ interface AccountRowProps {
   account: string;
   selected: boolean;
   onPress: (account: string) => void;
+  /** Live text scale; keys the name so a size change remeasures it. */
+  fontScale: number;
 }
 
 /**
@@ -201,18 +203,17 @@ interface AccountRowProps {
  * so its own cell PureComponent can never bail out — without this, every
  * mounted row re-renders on each keystroke. The theme hooks are called here
  * rather than passed down (`useThemeStyle` memoizes per theme), matching
- * `AccountTableRow` and keeping the memo comparison to primitives.
+ * `AccountTableRow` and keeping the memo comparison to primitives. The font
+ * scale is passed down instead, so rows don't each subscribe to window changes.
  */
 const AccountRow = memo(function AccountRow({
   account,
   selected,
   onPress,
+  fontScale,
 }: AccountRowProps) {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
-  // Keyed on the live scale so a text-size change while the picker is open
-  // remeasures the row (see DateSectionHeader).
-  const { fontScale } = useWindowDimensions();
   const { parent, leaf } = splitAccountLeaf(account);
   return (
     <TouchableOpacity
@@ -221,16 +222,13 @@ const AccountRow = memo(function AccountRow({
       accessibilityRole="button"
       accessibilityState={{ selected }}
     >
-      <View style={styles.accountName}>
-        <Text
-          key={`parent-${fontScale}`}
-          style={styles.parentPath}
-          numberOfLines={1}
-          ellipsizeMode="head"
-        >
+      {/* Keyed on the live scale so a text-size change while the picker is
+          open remeasures the name (see DateSectionHeader). */}
+      <View key={fontScale} style={styles.accountName}>
+        <Text style={styles.parentPath} numberOfLines={1} ellipsizeMode="head">
           {parent}
         </Text>
-        <Text key={`leaf-${fontScale}`} style={styles.leaf} numberOfLines={1}>
+        <Text style={styles.leaf} numberOfLines={1}>
           {leaf}
         </Text>
       </View>
@@ -607,6 +605,7 @@ function AccountPickerScreenComponent(): JSX.Element {
             account={item}
             selected={item === selectedItem}
             onPress={onPick}
+            fontScale={fontScale}
           />
         )}
       />
