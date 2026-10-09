@@ -39,6 +39,7 @@
 - [ ] **m34** — [Ledger catalogs list every ledger, not the first upstream page](./blocked/m34/README.md) (6 tasks) ← from user report 2026-10-01 (dashboard ledger switcher could not find `open_ledger/stock-example`), reproduced against the deployed site; user routed to w2 — **blocked:** t001–t005 shipped; closeout needs production backend-v2 deployed with the fix
 - [ ] **m35** — [Public ledgers that explain themselves in search and on first visit](./blocked/m35/README.md) (13 tasks) ← public-ledger SEO research; materialized 2026-10-02 at user request — **blocked:** implementation pushed; deployed closeout needs the production target and access
 - [x] **m36** — [List the hosted MCP server on the official MCP Registry](./done/m36/README.md) (10 tasks) ← [ADR 019](../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) open question "which directory comes first"; user decision 2026-10-02 to start with the easiest marketplace; registry research 2026-10-03
+- [ ] **m37** — [Refresh native measurements after live Dynamic Type changes](./m37/README.md) (6 tasks) ← promoted [w2/062](./062.md), extended by independently verified picker rows/sections and root pills,2026-10-09
 
 ## Dropped
 
@@ -54,7 +55,6 @@
 - [065](./065.md) — Expose account-journal transactions as named native buttons; fresh rows are Other with icon glyphs while the repaired Transactions rows pass the Button control (40–55 minutes).
 - [064](./064.md) — Keep account-journal names identifiable at enlarged text sizes; fresh light/dark rows show Hoo…/BAN… while complete data and detail navigation pass (35–50 minutes).
 - [063](./063.md) — Keep account-journal daily totals inside enlarged date headers; fresh light/dark dates fill the row and push correct positive/negative totals offscreen, while default controls pass (30–45 minutes).
-- [062](./062.md) — Refresh journal date-header measurements when text size changes; live transitions clip dates or retain95-point gaps, while fresh layouts and theme refreshes work (45–60 minutes).
 - [061](./061.md) — Make shared transaction narrations readable in light mode; native Home, Transactions and merchant journals are faint at1.62–1.78:1, while fresh dark and actual detail-navigation controls pass (25–40 minutes).
 - [060](./060.md) — Reflow enlarged Home card titles beside See all; fresh German maximum text gives Recent Transactions a26.67-point column and1457.67-point height, with Spending/Budget also affected and default-size controls passing (35–50 minutes).
 - [059](./059.md) — Keep Home's chart tabs readable beside enlarged translated See all; fresh German maximum-text runs leave a38.67-point viewport, while default scrolling/taps and the completed overflow fade controls pass (35–50 minutes).
