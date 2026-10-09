@@ -16,6 +16,7 @@ import {
   type UnstarDiscoveryLedgerMutation,
 } from "@/generated-graphql/graphql";
 import { DiscoveryStore, type DiscoveryItem } from "./discovery-store";
+import { queryCatalogPage } from "./catalog-query";
 
 const PAGE_SIZE = 30;
 export function useDiscovery() {
@@ -30,12 +31,18 @@ export function useDiscovery() {
             queryDeduplication: false,
           };
           if (tab === "explore") {
-            const { data } = await client.query<DiscoverLedgersQuery>({
-              query: DiscoverLedgersDocument,
-              variables: { q, page, limit: PAGE_SIZE },
-              fetchPolicy: "no-cache",
-              context,
-            });
+            const data = await queryCatalogPage<
+              DiscoverLedgersQuery,
+              { q: string; page: number; limit: number }
+            >(
+              client,
+              {
+                query: DiscoverLedgersDocument,
+                variables: { q, page, limit: PAGE_SIZE },
+                context,
+              },
+              "searchLedgers",
+            );
             return {
               items: data.searchLedgers,
               hasMore: data.searchLedgers.length === PAGE_SIZE,
@@ -80,12 +87,18 @@ export function useDiscovery() {
               )
                 break;
             } else {
-              const { data } = await client.query<MyDiscoveryLedgersQuery>({
-                query: MyDiscoveryLedgersDocument,
-                variables: { page: current, limit: PAGE_SIZE },
-                fetchPolicy: "no-cache",
-                context,
-              });
+              const data = await queryCatalogPage<
+                MyDiscoveryLedgersQuery,
+                { page: number; limit: number }
+              >(
+                client,
+                {
+                  query: MyDiscoveryLedgersDocument,
+                  variables: { page: current, limit: PAGE_SIZE },
+                  context,
+                },
+                "listLedgers",
+              );
               items.push(...data.listLedgers);
               if (data.listLedgers.length < PAGE_SIZE) break;
             }
