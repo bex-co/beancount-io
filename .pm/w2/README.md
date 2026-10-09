@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [066](./066.md) — Make report category shares and expand arrows legible in light mode; fresh6M/1M values, native accessible summaries and expansion pass, but their card contrast is1.62:1 (20–35 minutes).
 - [065](./065.md) — Expose account-journal transactions as named native buttons; fresh rows are Other with icon glyphs while the repaired Transactions rows pass the Button control (40–55 minutes).
 - [064](./064.md) — Keep account-journal names identifiable at enlarged text sizes; fresh light/dark rows show Hoo…/BAN… while complete data and detail navigation pass (35–50 minutes).
 - [063](./063.md) — Keep account-journal daily totals inside enlarged date headers; fresh light/dark dates fill the row and push correct positive/negative totals offscreen, while default controls pass (30–45 minutes).
