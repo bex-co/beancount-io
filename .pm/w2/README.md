@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [039](./039.md) — Keep every chart range reachable at enlarged text sizes; native account detail and Reports clip their end choices at maximum accessibility text (45–60 minutes).
 - [038](./038.md) — Keep transaction source and balance context available to mobile readers; reproduced on native iPhone 17e with the public example (45–60 minutes).
 - [037](./037.md) — Serve the MCP Registry domain proof over HTTP on production too (optional; publishing uses the apex DNS TXT today). Found during m36 closeout — operator-only
 - [034](./blocked/034.md) — Ledger counts read from one upstream page: the tier ledger-limit check counts owned ledgers inside the first 10 accessible ones, and `ledgersUsed` and the activity feed stop at 50. Found during m34. — **blocked:** repository owner must decide grandfathering before accurate counts tighten creation eligibility.
