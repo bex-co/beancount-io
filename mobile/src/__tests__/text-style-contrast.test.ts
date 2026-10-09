@@ -142,6 +142,18 @@ const CASES: Case[] = [
     text: "sectionTitle",
     surface: { style: "container" },
   },
+  {
+    name: "New Ledger hints on the page",
+    file: "screens/create-ledger-screen/create-ledger-screen.tsx",
+    text: "hint",
+    surface: { style: "container" },
+  },
+  {
+    name: "New Ledger hints on the selected template",
+    file: "screens/create-ledger-screen/create-ledger-screen.tsx",
+    text: "hint",
+    surface: { style: "templateSelected" },
+  },
 ];
 
 // Inert stand-in for every import except StyleSheet, so only `getStyles`

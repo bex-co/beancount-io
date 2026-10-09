@@ -94,7 +94,7 @@ const getStyles = (theme: ColorTheme) =>
       textAlign: LEADING_TEXT_ALIGN,
     },
     hint: {
-      color: theme.black60,
+      color: theme.black80,
       fontSize: fontSizes.sm,
       textAlign: LEADING_TEXT_ALIGN,
     },
