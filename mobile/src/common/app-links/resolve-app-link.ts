@@ -157,7 +157,8 @@ export function resolveAppLink(
         ledgerFullName,
         href: {
           pathname: "/transaction-detail",
-          params: { entry_hash: tail[0] },
+          // `ledger` binds the entry to the link's ledger (see account above).
+          params: { entry_hash: tail[0], ledger: ledgerFullName },
         },
       };
     }

@@ -1,3 +1,5 @@
+import { bindRouteLedger, firstRouteParam } from "../../common/route-ledger";
+
 /**
  * What an account-detail route entry resolves to.
  *
@@ -10,7 +12,7 @@
  *
  * So the ledger is bound to the route: every link to `/account-detail` carries a
  * `ledger` param, and the screen only queries when that param matches the
- * selected ledger.
+ * selected ledger (see `common/route-ledger`).
  */
 export type AccountDetailTarget =
   | { status: "ready"; account: string; ledgerId: string }
@@ -18,13 +20,6 @@ export type AccountDetailTarget =
   | { status: "missing" }
   /** The route belongs to a ledger that is no longer selected. */
   | { status: "mismatch"; routeLedgerId: string; selectedLedgerId: string };
-
-const firstParam = (value?: string | string[]): string => {
-  if (Array.isArray(value)) {
-    return typeof value[0] === "string" ? value[0] : "";
-  }
-  return typeof value === "string" ? value : "";
-};
 
 /**
  * Resolve the route params against the selected ledger.
@@ -38,17 +33,13 @@ export function selectAccountDetailTarget(args: {
   ledger?: string | string[];
   selectedLedgerId: string;
 }): AccountDetailTarget {
-  const account = firstParam(args.account);
+  const account = firstRouteParam(args.account);
   if (!account) {
     return { status: "missing" };
   }
-  const routeLedgerId = firstParam(args.ledger);
-  if (routeLedgerId && routeLedgerId !== args.selectedLedgerId) {
-    return {
-      status: "mismatch",
-      routeLedgerId,
-      selectedLedgerId: args.selectedLedgerId,
-    };
+  const binding = bindRouteLedger(args.ledger, args.selectedLedgerId);
+  if (binding.status === "mismatch") {
+    return binding;
   }
-  return { status: "ready", account, ledgerId: args.selectedLedgerId };
+  return { status: "ready", account, ledgerId: binding.ledgerId };
 }

@@ -312,6 +312,8 @@ export const en = {
   noEntries: "No entries",
   accountDetailUnavailable:
     "This account isn't available in the selected ledger.",
+  transactionDetailUnavailable:
+    "This transaction isn't available in the selected ledger.",
   journalLoadError: "Failed to load journal: ",
   // entry context (transactions screen)
   journalError: "Error",

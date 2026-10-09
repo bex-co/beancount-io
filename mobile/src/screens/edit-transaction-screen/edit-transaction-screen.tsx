@@ -325,9 +325,14 @@ export const EditTransactionScreen = (): JSX.Element => {
             // it re-queries the entry under its fresh identity.
             router.dismissTo({
               pathname: "/transaction-detail",
+              // `ledger` keeps the replaced params bound to the entry's ledger.
               params: originAccount
-                ? { entry_hash: exit.entryHash, origin_account: originAccount }
-                : { entry_hash: exit.entryHash },
+                ? {
+                    entry_hash: exit.entryHash,
+                    ledger: ledgerId,
+                    origin_account: originAccount,
+                  }
+                : { entry_hash: exit.entryHash, ledger: ledgerId },
             });
           } else {
             // No usable new identity (an older server echoes the request

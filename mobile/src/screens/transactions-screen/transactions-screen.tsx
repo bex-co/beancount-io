@@ -221,9 +221,9 @@ const TransactionList = () => {
       // The query is pinned to transactions, so this guard only ever rejects a
       // surprise from the server — there is no detail screen for other kinds.
       if (!isJournalTransaction(entry)) return;
-      openTransactionDetail(router, entry, undefined, guest);
+      openTransactionDetail(router, entry, ledgerId, undefined, guest);
     },
-    [router, guest],
+    [router, ledgerId, guest],
   );
 
   const handleOpenFilters = useCallback(() => {

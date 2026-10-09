@@ -133,7 +133,13 @@ export function AccountTransactionsCard({
                 onPress={
                   isJournalTransaction(entry)
                     ? () =>
-                        openTransactionDetail(router, entry, undefined, guest)
+                        openTransactionDetail(
+                          router,
+                          entry,
+                          ledgerId,
+                          undefined,
+                          guest,
+                        )
                     : undefined
                 }
               />

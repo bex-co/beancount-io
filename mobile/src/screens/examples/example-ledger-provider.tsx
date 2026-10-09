@@ -27,7 +27,7 @@ import {
   NO_SCOPED_FILTERS,
   type ScopedTransactionFilters,
 } from "@/screens/transactions-screen/filters/types";
-import type { JournalTransaction } from "@/screens/transactions-screen/types";
+import type { StashedTransaction } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { exampleRoutes } from "./example-routes";
 
 const GuestReadContext = createContext<{
@@ -54,7 +54,7 @@ function GuestLedgerSession({
     [visit.serverUrl, ledgerId],
   );
   const selectedTransaction = useMemo(
-    () => makeVar<JournalTransaction | null>(null),
+    () => makeVar<StashedTransaction | null>(null),
     [],
   );
   const transactionFilters = useMemo(

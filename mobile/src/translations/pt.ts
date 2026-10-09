@@ -328,6 +328,8 @@ export const pt: Translations = {
   noEntries: "Sem registros",
   accountDetailUnavailable:
     "Esta conta não está disponível no livro-razão selecionado.",
+  transactionDetailUnavailable:
+    "Esta transação não está disponível no livro-razão selecionado.",
   journalLoadError: "Falha ao carregar o diário: ",
   // entry context (transactions screen)
   journalError: "Erro",

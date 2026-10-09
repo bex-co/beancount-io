@@ -326,6 +326,8 @@ export const fr: Translations = {
   noEntries: "Aucune entrée",
   accountDetailUnavailable:
     "Ce compte n'est pas disponible dans le grand livre sélectionné.",
+  transactionDetailUnavailable:
+    "Cette transaction n'est pas disponible dans le grand livre sélectionné.",
   journalLoadError: "Échec du chargement du journal : ",
   // entry context (transactions screen)
   journalError: "Erreur",

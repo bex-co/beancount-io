@@ -85,7 +85,7 @@ describe("resolveAppLink", () => {
       ledgerFullName: LEDGER,
       href: {
         pathname: "/transaction-detail",
-        params: { entry_hash: "deadbeef" },
+        params: { entry_hash: "deadbeef", ledger: LEDGER },
       },
     });
   });
@@ -212,7 +212,7 @@ describe("buildLedgerUrl round trip", () => {
       if (input.kind === "entry") {
         expect(resolved!.href).toEqual({
           pathname: "/transaction-detail",
-          params: { entry_hash: input.entryHash },
+          params: { entry_hash: input.entryHash, ledger: LEDGER },
         });
       }
     });

@@ -55,6 +55,7 @@ import { AccountEntryRow } from "@/screens/account-detail-screen/components/acco
 import { DateSectionHeader } from "@/screens/transactions-screen/date-section-header";
 import { selectAccountDetailTarget } from "@/screens/account-detail-screen/select-account-detail-target";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
 
 /** Leaf segment for the compact navigation title. */
 function accountLeafName(account: string): string {
@@ -92,13 +93,6 @@ const getStyles = (theme: ColorTheme) =>
     stateText: {
       fontSize: fontSizes.md,
       color: theme.black60,
-      textAlign: "center",
-    },
-    backLink: {
-      marginTop: 16,
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
-      color: theme.primary,
       textAlign: "center",
     },
     footer: {
@@ -358,13 +352,13 @@ const AccountDetailScreenImpl = ({
         JournalDirectiveType | undefined;
       const onPress =
         entry && isJournalTransaction(entry)
-          ? () => openTransactionDetail(router, entry, account, guest)
+          ? () => openTransactionDetail(router, entry, ledgerId, account, guest)
           : undefined;
       return (
         <AccountEntryRow row={item} currency={currency} onPress={onPress} />
       );
     },
-    [currency, itemsByKey, router, account, guest],
+    [currency, itemsByKey, router, ledgerId, account, guest],
   );
 
   const renderSectionHeader = useCallback(
@@ -474,34 +468,6 @@ const AccountDetailScreenImpl = ({
   );
 };
 
-/**
- * The route entry is unusable: no account, or one belonging to a ledger that is
- * no longer selected. Rendering this instead of querying is what keeps a revived
- * back-stack entry from pairing the old ledger's account with the new ledger's
- * id (see `select-account-detail-target`).
- */
-const AccountDetailUnavailable = (): JSX.Element => {
-  const { t } = useTranslations();
-  const styles = useThemeStyle(getStyles);
-  const router = useRouter();
-
-  return (
-    <SafeAreaView edges={["bottom"]} style={styles.container}>
-      <Stack.Screen options={{ title: t("accounts") }} />
-      <View style={styles.stateContainer}>
-        <Text style={styles.stateText}>{t("accountDetailUnavailable")}</Text>
-        <Text
-          style={styles.backLink}
-          accessibilityRole="button"
-          onPress={() => router.back()}
-        >
-          {t("back")}
-        </Text>
-      </View>
-    </SafeAreaView>
-  );
-};
-
 const AccountDetailRoute = ({
   account,
   ledger,
@@ -510,6 +476,7 @@ const AccountDetailRoute = ({
   ledger?: string | string[];
 }): JSX.Element => {
   const ledgerId = useLedgerGuard();
+  const { t } = useTranslations();
   const target = selectAccountDetailTarget({
     account,
     ledger,
@@ -517,7 +484,14 @@ const AccountDetailRoute = ({
   });
 
   if (target.status !== "ready") {
-    return <AccountDetailUnavailable />;
+    // Rendering this instead of querying is what keeps a revived back-stack
+    // entry from pairing the old ledger's account with the new ledger's id.
+    return (
+      <RouteLedgerUnavailable
+        title={t("accounts")}
+        message={t("accountDetailUnavailable")}
+      />
+    );
   }
   return <AccountDetailScreenImpl account={target.account} />;
 };

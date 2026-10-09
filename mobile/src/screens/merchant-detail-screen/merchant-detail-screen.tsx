@@ -415,9 +415,9 @@ function MerchantDetailBody({ payee }: { payee: string }) {
       if (!isJournalTransaction(entry)) {
         return;
       }
-      openTransactionDetail(router, entry);
+      openTransactionDetail(router, entry, ledgerId);
     },
-    [router],
+    [router, ledgerId],
   );
 
   const onToggleRecurring = () => {

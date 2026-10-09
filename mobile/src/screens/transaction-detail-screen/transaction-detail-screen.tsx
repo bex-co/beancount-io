@@ -43,7 +43,12 @@ import {
   isJournalTransaction,
 } from "@/screens/transactions-screen/types";
 import { formatLedgerDate } from "@/common/date-format";
-import { selectedTransactionVar } from "./open-transaction-detail";
+import {
+  selectStashedTransaction,
+  selectedTransactionVar,
+} from "./open-transaction-detail";
+import { bindRouteLedger } from "@/common/route-ledger";
+import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
 import {
   hasEditableSource,
   selectHeroAmount,
@@ -271,7 +276,10 @@ const TransactionDetailImpl = ({
     guest?.selectedTransaction ?? selectedTransactionVar,
   );
   const client = useApolloClient();
-  const stashedEntry = stashed?.entry_hash === entryHash ? stashed : null;
+  const stashedEntry = selectStashedTransaction(stashed, {
+    entryHash,
+    ledgerId,
+  });
   const shouldLoadContext = !stashedEntry || hasEditableSource(stashedEntry);
 
   // Also serves as the fallback entry source when the stash is cold (deep
@@ -623,9 +631,42 @@ const TransactionDetailImpl = ({
   );
 };
 
+const TransactionDetailRoute = ({
+  entryHash,
+  ledger,
+  originAccount,
+}: {
+  entryHash: string;
+  ledger?: string | string[];
+  originAccount?: string;
+}): JSX.Element => {
+  const { t } = useTranslations();
+  const binding = bindRouteLedger(ledger, useLedgerGuard());
+
+  if (binding.status === "mismatch") {
+    // A revived entry from another ledger: render nothing of it and query
+    // nothing, so its postings cannot open accounts in the new ledger.
+    return (
+      <RouteLedgerUnavailable
+        title={t("transaction")}
+        message={t("transactionDetailUnavailable")}
+      />
+    );
+  }
+  return (
+    <TransactionDetailImpl
+      entryHash={entryHash}
+      originAccount={originAccount}
+    />
+  );
+};
+
 export const TransactionDetailScreen = (): JSX.Element => {
+  // `ledger` binds the entry to the ledger it was opened for; see
+  // `common/route-ledger` for why the ambient selection is not enough.
   const params = useLocalSearchParams<{
     entry_hash?: string;
+    ledger?: string;
     origin_account?: string;
   }>();
   const entryHash =
@@ -637,8 +678,9 @@ export const TransactionDetailScreen = (): JSX.Element => {
 
   return (
     <LedgerGuard>
-      <TransactionDetailImpl
+      <TransactionDetailRoute
         entryHash={entryHash}
+        ledger={params.ledger}
         originAccount={originAccount}
       />
     </LedgerGuard>

@@ -328,6 +328,8 @@ export const sk: Translations = {
   noMoreEntries: "Žiadne ďalšie záznamy",
   noEntries: "Žiadne záznamy",
   accountDetailUnavailable: "Tento účet nie je vo zvolenej knihe dostupný.",
+  transactionDetailUnavailable:
+    "Táto transakcia nie je vo zvolenej knihe dostupná.",
   journalLoadError: "Načítanie denníka zlyhalo: ",
   // entry context (transactions screen)
   journalError: "Chyba",

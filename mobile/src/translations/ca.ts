@@ -327,6 +327,8 @@ export const ca: Translations = {
   noEntries: "Cap entrada",
   accountDetailUnavailable:
     "Aquest compte no està disponible al llibre seleccionat.",
+  transactionDetailUnavailable:
+    "Aquesta transacció no està disponible al llibre seleccionat.",
   journalLoadError: "Error en carregar el diari: ",
   // entry context (transactions screen)
   journalError: "Error",

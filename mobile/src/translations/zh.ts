@@ -289,6 +289,7 @@ export const zh: Translations = {
   noMoreEntries: "没有更多记录",
   noEntries: "暂无记录",
   accountDetailUnavailable: "所选账本中没有这个账户。",
+  transactionDetailUnavailable: "所选账本中没有这笔交易。",
   journalLoadError: "加载日记账失败：",
   // entry context (transactions screen)
   journalError: "错误",

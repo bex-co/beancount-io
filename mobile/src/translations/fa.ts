@@ -315,6 +315,7 @@ export const fa: Translations = {
   noMoreEntries: "رکورد دیگری نیست",
   noEntries: "بدون رکورد",
   accountDetailUnavailable: "این حساب در دفتر کل انتخاب‌شده موجود نیست.",
+  transactionDetailUnavailable: "این تراکنش در دفتر کل انتخاب‌شده موجود نیست.",
   journalLoadError: "بارگذاری روزنامه ناموفق بود: ",
   // entry context (transactions screen)
   journalError: "خطا", // TODO: needs native speaker review
