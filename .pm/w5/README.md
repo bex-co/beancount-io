@@ -36,6 +36,7 @@
 ## Inbox
 
 - [055 — Init prints an unusable next command for custom ledger filenames under home](./055.md) — minor CLI onboarding bug; real zsh/bash reproduction, 20–30m.
+- [056 — Price export writes a partial snapshot before discovering a blocked directory](./056.md) — minor CLI export preflight bug; repeated split-ledger reproduction, 30–45m.
 
 The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–054, less the five under [Dropped](#dropped)) were fixed in `backend-cluster/backend-v2` and closed on 2026-10-02 and 2026-10-03; each note under [`done/`](./done/) records what shipped and in which commit. None has been re-observed against the hosted endpoint yet — the fixes reach it with the next backend deploy.
 
