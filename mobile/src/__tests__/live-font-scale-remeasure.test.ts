@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import vm from "vm";
 import ts from "typescript";
+import * as dynamicType from "../common/theme/dynamic-type";
 
 // iOS keeps a Text's native measurement when the text size changes while the
 // app is open, unless that Text remounts. These tests execute the real owners
@@ -143,6 +144,7 @@ describe("DateSectionHeader live font-scale remeasurement", () => {
     {
       "react-native": reactNative,
       "@/common/hooks": themeHooks,
+      "@/common/theme/dynamic-type": dynamicType,
       "@/components/amount-text": { AmountText: "AmountText" },
     },
   );
@@ -167,6 +169,38 @@ describe("DateSectionHeader live font-scale remeasurement", () => {
 
   it("keeps the header mounted when only its data changes", () => {
     expect(header("-$1").props.key).toEqual(header().props.key);
+  });
+
+  // An enlarged date fills the row on its own; a total beside it overflowed
+  // the screen edge (account journals are the only caller with a total).
+  const flat = (style: unknown): Record<string, unknown> =>
+    Array.isArray(style)
+      ? Object.assign({}, ...style.map(flat))
+      : style && typeof style === "object"
+        ? (style as Record<string, unknown>)
+        : {};
+
+  it("moves the daily total under the date at accessibility sizes", () => {
+    for (const total of ["0 NWRB", "-$4,500.00", "+12,345,678.90 MRMB"]) {
+      fontScale = 3.12;
+      const enlarged = header(total);
+      const amount = findAll(enlarged, ofType("AmountText"))[0];
+      expect(flat(enlarged.props.style).flexDirection).toBe("column");
+      expect(flat(amount.props.style).alignSelf).toBe("flex-end");
+      expect(textOf(amount)).toBe(total);
+    }
+  });
+
+  it("keeps date and total side by side at ordinary sizes", () => {
+    for (const scale of [1, 1.235]) {
+      fontScale = scale;
+      expect(flat(header("-$33.71").props.style).flexDirection).toBe("row");
+    }
+  });
+
+  it("never stacks a header without a total", () => {
+    fontScale = 3.12;
+    expect(flat(header().props.style).flexDirection).toBe("row");
   });
 });
 

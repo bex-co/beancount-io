@@ -7,6 +7,7 @@ import {
   gutter,
   sectionHeaderPaddingVertical,
 } from "@/common/theme";
+import { prefersStackedLayout } from "@/common/theme/dynamic-type";
 import { AmountText } from "@/components/amount-text";
 import { ColorTheme } from "@/types/theme-props";
 
@@ -19,6 +20,15 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: gutter,
       paddingVertical: sectionHeaderPaddingVertical,
       backgroundColor: theme.black10,
+    },
+    // Accessibility text sizes: an enlarged date fills the row by itself, so
+    // the daily total takes its own line instead of overflowing the gutter.
+    containerStacked: {
+      flexDirection: "column",
+      alignItems: "stretch",
+    },
+    totalStacked: {
+      alignSelf: "flex-end",
     },
     date: {
       fontSize: fontSizes.sm,
@@ -53,11 +63,19 @@ export const DateSectionHeader: React.FC<DateSectionHeaderProps> = ({
   // after shrinking. Keying the header on the live scale mounts fresh,
   // correctly measured text without disturbing the surrounding list.
   const { fontScale } = useWindowDimensions();
+  const stacked = Boolean(total) && prefersStackedLayout(fontScale);
 
   return (
-    <View key={fontScale} style={styles.container}>
+    <View
+      key={fontScale}
+      style={[styles.container, stacked && styles.containerStacked]}
+    >
       <Text style={styles.date}>{displayDate}</Text>
-      {total ? <AmountText style={styles.total}>{total}</AmountText> : null}
+      {total ? (
+        <AmountText style={[styles.total, stacked && styles.totalStacked]}>
+          {total}
+        </AmountText>
+      ) : null}
     </View>
   );
 };
