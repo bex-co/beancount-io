@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [047](./047.md) — Preserve non-USD running balances on zero-change account rows; native MRMB assertions falsely show zero because the selector reuses the empty change map's USD fallback (30–45 minutes).
 - [046](./046.md) — Measure scrubbed chart colors from the displayed change baseline; native Alibaba's negative ALL-range change turns green under a finger because the active branch compares against the first plotted close (35–45 minutes).
 - [045](./045.md) — Preserve both quote kinds in transaction search; native `E.B.'s "Beer"` silently drops double quotes and returns four false matches (30–45 minutes).
 - [044](./044.md) — Make the file reader's permission notice legible in light mode; its 13-point informational text measures1.62:1 versus a passing dark control (20–30 minutes).
