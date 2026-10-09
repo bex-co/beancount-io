@@ -424,7 +424,9 @@ const TransactionDetailImpl = ({
     amount: Number.parseFloat(posting.units.number),
   }));
   const hasMetadata = Boolean(entry.tags?.length || entry.links?.length);
-  const entryHasEditableSource = canWrite && !isGenerated;
+  // Source and balance context is read-only, so any reader of a
+  // source-backed entry sees it; only edit/delete need write access.
+  const showEntryContext = !isGenerated;
   const showWriteActions = shouldShowTransactionWriteActions(
     canWrite,
     sha256sum,
@@ -605,7 +607,7 @@ const TransactionDetailImpl = ({
           </>
         )}
 
-        {entryHasEditableSource ? (
+        {showEntryContext ? (
           <View>
             <EntryContext
               entry={entry}
