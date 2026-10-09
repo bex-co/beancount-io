@@ -48,6 +48,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [076](./076.md) — Identify the year of native balance-chart selections; three actual ALL March holds show only MAR for 2024/2025/2026, with fresh dark and real dated-value controls passing (35–50 minutes).
 - [075](./075.md) — Name native account navigation separately from disclosure; fresh collapsed/expanded Assets Buttons begin Expand/Collapse while ordinary activation opens detail, with chevron and numeric controls passing (35–50 minutes).
 - [074](./074.md) — Keep valuation-sheet holding quantities visible at enlarged text; fresh light/dark native holding Text widths are0 while the price column consumes346 points, and default235.7-point quantities recover (35–50 minutes).
 - [073](./073.md) — Expose native valuation-sheet contents to accessibility; fresh light/dark Stock shows correct holdings while native queries expose a full-screen Done grouping and omit the existing child names (35–50 minutes).
