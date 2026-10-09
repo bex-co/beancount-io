@@ -51,7 +51,10 @@ export const RouteLedgerUnavailable = ({
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
-      <Stack.Screen options={{ title }} />
+      {/* Screen options merge into what the replaced body installed, so its
+          ledger-specific header actions (Share/Copy for the old entry) must
+          be cleared explicitly rather than left out. */}
+      <Stack.Screen options={{ title, headerRight: () => null }} />
       <View style={styles.stateContainer}>
         <Text style={styles.stateText}>{message}</Text>
         <Text
