@@ -1,6 +1,6 @@
 # ADR 0019: MCP hosts — one endpoint for ChatGPT, Claude, Cursor, Copilot, and Muse, and what the authorization server must accept to let them in
 
-- Status: Accepted (2026-10-06, after the facts were re-verified — see [Amendments](#2026-10-06--facts-re-verified-and-accepted)). D1–D8 are on `main` and deployed, and D9 is done at the edge. D3, D4, and D8 were verified on production on 2026-10-08. D6's production verification and the real-host sign-ins are still open — see [Implementation status](#implementation-status).
+- Status: Accepted (2026-10-06, after the facts were re-verified — see [Amendments](#2026-10-06--facts-re-verified-and-accepted)). D1–D8 are on `main` and deployed, and D9 is done at the edge. D3, D4, D6, and D8 were verified on production on 2026-10-08. The real-host sign-ins are still open — see [Implementation status](#implementation-status).
 - Date: 2026-09-25
 - Decision owners: Backend (`backend-cluster/backend-v2`: OAuth provider, MCP surface), Dashboard (`dashboard/`: the consent page), Deploy (edge rules)
 - Scope: which third-party MCP hosts the `POST /api-gateway/mcp` endpoint serves, the credential path each one uses, what the authorization server must accept for each to register, sign in, and stay signed in, and which parts of the surface a host that only calls tools can reach. The transport stays [ADR 0007](./ADR007-backend-v2-mcp-surface.md); the tool/resource split stays [ADR 0008](./ADR008-backend-v2-surface-parity.md), amended by D7; the well-known paths stay [ADR 0009](./ADR009-backend-v2-well-known-paths.md).
@@ -251,7 +251,7 @@ ADR 0007 D1 already rules this out, and each host would need its own discovery d
 
 ## Implementation status
 
-Every decision has landed on `main` and is deployed, and D9 is done at the edge. D3, D4, and D8 were verified on production on 2026-10-08 and closed as `.pm/w1/done/m30`. What remains is D6's production verification (`.pm/w1/m31`) and the real-host sign-ins, which need the owner's host accounts (`.pm/w1/blocked/m34`). D5 and D7 with D2's declaration are closed as `.pm/w1/done/m32` and `.pm/w1/done/m33`.
+Every decision has landed on `main` and is deployed, and D9 is done at the edge. D3, D4, and D8 were verified on production on 2026-10-08 and closed as `.pm/w1/done/m30`; D6 the same day as `.pm/w1/done/m31`. What remains is the real-host sign-ins, which need the owner's host accounts (`.pm/w1/blocked/m34`). D5 and D7 with D2's declaration are closed as `.pm/w1/done/m32` and `.pm/w1/done/m33`.
 
 The table below names where each decision lives; the one after it gives its state.
 
@@ -274,7 +274,7 @@ State on `main`, not yet deployed to production unless stated:
 | D3 | Landed (`e65236f0`): an unstated `application_type` is native, and Discourse states `web`. **Verified on production 2026-10-08:** a Cursor-shaped registration (three URIs, no `application_type`) and a VS Code-shaped one authorized from port 50123 both reach consent. |
 | D4 | Landed: interaction details name the requester (`1cc1e61a`), and the consent page shows them and blocks approval until it can (`def491ca`). **Verified on production 2026-10-08:** after sign-in, the consent page shows the redirect host and the labelled self-asserted name for both registrations. |
 | D5 | Landed: 45-day idle window and 46-day grant (`127589ed`), grant slides on refresh up to one year after consent (`d5d46d8c`), public clients always rotate (`59810c3e`); README and `docs/mcp.md` updated. |
-| D6 | Landed (`ea0d8d23`), with CIMD fixtures for Claude Code, VS Code, and a ChatGPT shape, and refusal cases. |
+| D6 | Landed (`ea0d8d23`), with CIMD fixtures for Claude Code, VS Code, and a ChatGPT shape, and refusal cases. The consent page's vouching domain comes from oidc-provider's own CIMD marker (`ca614050`). **Verified on production 2026-10-08:** discovery advertises CIMD, and conformance check 16 passes. Using Claude Code's published client ID, production reached consent naming claude.ai with no registration, issued a token, and served MCP scoped to the approved ledger. A real Claude Code 2.1.289 sign-in then stored the CIMD document URL as its client ID. |
 | D8 | Host fixtures in `oidc-route.test.ts`, and `yarn mcp:conformance` checks 11–16. **All six pass against production (2026-10-08)**, including 16 (CIMD). Per-host setup notes are in `docs/mcp.md` (`b147cf66`). |
 | D7 | Landed: `listBankConnections` (`e3df700e`), `listStagedBankTransactions` (`b6332c0a`), `listPublicKeys` (`f7786884`), each beside its resource twin and its verb's REST and GraphQL rows; a tools-only journey test (`16b65818`); ADR 0008 amended. **Deviation:** the two `admin`-class lists are annotated `readOnlyHint: false` (a non-destructive, idempotent `ADMIN_READ` preset), not read-only — the annotation guard keeps `readOnlyHint` for `read`-class verbs because hosts auto-approve read-only tools, and these expose bank connections and keys. `tools/list`: 30 tools. |
 | D2 | Landed (`bc2acded`): every tool's `securitySchemes`, derived from `VERB_TABLE`, top-level and in `_meta`. |

@@ -1,6 +1,6 @@
 # w1 · m31 — Advertise CIMD so Claude and ChatGPT identify themselves without registering
 
-**Worker:** worker1 **Goal:** Production advertises Client ID Metadata Documents — the registration method the MCP spec prefers and Claude and ChatGPT choose — without breaking any DCR host, ending per-connection client-row growth from directory traffic **Status:** in progress — t001–t007 done; t008 next
+**Worker:** worker1 **Goal:** Production advertises Client ID Metadata Documents — the registration method the MCP spec prefers and Claude and ChatGPT choose — without breaking any DCR host, ending per-connection client-row growth from directory traffic **Status:** done
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | [t005](./done/t005.md) | Adoption surface — **DONE** | 30m | t004 |
 | [t006](./done/t006.md) | Simplify — **DONE** | 30m | t005 |
 | [t007](./done/t007.md) | Test coverage — **DONE** | 45m | t005, t006 |
-| t008 | Closeout | 15m | t007 |
+| [t008](./done/t008.md) | Closeout — **DONE** | 15m | t007 |
 
 ## Definition of done
 
@@ -24,7 +24,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm` for w1, 2026-10-06 — [ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D3–D9; code and production re-checked the same day: none of D3–D8 has landed, ADR status is Proposed, production discovery lacks `client_id_metadata_document_supported`.
+- **Source:** `/pm-brainstorm` for w1, 2026-10-06 — [ADR 019](../../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D3–D9; code and production re-checked the same day: none of D3–D8 has landed, ADR status is Proposed, production discovery lacks `client_id_metadata_document_supported`.
 - **Goal linkage:** **A1 — Agent-native accounting** and **A3 — Community & distribution**: the spec ranks CIMD above deprecated DCR, Claude and ChatGPT prefer it, and Claude's own docs warn of very large numbers of registered clients from directory traffic — rows our OAuth store never sweeps.
 - **Expected outcome:** Claude and ChatGPT connect by URL identity; the consent page shows the domain vouching for the app; signals: CIMD sign-ins, flat OAuth client-table growth.
 - **Why now:** ADR 019 orders D6 after D3 and D4 — enabling it first breaks Claude Code — so it starts only once w1/m30 is on production. Adoption surface is included: the docs must say which sign-in path each host takes.
