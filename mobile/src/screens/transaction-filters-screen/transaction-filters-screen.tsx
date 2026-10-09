@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
@@ -149,6 +150,7 @@ const FilterChip = ({
   onPress: () => void;
 }) => {
   const styles = useThemeStyle(getStyles);
+  const { fontScale } = useWindowDimensions();
   return (
     <Pressable
       style={({ pressed }) => [
@@ -160,7 +162,10 @@ const FilterChip = ({
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
     >
-      <Text style={[styles.chipText, active && styles.chipTextActive]}>
+      <Text
+        key={fontScale}
+        style={[styles.chipText, active && styles.chipTextActive]}
+      >
         {label}
       </Text>
     </Pressable>
@@ -189,6 +194,10 @@ const TransactionFiltersSheet = ({
   const router = useRouter();
   const guest = useGuest();
   const styles = useThemeStyle(getStyles);
+  // Keys the sheet's labels on the live text scale so a size change while it
+  // is open remeasures them (see DateSectionHeader); the draft is state of
+  // this sheet and survives.
+  const { fontScale } = useWindowDimensions();
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
 
@@ -275,6 +284,7 @@ const TransactionFiltersSheet = ({
               accessibilityRole="button"
             >
               <Text
+                key={fontScale}
                 style={styles.headerAction}
                 numberOfLines={1}
                 maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
@@ -290,6 +300,7 @@ const TransactionFiltersSheet = ({
               accessibilityRole="button"
             >
               <Text
+                key={fontScale}
                 style={styles.headerAction}
                 numberOfLines={1}
                 maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
@@ -303,7 +314,9 @@ const TransactionFiltersSheet = ({
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("filterStatus")}</Text>
+          <Text key={fontScale} style={styles.sectionTitle}>
+            {t("filterStatus")}
+          </Text>
           <View style={styles.chipRow}>
             {TRANSACTION_STATUSES.map((status) => (
               <FilterChip
@@ -317,7 +330,9 @@ const TransactionFiltersSheet = ({
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("filterDateRange")}</Text>
+          <Text key={fontScale} style={styles.sectionTitle}>
+            {t("filterDateRange")}
+          </Text>
           <View style={styles.chipRow}>
             {DATE_RANGE_KEYS.map((key) => (
               <FilterChip
@@ -331,11 +346,13 @@ const TransactionFiltersSheet = ({
           {draft.range === "custom" && (
             <View style={[styles.rows, styles.rowsUnderChips]}>
               <ListItem
+                key={`start-${fontScale}`}
                 title={t("startDate").toUpperCase()}
                 content={draft.startDate ?? ""}
                 onPress={() => setPickerTarget("start")}
               />
               <ListItem
+                key={`end-${fontScale}`}
                 title={t("endDate").toUpperCase()}
                 content={draft.endDate ?? ""}
                 showDivider
@@ -344,17 +361,24 @@ const TransactionFiltersSheet = ({
             </View>
           )}
           {draft.range === "custom" && !isRangeValid ? (
-            <Text style={styles.rangeError} testID="filter-range-error">
+            <Text
+              key={fontScale}
+              style={styles.rangeError}
+              testID="filter-range-error"
+            >
               {t("filterDateRangeInvalid")}
             </Text>
           ) : null}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("filterAccount")}</Text>
+          <Text key={fontScale} style={styles.sectionTitle}>
+            {t("filterAccount")}
+          </Text>
           <View style={[styles.rows, styles.accountRow]}>
             <View style={styles.accountRowItem}>
               <ListItem
+                key={fontScale}
                 // title={t("account").toUpperCase()}
                 content={draft.account ?? t("allAccounts")}
                 onPress={pickAccount}
@@ -378,7 +402,7 @@ const TransactionFiltersSheet = ({
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button onPress={apply} disabled={!isRangeValid}>
+        <Button key={fontScale} onPress={apply} disabled={!isRangeValid}>
           {t("apply")}
         </Button>
       </View>

@@ -63,6 +63,7 @@ const react = {
 };
 
 let ledgerId: string;
+let fontScale = 1;
 let saved: ScopedTransactionFilters;
 let pickerCallbacks: ((account: string) => void)[];
 let backs: number;
@@ -93,6 +94,7 @@ function loadScreen(): () => any {
           TouchableOpacity: "TouchableOpacity",
           View: "View",
           StyleSheet: { create: (styles: any) => styles },
+          useWindowDimensions: () => ({ fontScale }),
         };
       if (id === "react-native-safe-area-context")
         return { SafeAreaView: "SafeAreaView" };
@@ -277,5 +279,49 @@ describe("transaction filter header actions (w2/067)", () => {
     reset.props.onPress();
     expect(accountRow(render()).props.content).toBe("allAccounts");
     expect(saved.filters.account).toBe(CHECKING);
+  });
+});
+
+describe("transaction filter labels after live text-size changes (w2/077)", () => {
+  beforeEach(() => {
+    slots = new Map();
+    ledgerId = EXAMPLE;
+    saved = filterTypes.NO_SCOPED_FILTERS;
+    pickerCallbacks = [];
+    backs = 0;
+    fontScale = 1;
+  });
+  afterEach(() => {
+    fontScale = 1;
+  });
+
+  // Texts keyed by the scale remount, so iOS measures them afresh.
+  const keyed = (tree: Node) =>
+    nodes(tree)
+      .filter(
+        (node) =>
+          (node.type === "Text" ||
+            node.type === "ListItem" ||
+            node.type === "Button") &&
+          node.props.key !== undefined,
+      )
+      .map((node) => `${node.type}:${node.props.key}`);
+
+  it("remounts captions, chips, the account row and Apply on a new scale", () => {
+    const before = keyed(render());
+    fontScale = 3.12;
+    const after = keyed(render());
+    // Three captions, six chips, the account row and Apply.
+    expect(before.length >= 11).toBe(true);
+    expect(after.length).toBe(before.length);
+    expect(after.some((key) => before.includes(key))).toBe(false);
+  });
+
+  it("keeps the unapplied draft across the remount", () => {
+    accountRow(render()).props.onPress();
+    pickerCallbacks[0](CHECKING);
+    fontScale = 3.12;
+    expect(accountRow(render()).props.content).toBe(CHECKING);
+    expect(plain(saved)).toEqual(plain(filterTypes.NO_SCOPED_FILTERS));
   });
 });
