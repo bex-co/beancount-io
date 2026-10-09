@@ -5,3 +5,7 @@
 ## Milestones
 
 No milestones yet.
+
+## Inbox
+
+- [001](./001.md) — Classify malformed MCP request parameters before SDK validation escapes (minor; backend-v2; 60m).
