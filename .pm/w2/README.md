@@ -47,6 +47,8 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [065](./065.md) — Expose account-journal transactions as named native buttons; fresh rows are Other with icon glyphs while the repaired Transactions rows pass the Button control (40–55 minutes).
+- [064](./064.md) — Keep account-journal names identifiable at enlarged text sizes; fresh light/dark rows show Hoo…/BAN… while complete data and detail navigation pass (35–50 minutes).
 - [063](./063.md) — Keep account-journal daily totals inside enlarged date headers; fresh light/dark dates fill the row and push correct positive/negative totals offscreen, while default controls pass (30–45 minutes).
 - [062](./062.md) — Refresh journal date-header measurements when text size changes; live transitions clip dates or retain95-point gaps, while fresh layouts and theme refreshes work (45–60 minutes).
 - [061](./061.md) — Make shared transaction narrations readable in light mode; native Home, Transactions and merchant journals are faint at1.62–1.78:1, while fresh dark and actual detail-navigation controls pass (25–40 minutes).
