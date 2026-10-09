@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [056](./056.md) — Make merchant dates, counts and recurring explanations readable in light mode; eight native-proven text roles measure1.62–1.78:1, while dark and recent layout/sign controls pass (40–55 minutes).
 - [055](./055.md) — Make unavailable-detail explanations readable in light mode; both settled native messages measure1.78:1, while fresh dark controls and not-found semantics pass (25–40 minutes).
 - [054](./054.md) — Clear retained transaction actions when the ledger route becomes unavailable; fresh native Back removes the old body but leaves an active Example Share/Copy menu under Crypto (25–40 minutes).
 - [053](./053.md) — Make account-journal balances and cost captions legible in light mode; fresh native Stock captions measure1.78:1 while their dark control and numeric API checks pass (20–30 minutes).
