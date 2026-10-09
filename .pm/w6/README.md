@@ -9,3 +9,4 @@ No milestones yet.
 ## Inbox
 
 - [001](./001.md) — Classify malformed MCP request parameters before SDK validation escapes (minor; backend-v2; 60m).
+- [002](./002.md) — Distinguish invalid JSON-RPC envelopes from malformed JSON (minor; backend-v2; 40–50m).
