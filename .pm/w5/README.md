@@ -42,6 +42,7 @@
 - [059 — Arithmetic total-price inputs lose their exact @@ annotation](./059.md) — minor CLI serialization bug; single-add/bulk reproduction with literal controls, 35–55m.
 - [060 — Transaction table prints unescaped quotes and backslashes in lot labels](./060.md) — minor CLI display bug; pristine repeats, JSON/details and plain-label controls, 20–30m.
 - [061 — Invalid treeify regex options report runtime failures without naming the bad option](./061.md) — minor CLI input diagnosis bug; three regex flags repeated with preserved exports, 25–40m.
+- [062 — Doctor fails to resolve relative included filenames containing a colon](./062.md) — minor CLI location parsing bug; two pristine repros across three operations with absolute/plain controls, 25–40m.
 
 The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–054, less the five under [Dropped](#dropped)) were fixed in `backend-cluster/backend-v2` and closed on 2026-10-02 and 2026-10-03; each note under [`done/`](./done/) records what shipped and in which commit. None has been re-observed against the hosted endpoint yet — the fixes reach it with the next backend deploy.
 
