@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [063](./063.md) — Keep account-journal daily totals inside enlarged date headers; fresh light/dark dates fill the row and push correct positive/negative totals offscreen, while default controls pass (30–45 minutes).
 - [062](./062.md) — Refresh journal date-header measurements when text size changes; live transitions clip dates or retain95-point gaps, while fresh layouts and theme refreshes work (45–60 minutes).
 - [061](./061.md) — Make shared transaction narrations readable in light mode; native Home, Transactions and merchant journals are faint at1.62–1.78:1, while fresh dark and actual detail-navigation controls pass (25–40 minutes).
 - [060](./060.md) — Reflow enlarged Home card titles beside See all; fresh German maximum text gives Recent Transactions a26.67-point column and1457.67-point height, with Spending/Budget also affected and default-size controls passing (35–50 minutes).
