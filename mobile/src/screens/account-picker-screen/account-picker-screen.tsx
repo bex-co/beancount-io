@@ -220,6 +220,9 @@ const AccountRow = memo(function AccountRow({
       style={[styles.listItem, selected && styles.listItemSelected]}
       onPress={() => onPress(account)}
       accessibilityRole="button"
+      // The full path, not the grouped children: their chevron/check glyph
+      // would otherwise be read as part of the account's name.
+      accessibilityLabel={account}
       accessibilityState={{ selected }}
     >
       {/* Keyed on the live scale so a text-size change while the picker is
@@ -236,6 +239,9 @@ const AccountRow = memo(function AccountRow({
         name={selected ? "checkmark" : directionalIcon("chevron-forward")}
         size={24}
         color={selected ? theme.primary : theme.black}
+        accessible={false}
+        importantForAccessibility="no"
+        accessibilityElementsHidden
       />
     </TouchableOpacity>
   );

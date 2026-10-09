@@ -246,6 +246,21 @@ describe("AccountRow live font-scale remeasurement", () => {
     expect(picked).toEqual(["Assets:US:BofA:Checking"]);
   });
 
+  it("names the row by its full path and hides the decorative icon", () => {
+    for (const selected of [false, true]) {
+      const tree = row(selected);
+      expect(tree.props.accessibilityLabel).toBe("Assets:US:BofA:Checking");
+      expect(tree.props.accessibilityState.selected).toBe(selected);
+      const icon = findAll(
+        tree,
+        (node) => node.type !== "Text" && node.type !== "View" && node !== tree,
+      )[0];
+      expect(icon.props.accessible).toBe(false);
+      expect(icon.props.accessibilityElementsHidden).toBe(true);
+      expect(icon.props.importantForAccessibility).toBe("no");
+    }
+  });
+
   it("keeps the name mounted when only the selection changes", () => {
     expect(name(row(false)).props.key).toEqual(name(row(true)).props.key);
   });
