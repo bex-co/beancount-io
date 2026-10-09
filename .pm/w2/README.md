@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [048](./048.md) — Keep currency-bearing Spending axis labels inside the chart; native H&M's decimal MSEK ticks lose their leading zero at default text size while USD and Reports controls fit (25–40 minutes).
 - [047](./047.md) — Preserve non-USD running balances on zero-change account rows; native MRMB assertions falsely show zero because the selector reuses the empty change map's USD fallback (30–45 minutes).
 - [046](./046.md) — Measure scrubbed chart colors from the displayed change baseline; native Alibaba's negative ALL-range change turns green under a finger because the active branch compares against the first plotted close (35–45 minutes).
 - [045](./045.md) — Preserve both quote kinds in transaction search; native `E.B.'s "Beer"` silently drops double quotes and returns four false matches (30–45 minutes).
