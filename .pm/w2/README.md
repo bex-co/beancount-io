@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [052](./052.md) — Keep unapplied transaction-filter drafts bound to their ledger; native Back after a Stock file link lets Example's retained checking-account draft hide Stock's journal, while ordinary saved-filter switching passes (45–60 minutes).
 - [051](./051.md) — Keep the recurring merchant's next-payment year visible at enlarged text sizes; native H&M's future year becomes `20…` while the amount and general-list date remain complete (20–30 minutes).
 - [050](./050.md) — Keep merchant header totals complete at enlarged text sizes; fresh native H&M and Hoogle details truncate currency codes while USD, Home and directory controls stay readable (30–45 minutes).
 - [049](./049.md) — Keep retained commit details bound to their original ledger; native Back after a cross-ledger file link retries H&M's SHA against Example, while same-ledger Back and original-ledger recovery work (45–55 minutes).
