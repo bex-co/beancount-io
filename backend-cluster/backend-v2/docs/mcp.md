@@ -76,9 +76,9 @@ client's authorization flow:
 2. That document identifies the MCP resource and authorization server. The
    client discovers the authorization, registration, and token endpoints.
 3. The client identifies itself — by the URL of a published client metadata
-   document (CIMD) when it supports one, as Claude, ChatGPT, and VS Code do, or
-   by dynamic client registration otherwise — then requests scopes in
-   authorization code flow with PKCE. In the browser, sign in and review the
+   document (CIMD) when it supports one, as Claude, Claude Code, ChatGPT, and
+   VS Code do, or by dynamic client registration otherwise — then requests
+   scopes in authorization code flow with PKCE. In the browser, sign in and review the
    request on `/oauth/consent`: the page shows where you will be returned, the
    name the app gave itself, the domain publishing its metadata when it used
    CIMD, and a warning when the app only returns to your own computer. Select
@@ -118,8 +118,9 @@ The fixture registers the host the way the host documents, then authorizes
 with the redirect the host really uses. A host without a fixture is not called
 supported here
 ([ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D8).
-None of these hosts has been verified with a real sign-in against
-`https://beancount.io` yet.
+Claude Code signed in for real against `https://beancount.io` through its
+CIMD document on 2026-10-08. The other hosts have not been verified with a
+real sign-in yet.
 
 | Host | Identifies itself by | Redirect the fixture authorizes with | Notes |
 | --- | --- | --- | --- |
