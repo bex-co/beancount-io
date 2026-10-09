@@ -129,7 +129,7 @@ const getStyles = (theme: ColorTheme) =>
       minWidth: 34,
       textAlign: "right",
       fontSize: fontSizes.xs,
-      color: theme.black60,
+      color: theme.black80,
     },
     // Expanded sub-account row: indented name + amount, no bar.
     childRow: {
@@ -212,7 +212,7 @@ export function CategoryBreakdown({
         style={styles.leaf}
         name={isExpanded ? "chevron-down" : directionalIcon("chevron-forward")}
         size={14}
-        color={theme.black60}
+        color={theme.black80}
       />
     ) : (
       <View style={styles.leaf} />
@@ -292,7 +292,7 @@ export function CategoryBreakdown({
         style={styles.chevron}
         name={isExpanded ? "chevron-down" : directionalIcon("chevron-forward")}
         size={14}
-        color={theme.black60}
+        color={theme.black80}
       />
     );
 

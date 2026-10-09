@@ -130,6 +130,12 @@ const CASES: Case[] = [
     text: "secondary",
     surface: { theme: "controlFill" },
   },
+  {
+    name: "report category shares on their card",
+    file: "screens/reports-screen/components/category-breakdown.tsx",
+    text: "pctLabel",
+    surface: { theme: "controlFill" },
+  },
 ];
 
 // Inert stand-in for every import except StyleSheet, so only `getStyles`
