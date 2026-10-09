@@ -303,6 +303,10 @@ const AccountTableRow = memo(function AccountTableRow({
   // too: left to wrap, the sign strands on its own line above the figure
   // (w1/034). Same fit props as the hero amounts — shrink, never wrap,
   // never ellipsize.
+  const amountText = units
+    ? formatHolding(units)
+    : formatSignedMoneyWithCurrency(row.value, currency);
+  const notes = display ? balanceNotes(display, currency, t, locale) : [];
   const amountBlock = (
     <View style={[styles.amounts, stacked && styles.stackedAmounts]}>
       <AmountText
@@ -310,17 +314,13 @@ const AccountTableRow = memo(function AccountTableRow({
         style={valueStyle}
         {...HERO_AMOUNT_FIT}
       >
-        {units
-          ? formatHolding(units)
-          : formatSignedMoneyWithCurrency(row.value, currency)}
+        {amountText}
       </AmountText>
-      {display
-        ? balanceNotes(display, currency, t, locale).map((note) => (
-            <Text key={note} style={styles.amountNote}>
-              {note}
-            </Text>
-          ))
-        : null}
+      {notes.map((note) => (
+        <Text key={note} style={styles.amountNote}>
+          {note}
+        </Text>
+      ))}
     </View>
   );
 
@@ -396,6 +396,14 @@ const AccountTableRow = memo(function AccountTableRow({
         style={rowStyle}
         onPress={() => onPressAccount?.(row.account)}
         accessibilityRole="button"
+        // Named for what activating it does, opening this account. Left to
+        // iOS, the name concatenated the children and began with the nested
+        // chevron's "Expand"/"Collapse" command.
+        accessibilityLabel={[
+          isCategory ? label : row.account,
+          amountText,
+          ...notes,
+        ].join(", ")}
         // Drill-down stays the default action; expanding is published as a
         // custom action because the nested chevron is grouped away on iOS.
         accessibilityActions={disclosure?.actions}
