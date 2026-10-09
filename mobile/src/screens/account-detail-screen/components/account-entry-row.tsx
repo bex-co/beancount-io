@@ -135,13 +135,22 @@ export function AccountEntryRow({
         ? theme.error
         : theme.black60;
 
+  const title = row.title || t("transactions");
+  const costText =
+    units && units.cost !== null
+      ? t("atCost", {
+          amount: formatSignedMoneyWithCurrency(units.cost, currency, true),
+        })
+      : null;
+  const balanceLine = `${t("balance")}: ${balanceText}`;
+
   const leading = (
     <>
       <AccountTypeIcon postings={row.postings} payee={row.payee} />
 
       <View style={styles.middle}>
         <Text style={styles.title} numberOfLines={stacked ? undefined : 1}>
-          {row.title || t("transactions")}
+          {title}
         </Text>
         {typeLabelKey && (
           <View style={styles.typeBadge}>
@@ -167,16 +176,10 @@ export function AccountEntryRow({
         >
           {changeText}
         </AmountText>
-        {units && units.cost !== null ? (
-          <AmountText style={styles.balance}>
-            {t("atCost", {
-              amount: formatSignedMoneyWithCurrency(units.cost, currency, true),
-            })}
-          </AmountText>
+        {costText !== null ? (
+          <AmountText style={styles.balance}>{costText}</AmountText>
         ) : null}
-        <AmountText style={styles.balance}>
-          {t("balance")}: {balanceText}
-        </AmountText>
+        <AmountText style={styles.balance}>{balanceLine}</AmountText>
       </View>
     </>
   );
@@ -187,6 +190,18 @@ export function AccountEntryRow({
         style={[styles.row, stacked && styles.rowStacked]}
         onPress={onPress}
         activeOpacity={0.7}
+        // One named button for the whole row, read from the visible text.
+        // The label also keeps the type icon's glyph out of the name.
+        accessibilityRole="button"
+        accessibilityLabel={[
+          title,
+          changeText,
+          costText,
+          balanceLine,
+          isPending ? t("pending") : null,
+        ]
+          .filter((part): part is string => Boolean(part))
+          .join(", ")}
       >
         {content}
       </TouchableOpacity>

@@ -188,3 +188,30 @@ describe("AccountEntryRow at enlarged text", () => {
     expect(flat(directive.props.style).flexDirection).toBe("column");
   });
 });
+
+describe("AccountEntryRow accessibility", () => {
+  it("names an actionable row as one button from its visible text", () => {
+    const row = AccountEntryRow({
+      row: transfer,
+      currency: "USD",
+      onPress() {},
+    });
+    expect(row.props.accessibilityRole).toBe("button");
+    expect(row.props.accessibilityLabel).toBe(
+      "Transfering accumulated savings to other account, $-4500, balance: $207.46, pending",
+    );
+  });
+
+  it("includes a commodity row's cost and omits pending when cleared", () => {
+    const row = AccountEntryRow({ row: broker, currency: "USD", onPress() {} });
+    expect(row.props.accessibilityLabel).toBe(
+      "Broker, -100 NWRB, $-1045 at cost, balance: 380 NWRB",
+    );
+  });
+
+  it("leaves non-interactive directive rows without a button role", () => {
+    const row = AccountEntryRow({ row: balanceDirective, currency: "USD" });
+    expect(row.type).toBe("View");
+    expect(row.props.accessibilityRole).toBe(undefined);
+  });
+});
