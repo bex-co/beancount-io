@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import Svg, { Text as SvgText, G, Line } from "react-native-svg";
-import { scaleBand, scaleLinear } from "d3-scale";
+import { scaleLinear } from "d3-scale";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -9,6 +9,7 @@ import { AnimatedBar } from "./animated-bar";
 import { useEntranceProgress } from "./use-entrance-progress";
 import { barChartValueDomain } from "./bar-chart-domain";
 import { restingBarRect } from "./bar-geometry";
+import { barChartLayout } from "./bar-chart-layout";
 import { ChartErrorBoundary } from "./chart-chrome";
 
 type BarChartProps = {
@@ -32,18 +33,10 @@ function BarChart({ labels, numbers, currency }: BarChartProps): JSX.Element {
   // Chart dimensions
   const chartWidth = ScreenWidth - contentPadding * 2;
   const chartHeight = BAR_CHART_HEIGHT;
-  const barWidth = labels.length > 0 ? (chartWidth / labels.length) * 0.6 : 0;
   const axisFontSize = 12;
   const labelFontSize = 13;
-  const leftPadding = 50;
   const bottomPadding = 30;
   const topPadding = 20;
-
-  // Scales
-  const xScale = scaleBand()
-    .domain(labels)
-    .range([leftPadding, chartWidth])
-    .padding(0.2);
 
   const yScale = scaleLinear()
     .domain(barChartValueDomain(numbers))
@@ -52,6 +45,16 @@ function BarChart({ labels, numbers, currency }: BarChartProps): JSX.Element {
 
   // Y axis ticks
   const yTicks = yScale.ticks(5);
+  const tickLabels = yTicks.map((tick) =>
+    formatShortMoneyWithCurrency(tick, currency),
+  );
+  // The gutter fits the widest formatted tick; bars share what remains.
+  const { axisWidth, barWidth, barX, labelX } = barChartLayout(
+    chartWidth,
+    tickLabels,
+    labels.length,
+    axisFontSize,
+  );
 
   // Loop-invariant: the baseline every bar grows from, hoisted out of the map
   // the way the two sibling charts already do it.
@@ -66,7 +69,7 @@ function BarChart({ labels, numbers, currency }: BarChartProps): JSX.Element {
         {yTicks.map((tick: number, i: number) => (
           <G key={i}>
             <Line
-              x1={leftPadding}
+              x1={axisWidth}
               x2={chartWidth}
               y1={yScale(tick)}
               y2={yScale(tick)}
@@ -75,13 +78,13 @@ function BarChart({ labels, numbers, currency }: BarChartProps): JSX.Element {
               strokeWidth={1}
             />
             <SvgText
-              x={leftPadding - 4}
+              x={axisWidth - 4}
               y={yScale(tick) + 5}
               fontSize={axisFontSize}
               fill={theme.text01}
               textAnchor="end"
             >
-              {formatShortMoneyWithCurrency(tick, currency)}
+              {tickLabels[i]}
             </SvgText>
           </G>
         ))}
@@ -97,7 +100,7 @@ function BarChart({ labels, numbers, currency }: BarChartProps): JSX.Element {
           return (
             <AnimatedBar
               key={i}
-              x={xScale(labels[i]) ?? 0}
+              x={barX(i)}
               y={barY}
               width={barWidth}
               height={Math.abs(barHeight)}
@@ -115,7 +118,7 @@ function BarChart({ labels, numbers, currency }: BarChartProps): JSX.Element {
         {labels.map((label, i) => (
           <SvgText
             key={i}
-            x={(xScale(label) ?? 0) + barWidth / 2}
+            x={labelX(i)}
             y={chartHeight - 8}
             fontSize={labelFontSize}
             fill={theme.text01}
