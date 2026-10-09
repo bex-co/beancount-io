@@ -156,15 +156,15 @@ export function ValuationSheet({
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable
-        style={styles.overlay}
-        onPress={onClose}
-        accessibilityRole="button"
-        accessibilityLabel={t("done")}
-      >
+      {/* The backdrop is a touch target only. As an accessible element it
+          grouped the whole sheet into one full-screen "Done", hiding the
+          heading, holdings and footer; the header's Done and the escape
+          gesture close the sheet for assistive tech. */}
+      <Pressable style={styles.overlay} onPress={onClose} accessible={false}>
         <Pressable
           style={[styles.sheet, { paddingBottom: insets.bottom }]}
           accessibilityViewIsModal
+          onAccessibilityEscape={onClose}
           // Swallows taps so only the backdrop closes the sheet.
           onPress={() => undefined}
           accessible={false}
