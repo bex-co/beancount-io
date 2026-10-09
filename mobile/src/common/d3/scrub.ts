@@ -95,6 +95,27 @@ export function activeScrubIndex(scrubIndex: number, count: number): number {
   return shownScrubIndex(scrubIndex, count);
 }
 
+/**
+ * Whether the scrubbed point is up on the period's opening balance — `null`
+ * while no finger is down, so the chart keeps its resting direction.
+ *
+ * `openingY` is the opening balance projected through the plot's y scale, the
+ * same baseline the change row measures from. It is *not* the first plotted
+ * point: that is a closing balance, and an ALL window opens at zero below it.
+ * SVG y grows downward, so "at or above the opening" is the smaller-or-equal
+ * y — matching the change row's `change >= 0` reading green. A stale index
+ * clamps to the last point exactly as the cursor does.
+ */
+export function scrubTrendUp(
+  scrubIndex: number,
+  pointYs: number[],
+  openingY: number,
+): boolean | null {
+  "worklet";
+  const index = activeScrubIndex(scrubIndex, pointYs.length);
+  return index === SCRUB_IDLE ? null : pointYs[index] <= openingY;
+}
+
 /** The value under the cursor, or the latest one at rest. Zero if there is no series. */
 export function scrubbedValue(values: number[], scrubIndex: number): number {
   "worklet";

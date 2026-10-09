@@ -41,6 +41,7 @@ import {
   scrubbedValue,
   shouldTickHaptic,
   shownScrubIndex,
+  scrubTrendUp,
 } from "./scrub";
 import { LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
 import { ChartErrorBoundary } from "./chart-chrome";
@@ -500,19 +501,28 @@ function InteractiveLineChart({
   // thread: the d3 scales that produced them cannot cross to it (see
   // `buildPaths`), but two `number[]`s of plotted positions can, and indexing
   // them is all a cursor needs.
-  const { linePath, areaPath, pointXs, pointYs, lineLength } = useMemo(() => {
-    const paths = buildPaths(numbers, computeDomain(numbers), geometry);
-    const xs = numbers.map((_, i) => paths.xFor(i));
-    const ys = numbers.map((v) => paths.yFor(v));
-    return {
-      linePath: paths.linePath,
-      areaPath: paths.areaPath,
-      pointXs: xs,
-      pointYs: ys,
-      lineLength: polylineLength(xs, ys),
-    };
-  }, [numbers, geometry]);
+  const baseline = windowBaseline ?? numbers[0] ?? 0;
 
+  // `openingY` is the period-opening balance the change row measures from,
+  // projected through the same scale as the points. It may sit outside the
+  // plotted domain (an ALL window opens at zero), which is fine: it is only
+  // compared against, never drawn.
+  const { linePath, areaPath, pointXs, pointYs, openingY, lineLength } =
+    useMemo(() => {
+      const paths = buildPaths(numbers, computeDomain(numbers), geometry);
+      const xs = numbers.map((_, i) => paths.xFor(i));
+      const ys = numbers.map((v) => paths.yFor(v));
+      return {
+        linePath: paths.linePath,
+        areaPath: paths.areaPath,
+        pointXs: xs,
+        pointYs: ys,
+        openingY: paths.yFor(baseline),
+        lineLength: polylineLength(xs, ys),
+      };
+    }, [numbers, geometry, baseline]);
+
+  // The dashed reference line stays on the first plotted point.
   const baselineY = pointYs[0] ?? 0;
 
   // Entrance progress, 0 → 1. The stroke carries a dash as long as the whole
@@ -605,8 +615,6 @@ function InteractiveLineChart({
     };
   });
 
-  const baseline = windowBaseline ?? numbers[0] ?? 0;
-
   // Whether the shown point is up on the period start — `null` while no finger
   // is down, so the resting direction is used.
   //
@@ -625,13 +633,10 @@ function InteractiveLineChart({
   // cursor worklets already hold `pointYs`, so asking it here costs no second
   // array on the UI thread — and neither call site memoizes the `numbers` prop,
   // so capturing that one would re-upload the whole series to the UI runtime on
-  // every unrelated re-render of the card. SVG y grows downward, so "above the
-  // period start" is the *smaller* y.
+  // every unrelated re-render of the card. Measured against `openingY`, the
+  // same baseline as the change row, not the first plotted close.
   useAnimatedReaction(
-    () => {
-      const index = activeScrubIndex(scrub.value, pointYs.length);
-      return index === SCRUB_IDLE ? null : pointYs[index] <= baselineY;
-    },
+    () => scrubTrendUp(scrub.value, pointYs, openingY),
     (up, previous) => {
       if (up !== previous) {
         scheduleOnRN(setScrubUp, up);
