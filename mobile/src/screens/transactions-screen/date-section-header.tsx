@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
 import {
   fontSizes,
@@ -48,11 +48,22 @@ export const DateSectionHeader: React.FC<DateSectionHeaderProps> = ({
   total,
 }) => {
   const styles = useThemeStyle(getStyles);
+  // iOS keeps a Text's cached measurement when the system text size changes
+  // while the app is open, clipping enlarged dates or leaving tall blank bands
+  // after shrinking. Keying the text on the live scale mounts a fresh,
+  // correctly measured node without disturbing the surrounding list.
+  const { fontScale } = useWindowDimensions();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.date}>{displayDate}</Text>
-      {total ? <AmountText style={styles.total}>{total}</AmountText> : null}
+      <Text key={fontScale} style={styles.date}>
+        {displayDate}
+      </Text>
+      {total ? (
+        <AmountText key={fontScale} style={styles.total}>
+          {total}
+        </AmountText>
+      ) : null}
     </View>
   );
 };
