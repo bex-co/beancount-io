@@ -20,7 +20,6 @@ import {
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatLedgerDateShort } from "@/common/date-format";
-import { formatMoneyWithCurrency } from "@/common/number-utils";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { ColorTheme } from "@/types/theme-props";
 import {
@@ -59,6 +58,7 @@ import {
   mapMerchantCurrencyTotals,
   mapMerchantMeta,
 } from "./selectors/merchant-stats";
+import { formatMerchantTotal } from "./selectors/format-merchant-total";
 import { MerchantDetailSkeleton } from "./merchant-detail-skeleton";
 
 const PAGE_SIZE = 20;
@@ -468,7 +468,7 @@ function MerchantDetailBody({ payee }: { payee: string }) {
 
       {stats?.totalsByCurrency.map((row) => (
         <Text key={row.currency} style={styles.totalLine} numberOfLines={1}>
-          {formatMoneyWithCurrency(row.total, row.currency)}
+          {formatMerchantTotal(row)}
         </Text>
       ))}
 
