@@ -317,6 +317,7 @@ export const fa: Translations = {
   accountDetailUnavailable: "این حساب در دفتر کل انتخاب‌شده موجود نیست.",
   transactionDetailUnavailable: "این تراکنش در دفتر کل انتخاب‌شده موجود نیست.",
   merchantDetailUnavailable: "این فروشنده در دفتر کل انتخاب‌شده موجود نیست.",
+  commitDetailUnavailable: "این تغییر در دفتر کل انتخاب‌شده موجود نیست.",
   journalLoadError: "بارگذاری روزنامه ناموفق بود: ",
   // entry context (transactions screen)
   journalError: "خطا", // TODO: needs native speaker review

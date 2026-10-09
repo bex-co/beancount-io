@@ -330,6 +330,7 @@ export const ru: Translations = {
   accountDetailUnavailable: "Этот счёт недоступен в выбранной книге.",
   transactionDetailUnavailable: "Эта транзакция недоступна в выбранной книге.",
   merchantDetailUnavailable: "Этот продавец недоступен в выбранной книге.",
+  commitDetailUnavailable: "Это изменение недоступно в выбранной книге.",
   journalLoadError: "Ошибка загрузки журнала: ",
   // entry context (transactions screen)
   journalError: "Ошибка",

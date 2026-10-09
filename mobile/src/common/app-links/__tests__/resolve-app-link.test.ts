@@ -42,7 +42,10 @@ describe("resolveAppLink", () => {
       }),
     ).toEqual({
       ledgerFullName: LEDGER,
-      href: { pathname: "/commit-detail", params: { sha: "abc123" } },
+      href: {
+        pathname: "/commit-detail",
+        params: { sha: "abc123", ledger: LEDGER },
+      },
     });
     expect(
       resolveAppLink(
@@ -198,7 +201,7 @@ describe("buildLedgerUrl round trip", () => {
       if (input.kind === "commit") {
         expect(resolved!.href).toEqual({
           pathname: "/commit-detail",
-          params: { sha: input.sha },
+          params: { sha: input.sha, ledger: LEDGER },
         });
         return;
       }

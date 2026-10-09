@@ -322,6 +322,8 @@ export const nl: Translations = {
     "Deze transactie is niet beschikbaar in het geselecteerde grootboek.",
   merchantDetailUnavailable:
     "Deze handelaar is niet beschikbaar in het geselecteerde grootboek.",
+  commitDetailUnavailable:
+    "Deze wijziging is niet beschikbaar in het geselecteerde grootboek.",
   journalLoadError: "Laden van journaal mislukt: ",
   // entry context (transactions screen)
   journalError: "Fout",

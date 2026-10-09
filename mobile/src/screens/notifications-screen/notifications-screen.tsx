@@ -313,7 +313,9 @@ function NotificationsScreenImpl(): JSX.Element {
                       onPress={() =>
                         router.push({
                           pathname: "/(app)/commit-detail",
-                          params: { sha: commit.sha },
+                          // `ledger` binds the entry to this ledger's
+                          // repository; see `common/route-ledger`.
+                          params: { sha: commit.sha, ledger: ledgerId },
                         })
                       }
                     >

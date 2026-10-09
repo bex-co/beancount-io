@@ -5,12 +5,12 @@ import { ColorTheme } from "@/types/theme-props";
 import { fonts } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useReactiveVar } from "@apollo/client";
-import { ledgerVar } from "@/common/vars";
 import { useGetCommitDetailsQuery } from "@/generated-graphql/graphql";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
-import { LedgerGuard } from "@/components/ledger-guard";
+import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
+import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
+import { bindRouteLedger, firstRouteParam } from "@/common/route-ledger";
 import { parseDiff, DiffLine } from "./diff-utils";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { formatCommitAuthorLine } from "@/screens/notifications-screen/formatting";
@@ -158,14 +158,18 @@ function DiffLineView({ line }: { line: DiffLine }): JSX.Element {
   );
 }
 
-function CommitDetailScreenImpl(): JSX.Element {
+function CommitDetailScreenImpl({
+  sha,
+  ledgerId,
+}: {
+  sha: string;
+  ledgerId: string;
+}): JSX.Element {
   const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
-  const { sha } = useLocalSearchParams<{ sha: string }>();
 
-  const ledgerId = useReactiveVar(ledgerVar) ?? "";
   const { data, loading, error, refetch } = useGetCommitDetailsQuery({
-    variables: { ledgerId, sha: sha ?? "" },
+    variables: { ledgerId, sha },
     skip: !ledgerId || !sha,
     fetchPolicy: "cache-and-network",
   });
@@ -293,10 +297,44 @@ function CommitDetailScreenImpl(): JSX.Element {
   );
 }
 
+function CommitDetailRoute({
+  sha,
+  ledger,
+}: {
+  sha: string;
+  ledger?: string | string[];
+}): JSX.Element {
+  const { t } = useTranslations();
+  const binding = bindRouteLedger(ledger, useLedgerGuard());
+
+  if (binding.status === "mismatch") {
+    // A revived commit from another ledger: its SHA names a commit in the
+    // route's repository, so looking it up in the selected one can only fail
+    // (or find the wrong commit). Send no request at all.
+    return (
+      <RouteLedgerUnavailable
+        title={sha.slice(0, 7)}
+        message={t("commitDetailUnavailable")}
+      />
+    );
+  }
+  return <CommitDetailScreenImpl sha={sha} ledgerId={binding.ledgerId} />;
+}
+
 export function CommitDetailScreen(): JSX.Element {
+  // `ledger` binds the entry to the ledger it was opened for; see
+  // `common/route-ledger` for why the ambient selection is not enough.
+  const params = useLocalSearchParams<{
+    sha?: string | string[];
+    ledger?: string | string[];
+  }>();
+
   return (
     <LedgerGuard>
-      <CommitDetailScreenImpl />
+      <CommitDetailRoute
+        sha={firstRouteParam(params.sha)}
+        ledger={params.ledger}
+      />
     </LedgerGuard>
   );
 }

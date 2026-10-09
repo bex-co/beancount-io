@@ -233,6 +233,54 @@ describe("merchant detail is bound to its ledger (w2/042)", () => {
   });
 });
 
+describe("commit detail is bound to its ledger (w2/049)", () => {
+  const HM = "open_ledger/hm";
+  const SHA = "94b78d9aa1f0c3e5d7b9a1c3e5f7091b2d4f6a8c";
+
+  it("every push to /commit-detail passes a ledger param", () => {
+    expect(pushesMissingLedger("commit-detail", "sha")).toEqual([]);
+  });
+
+  it("a commit link names its repository, and identical SHAs stay apart", () => {
+    const fromHm = resolveAppLink(`${ORIGIN}/ledger/${HM}/commit/${SHA}`, {
+      serverUrl: ORIGIN,
+    });
+    const fromExample = resolveAppLink(
+      `${ORIGIN}/ledger/${EXAMPLE}/commit/${SHA}`,
+      { serverUrl: ORIGIN },
+    );
+    const hm = (fromHm!.href as { params: Record<string, string> }).params;
+    const example = (fromExample!.href as { params: Record<string, string> })
+      .params;
+    expect(hm).toEqual({ sha: SHA, ledger: HM });
+    expect(example).toEqual({ sha: SHA, ledger: EXAMPLE });
+    // H&M's commit, revived after an Example file link: refused, then usable
+    // again once H&M is reselected.
+    expect(bindRouteLedger(hm.ledger, EXAMPLE).status).toBe("mismatch");
+    expect(bindRouteLedger(hm.ledger, HM)).toEqual({
+      status: "ready",
+      ledgerId: HM,
+    });
+    expect(bindRouteLedger(example.ledger, EXAMPLE).status).toBe("ready");
+  });
+
+  it("the screen resolves the route ledger before mounting its query", () => {
+    expectGuardedScreen({
+      file: "screens/commit-detail-screen/commit-detail-screen.tsx",
+      route: "CommitDetailRoute",
+      body: "CommitDetailScreenImpl",
+      screen: "export function CommitDetailScreen",
+    });
+    // The query takes the bound ledger from the route, not the global
+    // selection, so no retained observer can pair this SHA with another one.
+    const source = read(
+      "screens/commit-detail-screen/commit-detail-screen.tsx",
+    );
+    expect(source.includes("ledgerVar")).toBe(false);
+    expect(source.includes("ledgerId={binding.ledgerId}")).toBe(true);
+  });
+});
+
 /**
  * `route` resolves `bindRouteLedger` and returns early on a mismatch before it
  * renders `body`; the exported `screen` mounts `route` (passing the `ledger`

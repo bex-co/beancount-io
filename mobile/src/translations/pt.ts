@@ -332,6 +332,8 @@ export const pt: Translations = {
     "Esta transação não está disponível no livro-razão selecionado.",
   merchantDetailUnavailable:
     "Este comerciante não está disponível no livro-razão selecionado.",
+  commitDetailUnavailable:
+    "Esta alteração não está disponível no livro-razão selecionado.",
   journalLoadError: "Falha ao carregar o diário: ",
   // entry context (transactions screen)
   journalError: "Erro",

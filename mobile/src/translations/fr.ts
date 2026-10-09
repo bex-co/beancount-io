@@ -330,6 +330,8 @@ export const fr: Translations = {
     "Cette transaction n'est pas disponible dans le grand livre sélectionné.",
   merchantDetailUnavailable:
     "Ce marchand n'est pas disponible dans le grand livre sélectionné.",
+  commitDetailUnavailable:
+    "Cette modification n'est pas disponible dans le grand livre sélectionné.",
   journalLoadError: "Échec du chargement du journal : ",
   // entry context (transactions screen)
   journalError: "Erreur",

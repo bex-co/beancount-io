@@ -123,7 +123,8 @@ export function resolveAppLink(
         ledgerFullName,
         href: {
           pathname: "/commit-detail",
-          params: { sha: tail[0] },
+          // `ledger` binds the commit to the link's repository (see account).
+          params: { sha: tail[0], ledger: ledgerFullName },
         },
       };
     }

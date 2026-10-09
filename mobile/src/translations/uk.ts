@@ -328,6 +328,7 @@ export const uk: Translations = {
   accountDetailUnavailable: "Цей рахунок недоступний у вибраній книзі.",
   transactionDetailUnavailable: "Ця транзакція недоступна у вибраній книзі.",
   merchantDetailUnavailable: "Цей продавець недоступний у вибраній книзі.",
+  commitDetailUnavailable: "Ця зміна недоступна у вибраній книзі.",
   journalLoadError: "Помилка завантаження журналу: ",
   // entry context (transactions screen)
   journalError: "Помилка",
