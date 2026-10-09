@@ -248,6 +248,7 @@ const HomeScreenImpl = (): JSX.Element => {
           onCaptionPress={setDetailPage}
           loading={isLoading}
           error={chartError}
+          ledgerId={ledgerId}
         />
         <ValuationSheet
           valuation={detailPage === null ? null : valuations[detailPage]}

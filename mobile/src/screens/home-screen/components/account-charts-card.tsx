@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { FadeInView } from "@/components/crossfade";
 import { PressableScale } from "@/components/pressable-scale";
@@ -102,7 +102,24 @@ type AccountChartsCardProps = {
   onCaptionPress: (key: ChartKey) => void;
   loading: boolean;
   error: boolean;
+  /**
+   * Identifies the ledger on screen. Heights measured for one ledger say
+   * nothing about the next one's amounts or captions.
+   */
+  ledgerId: string;
 };
+
+type Measurements = {
+  scope: string;
+  captionHeight: number;
+  headerHeight: number | null;
+};
+
+const emptyMeasurements = (scope: string): Measurements => ({
+  scope,
+  captionHeight: 0,
+  headerHeight: null,
+});
 
 /**
  * Top-of-dashboard card whose tab strip switches between three balance-sheet
@@ -121,24 +138,47 @@ export function AccountChartsCard({
   onCaptionPress,
   loading,
   error,
+  ledgerId,
 }: AccountChartsCardProps): JSX.Element {
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const theme = useTheme().colorTheme;
   const router = useRouter();
   const guest = useGuest();
   const [range, setRange] = useState<TimeRange>("6M");
-  // Tallest status line any page has shown, so switching tabs never moves the
-  // pager: the line sits above it, outside the measured page header.
-  const [captionHeight, setCaptionHeight] = useState(0);
-  // Tallest header any page has reported. Max, not last: the three pages carry
-  // different amounts and only one is measured at a time, so the pager has to be
-  // tall enough for whichever is showing.
-  const [headerHeight, setHeaderHeight] = useState<number | null>(null);
-  const handleHeaderLayout = useCallback((height: number) => {
-    setHeaderHeight((previous) =>
-      previous === null || height > previous ? height : previous,
-    );
-  }, []);
+  // The tallest status line and page header any page has shown, so switching
+  // tabs never moves the pager. Max, not last: the three pages carry different
+  // amounts and captions, so the pager has to fit whichever is showing. The
+  // maxima only hold for one ledger at one text size and width. Outside that
+  // scope they are stale, so a new scope starts over and remounts the measured
+  // views so they report again.
+  const { width, fontScale } = useWindowDimensions();
+  const scope = `${ledgerId}|${locale}|${fontScale}|${width}`;
+  const [measured, setMeasured] = useState(() => emptyMeasurements(scope));
+  const current =
+    measured.scope === scope ? measured : emptyMeasurements(scope);
+  const { captionHeight, headerHeight } = current;
+  const handleHeaderLayout = useCallback(
+    (height: number) =>
+      setMeasured((previous) => {
+        const base =
+          previous.scope === scope ? previous : emptyMeasurements(scope);
+        return base.headerHeight === null || height > base.headerHeight
+          ? { ...base, headerHeight: height }
+          : base;
+      }),
+    [scope],
+  );
+  const handleCaptionLayout = useCallback(
+    (height: number) =>
+      setMeasured((previous) => {
+        const base =
+          previous.scope === scope ? previous : emptyMeasurements(scope);
+        return height > base.captionHeight
+          ? { ...base, captionHeight: height }
+          : base;
+      }),
+    [scope],
+  );
   const pageHeight = chartPageHeight(headerHeight, CHART_HEIGHT, PAGE_HEIGHT);
 
   // One door for all three pages: pinned to the tab row (not a lone header
@@ -211,7 +251,7 @@ export function AccountChartsCard({
     );
     return (
       <InteractiveLineChartD3
-        key={key}
+        key={`${key}|${scope}`}
         footnote={footnotes[key]}
         labels={chart.labels}
         numbers={chart.numbers}
@@ -236,15 +276,15 @@ export function AccountChartsCard({
             <View style={{ minHeight: captionHeight }}>
               {captions[charts[activeIndex].key] !== undefined && (
                 <PressableScale
+                  key={scope}
                   style={styles.caption}
                   onPress={() => onCaptionPress(charts[activeIndex].key)}
                   accessibilityRole="button"
                   accessibilityLabel={captions[charts[activeIndex].key]}
                   accessibilityHint={t("valuationDetailsHint")}
-                  onLayout={(event) => {
-                    const height = event.nativeEvent.layout.height;
-                    setCaptionHeight((previous) => Math.max(previous, height));
-                  }}
+                  onLayout={(event) =>
+                    handleCaptionLayout(event.nativeEvent.layout.height)
+                  }
                 >
                   <Text style={[styles.captionText, { color: theme.black80 }]}>
                     {captions[charts[activeIndex].key]}
