@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [067](./067.md) — Give Filters Cancel and Reset native button roles; fresh header actions are Other while enabled/disabled Apply and filter choices pass the Button controls (20–30 minutes).
 - [066](./066.md) — Make report category shares and expand arrows legible in light mode; fresh6M/1M values, native accessible summaries and expansion pass, but their card contrast is1.62:1 (20–35 minutes).
 - [065](./065.md) — Expose account-journal transactions as named native buttons; fresh rows are Other with icon glyphs while the repaired Transactions rows pass the Button control (40–55 minutes).
 - [064](./064.md) — Keep account-journal names identifiable at enlarged text sizes; fresh light/dark rows show Hoo…/BAN… while complete data and detail navigation pass (35–50 minutes).
