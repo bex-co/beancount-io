@@ -269,7 +269,11 @@ const TransactionFiltersSheet = ({
         options={{
           headerTitle: t("filters"),
           headerLeft: () => (
-            <Pressable onPress={() => router.back()} hitSlop={10}>
+            <Pressable
+              onPress={() => router.back()}
+              hitSlop={10}
+              accessibilityRole="button"
+            >
               <Text
                 style={styles.headerAction}
                 numberOfLines={1}
@@ -280,7 +284,11 @@ const TransactionFiltersSheet = ({
             </Pressable>
           ),
           headerRight: () => (
-            <Pressable onPress={() => setDraft(NO_FILTERS)} hitSlop={10}>
+            <Pressable
+              onPress={() => setDraft(NO_FILTERS)}
+              hitSlop={10}
+              accessibilityRole="button"
+            >
               <Text
                 style={styles.headerAction}
                 numberOfLines={1}

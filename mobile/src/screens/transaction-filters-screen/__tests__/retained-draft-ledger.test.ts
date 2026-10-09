@@ -238,3 +238,44 @@ describe("transaction filter draft is bound to its ledger (w2/052)", () => {
     expect(accountRow(render()).props.content).toBe("Assets:Broker");
   });
 });
+
+describe("transaction filter header actions (w2/067)", () => {
+  beforeEach(() => {
+    slots = new Map();
+    ledgerId = EXAMPLE;
+    saved = filterTypes.NO_SCOPED_FILTERS;
+    pickerCallbacks = [];
+    backs = 0;
+  });
+
+  const header = (tree: Node, side: "headerLeft" | "headerRight"): Node =>
+    nodes(tree)
+      .filter((node) => node.type === "StackScreen")[0]
+      .props.options[side]();
+
+  it("exposes Cancel as a native button that dismisses without applying", () => {
+    const tree = render();
+    const cancel = header(tree, "headerLeft");
+    expect(cancel.props.accessibilityRole).toBe("button");
+    expect(nodes(cancel).some((node) => node.children.includes("cancel"))).toBe(
+      true,
+    );
+    cancel.props.onPress();
+    expect(backs).toBe(1);
+    expect(plain(saved)).toEqual(plain(filterTypes.NO_SCOPED_FILTERS));
+  });
+
+  it("exposes Reset as a native button that clears only the draft", () => {
+    saved = {
+      ledgerId: EXAMPLE,
+      filters: { ...filterTypes.NO_FILTERS, account: CHECKING },
+    };
+    const tree = render();
+    expect(accountRow(tree).props.content).toBe(CHECKING);
+    const reset = header(tree, "headerRight");
+    expect(reset.props.accessibilityRole).toBe("button");
+    reset.props.onPress();
+    expect(accountRow(render()).props.content).toBe("allAccounts");
+    expect(saved.filters.account).toBe(CHECKING);
+  });
+});
