@@ -1,6 +1,6 @@
 # w1 · m31 — Advertise CIMD so Claude and ChatGPT identify themselves without registering
 
-**Worker:** worker1 **Goal:** Production advertises Client ID Metadata Documents — the registration method the MCP spec prefers and Claude and ChatGPT choose — without breaking any DCR host, ending per-connection client-row growth from directory traffic **Status:** in progress — t001–t006 done; t007 next
+**Worker:** worker1 **Goal:** Production advertises Client ID Metadata Documents — the registration method the MCP spec prefers and Claude and ChatGPT choose — without breaking any DCR host, ending per-connection client-row growth from directory traffic **Status:** in progress — t001–t007 done; t008 next
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | [t004](./done/t004.md) | Conformance requires CIMD; verify on production — **DONE** | 20m | t003 |
 | [t005](./done/t005.md) | Adoption surface — **DONE** | 30m | t004 |
 | [t006](./done/t006.md) | Simplify — **DONE** | 30m | t005 |
-| t007 | Test coverage | 45m | t005, t006 |
+| [t007](./done/t007.md) | Test coverage — **DONE** | 45m | t005, t006 |
 | t008 | Closeout | 15m | t007 |
 
 ## Definition of done
