@@ -28,6 +28,18 @@ const CASES: Case[] = [
     text: "balance",
     surface: { style: "row" },
   },
+  {
+    name: "unavailable-ledger detail explanation",
+    file: "components/route-ledger-unavailable.tsx",
+    text: "stateText",
+    surface: { style: "container" },
+  },
+  {
+    name: "missing transaction explanation",
+    file: "screens/transaction-detail-screen/transaction-detail-screen.tsx",
+    text: "stateText",
+    surface: { style: "stateContainer" },
+  },
 ];
 
 // Inert stand-in for every import except StyleSheet, so only `getStyles`
