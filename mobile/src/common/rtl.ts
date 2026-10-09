@@ -154,6 +154,19 @@ export const LEADING_TEXT_ALIGN = "left" as const;
 export const LTR_PLOT = { direction: "ltr" } as const;
 
 /**
+ * Pins source text and its scroller to left-to-right, whatever the app's
+ * direction.
+ *
+ * For ledger source and diffs. Beancount source is written left to right, and
+ * a diff line's `+`/`-` prefix and indentation live at its left edge. Under a
+ * Persian layout an unqualified horizontal scroller starts at its right end,
+ * so the reader lands past every prefix and has to pan back to find them.
+ * Scope it to the source viewport; the summary, file names and stats around
+ * it are interface text and mirror with the app.
+ */
+export const LTR_SOURCE = { direction: "ltr" } as const;
+
+/**
  * Glyphs that point along the reading direction, paired with their mirror.
  *
  * Ionicons' names read logically — `chevron-forward`, `arrow-back` — which is

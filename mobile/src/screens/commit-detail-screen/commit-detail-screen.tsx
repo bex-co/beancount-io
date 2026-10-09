@@ -12,7 +12,7 @@ import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
 import { bindRouteLedger, firstRouteParam } from "@/common/route-ledger";
 import { parseDiff, DiffLine } from "./diff-utils";
-import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+import { LEADING_TEXT_ALIGN, LTR_SOURCE } from "@/common/rtl";
 import { formatCommitAuthorLine } from "@/screens/notifications-screen/formatting";
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { selectCardLoadState } from "@/common/apollo/card-load-state";
@@ -273,7 +273,12 @@ function CommitDetailScreenImpl({
                   {t("commitDetailDiff")}
                 </Text>
               </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator
+                style={LTR_SOURCE}
+                contentContainerStyle={LTR_SOURCE}
+              >
                 <View style={styles.diffContainer}>
                   {diffLines && diffLines.length > 0 ? (
                     <FlatList
