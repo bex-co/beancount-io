@@ -73,7 +73,7 @@ const getStyles = (theme: ColorTheme) =>
     balance: {
       marginTop: 2,
       fontSize: fontSizes.xs,
-      color: theme.black60,
+      color: theme.black80,
     },
   });
 
