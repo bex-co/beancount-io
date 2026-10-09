@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +21,8 @@ import { getServerUrl } from "@/common/vars/server-url";
 import { Button } from "@/components/button";
 import { ColorTheme } from "@/types/theme-props";
 import { useGuest } from "@/common/guest/guest-context";
+import { prefersStackedLayout } from "@/common/theme/dynamic-type";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -70,6 +73,23 @@ const getStyles = (theme: ColorTheme) =>
       flexShrink: 1,
       alignItems: "flex-end",
     },
+    // Accessibility text sizes: an enlarged price date took the row's whole
+    // width and squeezed the holding beside it to zero. The detail moves
+    // under the holding instead, both left at the leading edge.
+    rowStacked: {
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: 4,
+    },
+    holdingStacked: {
+      flex: 0,
+    },
+    detailStacked: {
+      alignItems: "flex-start",
+    },
+    dateStacked: {
+      textAlign: LEADING_TEXT_ALIGN,
+    },
     date: {
       fontSize: 14,
       color: theme.black80,
@@ -117,6 +137,8 @@ export function ValuationSheet({
   const styles = useThemeStyle(getStyles);
   const insets = useSafeAreaInsets();
   const guest = useGuest();
+  const { fontScale } = useWindowDimensions();
+  const stacked = prefersStackedLayout(fontScale);
   if (valuation === null) return null;
 
   const stale = stalePrices(valuation);
@@ -156,18 +178,21 @@ export function ValuationSheet({
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      {/* The backdrop is a touch target only. As an accessible element it
-          grouped the whole sheet into one full-screen "Done", hiding the
-          heading, holdings and footer; the header's Done and the escape
-          gesture close the sheet for assistive tech. */}
-      <Pressable style={styles.overlay} onPress={onClose} accessible={false}>
+      <View style={styles.overlay}>
+        {/* The backdrop is a touch target beside the sheet, not around it:
+            as an accessible parent it grouped the whole sheet into one
+            full-screen "Done", and as a touch responder around the sheet it
+            kept the holdings from scrolling. The header's Done and the
+            escape gesture close the sheet for assistive tech. */}
         <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessible={false}
+        />
+        <View
           style={[styles.sheet, { paddingBottom: insets.bottom }]}
           accessibilityViewIsModal
           onAccessibilityEscape={onClose}
-          // Swallows taps so only the backdrop closes the sheet.
-          onPress={() => undefined}
-          accessible={false}
         >
           <View style={styles.header}>
             <Text style={styles.title} accessibilityRole="header">
@@ -186,7 +211,7 @@ export function ValuationSheet({
             {entries.map(({ holding, detail, stale: behind }) => (
               <View
                 key={`${holding.currency}-${detail}`}
-                style={styles.row}
+                style={[styles.row, stacked && styles.rowStacked]}
                 accessible
                 accessibilityLabel={[
                   formatHolding(holding),
@@ -196,9 +221,15 @@ export function ValuationSheet({
                   .filter(Boolean)
                   .join(", ")}
               >
-                <Text style={styles.holding}>{formatHolding(holding)}</Text>
-                <View style={styles.detail}>
-                  <Text style={styles.date}>{detail}</Text>
+                <Text
+                  style={[styles.holding, stacked && styles.holdingStacked]}
+                >
+                  {formatHolding(holding)}
+                </Text>
+                <View style={[styles.detail, stacked && styles.detailStacked]}>
+                  <Text style={[styles.date, stacked && styles.dateStacked]}>
+                    {detail}
+                  </Text>
                   {behind && (
                     <View style={styles.stale}>
                       <Ionicons
@@ -230,8 +261,8 @@ export function ValuationSheet({
               {t(guest ? "signIn" : "updatePricesOnWeb")}
             </Button>
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }

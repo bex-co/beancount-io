@@ -2,12 +2,15 @@ import fs from "fs";
 import path from "path";
 import vm from "vm";
 import ts from "typescript";
+import * as dynamicType from "../../../common/theme/dynamic-type";
 
 // Executes the real ValuationSheet and inspects its accessibility tree. The
 // full-screen backdrop was an accessible button named "Done", and an
 // accessible parent is one element on iOS: the heading, the holdings and the
 // footer action inside it were unreachable.
 type Node = { type: unknown; props: Record<string, any>; children: unknown[] };
+
+let fontScale = 1;
 
 const react = {
   createElement: (type: unknown, props: any, ...children: unknown[]): Node => ({
@@ -38,7 +41,10 @@ function load(): (props: Record<string, unknown>) => Node | null {
       Text: "Text",
       View: "View",
       StyleSheet: { create: (styles: unknown) => styles },
+      useWindowDimensions: () => ({ fontScale }),
     },
+    "@/common/theme/dynamic-type": dynamicType,
+    "@/common/rtl": { LEADING_TEXT_ALIGN: "left" },
     "expo-web-browser": { openBrowserAsync: () => undefined },
     "@expo/vector-icons": { Ionicons: "Icon" },
     "react-native-safe-area-context": {
@@ -99,10 +105,15 @@ describe("ValuationSheet accessibility", () => {
     ledgerId: "open_ledger/stock-example",
     onClose: () => (closes += 1),
   })!;
-  const [backdrop] = modal.children as Node[];
-  const [sheet] = backdrop.children as Node[];
+  const [overlay] = modal.children as Node[];
+  const [backdrop, sheet] = overlay.children as Node[];
 
-  it("keeps the backdrop a touch target, not an element grouping the sheet", () => {
+  it("keeps the backdrop a touch target beside the sheet, not around it", () => {
+    // Around the sheet it grouped it for VoiceOver and, as a touch responder,
+    // kept the holdings from scrolling at large text sizes.
+    expect(backdrop.type).toBe("Pressable");
+    expect(backdrop.children.length).toBe(0);
+    expect(sheet.type).toBe("View");
     expect(backdrop.props.accessible).toBe(false);
     expect(backdrop.props.accessibilityLabel).toBe(undefined);
     expect(backdrop.props.accessibilityRole).toBe(undefined);
@@ -112,10 +123,8 @@ describe("ValuationSheet accessibility", () => {
 
   it("scopes assistive tech to the sheet and lets the escape gesture close it", () => {
     expect(sheet.props.accessibilityViewIsModal).toBe(true);
-    expect(sheet.props.accessible).toBe(false);
+    expect(sheet.props.onPress).toBe(undefined);
     sheet.props.onAccessibilityEscape();
-    expect(closes).toBe(2);
-    sheet.props.onPress();
     expect(closes).toBe(2);
   });
 
@@ -138,5 +147,55 @@ describe("ValuationSheet accessibility", () => {
     expect(rows[0].includes("NWRB")).toBe(true);
     expect(rows[0].includes("valuationNotUpdated")).toBe(true);
     expect(findAll(sheet, (node) => node.type === "Button").length).toBe(1);
+  });
+});
+
+describe("ValuationSheet rows at enlarged text", () => {
+  const flat = (style: unknown): Record<string, unknown> =>
+    Array.isArray(style)
+      ? Object.assign({}, ...style.map(flat))
+      : style && typeof style === "object"
+        ? (style as Record<string, unknown>)
+        : {};
+  const rows = () =>
+    findAll(
+      ValuationSheet({
+        valuation: {
+          priced: [holding("NWRB", true), holding("VERYLONGCOMMODITY", false)],
+          atCostNoPrice: [holding("RGAGX", false)],
+          notInTotal: [holding("VACHR", false)],
+        },
+        ledgerId: "open_ledger/stock-example",
+        onClose() {},
+      }),
+      (node) => node.props.accessible === true,
+    );
+
+  afterEach(() => {
+    fontScale = 1;
+  });
+
+  it("keeps holding and detail side by side at ordinary sizes", () => {
+    for (const scale of [1, 1.235]) {
+      fontScale = scale;
+      for (const row of rows()) {
+        expect(flat(row.props.style).flexDirection).toBe("row");
+        expect(flat((row.children[0] as Node).props.style).flex).toBe(1);
+      }
+    }
+  });
+
+  it("stacks every row so the holding keeps its width at accessibility sizes", () => {
+    fontScale = 3.12;
+    const stacked = rows();
+    expect(stacked.length).toBe(4);
+    for (const row of stacked) {
+      const [name, detail] = row.children as Node[];
+      expect(flat(row.props.style).flexDirection).toBe("column");
+      // flex: 1 has a zero basis; beside a 346-point date it measured 0 wide.
+      expect(flat(name.props.style).flex).toBe(0);
+      expect(flat(detail.props.style).alignItems).toBe("flex-start");
+    }
+    expect(stacked[0].props.accessibilityLabel.includes("NWRB")).toBe(true);
   });
 });
