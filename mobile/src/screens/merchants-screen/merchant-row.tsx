@@ -266,7 +266,9 @@ export function MerchantRow({ item, onPress }: MerchantRowProps) {
             trailingOverdue && styles.overdueMeta,
             stacked && styles.metaStacked,
           ]}
-          numberOfLines={1}
+          // Stacked, the line has the row's full width but must still reflow:
+          // "Next Aug 31, 2027" otherwise loses its year at the largest sizes.
+          numberOfLines={stacked ? undefined : 1}
         >
           {trailingMeta}
         </Text>

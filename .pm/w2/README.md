@@ -48,7 +48,6 @@
 ## Cross-queue promotions and follow-ups
 
 - [052](./052.md) — Keep unapplied transaction-filter drafts bound to their ledger; native Back after a Stock file link lets Example's retained checking-account draft hide Stock's journal, while ordinary saved-filter switching passes (45–60 minutes).
-- [051](./051.md) — Keep the recurring merchant's next-payment year visible at enlarged text sizes; native H&M's future year becomes `20…` while the amount and general-list date remain complete (20–30 minutes).
 - [049](./049.md) — Keep retained commit details bound to their original ledger; native Back after a cross-ledger file link retries H&M's SHA against Example, while same-ledger Back and original-ledger recovery work (45–55 minutes).
 - [042](./042.md) — Keep retained merchant details bound to their original ledger; native Back silently turns Example's 44-transaction Cafe detail into Crypto's empty match after file links (35–55 minutes).
 - [040](./040.md) — Keep retained transaction details bound to their original ledger; Back after a cross-ledger App Link opens an Example posting in Crypto as a false zero/empty account (55–60 minutes).
