@@ -1,6 +1,6 @@
 # w1 · m31 — Advertise CIMD so Claude and ChatGPT identify themselves without registering
 
-**Worker:** worker1 **Goal:** Production advertises Client ID Metadata Documents — the registration method the MCP spec prefers and Claude and ChatGPT choose — without breaking any DCR host, ending per-connection client-row growth from directory traffic **Status:** blocked — t001–t003 done; t004's conformance half passes on production, and its Claude Code CIMD connection waits on the user clearing a cached registration; t005–t008 depend on t004 — see [Blocked](#blocked)
+**Worker:** worker1 **Goal:** Production advertises Client ID Metadata Documents — the registration method the MCP spec prefers and Claude and ChatGPT choose — without breaking any DCR host, ending per-connection client-row growth from directory traffic **Status:** in progress — t001–t004 done; t005 next
 
 ## Tasks (in order)
 
@@ -9,7 +9,7 @@
 | [t001](./done/t001.md) | D6: advertise CIMD with the draft acknowledged — **DONE** | 30m | — |
 | [t002](./done/t002.md) | CIMD fixtures: Claude Code's published document and a ChatGPT-style document — **DONE** | 45m | t001 |
 | [t003](./done/t003.md) | Consent and failure modes for CIMD clients — **DONE** | 30m | t002 |
-| t004 | Conformance requires CIMD; verify on production — **blocked** | 20m | t003 |
+| [t004](./done/t004.md) | Conformance requires CIMD; verify on production — **DONE** | 20m | t003 |
 | t005 | Adoption surface | 30m | t004 |
 | t006 | Simplify | 30m | t005 |
 | t007 | Test coverage | 45m | t005, t006 |
@@ -24,7 +24,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm` for w1, 2026-10-06 — [ADR 019](../../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D3–D9; code and production re-checked the same day: none of D3–D8 has landed, ADR status is Proposed, production discovery lacks `client_id_metadata_document_supported`.
+- **Source:** `/pm-brainstorm` for w1, 2026-10-06 — [ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md) D3–D9; code and production re-checked the same day: none of D3–D8 has landed, ADR status is Proposed, production discovery lacks `client_id_metadata_document_supported`.
 - **Goal linkage:** **A1 — Agent-native accounting** and **A3 — Community & distribution**: the spec ranks CIMD above deprecated DCR, Claude and ChatGPT prefer it, and Claude's own docs warn of very large numbers of registered clients from directory traffic — rows our OAuth store never sweeps.
 - **Expected outcome:** Claude and ChatGPT connect by URL identity; the consent page shows the domain vouching for the app; signals: CIMD sign-ins, flat OAuth client-table growth.
 - **Why now:** ADR 019 orders D6 after D3 and D4 — enabling it first breaks Claude Code — so it starts only once w1/m30 is on production. Adoption surface is included: the docs must say which sign-in path each host takes.
@@ -33,6 +33,6 @@
 
 - **2026-10-08** — blocked 2026-10-06 on the operator deploy of backend-v2 (t004). Cleared by that deploy: `https://beancount.io/.well-known/oauth-authorization-server` advertises `client_id_metadata_document_supported: true`, and `yarn mcp:conformance https://beancount.io` passes check 16. The 2026-10-06 note that "depends on w1/m30 on production" is an ordering rule still holds: w1/m30 was verified on production and closed first (`7b912536`).
 
-## Blocked
+## Production verification
 
-- **t004 (2026-10-08)**: `yarn mcp:conformance https://beancount.io` passes check 16, and discovery advertises CIMD. The real Claude Code connection still has to use CIMD, but this machine's Claude Code reuses a DCR client it registered before the deploy (its authorize URL carries an opaque `client_id`). *Update 2026-10-08:* the production CIMD path was verified end to end with Claude Code's published identity (consent, token, MCP call; evidence in [t004](./t004.md)). **Unblock:** one sign-in from the Claude Code app itself. The user runs `/mcp` → `beancount-cimd-check` → Authenticate, and the consent page says "Its details are published by claude.ai". t005–t008 depend on t004. **Who can clear it:** the user.
+- **2026-10-08** — the block (a real Claude Code CIMD sign-in) cleared. The user authenticated a fresh Claude Code 2.1.289 entry (`beancount-cimd-check`) against `https://beancount.io/api-gateway/mcp`, and Claude Code stored `https://claude.ai/oauth/claude-code-client-metadata` as its client ID, with no registration. Earlier the same day, the CIMD path was verified with that identity through consent, token, and an MCP call, and conformance passed check 16. Details in [t004](./done/t004.md).
