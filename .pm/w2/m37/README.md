@@ -1,13 +1,13 @@
 # w2 · m37 — Refresh native measurements after live Dynamic Type changes
 
-**Worker:** worker2 **Goal:** readers can change iOS text size while the app is open and retain readable dates, account choices, range controls and file permission notices. **Status:** in progress (t001 done)
+**Worker:** worker2 **Goal:** readers can change iOS text size while the app is open and retain readable dates, account choices, range controls and file permission notices. **Status:** in progress (t001–t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Validate native invalidation and repair journal date headers — **DONE** | 45m | — |
-| t002 | Apply the validated policy to picker text, pills and file notices | 55m | t001 |
+| t002 | Apply the validated policy to picker text, pills and file notices — **DONE** | 55m | t001 |
 | t003 | Adoption surface: verify native navigation and guidance | 20m | t002 |
 | t004 | Simplify the changed font-transition handling | 15m | t003 |
 | t005 | Meaningful transition coverage and native verification | 50m | t003 |

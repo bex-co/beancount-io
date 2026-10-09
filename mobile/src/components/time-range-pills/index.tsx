@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -167,6 +168,9 @@ export function TimeRangePills<T extends PillKey>({
   haptics: hapticsEnabled = true,
 }: TimeRangePillsProps<T>): JSX.Element {
   const styles = useThemeStyle(getStyles);
+  // Keyed on the live scale so a text-size change while the app is open
+  // remeasures the labels; the pills' onLayout then re-places the indicator.
+  const { fontScale } = useWindowDimensions();
 
   const layouts = useRef<Record<string, PillLayout>>({});
   // False until the indicator has been placed at least once, so the first
@@ -287,6 +291,7 @@ export function TimeRangePills<T extends PillKey>({
             accessibilityLabel={option.label}
           >
             <Text
+              key={fontScale}
               style={[
                 styles.label,
                 active && indicatorPlaced && styles.labelActive,

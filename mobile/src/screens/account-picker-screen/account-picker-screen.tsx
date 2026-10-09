@@ -210,6 +210,9 @@ const AccountRow = memo(function AccountRow({
 }: AccountRowProps) {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
+  // Keyed on the live scale so a text-size change while the picker is open
+  // remeasures the row (see DateSectionHeader).
+  const { fontScale } = useWindowDimensions();
   const { parent, leaf } = splitAccountLeaf(account);
   return (
     <TouchableOpacity
@@ -219,10 +222,15 @@ const AccountRow = memo(function AccountRow({
       accessibilityState={{ selected }}
     >
       <View style={styles.accountName}>
-        <Text style={styles.parentPath} numberOfLines={1} ellipsizeMode="head">
+        <Text
+          key={`parent-${fontScale}`}
+          style={styles.parentPath}
+          numberOfLines={1}
+          ellipsizeMode="head"
+        >
           {parent}
         </Text>
-        <Text style={styles.leaf} numberOfLines={1}>
+        <Text key={`leaf-${fontScale}`} style={styles.leaf} numberOfLines={1}>
           {leaf}
         </Text>
       </View>
@@ -552,13 +560,17 @@ function AccountPickerScreenComponent(): JSX.Element {
                 // you use this" reads the same wherever it appears.
                 <Ionicons name="time-outline" size={14} color={theme.black80} />
               )}
-              <Text style={styles.sectionHeaderText}>{section.title}</Text>
+              <Text key={fontScale} style={styles.sectionHeaderText}>
+                {section.title}
+              </Text>
             </View>
           ) : null
         }
         ListEmptyComponent={
           <View>
-            <Text style={styles.emptyText}>{t("accountPickerNoResults")}</Text>
+            <Text key={fontScale} style={styles.emptyText}>
+              {t("accountPickerNoResults")}
+            </Text>
             {showCreateRow && (
               <TouchableOpacity
                 testID="account-picker-create-row"
@@ -575,6 +587,7 @@ function AccountPickerScreenComponent(): JSX.Element {
                   color={theme.primary}
                 />
                 <Text
+                  key={fontScale}
                   style={[styles.listItemText, styles.createText]}
                   numberOfLines={1}
                 >

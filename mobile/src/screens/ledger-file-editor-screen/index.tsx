@@ -8,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import {
   Redirect,
@@ -329,6 +330,9 @@ function LedgerFileEditorSession({
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
+  // Keys the notice text so a live text-size change remeasures it without
+  // remounting this session or its editor (see DateSectionHeader).
+  const { fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const router = useRouter();
@@ -631,7 +635,9 @@ function LedgerFileEditorSession({
             size={16}
             color={readOnlyNoticeColors(theme).foreground}
           />
-          <Text style={styles.readOnlyText}>{t("ledgerReadOnly")}</Text>
+          <Text key={fontScale} style={styles.readOnlyText}>
+            {t("ledgerReadOnly")}
+          </Text>
         </View>
       ) : null}
 

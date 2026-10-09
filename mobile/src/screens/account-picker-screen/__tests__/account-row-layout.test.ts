@@ -18,13 +18,13 @@ describe("account and file name truncation", () => {
       source.indexOf("function AccountPickerScreenComponent("),
     );
     expect(
-      row.includes(
-        '<Text style={styles.parentPath} numberOfLines={1} ellipsizeMode="head">',
+      /<Text\s[^>]*style=\{styles\.parentPath\}\s+numberOfLines=\{1\}\s+ellipsizeMode="head"\s*>/u.test(
+        row,
       ),
     ).toBe(true);
-    expect(row.includes("<Text style={styles.leaf} numberOfLines={1}>")).toBe(
-      true,
-    );
+    expect(
+      /<Text\s[^>]*style=\{styles\.leaf\}\s+numberOfLines=\{1\}\s*>/u.test(row),
+    ).toBe(true);
     expect(/parentPath: \{\s*flexShrink: 1,/u.test(source)).toBe(true);
     expect(/leaf: \{\s*flexShrink: 0,/u.test(source)).toBe(true);
   });
