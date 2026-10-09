@@ -602,4 +602,5 @@ export const en = {
   profileNotSet: "Not set",
   profilePhotoFromGravatar: "Photo from Gravatar",
   profileUpdated: "Profile updated",
+  multiplePostings: "Multiple postings",
 };

@@ -1,8 +1,12 @@
-import { formatEntryRowAmount } from "../format-entry-row-amount";
-import { selectTransactionAmount } from "../../utils/transaction-display-utils";
-import { DirectiveType, JournalTransaction } from "../../types";
+import {
+  formatEntryRowAmount,
+  selectEntryRowAmount,
+} from "../format-entry-row-amount";
+import { DirectiveType, JournalPosting, JournalTransaction } from "../../types";
 
 type Leg = [account: string, number: string, currency?: string];
+
+const MIXED = "Multiple postings";
 
 const transaction = (legs: Leg[]): JournalTransaction => ({
   entry_hash: "row",
@@ -20,11 +24,8 @@ const transaction = (legs: Leg[]): JournalTransaction => ({
 });
 
 /** The string a row renders for these postings, through the real selector. */
-const rowAmount = (legs: Leg[]): string => {
-  const amount = selectTransactionAmount(transaction(legs));
-  if (!amount) throw new Error("no amount");
-  return formatEntryRowAmount(amount.text, amount.value);
-};
+const rowAmount = (legs: Leg[]): string =>
+  selectEntryRowAmount(transaction(legs), MIXED).amountStr;
 
 describe("formatEntryRowAmount", () => {
   it("signs a negative entry", () => {
@@ -94,5 +95,64 @@ describe("formatEntryRowAmount", () => {
       .reduce((sum, value) => sum + value, 0);
 
     expect(total).toBe(109896000000);
+  });
+});
+
+describe("selectEntryRowAmount", () => {
+  /** A real-estate trade: the property leg at cost, then the given legs. */
+  const trade = (units: string, legs: Leg[]): JournalTransaction => {
+    const txn = transaction(legs);
+    const property: JournalPosting = {
+      account: "Assets:RealEstate:Property",
+      units: { number: units, currency: "PROP123MAIN" },
+      cost: { number: "400000", currency: "USD", date: "2026-01-02" },
+    };
+    return { ...txn, postings: [property, ...txn.postings] };
+  };
+
+  it("shows a disposal's mixed settlement as a neutral summary", () => {
+    expect(
+      selectEntryRowAmount(
+        trade("-1", [
+          ["Assets:RealEstate:CapitalImprovements", "-6000"],
+          ["Assets:RealEstate:AccumDepreciation", "19394"],
+          ["Assets:Bank:Checking", "408900"],
+          ["Income:RealEstate:DepreciationRecapture", "-19394"],
+          ["Income:CapitalGains:LongTerm", "-2900"],
+        ]),
+        MIXED,
+      ),
+    ).toEqual({ amountStr: MIXED, isPositive: null });
+  });
+
+  it("shows a financed purchase as a neutral summary", () => {
+    expect(
+      selectEntryRowAmount(
+        trade("1", [
+          ["Assets:Bank:Checking", "-80000"],
+          ["Liabilities:Mortgage", "-320000"],
+        ]),
+        MIXED,
+      ),
+    ).toEqual({ amountStr: MIXED, isPositive: null });
+  });
+
+  it("keeps the signed inflow for an ordinary deposit", () => {
+    expect(
+      selectEntryRowAmount(
+        transaction([
+          ["Assets:US:Checking", "2550.60"],
+          ["Income:US:Hoogle:Salary", "-2550.60"],
+        ]),
+        MIXED,
+      ),
+    ).toEqual({ amountStr: "+$2,550.60", isPositive: true });
+  });
+
+  it("shows nothing for a transaction without postings", () => {
+    expect(selectEntryRowAmount(transaction([]), MIXED)).toEqual({
+      amountStr: "",
+      isPositive: null,
+    });
   });
 });

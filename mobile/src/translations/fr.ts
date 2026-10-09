@@ -624,4 +624,5 @@ export const fr: Translations = {
   profileNotSet: "Non renseigné",
   profilePhotoFromGravatar: "Photo depuis Gravatar",
   profileUpdated: "Profil mis à jour",
+  multiplePostings: "Plusieurs écritures",
 };

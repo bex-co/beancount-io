@@ -1,6 +1,6 @@
 import {
   hasEditableSource,
-  selectHeroAmount,
+  selectHeroAmount as selectHeroAmountWithLabel,
   selectPostingRows,
   selectTransactionMenuActions,
   selectTransactionTitle,
@@ -36,6 +36,11 @@ function txn(
     ...extra,
   };
 }
+
+const MIXED = "Multiple postings";
+
+const selectHeroAmount = (t: JournalTransaction) =>
+  selectHeroAmountWithLabel(t, MIXED);
 
 describe("selectHeroAmount", () => {
   it("nets cash postings for an expense (unsigned, not positive)", () => {
@@ -97,6 +102,42 @@ describe("selectHeroAmount", () => {
       ]),
     );
     expect(hero).toEqual({ text: "$3,177.39", isPositive: false });
+  });
+
+  function costed(account: string, number: string): JournalPosting {
+    return {
+      account,
+      units: { number, currency: "PROP123MAIN" },
+      cost: { number: "400000", currency: "USD", date: "2026-01-02" },
+    };
+  }
+
+  it("summarizes a disposal settled through several accounts, unsigned", () => {
+    // Was "+$422,294.00": Checking, CapitalImprovements and AccumDepreciation
+    // summed into one green inflow that matched neither proceeds nor gain.
+    const hero = selectHeroAmount(
+      txn([
+        costed("Assets:RealEstate:Property", "-1"),
+        posting("Assets:RealEstate:CapitalImprovements", "-6000"),
+        posting("Assets:RealEstate:AccumDepreciation", "19394"),
+        posting("Assets:Bank:Checking", "408900"),
+        posting("Income:RealEstate:DepreciationRecapture", "-19394"),
+        posting("Income:CapitalGains:LongTerm", "-2900"),
+      ]),
+    );
+    expect(hero).toEqual({ text: MIXED, isPositive: null });
+  });
+
+  it("summarizes a financed purchase instead of adding loan to cash", () => {
+    // Was "$400,000.00" outflow: the 80,000 down payment plus the mortgage.
+    const hero = selectHeroAmount(
+      txn([
+        costed("Assets:RealEstate:Property", "1"),
+        posting("Assets:Bank:Checking", "-80000"),
+        posting("Liabilities:Mortgage", "-320000"),
+      ]),
+    );
+    expect(hero).toEqual({ text: MIXED, isPositive: null });
   });
 });
 

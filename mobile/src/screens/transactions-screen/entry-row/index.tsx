@@ -7,6 +7,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
+import { useTranslations } from "@/common/hooks/use-translations";
 import {
   fontSizes,
   fontWeights,
@@ -27,9 +28,8 @@ import {
   isJournalClose,
 } from "../types";
 import { getEntryPostings } from "../utils/entry-utils";
-import { selectTransactionAmount } from "../utils/transaction-display-utils";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
-import { formatEntryRowAmount } from "./format-entry-row-amount";
+import { selectEntryRowAmount } from "./format-entry-row-amount";
 import { entryRowSecondaryText } from "./entry-row-secondary";
 import { entryRowAccessibilityLabel } from "./entry-row-accessibility-label";
 
@@ -115,6 +115,7 @@ const getStyles = (theme: ColorTheme) =>
 
 const getDisplayInfo = (
   entry: JournalDirectiveType,
+  mixedLabel: string,
 ): { name: string; amountStr: string; isPositive: boolean | null } => {
   if (isJournalOpen(entry)) {
     const currencies = entry.currencies?.join(", ") ?? "";
@@ -135,16 +136,7 @@ const getDisplayInfo = (
 
   const name = entry.payee || entry.narration || entry.directive_type;
 
-  const amount = selectTransactionAmount(entry);
-  if (!amount) {
-    return { name, amountStr: "", isPositive: null };
-  }
-
-  return {
-    name,
-    amountStr: formatEntryRowAmount(amount.text, amount.value),
-    isPositive: amount.value > 0,
-  };
+  return { name, ...selectEntryRowAmount(entry, mixedLabel) };
 };
 
 interface EntryRowProps {
@@ -158,7 +150,11 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
   const { fontScale } = useWindowDimensions();
   const stacked = prefersStackedLayout(fontScale);
 
-  const { name, amountStr, isPositive } = getDisplayInfo(entry);
+  const { t } = useTranslations();
+  const { name, amountStr, isPositive } = getDisplayInfo(
+    entry,
+    t("multiplePostings"),
+  );
   const secondary = isJournalTransaction(entry)
     ? entryRowSecondaryText(entry)
     : null;

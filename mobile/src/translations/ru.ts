@@ -624,4 +624,5 @@ export const ru: Translations = {
   profileNotSet: "Не указано",
   profilePhotoFromGravatar: "Фото из Gravatar",
   profileUpdated: "Профиль обновлён",
+  multiplePostings: "Несколько проводок",
 };

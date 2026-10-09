@@ -622,4 +622,5 @@ export const uk: Translations = {
   profileNotSet: "Не вказано",
   profilePhotoFromGravatar: "Фото з Gravatar",
   profileUpdated: "Профіль оновлено",
+  multiplePostings: "Кілька проведень",
 };

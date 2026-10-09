@@ -624,4 +624,5 @@ export const ca: Translations = {
   profileNotSet: "Sense definir",
   profilePhotoFromGravatar: "Foto de Gravatar",
   profileUpdated: "Perfil actualitzat",
+  multiplePostings: "Diversos apunts",
 };

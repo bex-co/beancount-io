@@ -566,4 +566,5 @@ export const zh: Translations = {
   profileNotSet: "未设置",
   profilePhotoFromGravatar: "头像来自 Gravatar",
   profileUpdated: "个人资料已更新",
+  multiplePostings: "多笔分录",
 };

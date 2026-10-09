@@ -605,4 +605,5 @@ export const fa: Translations = {
   profileNotSet: "تنظیم نشده",
   profilePhotoFromGravatar: "عکس از Gravatar",
   profileUpdated: "نمایه به‌روزرسانی شد",
+  multiplePostings: "چند ثبت",
 };

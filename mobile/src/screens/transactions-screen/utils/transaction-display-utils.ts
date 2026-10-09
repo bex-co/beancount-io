@@ -50,6 +50,22 @@ export type EntryAmount = {
   currency: string;
 };
 
+/**
+ * A trade whose money side cannot be told as one signed figure: the cash,
+ * financing and book-value adjustments that settle a commodity were recorded
+ * against several balance-sheet accounts. Their sum is a partial subtotal (it
+ * excludes the commodity's costed leg), not money in or out, so callers show
+ * a neutral "multiple postings" summary instead of a signed amount.
+ */
+export type MixedPostingsAmount = { mixed: true };
+
+/** What a transaction headline shows: an amount, or the mixed summary. */
+export type TransactionAmount = EntryAmount | MixedPostingsAmount;
+
+export const isMixedPostingsAmount = (
+  amount: TransactionAmount,
+): amount is MixedPostingsAmount => "mixed" in amount;
+
 /** Currency a posting is *priced* in, when it holds a commodity at cost. */
 const moneyCurrencyOf = (p: JournalPosting): string | undefined =>
   p.cost?.currency ?? p.price?.currency ?? undefined;
@@ -69,11 +85,19 @@ const moneyCurrencyOf = (p: JournalPosting): string | undefined =>
  * Assets/Liabilities posting exists at all (an Income → Expenses entry, say),
  * fall back to the single largest posting.
  *
- * @returns The amount, or null when the transaction has no usable posting.
+ * That preferred money bucket is a genuine money leg only while it belongs to
+ * one account (a brokerage cash account, fees included). A financed purchase
+ * (a cash down payment plus a mortgage) or a disposal that also writes off
+ * improvements and depreciation spreads it over several accounts, and its sum
+ * is then an unexplained partial subtotal, so that trade is reported as mixed.
+ *
+ * @returns The amount; `{ mixed: true }` for a trade whose money side spans
+ *   several balance-sheet accounts; or null when the transaction has no usable
+ *   posting.
  */
 export const selectTransactionAmount = (
   txn: JournalTransaction,
-): EntryAmount | null => {
+): TransactionAmount | null => {
   const postings = txn.postings ?? [];
   if (!postings.length) return null;
 
@@ -87,7 +111,13 @@ export const selectTransactionAmount = (
     // widest scale any of its postings recorded.
     const byCurrency = new Map<
       string,
-      { value: number; scale: number; legs: number; largestLeg: number }
+      {
+        value: number;
+        scale: number;
+        legs: number;
+        largestLeg: number;
+        accounts: Set<string>;
+      }
     >();
     for (const p of cashPostings) {
       const value = parseFloat(p.units.number);
@@ -100,12 +130,14 @@ export const selectTransactionAmount = (
         bucket.scale = Math.max(bucket.scale, scale);
         bucket.legs += 1;
         bucket.largestLeg = Math.max(bucket.largestLeg, Math.abs(value));
+        bucket.accounts.add(p.account);
       } else {
         byCurrency.set(currency, {
           value,
           scale,
           legs: 1,
           largestLeg: Math.abs(value),
+          accounts: new Set([p.account]),
         });
       }
     }
@@ -124,6 +156,9 @@ export const selectTransactionAmount = (
         picked = candidates.reduce((best, bucket) =>
           Math.abs(bucket[1].value) > Math.abs(best[1].value) ? bucket : best,
         );
+        if (money.length > 0 && picked[1].accounts.size > 1) {
+          return { mixed: true };
+        }
       }
       const [currency, { value, scale, legs, largestLeg }] = picked;
       // A transfer between two cash or liability accounts nets to zero in its

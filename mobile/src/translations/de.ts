@@ -622,4 +622,5 @@ export const de: Translations = {
   profileNotSet: "Nicht festgelegt",
   profilePhotoFromGravatar: "Foto von Gravatar",
   profileUpdated: "Profil aktualisiert",
+  multiplePostings: "Mehrere Buchungen",
 };

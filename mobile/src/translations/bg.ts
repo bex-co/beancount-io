@@ -613,4 +613,5 @@ export const bg: Translations = {
   profileNotSet: "Не е зададено",
   profilePhotoFromGravatar: "Снимка от Gravatar",
   profileUpdated: "Профилът е обновен",
+  multiplePostings: "Няколко реда",
 };

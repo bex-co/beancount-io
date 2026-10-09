@@ -405,7 +405,7 @@ const TransactionDetailImpl = ({
     );
   }
 
-  const hero = selectHeroAmount(entry);
+  const hero = selectHeroAmount(entry, t("multiplePostings"));
   const postingRows = selectPostingRows(entry);
   const title = selectTransactionTitle(entry) || t("transaction");
   const isPending = entry.flag === "!";

@@ -1,5 +1,8 @@
 import type { JournalTransaction } from "../../transactions-screen/types";
-import { selectTransactionAmount } from "../../transactions-screen/utils/transaction-display-utils";
+import {
+  isMixedPostingsAmount,
+  selectTransactionAmount,
+} from "../../transactions-screen/utils/transaction-display-utils";
 
 // Beancount/Fava reserve these flags for entries synthesized by reports or
 // plugins. They are not standalone source directives, so asking the source
@@ -30,11 +33,21 @@ export type HeroAmount = {
 /**
  * The headline amount, from the same selector `EntryRow` uses for list
  * rows, so the hero number can never disagree with the row the user tapped.
+ *
+ * @param mixedLabel - Localized neutral summary shown, unsigned and uncolored,
+ *   for a trade whose money side spans several accounts (see
+ *   `selectTransactionAmount`); its exact postings are listed below the hero.
  */
-export function selectHeroAmount(txn: JournalTransaction): HeroAmount {
+export function selectHeroAmount(
+  txn: JournalTransaction,
+  mixedLabel: string,
+): HeroAmount {
   const amount = selectTransactionAmount(txn);
   if (!amount) {
     return { text: "", isPositive: null };
+  }
+  if (isMixedPostingsAmount(amount)) {
+    return { text: mixedLabel, isPositive: null };
   }
 
   const { text, value } = amount;

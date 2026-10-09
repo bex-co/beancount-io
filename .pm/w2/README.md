@@ -56,7 +56,6 @@
 - [046](./046.md) — Measure scrubbed chart colors from the displayed change baseline; native Alibaba's negative ALL-range change turns green under a finger because the active branch compares against the first plotted close (35–45 minutes).
 - [045](./045.md) — Preserve both quote kinds in transaction search; native `E.B.'s "Beer"` silently drops double quotes and returns four false matches (30–45 minutes).
 - [044](./044.md) — Make the file reader's permission notice legible in light mode; its 13-point informational text measures1.62:1 versus a passing dark control (20–30 minutes).
-- [043](./043.md) — Give mixed commodity trades an explicit native summary; a financed $80,000 down payment reads −$400,000 and a disposal mixes cash with noncash adjustments (45–60 minutes).
 - [042](./042.md) — Keep retained merchant details bound to their original ledger; native Back silently turns Example's 44-transaction Cafe detail into Crypto's empty match after file links (35–55 minutes).
 - [040](./040.md) — Keep retained transaction details bound to their original ledger; Back after a cross-ledger App Link opens an Example posting in Crypto as a false zero/empty account (55–60 minutes).
 - [037](./blocked/037.md) — Serve the MCP Registry domain proof over HTTP on production too (optional; publishing uses the apex DNS TXT today). Found during m36 closeout — operator-only — **blocked:** needs production access to set `MCP_REGISTRY_AUTH_PROOF` and redeploy.

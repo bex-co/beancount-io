@@ -627,4 +627,5 @@ export const sk: Translations = {
   profileNotSet: "Nenastavené",
   profilePhotoFromGravatar: "Fotka z Gravataru",
   profileUpdated: "Profil bol aktualizovaný",
+  multiplePostings: "Viacero zápisov",
 };

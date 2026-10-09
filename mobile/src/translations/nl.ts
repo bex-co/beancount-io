@@ -613,4 +613,5 @@ export const nl: Translations = {
   profileNotSet: "Niet ingesteld",
   profilePhotoFromGravatar: "Foto van Gravatar",
   profileUpdated: "Profiel bijgewerkt",
+  multiplePostings: "Meerdere boekingen",
 };

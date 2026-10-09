@@ -1,6 +1,8 @@
 import { amountScale } from "../../../../common/number-utils";
 import {
+  type EntryAmount,
   formatAmount,
+  isMixedPostingsAmount,
   selectTransactionAmount,
   groupToSections,
 } from "../transaction-display-utils";
@@ -40,6 +42,15 @@ const makePosting = (
   units: { number, currency },
   ...(cost ? { cost: { ...cost, date: "2026-07-01" } } : {}),
 });
+
+/** The selector's amount, failing the test on null or a mixed summary. */
+const entryAmount = (tx: JournalTransaction): EntryAmount => {
+  const amount = selectTransactionAmount(tx);
+  if (!amount || isMixedPostingsAmount(amount)) {
+    throw new Error(`expected an amount, got ${JSON.stringify(amount)}`);
+  }
+  return amount;
+};
 
 const makeOpen = (account: string, currencies?: string[]): JournalOpen => ({
   entry_hash: "open1",
@@ -159,7 +170,7 @@ describe("selectTransactionAmount", () => {
         makePosting("Liabilities:CreditCard", "-500.00"),
       ],
     });
-    expect(selectTransactionAmount(tx)?.value).toBe(-500);
+    expect(entryAmount(tx).value).toBe(-500);
   });
 
   it("nets several postings in the same currency", () => {
@@ -170,7 +181,7 @@ describe("selectTransactionAmount", () => {
         makePosting("Income:Stripe", "-200.00"),
       ],
     });
-    expect(selectTransactionAmount(tx)?.value).toBe(200);
+    expect(entryAmount(tx).value).toBe(200);
   });
 
   it("shows how much moved in a transfer between a liability and a bank account", () => {
@@ -208,7 +219,7 @@ describe("selectTransactionAmount", () => {
         makePosting("Assets:Wallet", "0.00012345", "BTC"),
       ],
     });
-    expect(selectTransactionAmount(tx)?.text).toBe("0.00012345 BTC");
+    expect(entryAmount(tx).text).toBe("0.00012345 BTC");
   });
 
   it("still reports a genuinely zero single cash posting as zero", () => {
@@ -268,7 +279,7 @@ describe("selectTransactionAmount", () => {
         makePosting("Assets:Checking", "-12000.00"),
       ],
     });
-    expect(selectTransactionAmount(tx)?.currency).toBe("USD");
+    expect(entryAmount(tx).currency).toBe("USD");
   });
 
   it("falls back to the largest single posting when no cash accounts exist", () => {
@@ -279,7 +290,7 @@ describe("selectTransactionAmount", () => {
       ],
     });
     // Netting would read $0.00 — an Income → Expenses entry still moved $30.
-    expect(selectTransactionAmount(tx)?.value).toBe(30);
+    expect(entryAmount(tx).value).toBe(30);
   });
 
   it("skips postings whose amount is not a finite number", () => {
@@ -289,7 +300,7 @@ describe("selectTransactionAmount", () => {
         makePosting("Assets:Savings", "-42.00"),
       ],
     });
-    expect(selectTransactionAmount(tx)?.value).toBe(-42);
+    expect(entryAmount(tx).value).toBe(-42);
   });
 
   it("returns null when no posting has a usable amount", () => {
@@ -320,7 +331,7 @@ describe("selectTransactionAmount", () => {
         makePosting("Income:Crypto:Staking", "-0.005", "STETH"),
       ],
     });
-    expect(selectTransactionAmount(tx)?.text).toBe("0.005 STETH");
+    expect(entryAmount(tx).text).toBe("0.005 STETH");
   });
 
   it("still shows USD at cent precision", () => {
@@ -330,7 +341,7 @@ describe("selectTransactionAmount", () => {
         makePosting("Assets:Checking", "-12.3"),
       ],
     });
-    expect(selectTransactionAmount(tx)?.text).toBe("$12.30");
+    expect(entryAmount(tx).text).toBe("$12.30");
   });
 
   it("prints an unsigned magnitude for a negative crypto outflow", () => {
@@ -369,7 +380,7 @@ describe("selectTransactionAmount", () => {
         makePosting("Income:Crypto", "-1.004", "ETH"),
       ],
     });
-    expect(selectTransactionAmount(tx)?.text).toBe("1.004 ETH");
+    expect(entryAmount(tx).text).toBe("1.004 ETH");
   });
 
   it("does not special-case pending transactions", () => {
@@ -380,7 +391,96 @@ describe("selectTransactionAmount", () => {
         makePosting("Income:Goldman", "-7000.00"),
       ],
     });
-    expect(selectTransactionAmount(tx)?.value).toBe(7000);
+    expect(entryAmount(tx).value).toBe(7000);
+  });
+
+  // The public real-estate example: the sale's USD bucket held
+  // CapitalImprovements, AccumDepreciation and Checking, and summed to an
+  // unexplained +422,294; the financed purchase added the 80,000 down payment
+  // to the 320,000 mortgage and read -400,000.
+  it("reports a disposal settled through several accounts as mixed", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:RealEstate:Property", "-1", "PROP123MAIN", {
+          number: "400000",
+          currency: "USD",
+        }),
+        makePosting("Assets:RealEstate:CapitalImprovements", "-6000"),
+        makePosting("Assets:RealEstate:AccumDepreciation", "19394"),
+        makePosting("Assets:Bank:Checking", "408900"),
+        makePosting("Income:RealEstate:DepreciationRecapture", "-19394"),
+        makePosting("Income:CapitalGains:LongTerm", "-2900"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({ mixed: true });
+  });
+
+  it("reports a purchase paid in cash and borrowing as mixed", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:RealEstate:Property", "1", "PROP123MAIN", {
+          number: "400000",
+          currency: "USD",
+        }),
+        makePosting("Assets:Bank:Checking", "-80000"),
+        makePosting("Liabilities:Mortgage", "-320000"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({ mixed: true });
+  });
+
+  it("keeps a sale's proceeds net of a fee in the same cash account", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Broker:AAPL", "-5", "AAPL", {
+          number: "150",
+          currency: "USD",
+        }),
+        makePosting("Assets:Broker:Cash", "910.00"),
+        makePosting("Assets:Broker:Cash", "-4.95"),
+        makePosting("Expenses:Fees", "4.95"),
+        makePosting("Income:CapitalGains", "-160.00"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "$905.05",
+      value: 905.05,
+      currency: "USD",
+    });
+  });
+
+  it("keeps a purchase's cost plus fee from the same cash account", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Crypto:BTC", "0.1", "BTC", {
+          number: "75637.80",
+          currency: "USD",
+        }),
+        makePosting("Assets:Crypto:Cash", "-7563.78"),
+        makePosting("Assets:Crypto:Cash", "-11.35"),
+        makePosting("Expenses:Fees", "11.35"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "$7,575.13",
+      value: -7575.13,
+      currency: "USD",
+    });
+  });
+
+  it("still nets several cash accounts when no commodity is traded", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Checking", "2000.00"),
+        makePosting("Assets:Retirement:401k", "500.00"),
+        makePosting("Income:Salary", "-2500.00"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "$2,500.00",
+      value: 2500,
+      currency: "USD",
+    });
   });
 });
 
