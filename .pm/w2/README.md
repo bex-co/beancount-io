@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [040](./040.md) — Keep retained transaction details bound to their original ledger; Back after a cross-ledger App Link opens an Example posting in Crypto as a false zero/empty account (55–60 minutes).
 - [039](./039.md) — Keep every chart range reachable at enlarged text sizes; native account detail and Reports clip their end choices at maximum accessibility text (45–60 minutes).
 - [038](./038.md) — Keep transaction source and balance context available to mobile readers; reproduced on native iPhone 17e with the public example (45–60 minutes).
 - [037](./037.md) — Serve the MCP Registry domain proof over HTTP on production too (optional; publishing uses the apex DNS TXT today). Found during m36 closeout — operator-only
