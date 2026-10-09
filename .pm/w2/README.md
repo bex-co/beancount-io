@@ -47,6 +47,7 @@
 
 ## Cross-queue promotions and follow-ups
 
+- [054](./054.md) — Clear retained transaction actions when the ledger route becomes unavailable; fresh native Back removes the old body but leaves an active Example Share/Copy menu under Crypto (25–40 minutes).
 - [053](./053.md) — Make account-journal balances and cost captions legible in light mode; fresh native Stock captions measure1.78:1 while their dark control and numeric API checks pass (20–30 minutes).
 - [037](./blocked/037.md) — Serve the MCP Registry domain proof over HTTP on production too (optional; publishing uses the apex DNS TXT today). Found during m36 closeout — operator-only — **blocked:** needs production access to set `MCP_REGISTRY_AUTH_PROOF` and redeploy.
 - [034](./blocked/034.md) — Ledger counts read from one upstream page: the tier ledger-limit check counts owned ledgers inside the first 10 accessible ones, and `ledgersUsed` and the activity feed stop at 50. Found during m34. — **blocked:** repository owner must decide grandfathering before accurate counts tighten creation eligibility.
