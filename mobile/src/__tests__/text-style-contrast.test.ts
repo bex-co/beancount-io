@@ -40,6 +40,84 @@ const CASES: Case[] = [
     text: "stateText",
     surface: { style: "stateContainer" },
   },
+  {
+    name: "merchant directory section headers",
+    file: "screens/merchants-screen/merchants-screen.tsx",
+    text: "sectionHeaderText",
+    surface: { style: "sectionHeader" },
+  },
+  {
+    name: "merchant directory search feedback",
+    file: "screens/merchants-screen/merchants-screen.tsx",
+    text: "emptyMessage",
+    surface: { style: "container" },
+  },
+  {
+    name: "merchant directory error",
+    file: "screens/merchants-screen/merchants-screen.tsx",
+    text: "errorText",
+    surface: { style: "container" },
+  },
+  {
+    name: "merchant row badge",
+    file: "screens/merchants-screen/merchant-row.tsx",
+    text: "badgeText",
+    surface: { style: "badge" },
+  },
+  {
+    name: "merchant row subtitle",
+    file: "screens/merchants-screen/merchant-row.tsx",
+    text: "subtitle",
+    surface: { theme: "white" },
+  },
+  {
+    name: "merchant row metadata",
+    file: "screens/merchants-screen/merchant-row.tsx",
+    text: "meta",
+    surface: { theme: "white" },
+  },
+  {
+    name: "merchant row date",
+    file: "screens/merchants-screen/merchant-row.tsx",
+    text: "date",
+    surface: { theme: "white" },
+  },
+  {
+    name: "merchant detail count",
+    file: "screens/merchant-detail-screen/merchant-detail-screen.tsx",
+    text: "count",
+    surface: { style: "container" },
+  },
+  {
+    name: "merchant detail date range",
+    file: "screens/merchant-detail-screen/merchant-detail-screen.tsx",
+    text: "dateRange",
+    surface: { style: "container" },
+  },
+  {
+    name: "merchant detail recurrence helper",
+    file: "screens/merchant-detail-screen/merchant-detail-screen.tsx",
+    text: "toggleHelper",
+    surface: { style: "container" },
+  },
+  {
+    name: "merchant detail empty journal",
+    file: "screens/merchant-detail-screen/merchant-detail-screen.tsx",
+    text: "emptyMessage",
+    surface: { style: "container" },
+  },
+  {
+    name: "merchant detail error",
+    file: "screens/merchant-detail-screen/merchant-detail-screen.tsx",
+    text: "errorText",
+    surface: { style: "container" },
+  },
+  {
+    name: "merchant detail loading footer",
+    file: "screens/merchant-detail-screen/merchant-detail-screen.tsx",
+    text: "loadingFooterText",
+    surface: { style: "container" },
+  },
 ];
 
 // Inert stand-in for every import except StyleSheet, so only `getStyles`

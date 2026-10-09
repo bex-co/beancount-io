@@ -109,7 +109,7 @@ const getStyles = (theme: ColorTheme) =>
       marginTop: 2,
       fontSize: fontSizes.sm,
       lineHeight: 18,
-      color: theme.black60,
+      color: theme.black80,
       textAlign: LEADING_TEXT_ALIGN,
     },
     chipRow: {
@@ -140,7 +140,7 @@ const getStyles = (theme: ColorTheme) =>
     dateRange: {
       fontSize: fontSizes.sm,
       lineHeight: 18,
-      color: theme.black60,
+      color: theme.black80,
       fontVariant: ["tabular-nums"],
       textAlign: LEADING_TEXT_ALIGN,
     },
@@ -169,7 +169,7 @@ const getStyles = (theme: ColorTheme) =>
     toggleHelper: {
       fontSize: fontSizes.sm,
       lineHeight: 18,
-      color: theme.black60,
+      color: theme.black80,
       textAlign: LEADING_TEXT_ALIGN,
     },
     emptyContainer: {
@@ -189,7 +189,7 @@ const getStyles = (theme: ColorTheme) =>
     emptyMessage: {
       fontSize: fontSizes.lg,
       fontWeight: fontWeights.regular,
-      color: theme.black60,
+      color: theme.black80,
       textAlign: "center",
       lineHeight: 24,
     },
@@ -204,7 +204,7 @@ const getStyles = (theme: ColorTheme) =>
     errorText: {
       fontSize: fontSizes.lg,
       fontWeight: fontWeights.medium,
-      color: theme.black60,
+      color: theme.black80,
       textAlign: "center",
       lineHeight: 24,
     },
@@ -230,7 +230,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     loadingFooterText: {
       fontSize: fontSizes.md,
-      color: theme.black60,
+      color: theme.black80,
     },
   });
 
