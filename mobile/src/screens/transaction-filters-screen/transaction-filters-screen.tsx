@@ -57,7 +57,7 @@ const getStyles = (theme: ColorTheme) =>
     sectionTitle: {
       fontSize: fontSizes.sm,
       fontWeight: fontWeights.medium,
-      color: theme.black60,
+      color: theme.black80,
       textTransform: "uppercase",
       paddingHorizontal: 16,
       marginBottom: 10,

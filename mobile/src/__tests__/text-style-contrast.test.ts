@@ -136,6 +136,12 @@ const CASES: Case[] = [
     text: "pctLabel",
     surface: { theme: "controlFill" },
   },
+  {
+    name: "transaction filter group captions",
+    file: "screens/transaction-filters-screen/transaction-filters-screen.tsx",
+    text: "sectionTitle",
+    surface: { style: "container" },
+  },
 ];
 
 // Inert stand-in for every import except StyleSheet, so only `getStyles`
