@@ -1,3 +1,5 @@
+import type { ColorTheme } from "@/types/theme-props";
+
 type FileError = {
   message: string;
   lineno?: number | null;
@@ -23,4 +25,17 @@ export function filterFileErrors(
     // rendered for any file, however broken the ledger was.
     return typeof e.message === "string" && e.message.includes(fileName);
   });
+}
+
+/**
+ * Colors for the read-only notice. It is an explanatory sentence, not a
+ * disabled control, so it uses the secondary-text role (`black80`) rather than
+ * the placeholder/disabled ramp: light `black60` on the `black10` inset band
+ * measured 1.62:1, unreadable at 13pt.
+ */
+export function readOnlyNoticeColors(theme: ColorTheme): {
+  background: string;
+  foreground: string;
+} {
+  return { background: theme.black10, foreground: theme.black80 };
 }

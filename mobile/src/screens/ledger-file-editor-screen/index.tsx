@@ -65,7 +65,7 @@ import {
   resetRevisionTracker,
 } from "@/components/code-editor/revision-tracker";
 import { isConflictError } from "@/common/ledger-conflict";
-import { filterFileErrors } from "./utils";
+import { filterFileErrors, readOnlyNoticeColors } from "./utils";
 import { selectLedgerFileEditorState } from "./select-editor-state";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
@@ -86,13 +86,13 @@ const getStyles = (theme: ColorTheme) =>
       gap: 8,
       paddingHorizontal: 16,
       paddingVertical: 8,
-      backgroundColor: theme.black10,
+      backgroundColor: readOnlyNoticeColors(theme).background,
     },
     readOnlyText: {
       flex: 1,
       fontSize: 13,
       lineHeight: 18,
-      color: theme.black60,
+      color: readOnlyNoticeColors(theme).foreground,
       textAlign: LEADING_TEXT_ALIGN,
     },
     editorWrapper: {
@@ -629,7 +629,7 @@ function LedgerFileEditorSession({
           <Ionicons
             name="lock-closed-outline"
             size={16}
-            color={theme.black60}
+            color={readOnlyNoticeColors(theme).foreground}
           />
           <Text style={styles.readOnlyText}>{t("ledgerReadOnly")}</Text>
         </View>
