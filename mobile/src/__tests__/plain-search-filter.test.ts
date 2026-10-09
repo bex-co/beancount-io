@@ -18,8 +18,35 @@ describe("toPlainSearchFilter", () => {
     expect(toPlainSearchFilter('say "hi"')).toBe("'say \"hi\"'");
   });
 
-  it("keeps a usable literal when both quote kinds appear", () => {
-    expect(toPlainSearchFilter(`say "hi" 'there'`)).toBe("\"say hi 'there'\"");
+  describe("when both quote kinds appear", () => {
+    // Mirrors the filter service: its STRING lexer takes `"[^"]*"` or
+    // `'[^']*'` verbatim (no escape processing), and the body is compiled as a
+    // case-insensitive JavaScript regex.
+    const compile = (raw: string): RegExp => {
+      const filter = toPlainSearchFilter(raw);
+      if (filter === undefined) throw new Error("expected a filter");
+      const lexed = /^(?:"[^"]*"|'[^']*')$/.exec(filter);
+      if (!lexed) throw new Error(`not one STRING token: ${filter}`);
+      return new RegExp(filter.slice(1, -1), "i");
+    };
+
+    it("matches text containing both quote kinds, not the quote-stripped text", () => {
+      const regex = compile(`E.B.'s "Beer"`);
+      expect(regex.test(`E.B.'s "Beer" and Wine`)).toBe(true);
+      expect(regex.test(`E.B.'s Beer and Wine`)).toBe(false);
+    });
+
+    it("keeps typed backslashes literal beside quotes", () => {
+      const regex = compile(`a\\"b'`);
+      expect(regex.test(`a\\"b'`)).toBe(true);
+      expect(regex.test(`a"b'`)).toBe(false);
+    });
+
+    it("does not turn a typed \\x22 into a quote", () => {
+      const regex = compile(`it's \\x22 "q"`);
+      expect(regex.test(`it's \\x22 "q"`)).toBe(true);
+      expect(regex.test(`it's " "q"`)).toBe(false);
+    });
   });
 
   it("trims surrounding whitespace before encoding", () => {

@@ -20,17 +20,19 @@ export function toPlainSearchFilter(raw: string): string | undefined {
   const trimmed = raw.trim();
   if (!trimmed) return undefined;
 
-  // Lexer forms: `"[^"]*"` and `'[^']*'`. Prefer double quotes; fall back to
-  // single quotes when the needle itself contains `"`. If both quote kinds
-  // appear, drop embedded doubles so a double-quoted literal stays lexable.
-  const forLiteral =
-    trimmed.includes('"') && trimmed.includes("'")
-      ? trimmed.replace(/"/g, "")
-      : trimmed;
-  const escaped = escapeRegExp(forLiteral);
+  // Lexer forms: `"[^"]*"` and `'[^']*'`, with no escape processing inside.
+  // Prefer double quotes; fall back to single quotes when the needle itself
+  // contains `"`. When both quote kinds appear, keep double quotes and encode
+  // each embedded `"` as the regex escape `\x22`, so the literal still lexes
+  // and still matches the quote. `escapeRegExp` escapes typed backslashes
+  // first, so a typed `\x22` stays literal text rather than becoming a quote.
+  const escaped = escapeRegExp(trimmed);
 
   if (!escaped.includes('"')) {
     return `"${escaped}"`;
   }
-  return `'${escaped}'`;
+  if (!escaped.includes("'")) {
+    return `'${escaped}'`;
+  }
+  return `"${escaped.replace(/"/g, "\\x22")}"`;
 }
