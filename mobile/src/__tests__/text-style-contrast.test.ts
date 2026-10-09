@@ -118,6 +118,18 @@ const CASES: Case[] = [
     text: "loadingFooterText",
     surface: { style: "container" },
   },
+  {
+    name: "transaction narration on list rows",
+    file: "screens/transactions-screen/entry-row/index.tsx",
+    text: "secondary",
+    surface: { theme: "white" },
+  },
+  {
+    name: "transaction narration on Home cards",
+    file: "screens/transactions-screen/entry-row/index.tsx",
+    text: "secondary",
+    surface: { theme: "controlFill" },
+  },
 ];
 
 // Inert stand-in for every import except StyleSheet, so only `getStyles`
