@@ -45,6 +45,7 @@
 - [062 — Doctor fails to resolve relative included filenames containing a colon](./062.md) — minor CLI location parsing bug; two pristine repros across three operations with absolute/plain controls, 25–40m.
 - [063 — Bulk amount shorthand rejects valid partial lot selectors](./063.md) — minor CLI batch input bug; three selectors repeated with single-add/structured controls, 25–40m.
 - [064 — Sigil-only tag and link filters silently erase matching list results](./064.md) — minor CLI empty-filter bug; human/JSON repeats with named-filter and literal-empty controls, 15–25m.
+- [065 — Check deletes ledger files when its cache filename aliases the input](./065.md) — major CLI data-loss bug; repeated root/include deletion, native spelling/alias cases and safe-cache controls, 45–60m.
 
 The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–054, less the five under [Dropped](#dropped)) were fixed in `backend-cluster/backend-v2` and closed on 2026-10-02 and 2026-10-03; each note under [`done/`](./done/) records what shipped and in which commit. None has been re-observed against the hosted endpoint yet — the fixes reach it with the next backend deploy.
 
