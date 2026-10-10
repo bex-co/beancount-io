@@ -35,7 +35,11 @@ export function ChartModeSelect({
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={className} size={size}>
+      <SelectTrigger
+        aria-label={defaultPlaceholder}
+        className={className}
+        size={size}
+      >
         <SelectValue placeholder={defaultPlaceholder} />
       </SelectTrigger>
       <SelectContent>
