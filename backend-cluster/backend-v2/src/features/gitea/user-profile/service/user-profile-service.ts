@@ -1,3 +1,4 @@
+import { publicAvatarUrl } from "@/shared/gitea-utils";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
@@ -451,7 +452,7 @@ export class UserProfileService implements IUserProfileService {
     return {
       username: user.login || "",
       fullName: user.full_name,
-      avatarUrl: user.avatar_url,
+      avatarUrl: publicAvatarUrl(user.avatar_url),
       bio: user.description,
       location: user.location,
       website: user.website,
@@ -528,7 +529,7 @@ export class UserProfileService implements IUserProfileService {
     return {
       username: user.login || "",
       fullName: user.full_name,
-      avatarUrl: user.avatar_url,
+      avatarUrl: publicAvatarUrl(user.avatar_url),
       bio: user.description,
     };
   }

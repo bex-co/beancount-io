@@ -46,6 +46,7 @@ let schemaPromise: ReturnType<typeof buildSchema>;
 async function fixture(
   caller: Identity | undefined,
   failure?: "profile" | "activities" | "missing-user",
+  avatarUrl = "https://example.test/avatar",
 ) {
   const privateReads = jest.fn();
   const activity = {
@@ -65,7 +66,7 @@ async function fixture(
           data: {
             login: username,
             full_name: "Ada",
-            avatar_url: "https://example.test/avatar",
+            avatar_url: avatarUrl,
             description: "Books",
             location: "Paris",
             website: "https://example.test",
@@ -167,6 +168,77 @@ async function fixture(
 }
 
 describe("public profile enrichment across adapters", () => {
+  it("omits a non-public avatar from anonymous profiles while retaining nullable GraphQL fields", async () => {
+    const f = await fixture(
+      undefined,
+      undefined,
+      "http://localhost:3000/avatars/example",
+    );
+    try {
+      const response = await f.rest("other");
+      expect(response.status).toBe(200);
+      const restProfile = await response.json();
+      expect(restProfile.profile).not.toHaveProperty("avatarUrl");
+      expect(restProfile).not.toHaveProperty("isFollowing");
+      const gql = await f.gql("other");
+      expect(gql.errors).toBeUndefined();
+      expect(gql.data?.getUserProfile).toEqual({
+        ...restProfile,
+        profile: { ...restProfile.profile, avatarUrl: null },
+        isFollowing: null,
+      });
+      // MCP keeps its transport credential requirement and caller follow status.
+      expect(await f.read("other")).toEqual({
+        ...restProfile,
+        isFollowing: true,
+      });
+      expect(f.privateReads).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  it.each([
+    ["http://localhost:3000/avatars/example", undefined],
+    ["http://gitea.internal/avatars/example", undefined],
+    [
+      "https://images.example.com/avatars/example",
+      "https://images.example.com/avatars/example",
+    ],
+    [
+      "https://secure.gravatar.com/avatar/example?d=identicon",
+      "https://secure.gravatar.com/avatar/example?d=identicon",
+    ],
+  ])(
+    "normalizes upstream avatar %s through real REST, GraphQL, and MCP",
+    async (avatar, expected) => {
+      const f = await fixture(identity, undefined, avatar);
+      try {
+        const response = await f.rest("other");
+        expect(response.status).toBe(200);
+        const restProfile = await response.json();
+        expect(restProfile.profile.avatarUrl).toBe(expected);
+        if (expected === undefined)
+          expect(restProfile.profile).not.toHaveProperty("avatarUrl");
+        expect(restProfile.profile).toMatchObject({
+          username: "other",
+          fullName: "Ada",
+          followersCount: 3,
+        });
+        const gql = await f.gql("other");
+        expect(gql.errors).toBeUndefined();
+        expect(gql.data?.getUserProfile).toEqual({
+          ...restProfile,
+          profile: { ...restProfile.profile, avatarUrl: expected ?? null },
+        });
+        expect(await f.read("other")).toEqual(restProfile);
+        expect(f.privateReads).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   it.each(["ada", "other + café"])(
     "preserves authenticated visibility for %s",
     async (username) => {

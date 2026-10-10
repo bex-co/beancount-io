@@ -40,7 +40,7 @@ const repos = ["books", "sample", "demo"].map((name) => ({
 let resolver: UserProfileResolver;
 let schemaPromise: ReturnType<typeof buildSchema>;
 
-async function fixture(outage = false) {
+async function fixture(outage = false, upstreamUsers = users) {
   const fetchPage = jest.fn(
     async (
       kind: string,
@@ -49,7 +49,7 @@ async function fixture(outage = false) {
     ) => {
       expect(target).toBe(username);
       if (outage) throw new Error("Upstream unavailable");
-      const all = kind === "repos" ? repos : users;
+      const all = kind === "repos" ? repos : upstreamUsers;
       const start = (opts.page - 1) * opts.limit;
       return { data: all.slice(start, start + opts.limit) };
     },
@@ -122,7 +122,17 @@ async function fixture(outage = false) {
         contextValue: {},
       });
       expect(g.errors).toBeUndefined();
-      expect(g.data?.[read.method]).toEqual(data);
+      expect(g.data?.[read.method]).toEqual(
+        read.path === "starred-repositories"
+          ? data
+          : {
+              ...data,
+              users: data.users.map((user: Record<string, unknown>) => ({
+                ...user,
+                avatarUrl: user.avatarUrl ?? null,
+              })),
+            },
+      );
       const result = await client.readResource({
         uri: `beancount://social/${read.path}?${query}`,
       });
@@ -139,6 +149,44 @@ async function fixture(outage = false) {
 }
 
 describe("public social lists across real REST, GraphQL, and MCP adapters", () => {
+  it.each(SOCIAL_READS.filter((read) => read.path !== "starred-repositories"))(
+    "$name omits non-public upstream avatars while retaining public URLs and pagination",
+    async (read) => {
+      const avatars = [
+        "http://localhost:3000/avatars/example",
+        "http://169.254.169.254/avatars/example",
+        "https://images.example.com/avatars/example",
+        "https://secure.gravatar.com/avatar/example?d=identicon",
+      ];
+      const f = await fixture(
+        false,
+        avatars.map((avatar_url, index) => ({
+          ...users[0],
+          login: `reader${index}`,
+          avatar_url,
+        })),
+      );
+      try {
+        const first = await f.compare(read, 1, 2);
+        expect(first.total).toBe(2);
+        expect(
+          first.users.map((user: { username: string }) => user.username),
+        ).toEqual(["reader0", "reader1"]);
+        first.users.forEach((user: Record<string, unknown>) =>
+          expect(user).not.toHaveProperty("avatarUrl"),
+        );
+        const second = await f.compare(read, 2, 2);
+        expect(second.total).toBe(2);
+        expect(
+          second.users.map((user: { avatarUrl: string }) => user.avatarUrl),
+        ).toEqual(avatars.slice(2));
+        expect(await f.compare(read, 3, 2)).toEqual({ users: [], total: 0 });
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   it.each(SOCIAL_READS)(
     "$name preserves default and explicit pages",
     async (read) => {

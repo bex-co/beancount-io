@@ -3,10 +3,7 @@ import {
   isMissingUserLookupError,
   UserProfileService,
 } from "../user-profile-service";
-import {
-  InternalServerError,
-  NotFoundError,
-} from "@/shared/errors";
+import { InternalServerError, NotFoundError } from "@/shared/errors";
 import { IContext } from "@/server/graphql/context";
 import {
   AUTHORIZATION_ACTIONS,
@@ -23,12 +20,12 @@ import {
 
 describe("isMissingUserLookupError", () => {
   it("recognizes a Gitea 404 Response only", () => {
-    expect(
-      isMissingUserLookupError(new Response(null, { status: 404 })),
-    ).toBe(true);
-    expect(
-      isMissingUserLookupError(new Response(null, { status: 503 })),
-    ).toBe(false);
+    expect(isMissingUserLookupError(new Response(null, { status: 404 }))).toBe(
+      true,
+    );
+    expect(isMissingUserLookupError(new Response(null, { status: 503 }))).toBe(
+      false,
+    );
     expect(isMissingUserLookupError(new Error("404"))).toBe(false);
   });
 });
@@ -68,6 +65,80 @@ describe("UserProfileService", () => {
       { authorizeOrThrow } as never,
     );
   });
+
+  describe.each(["profile", "followers", "following"] as const)(
+    "%s public avatar mapping",
+    (kind) => {
+      async function readAvatar(avatar_url: string | undefined) {
+        const upstreamUser = createMockGiteaUser({ avatar_url });
+        mockGiteaClient.users.userGet.mockResolvedValue({ data: upstreamUser });
+        mockGiteaClient.users.userListActivityFeeds.mockResolvedValue({
+          data: [],
+        });
+        mockGiteaClient.users.userListRepos.mockResolvedValue({ data: [] });
+        mockGiteaClient.users.userListFollowers.mockResolvedValue({
+          data: [upstreamUser],
+        });
+        mockGiteaClient.users.userListFollowing.mockResolvedValue({
+          data: [upstreamUser],
+        });
+        if (kind === "profile")
+          return (await service.getUserProfile("testuser")).profile;
+        const result =
+          kind === "followers"
+            ? await service.getUserFollowers("testuser", 2, 20)
+            : await service.getUserFollowing("testuser", 2, 20);
+        expect(result.total).toBe(1);
+        expect(result.users[0]).toMatchObject({
+          username: "testuser",
+          fullName: "Test User",
+        });
+        const fetchPage =
+          kind === "followers"
+            ? mockGiteaClient.users.userListFollowers
+            : mockGiteaClient.users.userListFollowing;
+        expect(fetchPage).toHaveBeenCalledWith(
+          "testuser",
+          { page: 2, limit: 20 },
+          { format: "json" },
+        );
+        return result.users[0];
+      }
+
+      it.each([
+        "http://localhost:3000/avatars/example",
+        "http://gitea:3000/avatars/example",
+        "http://127.0.0.1:3000/avatars/example",
+        "http://[::1]:3000/avatars/example",
+        "http://10.0.0.5/avatars/example",
+        "http://172.20.1.2/avatars/example",
+        "http://192.168.1.10/avatars/example",
+        "http://169.254.169.254/avatars/example",
+        "http://gitea.internal/avatars/example",
+        "http://machine.local/avatars/example",
+        "http://app.localhost/avatars/example",
+        "/avatars/example",
+        "javascript:alert(1)",
+        "",
+        undefined,
+      ])(
+        "omits upstream non-public avatar %s without changing the user",
+        async (url) => {
+          const result = await readAvatar(url);
+          expect(result.avatarUrl).toBeUndefined();
+          expect(result.username).toBe("testuser");
+        },
+      );
+
+      it.each([
+        "https://images.example.com/avatars/example",
+        "http://images.example.com/avatars/example",
+        "https://secure.gravatar.com/avatar/example?d=identicon",
+      ])("preserves the upstream public avatar %s exactly", async (url) => {
+        expect((await readAvatar(url)).avatarUrl).toBe(url);
+      });
+    },
+  );
 
   describe("getUserProfile", () => {
     it("should fetch and transform user profile successfully", async () => {
@@ -184,7 +255,9 @@ describe("UserProfileService", () => {
     });
 
     it("keeps arbitrary thrown errors as InternalServerError", async () => {
-      mockGiteaClient.users.userGet.mockRejectedValue(new Error("network reset"));
+      mockGiteaClient.users.userGet.mockRejectedValue(
+        new Error("network reset"),
+      );
 
       await expect(
         service.getUserProfile("nonexistent", mockContext.userId),
