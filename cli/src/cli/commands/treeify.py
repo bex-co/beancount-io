@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 from typing import NoReturn
@@ -68,6 +69,32 @@ def _without_output(parsed: argparse.Namespace) -> list[str]:
     return argv
 
 
+def _check_regexes(parsed: argparse.Namespace) -> None:
+    """Refuse a malformed regex option by name, before upstream trips over it.
+
+    Upstream splices `--pattern` and `--delimiter` into one larger expression,
+    so a typo surfaces as `IndexError: no such group` or as a position inside
+    text the user never typed. Only the values upstream will use are checked:
+    `--filenames` and `--loose-accounts` replace the split, and conflict with
+    a pattern in upstream's own words.
+    """
+    preset = parsed.filenames or parsed.loose_accounts
+    for flag, value, used in (
+        ("--pattern", parsed.pattern, not preset),
+        ("--delimiter", parsed.delimiter, True),
+        ("--split", parsed.split, not preset),
+    ):
+        if value is None or not used:
+            continue
+        try:
+            re.compile(value)
+        except re.error as exc:
+            raise UsageError(
+                f"Invalid regular expression for {flag} {value!r}: {exc}. "
+                "Fix the expression; see 'bea treeify --help' for the defaults."
+            ) from None
+
+
 def treeify(ctx: typer.Context) -> None:
     """Render a hierarchical column as an ASCII tree (delegates to treeify)."""
     refuse_json("treeify", hint="Run without --json to print the ASCII tree.")
@@ -86,6 +113,8 @@ def treeify(ctx: typer.Context) -> None:
         output.guard_forwarded_output(
             forwarded, _ledgers(), refuse_existing_ledger_file=True, force=_FORCE in args[:stop], flags="FA"
         )
+    if parsed is not None and not parsed.help:
+        _check_regexes(parsed)
     if parsed is not None and parsed.output is not None and not parsed.help:
         # Upstream opens `-o` for writing before it reads the input, so a run
         # that then fails — or reads the same file — has already truncated

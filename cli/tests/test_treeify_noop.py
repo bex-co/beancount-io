@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 ALIGNED = "Assets:Bank:Checking               100\nAssets:Cash                       25\n"
@@ -111,3 +113,61 @@ def test_a_valid_input_file_still_writes_its_destination(tmp_path: Path) -> None
     assert result.stdout == ""
     assert "`-- Assets" in (tmp_path / "tree.txt").read_text()
     assert source.read_text() == ALIGNED
+
+
+BALANCES = "Assets:Cash     10\nAssets:Savings  20\nExpenses:Food    5\n"
+
+
+@pytest.mark.parametrize(
+    "option",
+    [
+        ("--pattern", "["),
+        ("--delimiter", "["),
+        ("--split", "["),
+        ("-r", "(unclosed"),
+        ("-d", "*"),
+        ("--split=a{2,1}",),
+    ],
+    ids=["pattern", "delimiter", "split", "short-pattern", "short-delimiter", "split-equals"],
+)
+def test_treeify_names_the_malformed_regex_option(tmp_path: Path, option: tuple[str, ...]) -> None:
+    """w5/061: a regex typo was `IndexError: no such group` or a position in text the user never typed, exit 1."""
+    source = tmp_path / "balances.txt"
+    source.write_text(BALANCES)
+    out = tmp_path / "out.txt"
+    out.write_text("SENTINEL\n")
+    flag = {"-r": "--pattern", "-d": "--delimiter"}.get(option[0], option[0].split("=")[0])
+    value = option[-1].split("=", 1)[-1]
+
+    result = _bea(tmp_path, "treeify", str(source), "-o", str(out), *option)
+
+    assert result.returncode == 2, result.stderr
+    assert result.stdout == ""
+    assert f"Invalid regular expression for {flag} {value!r}" in result.stderr
+    assert "IndexError" not in result.stderr
+    assert "treeify failed" not in result.stderr
+    assert out.read_text() == "SENTINEL\n"
+    assert source.read_text() == BALANCES
+
+
+def test_treeify_valid_and_default_regexes_still_render(tmp_path: Path) -> None:
+    source = tmp_path / "balances.txt"
+    source.write_text(BALANCES)
+    out = tmp_path / "out.txt"
+
+    custom = _bea(tmp_path, "treeify", str(source), "-o", str(out), "--delimiter", " {2,}")
+    assert custom.returncode == 0, custom.stderr
+    tree = out.read_text()
+    assert "Assets" in tree and "Savings" in tree and "Food" in tree
+    assert tree != BALANCES
+
+    default = _bea(tmp_path, "treeify", str(source))
+    assert default.returncode == 0, default.stderr
+    assert default.stdout == tree
+
+
+def test_treeify_does_not_validate_a_split_that_a_preset_replaces(tmp_path: Path) -> None:
+    """`--loose-accounts` supplies its own split, so upstream never compiles the one given."""
+    result = _bea(tmp_path, "treeify", "--loose-accounts", "--split", "[", stdin=BALANCES)
+    assert result.returncode == 0, result.stderr
+    assert "Assets" in result.stdout
