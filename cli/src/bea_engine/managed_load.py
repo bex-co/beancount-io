@@ -746,6 +746,28 @@ def export_portable(
         except ValueError:
             external += 1
             destinations[path] = target / "_shared" / f"{external:02d}-{path.name}"
+    # The resolved file decides containment, but not how many files there are.
+    # `a.bean` and `b.bean` linked to one `tx.bean` are two includes the loader
+    # reads twice; both resolved to `tx.bean`, so the export wrote one file,
+    # pointed both includes at it, and stock Beancount refused the snapshot as
+    # a duplicate filename with half the transactions. Each alias keeps the
+    # name the ledger spells when that stays inside the export.
+    sharing: dict[Path, list[Path]] = {}
+    for path, dest in destinations.items():
+        sharing.setdefault(dest, []).append(path)
+    claimed = set(sharing)
+    lexical_home = Path(os.path.normpath(snapshot.root.parent))
+    for dest, paths in sharing.items():
+        for path in paths if len(paths) > 1 else ():
+            spelled = Path(os.path.normpath(path))
+            own = target / spelled.relative_to(lexical_home) if spelled.is_relative_to(lexical_home) else None
+            if own == dest:
+                continue
+            if own is None or own in claimed:
+                external += 1
+                own = target / "_shared" / f"{external:02d}-{path.name}"
+            destinations[path] = own
+            claimed.add(own)
     # Allocated against the copied files, not independently of them. A ledger
     # may legitimately keep its own `prices/BTC-USD.beancount` beside a managed
     # `BTC-USD` feed; the two maps used to be built in isolation, so the feed
