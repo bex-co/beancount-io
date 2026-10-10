@@ -9,6 +9,7 @@ as strings — and owns every decision about how to show it.
 from __future__ import annotations
 
 import datetime
+from pathlib import Path
 from typing import Any
 
 from bea_engine import protocol
@@ -92,6 +93,9 @@ def answer(
         filters["type_filter"] = kind
     if directive_type == "transaction":
         filters |= {"flag": flag, "search": search, "tags": tags, "links": links, "newest": newest}
+    if directive_type == "document":
+        # The tree a document may live in, so its path lists as the ledger spells it.
+        filters["root"] = Path(str(file)).resolve().parent
 
     entries, errors = reader.load_file(file)
     if on_disk_only:

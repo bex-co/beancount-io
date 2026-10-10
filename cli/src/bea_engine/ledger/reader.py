@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import os
 import re
 import unicodedata
 from decimal import Decimal
@@ -481,6 +482,7 @@ def list_documents(
     to_date: datetime.date | None = None,
     account: str | None = None,
     limit: int = 50,
+    root: Path | None = None,
 ) -> list[DocumentDirective]:
     results = []
     for entry in entries:
@@ -496,7 +498,7 @@ def list_documents(
             DocumentDirective(
                 date=entry.date,
                 account=entry.account,
-                filename=_document_filename_for_json(entry),
+                filename=_document_filename_for_json(entry, root),
                 tags=tags,
                 links=links,
                 meta=metadata_to_json(entry.meta),
@@ -508,26 +510,32 @@ def list_documents(
     return results
 
 
-def _document_filename_for_json(entry: Any) -> str:
+def _document_filename_for_json(entry: Any, root: Path | None = None) -> str:
     """Prefer the ledger-relative path token when Beancount resolved it absolutely.
 
     `add document` writes and returns the relative `--path`; the loader expands
-    it. Relativize against the directive's source file so list matches add.
+    it. Relativize against the directive's source file so list matches add —
+    for any attachment inside the root ledger's tree, not only one beneath the
+    source file: `../receipts/r.txt` named from `year/entries.bean` is a valid
+    path that `relative_to` cannot express, and it used to list absolutely,
+    which `add document` then refuses as input. The path is computed from the
+    names as written, so a symlinked attachment keeps its own name. Outside
+    the tree the absolute path stays, as it does without a root to judge by.
     """
-    from pathlib import Path
-
     filename = str(entry.filename)
     source = entry.meta.get("filename") if getattr(entry, "meta", None) else None
-    if not source:
+    if not source or not os.path.isabs(filename):
         return filename
     try:
-        path = Path(filename)
-        root = Path(str(source)).resolve().parent
-        if path.is_absolute():
-            return str(path.resolve().relative_to(root))
+        base = Path(str(source)).resolve().parent
+        resolved = Path(filename).resolve()
+        if root is None:
+            return str(resolved.relative_to(base))
+        if not resolved.is_relative_to(root.resolve()):
+            return filename
+        return os.path.relpath(filename, os.path.dirname(os.path.abspath(str(source))))
     except (OSError, ValueError):
         return filename
-    return filename
 
 
 def list_customs(
