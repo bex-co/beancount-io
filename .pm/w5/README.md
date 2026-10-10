@@ -35,7 +35,6 @@
 
 ## Inbox
 
-- [058 — Portable export collapses distinct symlink includes into an invalid, changed ledger](./058.md) — major CLI export bug; two pristine repros and hard-link/regular controls, 45–60m.
 - [059 — Arithmetic total-price inputs lose their exact @@ annotation](./059.md) — minor CLI serialization bug; single-add/bulk reproduction with literal controls, 35–55m.
 - [060 — Transaction table prints unescaped quotes and backslashes in lot labels](./060.md) — minor CLI display bug; pristine repeats, JSON/details and plain-label controls, 20–30m.
 - [061 — Invalid treeify regex options report runtime failures without naming the bad option](./061.md) — minor CLI input diagnosis bug; three regex flags repeated with preserved exports, 25–40m.
