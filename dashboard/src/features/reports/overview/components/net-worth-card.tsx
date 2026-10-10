@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import type { EChartsOption } from "echarts";
 import {
   AlertTriangle,
@@ -88,6 +88,7 @@ function NetWorthValuationNote({
   ledgerName: string;
 }) {
   const { t } = useTranslations();
+  const titleId = useId();
   const formatNumber = useFormatNumber();
   // Units keep every digit the ledger recorded: rounding 0.00012 BTC to 0
   // would name a holding the reader cannot see.
@@ -143,12 +144,16 @@ function NetWorthValuationNote({
         </PopoverTrigger>
         <PopoverContent
           align="start"
+          aria-labelledby={titleId}
           className="w-[min(22rem,calc(100vw-2rem))] p-0"
         >
-          <p className="border-b px-4 py-3 text-sm font-medium">
+          <p id={titleId} className="border-b px-4 py-3 text-sm font-medium">
             {t("page.overview.valuationDetails")}
           </p>
-          <ul className="max-h-72 divide-y overflow-y-auto text-sm">
+          <ul
+            tabIndex={0}
+            className="max-h-72 divide-y overflow-y-auto text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          >
             {holdings.map((holding) => (
               <li
                 key={holding.currency}
