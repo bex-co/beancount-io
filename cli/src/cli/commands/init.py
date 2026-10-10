@@ -67,6 +67,15 @@ def _opening_amount(value: str) -> Decimal:
         raise typer.BadParameter(str(exc)) from exc
 
 
+def _shell_path(shown: str) -> str:
+    """Quote a path for a copy-pasteable command, leaving a leading `~` for the shell to expand."""
+    if shown == "~":
+        return shown
+    if shown.startswith("~/"):
+        return "~/" + shlex.quote(shown[2:])
+    return shlex.quote(shown)
+
+
 def init(
     directory: Annotated[Path, typer.Argument(help="New ledger directory, or a .bean/.beancount file")] = Path("."),
     currency: Annotated[
@@ -175,12 +184,9 @@ def init(
         if file == Path.cwd() / "main.bean":
             next_command = "bea check"
         elif file.name == "main.bean":
-            parent = shown.rpartition("/")[0]
-            # Keep `~` unquoted so the shell still expands it.
-            parent = "~/" + shlex.quote(parent[2:]) if parent.startswith("~/") else shlex.quote(parent)
-            next_command = f"cd {parent} && bea check"
+            next_command = f"cd {_shell_path(shown.rpartition('/')[0])} && bea check"
         else:
-            next_command = f"bea --file {shlex.quote(shown)} check"
+            next_command = f"bea --file {_shell_path(shown)} check"
         typer.echo(f"Next: {next_command}")
         typer.echo(
             f"Accounts open on {day}. To record earlier history, edit their open dates; "
