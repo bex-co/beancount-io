@@ -132,23 +132,20 @@ export const LedgerSearchControls = ({
     );
   }
 
-  // Error state
-  if (error) {
-    return (
-      <Alert className="w-auto">
-        <AlertDescription className="text-sm">
-          {t("component.searchControls.failedToLoad")}
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
   // No data state
-  if (!data?.getLedgerAttributes) {
+  if (!data?.getLedgerAttributes && !error) {
     return null;
   }
 
-  const { accounts, tags, years, links, payees } = data.getLedgerAttributes;
+  // Suggestions are optional; applied values and manual edits belong to the
+  // provider. A failed read must not expose retained or partial suggestions.
+  const {
+    accounts = [],
+    tags = [],
+    years = [],
+    links = [],
+    payees = [],
+  } = (error ? undefined : data?.getLedgerAttributes) ?? {};
 
   // Generate all partial account paths and sort hierarchically
   const sortedAccounts = generateAllAccountPaths(accounts);
@@ -166,7 +163,7 @@ export const LedgerSearchControls = ({
 
   const comboboxClass = isStack ? "w-full min-w-0" : undefined;
 
-  return (
+  const controls = (
     <div
       className={cn(
         isStack ? "flex w-full flex-col gap-3" : "flex items-center gap-3",
@@ -225,6 +222,19 @@ export const LedgerSearchControls = ({
           triggerOn="blur"
         />
       </div>
+    </div>
+  );
+
+  if (!error) return controls;
+
+  return (
+    <div className={cn("flex flex-col", isStack ? "w-full gap-3" : "gap-1")}>
+      <Alert className="w-auto border-0 bg-transparent p-0">
+        <AlertDescription className="text-xs leading-4">
+          {t("component.searchControls.failedToLoad")}
+        </AlertDescription>
+      </Alert>
+      {controls}
     </div>
   );
 };
