@@ -298,7 +298,7 @@ def missing_includes(root: Path) -> list[MissingInclude]:
     return missing
 
 
-def _same_file(left: Path, right: Path) -> bool:
+def same_file(left: Path, right: Path) -> bool:
     """True when two paths name one file, through symlinks and hard links alike."""
     try:
         first, second = left.stat(), right.stat()
@@ -320,7 +320,7 @@ def refuse_ledger_alias(destination: Path, ledger: Path) -> None:
     stream is opened, so a refusal leaves the destination byte-identical.
     """
     for member in ledger_closure(ledger):
-        if _same_file(destination, member):
+        if same_file(destination, member):
             raise UsageError(
                 f"--output {destination} would overwrite the ledger it reads ({member}); "
                 "choose a different destination."
@@ -332,7 +332,7 @@ def refuse_input_alias(destination: Path, source: Path) -> None:
 
     `refuse_ledger_alias` for inputs without includes, such as a CSV table.
     """
-    if _same_file(destination, source):
+    if same_file(destination, source):
         raise UsageError(
             f"--output {destination} would overwrite the file it reads ({source}); choose a different destination."
         )

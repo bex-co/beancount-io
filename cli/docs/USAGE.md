@@ -165,6 +165,9 @@ destination is refused with exit **2**, before anything is written, when it
 A refusal names the colliding path and leaves the destination byte-identical,
 its file list included. `--force` is the only way past the second case
 (`treeify -o`, `price export`, `example -o`); nothing gets past the first.
+`bea check --cache-filename` follows the first case as well: bean-check
+deletes a cache file it cannot read, so a cache path that is the ledger or one
+of its includes is refused before bean-check runs, with or without `--no-cache`.
 `price export` also plans the directories it needs: a file standing where the
 export needs a directory (or a directory where it needs a file) is refused the
 same way, and `--force` does not remove it.
