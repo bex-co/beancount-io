@@ -18,6 +18,7 @@ export function ActivityFeed() {
   const { t, i18n } = useTranslations();
   const [offset, setOffset] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [paginationError, setPaginationError] = useState(false);
   const limit = 10;
 
   const heading = (
@@ -74,6 +75,9 @@ export function ActivityFeed() {
         },
       });
       setOffset(newOffset);
+      setPaginationError(false);
+    } catch {
+      setPaginationError(true);
     } finally {
       setIsLoadingMore(false);
     }
@@ -157,14 +161,23 @@ export function ActivityFeed() {
 
       {/* Show More button */}
       {hasMore && (
-        <div className="flex justify-center pt-2 pb-8">
+        <div className="flex flex-col items-center gap-3 pt-2 pb-8">
+          {paginationError && (
+            <p role="alert" className="text-center text-sm text-destructive">
+              {t("page.dashboard.feedError")}
+            </p>
+          )}
           <Button
             onClick={handleShowMore}
             variant="outline"
             disabled={loading || isLoadingMore}
           >
             {isLoadingMore && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {t("page.dashboard.showMore")}
+            {t(
+              paginationError
+                ? "page.dashboard.retry"
+                : "page.dashboard.showMore",
+            )}
           </Button>
         </div>
       )}
