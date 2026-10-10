@@ -502,7 +502,7 @@ export default function LedgerAccountsPage() {
           error={error}
           data={accounts}
           loadingSlot={
-            <Table>
+            <Table aria-label={t("page.accounts.accounts")}>
               <TableHeader className="bg-muted/40">
                 <TableRow className="hover:bg-transparent">
                   <TableHead>
@@ -566,7 +566,7 @@ export default function LedgerAccountsPage() {
                 </div>
               )}
               {filtered.length > 0 && (
-                <Table>
+                <Table aria-label={t("page.accounts.accounts")}>
                   <TableHeader className="bg-muted/40">
                     <TableRow className="hover:bg-transparent">
                       <TableHead className="whitespace-nowrap">
