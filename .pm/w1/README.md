@@ -10,7 +10,7 @@ Milestones m1–m23 are complete; no pending ADR014 follow-up milestones remain 
 
 ### Open
 
-- [ ] **m36** — [Trim the MCP surface to what the Claude and ChatGPT directories accept](./m36/README.md) (10 tasks) ← user decision 2026-10-09: a public listing in Claude's and ChatGPT's directories outranks every other goal; ADR 019 follow-up — **top priority**
+- [ ] **m36** — [Trim the MCP surface to what the Claude and ChatGPT directories accept](./blocked/m36/README.md) (10 tasks) ← user decision 2026-10-09: a public listing in Claude's and ChatGPT's directories outranks every other goal; ADR 019 follow-up — **top priority** — **blocked:** all code shipped through `fdc37b27`; the production check waits on a backend-v2 deploy
 - [x] **m30** — [Every named MCP host can register and reach a consent page that says who is asking](./done/m30/README.md) (11 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 1; ADR 019 D3 + D4 + D8
 - [x] **m31** — [Advertise CIMD so Claude and ChatGPT identify themselves without registering](./done/m31/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 2; ADR 019 D6, after m30
 - [x] **m32** — [A connector stays connected while it is used](./done/m32/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-10-06 item 3; ADR 019 D5
