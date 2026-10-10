@@ -44,6 +44,8 @@ export function IncomeExpensesChart({
     tooltip: {
       trigger: "axis" as const,
       axisPointer: { type: "shadow" as const },
+      valueFormatter: (value: unknown) =>
+        typeof value === "number" ? formatNum(value) : String(value),
     },
     legend: {
       data: [t("common.income"), t("common.expenses")],
