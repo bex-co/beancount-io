@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { GitCommit } from "lucide-react";
 import { cn } from "@/common/lib/utils/utils";
 import { useFormatRelativeTime } from "@/common/hooks/use-date-locale";
+import { useTranslations } from "@/common/hooks/use-translations";
 import type { MouseEvent } from "react";
 
 interface CommitListItemProps {
@@ -26,6 +27,7 @@ export function CommitListItem({
   isSelected = false,
   onSelect,
 }: CommitListItemProps) {
+  const { i18n } = useTranslations();
   const formatRelativeTime = useFormatRelativeTime();
   const [ledgerOwner, ledgerName] = ledgerId.split("/");
 
@@ -79,7 +81,7 @@ export function CommitListItem({
           <time
             dateTime={commit.author.date}
             className="min-w-0 truncate"
-            title={new Date(commit.author.date).toLocaleString()}
+            title={new Date(commit.author.date).toLocaleString(i18n.language)}
           >
             {formatRelativeTime(new Date(commit.author.date))}
           </time>

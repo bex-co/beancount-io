@@ -25,7 +25,7 @@ export function CommitMetadata({
   stats,
   fileCount,
 }: CommitMetadataProps) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
   const formatRelativeTime = useFormatRelativeTime();
   const [copied, setCopied] = useState(false);
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -35,7 +35,7 @@ export function CommitMetadata({
     messageParts.length > 1 ? messageParts.slice(1).join("\n").trim() : null;
   const commitDate = new Date(author.date);
   const relativeTime = formatRelativeTime(commitDate);
-  const exactTime = new Intl.DateTimeFormat(undefined, {
+  const exactTime = new Intl.DateTimeFormat(i18n.language, {
     dateStyle: "medium",
     timeStyle: "long",
   }).format(commitDate);
