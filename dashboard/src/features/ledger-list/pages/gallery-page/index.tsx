@@ -315,7 +315,7 @@ export default function GalleryPage() {
                                     : "hover:bg-accent/50",
                                 )}
                                 onClick={() => handleLedgerSelect(ledger.id)}
-                                onMouseEnter={() => setHighlightedIndex(index)}
+                                onMouseMove={() => setHighlightedIndex(index)}
                                 role="option"
                                 aria-selected={highlightedIndex === index}
                               >

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import GalleryPage from "../index";
 import * as apolloClient from "@apollo/client/react";
@@ -30,6 +30,15 @@ vi.mock("@/common/components/seo/page-seo", () => ({
 
 describe("GalleryPage", () => {
   const mockSearchLedgers = vi.fn();
+  const mixedResults: SearchLedgersQuery = {
+    searchLedgers: Array.from({ length: 15 }, (_, index) => ({
+      id: `synthetic/gallery-${index}`,
+      name: `gallery-${index}`,
+      fullName: index % 2 === 0 ? `synthetic/gallery-${index}` : null,
+      description: index % 3 === 0 ? `Description for gallery ${index}` : null,
+      __typename: "Ledger",
+    })),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -279,6 +288,144 @@ describe("GalleryPage", () => {
       "ledger-search-option-1",
     );
     expect(options[1]).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("keeps every keyboard step when scrolling emits option-entry events under a stationary pointer", async () => {
+    vi.mocked(apolloClient.useLazyQuery).mockReturnValue(
+      createMockLazyQueryTuple(mockSearchLedgers, {
+        data: mixedResults,
+        loading: false,
+        error: undefined,
+      }),
+    );
+    const user = userEvent.setup();
+    render(<GalleryPage />);
+
+    const searchInput = screen.getByRole("combobox");
+    await user.type(searchInput, "in");
+    const options = await screen.findAllByRole("option");
+    expect(options).toHaveLength(15);
+    await user.pointer({
+      target: options[3],
+      coords: { clientX: 720, clientY: 629 },
+    });
+    expect(searchInput).toHaveAttribute("aria-activedescendant", options[3].id);
+    expect(searchInput).toHaveFocus();
+
+    let pointerOption = options[3];
+    let entryAfterScroll: HTMLElement | undefined;
+    const scroll = vi
+      .spyOn(Element.prototype, "scrollIntoView")
+      .mockImplementation(() => {
+        if (entryAfterScroll) {
+          const entered = entryAfterScroll;
+          entryAfterScroll = undefined;
+          // jsdom has no layout. Reproduce the native option transition after
+          // programmatic scrolling, with unchanged coordinates and no move.
+          pointerOption.dispatchEvent(
+            new MouseEvent("mouseout", {
+              bubbles: true,
+              relatedTarget: entered,
+              clientX: 720,
+              clientY: 629,
+            }),
+          );
+          entered.dispatchEvent(
+            new MouseEvent("mouseover", {
+              bubbles: true,
+              relatedTarget: pointerOption,
+              clientX: 720,
+              clientY: 629,
+            }),
+          );
+          pointerOption = entered;
+        }
+      });
+
+    try {
+      for (let index = 4; index <= 9; index++) {
+        entryAfterScroll = index === 4 ? undefined : options[index - 1];
+        scroll.mockClear();
+        await user.keyboard("{ArrowDown}");
+
+        expect(searchInput).toHaveAttribute(
+          "aria-activedescendant",
+          options[index].id,
+        );
+        expect(options[index]).toHaveAttribute("aria-selected", "true");
+        expect(
+          options.filter(
+            (option) => option.getAttribute("aria-selected") === "true",
+          ),
+        ).toEqual([options[index]]);
+        expect(searchInput).toHaveFocus();
+        expect(scroll).toHaveBeenCalledExactlyOnceWith({
+          block: "nearest",
+          behavior: "smooth",
+        });
+        expect(scroll.mock.contexts[0]).toBe(options[index]);
+      }
+      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(mockSearchLedgers).toHaveBeenCalledExactlyOnceWith({
+        variables: { q: "in", limit: 50 },
+      });
+    } finally {
+      scroll.mockRestore();
+    }
+  });
+
+  it("selects on intentional pointer movement and Enter opens that ledger once", async () => {
+    vi.mocked(apolloClient.useLazyQuery).mockReturnValue(
+      createMockLazyQueryTuple(mockSearchLedgers, {
+        data: mixedResults,
+        loading: false,
+        error: undefined,
+      }),
+    );
+    const user = userEvent.setup();
+    render(<GalleryPage />);
+
+    const searchInput = screen.getByRole("combobox");
+    await user.type(searchInput, "in");
+    const options = await screen.findAllByRole("option");
+    await user.keyboard(
+      "{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}",
+    );
+    expect(searchInput).toHaveAttribute("aria-activedescendant", options[4].id);
+
+    fireEvent.mouseOut(searchInput, {
+      relatedTarget: options[8],
+      clientX: 720,
+      clientY: 629,
+    });
+    fireEvent.mouseOver(options[8], {
+      relatedTarget: searchInput,
+      clientX: 720,
+      clientY: 629,
+    });
+    expect(searchInput).toHaveAttribute("aria-activedescendant", options[4].id);
+    expect(options[8]).toHaveAttribute("aria-selected", "false");
+
+    await user.pointer({
+      target: screen.getByText("gallery-8"),
+      coords: { clientX: 721, clientY: 630 },
+    });
+    expect(searchInput).toHaveAttribute("aria-activedescendant", options[8].id);
+    expect(options[8]).toHaveAttribute("aria-selected", "true");
+    expect(options[4]).toHaveAttribute("aria-selected", "false");
+    expect(searchInput).toHaveFocus();
+
+    await user.keyboard("{Enter}");
+    expect(mockNavigate).toHaveBeenCalledExactlyOnceWith({
+      to: "/ledger/synthetic/gallery-8",
+    });
+    expect(searchInput).toHaveValue("");
+    expect(searchInput).toHaveAttribute("aria-expanded", "false");
+    expect(searchInput).not.toHaveAttribute("aria-activedescendant");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+
+    await user.keyboard("{Enter}");
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
   });
 
   it("clear button is keyboard-reachable and clears the search", async () => {
