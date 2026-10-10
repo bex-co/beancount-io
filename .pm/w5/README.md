@@ -35,7 +35,6 @@
 
 ## Inbox
 
-- [059 — Arithmetic total-price inputs lose their exact @@ annotation](./059.md) — minor CLI serialization bug; single-add/bulk reproduction with literal controls, 35–55m.
 - [060 — Transaction table prints unescaped quotes and backslashes in lot labels](./060.md) — minor CLI display bug; pristine repeats, JSON/details and plain-label controls, 20–30m.
 - [061 — Invalid treeify regex options report runtime failures without naming the bad option](./061.md) — minor CLI input diagnosis bug; three regex flags repeated with preserved exports, 25–40m.
 - [062 — Doctor fails to resolve relative included filenames containing a colon](./062.md) — minor CLI location parsing bug; two pristine repros across three operations with absolute/plain controls, 25–40m.
