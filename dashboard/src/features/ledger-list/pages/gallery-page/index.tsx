@@ -250,8 +250,9 @@ export default function GalleryPage() {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            clearSearch();
+                            // Focus can reopen the previous query; clear its state last.
                             inputRef.current?.focus();
+                            clearSearch();
                           }}
                           onMouseDown={(e) => e.preventDefault()}
                           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm hover:bg-muted p-1 z-10 cursor-pointer"
