@@ -47,11 +47,6 @@ import {
   executeLifecycleTool,
 } from "./mcp-lifecycle";
 import {
-  publicKeyToolInput,
-  publicKeyToolOutput,
-  executePublicKeyTool,
-} from "./mcp-public-keys";
-import {
   collaboratorToolInput,
   collaboratorToolOutput,
   executeCollaboratorTool,
@@ -65,10 +60,6 @@ import {
   listStagedBankTransactionsInput,
   listStagedBankTransactionsOutput,
   executeListStagedBankTransactions,
-  listPublicKeysDescription,
-  listPublicKeysInput,
-  listPublicKeysOutput,
-  executeListPublicKeys,
 } from "./mcp-list-tools";
 import { z, type ZodTypeAny } from "zod";
 import type { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
@@ -658,27 +649,6 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     outputSchema: lifecycleToolOutput,
     execute: executeLifecycleTool,
   },
-  // The keyId `managePublicKeys` delete needs, for tools-only hosts (ADR 019
-  // D7); the `publicKeys` resource carries the same list.
-  {
-    name: "listPublicKeys",
-    title: "List SSH Public Keys",
-    annotations: ADMIN_READ,
-    description: listPublicKeysDescription,
-    inputSchema: listPublicKeysInput,
-    outputSchema: mcpOutputSchema(listPublicKeysOutput),
-    execute: executeListPublicKeys,
-  },
-  {
-    name: "managePublicKeys",
-    title: "Manage SSH Public Keys",
-    annotations: DESTRUCTIVE,
-    description:
-      "Create or delete the authenticated user's SSH public keys. create requires key and title, and accepts readOnly (default false); delete requires keyId. No ledger or user selector is accepted.",
-    inputSchema: publicKeyToolInput,
-    outputSchema: publicKeyToolOutput,
-    execute: executePublicKeyTool,
-  },
   {
     name: "manageLedgerCollaborators",
     title: "Manage Ledger Collaborators",
@@ -688,18 +658,5 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     inputSchema: collaboratorToolInput,
     outputSchema: collaboratorToolOutput,
     execute: executeCollaboratorTool,
-  },
-  {
-    name: "deleteAccount",
-    title: "Delete Your Account",
-    annotations: DESTRUCTIVE,
-    description:
-      "Permanently delete the authenticated account, including subscription cancellation and cleanup. OAuth credentials may call this; API keys cannot.",
-    inputSchema: z.object({}).strict(),
-    outputSchema: mcpOutputSchema(toolOutputSchema(z.boolean())),
-    execute: async (context) => ({
-      ok: true,
-      result: await context.accountService.deleteAccount(context.identity),
-    }),
   },
 ];

@@ -1,7 +1,5 @@
 import { z } from "zod";
 import { bankAccountQuery } from "@/features/ledger/api/rest/v1/banks-handler";
-import { publicKeyListQuery } from "@/features/ledger/api/rest/v1/public-keys-handler";
-import type { McpRequestContext } from "./mcp-context";
 import { logger } from "@/shared/logger";
 import type { ToolContext } from "../tools/types";
 import { toolOutputSchema } from "../tools/types";
@@ -12,8 +10,8 @@ import { runToolSafely } from "../utils/run-tool";
  * (ADR 019 D7). Each wraps exactly the service call of a resource twin and is
  * authorized the same way; the rule they answer is that an identifier a tool
  * needs must be obtainable from some tool's output. Without them, ChatGPT and
- * Copilot's cloud agent cannot reach the ids `manageBankConnection`,
- * `manageBankImport`, and `managePublicKeys` require.
+ * Copilot's cloud agent cannot reach the ids `manageBankConnection` and
+ * `manageBankImport` require.
  */
 
 const toolLogger = logger.child({ module: "tool:list" });
@@ -77,28 +75,5 @@ export async function executeListStagedBankTransactions(
     // The `bankUnsyncedTransactions` resource's call, with its account filter.
     execute: () =>
       services.plaidItem.getUnsyncedTransactions(identity, accountId, ledgerId),
-  });
-}
-
-// --- listPublicKeys -----------------------------------------------------------
-
-export const listPublicKeysDescription =
-  "List your SSH public keys (keyId for managePublicKeys delete); optional page and limit.";
-
-export const listPublicKeysInput = publicKeyListQuery;
-
-export const listPublicKeysOutput = toolOutputSchema(z.array(z.unknown()));
-
-export async function executeListPublicKeys(
-  ctx: McpRequestContext,
-  input: z.infer<typeof listPublicKeysInput>,
-) {
-  const query = listPublicKeysInput.parse(input);
-  return runToolSafely({
-    logger: toolLogger,
-    message: "Listing SSH public keys failed",
-    context: { tool: "listPublicKeys" },
-    // The `publicKeys` resource's call; no ledger target.
-    execute: () => ctx.publicKeyService.listPublicKeys(ctx.identity, query),
   });
 }

@@ -27,16 +27,11 @@ const LEDGER = "alice/main";
 const CONNECTIONS = [{ id: "pitm_1", institutionName: "Bank A" }];
 const ACCOUNTS = [{ id: "pacc_1", itemId: "pitm_1", mappedAccount: null }];
 const STAGED = [{ id: "ptxn_1", accountId: "pacc_1", amount: 12.5 }];
-const KEYS = [{ id: 7, title: "laptop", fingerprint: "SHA256:abc" }];
-
 const fakeServices = () => ({
   plaidItem: {
     getItems: jest.fn().mockResolvedValue(CONNECTIONS),
     getAccountsForLedger: jest.fn().mockResolvedValue(ACCOUNTS),
     getUnsyncedTransactions: jest.fn().mockResolvedValue(STAGED),
-  },
-  publicKeys: {
-    listPublicKeys: jest.fn().mockResolvedValue(KEYS),
   },
 });
 
@@ -53,7 +48,6 @@ function ctx(services: ReturnType<typeof fakeServices>): McpRequestContext {
     services,
     identity,
     ledgerId: LEDGER,
-    publicKeyService: services.publicKeys,
     llmService: {},
     ledgerReceiptWorkflow: {},
   } as unknown as McpRequestContext;
@@ -156,46 +150,6 @@ describe("listStagedBankTransactions", () => {
   });
 });
 
-describe("listPublicKeys", () => {
-  it.each([
-    [{}, ""],
-    [{ page: 2, limit: 5 }, "?page=2&limit=5"],
-  ])(
-    "returns what the public-keys resource returns (%o)",
-    async (args, query) => {
-      const services = fakeServices();
-      const { client, close } = await connect(services);
-      const result = await client.callTool({
-        name: "listPublicKeys",
-        arguments: args,
-      });
-      const { contents } = await client.readResource({
-        uri: `beancount://account/public-keys${query}`,
-      });
-      expect(result.structuredContent).toEqual({
-        ok: true,
-        result: JSON.parse(String((contents[0] as { text: string }).text)),
-      });
-      expect(services.publicKeys.listPublicKeys).toHaveBeenNthCalledWith(
-        1,
-        identity,
-        args,
-      );
-      await close();
-    },
-  );
-
-  it("takes no ledger", async () => {
-    const { client, close } = await connect(fakeServices());
-    const result = await client.callTool({
-      name: "listPublicKeys",
-      arguments: { ledger: LEDGER },
-    });
-    expect(result.isError).toBe(true);
-    await close();
-  });
-});
-
 /**
  * Each tool is authorized the way its resource twin is. Bank and key reads are
  * PDP-routed: the transport gate defers to the service's own policy check. A
@@ -205,10 +159,7 @@ describe("listPublicKeys", () => {
  * own check — never weaker than the resources it reads.
  */
 describe("list tools are authorized like their resource twins", () => {
-  it.each([
-    ["listStagedBankTransactions", "bankUnsyncedTransactions"],
-    ["listPublicKeys", "publicKeys"],
-  ])(
+  it.each([["listStagedBankTransactions", "bankUnsyncedTransactions"]])(
     "%s defers to the same PDP action as the %s resource",
     (tool, resource) => {
       const action = authorizationActionForOp(mcpOpId(tool));

@@ -860,9 +860,7 @@ describe("MCP tool annotations", () => {
       MCP_TOOLS.map((tool) => [tool.name, tool.annotations.destructiveHint]),
     );
     for (const name of [
-      "deleteAccount",
       "manageLedgers",
-      "managePublicKeys",
       "manageLedgerCollaborators",
       "managePullRequests",
       "manageBankConnection",

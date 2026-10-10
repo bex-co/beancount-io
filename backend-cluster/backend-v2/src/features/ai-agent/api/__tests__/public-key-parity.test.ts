@@ -48,8 +48,10 @@ const fields = "id fingerprint key title createdAt lastUsedAt";
 const envelope = (data: unknown) => ({ data: { success: true, data } });
 let resolvers: Map<unknown, object>;
 let schemaPromise: ReturnType<typeof buildSchema> | undefined;
-type Surface = "rest" | "mcp" | "gql";
-const surfaces: Surface[] = ["rest", "mcp", "gql"];
+// MCP withholds SSH-key management by directory policy (ADR 019, 2026-10-09
+// amendment); the last test below proves it.
+type Surface = "rest" | "gql";
+const surfaces: Surface[] = ["rest", "gql"];
 async function fixture(caller = identity) {
   const records = new Map([
     [1, { ...key, owner: "usr_alice", readOnly: false }],
@@ -199,17 +201,6 @@ async function fixture(caller = identity) {
         );
         return { failed: !r.ok, data: await r.json() };
       }
-      if (surface === "mcp") {
-        const r = await client.callTool({
-          name: "managePublicKeys",
-          arguments: { operation, ...input },
-        });
-        return {
-          failed: r.isError === true,
-          data: (r.structuredContent as { result?: unknown } | undefined)
-            ?.result,
-        };
-      }
       const field =
         operation === "create" ? "createPublicKey" : "deletePublicKey";
       const args = Object.entries(input)
@@ -234,12 +225,10 @@ describe("SSH public keys through actual adapters and exact-self authorization",
       const f = await fixture(caller);
       try {
         expect(await (await f.request()).json()).toEqual([expected]);
-        expect(await f.read("public-keys")).toEqual([expected]);
         const g = await f.gql(`{listPublicKeys{${fields}}}`);
         expect(g.errors).toBeUndefined();
         expect(g.data?.listPublicKeys).toEqual([expected]);
         expect(await (await f.request("/1")).json()).toEqual(expected);
-        expect(await f.read("public-key?keyId=1")).toEqual(expected);
         const one = await f.gql(`{getPublicKey(keyId:1){${fields}}}`);
         expect(one.errors).toBeUndefined();
         expect(one.data?.getPublicKey).toEqual(expected);
@@ -260,7 +249,6 @@ describe("SSH public keys through actual adapters and exact-self authorization",
     const f = await fixture();
     try {
       expect(await (await f.request("?page=2&limit=1")).json()).toEqual([]);
-      expect(await f.read("public-keys?page=2&limit=1")).toEqual([]);
       const g = await f.gql(`{listPublicKeys(page:2,limit:1){${fields}}}`);
       expect(g.errors).toBeUndefined();
       expect(g.data?.listPublicKeys).toEqual([]);
@@ -326,7 +314,6 @@ describe("SSH public keys through actual adapters and exact-self authorization",
         );
         expect(f.records.get(2)?.owner).toBe("usr_bob");
         expect((await f.request("/2")).status).toBe(404);
-        await expect(f.read("public-key?keyId=2")).rejects.toThrow();
         expect(
           (await f.gql(`{getPublicKey(keyId:2){${fields}}}`)).errors,
         ).toHaveLength(1);
@@ -358,10 +345,6 @@ describe("SSH public keys through actual adapters and exact-self authorization",
           expect((await f.request()).status).toBe(403);
           expect((await f.request("/1")).status).toBe(403);
         }
-        if (surface === "mcp") {
-          await expect(f.read("public-keys")).rejects.toThrow();
-          await expect(f.read("public-key?keyId=1")).rejects.toThrow();
-        }
         if (surface === "gql") {
           expect(
             (await f.gql(`{listPublicKeys{${fields}}}`)).errors,
@@ -387,8 +370,6 @@ describe("SSH public keys through actual adapters and exact-self authorization",
           );
           if (surface === "rest")
             expect((await f.request(`/${keyId}`)).status).toBe(400);
-          if (surface === "mcp")
-            await expect(f.read(`public-key?keyId=${keyId}`)).rejects.toThrow();
           if (surface === "gql") {
             const g = await f.gql(`{getPublicKey(keyId:${keyId}){id}}`);
             expect(g.errors).toHaveLength(1);
@@ -402,26 +383,9 @@ describe("SSH public keys through actual adapters and exact-self authorization",
       }
     },
   );
-  it("rejects selectors, unknown branches, and unsupported previews without mutation", async () => {
+  it("rejects a caller-supplied user selector on REST without mutation", async () => {
     const f = await fixture();
     try {
-      for (const args of [
-        { operation: "unknown" },
-        { operation: "create" },
-        { operation: "delete" },
-        { operation: "delete", keyId: 1, title: "extra" },
-        { operation: "delete", keyId: 1, userId: "usr_bob" },
-        { operation: "delete", keyId: 1, ledger: "alice/books" },
-        { operation: "delete", keyId: 1, dry_run: true },
-      ])
-        expect(
-          (
-            await f.client.callTool({
-              name: "managePublicKeys",
-              arguments: args,
-            })
-          ).isError,
-        ).toBe(true);
       expect(
         (
           await f.request("", "POST", {
@@ -432,7 +396,33 @@ describe("SSH public keys through actual adapters and exact-self authorization",
         ).status,
       ).toBe(400);
       expect(f.create).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+  it("offers no SSH-key tool or resource on MCP", async () => {
+    // Withheld by directory policy (ADR 019, 2026-10-09 amendment): nothing
+    // lists, reads, adds, or deletes a key, and the old names are refused.
+    const f = await fixture();
+    try {
+      const { tools } = await f.client.listTools();
+      expect(tools.map((t) => t.name)).not.toEqual(
+        expect.arrayContaining(["listPublicKeys"]),
+      );
+      expect(tools.some((t) => /public.?key/i.test(t.name))).toBe(false);
+      for (const name of ["listPublicKeys", "managePublicKeys"]) {
+        const r = await f.client.callTool({
+          name,
+          arguments: { operation: "delete", keyId: 1 },
+        });
+        expect(r.isError).toBe(true);
+      }
+      await expect(f.read("public-keys")).rejects.toThrow();
+      await expect(f.read("public-key?keyId=1")).rejects.toThrow();
+      expect(f.list).not.toHaveBeenCalled();
+      expect(f.get).not.toHaveBeenCalled();
       expect(f.remove).not.toHaveBeenCalled();
+      expect(f.records.has(1)).toBe(true);
     } finally {
       await f.close();
     }

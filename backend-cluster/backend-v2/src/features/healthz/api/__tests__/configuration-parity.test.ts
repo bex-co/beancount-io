@@ -185,11 +185,11 @@ describe("public configuration across real adapters", () => {
     });
     expect(g.errors).toBeUndefined();
     expect(g.data?.allTierQuotas).toEqual(quotas);
-    const r = await client.readResource({
-      uri: "beancount://configuration/tier-quotas",
-    });
-    const c = r.contents[0];
-    expect("text" in c && JSON.parse(c.text)).toEqual(quotas);
+    // MCP withholds plan tiers by directory policy (ADR 019, 2026-10-09
+    // amendment): OpenAI's guidelines forbid displaying subscription plans.
+    await expect(
+      client.readResource({ uri: "beancount://configuration/tier-quotas" }),
+    ).rejects.toThrow();
     expect(
       generateV1OpenAPIDocument().paths["/api-gateway/v1/tier-quotas"].get
         ?.security,

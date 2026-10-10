@@ -1,5 +1,4 @@
 import { feedQuery } from "@/features/gitea/feed/api/feed-route";
-import { readAiCfoUsage } from "@/features/feature-usage/api/ai-cfo-usage-route";
 import { suggestCategoriesQuery } from "@/features/llm/api/suggest-categories-route";
 import { tempAssetDownloadQuery } from "@/features/s3/api/temp-asset-routes";
 import { bankAccountQuery } from "@/features/ledger/api/rest/v1/banks-handler";
@@ -16,10 +15,6 @@ import {
 } from "@/features/healthz/utils/public-configuration";
 import { assetUrlQuery } from "@/features/ledger/api/rest/v1/asset-url-handler";
 import { pullRequestNumberQuery } from "@/features/gitea/pull-request/api/pull-request-routes";
-import {
-  publicKeyListQuery,
-  publicKeyIdQuery,
-} from "@/features/ledger/api/rest/v1/public-keys-handler";
 import {
   collaboratorListQuery,
   collaboratorPermissionQuery,
@@ -361,18 +356,6 @@ const bankResources: readonly McpResourceDescriptor[] = [
 /** The resource fragment: every template this feature contributes to the registry. */
 export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
   {
-    name: "aiCfoUsage",
-    title: "AI CFO Usage",
-    description:
-      "Current account's billing-month token usage and plan limit. No user or ledger selector; read capability is required.",
-    uriTemplate: "beancount://account/ai-cfo-usage",
-    mimeType: "application/json",
-    read: async (context) =>
-      JSON.stringify(
-        await readAiCfoUsage(context.aiCfoUsage, context.identity),
-      ),
-  },
-  {
     name: "transactionCategorySuggestions",
     title: "Transaction Category Suggestions",
     description:
@@ -474,16 +457,6 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
     },
   },
   {
-    name: "allTierQuotas",
-    title: "Subscription tier quotas",
-    description:
-      "Public product limits for every tier; -1 means unlimited. No user billing information.",
-    uriTemplate: "beancount://configuration/tier-quotas",
-    mimeType: "application/json",
-    read: async (context) =>
-      JSON.stringify(await context.subscriptionService.allTierQuotas()),
-  },
-  {
     name: "health",
     title: "Application health",
     description:
@@ -575,38 +548,6 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
         ),
       );
     },
-  },
-  {
-    name: "publicKeys",
-    title: "SSH Public Keys",
-    description:
-      "List the authenticated user's SSH public keys. Requires administrative account authority; no ledger target.",
-    mimeType: "application/json",
-    uriTemplate: "beancount://account/public-keys",
-    queryNames: Object.keys(publicKeyListQuery.shape),
-    read: async (context, query) =>
-      JSON.stringify(
-        await context.publicKeyService.listPublicKeys(
-          context.identity,
-          publicKeyListQuery.parse(query),
-        ),
-      ),
-  },
-  {
-    name: "publicKey",
-    title: "SSH Public Key",
-    description:
-      "Read one SSH public key from the authenticated user's key API. Requires keyId and administrative account authority.",
-    mimeType: "application/json",
-    uriTemplate: "beancount://account/public-key",
-    queryNames: Object.keys(publicKeyIdQuery.shape),
-    read: async (context, query) =>
-      JSON.stringify(
-        await context.publicKeyService.getPublicKey(
-          context.identity,
-          publicKeyIdQuery.parse(query).keyId,
-        ),
-      ),
   },
   {
     name: "ledgerCollaborators",

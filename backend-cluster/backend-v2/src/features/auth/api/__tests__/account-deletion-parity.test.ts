@@ -27,7 +27,9 @@ const caller: Identity = {
   scopes: new Set(),
   ledgerScope: "ada/personal",
 };
-const surfaces = ["rest", "gql", "mcp"] as const;
+// MCP withholds account deletion by directory policy (ADR 019, 2026-10-09
+// amendment); the last test below proves it.
+const surfaces = ["rest", "gql"] as const;
 let resolver: AccountResolver;
 let schemaPromise: ReturnType<typeof buildSchema>;
 registerEnumType(ReportStatus, { name: "ReportStatus" });
@@ -134,24 +136,16 @@ async function fixture(identity = caller, failure?: "billing" | "ledger") {
         });
         return { success: r.ok, result: await r.json() };
       }
-      if (surface === "gql") {
-        const r = await graphql({
-          schema,
-          source: "mutation{deleteAccount}",
-          contextValue: {
-            identity,
-            userId: identity.userId,
-            getCurrentIdentity: () => identity,
-          },
-        });
-        return { success: !r.errors, result: r.data?.deleteAccount };
-      }
-      const r = await client.callTool({ name: "deleteAccount", arguments: {} });
-      return {
-        success: !r.isError,
-        result: (r.structuredContent as { result?: boolean } | undefined)
-          ?.result,
-      };
+      const r = await graphql({
+        schema,
+        source: "mutation{deleteAccount}",
+        contextValue: {
+          identity,
+          userId: identity.userId,
+          getCurrentIdentity: () => identity,
+        },
+      });
+      return { success: !r.errors, result: r.data?.deleteAccount };
     },
     close: async () => {
       await client.close();
@@ -263,17 +257,30 @@ describe("account deletion through real transports and the existing cleanup serv
   it("rejects target selectors instead of deleting a different account", async () => {
     const f = await fixture();
     try {
-      const r = await f.client.callTool({
-        name: "deleteAccount",
-        arguments: { userId: "other-user" },
-      });
-      expect(r.isError).toBe(true);
       const rest = await fetch(
         `${f.url}/api-gateway/v1/account?userId=other-user`,
         { method: "DELETE" },
       );
       expect(rest.status).toBe(400);
       expect(f.getById).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+  it("offers no account deletion on MCP", async () => {
+    // Withheld by directory policy (ADR 019, 2026-10-09 amendment): it is
+    // irreversible, and a reviewer's test of every tool would run it.
+    const f = await fixture();
+    try {
+      const { tools } = await f.client.listTools();
+      expect(tools.map((t) => t.name)).not.toContain("deleteAccount");
+      const r = await f.client.callTool({
+        name: "deleteAccount",
+        arguments: {},
+      });
+      expect(r.isError).toBe(true);
+      expect(f.getById).not.toHaveBeenCalled();
+      expect(f.cancel).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }

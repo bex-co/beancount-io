@@ -115,24 +115,14 @@ it.each([
     try {
       const r = await f.rest();
       const g = await f.gql();
-      const m = await f.client.readResource({
-        uri: "beancount://account/ai-cfo-usage",
-      });
       expect(r.status).toBe(200);
       expect(g.errors).toBeUndefined();
-      const content = m.contents[0];
-      if (!content || !("text" in content))
-        throw new Error("Expected text resource");
-      for (const result of [
-        await r.json(),
-        g.data!.aiCfoUsage,
-        JSON.parse(content.text),
-      ])
+      for (const result of [await r.json(), g.data!.aiCfoUsage])
         expect(result).toEqual({
           aiCfoTokensUsed: count,
           aiCfoTokensMax: 20000,
         });
-      expect(f.getCount).toHaveBeenCalledTimes(3);
+      expect(f.getCount).toHaveBeenCalledTimes(2);
       expect(f.addAndGetCount).not.toHaveBeenCalled();
     } finally {
       await f.close();
@@ -145,11 +135,6 @@ it("refuses caller-supplied account selection", async () => {
   try {
     expect((await f.rest("?userId=usr_bob")).status).toBe(400);
     expect((await f.gql('(userId:"usr_bob")')).errors).toHaveLength(1);
-    await expect(
-      f.client.readResource({
-        uri: "beancount://account/ai-cfo-usage?userId=usr_bob",
-      }),
-    ).rejects.toThrow();
     expect(f.getCount).not.toHaveBeenCalled();
     expect(f.subscriptions).not.toHaveBeenCalled();
   } finally {
@@ -162,9 +147,6 @@ it("refuses missing read capability before usage or billing access", async () =>
   try {
     expect((await f.rest()).status).toBe(403);
     expect((await f.gql()).errors).toHaveLength(1);
-    await expect(
-      f.client.readResource({ uri: "beancount://account/ai-cfo-usage" }),
-    ).rejects.toThrow();
     expect(f.getCount).not.toHaveBeenCalled();
     expect(f.subscriptions).not.toHaveBeenCalled();
   } finally {
@@ -178,10 +160,25 @@ it("propagates a usage-store outage without fabricating zero usage", async () =>
   try {
     expect((await f.rest()).status).toBe(500);
     expect((await f.gql()).errors).toHaveLength(1);
+    expect(f.addAndGetCount).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+it("offers no plan-usage resource on MCP", async () => {
+  // Withheld by directory policy (ADR 019, 2026-10-09 amendment): usage
+  // against a plan limit reads as displaying a subscription plan.
+  const f = await fixture();
+  try {
+    const { resourceTemplates } = await f.client.listResourceTemplates();
+    expect(resourceTemplates.map((t) => t.uriTemplate).join(" ")).not.toContain(
+      "ai-cfo-usage",
+    );
     await expect(
       f.client.readResource({ uri: "beancount://account/ai-cfo-usage" }),
     ).rejects.toThrow();
-    expect(f.addAndGetCount).not.toHaveBeenCalled();
+    expect(f.getCount).not.toHaveBeenCalled();
   } finally {
     await f.close();
   }

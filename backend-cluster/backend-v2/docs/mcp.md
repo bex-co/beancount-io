@@ -257,7 +257,6 @@ the principal inputs; inspect the schema before constructing a call.
 | `manageBankConnection`       | `operation: reconcile / map_account / set_currency / refresh / unlink`, operation-specific arguments.                                                                     | Admin      |
 | `listBankConnections`        | `{}`; linked bank connections (`item_id`) and their accounts (`account_id`, mapping) — the `banks` and `bank-accounts` resources as a tool.                               | Admin      |
 | `listStagedBankTransactions` | Optional `accountId`; transactions staged for import, with the ids `manageBankImport` submit/discard take — the `bank-transactions/unsynced` resource as a tool.          | Read       |
-| `listPublicKeys`             | Optional `page`, `limit`; your SSH public keys with the `keyId` `managePublicKeys` delete takes — the `account/public-keys` resource as a tool.                           | Admin      |
 
 The implementation is listed in
 [`mcp-tools.ts`](../src/features/ai-agent/api/mcp-tools.ts).
@@ -476,22 +475,10 @@ skipped and repository deletion still proceeds.
 
 ### SSH public keys
 
-These account operations use the authenticated caller and require administrative
-account authority. They accept no user or ledger selector. A ledger pin does
-not prevent the caller from managing their own SSH public keys.
-
-- Read `beancount://account/public-keys{?page,limit}`, or call `listPublicKeys`,
-  to list keys.
-- Read `beancount://account/public-key{?keyId}` to inspect a key by ID.
-- Call `managePublicKeys` with `operation: "create"`, `key`, and `title` to add
-  an SSH public key. Optional `readOnly` defaults to `false`.
-- Call `managePublicKeys` with `operation: "delete"` and `keyId` to remove it.
-
-Creation returns the ID, fingerprint, public key, title, creation time, and
-optional last-use time; deletion returns `{ "id": ... }`. These changes apply
-immediately and offer no preview. Key validity, uniqueness, and ownership use
-the same repository-service checks as GraphQL. REST exposes the same operations
-at `/api-gateway/v1/public-keys` and `/api-gateway/v1/public-keys/{keyId}`.
+MCP has no SSH-key tool or resource. An SSH key registered on the account is an
+access credential, which the connector directories forbid an app to handle
+([ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md#amendments), 2026-10-09). List, add, and remove keys in the dashboard, with GraphQL, or at
+`/api-gateway/v1/public-keys` and `/api-gateway/v1/public-keys/{keyId}`.
 
 ### Collaborator changes
 
@@ -993,11 +980,9 @@ transport credential, but neither resource requires ledger scopes or a ledger
 target. The REST OpenAPI security alternatives explicitly mark anonymous access;
 protected ledger routes continue to require credentials.
 
-`beancount://configuration/tier-quotas` returns the public quota catalog, matching
-GraphQL `allTierQuotas` and anonymous `GET /api-gateway/v1/tier-quotas`. Every row
-includes `tier`, `maxLedgers`, `maxCollaboratorsPerLedger`, `aiCfoTokensMax`, and
-`maxDirectives`. A limit of `-1` means unlimited. This static catalog does not
-read a customer's subscription or contact Stripe.
+The plan-tier catalog (GraphQL `allTierQuotas`, anonymous
+`GET /api-gateway/v1/tier-quotas`) is not on MCP: the connector directories forbid
+an app to display subscription plans ([ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md#amendments), 2026-10-09).
 
 ### Account profile
 
@@ -1014,20 +999,10 @@ continues to require a credential.
 
 ### Account deletion
 
-`deleteAccount` takes an empty object and matches GraphQL `deleteAccount` and
-`DELETE /api-gateway/v1/account`. It permanently deletes the authenticated
-account, with no user/ledger selector or preview. The existing credential policy
-allows session and OAuth identities; API keys are refused even with an admin
-scope. The operation's `admin` classification is audit/rate metadata, not a new
-scope requirement. A ledger pin does not change which account is deleted.
-
-All adapters call the existing account service: cancel active subscriptions,
-attempt bank disconnection, remove local account-related rows and the ledger
-user, then clear email-token storage. A failed subscription cancellation stops
-later cleanup. A failed ledger-user deletion rolls back local transactional
-rows; earlier external cancellation or disconnection cannot be rolled back.
-Email-token cleanup happens after that transaction. These cross-system partial
-failure boundaries are shared with GraphQL.
+MCP has no account-deletion tool. Deleting an account is irreversible, and a
+connector directory reviewer's test of every tool would run it ([ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md#amendments), 2026-10-09). Delete the
+account in the dashboard, with GraphQL `deleteAccount`, or with
+`DELETE /api-gateway/v1/account`.
 
 ### Public social lists
 
@@ -1090,11 +1065,9 @@ that an object exists. URLs retain their configured lifetime once issued.
 
 ### AI CFO usage
 
-Read `beancount://account/ai-cfo-usage` for `aiCfoTokensUsed` and
-`aiCfoTokensMax`, matching GraphQL's `aiCfoUsage` fields. Usage is for the current
-UTC billing month and the authenticated account. Read capability is required;
-API keys and ledger-pinned credentials retain the existing account-read policy.
-No user or ledger selector is accepted. This read does not consume AI tokens.
+Monthly AI CFO usage against the plan limit is not on MCP; the connector
+directories forbid an app to display subscription plans or promote upgrades
+([ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md#amendments), 2026-10-09). GraphQL `aiCfoUsage` and `GET /api-gateway/v1/account/ai-cfo-usage` keep it.
 
 ### Parse uploaded statements
 

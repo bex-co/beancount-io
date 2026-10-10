@@ -20,15 +20,20 @@ const identity: Identity = {
   scopes: new Set(["ledger.admin"]),
   tokenId: "tok_masking",
 };
-const LEAK = 'select * from "public_keys" where id = $1 -- params: 7';
+const LEAK =
+  'select * from "leak_marker_ledgers" where id = $1 -- params: alice/main';
 
 async function connect(env: string, failure: Error) {
-  const publicKeyService = {
-    deletePublicKey: jest.fn().mockRejectedValue(failure),
-    getPublicKey: jest.fn().mockRejectedValue(failure),
+  const ledgerWorkflow = { deleteLedger: jest.fn().mockRejectedValue(failure) };
+  const collaboratorsWorkflow = {
+    listCollaborators: jest.fn().mockRejectedValue(failure),
   };
   const server = assembleMcpRegistry(
-    { identity, publicKeyService } as unknown as McpRequestContext,
+    {
+      identity,
+      ledgerWorkflow,
+      collaboratorsWorkflow,
+    } as unknown as McpRequestContext,
     { env, api: { scopeEnforcement: "enforce" } } as AppConfig,
   );
   const client = new Client({ name: "masking", version: "1" });
@@ -37,11 +42,11 @@ async function connect(env: string, failure: Error) {
   return {
     call: () =>
       client.callTool({
-        name: "managePublicKeys",
-        arguments: { operation: "delete", keyId: 7 },
+        name: "manageLedgers",
+        arguments: { operation: "delete", ledger: "alice/main" },
       }),
     read: () =>
-      client.readResource({ uri: "beancount://account/public-key?keyId=7" }),
+      client.readResource({ uri: "beancount://alice/main/collaborators" }),
     close: async () => {
       await client.close();
       await server.close();
@@ -62,7 +67,7 @@ describe("MCP masks unexpected errors in production", () => {
           message: "Internal server error",
         },
       });
-      expect(JSON.stringify(result)).not.toContain("public_keys");
+      expect(JSON.stringify(result)).not.toContain("leak_marker");
       const refusal = await f.read().catch((error: unknown) => error);
       expect(refusal).toMatchObject({
         code: -32000,
@@ -71,7 +76,7 @@ describe("MCP masks unexpected errors in production", () => {
           message: "Internal server error",
         },
       });
-      expect(String((refusal as Error).message)).not.toContain("public_keys");
+      expect(String((refusal as Error).message)).not.toContain("leak_marker");
     } finally {
       await f.close();
     }
@@ -92,13 +97,16 @@ describe("MCP masks unexpected errors in production", () => {
   });
 
   it("keeps a failure written for the caller in production", async () => {
-    const f = await connect("production", new NotFoundError("Public key", "7"));
+    const f = await connect(
+      "production",
+      new NotFoundError("Ledger", "alice/main"),
+    );
     try {
       const result = await f.call();
       expect(result.structuredContent).toMatchObject({
         error: { code: "NOT_FOUND" },
       });
-      expect(JSON.stringify(result.structuredContent)).toContain("Public key");
+      expect(JSON.stringify(result.structuredContent)).toContain("Ledger");
       await expect(f.read()).rejects.toMatchObject({
         code: -32002,
         data: { code: "NOT_FOUND" },

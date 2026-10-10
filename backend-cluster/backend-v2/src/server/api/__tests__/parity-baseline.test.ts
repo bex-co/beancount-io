@@ -10,14 +10,23 @@ import { VERB_TABLE, isReachableOn } from "../op-class";
  */
 /**
  * Verbs whose MCP adapter was withdrawn on purpose, by directory policy
- * (ADR 019, 2026-10-09 amendment, w1/m36): OpenAI's app guidelines forbid an
- * app to process access credentials such as API keys. GraphQL and REST keep
- * them. This is the only list that may narrow a baseline row, and only on MCP.
+ * (ADR 019, 2026-10-09 amendment, w1/m36): access credentials (API and SSH
+ * keys), irreversible account deletion, and plan tiers or usage, which the
+ * Claude and ChatGPT directories' published rules refuse. GraphQL and REST
+ * keep them. This is the only list that may narrow a baseline row, and only
+ * on MCP; it must equal op-class's `DIRECTORY_WITHHELD_FROM_MCP`.
  */
 const WITHDRAWN_FROM_MCP = new Set([
   "apikeys.list",
   "apikeys.create",
   "apikeys.revoke",
+  "Query.listPublicKeys",
+  "Query.getPublicKey",
+  "Mutation.createPublicKey",
+  "Mutation.deletePublicKey",
+  "Mutation.deleteAccount",
+  "Query.allTierQuotas",
+  "Query.aiCfoUsage",
 ]);
 
 describe("the accepted parity baseline", () => {

@@ -11,7 +11,7 @@ import type { McpRequestContext } from "../mcp-context";
 
 /**
  * ADR 019 D7's structural claim, end to end: a host that only calls tools —
- * never `resources/read` — can finish the bank flow and key management,
+ * never `resources/read` — can finish the bank flow,
  * because every id a tool requires appears in some tool's output. Each id
  * below is taken from a previous call's `structuredContent`, never written
  * into the test by hand.
@@ -40,12 +40,6 @@ const services = {
     syncItemTransactions: jest.fn().mockResolvedValue({ added: 2 }),
     deleteTransactions: jest.fn().mockResolvedValue({ deleted: 2 }),
   },
-  publicKeys: {
-    listPublicKeys: jest
-      .fn()
-      .mockResolvedValue([{ id: 4711, title: "laptop" }]),
-    deletePublicKey: jest.fn().mockResolvedValue({ id: 4711 }),
-  },
 };
 
 const identity = {
@@ -56,13 +50,12 @@ const identity = {
   ledgerScope: LEDGER,
 };
 
-it("finishes the bank flow and key management through tools alone", async () => {
+it("finishes the bank flow through tools alone", async () => {
   const server = assembleMcpRegistry(
     {
       services,
       identity,
       ledgerId: LEDGER,
-      publicKeyService: services.publicKeys,
       llmService: {},
       ledgerReceiptWorkflow: {},
     } as unknown as McpRequestContext,
@@ -127,14 +120,6 @@ it("finishes the bank flow and key management through tools alone", async () => 
   });
   expect(services.plaidItem.updateAccountMapping.mock.calls[0]).toContain(
     "pacc_31c",
-  );
-
-  // 5. Delete an SSH key by the id the list named.
-  const keys = (await call("listPublicKeys", {})) as { id: number }[];
-  await call("managePublicKeys", { operation: "delete", keyId: keys[0].id });
-  expect(services.publicKeys.deletePublicKey).toHaveBeenCalledWith(
-    identity,
-    4711,
   );
 
   expect(readResource).not.toHaveBeenCalled();

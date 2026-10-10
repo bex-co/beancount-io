@@ -214,6 +214,12 @@ const M = {
     "Authentication ceremony: an MCP client arrives already holding a token, so it can neither need nor complete these.",
   credentialMinting:
     "Credential minting is deliberately unreachable by a token credential (ADR 0006 D6), and an agent minting its own successor credential is precisely the loop that rule closes.",
+  directorySshKeys:
+    "Withheld from MCP by directory policy (ADR 019, 2026-10-09 amendment): an SSH key registered on the account is an access credential, which OpenAI's app guidelines forbid an app to collect or process, and adding one through a connector would bypass the deliberate SSH-setup step. Manage SSH keys in the dashboard, REST, or GraphQL.",
+  directoryAccountDeletion:
+    "Withheld from MCP by directory policy (ADR 019, 2026-10-09 amendment): deleting the account is irreversible and cancels the subscription, and a directory reviewer's functional test of every tool would delete their own test account. Delete the account in the dashboard, REST, or GraphQL.",
+  directoryPlans:
+    "Withheld from MCP by directory policy (ADR 019, 2026-10-09 amendment): OpenAI's app guidelines say an app must not display subscription plans or promote upgrades, and plan tiers or usage against a plan limit read as either. GraphQL and REST keep it for the dashboard.",
   directoryCredentials:
     "Withheld from MCP by directory policy (ADR 019, 2026-10-09 amendment): OpenAI's app guidelines forbid an app to collect, solicit, or process access credentials such as API keys, and a connector's OAuth token minting a key would outlive the connection's revocation. Manage keys in the dashboard, the CLI, REST, or GraphQL.",
   billing:
@@ -330,6 +336,13 @@ const DIRECTORY_WITHHELD_FROM_MCP: ReadonlySet<string> = new Set([
   "apikeys.create",
   "apikeys.list",
   "apikeys.revoke",
+  "Query.listPublicKeys",
+  "Query.getPublicKey",
+  "Mutation.createPublicKey",
+  "Mutation.deletePublicKey",
+  "Mutation.deleteAccount",
+  "Query.allTierQuotas",
+  "Query.aiCfoUsage",
 ]);
 
 /** Whether `surface` could carry this verb if someone did the work. */
@@ -416,7 +429,7 @@ const ACCOUNT_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.deleteAccount",
     class: "admin",
     rest: "DELETE /api-gateway/v1/account",
-    mcp: "deleteAccount",
+    mcpExempt: M.directoryAccountDeletion,
     authorizationAction: AUTHORIZATION_ACTIONS.USER_DELETE,
   },
   {
@@ -564,9 +577,7 @@ const BILLING_VERBS: readonly VerbEntry[] = [
     gql: "Query.allTierQuotas",
     class: "public",
     rest: "GET /api-gateway/v1/tier-quotas",
-    mcpResource: "allTierQuotas",
-    mcpExempt:
-      "Exposed as an MCP resource; the public quota catalog needs no action tool.",
+    mcpExempt: M.directoryPlans,
     nonPdpReason: NON_PDP.publicProductConfiguration,
   },
   {
@@ -664,8 +675,7 @@ const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
     class: "admin",
     authorizationAction: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST,
     rest: "GET /api-gateway/v1/public-keys",
-    mcp: "listPublicKeys",
-    mcpResource: "publicKeys",
+    mcpExempt: M.directorySshKeys,
   },
   {
     verb: "Query.getPublicKey",
@@ -673,9 +683,7 @@ const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
     class: "admin",
     authorizationAction: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_READ,
     rest: "GET /api-gateway/v1/public-keys/{keyId}",
-    mcpResource: "publicKey",
-    mcpExempt:
-      "Exposed through an administrative MCP resource for the authenticated user. Public-key inspection does not need a model-selected action tool.",
+    mcpExempt: M.directorySshKeys,
   },
   {
     verb: "Mutation.createPublicKey",
@@ -683,7 +691,7 @@ const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
     class: "admin",
     authorizationAction: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_CREATE,
     rest: "POST /api-gateway/v1/public-keys",
-    mcp: "managePublicKeys",
+    mcpExempt: M.directorySshKeys,
   },
   {
     verb: "Mutation.deletePublicKey",
@@ -691,7 +699,7 @@ const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
     class: "admin",
     authorizationAction: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_DELETE,
     rest: "DELETE /api-gateway/v1/public-keys/{keyId}",
-    mcp: "managePublicKeys",
+    mcpExempt: M.directorySshKeys,
   },
   {
     verb: "Query.listLedgerCollaborators",
@@ -1578,8 +1586,7 @@ const LLM_VERBS: readonly VerbEntry[] = [
     class: "read",
     gql: "Query.aiCfoUsage",
     rest: "GET /api-gateway/v1/account/ai-cfo-usage",
-    mcpResource: "aiCfoUsage",
-    mcpExempt: "Account usage is exposed as an MCP resource instead of a tool.",
+    mcpExempt: M.directoryPlans,
     authorizationAction: AUTHORIZATION_ACTIONS.USER_AI_USAGE_READ,
   },
 ];

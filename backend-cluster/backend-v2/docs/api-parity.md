@@ -106,10 +106,12 @@ none can dissolve into stale exemption prose:
    w1/m36). The operations are listed in `DIRECTORY_WITHHELD_FROM_MCP` in
    `op-class.ts`, which `isReachableOn` consults, so they are out of MCP's
    parity target rather than counted as gaps. Each keeps an `mcpExempt` reason
-   quoting the rule, and GraphQL and REST keep the operation. API-key
-   management (`apikeys.list`, `apikeys.create`, `apikeys.revoke`) left first.
-   It was the only withdrawal from the frozen baseline, which
-   `parity-baseline.test.ts` names explicitly.
+   quoting the rule, and GraphQL and REST keep the operation. Withheld so far:
+   API-key management (`apikeys.*`), SSH-key management (`Query.listPublicKeys`,
+   `Query.getPublicKey`, `Mutation.createPublicKey`, `Mutation.deletePublicKey`),
+   account deletion (`Mutation.deleteAccount`), and plan tiers and usage
+   (`Query.allTierQuotas`, `Query.aiCfoUsage`). `parity-baseline.test.ts` names
+   the same ten verbs as the only rows whose frozen MCP eligibility may narrow.
 
 ## Target selection
 

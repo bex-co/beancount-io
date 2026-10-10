@@ -2,7 +2,7 @@ import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 
-export const publicKeySchema = z.object({
+const publicKeySchema = z.object({
   id: z.number(),
   fingerprint: z.string(),
   key: z.string(),
@@ -10,7 +10,7 @@ export const publicKeySchema = z.object({
   title: z.string(),
   createdAt: z.string(),
 });
-export const publicKeyListQuery = z
+const publicKeyListQuery = z
   .object({
     page: z.coerce.number().optional(),
     limit: z.coerce.number().optional(),
@@ -18,18 +18,16 @@ export const publicKeyListQuery = z
   .strict();
 // A key id is a positive integer. A fraction would be truncated downstream and
 // name a different key than the caller asked for (w5/023).
-const publicKeyId = z.number().int().positive();
-export const publicKeyIdQuery = z
+const publicKeyIdQuery = z
   .object({ keyId: z.coerce.number().int().positive() })
   .strict();
-export const publicKeyCreateInput = z
+const publicKeyCreateInput = z
   .object({
     key: z.string(),
     title: z.string(),
     readOnly: z.boolean().nullable().default(false),
   })
   .strict();
-export const publicKeyDeleteInput = z.object({ keyId: publicKeyId }).strict();
 
 export const PUBLIC_KEY_ROUTES = [
   v1Route({
