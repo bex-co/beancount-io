@@ -261,6 +261,16 @@ export function getCashFlowSummaryItems(
   return items.filter((item): item is CashFlowSummaryItem => item !== null);
 }
 
+/** Keep sparse-zero summary lines, without inventing an unobserved unit. */
+export function getCashFlowSummaryAmounts(
+  document: StatementExportDocument,
+  row: StatementRow,
+): readonly (StatementPresentationAmount | null)[] {
+  if (row.amounts.length > 0) return row.amounts;
+  const units = orderedUnits(document);
+  return units.length > 0 ? presentationAmounts({}, units) : [null];
+}
+
 /** Account detail per activity, without the activity total rows. */
 export function getCashFlowSupportingSections(
   document: StatementExportDocument,

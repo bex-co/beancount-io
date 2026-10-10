@@ -14,6 +14,7 @@ import {
   getBalanceSheetSummaryItems,
   getBalanceSheetSupportingSections,
   getCashFlowSummaryItems,
+  getCashFlowSummaryAmounts,
   getCashFlowSupportingSections,
   getProfitAndLossSummaryItems,
   getProfitAndLossSupportingSections,
@@ -346,21 +347,25 @@ export function PrintableStatement({
                 </thead>
                 <tbody>
                   {cashFlowSummary.flatMap((item) =>
-                    item.row.amounts.map((amount, amountIndex) => (
-                      <tr
-                        className={`statement-print-row statement-print-summary-row statement-print-summary-row-${item.key}`}
-                        key={`${item.key}-${amount.unit}-${amountIndex}`}
-                      >
-                        <th scope="row">{cashFlowSummaryLabel(item.key)}</th>
-                        <td>{amount.unit}</td>
-                        <td className="statement-print-amount">
-                          {formatStatementAmount(
-                            amount.displayAmount,
-                            i18n.language,
-                          )}
-                        </td>
-                      </tr>
-                    )),
+                    getCashFlowSummaryAmounts(document, item.row).map(
+                      (amount, amountIndex) => (
+                        <tr
+                          className={`statement-print-row statement-print-summary-row statement-print-summary-row-${item.key}`}
+                          key={`${item.key}-${amount?.unit ?? "empty"}-${amountIndex}`}
+                        >
+                          <th scope="row">{cashFlowSummaryLabel(item.key)}</th>
+                          <td>{amount?.unit ?? "—"}</td>
+                          <td className="statement-print-amount">
+                            {amount
+                              ? formatStatementAmount(
+                                  amount.displayAmount,
+                                  i18n.language,
+                                )
+                              : "—"}
+                          </td>
+                        </tr>
+                      ),
+                    ),
                   )}
                 </tbody>
               </table>

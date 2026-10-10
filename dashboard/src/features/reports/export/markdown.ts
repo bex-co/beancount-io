@@ -14,6 +14,7 @@ import {
   getBalanceSheetSummaryItems,
   getBalanceSheetSupportingSections,
   getCashFlowSummaryItems,
+  getCashFlowSummaryAmounts,
   getCashFlowSupportingSections,
   getProfitAndLossSummaryItems,
   getProfitAndLossSupportingSections,
@@ -182,12 +183,12 @@ function cashFlowSummaryLines(
   { locale, t }: MarkdownOptions,
 ): string[] {
   return getCashFlowSummaryItems(document).flatMap((item) =>
-    item.row.amounts.map((amount) => {
+    getCashFlowSummaryAmounts(document, item.row).map((amount) => {
       const label = escapeMarkdown(cashFlowSummaryLabel(item.key, t));
-      const unit = escapeMarkdown(amount.unit);
-      const value = escapeMarkdown(
-        formatStatementAmount(amount.displayAmount, locale),
-      );
+      const unit = amount ? escapeMarkdown(amount.unit) : "—";
+      const value = amount
+        ? escapeMarkdown(formatStatementAmount(amount.displayAmount, locale))
+        : "—";
       return `| **${label}** | **${unit}** | **${value}** |`;
     }),
   );
