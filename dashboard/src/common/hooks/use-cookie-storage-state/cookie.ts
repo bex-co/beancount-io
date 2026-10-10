@@ -12,7 +12,15 @@ import {
  * - Client: delegates to js-cookie
  */
 export const getCookie = createIsomorphicFn()
-  .server((key: string) => serverGetCookie(key))
+  .server((key: string) => {
+    // js-cookie serializes names as well as values; the server parser leaves
+    // names encoded. Match that spelling, retaining server-written raw names.
+    const browserKey = encodeURIComponent(key)
+      .replace(/%(2[346B]|5E|60|7C)/g, decodeURIComponent)
+      .replace(/\(/g, "%28")
+      .replace(/\)/g, "%29");
+    return serverGetCookie(browserKey) ?? serverGetCookie(key);
+  })
   .client((key: string) => Cookies.get(key));
 
 /**
