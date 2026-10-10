@@ -11,3 +11,4 @@ No milestones yet.
 - [001](./001.md) — Classify malformed MCP request parameters before SDK validation escapes (minor; backend-v2; 60m).
 - [002](./002.md) — Distinguish invalid JSON-RPC envelopes from malformed JSON (minor; backend-v2; 40–50m).
 - [003](./003.md) — Count BQL result rows rather than physical lines in MCP text summaries (minor; backend-v2; 45–60m).
+- [004](./004.md) — Keep nonzero account movements when interval totals cancel to zero (major; backend-v2; 35–50m).
