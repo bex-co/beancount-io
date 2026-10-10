@@ -10,6 +10,8 @@ const state = vi.hoisted(() => ({
   isDark: false,
   chart: {
     setOption: vi.fn(),
+    getOption: vi.fn(),
+    dispatchAction: vi.fn(),
     dispose: vi.fn(),
     resize: vi.fn(),
     showLoading: vi.fn(),
@@ -37,6 +39,7 @@ beforeEach(() => {
   state.initThemes.length = 0;
   state.isDark = false;
   state.chart.setOption.mockImplementation(() => state.calls.push("setOption"));
+  state.chart.getOption.mockReturnValue({});
   state.chart.dispose.mockImplementation(() => state.calls.push("dispose"));
 });
 
@@ -82,6 +85,101 @@ it("recreates the chart when the resolved app appearance changes", () => {
   view.rerender(<ReactEChartsClient option={option} />);
   expect(state.calls).toEqual(["dispose", "init", "setOption"]);
   expect(state.initThemes).toEqual(["app-dark"]);
+});
+
+it("restores only current selectable legend names after applying the same report defaults", () => {
+  const option = {
+    legend: [
+      {
+        data: ["USD", { name: "IRAUSD" }, "VACHR"],
+        selected: { USD: true, IRAUSD: false, VACHR: false },
+      },
+      { data: ["Fees"], selectedMode: false as const },
+    ],
+    series: [{ type: "bar" as const, name: "USD", data: [1] }],
+  };
+  const view = render(<ReactEChartsClient option={option} />);
+  state.chart.getOption
+    .mockReturnValueOnce({
+      legend: [
+        {
+          selected: {
+            USD: true,
+            IRAUSD: true,
+            VACHR: false,
+            obsolete: false,
+          },
+        },
+        { selected: { Fees: false } },
+      ],
+    })
+    .mockReturnValue(option);
+  state.isDark = true;
+  view.rerender(<ReactEChartsClient option={option} />);
+
+  expect(state.chart.setOption).toHaveBeenLastCalledWith(option, {
+    notMerge: false,
+    lazyUpdate: false,
+    silent: false,
+  });
+  expect(state.chart.dispatchAction.mock.calls).toEqual([
+    [{ type: "legendSelect", name: "USD", legendIndex: 0 }, { silent: true }],
+    [
+      { type: "legendSelect", name: "IRAUSD", legendIndex: 0 },
+      { silent: true },
+    ],
+    [
+      { type: "legendUnSelect", name: "VACHR", legendIndex: 0 },
+      { silent: true },
+    ],
+  ]);
+  view.unmount();
+});
+
+it("keeps new report defaults when option and theme change together, then scopes later snapshots to that report", () => {
+  const oldOption = {
+    legend: { data: ["USD", "IRAUSD"] },
+    series: [{ type: "bar" as const, name: "USD", data: [1] }],
+  };
+  const nextOption = {
+    legend: { data: ["EUR"], selected: { EUR: false } },
+    series: [{ type: "bar" as const, name: "EUR", data: [2] }],
+  };
+  const view = render(<ReactEChartsClient option={oldOption} />);
+  state.chart.getOption.mockReturnValue({
+    legend: [{ selected: { USD: true, IRAUSD: true } }],
+  });
+  state.isDark = true;
+  view.rerender(<ReactEChartsClient option={nextOption} />);
+  expect(state.chart.dispatchAction).not.toHaveBeenCalled();
+  expect(state.chart.setOption).toHaveBeenLastCalledWith(nextOption, {
+    notMerge: false,
+    lazyUpdate: false,
+    silent: false,
+  });
+
+  state.chart.getOption
+    .mockReturnValueOnce({ legend: [{ selected: { EUR: true } }] })
+    .mockReturnValue(nextOption);
+  state.isDark = false;
+  view.rerender(<ReactEChartsClient option={nextOption} />);
+  expect(state.chart.dispatchAction).toHaveBeenCalledExactlyOnceWith(
+    { type: "legendSelect", name: "EUR", legendIndex: 0 },
+    { silent: true },
+  );
+  view.unmount();
+});
+
+it("does not recreate an explicitly themed chart when the app appearance changes", () => {
+  const option = { series: [{ type: "line" as const, data: [1, 2] }] };
+  const view = render(<ReactEChartsClient option={option} theme="custom" />);
+  state.isDark = true;
+  view.rerender(<ReactEChartsClient option={option} theme="custom" />);
+  expect(state.initThemes).toEqual(["custom"]);
+  expect(state.chart.dispose).not.toHaveBeenCalled();
+  expect(state.chart.getOption).not.toHaveBeenCalled();
+  expect(state.chart.dispatchAction).not.toHaveBeenCalled();
+  view.unmount();
 });
 
 it("reapplies unchanged options and loading state when the theme recreates the chart", async () => {
