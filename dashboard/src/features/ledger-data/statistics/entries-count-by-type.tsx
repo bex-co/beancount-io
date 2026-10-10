@@ -97,10 +97,15 @@ function EntriesCountTable({
 }: {
   data: GetLedgerEntriesCountPerTypeQuery;
 }) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
   const formatNum = useFormatNumber();
   const entries = data.getLedgerEntriesCountPerType;
   const totalCount = entries.reduce((sum, entry) => sum + entry.number, 0);
+  const formatPercentage = new Intl.NumberFormat(i18n.language, {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
 
   return (
     <StatisticsSection
@@ -131,7 +136,7 @@ function EntriesCountTable({
           const percentage =
             totalCount === 0
               ? null
-              : ((entry.number / totalCount) * 100).toFixed(1);
+              : formatPercentage.format(entry.number / totalCount);
           return (
             <TableRow key={entry.type}>
               <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">
@@ -148,7 +153,7 @@ function EntriesCountTable({
                     —
                   </span>
                 ) : (
-                  `${percentage}%`
+                  percentage
                 )}
               </TableCell>
             </TableRow>
