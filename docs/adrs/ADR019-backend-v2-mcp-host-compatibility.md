@@ -291,6 +291,41 @@ Ledger scope is settled in ADR 0007: [every credential reaches all the ledgers i
 
 ## Amendments
 
+### 2026-10-09 — The MCP surface is trimmed to what the Claude and ChatGPT directories accept (w1/m36)
+
+The owner decided on 2026-10-09 that a public listing in Claude's connector directory and ChatGPT's app directory outranks every other goal. An operation either directory would refuse leaves MCP rather than being defended, and when the policy text is ambiguous, refusal is assumed. Every decision below applies to every host: the single endpoint of D1 stands, and nothing is hidden per host.
+
+Sources were read on 2026-10-09 and are quoted verbatim:
+
+- **[C-rev]** Claude connector pre-submission checklist, claude.com/docs/connectors/building/review-criteria.
+- **[C-pol]** Anthropic Software Directory Policy (last updated 2026-04-15), support.claude.com/en/articles/13145358.
+- **[O-gl]** OpenAI app submission guidelines, developers.openai.com/apps-sdk/app-submission-guidelines.
+
+The clauses that decide something:
+
+- **O-gl, restricted data:** "Do not collect, solicit, or process the following categories of Restricted Data: Access credentials and authentication secrets (such as API keys, MFA/OTP codes, or passwords)."
+- **O-gl, commerce:** "Plugins must not display subscription plans, initiate new subscriptions, or promote upgrades."
+- **O-gl, `destructiveHint`:** "Use `true` for potentially destructive or irreversible effects, such as deletion, overwriting, cancellation, access revocation, or irreversible sends or transactions."
+- **O-gl, `readOnlyHint`:** "Use `true` for retrieval, computation, or previews that do not modify the environment."
+- **C-rev, mixed tools:** "A single tool that accepts both safe HTTP methods … and unsafe methods … is rejected."
+- **C-rev, annotations:** "`readOnlyHint: true` for read-only tools, and `destructiveHint: true` for tools that modify or delete data."
+- **C-rev, prompt injection:** "Describe what the tool does, and don't tell Claude how to behave." Rejected descriptions include those that "Interfere with Claude calling other tools" or "promote products and services".
+- **C-rev, review process:** in Verified review, "reviewers run a functional test of each tool".
+
+| MCP surface | Decision | Clause |
+| --- | --- | --- |
+| `manageApiKeys` (list, create, revoke) | **Remove** | O-gl restricted data: `create` returns an API key into the conversation. C-rev mixed tools: `list` is a read in a destructive tool. Separately, a connector's OAuth token could mint a key with no link to its grant that outlives the connection's revocation. |
+| `listPublicKeys`, `managePublicKeys`, and resources `publicKeys`, `publicKey` | **Remove** | O-gl restricted data: an SSH key registered on the account is an access credential. Adding one also bypasses the deliberate SSH-setup step (`.pm/DO_NOT_DO.md`). |
+| `deleteAccount` | **Remove** | Irreversible, and it cancels the subscription. Under C-rev's review process, a Verified reviewer's functional test would delete their own test account. |
+| Resource `allTierQuotas` | **Remove** | O-gl commerce: it lists every subscription tier's limits. |
+| Resource `aiCfoUsage` | **Remove** | O-gl commerce: it reports usage against the plan limit. Ambiguous, so refusal is assumed. |
+| `listBankConnections` | **Relabel** `readOnlyHint: true` | O-gl and C-rev `readOnlyHint`: it only reads. This reverses the D7 deviation ("hosts will ask before running them"), because the directories require the label to match the behavior. |
+| `manageBankImport` | **Relabel** `destructiveHint: true` | O-gl `destructiveHint`: `discard` deletes staged transactions. |
+| Server instructions, tool descriptions, error text | **Reword** | C-rev prompt injection and O-gl commerce. Imperatives addressed to the model ("Start with…", "Use this, not…", "Use when…") become statements of what each tool does. "Upgrade the plan" error text becomes a neutral statement of the limit. |
+| Every other tool | **Keep** | Each reads or writes ledger data, and its annotations already match O-gl's and C-rev's definitions. None moves money (C-pol, O-gl). |
+
+REST and GraphQL keep every removed operation. The parity table records each removal as directory-policy-withheld on MCP. The frozen parity baseline names the three API-key verbs as an explicit exception, and ADR 0008's Amendments record the contract change.
+
 ### 2026-10-06 — Facts re-verified, and accepted
 
 Before implementation started, the record's 2026-09-25 facts were re-checked against current sources and the installed provider (`.pm/w1/done/m30/done/t001.md`).
