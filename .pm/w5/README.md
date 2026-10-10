@@ -35,7 +35,6 @@
 
 ## Inbox
 
-- [061 — Invalid treeify regex options report runtime failures without naming the bad option](./061.md) — minor CLI input diagnosis bug; three regex flags repeated with preserved exports, 25–40m.
 - [062 — Doctor fails to resolve relative included filenames containing a colon](./062.md) — minor CLI location parsing bug; two pristine repros across three operations with absolute/plain controls, 25–40m.
 - [063 — Bulk amount shorthand rejects valid partial lot selectors](./063.md) — minor CLI batch input bug; three selectors repeated with single-add/structured controls, 25–40m.
 - [064 — Sigil-only tag and link filters silently erase matching list results](./064.md) — minor CLI empty-filter bug; human/JSON repeats with named-filter and literal-empty controls, 15–25m.
