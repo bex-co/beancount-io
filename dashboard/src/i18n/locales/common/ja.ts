@@ -71,6 +71,12 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "編集",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "エディターを読み込めませんでした。ページを再読み込みして、もう一度お試しください。",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "予期しないエラーが発生しました。もう一度お試しいただくか、前のページに戻ってください。",

@@ -71,6 +71,12 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "Editar",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "No s'ha pogut carregar l'editor. Torna a carregar la pàgina per tornar-ho a provar.",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "Hem trobat un error inesperat. Si us plau, torneu-ho a provar o torneu a la pàgina anterior.",

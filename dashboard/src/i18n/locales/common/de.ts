@@ -71,6 +71,12 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Bearbeiten",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "Der Editor konnte nicht geladen werden. Laden Sie die Seite neu, um es erneut zu versuchen.",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "Wir sind auf einen unerwarteten Fehler gestoßen. Bitte versuchen Sie es erneut oder kehren Sie zur vorherigen Seite zurück.",

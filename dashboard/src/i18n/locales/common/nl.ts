@@ -71,6 +71,12 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Bewerken",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "De editor kon niet worden geladen. Laad de pagina opnieuw om het nogmaals te proberen.",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "We hebben een onverwachte fout aangetroffen. Probeer het opnieuw of ga terug naar de vorige pagina.",

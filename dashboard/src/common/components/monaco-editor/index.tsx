@@ -1,6 +1,13 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
-import Editor, { type EditorProps, type OnMount } from "@monaco-editor/react";
+import Editor, {
+  loader,
+  type EditorProps,
+  type OnMount,
+} from "@monaco-editor/react";
+import { Alert, AlertDescription } from "@/common/components/ui/alert";
+import { Button } from "@/common/components/ui/button";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 /**
  * Tell assistive technology when the editor is read-only.
@@ -57,6 +64,24 @@ export const MonacoEditor = ({
   options,
   ...props
 }: EditorProps & { fallback?: React.ReactNode }) => {
+  const { t } = useTranslations();
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    const initialization = loader.init();
+    void initialization.catch((error: unknown) => {
+      const canceled =
+        typeof error === "object" &&
+        error !== null &&
+        "type" in error &&
+        error.type === "cancelation";
+      if (active && !canceled) setFailed(true);
+    });
+    return () => {
+      active = false;
+      initialization.cancel();
+    };
+  }, []);
   // A fresh object every render would make the editor re-apply its options on
   // every render, so the default is computed only when the caller's changes.
   const editorOptions = useMemo(() => withDomReadOnly(options), [options]);
@@ -68,7 +93,22 @@ export const MonacoEditor = ({
 
   return (
     <ClientOnly fallback={fallback}>
-      <Editor {...props} options={editorOptions} onMount={handleMount} />
+      {failed ? (
+        <Alert variant="destructive">
+          <AlertDescription>
+            <p>{t("common.editorFailedToLoad")}</p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => window.location.reload()}
+            >
+              {t("common.reloadPage")}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Editor {...props} options={editorOptions} onMount={handleMount} />
+      )}
     </ClientOnly>
   );
 };

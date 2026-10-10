@@ -4,6 +4,9 @@ import { TextEditor } from "../ledger-file-view/text-editor";
 
 // Capture the language/theme props the real TextEditor passes to Monaco
 vi.mock("@monaco-editor/react", () => ({
+  loader: {
+    init: () => Object.assign(Promise.resolve(), { cancel: vi.fn() }),
+  },
   default: ({ language, theme }: { language?: string; theme?: string }) => (
     <div
       data-testid="monaco-editor"

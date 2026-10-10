@@ -71,6 +71,12 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Редагувати",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "Не вдалося завантажити редактор. Перезавантажте сторінку, щоб спробувати ще раз.",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "Ми зіткнулися з несподіваною помилкою. Будь ласка, спробуйте ще раз або поверніться на попередню сторінку.",

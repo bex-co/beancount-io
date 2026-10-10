@@ -71,6 +71,12 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "ویرایش",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "ویرایشگر بارگذاری نشد. برای تلاش دوباره، صفحه را دوباره بارگذاری کنید.",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "با خطای غیرمنتظره‌ای مواجه شدیم. لطفاً دوباره تلاش کنید یا به صفحه قبلی برگردید.",

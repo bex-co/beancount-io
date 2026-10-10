@@ -71,6 +71,11 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "编辑",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message: "编辑器加载失败。重新加载页面后再试一次。",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message: "我们遇到了意外错误。请重试或返回上一页。",
     description: "Error page description",

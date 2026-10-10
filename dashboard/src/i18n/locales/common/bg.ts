@@ -71,6 +71,12 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Редактиране",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "Редакторът не можа да се зареди. Презаредете страницата, за да опитате отново.",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "Срещнахме неочаквана грешка. Моля, опитайте отново или се върнете на предишната страница.",

@@ -73,6 +73,9 @@ let current: ReturnType<typeof fakeEditor>;
 let seenOptions: Record<string, unknown> | undefined;
 
 vi.mock("@monaco-editor/react", () => ({
+  loader: {
+    init: () => Object.assign(Promise.resolve(), { cancel: vi.fn() }),
+  },
   default: ({
     options,
     onMount,

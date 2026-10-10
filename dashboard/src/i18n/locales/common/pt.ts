@@ -71,6 +71,12 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Editar",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "Não foi possível carregar o editor. Recarregue a página para tentar novamente.",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "Encontramos um erro inesperado. Por favor, tente novamente ou volte para a página anterior.",

@@ -71,6 +71,12 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Редактировать",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "Не удалось загрузить редактор. Перезагрузите страницу, чтобы повторить попытку.",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "Мы столкнулись с неожиданной ошибкой. Пожалуйста, попробуйте снова или вернитесь на предыдущую страницу.",

@@ -71,6 +71,12 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "편집",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "편집기를 불러오지 못했습니다. 페이지를 새로고침하여 다시 시도하세요.",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "예기치 못한 오류가 발생했습니다. 다시 시도하거나 이전 페이지로 돌아가세요.",

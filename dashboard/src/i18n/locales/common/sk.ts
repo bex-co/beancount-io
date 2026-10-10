@@ -71,6 +71,12 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Upraviť",
     description: "Button label to edit item",
   },
+  "common.editorFailedToLoad": {
+    message:
+      "Editor sa nepodarilo načítať. Načítajte stránku znova a skúste to opäť.",
+    description:
+      "Message shown when editor initialization fails, with page reload as recovery",
+  },
   "common.errorDescription": {
     message:
       "Narazili sme na neočakávanú chybu. Skúste to znova alebo sa vráťte na predchádzajúcu stránku.",
