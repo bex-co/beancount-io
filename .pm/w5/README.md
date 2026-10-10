@@ -35,7 +35,6 @@
 
 ## Inbox
 
-- [055 — Init prints an unusable next command for custom ledger filenames under home](./055.md) — minor CLI onboarding bug; real zsh/bash reproduction, 20–30m.
 - [056 — Price export writes a partial snapshot before discovering a blocked directory](./056.md) — minor CLI export preflight bug; repeated split-ledger reproduction, 30–45m.
 - [057 — Bulk posting fragments bypass the literal-zero-divisor guard and crash validation](./057.md) — minor CLI batch validation bug; atomic/partial reproduction and single-add control, 30–45m.
 - [058 — Portable export collapses distinct symlink includes into an invalid, changed ledger](./058.md) — major CLI export bug; two pristine repros and hard-link/regular controls, 45–60m.
