@@ -32,8 +32,13 @@ export function AccountPrefixNavigation({
     >
       <div className="flex items-center gap-2">
         <span
-          className="min-w-0 max-w-[55cqw] truncate font-mono text-sm @xl:max-w-none"
+          className="min-w-0 max-w-[55cqw] truncate font-mono text-sm focus-within:text-clip @xl:max-w-none"
           onMouseLeave={() => setHoveredPrefixIndex(null)}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+              event.currentTarget.scrollLeft = 0;
+            }
+          }}
         >
           {segments.map((segment, index) => {
             const accountPrefix = segments.slice(0, index + 1).join(":");
@@ -59,7 +64,18 @@ export function AccountPrefixNavigation({
                 aria-label={accountPrefix}
                 title={accountPrefix}
                 onMouseEnter={() => setHoveredPrefixIndex(index)}
-                onFocus={() => setFocusedPrefixIndex(index)}
+                onFocus={(event) => {
+                  setFocusedPrefixIndex(index);
+                  const viewport = event.currentTarget.parentElement;
+                  if (!viewport) return;
+                  const visible = viewport.getBoundingClientRect();
+                  const focused = event.currentTarget.getBoundingClientRect();
+                  if (focused.left < visible.left) {
+                    viewport.scrollLeft += focused.left - visible.left;
+                  } else if (focused.right > visible.right) {
+                    viewport.scrollLeft += focused.right - visible.right;
+                  }
+                }}
                 onBlur={() => setFocusedPrefixIndex(null)}
                 onClick={(event) => {
                   event.stopPropagation();
