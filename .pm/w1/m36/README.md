@@ -1,6 +1,6 @@
 # w1 · m36 — Trim the MCP surface to what the Claude and ChatGPT directories accept
 
-**Worker:** worker1 **Goal:** Every tool, annotation, description, and error message the hosted MCP endpoint exposes passes Claude's connector-directory review criteria and ChatGPT's app-submission guidelines. Any operation either directory would refuse is removed from MCP (or hidden from that host) with its reason on record. **Status:** in progress (t001–t005, t007, t008 done; t006 waits on a deploy)
+**Worker:** worker1 **Goal:** Every tool, annotation, description, and error message the hosted MCP endpoint exposes passes Claude's connector-directory review criteria and ChatGPT's app-submission guidelines. Any operation either directory would refuse is removed from MCP (or hidden from that host) with its reason on record. **Status:** in progress (t001–t005, t007–t009 done; t006 waits on a deploy)
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | t006 | Verify the trimmed surface on production | 20m | t002, t003, t004, t005 |
 | [t007](./done/t007.md) | Adoption surface — **DONE** | 30m | t006 |
 | [t008](./done/t008.md) | Simplify — **DONE** | 30m | t007 |
-| t009 | Test coverage | 45m | t007, t008 |
+| [t009](./done/t009.md) | Test coverage — **DONE** | 45m | t007, t008 |
 | t010 | Closeout | 15m | t009 |
 
 ## Definition of done
