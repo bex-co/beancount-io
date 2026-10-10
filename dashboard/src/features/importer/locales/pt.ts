@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const ptImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "Importação indisponível",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "Você tem acesso somente de leitura a este livro. Importar transações exige acesso de escrita. Você ainda pode explorar o diário, os arquivos e as consultas.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "Não foi possível confirmar o acesso de escrita. A importação fica indisponível até que suas permissões do livro sejam confirmadas.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

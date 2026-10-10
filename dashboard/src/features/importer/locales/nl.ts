@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const nlImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "Importeren niet beschikbaar",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "Je hebt alleen leestoegang tot dit grootboek. Voor het importeren van transacties heb je schrijftoegang nodig. Je kunt het journaal, de bestanden en de query’s blijven bekijken.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "Schrijftoegang kon niet worden bevestigd. Importeren is niet beschikbaar totdat je grootboekrechten zijn vastgesteld.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

@@ -6,7 +6,14 @@ import { ImportWorkflowContainer } from "../components/import-workflow-container
 import { AiCfoUpgradePanel } from "@/common/components/ai-cfo-upgrade-panel";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { useLedger } from "@/common/hooks/use-ledger";
+import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { useTranslations } from "@/common/hooks/use-translations";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/common/components/ui/alert";
+import { LockKeyhole } from "lucide-react";
 
 export default function ImportPage() {
   const { t } = useTranslations();
@@ -15,7 +22,8 @@ export default function ImportPage() {
     ledgerName: string;
   };
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
-  const { ledgerName: ledgerDisplayName } = useLedger();
+  const { ledgerName: ledgerDisplayName, ledgerData } = useLedger();
+  const { canWrite } = useLedgerPermission();
 
   return (
     <div className="space-y-6">
@@ -27,18 +35,32 @@ export default function ImportPage() {
         })}
       />
 
-      {/* AI CFO Upgrade Panel */}
-      <ClientOnly>
-        <AiCfoUpgradePanel />
-      </ClientOnly>
-
       {/* Main Content */}
       <div className="space-y-6">
-        <ImportWorkflowContainer
-          ledgerId={ledgerId}
-          ledgerOwner={ledgerOwner}
-          ledgerName={ledgerName}
-        />
+        {canWrite ? (
+          <>
+            <ClientOnly>
+              <AiCfoUpgradePanel />
+            </ClientOnly>
+            <ImportWorkflowContainer
+              ledgerId={ledgerId}
+              ledgerOwner={ledgerOwner}
+              ledgerName={ledgerName}
+            />
+          </>
+        ) : (
+          <Alert role="status">
+            <LockKeyhole aria-hidden />
+            <AlertTitle>{t("importer.access.title")}</AlertTitle>
+            <AlertDescription>
+              {t(
+                ledgerData.permissions
+                  ? "importer.access.readOnly"
+                  : "importer.access.unresolved",
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
       {/* Footer */}

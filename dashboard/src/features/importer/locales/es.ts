@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const esImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "Importación no disponible",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "Tienes acceso de solo lectura a este libro. Importar transacciones requiere acceso de escritura. Puedes seguir explorando el diario, los archivos y las consultas.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "No se pudo confirmar el acceso de escritura. La importación no está disponible hasta que se resuelvan tus permisos del libro.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

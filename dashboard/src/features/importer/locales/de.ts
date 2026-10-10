@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const deImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "Import nicht verfügbar",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "Du hast nur Lesezugriff auf dieses Hauptbuch. Zum Importieren von Transaktionen brauchst du Schreibzugriff. Du kannst weiterhin Journal, Dateien und Abfragen ansehen.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "Der Schreibzugriff konnte nicht bestätigt werden. Der Import ist erst verfügbar, wenn deine Hauptbuchberechtigungen feststehen.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

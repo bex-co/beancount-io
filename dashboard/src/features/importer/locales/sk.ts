@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const skImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "Import nie je dostupný",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "K tejto účtovnej knihe máte prístup iba na čítanie. Import transakcií vyžaduje oprávnenie na zápis. Denník, súbory a dotazy si môžete naďalej prezerať.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "Oprávnenie na zápis sa nepodarilo potvrdiť. Import nie je dostupný, kým sa neoveria vaše oprávnenia k účtovnej knihe.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

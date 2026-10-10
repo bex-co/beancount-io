@@ -4,6 +4,19 @@ export interface TranslationEntry {
 }
 
 const zhImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "无法导入",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "你对该账本仅有只读权限。导入交易需要写入权限。你仍可查看日记账、文件和查询。",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message: "无法确认写入权限。在确认你的账本权限之前，导入功能不可用。",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

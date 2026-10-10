@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const enImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "Import unavailable",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "This ledger is read-only for you. Importing transactions requires write access. You can still explore its journal, files, and queries.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "Write access could not be confirmed. Import is unavailable until your ledger permissions are resolved.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   "page.importer.title": {
     message: "Smart Import",
     description: "Page title for the importer page",

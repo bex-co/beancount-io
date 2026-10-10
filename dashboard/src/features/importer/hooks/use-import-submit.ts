@@ -1,8 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useMutation } from "@apollo/client/react";
 import { BulkEntriesDocument, LedgerEntryType } from "@/graphql/definitions";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { negateDecimalNumber } from "@/common/lib/beancount/decimal-number";
+import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
+import { useTranslations } from "@/common/hooks/use-translations";
 import type {
   LedgerTransactionInput,
   LedgerPostingInput,
@@ -23,9 +25,33 @@ export function useImportSubmit(ledgerId: string): UseImportSubmitReturn {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bulkEntries] = useMutation(BulkEntriesDocument);
   const formatError = useErrorMessage();
+  const { t } = useTranslations();
+  const { canWrite } = useLedgerPermission();
+  const canWriteRef = useRef(canWrite);
+
+  useEffect(() => {
+    canWriteRef.current = canWrite;
+    // A permission change can unmount the workflow before this hook renders
+    // again. Any retained submit callback must fail closed after that too.
+    return () => {
+      canWriteRef.current = false;
+    };
+  }, [canWrite]);
 
   const submitImport = useCallback(
     async (transactions: ImportTransaction[]) => {
+      if (!canWriteRef.current) {
+        const message = t("common.errors.forbidden");
+        setImportResult({
+          success: false,
+          message,
+          successCount: 0,
+          failureCount: transactions.length,
+          errors: [{ index: -1, message }],
+        });
+        return;
+      }
+
       setIsSubmitting(true);
       const startTime = Date.now();
 
@@ -111,7 +137,7 @@ export function useImportSubmit(ledgerId: string): UseImportSubmitReturn {
         setIsSubmitting(false);
       }
     },
-    [ledgerId, bulkEntries, formatError],
+    [ledgerId, bulkEntries, formatError, t],
   );
 
   return {

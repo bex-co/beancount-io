@@ -1,20 +1,27 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { useImportSubmit } from "../use-import-submit";
 import type { ImportTransaction } from "../../types";
 
 // ---------------------------------------------------------------------------
 // Hoist mocks so they are available before module imports
 // ---------------------------------------------------------------------------
-const { mockMutate, mockUseMutation } = vi.hoisted(() => {
-  const mockMutate = vi.fn();
-  const mockUseMutation = vi.fn(() => [mockMutate, { loading: false }]);
+const { mockMutate, mockUseMutation, mockUseLedgerPermission } = vi.hoisted(
+  () => {
+    const mockMutate = vi.fn();
+    const mockUseMutation = vi.fn(() => [mockMutate, { loading: false }]);
 
-  return { mockMutate, mockUseMutation };
-});
+    const mockUseLedgerPermission = vi.fn(() => ({ canWrite: true }));
+    return { mockMutate, mockUseMutation, mockUseLedgerPermission };
+  },
+);
 
 vi.mock("@apollo/client/react", () => ({
   useMutation: mockUseMutation,
+}));
+
+vi.mock("@/common/hooks/use-ledger-permission", () => ({
+  useLedgerPermission: mockUseLedgerPermission,
 }));
 
 vi.mock("@/graphql/definitions", () => ({
@@ -45,6 +52,7 @@ describe("useImportSubmit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseMutation.mockReturnValue([mockMutate, { loading: false }]);
+    mockUseLedgerPermission.mockReturnValue({ canWrite: true });
     // Mock Date.now() to always return a value far in the future relative to
     // startTime, so the "minimum 2-second UX delay" in the hook is skipped.
     vi.spyOn(Date, "now").mockReturnValue(Date.now() + 5_000);
@@ -52,6 +60,47 @@ describe("useImportSubmit", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe("ledger write access", () => {
+    it("refuses submission without write permission and reports a localized failure", async () => {
+      mockUseLedgerPermission.mockReturnValue({ canWrite: false });
+      const { result } = renderHook(() => useImportSubmit(ledgerId));
+
+      await act(() => result.current.submitImport([makeTransaction()]));
+
+      expect(mockMutate).not.toHaveBeenCalled();
+      expect(result.current.isSubmitting).toBe(false);
+      expect(result.current.importResult).toMatchObject({
+        success: false,
+        successCount: 0,
+        failureCount: 1,
+        message: "You don't have permission to perform this action.",
+      });
+    });
+
+    it("refuses a retained callback after write access is lost", async () => {
+      const { result, rerender } = renderHook(() => useImportSubmit(ledgerId));
+      const submitBeforePermissionLoss = result.current.submitImport;
+      mockUseLedgerPermission.mockReturnValue({ canWrite: false });
+      rerender();
+
+      await act(() => submitBeforePermissionLoss([makeTransaction()]));
+
+      expect(mockMutate).not.toHaveBeenCalled();
+      expect(result.current.importResult?.success).toBe(false);
+      expect(result.current.isSubmitting).toBe(false);
+    });
+
+    it("refuses a retained callback after the page unmounts its workflow", async () => {
+      const { result, unmount } = renderHook(() => useImportSubmit(ledgerId));
+      const submitBeforeUnmount = result.current.submitImport;
+      unmount();
+
+      await submitBeforeUnmount([makeTransaction()]);
+
+      expect(mockMutate).not.toHaveBeenCalled();
+    });
   });
 
   // -------------------------------------------------------------------------

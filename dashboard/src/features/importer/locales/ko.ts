@@ -1,6 +1,20 @@
 import type { TranslationEntry } from "@/i18n";
 
 const koImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "가져오기를 사용할 수 없습니다",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "이 원장에는 읽기 전용으로 접근할 수 있습니다. 거래를 가져오려면 쓰기 권한이 필요합니다. 분개장, 파일, 쿼리는 계속 살펴볼 수 있습니다.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "쓰기 권한을 확인할 수 없습니다. 원장 권한이 확인될 때까지 가져오기를 사용할 수 없습니다.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

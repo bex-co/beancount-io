@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const ukImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "Імпорт недоступний",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "Ця книга доступна вам лише для читання. Для імпорту транзакцій потрібні права на запис. Ви й надалі можете переглядати журнал, файли та запити.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "Не вдалося підтвердити права на запис. Імпорт недоступний, доки ваші права доступу до книги не буде визначено.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

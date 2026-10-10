@@ -1,6 +1,20 @@
 import type { TranslationEntry } from "@/i18n";
 
 const jaImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "インポートできません",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "この台帳へのアクセスは読み取り専用です。取引のインポートには書き込み権限が必要です。仕訳帳、ファイル、クエリは引き続き閲覧できます。",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "書き込み権限を確認できませんでした。台帳の権限が確認されるまでインポートは利用できません。",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

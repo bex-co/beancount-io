@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const caImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "Importació no disponible",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "Aquest llibre és de només lectura per a tu. Importar transaccions requereix accés d’escriptura. Pots continuar explorant el diari, els fitxers i les consultes.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "No s’ha pogut confirmar l’accés d’escriptura. La importació no està disponible fins que es resolguin els teus permisos del llibre.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

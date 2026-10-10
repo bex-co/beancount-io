@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const bgImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "Импортирането не е налично",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "Имате достъп само за четене до тази книга. Импортирането на транзакции изисква достъп за запис. Можете да разглеждате дневника, файловете и заявките.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "Достъпът за запис не може да бъде потвърден. Импортирането не е налично, докато не бъдат установени правата ви за книгата.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const ruImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "Импорт недоступен",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "Эта книга доступна вам только для чтения. Для импорта транзакций нужны права на запись. Вы по-прежнему можете просматривать журнал, файлы и запросы.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "Не удалось подтвердить права на запись. Импорт недоступен, пока ваши права доступа к книге не будут определены.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload

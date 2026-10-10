@@ -4,6 +4,20 @@ export interface TranslationEntry {
 }
 
 const faImporter: Record<string, TranslationEntry> = {
+  "importer.access.title": {
+    message: "درون‌ریزی در دسترس نیست",
+    description: "Title when the importer cannot be used",
+  },
+  "importer.access.readOnly": {
+    message:
+      "این دفتر برای شما فقط خواندنی است. درون‌ریزی تراکنش‌ها به دسترسی نوشتن نیاز دارد. همچنان می‌توانید دفتر روزنامه، فایل‌ها و پرس‌وجوها را بررسی کنید.",
+    description: "Explanation when the user cannot write to the ledger",
+  },
+  "importer.access.unresolved": {
+    message:
+      "دسترسی نوشتن تأیید نشد. تا زمانی که مجوزهای دفتر شما مشخص نشود، درون‌ریزی در دسترس نیست.",
+    description: "Explanation when ledger write permissions are unavailable",
+  },
   // Premium Banner
 
   // File Upload
