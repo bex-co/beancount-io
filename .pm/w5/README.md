@@ -35,7 +35,6 @@
 
 ## Inbox
 
-- [056 — Price export writes a partial snapshot before discovering a blocked directory](./056.md) — minor CLI export preflight bug; repeated split-ledger reproduction, 30–45m.
 - [057 — Bulk posting fragments bypass the literal-zero-divisor guard and crash validation](./057.md) — minor CLI batch validation bug; atomic/partial reproduction and single-add control, 30–45m.
 - [058 — Portable export collapses distinct symlink includes into an invalid, changed ledger](./058.md) — major CLI export bug; two pristine repros and hard-link/regular controls, 45–60m.
 - [059 — Arithmetic total-price inputs lose their exact @@ annotation](./059.md) — minor CLI serialization bug; single-add/bulk reproduction with literal controls, 35–55m.
