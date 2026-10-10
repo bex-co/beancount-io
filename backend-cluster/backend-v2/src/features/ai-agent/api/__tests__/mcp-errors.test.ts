@@ -19,7 +19,9 @@ import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
+  PremiumRequiredError,
   RateLimitedError,
+  ResourceLimitReachedError,
   UnbalancedTransactionError,
 } from "@/shared/errors";
 
@@ -341,5 +343,50 @@ describe("renderErrorText", () => {
     expect(
       renderErrorText({ code: "FORBIDDEN", message: "nope", hint: "ask" }),
     ).toBe("FORBIDDEN: nope\nHint: ask");
+  });
+});
+
+describe("plan wording stays off MCP", () => {
+  // ADR 019, 2026-10-09 amendment: the connector directories forbid an app to
+  // display plans or promote upgrades. The domain messages are written for the
+  // dashboard, so MCP keeps their facts and drops the upsell.
+  const PLAN = /upgrade|premium|subscri|paid|\bplans?\b/i;
+
+  it("keeps a limit's numbers and drops the upgrade sentence", () => {
+    const envelope = envelopeFromThrown(
+      new ResourceLimitReachedError("Ledger", 1, 1),
+    );
+    expect(envelope.code).toBe("RESOURCE_LIMIT_REACHED");
+    expect(envelope.message).toBe(
+      "Ledger limit reached. Maximum: 1, Current: 1.",
+    );
+    expect(envelope.message).not.toMatch(PLAN);
+    expect(envelope.hint).not.toMatch(PLAN);
+  });
+
+  it("keeps a custom limit message that never mentioned a plan", () => {
+    const message =
+      "Directive limit reached. Delete entries to get back under it.";
+    expect(
+      envelopeFromThrown(
+        new ResourceLimitReachedError("Directive", 10, 11, message),
+      ).message,
+    ).toBe(message);
+  });
+
+  it("states a premium-only refusal without naming a plan", () => {
+    const envelope = envelopeFromThrown(new PremiumRequiredError("API keys"));
+    expect(envelope.code).toBe("PREMIUM_REQUIRED");
+    expect(envelope.message).not.toMatch(PLAN);
+    expect(envelope.message.length).toBeGreaterThan(0);
+    expect(envelope.hint).not.toMatch(PLAN);
+  });
+
+  it("drops plan wording from a throw-site hint too", () => {
+    const error = new ResourceLimitReachedError("Ledger", 1, 1);
+    (error as { metadata?: unknown }).metadata = {
+      hint: "Upgrade your plan to add more.",
+    };
+    expect(envelopeFromThrown(error).hint).not.toMatch(PLAN);
   });
 });

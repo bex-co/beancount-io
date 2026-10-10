@@ -73,6 +73,46 @@ async function listTools() {
 }
 
 describe("MCP tool list", () => {
+  it("describes every tool and prompt without steering the model or naming a plan", async () => {
+    // Both connector directories review this text (ADR 019, 2026-10-09
+    // amendment): it says what a tool does, never how the model should
+    // behave, and never promotes a plan.
+    const ctx = { identity } as unknown as McpRequestContext;
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const server = assembleMcpRegistry(ctx, config);
+    await server.connect(serverTransport);
+    const client = new Client({ name: "test", version: "1.0.0" });
+    await client.connect(clientTransport);
+    try {
+      const { tools } = await client.listTools();
+      const { prompts } = await client.listPrompts();
+      const texts = [
+        ...tools.map((t) => [
+          t.name,
+          `${t.title ?? ""} ${t.description ?? ""}`,
+        ]),
+        ...prompts.map((p) => [p.name, p.description ?? ""]),
+      ];
+      for (const [name, text] of texts) {
+        expect({
+          name,
+          steering:
+            /\b(use this|use when|start with|start here|call after|prefer)\b/i.test(
+              text,
+            ),
+        }).toEqual({ name, steering: false });
+        expect({
+          name,
+          plan: /upgrade|premium|paid plan|pricing/i.test(text),
+        }).toEqual({ name, plan: false });
+      }
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  });
+
   it("starts with the read tools agents reach for first", () => {
     expect(MCP_TOOLS.slice(0, 5).map((tool) => tool.name)).toEqual([
       "runBqlQuery",

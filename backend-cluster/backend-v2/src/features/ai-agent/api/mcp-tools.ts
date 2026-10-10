@@ -569,7 +569,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     // because it reaches the feed's origin.
     annotations: { ...IDEMPOTENT_WRITE, openWorldHint: true },
     description:
-      "Re-fetch the ledger's managed price feeds now and return each source's status (the ledgerManagedPrices records). Use when a source is stale or unavailable. Never edits the ledger. ledger is required unless pinned.",
+      "Re-fetch the ledger's managed price feeds now and return each source's status (the ledgerManagedPrices records). Never edits the ledger. ledger is required unless pinned.",
     inputSchema: refreshManagedPricesInput,
     outputSchema: refreshManagedPricesOutput,
     execute: executeRefreshManagedPrices,

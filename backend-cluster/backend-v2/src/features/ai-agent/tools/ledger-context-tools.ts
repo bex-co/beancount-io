@@ -20,7 +20,7 @@ const toolLogger = logger.child({ module: "tool:ledger-context" });
 // --- listLedgers --------------------------------------------------------
 
 export const listLedgersDescription =
-  "List the ledgers this credential can reach — every one when `page` and `limit` are omitted. A pinned credential returns its one ledger; an unpinned credential must call this first and pass `ledger: owner/name` afterwards.";
+  "List the ledgers this credential can reach — every one when `page` and `limit` are omitted. A pinned credential returns its one ledger; for an unpinned credential, ledger tools take one of these as `ledger: owner/name`.";
 
 export const listLedgersInputSchema = z.object({
   page: z
@@ -62,7 +62,7 @@ export async function executeListLedgers(
 // --- checkLedger ----------------------------------------------------------
 
 export const checkLedgerDescription =
-  "Check one ledger's validity in one call: bean-check errors with file and line, entry counts per directive type, and the latest commit. Call after any write instead of re-reading files.";
+  "Check one ledger's validity in one call: bean-check errors with file and line, entry counts per directive type, and the latest commit.";
 
 export const checkLedgerInputSchema = z.object({});
 
@@ -167,7 +167,7 @@ export async function executeGetLedgerContext(
 // --- getEntryContext ------------------------------------------------------
 
 export const getEntryContextDescription =
-  "Read the source context around one entry, addressed by its hash — what to read before editing it. Same data as the entry-context resource.";
+  "Read the source context around one entry, addressed by its hash; editEntrySource takes the same hash. Same data as the entry-context resource.";
 
 export const getEntryContextInputSchema = z.object({
   entryHash: z.string().describe("The entry's hash."),

@@ -86,7 +86,7 @@ const CATEGORY_HINTS: Record<ErrorCategory, string> = {
   [ErrorCategory.SERVICE_UNAVAILABLE]:
     "A dependency is down. Retry with backoff; this is not a problem with the request.",
   [ErrorCategory.RESOURCE_LIMIT_REACHED]:
-    "The account is at its plan limit for this resource. Remove something, or upgrade the plan.",
+    "The account is at its limit for this resource; removing something frees room.",
   [ErrorCategory.OPERATION_NOT_ALLOWED]:
     "The ledger's current state forbids this operation; read its metadata before retrying.",
   [ErrorCategory.UNBALANCED]:
@@ -94,8 +94,30 @@ const CATEGORY_HINTS: Record<ErrorCategory, string> = {
   [ErrorCategory.CONFIGURATION_ERROR]:
     "The deployment is missing configuration this operation needs. Nothing about the request will fix it.",
   [ErrorCategory.PREMIUM_REQUIRED]:
-    "This operation needs a paid plan on the account the credential belongs to.",
+    "This operation is not available for the account the credential belongs to.",
 };
+
+/**
+ * Plan wording stays off MCP (ADR 019, 2026-10-09 amendment): OpenAI's app
+ * guidelines forbid an app to display subscription plans or promote upgrades,
+ * and Claude's reject text that promotes products. The domain messages these
+ * two categories carry are written for the dashboard ("Upgrade to Premium…"),
+ * so MCP keeps their factual sentences and drops any that mention a plan.
+ */
+const PLAN_CATEGORIES: ReadonlySet<ErrorCategory> = new Set([
+  ErrorCategory.RESOURCE_LIMIT_REACHED,
+  ErrorCategory.PREMIUM_REQUIRED,
+]);
+const PLAN_WORDING = /upgrade|premium|subscri|pricing|\bplans?\b|paid/i;
+
+function withoutPlanWording(text: string, fallback: string): string {
+  const kept = text
+    .split(/(?<=\.)\s+/)
+    .filter((sentence) => !PLAN_WORDING.test(sentence))
+    .join(" ")
+    .trim();
+  return kept || fallback;
+}
 
 /**
  * Zod's prose, reduced to the field that is wrong.
@@ -170,13 +192,17 @@ export function envelopeFromThrown(
       | undefined;
     // The throw site's own hint wins; the category fallback is what a
     // refusal that has nothing more specific to say still carries (w2/013).
-    const hint =
-      typeof metadata?.hint === "string"
-        ? metadata.hint
-        : CATEGORY_HINTS[error.category];
+    const fallbackHint = CATEGORY_HINTS[error.category];
+    let hint =
+      typeof metadata?.hint === "string" ? metadata.hint : fallbackHint;
+    let message = error.message;
+    if (PLAN_CATEGORIES.has(error.category)) {
+      message = withoutPlanWording(message, fallbackHint);
+      hint = withoutPlanWording(hint, fallbackHint);
+    }
     return {
       code: error.category,
-      message: error.message,
+      message,
       hint,
       ...(typeof metadata?.retryAfter === "number" && {
         retryAfter: metadata.retryAfter,

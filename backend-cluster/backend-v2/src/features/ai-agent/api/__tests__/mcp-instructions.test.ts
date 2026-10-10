@@ -21,10 +21,7 @@ describe("buildInstructions", () => {
   });
 
   it("mentions validation, the URI grammar, and the BQL posting-row caveat", () => {
-    for (const identity of [
-      base,
-      { ...base, ledgerScope: "alice/personal" },
-    ]) {
+    for (const identity of [base, { ...base, ledgerScope: "alice/personal" }]) {
       const text = buildInstructions(identity);
       expect(text).toMatch(/checkLedger|validation/);
       expect(text).toContain("beancount://");
@@ -37,5 +34,17 @@ describe("buildInstructions", () => {
     expect(
       buildInstructions({ ...base, ledgerScope: "alice/personal" }).length,
     ).toBeLessThan(1500);
+  });
+
+  it("describes the server and never directs the model or mentions plans", () => {
+    // Both connector directories reject text that steers the model or
+    // promotes upgrades (ADR 019, 2026-10-09 amendment).
+    for (const identity of [base, { ...base, ledgerScope: "alice/personal" }]) {
+      const text = buildInstructions(identity);
+      expect(text).not.toMatch(
+        /\b(start with|prefer|use this|call after|follow|branch on|do not|don't|always|never)\b/i,
+      );
+      expect(text).not.toMatch(/upgrade|premium|subscri|paid|\bplans?\b/i);
+    }
   });
 });

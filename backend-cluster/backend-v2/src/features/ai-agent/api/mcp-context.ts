@@ -65,23 +65,26 @@ export type McpRequestContext = Omit<ToolContext, "ledgerId"> & {
  * Kept under 1,500 characters; it is paid on every session.
  */
 export function buildInstructions(identity: Identity): string {
+  // Statements of what the server provides, never directions to the model:
+  // both connector directories reject instructions that steer behavior
+  // (ADR 019, 2026-10-09 amendment).
   const ledgerLine = identity.ledgerScope
-    ? `Ledger ${identity.ledgerScope}: omit \`ledger\` or repeat it.`
-    : "Unpinned credential: pass `ledger: owner/name` on every ledger call; call `listLedgers` first.";
+    ? `Ledger ${identity.ledgerScope}: ledger tools default to it.`
+    : "Unpinned credential: ledger tools take `ledger: owner/name`; `listLedgers` lists the reachable ledgers.";
   return [
     ledgerLine,
-    "Start with `listLedgers`, then `getLedgerContext`, then work.",
+    "`getLedgerContext` returns a ledger's accounts, currencies, payees, and files.",
     "Reads: beancount://{owner}/{name}/<errors|accounts|payees|metadata>, e.g. beancount://alice/personal/errors.",
     "Files: beancount://{owner}/{name}/files/{path}; catalog: beancount://catalog/ledgers.",
-    "Prefer resources over tools when your client fetches URIs; reads cost less.",
+    "Most reads are also resources, which cost less than a tool call.",
     "Multi-step jobs have playbooks: prompts/list offers close-month, reconcile-account, categorize-imports, spending-report.",
-    "After any write, check `validation.newErrors` or call `checkLedger`.",
-    "BQL rows are postings: LIMIT counts postings, not transactions; use `runBqlQueryStructured` for typed numbers.",
-    "Every tool returns {ok, result} or {ok:false, error:{code,message,hint}} with isError; branch on error.code and follow error.hint.",
+    "Write results include `validation.newErrors`; `checkLedger` reports every bean-check error.",
+    "BQL rows are postings: LIMIT counts postings, not transactions; `runBqlQueryStructured` returns typed numbers.",
+    "Every tool returns {ok, result} or {ok:false, error:{code,message,hint}} with isError.",
     // Interpolated, not restated: the instruction string is the contract every
     // session reads, and a retuned budget must not leave it advertising a
     // number the limiter does not enforce.
-    `Budgets per minute: ${CLASS_BUDGETS.read.max} reads, ${CLASS_BUDGETS.write.max} writes, ${CLASS_BUDGETS.admin.max} admin; the handshake is free. Over budget is code RATE_LIMITED with retryAfter — wait, do not retry now.`,
+    `Budgets per minute: ${CLASS_BUDGETS.read.max} reads, ${CLASS_BUDGETS.write.max} writes, ${CLASS_BUDGETS.admin.max} admin; the handshake is free. Over budget returns code RATE_LIMITED with retryAfter.`,
   ].join("\n");
 }
 
