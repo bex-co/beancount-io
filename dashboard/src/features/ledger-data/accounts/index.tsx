@@ -444,7 +444,10 @@ export default function LedgerAccountsPage() {
                 size="icon-sm"
                 className="absolute right-0.5 top-1/2 -translate-y-1/2 text-muted-foreground"
                 aria-label={t("common.clearInput")}
-                onClick={() => setSearch("")}
+                onClick={() => {
+                  setSearch("");
+                  searchInputRef.current?.focus();
+                }}
               >
                 <X className="h-3.5 w-3.5" />
               </Button>

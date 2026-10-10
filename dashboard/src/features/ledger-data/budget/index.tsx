@@ -94,6 +94,7 @@ export default function LedgerBudgetPage() {
   const [selectedTimeSpan, setSelectedTimeSpan] = useState<string>("all");
   const conversion: ConversionOption = "units";
   const { primaryCurrency } = useLedger();
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const headerAddRef = useRef<HTMLButtonElement | null>(null);
   const addReturnFocusRef = useRef<HTMLElement | null>(null);
 
@@ -238,6 +239,7 @@ export default function LedgerBudgetPage() {
                 <div className="relative min-w-0 flex-1 sm:max-w-sm">
                   <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
+                    ref={searchInputRef}
                     aria-label={t("page.budget.budgetSearchPlaceholder")}
                     placeholder={t("page.budget.budgetSearchPlaceholder")}
                     value={search}
@@ -251,7 +253,10 @@ export default function LedgerBudgetPage() {
                       size="icon-sm"
                       className="absolute right-0.5 top-1/2 -translate-y-1/2 text-muted-foreground"
                       aria-label={t("common.clearInput")}
-                      onClick={() => setSearch("")}
+                      onClick={() => {
+                        setSearch("");
+                        searchInputRef.current?.focus();
+                      }}
                     >
                       <X className="size-3.5" />
                     </Button>

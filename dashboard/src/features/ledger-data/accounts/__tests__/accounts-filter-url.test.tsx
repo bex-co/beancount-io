@@ -180,6 +180,12 @@ function searchBox() {
   return screen.getByRole("textbox", { name: "page.accounts.searchAccounts" });
 }
 
+function searchClear() {
+  return within(searchBox().parentElement!).getByRole("button", {
+    name: "common.clearInput",
+  });
+}
+
 /** The type chips share names with the account-prefix buttons in the rows. */
 function typeChip(name: string) {
   return within(
@@ -204,6 +210,117 @@ describe("accounts list filters in the URL", () => {
   beforeEach(() => {
     viewport.isMobile = false;
   });
+
+  it.each([
+    { isMobile: false, firstSearch: "Checking", nextSearch: "Cash" },
+    { isMobile: true, firstSearch: "Checking", nextSearch: "Cash" },
+    {
+      isMobile: false,
+      firstSearch: "no-matching-account",
+      nextSearch: "Checking",
+    },
+    {
+      isMobile: true,
+      firstSearch: "no-matching-account",
+      nextSearch: "Checking",
+    },
+  ])(
+    "returns keyboard Clear to search and supports the next search (mobile=$isMobile, first=$firstSearch)",
+    async ({ isMobile, firstSearch, nextSearch }) => {
+      viewport.isMobile = isMobile;
+      const user = userEvent.setup();
+      const router = await mountAt(
+        "/ledger/alice/books/accounts?type=Assets&time=2017-09",
+      );
+      const input = searchBox();
+      const historyLength = router.history.length;
+      await user.type(input, firstSearch);
+      await waitFor(() => {
+        expect(router.state.location.search).toMatchObject({
+          search: firstSearch,
+        });
+      });
+      expect(accountNames()).toEqual(
+        firstSearch === "Checking" ? ["Assets:Bank:Checking"] : [],
+      );
+      const clear = searchClear();
+      await user.tab();
+      expect(clear).toHaveFocus();
+      await user.keyboard("{Enter}");
+
+      await waitFor(() => {
+        expect(router.state.location.search).toEqual({
+          type: "Assets",
+          time: "2017-09",
+        });
+      });
+      expect(searchBox()).toBe(input);
+      expect(input).toHaveValue("");
+      expect(input).toHaveFocus();
+      expect(clear).not.toBeInTheDocument();
+      expect(typeChip("Assets")).toHaveAttribute("aria-pressed", "true");
+      expect(accountNames()).toEqual(["Assets:Cash", "Assets:Bank:Checking"]);
+
+      // No click or programmatic refocus: these keys must reach the input
+      // after its focused Clear button disappears.
+      await user.keyboard(nextSearch);
+      await waitFor(() => {
+        expect(router.state.location.search).toEqual({
+          search: nextSearch,
+          type: "Assets",
+          time: "2017-09",
+        });
+      });
+      expect(input).toHaveValue(nextSearch);
+      expect(input).toHaveFocus();
+      const matchingAccount =
+        nextSearch === "Cash" ? "Assets:Cash" : "Assets:Bank:Checking";
+      expect(accountNames()).toEqual([matchingAccount]);
+      expect(router.history.length).toBe(historyLength);
+
+      await user.click(screen.getByRole("button", { name: matchingAccount }));
+      await screen.findByTestId("account-page");
+      await act(async () => router.history.back());
+      await waitFor(() => expect(searchBox()).toHaveValue(nextSearch));
+      expect(router.state.location.search).toEqual({
+        search: nextSearch,
+        type: "Assets",
+        time: "2017-09",
+      });
+      expect(accountNames()).toEqual([matchingAccount]);
+    },
+  );
+
+  it.each([false, true])(
+    "returns pointer Clear to search while retaining type and time (mobile=%s)",
+    async (isMobile) => {
+      viewport.isMobile = isMobile;
+      const user = userEvent.setup();
+      const router = await mountAt(
+        "/ledger/alice/books/accounts?type=Assets&time=2017-09",
+      );
+      const input = searchBox();
+      await user.type(input, "Cash");
+      expect(accountNames()).toEqual(["Assets:Cash"]);
+      await user.click(searchClear());
+      await waitFor(() => {
+        expect(router.state.location.search).toEqual({
+          type: "Assets",
+          time: "2017-09",
+        });
+      });
+      expect(input).toHaveValue("");
+      expect(input).toHaveFocus();
+      await user.keyboard("Checking");
+      await waitFor(() => {
+        expect(router.state.location.search).toMatchObject({
+          search: "Checking",
+        });
+      });
+      expect(input).toHaveValue("Checking");
+      expect(accountNames()).toEqual(["Assets:Bank:Checking"]);
+    },
+  );
 
   it.each([false, true])(
     "retains the search input, focus and caret across each typed character (mobile=%s)",
