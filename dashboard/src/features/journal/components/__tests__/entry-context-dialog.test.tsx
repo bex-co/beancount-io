@@ -1,9 +1,18 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import en from "@/i18n/locales/en";
+import de from "@/i18n/locales/de";
 
 const mocks = vi.hoisted(() => ({
   canWrite: true,
+  language: null as "en" | "de" | null,
   fileNavigate: vi.fn(),
   queryOptions: [] as Array<{ skip?: boolean }>,
   contextData: {
@@ -44,12 +53,22 @@ vi.mock("@apollo/client/react", () => ({
   },
 }));
 
-vi.mock("@/common/hooks/use-translations", () => ({
-  useTranslations: () => ({
-    t: (key: string, params?: { entry?: string }) =>
-      params?.entry ? `${key} ${params.entry}` : key,
-  }),
-}));
+vi.mock("@/common/hooks/use-translations", async () => {
+  const { default: english } = await import("@/i18n/locales/en");
+  const { default: german } = await import("@/i18n/locales/de");
+  return {
+    useTranslations: () => ({
+      t: (key: string, params?: { entry?: string }) => {
+        if (!mocks.language) {
+          return params?.entry ? `${key} ${params.entry}` : key;
+        }
+        const messages = mocks.language === "en" ? english : german;
+        const text = messages[key] ?? key;
+        return params?.entry ? text.replace("{entry}", params.entry) : text;
+      },
+    }),
+  };
+});
 
 vi.mock("@/common/hooks/use-ledger-permission", () => ({
   useLedgerPermission: () => ({ canWrite: mocks.canWrite }),
@@ -114,6 +133,7 @@ const entry = {
 describe("EntryContextDialog", () => {
   beforeEach(() => {
     mocks.canWrite = true;
+    mocks.language = null;
     mocks.loading = false;
     mocks.error = undefined;
     mocks.queryOptions.length = 0;
@@ -533,6 +553,177 @@ describe("EntryContextDialog", () => {
         },
       ],
     } as never;
+
+    const stockOpeningEntry = {
+      ...(summarizationEntry as object),
+      date: "2025-08-31",
+      postings: [
+        {
+          account: "Assets:Brokerage:ACME",
+          units: { number: "150", currency: "ACME" },
+        },
+        {
+          account: "Equity:Opening-Balances",
+          units: { number: "-10230.00", currency: "USD" },
+        },
+      ],
+    } as never;
+
+    const generatedCases = [
+      {
+        flag: "P",
+        entry: generatedEntry,
+        explanation: "journal.generatedEntryExplanation",
+        rows: [
+          ["Assets:Cash", "10.00 USD"],
+          ["Equity:Opening-Balances", "-10.00 USD"],
+        ],
+      },
+      {
+        flag: "S",
+        entry: stockOpeningEntry,
+        explanation: "journal.generatedOpeningExplanation",
+        rows: [
+          ["Assets:Brokerage:ACME", "150 ACME"],
+          ["Equity:Opening-Balances", "-10230.00 USD"],
+        ],
+      },
+      {
+        flag: "C",
+        entry: conversionEntry,
+        explanation: "journal.generatedConversionExplanation",
+        rows: [["Equity:Conversions:Current", "0.01663 USD"]],
+      },
+    ];
+
+    for (const language of ["en", "de"] as const) {
+      it.each(generatedCases)(
+        `names the generated $flag table and its columns in ${language} without a source read`,
+        ({ entry: generated, explanation, rows }) => {
+          mocks.language = language;
+          const messages = language === "en" ? en : de;
+          render(
+            <EntryContextDialog
+              open
+              onOpenChange={vi.fn()}
+              entry={generated}
+              ledgerId="open_ledger/stock-example"
+            />,
+          );
+
+          const table = screen.getByRole("table", {
+            name: messages["journal.postings"],
+          });
+          const heading = screen.getByRole("heading", {
+            name: messages["journal.postings"],
+            level: 3,
+          });
+          expect(table).toHaveAttribute("aria-labelledby", heading.id);
+          expect(heading.id).not.toBe("");
+          const headers = within(table).getAllByRole("columnheader");
+          expect(headers.map((header) => header.textContent)).toEqual([
+            messages["common.accountColumn"],
+            messages["journal.unitsHeader"],
+          ]);
+          for (const header of headers) {
+            expect(header.tagName).toBe("TH");
+            expect(header).toHaveAttribute("scope", "col");
+          }
+          expect(
+            within(table)
+              .getAllByRole("row")
+              .slice(1)
+              .map((row) =>
+                within(row)
+                  .getAllByRole("cell")
+                  .map((cell) => cell.textContent),
+              ),
+          ).toEqual(rows);
+          expect(screen.getByText(messages[explanation])).toBeVisible();
+          expect(mocks.queryOptions).toHaveLength(0);
+          expect(mocks.mutationCallCount).toBe(0);
+          expect(mocks.fileNavigate).not.toHaveBeenCalled();
+          for (const name of [
+            messages["journal.openEntrySource"],
+            messages["common.save"],
+            messages["common.delete"],
+          ]) {
+            expect(
+              screen.queryByRole("button", { name }),
+            ).not.toBeInTheDocument();
+          }
+          expect(
+            screen.queryByLabelText("entry-source"),
+          ).not.toBeInTheDocument();
+        },
+      );
+    }
+
+    it("keeps sparse generated units blank and the heading association stable on an entry change", () => {
+      mocks.language = "en";
+      const props = {
+        open: true,
+        onOpenChange: vi.fn(),
+        ledgerId: "open_ledger/stock-example",
+      };
+      const { rerender } = render(
+        <EntryContextDialog
+          {...props}
+          entry={
+            {
+              ...(stockOpeningEntry as object),
+              postings: [{ account: "Assets:Brokerage:ACME" }],
+            } as never
+          }
+        />,
+      );
+      const table = screen.getByRole("table", { name: "Postings" });
+      const headingId = table.getAttribute("aria-labelledby");
+      const row = within(table).getAllByRole("row")[1];
+      expect(
+        within(row)
+          .getAllByRole("cell")
+          .map((cell) => cell.textContent),
+      ).toEqual(["Assets:Brokerage:ACME", ""]);
+
+      rerender(<EntryContextDialog {...props} entry={conversionEntry} />);
+      expect(screen.getByRole("table", { name: "Postings" })).toHaveAttribute(
+        "aria-labelledby",
+        headingId,
+      );
+      expect(screen.getByText("0.01663 USD")).toBeInTheDocument();
+      expect(
+        screen.queryByText("Assets:Brokerage:ACME"),
+      ).not.toBeInTheDocument();
+      expect(mocks.queryOptions).toHaveLength(0);
+      expect(mocks.mutationCallCount).toBe(0);
+    });
+
+    it("returns focus to the generated opening control after Escape without a source read", async () => {
+      const user = userEvent.setup();
+      const opener = document.createElement("button");
+      opener.textContent = "2025-08-31";
+      document.body.appendChild(opener);
+      const props = {
+        onOpenChange: vi.fn(),
+        entry: stockOpeningEntry,
+        ledgerId: "open_ledger/stock-example",
+        returnFocusRef: { current: opener },
+      };
+      const { rerender } = render(<EntryContextDialog {...props} open />);
+
+      try {
+        await user.keyboard("{Escape}");
+        expect(props.onOpenChange).toHaveBeenCalledWith(false);
+        rerender(<EntryContextDialog {...props} open={false} />);
+        await waitFor(() => expect(opener).toHaveFocus());
+        expect(screen.queryByRole("table")).not.toBeInTheDocument();
+        expect(mocks.queryOptions).toHaveLength(0);
+        expect(mocks.mutationCallCount).toBe(0);
+      } finally {
+        opener.remove();
+      }
+    });
 
     it("explains a generated opening balance without querying for a source", () => {
       mocks.contextData = null;

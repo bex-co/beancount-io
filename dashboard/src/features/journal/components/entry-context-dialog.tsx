@@ -1,4 +1,4 @@
-import { useRef, type RefObject } from "react";
+import { useId, useRef, type RefObject } from "react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
   Dialog,
@@ -11,6 +11,8 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
   TableRow,
 } from "@/common/components/ui/table";
 import type {
@@ -74,6 +76,7 @@ function GeneratedEntryPanel({
   entry: JournalTransaction & { flag: GeneratedFlag };
 }) {
   const { t } = useTranslations();
+  const postingsHeadingId = useId();
   const postings = entry.postings ?? [];
   return (
     <div className="space-y-4">
@@ -96,8 +99,18 @@ function GeneratedEntryPanel({
         </div>
       </div>
       <div className="space-y-1">
-        <h3 className="text-sm font-semibold">{t("journal.postings")}</h3>
-        <Table>
+        <h3 id={postingsHeadingId} className="text-sm font-semibold">
+          {t("journal.postings")}
+        </h3>
+        <Table aria-labelledby={postingsHeadingId}>
+          <TableHeader>
+            <TableRow>
+              <TableHead scope="col">{t("common.accountColumn")}</TableHead>
+              <TableHead scope="col" className="text-right">
+                {t("journal.unitsHeader")}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
           <TableBody>
             {postings.map((posting, index) => (
               <TableRow

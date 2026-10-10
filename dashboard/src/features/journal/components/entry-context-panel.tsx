@@ -16,6 +16,8 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
   TableRow,
 } from "@/common/components/ui/table";
 import { Loader2, Trash2, Save, ChevronDown } from "lucide-react";
@@ -106,6 +108,8 @@ function EntryContextMain({
 }) {
   const { t } = useTranslations();
   const balancesRegionId = useId();
+  const balancesBeforeTitleId = useId();
+  const balancesAfterTitleId = useId();
   const [sourceText, setSourceText] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
   const [originalSource, setOriginalSource] = useState("");
@@ -249,11 +253,24 @@ function EntryContextMain({
             >
               {data?.balances_before && (
                 <div>
-                  <div className="p-3 bg-muted/50 text-foreground font-medium text-sm">
+                  <div
+                    id={balancesBeforeTitleId}
+                    className="p-3 bg-muted/50 text-foreground font-medium text-sm"
+                  >
                     {t("journal.balancesBeforeEntry")}
                   </div>
                   <div className="bg-background">
-                    <Table>
+                    <Table aria-labelledby={balancesBeforeTitleId}>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead scope="col">
+                            {t("common.accountColumn")}
+                          </TableHead>
+                          <TableHead scope="col" className="text-right">
+                            {t("journal.balanceHeader")}
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
                       <TableBody>
                         {formatBalances(data.balances_before).map((balance) => (
                           <TableRow
@@ -276,11 +293,24 @@ function EntryContextMain({
 
               {data?.balances_after && (
                 <div>
-                  <div className="p-3 bg-muted/50 text-foreground font-medium text-sm">
+                  <div
+                    id={balancesAfterTitleId}
+                    className="p-3 bg-muted/50 text-foreground font-medium text-sm"
+                  >
                     {t("journal.balancesAfterEntry")}
                   </div>
                   <div className="bg-background">
-                    <Table>
+                    <Table aria-labelledby={balancesAfterTitleId}>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead scope="col">
+                            {t("common.accountColumn")}
+                          </TableHead>
+                          <TableHead scope="col" className="text-right">
+                            {t("journal.balanceHeader")}
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
                       <TableBody>
                         {formatBalances(data.balances_after).map((balance) => (
                           <TableRow
