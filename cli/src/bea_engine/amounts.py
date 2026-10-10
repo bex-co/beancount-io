@@ -52,6 +52,21 @@ def split_total_price(text: str) -> tuple[str, str] | None:
     return tail[0], tail[1]
 
 
+def refuse_zero_divisor(text: str) -> None:
+    """Refuse a literal zero divisor, which crashes Beancount's parser instead of erroring.
+
+    The frontend's `check_decimal_notation` makes the same check for flag
+    input; a bulk row's amount fragment reaches the engine without passing
+    it. Quoted labels and comments are text, and anything computed
+    (`100/(2-2)`) is still upstream's to answer.
+    """
+    if re.search(r"/\s*[-+]?(?:0+(?:\.0*)?|\.0+)(?![\d.])", _QUOTED_OR_COMMENT.sub("", text)):
+        raise ValueError(
+            f"Division by zero in {text.strip()!r}. Beancount evaluates amount arithmetic while parsing, "
+            "and a zero divisor crashes it outright, so bea refuses the expression instead of sending it."
+        )
+
+
 def require_decimal_notation(value: Any) -> Any:
     """Reject exponent notation and JSON floats before conversion; internal Decimals remain valid.
 

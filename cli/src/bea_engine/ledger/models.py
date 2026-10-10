@@ -18,7 +18,7 @@ from pydantic import (
     model_validator,
 )
 
-from bea_engine.amounts import require_plain_decimal, split_total_price
+from bea_engine.amounts import refuse_zero_divisor, require_plain_decimal, split_total_price
 from bea_engine.ledger.text import parse_iso_date, require_commodity, require_flag, require_tag_or_link
 
 
@@ -185,6 +185,7 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
 
     if "\n" in amount or "\r" in amount:
         raise ValueError(f"amount {amount!r} must be one posting fragment without line breaks. {_FRAGMENT_HELP}")
+    refuse_zero_divisor(amount)
     entries, errors, _ = beancount_parser.parse_string(
         f'2026-01-02 * "probe"\n  Assets:Probe {amount}\n  Equity:Probe\n'
     )
