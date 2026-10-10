@@ -1,6 +1,13 @@
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import type { EChartsOption } from "echarts";
 import { DateBalanceChart } from "../date-balance-chart";
+
+let capturedOption: EChartsOption | undefined;
+
+beforeEach(() => {
+  capturedOption = undefined;
+});
 
 vi.mock("@/common/hooks/use-format-number", () => ({
   useFormatNumber: () => (v: number) => String(v),
@@ -13,7 +20,8 @@ vi.mock("@/common/hooks/use-format-quantity", () => ({
 
 // Mock ReactECharts to avoid canvas rendering
 vi.mock("@/common/components/react-echarts", () => ({
-  ReactECharts: ({ option }: { option: unknown }) => {
+  ReactECharts: ({ option }: { option: EChartsOption }) => {
+    capturedOption = option;
     const opt = option as { series?: unknown };
     const series = opt.series;
     const arr = Array.isArray(series) ? series : series ? [series] : [];
@@ -401,6 +409,102 @@ describe("DateBalanceChart", () => {
   });
 
   describe("Stacked Mode", () => {
+    // Reproduced USD account values, with synthetic EUR counterparts to
+    // exercise the same account mapping in a second currency group.
+    const tooltipData: DateAndBalance[] = [
+      {
+        date: "2026-01-31",
+        balance: { USD: "-15500", EUR: "-200" },
+        accountBalances: {
+          "Income:Development": { USD: "-9500", EUR: "-120" },
+          "Income:Consulting": { USD: "-6000", EUR: "-80" },
+        },
+      },
+    ];
+
+    function renderStackedTooltip() {
+      render(
+        <DateBalanceChart
+          data={tooltipData}
+          interval="monthly"
+          primarySeries="USD"
+          chartMode="stacked"
+          inverted={false}
+        />,
+      );
+      const option = capturedOption as {
+        tooltip: { formatter: (params: unknown) => string };
+        series: Array<{ name: string; data: number[] }>;
+      };
+      return {
+        format: option.tooltip.formatter,
+        item: (seriesIndex: number) => ({
+          componentType: "series",
+          seriesType: "bar",
+          seriesIndex,
+          seriesName: option.series[seriesIndex].name,
+          name: tooltipData[0].date,
+          dataIndex: 0,
+          data: option.series[seriesIndex].data[0],
+          value: option.series[seriesIndex].data[0],
+        }),
+      };
+    }
+
+    it("names the first and later account segments in every currency group", () => {
+      const { format, item } = renderStackedTooltip();
+      const expected = [
+        ["Income:Consulting", "-6000 USD"],
+        ["Income:Development", "-9500 USD"],
+        ["Income:Consulting", "-80 EUR"],
+        ["Income:Development", "-120 EUR"],
+      ];
+      expected.forEach(([account, amount], seriesIndex) => {
+        const html = format(item(seriesIndex));
+        expect(html).toContain(`<div>${account}</div>`);
+        expect(html).toContain("<strong>2026-01</strong>");
+        expect(html).toContain(`<div>${amount}</div>`);
+      });
+    });
+
+    it("omits account identity for absent, noninteger or out-of-range series indices", () => {
+      const { format, item } = renderStackedTooltip();
+      for (const seriesIndex of [
+        undefined,
+        null,
+        -1,
+        -2,
+        0.5,
+        NaN,
+        Infinity,
+        -Infinity,
+        4,
+        1000,
+        "0",
+      ]) {
+        const html = format({ ...item(0), seriesIndex });
+        expect(html).not.toContain("Income:");
+        expect(html).toContain("<strong>2026-01</strong>");
+        expect(html).toContain("-6000 USD");
+      }
+    });
+
+    it("keeps item-only value validation and signed scalar formatting", () => {
+      const { format, item } = renderStackedTooltip();
+      expect(format([item(0)])).toBe("");
+      expect(format([])).toBe("");
+      for (const value of [null, undefined, {}, [-6000], NaN, "not a number"]) {
+        expect(format({ ...item(0), value })).toBe("");
+      }
+      for (const [value, expected] of [
+        ["-6000.5", "-6000.5 USD"],
+        [100.5, "+100.5 USD"],
+        [0, "+0 USD"],
+      ]) {
+        expect(format({ ...item(1), value })).toContain(String(expected));
+      }
+    });
+
     const mockDataWithAccounts: DateAndBalance[] = [
       {
         date: "2024-01",
@@ -516,6 +620,16 @@ describe("DateBalanceChart", () => {
       // USD comes first (primarySeries), EUR second
       expect(option.series[0].stack).toBe("USD");
       expect(option.series[2].stack).toBe("EUR");
+      // Account colors stay consistent across currency groups.
+      expect(option.series[0].itemStyle.color).toBe(
+        option.series[2].itemStyle.color,
+      );
+      expect(option.series[1].itemStyle.color).toBe(
+        option.series[3].itemStyle.color,
+      );
+      expect(option.series[0].itemStyle.color).not.toBe(
+        option.series[1].itemStyle.color,
+      );
     });
 
     it("should handle missing accountBalances in some data points", () => {

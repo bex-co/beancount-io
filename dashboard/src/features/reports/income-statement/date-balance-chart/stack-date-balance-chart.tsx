@@ -137,9 +137,14 @@ export function StackDateBalanceChart({
             : formatNum(numericValue);
 
         // seriesName is the currency; derive the account from the series index
+        const seriesIndex = param.seriesIndex;
         const account =
-          accountList.length > 0 && param.seriesIndex
-            ? (accountList[param.seriesIndex % accountList.length] ?? "")
+          accountList.length > 0 &&
+          typeof seriesIndex === "number" &&
+          Number.isInteger(seriesIndex) &&
+          seriesIndex >= 0 &&
+          seriesIndex < seriesData.length
+            ? (accountList[seriesIndex % accountList.length] ?? "")
             : "";
 
         return `<div>
