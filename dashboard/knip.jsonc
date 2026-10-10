@@ -4,6 +4,8 @@
     // GraphQL Codegen loads these custom schema loaders from codegen.ts.
     "scripts/codegen-schema-file-loader.cjs",
     "scripts/codegen-schema-loader.cjs",
+    // The browser QA runner supplies a Playwright page to this native scenario.
+    "scripts/qa/ledger-header-layout.mjs",
     // Vitest resolves this test double through its monaco-editor alias.
     "src/test/mocks/monaco-editor.ts",
     // TanStack Start discovers the server entry by file name.

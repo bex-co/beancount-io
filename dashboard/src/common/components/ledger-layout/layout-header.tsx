@@ -80,7 +80,7 @@ export function LayoutHeader({
   return (
     <header
       className={cn(
-        "shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60",
+        "@container/ledger-header shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60",
         isCompact ? "h-12" : "h-16",
       )}
     >
@@ -91,7 +91,7 @@ export function LayoutHeader({
         <div className="flex items-center gap-2">
           {shouldShowFilters && (
             <>
-              <div className="hidden lg:block">
+              <div className="hidden @min-[52rem]/ledger-header:block">
                 <LedgerSearchControls ledgerId={ledgerId} layout="inline" />
               </div>
               <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
@@ -99,7 +99,7 @@ export function LayoutHeader({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="lg:hidden"
+                    className="@min-[52rem]/ledger-header:hidden"
                     aria-label={t("component.searchControls.filters")}
                   >
                     <ListFilter className="h-4 w-4" />
