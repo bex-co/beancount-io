@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Button } from "../button";
 
 describe("Button", () => {
@@ -76,9 +77,81 @@ describe("Button", () => {
     expect(screen.getByRole("button")).toHaveClass("custom-class");
   });
 
-  it("should render with variant styles", () => {
-    render(<Button variant="outline">Click me</Button>);
-    const button = screen.getByRole("button");
-    expect(button).toHaveClass("border");
+  it.each([
+    { variant: "ghost", style: "hover:bg-accent" },
+    { variant: "outline", style: "border" },
+    { variant: "default", style: "bg-primary" },
+  ] as const)(
+    "emits a forced-colors keyboard outline for $variant and preserves native activation",
+    async ({ variant, style }) => {
+      const user = userEvent.setup();
+      const onClick = vi.fn();
+      render(
+        <Button variant={variant} size="sm" onClick={onClick}>
+          Run action
+        </Button>,
+      );
+      const button = screen.getByRole("button", { name: "Run action" });
+      // jsdom does not paint forced colors. These are the emitted CSS rules;
+      // native browser focus/pixel checks establish the visible outline.
+      expect(button).toHaveClass(
+        "forced-colors:focus-visible:[outline-style:solid]",
+        "forced-colors:focus-visible:outline-2",
+        "forced-colors:focus-visible:outline-offset-2",
+        "forced-colors:focus-visible:outline-[CanvasText]",
+      );
+      expect(button).toHaveClass(style, "h-8", "focus-visible:ring-[3px]");
+      await user.tab();
+      expect(button).toHaveFocus();
+      await user.keyboard("{Enter} ");
+      expect(onClick).toHaveBeenCalledTimes(2);
+      expect(button).toHaveFocus();
+    },
+  );
+
+  it("skips disabled and pending buttons during Tab and prevents their activation", async () => {
+    const user = userEvent.setup();
+    const blocked = vi.fn();
+    const enabled = vi.fn();
+    render(
+      <>
+        <Button disabled onClick={blocked}>
+          Disabled action
+        </Button>
+        <Button loading onClick={blocked}>
+          Pending action
+        </Button>
+        <Button onClick={enabled}>Ready action</Button>
+      </>,
+    );
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Ready action" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(enabled).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole("button", { name: "Disabled action" }));
+    await user.click(screen.getByRole("button", { name: "Pending action" }));
+    expect(blocked).not.toHaveBeenCalled();
+  });
+
+  it("keeps the forced-colors outline and keyboard callback on an asChild link", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn((event) => event.preventDefault());
+    render(
+      <Button asChild variant="ghost" onClick={onClick}>
+        <a href="/help">Help</a>
+      </Button>,
+    );
+    const link = screen.getByRole("link", { name: "Help" });
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/help");
+    expect(link).toHaveClass(
+      "forced-colors:focus-visible:[outline-style:solid]",
+      "forced-colors:focus-visible:outline-[CanvasText]",
+    );
+    await user.tab();
+    expect(link).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(link).toHaveFocus();
   });
 });
