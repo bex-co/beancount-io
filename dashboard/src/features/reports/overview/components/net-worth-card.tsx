@@ -13,7 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/common/components/ui/popover";
-import { Link } from "@tanstack/react-router";
+import { Link, useHydrated } from "@tanstack/react-router";
 import { cn } from "@/common/lib/utils/utils.ts";
 import {
   Card,
@@ -252,6 +252,7 @@ export function NetWorthCard({
   ledgerName: string;
 }) {
   const { t, i18n } = useTranslations();
+  const hydrated = useHydrated();
   const language = i18n.language;
   const formatNumber = useFormatNumber();
   // Chart or table is view preference, not scoped to the data. The overview
@@ -369,6 +370,7 @@ export function NetWorthCard({
             variant={view === "chart" ? "secondary" : "ghost"}
             size="icon"
             className="size-8"
+            disabled={!hydrated}
             onClick={() => setView("chart")}
             aria-label={t("page.overview.chartView")}
             aria-pressed={view === "chart"}
@@ -380,6 +382,7 @@ export function NetWorthCard({
             variant={view === "table" ? "secondary" : "ghost"}
             size="icon"
             className="size-8"
+            disabled={!hydrated}
             onClick={() => setView("table")}
             aria-label={t("page.overview.tableView")}
             aria-pressed={view === "table"}

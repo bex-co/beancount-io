@@ -19,7 +19,11 @@ const routerSearch = vi.hoisted(() => ({
 // does: the card no longer owns this as component state.
 vi.mock("@tanstack/react-router", async () => {
   const { useSyncExternalStore } = await import("react");
+  const { useHydrated } = await vi.importActual<
+    typeof import("@tanstack/react-router")
+  >("@tanstack/react-router");
   return {
+    useHydrated,
     Link: ({
       to,
       params,
