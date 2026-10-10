@@ -20,7 +20,7 @@ export function CommitFileList({ files, onFileSelect }: CommitFileListProps) {
       className="group border-t border-border"
       data-testid="commit-file-list"
     >
-      <summary className="flex h-10 cursor-pointer list-none items-center gap-2 px-4 text-sm font-medium transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+      <summary className="flex h-10 cursor-pointer list-none items-center gap-2 px-4 text-sm font-medium transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:-outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]">
         <ChevronDown
           className="size-4 shrink-0 transition-transform group-open:rotate-180"
           aria-hidden="true"
@@ -38,7 +38,7 @@ export function CommitFileList({ files, onFileSelect }: CommitFileListProps) {
               <a
                 href={`#${getDiffFileId(file.filename)}`}
                 onClick={() => onFileSelect?.(file.filename)}
-                className="flex min-h-10 min-w-0 items-center gap-2 px-4 py-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                className="flex min-h-10 min-w-0 items-center gap-2 px-4 py-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:-outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]"
               >
                 <FileText
                   className="size-4 shrink-0 text-muted-foreground"
