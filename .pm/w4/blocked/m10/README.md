@@ -22,9 +22,11 @@
 
 1. **Security reporting channel (t003, then t005, t006, t007, t009).** Enable GitHub private vulnerability reporting for the repository, or supply the maintainer contact `SECURITY.md` and `CODE_OF_CONDUCT.md` should name. The task forbids a placeholder address.
 2. **Labels (t001).** Approve creating the `skills` and `self-host` labels that two forms apply, then confirm in a signed-in session that "New issue" offers the four forms and no blank issue.
-3. **Public issues (t004).** Approve filing at least five `good first issue`s from board notes and posting the issue 176 reply. The reply's content also waits on the [w4/m9](../m9/README.md) re-scope-or-drop decision, because it was to cite m9 as the local-first price path.
+3. **Public issues (t004).** Approve filing at least five `good first issue`s from current board notes and labeling issue176. The maintainer already answered the community request and closed it; no duplicate reply is required.
 
-**Unblock:** when the answers arrive, move this directory back to `.pm/w4/m10/` and continue from t003 and t004. The workstream checkbox stays unchecked until closeout.
+**Unblock with the repository owner:** confirm the real security/conduct reporting channel (enable private vulnerability reporting or supply the contact), authorize the missing labels and public contributor issues/issue176 labeling, and provide the signed-in issue-chooser verification. The t005/t006/t007/t009 chain remains deferred behind those inputs. Move this directory back to `.pm/w4/m10/` when they arrive; the workstream checkbox stays unchecked until closeout.
+
+**Rechecked 2026-10-10 by `/loopx w4`:** GitHub's read-only API reports private vulnerability reporting disabled, no `skills` or `self-host` labels, no open `good first issue`s, and issue176 closed with no labels. The maintainer's [2026-09-12 reply](https://github.com/bex-co/beancount-io/issues/176#issuecomment-5644470503) addresses live prices, operating currencies and shared-database deployment; the [2026-09-17 follow-up](https://github.com/bex-co/beancount-io/issues/176#issuecomment-5707657060) links the shipped public live-price example. The old reply blocker is therefore cleared, independently of m9's remaining local-first scope decision. No GitHub setting, label, issue or comment was changed during this audit. The milestone stays blocked on the owner decisions and remaining observation above.
 
 ## Definition of done
 
