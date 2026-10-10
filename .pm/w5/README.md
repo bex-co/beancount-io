@@ -35,7 +35,6 @@
 
 ## Inbox
 
-- [064 — Sigil-only tag and link filters silently erase matching list results](./064.md) — minor CLI empty-filter bug; human/JSON repeats with named-filter and literal-empty controls, 15–25m.
 - [065 — Check deletes ledger files when its cache filename aliases the input](./065.md) — major CLI data-loss bug; repeated root/include deletion, native spelling/alias cases and safe-cache controls, 45–60m.
 - [066 — Document listings return absolute paths for valid parent-relative attachments](./066.md) — minor CLI read/write path mismatch; two fresh included-ledger repros with same-directory controls, 25–40m.
 
