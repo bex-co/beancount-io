@@ -1,4 +1,5 @@
 import { buildInstructions } from "../mcp-context";
+import { PLAN_WORDING, STEERING_WORDING } from "./directory-wording";
 import type { Identity } from "@/server/api/identity";
 
 const base: Identity = {
@@ -41,10 +42,8 @@ describe("buildInstructions", () => {
     // promotes upgrades (ADR 019, 2026-10-09 amendment).
     for (const identity of [base, { ...base, ledgerScope: "alice/personal" }]) {
       const text = buildInstructions(identity);
-      expect(text).not.toMatch(
-        /\b(start with|prefer|use this|call after|follow|branch on|do not|don't|always|never)\b/i,
-      );
-      expect(text).not.toMatch(/upgrade|premium|subscri|paid|\bplans?\b/i);
+      expect(text).not.toMatch(STEERING_WORDING);
+      expect(text).not.toMatch(PLAN_WORDING);
     }
   });
 });

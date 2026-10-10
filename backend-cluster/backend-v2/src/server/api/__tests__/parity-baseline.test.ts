@@ -1,5 +1,5 @@
 import baseline from "./fixtures/parity-baseline.json";
-import { VERB_TABLE, isReachableOn } from "../op-class";
+import { VERB_TABLE, isReachableOn, isWithheldFromMcp } from "../op-class";
 
 /**
  * The completion denominator is independent of today's mutable exemption
@@ -14,7 +14,8 @@ import { VERB_TABLE, isReachableOn } from "../op-class";
  * keys), irreversible account deletion, and plan tiers or usage, which the
  * Claude and ChatGPT directories' published rules refuse. GraphQL and REST
  * keep them. This is the only list that may narrow a baseline row, and only
- * on MCP; it must equal op-class's `DIRECTORY_WITHHELD_FROM_MCP`.
+ * on MCP. It is written out rather than derived, so that op-class withholding
+ * one more verb fails here until this contract names it too.
  */
 const WITHDRAWN_FROM_MCP = new Set([
   "apikeys.list",
@@ -31,6 +32,12 @@ const WITHDRAWN_FROM_MCP = new Set([
 
 describe("the accepted parity baseline", () => {
   const live = new Map(VERB_TABLE.map((entry) => [entry.verb, entry]));
+
+  it("names exactly the verbs op-class withholds from MCP", () => {
+    expect(
+      new Set(VERB_TABLE.filter(isWithheldFromMcp).map((entry) => entry.verb)),
+    ).toEqual(WITHDRAWN_FROM_MCP);
+  });
 
   it.each(baseline.operations)("preserves $verb and its authority", (entry) => {
     const current = live.get(entry.verb);

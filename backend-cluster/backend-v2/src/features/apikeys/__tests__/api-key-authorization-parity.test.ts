@@ -1,12 +1,8 @@
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
-import { assembleMcpRegistry } from "@/server/api/composition-root";
-import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
@@ -186,27 +182,6 @@ describe("API-key authorization parity", () => {
     expect(model.revoke).not.toHaveBeenCalled();
   });
 
-  it("offers no API-key management on MCP, even to an admin OAuth caller", async () => {
-    // Directory policy withholds credentials from MCP (ADR 019, 2026-10-09
-    // amendment): the tool is not listed, and calling it by name is refused
-    // before any key is read, minted, or revoked.
-    const tools = await listMcpTools();
-    expect(tools).not.toContain("manageApiKeys");
-    expect(tools.some((name) => /api.?key/i.test(name))).toBe(false);
-    for (const operation of ["list", "create", "revoke"]) {
-      const response = await callMcp("manageApiKeys", {
-        operation,
-        name: "CI",
-        scopes: ["ledger.read"],
-        id: storedKey.id,
-      });
-      expect(response.isError).toBe(true);
-    }
-    expect(model.listByUserId).not.toHaveBeenCalled();
-    expect(model.create).not.toHaveBeenCalled();
-    expect(model.revoke).not.toHaveBeenCalled();
-  });
-
   it("conceals a blank REST revoke id as not found", async () => {
     server.setIdentity(adminOAuth);
     await expect(
@@ -255,33 +230,6 @@ describe("API-key authorization parity", () => {
     ).resolves.toBe(200);
     expect(model.listByUserId).toHaveBeenCalledTimes(2);
   });
-
-  async function withMcp<T>(use: (client: Client) => Promise<T>): Promise<T> {
-    const mcp = assembleMcpRegistry(
-      {
-        identity: adminOAuth,
-        apiKeyService: service,
-      } as unknown as McpRequestContext,
-      config,
-    );
-    const client = new Client({ name: "api-key-parity", version: "1" });
-    const [a, b] = InMemoryTransport.createLinkedPair();
-    await Promise.all([client.connect(a), mcp.connect(b)]);
-    try {
-      return await use(client);
-    } finally {
-      await client.close();
-      await mcp.close();
-    }
-  }
-
-  const callMcp = (name: string, input: Record<string, unknown>) =>
-    withMcp((client) => client.callTool({ name, arguments: input }));
-
-  const listMcpTools = () =>
-    withMcp(async (client) =>
-      (await client.listTools()).tools.map((tool) => tool.name),
-    );
 
   it.each([undefined, "", "ada/personal"])(
     "preserves expiry and inherited restrictions through actual adapters: %s",

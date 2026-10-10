@@ -1,8 +1,6 @@
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerPublicKeyService } from "@/features/ledger/service/ledger-public-key-service";
@@ -14,13 +12,11 @@ import {
   AUTHORIZATION_ACTIONS,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
-import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import { NotFoundError, ConflictError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
-import type { McpRequestContext } from "../mcp-context";
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const identity: Identity = {
   userId: "usr_alice",
@@ -49,7 +45,7 @@ const envelope = (data: unknown) => ({ data: { success: true, data } });
 let resolvers: Map<unknown, object>;
 let schemaPromise: ReturnType<typeof buildSchema> | undefined;
 // MCP withholds SSH-key management by directory policy (ADR 019, 2026-10-09
-// amendment); the last test below proves it.
+// amendment); `mcp-tool-list.test.ts` proves it.
 type Surface = "rest" | "gql";
 const surfaces: Surface[] = ["rest", "gql"];
 async function fixture(caller = identity) {
@@ -146,16 +142,6 @@ async function fixture(caller = identity) {
     { apiKeys: false },
   );
   rest.setIdentity(caller);
-  const server = assembleMcpRegistry(
-    {
-      identity: caller,
-      publicKeyService: service,
-    } as unknown as McpRequestContext,
-    config,
-  );
-  const client = new Client({ name: "public-key-parity", version: "1" });
-  const [a, b] = InMemoryTransport.createLinkedPair();
-  await Promise.all([client.connect(a), server.connect(b)]);
   const request = (suffix = "", method = "GET", body?: unknown) =>
     fetch(`${rest.url}/api-gateway/v1/public-keys${suffix}`, {
       method,
@@ -170,12 +156,6 @@ async function fixture(caller = identity) {
       source,
       contextValue: { identity: caller, getCurrentIdentity: () => caller },
     });
-  const read = async (path: string) => {
-    const r = await client.readResource({ uri: `beancount://account/${path}` });
-    const c = r.contents[0];
-    if (!("text" in c)) throw new Error("Expected JSON");
-    return JSON.parse(c.text);
-  };
   return {
     records,
     getApiContext,
@@ -186,8 +166,6 @@ async function fixture(caller = identity) {
     authorize,
     request,
     gql,
-    read,
-    client,
     write: async (
       surface: Surface,
       operation: "create" | "delete",
@@ -212,8 +190,6 @@ async function fixture(caller = identity) {
       return { failed: Boolean(r.errors), data: r.data?.[field] };
     },
     close: async () => {
-      await client.close();
-      await server.close();
       await rest.close();
     },
   };
@@ -396,33 +372,6 @@ describe("SSH public keys through actual adapters and exact-self authorization",
         ).status,
       ).toBe(400);
       expect(f.create).not.toHaveBeenCalled();
-    } finally {
-      await f.close();
-    }
-  });
-  it("offers no SSH-key tool or resource on MCP", async () => {
-    // Withheld by directory policy (ADR 019, 2026-10-09 amendment): nothing
-    // lists, reads, adds, or deletes a key, and the old names are refused.
-    const f = await fixture();
-    try {
-      const { tools } = await f.client.listTools();
-      expect(tools.map((t) => t.name)).not.toEqual(
-        expect.arrayContaining(["listPublicKeys"]),
-      );
-      expect(tools.some((t) => /public.?key/i.test(t.name))).toBe(false);
-      for (const name of ["listPublicKeys", "managePublicKeys"]) {
-        const r = await f.client.callTool({
-          name,
-          arguments: { operation: "delete", keyId: 1 },
-        });
-        expect(r.isError).toBe(true);
-      }
-      await expect(f.read("public-keys")).rejects.toThrow();
-      await expect(f.read("public-key?keyId=1")).rejects.toThrow();
-      expect(f.list).not.toHaveBeenCalled();
-      expect(f.get).not.toHaveBeenCalled();
-      expect(f.remove).not.toHaveBeenCalled();
-      expect(f.records.has(1)).toBe(true);
     } finally {
       await f.close();
     }

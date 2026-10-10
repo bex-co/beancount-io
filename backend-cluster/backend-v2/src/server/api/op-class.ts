@@ -328,22 +328,24 @@ const SURFACE_IMPOSSIBLE: Record<
  * Distinct from `SURFACE_IMPOSSIBLE`: MCP could carry these, and did. The
  * owner decided on 2026-10-09 that a listing in Claude's and ChatGPT's
  * connector directories outranks reach, so an operation either directory's
- * published rules would refuse leaves MCP (ADR 019 amendment, w1/m36). Each
- * row keeps an `mcpExempt` reason quoting the rule; GraphQL and REST keep the
- * operation. Adding a verb here is a contract change, made deliberately.
+ * published rules would refuse leaves MCP (ADR 019 amendment, w1/m36). A row
+ * is withheld exactly when its `mcpExempt` is one of these reasons, each
+ * quoting the rule; GraphQL and REST keep the operation. Giving a row one of
+ * them is a contract change, made deliberately.
  */
-const DIRECTORY_WITHHELD_FROM_MCP: ReadonlySet<string> = new Set([
-  "apikeys.create",
-  "apikeys.list",
-  "apikeys.revoke",
-  "Query.listPublicKeys",
-  "Query.getPublicKey",
-  "Mutation.createPublicKey",
-  "Mutation.deletePublicKey",
-  "Mutation.deleteAccount",
-  "Query.allTierQuotas",
-  "Query.aiCfoUsage",
+const DIRECTORY_REASONS: ReadonlySet<string> = new Set([
+  M.directoryCredentials,
+  M.directorySshKeys,
+  M.directoryAccountDeletion,
+  M.directoryPlans,
 ]);
+
+/** Whether directory policy withholds this verb from MCP. */
+export function isWithheldFromMcp(entry: VerbEntry): boolean {
+  return (
+    entry.mcpExempt !== undefined && DIRECTORY_REASONS.has(entry.mcpExempt)
+  );
+}
 
 /** Whether `surface` could carry this verb if someone did the work. */
 export function isReachableOn(
@@ -353,7 +355,7 @@ export function isReachableOn(
   return (
     isInParityScope(entry) &&
     !SURFACE_IMPOSSIBLE[surface].has(entry.verb) &&
-    !(surface === "mcp" && DIRECTORY_WITHHELD_FROM_MCP.has(entry.verb))
+    !(surface === "mcp" && isWithheldFromMcp(entry))
   );
 }
 

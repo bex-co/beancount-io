@@ -1,8 +1,6 @@
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { graphql } from "graphql";
 import { buildSchema, registerEnumType } from "type-graphql";
 import { AccountResolver } from "../account-resolver";
@@ -13,12 +11,10 @@ import {
   SourceBackedRelationshipEvaluator,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
-import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
 import type { AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
-import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const caller: Identity = {
@@ -28,7 +24,7 @@ const caller: Identity = {
   ledgerScope: "ada/personal",
 };
 // MCP withholds account deletion by directory policy (ADR 019, 2026-10-09
-// amendment); the last test below proves it.
+// amendment); `mcp-tool-list.test.ts` proves it.
 const surfaces = ["rest", "gql"] as const;
 let resolver: AccountResolver;
 let schemaPromise: ReturnType<typeof buildSchema>;
@@ -115,20 +111,12 @@ async function fixture(identity = caller, failure?: "billing" | "ledger") {
     config,
   );
   rest.setIdentity(identity);
-  const mcp = assembleMcpRegistry(
-    { identity, accountService: service } as unknown as McpRequestContext,
-    config,
-  );
-  const client = new Client({ name: "account-delete-parity", version: "1" });
-  const [a, b] = InMemoryTransport.createLinkedPair();
-  await Promise.all([client.connect(a), mcp.connect(b)]);
   return {
     rows,
     url: rest.url,
     effects,
     cancel,
     getById,
-    client,
     delete: async (surface: (typeof surfaces)[number]) => {
       if (surface === "rest") {
         const r = await fetch(`${rest.url}/api-gateway/v1/account`, {
@@ -148,8 +136,6 @@ async function fixture(identity = caller, failure?: "billing" | "ledger") {
       return { success: !r.errors, result: r.data?.deleteAccount };
     },
     close: async () => {
-      await client.close();
-      await mcp.close();
       await rest.close();
     },
   };
@@ -263,24 +249,6 @@ describe("account deletion through real transports and the existing cleanup serv
       );
       expect(rest.status).toBe(400);
       expect(f.getById).not.toHaveBeenCalled();
-    } finally {
-      await f.close();
-    }
-  });
-  it("offers no account deletion on MCP", async () => {
-    // Withheld by directory policy (ADR 019, 2026-10-09 amendment): it is
-    // irreversible, and a reviewer's test of every tool would run it.
-    const f = await fixture();
-    try {
-      const { tools } = await f.client.listTools();
-      expect(tools.map((t) => t.name)).not.toContain("deleteAccount");
-      const r = await f.client.callTool({
-        name: "deleteAccount",
-        arguments: {},
-      });
-      expect(r.isError).toBe(true);
-      expect(f.getById).not.toHaveBeenCalled();
-      expect(f.cancel).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }

@@ -64,7 +64,6 @@ export function setAgentRoute(router: Router, layers: AppLayers): void {
           plaidSync: layers.services.plaidSync,
         },
         identity,
-        apiKeyService: layers.services.apiKey,
         sessionId,
         onStreamReady: () => {
           ctx.respond = false;

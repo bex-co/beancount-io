@@ -13,6 +13,10 @@ import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "../identity";
 import { z } from "zod";
+import {
+  PLAN_WORDING,
+  STEERING_WORDING,
+} from "@/features/ai-agent/api/__tests__/directory-wording";
 import { mcpToolSecuritySchemes, VERB_TABLE } from "../op-class";
 
 /**
@@ -37,7 +41,7 @@ const identity: Identity = {
  * its `Tool` type does not know — the top-level `securitySchemes` among them —
  * so byte budgets and wire checks read the raw response.
  */
-async function listToolsRaw() {
+async function withClient<T>(use: (client: Client) => Promise<T>): Promise<T> {
   const ctx = { identity } as unknown as McpRequestContext;
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -46,71 +50,81 @@ async function listToolsRaw() {
   const client = new Client({ name: "test", version: "1.0.0" });
   await client.connect(clientTransport);
   try {
-    return (await client.request(
-      { method: "tools/list" },
-      z.looseObject({ tools: z.array(z.looseObject({ name: z.string() })) }),
-    )) as { tools: Record<string, unknown>[] };
+    return await use(client);
   } finally {
     await client.close();
     await server.close();
   }
 }
 
-async function listTools() {
-  const ctx = { identity } as unknown as McpRequestContext;
-  const [clientTransport, serverTransport] =
-    InMemoryTransport.createLinkedPair();
-  const server = assembleMcpRegistry(ctx, config);
-  await server.connect(serverTransport);
-  const client = new Client({ name: "test", version: "1.0.0" });
-  await client.connect(clientTransport);
-  try {
-    return await client.listTools();
-  } finally {
-    await client.close();
-    await server.close();
-  }
-}
+const listToolsRaw = () =>
+  withClient(
+    async (client) =>
+      (await client.request(
+        { method: "tools/list" },
+        z.looseObject({
+          tools: z.array(z.looseObject({ name: z.string() })),
+        }),
+      )) as { tools: Record<string, unknown>[] },
+  );
+
+const listTools = () => withClient((client) => client.listTools());
 
 describe("MCP tool list", () => {
   it("describes every tool and prompt without steering the model or naming a plan", async () => {
     // Both connector directories review this text (ADR 019, 2026-10-09
     // amendment): it says what a tool does, never how the model should
     // behave, and never promotes a plan.
-    const ctx = { identity } as unknown as McpRequestContext;
-    const [clientTransport, serverTransport] =
-      InMemoryTransport.createLinkedPair();
-    const server = assembleMcpRegistry(ctx, config);
-    await server.connect(serverTransport);
-    const client = new Client({ name: "test", version: "1.0.0" });
-    await client.connect(clientTransport);
-    try {
-      const { tools } = await client.listTools();
-      const { prompts } = await client.listPrompts();
-      const texts = [
-        ...tools.map((t) => [
-          t.name,
-          `${t.title ?? ""} ${t.description ?? ""}`,
-        ]),
-        ...prompts.map((p) => [p.name, p.description ?? ""]),
-      ];
-      for (const [name, text] of texts) {
-        expect({
-          name,
-          steering:
-            /\b(use this|use when|start with|start here|call after|prefer)\b/i.test(
-              text,
-            ),
-        }).toEqual({ name, steering: false });
-        expect({
-          name,
-          plan: /upgrade|premium|paid plan|pricing/i.test(text),
-        }).toEqual({ name, plan: false });
-      }
-    } finally {
-      await client.close();
-      await server.close();
+    const [{ tools }, { prompts }] = await withClient((client) =>
+      Promise.all([client.listTools(), client.listPrompts()]),
+    );
+    const texts = [
+      ...tools.map((t) => [t.name, `${t.title ?? ""} ${t.description ?? ""}`]),
+      ...prompts.map((p) => [p.name, p.description ?? ""]),
+    ];
+    for (const [name, text] of texts) {
+      expect({ name, steering: STEERING_WORDING.test(text) }).toEqual({
+        name,
+        steering: false,
+      });
+      expect({ name, plan: PLAN_WORDING.test(text) }).toEqual({
+        name,
+        plan: false,
+      });
     }
+  });
+
+  // Directory policy withholds these from MCP (ADR 019, 2026-10-09
+  // amendment); GraphQL and REST keep them. One table instead of a case per
+  // parity suite: nothing is registered, so nothing can reach a service.
+  it.each([
+    "manageApiKeys",
+    "listPublicKeys",
+    "managePublicKeys",
+    "deleteAccount",
+  ])("offers no %s tool and refuses a call by that name", async (name) => {
+    await withClient(async (client) => {
+      const { tools } = await client.listTools();
+      expect(tools.map((t) => t.name)).not.toContain(name);
+      const result = await client.callTool({ name, arguments: {} });
+      expect(result.isError).toBe(true);
+    });
+  });
+
+  it.each([
+    "beancount://account/public-keys",
+    "beancount://account/public-key?keyId=1",
+    "beancount://configuration/tier-quotas",
+    "beancount://account/ai-cfo-usage",
+  ])("serves no withheld resource at %s", async (uri) => {
+    await withClient(async (client) => {
+      const { resourceTemplates } = await client.listResourceTemplates();
+      const path = uri.replace(/^beancount:\/\//, "").split("?")[0];
+      expect(resourceTemplates.some((t) => t.uriTemplate.includes(path))).toBe(
+        false,
+      );
+      await expect(client.readResource({ uri })).rejects.toThrow();
+    });
   });
 
   it("starts with the read tools agents reach for first", () => {

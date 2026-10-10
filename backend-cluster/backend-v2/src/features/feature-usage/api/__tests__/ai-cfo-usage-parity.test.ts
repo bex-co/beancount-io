@@ -1,8 +1,6 @@
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { AiCfoUsageResolver } from "../ai-cfo-usage-resolver";
@@ -13,12 +11,10 @@ import {
   SourceBackedRelationshipEvaluator,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
-import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
-import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const identity: Identity = {
@@ -76,15 +72,7 @@ async function fixture(caller = identity) {
     config,
   );
   rest.setIdentity(caller);
-  const server = assembleMcpRegistry(
-    { identity: caller, aiCfoUsage: usage } as unknown as McpRequestContext,
-    config,
-  );
-  const client = new Client({ name: "usage-parity", version: "1" });
-  const [a, b] = InMemoryTransport.createLinkedPair();
-  await Promise.all([client.connect(a), server.connect(b)]);
   return {
-    client,
     getCount,
     addAndGetCount,
     subscriptions,
@@ -97,8 +85,6 @@ async function fixture(caller = identity) {
         contextValue: { identity: caller, getCurrentIdentity: () => caller },
       }),
     close: async () => {
-      await client.close();
-      await server.close();
       await rest.close();
     },
   };
@@ -161,24 +147,6 @@ it("propagates a usage-store outage without fabricating zero usage", async () =>
     expect((await f.rest()).status).toBe(500);
     expect((await f.gql()).errors).toHaveLength(1);
     expect(f.addAndGetCount).not.toHaveBeenCalled();
-  } finally {
-    await f.close();
-  }
-});
-
-it("offers no plan-usage resource on MCP", async () => {
-  // Withheld by directory policy (ADR 019, 2026-10-09 amendment): usage
-  // against a plan limit reads as displaying a subscription plan.
-  const f = await fixture();
-  try {
-    const { resourceTemplates } = await f.client.listResourceTemplates();
-    expect(resourceTemplates.map((t) => t.uriTemplate).join(" ")).not.toContain(
-      "ai-cfo-usage",
-    );
-    await expect(
-      f.client.readResource({ uri: "beancount://account/ai-cfo-usage" }),
-    ).rejects.toThrow();
-    expect(f.getCount).not.toHaveBeenCalled();
   } finally {
     await f.close();
   }

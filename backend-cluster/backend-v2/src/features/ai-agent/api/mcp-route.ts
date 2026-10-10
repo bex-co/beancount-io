@@ -109,14 +109,11 @@ async function handleMcpRequest(
     identity,
     ledgerId: identity.ledgerScope,
     llmService: layers.services.llm,
-    apiKeyService: layers.services.apiKey,
     socialService: layers.services.userProfile,
     feedService: layers.services.feed,
     accountService: layers.services.account,
     assetStorage: layers.services.assetStorage,
     ledgerEntryService: layers.services.ledgerEntry,
-    aiCfoUsage: layers.services.aiCfoUsage,
-    subscriptionService: layers.services.subscriptions,
     ledgerReceiptWorkflow: layers.workflows.ledgerReceipt,
     legacyEntryWorkflow: layers.workflows.legacyEntry,
     ledgerWorkflow: layers.workflows.ledger,
@@ -124,7 +121,6 @@ async function handleMcpRequest(
     ledgerArchiveService: layers.services.ledgerArchive,
     pullRequestWorkflow: layers.workflows.pullRequest,
     commitsService: layers.services.commits,
-    publicKeyService: layers.services.ledgerPublicKey,
     collaboratorsWorkflow: layers.workflows.ledgerCollaborators,
   };
 

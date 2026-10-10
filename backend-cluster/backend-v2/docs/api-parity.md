@@ -103,10 +103,11 @@ none can dissolve into stale exemption prose:
    owner ranked a listing in Claude's and ChatGPT's connector directories above
    reach, so an operation either directory's published rules would refuse left
    MCP ([ADR 019 amendment](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md#amendments),
-   w1/m36). The operations are listed in `DIRECTORY_WITHHELD_FROM_MCP` in
-   `op-class.ts`, which `isReachableOn` consults, so they are out of MCP's
-   parity target rather than counted as gaps. Each keeps an `mcpExempt` reason
-   quoting the rule, and GraphQL and REST keep the operation. Withheld so far:
+   w1/m36). A row is withheld when its `mcpExempt` is one of the four
+   `directory*` reasons in `op-class.ts`, each quoting the rule;
+   `isWithheldFromMcp` reads that, and `isReachableOn` uses it to take the row
+   out of MCP's parity target rather than count it as a gap. GraphQL and REST
+   keep the operation. Withheld so far:
    API-key management (`apikeys.*`), SSH-key management (`Query.listPublicKeys`,
    `Query.getPublicKey`, `Mutation.createPublicKey`, `Mutation.deletePublicKey`),
    account deletion (`Mutation.deleteAccount`), and plan tiers and usage

@@ -63,8 +63,7 @@ export class SelfHostedAgentHandler implements IAgentHandler {
   ) {}
 
   async handle(ctx: AgentHandlerContext, res: ServerResponse): Promise<void> {
-    const { messages, ledgerId, userId, services, identity, apiKeyService } =
-      ctx;
+    const { messages, ledgerId, userId, services, identity } = ctx;
 
     const accessMode = await resolveAgentAccessMode({
       authorization: this.authorization,
@@ -91,7 +90,6 @@ export class SelfHostedAgentHandler implements IAgentHandler {
         identity,
         ledgerId,
         llmService: this.llmService,
-        apiKeyService,
         ledgerReceiptWorkflow: this.ledgerReceiptWorkflow,
       },
       accessMode,

@@ -39,7 +39,6 @@ describe("SelfHostedAgentHandler authorization boundary", () => {
           userId: "usr_1",
           services: {} as never,
           identity: principal,
-          apiKeyService: {} as never,
         },
         { setHeader: jest.fn(), write: jest.fn() } as never,
       ),

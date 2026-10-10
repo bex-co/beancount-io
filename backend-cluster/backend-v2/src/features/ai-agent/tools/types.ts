@@ -2,7 +2,6 @@ import { z } from "zod";
 import type { ServiceLayer } from "@/foundation/composition";
 import type { ILLMService } from "@/features/llm/service/llm-service";
 import type { ILedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
-import type { IApiKeyService } from "@/features/apikeys/service/api-key-service";
 import type { Identity } from "@/server/api/identity";
 
 /**
@@ -36,7 +35,6 @@ export interface ToolContext {
   platform?: "web" | "mobile";
   ledgerId: string;
   llmService: ILLMService;
-  apiKeyService: IApiKeyService;
   ledgerReceiptWorkflow: ILedgerReceiptWorkflow;
 }
 
@@ -99,7 +97,6 @@ export const writeValidationSchema = z.object({
   errorsAfter: z.number().int(),
   newErrors: z.array(beanCheckErrorSchema),
 });
-
 
 export const wroteFileSchema = z.object({
   path: z.string(),

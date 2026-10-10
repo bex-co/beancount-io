@@ -1,4 +1,5 @@
 import { resolveMcpLedger } from "../mcp-context";
+import { PLAN_WORDING } from "./directory-wording";
 import {
   envelopeFromThrown,
   maskingFor,
@@ -350,7 +351,6 @@ describe("plan wording stays off MCP", () => {
   // ADR 019, 2026-10-09 amendment: the connector directories forbid an app to
   // display plans or promote upgrades. The domain messages are written for the
   // dashboard, so MCP keeps their facts and drops the upsell.
-  const PLAN = /upgrade|premium|subscri|paid|\bplans?\b/i;
 
   it("keeps a limit's numbers and drops the upgrade sentence", () => {
     const envelope = envelopeFromThrown(
@@ -360,8 +360,8 @@ describe("plan wording stays off MCP", () => {
     expect(envelope.message).toBe(
       "Ledger limit reached. Maximum: 1, Current: 1.",
     );
-    expect(envelope.message).not.toMatch(PLAN);
-    expect(envelope.hint).not.toMatch(PLAN);
+    expect(envelope.message).not.toMatch(PLAN_WORDING);
+    expect(envelope.hint).not.toMatch(PLAN_WORDING);
   });
 
   it("keeps a custom limit message that never mentioned a plan", () => {
@@ -377,9 +377,9 @@ describe("plan wording stays off MCP", () => {
   it("states a premium-only refusal without naming a plan", () => {
     const envelope = envelopeFromThrown(new PremiumRequiredError("API keys"));
     expect(envelope.code).toBe("PREMIUM_REQUIRED");
-    expect(envelope.message).not.toMatch(PLAN);
+    expect(envelope.message).not.toMatch(PLAN_WORDING);
     expect(envelope.message.length).toBeGreaterThan(0);
-    expect(envelope.hint).not.toMatch(PLAN);
+    expect(envelope.hint).not.toMatch(PLAN_WORDING);
   });
 
   it("drops plan wording from a throw-site hint too", () => {
@@ -387,6 +387,6 @@ describe("plan wording stays off MCP", () => {
     (error as { metadata?: unknown }).metadata = {
       hint: "Upgrade your plan to add more.",
     };
-    expect(envelopeFromThrown(error).hint).not.toMatch(PLAN);
+    expect(envelopeFromThrown(error).hint).not.toMatch(PLAN_WORDING);
   });
 });
