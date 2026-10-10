@@ -773,7 +773,7 @@ mean the tool succeeded.
 Each tool advertises an object `outputSchema`: `ok` is required, with optional
 `result` and `error`. Its fields are intentionally undocumented there — the
 envelope is identical on every tool, so describing it once here costs one copy
-instead of twenty-five in each `tools/list`. The runtime success/failure
+instead of twenty-six in each `tools/list`. The runtime success/failure
 convention is stronger than that published schema because the SDK requires an
 object schema here. See
 [`types.ts`](../src/features/ai-agent/tools/types.ts) and MCP's

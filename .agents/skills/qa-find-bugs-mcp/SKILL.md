@@ -96,7 +96,7 @@ and deepen the journeys that show failures. Report each skipped group and why.
 | prompts | `prompts/get` returns each playbook; malformed `month` or `ledger` is refused; every tool and `beancount://` URI the text cites exists in this deployment's lists; a pinned credential is told its ledger. Compare served text with `mcp-prompts.ts` and classify a difference as deployment lag. |
 | envelope | Every failure carries `isError: true` and `{ ok: false, error: { code, message, hint } }`; success carries `{ ok: true, result }`; `retryAfter` appears only with `RATE_LIMITED`. Missing required arguments are `BAD_USER_INPUT`, not `INTERNAL_SERVER_ERROR`. Unexpected errors are masked in production; a `DomainError` keeps its message. `ok` and `isError` never disagree. |
 | limits | The handshake methods are not charged; write budgets are smaller than read budgets; `RATE_LIMITED` names `retryAfter`. Probe at human pace with a few extra calls, never a flood, and never against production for write budgets. |
-| account | `manageApiKeys list`, `managePublicKeys`, `manageLedgerCollaborators`, `manageLedgers`, `setLedgerStar` and account resources honor scopes and relationships. Create or delete only `qa-<yyyymmdd>-` resources on the designated QA account; never call `deleteAccount` or change collaborators, banks or billing on a pre-existing account. |
+| account | `manageLedgerCollaborators`, `manageLedgers`, `setLedgerStar` and account resources honor scopes and relationships. API-key and SSH-key management, account deletion, and plan tiers and usage are deliberately absent from MCP (ADR 019, 2026-10-09 amendment); their absence is not a bug, and their presence on a deployment is either deployment lag or a regression. Create or delete only `qa-<yyyymmdd>-` resources on the designated QA account; never change collaborators, banks or billing on a pre-existing account. |
 | clients | Only when requested: a real Claude Code or Codex session connects with a bearer key, lists the same tools, exposes the four prompts, and completes a read journey; `yarn mcp:agent-eval` is the deep, billed harness. Record client versions and cost. |
 
 After a surprising response, capture the full sanitized exchange, then repeat
@@ -114,8 +114,8 @@ Reproduce from a fresh request with the same credential kind and target, and
 check a nearby working control (another tool, the REST route, or a second
 ledger). Documented behaviors are not bugs: `405` on authenticated `GET`, an
 empty `resources/list`, SSE framing, a loosened published `outputSchema`,
-`manageApiKeys create` requiring OAuth and a paid plan, and `PREMIUM_REQUIRED`
-on a free account. Deployment lag is not a bug either: when the served
+`PREMIUM_REQUIRED` on a free account, and error text that states a limit
+without naming a plan. Deployment lag is not a bug either: when the served
 inventory or prompt text differs from HEAD, cite the commit that already
 changed it.
 

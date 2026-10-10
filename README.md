@@ -203,10 +203,10 @@ and sign in with OAuth ([details](./backend-cluster/backend-v2/docs/mcp.md#from-
 There are [per-host notes](./backend-cluster/backend-v2/docs/mcp.md#per-host-notes)
 for Claude, Claude Code, ChatGPT, Cursor, and GitHub Copilot in VS Code.
 
-Thirty tools — BQL queries, file listing, reads, edits, entry and receipt
+Twenty-six tools — BQL queries, file listing, reads, edits, entry and receipt
 insertion, appending directives as plain Beancount text, statement parsing,
-pull requests, collaborators, API-key management, and bank import — plus
-sixty-four URI-addressed **resources** an agent fetches without spending a tool
+pull requests, collaborators, and bank import — plus
+sixty-three URI-addressed **resources** an agent fetches without spending a tool
 call: the ledger's vocabulary (payees, currencies, tags, …), its journals and
 analysis reads (trial balance, account reports, …), its linked banks, category
 suggestions, and file contents. Statements answer with totals and the accounts

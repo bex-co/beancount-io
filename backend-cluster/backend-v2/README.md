@@ -311,7 +311,9 @@ mobile deletion fix needs no client change or step-up flow. API keys cannot
 delete the user or mint successor keys. User profile search/update remain
 session-only; profile reads and API-key management keep their prior scope
 ceilings. Paid-plan, scope/pin narrowing, expiry, and one-time-secret handling
-remain enforced after authorization.
+remain enforced after authorization. Since 2026-10-09, API-key and SSH-key
+management, account deletion, and plan tiers and usage are not on MCP at all;
+they stay on GraphQL and REST (ADR 019 amendment).
 
 The static tier-quota catalog is deliberately public and does not enter the
 PDP. Subscription status, checkout and portal sessions, cancel, resume, and
@@ -553,7 +555,7 @@ every failure carries `{code, message, hint}` with `isError` set, so an agent
 branches on a code rather than on prose.
 
 The [Beancount.io MCP guide](./docs/mcp.md) explains setup, OAuth and API-key
-permissions, how requests reach the ledger, all 30 tools and 64 resource
+permissions, how requests reach the ledger, all 26 tools and 63 resource
 templates, the four accounting prompts and how Claude Code and Codex use them,
 the result envelope and its failure codes, writing directives as
 Beancount text, file-edit previews, bank imports, protocol examples, and
