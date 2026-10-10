@@ -286,13 +286,16 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
         ("--flag", filters.get("flag")),
     ):
         refuse_blank_filter(flag, value)
-    for flag, values in (
-        ("--search", filters.get("search")),
-        ("--tag", filters.get("tags")),
-        ("--link", filters.get("links")),
+    # A tag or link is tested without its sigil, as the engine strips it: a
+    # bare `#` or `^` (`"#${TAG}"` with TAG unset) names nothing, and would
+    # otherwise match no transaction at all rather than be reported.
+    for flag, values, sigil in (
+        ("--search", filters.get("search"), ""),
+        ("--tag", filters.get("tags"), "#"),
+        ("--link", filters.get("links"), "^"),
     ):
         for value in values or []:
-            refuse_blank_filter(flag, value)
+            refuse_blank_filter(flag, value.lstrip(sigil) if sigil else value)
     ctx = context.current()
     if filters.get("from_date") and filters.get("to_date") and filters["from_date"] > filters["to_date"]:
         raise UsageError("--from-date must be on or before --to-date.")

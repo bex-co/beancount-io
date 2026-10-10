@@ -438,3 +438,57 @@ def test_add_to_non_utf8_ledger_reports_and_writes_nothing(book: Path) -> None:
     for expected in (str(book), f"byte {offset}", "UTF-8", "Re-save"):
         assert expected in error["message"], error["message"]
     assert book.read_bytes() == raw
+
+
+TAGGED = '2026-01-02 * "tagged" #trip ^ref\n  Expenses:Food 1.00 USD\n  Assets:Checking\n'
+
+
+@pytest.mark.parametrize(
+    ("flag", "filters"),
+    [
+        ("--tag", ["--tag", "#"]),
+        ("--tag", ["--tag", "trip", "--tag", "#"]),
+        ("--tag", ["--tag", "##"]),
+        ("--tag", ["--tag", "# "]),
+        ("--link", ["--link", "^"]),
+        ("--link", ["--link", "ref", "--link", "^"]),
+    ],
+    ids=["tag", "tag-combined", "tag-doubled", "tag-space", "link", "link-combined"],
+)
+@pytest.mark.parametrize("json_mode", [True, False], ids=["json", "human"])
+def test_sigil_only_tag_or_link_filter_is_usage_error(
+    book: Path, flag: str, filters: list[str], json_mode: bool
+) -> None:
+    """w5/064: `"#${TAG}"` with TAG unset passed the blank check and matched nothing, at exit 0."""
+    with book.open("a") as stream:
+        stream.write(TAGGED)
+    before = book.read_bytes()
+    argv = ["-f", str(book), "list", "transaction", *filters]
+
+    result = runner.invoke(app, ["--json", *argv] if json_mode else argv)
+
+    assert result.exit_code == 2, result.output
+    assert result.stdout == ""
+    message = json.loads(result.stderr)["error"]["message"] if json_mode else result.stderr
+    assert f"{flag} needs a non-empty value" in message
+    assert book.read_bytes() == before
+
+
+@pytest.mark.parametrize(
+    "filters",
+    [
+        ["--tag", "trip"],
+        ["--tag", "#trip"],
+        ["--link", "ref"],
+        ["--link", "^ref"],
+        ["--tag", "#trip", "--link", "^ref"],
+    ],
+)
+def test_named_tag_and_link_filters_still_match_with_or_without_sigils(book: Path, filters: list[str]) -> None:
+    with book.open("a") as stream:
+        stream.write(TAGGED)
+
+    result = invoke(book, "list", "transaction", *filters)
+
+    assert result.exit_code == 0, result.output
+    assert [row["narration"] for row in json.loads(result.stdout)["data"]] == ["tagged"]
