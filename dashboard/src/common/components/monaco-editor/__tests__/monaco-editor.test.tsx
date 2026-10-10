@@ -10,7 +10,7 @@
  * recorded on the task — these cases pin the logic that browser run exercises.
  */
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, screen } from "@testing-library/react";
 import { MonacoEditor } from "..";
 
 type Listener = () => void;
@@ -61,6 +61,7 @@ function fakeEditor(surface: "editContext" | "textarea", readOnly: boolean) {
           },
         };
       },
+      onDidLayoutChange: () => ({ dispose: vi.fn() }),
       onDidDispose: (listener: Listener) => {
         disposeListeners.push(listener);
       },
@@ -93,6 +94,11 @@ vi.mock("@tanstack/react-router", () => ({
   ClientOnly: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+async function renderReady(element: React.ReactElement) {
+  render(element);
+  await screen.findByTestId("editor");
+}
+
 beforeEach(() => {
   cleanup();
   seenOptions = undefined;
@@ -101,9 +107,9 @@ beforeEach(() => {
 describe("read-only state on Monaco's input surface", () => {
   it.each(["editContext", "textarea"] as const)(
     "marks a read-only %s surface as read-only",
-    (surface) => {
+    async (surface) => {
       current = fakeEditor(surface, true);
-      render(<MonacoEditor options={{ readOnly: true }} />);
+      await renderReady(<MonacoEditor options={{ readOnly: true }} />);
       // Monaco never sets this itself on the native surface — that is the bug.
       expect(current.input.getAttribute("aria-readonly")).toBe("true");
     },
@@ -111,16 +117,16 @@ describe("read-only state on Monaco's input surface", () => {
 
   it.each(["editContext", "textarea"] as const)(
     "leaves an editable %s surface editable",
-    (surface) => {
+    async (surface) => {
       current = fakeEditor(surface, false);
-      render(<MonacoEditor options={{ readOnly: false }} />);
+      await renderReady(<MonacoEditor options={{ readOnly: false }} />);
       expect(current.input.getAttribute("aria-readonly")).toBe("false");
     },
   );
 
-  it("follows a reader-to-writer transition", () => {
+  it("follows a reader-to-writer transition", async () => {
     current = fakeEditor("editContext", true);
-    render(<MonacoEditor options={{ readOnly: true }} />);
+    await renderReady(<MonacoEditor options={{ readOnly: true }} />);
     expect(current.input.getAttribute("aria-readonly")).toBe("true");
 
     // The view switches to edit mode under the reader.
@@ -133,53 +139,59 @@ describe("read-only state on Monaco's input surface", () => {
     expect(current.input.getAttribute("aria-readonly")).toBe("true");
   });
 
-  it("stops listening once the editor goes away", () => {
+  it("stops listening once the editor goes away", async () => {
     current = fakeEditor("editContext", true);
-    render(<MonacoEditor options={{ readOnly: true }} />);
+    await renderReady(<MonacoEditor options={{ readOnly: true }} />);
     expect(current.disposed()).toBe(false);
     current.fireDispose();
     expect(current.disposed()).toBe(true);
   });
 
-  it("leaves Monaco's own attributes alone", () => {
+  it("leaves Monaco's own attributes alone", async () => {
     current = fakeEditor("editContext", true);
-    render(<MonacoEditor options={{ readOnly: true }} />);
+    await renderReady(<MonacoEditor options={{ readOnly: true }} />);
     expect(current.input.getAttribute("role")).toBe("textbox");
     expect(current.input.getAttribute("aria-multiline")).toBe("true");
   });
 });
 
 describe("domReadOnly policy", () => {
-  it("gives a read-only editor a read-only DOM", () => {
+  it("gives a read-only editor a read-only DOM", async () => {
     current = fakeEditor("textarea", true);
-    render(<MonacoEditor options={{ readOnly: true }} />);
+    await renderReady(<MonacoEditor options={{ readOnly: true }} />);
     expect(seenOptions).toMatchObject({ readOnly: true, domReadOnly: true });
   });
 
-  it("does not make an editable editor DOM-read-only", () => {
+  it("does not make an editable editor DOM-read-only", async () => {
     current = fakeEditor("textarea", false);
-    render(<MonacoEditor options={{ readOnly: false }} />);
+    await renderReady(<MonacoEditor options={{ readOnly: false }} />);
     expect(seenOptions).toMatchObject({ readOnly: false, domReadOnly: false });
   });
 
-  it("respects a caller that sets the two apart on purpose", () => {
+  it("respects a caller that sets the two apart on purpose", async () => {
     current = fakeEditor("textarea", true);
-    render(<MonacoEditor options={{ readOnly: true, domReadOnly: false }} />);
+    await renderReady(
+      <MonacoEditor options={{ readOnly: true, domReadOnly: false }} />,
+    );
     expect(seenOptions).toMatchObject({ readOnly: true, domReadOnly: false });
   });
 
-  it("leaves an editor that never mentions readOnly untouched", () => {
+  it("leaves an editor that never mentions readOnly untouched", async () => {
     current = fakeEditor("textarea", false);
-    render(<MonacoEditor options={{ minimap: { enabled: false } }} />);
+    await renderReady(
+      <MonacoEditor options={{ minimap: { enabled: false } }} />,
+    );
     expect(seenOptions).not.toHaveProperty("domReadOnly");
   });
 });
 
 describe("wiring", () => {
-  it("still calls the consumer's own onMount", () => {
+  it("still calls the consumer's own onMount", async () => {
     current = fakeEditor("editContext", true);
     const onMount = vi.fn();
-    render(<MonacoEditor options={{ readOnly: true }} onMount={onMount} />);
+    await renderReady(
+      <MonacoEditor options={{ readOnly: true }} onMount={onMount} />,
+    );
     expect(onMount).toHaveBeenCalledWith(current.editor, current.monaco);
     // And the read-only state was applied regardless.
     expect(current.input.getAttribute("aria-readonly")).toBe("true");
