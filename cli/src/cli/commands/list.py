@@ -104,7 +104,10 @@ def _cost(cost: dict[str, Any]) -> str:
     if cost.get("date"):
         parts.append(str(cost["date"]))
     if cost.get("label"):
-        parts.append(f'"{cost["label"]}"')
+        # Beancount's string escaping, so a label holding a quote or a
+        # backslash still reads as one string — the spelling `--details` shows.
+        label = str(cost["label"]).replace("\\", "\\\\").replace('"', '\\"')
+        parts.append(f'"{label}"')
     return "{" + ", ".join(parts) + "}"
 
 
