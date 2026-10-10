@@ -100,6 +100,16 @@ const nlCashFlow: Record<string, TranslationEntry> = {
     message: "Operationele activiteiten",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "De geselecteerde omrekening of filters sluiten niet aan op de geregistreerde kasmutaties. Probeer {atCost} of pas de rapportfilters aan. Exporteren is pas beschikbaar wanneer het rapport aansluit.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "De kasstroom kan niet worden afgestemd",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "Gesloten tonen",
     description: "Button label to reveal closed cash accounts",

@@ -101,6 +101,16 @@ const ruCashFlow: Record<string, TranslationEntry> = {
     message: "Операционная деятельность",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "Выбранный способ пересчёта или фильтры не соответствуют записанным движениям денежных средств. Попробуйте {atCost} или измените фильтры отчёта. Экспорт недоступен, пока отчёт не будет согласован.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "Денежный поток не удаётся сверить",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "Показать закрытые",
     description: "Button label to reveal closed cash accounts",

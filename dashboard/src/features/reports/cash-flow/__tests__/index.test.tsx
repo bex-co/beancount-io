@@ -249,9 +249,9 @@ describe("LedgerCashFlowPage", () => {
       assetIntervals: [
         {
           date: "2026-01-01",
-          balance: { USD: "5000.00" },
+          balance: { USD: "3500.00" },
           accountBalances: {
-            "Assets:Bank:Checking": { USD: "3500.00" },
+            "Assets:Bank:Checking": { USD: "2000.00" },
             "Assets:Bank:CD": { USD: "1500.00" },
           },
         },

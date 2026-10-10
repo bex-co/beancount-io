@@ -95,6 +95,16 @@ const koCashFlow: Record<string, TranslationEntry> = {
     message: "영업 활동",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "선택한 환산 방식 또는 필터가 기록된 현금 변동과 일치하지 않습니다. {atCost}을(를) 선택하거나 보고서 필터를 조정하세요. 보고서가 일치할 때까지 내보내기를 사용할 수 없습니다.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "현금 흐름을 대사할 수 없습니다",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "폐쇄된 계정 표시",
     description: "Button label to reveal closed cash accounts",

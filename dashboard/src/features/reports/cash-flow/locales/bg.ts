@@ -100,6 +100,16 @@ const bgCashFlow: Record<string, TranslationEntry> = {
     message: "Оперативна дейност",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "Избраното преобразуване или филтри не съответстват на записаните парични движения. Опитайте {atCost} или коригирайте филтрите на отчета. Експортът не е достъпен, докато отчетът не бъде съгласуван.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "Паричният поток не може да бъде съгласуван",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "Покажи затворените",
     description: "Button label to reveal closed cash accounts",

@@ -47,6 +47,17 @@ export interface IntervalAccountChanges {
   accountChanges: Record<string, Record<string, unknown>>;
 }
 
+/** Converted or filtered movements cannot support a reconciled cash statement. */
+export class CashFlowReconciliationError extends Error {
+  constructor(
+    readonly date: string,
+    readonly differences: Record<string, string>,
+  ) {
+    super(`Cash flow movements do not reconcile for ${date}`);
+    this.name = "CashFlowReconciliationError";
+  }
+}
+
 export interface CashAccountSnapshot {
   account: string;
   /** Rollup balance at period end, per currency. */
@@ -275,6 +286,18 @@ export function buildCashFlowStatement(input: {
   primaryCurrency: string;
   accountMeta?: AccountMetaMap;
 }): CashFlowStatement {
+  // Valuation can change security movements without changing actual cash.
+  // Check every interval and unit independently before deriving cash from
+  // non-cash activity; discrepancies in different chart points cannot cancel.
+  input.intervals.forEach((interval) => {
+    const differences = sumBalanceRecords(
+      Object.values(interval.accountChanges),
+    );
+    if (!isZeroAmounts(differences)) {
+      throw new CashFlowReconciliationError(interval.date, differences);
+    }
+  });
+
   const buckets: Record<CashFlowActivity, ActivityBucket> = {
     operating: { accountDeltas: new Map() },
     investing: { accountDeltas: new Map() },

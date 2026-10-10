@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
-import { useParams } from "@tanstack/react-router";
+import { ClientOnly, useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import {
   GetLedgerCashFlowDocument,
@@ -23,6 +23,7 @@ import {
 } from "@/common/lib/fava-options";
 import {
   buildCashFlowStatement,
+  CashFlowReconciliationError,
   collectCashAccounts,
   toAccountMetaMap,
 } from "./lib/model";
@@ -33,6 +34,9 @@ import { useReportConversion } from "@/features/reports/components/use-report-co
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 import { useUrlView } from "@/common/hooks/use-url-view";
 import { CASH_FLOW_VIEWS, DEFAULT_VIEW } from "./search";
+import { PageHeader } from "@/common/components/page-header";
+import { ConversionSelect } from "@/common/components/conversion-select";
+import { IntervalSelect } from "@/common/components/interval-select";
 
 /**
  * Cash Flow page component
@@ -107,8 +111,8 @@ export default function LedgerCashFlowPage() {
     [cashFlowData, accountMeta],
   );
 
-  const statement = useMemo(() => {
-    if (!cashFlowData) return null;
+  const { statement, reconciliationError } = useMemo(() => {
+    if (!cashFlowData) return { statement: null, reconciliationError: null };
     const intervals = mergeIntervalAccountChanges(
       cashFlowData.incomeIntervals,
       cashFlowData.expenseIntervals,
@@ -116,12 +120,20 @@ export default function LedgerCashFlowPage() {
       cashFlowData.liabilityIntervals,
       cashFlowData.equityIntervals,
     );
-    return buildCashFlowStatement({
-      intervals,
-      closingCashAccounts,
-      primaryCurrency,
-      accountMeta,
-    });
+    try {
+      return {
+        statement: buildCashFlowStatement({
+          intervals,
+          closingCashAccounts,
+          primaryCurrency,
+          accountMeta,
+        }),
+        reconciliationError: null,
+      };
+    } catch (error) {
+      if (!(error instanceof CashFlowReconciliationError)) throw error;
+      return { statement: null, reconciliationError: error };
+    }
   }, [cashFlowData, closingCashAccounts, primaryCurrency, accountMeta]);
 
   const cashAccountRows = useMemo(
@@ -140,6 +152,40 @@ export default function LedgerCashFlowPage() {
 
   if (error) {
     return <ReportErrorState error={error} />;
+  }
+
+  if (reconciliationError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <PageHeader
+            title={t("common.cashFlow")}
+            description={t("common.pageDescription.cashFlow", {
+              ledgerName: ledgerDisplayName,
+            })}
+          />
+          <ClientOnly>
+            <div className="flex flex-wrap items-center gap-2">
+              <IntervalSelect
+                value={timeInterval}
+                onValueChange={setTimeInterval}
+              />
+              <ConversionSelect
+                value={conversion}
+                onValueChange={setConversion}
+                currency={primaryCurrency}
+              />
+            </div>
+          </ClientOnly>
+        </div>
+        <ReportErrorState
+          title={t("page.cashFlow.reconciliationTitle")}
+          message={t("page.cashFlow.reconciliationDescription", {
+            atCost: t("component.conversionSelect.atCost"),
+          })}
+        />
+      </div>
+    );
   }
 
   if (

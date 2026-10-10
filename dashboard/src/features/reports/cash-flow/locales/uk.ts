@@ -100,6 +100,16 @@ const ukCashFlow: Record<string, TranslationEntry> = {
     message: "Операційна діяльність",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "Вибраний спосіб перерахунку або фільтри не відповідають записаним рухам грошових коштів. Спробуйте {atCost} або змініть фільтри звіту. Експорт недоступний, доки звіт не буде узгоджено.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "Грошовий потік не вдається звірити",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "Показати закриті",
     description: "Button label to reveal closed cash accounts",

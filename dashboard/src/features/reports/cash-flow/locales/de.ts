@@ -98,6 +98,16 @@ const deCashFlow: Record<string, TranslationEntry> = {
     message: "Betriebliche Tätigkeit",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "Die ausgewählte Umrechnung oder die Filter stimmen nicht mit den erfassten Zahlungsbewegungen überein. Wählen Sie „{atCost}“ oder passen Sie die Berichtsfilter an. Der Export ist erst verfügbar, wenn der Bericht abgestimmt ist.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "Der Cashflow lässt sich nicht abstimmen",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "Geschlossene einblenden",
     description: "Button label to reveal closed cash accounts",

@@ -99,6 +99,16 @@ const faCashFlow: Record<string, TranslationEntry> = {
     message: "فعالیت‌های عملیاتی",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "تبدیل یا فیلترهای انتخاب‌شده با گردش نقدی ثبت‌شده مطابقت ندارند. {atCost} را امتحان کنید یا فیلترهای گزارش را تغییر دهید. تا زمانی که گزارش تطبیق داده نشود، خروجی گرفتن امکان‌پذیر نیست.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "جریان نقدی قابل تطبیق نیست",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "نمایش بسته‌ها",
     description: "Button label to reveal closed cash accounts",

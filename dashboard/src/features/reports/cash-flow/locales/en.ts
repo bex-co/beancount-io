@@ -98,6 +98,16 @@ const enCashFlow: Record<string, TranslationEntry> = {
     message: "Operating Activities",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "The selected conversion or filters do not reconcile with recorded cash movements. Try {atCost} or adjust the report filters. Export is unavailable until the statement reconciles.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "Cash flow cannot be reconciled",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "Show closed",
     description: "Button label to reveal closed cash accounts",

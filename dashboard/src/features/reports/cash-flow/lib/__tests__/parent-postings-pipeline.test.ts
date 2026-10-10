@@ -7,9 +7,10 @@ import { buildCashFlowStatement } from "../model";
 import { buildActivityForest } from "../statement-tree";
 
 /**
- * Captured-response-shaped fixture for the public example's 2016 Federal
- * parent/child collision (see .pm/w3/m16). Interval totals are *direct*
- * postings: Federal USD and PreTax401k IRAUSD coexist; they are not rollups.
+ * Synthetic balanced fixture built from the public example's partial 2016
+ * Federal parent/child rows (see .pm/w3/m16), completed with explicit cash
+ * counterparts. These are not independently verified public cash movements.
+ * Federal USD and PreTax401k IRAUSD are direct postings, not rollups.
  */
 const FEDERAL = "Expenses:Taxes:Y2016:US:Federal";
 const PRETAx = "Expenses:Taxes:Y2016:US:Federal:PreTax401k";
@@ -45,9 +46,10 @@ const labels = {
 function statementFromSeries(
   income: { date: string; accountBalances: Record<string, unknown> }[],
   expenses: { date: string; accountBalances: Record<string, unknown> }[],
+  cash: { date: string; accountBalances: Record<string, unknown> }[],
 ) {
   return buildCashFlowStatement({
-    intervals: mergeIntervalAccountChanges(income, expenses),
+    intervals: mergeIntervalAccountChanges(income, expenses, cash),
     closingCashAccounts,
     primaryCurrency: "USD",
   });
@@ -96,9 +98,40 @@ describe("parent direct postings pipeline (m16)", () => {
     },
   ];
 
-  it("reconciles monthly and yearly groupings to the documented cash set", () => {
-    const monthly = statementFromSeries(monthlyIncome, monthlyExpenses);
-    const yearly = statementFromSeries(yearlyIncome, yearlyExpenses);
+  // Complete this focused parent/child fixture with its cash counterparts.
+  // Both units reconcile independently; these are not parent rollups.
+  const yearlyCash = [
+    {
+      date: "2016",
+      accountBalances: {
+        "Assets:US:BofA:Checking": { USD: "-1450.36", IRAUSD: "-18000" },
+      },
+    },
+  ];
+  const monthlyCash = [
+    {
+      date: "2016-07",
+      accountBalances: {
+        "Assets:US:BofA:Checking": { USD: "-2943.80", IRAUSD: "-18000" },
+      },
+    },
+    {
+      date: "2016-12",
+      accountBalances: { "Assets:US:BofA:Checking": { USD: "1493.44" } },
+    },
+  ];
+
+  it("reconciles monthly and yearly groupings in the completed synthetic fixture", () => {
+    const monthly = statementFromSeries(
+      monthlyIncome,
+      monthlyExpenses,
+      monthlyCash,
+    );
+    const yearly = statementFromSeries(
+      yearlyIncome,
+      yearlyExpenses,
+      yearlyCash,
+    );
 
     for (const statement of [monthly, yearly]) {
       expect(statement.closing).toEqual({ USD: "6763.51" });
@@ -120,7 +153,11 @@ describe("parent direct postings pipeline (m16)", () => {
   });
 
   it("keeps Federal own USD on the hierarchy node beside the IRAUSD child", () => {
-    const statement = statementFromSeries(yearlyIncome, yearlyExpenses);
+    const statement = statementFromSeries(
+      yearlyIncome,
+      yearlyExpenses,
+      yearlyCash,
+    );
     const operating = statement.rows.filter(
       (row) => row.activity === "operating",
     );
@@ -142,7 +179,11 @@ describe("parent direct postings pipeline (m16)", () => {
   });
 
   it("exports CSV and Markdown with the full Federal USD amount", () => {
-    const statement = statementFromSeries(yearlyIncome, yearlyExpenses);
+    const statement = statementFromSeries(
+      yearlyIncome,
+      yearlyExpenses,
+      yearlyCash,
+    );
     const document = buildCashFlowDocument({
       title: "Cash Flow",
       statement,
@@ -183,6 +224,7 @@ describe("parent direct postings pipeline (m16)", () => {
             [FEDERAL]: { USD: "100.00" },
             [PRETAx]: { USD: "0.00" },
             [OTHER_INCOME]: { USD: "-50.00" },
+            "Assets:US:BofA:Checking": { USD: "-50.00" },
           },
         },
       ]),

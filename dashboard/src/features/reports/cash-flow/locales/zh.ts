@@ -95,6 +95,16 @@ const zhCashFlow: Record<string, TranslationEntry> = {
     message: "经营活动",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "所选换算方式或筛选条件与已记录的现金变动不一致。请尝试{atCost}或调整报表筛选条件。报表核对一致之前无法导出。",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "现金流无法核对",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "显示已关闭",
     description: "Button label to reveal closed cash accounts",

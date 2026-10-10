@@ -99,6 +99,16 @@ const skCashFlow: Record<string, TranslationEntry> = {
     message: "Prevádzková činnosť",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "Zvolený prepočet alebo filtre nezodpovedajú zaznamenaným pohybom peňažných prostriedkov. Skúste {atCost} alebo upravte filtre výkazu. Export nie je dostupný, kým sa výkaz nezosúladí.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "Peňažný tok nie je možné zosúladiť",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "Zobraziť uzavreté",
     description: "Button label to reveal closed cash accounts",

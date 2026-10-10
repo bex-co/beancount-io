@@ -97,6 +97,16 @@ const jaCashFlow: Record<string, TranslationEntry> = {
     message: "営業活動",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "選択した換算方法またはフィルターでは、記録された現金の増減と一致しません。{atCost}を試すか、レポートのフィルターを調整してください。レポートの整合性が確認できるまで、エクスポートは利用できません。",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "キャッシュフローを照合できません",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "閉鎖済みを表示",
     description: "Button label to reveal closed cash accounts",

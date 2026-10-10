@@ -99,6 +99,16 @@ const ptCashFlow: Record<string, TranslationEntry> = {
     message: "Atividades operacionais",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "A conversão ou os filtros selecionados não correspondem aos movimentos de caixa registrados. Tente {atCost} ou ajuste os filtros do relatório. A exportação fica indisponível até que o relatório seja reconciliado.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "Não é possível reconciliar o fluxo de caixa",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "Mostrar fechadas",
     description: "Button label to reveal closed cash accounts",

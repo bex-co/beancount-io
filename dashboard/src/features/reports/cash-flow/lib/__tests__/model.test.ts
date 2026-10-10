@@ -249,7 +249,7 @@ describe("buildCashFlowStatement", () => {
       {
         date: "2026-01-31",
         accountChanges: {
-          "Assets:Bank:Checking": { USD: "-500.00" },
+          "Assets:Bank:Checking": { USD: "500.00" }, // transfer -500 + salary 1000
           "Assets:Bank:Savings": { USD: "500.00" },
           "Income:Salary": { USD: "-1000.00" },
         },
@@ -286,6 +286,8 @@ describe("buildCashFlowStatement", () => {
   it("counts parent and child direct postings separately (no leaf filter)", () => {
     // Interval totals are per exact account, not parent rollups — Federal's
     // own USD and PreTax401k's IRAUSD must both survive into the statement.
+    // Explicit synthetic cash counterparts complete this focused fixture;
+    // these are not independently verified public-ledger cash movements.
     const intervals: IntervalAccountChanges[] = [
       {
         date: "2016-12-31",
@@ -293,6 +295,7 @@ describe("buildCashFlowStatement", () => {
           "Expenses:Taxes:Federal": { USD: "27635.92" },
           "Expenses:Taxes:Federal:PreTax401k": { IRAUSD: "18000" },
           "Income:US:Hoogle:Salary": { USD: "-100000.00" },
+          "Assets:US:BofA:Checking": { USD: "72364.08", IRAUSD: "-18000" },
         },
       },
     ];
@@ -334,6 +337,7 @@ describe("buildCashFlowStatement", () => {
         accountChanges: {
           "Assets:Invest:Brokerage": { USD: "0.00" },
           "Income:Salary": { USD: "-100.00" },
+          "Assets:Bank:Checking": { USD: "100.00" },
         },
       },
     ];
@@ -356,6 +360,7 @@ describe("buildCashFlowStatement", () => {
         accountChanges: {
           "Income:Salary": { USD: "-1000.00", EUR: "-200.00" },
           "Expenses:Rent": { USD: "500.00" },
+          "Assets:Bank:Checking": { USD: "500.00", EUR: "200.00" },
         },
       },
     ];
@@ -384,11 +389,17 @@ describe("buildCashFlowStatement", () => {
     const intervals: IntervalAccountChanges[] = [
       {
         date: "2026-01-31",
-        accountChanges: { "Income:Salary": { USD: "-1000.00" } },
+        accountChanges: {
+          "Income:Salary": { USD: "-1000.00" },
+          "Assets:Bank:Checking": { USD: "1000.00" },
+        },
       },
       {
         date: "2026-02-28",
-        accountChanges: { "Income:Salary": { USD: "-1200.00" } },
+        accountChanges: {
+          "Income:Salary": { USD: "-1200.00" },
+          "Assets:Bank:Checking": { USD: "1200.00" },
+        },
       },
     ];
 
@@ -573,7 +584,10 @@ describe("declared cash-flow roles (accountMeta)", () => {
     const intervals: IntervalAccountChanges[] = [
       {
         date: "2026-01-31",
-        accountChanges: { "Equity:Opening-Balances": { USD: "1000.00" } },
+        accountChanges: {
+          "Equity:Opening-Balances": { USD: "1000.00" },
+          "Assets:Bank:Checking": { USD: "-1000.00" },
+        },
       },
     ];
 

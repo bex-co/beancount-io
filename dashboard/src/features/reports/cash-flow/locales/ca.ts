@@ -100,6 +100,16 @@ const caCashFlow: Record<string, TranslationEntry> = {
     message: "Activitats operatives",
     description: "Section title for operating cash flows",
   },
+  "page.cashFlow.reconciliationDescription": {
+    message:
+      "La conversió o els filtres seleccionats no quadren amb els moviments de caixa registrats. Prova {atCost} o ajusta els filtres de l'informe. L'exportació no està disponible fins que l'informe quadri.",
+    description:
+      "Recovery guidance when conversion or filtering prevents cash-flow reconciliation",
+  },
+  "page.cashFlow.reconciliationTitle": {
+    message: "No es pot quadrar el flux de caixa",
+    description: "Title for the unsupported cash-flow reconciliation state",
+  },
   "page.cashFlow.showClosedAccounts": {
     message: "Mostra les tancades",
     description: "Button label to reveal closed cash accounts",
