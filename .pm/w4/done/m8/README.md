@@ -1,14 +1,14 @@
 # w4 · m8 — Localized Google Play listing from the canonical metadata
 
-**Worker:** worker1 **Goal:** the Google Play listing is generated from the same canonical metadata as the App Store listing and is live in all 13 shipped languages, including the Bulgarian and Persian listings Apple cannot offer **Status:** blocked — see [Blocked](#blocked) (t001–t007 done; closeout waits on the public listing)
+**Worker:** worker1 **Goal:** the Google Play listing is generated from the same canonical metadata as the App Store listing and is live in all 13 shipped languages, including the Bulgarian and Persian listings Apple cannot offer **Status:** done
 
-## Blocked
+## Block history
 
 **Blocked 2026-09-14 by `/loop-worker w4` triage; every implementation task is complete.** The reviewed Play edit was applied and verified at the API level on 2026-09-10: all 16 locales' text and image checksums match plan `b4921f16…5cf5636f`. The public listing does not show it. On 2026-09-14 the public store page for `io.beancount.android` still carries the previous title ("Beancount") and the previous English description, and none of the generated en-US, `bg`, or `fa` copy appears. Whether the change is in Google Play review, held by managed publishing, or rejected is visible only in Play Console, which this worker cannot access.
 
 **Rechecked 2026-09-28 by `/loopx w4`:** the copy is now public. Fresh unauthenticated requests to all 16 locale pages match their canonical title, short description, and full description, including [Bulgarian](https://play.google.com/store/apps/details?id=io.beancount.android&hl=bg&gl=US) and [Persian](https://play.google.com/store/apps/details?id=io.beancount.android&hl=fa&gl=US). `verify-play` also passes for all 16 locales against the newer reviewed plan `c0a8eb2bea8ced4237ae6bc8424480685b9447448428a91244ed185bb6a3c324` (2026-09-26), including image counts, order, and checksums. Public artwork still differs: the Bulgarian overview screenshot displays the old $106,826.05 net worth and bottom tabs, while the API's reviewed image displays the newer $117,649.49 market value, valuation explanation, and floating tabs. This is a visible content difference, not just CDN encoding. The public original-size PNG hashes to `4ef92fc878434f9c15c2871410fc361be3e0e90842fbc539c1dc0d8e1a5c5a50`; the API image hashes to `803278cacb19f7f4c2da15bc0c1a632b730d13a76fdd43e1d0c53072e26a6f54`. No edit was committed or published during this read-only verification. The first API request returned 503; one retry completed successfully.
 
-**Unblock with a Play Console owner:** confirm the current artwork's review/publishing state and publish it if managed publishing is holding it, then verify the public screenshots and feature graphics against the reviewed plan, including `bg` and `fa`. Public copy is already verified; artwork publication remains unconfirmed. When the complete localized listing is public, move this directory back to `.pm/w4/m8/` and run `/pm done w4/m8/t008`. The workstream checkbox stays unchecked until then.
+**Previous unblock condition (cleared below):** confirm the current artwork's review/publishing state and publish it if managed publishing is holding it, then verify the public screenshots and feature graphics against the reviewed plan, including `bg` and `fa`. Public copy is already verified; artwork publication remains unconfirmed. When the complete localized listing is public, move this directory back to `.pm/w4/m8/` and run `/pm done w4/m8/t008`. The workstream checkbox stays unchecked until then.
 
 Board repair in the same move: t004–t007 already recorded `status: done` but still sat in the open tree; they now live under `done/` with their rows marked.
 
@@ -23,7 +23,7 @@ Board repair in the same move: t004–t007 already recorded `status: done` but s
 | t005 | Adoption surface — **DONE** | 25m | t004 |
 | t006 | Simplify — **DONE** | 25m | t005 |
 | t007 | Test coverage — **DONE** | 45m | t005 |
-| t008 | Closeout | 15m | t006, t007 |
+| t008 | Closeout — **DONE** | 15m | t006, t007 |
 
 ## Definition of done
 
@@ -59,3 +59,12 @@ Board repair in the same move: t004–t007 already recorded `status: done` but s
 - t008 stays open until the console/public-listing check lands; `/pm done` runs only then.
 
 - Scoped simplification removed an unnecessary plan-builder type cast and avoided unused icon reads during phone rendering. The reviewed publication plan retained SHA-256 `b4921f1697ffee42c3218ce4ac7fd7ba454e3e62b3aab73d7fedfcca5cf5636f`.
+
+
+## Unblocked — 2026-10-10
+
+The public listing now satisfies the remaining publication condition. Fresh unauthenticated US storefront requests in all16 mapped locales match all48 canonical title, short-description and full-description fields. Each locale exposes three ordered phone screenshots and one feature graphic in the public app-detail data; the screenshot order also matches the rendered web gallery. All64 original public PNGs have the expected 1080×1920 or1024×500 dimensions and match freshly generated canonical artwork byte-for-byte, including Bulgarian and Persian. The matched64-image manifest SHA-256 is `5c673765a82c0343cf7c08a1a7b069d9964793ef3d224475ac3d0711665f6ef2`. Bulgarian overview is the previously reviewed `803278cacb19f7f4c2da15bc0c1a632b730d13a76fdd43e1d0c53072e26a6f54`; its feature graphic is `ce086f2cbdc6bcb180c1ed39e48970f7aacc9adec1df0d9f4cd0bde969593191`. Bulgarian overview/ownership/reports and the Persian phone/feature images were visually inspected. The newer valuation display and localized captions are public.
+
+The comparison also establishes a local renderer distinction rather than concealing it: the font-capable full ImageMagick SVG delegate matches all16 feature graphics and three Chromium-rendered Persian screenshots, while its45 other phone images differ around SVG overlays. With the installed standard ImageMagick SVG renderer and the same actual Arial Unicode MS font exposed through an ignored local font map, all48 phone screenshots reproduce the public reviewed images exactly. No screenshot source, caption, font file, package dependency or lockfile changed. The full-builder negative comparison and the exact standard-renderer comparison are retained separately under ignored `mobile/tmp/public-play-m8/` with fresh public listing/download evidence and a repeatable verifier.
+
+All closeout checks pass: mobile formatting, lint (including unused-code/GraphQL checks), typecheck,2244 unit tests, metadata validation (104 files, zero errors/warnings), the full148-image build, and screenshot order/dimension/opacity validation. The all48-phone reproduction and subsequent complete148-image validation also pass. Public visibility is observed directly; no private Play Console status or fresh authenticated API parity is claimed, and no remote edit or publication was performed. Historical API parity/review evidence above remains unchanged. The implementation in `ec8297a7` and the reviewed artwork update in `0c6fb507` already shipped; only the public closeout record remains to archive.
