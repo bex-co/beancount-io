@@ -2,6 +2,7 @@ import { ReactECharts } from "@/common/components/react-echarts";
 import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { CONFINED_TOOLTIP } from "@/common/lib/chart/tooltip";
 import { type DataSeries } from "../lib/overview-utils";
 import {
   balanceToAmounts,
@@ -42,10 +43,13 @@ export function IncomeExpensesChart({
 
   const option = {
     tooltip: {
+      ...CONFINED_TOOLTIP,
       trigger: "axis" as const,
       axisPointer: { type: "shadow" as const },
       valueFormatter: (value: unknown) =>
-        typeof value === "number" ? formatNum(value) : String(value),
+        typeof value === "number"
+          ? formatNum(value === 0 ? 0 : value)
+          : String(value),
     },
     legend: {
       data: [t("common.income"), t("common.expenses")],

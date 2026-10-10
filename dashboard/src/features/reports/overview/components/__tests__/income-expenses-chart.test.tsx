@@ -34,14 +34,16 @@ vi.mock("@/common/components/react-echarts", () => ({
 }));
 
 // January/April amounts from the reproduced public report, plus an omitted
-// synthetic EUR amount to preserve the existing single-unit disclosure.
+// synthetic EUR amount and a sparse December to retain unit/zero controls.
 const income = [
   { date: "2026-01-31", balance: { USD: "-15500", EUR: "-100" } },
   { date: "2026-04-30", balance: { USD: "-4792.4" } },
+  { date: "2026-12-31", balance: {} },
 ];
 const expenses = [
   { date: "2026-01-31", balance: {} },
   { date: "2026-04-30", balance: { USD: "5292.4" } },
+  { date: "2026-12-31", balance: {} },
 ];
 
 async function setup(language: SupportedLanguage, renderCommas = true) {
@@ -94,6 +96,11 @@ describe("IncomeExpensesChart tooltip numbers", () => {
         values.map((value) => option.tooltip.valueFormatter?.(value)),
       ).toEqual(expected);
       expect(values.map(option.yAxis.axisLabel.formatter)).toEqual(expected);
+      // Negating the real chart's absent income creates -0. Keep that raw
+      // series value, while its tooltip retains the existing visible "0".
+      const sparseIncome = option.series[0].data[2];
+      expect(sparseIncome).toBe(-0);
+      expect(option.tooltip.valueFormatter?.(sparseIncome)).toBe("0");
     },
   );
 
@@ -102,11 +109,15 @@ describe("IncomeExpensesChart tooltip numbers", () => {
     expect(option.tooltip.trigger).toBe("axis");
     expect(option.tooltip.axisPointer.type).toBe("shadow");
     expect(option.tooltip.formatter).toBeUndefined();
-    expect(option.xAxis.data).toEqual(["2026-01-31", "2026-04-30"]);
+    expect(option.xAxis.data).toEqual([
+      "2026-01-31",
+      "2026-04-30",
+      "2026-12-31",
+    ]);
     expect(option.legend.data).toEqual(["Erträge", "Aufwendungen"]);
     expect(option.series).toMatchObject([
-      { name: "Erträge", type: "bar", data: [15500, 4792.4] },
-      { name: "Aufwendungen", type: "bar", data: [0, 5292.4] },
+      { name: "Erträge", type: "bar", data: [15500, 4792.4, -0] },
+      { name: "Aufwendungen", type: "bar", data: [0, 5292.4, 0] },
     ]);
     expect(screen.getByText(/USD.*EUR/)).toBeInTheDocument();
     expect(income[0].balance).toEqual({ USD: "-15500", EUR: "-100" });

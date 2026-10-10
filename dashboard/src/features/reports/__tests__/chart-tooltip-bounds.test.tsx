@@ -3,6 +3,7 @@ import type { EChartsOption } from "echarts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LineChart } from "@/features/reports/balance-sheet/line-chart";
 import CashFlowSankey from "@/features/reports/overview/components/cash-flow-sankey";
+import { IncomeExpensesChart } from "@/features/reports/overview/components/income-expenses-chart";
 import { parseQueryChart } from "@/features/bql/lib/chart-utils";
 import LedgerCommoditiesPage from "@/features/ledger-data/commodities";
 import type { QueryResultTable } from "@/graphql/definitions";
@@ -147,6 +148,28 @@ describe("cash flow sankey", () => {
     );
 
     expectBounded(tooltipOf(captured.at(-1)));
+  });
+});
+
+describe("overview income and expenses chart", () => {
+  it("bounds its axis tooltip while retaining the shadow pointer and number formatter", () => {
+    render(
+      <IncomeExpensesChart
+        income={[{ date: "2026-04-30", balance: { USD: "-4792.4" } }]}
+        expenses={[{ date: "2026-04-30", balance: { USD: "5292.4" } }]}
+        primaryCurrency="USD"
+      />,
+    );
+
+    const tooltip = tooltipOf(captured.at(-1)) as BoundedTooltip & {
+      trigger?: string;
+      axisPointer?: { type?: string };
+      valueFormatter?: (value: number) => string;
+    };
+    expectBounded(tooltip);
+    expect(tooltip.trigger).toBe("axis");
+    expect(tooltip.axisPointer?.type).toBe("shadow");
+    expect(tooltip.valueFormatter?.(4792.4)).toBe("4,792.4");
   });
 });
 
