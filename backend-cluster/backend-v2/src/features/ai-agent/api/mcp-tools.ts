@@ -189,25 +189,14 @@ function withLedger(
 
 /**
  * Shared `tools/list` annotation presets (w2/m27). The op-class decides
- * authority; these hints only describe it. `READ_ONLY` is paired exclusively
- * with `read` op-class verbs — the guard test enforces that — while every
- * other preset pairs with `write`/`admin` verbs, including the
- * quota-consuming AI parsers (write class).
+ * authority; these hints only describe it. `READ_ONLY` marks exactly the
+ * tools that change nothing: `read` verbs and admin-authority lookups such as
+ * bank connections. Both directories require the hint to match the behavior
+ * (ADR 019, 2026-10-09 amendment), and the guard test enforces it. The
+ * quota-consuming AI parsers are write class and never read-only.
  */
 const READ_ONLY: ToolAnnotations = {
   readOnlyHint: true,
-  destructiveHint: false,
-  idempotentHint: true,
-  openWorldHint: false,
-};
-/**
- * A read that needs `admin` authority (bank connections, SSH keys). It changes
- * nothing, but the annotation guard keeps `readOnlyHint` for `read`-class
- * verbs only: hosts auto-approve read-only tools, and these lists expose
- * credentials-adjacent data a person should see being read (ADR 019 D7).
- */
-const ADMIN_READ: ToolAnnotations = {
-  readOnlyHint: false,
   destructiveHint: false,
   idempotentHint: true,
   openWorldHint: false,
@@ -592,7 +581,8 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
   {
     name: "manageBankImport",
     title: "Move Bank Transactions Into The Ledger",
-    annotations: EXTERNAL_WRITE,
+    // `discard` deletes staged transactions.
+    annotations: EXTERNAL_ADMIN,
     description: importDescription,
     inputSchema: bankImportInputSchema.extend({ ledger: ledgerSelection }),
     outputSchema: mcpOutputSchema(bankImportOutputSchema),
@@ -612,7 +602,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
   {
     name: "listBankConnections",
     title: "List Linked Banks And Their Accounts",
-    annotations: ADMIN_READ,
+    annotations: READ_ONLY,
     description: listBankConnectionsDescription,
     inputSchema: listBankConnectionsInput.extend({ ledger: ledgerSelection }),
     outputSchema: mcpOutputSchema(listBankConnectionsOutput),

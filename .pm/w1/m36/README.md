@@ -1,6 +1,6 @@
 # w1 · m36 — Trim the MCP surface to what the Claude and ChatGPT directories accept
 
-**Worker:** worker1 **Goal:** Every tool, annotation, description, and error message the hosted MCP endpoint exposes passes Claude's connector-directory review criteria and ChatGPT's app-submission guidelines. Any operation either directory would refuse is removed from MCP (or hidden from that host) with its reason on record. **Status:** in progress (t001–t003 done)
+**Worker:** worker1 **Goal:** Every tool, annotation, description, and error message the hosted MCP endpoint exposes passes Claude's connector-directory review criteria and ChatGPT's app-submission guidelines. Any operation either directory would refuse is removed from MCP (or hidden from that host) with its reason on record. **Status:** in progress (t001–t004 done)
 
 ## Tasks (in order)
 
@@ -9,7 +9,7 @@
 | [t001](./done/t001.md) | Read both directories' policy text and decide every MCP tool's fate — **DONE** | 60m | — |
 | [t002](./done/t002.md) | Remove API-key management from MCP — **DONE** | 60m | t001 |
 | [t003](./done/t003.md) | Remove or hide the other operations t001 rules out — **DONE** | 45m | t001 |
-| t004 | Correct read-only and destructive annotations | 30m | t001 |
+| [t004](./done/t004.md) | Correct read-only and destructive annotations — **DONE** | 30m | t001 |
 | t005 | Strip model-steering wording and upsell copy | 30m | t001 |
 | t006 | Verify the trimmed surface on production | 20m | t002, t003, t004, t005 |
 | t007 | Adoption surface | 30m | t006 |

@@ -821,6 +821,17 @@ describe("executeEditLedgerFiles", () => {
  * fails CI here rather than misleading a client in production.
  */
 describe("MCP tool annotations", () => {
+  type Verb = (typeof VERB_TABLE)[number];
+  /** A lookup: a read, or an admin-authority GraphQL query. */
+  const changesNothing = (entry: Verb) =>
+    entry.class === "read" ||
+    (entry.class === "admin" && entry.verb.startsWith("Query."));
+  const verbsByTool = new Map<string, Verb[]>();
+  for (const entry of VERB_TABLE) {
+    if (!entry.mcp) continue;
+    verbsByTool.set(entry.mcp, [...(verbsByTool.get(entry.mcp) ?? []), entry]);
+  }
+
   it("declares all four hints on every tool", () => {
     for (const tool of MCP_TOOLS) {
       expect(typeof tool.annotations.readOnlyHint).toBe("boolean");
@@ -830,32 +841,40 @@ describe("MCP tool annotations", () => {
     }
   });
 
-  it("marks a tool read-only exactly when every verb it carries is a read", () => {
+  it("marks a tool read-only exactly when every verb it carries changes nothing", () => {
     // Both directions: a read-only hint on a write would let hosts
     // auto-approve it, and a pure read left unmarked makes every host ask
-    // before a lookup. `admin`-class reads (bank connections, SSH keys) are
-    // deliberately not read-only (ADR 019 D7).
-    const classesByTool = new Map<string, Set<string>>();
-    for (const entry of VERB_TABLE) {
-      if (!entry.mcp) continue;
-      const classes = classesByTool.get(entry.mcp) ?? new Set<string>();
-      classes.add(entry.class);
-      classesByTool.set(entry.mcp, classes);
-    }
+    // before a lookup. Both directories require the hint to match the
+    // behavior (ADR 019, 2026-10-09 amendment), so an admin-authority lookup
+    // (a GraphQL Query in the admin class, like bank connections) is
+    // read-only too. Write-class queries consume quota and are not.
     for (const tool of MCP_TOOLS) {
-      const classes = [...(classesByTool.get(tool.name) ?? [])];
-      expect(classes.length).toBeGreaterThan(0);
+      const verbs = verbsByTool.get(tool.name) ?? [];
+      expect(verbs.length).toBeGreaterThan(0);
       expect({
         tool: tool.name,
         readOnly: tool.annotations.readOnlyHint,
       }).toEqual({
         tool: tool.name,
-        readOnly: classes.every((opClass) => opClass === "read"),
+        readOnly: verbs.every(changesNothing),
       });
     }
   });
 
-  it("marks every account/ledger deleter as destructive", () => {
+  it("never mixes a lookup and a state change in one tool", () => {
+    // Claude's review rejects a single tool that accepts both safe and unsafe
+    // operations (ADR 019, 2026-10-09 amendment); `manageApiKeys`' `list`
+    // branch was the last one.
+    for (const [tool, verbs] of verbsByTool) {
+      const n = verbs.filter(changesNothing).length;
+      expect({ tool, mixed: n > 0 && n < verbs.length }).toEqual({
+        tool,
+        mixed: false,
+      });
+    }
+  });
+
+  it("marks every tool that can delete, overwrite, or revoke as destructive", () => {
     const destructive = new Map(
       MCP_TOOLS.map((tool) => [tool.name, tool.annotations.destructiveHint]),
     );
@@ -864,6 +883,7 @@ describe("MCP tool annotations", () => {
       "manageLedgerCollaborators",
       "managePullRequests",
       "manageBankConnection",
+      "manageBankImport",
       "editLedgerFiles",
       "editEntrySource",
     ]) {
