@@ -35,7 +35,6 @@
 
 ## Inbox
 
-- [065 — Check deletes ledger files when its cache filename aliases the input](./065.md) — major CLI data-loss bug; repeated root/include deletion, native spelling/alias cases and safe-cache controls, 45–60m.
 - [066 — Document listings return absolute paths for valid parent-relative attachments](./066.md) — minor CLI read/write path mismatch; two fresh included-ledger repros with same-directory controls, 25–40m.
 
 The 27 findings from the MCP QA auth sweep against the hosted endpoint (023–054, less the five under [Dropped](#dropped)) were fixed in `backend-cluster/backend-v2` and closed on 2026-10-02 and 2026-10-03; each note under [`done/`](./done/) records what shipped and in which commit. None has been re-observed against the hosted endpoint yet — the fixes reach it with the next backend deploy.
