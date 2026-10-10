@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -108,14 +109,20 @@ def _located_against_ledger(op: str, args: list[str]) -> list[str]:
     if not ledger.is_file():
         return args
     position = operands[1]
-    head, sep, rest = args[position].partition(":")
-    if not sep or not head or head.isdigit() or Path(head).is_absolute() or Path(head).exists():
+    # Upstream's own split: the filename is everything before the trailing
+    # line fields, so a colon inside it (`tx:jan.bean:1`) belongs to the name.
+    lines = r"\d+:\d+" if op == "region" else r"\d+"
+    match = re.fullmatch(rf"(.+):({lines})", args[position])
+    if match is None:
+        return args
+    head, rest = match.groups()
+    if Path(head).is_absolute() or Path(head).exists():
         return args
     candidate = ledger.parent / head
     if not candidate.exists():
         return args
     args = list(args)
-    args[position] = f"{candidate}{sep}{rest}"
+    args[position] = f"{candidate}:{rest}"
     return args
 
 

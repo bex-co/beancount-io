@@ -90,3 +90,55 @@ def test_a_line_only_region_is_untouched(books: Path, tmp_path: Path) -> None:
 def test_a_location_naming_no_file_anywhere_still_fails(books: Path, tmp_path: Path) -> None:
     result = _bea(tmp_path / "foreign", tmp_path, "doctor", "context", str(books / "main.bean"), "txns/nope.bean:1")
     assert "No entry could be found" in result.stdout + result.stderr
+
+
+COLON_MAIN = '2026-01-01 open Assets:Cash USD\n2026-01-01 open Equity:Opening USD\ninclude "tx:jan.bean"\n'
+COLON_JAN = '2026-01-02 * "colon fixture" ^colon\n  Assets:Cash  100 USD\n  Equity:Opening  -100 USD\n'
+COLON_OPS = [("context", "tx:jan.bean:1"), ("linked", "tx:jan.bean:1"), ("region", "tx:jan.bean:1:3")]
+
+
+@pytest.fixture
+def colon_books(tmp_path: Path) -> Path:
+    root = tmp_path / "books"
+    root.mkdir()
+    (root / "main.bean").write_text(COLON_MAIN)
+    (root / "tx:jan.bean").write_text(COLON_JAN)
+    (tmp_path / "foreign").mkdir()
+    return root
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="a colon is not a filename character there")
+@pytest.mark.parametrize(("op", "location"), COLON_OPS)
+def test_a_colon_in_the_relative_filename_belongs_to_the_filename(
+    colon_books: Path, tmp_path: Path, op: str, location: str
+) -> None:
+    """w5/062: the location was cut at its first colon, so `tx` was looked up and the include never found."""
+    main = colon_books / "main.bean"
+    before = {path.name: path.read_bytes() for path in colon_books.iterdir()}
+
+    relative = _bea(tmp_path / "foreign", tmp_path, "doctor", op, str(main), location)
+    absolute = _bea(tmp_path / "foreign", tmp_path, "doctor", op, str(main), f"{colon_books}/{location}")
+
+    assert absolute.returncode == 0, absolute.stdout + absolute.stderr
+    assert relative.returncode == 0, relative.stdout + relative.stderr
+    assert "100 USD" in relative.stdout
+    assert relative.stdout == absolute.stdout
+    assert {path.name: path.read_bytes() for path in colon_books.iterdir()} == before
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="a colon is not a filename character there")
+def test_a_colon_filename_in_the_cwd_still_wins(colon_books: Path, tmp_path: Path) -> None:
+    """An existing cwd-relative file keeps precedence over the ledger's directory."""
+    foreign = tmp_path / "foreign"
+    (foreign / "tx:jan.bean").write_text("; not part of the ledger\n")
+
+    result = _bea(foreign, tmp_path, "doctor", "context", str(colon_books / "main.bean"), "tx:jan.bean:1")
+
+    assert result.returncode != 0
+    assert "100 USD" not in result.stdout
+
+
+def test_a_numeric_only_location_is_untouched(books: Path, tmp_path: Path) -> None:
+    result = _bea(tmp_path / "foreign", tmp_path, "doctor", "context", str(books / "main.bean"), "6")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "root dinner" in result.stdout
