@@ -7,6 +7,7 @@ import { Skeleton } from "@/common/components/ui/skeleton";
 import { PRMetadata } from "../components/pr-metadata";
 import { PRFileList } from "../components/pr-file-list";
 import { DiffViewer } from "@/common/components/diff-viewer";
+import { LedgerWritePermission } from "@/common/components/ledger-permission/write";
 import { PRActions } from "../components/pr-actions";
 import { toast } from "sonner";
 import {
@@ -120,13 +121,15 @@ export default function PRReviewPage() {
 
       <DiffViewer diff={pr.diff || ""} />
 
-      <PRActions
-        state={pr.state}
-        onApprove={handleApprove}
-        onReject={handleReject}
-        approving={approving}
-        rejecting={rejecting}
-      />
+      <LedgerWritePermission>
+        <PRActions
+          state={pr.state}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          approving={approving}
+          rejecting={rejecting}
+        />
+      </LedgerWritePermission>
     </div>
   );
 }

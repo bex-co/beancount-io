@@ -37,6 +37,17 @@ vi.mock("@apollo/client/react", () => ({
   useMutation: vi.fn(() => [vi.fn(), { loading: false }]),
 }));
 
+// These existing handler tests run as an authenticated ordinary ledger writer.
+// Permission rendering with the real provider/actions is covered separately.
+vi.mock("@/common/hooks/use-is-authenticated", () => ({
+  useIsAuthenticated: () => true,
+}));
+vi.mock("@/common/hooks/use-ledger", () => ({
+  useLedger: () => ({
+    ledgerData: { permissions: { push: true, admin: false } },
+  }),
+}));
+
 vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
