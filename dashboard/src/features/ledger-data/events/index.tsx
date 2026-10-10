@@ -223,7 +223,7 @@ export default function LedgerEventsPage() {
                   </div>
                 ) : (
                   <div>
-                    <Table>
+                    <Table aria-label={t("page.events.events")}>
                       <TableHeader className="bg-muted/50">
                         <TableRow>
                           <TableHead className="px-2 sm:px-3 py-1.5 sm:py-2">
