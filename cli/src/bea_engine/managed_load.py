@@ -781,6 +781,19 @@ def export_portable(
     for dest in planned:
         if not dest.resolve().is_relative_to(resolved_target):
             raise UsageError(f"Cannot export: {dest} would land outside {target}. Nothing was written.")
+    # The directories the plan needs are part of the plan. A regular file at
+    # `output/sub` passed every check above while `output/sub/accounts.bean`
+    # was planned, so the root was copied before `mkdir` failed on the include
+    # and the export left half a ledger behind. `--force` replaces files the
+    # export writes; it does not remove what stands where a directory must be.
+    for dest in planned:
+        blocker = _destination_blocker(dest)
+        if blocker is not None:
+            needs = "a file" if blocker == dest else "a directory"
+            raise UsageError(
+                f"Cannot export into {target}: {blocker} is in the way of {dest}, where the export needs {needs}. "
+                "Move it or choose another directory; --force does not remove it. Nothing was written."
+            )
     # A file already at a planned destination is a file the export was never
     # given: the directory the user picked may be somebody else's ledger, and
     # replacing it reported success. Re-exporting into a previous snapshot is
@@ -816,6 +829,22 @@ def export_portable(
         errors=list(loaded.errors),
         overwritten=tuple(sorted(str(dest) for dest in existing)),
     )
+
+
+def _destination_blocker(dest: Path) -> Path | None:
+    """The existing path that stops `dest` from being written as a file, if any.
+
+    Either `dest` itself is a directory, or its nearest existing ancestor is
+    something other than a directory.
+    """
+    if dest.is_dir():
+        return dest
+    for ancestor in dest.parents:
+        if ancestor.is_dir():
+            return None
+        if ancestor.exists() or ancestor.is_symlink():
+            return ancestor
+    return None
 
 
 def _export_attachments(

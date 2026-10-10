@@ -165,6 +165,9 @@ destination is refused with exit **2**, before anything is written, when it
 A refusal names the colliding path and leaves the destination byte-identical,
 its file list included. `--force` is the only way past the second case
 (`treeify -o`, `price export`, `example -o`); nothing gets past the first.
+`price export` also plans the directories it needs: a file standing where the
+export needs a directory (or a directory where it needs a file) is refused the
+same way, and `--force` does not remove it.
 The exceptions are both narrow: `ingest archive -o DIR` files source documents
 into a directory tree rather than writing a ledger, so it keeps upstream's own
 collision handling (exit 1 naming the document), and `example -o` reports its
