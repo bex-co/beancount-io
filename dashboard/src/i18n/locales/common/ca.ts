@@ -273,6 +273,10 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "Seleccionar data",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "Menú d’usuari",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "Configuració",
     description: "Navigation label for settings page",

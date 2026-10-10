@@ -273,6 +273,10 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Datum auswählen",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "Benutzermenü",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "Einstellungen",
     description: "Navigation label for settings page",

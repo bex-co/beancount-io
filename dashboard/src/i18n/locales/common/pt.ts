@@ -273,6 +273,10 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Selecionar data",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "Menu do usuário",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "Configurações",
     description: "Navigation label for settings page",

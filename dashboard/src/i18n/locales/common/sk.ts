@@ -273,6 +273,10 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Vyberte dátum",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "Používateľské menu",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "Nastavenia",
     description: "Navigation label for settings page",

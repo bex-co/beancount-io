@@ -269,6 +269,10 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "选择日期",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "用户菜单",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "设置",
     description: "Navigation label for settings page",

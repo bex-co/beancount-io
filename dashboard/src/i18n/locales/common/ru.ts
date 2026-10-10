@@ -272,6 +272,10 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Выберите дату",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "Меню пользователя",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "Настройки",
     description: "Navigation label for settings page",

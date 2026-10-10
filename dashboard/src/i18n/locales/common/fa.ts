@@ -273,6 +273,10 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "انتخاب تاریخ",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "منوی کاربر",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "تنظیمات",
     description: "Navigation label for settings page",

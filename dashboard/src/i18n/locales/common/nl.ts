@@ -273,6 +273,10 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Selecteer datum",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "Gebruikersmenu",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "Instellingen",
     description: "Navigation label for settings page",

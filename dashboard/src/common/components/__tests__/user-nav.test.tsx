@@ -1,13 +1,17 @@
 import { createLocalization } from "@/i18n/init";
 import { LocalizationProvider } from "@/i18n/provider";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { createRef } from "react";
+import { en, de } from "@/i18n/locales";
 import {
+  act,
+  cleanup,
   render as renderComponent,
   screen,
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { UserNav } from "../user-nav";
+import { UserAvatarButton, UserNav } from "../user-nav";
 import * as apolloClient from "@apollo/client/react";
 import {
   createMockQueryResult,
@@ -33,33 +37,23 @@ vi.mock("@/common/hooks/use-theme", () => ({
   }),
 }));
 
-vi.mock("@/common/hooks/use-translations", () => ({
-  useTranslations: () => ({
-    t: (key: string) => {
-      const translations: Record<string, string> = {
-        "common.settings": "Settings",
-        "common.stars": "Stars",
-        "userSettings.theme": "Theme",
-        "userSettings.themeLight": "Light",
-        "userSettings.themeDark": "Dark",
-        "userSettings.themeSystem": "System",
-        "userSettings.currentLanguage": "Language",
-        "auth.logout": "Log out",
-        "common.userFallback": "User",
-        "common.userEmailFallback": "user@example.com",
-      };
-      return translations[key] || key;
-    },
-    i18n: {
-      language: "en",
-      changeLanguage: vi.fn(),
-    },
-  }),
-}));
+vi.unmock("@/common/hooks/use-translations");
+vi.unmock("react-i18next");
 
-vi.mock("@/common/hooks/use-mobile", () => ({
-  useIsMobile: () => false,
-}));
+const originalWidth = window.innerWidth;
+const viewportListeners = new Set<() => void>();
+
+function setViewport(width: number) {
+  window.innerWidth = width;
+  viewportListeners.forEach((listener) => listener());
+}
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  window.innerWidth = originalWidth;
+  viewportListeners.clear();
+});
 
 describe("UserNav", () => {
   const mockUser = {
@@ -83,6 +77,23 @@ describe("UserNav", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.innerWidth = 1440;
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({
+        matches: window.innerWidth < 768,
+        addEventListener: (_: string, listener: () => void) =>
+          viewportListeners.add(listener),
+        removeEventListener: (_: string, listener: () => void) =>
+          viewportListeners.delete(listener),
+      })),
+    );
+    vi.mocked(apolloClient.useQuery).mockReturnValue(
+      createMockQueryResult({
+        data: { userProfile: mockUser },
+        loading: false,
+      }),
+    );
   });
 
   it("should show loading state when data is loading", () => {
@@ -98,6 +109,7 @@ describe("UserNav", () => {
     // Should show loading skeleton instead of dropdown
     const loadingElement = document.querySelector(".animate-pulse");
     expect(loadingElement).toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
   it("should render dropdown menu with all items", async () => {
@@ -113,14 +125,17 @@ describe("UserNav", () => {
     const user = userEvent.setup();
     render(<UserNav />);
 
-    const trigger = screen.getByRole("button", { expanded: false });
+    const trigger = screen.getByRole("button", {
+      name: "User menu",
+      expanded: false,
+    });
     await user.click(trigger);
 
     await waitFor(() => {
       expect(screen.getByText("Settings")).toBeInTheDocument();
       expect(screen.getByText("Stars")).toBeInTheDocument();
       expect(screen.getByText("Theme")).toBeInTheDocument();
-      expect(screen.getByText("Log out")).toBeInTheDocument();
+      expect(screen.getByText(en["auth.logout"])).toBeInTheDocument();
     });
   });
 
@@ -137,7 +152,10 @@ describe("UserNav", () => {
     const user = userEvent.setup();
     render(<UserNav />);
 
-    const trigger = screen.getByRole("button", { expanded: false });
+    const trigger = screen.getByRole("button", {
+      name: "User menu",
+      expanded: false,
+    });
     await user.click(trigger);
 
     const settingsLink = await screen.findByText("Settings");
@@ -163,7 +181,10 @@ describe("UserNav", () => {
     const user = userEvent.setup();
     render(<UserNav />);
 
-    const trigger = screen.getByRole("button", { expanded: false });
+    const trigger = screen.getByRole("button", {
+      name: "User menu",
+      expanded: false,
+    });
     await user.click(trigger);
 
     const starsLink = await screen.findByText("Stars");
@@ -196,7 +217,10 @@ describe("UserNav", () => {
     const user = userEvent.setup();
     render(<UserNav />);
 
-    const trigger = screen.getByRole("button", { expanded: false });
+    const trigger = screen.getByRole("button", {
+      name: "User menu",
+      expanded: false,
+    });
     await user.click(trigger);
 
     const starsLink = await screen.findByText("Stars");
@@ -206,15 +230,186 @@ describe("UserNav", () => {
       expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
+
+  it.each([1440, 390])(
+    "keeps the action name independent of profile resolution and username changes at %ipx",
+    (width) => {
+      setViewport(width);
+      vi.mocked(apolloClient.useQuery).mockReturnValue(
+        createMockQueryResult({ loading: true }),
+      );
+      const { rerender } = render(<UserNav />);
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+      expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+
+      vi.mocked(apolloClient.useQuery).mockReturnValue(
+        createMockQueryResult({
+          data: { userProfile: { ...mockUser, username: "zoe" } },
+          loading: false,
+        }),
+      );
+      rerender(<UserNav />);
+      const label = width < 768 ? en["common.settings"] : en["common.userMenu"];
+      expect(screen.getByRole("button", { name: label })).toHaveTextContent(
+        "Z",
+      );
+
+      vi.mocked(apolloClient.useQuery).mockReturnValue(
+        createMockQueryResult({
+          data: { userProfile: { ...mockUser, username: "beta" } },
+          loading: false,
+        }),
+      );
+      rerender(<UserNav />);
+      expect(screen.getByRole("button", { name: label })).toHaveTextContent(
+        "B",
+      );
+      expect(
+        screen.queryByRole("button", { name: "B" }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it.each([1440, 390])(
+    "names the fallback avatar action without a resolved profile at %ipx",
+    (width) => {
+      setViewport(width);
+      vi.mocked(apolloClient.useQuery).mockReturnValue(
+        createMockQueryResult({ loading: false }),
+      );
+      render(<UserNav />);
+
+      expect(
+        screen.getByRole("button", {
+          name: width < 768 ? en["common.settings"] : en["common.userMenu"],
+        }),
+      ).toHaveTextContent("U");
+    },
+  );
+
+  it("opens the named desktop Radix menu with Enter and restores trigger focus after Escape", async () => {
+    const user = userEvent.setup();
+    render(<UserNav />);
+    const trigger = screen.getByRole("button", { name: "User menu" });
+    expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    trigger.focus();
+
+    await user.keyboard("{Enter}");
+
+    const menu = await screen.findByRole("menu");
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(trigger).toHaveAttribute("aria-controls", menu.id);
+    expect(
+      screen.getByRole("menuitem", { name: "Settings" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /Language/ }),
+    ).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      expect(trigger).toHaveFocus();
+    });
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("navigates directly to settings from the named narrow action using Enter", async () => {
+    setViewport(390);
+    const user = userEvent.setup();
+    render(<UserNav />);
+    const trigger = screen.getByRole("button", { name: "Settings" });
+    expect(trigger).not.toHaveAttribute("aria-haspopup");
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    trigger.focus();
+
+    await user.keyboard("{Enter}");
+
+    expect(mockNavigate).toHaveBeenCalledExactlyOnceWith({ to: "/settings" });
+  });
+
+  it("updates the localized action during live viewport and language changes", async () => {
+    const { localization } = render(<UserNav />);
+    expect(
+      screen.getByRole("button", { name: en["common.userMenu"] }),
+    ).toHaveTextContent("T");
+
+    await act(() => localization.changeLanguage("de"));
+    expect(
+      screen.getByRole("button", { name: de["common.userMenu"] }),
+    ).toHaveAttribute("aria-haspopup", "menu");
+    expect(
+      screen.queryByRole("button", { name: en["common.userMenu"] }),
+    ).not.toBeInTheDocument();
+
+    act(() => setViewport(390));
+    const settings = screen.getByRole("button", {
+      name: de["common.settings"],
+    });
+    expect(settings).toHaveTextContent("T");
+    expect(settings).not.toHaveAttribute("aria-haspopup");
+
+    await act(() => localization.changeLanguage("en"));
+    expect(
+      screen.getByRole("button", { name: en["common.settings"] }),
+    ).toHaveTextContent("T");
+
+    act(() => setViewport(1440));
+    expect(
+      screen.getByRole("button", { name: en["common.userMenu"] }),
+    ).toHaveAttribute("aria-haspopup", "menu");
+  });
+
+  it("forwards native trigger attributes, event handlers and ref to the avatar button", async () => {
+    const ref = createRef<HTMLButtonElement>();
+    const onClick = vi.fn();
+    const onKeyDown = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <UserAvatarButton
+        ref={ref}
+        userInitial="Q"
+        aria-label="Profile controls"
+        id="profile-controls"
+        aria-haspopup="menu"
+        aria-expanded={false}
+        data-state="closed"
+        onClick={onClick}
+        onKeyDown={onKeyDown}
+        className="text-primary"
+      />,
+    );
+    const button = screen.getByRole("button", { name: "Profile controls" });
+    expect(ref.current).toBe(button);
+    expect(button).toHaveAttribute("id", "profile-controls");
+    expect(button).toHaveAttribute("aria-haspopup", "menu");
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(button).toHaveAttribute("data-state", "closed");
+    expect(button).toHaveClass("rounded-full", "text-primary");
+    expect(button).toHaveTextContent("Q");
+
+    button.focus();
+    await user.keyboard("{Enter}");
+
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onKeyDown).toHaveBeenCalledWith(
+      expect.objectContaining({ key: "Enter" }),
+    );
+  });
 });
 
 function render(ui: React.ReactNode) {
   const localization = createLocalization();
-  return renderComponent(ui, {
-    wrapper: ({ children }) => (
-      <LocalizationProvider localization={localization}>
-        {children}
-      </LocalizationProvider>
-    ),
-  });
+  return {
+    localization,
+    ...renderComponent(ui, {
+      wrapper: ({ children }) => (
+        <LocalizationProvider localization={localization}>
+          {children}
+        </LocalizationProvider>
+      ),
+    }),
+  };
 }

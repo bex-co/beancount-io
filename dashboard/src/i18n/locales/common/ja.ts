@@ -272,6 +272,10 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "日付を選択",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "ユーザーメニュー",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "設定",
     description: "Navigation label for settings page",

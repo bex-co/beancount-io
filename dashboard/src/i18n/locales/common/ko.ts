@@ -272,6 +272,10 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "날짜 선택",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "사용자 메뉴",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "설정",
     description: "Navigation label for settings page",

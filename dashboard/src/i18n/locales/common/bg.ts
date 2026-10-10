@@ -273,6 +273,10 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Изберете дата",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "Потребителско меню",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "Настройки",
     description: "Navigation label for settings page",

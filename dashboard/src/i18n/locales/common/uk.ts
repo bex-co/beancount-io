@@ -273,6 +273,10 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Виберіть дату",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "Меню користувача",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "Налаштування",
     description: "Navigation label for settings page",

@@ -1,4 +1,5 @@
 import { useChangeLanguage } from "@/common/hooks/use-change-language";
+import type { ComponentProps } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   LogOut,
@@ -29,15 +30,16 @@ import { useTranslations } from "@/common/hooks/use-translations.ts";
 import { useIsMobile } from "@/common/hooks/use-mobile";
 import { Button } from "@/common/components/ui/button.tsx";
 import { Avatar, AvatarFallback } from "@/common/components/ui/avatar.tsx";
+import { cn } from "@/common/lib/utils/utils";
 import {
   SUPPORTED_LANGUAGES,
   LANGUAGE_NAMES,
   type SupportedLanguage,
 } from "@/i18n";
 
-interface UserAvatarButtonProps {
+interface UserAvatarButtonProps extends ComponentProps<typeof Button> {
   userInitial: string;
-  onClick?: () => void;
+  "aria-label": string;
 }
 
 /**
@@ -47,6 +49,7 @@ interface UserAvatarButtonProps {
 export function UserAvatarButton({
   userInitial,
   onClick,
+  className,
   ...props
 }: UserAvatarButtonProps) {
   return (
@@ -55,7 +58,7 @@ export function UserAvatarButton({
       size="icon-sm"
       onClick={onClick}
       {...props}
-      className="relative rounded-full hover:bg-accent p-0"
+      className={cn("relative rounded-full hover:bg-accent p-0", className)}
     >
       <Avatar className="h-8 w-8">
         <AvatarFallback>{userInitial}</AvatarFallback>
@@ -134,7 +137,11 @@ export function UserNav() {
   // On mobile, show a simple button that navigates to settings
   if (isMobile) {
     return (
-      <UserAvatarButton userInitial={userInitial} onClick={handleSettings} />
+      <UserAvatarButton
+        userInitial={userInitial}
+        aria-label={t("common.settings")}
+        onClick={handleSettings}
+      />
     );
   }
 
@@ -142,7 +149,10 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <UserAvatarButton userInitial={userInitial} />
+        <UserAvatarButton
+          userInitial={userInitial}
+          aria-label={t("common.userMenu")}
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">

@@ -272,6 +272,10 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Sélectionner une date",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "Menu utilisateur",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "Paramètres",
     description: "Navigation label for settings page",

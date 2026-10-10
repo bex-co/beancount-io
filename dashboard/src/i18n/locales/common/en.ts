@@ -273,6 +273,10 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Select date",
     description: "Screen reader label for date picker button",
   },
+  "common.userMenu": {
+    message: "User menu",
+    description: "Accessible name for the user account menu trigger",
+  },
   "common.settings": {
     message: "Settings",
     description: "Navigation label for settings page",
