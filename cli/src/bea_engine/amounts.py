@@ -40,16 +40,40 @@ def split_total_price(text: str) -> tuple[str, str] | None:
 
     The caller has already validated the line through Beancount's parser, so
     a total that cannot be read here means the split misread the text — never
-    a user error. Plain decimals only: exponent notation never reaches this
-    far, and anything else falls back to the parsed unit price.
+    a user error — and the caller falls back to the parsed unit price. A total
+    written as native arithmetic (`@@ (40+60) USD`, `@@ 200/2 USD`) is
+    evaluated by that same parser rather than here: the fallback would
+    otherwise record it as a divided, repeating `@` price.
     """
     unquoted = _QUOTED_OR_COMMENT.sub("", text)
     if "@@" not in unquoted:
         return None
     tail = unquoted.rsplit("@@", 1)[1].split()
-    if len(tail) < 2 or not _PLAIN_DECIMAL.fullmatch(tail[0]):
+    if len(tail) < 2:
         return None
-    return tail[0], tail[1]
+    if len(tail) == 2 and _PLAIN_DECIMAL.fullmatch(tail[0]):
+        return tail[0], tail[1]
+    return _evaluated_amount(" ".join(tail[:-1]), tail[-1])
+
+
+def _evaluated_amount(expression: str, currency: str) -> tuple[str, str] | None:
+    """A native arithmetic amount as Beancount evaluates it, or None when it does not parse as one."""
+    from beancount.core.number import MISSING
+    from beancount.parser import parser as beancount_parser
+
+    entries, errors, _ = beancount_parser.parse_string(
+        f'2026-01-02 * "probe"\n  Assets:Probe {expression} {currency}\n  Equity:Probe\n'
+    )
+    entry: Any = entries[0] if len(entries) == 1 and not errors else None
+    if entry is None or len(entry.postings) != 2:
+        return None
+    posting: Any = entry.postings[0]
+    units: Any = posting.units
+    if posting.cost is not None or posting.price is not None or units is None or units is MISSING:
+        return None
+    if units.number is MISSING or units.currency != currency:
+        return None
+    return format(units.number, "f"), currency
 
 
 def refuse_zero_divisor(text: str) -> None:

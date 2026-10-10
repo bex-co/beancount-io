@@ -222,6 +222,13 @@ def test_json_answer_total_price_round_trips_through_bulk(ledger: Path, posting:
         ("Assets:Brokerage 3 HOOL @@ 100 USD", ("100", "USD")),
         ("3 HOOL {10 USD} @@ 30 USD", ("30", "USD")),
         ("3 HOOL @@ -100 USD", ("-100", "USD")),
+        # w5/059: native arithmetic is evaluated to its total, not left to the divided unit price.
+        ("3 HOOL @@ (40+60) USD", ("100", "USD")),
+        ("3 HOOL @@ (100) USD", ("100", "USD")),
+        ("3 HOOL @@ 200/2 USD", ("100", "USD")),
+        ("3 HOOL @@ 40 + 60 USD", ("100", "USD")),
+        ("3 HOOL {10 USD} @@ 2.50*4 USD ; fee", ("10.00", "USD")),
+        ('3 HOOL {10 USD, "lot @@ 1"} @@ -(40+60) USD', ("-100", "USD")),
     ],
 )
 def test_split_total_price_reads_plain_totals(text: str, total: tuple[str, str]) -> None:
@@ -238,6 +245,8 @@ def test_split_total_price_reads_plain_totals(text: str, total: tuple[str, str])
         "3 HOOL @@",
         "3 HOOL @@ USD",
         "3 HOOL @@ 1e3 USD",
+        "3 HOOL @@ (40+ USD",
+        "3 HOOL @@ 40 + USD",
     ],
 )
 def test_split_total_price_ignores_non_totals(text: str) -> None:
@@ -261,3 +270,65 @@ def test_shorthand_total_price_parses_without_a_subprocess() -> None:
     assert posting.price is None
     assert posting.price_total is not None
     assert (posting.price_total.number, posting.price_total.currency) == (Decimal("100"), "USD")
+
+
+ARITHMETIC_TOTALS = ["(40+60)", "(100)", "200/2", "40 + 60"]
+
+
+@pytest.mark.parametrize("total", ARITHMETIC_TOTALS)
+def test_arithmetic_total_price_keeps_its_annotation_and_replays(ledger: Path, total: str) -> None:
+    """w5/059: `@@ (40+60) USD` was written as `@ 33.33333333333333333333333333 USD` with `price_total: null`."""
+    added = _bea(
+        ledger.parent,
+        *("--json", "--file", str(ledger), "add", "transaction", "--date", "2024-03-23", "--narration", "buy"),
+        *("--posting", f"Assets:Brokerage 3 HOOL @@ {total} USD", "--posting", "Equity:Opening-Balances -100.00 USD"),
+    )
+    assert added.returncode == 0, added.stderr
+    first = ledger.read_text()[len(LEDGER) :]
+    assert "3 HOOL @@ 100 USD" in first
+    assert "33.3" not in first
+    directive = json.loads(added.stdout)["data"]["directive"]
+    assert directive["postings"][0]["price"] is None
+    assert directive["postings"][0]["price_total"] == {"number": "100", "currency": "USD"}
+
+    ledger.write_text(LEDGER)
+    rows = ledger.parent / "rows.json"
+    rows.write_text(json.dumps([{key: directive[key] for key in ("date", "narration", "postings")}]))
+    replayed = _bea(ledger.parent, "--file", str(ledger), "add", "transactions", "--from", str(rows))
+    assert replayed.returncode == 0, replayed.stderr
+    assert ledger.read_text()[len(LEDGER) :] == first
+    check = _bea(ledger.parent, "--json", "--file", str(ledger), "check")
+    assert check.returncode == 0, check.stderr
+
+
+@pytest.mark.parametrize("total", [*ARITHMETIC_TOTALS, "100"])
+def test_bulk_shorthand_arithmetic_total_price_keeps_its_annotation(ledger: Path, total: str) -> None:
+    rows = ledger.parent / "rows.json"
+    row = {
+        "date": "2024-03-23",
+        "narration": "buy",
+        "postings": [
+            {"account": "Assets:Brokerage", "amount": f"3 HOOL @@ {total} USD"},
+            {"account": "Equity:Opening-Balances", "amount": "-100.00 USD"},
+        ],
+    }
+    rows.write_text(json.dumps([row]))
+
+    result = _bea(ledger.parent, "--json", "--file", str(ledger), "add", "transactions", "--from", str(rows))
+
+    assert result.returncode == 0, result.stderr
+    text = ledger.read_text()
+    assert "3 HOOL @@ 100 USD" in text
+    assert "33.3" not in text
+
+
+def test_zero_divisor_in_a_total_price_is_still_refused(ledger: Path) -> None:
+    result = _bea(
+        ledger.parent,
+        *("--json", "--file", str(ledger), "add", "transaction", "--date", "2024-03-23", "--narration", "buy"),
+        *("--posting", "Assets:Brokerage 3 HOOL @@ 100/0 USD", "--posting", "Equity:Opening-Balances"),
+    )
+
+    assert result.returncode == 2, result.stderr or result.stdout
+    assert "Division by zero" in result.stderr
+    assert ledger.read_text() == LEDGER
