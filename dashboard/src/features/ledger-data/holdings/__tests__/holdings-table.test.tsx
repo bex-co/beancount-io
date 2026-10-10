@@ -38,12 +38,17 @@ describe("DatasetTable", () => {
       });
 
       const { container } = render(
-        <DatasetTable query={mockQuery} ledgerId={mockLedgerId} />,
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
       );
 
       // Check for skeleton elements (they have animate-pulse class)
       const skeletons = container.querySelectorAll('[class*="animate-pulse"]');
       expect(skeletons.length).toBeGreaterThan(0);
+      expect(screen.queryByRole("table")).not.toBeInTheDocument();
     });
   });
 
@@ -55,11 +60,18 @@ describe("DatasetTable", () => {
         error: new Error("Network error occurred"),
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       expect(
         screen.getByText("Something went wrong. Please try again."),
       ).toBeInTheDocument();
+      expect(screen.queryByRole("table")).not.toBeInTheDocument();
     });
 
     it("should render default error message for non-Error exceptions", () => {
@@ -69,7 +81,13 @@ describe("DatasetTable", () => {
         error: { message: "Some error" } as Error, // Not an actual Error instance
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       // Should show the error message
       expect(screen.getByRole("alert")).toBeInTheDocument();
@@ -84,11 +102,18 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       expect(
         screen.getByText(/No query results available/),
       ).toBeInTheDocument();
+      expect(screen.queryByRole("table")).not.toBeInTheDocument();
     });
 
     it("should render no data message when table has no rows", () => {
@@ -107,11 +132,18 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       expect(
         screen.getByText(/No data returned from query/),
       ).toBeInTheDocument();
+      expect(screen.queryByRole("table")).not.toBeInTheDocument();
     });
   });
 
@@ -135,7 +167,17 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
+
+      expect(
+        screen.getByRole("table", { name: "Holdings" }),
+      ).toBeInTheDocument();
 
       // Check headers
       expect(screen.getByText("account")).toBeInTheDocument();
@@ -164,7 +206,13 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       // Should show "2 Rows" (text split in DOM)
       expect(screen.getByText(/2/)).toBeInTheDocument();
@@ -187,7 +235,13 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       // The row count is displayed
       expect(screen.getByText(/1/)).toBeInTheDocument();
@@ -212,7 +266,11 @@ describe("DatasetTable", () => {
       });
 
       const { container } = render(
-        <DatasetTable query={mockQuery} ledgerId={mockLedgerId} />,
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
       );
 
       // Find the pre element and check its content
@@ -237,7 +295,13 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       // The text is split across elements, so we check for partial matches
       expect(screen.getByText(/Unknown result type/)).toBeInTheDocument();
@@ -262,7 +326,13 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       // Check that the object values are rendered
       expect(screen.getByText("1000.50")).toBeInTheDocument();
@@ -297,7 +367,13 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       expect(screen.getByText("0.004")).toBeInTheDocument();
       expect(screen.getByText("14.42")).toBeInTheDocument();
@@ -325,7 +401,13 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       const accountButton = screen.getByRole("button", {
         name: "Assets:Bank:Checking",
@@ -358,7 +440,13 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       expect(useQuery).toHaveBeenCalledWith(QueryShellDocument, {
         variables: {
@@ -391,7 +479,13 @@ describe("DatasetTable", () => {
         error: undefined,
       });
 
-      render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
+      render(
+        <DatasetTable
+          query={mockQuery}
+          ledgerId={mockLedgerId}
+          ariaLabel="Holdings"
+        />,
+      );
 
       // The control used to be `hidden sm:flex`, so narrow viewports had no way
       // to download the dataset at all.

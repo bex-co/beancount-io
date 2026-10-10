@@ -76,6 +76,7 @@ const LedgerHoldingsTabs = () => {
       <TabsContent value="holdings" className="mt-2 max-w-full">
         <DatasetTable
           query={holdingsStatement}
+          ariaLabel={t("page.holdings.holdings")}
           ledgerId={ledgerId}
           rowsFilter={holdingsRowsFilter}
         />
@@ -84,6 +85,7 @@ const LedgerHoldingsTabs = () => {
       <TabsContent value="by-account" className="mt-2 max-w-full">
         <DatasetTable
           query={holdingsStatementByAccount}
+          ariaLabel={t("page.holdings.holdingsByAccount")}
           ledgerId={ledgerId}
           rowsFilter={defaultRowsFilter}
         />
@@ -92,6 +94,7 @@ const LedgerHoldingsTabs = () => {
       <TabsContent value="by-currency" className="mt-2 max-w-full">
         <DatasetTable
           query={holdingsStatementByCurrency}
+          ariaLabel={t("page.holdings.holdingsByCurrency")}
           ledgerId={ledgerId}
           rowsFilter={unitsFirstRowsFilter}
         />
@@ -100,6 +103,7 @@ const LedgerHoldingsTabs = () => {
       <TabsContent value="by-cost-currency" className="mt-2 max-w-full">
         <DatasetTable
           query={holdingsStatementByCostCurrency}
+          ariaLabel={t("page.holdings.holdingsByCostCurrency")}
           ledgerId={ledgerId}
           rowsFilter={unitsFirstRowsFilter}
         />

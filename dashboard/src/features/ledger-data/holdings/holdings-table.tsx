@@ -26,6 +26,7 @@ import { getClickableRowProps } from "@/common/components/clickable-row";
 interface DatasetTableProps {
   query: string;
   ledgerId: string;
+  ariaLabel: string;
   rowsFilter?: (rows: unknown[][]) => unknown[][];
 }
 
@@ -41,7 +42,7 @@ const renderObject = (obj: object) => {
 };
 
 export const DatasetTable = React.memo(
-  ({ query, ledgerId, rowsFilter }: DatasetTableProps) => {
+  ({ query, ledgerId, ariaLabel, rowsFilter }: DatasetTableProps) => {
     const { t } = useTranslations();
     const navigate = useNavigate();
 
@@ -118,7 +119,7 @@ export const DatasetTable = React.memo(
           </div>
           <div className="overflow-hidden w-full">
             <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
-              <Table>
+              <Table aria-label={ariaLabel}>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     {headers.map((header) => (
@@ -217,7 +218,7 @@ export const DatasetTable = React.memo(
           </div>
         </div>
       );
-    }, [data, handleExportCSV, ledgerId, navigate, t, rowsFilter]);
+    }, [data, handleExportCSV, ledgerId, navigate, t, rowsFilter, ariaLabel]);
 
     const renderTextData = React.useMemo(() => {
       if (!data?.queryShell?.text) return null;
