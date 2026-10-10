@@ -1,5 +1,6 @@
 import { createInstance } from "i18next";
 import type { Locale } from "react-day-picker";
+import { rethrowLocallyHandledChunkError } from "@/common/lib/errors/chunk-load-error";
 import {
   defaultDateLocale,
   loadDateLocale,
@@ -66,10 +67,12 @@ export function createLocalization() {
       if (!dateLocales.has(language)) {
         let dateLoad = pendingDate.get(language);
         if (!dateLoad) {
-          dateLoad = loadDateLocale(language).then((locale) => {
-            dateLocales.set(language, locale);
-            return locale;
-          });
+          dateLoad = loadDateLocale(language)
+            .catch(rethrowLocallyHandledChunkError)
+            .then((locale) => {
+              dateLocales.set(language, locale);
+              return locale;
+            });
           pendingDate.set(language, dateLoad);
         }
         loads.push(dateLoad);
@@ -78,7 +81,9 @@ export function createLocalization() {
       if (!i18n.hasResourceBundle(language, "translation")) {
         let load = pending.get(language);
         if (!load) {
-          load = localeLoaders[language]().then((module) => module.default);
+          load = localeLoaders[language]()
+            .catch(rethrowLocallyHandledChunkError)
+            .then((module) => module.default);
           pending.set(language, load);
         }
         loads.push(

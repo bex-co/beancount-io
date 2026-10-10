@@ -3,16 +3,21 @@ import { RootProvider } from "@/common/providers/root-provider";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { reloadOnceForStaleChunk } from "@/common/lib/errors/chunk-load-error";
+import {
+  isLocallyHandledChunkError,
+  reloadOnceForStaleChunk,
+} from "@/common/lib/errors/chunk-load-error";
 
 export const RootComponent = () => {
-  // Vite raises this when a lazy chunk or its stylesheet is gone, which after
-  // a deploy means this page belongs to the previous build. Reload once to
-  // adopt the current one; if the guard declines, the error is left to reach
-  // the nearest error boundary.
+  // Leave Vite's rejection intact so optional imports can claim their own
+  // errors. Check after promise reactions settle; unclaimed chunks still
+  // reload once to adopt the current build, even if the error unmounts root.
   useEffect(() => {
     const onPreloadError = (event: Event) => {
-      if (reloadOnceForStaleChunk()) event.preventDefault();
+      const error = (event as Event & { payload?: unknown }).payload;
+      window.setTimeout(() => {
+        if (!isLocallyHandledChunkError(error)) reloadOnceForStaleChunk();
+      }, 0);
     };
     window.addEventListener("vite:preloadError", onPreloadError);
     return () =>

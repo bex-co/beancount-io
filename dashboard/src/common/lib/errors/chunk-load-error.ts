@@ -18,6 +18,27 @@ export function isChunkLoadError(error: unknown): boolean {
   );
 }
 
+const locallyHandledChunkErrors = new WeakSet<object>();
+
+/** Let optional imports retain their own failure feedback and retry. */
+export function rethrowLocallyHandledChunkError(error: unknown): never {
+  if (
+    error !== null &&
+    (typeof error === "object" || typeof error === "function")
+  ) {
+    locallyHandledChunkErrors.add(error);
+  }
+  throw error;
+}
+
+export function isLocallyHandledChunkError(error: unknown): boolean {
+  return (
+    error !== null &&
+    (typeof error === "object" || typeof error === "function") &&
+    locallyHandledChunkErrors.has(error)
+  );
+}
+
 const RELOAD_KEY = "beancount.staleChunkReloadAt";
 const RELOAD_WINDOW_MS = 60_000;
 
