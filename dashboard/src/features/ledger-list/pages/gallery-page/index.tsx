@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useHydrated, useNavigate } from "@tanstack/react-router";
 import { useLazyQuery } from "@apollo/client/react";
 import { Search, Loader2, X } from "lucide-react";
 import { Card, CardContent } from "@/common/components/ui/card";
@@ -43,6 +43,7 @@ function EmptyState() {
 export default function GalleryPage() {
   const { t } = useTranslations();
   const navigate = useNavigate();
+  const hydrated = useHydrated();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedQuery = useDebounce(searchQuery, 300);
 
@@ -226,6 +227,7 @@ export default function GalleryPage() {
                         ref={inputRef}
                         id="ledger-search"
                         type="text"
+                        disabled={!hydrated}
                         value={searchQuery}
                         onChange={handleInputChange}
                         onFocus={handleInputFocus}

@@ -15,9 +15,15 @@ type SearchLedgersQueryTuple = MockLazyQueryTuple<SearchLedgersQuery>;
 // Mock dependencies
 const mockNavigate = vi.fn();
 
-vi.mock("@tanstack/react-router", () => ({
-  useNavigate: () => mockNavigate,
-}));
+vi.mock("@tanstack/react-router", async () => {
+  const { useHydrated } = await vi.importActual<
+    typeof import("@tanstack/react-router")
+  >("@tanstack/react-router");
+  return {
+    useHydrated,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 vi.mock("@apollo/client/react", () => ({
   useLazyQuery: vi.fn(),
