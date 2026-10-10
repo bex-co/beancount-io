@@ -11,6 +11,9 @@ import { LanguageSelector } from "../language-selector";
 import { createLocalization } from "@/i18n/init";
 import { LocalizationProvider } from "@/i18n/provider";
 import { LANGUAGE_NAMES } from "@/i18n/config";
+import en from "@/features/user-settings/locales/en";
+import fr from "@/features/user-settings/locales/fr";
+import zh from "@/features/user-settings/locales/zh";
 
 vi.unmock("react-i18next");
 vi.unmock("@/common/hooks/use-translations");
@@ -39,12 +42,14 @@ describe("LanguageSelector", () => {
 
   it("offers every supported language and starts collapsed in English", async () => {
     await setup();
-    expect(screen.getByRole("combobox")).toHaveTextContent("English");
-    expect(screen.getByRole("combobox")).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
-    await userEvent.click(screen.getByRole("combobox"));
+    const trigger = screen.getByRole("combobox", {
+      name: en["userSettings.currentLanguage"].message,
+      exact: true,
+    });
+    expect(trigger).toHaveTextContent("English");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(trigger).toHaveAttribute("aria-busy", "false");
+    await userEvent.click(trigger);
     for (const name of Object.values(LANGUAGE_NAMES)) {
       expect(
         screen.getByRole("button", { name, exact: true }),
@@ -52,21 +57,42 @@ describe("LanguageSelector", () => {
     }
   });
 
-  it("marks the language in use as current and moves the marker on change", async () => {
+  it("keeps the localized setting name separate from the value and returns keyboard focus after changing the current marker", async () => {
     await import("@/i18n/locales/fr");
     await setup();
     const row = (name: string) =>
       screen.getByRole("button", { name, exact: true });
 
-    await userEvent.click(screen.getByRole("combobox"));
+    const user = userEvent.setup();
+    const trigger = screen.getByRole("combobox", {
+      name: en["userSettings.currentLanguage"].message,
+      exact: true,
+    });
+    await user.tab();
+    expect(trigger).toHaveFocus();
+    await user.keyboard("{Enter}");
     expect(row("English")).toHaveAttribute("aria-current", "true");
     expect(row("Français")).not.toHaveAttribute("aria-current");
-
-    await userEvent.click(row("Français"));
+    await waitFor(() => expect(row("English")).toHaveFocus());
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(row("Français")).toHaveFocus();
+    await user.keyboard("{Enter}");
     await waitFor(() =>
-      expect(screen.getByRole("combobox")).toHaveTextContent("Français"),
+      expect(
+        screen.getByRole("combobox", {
+          name: fr["userSettings.currentLanguage"].message,
+          exact: true,
+        }),
+      ).toBe(trigger),
     );
-    await userEvent.click(screen.getByRole("combobox"));
+    expect(trigger).toHaveTextContent("Français");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(trigger).toHaveAttribute("aria-busy", "false");
+    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.click(trigger);
     expect(row("Français")).toHaveAttribute("aria-current", "true");
     expect(row("English")).not.toHaveAttribute("aria-current");
   });
@@ -76,12 +102,22 @@ describe("LanguageSelector", () => {
     // has only English resources until the selection loads it.
     await import("@/i18n/locales/fr");
     const { localization } = await setup();
-    await userEvent.click(screen.getByRole("combobox"));
+    await userEvent.click(
+      screen.getByRole("combobox", {
+        name: en["userSettings.currentLanguage"].message,
+        exact: true,
+      }),
+    );
     await userEvent.click(
       screen.getByRole("button", { name: "Français", exact: true }),
     );
     await waitFor(() =>
-      expect(screen.getByRole("combobox")).toHaveTextContent("Français"),
+      expect(
+        screen.getByRole("combobox", {
+          name: fr["userSettings.currentLanguage"].message,
+          exact: true,
+        }),
+      ).toHaveTextContent("Français"),
     );
     expect(localization.i18n.hasResourceBundle("fr", "translation")).toBe(true);
     expect(localStorage.setItem).toHaveBeenCalledWith("i18nextLng", "fr");
@@ -113,12 +149,22 @@ describe("LanguageSelector", () => {
     await router.load();
     render(<RouterProvider router={router} />);
 
-    await userEvent.click(screen.getByRole("combobox"));
+    const trigger = screen.getByRole("combobox", {
+      name: zh["userSettings.currentLanguage"].message,
+      exact: true,
+    });
+    expect(trigger).toHaveTextContent("中文");
+    await userEvent.click(trigger);
     await userEvent.click(
       screen.getByRole("button", { name: "English", exact: true }),
     );
     await waitFor(() =>
-      expect(screen.getByRole("combobox")).toHaveTextContent("English"),
+      expect(
+        screen.getByRole("combobox", {
+          name: en["userSettings.currentLanguage"].message,
+          exact: true,
+        }),
+      ).toHaveTextContent("English"),
     );
     expect(window.location.search).toMatch(/[?&]lang=en(?:&|$)/);
     expect(localization.i18n.language).toBe("en");

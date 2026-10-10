@@ -16,7 +16,7 @@ import { cn } from "@/common/lib/utils/utils.ts";
  * Allows users to change the application language
  */
 export function LanguageSelector() {
-  const { i18n } = useTranslations();
+  const { i18n, t } = useTranslations();
   const { changeLanguage, isChangingLanguage } = useChangeLanguage();
   const [open, setOpen] = useState(false);
 
@@ -34,6 +34,7 @@ export function LanguageSelector() {
         <Button
           variant="outline"
           role="combobox"
+          aria-label={t("userSettings.currentLanguage")}
           aria-expanded={open}
           aria-busy={isChangingLanguage}
           className="justify-between"
