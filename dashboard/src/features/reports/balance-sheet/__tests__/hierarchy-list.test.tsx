@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { HierarchyList } from "../hierarchy-list";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 
@@ -464,6 +465,196 @@ describe("HierarchyList", () => {
       // Child should be visible again
       expect(screen.getByText("Bank")).toBeInTheDocument();
       expect(toggleButton).toHaveAttribute("aria-expanded", "true");
+    });
+  });
+
+  describe("amount disclosure on an expandable account", () => {
+    const otherAmounts = {
+      GLD: 17,
+      ITOT: 95,
+      VEA: 36,
+      VHT: 39,
+      VACHR: 25,
+      RGAGX: 394.75,
+      VBMPX: 136.632,
+    };
+    const balances = { USD: 3609.87, ...otherAmounts };
+
+    function expandedAssets() {
+      const checking = createNode({
+        account: "Assets:US:Checking",
+        balance: { USD: 10 },
+        balanceChildren: { USD: 10 },
+      });
+      const us = createNode({
+        account: "Assets:US",
+        balance: { USD: 3599.87, ...otherAmounts },
+        balanceChildren: balances,
+        children: [toChild(checking)],
+      });
+      return [
+        createNode({
+          account: "Assets",
+          balanceChildren: balances,
+          children: [toChild(us)],
+        }),
+      ];
+    }
+
+    function parentControls() {
+      const account = screen.getByRole("link", { name: "US", exact: true });
+      const row = account.closest("tr")!;
+      const expander = within(row).getByRole("button", {
+        name: "common.toggleAccountChildren",
+      });
+      const disclosure = within(row).getByRole("button", {
+        name: "All amounts for Assets:US",
+      });
+      const [primaryCell, otherCell] = within(row).getAllByRole("cell");
+      return { account, row, expander, disclosure, primaryCell, otherCell };
+    }
+
+    function expectBranchVisible(expander: HTMLElement, rowCount = 4) {
+      expect(expander).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getByRole("link", { name: "Checking" })).toBeVisible();
+      expect(screen.getByRole("rowheader", { name: "Checking" })).toBeVisible();
+      expect(screen.getAllByRole("row")).toHaveLength(rowCount);
+    }
+
+    function expectAllAmounts(cell: HTMLElement) {
+      for (const [unit, amount] of Object.entries(otherAmounts)) {
+        expect(within(cell).getByText(unit)).toBeVisible();
+        expect(within(cell).getByText(amount.toLocaleString())).toBeVisible();
+      }
+    }
+
+    it.each(["pointer", "Enter"] as const)(
+      "%s reveal and hide leave the expanded branch and descendant visible",
+      async (activation) => {
+        render(<HierarchyList data={expandedAssets()} primaryCurrency="USD" />);
+        const user = userEvent.setup();
+        const { row, expander, disclosure, primaryCell, otherCell } =
+          parentControls();
+        const child = screen.getByRole("rowheader", { name: "Checking" });
+        const activate = async () => {
+          if (activation === "pointer") await user.click(disclosure);
+          else {
+            disclosure.focus();
+            await user.keyboard("{Enter}");
+          }
+        };
+        expectBranchVisible(expander);
+        expect(disclosure).toHaveAttribute("aria-expanded", "false");
+        expect(disclosure).toHaveTextContent("+4 more");
+        expect(within(otherCell).queryByText("VHT")).not.toBeInTheDocument();
+        expect(within(primaryCell).getByText("3,609.87")).toBeVisible();
+
+        await activate();
+
+        // The real parent row has its own click handler. A leaf or standalone
+        // amount cell would pass even when this button collapsed the branch.
+        expectBranchVisible(expander);
+        expect(screen.getByRole("rowheader", { name: "Checking" })).toBe(child);
+        expect(disclosure).toHaveAttribute("aria-expanded", "true");
+        expect(disclosure).toHaveTextContent("Show less");
+        expect(disclosure).toHaveFocus();
+        expectAllAmounts(otherCell);
+        expect(within(row).getAllByRole("cell")).toHaveLength(2);
+        expect(within(primaryCell).getByText("3,609.87")).toBeVisible();
+
+        await activate();
+
+        expectBranchVisible(expander);
+        expect(screen.getByRole("rowheader", { name: "Checking" })).toBe(child);
+        expect(disclosure).toHaveAttribute("aria-expanded", "false");
+        expect(disclosure).toHaveTextContent("+4 more");
+        expect(disclosure).toHaveFocus();
+        for (const unit of ["GLD", "ITOT", "VEA"])
+          expect(within(otherCell).getByText(unit)).toBeVisible();
+        for (const unit of ["VHT", "VACHR", "RGAGX", "VBMPX"])
+          expect(within(otherCell).queryByText(unit)).not.toBeInTheDocument();
+      },
+    );
+
+    it("keeps ordinary row clicks, dedicated expanders, and account links independent", async () => {
+      render(<HierarchyList data={expandedAssets()} primaryCurrency="USD" />);
+      const user = userEvent.setup();
+      const { account, expander, disclosure, primaryCell, otherCell } =
+        parentControls();
+      await user.click(disclosure);
+      expectBranchVisible(expander);
+      expectAllAmounts(otherCell);
+
+      await user.click(primaryCell);
+      expect(expander).toHaveAttribute("aria-expanded", "false");
+      expect(
+        screen.queryByRole("link", { name: "Checking" }),
+      ).not.toBeInTheDocument();
+      expect(disclosure).toHaveAttribute("aria-expanded", "true");
+      expectAllAmounts(otherCell);
+
+      await user.click(expander);
+      expectBranchVisible(expander);
+      expect(disclosure).toHaveAttribute("aria-expanded", "true");
+
+      // The Link stub leaves the native event intact. Prevent only browser
+      // navigation, as the real router does; bubbling is still observable.
+      account.addEventListener("click", (event) => event.preventDefault());
+      expect(account).toHaveAttribute(
+        "href",
+        "/ledger/alice/book/account/Assets:US",
+      );
+      await user.click(account);
+      expectBranchVisible(expander);
+      expect(disclosure).toHaveAttribute("aria-expanded", "true");
+
+      await user.click(expander);
+      expect(expander).toHaveAttribute("aria-expanded", "false");
+      expect(
+        screen.queryByRole("rowheader", { name: "Checking" }),
+      ).not.toBeInTheDocument();
+      expander.focus();
+      await user.keyboard("{Enter}");
+      expectBranchVisible(expander);
+      expectAllAmounts(otherCell);
+    });
+
+    it("keeps a summary disclosure usable without changing account expansion", async () => {
+      render(
+        <HierarchyList
+          data={expandedAssets()}
+          primaryCurrency="USD"
+          summaryRows={[{ label: "Total Assets", balance: balances }]}
+        />,
+      );
+      const user = userEvent.setup();
+      const { expander, disclosure: parentDisclosure } = parentControls();
+      const summary = screen
+        .getByRole("rowheader", { name: "Total Assets" })
+        .closest("tr")!;
+      const disclosure = within(summary).getByRole("button", {
+        name: "All amounts for Total Assets",
+      });
+      const otherCell = within(summary).getAllByRole("cell")[1];
+      expect(within(summary).queryByRole("link")).not.toBeInTheDocument();
+      expect(within(summary).getAllByRole("button")).toHaveLength(1);
+      expect(disclosure).toHaveAttribute("aria-expanded", "false");
+      expectBranchVisible(expander, 5);
+
+      disclosure.focus();
+      await user.keyboard("{Enter}");
+      expectAllAmounts(otherCell);
+      expect(disclosure).toHaveAttribute("aria-expanded", "true");
+      expect(disclosure).toHaveFocus();
+      expectBranchVisible(expander, 5);
+      expect(parentDisclosure).toHaveAttribute("aria-expanded", "false");
+
+      await user.click(disclosure);
+      expect(disclosure).toHaveAttribute("aria-expanded", "false");
+      expect(disclosure).toHaveTextContent("+4 more");
+      expect(disclosure).toHaveFocus();
+      expect(within(otherCell).queryByText("VHT")).not.toBeInTheDocument();
+      expectBranchVisible(expander, 5);
     });
   });
 

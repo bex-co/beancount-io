@@ -138,7 +138,10 @@ function OtherBalancesColumn({
       {otherBalances.length > 3 && (
         <button
           type="button"
-          onClick={() => setExpanded((open) => !open)}
+          onClick={(event) => {
+            event.stopPropagation();
+            setExpanded((open) => !open);
+          }}
           aria-expanded={expanded}
           aria-label={t("common.otherBalancesLabel", { account: label ?? "" })}
           className="cursor-pointer text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
