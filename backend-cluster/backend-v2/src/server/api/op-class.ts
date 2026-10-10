@@ -214,6 +214,8 @@ const M = {
     "Authentication ceremony: an MCP client arrives already holding a token, so it can neither need nor complete these.",
   credentialMinting:
     "Credential minting is deliberately unreachable by a token credential (ADR 0006 D6), and an agent minting its own successor credential is precisely the loop that rule closes.",
+  directoryCredentials:
+    "Withheld from MCP by directory policy (ADR 019, 2026-10-09 amendment): OpenAI's app guidelines forbid an app to collect, solicit, or process access credentials such as API keys, and a connector's OAuth token minting a key would outlive the connection's revocation. Manage keys in the dashboard, the CLI, REST, or GraphQL.",
   billing:
     "Billing is a human decision with a hosted checkout page; an agent has nothing to do with the URL it would receive.",
   publicPricingCatalog:
@@ -314,12 +316,32 @@ const SURFACE_IMPOSSIBLE: Record<
   mcp: new Set(["ai.agent", "ai.sandboxAgent", "ai.openaiChatCompletions"]),
 };
 
+/**
+ * In-scope verbs MCP withholds on purpose, by directory policy.
+ *
+ * Distinct from `SURFACE_IMPOSSIBLE`: MCP could carry these, and did. The
+ * owner decided on 2026-10-09 that a listing in Claude's and ChatGPT's
+ * connector directories outranks reach, so an operation either directory's
+ * published rules would refuse leaves MCP (ADR 019 amendment, w1/m36). Each
+ * row keeps an `mcpExempt` reason quoting the rule; GraphQL and REST keep the
+ * operation. Adding a verb here is a contract change, made deliberately.
+ */
+const DIRECTORY_WITHHELD_FROM_MCP: ReadonlySet<string> = new Set([
+  "apikeys.create",
+  "apikeys.list",
+  "apikeys.revoke",
+]);
+
 /** Whether `surface` could carry this verb if someone did the work. */
 export function isReachableOn(
   entry: VerbEntry,
   surface: "gql" | "rest" | "mcp",
 ): boolean {
-  return isInParityScope(entry) && !SURFACE_IMPOSSIBLE[surface].has(entry.verb);
+  return (
+    isInParityScope(entry) &&
+    !SURFACE_IMPOSSIBLE[surface].has(entry.verb) &&
+    !(surface === "mcp" && DIRECTORY_WITHHELD_FROM_MCP.has(entry.verb))
+  );
 }
 
 /**
@@ -1285,18 +1307,13 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
  * that transport-to-action equivalence executable.
  */
 /**
- * API-key management, on all three surfaces (ADR 0006 D6, w1/m22).
+ * API-key management on GraphQL and REST (ADR 0006 D6, w1/m22). MCP carried
+ * it as the grouped `manageApiKeys` tool until 2026-10-09, when directory
+ * policy withdrew it (ADR 019 amendment, w1/m36).
  *
  * The operational class remains `admin` for rate limiting. The independent
  * canonical action tells the legacy scope gate to defer the final decision to
  * the PDP without changing the operation's risk budget.
- */
-/**
- * Row order matters for the grouped MCP tool: the op index keeps the first
- * row's verb for a shared tool id, and the rate limiter buckets by that verb.
- * `create` leads so `MCP manageApiKeys` spends the deliberate 5/minute mint
- * budget together with the GraphQL and REST create aliases, instead of
- * joining `list`'s class budget or earning a counter of its own.
  */
 const API_KEY_VERBS: readonly VerbEntry[] = [
   {
@@ -1305,7 +1322,7 @@ const API_KEY_VERBS: readonly VerbEntry[] = [
     authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
     gql: "Mutation.createApiKey",
     rest: "POST /api-gateway/v1/api-keys",
-    mcp: "manageApiKeys",
+    mcpExempt: M.directoryCredentials,
   },
   {
     verb: "apikeys.list",
@@ -1313,7 +1330,7 @@ const API_KEY_VERBS: readonly VerbEntry[] = [
     authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
     gql: "Query.apiKeys",
     rest: "GET /api-gateway/v1/api-keys",
-    mcp: "manageApiKeys",
+    mcpExempt: M.directoryCredentials,
   },
   {
     verb: "apikeys.revoke",
@@ -1321,7 +1338,7 @@ const API_KEY_VERBS: readonly VerbEntry[] = [
     authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
     gql: "Mutation.revokeApiKey",
     rest: "DELETE /api-gateway/v1/api-keys/{id}",
-    mcp: "manageApiKeys",
+    mcpExempt: M.directoryCredentials,
   },
   {
     // RFC 7662 token introspection (ADR 0017).
@@ -1331,7 +1348,7 @@ const API_KEY_VERBS: readonly VerbEntry[] = [
     gql: "Query.introspectToken",
     rest: "POST /api-gateway/v1/token/introspect",
     mcpExempt:
-      "The caller is a token *validator* — a gateway, a proxy, an agent runtime's auth layer — deciding whether to admit a request it is holding. An MCP client is the thing being validated, not the thing validating, and it already learns its credential is dead from the next call's 401. Adding a tool would spend the deliberately-small tool budget (ADR 0008 D5) on a question no agent's ledger work asks. This is a shape argument, not a credential one: `manageApiKeys` proves credential reads can live on MCP when an agent has a use for them.",
+      "The caller is a token *validator* — a gateway, a proxy, an agent runtime's auth layer — deciding whether to admit a request it is holding. An MCP client is the thing being validated, not the thing validating, and it already learns its credential is dead from the next call's 401. Adding a tool would spend the deliberately-small tool budget (ADR 0008 D5) on a question no agent's ledger work asks. This is a shape argument; since 2026-10-09 credentials are also withheld from MCP by directory policy (ADR 019 amendment).",
   },
 ];
 

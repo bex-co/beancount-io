@@ -201,6 +201,7 @@ function captureMcpHandlers(
           ledgerRepo: {},
         },
         apiKeyService: services?.apiKeyService ?? {},
+        ledgerWorkflow: services?.ledgerWorkflow ?? {},
         identity,
         ledgerId: "alice/main",
       } as unknown as McpRequestContext,
@@ -246,21 +247,24 @@ describe("scope enforcement across surfaces", () => {
 
     it("keeps the MCP operation through the tool's service call", async () => {
       const seen: Array<string | undefined> = [];
-      const list = jest.fn(async () => {
+      const deleteLedger = jest.fn(async () => {
         seen.push(getOperationId());
-        return [];
+        return { ledgerId: "alice/main" };
       });
       const handlers = captureMcpHandlers(adminToken, enforcing, {
-        apiKeyService: { list },
+        ledgerWorkflow: { deleteLedger },
         ledgerRepo: {},
         ledgerShell: {},
       });
 
       await asyncContext.run({ requestId: "req-mcp" }, async () => {
-        await handlers.get("manageApiKeys")!({ operation: "list" });
+        await handlers.get("manageLedgers")!({
+          operation: "delete",
+          ledger: "alice/main",
+        });
         expect(getOperationId()).toBeUndefined();
       });
-      expect(seen).toEqual(["MCP manageApiKeys"]);
+      expect(seen).toEqual(["MCP manageLedgers"]);
     });
   });
 
@@ -326,38 +330,46 @@ describe("scope enforcement across surfaces", () => {
       expect(reached).toBe(true);
     });
 
-    it("MCP: the grouped key tool refuses a non-admin scope at the gate", async () => {
+    it("MCP: a grouped admin tool refuses a non-admin scope at the gate", async () => {
       // The grouped dispatcher carries no transport-level canonical action
       // (w2/m27), so the gate enforces the admin risk class up front — the
       // centralized PDP still decides per-branch authority for callers that
       // hold the scope, as the API-key parity suite proves branch by branch.
-      const list = jest.fn().mockResolvedValue([]);
+      const deleteLedger = jest
+        .fn()
+        .mockResolvedValue({ ledgerId: "alice/main" });
       const handlers = captureMcpHandlers(writeToken, realConfig, {
-        apiKeyService: { list },
+        ledgerWorkflow: { deleteLedger },
         ledgerRepo: {},
         ledgerShell: {},
       });
-      const result = await handlers.get("manageApiKeys")!({
-        operation: "list",
+      const result = await handlers.get("manageLedgers")!({
+        operation: "delete",
+        ledger: "alice/main",
       });
 
       expect(result.isError).toBe(true);
-      expect(list).not.toHaveBeenCalled();
+      expect(deleteLedger).not.toHaveBeenCalled();
     });
 
     it("MCP: ledger.admin still reaches an admin operation", async () => {
-      const list = jest.fn().mockResolvedValue([]);
+      const deleteLedger = jest
+        .fn()
+        .mockResolvedValue({ ledgerId: "alice/main" });
       const handlers = captureMcpHandlers(adminToken, realConfig, {
-        apiKeyService: { list },
+        ledgerWorkflow: { deleteLedger },
         ledgerRepo: {},
         ledgerShell: {},
       });
-      const result = await handlers.get("manageApiKeys")!({
-        operation: "list",
+      const result = await handlers.get("manageLedgers")!({
+        operation: "delete",
+        ledger: "alice/main",
       });
 
       expect(result.isError).not.toBe(true);
-      expect(list).toHaveBeenCalledWith(adminToken);
+      expect(deleteLedger).toHaveBeenCalledWith(
+        expect.objectContaining({ identity: adminToken }),
+      );
     });
 
     it("still lets an unauthenticated signup ceremony reach its resolver", async () => {

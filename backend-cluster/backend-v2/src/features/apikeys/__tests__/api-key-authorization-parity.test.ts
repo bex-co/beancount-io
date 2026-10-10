@@ -17,7 +17,6 @@ import type {
   CreateApiKeyInput,
   IApiKeyModel,
 } from "@/features/apikeys/data/api-key-model";
-import { executeManageApiKeys } from "@/features/ai-agent/tools/api-key-tools";
 import {
   AuthorizationDeniedError,
   AuthorizationService,
@@ -141,7 +140,7 @@ describe("API-key authorization parity", () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  it("denies list before domain work on GraphQL, REST, and MCP", async () => {
+  it("denies list before domain work on GraphQL and REST", async () => {
     server.setIdentity(writeOAuth);
     await expect(
       resolver.apiKeys(gqlContext(writeOAuth)),
@@ -149,21 +148,10 @@ describe("API-key authorization parity", () => {
     await expect(
       restCall(server, "GET", "/api-gateway/v1/api-keys"),
     ).resolves.toBe(403);
-    const mcp = await executeManageApiKeys(
-      {
-        apiKeyService: service,
-        identity: writeOAuth,
-      },
-      { operation: "list" },
-    );
-    expect(mcp).toMatchObject({
-      ok: false,
-      error: expect.stringContaining('requires the "ledger.admin" scope'),
-    });
     expect(model.listByUserId).not.toHaveBeenCalled();
   });
 
-  it("denies a non-admin OAuth minter before domain work on every surface", async () => {
+  it("denies a non-admin OAuth minter before domain work on both surfaces", async () => {
     const input = { name: "CI", scopes: ["ledger.read"] };
     server.setIdentity(writeOAuth);
     await expect(
@@ -172,19 +160,10 @@ describe("API-key authorization parity", () => {
     await expect(
       restCall(server, "POST", "/api-gateway/v1/api-keys", input),
     ).resolves.toBe(403);
-    await expect(
-      executeManageApiKeys(
-        { apiKeyService: service, identity: writeOAuth },
-        { operation: "create", ...input },
-      ),
-    ).resolves.toMatchObject({
-      ok: false,
-      error: expect.stringContaining('requires the "ledger.admin" scope'),
-    });
     expect(model.create).not.toHaveBeenCalled();
   });
 
-  it("denies key self-replication before domain work on every surface", async () => {
+  it("denies key self-replication before domain work on both surfaces", async () => {
     const input = { name: "CI", scopes: ["ledger.read"] };
     server.setIdentity(adminApiKey);
     await expect(
@@ -193,19 +172,10 @@ describe("API-key authorization parity", () => {
     await expect(
       restCall(server, "POST", "/api-gateway/v1/api-keys", input),
     ).resolves.toBe(403);
-    await expect(
-      executeManageApiKeys(
-        { apiKeyService: service, identity: adminApiKey },
-        { operation: "create", ...input },
-      ),
-    ).resolves.toMatchObject({
-      ok: false,
-      error: expect.stringContaining("cannot mint another API key"),
-    });
     expect(model.create).not.toHaveBeenCalled();
   });
 
-  it("denies revoke before domain work on GraphQL, REST, and MCP", async () => {
+  it("denies revoke before domain work on GraphQL and REST", async () => {
     server.setIdentity(writeOAuth);
     await expect(
       resolver.revokeApiKey(storedKey.id, gqlContext(writeOAuth)),
@@ -213,34 +183,27 @@ describe("API-key authorization parity", () => {
     await expect(
       restCall(server, "DELETE", `/api-gateway/v1/api-keys/${storedKey.id}`),
     ).resolves.toBe(403);
-    await expect(
-      executeManageApiKeys(
-        { apiKeyService: service, identity: writeOAuth },
-        { operation: "revoke", id: storedKey.id },
-      ),
-    ).resolves.toMatchObject({
-      ok: false,
-      error: expect.stringContaining('requires the "ledger.admin" scope'),
-    });
     expect(model.revoke).not.toHaveBeenCalled();
   });
 
-  it("tells an MCP caller revoking an unknown key to list keys, not ledgers", async () => {
-    // w5/043: the NOT_FOUND fallback hint names ledger and file calls. No
-    // key-owner relationship exists for an id nobody holds.
-    (relationships.check as jest.Mock).mockResolvedValueOnce(false);
-    const response = await callMcp("manageApiKeys", {
-      operation: "revoke",
-      id: "akey_does_not_exist",
-    });
-    expect(response.isError).toBe(true);
-    const { error } = response.structuredContent as {
-      error: { code: string; hint: string };
-    };
-    expect(error.code).toBe("NOT_FOUND");
-    expect(error.hint).toContain("manageApiKeys");
-    expect(error.hint).toContain("list");
-    expect(error.hint).not.toContain("listLedgers");
+  it("offers no API-key management on MCP, even to an admin OAuth caller", async () => {
+    // Directory policy withholds credentials from MCP (ADR 019, 2026-10-09
+    // amendment): the tool is not listed, and calling it by name is refused
+    // before any key is read, minted, or revoked.
+    const tools = await listMcpTools();
+    expect(tools).not.toContain("manageApiKeys");
+    expect(tools.some((name) => /api.?key/i.test(name))).toBe(false);
+    for (const operation of ["list", "create", "revoke"]) {
+      const response = await callMcp("manageApiKeys", {
+        operation,
+        name: "CI",
+        scopes: ["ledger.read"],
+        id: storedKey.id,
+      });
+      expect(response.isError).toBe(true);
+    }
+    expect(model.listByUserId).not.toHaveBeenCalled();
+    expect(model.create).not.toHaveBeenCalled();
     expect(model.revoke).not.toHaveBeenCalled();
   });
 
@@ -282,7 +245,7 @@ describe("API-key authorization parity", () => {
     }
   });
 
-  it("allows the same admin list decision on all three surfaces", async () => {
+  it("allows the same admin list decision on both surfaces", async () => {
     server.setIdentity(adminOAuth);
     await expect(
       resolver.apiKeys(gqlContext(adminOAuth)),
@@ -290,34 +253,35 @@ describe("API-key authorization parity", () => {
     await expect(
       restCall(server, "GET", "/api-gateway/v1/api-keys"),
     ).resolves.toBe(200);
-    await expect(
-      executeManageApiKeys(
-        { apiKeyService: service, identity: adminOAuth },
-        { operation: "list" },
-      ),
-    ).resolves.toMatchObject({ ok: true });
-    expect(model.listByUserId).toHaveBeenCalledTimes(3);
+    expect(model.listByUserId).toHaveBeenCalledTimes(2);
   });
 
-  async function callMcp(
-    name: string,
-    input: Record<string, unknown>,
-    identity = adminOAuth,
-  ) {
+  async function withMcp<T>(use: (client: Client) => Promise<T>): Promise<T> {
     const mcp = assembleMcpRegistry(
-      { identity, apiKeyService: service } as unknown as McpRequestContext,
+      {
+        identity: adminOAuth,
+        apiKeyService: service,
+      } as unknown as McpRequestContext,
       config,
     );
     const client = new Client({ name: "api-key-parity", version: "1" });
     const [a, b] = InMemoryTransport.createLinkedPair();
     await Promise.all([client.connect(a), mcp.connect(b)]);
     try {
-      return await client.callTool({ name, arguments: input });
+      return await use(client);
     } finally {
       await client.close();
       await mcp.close();
     }
   }
+
+  const callMcp = (name: string, input: Record<string, unknown>) =>
+    withMcp((client) => client.callTool({ name, arguments: input }));
+
+  const listMcpTools = () =>
+    withMcp(async (client) =>
+      (await client.listTools()).tools.map((tool) => tool.name),
+    );
 
   it.each([undefined, "", "ada/personal"])(
     "preserves expiry and inherited restrictions through actual adapters: %s",
@@ -348,31 +312,6 @@ describe("API-key authorization parity", () => {
         contextValue: gqlContext(caller),
       });
       expect(gql.errors).toBeUndefined();
-      const mcp = await callMcp(
-        "manageApiKeys",
-        { operation: "create", ...input },
-        caller,
-      );
-      expect(mcp.isError).not.toBe(true);
-      expect(mcp.structuredContent).toMatchObject({
-        ok: true,
-        result: {
-          key: { expires_at: expiresAt, ledger_scope: "ada/personal" },
-          plaintext: expect.stringMatching(/^bcio_/),
-        },
-      });
-      const snake = await callMcp(
-        "manageApiKeys",
-        {
-          operation: "create",
-          name: input.name,
-          scopes: input.scopes,
-          ledger_scope: ledgerScope,
-          expires_at: expiresAt,
-        },
-        caller,
-      );
-      expect(snake.isError).not.toBe(true);
       expect(rest.key).toMatchObject({
         expiresAt,
         ledgerScope: "ada/personal",
@@ -381,7 +320,7 @@ describe("API-key authorization parity", () => {
         key: { expiresAt, ledgerScope: "ada/personal" },
         plaintext: expect.stringMatching(/^bcio_/),
       });
-      expect(model.create).toHaveBeenCalledTimes(4);
+      expect(model.create).toHaveBeenCalledTimes(2);
       for (const [, written] of model.create.mock.calls) {
         expect(written).toMatchObject({
           expiresAt: new Date(expiresAt),
@@ -392,85 +331,4 @@ describe("API-key authorization parity", () => {
       }
     },
   );
-
-  it.each([
-    { expires_at: "not-a-date" },
-    { expires_at: "2000-01-01T00:00:00Z" },
-  ])("rejects invalid MCP arguments before persistence: %j", async (extra) => {
-    const response = await callMcp("manageApiKeys", {
-      operation: "create",
-      name: "Automation",
-      scopes: ["ledger.read"],
-      ...extra,
-    });
-    expect(response.isError).toBe(true);
-    expect(model.create).not.toHaveBeenCalled();
-  });
-
-  it("refuses an unknown MCP argument as bad input naming the argument", async () => {
-    const response = await callMcp("manageApiKeys", {
-      operation: "list",
-      bogus_field: 1,
-    });
-    expect(response.isError).toBe(true);
-    const { error } = response.structuredContent as {
-      error: { code: string; message: string; hint: string };
-    };
-    expect(error.code).toBe("BAD_USER_INPUT");
-    expect(error.message).toContain("bogus_field");
-    expect(error.message).not.toContain("unrecognized_keys");
-    expect(error.hint).not.toMatch(/retry/i);
-    expect(model.listByUserId).not.toHaveBeenCalled();
-  });
-
-  it("prefers the documented spelling when both key spellings are sent", async () => {
-    // The snake_case spellings stay accepted for one release (w2/m27); when
-    // both spellings arrive, the advertised camelCase one wins.
-    const response = await callMcp("manageApiKeys", {
-      operation: "create",
-      name: "Automation",
-      scopes: ["ledger.read"],
-      ledgerScope: "ada/personal",
-      ledger_scope: "ada/other",
-      expiresAt: "2030-01-01T00:00:00Z",
-      expires_at: "2031-01-01T00:00:00Z",
-    });
-    expect(response.isError).not.toBe(true);
-    expect(response.structuredContent).toMatchObject({
-      ok: true,
-      result: {
-        key: {
-          expires_at: "2030-01-01T00:00:00.000Z",
-          ledger_scope: "ada/personal",
-        },
-      },
-    });
-  });
-
-  it("includes usage and revocation dates in MCP list results without a secret", async () => {
-    model.listByUserId.mockResolvedValueOnce([
-      {
-        ...storedKey,
-        lastUsedAt: new Date("2026-01-02"),
-        revokedAt: new Date("2026-01-03"),
-      },
-    ]);
-    const response = await callMcp("manageApiKeys", { operation: "list" });
-    expect(response.isError).not.toBe(true);
-    expect(response.structuredContent).toMatchObject({
-      result: [
-        {
-          last_used_at: "2026-01-02T00:00:00.000Z",
-          revoked_at: "2026-01-03T00:00:00.000Z",
-          revoked: true,
-        },
-      ],
-    });
-    expect(JSON.stringify(response.structuredContent)).not.toContain(
-      "keyDigest",
-    );
-    expect(JSON.stringify(response.structuredContent)).not.toContain(
-      "plaintext",
-    );
-  });
 });

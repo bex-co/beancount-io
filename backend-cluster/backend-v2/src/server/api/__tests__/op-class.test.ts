@@ -453,20 +453,18 @@ describe("evaluateScope", () => {
     ).toEqual(["read", "read", "write", "write", "admin"]);
   });
 
-  it("keeps API-key operations on the admin risk class while deferring policy", () => {
-    // The grouped dispatcher keeps the admin risk class but carries no
-    // transport-level canonical action (w2/m27): the selected branch
-    // authorizes in the shared application service instead. Without an
-    // admin scope the gate refuses before any branch runs.
-    const decision = evaluateScope(token("ledger.admin"), "MCP manageApiKeys");
-    expect(decision).toMatchObject({
-      allowed: true,
-      opClass: "admin",
-      requiredScope: "ledger.admin",
-    });
-    expect(decision.authorizationAction).toBeUndefined();
+  it("keeps API-key operations on the admin risk class, and off MCP", () => {
+    for (const opId of [
+      "GQL Mutation.createApiKey",
+      "REST POST /api-gateway/v1/api-keys",
+    ]) {
+      expect(classifyOp(opId).class).toBe("admin");
+    }
+    // Directory policy withdrew the grouped MCP tool (ADR 019, 2026-10-09
+    // amendment); its old operation id is no longer classified, so the MCP
+    // registry refuses it as unknown.
     expect(
-      evaluateScope(token("ledger.write"), "MCP manageApiKeys").allowed,
+      evaluateScope(token("ledger.admin"), "MCP manageApiKeys").classified,
     ).toBe(false);
   });
 

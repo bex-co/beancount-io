@@ -8,6 +8,18 @@ import { VERB_TABLE, isReachableOn } from "../op-class";
  * This fixture is a historical contract, not a snapshot to regenerate when a
  * test fails. New verbs remain subject to the live coverage/parity guards.
  */
+/**
+ * Verbs whose MCP adapter was withdrawn on purpose, by directory policy
+ * (ADR 019, 2026-10-09 amendment, w1/m36): OpenAI's app guidelines forbid an
+ * app to process access credentials such as API keys. GraphQL and REST keep
+ * them. This is the only list that may narrow a baseline row, and only on MCP.
+ */
+const WITHDRAWN_FROM_MCP = new Set([
+  "apikeys.list",
+  "apikeys.create",
+  "apikeys.revoke",
+]);
+
 describe("the accepted parity baseline", () => {
   const live = new Map(VERB_TABLE.map((entry) => [entry.verb, entry]));
 
@@ -31,7 +43,9 @@ describe("the accepted parity baseline", () => {
         // Explicit policy expansion for native OAuth feed access; the historical
         // fixture stays frozen and every other operation keeps its eligibility.
         eligible:
-          entry.verb === "Query.getFeed" || entry.eligible.includes(surface),
+          entry.verb === "Query.getFeed" ||
+          (entry.eligible.includes(surface) &&
+            !(surface === "mcp" && WITHDRAWN_FROM_MCP.has(entry.verb))),
       });
     }
   });
@@ -42,7 +56,12 @@ describe("the accepted parity baseline", () => {
       const current = live.get(entry.verb);
       for (const surface of ["gql", "rest", "mcp", "mcpResource"] as const) {
         const binding = entry.bindings[surface];
-        if (binding !== undefined) expect(current?.[surface]).toBe(binding);
+        if (binding === undefined) continue;
+        if (surface === "mcp" && WITHDRAWN_FROM_MCP.has(entry.verb)) {
+          expect(current?.mcp).toBeUndefined();
+          continue;
+        }
+        expect(current?.[surface]).toBe(binding);
       }
     },
   );

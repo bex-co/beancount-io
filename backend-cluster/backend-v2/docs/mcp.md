@@ -64,7 +64,14 @@ authorized browser session or an API-audience OAuth credential with admin
 capability. The request body includes `name`, `scopes`, and
 `ledgerScope: "alice/books"`; `expiresAt` is optional. See the
 [key schemas](../src/features/apikeys/api/api-key-schemas.ts). An API key cannot
-create another API key, including through MCP's `manageApiKeys` tool.
+create another API key.
+
+MCP itself has no key-management tool. Creating, listing, and revoking keys
+happens in the dashboard, the CLI, REST, or GraphQL. The connector directories
+forbid an app to handle access credentials, and a key minted through a
+connector would outlive revoking that connector
+([ADR 019](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md#amendments),
+2026-10-09).
 
 ### OAuth
 
@@ -246,7 +253,6 @@ the principal inputs; inspect the schema before constructing a call.
 | `appendLedgerText`           | `text`, optional `path`, `dry_run`, `allowInvalid`; appends Beancount directive text, routed by type and date and inserted in date order.                                 | Write      |
 | `refreshManagedPrices`       | Optional `ledger`; re-fetches every managed price include (`include "https://beancount.io/prices/BTC-USD"`) now and returns each source's status. Never edits the ledger. | Write      |
 | `editLedgerFiles`            | `description`, `files`, optional `dry_run`; batches create/update/replace/delete operations into one commit.                                                              | Write      |
-| `manageApiKeys`              | `operation: list / create / revoke`, operation-specific arguments. `create` returns plaintext once; requires OAuth on MCP and a paid plan.                                | Admin      |
 | `manageBankImport`           | `operation: sync / submit / discard`, operation-specific arguments, optional `dry_run`.                                                                                   | Write      |
 | `manageBankConnection`       | `operation: reconcile / map_account / set_currency / refresh / unlink`, operation-specific arguments.                                                                     | Admin      |
 | `listBankConnections`        | `{}`; linked bank connections (`item_id`) and their accounts (`account_id`, mapping) — the `banks` and `bank-accounts` resources as a tool.                               | Admin      |
@@ -730,8 +736,8 @@ to handle framing, initialization, and version negotiation.
 
 The common [rate limiter](../src/server/api/rate-limit.ts) counts calls per
 credential and operation. Default budgets are 300 read, 60 write, and 30 admin
-calls per minute; `manageApiKeys` carries the five-per-minute mint override
-because its create branch mints. These are
+calls per minute; minting an API key on GraphQL or REST carries a
+five-per-minute override. These are
 operation-class budgets, not one combined allowance for the entire MCP endpoint.
 
 The MCP endpoint itself also carries a read-class transport budget, and the

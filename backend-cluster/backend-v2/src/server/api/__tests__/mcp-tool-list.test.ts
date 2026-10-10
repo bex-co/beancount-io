@@ -143,7 +143,8 @@ describe("MCP tool list", () => {
     expect(names).not.toContain("listApiKeys");
     expect(names).not.toContain("createApiKey");
     expect(names).not.toContain("revokeApiKey");
-    expect(names).toContain("manageApiKeys");
+    // Withdrawn by directory policy, not folded (ADR 019, 2026-10-09).
+    expect(names).not.toContain("manageApiKeys");
   });
 
   /**
@@ -169,32 +170,6 @@ describe("MCP tool list", () => {
         });
       }
     }
-  });
-
-  it("publishes manageApiKeys with its operation enum and dated expiry", async () => {
-    const { tools } = await listTools();
-    const schema = tools.find((tool) => tool.name === "manageApiKeys")!
-      .inputSchema as {
-      required?: string[];
-      properties?: Record<string, { enum?: string[]; format?: string }>;
-    };
-    expect(schema.required).toEqual(["operation"]);
-    expect(schema.properties?.operation?.enum).toEqual([
-      "list",
-      "create",
-      "revoke",
-    ]);
-    expect(schema.properties?.expiresAt?.format).toBe("date-time");
-    // The snake_case spellings stay accepted on input but are not advertised:
-    // one spelling per field in `tools/list` is what w2/m27:t005 bought.
-    expect(Object.keys(schema.properties ?? {}).sort()).toEqual([
-      "expiresAt",
-      "id",
-      "ledgerScope",
-      "name",
-      "operation",
-      "scopes",
-    ]);
   });
 });
 

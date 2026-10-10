@@ -231,7 +231,9 @@ describe("op-class coverage", () => {
     // listStagedBankTransactions, does the same for the staged transaction
     // ids `manageBankImport` submit and discard take: `sync` returns counts.
     // The 30th, listPublicKeys, lists the keyId managePublicKeys delete needs.
-    expect(tools).toHaveLength(30);
+    // w1/m36 withdrew manageApiKeys by directory policy (ADR 019, 2026-10-09
+    // amendment), leaving 29.
+    expect(tools).toHaveLength(29);
 
     // Resources are counted apart on purpose. They do not compete for tool
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can

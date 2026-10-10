@@ -111,7 +111,6 @@ describe("budgets", () => {
     for (const opId of [
       "GQL Mutation.createApiKey",
       "REST POST /api-gateway/v1/api-keys",
-      "MCP manageApiKeys",
     ]) {
       expect(budgetFor(opId, classifyOp(opId))).toEqual({
         windowMs: 60_000,
@@ -296,13 +295,10 @@ describe("charging", () => {
   });
 
   it("charges every surface's spelling of one verb to one counter", async () => {
-    // Three aliases, one 5/minute operation — otherwise rotating surfaces
-    // would turn the deliberate createApiKey override into 15/minute. The
-    // grouped MCP tool (w2/m27) joins the create verb's bucket through its
-    // first-claimed row, so it shares the counter rather than earning one.
+    // Two aliases, one 5/minute operation — otherwise rotating surfaces
+    // would turn the deliberate createApiKey override into 10/minute.
     respond(1);
     respond(2);
-    respond(3);
     await consume({
       opId: "GQL Mutation.createApiKey",
       identity: token,
@@ -313,7 +309,6 @@ describe("charging", () => {
       identity: token,
       ip: "ip",
     });
-    await consume({ opId: "MCP manageApiKeys", identity: token, ip: "ip" });
     const keys = new Set(counter.mock.calls.map(([key]) => key));
     expect(keys.size).toBe(1);
   });

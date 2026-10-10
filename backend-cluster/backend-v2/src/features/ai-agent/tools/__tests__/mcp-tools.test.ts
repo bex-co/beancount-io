@@ -868,7 +868,6 @@ describe("MCP tool annotations", () => {
       "manageBankConnection",
       "editLedgerFiles",
       "editEntrySource",
-      "manageApiKeys",
     ]) {
       expect(destructive.get(name)).toBe(true);
     }

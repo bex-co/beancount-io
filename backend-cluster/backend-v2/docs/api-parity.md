@@ -27,8 +27,9 @@ old exemption prose or the operation's rate-limit class. In particular:
   expansion is required to close this row.
 - User profile updates/search, follow/unfollow, billing, and authentication
   ceremonies retain their existing credential exclusions.
-- API-key minting requires OAuth on MCP, admin capability, a paid plan, and scope
-  and ledger-pin narrowing. An API key cannot mint a successor.
+- API-key minting requires admin capability, a paid plan, and scope and
+  ledger-pin narrowing. An API key cannot mint a successor. API-key management
+  is not on MCP at all (exception 9).
 - Ledger and bank calls select a target, then the protected service checks current
   relationships and the credential pin. Target selection never grants authority.
 
@@ -96,10 +97,19 @@ none can dissolve into stale exemption prose:
    validating, and it already learns its credential is dead from the next
    call's 401. Spending the deliberately-small tool budget (ADR 0008 D5) on a
    question no agent's ledger work asks would cost selection accuracy for the
-   tools that do. This is a **shape** exception, not a credential one:
-   `manageApiKeys` shows credential reads reach MCP when an agent has a use for
-   them, so if an agent workflow ever needs this, the exception should be
-   re-argued rather than inherited.
+   tools that do. This is a **shape** exception; since exception 9, credentials
+   are also withheld from MCP by directory policy.
+9. **Directory policy withholds some operations from MCP.** On 2026-10-09 the
+   owner ranked a listing in Claude's and ChatGPT's connector directories above
+   reach, so an operation either directory's published rules would refuse left
+   MCP ([ADR 019 amendment](../../../docs/adrs/ADR019-backend-v2-mcp-host-compatibility.md#amendments),
+   w1/m36). The operations are listed in `DIRECTORY_WITHHELD_FROM_MCP` in
+   `op-class.ts`, which `isReachableOn` consults, so they are out of MCP's
+   parity target rather than counted as gaps. Each keeps an `mcpExempt` reason
+   quoting the rule, and GraphQL and REST keep the operation. API-key
+   management (`apikeys.list`, `apikeys.create`, `apikeys.revoke`) left first.
+   It was the only withdrawal from the frozen baseline, which
+   `parity-baseline.test.ts` names explicitly.
 
 ## Target selection
 

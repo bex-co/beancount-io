@@ -838,8 +838,8 @@ export function assembleMcpRegistry(
  * committed what the caller meant to preview (w5/039). Refusing here covers
  * every tool at once without publishing `additionalProperties: false` on each
  * schema, which `tools/list` has no byte budget left for. A schema that
- * already decided — strict, or deliberately loose like `manageApiKeys`, which
- * folds deprecated spellings before its own strict parse — is left alone.
+ * already decided — strict, or deliberately loose so it can fold deprecated
+ * spellings before its own strict parse — is left alone.
  */
 function refusingUnknownArguments(schema: ZodTypeAny): ZodTypeAny {
   return schema instanceof z.ZodObject && schema.def.catchall === undefined

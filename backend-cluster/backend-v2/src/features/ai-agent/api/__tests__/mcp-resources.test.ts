@@ -254,27 +254,26 @@ describe("MCP per-call ledger selection", () => {
       "main.beancount",
       "2026-01-01 open Assets:Cash",
     );
-    const list = jest.fn().mockResolvedValue([]);
+    const listLedgers = jest.fn().mockResolvedValue([]);
     const context: McpRequestContext = {
       ...ctx(getFilesContent),
       ledgerId: undefined,
     };
-    context.identity = {
-      ...context.identity,
-      ledgerScope: undefined,
-      // The grouped key tool enforces the admin risk class at the gate; the
-      // point here is that no ledger default is needed, not the scope.
-      scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
-    };
-    context.apiKeyService = { list } as unknown as ToolContext["apiKeyService"];
+    context.identity = { ...context.identity, ledgerScope: undefined };
+    context.ledgerWorkflow = {
+      ...context.ledgerWorkflow,
+      listLedgers,
+    } as unknown as McpRequestContext["ledgerWorkflow"];
     const { client, close } = await connect(context);
     try {
-      const keys = await client.callTool({
-        name: "manageApiKeys",
-        arguments: { operation: "list" },
+      const ledgers = await client.callTool({
+        name: "listLedgers",
+        arguments: {},
       });
-      expect(keys.isError).not.toBe(true);
-      expect(list).toHaveBeenCalledWith(context.identity);
+      expect(ledgers.isError).not.toBe(true);
+      expect(listLedgers).toHaveBeenCalledWith(
+        expect.objectContaining({ identity: context.identity }),
+      );
       const file = await client.readResource({ uri: FILE_URI });
       expect(file.contents[0]).toMatchObject({
         text: "2026-01-01 open Assets:Cash",

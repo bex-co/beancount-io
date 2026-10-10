@@ -109,12 +109,6 @@ import {
   appendLedgerTextOutputSchema,
   executeAppendLedgerText,
 } from "../tools/append-ledger-text-tool";
-import {
-  executeManageApiKeys,
-  manageApiKeysDescription,
-  manageApiKeysInputSchema,
-  manageApiKeysOutputSchema,
-} from "../tools/api-key-tools";
 import type { ToolContext } from "../tools/types";
 import {
   mcpOutputSchema,
@@ -653,20 +647,6 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     inputSchema: pullRequestToolInput,
     outputSchema: pullRequestToolOutput,
     execute: executePullRequestTool,
-  },
-
-  // Key management (ADR 0006 D6). One grouped tool for the list/create/revoke
-  // family: same subject, same authorization class (ADR 0008 D3). Not ledger
-  // verbs, but the same credential reaches them, and leaving them off MCP
-  // would mean an agent could use a key and never revoke one.
-  {
-    name: "manageApiKeys",
-    title: "Manage API Keys",
-    description: manageApiKeysDescription,
-    inputSchema: manageApiKeysInputSchema,
-    outputSchema: mcpOutputSchema(manageApiKeysOutputSchema),
-    annotations: DESTRUCTIVE,
-    execute: executeManageApiKeys,
   },
   {
     name: "manageLedgers",

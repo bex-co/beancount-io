@@ -61,7 +61,7 @@ type AuditClass = "read" | "write" | "admin";
 
 /** Shared with the key service's own not-found, so both say the same thing. */
 export const API_KEY_NOT_FOUND_HINT =
-  "Pass a key id (`akey_…`) that belongs to this account, not the key itself. `manageApiKeys` with operation `list` shows your keys and their ids.";
+  "Pass a key id (`akey_…`) that belongs to this account, not the key itself. Listing your API keys shows their ids.";
 
 interface DenialConcealment {
   readonly reasons: readonly AuthorizationDenyReason[];
