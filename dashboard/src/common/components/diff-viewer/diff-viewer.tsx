@@ -265,6 +265,7 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
           </div>
           <List<Record<string, never>>
             data-testid="virtualized-diff"
+            className="diff-source"
             listRef={listRef}
             rowCount={flattenedRows.length}
             rowHeight={(index) =>
@@ -359,6 +360,7 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
 
                 {/* Diff hunks */}
                 <Diff
+                  className="diff-source"
                   viewType="unified"
                   diffType={file.type}
                   hunks={file.hunks}

@@ -1,9 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  render as renderComponent,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { useEffect } from "react";
-import type { CSSProperties, ComponentType } from "react";
+import type { CSSProperties, ComponentType, ReactElement } from "react";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { createLocalization } from "@/i18n/init";
+import { LocalizationProvider } from "@/i18n/provider";
 import { DiffViewer } from "../diff-viewer";
 import { getDiffFileId } from "../diff-file-id";
+
+vi.unmock("react-i18next");
+vi.unmock("@/common/hooks/use-translations");
 
 const scrollToRow = vi.fn();
 
@@ -28,6 +40,7 @@ vi.mock("react-window", () => ({
     rowProps,
     style,
     listRef,
+    className,
   }: {
     rowCount: number;
     rowComponent: ComponentType<{
@@ -38,6 +51,7 @@ vi.mock("react-window", () => ({
     rowProps: Record<string, unknown>;
     style?: CSSProperties;
     listRef?: { current: unknown };
+    className?: string;
   }) => {
     if (listRef && "current" in listRef) {
       listRef.current = listHandle;
@@ -56,7 +70,7 @@ vi.mock("react-window", () => ({
       return () => clearTimeout(timer);
     }, []);
     return (
-      <div data-testid="virtualized-diff" style={style}>
+      <div data-testid="virtualized-diff" style={style} className={className}>
         {Array.from({ length: Math.min(rowCount, 20) }, (_, index) => (
           <RowComponent
             key={index}
@@ -70,6 +84,42 @@ vi.mock("react-window", () => ({
     );
   },
 }));
+
+function render(element: ReactElement, localization = createLocalization()) {
+  return renderComponent(element, {
+    wrapper: ({ children }) => (
+      <LocalizationProvider localization={localization}>
+        {children}
+      </LocalizationProvider>
+    ),
+  });
+}
+
+const source = {
+  comment: "; Comment remains first — یادداشت",
+  open: "2024-01-25 open Assets:Cash USD",
+  old: '2024-01-25 * "Coinbase" "قبلی"',
+  added: '2024-01-25 * "Coinbase" "خرید سهام"',
+  posting: "  Assets:Cash  -1.2300 USD",
+};
+
+function mixedSourceDiff(virtual: boolean) {
+  const padding = virtual
+    ? Array.from({ length: 1001 }, (_, index) => ` ; padding ${index}`)
+    : [];
+  return `diff --git a/transfers.bean b/transfers.bean
+--- a/transfers.bean
++++ b/transfers.bean
+@@ -12,${4 + padding.length} +12,${4 + padding.length} @@
+ ${source.comment}
+ ${source.open}
+-${source.old}
++${source.added}
+ ${source.posting}
+${padding.join("\n")}`;
+}
+
+let stylesheet: HTMLStyleElement;
 
 function createLargeDiff(lineCount: number) {
   const lines = Array.from(
@@ -108,11 +158,132 @@ describe("DiffViewer", () => {
     scrollToRow.mockClear();
     listHandle.element = null;
     elementAttachMode = "async";
+    const require = createRequire(`${process.cwd()}/`);
+    stylesheet = document.createElement("style");
+    stylesheet.textContent =
+      readFileSync(require.resolve("react-diff-view/style/index.css"), "utf8") +
+      readFileSync(
+        "src/common/components/diff-viewer/diff-viewer.css",
+        "utf8",
+      ).replace(/^@import\s+[^;]+;/gm, "");
+    document.head.appendChild(stylesheet);
   });
 
   afterEach(() => {
     elementAttachMode = "async";
+    stylesheet.remove();
   });
+
+  it.each(["en", "fa"] as const)(
+    "isolates the actual small %s source table while preserving tokenized content, gutters and interface direction",
+    async (language) => {
+      const localization = createLocalization();
+      await localization.changeLanguage(language);
+      const direction = localization.i18n.dir();
+      const { container } = render(
+        <main lang={language} dir={direction} style={{ direction }}>
+          <DiffViewer diff={mixedSourceDiff(false)} />
+        </main>,
+        localization,
+      );
+      const table = screen.getByRole("table");
+      expect(table.tagName).toBe("TABLE");
+      expect(getComputedStyle(table).direction).toBe("ltr");
+      expect(getComputedStyle(table).unicodeBidi).toBe("isolate");
+      expect(screen.queryByTestId("virtualized-diff")).not.toBeInTheDocument();
+      const heading = screen.getByRole("heading", {
+        name: localization.i18n.t("commits.changes"),
+      });
+      expect(heading.closest(".diff-source")).toBeNull();
+      expect(getComputedStyle(container.querySelector("main")!).direction).toBe(
+        direction,
+      );
+      const rows = Array.from(table.querySelectorAll(".diff-line"));
+      expect(
+        rows.map((row) => row.querySelector(".diff-code")!.textContent),
+      ).toEqual([
+        source.comment,
+        source.open,
+        source.old,
+        source.added,
+        source.posting,
+      ]);
+      expect(
+        rows.map((row) =>
+          Array.from(row.querySelectorAll("td")).map((cell) =>
+            cell.classList.contains("diff-gutter")
+              ? cell.textContent
+              : "source",
+          ),
+        ),
+      ).toEqual([
+        ["12", "12", "source"],
+        ["13", "13", "source"],
+        ["14", "", "source"],
+        ["", "14", "source"],
+        ["15", "15", "source"],
+      ]);
+      expect(rows[2].querySelector(".diff-code-delete")).not.toBeNull();
+      expect(rows[3].querySelector(".diff-code-insert")).not.toBeNull();
+      expect(rows[3].querySelector(".token.date")).toHaveTextContent(
+        "2024-01-25",
+      );
+      expect(
+        Array.from(rows[3].querySelectorAll(".token.string")).map(
+          (token) => token.textContent,
+        ),
+      ).toEqual(['"Coinbase"', '"خرید سهام"']);
+      expect(rows[0].querySelector(".token.comment")).toHaveTextContent(
+        source.comment,
+      );
+    },
+  );
+
+  it.each(["en", "fa"] as const)(
+    "isolates the virtual %s source and keeps markers, whitespace and localized warnings outside the boundary",
+    async (language) => {
+      const localization = createLocalization();
+      await localization.changeLanguage(language);
+      const direction = localization.i18n.dir();
+      const { container } = render(
+        <main lang={language} dir={direction} style={{ direction }}>
+          <DiffViewer diff={mixedSourceDiff(true)} />
+        </main>,
+        localization,
+      );
+      const list = screen.getByTestId("virtualized-diff");
+      expect(getComputedStyle(list).direction).toBe("ltr");
+      expect(getComputedStyle(list).unicodeBidi).toBe("isolate");
+      expect(screen.queryByRole("table")).not.toBeInTheDocument();
+      const sourceRows = Array.from(list.children).slice(1, 6);
+      expect(
+        sourceRows.map((row) =>
+          Array.from(row.children).map((span) => span.textContent),
+        ),
+      ).toEqual([
+        ["12", " ", source.comment],
+        ["13", " ", source.open],
+        ["14", "-", source.old],
+        ["14", "+", source.added],
+        ["15", " ", source.posting],
+      ]);
+      const heading = screen.getByRole("heading", {
+        name: localization.i18n.t("commits.changes"),
+      });
+      const warning = screen.getByRole("alert");
+      expect(warning).toHaveTextContent(
+        localization.i18n.t("commits.largeDiffWarning", {
+          totalLines: 1006,
+        }),
+      );
+      expect(heading.closest(".diff-source")).toBeNull();
+      expect(warning.closest(".diff-source")).toBeNull();
+      expect(getComputedStyle(container.querySelector("main")!).direction).toBe(
+        direction,
+      );
+      expect(list.querySelector(".token")).toBeNull();
+    },
+  );
 
   it("renders empty state when diff is empty", () => {
     render(<DiffViewer diff="" />);

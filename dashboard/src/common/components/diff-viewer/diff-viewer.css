@@ -8,6 +8,12 @@
 /* Import react-diff-view base styles */
 @import "react-diff-view/style/index.css";
 
+/* Source and gutters retain code order inside a right-to-left interface. */
+.diff-source {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 /* Diff container */
 .diff-viewer-container {
   border-radius: var(--radius-lg);
