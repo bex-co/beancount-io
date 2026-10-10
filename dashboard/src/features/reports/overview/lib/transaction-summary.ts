@@ -118,14 +118,20 @@ export function summarizeTransaction({
   const expensePostings = postings.filter((posting) =>
     isAccountWithin(posting.account, expensesRoot),
   );
-  const incomeAndExpense =
+  const mixedExpense =
     expensePostings.length > 0 &&
-    postings.some((posting) => isAccountWithin(posting.account, incomeRoot));
+    postings.some(
+      (posting) =>
+        isAccountWithin(posting.account, incomeRoot) ||
+        (!isAccountWithin(posting.account, expensesRoot) &&
+          posting.cost != null &&
+          posting.units.currency !== posting.cost.currency),
+    );
   // A payroll carries salary and its deductions; a sale carries a gain and its
-  // commission. Either side alone is a real number answering a question nobody
-  // asked — reporting a salary as its deductions reads as money going out. Say
-  // there are several postings and let the entry itself explain them.
-  if (incomeAndExpense) {
+  // commission. Costed purchases and loss sales can carry only expenses, whose
+  // total is still just a fee or realized loss, not the transaction amount.
+  // Say there are several postings and let the entry itself explain them.
+  if (mixedExpense) {
     return {
       kind: "mixed",
       amounts: [],

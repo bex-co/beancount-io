@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { DirectiveType, type JournalTransaction } from "@/common/types/journal";
+import {
+  DirectiveType,
+  type JournalPosting,
+  type JournalTransaction,
+} from "@/common/types/journal";
 import { summarizeTransaction } from "../transaction-summary";
 
 function transaction(
@@ -19,6 +23,26 @@ function transaction(
 
 function posting(account: string, number: string, currency = "USD") {
   return { account, units: { number, currency } };
+}
+
+function costedPosting(
+  account: string,
+  number: string,
+  currency: string,
+  costNumber: string,
+  costCurrency = "USD",
+  costDate = "2025-09-08",
+): JournalPosting {
+  return {
+    ...posting(account, number, currency),
+    cost: {
+      number: costNumber,
+      currency: costCurrency,
+      date: costDate,
+      label: null,
+    },
+    price: null,
+  };
 }
 
 const base = {
@@ -89,6 +113,151 @@ describe("summarizeTransaction", () => {
     expect(summary.kind).toBe("mixed");
     expect(summary.amounts).toEqual([]);
   });
+
+  describe("costed commodity trades with expenses", () => {
+    const purchase = transaction([
+      costedPosting("Assets:Brokerage:ACME", "100", "ACME", "84.60"),
+      posting("Expenses:Brokerage:Commissions", "4.95"),
+      posting("Assets:Brokerage:Cash", "-8464.95"),
+    ]);
+    const lossSale = transaction([
+      costedPosting(
+        "Assets:Brokerage:NWRB",
+        "-100",
+        "NWRB",
+        "10.45",
+        "USD",
+        "2024-03-12",
+      ),
+      posting("Assets:Brokerage:Cash", "910.00"),
+      posting("Assets:Brokerage:Cash", "-4.95"),
+      posting("Expenses:Brokerage:Commissions", "4.95"),
+      posting("Expenses:CapitalLoss:LongTerm", "135.00"),
+    ]);
+
+    it.each([
+      ["purchase", purchase],
+      ["loss sale", lossSale],
+    ] as const)(
+      "does not summarize the %s as its expenses or cash",
+      (_, trade) => {
+        const summary = summarizeTransaction({ ...base, transaction: trade });
+
+        expect(summary.kind).toBe("mixed");
+        expect(summary.amounts).toEqual([]);
+        expect(summary.accounts).toEqual(
+          Array.from(new Set(trade.postings.map((p) => p.account))),
+        );
+      },
+    );
+
+    it.each([
+      ["purchase", purchase, -8464.95],
+      ["loss sale", lossSale, 905.05],
+    ] as const)(
+      "keeps the %s cash movement when the reader explicitly filters cash",
+      (_, trade, value) => {
+        const summary = summarizeTransaction({
+          ...base,
+          transaction: trade,
+          accountFilter: "Assets:Brokerage:Cash",
+        });
+
+        expect(summary.amounts).toEqual([{ currency: "USD", value }]);
+        expect(summary.accounts).not.toContain("Assets:Brokerage:Cash");
+      },
+    );
+
+    it("keeps the purchased commodity units under an explicit account filter", () => {
+      const summary = summarizeTransaction({
+        ...base,
+        transaction: purchase,
+        accountFilter: "Assets:Brokerage:ACME",
+      });
+
+      expect(summary.amounts).toEqual([{ currency: "ACME", value: 100 }]);
+    });
+
+    it("keeps ordinary fee-only expenses and split-expense payments", () => {
+      const fee = summarizeTransaction({
+        ...base,
+        transaction: transaction([
+          posting("Assets:Brokerage:Cash", "-4.95"),
+          posting("Expenses:Brokerage:Commissions", "4.95"),
+        ]),
+      });
+      expect(fee.kind).toBe("expense");
+      expect(fee.amounts).toEqual([{ currency: "USD", value: -4.95 }]);
+
+      const payment = summarizeTransaction({
+        ...base,
+        transaction: transaction([
+          posting("Assets:Checking", "-45"),
+          posting("Expenses:Food", "30"),
+          posting("Expenses:Household", "15"),
+        ]),
+      });
+      expect(payment.kind).toBe("expense");
+      expect(payment.amounts).toEqual([{ currency: "USD", value: -45 }]);
+    });
+
+    it("does not treat a same-unit cost annotation as a commodity trade", () => {
+      const summary = summarizeTransaction({
+        ...base,
+        transaction: transaction([
+          costedPosting("Assets:Cash", "-4.95", "USD", "1"),
+          posting("Expenses:Fees", "4.95"),
+        ]),
+      });
+
+      expect(summary.kind).toBe("expense");
+      expect(summary.amounts).toEqual([{ currency: "USD", value: -4.95 }]);
+    });
+
+    it("does not treat an expense-side cost or price-only posting as a costed trade", () => {
+      const costedExpense = summarizeTransaction({
+        ...base,
+        transaction: transaction([
+          posting("Assets:Cash", "-10"),
+          costedPosting("Expenses:Supplies", "2", "SUPPLY", "5"),
+        ]),
+      });
+      expect(costedExpense.kind).toBe("expense");
+      expect(costedExpense.amounts).toEqual([
+        { currency: "SUPPLY", value: -2 },
+      ]);
+
+      const priceOnly = summarizeTransaction({
+        ...base,
+        transaction: transaction([
+          {
+            ...posting("Assets:Commodity", "1", "ACME"),
+            price: { number: "10", currency: "USD" },
+            cost: null,
+          },
+          posting("Expenses:Fees", "4.95"),
+          posting("Assets:Cash", "-14.95"),
+        ]),
+      });
+      expect(priceOnly.kind).toBe("expense");
+      expect(priceOnly.amounts).toEqual([{ currency: "USD", value: -4.95 }]);
+    });
+
+    it("honors configured income and expense account roots", () => {
+      const summary = summarizeTransaction({
+        ...base,
+        expensesRoot: "Costs",
+        incomeRoot: "Revenue",
+        transaction: transaction([
+          costedPosting("Assets:Brokerage:ACME", "100", "ACME", "84.60"),
+          posting("Costs:Brokerage:Commissions", "4.95"),
+          posting("Assets:Brokerage:Cash", "-8464.95"),
+        ]),
+      });
+      expect(summary.kind).toBe("mixed");
+      expect(summary.amounts).toEqual([]);
+    });
+  });
   describe("entries with both income and expense postings", () => {
     /** The public example ledger's Hoogle payroll, main.bean:5544. */
     const payroll = transaction([
@@ -125,7 +294,7 @@ describe("summarizeTransaction", () => {
       const summary = summarizeTransaction({
         ...base,
         transaction: transaction([
-          posting("Assets:Brokerage:ACME", "-40", "ACME"),
+          costedPosting("Assets:Brokerage:ACME", "-40", "ACME", "84.60"),
           posting("Assets:Brokerage:Cash", "3670.00"),
           posting("Assets:Brokerage:Cash", "-4.95"),
           posting("Expenses:Financial:Commissions", "4.95"),
@@ -141,7 +310,7 @@ describe("summarizeTransaction", () => {
         ...base,
         accountFilter: "Assets:Brokerage:Cash",
         transaction: transaction([
-          posting("Assets:Brokerage:ACME", "-40", "ACME"),
+          costedPosting("Assets:Brokerage:ACME", "-40", "ACME", "84.60"),
           posting("Assets:Brokerage:Cash", "3670.00"),
           posting("Assets:Brokerage:Cash", "-4.95"),
           posting("Expenses:Financial:Commissions", "4.95"),

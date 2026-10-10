@@ -1,11 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RecentActivityCard } from "../recent-activity-card";
+import type { JournalPosting } from "@/common/types/journal";
 
-let postings: Array<{
-  account: string;
-  units: { number: string; currency: string };
-}> = [];
+let postings: JournalPosting[] = [];
+let narration = "Coffee";
+let payee = "Cafe";
 
 vi.mock("@apollo/client/react", () => ({
   useQuery: () => ({
@@ -17,8 +17,8 @@ vi.mock("@apollo/client/react", () => ({
             date: "2026-02-03",
             directive_type: "Transaction",
             flag: "*",
-            payee: "Cafe",
-            narration: "Coffee",
+            payee,
+            narration,
             postings,
             tags: [],
             links: [],
@@ -33,15 +33,8 @@ vi.mock("@apollo/client/react", () => ({
   }),
 }));
 
-vi.mock("@/common/hooks/use-format-number", () => ({
-  useFormatNumber: () => (v: number) => String(v),
-}));
-
-vi.mock("@/common/hooks/use-translations", () => ({
-  useTranslations: () => ({
-    t: (key: string) => key,
-    i18n: { language: "en" },
-  }),
+vi.mock("@/common/hooks/use-ledger", () => ({
+  useLedger: () => ({ ledgerData: { options: { renderCommas: true } } }),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -89,6 +82,8 @@ function occurrences(text: string, needle: string) {
 describe("RecentActivityCard account summary", () => {
   beforeEach(() => {
     postings = [];
+    narration = "Coffee";
+    payee = "Cafe";
   });
 
   it("names a row's accounts once at desktop width and keeps them on narrow rows", () => {
@@ -119,9 +114,204 @@ describe("RecentActivityCard account summary", () => {
     const desktop = visibleText(row, "desktop");
 
     expect(occurrences(desktop, "Savings · Checking")).toBe(1);
-    expect(desktop).toContain("page.overview.transactionTransfer");
+    expect(desktop).toContain("Transfer");
     expect(occurrences(visibleText(row, "narrow"), "Savings · Checking")).toBe(
       1,
+    );
+  });
+
+  describe("costed investment activity amounts", () => {
+    const purchase: JournalPosting[] = [
+      {
+        account: "Assets:Brokerage:ACME",
+        units: { number: "100", currency: "ACME" },
+        cost: {
+          number: "84.60",
+          currency: "USD",
+          date: "2025-09-08",
+          label: null,
+        },
+        price: null,
+      },
+      {
+        account: "Expenses:Brokerage:Commissions",
+        units: { number: "4.95", currency: "USD" },
+      },
+      {
+        account: "Assets:Brokerage:Cash",
+        units: { number: "-8464.95", currency: "USD" },
+      },
+    ];
+    const lossSale: JournalPosting[] = [
+      {
+        account: "Assets:Brokerage:NWRB",
+        units: { number: "-100", currency: "NWRB" },
+        cost: {
+          number: "10.45",
+          currency: "USD",
+          date: "2024-03-12",
+          label: null,
+        },
+        price: null,
+      },
+      {
+        account: "Assets:Brokerage:Cash",
+        units: { number: "910.00", currency: "USD" },
+      },
+      {
+        account: "Assets:Brokerage:Cash",
+        units: { number: "-4.95", currency: "USD" },
+      },
+      {
+        account: "Expenses:Brokerage:Commissions",
+        units: { number: "4.95", currency: "USD" },
+      },
+      {
+        account: "Expenses:CapitalLoss:LongTerm",
+        units: { number: "135.00", currency: "USD" },
+      },
+    ];
+
+    const trades = [
+      {
+        narration: "Buy 100 ACME @ $84.60",
+        postings: purchase,
+        expenseAmount: "-4.95 USD",
+        cashAmount: "-8,464.95 USD",
+      },
+      {
+        narration: "Sell 100 NWRB post-split shares — long-term loss",
+        postings: lossSale,
+        expenseAmount: "-139.95 USD",
+        cashAmount: "905.05 USD",
+      },
+    ];
+
+    it.each(trades)(
+      "shows Multiple postings instead of an expense subtotal for $narration at both widths",
+      (trade) => {
+        postings = trade.postings;
+        narration = trade.narration;
+        payee = "";
+        render(<RecentActivityCard {...props} canWrite={false} />);
+        const activity = screen.getByRole("region", {
+          name: /Recent activity/i,
+        });
+        const row = within(activity).getByRole("button", {
+          name: (name) => name.includes(trade.narration),
+        });
+
+        expect(within(row).getByText("Multiple postings")).toBeInTheDocument();
+        for (const viewport of ["narrow", "desktop"] as const) {
+          const text = visibleText(row, viewport);
+          expect(text).toContain("Multiple postings");
+          expect(text).not.toContain(trade.expenseAmount);
+          expect(text).not.toContain(trade.cashAmount);
+        }
+      },
+    );
+
+    it.each(trades)(
+      "shows the explicit cash-account movement for $narration",
+      (trade) => {
+        postings = trade.postings;
+        narration = trade.narration;
+        payee = "";
+        render(
+          <RecentActivityCard
+            {...props}
+            account="Assets:Brokerage:Cash"
+            canWrite={false}
+          />,
+        );
+        const row = screen.getByRole("button", {
+          name: (name) => name.includes(trade.narration),
+        });
+
+        expect(within(row).getByText(trade.cashAmount)).toBeInTheDocument();
+        expect(
+          within(row).queryByText("Multiple postings"),
+        ).not.toBeInTheDocument();
+        expect(visibleText(row, "narrow")).toContain(trade.cashAmount);
+      },
+    );
+
+    it("continues showing an ordinary fee as an expense amount", () => {
+      postings = [
+        {
+          account: "Assets:Brokerage:Cash",
+          units: { number: "-4.95", currency: "USD" },
+        },
+        {
+          account: "Expenses:Brokerage:Commissions",
+          units: { number: "4.95", currency: "USD" },
+        },
+      ];
+      render(<RecentActivityCard {...props} />);
+      const row = screen.getByRole("button", { name: /Cafe/ });
+
+      expect(within(row).getByText("-4.95 USD")).toBeInTheDocument();
+      expect(
+        within(row).queryByText("Multiple postings"),
+      ).not.toBeInTheDocument();
+    });
+
+    it.each([
+      [
+        "payroll",
+        [
+          {
+            account: "Assets:Checking",
+            units: { number: "2550.60", currency: "USD" },
+          },
+          {
+            account: "Income:Salary",
+            units: { number: "-4639.70", currency: "USD" },
+          },
+          {
+            account: "Expenses:Taxes",
+            units: { number: "2089.10", currency: "USD" },
+          },
+        ],
+      ],
+      [
+        "gain sale",
+        [
+          {
+            account: "Assets:Brokerage:ACME",
+            units: { number: "-40", currency: "ACME" },
+            cost: {
+              number: "84.60",
+              currency: "USD",
+              date: "2025-09-08",
+              label: null,
+            },
+          },
+          {
+            account: "Assets:Brokerage:Cash",
+            units: { number: "3665.05", currency: "USD" },
+          },
+          {
+            account: "Expenses:Brokerage:Commissions",
+            units: { number: "4.95", currency: "USD" },
+          },
+          {
+            account: "Income:Investment:CapitalGains",
+            units: { number: "-286.00", currency: "USD" },
+          },
+        ],
+      ],
+    ] as const)(
+      "preserves the Multiple postings fallback for %s",
+      (_, controlPostings) => {
+        postings = [...controlPostings];
+        render(<RecentActivityCard {...props} />);
+        expect(
+          within(screen.getByRole("button", { name: /Cafe/ })).getByText(
+            "Multiple postings",
+          ),
+        ).toBeInTheDocument();
+      },
     );
   });
 });
