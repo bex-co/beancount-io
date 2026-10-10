@@ -1,6 +1,7 @@
 import type { JournalTransaction } from "@/common/types/journal";
 import { Link } from "@tanstack/react-router";
 import { formatAmountWithCurrency } from "./journal-description/utils";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 interface JournalPostingsProps {
   directive: JournalTransaction;
@@ -15,6 +16,7 @@ export function JournalPostings({
   ledgerOwner,
   ledgerName,
 }: JournalPostingsProps) {
+  const { t } = useTranslations();
   if (!showPostings || !directive.postings || directive.postings.length === 0)
     return null;
 
@@ -45,6 +47,18 @@ export function JournalPostings({
               {posting.units && (
                 <span className="mt-0.5 block text-muted-foreground sm:hidden">
                   {formatAmountWithCurrency(posting.units)}
+                </span>
+              )}
+              {posting.cost && (
+                <span className="mt-0.5 block text-muted-foreground sm:hidden">
+                  {t("journal.postingCost")}:{" "}
+                  {formatAmountWithCurrency(posting.cost)}
+                </span>
+              )}
+              {posting.price && (
+                <span className="mt-0.5 block text-muted-foreground sm:hidden">
+                  {t("journal.price")}:{" "}
+                  {formatAmountWithCurrency(posting.price)}
                 </span>
               )}
             </span>

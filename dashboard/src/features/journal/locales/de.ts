@@ -300,6 +300,11 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "Buchungen",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "Kosten",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "Preis",
     description: "Price entry type filter",

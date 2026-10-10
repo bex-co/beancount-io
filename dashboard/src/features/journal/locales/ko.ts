@@ -296,6 +296,11 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "전기",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "취득 원가",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "가격",
     description: "Price entry type filter",

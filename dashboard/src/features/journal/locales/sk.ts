@@ -300,6 +300,11 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Zápisy",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "Obstarávacia cena",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "Cena",
     description: "Price entry type filter",

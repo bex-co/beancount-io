@@ -297,6 +297,11 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "ポスティング",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "取得原価",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "価格",
     description: "Price entry type filter",

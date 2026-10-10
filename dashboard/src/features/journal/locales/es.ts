@@ -300,6 +300,11 @@ const esJournal: Record<string, TranslationEntry> = {
     message: "Asientos",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "Coste",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "Precio",
     description: "Price entry type filter",

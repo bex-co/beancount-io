@@ -300,6 +300,11 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Boekingen",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "Kostprijs",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "Prijs",
     description: "Price entry type filter",

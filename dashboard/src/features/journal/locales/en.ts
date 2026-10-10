@@ -299,6 +299,11 @@ const enJournal: Record<string, TranslationEntry> = {
     message: "Postings",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "Cost",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "Price",
     description: "Price entry type filter",

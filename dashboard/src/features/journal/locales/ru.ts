@@ -300,6 +300,11 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Проводки",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "Себестоимость",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "Цена",
     description: "Price entry type filter",

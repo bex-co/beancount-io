@@ -299,6 +299,11 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "过账条目",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "成本",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "价格",
     description: "Price entry type filter",

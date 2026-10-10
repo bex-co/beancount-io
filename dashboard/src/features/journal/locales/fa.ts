@@ -300,6 +300,11 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "پست‌ها",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "بهای تمام‌شده",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "قیمت",
     description: "Price entry type filter",

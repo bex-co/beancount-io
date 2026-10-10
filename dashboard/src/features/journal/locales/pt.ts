@@ -300,6 +300,11 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "Lançamentos",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "Custo",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "Preço",
     description: "Price entry type filter",

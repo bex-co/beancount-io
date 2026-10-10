@@ -300,6 +300,11 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Проведення",
     description: "Label for postings toggle filter",
   },
+  "journal.postingCost": {
+    message: "Собівартість",
+    description:
+      "Label for the unit lot cost in expanded journal posting details",
+  },
   "journal.price": {
     message: "Ціна",
     description: "Price entry type filter",
