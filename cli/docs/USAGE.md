@@ -1021,7 +1021,8 @@ proceeds and realized gain postings. Use `"price_total"` instead of `"price"`
 for a total price; the two are mutually exclusive. Booking validates that the lot exists.
 Cost dates are optional; specify one to select a particular acquisition lot.
 Bulk `amount` shorthand accepts the same lot spelling: `"amount": "5 HOOL
-{10 USD}"`, with optional date, label, and `@`/`@@` price. The shorthand
+{10 USD}"`, with optional date, label, and `@`/`@@` price, and the partial
+selectors `{USD}`, `{2026-01-02}`, `{"label"}` and `{}` for a sale. The shorthand
 cannot spell a total cost (`{{...}}`); use `units` with a structured `cost`
 carrying `number_total` instead.
 

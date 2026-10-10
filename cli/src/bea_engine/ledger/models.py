@@ -207,11 +207,11 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
                 'Split the lot into a per-unit cost \'{...}\', or use "units" with a structured "cost" '
                 'carrying "number_total" and "currency".'
             )
-        if cost.number_per is MISSING or cost.currency is MISSING:
-            refuse("incomplete cost")
+        # A part the fragment leaves out stays out: `{USD}`, `{2026-01-02}` and
+        # `{}` select an existing lot, exactly as they do in `--posting`.
         fields["cost"] = {
-            "number": format(cost.number_per, "f"),
-            "currency": cost.currency,
+            "number": None if cost.number_per is MISSING else format(cost.number_per, "f"),
+            "currency": None if cost.currency is MISSING else cost.currency,
             "date": cost.date,
             "label": cost.label,
         }
