@@ -1,6 +1,6 @@
 # w6 · m1 — Count canonical BQL rows in MCP text summaries
 
-**Worker:** worker1 **Goal:** Agents can trust text query counts without losing query content. **Status:** todo (t001, t002, t003, t004, t005 done)
+**Worker:** worker1 **Goal:** Agents can trust text query counts without losing query content. **Status:** todo (t001, t002, t003, t004, t005, t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Use canonical metadata in MCP text summaries — **DONE** | 50m | t002 |
 | t004 | Adoption surface — **DONE** | 20m | t003 |
 | t005 | Simplify — **DONE** | 20m | t004 |
-| t006 | Test coverage | 20m | t004, t005 |
+| t006 | Test coverage — **DONE** | 20m | t004, t005 |
 | t007 | Closeout | 10m | t006 |
 
 ## Definition of done
