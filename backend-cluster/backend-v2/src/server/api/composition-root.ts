@@ -23,11 +23,17 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { UriTemplate } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
+import { Protocol } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import {
   CallToolRequestSchema,
+  CallToolResultSchema,
+  CreateTaskResultSchema,
+  ErrorCode,
   GetPromptRequestSchema,
   ListToolsRequestSchema,
+  McpError,
   ReadResourceRequestSchema,
+  type CallToolRequest,
   type GetPromptResult,
   type ListToolsResult,
 } from "@modelcontextprotocol/sdk/types.js";
@@ -530,59 +536,103 @@ export function assembleMcpRegistry(
   // against the same descriptor schema here, and refusing in the one envelope,
   // is what lets a malformed argument read like every other refusal on this
   // surface. Invalid input is still refused before the gate or any domain work.
-  server.server.setRequestHandler(
-    CallToolRequestSchema,
-    async (request): Promise<CallToolResult> => {
-      const { name } = request.params;
-      const entry = toolHandlers.get(name);
-      if (!entry) {
+  const dispatchTool = async (
+    request: CallToolRequest,
+  ): Promise<CallToolResult> => {
+    const { name } = request.params;
+    const entry = toolHandlers.get(name);
+    if (!entry) {
+      return toolFailureResult(
+        name,
+        envelopeFromThrown(
+          new NotFoundError(
+            "Tool",
+            name,
+            "No tool by that name. Call `tools/list` for the inventory.",
+          ),
+        ),
+      );
+    }
+    const parsed = await refusingUnknownArguments(
+      entry.descriptor.inputSchema,
+    ).safeParseAsync(request.params.arguments ?? {});
+    if (!parsed.success) {
+      // A Zod error's message is its issue array, which `envelopeFromThrown`
+      // reduces to `path: reason` per wrong field, nested paths included.
+      const envelope = envelopeFromThrown(parsed.error);
+      mcpLogger.info("MCP tool arguments refused", {
+        tool: name,
+        error: envelope.message,
+      });
+      return toolFailureResult(name, envelope);
+    }
+    const result = await entry.handle(parsed.data as never);
+    // The output check the SDK dispatcher ran: a success must match the
+    // schema `tools/list` published for it.
+    if (!result.isError) {
+      const output = entry.descriptor.outputSchema.safeParse(
+        result.structuredContent,
+      );
+      if (!output.success) {
+        mcpLogger.error("MCP tool output failed its schema", {
+          tool: name,
+          error: output.error.message,
+        });
         return toolFailureResult(
           name,
           envelopeFromThrown(
-            new NotFoundError(
-              "Tool",
-              name,
-              "No tool by that name. Call `tools/list` for the inventory.",
+            new Error(
+              `Tool ${name} returned a result that does not match its published output schema.`,
             ),
           ),
         );
       }
-      const parsed = await refusingUnknownArguments(
-        entry.descriptor.inputSchema,
-      ).safeParseAsync(request.params.arguments ?? {});
+    }
+    return result;
+  };
+
+  // Server.setRequestHandler adds its own full tools/call validation before
+  // our callback. Register through the public Protocol API so we can classify
+  // outer parameter failures ourselves, retaining full request/result checks.
+  Protocol.prototype.setRequestHandler.call(
+    server.server,
+    CallToolRequestSchema.pick({ method: true }).passthrough(),
+    async (raw) => {
+      const parsed = CallToolRequestSchema.safeParse(raw);
       if (!parsed.success) {
-        // A Zod error's message is its issue array, which `envelopeFromThrown`
-        // reduces to `path: reason` per wrong field, nested paths included.
-        const envelope = envelopeFromThrown(parsed.error);
-        mcpLogger.info("MCP tool arguments refused", {
-          tool: name,
-          error: envelope.message,
-        });
-        return toolFailureResult(name, envelope);
-      }
-      const result = await entry.handle(parsed.data as never);
-      // The output check the SDK dispatcher ran: a success must match the
-      // schema `tools/list` published for it.
-      if (!result.isError) {
-        const output = entry.descriptor.outputSchema.safeParse(
-          result.structuredContent,
-        );
-        if (!output.success) {
-          mcpLogger.error("MCP tool output failed its schema", {
-            tool: name,
-            error: output.error.message,
-          });
-          return toolFailureResult(
-            name,
-            envelopeFromThrown(
-              new Error(
-                `Tool ${name} returned a result that does not match its published output schema.`,
-              ),
+        const named = CallToolRequestSchema.shape.params
+          .pick({ name: true })
+          .safeParse(raw.params);
+        if (
+          named.success &&
+          parsed.error.issues.every(
+            ({ path }) => path[0] === "params" && path[1] === "arguments",
+          )
+        ) {
+          return CallToolResultSchema.parse(
+            toolFailureResult(
+              named.data.name,
+              envelopeFromThrown(parsed.error),
             ),
           );
         }
+        return refuseMcpParameters(
+          parsed.error,
+          "Fix the named request field; `tools/list` publishes tool names and input schemas.",
+        );
       }
-      return result;
+      const result = await dispatchTool(parsed.data);
+      // Preserve the Server wrapper's checks, including its task result path.
+      const output = (
+        parsed.data.params.task ? CreateTaskResultSchema : CallToolResultSchema
+      ).safeParse(result);
+      if (!output.success) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          `Invalid ${parsed.data.params.task ? "task creation" : "tools/call"} result: ${output.error.message}`,
+        );
+      }
+      return output.data;
     },
   );
 
@@ -703,8 +753,16 @@ export function assembleMcpRegistry(
   // Dispatching over the same templates in the same order keeps every other
   // read exactly as it was.
   server.server.setRequestHandler(
-    ReadResourceRequestSchema,
-    async (request): Promise<ReadResourceResult> => {
+    ReadResourceRequestSchema.pick({ method: true }).passthrough(),
+    async (rawRequest): Promise<ReadResourceResult> => {
+      const parsed = ReadResourceRequestSchema.safeParse(rawRequest);
+      if (!parsed.success) {
+        return refuseMcpParameters(
+          parsed.error,
+          "Supply a string `params.uri`; `resources/templates/list` publishes the resource URI templates.",
+        );
+      }
+      const request = parsed.data;
       const raw = request.params.uri;
       if (!URL.canParse(raw)) {
         return refuseMcpRequest(
@@ -794,8 +852,16 @@ export function assembleMcpRegistry(
   // prefixes a second time (w5/045). It also refused a prompt fetched with no
   // `arguments` at all, though every argument here is optional.
   server.server.setRequestHandler(
-    GetPromptRequestSchema,
-    async (request): Promise<GetPromptResult> => {
+    GetPromptRequestSchema.pick({ method: true }).passthrough(),
+    async (rawRequest): Promise<GetPromptResult> => {
+      const validated = GetPromptRequestSchema.safeParse(rawRequest);
+      if (!validated.success) {
+        return refuseMcpParameters(
+          validated.error,
+          "Supply a string `params.name` and optional string-valued `params.arguments`; `prompts/list` publishes prompt names and arguments.",
+        );
+      }
+      const request = validated.data;
       const { name } = request.params;
       const build = promptBuilders.get(name);
       if (!build) {
@@ -848,6 +914,11 @@ function refusingUnknownArguments(schema: ZodTypeAny): ZodTypeAny {
 
 /** The catch-all template's name, in `resources/templates/list` and the logs. */
 const UNKNOWN_RESOURCE = "unknownResource";
+
+/** Classify method parameter failures before any SDK or domain dispatch. */
+function refuseMcpParameters(error: unknown, hint: string): never {
+  throw new McpRequestFailure({ ...envelopeFromThrown(error), hint });
+}
 
 /**
  * Refuse a resource read or a prompt fetch in this server's one envelope.

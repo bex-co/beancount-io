@@ -60,20 +60,20 @@ async function fixture(result: unknown) {
     client,
     authorizeOrThrow,
     queryShell,
-    rest: () =>
+    rest: (queryValue: unknown = query) =>
       fetch(`${rest.url}/api-gateway/v1/ledgers/alice/main/query`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query: queryValue }),
       }),
-    gql: (selection: string) =>
+    gql: (selection: string, queryValue: unknown = query) =>
       graphql({
         schema,
         source: `query($query: String!) { queryShell(ledgerId: "alice/main", query: $query) { resultType ${selection} } }`,
-        variableValues: { query },
+        variableValues: { query: queryValue },
         contextValue: { identity: pinnedReadToken },
       }),
     close: async () => {
@@ -153,6 +153,36 @@ describe("structured BQL across actual adapters", () => {
         for (const call of f.queryShell.mock.calls)
           expect(call).toEqual(["alice", "main", { query }]);
         expect(f.authorizeOrThrow).toHaveBeenCalledTimes(3);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each([42, null])(
+    "refuses a query of the wrong type (%s) on every surface before domain work",
+    async (queryValue) => {
+      const f = await fixture({ contents: "must not read" });
+      try {
+        const rest = await f.rest(queryValue);
+        expect(rest.status).toBe(400);
+        expect(await rest.json()).toMatchObject({
+          error: { code: "VALIDATION_FAILED" },
+        });
+        expect(
+          (await f.gql("text { contents }", queryValue)).errors,
+        ).toHaveLength(1);
+        const mcp = await f.client.callTool({
+          name: "runBqlQueryStructured",
+          arguments: { query: queryValue },
+        });
+        expect(mcp.isError).toBe(true);
+        expect(mcp.structuredContent).toMatchObject({
+          ok: false,
+          error: { code: "BAD_USER_INPUT" },
+        });
+        expect(f.authorizeOrThrow).not.toHaveBeenCalled();
+        expect(f.queryShell).not.toHaveBeenCalled();
       } finally {
         await f.close();
       }
