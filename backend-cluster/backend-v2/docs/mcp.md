@@ -129,13 +129,13 @@ Claude Code signed in for real against `https://beancount.io` through its
 CIMD document on 2026-10-08. The other hosts have not been verified with a
 real sign-in yet.
 
-| Host | Identifies itself by | Redirect the fixture authorizes with | Notes |
-| --- | --- | --- | --- |
-| Claude (claude.ai, Desktop, mobile) | CIMD; the fixture covers its DCR fallback | `https://claude.ai/api/mcp/auth_callback` | Add the endpoint as a custom connector. |
-| Claude Code | Its CIMD document, or DCR | Loopback on an ephemeral port | `claude mcp add --transport http beancount <endpoint>`, then sign in from `/mcp`. |
-| ChatGPT | CIMD; DCR otherwise | `https://chatgpt.com/connector_platform_oauth_redirect` | Calls tools only. Every id a tool argument needs is returned by another tool. ChatGPT cannot send an API key. |
-| Cursor | DCR, with no `application_type` | `cursor://anysphere.cursor-mcp/oauth/callback` (also registers `localhost:8787` and `www.cursor.com`) | Add the endpoint as a remote server in `mcp.json`. |
-| GitHub Copilot in VS Code | CIMD, or DCR with no `application_type` | `http://127.0.0.1:33418/`, or any loopback port when 33418 is busy | Add the endpoint as an `http` server in `mcp.json`. |
+| Host                                | Identifies itself by                      | Redirect the fixture authorizes with                                                                  | Notes                                                                                                         |
+| ----------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Claude (claude.ai, Desktop, mobile) | CIMD; the fixture covers its DCR fallback | `https://claude.ai/api/mcp/auth_callback`                                                             | Add the endpoint as a custom connector.                                                                       |
+| Claude Code                         | Its CIMD document, or DCR                 | Loopback on an ephemeral port                                                                         | `claude mcp add --transport http beancount <endpoint>`, then sign in from `/mcp`.                             |
+| ChatGPT                             | CIMD; DCR otherwise                       | `https://chatgpt.com/connector_platform_oauth_redirect`                                               | Calls tools only. Every id a tool argument needs is returned by another tool. ChatGPT cannot send an API key. |
+| Cursor                              | DCR, with no `application_type`           | `cursor://anysphere.cursor-mcp/oauth/callback` (also registers `localhost:8787` and `www.cursor.com`) | Add the endpoint as a remote server in `mcp.json`.                                                            |
+| GitHub Copilot in VS Code           | CIMD, or DCR with no `application_type`   | `http://127.0.0.1:33418/`, or any loopback port when 33418 is busy                                    | Add the endpoint as an `http` server in `mcp.json`.                                                           |
 
 A host that registers through DCR without stating `application_type` is
 treated as a native app. That is what lets custom-scheme and loopback
@@ -740,9 +740,16 @@ enumerates ledgers and source files.
 ### The result envelope
 
 The text block is what a person would read and `structuredContent` is what a
-program parses. They are no longer the same bytes: a BQL result arrives as the
-row count and the rendered table, while the typed rows stay in
-`structuredContent`.
+program parses. `runBqlQuery` leads its text block with the canonical row count
+from the same query execution, followed by the rendered table. Multiline cells
+and directive postings do not add result rows. `structuredContent.result`
+remains the exact rendered string, including embedded and trailing newlines.
+
+When an older ledger service omits count metadata, or reports an unknown count,
+the text begins `BQL result — row count unavailable` and preserves the readable
+result. `runBqlQueryStructured` returns typed rows instead: its `rowCount` counts
+the rows returned, capped at 1,000, and `truncated` says whether rows were
+dropped. Text results retain their full count.
 
 ```json
 { "ok": true, "result": "tool-specific payload" }

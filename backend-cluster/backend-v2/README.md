@@ -144,15 +144,15 @@ carrying `iss`, `aud`, and `kid`. Their public keys are served at
 so any standard validator (`jose`'s `createRemoteJWKSet`, an API gateway's JWT
 filter) can verify one with no call to us.
 
-This proves the token *was issued* and has not expired. It cannot tell you the
+This proves the token _was issued_ and has not expired. It cannot tell you the
 grant was revoked five minutes ago, and it does not work at all for the other
 two credential kinds: session tokens are HS256 (publishing the key would publish
 the ability to mint them), and `bcio_` API keys are not JWTs and have no
 signature to check.
 
 **Online, by asking.** `POST /api-gateway/v1/token/introspect` (RFC 7662)
-answers for all three kinds, including whether the credential is live *right
-now*:
+answers for all three kinds, including whether the credential is live _right
+now_:
 
 ```zsh
 curl -sS https://beancount.io/api-gateway/v1/token/introspect \
@@ -464,13 +464,14 @@ The server will be available at the port specified in your configuration (defaul
 ### Available Scripts
 
 - `yarn start`: Start the server using ts-node
-- `yarn server`: Start the server using Node.js (requires build first)
+- `yarn build`: Compile the server
+- `yarn dist:start`: Start the compiled server using Node.js (requires build first)
+- `yarn typecheck`: Check TypeScript types
+- `yarn test`: Run unit tests
 - `yarn lint`: Run ESLint to check and fix code style issues
 - `yarn kill`: Kill the node server occupying port 4104
 - `yarn mcp:conformance <base-url>`: Check whether a deployment's MCP endpoint is connectable (see [Connecting an MCP client](#connecting-an-mcp-client))
 - `yarn mcp:agent-eval`: Run the onboarding journeys through real Claude Code and Codex sessions against the hosted MCP endpoint and score answers and ledger effects (billed, opt-in; see [MCP agent journeys](./docs/mcp-agent-eval.md))
-- `yarn backfill-empty-locale`: Run script to backfill empty locale data
-- `yarn backfill-user-activated`: Run script to backfill user activation status
 
 ### Job Scheduler
 
@@ -553,6 +554,12 @@ in with OAuth; see [From the MCP Registry](./docs/mcp.md#from-the-mcp-registry).
 Every result carries a readable text block and a typed `structuredContent`;
 every failure carries `{code, message, hint}` with `isError` set, so an agent
 branches on a code rather than on prose.
+
+`runBqlQuery` reports canonical rows from its single query execution while
+preserving the raw string result. Multiline cells and directives count as
+result rows. If the ledger service supplies no count, the readable text says
+`row count unavailable`. See [the result envelope](./docs/mcp.md#the-result-envelope)
+for text and structured-query behavior.
 
 The [Beancount.io MCP guide](./docs/mcp.md) explains setup, OAuth and API-key
 permissions, how requests reach the ledger, all 26 tools and 63 resource
