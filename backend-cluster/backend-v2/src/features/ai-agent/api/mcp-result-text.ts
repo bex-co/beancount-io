@@ -60,7 +60,7 @@ function renderBqlTable(table: string, rows: unknown): string {
   const summary = known
     ? countNoun(rows, "row")
     : "BQL result — row count unavailable";
-  const readable = table.replace(/\s+$/, "");
+  const readable = table.trimEnd();
   return readable ? `${summary}\n${readable}` : summary;
 }
 

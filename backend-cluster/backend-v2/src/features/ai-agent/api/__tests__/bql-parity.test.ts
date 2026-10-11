@@ -10,6 +10,7 @@ import { LedgerShellQueryResolver } from "@/features/ledger/api/resolvers/ledger
 import {
   LedgerShellService,
   type ShellQueryResult,
+  type ShellTextResult,
 } from "@/features/ledger/service/ledger-shell-service";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IAuthorizationService } from "@/server/api/authorization";
@@ -29,7 +30,7 @@ const query = "SELECT account, sum(position) GROUP BY account";
 
 async function fixture(
   result: unknown,
-  textResult: { text: string; rowCount?: number | null } = { text: "" },
+  textResult: ShellTextResult = { text: "" },
 ) {
   const authorizeOrThrow = jest.fn().mockResolvedValue(undefined);
   const queryShell = jest
@@ -67,29 +68,21 @@ async function fixture(
   const client = new Client({ name: "bql-parity", version: "1" });
   const [a, b] = InMemoryTransport.createLinkedPair();
   await Promise.all([client.connect(a), server.connect(b)]);
+  const restQuery = (queryValue: unknown, accept: string) =>
+    fetch(`${rest.url}/api-gateway/v1/ledgers/alice/main/query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: accept },
+      body: JSON.stringify({ query: queryValue }),
+    });
   return {
     client,
     authorizeOrThrow,
     queryShell,
     queryShellText,
     rest: (queryValue: unknown = query) =>
-      fetch(`${rest.url}/api-gateway/v1/ledgers/alice/main/query`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ query: queryValue }),
-      }),
+      restQuery(queryValue, "application/json"),
     restText: (queryValue: unknown = query) =>
-      fetch(`${rest.url}/api-gateway/v1/ledgers/alice/main/query`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "text/plain",
-        },
-        body: JSON.stringify({ query: queryValue }),
-      }),
+      restQuery(queryValue, "text/plain"),
     gql: (selection: string, queryValue: unknown = query) =>
       graphql({
         schema,
