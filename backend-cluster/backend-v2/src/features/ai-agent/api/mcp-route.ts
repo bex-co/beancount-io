@@ -2,6 +2,11 @@ import type { ServerResponse } from "node:http";
 import Router from "@koa/router";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { isJsonContentType } from "@modelcontextprotocol/sdk/shared/mediaType.js";
+import {
+  ErrorCode,
+  JSONRPCMessageSchema,
+} from "@modelcontextprotocol/sdk/types.js";
 import { logger } from "@/shared/logger";
 import { type AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
@@ -88,6 +93,39 @@ async function handleMcpRequest(
         code: -32000,
         message:
           "Method Not Allowed: this MCP endpoint is stateless and serves POST only",
+      },
+      id: null,
+    };
+    return;
+  }
+
+  // The SDK labels a schema-invalid parsed JSON value as a parse error.
+  // Classify it after authentication without preempting media refusals.
+  // Empty/unparsed bodies and duplicate Content-Type headers stay with the
+  // transport: Koa sees only the first Content-Type, while the SDK joins them.
+  const accept = ctx.get("Accept");
+  const contentTypeCount = ctx.req.rawHeaders.filter(
+    (header, index) =>
+      index % 2 === 0 && header.toLowerCase() === "content-type",
+  ).length;
+  const body = ctx.request.body;
+  if (
+    ctx.request.rawBody?.length > 0 &&
+    contentTypeCount === 1 &&
+    accept.includes("application/json") &&
+    accept.includes("text/event-stream") &&
+    isJsonContentType(ctx.get("Content-Type")) &&
+    !(Array.isArray(body)
+      ? body.every((message) => JSONRPCMessageSchema.safeParse(message).success)
+      : JSONRPCMessageSchema.safeParse(body).success)
+  ) {
+    ctx.status = 400;
+    ctx.body = {
+      jsonrpc: "2.0",
+      error: {
+        code: ErrorCode.InvalidRequest,
+        message:
+          "Invalid Request: the body must contain valid JSON-RPC messages",
       },
       id: null,
     };
