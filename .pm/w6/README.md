@@ -4,7 +4,7 @@
 
 ## Milestones
 
-No milestones yet.
+- [ ] **m1** — Count canonical BQL rows in MCP text summaries (7 tasks) ← from [003](./003.md).
 
 ## Inbox
 

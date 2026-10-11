@@ -12342,6 +12342,12 @@
             "type": "string",
             "title": "Text",
             "description": "Formatted query output as plain text"
+          },
+          "rowCount": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "title": "Row Count",
+            "description": "Canonical rows from the same query execution, independent of rendered text lines. Omitted or null when unknown."
           }
         },
         "type": "object",
