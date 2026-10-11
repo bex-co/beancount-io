@@ -37,7 +37,7 @@ export type ShellQueryResult = {
   };
 };
 
-export type ShellTextResult = { text: string };
+export type ShellTextResult = { text: string; rowCount: number };
 
 interface ILedgerShellService {
   queryShell(params: {
@@ -112,7 +112,7 @@ export class LedgerShellService implements ILedgerShellService {
       stripBqlBlockComments(query),
     );
     assertQuerySucceeded(result);
-    return { text: queryResultToText(result) };
+    return { text: queryResultToText(result), rowCount: result.rows.length };
   }
 }
 

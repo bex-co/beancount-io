@@ -1,13 +1,13 @@
 # w6 · m1 — Count canonical BQL rows in MCP text summaries
 
-**Worker:** worker1 **Goal:** Agents can trust text query counts without losing query content. **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** Agents can trust text query counts without losing query content. **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Define same-query row-count metadata — **DONE** | 25m | — |
-| t002 | Emit canonical counts from the ledger producer | 35m | t001 |
+| t002 | Emit canonical counts from the ledger producer — **DONE** | 35m | t001 |
 | t003 | Use canonical metadata in MCP text summaries | 50m | t002 |
 | t004 | Adoption surface | 20m | t003 |
 | t005 | Simplify | 20m | t004 |

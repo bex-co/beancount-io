@@ -20,7 +20,7 @@ export function setShellHandler(router: Router): void {
     });
   });
 
-  // operationId: queryShellText — wire {text}
+  // operationId: queryShellText — wire {text, rowCount}
   router.get(`${base}/query-text`, authMiddleware, async (ctx) => {
     const { shell } = servicesForRequest(ctx);
     ctx.body = successResponse(

@@ -2353,6 +2353,8 @@ export interface QueryTextResult {
    * Formatted query output as plain text
    */
   text: string;
+  /** Canonical rows from the same query execution; omitted or null when unknown. */
+  rowCount?: number | null;
 }
 
 /** ReferencePublic */
