@@ -4,9 +4,8 @@
 
 ## Milestones
 
-- [x] **m1** — Count canonical BQL rows in MCP text summaries (7 tasks) ← from [003](./003.md).
+- [x] **m1** — Count canonical BQL rows in MCP text summaries (7 tasks) ← from [003](./done/003.md).
 
 ## Inbox
 
-- [003](./003.md) — Count BQL result rows rather than physical lines in MCP text summaries (minor; backend-v2; 45–60m).
 - [004](./004.md) — Keep nonzero account movements when interval totals cancel to zero (major; backend-v2; 35–50m).
