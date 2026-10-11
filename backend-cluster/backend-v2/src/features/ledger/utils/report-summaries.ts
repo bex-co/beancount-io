@@ -139,7 +139,8 @@ export function flattenHierarchy(
 ): AccountBalance[] {
   if (!node) return into;
   const balance = amount(node.balance, currency);
-  if (balance !== 0 && node.account) into.push({ account: node.account, balance });
+  if (balance !== 0 && node.account)
+    into.push({ account: node.account, balance });
   for (const child of node.children ?? []) {
     flattenHierarchy(child, currency, into);
   }
@@ -152,7 +153,9 @@ function total(
   currency: string,
 ): number {
   if (!node) return 0;
-  return amount(node.balance_children, currency) + amount(node.balance, currency);
+  return (
+    amount(node.balance_children, currency) + amount(node.balance, currency)
+  );
 }
 
 function lastDate(series: readonly { date: string }[]): string | null {
@@ -245,10 +248,23 @@ export function summarizeIntervalTotals(
   data: readonly DateAndBalanceWithAccountBalancePublic[],
   conversion?: string,
 ): IntervalTotalsSummary {
-  const currency = resolveCurrency(
-    data.map((point) => point.balance),
-    conversion,
-  );
+  const aggregateBalances = data.map((point) => point.balance);
+  // Transfers can cancel every aggregate while their accounts still move.
+  // Keep the aggregate's currency policy whenever it provides evidence.
+  const balances = aggregateBalances.some(
+    (balance) =>
+      balance && typeof balance === "object" && Object.keys(balance).length > 0,
+  )
+    ? aggregateBalances
+    : data.flatMap((point) => Object.values(point.account_balances ?? {}));
+  // A conversion strategy describes how to value postings, not their currency.
+  const requested =
+    conversion === "units" ||
+    conversion === "at_cost" ||
+    conversion === "at_value"
+      ? undefined
+      : conversion;
+  const currency = resolveCurrency(balances, requested);
   return {
     currency,
     intervals: data.map((point) => ({
