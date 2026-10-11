@@ -8,4 +8,4 @@
 
 ## Inbox
 
-- [004](./004.md) — Keep nonzero account movements when interval totals cancel to zero (major; backend-v2; 35–50m).
+No open inbox notes.
