@@ -1,3 +1,5 @@
+import { BQL_ROW_COUNT } from "../tools/bql-result-metadata";
+
 /**
  * What a tool result looks like as *text* (w2/m28:t001).
  *
@@ -32,7 +34,10 @@ export function renderToolText(toolName: string, result: unknown): string {
   // rendered table, so wrapping it in JSON only escaped the newlines that
   // made it a table in the first place.
   if (toolName === "runBqlQuery" && typeof payload === "string") {
-    return renderBqlTable(payload);
+    return renderBqlTable(
+      payload,
+      Reflect.get(result as object, BQL_ROW_COUNT),
+    );
   }
 
   const summary = summaryLine(toolName, payload);
@@ -46,28 +51,17 @@ export function renderToolText(toolName: string, result: unknown): string {
 /**
  * A BQL result as the shell rendered it, with the row count in front.
  *
- * The count is the first thing an agent branches on — "did my filter match
- * anything" — and it is otherwise only obtainable by counting lines, which is
- * exactly what this does once so the model does not have to.
+ * Counts come from the same executed query as the text. Rendered cells may
+ * contain newlines, so text boundaries cannot reveal canonical rows.
  */
-function renderBqlTable(table: string): string {
-  const rows = countTableRows(table);
-  if (rows === 0) return "0 rows — no postings matched";
-  return `${rows} ${rows === 1 ? "row" : "rows"}\n${table.replace(/\s+$/, "")}`;
-}
-
-/**
- * How many data rows a rendered shell table has.
- *
- * The shell prints a header, a run of dashes, then one line per row, so the
- * dashed rule is the divider to count from. A result with no rule (BQL's
- * plain-text results, e.g. `PRINT`) falls back to counting non-empty lines,
- * which is the honest answer for a payload that has no rows to speak of.
- */
-function countTableRows(table: string): number {
-  const lines = table.split("\n").filter((line) => line.trim().length > 0);
-  const rule = lines.findIndex((line) => /^[\s-]*-{3,}[\s-]*$/.test(line));
-  return rule === -1 ? lines.length : lines.length - rule - 1;
+function renderBqlTable(table: string, rows: unknown): string {
+  const known = typeof rows === "number" && Number.isInteger(rows) && rows >= 0;
+  if (known && rows === 0) return "0 rows — no postings matched";
+  const summary = known
+    ? countNoun(rows, "row")
+    : "BQL result — row count unavailable";
+  const readable = table.replace(/\s+$/, "");
+  return readable ? `${summary}\n${readable}` : summary;
 }
 
 /**

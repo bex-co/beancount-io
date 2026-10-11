@@ -21,7 +21,7 @@ export type ShellQueryResult = {
   };
 };
 
-export type ShellTextResult = { text: string };
+export type ShellTextResult = { text: string; rowCount?: number | null };
 
 export interface ILedgerShellService {
   queryShell(params: {
@@ -109,6 +109,9 @@ export class LedgerShellService
       favaApiClient.shell.queryShellText(ledgerOwner, ledgerName, { query }),
       "execute shell query",
     );
-    return { text: data.text };
+    return {
+      text: data.text,
+      ...(data.rowCount !== undefined && { rowCount: data.rowCount }),
+    };
   }
 }

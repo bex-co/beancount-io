@@ -9,4 +9,4 @@ api-gateway.graphql
 openapi.json
 src/features/gitea/client
 src/drizzle/migrations
-src/service/fava/Api.ts
+src/foundation/fava/Api.ts

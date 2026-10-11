@@ -67,8 +67,7 @@ beforeAll(async () => {
   const layers = {
     database: {},
     services: {
-      // The shape the real service returns: `{ text }` holding the rendered
-      // table, header rule and all.
+      // The count accompanies the rendered text from the same query result.
       ledgerShell: {
         queryShellText: async () => ({
           text: [
@@ -76,6 +75,7 @@ beforeAll(async () => {
             "------------ -------------",
             "Assets:Cash     100.00 USD",
           ].join("\n"),
+          rowCount: 1,
         }),
       },
       ledgerData: { getSourceFiles: async () => ["main.bean"] },

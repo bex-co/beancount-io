@@ -4,6 +4,7 @@ import { logger } from "@/shared/logger";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
+import { BQL_ROW_COUNT } from "./bql-result-metadata";
 
 const toolLogger = logger.child({ module: "tool:bql-query" });
 
@@ -27,7 +28,7 @@ export async function executeBqlQuery(
 ): Promise<BqlQueryOutput> {
   const { services, identity, ledgerId } = ctx;
   toolLogger.debug("Executing BQL query", { query: input.query });
-  return runToolSafely({
+  const output = await runToolSafely({
     logger: toolLogger,
     message: "BQL query failed",
     context: { query: input.query },
@@ -35,14 +36,19 @@ export async function executeBqlQuery(
       // Same verb the GraphQL `queryShellText` resolver calls — authorization
       // and the underlying Fava call are identical for both surfaces
       // (ADR 0006 D1); this tool only shapes the output for the LLM.
-      const { text } = await services.ledgerShell.queryShellText({
+      return services.ledgerShell.queryShellText({
         ledgerId,
         identity,
         query: input.query,
       });
-      return text ?? "";
     },
   });
+  if (!output.ok) return output;
+  return Object.defineProperty(
+    { ok: true as const, result: output.result.text ?? "" },
+    BQL_ROW_COUNT,
+    { value: output.result.rowCount },
+  );
 }
 
 /**

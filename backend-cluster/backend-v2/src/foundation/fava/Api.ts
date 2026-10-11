@@ -2322,6 +2322,12 @@ export interface QueryTextResult {
    * Formatted query output as plain text
    */
   text: string;
+  /**
+   * Row Count
+   * Canonical rows from the same query execution, independent of rendered text lines. Omitted or null when unknown.
+   * @min 0
+   */
+  rowCount?: number | null;
 }
 
 /** ReferencePublic */
