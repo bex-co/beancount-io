@@ -1,0 +1,133 @@
+name: Publish (clawhub)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "scripts/skills/**"
+      - "docs/skills/**"
+      - ".github/workflows/publish-clawhub.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "scripts/skills/**"
+      - "docs/skills/**"
+      - ".github/workflows/publish-clawhub.yml"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish the bundles (unset: dry run only)"
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: clawhub-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CLAWHUB_VERSION: "0.23.3"
+
+defaults:
+  run:
+    shell: bash
+    working-directory: scripts/skills
+
+jobs:
+  validate:
+    name: dry-run every bundle
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CLAWHUB_CONFIG_PATH: ${{ github.workspace }}/scripts/skills/tmp/clawhub-validate.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the pinned publisher
+        run: npm install --global "clawhub@$CLAWHUB_VERSION"
+      - name: Build self-contained bundles
+        run: python3 beancount-skills.py bundle tmp/clawhub-bundles
+      - name: Preview every bundle without credentials
+        run: |
+          set -euo pipefail
+          for bundle in tmp/clawhub-bundles/beancount-*; do
+            test -f "$bundle/SKILL.md"
+            clawhub --no-input skill publish "$bundle" \
+              --slug "$(basename "$bundle")" --dry-run --json
+          done
+
+  publish:
+    name: publish to ClawHub
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Configure this environment with a required reviewer and main-only
+    # deployment branches. A workflow's environment key alone does not do it.
+    environment: clawhub-publish
+    permissions:
+      contents: read
+    env:
+      CLAWHUB_CONFIG_PATH: ${{ github.workspace }}/scripts/skills/tmp/clawhub-publish.json
+      CLAWHUB_OWNER: ${{ vars.CLAWHUB_OWNER }}
+      CLAWHUB_MIT0_APPROVED: ${{ vars.CLAWHUB_MIT0_APPROVED }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check publication approval
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" != workflow_dispatch || "$GITHUB_REF" != refs/heads/main ]]; then
+            echo "::error::Publishing requires a manual dispatch from main"
+            exit 1
+          fi
+          if [[ "$CLAWHUB_MIT0_APPROVED" != true ]]; then
+            echo "::error::The owner must approve ClawHub's MIT-0 terms before publication"
+            exit 1
+          fi
+          if [[ -z "$CLAWHUB_OWNER" ]]; then
+            echo "::error::Set CLAWHUB_OWNER on the clawhub-publish environment"
+            exit 1
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the pinned publisher
+        run: npm install --global "clawhub@$CLAWHUB_VERSION"
+      - name: Build self-contained bundles
+        run: python3 beancount-skills.py bundle tmp/clawhub-bundles
+      - name: Sign in with the environment token
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$CLAWHUB_TOKEN" ]]; then
+            echo "::error::CLAWHUB_TOKEN is not set on the clawhub-publish environment"
+            exit 1
+          fi
+          clawhub --no-input login --token "$CLAWHUB_TOKEN"
+      - name: Publish the release commit's bundles
+        run: |
+          set -euo pipefail
+          changelog="$(git log -1 --format=%s) (${GITHUB_SHA})"
+          for bundle in tmp/clawhub-bundles/beancount-*; do
+            test -f "$bundle/SKILL.md"
+            slug="$(basename "$bundle")"
+            clawhub --no-input skill publish "$bundle" \
+              --slug "$slug" --owner "$CLAWHUB_OWNER" \
+              --changelog "$changelog" \
+              --source-repo "$GITHUB_REPOSITORY" --source-commit "$GITHUB_SHA" \
+              --source-ref "$GITHUB_REF" --source-path "skills/$slug" \
+              --json
+          done
+      - name: Remove the publisher credentials
+        if: always()
+        run: rm -f "$CLAWHUB_CONFIG_PATH"
