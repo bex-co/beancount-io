@@ -35,7 +35,7 @@
 
 - **Naming:** skill names stay exactly as they are. Plugin skills are namespaced by plugin, so an explicit invocation reads `/beancount-io:beancount-ask`, while model routing still goes by each description. Dropping the `beancount-` prefix inside the plugin would create a second set of names next to the linked install and ClawHub, so it is rejected. A later rename ([m39](../m39/README.md)) applies to every channel at once.
 - **Single source:** the manifests sit outside `skills/` and point at it, because m42's guard rejects a `.claude-plugin/` folder inside `skills/`. t001 confirms the formats allow this. If one does not, the milestone stops for a layout decision rather than copying skills.
-- **Versioning:** t004 picks one rule: either a single suite version that the plugin manifests share and [w6/m6](../../../w6/m6/README.md) can reuse for ClawHub, or no version, so each commit is an update. The rule depends on what each client does with a missing or unchanged version. Today's `install` reports a Git revision; the plugin docs say how a user maps one to the other.
+- **Versioning:** t004 picks one rule: either a single suite version that the plugin manifests share and [w6/m6](../../../w6/blocked/m6/README.md) can reuse for ClawHub, or no version, so each commit is an update. The rule depends on what each client does with a missing or unchanged version. Today's `install` reports a Git revision; the plugin docs say how a user maps one to the other.
 
 ## Source + Goal linkage
 

@@ -27,7 +27,7 @@
 - `npx skills add bex-co/beancount-io --list` against `main` lists only the customer `beancount-*` skills. With `INSTALL_INTERNAL_SKILLS=1` the development skills appear, which shows they are flagged rather than deleted. Claude Code and Codex still load every development skill inside this repository.
 - Every customer skill passes `skills-ref validate`. The one exception allowed: if a rule cannot be met without breaking the `metadata.openclaw` block that ClawHub reads, that rule is named in `skills/AGENTS.md` with the validator's output. `CI (skills)` enforces every other rule of the specification.
 - `docs/skills/installation.md` gives a whole-suite install and an update for `npx skills`, `gh skill`, and Hermes, next to the link installer, and says how to switch methods. Each channel was rehearsed on Claude Code and Codex through to the first-query answer, recorded with versions and dates.
-- The ClawHub metadata still parses to the same `requires` and `install` values, and [w6/m6](../../../w6/m6/README.md)'s `beancount-skills.py bundle` still runs.
+- The ClawHub metadata still parses to the same `requires` and `install` values, and [w6/m6](../../../w6/blocked/m6/README.md)'s `beancount-skills.py bundle` still runs.
 
 ## Source + Goal linkage
 
@@ -38,6 +38,6 @@
 
 ## Out of scope
 
-- The Claude Code and Codex plugin (w2/m44) and the ClawHub publish ([w6/m6](../../../w6/m6/README.md)).
+- The Claude Code and Codex plugin (w2/m44) and the ClawHub publish ([w6/m6](../../../w6/blocked/m6/README.md)).
 - A mirror repository for the plugin directories (w2/087), a `/.well-known/agent-skills/` index on beancount.io, and awesome-list submissions.
 - Changing any skill's behavior or description beyond frontmatter form.

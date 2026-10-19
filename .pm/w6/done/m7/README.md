@@ -90,4 +90,4 @@ Checked against `main` at `14aaebee` and the recorded runs:
 
 - A pull request to Hermes's `optional-mcps/` catalog. Nous curates it, and the docs describe no community submissions. Revisit only if Nous invites one.
 - OAuth device-authorization grant on the authorization server. If t004 shows headless Hermes users need it, file it as its own milestone with the REST/GraphQL/MCP parity check.
-- Skills on ClawHub ([w6/m6](../../m6/README.md)). Host-specific MCP endpoints, tools, or code (ADR 019 D1).
+- Skills on ClawHub ([w6/m6](../../blocked/m6/README.md)). Host-specific MCP endpoints, tools, or code (ADR 019 D1).

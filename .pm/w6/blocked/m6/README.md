@@ -1,6 +1,6 @@
 # w6 · m6 — Publish the ledger skills to ClawHub for OpenClaw and Hermes Agent
 
-**Worker:** worker1 **Goal:** An OpenClaw or Hermes Agent user installs any `beancount-*` skill by name from ClawHub, and it works on its own without a Git checkout or this repository's link installer. **Status:** todo (t002–t005 done; t006 implemented, hosted CI pending; t001 blocked)
+**Worker:** worker1 **Goal:** An OpenClaw or Hermes Agent user installs any `beancount-*` skill by name from ClawHub, and it works on its own without a Git checkout or this repository's link installer. **Status:** blocked (t002–t006 done; publication waits on owner decisions and operator setup)
 
 **Research date:** 2026-10-16. Sources: ClawHub's quickstart, how-it-works, and skill-format pages at `docs.openclaw.ai/clawhub/`; Hermes Agent's skills page at `hermes-agent.nousresearch.com/docs/user-guide/features/skills`. Re-check the CLI flags against `clawhub --help` and `hermes skills --help` before relying on them.
 
@@ -12,9 +12,9 @@
 | [t002](done/t002.md) | Bundle each skill with the shared references it reads — **DONE** | 45m | — |
 | [t003](done/t003.md) | Name the sibling skills each one hands off to, and how to get them — **DONE** | 30m | — |
 | [t004](done/t004.md) | Declare `bea` and registry metadata in the frontmatter — **DONE** | 45m | — |
-| [t005](./done/t005.md) | Dry-run publish every bundle — **DONE** | 30m | t002, t003, t004 |
-| t006 | Add the `Publish (clawhub)` workflow | 45m | t005 |
-| t007 | Operator: ClawHub handle, token, and first publish | 30m | t001, t006 |
+| [t005](done/t005.md) | Dry-run publish every bundle — **DONE** | 30m | t002, t003, t004 |
+| [t006](done/t006.md) | Add the `Publish (clawhub)` workflow — **DONE** | 45m | t005 |
+| t007 | Operator: ClawHub handle, token, and first publish — **BLOCKED** | 30m | t001, t006 |
 | t008 | Rehearse installs in OpenClaw and Hermes Agent | 45m | t007 |
 | t009 | Document the registry installs | 30m | t001, t006, t008 |
 | t010 | Adoption surface | 30m | t009 |
@@ -25,6 +25,8 @@
 Two tasks need someone with authority this repository does not have: t001 is the owner's decision, and t007 needs the operator's ClawHub account and token. If either waits, park it with `/pm block` and keep the code tasks moving. t013 waits for both.
 
 ## Blocked
+
+- **Milestone / t007 (2026-10-19)** — all remaining tasks wait on t001 or the first publish. Preparation t005/t006 is complete in [PR #181](https://github.com/bex-co/beancount-io/pull/181), with ten hosted dry runs passing at `20acffd19`. Shipped baseline t002–t004 remains `6a3e99a4`, `313fe145`, `155e3135`. **Unblock:** the owner records MIT-0 approval and the publisher handle, resolves the naming decision in w2/m39, and the operator configures the reviewed main-only publishing environment after the workflow reaches main. Then resume at t007. **Who can clear it:** the repository owner and publishing operator. No license, owner, token, environment, or live listing was created by this preparation.
 
 - **t001 (2026-10-16)** — needs the repository owner's decision, which this repository cannot make. ClawHub publishes every skill under `MIT-0` with no per-skill override, and `LICENSE` here is MIT. MIT-0 drops the requirement to keep the copyright and permission notice. The owner must also choose which ClawHub handle (and so which install scope, `@<handle>/beancount-*`) publishes the suite. No decision on either is recorded on the board, in an ADR, or in a commit. Preparation t005/t006 can proceed without it; publication t007 onward waits. **Unblock:** the owner states (1) whether the suite's skills may be published under MIT-0 and (2) the publishing handle, and t001 records both under `## Decisions`. If the owner declines MIT-0, block the milestone with that reason. **Who can clear it:** the repository owner.
 
@@ -50,31 +52,31 @@ Two tasks need someone with authority this repository does not have: t001 is the
 ## Source + Goal linkage
 
 - **Source:** user request 2026-10-16 to list Beancount.io on OpenClaw and Hermes Agent, after a search found no such work on the board. Research the same day into ClawHub's publishing, skill-format, and moderation docs, and into Hermes Agent's skills-hub docs.
-- **Goal linkage:** **A3 — Community & distribution.** ClawHub is the public registry both hosts search, as PyPI and the Homebrew tap are for `bea` and the official MCP Registry is for the hosted endpoint ([w2/m36](../../w2/done/m36/README.md)). Secondary **A1 — Agent-native accounting**: two agent hosts beyond Claude Code and Codex can run the ledger workflows.
+- **Goal linkage:** **A3 — Community & distribution.** ClawHub is the public registry both hosts search, as PyPI and the Homebrew tap are for `bea` and the official MCP Registry is for the hosted endpoint ([w2/m36](../../../w2/done/m36/README.md)). Secondary **A1 — Agent-native accounting**: two agent hosts beyond Claude Code and Codex can run the ledger workflows.
 - **Expected outcome:** an OpenClaw or Hermes user types one install command and gets a working skill without cloning this repository. Signals: ClawHub install counts per skill, and `bea` installs that follow.
-- **Why now:** the suite is rehearsed and stable on Claude Code and Codex ([w5/m3](../../w5/done/m3/README.md), [w5/m9](../../w5/done/m9/README.md), [w5/m10](../../w5/done/m10/README.md)), and the only install path today is a sparse Git checkout plus a Python link script. Both hosts read ClawHub, so one listing reaches both. The single-folder gap (t002, t003) has to close before any registry publish, or the first installs read missing files. Adoption surface is included because the milestone changes the customer install guide, the skills catalog, and the skill frontmatter that agents read.
+- **Why now:** the suite is rehearsed and stable on Claude Code and Codex ([w5/m3](../../../w5/done/m3/README.md), [w5/m9](../../../w5/done/m9/README.md), [w5/m10](../../../w5/done/m10/README.md)), and the only install path today is a sparse Git checkout plus a Python link script. Both hosts read ClawHub, so one listing reaches both. The single-folder gap (t002, t003) has to close before any registry publish, or the first installs read missing files. Adoption surface is included because the milestone changes the customer install guide, the skills catalog, and the skill frontmatter that agents read.
 
 ## Out of scope
 
-- Hermes Agent's curated MCP catalog (`optional-mcps/` in its repository). Nous approves entries there, and the docs describe no community submission, so this milestone does not open a pull request against it ([DO_NOT_DO](../../DO_NOT_DO.md): no unsolicited PRs to other repos).
+- Hermes Agent's curated MCP catalog (`optional-mcps/` in its repository). Nous approves entries there, and the docs describe no community submission, so this milestone does not open a pull request against it ([DO_NOT_DO](../../../DO_NOT_DO.md): no unsolicited PRs to other repos).
 - skills.sh, LobeHub, and other directories. A `/.well-known` skills index on `beancount.io`: Hermes documents `/.well-known/skills/index.json`, while the draft discovery RFC uses `/.well-known/agent-skills/index.json`. Revisit once the convention settles.
-- An OpenClaw plugin package, and the hosted MCP endpoint on either host ([w6/m7](../done/m7/README.md)).
+- An OpenClaw plugin package, and the hosted MCP endpoint on either host ([w6/m7](../../done/m7/README.md)).
 - Development skills under `.agents/skills/`. Only the customer `beancount-*` suite is published.
 
 ## Unblocked 2026-10-18; refreshed 2026-10-19
 
-The milestone was parked on 2026-10-16 because dry-run task t005 depended on the owner's publication decision. ClawHub 0.23.3 supports token-free dry runs, so that preparatory dependency is removed; t006 can proceed while t001 waits. Eight bundles passed on the original layout on 2026-10-18. The branch is now based on current main, where the suite lives under `skills/` and tooling under `scripts/skills/`; t005 is re-run against that current inventory before closure.
+The milestone was parked on 2026-10-16 because dry-run task t005 depended on the owner's publication decision. ClawHub 0.23.3 supports token-free dry runs, so that preparatory dependency is removed; t006 can proceed while t001 waits. Eight bundles passed on the original layout on 2026-10-18. The branch is now based on current main, where the suite lives under `skills/` and tooling under `scripts/skills/`; t005 has now been re-run successfully against that current inventory.
 
 ## Publication sequencing
 
 - t007 now depends explicitly on t001. The owner records MIT-0 approval and the publisher handle; the operator supplies the protected environment and token.
-- Resolve [w2/m39](../../w2/blocked/m39/README.md)'s naming decision before issuing permanent registry slugs. Its routing evidence currently found no benefit from renaming; keeping current names and completing an approved rename are both possible owner decisions. This milestone does not make that decision.
+- Resolve [w2/m39](../../../w2/blocked/m39/README.md)'s naming decision before issuing permanent registry slugs. Its routing evidence currently found no benefit from renaming; keeping current names and completing an approved rename are both possible owner decisions. This milestone does not make that decision.
 - Rebuild the suite and repeat the dry runs on the release commit. The inventory includes newly shipped skills automatically. t009 waits for t008 so printed install commands have actual host rehearsal evidence.
 - Dry runs do not establish server moderation or clean OpenClaw/Hermes scanner acceptance; t007/t008 retain those checks.
 
 ## Workflow implementation 2026-10-19
 
-`.github/workflows/publish-clawhub.yml` validates current bundles without credentials on relevant PRs/main pushes and on dispatch. Publication requires a manual dispatch from main, recorded owner approval, an explicit handle, and an environment token. Releases carry commit provenance. The branch adapts the earlier implementation to the current skills/tooling layout; hosted CI evidence remains pending.
+`.github/workflows/publish-clawhub.yml` validates current bundles without credentials on relevant PRs/main pushes and on dispatch. Publication requires a manual dispatch from main, recorded owner approval, an explicit handle, and an environment token. Releases carry commit provenance. The branch adapts the earlier implementation to the current skills/tooling layout; the hosted ClawHub validation run now passes for all ten bundles ([run 39336904170](https://github.com/bex-co/beancount-io/actions/runs/39336904170)); its publish job is skipped. t006 is complete in [PR #181](https://github.com/bex-co/beancount-io/pull/181), implementation commit `20acffd19`.
 
 ## Current-suite dry-run evidence 2026-10-19
 

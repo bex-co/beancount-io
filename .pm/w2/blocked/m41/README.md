@@ -33,7 +33,7 @@
 - **Source:** agentic-skill review of `skills/` at the user's request, 2026-10-18. Months of QA fixes have accumulated as one-line patches: "Do not point at a nonexistent `ingest.py`", "older `bea` batch schemas require…", "the system libmagic library is optional…". Each fixed a real failure, but together they read as patch notes and push the procedure out of view. A cleanup pass started the same day (dropping init's 50-line `.gitignore` listing and options' repeated confirmation block). This milestone finishes it with a rule against losing anything.
 - **Goal linkage:** **A1 — Agent-native accounting.** Instruction-file quality is the pillar's own measure, and shorter, positive procedures are followed more reliably and are cheaper to load.
 - **Expected outcome:** an agent loading any skill reads the workflow first and the caveats only when relevant. A maintainer can tell from one section which caveats to delete when the minimum `bea` moves.
-- **Why now:** [w6/m6](../../../w6/m6/README.md) will bundle these texts into immutable ClawHub versions, and [m40](../m40/README.md) adds a ninth skill that should follow the compacted style rather than copy the current one. Run after [m39](../m39/README.md) where possible, so the renamed files are rewritten once. Adoption surface is included because skill text is what agents read.
+- **Why now:** [w6/m6](../../../w6/blocked/m6/README.md) will bundle these texts into immutable ClawHub versions, and [m40](../m40/README.md) adds a ninth skill that should follow the compacted style rather than copy the current one. Run after [m39](../m39/README.md) where possible, so the renamed files are rewritten once. Adoption surface is included because skill text is what agents read.
 
 ## Out of scope
 

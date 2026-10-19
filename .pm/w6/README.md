@@ -4,11 +4,11 @@
 
 ## Blocker triage — 2026-10-18
 
-Reviewed all 21 items originally under `blocked/`: 19 engine-adoption inbox notes, m2, and m6. m6 is actionable again; the remaining 20 need upstream engine work or publication. No engine dependency, deployed service, or external issue was changed.
+Reviewed all 21 items originally under `blocked/`: 19 engine-adoption inbox notes, m2, and m6. m6 preparation is complete in PR #181 and its remaining publication work is parked again; the other 20 items need upstream engine work or publication. No engine dependency, deployed service, or external issue was changed.
 
 | Items | Verified state | Action that clears the blocker |
 | --- | --- | --- |
-| [m6](./m6/README.md) | t005 done: all ten current bundles pass; t006 is implemented for the current layout. | Verify a hosted PR run before closing t006. Publication still needs the owner's license/handle and naming decisions, then operator environment setup. |
+| [m6](blocked/m6/README.md) | t005/t006 done in PR #181: hosted validation passes for all ten current bundles; publication remains blocked. | Publication needs the owner's license/handle and naming decisions, then operator environment setup. |
 | [016](./blocked/016.md), [017](./blocked/017.md), [018](./blocked/018.md), [022](./blocked/022.md), [023](./blocked/023.md), [024](./blocked/024.md), [025](./blocked/025.md) | All seven recorded fix commits are ancestors of upstream main `13ddd438`. No newer supported npm artifact is published. | Rustledger maintainer publishes WASM containing the seven fixes; repository worker adopts one release and runs each note's native and REST/GraphQL/MCP acceptance cases. |
 | [029](./blocked/029.md), [034](./blocked/034.md), [037](./blocked/037.md) | [Rustledger PR #2682](https://github.com/rustledger/rustledger/pull/2682) merged 2026-10-19 at 11:03 UTC, covering SUBST, FINDFIRST, and short-circuit guards. | Maintainer publishes a compatible WASM artifact; repository worker adopts it and verifies the exact native/API controls. Merge alone does not clear the release condition. |
 | [m2](./blocked/m2/README.md), [026](./blocked/026.md), [027](./blocked/027.md), [028](./blocked/028.md), [031](./blocked/031.md), [032](./blocked/032.md), [033](./blocked/033.md), [035](./blocked/035.md), [036](./blocked/036.md), [038](./blocked/038.md) | Upstream main retains the missing contracts or affected implementations; no matching correction was identified. Waiting for a release alone is insufficient. | User files or explicitly authorizes the upstream requests below; maintainer implements and publishes; repository worker adopts and verifies. |
@@ -40,7 +40,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 - [x] **m7** — [Connect OpenClaw and Hermes Agent to the hosted MCP endpoint](./done/m7/README.md) (9 tasks; A1; backend-v2 fixtures and docs) ← user request 2026-10-16 to list Beancount.io on OpenClaw and Hermes Agent; ADR 019 D8
 
-- [ ] **m6** — [Publish the ledger skills to ClawHub for OpenClaw and Hermes Agent](m6/README.md) (13 tasks; A3; skills and CI) ← user request 2026-10-16 to list Beancount.io on OpenClaw and Hermes Agent — t002–t005 done; t006 implemented, hosted CI pending; publication waits on owner decisions and operator setup
+- [ ] **m6** — [Publish the ledger skills to ClawHub for OpenClaw and Hermes Agent](blocked/m6/README.md) (13 tasks; A3; skills and CI) ← user request 2026-10-16 to list Beancount.io on OpenClaw and Hermes Agent — **blocked:** t002–t006 complete in PR #181; publication waits on owner decisions, main merge, and operator setup
 
 - [x] **m5** — [Include current earnings in balance-sheet equity](./done/m5/README.md) (6 tasks; major; ledger with backend-v2 validation).
 
