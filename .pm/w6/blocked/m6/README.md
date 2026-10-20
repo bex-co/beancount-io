@@ -15,7 +15,7 @@
 | [t005](done/t005.md) | Dry-run publish every bundle — **DONE** | 30m | t002, t003, t004 |
 | [t006](done/t006.md) | Add the `Publish (clawhub)` workflow — **DONE** | 45m | t005 |
 | t007 | Operator: ClawHub handle, token, and first publish — **BLOCKED** | 30m | t001, t006 |
-| t008 | Rehearse installs in OpenClaw and Hermes Agent | 45m | t007 |
+| t008 | Rehearse installs in OpenClaw and Hermes Agent — **BLOCKED** (partial preflight recorded) | 45m | t007 |
 | t009 | Document the registry installs | 30m | t001, t006, t008 |
 | t010 | Adoption surface | 30m | t009 |
 | t011 | Simplify | 30m | t010 |
@@ -26,9 +26,11 @@ Two tasks need someone with authority this repository does not have: t001 is the
 
 ## Blocked
 
-- **Milestone / t007 (2026-10-19)** — all remaining tasks wait on t001 or the first publish. Preparation t005/t006 is complete in [PR #181](https://github.com/bex-co/beancount-io/pull/181), with ten hosted dry runs passing at `20acffd19`. Shipped baseline t002–t004 remains `6a3e99a4`, `313fe145`, `155e3135`. **Unblock:** the owner records MIT-0 approval and the publisher handle, resolves the naming decision in w2/m39, and the operator configures the reviewed main-only publishing environment after the workflow reaches main. Then resume at t007. **Who can clear it:** the repository owner and publishing operator. No license, owner, token, environment, or live listing was created by this preparation.
+- **Milestone / t007 (2026-10-19)** — publication and the remaining closeout tasks wait on t001 or the first publish. Preparation t005/t006 shipped in [PR #181](https://github.com/bex-co/beancount-io/pull/181), merge commit `387cca812`; ten hosted dry runs pass on main. Shipped baseline t002–t004 remains `6a3e99a4`, `313fe145`, `155e3135`. The `clawhub-publish` environment now requires reviewer `puncsky` and permits only the exact `main` branch. **Unblock:** the owner records MIT-0 approval and the publisher handle, resolves the naming decision in w2/m39, and the operator supplies `CLAWHUB_OWNER`, `CLAWHUB_MIT0_APPROVED=true`, and the `CLAWHUB_TOKEN` environment secret. Then resume publication at t007. **Who can clear it:** the repository owner and publishing operator. No license approval, publisher handle, credential, or live listing was created by this preparation.
 
 - **t001 (2026-10-16)** — needs the repository owner's decision, which this repository cannot make. ClawHub publishes every skill under `MIT-0` with no per-skill override, and `LICENSE` here is MIT. MIT-0 drops the requirement to keep the copyright and permission notice. The owner must also choose which ClawHub handle (and so which install scope, `@<handle>/beancount-*`) publishes the suite. No decision on either is recorded on the board, in an ADR, or in a commit. Preparation t005/t006 can proceed without it; publication t007 onward waits. **Unblock:** the owner states (1) whether the suite's skills may be published under MIT-0 and (2) the publishing handle, and t001 records both under `## Decisions`. If the owner declines MIT-0, block the milestone with that reason. **Who can clear it:** the repository owner.
+
+- **t008 (2026-10-19)** — Hermes v0.22.2's local `skills-guard-v10` allows nine prepared bundles without force after the pending-flag clarification, but rejects init's intentional ledger `AGENTS.md` creation. Direct GitHub installation of raw ask succeeds but omits its shared CLI contract. **Unblock:** the owner resolves the init feature/host-policy conflict documented in [t008](t008.md), and the operator completes t007 so registry installs and first-query journeys can run. Local scanner results do not establish live moderation or install acceptance.
 
 ## What the hosts need (checked 2026-10-16)
 
@@ -77,6 +79,16 @@ The milestone was parked on 2026-10-16 because dry-run task t005 depended on the
 ## Workflow implementation 2026-10-19
 
 `.github/workflows/publish-clawhub.yml` validates current bundles without credentials on relevant PRs/main pushes and on dispatch. Publication requires a manual dispatch from main, recorded owner approval, an explicit handle, and an environment token. Releases carry commit provenance. The branch adapts the earlier implementation to the current skills/tooling layout; the hosted ClawHub validation run now passes for all ten bundles ([run 39336904170](https://github.com/bex-co/beancount-io/actions/runs/39336904170)); its publish job is skipped. t006 is complete in [PR #181](https://github.com/bex-co/beancount-io/pull/181), implementation commit `20acffd19`.
+
+## Main merge and environment preparation 2026-10-19
+
+PR #181 merged at `387cca8122f9c3ddb17099db8b0540058920d812`. Its [main push run](https://github.com/bex-co/beancount-io/actions/runs/39341900916) and the [subsequent run at `51d1303e7`](https://github.com/bex-co/beancount-io/actions/runs/39344911064) both validate all ten current bundles; the publish jobs are skipped.
+
+Created the `clawhub-publish` GitHub environment with the same required reviewer (`puncsky`) and review policy as `mcp-registry-publish`, and a custom deployment branch policy containing only `main` (branch, not tag). Read-back verifies both protections. No configuration variables or secrets exist in the new environment: its approval flag stays unset pending the owner's answer. The remaining operator setup is the chosen handle variable, the approval variable after its decision is recorded, and the account token. Environment creation does not satisfy t001 or the live-listing acceptance criterion in t007.
+
+## Hermes preflight 2026-10-19
+
+The independent portion of t008 now has real host evidence: direct GitHub ask installs under Hermes v0.22.2 but is incomplete on its own, and the full generated bundle trees have been scanned with Hermes's actual community-source policy. Three accidental inline-shell findings are corrected without changing the pending-transaction behavior. Nine bundles pass locally without force. Init's remaining critical finding is its intended ledger-instruction scaffolding; that feature is preserved pending the owner's compatibility decision. See [t008](t008.md) for versions, commands, limits, and the exact unblock condition.
 
 ## Current-suite dry-run evidence 2026-10-19
 

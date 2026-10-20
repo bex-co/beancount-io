@@ -69,8 +69,8 @@ user asked for Fava / `make start` / "bootstrap fava", otherwise ask once
 still want a browser — otherwise they can install `bea` later).
 
 When FAVA is yes, verify `uv` with `command -v uv`. If missing, stop and tell
-them to install it (`brew install uv` on macOS, or
-`curl -LsSf https://astral.sh/uv/install.sh | sh`).
+them to install it with their package manager (`brew install uv` on macOS),
+or follow the [official uv installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 
 ## Step 2 — Resolve the opening date
 
