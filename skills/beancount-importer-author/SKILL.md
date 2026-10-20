@@ -1,6 +1,7 @@
 ---
 name: beancount-importer-author
 description: Write or repair a reusable Beangulp importer from a sample bank export for a local ledger, with reviewed golden files and a passing test harness. Use when a source needs a tested Python importer or its format changed, e.g. "write a beangulp importer for my bank's CSV" or "my importer broke after the bank renamed its columns". Wire the confirmed runner through bea ingest; keep generate/test in the authoring project. Skip one-off imports, reconciliation, finance-app migration, ledger writes, and ledgers hosted on Beancount.io.
+license: MIT-0
 metadata:
   openclaw:
     homepage: 'https://github.com/bex-co/beancount-io/tree/main/skills'

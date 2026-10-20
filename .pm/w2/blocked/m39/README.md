@@ -42,3 +42,7 @@
 - Renaming `beancount-ask` (tracked in [w2/081](../../done/081.md)) or `beancount-importer-author`.
 - Changing the `beancount-` prefix.
 - Rewriting dated rehearsal evidence or ADR history; add a note where an old name would confuse a reader.
+
+## First-publication sequencing — 2026-10-19
+
+Under the owner's instruction to continue with routine decisions delegated, w6/m6 retains the existing skill names for its first publication, supported by t001's no-benefit routing evidence. This readability-only rename proposal stays parked for a future explicit owner decision and no longer gates the first release. No directories, persisted config headers, or install names change in the licensing work.

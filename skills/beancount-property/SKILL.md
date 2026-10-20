@@ -1,6 +1,7 @@
 ---
 name: beancount-property
 description: Record buying, holding, and selling a home or rental property in a local Beancount ledger through bea — the property as a priced lot, its mortgage liability, escrow, and closing costs split exactly as the closing statement states; each mortgage payment's split read from the loan statement and tied to its printed new balance; rent and deposits per property; and a sale whose gain the booking produces — proposed first and written only after confirmation. Skip paying rent as a tenant (beancount-add), bank or loan statement files (beancount-import), statement comparison (beancount-reconcile), tax treatment and depreciation advice, and ledgers hosted on Beancount.io.
+license: MIT-0
 metadata:
   openclaw:
     homepage: 'https://github.com/bex-co/beancount-io/tree/main/skills'

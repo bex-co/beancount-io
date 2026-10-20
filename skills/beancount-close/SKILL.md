@@ -1,6 +1,7 @@
 ---
 name: beancount-close
 description: Close an accounting period in a local Beancount ledger by reconciling each active account through beancount-reconcile, checking assertions and recurring gaps, reviewing flags, then proposing a commit with the period reports. Use for month-end close or wrapping up the books. Surface incomplete work and require a passing check before a confirmed commit; never push. Skip closing a single account (a `close` directive; beancount-add) and ledgers hosted on Beancount.io.
+license: MIT-0
 metadata:
   openclaw:
     homepage: 'https://github.com/bex-co/beancount-io/tree/main/skills'

@@ -1,6 +1,6 @@
 # w6 · m6 — Publish the ledger skills to ClawHub for OpenClaw and Hermes Agent
 
-**Worker:** worker1 **Goal:** An OpenClaw or Hermes Agent user installs any `beancount-*` skill by name from ClawHub, and it works on its own without a Git checkout or this repository's link installer. **Status:** blocked (t002–t006 done; publication waits on owner decisions and operator setup)
+**Worker:** worker1 **Goal:** An OpenClaw or Hermes Agent user installs any `beancount-*` skill by name from ClawHub, and it works on its own without a Git checkout or this repository's link installer. **Status:** blocked (t001–t006 done; publication needs a token and the licensing change on main; Hermes init awaits host-policy compatibility)
 
 **Research date:** 2026-10-16. Sources: ClawHub's quickstart, how-it-works, and skill-format pages at `docs.openclaw.ai/clawhub/`; Hermes Agent's skills page at `hermes-agent.nousresearch.com/docs/user-guide/features/skills`. Re-check the CLI flags against `clawhub --help` and `hermes skills --help` before relying on them.
 
@@ -8,7 +8,7 @@
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Owner decision: ClawHub's MIT-0 terms and the publishing handle — **BLOCKED** | 15m | — |
+| [t001](done/t001.md) | Owner decision: ClawHub's MIT-0 terms and the publishing handle — **DONE** | 15m | — |
 | [t002](done/t002.md) | Bundle each skill with the shared references it reads — **DONE** | 45m | — |
 | [t003](done/t003.md) | Name the sibling skills each one hands off to, and how to get them — **DONE** | 30m | — |
 | [t004](done/t004.md) | Declare `bea` and registry metadata in the frontmatter — **DONE** | 45m | — |
@@ -22,20 +22,23 @@
 | t012 | Test coverage | 45m | t010, t011 |
 | t013 | Closeout after the listings are live | 15m | t008, t012 |
 
-Two tasks need someone with authority this repository does not have: t001 is the owner's decision, and t007 needs the operator's ClawHub account and token. If either waits, park it with `/pm block` and keep the code tasks moving. t013 waits for both.
+## Decisions — 2026-10-19
+
+- **License:** the owner approved the explained `skills/LICENSE` MIT-0 scope and instructed implementation and continued work. The root `LICENSE` remains MIT. Customer instructions, references, and fixtures under `skills/` are MIT-0; each standalone registry bundle includes the canonical license. Tooling and guides outside that directory retain MIT.
+- **Publisher:** use `puncsky`, verified from the existing authenticated ClawHub account's Organizations settings. This is the first-release selection under the owner's delegated continuation instruction; no organization or account was created.
+- **Names:** retain current skill names for this release. w2/m39's measured routing evidence found no benefit from the proposed renames; a future explicitly requested readability rename can carry its own migration.
+- **Hermes init:** preserve the existing consent-gated ledger-instruction scaffolding. Do not remove or obscure this feature to pass the host scanner; defer Hermes init support until the host has a compatible policy or the user later requests a workflow change. The remaining ten bundles are rechecked against the current inventory in this change.
 
 ## Blocked
 
-- **Milestone / t007 (2026-10-19)** — publication and the remaining closeout tasks wait on t001 or the first publish. Preparation t005/t006 shipped in [PR #181](https://github.com/bex-co/beancount-io/pull/181), merge commit `387cca812`; ten hosted dry runs pass on main. Shipped baseline t002–t004 remains `6a3e99a4`, `313fe145`, `155e3135`. The `clawhub-publish` environment now requires reviewer `puncsky` and permits only the exact `main` branch. **Unblock:** the owner records MIT-0 approval and the publisher handle, resolves the naming decision in w2/m39, and the operator supplies `CLAWHUB_OWNER`, `CLAWHUB_MIT0_APPROVED=true`, and the `CLAWHUB_TOKEN` environment secret. Then resume publication at t007. **Who can clear it:** the repository owner and publishing operator. No license approval, publisher handle, credential, or live listing was created by this preparation.
+- **Milestone / t007 (2026-10-19)** — t001–t006 are complete. PR #181 shipped the workflow at `387cca812`; the reviewed `clawhub-publish` environment permits only `main`. The owner has approved MIT-0 and the existing ClawHub publisher is `puncsky`. **Unblock:** merge the licensing/package changes, supply the `CLAWHUB_TOKEN` environment secret, rebuild and dry-run the release commit, and dispatch the first publication. `CLAWHUB_OWNER=puncsky` and `CLAWHUB_MIT0_APPROVED=true` are the corresponding environment variables. **Who can clear it:** the repository maintainer and publishing operator. No token or live listing has been created by this work.
 
-- **t001 (2026-10-16)** — needs the repository owner's decision, which this repository cannot make. ClawHub publishes every skill under `MIT-0` with no per-skill override, and `LICENSE` here is MIT. MIT-0 drops the requirement to keep the copyright and permission notice. The owner must also choose which ClawHub handle (and so which install scope, `@<handle>/beancount-*`) publishes the suite. No decision on either is recorded on the board, in an ADR, or in a commit. Preparation t005/t006 can proceed without it; publication t007 onward waits. **Unblock:** the owner states (1) whether the suite's skills may be published under MIT-0 and (2) the publishing handle, and t001 records both under `## Decisions`. If the owner declines MIT-0, block the milestone with that reason. **Who can clear it:** the repository owner.
-
-- **t008 (2026-10-19)** — Hermes v0.22.2's local `skills-guard-v10` allows nine prepared bundles without force after the pending-flag clarification, but rejects init's intentional ledger `AGENTS.md` creation. Direct GitHub installation of raw ask succeeds but omits its shared CLI contract. **Unblock:** the owner resolves the init feature/host-policy conflict documented in [t008](t008.md), and the operator completes t007 so registry installs and first-query journeys can run. Local scanner results do not establish live moderation or install acceptance.
+- **t008 (2026-10-19)** — Hermes v0.22.2 rejects init's intentional ledger `AGENTS.md` creation. The product behavior is retained by the release decision above. **Unblock:** compatible host-policy support for the existing init workflow, plus t007's live registry bundles, permits the complete host install and first-query rehearsal. **Who can clear it:** the Hermes maintainer for host policy and the publishing operator for t007. Local scanner preflights remain distinct from live moderation and installation acceptance.
 
 ## What the hosts need (checked 2026-10-16)
 
 - **ClawHub** is OpenClaw's public registry for skills and plugins. A skill is one folder holding a `SKILL.md`, published with `clawhub skill publish <folder> --slug <slug> --name <name> --changelog <text>` (`--dry-run` previews it). The publisher signs in with GitHub, or with `clawhub login --token` in CI. Each publish is an immutable version: the first is `1.0.0`, later changes get the next patch version, and unchanged content is skipped. Users run `openclaw skills install @<handle>/<slug>`. A package scope must match the publisher's ClawHub handle exactly.
-- **License.** ClawHub publishes every skill under `MIT-0` and has no per-skill override. This repository is MIT. MIT-0 drops MIT's attribution requirement, so publishing is a licensing decision for the owner (t001).
+- **License.** ClawHub publishes every skill under `MIT-0` and has no per-skill override. The repository defaults to MIT; the owner has approved MIT-0 for `skills/` in [t001](done/t001.md).
 - **Scanning.** ClawHub's security analysis compares declared metadata with what a skill actually does, and flags any environment variable used but not declared. A release held by moderation is hidden from search and install until resolved. Hermes runs its own scanner on every hub install: a `dangerous` verdict always blocks, and `--force` overrides only caution or warn findings.
 - **Frontmatter.** OpenClaw reads `metadata.openclaw`: `requires.bins` and `requires.anyBins`, `requires.env`, `install` specs (`brew`, `node`, `go`, `uv`), `os`, `homepage`, and `emoji`. Hermes reads `platforms` and `metadata.hermes` (`tags`, `category`, `requires_tools`/`requires_toolsets`). `name` should match the folder: 1–64 lowercase letters, digits, or hyphens.
 - **Hermes reaches ClawHub too.** `hermes skills search` and `install` read a `clawhub` source next to `skills-sh`, `lobehub`, GitHub taps, and `well-known` indexes, so one ClawHub listing serves both hosts. Hermes can also install one skill from a public repository path (`hermes skills install owner/repo/path/to/skill`). Its taps skip directories whose names start with `.`; since w2/m42 the suite sits at `skills/<name>/`, so that rule no longer applies to it (t008 checks the direct path).
@@ -72,7 +75,7 @@ The milestone was parked on 2026-10-16 because dry-run task t005 depended on the
 ## Publication sequencing
 
 - t007 now depends explicitly on t001. The owner records MIT-0 approval and the publisher handle; the operator supplies the protected environment and token.
-- Resolve [w2/m39](../../../w2/blocked/m39/README.md)'s naming decision before issuing permanent registry slugs. Its routing evidence currently found no benefit from renaming; keeping current names and completing an approved rename are both possible owner decisions. This milestone does not make that decision.
+- Use the current skill names selected above for the first release; [w2/m39](../../../w2/blocked/m39/README.md)'s readability proposal is not a prerequisite for publication.
 - Rebuild the suite and repeat the dry runs on the release commit. The inventory includes newly shipped skills automatically. t009 waits for t008 so printed install commands have actual host rehearsal evidence.
 - Dry runs do not establish server moderation or clean OpenClaw/Hermes scanner acceptance; t007/t008 retain those checks.
 
@@ -86,7 +89,7 @@ PR #181 merged at `387cca8122f9c3ddb17099db8b0540058920d812`. Its [main push run
 
 Created the `clawhub-publish` GitHub environment with the same required reviewer (`puncsky`) and review policy as `mcp-registry-publish`, and a custom deployment branch policy containing only `main` (branch, not tag). Read-back verifies both protections. No configuration variables or secrets exist in the new environment: its approval flag stays unset pending the owner's answer. The remaining operator setup is the chosen handle variable, the approval variable after its decision is recorded, and the account token. Environment creation does not satisfy t001 or the live-listing acceptance criterion in t007.
 
-## Hermes preflight 2026-10-19
+## Initial ten-skill Hermes preflight 2026-10-19
 
 The independent portion of t008 now has real host evidence: direct GitHub ask installs under Hermes v0.22.2 but is incomplete on its own, and the full generated bundle trees have been scanned with Hermes's actual community-source policy. Three accidental inline-shell findings are corrected without changing the pending-transaction behavior. Nine bundles pass locally without force. Init's remaining critical finding is its intended ledger-instruction scaffolding; that feature is preserved pending the owner's compatibility decision. See [t008](t008.md) for versions, commands, limits, and the exact unblock condition.
 
@@ -108,3 +111,27 @@ Based on main `7fc077c76`. From `scripts/skills/`, build with `python3 beancount
 | beancount-trade | 6 | would-publish |
 
 These plans neither publish nor establish moderation/installation acceptance. The 2026-10-18 run covered the former eight-skill layout; this fresh run covers the current suite without freezing its count in the workflow.
+
+## License packaging refresh — 2026-10-19
+
+Refreshed on main `318cc0a7f`, which now contains eleven skills including `beancount-property`, and suite version 0.3.0. This change advances both manifests to 0.3.1 with MIT-0 metadata, declares the license in every customer skill, permits the canonical `skills/LICENSE` in the layout check, and copies that file into each standalone bundle. The earlier eight- and ten-skill dry runs remain historical evidence; first publication must use the current complete inventory.
+
+## Eleven-skill licensed preflight — 2026-10-19
+
+On main baseline `318cc0a7f` with this change, all eleven rebuilt bundles contain a byte-identical copy of `skills/LICENSE`, and all eleven pass pinned ClawHub 0.23.3 token-free publish dry runs. Hermes's actual `skills-guard-v10` at `d923a5eb` allows ten without force; only init retains its documented agent-instruction policy conflict. No skill descriptions changed.
+
+| Skill | Bundle files | ClawHub dry run | Hermes community policy |
+| --- | --- | --- | --- |
+| beancount-add | 8 | would-publish | safe |
+| beancount-ask | 8 | would-publish | safe |
+| beancount-close | 9 | would-publish | safe |
+| beancount-import | 11 | would-publish | safe |
+| beancount-importer-author | 7 | would-publish | safe |
+| beancount-init | 7 | would-publish | dangerous |
+| beancount-migrate | 12 | would-publish | safe |
+| beancount-options | 20 | would-publish | safe |
+| beancount-property | 6 | would-publish | safe |
+| beancount-reconcile | 9 | would-publish | safe |
+| beancount-trade | 8 | would-publish | safe |
+
+GitHub environment read-back confirms `CLAWHUB_OWNER=puncsky` and `CLAWHUB_MIT0_APPROVED=true`. The existing signed-in ClawHub account's API tokens settings explicitly show **No API tokens**, and GitHub lists no `CLAWHUB_TOKEN` secret. A labeled token form is prepared; no credential has been created. Creating persistent CLI access is the remaining operator action, followed by first publication from the reviewed main revision.

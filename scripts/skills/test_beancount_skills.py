@@ -98,6 +98,7 @@ class Workspace(unittest.TestCase):
     def copy_suite(self, dest: Path) -> None:
         for name in skills.expected_skills():
             shutil.copytree(SUITE / name, dest / name)
+        shutil.copyfile(SUITE / "LICENSE", dest / "LICENSE")
 
 
 class TestOldLayoutUpgrade(Workspace):
@@ -387,6 +388,20 @@ class TestBundle(Workspace):
                 missing_files, _ = skills.missing_references(alone, name, names, [name])
                 self.assertEqual(missing_files, {})
                 self.assertFalse((alone / name / "evals").exists())
+                self.assertEqual((alone / name / "LICENSE").read_bytes(), (SUITE / "LICENSE").read_bytes())
+
+    def test_a_missing_suite_license_is_refused_without_creating_output(self):
+        source = self.root / "suite"
+        self.copy_suite(source)
+        (source / "LICENSE").unlink()
+        out = self.root / "bundles"
+        before = snapshot(source)
+        with mock.patch.object(skills, "SOURCE_DIR", source):
+            code, _, err = run("bundle", out)
+        self.assertEqual(code, 1)
+        self.assertIn("skills/LICENSE is missing", err)
+        self.assertFalse(out.exists())
+        self.assertEqual(snapshot(source), before)
 
     def test_a_sibling_bundle_beside_it_does_not_stand_in_for_a_vendored_reference(self):
         out = self.root / "bundles"

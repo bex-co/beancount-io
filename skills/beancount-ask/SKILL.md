@@ -1,6 +1,7 @@
 ---
 name: beancount-ask
 description: Answer questions about a local Beancount ledger using shown, reproducible bea queries and reports for spending, trends, net worth, holdings, subscriptions and anomalies. Strictly read-only; figures come from executed queries. Skip ledgers hosted on Beancount.io, recording transactions (beancount-add), reconciliation, migration, ledger edits, option pricing or greeks, investment or tax advice, and general Beancount, BQL, or `bea` documentation questions (including what `bea ask` does).
+license: MIT-0
 metadata:
   openclaw:
     homepage: 'https://github.com/bex-co/beancount-io/tree/main/skills'

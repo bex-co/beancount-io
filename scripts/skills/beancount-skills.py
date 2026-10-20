@@ -301,11 +301,16 @@ def bundle(out: Path) -> int:
     A registry installs one folder, so a sibling's reference the skill names
     (beancount-init's `references/bea-cli.md`) is copied into the skill's own
     `references/`, which verify accepts as the same file. Repeats until the
-    copied references need nothing more. Evals stay behind; the checkout keeps
-    the only canonical copy of each reference.
+    copied references need nothing more. The shared skills/LICENSE travels
+    in every bundle. Evals stay behind; the checkout keeps the only canonical
+    copy of each reference and the license.
     """
     if os.path.lexists(out) and (not out.is_dir() or any(out.iterdir())):
         print(f"FAIL {out} must be an empty or new directory. Nothing was written.", file=sys.stderr)
+        return 1
+    license_path = SOURCE_DIR / "LICENSE"
+    if not license_path.is_file():
+        print("FAIL skills/LICENSE is missing. Nothing was written.", file=sys.stderr)
         return 1
     names = expected_skills()
     problems: list[str] = []
@@ -316,6 +321,7 @@ def bundle(out: Path) -> int:
             shutil.copytree(
                 SOURCE_DIR / name, target, ignore=shutil.ignore_patterns("evals", "__pycache__", ".DS_Store")
             )
+            shutil.copy2(license_path, target / "LICENSE")
             vendored: list[str] = []
             while missing := missing_references(target.parent, name, names, [name])[0]:
                 dangling = [path for path in missing if not (SOURCE_DIR / path).is_file()]

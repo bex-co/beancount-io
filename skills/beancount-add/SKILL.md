@@ -1,6 +1,7 @@
 ---
 name: beancount-add
 description: Record one-off entries the user describes in a local Beancount ledger through bea — a purchase, bill, paycheck, or transfer between their own accounts (including splits and pasted receipt text), opening or closing an account, a price, or a note. Propose the exact entries from existing accounts, check whether one is already recorded, and write only after confirmation with a passing check; it never changes existing entries. Skip bank or card export files (beancount-import), statements (beancount-reconcile), finance-app migrations, options trades (beancount-options), investment trades, dividends, splits, and vests (beancount-trade), month-end close, edits to existing entries, and ledgers hosted on Beancount.io.
+license: MIT-0
 metadata:
   openclaw:
     homepage: 'https://github.com/bex-co/beancount-io/tree/main/skills'

@@ -9,8 +9,8 @@
       "name": "beancount-io",
       "source": "./skills",
       "description": "Skills for working with local Beancount ledgers through a coding agent: init, add, trade, property, import, importer-author, reconcile, migrate, ask, close, options. Needs `bea` 0.3.1 or later for checks, queries, and writes.",
-      "version": "0.3.0",
-      "license": "MIT",
+      "version": "0.3.1",
+      "license": "MIT-0",
       "homepage": "https://github.com/bex-co/beancount-io/tree/main/skills",
       "repository": "https://github.com/bex-co/beancount-io",
       "keywords": [

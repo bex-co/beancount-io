@@ -1,6 +1,7 @@
 ---
 name: beancount-options
 description: Record a described options trade or lifecycle event as validated transactions in a local Beancount ledger through bea, after review and confirmation. Use for single-leg or multi-leg opens, closes, rolls, assignment, exercise and expiration, including pasted broker confirmations. Skip options education, pricing/greeks, tax planning, analytics, broker statement imports, other manual entries (beancount-add), share, fund, and crypto trades and realized-gains reports (beancount-trade), ledger `option` settings such as operating_currency, and ledgers hosted on Beancount.io.
+license: MIT-0
 metadata:
   openclaw:
     homepage: 'https://github.com/bex-co/beancount-io/tree/main/skills'

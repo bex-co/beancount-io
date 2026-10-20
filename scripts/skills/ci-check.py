@@ -68,7 +68,7 @@ LIBMAGIC_REQUIRED = re.compile(
 )
 CUSTOMER_DOCS = REPO_ROOT / "docs" / "skills"
 ROUTING_ENTRY_KEYS = ("id", "prompt", "expected", "confusable", "why")
-SKILLS_TOP_FILES = {"README.md", "AGENTS.md"}
+SKILLS_TOP_FILES = {"README.md", "AGENTS.md", "LICENSE"}
 SPARSE_SET = re.compile(r'git -C "\$SKILLS_SRC" sparse-checkout set (.+)')
 # A path a guide tells customers to use inside their checkout; stops at a
 # placeholder (`<name>`), a shell variable, quoting, or prose.
@@ -107,13 +107,13 @@ def repo_files(*paths: str) -> list[str]:
 
 
 def check_layout() -> None:
-    """`skills/` holds skill folders plus README.md and AGENTS.md (w2/m42)."""
+    """`skills/` holds skill folders, README.md, AGENTS.md, and their shared LICENSE."""
     if (SKILLS_ROOT / ".claude").exists():
         fail("skills/ must not hold a .claude/ folder; each customer skill lives at skills/<name>/SKILL.md")
     for rel in repo_files("skills"):
         parts = Path(rel).parts
         if len(parts) == 2 and parts[1] not in SKILLS_TOP_FILES:
-            fail(f"{rel}: only README.md and AGENTS.md sit directly in skills/; guides belong in docs/skills/, tooling in scripts/skills/")
+            fail(f"{rel}: only README.md, AGENTS.md, and LICENSE sit directly in skills/; guides belong in docs/skills/, tooling in scripts/skills/")
         if len(parts) > 2 and not (SKILLS_ROOT / parts[1] / "SKILL.md").is_file():
             fail(f"skills/{parts[1]}/ has no SKILL.md; only skill folders belong in skills/")
     # git cannot track an empty folder, but `install` would still link one.

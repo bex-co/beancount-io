@@ -1,6 +1,7 @@
 ---
 name: beancount-trade
 description: Record a described stock, fund, or crypto trade or investment event in a local Beancount ledger through bea — a buy, a sell with its booking-produced gain, a crypto swap, a cash or reinvested dividend, staking or airdrop receipts, a split, a transfer between the user's own accounts, or an RSU/ESPP vest — with correct lots and cost basis, proposed first and written only after confirmation. Skip options contracts and their lifecycle (beancount-options), broker statement files (beancount-import), statement comparison (beancount-reconcile), performance questions (beancount-ask), everyday one-off entries (beancount-add), tax treatment, and ledgers hosted on Beancount.io.
+license: MIT-0
 metadata:
   openclaw:
     homepage: 'https://github.com/bex-co/beancount-io/tree/main/skills'

@@ -272,5 +272,5 @@ Beancount.io stands on [Beancount](https://github.com/beancount/beancount) and [
 
 ## License
 
-[MIT](./LICENSE) © Beancount.io — covers the code in this repository; upstream projects remain under their own licenses.
+[MIT](./LICENSE) © Beancount.io applies by default. The customer skill suite under [`skills/`](./skills/) uses [MIT No Attribution (MIT-0)](./skills/LICENSE), including its instructions, references, and fixtures. Upstream projects remain under their own licenses.
 

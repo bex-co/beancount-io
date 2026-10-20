@@ -1,11 +1,11 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "beancount-io",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Skills for working with local Beancount ledgers through a coding agent: init, add, trade, property, import, importer-author, reconcile, migrate, ask, close, options. Needs `bea` 0.3.1 or later for checks, queries, and writes.",
   "homepage": "https://github.com/bex-co/beancount-io/tree/main/skills",
   "repository": "https://github.com/bex-co/beancount-io",
-  "license": "MIT",
+  "license": "MIT-0",
   "keywords": [
     "beancount",
     "accounting",

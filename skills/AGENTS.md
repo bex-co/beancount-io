@@ -2,7 +2,7 @@
 
 Cross-compatible Claude Code and Codex skills that automate Beancount workflows for [Beancount.io](https://beancount.io/) users (see root `AGENTS.md` for repo-wide rules).
 
-`skills/` holds the ten customer-facing `beancount-*` ledger skills, each at `skills/<name>/SKILL.md`, plus this guide and the user-facing [README.md](README.md) catalog. The suite's guides and examples live in [`docs/skills/`](../docs/skills) and its installer, checks, and tests in [`scripts/skills/`](../scripts/skills); both belong to this package. Repository development skills live separately in [`../.agents/skills/`](../.agents/skills), with conventions in [`../.agents/AGENTS.md`](../.agents/AGENTS.md). The repository-root `.claude/skills` links to that internal tree.
+`skills/` holds the ten customer-facing `beancount-*` ledger skills, each at `skills/<name>/SKILL.md`, plus this guide, the user-facing [README.md](README.md) catalog, and the shared MIT-0 [LICENSE](LICENSE). The suite's guides and examples live in [`docs/skills/`](../docs/skills) and its installer, checks, and tests in [`scripts/skills/`](../scripts/skills); both belong to this package. Repository development skills live separately in [`../.agents/skills/`](../.agents/skills), with conventions in [`../.agents/AGENTS.md`](../.agents/AGENTS.md). The repository-root `.claude/skills` links to that internal tree.
 
 ## Layout
 
@@ -12,6 +12,7 @@ The package spans `skills/` and two directories beside it at the repository root
 skills/
   AGENTS.md                   This guide
   README.md                   Customer catalog and install summary
+  LICENSE                     Canonical MIT-0 license, copied into each registry bundle
   beancount-add/              Record one-off entries the user describes (transactions, opens, closes, prices, notes)
   beancount-ask/              Answer ledger questions with shown, re-runnable BQL (read-only)
   beancount-close/            Month-end close ritual: reconcile all, assert, report, commit
@@ -35,7 +36,7 @@ scripts/skills/               Suite installer, CI checks, routing runner and rou
   tmp/                        Scratch space — gitignored, safe for experiments
 ```
 
-`ci-check.py` fails when a `.claude/` folder reappears in `skills/`, when any file other than `README.md` or `AGENTS.md` sits directly in `skills/`, when a folder there has no `SKILL.md`, or when a guide cites a `$SKILLS_SRC/<path>` the customer's sparse checkout does not contain.
+`ci-check.py` fails when a `.claude/` folder reappears in `skills/`, when any file other than `README.md`, `AGENTS.md`, or `LICENSE` sits directly in `skills/`, when a folder there has no `SKILL.md`, or when a guide cites a `$SKILLS_SRC/<path>` the customer's sparse checkout does not contain.
 
 Customers install the suite by linking each `beancount-*` directory from a sparse Git checkout into their agent's skill directory with `scripts/skills/beancount-skills.py` ([docs/skills/installation.md](../docs/skills/installation.md)). The helper is stdlib-only, owns exactly the `beancount-*` directories, and must never install development skills. When skill text starts depending on a new supporting file or sibling, keep the reference in the forms its `verify` resolves: `references/<name>.md` or a bare lowercase `<name>.md`, with the owning sibling named on the same line.
 
@@ -67,6 +68,10 @@ The [importer graduation guide](../docs/skills/importer-graduation.md) composes 
 | `beancount-trade`                   | Record described stock, fund, and crypto investment events — buys, sells that name the lot (ambiguous reductions are resolved with the user, never guessed), cash and reinvested dividends, splits that keep total cost, own-account transfers that keep cost and acquisition date, RSU/ESPP vests at fair-market value — through `bea` after a confirmed proposal, and report a year's realized gains per closed lot tied to the booked gain postings. States the booking methods `bea` accepts and never approximates average cost. Triggers on "I bought 10 VTI at 251.30" / "my RSUs vested" / "what were my realized gains". |
 
 ## Conventions
+
+### License
+
+The contents of `skills/` use MIT-0 under the single canonical `skills/LICENSE`, including skill instructions, references, and fixtures. Declare `license: MIT-0` in each customer skill's frontmatter and `MIT-0` in both suite plugin manifests. The bundle command copies the canonical license into each output skill folder; keep one source copy. Package tooling in `scripts/skills/`, guides in `docs/skills/`, and development skills in `.agents/skills/` retain the repository's MIT license.
 
 ### Skill structure
 
@@ -120,11 +125,11 @@ The suite also ships as one `beancount-io` plugin (`.claude-plugin/marketplace.j
 
 ### ClawHub publishing
 
-The root [`Publish (clawhub)` workflow](../.github/workflows/publish-clawhub.yml) builds the customer suite with `python3 beancount-skills.py bundle tmp/clawhub-bundles` from `scripts/skills/`. Each bundle contains the shared references it reads and leaves eval fixtures behind. Pull requests and pushes touching `skills/**`, `scripts/skills/**`, `docs/skills/**`, or the workflow dry-run every bundle with pinned ClawHub CLI 0.23.3 and no publisher credentials. A dispatch with `publish` unset also performs only these dry runs.
+The root [`Publish (clawhub)` workflow](../.github/workflows/publish-clawhub.yml) builds the customer suite with `python3 beancount-skills.py bundle tmp/clawhub-bundles` from `scripts/skills/`. Each bundle contains the shared references it reads and a copy of `skills/LICENSE`, and leaves eval fixtures behind. Pull requests and pushes touching `skills/**`, `scripts/skills/**`, `docs/skills/**`, or the workflow dry-run every bundle with pinned ClawHub CLI 0.23.3 and no publisher credentials. A dispatch with `publish` unset also performs only these dry runs.
 
 For a real release, configure the `clawhub-publish` GitHub environment with a required reviewer and deployment branches restricted to `main`. Store `CLAWHUB_TOKEN` as an environment secret and `CLAWHUB_OWNER` as a configuration variable containing the chosen publisher handle. Set the configuration variable `CLAWHUB_MIT0_APPROVED` to the string `true` only after the repository owner records approval for publishing the customer skills under ClawHub's MIT-0 terms (the repository itself remains MIT). The workflow refuses publication without the license approval, handle, or token. Only a manual dispatch from `main` with `publish` selected reaches the publish job; it records repository, commit, ref, and canonical source path for each skill. Unchanged bundles are skipped, while new or changed bundles use ClawHub's automatic versions.
 
-Before the first publish, complete w6/m6/t001's owner decisions and resolve w2/m39's naming decision (keep the current names or finish approved renames), then rebuild and repeat the dry runs on the release commit. Reconcile the suite inventory with any newly shipped skills. The protected-environment reviewer checks these prerequisites before allowing the first dispatch. Registry moderation and clean OpenClaw/Hermes installation checks remain the operator's t007/t008 work; local dry-run success does not establish that a listing is live or installable. Keep the existing Git/link installation documented until that evidence exists.
+Before the first publish, verify w6/m6/t001's recorded MIT-0 approval and publisher, use the current skill names selected in m6, then rebuild and repeat the dry runs on the release commit. Reconcile the suite inventory with any newly shipped skills. The protected-environment reviewer checks these prerequisites before allowing the first dispatch. Registry moderation and clean OpenClaw/Hermes installation checks remain the operator's t007/t008 work; local dry-run success does not establish that a listing is live or installable. Keep the existing Git/link installation documented until that evidence exists.
 
 ### Scratch space
 

@@ -39,3 +39,7 @@ python3 "$SKILLS_SRC/scripts/skills/beancount-skills.py" install ~/.claude/skill
 - [Graduate a CSV workflow into an importer](../docs/skills/importer-graduation.md): reuse confirmed settings and source IDs, review golden files, wire a tested importer, and repair changed bank headers without duplicating history. See the [Claude Code and Codex rehearsal results](../docs/skills/importer-graduation-rehearsal.md), tested on macOS with published `bea` 0.3.1 and Beangulp 0.2.0.
 
 Repository contributors use a separate set of [development skills](../.agents/AGENTS.md) in [`.agents/skills/`](../.agents/skills). Development conventions for this customer-facing package live in [AGENTS.md](AGENTS.md).
+
+## License
+
+The contents of `skills/`, including each customer skill's instructions, references, and fixtures, are licensed under [MIT No Attribution (MIT-0)](LICENSE). The bundle command includes this shared license in every standalone skill package. Package tooling in `scripts/skills/` and guides in `docs/skills/` follow the repository's [MIT license](../LICENSE).

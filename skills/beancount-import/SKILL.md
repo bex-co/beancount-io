@@ -1,6 +1,7 @@
 ---
 name: beancount-import
 description: Import a bank or card CSV, OFX/QFX, QIF, or PDF statement export — or a broker activity CSV as lot-carrying entries — into an existing local Beancount ledger. Normalize signs, suggest categories from existing accounts, review duplicates and confirm before writing through bea; a PDF statement must tie out and ends with a balance assertion. Use for recording an export or a statement PDF; skip comparing an account against a statement (beancount-reconcile), full finance-app migrations, reusable importer authoring, individual options trades, single manual entries (beancount-add), ledger `option` settings, and ledgers hosted on Beancount.io.
+license: MIT-0
 metadata:
   openclaw:
     homepage: 'https://github.com/bex-co/beancount-io/tree/main/skills'
