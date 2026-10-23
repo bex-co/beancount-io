@@ -1351,7 +1351,7 @@ def _transaction(
     # once this function returns, and a value it could not encode used to fail
     # with the directive already appended, so every retry appended another copy.
     answered = entry._replace(
-        postings=_with_inferred_cost_parts(entry.postings, totals), meta=metadata_to_json(entry.meta)
+        postings=writer.with_inferred_cost_parts(entry.postings, totals), meta=metadata_to_json(entry.meta)
     )
     directive = protocol.jsonable(answered)
     # A `@@` total is reported as the bulk schema's `price_total`, not as the
@@ -1370,74 +1370,6 @@ def _transaction(
         "warnings": warnings,
         "target": str(write.destination(file, into)),
     }
-
-
-def _with_inferred_cost_parts(postings: list[Any], totals: list[Any]) -> list[Any]:
-    """The postings with the one cost component the file leaves to booking filled in, for the answer only.
-
-    `{# 0.50 USD}` and `{5 # USD}` leave a per-unit or total part for booking
-    to infer, and the answer reported the open part as null: bulk read null
-    beside a number as the other form and the replay did not balance (w5/949).
-    The part is solved from the other legs when they are all explicit amounts in
-    the cost currency and the result reproduces the balance exactly; anything
-    else is reported as written. A part that solves to zero stays unstated.
-    """
-    from beancount.core.number import MISSING
-
-    for index, posting in enumerate(postings):
-        cost = posting.cost
-        units = posting.units
-        if cost is None or units is MISSING or not isinstance(getattr(units, "number", None), Decimal):
-            continue
-        per, total, currency = cost.number_per, cost.number_total, cost.currency
-        if not isinstance(currency, str) or (isinstance(per, Decimal) == isinstance(total, Decimal)):
-            continue
-        if per is not MISSING and per is not None and not isinstance(per, Decimal):
-            continue
-        others = Decimal(0)
-        for other_index, other in enumerate(postings):
-            if other_index == index:
-                continue
-            other_units = other.units
-            number = getattr(other_units, "number", None)
-            if other_units is MISSING or not isinstance(number, Decimal) or other.cost is not None:
-                others = None  # type: ignore[assignment]
-                break
-            if totals[other_index] is not None:
-                priced = totals[other_index]
-                if priced.currency != currency:
-                    others = None  # type: ignore[assignment]
-                    break
-                others += priced.number.copy_sign(number)
-            elif other.price is not None:
-                if other.price.currency != currency:
-                    others = None  # type: ignore[assignment]
-                    break
-                others += number * other.price.number
-            elif other_units.currency == currency:
-                others += number
-            else:
-                others = None  # type: ignore[assignment]
-                break
-        if others is None:
-            continue
-        needed = -others
-        count = units.number
-        if isinstance(total, Decimal):
-            solved = (needed - total.copy_sign(count)) / count
-            rebuilt = count * solved + total.copy_sign(count)
-            field = {"number_per": solved}
-        else:
-            solved = (needed - count * per).copy_sign(count) if isinstance(per, Decimal) else None
-            if solved is None:
-                continue
-            solved = abs(solved)
-            rebuilt = count * per + solved.copy_sign(count)
-            field = {"number_total": solved}
-        if not solved or solved < 0 or rebuilt != needed:
-            continue
-        postings = [*postings[:index], posting._replace(cost=cost._replace(**field)), *postings[index + 1 :]]
-    return postings
 
 
 _ZERO_NET_INFERRED = (

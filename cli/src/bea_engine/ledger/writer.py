@@ -674,3 +674,75 @@ def _require_custom_roundtrip(values: list[_ValueType], text: str) -> None:
                 f"reloads as: {', '.join(f'{kind}:{shown}' for kind, shown in got)}",
             ],
         )
+
+
+def with_inferred_cost_parts(postings: list[Any], totals: list[Any]) -> list[Any]:
+    """The postings with the one cost component the file leaves to booking filled in.
+
+    `{# 0.50 USD}` and `{5 # USD}` leave a per-unit or total part for booking
+    to infer. An answer that reported the open part as null did not replay: bulk
+    read null beside a number as the other form (w5/949). Import compared a
+    cost with the open part taken as zero, so two trades at different cash
+    prices shared a lot and an id (w5/950). The part is solved from the other
+    legs when they are all explicit amounts in the cost currency and the result
+    reproduces the balance exactly; anything else is left as written. A part
+    that solves to zero stays unstated. The written text is never changed: this
+    is for answers and comparisons.
+    """
+    from beancount.core.number import MISSING
+
+    for index, posting in enumerate(postings):
+        cost = posting.cost
+        units = posting.units
+        if cost is None or units is MISSING or not isinstance(getattr(units, "number", None), Decimal):
+            continue
+        per, total = getattr(cost, "number_per", None), getattr(cost, "number_total", None)
+        currency = cost.currency
+        # Only a part the file left for booking: a booked Cost has none, and
+        # `{5 USD}` states no total at all (None, not MISSING).
+        if not isinstance(currency, str) or (per is MISSING) == (total is MISSING):
+            continue
+        if not isinstance(per if total is MISSING else total, Decimal):
+            continue
+        others = Decimal(0)
+        for other_index, other in enumerate(postings):
+            if other_index == index:
+                continue
+            other_units = other.units
+            number = getattr(other_units, "number", None)
+            if other_units is MISSING or not isinstance(number, Decimal) or other.cost is not None:
+                others = None  # type: ignore[assignment]
+                break
+            if totals[other_index] is not None:
+                priced = totals[other_index]
+                if priced.currency != currency:
+                    others = None  # type: ignore[assignment]
+                    break
+                others += priced.number.copy_sign(number)
+            elif other.price is not None:
+                if other.price.currency != currency:
+                    others = None  # type: ignore[assignment]
+                    break
+                others += number * other.price.number
+            elif other_units.currency == currency:
+                others += number
+            else:
+                others = None  # type: ignore[assignment]
+                break
+        if others is None:
+            continue
+        needed = -others
+        count = units.number
+        if per is MISSING:
+            assert isinstance(total, Decimal)
+            solved = (needed - total.copy_sign(count)) / count
+            rebuilt = count * solved + total.copy_sign(count)
+            field = {"number_per": solved}
+        else:
+            solved = abs((needed - count * per).copy_sign(count))
+            rebuilt = count * per + solved.copy_sign(count)
+            field = {"number_total": solved}
+        if not solved or solved < 0 or rebuilt != needed:
+            continue
+        postings = [*postings[:index], posting._replace(cost=cost._replace(**field)), *postings[index + 1 :]]
+    return postings
