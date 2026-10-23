@@ -1,3 +1,6 @@
+import { formatLedgerDate } from "@/common/date-format";
+import { useAccountCloseDates } from "@/common/hooks/use-account-close-dates";
+import { closedBeforeDate } from "@/common/account-close-dates";
 import {
   budgetCurrencyOptions,
   defaultBudgetCurrency,
@@ -187,7 +190,7 @@ function FormRow({
 }
 
 function AddBudgetScreenImpl(): JSX.Element {
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const router = useRouter();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -254,7 +257,11 @@ function AddBudgetScreenImpl(): JSX.Element {
   // target went out positive and read as a spending cap (w21/303). A failed
   // read stops the wait; the amount then goes as typed.
   const metaSettled = ledgerMeta !== undefined || Boolean(metaError);
+  // A budget dated after its account closed never applies (w21/877).
+  const closeDates = useAccountCloseDates(ledgerId);
+  const closedAt = closedBeforeDate(account, getFormatDate(date), closeDates);
   const canSubmit =
+    closedAt === undefined &&
     account.trim().length > 0 &&
     amountOk &&
     currency.trim().length > 0 &&
@@ -266,6 +273,8 @@ function AddBudgetScreenImpl(): JSX.Element {
     pushAccountPicker(router, {
       type: "budget",
       current: account,
+      // The accounts open on the budget's own date are listed (w21/877).
+      entryDate: getFormatDate(date),
       onSelect: (selected) => {
         setAccount(selected);
         setSubmitError(null);
@@ -429,6 +438,15 @@ function AddBudgetScreenImpl(): JSX.Element {
           />
         ) : null}
         <Text style={styles.help}>{t("budgetAccountHelp")}</Text>
+        {closedAt !== undefined && (
+          <InlineError
+            style={styles.error}
+            message={t("accountPickerClosedOn", {
+              name: account,
+              date: formatLedgerDate(closedAt, locale),
+            })}
+          />
+        )}
         {submitError && (
           <InlineError style={styles.error} message={submitError} />
         )}

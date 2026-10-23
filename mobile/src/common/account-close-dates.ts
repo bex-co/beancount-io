@@ -239,3 +239,17 @@ export function firstOpeningAfter(
   }
   return first;
 }
+
+/**
+ * The day `account` closed, when a budget (or entry) dated `onDate` falls after
+ * it: that budget never applies (w21/877). Undefined for an account that is
+ * open, unknown, or not yet closed on that date.
+ */
+export function closedBeforeDate(
+  account: string,
+  onDate: string,
+  closeDates: CloseDates,
+): string | undefined {
+  const closedAt = closeDates.get(account.trim());
+  return closedAt !== undefined && onDate > closedAt ? closedAt : undefined;
+}

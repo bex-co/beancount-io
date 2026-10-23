@@ -2,6 +2,7 @@ import {
   budgetHasEnded,
   closeDatesOf,
   closedAccountNamed,
+  closedBeforeDate,
   firstOpeningAfter,
   isOpenOn,
   isSeedableOn,
@@ -383,5 +384,54 @@ describe("closed and not-yet-open names across Arabic-script spellings", () => {
     expect(named("Assets:Qa:بانک-ملی", "2026-06-01", closed)?.account).toBe(
       "Assets:Qa:بانك-ملي",
     );
+  });
+});
+
+// w21/877: an Update dated after the account closes writes a budget that never applies.
+describe("closedBeforeDate", () => {
+  const closeDates = new Map([["Expenses:QaLease", "2026-12-31"]]) as never;
+
+  it("names the day an account closed when the date is after it", () => {
+    expect(closedBeforeDate("Expenses:QaLease", "2027-01-01", closeDates)).toBe(
+      "2026-12-31",
+    );
+    expect(
+      closedBeforeDate(" Expenses:QaLease ", "2027-01-01", closeDates),
+    ).toBe("2026-12-31");
+  });
+
+  it("is undefined on or before the close, and for an open or unknown account", () => {
+    expect(closedBeforeDate("Expenses:QaLease", "2026-12-31", closeDates)).toBe(
+      undefined,
+    );
+    expect(closedBeforeDate("Expenses:QaLease", "2026-06-01", closeDates)).toBe(
+      undefined,
+    );
+    expect(closedBeforeDate("Expenses:QaFood", "2027-01-01", closeDates)).toBe(
+      undefined,
+    );
+    expect(closedBeforeDate("", "2027-01-01", closeDates)).toBe(undefined);
+  });
+});
+
+describe("the Add Budget form and the close date", () => {
+  const form = require("fs")
+    .readFileSync(
+      require("path").join(
+        __dirname,
+        "..",
+        "..",
+        "screens",
+        "add-budget-screen",
+        "add-budget-screen.tsx",
+      ),
+      "utf8",
+    )
+    .replace(/\s+/g, "");
+
+  it("refuses a date past the close, and hands the picker its date", () => {
+    expect(form.includes("canSubmit=closedAt===undefined&&")).toBe(true);
+    expect(form.includes("entryDate:getFormatDate(date),")).toBe(true);
+    expect(form.includes('t("accountPickerClosedOn"')).toBe(true);
   });
 });
