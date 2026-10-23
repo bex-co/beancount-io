@@ -1,3 +1,5 @@
+import { StaleDataBanner } from "@/components/stale-data-banner";
+import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 import { routeText } from "@/common/route-text";
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { useCallback, useMemo, useState } from "react";
@@ -364,8 +366,15 @@ function MerchantsDirectory() {
     return null;
   };
 
+  // Rows from before a failed refresh stay, under the banner every other
+  // data screen shows (w21/860).
+  const showStale = isShowingStaleDataFromQueries([
+    { data: rollupData, error: rollupError },
+  ]);
+
   return (
     <View style={styles.container}>
+      {showStale ? <StaleDataBanner /> : null}
       <SectionList
         style={styles.list}
         contentContainerStyle={styles.listContent}

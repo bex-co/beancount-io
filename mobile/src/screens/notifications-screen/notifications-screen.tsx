@@ -1,3 +1,5 @@
+import { StaleDataBanner } from "@/components/stale-data-banner";
+import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 import { isolatePath } from "@/common/bidi";
 import { routeText } from "@/common/route-text";
 import {
@@ -356,6 +358,14 @@ function NotificationsScreenImpl(): JSX.Element {
     commitsLoaded: commitsData !== undefined,
   });
 
+  // Data from before a failed refresh stays on screen under a banner, and is
+  // not taken for a clean bill of health (w21/860).
+  const showStale = isShowingStaleDataFromQueries([
+    { data: errorsLoaded ? errors : undefined, error: errorsError },
+    { data: commitsData, error: commitsError },
+  ]);
+  const errorsStale = errorsLoaded && Boolean(errorsError);
+
   const onRefresh = async () => {
     setRefreshing(true);
     try {
@@ -371,6 +381,7 @@ function NotificationsScreenImpl(): JSX.Element {
     <>
       <Stack.Screen options={{ title: t("notificationsTitle") }} />
       <SafeAreaView edges={["bottom"]} style={styles.container}>
+        {showStale ? <StaleDataBanner /> : null}
         <ScrollView
           // flexGrow keeps short content (healthy ledger, no changes) filling the
           // frame, so the whole area stays pull-to-refreshable, not just the rows.
@@ -394,7 +405,7 @@ function NotificationsScreenImpl(): JSX.Element {
             <FadeInView>
               {errorsLoadState === "failed" ? (
                 <CardLoadFailure onRetry={() => void refetchErrors()} />
-              ) : errorCount === 0 ? (
+              ) : errorCount === 0 && errorsStale ? null : errorCount === 0 ? (
                 <View style={styles.emptyRow}>
                   <Ionicons
                     accessibilityElementsHidden
