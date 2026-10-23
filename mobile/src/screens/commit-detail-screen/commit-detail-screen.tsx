@@ -27,7 +27,7 @@ import {
   type CommitFileRow,
   DiffLine,
 } from "./diff-utils";
-import { isolateSourceLine } from "@/common/bidi";
+import { isolatePath, isolateSourceLine } from "@/common/bidi";
 import { LEADING_TEXT_ALIGN, letterSpacing, LTR_SOURCE } from "@/common/rtl";
 import {
   formatCommitAuthorLine,
@@ -49,7 +49,9 @@ function fileStatusText(
     case "removed":
       return t("commitFileDeleted");
     case "renamed":
-      return t("commitFileRenamedFrom", { name: file.previousFilename ?? "" });
+      return t("commitFileRenamedFrom", {
+        name: isolatePath(file.previousFilename ?? ""),
+      });
     default:
       return null;
   }
@@ -351,7 +353,7 @@ function CommitDetailScreenImpl({
                             numberOfLines={1}
                             ellipsizeMode="middle"
                           >
-                            {f.filename}
+                            {isolatePath(f.filename)}
                           </Text>
                           <Text style={styles.fileStats}>
                             +{f.additions} −{f.deletions}

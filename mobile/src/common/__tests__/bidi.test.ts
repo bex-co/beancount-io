@@ -3,6 +3,7 @@ import path from "path";
 import {
   isolateAccountPath,
   isolateLtr,
+  isolatePath,
   isolateRtlSymbol,
   isolateSourceLine,
 } from "../bidi";
@@ -227,5 +228,63 @@ describe("isolateSourceLine", () => {
       "utf8",
     );
     expect(screen.includes("{isolateSourceLine(line.content)}")).toBe(true);
+  });
+});
+
+// w21/824: "qa20261020/بانک/ملی" drew the child folder before its parent, and
+// a dated document's name moved into the folder path, read backwards.
+describe("isolatePath", () => {
+  const LRI = "⁦";
+  const PDI = "⁩";
+  const fsi = (text: string) => `⁨${text}${PDI}`;
+
+  it("keeps each segment in order inside a left-to-right path", () => {
+    expect(isolatePath("qa20261020/بانک/ملی")).toBe(
+      `${LRI}${fsi("qa20261020")}/${fsi("بانک")}/${fsi("ملی")}${PDI}`,
+    );
+    expect(isolatePath("documents/Assets/بانک/ملی/2026-10-01.pdf")).toBe(
+      `${LRI}${["documents", "Assets", "بانک", "ملی", "2026-10-01.pdf"].map(fsi).join("/")}${PDI}`,
+    );
+  });
+
+  it("leaves a left-to-right path as it is", () => {
+    expect(isolatePath("documents/Assets/Bank/2026-10-01.pdf")).toBe(
+      "documents/Assets/Bank/2026-10-01.pdf",
+    );
+    expect(isolatePath("")).toBe("");
+  });
+
+  it("isolates a diff header's path segment by segment", () => {
+    expect(
+      isolateSourceLine("--- a/documents/Assets/بانک/ملی/2026-10-01.pdf"),
+    ).toBe(`‎--- ${isolatePath("a/documents/Assets/بانک/ملی/2026-10-01.pdf")}`);
+  });
+
+  it("is how the breadcrumb, commit files and error places draw", () => {
+    const read = (...parts: string[]) =>
+      fs
+        .readFileSync(path.join(__dirname, "..", "..", ...parts), "utf8")
+        .replace(/\s+/g, "");
+    expect(
+      read("screens", "ledger-file-browser-screen", "index.tsx").includes(
+        "{isolatePath(breadcrumbLabel)}",
+      ),
+    ).toBe(true);
+    const commit = read(
+      "screens",
+      "commit-detail-screen",
+      "commit-detail-screen.tsx",
+    );
+    expect(commit.includes("{isolatePath(f.filename)}")).toBe(true);
+    expect(
+      commit.includes('name:isolatePath(file.previousFilename??""),'),
+    ).toBe(true);
+    expect(
+      read(
+        "screens",
+        "notifications-screen",
+        "notifications-screen.tsx",
+      ).includes("{isolatePath(formatErrorLocation(err))}"),
+    ).toBe(true);
   });
 });

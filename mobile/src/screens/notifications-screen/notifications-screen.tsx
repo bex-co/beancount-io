@@ -1,3 +1,4 @@
+import { isolatePath } from "@/common/bidi";
 import { routeText } from "@/common/route-text";
 import {
   ScrollView,
@@ -221,7 +222,9 @@ function ErrorRow({
           <Text style={styles.errorHint}>{errorHint(err)}</Text>
         )}
         {err.filename && (
-          <Text style={styles.errorLocation}>{formatErrorLocation(err)}</Text>
+          <Text style={styles.errorLocation}>
+            {isolatePath(formatErrorLocation(err))}
+          </Text>
         )}
       </View>
       {canFix && (

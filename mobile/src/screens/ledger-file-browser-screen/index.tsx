@@ -1,3 +1,4 @@
+import { isolatePath } from "@/common/bidi";
 import { routeText } from "@/common/route-text";
 import { isConflictFailure } from "@/common/ledger-conflict";
 import { ledgerWriteFailureMessage } from "@/common/ledger-refusal";
@@ -772,7 +773,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
             numberOfLines={1}
             ellipsizeMode="head"
           >
-            {breadcrumbLabel}
+            {isolatePath(breadcrumbLabel)}
           </Text>
         </View>
       )}

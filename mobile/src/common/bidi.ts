@@ -46,6 +46,24 @@ export function isolateAccountPath(path: string): string {
   );
 }
 
+/**
+ * A file path with segments in a right-to-left script, kept root first, as
+ * `isolateAccountPath` keeps an account name: "qa20261020/بانک/ملی" drew the
+ * child folder before its parent, and a dated file name moved into the folder
+ * path and read backwards (w21/824). Each segment goes in a first-strong
+ * isolate and the path in a left-to-right one. A path in a left-to-right
+ * script is returned as it is.
+ */
+export function isolatePath(path: string): string {
+  if (!RTL_LETTERS.test(path)) return path;
+  return isolateLtr(
+    path
+      .split("/")
+      .map((segment) => `⁨${segment}⁩`)
+      .join("/"),
+  );
+}
+
 /** A string (to its closing quote), a comment, or a word of ledger source. */
 const SOURCE_TOKEN = /"(?:[^"\\]|\\.)*"?|;.*|[^\s"]+/gu;
 const ACCOUNT_TOKEN = /^[^\s":]+(?::[^\s":]+)+$/u;
@@ -66,6 +84,10 @@ export function isolateSourceLine(line: string): string {
   const isolated = line.replace(SOURCE_TOKEN, (token) => {
     if (!RTL_LETTERS.test(token)) return token;
     if (ACCOUNT_TOKEN.test(token)) return isolateAccountPath(token);
+    // A diff header's `a/documents/بانک/…` path (w21/824).
+    if (token.includes("/") && !token.startsWith('"')) {
+      return isolatePath(token);
+    }
     // Outside the isolate, a comment's ";", a tag's "#" and a string's quotes
     // stay where source puts them, before and after its text.
     const [, marks = "", text = "", quote = ""] = TOKEN_TEXT.exec(token) ?? [];

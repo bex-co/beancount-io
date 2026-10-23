@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [824](./824.md) — A Persian/Arabic folder path draws child first in the Files breadcrumb
 - [825](./825.md) — New File accepts a folder that differs from an existing one only by letter case
 - [826](./826.md) — New File allows a path inside ".git/"; raw English refusal on Create
 - [827](./827.md) — A commit diff splits a line at a lone carriage return
