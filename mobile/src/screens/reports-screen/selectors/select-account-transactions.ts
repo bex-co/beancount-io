@@ -157,3 +157,16 @@ export function accountTransactionsWindow(
 ): string | undefined {
   return timeRange === "ALL" ? undefined : recentTransactionsWindow(today);
 }
+
+/**
+ * Whether the card should look for any transaction beyond its page. Only a
+ * windowed range can miss one (ALL has no end), and only once the page came
+ * back with none of the report's accounts in it (w21/696).
+ */
+export function shouldProbeForAny(
+  timeRange: TimeRange,
+  loaded: boolean,
+  anyInWindow: boolean,
+): boolean {
+  return loaded && timeRange !== "ALL" && !anyInWindow;
+}

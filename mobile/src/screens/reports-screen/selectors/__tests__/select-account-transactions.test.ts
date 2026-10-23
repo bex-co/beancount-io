@@ -1,5 +1,6 @@
 import {
   accountTransactionsWindow,
+  shouldProbeForAny,
   accountPrefixFilter,
   selectAccountTransactions,
 } from "../select-account-transactions";
@@ -374,5 +375,20 @@ describe("accountTransactionsWindow", () => {
 
   it("leaves ALL without an end", () => {
     expect(accountTransactionsWindow("ALL", "2026-10-22")).toBe(undefined);
+  });
+});
+
+// w21/696: a ledger whose only expense is next month's read "No transactions
+// yet" once the page was bounded at the month.
+describe("shouldProbeForAny", () => {
+  it("looks past the page only for a windowed range that found nothing", () => {
+    expect(shouldProbeForAny("1M", true, false)).toBe(true);
+    expect(shouldProbeForAny("6M", true, false)).toBe(true);
+  });
+
+  it("does not look when the page has a row, ALL is shown, or nothing loaded", () => {
+    expect(shouldProbeForAny("1M", true, true)).toBe(false);
+    expect(shouldProbeForAny("ALL", true, false)).toBe(false);
+    expect(shouldProbeForAny("1M", false, false)).toBe(false);
   });
 });

@@ -23,6 +23,7 @@ import {
   accountTransactionsWindow,
   hasAnyAccountTransaction,
   resolveListAnchor,
+  shouldProbeForAny,
   accountPrefixFilter,
   selectAccountTransactions,
 } from "../selectors/select-account-transactions";
@@ -135,9 +136,30 @@ export function AccountTransactionsCard({
   // Twin entries share a hash: their keys carry the ordinal (w21/419, w21/524).
   const rowKeys = useMemo(() => journalRowKeys(entries), [entries]);
   // Rows exist, just not in this range: say so instead of "No transactions yet".
-  const emptyText = hasAnyAccountTransaction(journal, accountPrefix)
-    ? t("recentTransactionsEmptyRange")
-    : t(emptyKey);
+  // The page ends at the month, so a ledger whose only transactions are later
+  // ones needs one unbounded look for a single row (w21/696).
+  const anyInWindow = hasAnyAccountTransaction(journal, accountPrefix);
+  const probeAny = shouldProbeForAny(
+    timeRange,
+    data !== undefined,
+    anyInWindow,
+  );
+  const { data: anyData } = useGetLedgerJournalQuery({
+    variables: {
+      ledgerId,
+      query: {
+        offset: 0,
+        limit: 1,
+        directiveTypes: [DirectiveType.TRANSACTION],
+        account: accountPrefixFilter(accountPrefix),
+      },
+    },
+    skip: !probeAny,
+    fetchPolicy: "cache-and-network",
+  });
+  const hasAny =
+    anyInWindow || (anyData?.getLedgerJournal.data?.length ?? 0) > 0;
+  const emptyText = hasAny ? t("recentTransactionsEmptyRange") : t(emptyKey);
 
   return (
     <DashboardCard title={t(titleKey)} bleed testID="account-transactions-card">
