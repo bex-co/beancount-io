@@ -5,7 +5,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as apolloClient from "@apollo/client/react";
 import {
@@ -28,6 +28,9 @@ const monacoHarness = vi.hoisted(() => ({
   editorValue: "select * from accounts",
   KeyModCtrlCmd: 2048,
   KeyCodeEnter: 3,
+  // Holds the editor's mount, as the real wrapper does until Monaco's
+  // stylesheet has loaded.
+  mountGate: null as null | Promise<void>,
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -131,6 +134,7 @@ vi.mock("@/common/components/monaco-editor", () => ({
       },
     ) => void;
   }) => {
+    const input = useRef<HTMLTextAreaElement>(null);
     useEffect(() => {
       const editor = {
         getValue: () => monacoHarness.editorValue,
@@ -138,7 +142,7 @@ vi.mock("@/common/components/monaco-editor", () => ({
           monacoHarness.registeredKeybinding = keybinding;
           monacoHarness.commandHandler = handler;
         },
-        focus: vi.fn(),
+        focus: () => input.current?.focus(),
         // Production disposes Monaco providers on editor dispose
         // (index.tsx). The mock must expose it or onMount throws.
         onDidDispose: vi.fn(),
@@ -155,13 +159,22 @@ vi.mock("@/common/components/monaco-editor", () => ({
           CompletionItemKind: { Snippet: 27 },
         },
       };
-      onMount?.(editor, monaco);
-      // Mount once, like the real Monaco editor.
+      // Mount once, like the real Monaco editor, and never after unmount.
+      let mounted = true;
+      const mount = () => {
+        if (mounted) onMount?.(editor, monaco);
+      };
+      if (monacoHarness.mountGate) void monacoHarness.mountGate.then(mount);
+      else mount();
+      return () => {
+        mounted = false;
+      };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
       <textarea
+        ref={input}
         data-testid="bql-editor"
         aria-label="bql-editor"
         value={value}
@@ -229,6 +242,7 @@ describe("LedgerQueryPage", () => {
     monacoHarness.commandHandler = null;
     monacoHarness.registeredKeybinding = null;
     monacoHarness.editorValue = "select * from accounts";
+    monacoHarness.mountGate = null;
     mockExecuteQuery.mockReset();
     mockExecuteQuery.mockResolvedValue({
       data: { queryShell: tableResult([["Assets:Cash"]]) },
@@ -635,5 +649,50 @@ describe("LedgerQueryPage", () => {
       "Assets:Current:Cash",
     );
     expect(screen.queryByText("Assets:US:BofA")).not.toBeInTheDocument();
+  });
+
+  describe("editor focus when Monaco finishes loading (w4/974)", () => {
+    function holdEditor() {
+      let release!: () => void;
+      monacoHarness.mountGate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return async () => {
+        release();
+        await act(async () => {
+          await monacoHarness.mountGate;
+        });
+      };
+    }
+
+    it("focuses the editor on an untouched load", async () => {
+      const release = holdEditor();
+      renderPage();
+      await release();
+      expect(screen.getByTestId("bql-editor")).toHaveFocus();
+    });
+
+    it("leaves focus where the reader already moved it", async () => {
+      searchQuery = "select account limit 2";
+      mockSuccessfulQuery("select account limit 2", [["Assets:Cash"]]);
+      const release = holdEditor();
+      renderPage();
+      const run = await screen.findByRole("button", {
+        name: "bql.executeQuery",
+      });
+      run.focus();
+
+      await release();
+      expect(run).toHaveFocus();
+      expect(screen.getByTestId("bql-editor")).not.toHaveFocus();
+    });
+
+    it("does nothing when the page leaves before the editor is ready", async () => {
+      const release = holdEditor();
+      const view = renderPage();
+      view.unmount();
+      await release();
+      expect(document.body).toHaveFocus();
+    });
   });
 });

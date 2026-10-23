@@ -305,7 +305,12 @@ export default function LedgerQueryPage() {
                   monacoDisposablesRef.current = [];
                 });
 
-                editor.focus();
+                // Monaco can finish loading after the reader has moved on, to
+                // a bookmarked query's result, say; taking focus then sent
+                // their next key to the editor (w4/974). Focus it only while
+                // nothing else has focus.
+                const active = document.activeElement;
+                if (!active || active === document.body) editor.focus();
               }}
               options={{
                 minimap: { enabled: false },
