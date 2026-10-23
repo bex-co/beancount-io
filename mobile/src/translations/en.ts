@@ -617,6 +617,7 @@ export const en = {
   ledgerCreateFileSuccessIn: "Created {{name}} in {{ledger}}",
   ledgerCreateFileFailed: "Failed to create file",
   ledgerFileNameExists: "A file named {{name}} already exists",
+  ledgerFolderNameExists: "A folder named {{name}} already exists",
   ledgerFileNameExtension: "Use a .bean or .beancount name",
   ledgerFileNamePath: "Use a name without \\, .. or empty folder names",
   ledgerFileNamePortable:

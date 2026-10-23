@@ -589,6 +589,7 @@ export const fa: Translations = {
   ledgerCreateFileSuccessIn: "{{name}} در {{ledger}} ایجاد شد",
   ledgerCreateFileFailed: "ساخت فایل ناموفق بود",
   ledgerFileNameExists: "فایلی با نام {{name}} از قبل وجود دارد",
+  ledgerFolderNameExists: "پوشه‌ای با نام {{name}} از قبل وجود دارد",
   ledgerFileNameExtension:
     "از نامی با پسوند ‎.bean یا ‎.beancount استفاده کنید",
   ledgerFileNamePath: "از نامی بدون \\، .. یا نام پوشهٔ خالی استفاده کنید",

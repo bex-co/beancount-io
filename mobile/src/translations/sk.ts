@@ -612,6 +612,7 @@ export const sk: Translations = {
   ledgerCreateFileSuccessIn: "{{name}} bol vytvorený v {{ledger}}",
   ledgerCreateFileFailed: "Súbor sa nepodarilo vytvoriť",
   ledgerFileNameExists: "Súbor s názvom {{name}} už existuje",
+  ledgerFolderNameExists: "Priečinok s názvom {{name}} už existuje",
   ledgerFileNameExtension: "Použite názov s príponou .bean alebo .beancount",
   ledgerFileNamePath:
     "Použite názov bez \\, .. alebo prázdnych názvov priečinkov",

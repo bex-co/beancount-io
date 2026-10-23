@@ -611,6 +611,7 @@ export const ca: Translations = {
   ledgerCreateFileSuccessIn: "S'ha creat {{name}} a {{ledger}}",
   ledgerCreateFileFailed: "No s'ha pogut crear el fitxer",
   ledgerFileNameExists: "Ja existeix un fitxer anomenat {{name}}",
+  ledgerFolderNameExists: "Ja existeix una carpeta anomenada {{name}}",
   ledgerFileNameExtension: "Fes servir un nom .bean o .beancount",
   ledgerFileNamePath: "Fes servir un nom sense \\, .. ni noms de carpeta buits",
   ledgerFileNamePortable:

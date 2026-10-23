@@ -6,7 +6,8 @@ export type LedgerFileNameCheck =
   | { ok: true; filename: string }
   | {
       ok: false;
-      issue: "empty" | "path" | "portable" | "extension" | "exists";
+      issue:
+        "empty" | "path" | "portable" | "extension" | "exists" | "folderExists";
       filename?: string;
       /**
        * For "exists", the file there already: "Main" clashes with main.bean,
@@ -109,6 +110,19 @@ export function checkLedgerFileName(
   }
   const filename = [...segments.slice(0, -1), named].join("/");
   if (breaksPortablePath(filename)) return { ok: false, issue: "portable" };
+  // A folder the path goes into, spelled as one already here but for its
+  // letter case or Unicode form: a clone on macOS or Windows keeps one of the
+  // two (w21/825), as it does for file names (w21/770).
+  if (segments.length > 1) {
+    const folder = segments[0]!;
+    const twin = existingNames.find(
+      (name) =>
+        name !== folder && portableNameKey(name) === portableNameKey(folder),
+    );
+    if (twin !== undefined) {
+      return { ok: false, issue: "folderExists", filename, existing: twin };
+    }
+  }
   const existing = existingNames.find(
     (name) => portableNameKey(name) === portableNameKey(filename),
   );

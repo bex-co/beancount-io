@@ -273,3 +273,45 @@ describe("clashingFileName", () => {
     );
   });
 });
+
+// w21/825: "qa20261020docs/b" beside the folder Qa20261020Docs passed the
+// dialog and made a case-twin folder.
+describe("a new file into a folder spelled another way", () => {
+  const here = ["Qa20261020Docs", "main.bean"];
+
+  it("names the folder that is there", () => {
+    expect(checkLedgerFileName("qa20261020docs/b", here)).toEqual({
+      ok: false,
+      issue: "folderExists",
+      filename: "qa20261020docs/b.bean",
+      existing: "Qa20261020Docs",
+    });
+  });
+
+  it("still goes into the folder spelled as it is", () => {
+    expect(checkLedgerFileName("Qa20261020Docs/b", here)).toEqual({
+      ok: true,
+      filename: "Qa20261020Docs/b.bean",
+    });
+    expect(checkLedgerFileName("other/b", here).ok).toBe(true);
+  });
+
+  it("says so inline, in every language", () => {
+    const screen = fs
+      .readFileSync(path.join(__dirname, "..", "index.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    expect(
+      screen.includes(
+        'case"folderExists":returnt("ledgerFolderNameExists",{name:check.existing});',
+      ),
+    ).toBe(true);
+    for (const locale of translationLocales()) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const catalog = require(`../../../translations/${locale}`)[locale];
+      expect([
+        locale,
+        String(catalog.ledgerFolderNameExists).includes("{{name}}"),
+      ]).toEqual([locale, true]);
+    }
+  });
+});

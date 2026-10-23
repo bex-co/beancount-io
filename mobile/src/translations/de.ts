@@ -612,6 +612,7 @@ export const de: Translations = {
   ledgerCreateFileSuccessIn: "{{name}} in {{ledger}} erstellt",
   ledgerCreateFileFailed: "Datei konnte nicht angelegt werden",
   ledgerFileNameExists: "Eine Datei namens {{name}} existiert bereits",
+  ledgerFolderNameExists: "Ein Ordner namens {{name}} existiert bereits",
   ledgerFileNameExtension:
     "Verwenden Sie einen Namen mit .bean oder .beancount",
   ledgerFileNamePath:

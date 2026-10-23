@@ -609,6 +609,7 @@ export const ru: Translations = {
   ledgerCreateFileSuccessIn: "Файл {{name}} создан в {{ledger}}",
   ledgerCreateFileFailed: "Не удалось создать файл",
   ledgerFileNameExists: "Файл с именем {{name}} уже существует",
+  ledgerFolderNameExists: "Папка с именем {{name}} уже существует",
   ledgerFileNameExtension: "Используйте имя с расширением .bean или .beancount",
   ledgerFileNamePath: "Используйте имя без \\, .. и пустых имён папок",
   ledgerFileNamePortable:

@@ -536,6 +536,7 @@ export const zh: Translations = {
   ledgerCreateFileSuccessIn: "已在 {{ledger}} 中创建 {{name}}",
   ledgerCreateFileFailed: "新建文件失败",
   ledgerFileNameExists: "名为 {{name}} 的文件已存在",
+  ledgerFolderNameExists: "名为 {{name}} 的文件夹已存在",
   ledgerFileNameExtension: "请使用 .bean 或 .beancount 文件名",
   ledgerFileNamePath: "名称中不能包含 \\、.. 或空的文件夹名",
   ledgerFileNamePortable:

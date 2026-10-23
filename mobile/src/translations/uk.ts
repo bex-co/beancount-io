@@ -607,6 +607,7 @@ export const uk: Translations = {
   ledgerCreateFileSuccessIn: "Файл {{name}} створено в {{ledger}}",
   ledgerCreateFileFailed: "Не вдалося створити файл",
   ledgerFileNameExists: "Файл з назвою {{name}} уже існує",
+  ledgerFolderNameExists: "Папка з назвою {{name}} уже існує",
   ledgerFileNameExtension:
     "Використайте назву з розширенням .bean або .beancount",
   ledgerFileNamePath: "Використайте назву без \\, .. чи порожніх назв тек",

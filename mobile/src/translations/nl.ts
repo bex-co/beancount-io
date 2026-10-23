@@ -598,6 +598,7 @@ export const nl: Translations = {
   ledgerCreateFileSuccessIn: "{{name}} aangemaakt in {{ledger}}",
   ledgerCreateFileFailed: "Aanmaken van bestand mislukt",
   ledgerFileNameExists: "Er bestaat al een bestand met de naam {{name}}",
+  ledgerFolderNameExists: "Er bestaat al een map met de naam {{name}}",
   ledgerFileNameExtension: "Gebruik een naam op .bean of .beancount",
   ledgerFileNamePath: "Gebruik een naam zonder \\, .. of lege mapnamen",
   ledgerFileNamePortable:
