@@ -50,3 +50,6 @@
 - [893](./893.md) — An account first funded this month shows "Not enough data to chart yet"
 - [894](./894.md) — In a foreign-currency-only account, every row reads "Balance: $0.00"
 - [895](./895.md) — Account detail's range chips filter only the chart, not the list below
+- [896](./896.md) — In a non-dollar ledger, a CAD merchant's total reads "$150.00" while its row reads "150.00 CAD"
+- [897](./897.md) — Merchant detail's scheduled and priced lines are symbol-checked apart from the totals
+- [898](./898.md) — Merchants shows "Search 0 merchants…" above its error and empty states
