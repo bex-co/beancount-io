@@ -4,6 +4,8 @@
 
 ## Inbox
 
+- [1019 — Keep signed market values in Holdings gain percentages](./1019.md) — major; all four groupings/CSVs show +100% for a valid −300% loss under modeled reads; exact producer, independent arithmetic and zero/positive controls reproduced, no writes.
+
 - [1018 — Keep negative chart axis ticks readable in Persian](./1018.md) — minor sibling of 1005; local fa Changes Over Time canvas y-axis reads `300.0-`…`2.1k-` at both widths; tables fixed in 1005, English unchanged, source-only observation.
 
 - [1017 — Keep native amount stepping from rounding exact drafts](./1017.md) — major residual ofW1/028; both-width ArrowUp reduces valid large amount and prepares changed balanced postings; manual/ordinary controls and independent parsers pass, all writes blocked.
