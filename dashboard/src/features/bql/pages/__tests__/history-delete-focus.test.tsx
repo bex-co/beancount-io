@@ -100,7 +100,7 @@ function shellClient() {
                   types: [
                     { __typename: "QueryColumn", name: "label", dtype: "str" },
                   ],
-                  rows: [[text.match(/history-(\w)/)![1]!]],
+                  rows: [[text.match(/history-(\w)/)?.[1] ?? "accounts"]],
                   t: null,
                 },
                 text: null,
@@ -185,5 +185,55 @@ describe("BQL history deletion focus", () => {
     await user.keyboard("{Enter}");
     expect(shown()).toEqual([B, A]);
     expect(summary(B)).toHaveFocus();
+  });
+});
+
+/** Deleting a card leaves the others' disclosure choices alone (w4/994). */
+describe("BQL history deletion keeps collapsed cards closed", () => {
+  const details = (text: string) =>
+    card(text).querySelector("details") as HTMLDetailsElement;
+
+  beforeEach(() => {
+    seededHistory = [C, B, A];
+  });
+
+  it("keeps a collapsed card closed when it moves to the top", async () => {
+    const user = userEvent.setup();
+    const { runs } = renderPage();
+    await waitFor(() => expect(details(C).open).toBe(true));
+    const nodeA = details(A);
+    // A and B were never opened; C is the open one.
+    expect(nodeA.open).toBe(false);
+    expect(details(B).open).toBe(false);
+
+    deleteButton(B).focus();
+    await user.keyboard("{Enter}");
+    expect(details(C).open).toBe(true);
+    expect(details(A)).toBe(nodeA);
+    expect(nodeA.open).toBe(false);
+
+    deleteButton(C).focus();
+    await user.keyboard("{Enter}");
+    expect(shown()).toEqual([A]);
+    expect(details(A)).toBe(nodeA);
+    expect(nodeA.open).toBe(false);
+    expect(runs).toEqual([C]);
+  });
+
+  it("still opens a card that moves to the top because its query ran", async () => {
+    const DEFAULT = "select * from accounts";
+    seededHistory = [C, DEFAULT];
+    const user = userEvent.setup();
+    const { runs } = renderPage();
+    await waitFor(() => expect(details(C).open).toBe(true));
+    const rerun = details(DEFAULT);
+    expect(rerun.open).toBe(false);
+
+    // Execute the editor's query, which is the collapsed second card.
+    await user.click(screen.getByRole("button", { name: "bql.executeQuery" }));
+    await waitFor(() => expect(runs).toEqual([C, DEFAULT]));
+    expect(shown()).toEqual([DEFAULT, C]);
+    expect(details(DEFAULT)).toBe(rerun);
+    await waitFor(() => expect(rerun.open).toBe(true));
   });
 });

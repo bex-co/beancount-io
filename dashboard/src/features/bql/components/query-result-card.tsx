@@ -286,11 +286,17 @@ export function QueryResultCard({
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const errorFeedback = error ? getQueryErrorFeedback(error, query) : null;
 
+  // The newest card opens when it first appears and whenever its query runs.
+  // Reaching the top because the card above was deleted is not a run: the
+  // reader's collapsed choice stands (w4/994).
+  const mounted = useRef(false);
   useEffect(() => {
-    if (detailsRef.current && isInitiallyOpen) {
+    const appeared = !mounted.current;
+    mounted.current = true;
+    if (detailsRef.current && isInitiallyOpen && (appeared || loading)) {
       detailsRef.current.open = true;
     }
-  }, [isInitiallyOpen]);
+  }, [isInitiallyOpen, loading]);
 
   const handleToggle = () => {
     const isOpen = detailsRef.current?.open || false;
