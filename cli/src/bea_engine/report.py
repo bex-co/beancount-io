@@ -159,6 +159,10 @@ def _balances(
         for entry in filtered.entries:
             if isinstance(entry, Close):
                 closed.add(entry.account)
+        # Emptiness is the account's inventory, not its value in this
+        # conversion: 10 EUR against -10 USD is worth 0 USD at par and still
+        # held (w5/947).
+        closed -= _holding_accounts(FinancialStatementsModule().trial_balance(filtered, "units"), closed)
         matches = _substring_match(accounts)
         pruned = {name: _prune_tree(tree, matches, closed) for name, tree in sections.items()}
     # Valuation covers only the accounts being shown: an unrelated unpriced
@@ -1261,6 +1265,21 @@ def _prune_sections(sections: dict[str, Any], account: str | None, roots: Sequen
         return sections
     matches = _report_filter_match(account, roots)
     return {name: _prune_tree(tree, matches) for name, tree in sections.items()}
+
+
+def _holding_accounts(units: Any, among: set[str]) -> set[str]:
+    """Which of these accounts hold any commodity in the trial balance, valued in units."""
+    held: set[str] = set()
+
+    def walk(node: Any) -> None:
+        if node.account in among and any(number for _, number in node.balance.items()):
+            held.add(node.account)
+        for child in node.children:
+            walk(child)
+
+    for name in ("assets", "liabilities", "equity", "income", "expenses"):
+        walk(getattr(units, f"{name}_hierarchy"))
+    return held
 
 
 def _prune_tree(node: Any, matches: Callable[[str], bool], closed: set[str] | None = None) -> Any | None:
