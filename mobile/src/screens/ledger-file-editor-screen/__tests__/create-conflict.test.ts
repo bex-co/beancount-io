@@ -30,12 +30,13 @@ describe("a create over a file that already exists", () => {
     expect(handler.startsWith("if(isConflictFailure(createError)){")).toBe(
       true,
     );
+    // The file the server says is there (w21/787), the name sent otherwise.
     expect(
       handler.includes(
-        'setKnownExisting((known)=>[...known,filename]);voidinvalidateLedgerData(client,"file");',
+        'constexisting=clashingFileName(createError,filename);setKnownExisting((known)=>[...known,existing]);voidinvalidateLedgerData(client,"file");',
       ),
     ).toBe(true);
-    expect(handler.includes('t("ledgerFileNameExists",{name:filename})')).toBe(
+    expect(handler.includes('t("ledgerFileNameExists",{name:existing})')).toBe(
       true,
     );
   });

@@ -1,7 +1,12 @@
 import fs from "fs";
 import path from "path";
 import { translationLocales } from "../../../translations/__tests__/locale-parity";
-import { checkLedgerFileName, listingHasFile, parentDirectory } from "../utils";
+import {
+  checkLedgerFileName,
+  clashingFileName,
+  listingHasFile,
+  parentDirectory,
+} from "../utils";
 
 // New Ledger File used to grey out Create with no reason, and refused folder
 // paths the server accepts (w21/014). Each refusal now names its rule.
@@ -13,6 +18,18 @@ describe("checkLedgerFileName", () => {
       ok: false,
       issue: "exists",
       filename: "main.bean",
+      existing: "main.bean",
+    });
+  });
+
+  // w21/787: "Main" beside main.bean said "A file named Main.bean already
+  // exists", a file that did not.
+  it("names the file there when the clash is only in letter case", () => {
+    expect(checkLedgerFileName("Main", existing)).toEqual({
+      ok: false,
+      issue: "exists",
+      filename: "Main.bean",
+      existing: "main.bean",
     });
   });
 
@@ -71,7 +88,11 @@ describe("New Ledger File dialog", () => {
   it("maps each refusal to its message", () => {
     const screen = read("..", "index.tsx");
     expect(
-      screen.includes('t("ledgerFileNameExists", { name: check.filename })'),
+      screen
+        .replace(/\s+/g, " ")
+        .includes(
+          't("ledgerFileNameExists", { name: check.existing ?? check.filename, })',
+        ),
     ).toBe(true);
     expect(screen.includes('t("ledgerFileNameExtension")')).toBe(true);
     expect(screen.includes('t("ledgerFileNamePath")')).toBe(true);
@@ -121,7 +142,12 @@ describe("a new file into a folder that already holds it", () => {
     // ...and once the listing found it, the same input is refused with its name.
     expect(
       checkLedgerFileName("sub/notes", ["main.bean", "sub", "sub/notes.bean"]),
-    ).toEqual({ ok: false, issue: "exists", filename: "sub/notes.bean" });
+    ).toEqual({
+      ok: false,
+      issue: "exists",
+      filename: "sub/notes.bean",
+      existing: "sub/notes.bean",
+    });
   });
 
   it("finds the folder to look in", () => {
@@ -195,5 +221,55 @@ describe("checkLedgerFileName against the server's portable-path rule", () => {
       const catalog = require(`../../../translations/${locale}`)[locale];
       expect(typeof catalog.ledgerFileNamePortable).toBe("string");
     }
+  });
+});
+
+// w21/787: the server's conflict for a case twin names the file it kept.
+describe("clashingFileName", () => {
+  const conflict = (message: string) =>
+    Object.assign(new Error(message), {
+      graphQLErrors: [{ message, extensions: { code: "CONFLICT" } }],
+    });
+
+  it("reads the existing file from the server's conflict", () => {
+    expect(
+      clashingFileName(
+        conflict("File conflict: Main.bean already exists as main.bean"),
+        "Main.bean",
+      ),
+    ).toBe("main.bean");
+    expect(
+      clashingFileName(
+        { graphQLErrors: [{ message: "x already exists as sub/main.bean" }] },
+        "x",
+      ),
+    ).toBe("sub/main.bean");
+  });
+
+  it("keeps the name sent for an exact duplicate or an unknown error", () => {
+    expect(
+      clashingFileName(
+        conflict("File conflict: main.bean exists"),
+        "main.bean",
+      ),
+    ).toBe("main.bean");
+    expect(clashingFileName(null, "main.bean")).toBe("main.bean");
+  });
+
+  it("is what the dialog and the conflict toast name", () => {
+    const screen = fs
+      .readFileSync(path.join(__dirname, "..", "index.tsx"), "utf8")
+      .replace(/\s+/g, "");
+    expect(
+      screen.includes(
+        't("ledgerFileNameExists",{name:check.existing??check.filename,})',
+      ),
+    ).toBe(true);
+    expect(
+      screen.includes("constexisting=clashingFileName(createError,filename);"),
+    ).toBe(true);
+    expect(screen.includes('t("ledgerFileNameExists",{name:existing})')).toBe(
+      true,
+    );
   });
 });

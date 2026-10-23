@@ -8,6 +8,11 @@ export type LedgerFileNameCheck =
       ok: false;
       issue: "empty" | "path" | "portable" | "extension" | "exists";
       filename?: string;
+      /**
+       * For "exists", the file there already: "Main" clashes with main.bean,
+       * and the message named a Main.bean that did not exist (w21/787).
+       */
+      existing?: string;
     };
 
 /**
@@ -104,14 +109,36 @@ export function checkLedgerFileName(
   }
   const filename = [...segments.slice(0, -1), named].join("/");
   if (breaksPortablePath(filename)) return { ok: false, issue: "portable" };
-  if (
-    existingNames.some(
-      (name) => portableNameKey(name) === portableNameKey(filename),
-    )
-  ) {
-    return { ok: false, issue: "exists", filename };
+  const existing = existingNames.find(
+    (name) => portableNameKey(name) === portableNameKey(filename),
+  );
+  if (existing !== undefined) {
+    return { ok: false, issue: "exists", filename, existing };
   }
   return { ok: true, filename };
+}
+
+/**
+ * The file a create clashed with, as the server names a case or Unicode twin
+ * ("Main.bean already exists as main.bean", w21/770), else the name sent: the
+ * toast named the typed file, which did not exist (w21/787).
+ */
+export function clashingFileName(error: unknown, sent: string): string {
+  const graphQLErrors =
+    typeof error === "object" && error !== null
+      ? (error as { graphQLErrors?: unknown }).graphQLErrors
+      : undefined;
+  for (const graphQLError of Array.isArray(graphQLErrors)
+    ? graphQLErrors
+    : []) {
+    const message = (graphQLError as { message?: unknown } | null)?.message;
+    const twin =
+      typeof message === "string"
+        ? /already exists as (\S(?:.*\S)?)\s*$/u.exec(message)?.[1]
+        : undefined;
+    if (twin !== undefined) return twin;
+  }
+  return sent;
 }
 
 /** Characters that draw nothing: a name holding one looks like one without. */

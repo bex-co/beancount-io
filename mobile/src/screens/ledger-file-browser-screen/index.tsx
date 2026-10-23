@@ -57,6 +57,7 @@ import {
   buildLedgerFilePath,
   canDeleteLedgerFile,
   checkLedgerFileName,
+  clashingFileName,
   deleteEmptiesFolder,
   listingHasFile,
   parentDirectory,
@@ -482,7 +483,9 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         case "empty":
           return false;
         case "exists":
-          return t("ledgerFileNameExists", { name: check.filename });
+          return t("ledgerFileNameExists", {
+            name: check.existing ?? check.filename,
+          });
         case "extension":
           return t("ledgerFileNameExtension");
         case "path":
@@ -586,10 +589,11 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         // list was stale): say so by name, remember it, and refresh the list,
         // where the generic failure toast told the user nothing (w21/564).
         if (isConflictFailure(createError)) {
-          setKnownExisting((known) => [...known, filename]);
+          const existing = clashingFileName(createError, filename);
+          setKnownExisting((known) => [...known, existing]);
           void invalidateLedgerData(client, "file");
           toast.showToast({
-            message: t("ledgerFileNameExists", { name: filename }),
+            message: t("ledgerFileNameExists", { name: existing }),
             type: "error",
           });
           return;
