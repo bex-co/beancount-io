@@ -15,7 +15,14 @@ export const DRAFT_DEBOUNCE_MS = 400;
 export type EditorRecovery = {
   /** The file as loaded or reloaded: the saved text, and the draft's start. */
   loaded(text: string): void;
-  /** The text as saved: both the saved text and the latest. */
+  /** A save of this text is starting: it is the latest the editor has, so far. */
+  saving(text: string): void;
+  /**
+   * The text as saved: the saved text only. The latest stays whatever the editor
+   * has reported since the save began, so keystrokes typed during "Saving…" are
+   * not put back to the saved text by a later restart, Overwrite or Recreate
+   * (w21/689).
+   */
   saved(text: string): void;
   /** The latest text reported by the editor. */
   draft(text: string): void;
@@ -38,8 +45,10 @@ export function createEditorRecovery(): EditorRecovery {
       latest = text;
       savedText = text;
     },
-    saved(text) {
+    saving(text) {
       latest = text;
+    },
+    saved(text) {
       savedText = text;
     },
     draft(text) {

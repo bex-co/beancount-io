@@ -26,27 +26,27 @@ describe("after Overwrite or Recreate succeeds", () => {
     expect(rebase.includes("setHasUnsavedChanges(latest!==saved)")).toBe(true);
   });
 
-  it("is done by Overwrite once its save succeeds", () => {
+  // w21/689: the text is read after the save, so what was typed meanwhile stays.
+  it("is done by Overwrite once its save succeeds, on the editor's text then", () => {
     const overwrite = body(
       "constoverwriteRemote=",
       "[rebaseOnSaved,refetch,t],",
     );
-    const latest = overwrite.indexOf(
-      "constlatest=recoveryRef.current.latest()",
-    );
     const save = overwrite.indexOf(
       "handleSaveRef.current?.(content,epoch,revision,true)",
     );
-    expect(latest > -1 && latest < save).toBe(true);
-    expect(overwrite.includes("rebaseOnSaved(latest,content)")).toBe(true);
+    const rebase = overwrite.indexOf(
+      "rebaseOnSaved(recoveryRef.current.latest(),content)",
+    );
+    expect(save > -1 && rebase > save).toBe(true);
   });
 
-  it("is done by Recreate once the file is created", () => {
+  it("is done by Recreate once the file is created, on the editor's text then", () => {
     const recreate = body("constrecreateFile=", "consthandleSave=");
-    expect(recreate.includes("constlatest=recoveryRef.current.latest()")).toBe(
-      true,
-    );
-    expect(recreate.includes("rebaseOnSaved(latest,content)")).toBe(true);
+    expect(recreate.includes("recoveryRef.current.saving(content)")).toBe(true);
+    expect(
+      recreate.includes("rebaseOnSaved(recoveryRef.current.latest(),content)"),
+    ).toBe(true);
   });
 });
 
@@ -57,7 +57,12 @@ describe("the recovery's latest text", () => {
     expect(recovery.latest()).toBe("a");
     recovery.draft("ab");
     expect(recovery.latest()).toBe("ab");
-    recovery.saved("abc");
+    // A save starts with the text it sends as the latest, and finishing it
+    // leaves the latest to the editor.
+    recovery.saving("abc");
     expect(recovery.latest()).toBe("abc");
+    recovery.draft("abcd");
+    recovery.saved("abc");
+    expect(recovery.latest()).toBe("abcd");
   });
 });

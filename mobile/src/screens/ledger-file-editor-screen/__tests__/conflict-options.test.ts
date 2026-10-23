@@ -24,7 +24,11 @@ describe("the file editor's conflict alert", () => {
     // Copied first, and a failed copy returns before the reload.
     expect(setClip < reload).toBe(true);
     expect(copy.indexOf("return;") < reload).toBe(true);
-    expect(copy.includes("withLineEnding(content,lineEndingRef.current)")).toBe(
+    // The text now in the editor, which may be newer than the save's (w21/689).
+    expect(
+      copy.includes("constcurrent=recoveryRef.current.latest()||content;"),
+    ).toBe(true);
+    expect(copy.includes("withLineEnding(current,lineEndingRef.current)")).toBe(
       true,
     );
   });

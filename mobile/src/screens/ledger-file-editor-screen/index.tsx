@@ -674,9 +674,11 @@ function LedgerFileEditorSession({
   // load the remote version, or save it over that version.
   const copyThenReload = useCallback(
     async (content: string) => {
+      // The text now in the editor, which may be newer than the save's (w21/689).
+      const current = recoveryRef.current.latest() || content;
       try {
         await Clipboard.setStringAsync(
-          withLineEnding(content, lineEndingRef.current),
+          withLineEnding(current, lineEndingRef.current),
         );
       } catch {
         // Reloading now would drop text that was not kept.
@@ -743,9 +745,9 @@ function LedgerFileEditorSession({
           Alert.alert(t("ledgerEditorSaveFailed"));
           return;
         }
-        const latest = recoveryRef.current.latest();
         if (await handleSaveRef.current?.(content, epoch, revision, true)) {
-          rebaseOnSaved(latest, content);
+          // What is in the editor now, which includes anything typed while it saved.
+          rebaseOnSaved(recoveryRef.current.latest(), content);
         }
       } finally {
         endRestore();
@@ -812,7 +814,7 @@ function LedgerFileEditorSession({
   const recreateFile = useCallback(
     async (content: string, epoch: number, revision: number) => {
       if (!startRestore()) return;
-      const latest = recoveryRef.current.latest();
+      recoveryRef.current.saving(content);
       try {
         const result = await createLedgerFile({
           variables: {
@@ -835,7 +837,8 @@ function LedgerFileEditorSession({
         }
         haptics.success();
         savedThisSessionRef.current = true;
-        if (epoch === documentEpochRef.current) rebaseOnSaved(latest, content);
+        if (epoch === documentEpochRef.current)
+          rebaseOnSaved(recoveryRef.current.latest(), content);
         void invalidateLedgerData(client, "file");
       } catch (err: unknown) {
         if (isAuthTeardownError(err)) return;
@@ -888,6 +891,7 @@ function LedgerFileEditorSession({
       }
 
       saveInFlightRef.current = true;
+      recoveryRef.current.saving(content);
       // Read before sending: the refresh after the save replaces it.
       const before = errorsLoaded ? allErrors : null;
       try {

@@ -34,6 +34,31 @@ describe("createEditorRecovery", () => {
     expect(recovery.ready()).toEqual({ value: "three", savedValue: "two" });
   });
 
+  // w21/689: BBB was typed while the save of "L1\nAAA\n" was in flight.
+  it("keeps text typed during a save, through a restart", () => {
+    const recovery = createEditorRecovery();
+    recovery.loaded("L1\n");
+    recovery.ready();
+    recovery.draft("L1\nAAA\n");
+    recovery.saving("L1\nAAA\n");
+    recovery.draft("L1\nAAA\nBBB\n");
+    recovery.saved("L1\nAAA\n");
+    expect(recovery.latest()).toBe("L1\nAAA\nBBB\n");
+    expect(recovery.ready()).toEqual({
+      value: "L1\nAAA\nBBB\n",
+      savedValue: "L1\nAAA\n",
+    });
+  });
+
+  it("takes the saved text as the latest when nothing was typed meanwhile", () => {
+    const recovery = createEditorRecovery();
+    recovery.loaded("a");
+    recovery.ready();
+    recovery.saving("b");
+    recovery.saved("b");
+    expect(recovery.ready()).toEqual({ value: "b", savedValue: "b" });
+  });
+
   it("restores a clean file as it was loaded or last saved", () => {
     const recovery = createEditorRecovery();
     recovery.loaded("a");
