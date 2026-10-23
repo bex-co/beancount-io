@@ -187,3 +187,48 @@ describe("a ledger whose operating currency is a fine commodity", () => {
     expect(rows.some((row) => row.own)).toBe(false);
   });
 });
+
+// w21/808: a KWD wallet's own 0.004 was under the flat half-cent tolerance, so
+// Wallet folded into its Savings child and the rows read short of 15.004.
+describe("a ledger whose operating currency has three decimals", () => {
+  const kwd = trial(
+    node("Assets", {}, { KWD: "15.004" }, [
+      node("Assets:Wallet", { KWD: "0.004" }, { KWD: "10.004" }, [
+        node("Assets:Wallet:Savings", { KWD: "10.000" }, { KWD: "10.000" }),
+      ]),
+      node("Assets:Bank", { KWD: "5.000" }, { KWD: "5.000" }),
+    ]),
+  );
+
+  it("keeps the wallet as its own row, its 0.004 included", () => {
+    const rows = flattenRows(selectTrialBalanceCategories("KWD", kwd), {
+      Assets: true,
+      "Assets:Wallet": true,
+    });
+    expect(rows.some((row) => row.account === "Assets:Wallet:Savings")).toBe(
+      true,
+    );
+    const own = rows.find((row) => row.own);
+    expect([own?.account, own?.value]).toEqual(["Assets:Wallet", 0.004]);
+    const leaves = rows
+      .filter((row) => row.depth > 0 && !row.hasChildren)
+      .map((row) => row.value);
+    expect(
+      Number(leaves.reduce((sum, value) => sum + value, 0).toFixed(3)),
+    ).toBe(15.004);
+  });
+
+  it("still folds a dollar parent's float residue at the half cent", () => {
+    const usd = trial(
+      node("Assets", {}, { USD: "10.00" }, [
+        node("Assets:Wallet", { USD: "0.001" }, { USD: "10.001" }, [
+          node("Assets:Wallet:Cash", { USD: "10.00" }, { USD: "10.00" }),
+        ]),
+      ]),
+    );
+    const rows = flattenRows(selectTrialBalanceCategories("USD", usd), {
+      Assets: true,
+    });
+    expect(rows.some((row) => row.own)).toBe(false);
+  });
+});

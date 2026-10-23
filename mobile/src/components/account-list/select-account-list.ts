@@ -1,7 +1,10 @@
 import { resolveCurrencyBalance } from "../../common/balance-util";
 import { notInTotalOf, type Holding } from "../../common/balance-display";
 import { dropRoot, leafName } from "../../common/account-util";
-import { getCurrencySymbol } from "../../common/currency-util";
+import {
+  currencyMinorUnits,
+  getCurrencySymbol,
+} from "../../common/currency-util";
 import { amountScale } from "../../common/number-utils";
 
 export type AccountNode = {
@@ -203,14 +206,17 @@ function sameWithin(tolerance: number): (a: number, b: number) => boolean {
 }
 
 /**
- * How close two balances in `currency` must be to count as one. Half a cent for
- * a known currency. A commodity the app has no symbol for (BTC as a ledger's
- * operating currency) is held at its own recorded digits instead: a flat half
- * cent folded a wallet's 0.004 BTC into nothing and left the rows short of their
- * total (w21/451). Never less than half a cent.
+ * How close two balances in `currency` must be to count as one. Half the minor
+ * unit of a known currency: a flat half cent folded a KWD wallet's own 0.004
+ * into its only child, and the rows read short of their parent (w21/808). A
+ * commodity the app has no symbol for (BTC as a ledger's operating currency)
+ * is held at its own recorded digits instead, and never less than half a cent:
+ * a flat half cent folded a wallet's 0.004 BTC into nothing (w21/451).
  */
 function amountTolerance(raw: readonly RawChild[], currency: string): number {
-  if (getCurrencySymbol(currency) !== "") return 0.005;
+  if (getCurrencySymbol(currency) !== "") {
+    return 0.5 * 10 ** -currencyMinorUnits(currency);
+  }
   let scale = 2;
   for (const node of rawNodes(raw)) {
     for (const balance of [node.balance_children, node.balance]) {
