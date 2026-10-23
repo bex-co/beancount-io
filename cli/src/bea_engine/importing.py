@@ -548,6 +548,7 @@ def answer(
     held: list[tuple[dict[str, Any], Any, str, str | None]] = []
     # The rows this import writes so far, which an assertion after them counts.
     included: list[Any] = []
+    balance_rows: list[tuple[dict[str, Any], Any]] = []
     for index, entry in enumerate(entries):
         entry = normalize_entry_strings(entry)
         status, reason, match = "new", None, None
@@ -786,15 +787,6 @@ def answer(
             )
             if blocked_reason is not None:
                 status, reason, include = "blocked", blocked_reason, False
-        padded = None
-        if include and isinstance(entry, Balance):
-            # Written through the batch validation, which a pad passes: a
-            # wrong statement amount in a currency an already used pad has not
-            # padded was filled with a backdated adjustment, exit 0 (w5/871).
-            padded = _padded_balance_reason(entry, [*existing, *included], options, ledger=file)
-            if padded is not None:
-                status, reason, include = "blocked", padded, False
-                padded_rows += 1
         if include:
             texts.append(text)
             included.append(entry)
@@ -822,9 +814,25 @@ def answer(
         if csv_mode:
             row_dict["rule"] = rule
         rows.append(row_dict)
-        # A padded assertion stays blocked: opening an account fixes nothing about it.
-        if status == "blocked" and padded is None:
+        if include and isinstance(entry, Balance):
+            balance_rows.append((row_dict, entry))
+        if status == "blocked":
             held.append((row_dict, entry, *unblocked))
+
+    # Written through the batch validation, which a pad passes: a wrong
+    # statement amount in a currency an already used pad has not padded was
+    # filled with a backdated adjustment, exit 0 (w5/871). Judged against the
+    # whole batch, not the rows visited before it: a newest-first export lists
+    # the assertion before the receipts it follows, and booked a stale 200 EUR
+    # as true while blocking the correct 250 EUR (w5/951).
+    for row_dict, balance in balance_rows:
+        padded = _padded_balance_reason(balance, [*existing, *included], options, ledger=file)
+        if padded is None:
+            continue
+        position = next(i for i, kept in enumerate(included) if kept is balance)
+        del included[position], texts[position]
+        row_dict.update(status="blocked", reason=padded, include=False)
+        padded_rows += 1
 
     # The ledger before the import is not the whole answer to "is this account
     # open": `auto_accounts` opens whatever a transaction posts to, and an
