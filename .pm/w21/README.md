@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [780](./780.md) — A commit diff draws an RTL account's amount inside the account path
 - [781](./781.md) — Account detail shows forecast and future-dated entries as booked (no Forecast badge, no Upcoming line)
 - [782](./782.md) — Account detail rounds an 18-decimal holding through a float, unlike the Accounts row
 - [783](./783.md) — VoiceOver reads a split's units chart as "+900.00%" though the visible row is neutral

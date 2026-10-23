@@ -27,6 +27,7 @@ import {
   type CommitFileRow,
   DiffLine,
 } from "./diff-utils";
+import { isolateSourceLine } from "@/common/bidi";
 import { LEADING_TEXT_ALIGN, letterSpacing, LTR_SOURCE } from "@/common/rtl";
 import {
   formatCommitAuthorLine,
@@ -214,7 +215,7 @@ function DiffLineView({ line }: { line: DiffLine }): JSX.Element {
   return (
     <View style={rowStyle}>
       <Text style={styles.diffText} selectable>
-        {line.content}
+        {isolateSourceLine(line.content)}
       </Text>
     </View>
   );

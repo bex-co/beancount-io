@@ -45,3 +45,31 @@ export function isolateAccountPath(path: string): string {
       .join(":"),
   );
 }
+
+/** A string (to its closing quote), a comment, or a word of ledger source. */
+const SOURCE_TOKEN = /"(?:[^"\\]|\\.)*"?|;.*|[^\s"]+/gu;
+const ACCOUNT_TOKEN = /^[^\s":]+(?::[^\s":]+)+$/u;
+/** A token's marks before its text, and a string's closing quote. */
+const TOKEN_TEXT = /^([^\p{L}\p{N}]*)(.*?)("?)$/su;
+
+/**
+ * A line of ledger source with its right-to-left words kept in place. Drawn
+ * raw, "Assets:Bank:بانک:ملی      100.00 USD" let the spaces and amount join
+ * the Arabic-script run, so the amount landed inside the path and the path
+ * read child first (w21/780). The text of each string, comment and word
+ * holding such letters goes in an isolate, an account root first
+ * (`isolateAccountPath`), and a left-to-right mark starts the line, as source
+ * is written. A line without them is returned as it is.
+ */
+export function isolateSourceLine(line: string): string {
+  if (!RTL_LETTERS.test(line)) return line;
+  const isolated = line.replace(SOURCE_TOKEN, (token) => {
+    if (!RTL_LETTERS.test(token)) return token;
+    if (ACCOUNT_TOKEN.test(token)) return isolateAccountPath(token);
+    // Outside the isolate, a comment's ";", a tag's "#" and a string's quotes
+    // stay where source puts them, before and after its text.
+    const [, marks = "", text = "", quote = ""] = TOKEN_TEXT.exec(token) ?? [];
+    return `${marks}⁨${text}⁩${quote}`;
+  });
+  return `‎${isolated}`;
+}

@@ -1,6 +1,11 @@
 import fs from "fs";
 import path from "path";
-import { isolateAccountPath, isolateLtr, isolateRtlSymbol } from "../bidi";
+import {
+  isolateAccountPath,
+  isolateLtr,
+  isolateRtlSymbol,
+  isolateSourceLine,
+} from "../bidi";
 
 // w21/095: in Persian, "مانده: -$1,234.50" rendered as `1,234.50$- :مانده`,
 // the sign and symbol pulled to the wrong side of the number.
@@ -167,5 +172,60 @@ describe("isolateAccountPath", () => {
         "account-picker-screen.tsx",
       ).includes("{isolateAccountPath(parent)}"),
     ).toBe(true);
+  });
+});
+
+// w21/780: a diff drew "Assets:Qa20261020Bank:بانک:ملی      100.00 USD" as
+// "Assets:Qa20261020Bank:100.00      ملی:بانک USD": the amount joined the
+// Arabic-script run, and the path read child first.
+describe("isolateSourceLine", () => {
+  const LRM = "‎";
+  const fsi = (text: string) => `⁨${text}⁩`;
+  const account = isolateAccountPath("Assets:Qa20261020Bank:بانک:ملی");
+
+  it("keeps a posting's amount after its account, the path root first", () => {
+    expect(
+      isolateSourceLine("-  Assets:Qa20261020Bank:بانک:ملی      100.00 USD"),
+    ).toBe(`${LRM}-  ${account}      100.00 USD`);
+    expect(
+      isolateSourceLine("-2026-01-01 open Assets:Qa20261020Bank:بانک:ملی USD"),
+    ).toBe(`${LRM}-2026-01-01 open ${account} USD`);
+  });
+
+  it("keeps a string, a comment and a tag whole, their marks outside", () => {
+    expect(isolateSourceLine('+2026-10-21 * "پرداخت قبض" ; یادداشت مهم')).toBe(
+      `${LRM}+2026-10-21 * "${fsi("پرداخت قبض")}" ; ${fsi("یادداشت مهم")}`,
+    );
+    expect(isolateSourceLine("+  #سفر ^پیوند")).toBe(
+      `${LRM}+  #${fsi("سفر")} ^${fsi("پیوند")}`,
+    );
+    expect(isolateSourceLine('+  memo: "خرید!"')).toBe(
+      `${LRM}+  memo: "${fsi("خرید!")}"`,
+    );
+  });
+
+  it("leaves a line without right-to-left letters as it is", () => {
+    for (const line of [
+      "-  Assets:Bank      100.00 USD",
+      '+2026-10-21 * "Café" ; note',
+      "",
+    ]) {
+      expect(isolateSourceLine(line)).toBe(line);
+    }
+  });
+
+  it("is what the commit diff draws each line through", () => {
+    const screen = fs.readFileSync(
+      path.join(
+        __dirname,
+        "..",
+        "..",
+        "screens",
+        "commit-detail-screen",
+        "commit-detail-screen.tsx",
+      ),
+      "utf8",
+    );
+    expect(screen.includes("{isolateSourceLine(line.content)}")).toBe(true);
   });
 });
