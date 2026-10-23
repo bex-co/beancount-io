@@ -1,4 +1,5 @@
 import type { RootNames } from "../../../common/account-root";
+import { entryRowSecondaryText } from "../../transactions-screen/entry-row/entry-row-secondary";
 import { isolateLtr } from "../../../common/bidi";
 import {
   currencyMinorUnits,
@@ -290,6 +291,17 @@ export function postingBasisText(
 
 export function selectTransactionTitle(txn: JournalTransaction): string {
   return txn.payee?.trim() || txn.narration?.trim() || "";
+}
+
+/**
+ * The line under the title: the narration when the payee is the title and the
+ * narration says something else. A payee of spaces, or one equal to the
+ * narration, left the title repeated beneath itself (w21/668).
+ */
+export function selectTransactionSubtitle(
+  txn: JournalTransaction,
+): string | null {
+  return entryRowSecondaryText(txn);
 }
 
 /** An overflow-menu action on the transaction detail screen. */

@@ -57,6 +57,7 @@ import {
   selectHeroAmount,
   selectPostingRows,
   selectTransactionMenuActions,
+  selectTransactionSubtitle,
   selectTransactionTitle,
   type TransactionMenuAction,
   userMetadataLines,
@@ -642,6 +643,7 @@ const TransactionDetailImpl = ({
   );
   const postingRows = selectPostingRows(entry);
   const title = selectTransactionTitle(entry) || t("transaction");
+  const subtitle = selectTransactionSubtitle(entry);
   const isPending = entry.flag === "!";
   const formattedDate = formatLedgerDate(entry.date.slice(0, 10), locale);
   const iconPostings = entry.postings.map((posting) => ({
@@ -751,8 +753,8 @@ const TransactionDetailImpl = ({
           >
             {hero.text}
           </AmountText>
-          {entry.payee && entry.narration ? (
-            <Text style={styles.heroSubtitle}>{entry.narration}</Text>
+          {subtitle ? (
+            <Text style={styles.heroSubtitle}>{subtitle}</Text>
           ) : null}
           <View style={styles.heroMeta}>
             <Ionicons

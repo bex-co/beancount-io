@@ -8,6 +8,7 @@ import {
   selectPostingRows,
   userMetadataLines,
   selectTransactionMenuActions,
+  selectTransactionSubtitle,
   selectTransactionTitle,
 } from "../select-transaction-detail";
 import { DirectiveType } from "../../../transactions-screen/types";
@@ -217,6 +218,29 @@ describe("selectPostingRows", () => {
   it("passes unparseable amounts through verbatim", () => {
     const [row] = selectPostingRows(txn([posting("Assets:X", "abc")]));
     expect(row).toEqual({ account: "Assets:X", amount: "abc USD", sign: 0 });
+  });
+});
+
+// w21/668: the narration repeated under a title that already was the narration.
+describe("selectTransactionSubtitle", () => {
+  it("shows the narration under a different payee", () => {
+    expect(
+      selectTransactionSubtitle(txn([], { payee: "Cafe", narration: "Lunch" })),
+    ).toBe("Lunch");
+  });
+
+  it("hides a narration the title already says", () => {
+    expect(
+      selectTransactionSubtitle(
+        txn([], { payee: " ", narration: "qa Coffee" }),
+      ),
+    ).toBe(null);
+    expect(
+      selectTransactionSubtitle(txn([], { payee: "AMZN", narration: "AMZN" })),
+    ).toBe(null);
+    expect(
+      selectTransactionSubtitle(txn([], { payee: "Cafe", narration: "" })),
+    ).toBe(null);
   });
 });
 
