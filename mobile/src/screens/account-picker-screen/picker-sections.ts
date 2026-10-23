@@ -255,7 +255,8 @@ export function withParentAccounts(accounts: readonly string[]): string[] {
  * parents too: "Food: 600 a month" across its children is the commonest budget,
  * the server rolls children up by prefix, and a budget's account need not be
  * opened itself, so `Expenses:Food` was reachable only through a spurious
- * `open` (w21/396). A posting gets only accounts open on its date.
+ * `open` (w21/396), and so are the roots (w21/876). A posting gets only
+ * accounts open on its date.
  */
 export function pickerAccounts(
   type: string,
@@ -265,5 +266,13 @@ export function pickerAccounts(
 ): string[] {
   if (type === "filter") return withParentAccounts(opened);
   const open = openOn(opened, onDate, closeDates);
-  return type === "budget" ? withParentAccounts(open) : open;
+  if (type !== "budget") return open;
+  // And the roots themselves, each ahead of its accounts: "Total monthly
+  // spending" budgets Expenses whole, and the server rolls its children up by
+  // prefix (w21/876).
+  const roots = [...new Set(open.map((account) => account.split(":")[0]!))];
+  return [
+    ...roots.filter((root) => !open.includes(root)),
+    ...withParentAccounts(open),
+  ];
 }

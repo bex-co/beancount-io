@@ -1,6 +1,7 @@
 import { groupAccountsByRoot } from "../../../common/ledger-meta-utils";
 import {
   ALL_ROOTS,
+  pickerAccounts,
   findAccountLocation,
   RECENT_LIMIT,
   showCreateAccountRow,
@@ -472,6 +473,36 @@ describe("the picker across Arabic-script spellings", () => {
   test("offers no Create below results that already hold the name", () => {
     expect(
       showCreateBelowResults("ملی", ["Assets:Qa20261020:بانك-ملي"], writer),
+    ).toBe(false);
+  });
+});
+
+// w21/876: searching "Expenses" in Add Budget listed only child accounts.
+describe("pickerAccounts for a budget", () => {
+  const open = ["Expenses:Food", "Expenses:Food:Groceries", "Income:Salary"];
+  const none = new Map() as never;
+
+  it("offers the roots ahead of the accounts under them", () => {
+    const list = pickerAccounts("budget", open, "2026-10-20", none);
+    expect(list.slice(0, 2)).toEqual(["Expenses", "Income"]);
+    expect(list.includes("Expenses:Food")).toBe(true);
+    expect(filterAccounts("Expenses", list)[0]).toBe("Expenses");
+  });
+
+  it("leaves a root the ledger opened itself as one row", () => {
+    const list = pickerAccounts(
+      "budget",
+      ["Expenses", "Expenses:Food"],
+      "2026-10-20",
+      none,
+    );
+    expect(list.filter((account) => account === "Expenses").length).toBe(1);
+  });
+
+  it("offers a posting no root", () => {
+    expect(pickerAccounts("from", open, "2026-10-20", none)).toEqual(open);
+    expect(
+      pickerAccounts("to", open, "2026-10-20", none).includes("Expenses"),
     ).toBe(false);
   });
 });

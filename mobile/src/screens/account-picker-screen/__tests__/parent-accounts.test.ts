@@ -82,6 +82,8 @@ describe("the accounts a budget picker offers", () => {
   it("includes the parent category, just before its first child", () => {
     const list = pickerAccounts("budget", opened, "2026-10-21", closeDates);
     expect(list).toEqual([
+      // The root, ahead of everything under it (w21/876).
+      "Expenses",
       "Expenses:Food",
       "Expenses:Food:Groceries",
       "Expenses:Food:Restaurants",
