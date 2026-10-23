@@ -12,6 +12,10 @@
 
 ## Inbox
 
+- [762](./762.md) — A budget whose cadence changed back-fills the first entry: Monthly $300 then Yearly reads "Budget $2,922.95 · Below target" for $400 spent
+- [763](./763.md) — An overspent $0 budget shows no progress bar on its Budget card, but a full red bar on Home
+- [764](./764.md) — On LY, a weekly budget's last bar is labelled "1/4" (2026), and VoiceOver reads the span as "1/5–1/4"
+- [765](./765.md) — A budget whose only entry is in the future highlights that entry as in effect while the card says "Starts"
 - [759](./759.md) — A recurring merchant says "Next Oct 21, 2026" on Oct 23: a past date stays "Next" for a quarter of the cycle
 - [760](./760.md) — Brand logos miss payees typed with a curly apostrophe ("Trader Joe’s", from iOS Smart Punctuation)
 - [761](./761.md) — A merchant whose entries are all scheduled shows its first date as if it already happened
