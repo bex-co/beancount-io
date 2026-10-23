@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [803](./803.md) — One transient server error turns off profile photos until restart
 - [804](./804.md) — A BTC budget reads green "On target" while showing 17% over (w21/290 regression)
 - [805](./805.md) — A KWD budget is prorated to cents, so on-target spending reads "Above target"
 - [806](./806.md) — Budgets on one account in two currencies cancel each other's status

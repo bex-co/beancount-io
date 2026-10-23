@@ -5,6 +5,7 @@ import {
   useCurrentUserQuery,
 } from "@/generated-graphql/graphql";
 import { userDisplayName } from "@/common/user-display";
+import { isUnsupportedDocumentError } from "@/common/graphql-unsupported";
 
 // Servers whose schema rejected `avatarUrl`. A rejected query is never
 // cached, so without this every mount would ask again and fail again.
@@ -24,8 +25,10 @@ export function useCurrentUser() {
   const { data: avatarData } = useCurrentUserAvatarQuery({
     skip: !session || serversWithoutAvatars.has(server),
     onError: (avatarError) => {
-      // Only a GraphQL answer means "unsupported"; a network failure may pass.
-      if (session && avatarError.graphQLErrors.length > 0) {
+      // Only a schema that rejects the field means "unsupported": a network
+      // failure, or a GraphQL-wrapped outage or rate limit, may pass, where
+      // one of those turned photos off until a restart (w21/803).
+      if (session && isUnsupportedDocumentError(avatarError)) {
         serversWithoutAvatars.add(server);
       }
     },

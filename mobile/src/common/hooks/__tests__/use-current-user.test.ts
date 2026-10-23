@@ -36,6 +36,8 @@ function loadHook(): () => any {
       if (id === "@apollo/client") return { useReactiveVar: () => session };
       if (id === "@/common/vars") return { sessionVar: {} };
       if (id === "@/common/user-display") return userDisplay;
+      if (id === "@/common/graphql-unsupported")
+        return require("../../graphql-unsupported");
       if (id === "@/generated-graphql/graphql")
         return {
           useCurrentUserQuery: (options: QueryOptions) => {
@@ -120,7 +122,9 @@ describe("useCurrentUser", () => {
   it("remembers the rejection per server", () => {
     const useCurrentUser = loadHook();
     useCurrentUser();
-    avatarOptions.onError!({ graphQLErrors: [{ message: "unknown field" }] });
+    avatarOptions.onError!({
+      graphQLErrors: [{ message: 'Cannot query field "avatarUrl"' }],
+    });
     session = { serverUrl: "https://ledger.example.test/" };
     useCurrentUser();
     expect(avatarOptions.skip).toBe(false);
@@ -134,11 +138,31 @@ describe("useCurrentUser", () => {
     expect(avatarOptions.skip).toBe(false);
   });
 
+  // w21/803: one outage or rate limit, a GraphQL error with HTTP 200, turned
+  // photos off until the app restarted.
+  for (const code of [
+    "SERVICE_UNAVAILABLE",
+    "RATE_LIMITED",
+    "INTERNAL_SERVER_ERROR",
+  ]) {
+    it(`keeps asking after a transient GraphQL failure (${code})`, () => {
+      const useCurrentUser = loadHook();
+      useCurrentUser();
+      avatarOptions.onError!({
+        graphQLErrors: [{ message: "Try again", extensions: { code } }],
+      });
+      useCurrentUser();
+      expect(avatarOptions.skip).toBe(false);
+    });
+  }
+
   it("treats a legacy session without serverUrl as one server", () => {
     session = {};
     const useCurrentUser = loadHook();
     useCurrentUser();
-    avatarOptions.onError!({ graphQLErrors: [{ message: "unknown field" }] });
+    avatarOptions.onError!({
+      graphQLErrors: [{ message: 'Cannot query field "avatarUrl"' }],
+    });
     useCurrentUser();
     expect(avatarOptions.skip).toBe(true);
   });
