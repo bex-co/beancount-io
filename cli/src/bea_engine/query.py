@@ -548,6 +548,9 @@ def _native_shell(source: str, *, interactive: bool, format: str, numberify: boo
 
     class GuardedShell(BQLShell):  # type: ignore[misc]
         source_file = file
+        # A Beancount source loads NFC-normalized (`compat`), so its commands are
+        # too; a CSV source stays raw text and is matched as written (w5/944).
+        reads_ledger = parts.scheme == "beancount"
         debug = False
         replaying_init = False
         ran_query = False
@@ -644,6 +647,8 @@ def _native_shell(source: str, *, interactive: bool, format: str, numberify: boo
             self.ran_query = True
             # Bea-only, so popped before upstream sees it (see PreciseShell).
             kwargs.pop("stored_name", None)
+            if self.reads_ledger and isinstance(query, str):
+                query = unicodedata.normalize("NFC", query)
             statement = query if isinstance(query, str) else ""
             if statement:
                 _refuse_statement_tail(statement)
@@ -658,6 +663,8 @@ def _native_shell(source: str, *, interactive: bool, format: str, numberify: boo
             # query opening with a comment, or a dash-leading string such as
             # `--output=main.bean` — and the one-shot then exited 0 with no
             # output. Hand it to the parser, which runs it or says why not.
+            if self.reads_ledger:
+                line = unicodedata.normalize("NFC", line)
             command_name, _, parsed = self.parseline(line)
             if parsed and not command_name:
                 return self.execute(parsed)
