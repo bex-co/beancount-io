@@ -247,7 +247,9 @@ export type AuthorizationDenyReason =
   | "unknown_action"
   | "unknown_resource"
   | "credential_not_permitted"
-  | "relationship_denied";
+  | "relationship_denied"
+  /** Denied, to a caller who can read the ledger: nothing to conceal (w23/069). */
+  | "insufficient_relationship";
 
 export type AuthorizationDecision =
   | {

@@ -628,6 +628,34 @@ describe("ledger lifecycle through actual adapters and workflow", () => {
         }
       },
     );
+    // w23/069: a reader was told "Ledger not found" about a ledger it reads.
+    it("tells a public-ledger reader that changing it needs admin access", async () => {
+      const f = await fixture({ ...identity, userId: "usr_bob" });
+      f.records.set("alice/main", {
+        ...seed,
+        private: false,
+        permissions: { admin: false, pull: true, push: false },
+      });
+      try {
+        expect((await f.call(surface, "read")).failed).toBe(false);
+        for (const [operation, doing] of [
+          ["update", "Changing the settings of"],
+          ["delete", "Deleting"],
+        ] as const) {
+          const response = await f.call(surface, operation);
+          expect(response.failed).toBe(true);
+          expect(response.error).toMatchObject({
+            code: "FORBIDDEN",
+            message: `${doing} alice/main requires admin access to it`,
+          });
+          if ("status" in response) expect(response.status).toBe(403);
+        }
+        expect(f.remove).not.toHaveBeenCalled();
+        expect(f.records.get("alice/main")?.description).toBe("books");
+      } finally {
+        await f.close();
+      }
+    });
     it("keeps credential denials distinct from missing ledgers", async () => {
       const f = await fixture({ ...identity, scopes: new Set() });
       try {

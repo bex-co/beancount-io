@@ -460,7 +460,8 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
   });
   it.each([
     { identity: token("alice", "ledger.read"), status: 403 },
-    { identity: token("café+ops"), status: 404 },
+    // A read collaborator sees the ledger, so is told why (w23/069).
+    { identity: token("café+ops"), status: 403 },
     { identity: token("alice", "ledger.admin", "other/main"), status: 403 },
   ])(
     "denies insufficient scope, relationship, or ledger pin",
@@ -807,6 +808,82 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
         message: "No such user: zz-ghost",
       });
       expect(f.members.size).toBe(2);
+    } finally {
+      await f.close();
+    }
+  });
+  // w23/069: a caller who can read the ledger was told it was not found by
+  // every collaborator action, and concluded it was gone.
+  it.each([
+    ["a public-ledger reader", token("carol"), true],
+    ["a read collaborator", token("café+ops"), false],
+  ] as const)(
+    "tells %s that collaborators need admin access, on every surface",
+    async (_caller, identity, publicLedger) => {
+      const f = await fixture(identity, { publicLedger });
+      const refusal = {
+        code: "FORBIDDEN",
+        message: expect.stringMatching(
+          /collaborator.* alice\/main requires admin access to it$/,
+        ),
+      };
+      try {
+        for (const [path, field] of [
+          [
+            "collaborators",
+            'listLedgerCollaborators(ledgerId:"alice/main"){login}',
+          ],
+          [
+            "collaborators/permission?collaborator=bob",
+            'getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:"bob"){permission}',
+          ],
+        ]) {
+          const rest = await f.request(path);
+          expect(rest.status).toBe(403);
+          expect(await rest.json()).toMatchObject({ error: refusal });
+          await expect(f.read(path)).rejects.toThrow(/requires admin access/);
+          const gql = await f.gql(`{${field}}`);
+          expect(gql.errors?.[0].originalError).toMatchObject({
+            category: "FORBIDDEN",
+            message: refusal.message,
+          });
+        }
+        for (const surface of surfaces) {
+          for (const [operation, permission] of [
+            ["update", "read"],
+            ["delete", undefined],
+          ] as const) {
+            const outcome = await f.write(
+              surface,
+              operation,
+              "bob",
+              permission,
+            );
+            expect(outcome.failed).toBe(true);
+            if (surface === "rest") {
+              expect(outcome.data).toMatchObject({ error: refusal });
+            }
+          }
+        }
+        expect(f.update).not.toHaveBeenCalled();
+        expect(f.remove).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  it("still answers who cannot see a private ledger that it is not found", async () => {
+    const f = await fixture(token("carol"));
+    try {
+      const rest = await f.request("collaborators");
+      expect(rest.status).toBe(404);
+      expect(await rest.json()).toMatchObject({
+        error: { code: "NOT_FOUND", message: "Ledger not found" },
+      });
+      const outcome = await f.write("rest", "delete", "bob");
+      expect(outcome.data).toMatchObject({
+        error: { code: "NOT_FOUND", message: "Ledger not found" },
+      });
     } finally {
       await f.close();
     }

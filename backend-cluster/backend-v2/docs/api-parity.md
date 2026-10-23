@@ -164,6 +164,14 @@ scope and ledger-pin denials remain forbidden; unavailable authorization
 sources remain service-unavailable errors. Denied anonymous reads keep their
 authentication-required response. No relationship grant changes.
 
+Administration and collaborator operations (`updateLedger`, `deleteLedger`,
+listing, reading, setting and removing collaborators) conceal a denial only from
+a caller who cannot read the ledger. One who can — a public ledger's reader, a
+read collaborator — gets `FORBIDDEN` naming the authority it lacks, such as
+"Managing collaborators on alice/main requires admin access to it", because
+"Ledger not found" about a ledger it just read hides nothing and misleads it
+(w23/069). Leaving keeps its own refusals (w23/063).
+
 ## Explicit file-write byte limits
 
 GraphQL `createLedgerFile` and `updateLedgerFile`, REST `PUT …/files/{path}`,
@@ -338,8 +346,9 @@ uses the real workflow, PDP, and source-backed relationship evaluator with
 controlled upstream membership data. It verifies persisted membership effects,
 subsequent revocation, owner-leave refusal, tier limits, default permissions,
 encoded identifiers, pagination, scope/pin ceilings, and source outages.
-Relationship denials retain the existing 404 concealment, while credential
-failures are 403. The existing missing-member and partial permission-fetch
+Relationship denials retain the existing 404 concealment for a caller who
+cannot read the ledger, and are 403 for one who can; credential failures are
+403. The existing missing-member and partial permission-fetch
 behavior is preserved rather than replaced by a transport-specific fallback.
 
 SSH public-key list/get/create/delete now have REST and MCP bindings through

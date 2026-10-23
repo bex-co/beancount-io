@@ -612,6 +612,64 @@ describe("AuthorizationService", () => {
     }
   });
 
+  // w23/069: "Ledger not found" told a reader that a ledger it had just read
+  // was gone. Leave keeps its own refusal (w23/063).
+  it.each(
+    LEDGER_ADMIN_ACTIONS.filter(
+      ([action]) => action !== AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE,
+    ),
+  )(
+    "refuses %s to a caller who can read the ledger, naming admin access",
+    async (action, relation) => {
+      const relationships = {
+        check: jest.fn(
+          async ({ relation: asked }: { relation: string }) =>
+            asked === LEDGER_RELATIONSHIPS.READ_CONTENTS,
+        ),
+      };
+      const service = new AuthorizationService(relationships);
+      const input = {
+        principal: identity("oauth", "usr_alice", ["ledger.admin"]),
+        action,
+        resource: ledgerResource("open_ledger/3m"),
+      };
+      await expect(service.authorize(input)).resolves.toMatchObject({
+        allowed: false,
+        reason: "insufficient_relationship",
+      });
+      await expect(service.authorizeOrThrow(input)).rejects.toMatchObject({
+        category: ErrorCategory.FORBIDDEN,
+        message: expect.stringMatching(
+          /^\w.* open_ledger\/3m requires admin access to it$/,
+        ),
+      });
+      expect(relationships.check).toHaveBeenCalledWith(
+        expect.objectContaining({ relation }),
+      );
+    },
+  );
+
+  it("keeps concealing a denial when the reader check is unavailable", async () => {
+    const service = new AuthorizationService({
+      check: async ({ relation }) => {
+        if (relation === LEDGER_RELATIONSHIPS.READ_CONTENTS) {
+          throw new Error("source unavailable");
+        }
+        return false;
+      },
+    });
+    await expect(
+      service.authorizeOrThrow({
+        principal: identity("oauth", "usr_alice", ["ledger.admin"]),
+        action: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+        resource: ledgerResource("alice/private"),
+      }),
+    ).rejects.toMatchObject({
+      category: ErrorCategory.NOT_FOUND,
+      message: "Ledger not found",
+    });
+  });
+
   it.each(LEDGER_CONTENT_READ_ACTIONS)(
     "conceals relationship denials but preserves credential denials for %s",
     async (action) => {

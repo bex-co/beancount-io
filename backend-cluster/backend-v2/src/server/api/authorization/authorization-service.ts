@@ -83,6 +83,12 @@ interface ActionRequirement {
   readonly credential: CredentialRequirement;
   readonly auditClass: AuditClass;
   readonly concealDenialAs?: DenialConcealment;
+  /**
+   * The refusal for a caller who can read the ledger: concealing it as "Ledger
+   * not found" hides nothing from them, and says a ledger they just read is
+   * gone (w23/069).
+   */
+  readonly deniedToReader?: (ledgerId: string) => string;
 }
 
 const EVERY_CREDENTIAL = ["session", "oauth", "apikey"] as const;
@@ -144,6 +150,9 @@ const USER_CONTROL_PLANE_CREDENTIAL: CredentialRequirement = {
   methods: EVERY_CREDENTIAL,
   capability: "admin",
 };
+
+const requiresLedgerAdmin = (doing: string) => (ledgerId: string) =>
+  `${doing} ${ledgerId} requires admin access to it`;
 
 const LEDGER_NOT_FOUND_CONCEALMENT: DenialConcealment = {
   reasons: ["relationship_denied", "unknown_resource"],
@@ -422,6 +431,7 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+    deniedToReader: requiresLedgerAdmin("Changing the settings of"),
   },
   [AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE]: {
     relationships: [
@@ -430,6 +440,7 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+    deniedToReader: requiresLedgerAdmin("Deleting"),
   },
   [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LIST]: {
     relationships: [
@@ -438,6 +449,7 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+    deniedToReader: requiresLedgerAdmin("Listing the collaborators of"),
   },
   [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_PERMISSION_READ]: {
     relationships: [
@@ -446,6 +458,7 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+    deniedToReader: requiresLedgerAdmin("Reading collaborator permissions on"),
   },
   [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_UPDATE]: {
     relationships: [
@@ -454,6 +467,7 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+    deniedToReader: requiresLedgerAdmin("Managing collaborators on"),
   },
   [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_DELETE]: {
     relationships: [
@@ -462,6 +476,7 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+    deniedToReader: requiresLedgerAdmin("Managing collaborators on"),
   },
   [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE]: {
     relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.LEAVE)],
@@ -1103,11 +1118,19 @@ export class AuthorizationService implements IAuthorizationService {
       }
 
       if (!relationshipAllowed) {
-        return deny("relationship_denied", {
-          auditClass: requirement.auditClass,
-          failedResourceType: group.resourceType,
-          ledgerId: auditLedgerId,
-        });
+        const readerMessage =
+          group.resourceType === "ledger" && ledger
+            ? await this.deniedToReader(requirement, userId, ledger)
+            : undefined;
+        return deny(
+          readerMessage ? "insufficient_relationship" : "relationship_denied",
+          {
+            ...(readerMessage && { message: readerMessage }),
+            auditClass: requirement.auditClass,
+            failedResourceType: group.resourceType,
+            ledgerId: auditLedgerId,
+          },
+        );
       }
     }
 
@@ -1117,6 +1140,28 @@ export class AuthorizationService implements IAuthorizationService {
       requirement.auditClass,
       auditLedgerId,
     );
+  }
+
+  /**
+   * The action's refusal for a caller who can read the ledger, or nothing to
+   * keep the denial concealed. An outage reading that keeps it concealed too.
+   */
+  private async deniedToReader(
+    requirement: ActionRequirement,
+    userId: string,
+    ledger: { raw: AuthorizationResource; id: string },
+  ): Promise<string | undefined> {
+    if (!requirement.deniedToReader) return undefined;
+    try {
+      const readable = await this.relationships.check({
+        user: userResource(userId),
+        relation: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+        object: ledger.raw,
+      });
+      return readable ? requirement.deniedToReader(ledger.id) : undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   private finish<TDecision extends AuthorizationDecision>(
