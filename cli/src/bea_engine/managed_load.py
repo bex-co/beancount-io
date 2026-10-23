@@ -648,6 +648,8 @@ def _cached_managed_load(cache: Path, fingerprint: str) -> tuple[list[Any], list
     plugins = stored.get("plugins") or {}
     if plugins.get("modules") != _plugin_fingerprint(plugins.get("names", []), plugins.get("pythonpath", [])):
         return None
+    if _helpers_changed(plugins.get("helpers")):
+        return None
     entries, errors, options = stored["result"]
     if _documents_moved(entries, errors, options):
         return None
@@ -674,7 +676,12 @@ def _store_managed_load(
         return
     names = sorted({str(name) for name, _config in options.get("plugin") or ()})
     paths = [str(directory) for directory in options.get("pythonpath") or ()]
-    plugins = {"names": names, "pythonpath": paths, "modules": _plugin_fingerprint(names, paths)}
+    plugins = {
+        "names": names,
+        "pythonpath": paths,
+        "modules": _plugin_fingerprint(names, paths),
+        "helpers": _helper_fingerprint(options),
+    }
     try:
         payload = pickle.dumps({"fingerprint": fingerprint, "plugins": plugins, "result": (entries, errors, options)})
         cache.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -1169,6 +1176,7 @@ def _mark_engine_cache(cache: Path, options: Any) -> None:
         "names": names,
         "pythonpath": paths,
         "modules": _plugin_fingerprint(names, paths),
+        "helpers": _helper_fingerprint(options),
         "date": date.today().isoformat(),
     }
     try:
@@ -1217,11 +1225,59 @@ def _plugin_fingerprint(names: list[str], pythonpath: list[str]) -> list[list[An
         sys.path[:] = saved
 
 
+def _helper_fingerprint(options: Any) -> list[list[Any]]:
+    """The local Python files this load imported, each with its stat.
+
+    A plugin's output depends on whatever it imports, not only on its own
+    module: editing `fee_math.py` under an unchanged `fees.py` kept serving the
+    old calculation from the cache (w5/952). "Local" is a file under the
+    ledger's directory or its `pythonpath`, so the standard library and
+    installed packages are not fingerprinted. Read at the cold load, which is
+    the process that imported them.
+    """
+    roots: list[str] = []
+    filename = options.get("filename")
+    if isinstance(filename, str) and filename:
+        roots.append(os.path.dirname(os.path.realpath(filename)))
+    roots.extend(os.path.realpath(str(directory)) for directory in options.get("pythonpath") or ())
+    found: dict[str, list[Any]] = {}
+    for module in list(sys.modules.values()):
+        origin = getattr(module, "__file__", None)
+        if not isinstance(origin, str) or not origin.endswith(".py"):
+            continue
+        real = os.path.realpath(origin)
+        if not any(real == root or real.startswith(root + os.sep) for root in roots):
+            continue
+        try:
+            info = os.stat(real)
+        except OSError:
+            continue
+        found[real] = [real, [info.st_mtime_ns, info.st_size]]
+    return [found[path] for path in sorted(found)]
+
+
+def _helpers_changed(helpers: Any) -> bool:
+    """Whether a recorded helper module is gone or differs now; a record without any is as before."""
+    if not helpers:
+        return False
+    for path, recorded in helpers:
+        try:
+            info = os.stat(path)
+        except OSError:
+            return True
+        if recorded != [info.st_mtime_ns, info.st_size]:
+            return True
+    return False
+
+
 def _plugins_changed(cache: Path) -> bool:
     """Whether a plugin module the cached load ran now resolves elsewhere, differs, or is gone."""
     try:
         record = _plugin_record(cache)
-        return bool(record["modules"] != _plugin_fingerprint(record["names"], record["pythonpath"]))
+        return bool(
+            record["modules"] != _plugin_fingerprint(record["names"], record["pythonpath"])
+            or _helpers_changed(record.get("helpers"))
+        )
     except (OSError, ValueError, KeyError, TypeError):
         return True
 
