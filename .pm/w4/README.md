@@ -64,7 +64,6 @@
 
 - [978 — Keep Budget variance tolerance below visible differences](./978.md) — minor; modeled read fixtures against deployed dashboard,2026-10-22; exact ±1 USD deltas become On target/zero at a large target, both-width +1 and boundary controls confirmed; regression of130, no writes.
 
-- [977 — Let the shared Dialog hold dismissal while a write is pending](./977.md) — maintenance; w4/m47 simplify altitude review, 2026-10-22; six dialogs copy the pending close guard and treat the Close button inconsistently; one Dialog prop would own it.
 
 
 
