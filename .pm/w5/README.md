@@ -40,6 +40,7 @@
 - [988 — Recognize compact option and plugin declarations when choosing a root](./988.md) — major CLI wrong-context balance write/refusal; native compact settings are missed, reproduced 2026-10-22.
 - [989 — Find account-providing roots for flagged postings](./989.md) — minor CLI false refusal; native posting flags hide unopened accounts from plugin-root discovery, reproduced 2026-10-22.
 - [990 — Keep adjacent ticker text out of the account tree](./990.md) — minor CLI rendering defect; a bare ticker consumes the next account candidate during tree-column selection, reproduced 2026-10-22.
+- [991 — Compare source amounts when a plugin changes posting count](./991.md) — major CLI follow-up to completed 937; a calculated split copy passes as written and falsely skips a changed bank amount, reproduced 2026-10-22.
 - [986 — Reject day 366 in a non-leap CSV year](./986.md) — minor CLI date-validation gap; an explicit ordinal date in 2023 is accepted and written as January 1, 2024, reproduced 2026-10-22.
 - [985 — Keep transaction details parseable when redirected](./985.md) — minor CLI follow-up to completed 834; bare source-location headings make the full details stream fail native parsing, reproduced 2026-10-22.
 - [984 — Preserve account names when discovering documents](./984.md) — minor CLI inherited directory-walker NFKC mismatch; valid ligature/full-width account folders lose automatic receipts and doctor reports undeclared ASCII names, reproduced 2026-10-22.
