@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1009 — Compose historical lot-label and compound-cost import-ID spellings](./1009.md) — minor CLI compatibility regression after completed 999/1003; an unchanged historical trade needs review only when both old spellings coexist, reproduced 2026-10-23.
+
 - [1008 — Reject conflicting imported balance assertions from authored facts](./1008.md) — minor CLI gap after completed 993; filtered/transformed native imports write incompatible same-day declarations that plain native loading refuses, reproduced 2026-10-23.
 
 - [1007 — Preserve valid bulk plans across existing balance assertions](./1007.md) — major CLI residual after completed 1002; invalid intermediate prefixes change a stock lot or falsely refuse a valid offsetting-gains batch, reproduced 2026-10-23.
