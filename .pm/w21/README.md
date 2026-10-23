@@ -12,6 +12,10 @@
 
 ## Inbox
 
+- [675](./675.md) — A pad that isn't needed at its first balance silently hides a later failing balance: no error, no Off-by, bell at 0
+- [676](./676.md) — w21/135 follow-up: padding dropped for being within tolerance still counts when the next balance is checked
+- [677](./677.md) — A failing balance gets no "Off by" when another assertion on the account has the same amount
+- [678](./678.md) — A sale whose lot doesn't match is still counted in every balance, so the books don't balance
 - [674](./674.md) — Since w21/641, Home's net worth leaves out next month's entries while the Accounts tab includes them
 - [672](./672.md) — Deleting one of two same-day twin entries shifts the other onto its ID, so a stale screen's Delete silently removes the survivor
 - [673](./673.md) — New Transaction appends LF lines to a CRLF ledger file (add-path sibling of w21/252 and w21/062)
