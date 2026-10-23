@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1008 — Reject conflicting imported balance assertions from authored facts](./1008.md) — minor CLI gap after completed 993; filtered/transformed native imports write incompatible same-day declarations that plain native loading refuses, reproduced 2026-10-23.
+
 - [1007 — Preserve valid bulk plans across existing balance assertions](./1007.md) — major CLI residual after completed 1002; invalid intermediate prefixes change a stock lot or falsely refuse a valid offsetting-gains batch, reproduced 2026-10-23.
 
 - [1006 — Use effective unit costs when recognizing total-cost short covers](./1006.md) — major CLI regression after completed 1001; the new predicate ignores a total/compound component, changes the cover label and strands offsetting lots, reproduced 2026-10-23.
