@@ -339,7 +339,7 @@ export const sk: Translations = {
   // transactions filter modal
   filters: "Filtre",
   filtersActive: "Aktívne: {{count}}",
-  clearAccount: "Vymazať účet",
+  clearAccount: "Zrušiť výber účtu",
   filterStatus: "Stav",
   filterDateRange: "Obdobie",
   filterDateRangeInvalid:
