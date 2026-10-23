@@ -4,7 +4,6 @@ import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerIncomeStatementDocument } from "@/graphql/definitions";
 import type { ChartInterval } from "@/common/types/chart";
-import type { ChartMode } from "./chart-mode-select";
 import { incomeStatementQueryDefaults } from "./constants";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
@@ -27,7 +26,12 @@ import { useReportConversion } from "@/features/reports/components/use-report-co
 import { selectSettledReportData } from "@/features/reports/lib/select-settled-report-data";
 import { useUrlView } from "@/common/hooks/use-url-view";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
-import { INCOME_STATEMENT_VIEWS, DEFAULT_VIEW } from "./search";
+import {
+  CHART_MODES,
+  DEFAULT_CHART_MODE,
+  DEFAULT_VIEW,
+  INCOME_STATEMENT_VIEWS,
+} from "./search";
 
 /**
  * Income Statement page component
@@ -63,7 +67,14 @@ export default function LedgerIncomeStatementPage() {
     INCOME_STATEMENT_VIEWS,
     DEFAULT_VIEW,
   );
-  const [chartMode, setChartMode] = useState<ChartMode>("stacked");
+  // The bar mode is the same kind of preference, so it lives there too
+  // (w4/998).
+  const [chartMode, setChartMode] = useUrlView(
+    "/ledger/$ledgerOwner/$ledgerName/income-statement",
+    CHART_MODES,
+    DEFAULT_CHART_MODE,
+    "mode",
+  );
 
   const {
     data,

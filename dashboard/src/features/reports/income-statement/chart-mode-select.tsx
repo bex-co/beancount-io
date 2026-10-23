@@ -7,8 +7,9 @@ import {
 } from "@/common/components/ui/select.tsx";
 import type { ComponentProps } from "react";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
+import type { CHART_MODES } from "./search";
 
-export type ChartMode = "stacked" | "single";
+export type ChartMode = (typeof CHART_MODES)[number];
 
 interface ChartModeSelectProps {
   value: ChartMode;

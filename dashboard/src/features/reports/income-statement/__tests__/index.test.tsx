@@ -134,4 +134,38 @@ describe("LedgerIncomeStatementPage chart selection lifetime", () => {
     rerender(<LedgerIncomeStatementPage />);
     expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("income");
   });
+
+  it("keeps the bar mode when a shared scope change remounts the page (w4/998)", () => {
+    settled();
+    const first = render(<LedgerIncomeStatementPage />);
+    expect(captureProps.mock.calls.at(-1)![0].chartMode).toBe("stacked");
+    act(() => {
+      captureProps.mock.calls.at(-1)![0].onSelectedTabChange("expenses");
+      captureProps.mock.calls.at(-1)![0].onChartModeChange("single");
+    });
+    first.rerender(<LedgerIncomeStatementPage />);
+    expect(captureProps.mock.calls.at(-1)![0].chartMode).toBe("single");
+    // The default leaves the URL clean; a choice is spelled out.
+    expect(routerSearch.current).toMatchObject({
+      view: "expenses",
+      mode: "single",
+    });
+
+    // A Time edit replaces the layout's Outlet: the whole page unmounts.
+    first.unmount();
+    render(<LedgerIncomeStatementPage />);
+    const props = captureProps.mock.calls.at(-1)![0];
+    expect(props.chartMode).toBe("single");
+    expect(props.selectedTab).toBe("expenses");
+
+    act(() => props.onChartModeChange("stacked"));
+    expect(routerSearch.current.mode).toBeUndefined();
+  });
+
+  it("falls back to stacked bars for an unknown mode in the URL", () => {
+    routerSearch.current = { mode: "pie" };
+    settled();
+    render(<LedgerIncomeStatementPage />);
+    expect(captureProps.mock.calls.at(-1)![0].chartMode).toBe("stacked");
+  });
 });
