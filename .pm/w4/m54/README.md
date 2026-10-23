@@ -2,7 +2,7 @@
 
 **Worker:** worker1 **Goal:** readers can account for every side of the Cash Flow hub in the reproduced refund and deficit cases **Status:** todo
 
-Minor dashboard finding. Approximately2h55m across signed expense links, deficit funding and verification; it exceeds the inbox-note threshold. See [FINDINGS](./FINDINGS.md). The separate [m53](../m53/README.md) owns exact decimal text/arithmetic, not this missing-flow policy.
+Minor dashboard finding. Approximately2h55m across signed expense links, deficit funding and verification; it exceeds the inbox-note threshold. See [FINDINGS](./FINDINGS.md). The separate [m53](../done/m53/README.md) owns exact decimal text/arithmetic, not this missing-flow policy.
 
 ## Tasks (in order)
 

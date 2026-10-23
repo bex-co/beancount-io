@@ -1,6 +1,6 @@
 # Overview chart amounts lose source digits
 
-**Minor · dashboard · A2/A3.** Residual of [1015](../done/1015.md)'s source-precision work in a separate pipeline. Both actual renderers and their readable Breakdown lose commodity fractions, and the pie loses an integer digit before formatting. No product fix implemented.
+**Minor · dashboard · A2/A3.** Residual of [1015](../1015.md)'s source-precision work in a separate pipeline. Both actual renderers and their readable Breakdown lose commodity fractions, and the pie loses an integer digit before formatting. No product fix implemented.
 
 ## Reproducer
 
@@ -32,7 +32,7 @@ Running `https://beancount.io`, isolated headless Chromium156.0.8078.47, English
 
 Both fixtures parse without errors. The actual producer preserves all four own balances as decimal strings and their correct totals through each monthly point. Independent Python Beancount/Decimal sums agree. Read-only ECharts observation after animation confirms the bar still holds numeric4.00995/−0.00001, while pie data has already become9007199254740992/1. Native hovers yield the table above; the complete actual tooltip strings are retained locally.
 
-All four chart-card images were visually inspected. The long pie tooltip extends outside the card in those images; complete text was read from its actual DOM. Tooltip geometry is outside this precision repair and overlaps the existing [127](../done/127.md) class; no additional clipping issue is filed. Both narrow table amounts remain reachable, though the wrong large value wraps across lines.
+All four chart-card images were visually inspected. The long pie tooltip extends outside the card in those images; complete text was read from its actual DOM. Tooltip geometry is outside this precision repair and overlaps the existing [127](../127.md) class; no additional clipping issue is filed. Both narrow table amounts remain reachable, though the wrong large value wraps across lines.
 
 All four contexts closed, root context only; twelve modeled HTTP200 results, zero hosted writes/mutations, page/route errors or modeled-route diagnostics. Other widgets' served commodity formatting can still predate1015; that deployment state is not being reopened here.
 
@@ -50,7 +50,7 @@ Actual native asset `ledger._ledgerOwner._ledgerName.index-Dt5Wt5tH.js`: **whole
 
 ## Dedupe, scope and artifacts
 
-All board states and targeted distribution/quantity/precision searches were checked. [W3/627](../../w3/done/627.md) fixed floating residue and locale formatting in three tables, retaining the numeric source; its source-driven commodity case was not exercised. m21 fixed unit separation, m52 and1015 exact card text, and1001 the separate shared LineChart text pipeline. None preserves decimals in these distribution items/grouping/renderers. No matching open distribution precision repair was found. Record a residual of1015, without reopening those completed scopes.
+All board states and targeted distribution/quantity/precision searches were checked. [W3/627](../../../w3/done/627.md) fixed floating residue and locale formatting in three tables, retaining the numeric source; its source-driven commodity case was not exercised. m21 fixed unit separation, m52 and1015 exact card text, and1001 the separate shared LineChart text pipeline. None preserves decimals in these distribution items/grouping/renderers. No matching open distribution precision repair was found. Record a residual of1015, without reopening those completed scopes.
 
 This needs data/grouping and renderer changes plus meaningful regression/native coverage, so it is a milestone rather than a sub-hour note. Dashboard only; no backend/API/dependency change, new unit preference, persistent state or product flow is needed. The original distribution cases did not establish Income-vs-expenses or Sankey precision; the independent extension below now does.
 
