@@ -1755,6 +1755,75 @@ async function main(): Promise<void> {
     autoParent.length === 0,
     `auto_accounts opens an account named only by its close (got ${JSON.stringify(autoParent)})`,
   );
+  // w21/775: declared before auto_accounts, close_tree sees only the written
+  // opens: it closes no child the source does not open, and drops the close
+  // of a parent the source does not open, as bean-check 3.2.3 does.
+  const buyThenClose = [
+    '2024-01-02 * "Buy"',
+    "  Assets:Broker:VTI  1 USD",
+    "  Assets:Cash",
+    "2024-04-01 close Assets:Broker",
+  ];
+  const lateBuy = ['2024-05-01 * "Late"', "  Assets:Broker:VTI  1 USD", "  Assets:Cash"];
+  for (const [plugins, expected] of [
+    [["close_tree", "auto_accounts"], []],
+    [
+      ["auto_accounts", "close_tree"],
+      [
+        "E1003@7 Posting to inactive account Assets:Broker:VTI on 2024-05-01 (closed on 2024-04-01)",
+      ],
+    ],
+  ] as const) {
+    const ordered = await closeTree([
+      ...plugins.map((name) => `plugin "beancount.plugins.${name}"`),
+      ...buyThenClose,
+      ...lateBuy,
+    ]);
+    assert(
+      JSON.stringify(ordered) === JSON.stringify(expected),
+      `close_tree runs at its place in the plugin order (${plugins.join(", ")}: got ${JSON.stringify(ordered)})`,
+    );
+  }
+  const padAfterDroppedClose = await closeTree([
+    'plugin "beancount.plugins.close_tree"',
+    'plugin "beancount.plugins.auto_accounts"',
+    ...buyThenClose,
+    "2024-05-01 pad Assets:Broker:VTI Assets:Cash",
+    "2024-05-02 balance Assets:Broker:VTI 5 USD",
+  ]);
+  assert(
+    padAfterDroppedClose.length === 0,
+    `a pad into a child close_tree did not close passes (got ${JSON.stringify(padAfterDroppedClose)})`,
+  );
+  const unopenedParent = await closeTree([
+    'plugin "beancount.plugins.close_tree"',
+    "2024-01-01 open Assets:Broker:VTI",
+    "2024-01-01 open Assets:Cash",
+    "2024-04-01 close Assets:Broker",
+    ...lateBuy,
+  ]);
+  assert(
+    JSON.stringify(unopenedParent) ===
+      JSON.stringify([
+        "E1003@5 Posting to inactive account Assets:Broker:VTI on 2024-05-01 (closed on 2024-04-01)",
+      ]),
+    `close_tree closes the children of a parent never opened, and not the parent (got ${JSON.stringify(unopenedParent)})`,
+  );
+  const droppedParent = await closeTree([
+    'plugin "beancount.plugins.close_tree"',
+    'plugin "beancount.plugins.auto_accounts"',
+    '2024-01-02 * "Buy"',
+    "  Assets:Broker  1 USD",
+    "  Assets:Cash",
+    "2024-04-01 close Assets:Broker",
+    '2024-05-01 * "Late"',
+    "  Assets:Broker  1 USD",
+    "  Assets:Cash",
+  ]);
+  assert(
+    droppedParent.length === 0,
+    `a close close_tree drops refuses nothing (got ${JSON.stringify(droppedParent)})`,
+  );
   // w21/753: a child opened after its parent's close stays active, as
   // Beancount's date-ordered check leaves it, with bean-check's one error for
   // the close close_tree dated before the open.

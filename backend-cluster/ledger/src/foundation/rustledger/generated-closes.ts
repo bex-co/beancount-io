@@ -1,9 +1,45 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
-import { closeLocations, entryLocator, indexBlocks } from "./block-index";
+import {
+  closeLocations,
+  entryLocator,
+  indexBlocks,
+  openLocations,
+} from "./block-index";
+import { collectLedgerPlugins } from "./plugins/collect-plugins";
 import { includeTraversalOrder } from "./source-slice";
 
 /** A posting line's account, after its flag if it has one. */
 const POSTING = /^\s+(?:[*!&#?%]\s*|[PSTCURM]\s+)?(\S+)/u;
+
+/** The plugins that open every account a directive names. */
+const OPENS_EVERY_ACCOUNT = new Set([
+  "beancount.plugins.auto_accounts",
+  "beancount.plugins.auto",
+]);
+
+/**
+ * Whether Beancount keeps a close of the account, written or close_tree's.
+ * close_tree runs at its place among the plugins and sees the accounts opened
+ * by then: the written opens, or every account once auto_accounts has run. It
+ * closes only those children, and drops the close of a parent not among them,
+ * so declared before auto_accounts it keeps no close of an account the source
+ * does not open (w21/775). Every close stands without close_tree.
+ */
+function closeTreeKeeps(
+  files: FileMap,
+  entryPoint: string,
+): (account: string) => boolean {
+  const plugins = collectLedgerPlugins(files[entryPoint]);
+  const at = plugins.indexOf("beancount.plugins.close_tree");
+  if (
+    at === -1 ||
+    plugins.slice(0, at).some((name) => OPENS_EVERY_ACCOUNT.has(name))
+  ) {
+    return () => true;
+  }
+  const opened = openLocations(files, entryPoint);
+  return (account) => opened.has(account);
+}
 
 /**
  * Postings after a close the source does not write: one `close_tree` adds for
@@ -27,6 +63,7 @@ export function inactiveAfterGeneratedCloses(
   entryPoint: string,
 ): BeancountError[] {
   const written = closeLocations(files, entryPoint);
+  const keeps = closeTreeKeeps(files, entryPoint);
   const openedOn = new Map<string, string>();
   for (const directive of directives) {
     if (directive.type === "open" && !openedOn.has(directive.account)) {
@@ -36,7 +73,13 @@ export function inactiveAfterGeneratedCloses(
   const closedOn = new Map<string, string>();
   const errors: BeancountError[] = [];
   for (const directive of directives) {
-    if (directive.type !== "close" || written.has(directive.account)) continue;
+    if (
+      directive.type !== "close" ||
+      written.has(directive.account) ||
+      !keeps(directive.account)
+    ) {
+      continue;
+    }
     const opened = openedOn.get(directive.account);
     if (opened === undefined || opened <= directive.date) {
       closedOn.set(directive.account, directive.date);
@@ -108,6 +151,7 @@ export function inactivePads(
   files: FileMap,
   entryPoint: string,
 ): BeancountError[] {
+  const keeps = closeTreeKeeps(files, entryPoint);
   const openedOn = new Map<string, string>();
   const closedOn = new Map<string, string>();
   for (const directive of directives) {
@@ -116,7 +160,7 @@ export function inactivePads(
     }
   }
   for (const directive of directives) {
-    if (directive.type !== "close") continue;
+    if (directive.type !== "close" || !keeps(directive.account)) continue;
     const opened = openedOn.get(directive.account);
     if (opened === undefined || opened <= directive.date) {
       closedOn.set(directive.account, directive.date);
@@ -174,4 +218,34 @@ export function inactivePads(
         severity: "error",
       }));
   });
+}
+
+/**
+ * The engine's errors about a written close close_tree drops, its account not
+ * opened when the plugin runs: a posting after it, its balance, and the close
+ * of an account never opened, which close_tree allows a parent (w21/775).
+ */
+export function withoutDroppedCloseErrors(
+  errors: readonly BeancountError[],
+  files: FileMap,
+  entryPoint: string,
+): BeancountError[] {
+  const keeps = closeTreeKeeps(files, entryPoint);
+  const dropped = [...closeLocations(files, entryPoint)].filter(
+    ([account]) => !keeps(account),
+  );
+  return errors.filter(
+    (error) =>
+      !dropped.some(
+        ([account, at]) =>
+          error.message.startsWith(
+            `Posting to inactive account ${account} on `,
+          ) ||
+          error.message ===
+            `Cannot close account ${account} with non-zero balance` ||
+          (error.message === `Account ${account} was never opened` &&
+            error.file === at.file &&
+            error.line === at.line),
+      ),
+  );
 }

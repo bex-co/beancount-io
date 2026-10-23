@@ -44,7 +44,11 @@ import {
   discoverDocuments,
   mergeDiscoveredDocuments,
 } from "./document-discovery";
-import { inactiveAfterGeneratedCloses, inactivePads } from "./generated-closes";
+import {
+  inactiveAfterGeneratedCloses,
+  inactivePads,
+  withoutDroppedCloseErrors,
+} from "./generated-closes";
 import { reconcileCheckCommodityErrors } from "./check-commodity";
 import { coherentCostErrors } from "./coherent-cost";
 import { reconcileLeafOnlyErrors } from "./leafonly";
@@ -782,6 +786,8 @@ async function parseLedgerFilesUncached(
     errors,
     files[entryPoint],
   ));
+  // Beancount's close_tree drops a close whose account it does not see opened.
+  errors = withoutDroppedCloseErrors(errors, files, entryPoint);
   errors = locateBookErrors(errors, files, entryPoint);
   errors = reportUrlIncludes(errors, files, entryPoint);
   errors = locateIncludeAndPluginErrors(errors, files, entryPoint);

@@ -3,6 +3,7 @@ import { openAutoAccounts } from "../auto-accounts";
 import {
   inactiveAfterGeneratedCloses,
   inactivePads,
+  withoutDroppedCloseErrors,
 } from "../generated-closes";
 
 /**
@@ -43,6 +44,8 @@ describe("inactiveAfterGeneratedCloses", () => {
     "  ! Assets:Broker:VTI  1 USD",
     "  Assets:Broker:VTI  1 USD",
     "  Assets:Cash",
+    "2024-01-01 open Assets:Broker:VTI",
+    "2025-01-01 open Assets:Broker:Roth",
   ].join("\n");
   const check = (directives: DirectiveJson[]) =>
     located(
@@ -216,5 +219,129 @@ describe("inactivePads", () => {
   it("leaves a pad before the close, and an open account, alone", () => {
     expect(check([pad("2024-05-01")])).toEqual([]);
     expect(check([close("Assets:Broker:VTI"), pad("2024-03-01")])).toEqual([]);
+  });
+});
+
+// w21/775: close_tree runs at its place among the plugins. Declared before
+// auto_accounts it sees only the written opens: it closes no child the source
+// does not open, and drops the close of a parent the source does not open.
+describe("close_tree before auto_accounts", () => {
+  const CLOSE_TREE = 'plugin "beancount.plugins.close_tree"';
+  const AUTO = 'plugin "beancount.plugins.auto_accounts"';
+  const ledger = (plugins: string[], ...lines: string[]) => ({
+    "main.bean": [
+      ...plugins,
+      '2024-01-02 * "Buy"',
+      "  Assets:Broker:VTI  1 USD",
+      "  Assets:Cash",
+      "2024-04-01 close Assets:Broker",
+      '2024-05-01 * "Late"',
+      "  Assets:Broker:VTI  1 USD",
+      "  Assets:Cash",
+      ...lines,
+    ].join("\n"),
+  });
+  // The engine's stream closes the child whatever the order.
+  const stream = [
+    transaction("2024-01-02", ["Assets:Broker:VTI", "Assets:Cash"]),
+    close("Assets:Broker"),
+    close("Assets:Broker:VTI"),
+    transaction("2024-05-01", ["Assets:Broker:VTI", "Assets:Cash"]),
+  ];
+  const late = [
+    "E1003",
+    7,
+    "Posting to inactive account Assets:Broker:VTI on 2024-05-01 (closed on 2024-04-01)",
+  ];
+  const posted = (files: Record<string, string>) =>
+    located(inactiveAfterGeneratedCloses(stream, files, "main.bean"));
+
+  it("closes no child the source does not open, as bean-check", () => {
+    expect(posted(ledger([CLOSE_TREE, AUTO]))).toEqual([]);
+    expect(posted(ledger([AUTO, CLOSE_TREE]))).toEqual([late]);
+    expect(
+      posted(ledger(['plugin "beancount.plugins.auto"', CLOSE_TREE])),
+    ).toEqual([late]);
+    expect(
+      posted(ledger([CLOSE_TREE, AUTO], "2024-01-01 open Assets:Broker:VTI")),
+    ).toEqual([late]);
+  });
+
+  it("allows a pad into such a child", () => {
+    const pads = (plugins: string[]) =>
+      located(
+        inactivePads(
+          [
+            close("Assets:Broker"),
+            close("Assets:Broker:VTI"),
+            {
+              type: "pad",
+              date: "2024-05-01",
+              account: "Assets:Broker:VTI",
+              source_account: "Equity:Opening",
+            },
+          ],
+          {
+            "main.bean": [
+              ...plugins,
+              "2024-04-01 close Assets:Broker",
+              "2024-05-01 pad Assets:Broker:VTI Equity:Opening",
+            ].join("\n"),
+          },
+          "main.bean",
+        ),
+      );
+    expect(pads([CLOSE_TREE, AUTO])).toEqual([]);
+    expect(pads([AUTO, CLOSE_TREE])).toEqual([
+      ["E1003", 4, "Invalid reference to inactive account 'Assets:Broker:VTI'"],
+    ]);
+  });
+
+  const engineError = (message: string, line: number): BeancountError => ({
+    message,
+    code: "E1003",
+    phase: "validate",
+    hint: null,
+    file: "main.bean",
+    line,
+    column: 1,
+    end_line: null,
+    end_column: null,
+    severity: "error",
+  });
+  // The engine checks the written close of a parent close_tree drops.
+  const parentErrors = [
+    engineError("Account Assets:Broker was never opened", 6),
+    engineError("Account Assets:Broker was never opened", 8),
+    engineError(
+      "Posting to inactive account Assets:Broker on 2024-05-01 (closed on 2024-04-01)",
+      7,
+    ),
+    engineError("Cannot close account Assets:Broker with non-zero balance", 6),
+    engineError("Account Assets:Cash was never opened", 9),
+  ];
+  // Two lines before the entries, so the close is on line 6.
+  const kept = (plugins: string[], ...lines: string[]) =>
+    withoutDroppedCloseErrors(
+      parentErrors,
+      ledger([...plugins, ";", ";"].slice(0, 2), ...lines),
+      "main.bean",
+    ).map((error) => [error.line, error.message]);
+
+  it("drops the engine's errors about a parent close close_tree drops", () => {
+    // Only its close's own "never opened": a posting's is still one.
+    expect(kept([CLOSE_TREE])).toEqual([
+      [8, "Account Assets:Broker was never opened"],
+      [9, "Account Assets:Cash was never opened"],
+    ]);
+    expect(kept([CLOSE_TREE, AUTO])).toEqual(kept([CLOSE_TREE]));
+  });
+
+  it("keeps them when the close stands", () => {
+    expect(kept([])).toHaveLength(parentErrors.length);
+    expect(kept([AUTO, CLOSE_TREE])).toHaveLength(parentErrors.length);
+    expect(kept([CLOSE_TREE], "2024-01-01 open Assets:Broker")).toHaveLength(
+      parentErrors.length,
+    );
   });
 });
