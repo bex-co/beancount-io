@@ -40,7 +40,6 @@
 
 - [995 — Retry a failed BQL history query without replacing the current editor](./995.md) — minor; live QA, 2026-10-22; older A has only Delete after a transport failure; toggling sends no read and global Execute runs B; real A workaround succeeds at both widths.
 
-- [994 — Keep collapsed BQL history cards closed when another card is deleted](./994.md) — minor residual of 253; live QA, 2026-10-22; deleting the top card reopens an untouched collapsed neighbor at both widths; same nodes/cache and zero extra reads.
 
 
 
