@@ -24,6 +24,7 @@ import { parseQueryChart } from "../lib/chart-utils";
 import { QueryResultChart } from "./query-result-chart";
 import { QueryResultExport } from "./query-result-export";
 import type { QueryShellQuery } from "@/graphql/definitions";
+import { usePendingAction } from "@/common/hooks/use-pending-action";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getQueryErrorFeedback } from "../lib/query-error";
 
@@ -54,7 +55,8 @@ interface QueryResultCardProps {
   error?: Error | null;
   loading?: boolean;
   isInitiallyOpen?: boolean;
-  onExecute: (query: string) => void;
+  /** Runs this history query; a returned promise keeps its retry busy. */
+  onExecute: (query: string) => void | Promise<unknown>;
   onDelete: (query: string) => void;
 }
 
@@ -284,6 +286,8 @@ export function QueryResultCard({
 }: QueryResultCardProps) {
   const { t } = useTranslations();
   const detailsRef = useRef<HTMLDetailsElement>(null);
+  // One retry at a time; a failed one hands focus back to Try Again.
+  const { run: runRetry, pending: retrying } = usePendingAction();
   const errorFeedback = error ? getQueryErrorFeedback(error, query) : null;
 
   // The newest card opens when it first appears and whenever its query runs.
@@ -302,7 +306,7 @@ export function QueryResultCard({
     const isOpen = detailsRef.current?.open || false;
     // If opening and no result yet, execute the query
     if (isOpen && !result && !error && !loading) {
-      onExecute(query);
+      void onExecute(query);
     }
   };
 
@@ -362,8 +366,21 @@ export function QueryResultCard({
 
           {errorFeedback && (
             <Alert variant="destructive">
-              <AlertDescription>
-                {t(errorFeedback.key, errorFeedback.params)}
+              <AlertDescription className="flex flex-wrap items-center gap-2">
+                <span>{t(errorFeedback.key, errorFeedback.params)}</span>
+                {/* Re-runs this card's own query, not the editor's (w4/995). */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    runRetry(async () => {
+                      await onExecute(query);
+                    })
+                  }
+                  loading={retrying}
+                >
+                  {t("common.tryAgain")}
+                </Button>
               </AlertDescription>
             </Alert>
           )}

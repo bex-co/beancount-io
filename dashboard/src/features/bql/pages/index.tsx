@@ -223,9 +223,9 @@ export default function LedgerQueryPage() {
     submitQuery(queryText);
   };
 
-  const handleExecuteFromHistory = (query: string) => {
-    void executeQueryAndCache(query);
-  };
+  // Returned, so a card's retry stays busy until its read settles.
+  const handleExecuteFromHistory = (query: string) =>
+    executeQueryAndCache(query);
 
   // Deleting a card unmounts the focused Delete button. Hand focus to the
   // card that takes its place, else the one before it, else the editor

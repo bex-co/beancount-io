@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   ApolloClient,
@@ -75,14 +75,22 @@ vi.mock("@/common/components/monaco-editor", () => ({
 }));
 
 import LedgerQueryPage from "../index";
+import { track } from "@/common/analytics";
 
 const query = (label: string) =>
   `SELECT 'qa-20261022-history-${label}' AS label LIMIT 1`;
 const [A, B, C] = ["A", "B", "C"].map(query);
 
-/** A QueryShell that answers every query with its label, and counts runs. */
-function shellClient() {
+type Reply = "ok" | "fail" | "hold";
+
+/**
+ * A QueryShell that answers each query with its label and counts runs.
+ * `reply` decides each run (default: answer at once); a held run waits for
+ * `release`.
+ */
+function shellClient(reply: (text: string, run: number) => Reply = () => "ok") {
   const runs: string[] = [];
+  const held: ((ok: boolean) => void)[] = [];
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: new ApolloLink(
@@ -90,39 +98,55 @@ function shellClient() {
         new Observable((observer) => {
           const text = String(operation.variables.query);
           runs.push(text);
-          observer.next({
-            data: {
-              queryShell: {
-                __typename: "QueryShellResult",
-                resultType: "table",
-                table: {
-                  __typename: "QueryTable",
-                  types: [
-                    { __typename: "QueryColumn", name: "label", dtype: "str" },
-                  ],
-                  rows: [[text.match(/history-(\w)/)?.[1] ?? "accounts"]],
-                  t: null,
+          const answer = (ok: boolean) => {
+            if (!ok) return observer.error(new TypeError("Failed to fetch"));
+            observer.next({
+              data: {
+                queryShell: {
+                  __typename: "QueryShellResult",
+                  resultType: "table",
+                  table: {
+                    __typename: "QueryTable",
+                    types: [
+                      {
+                        __typename: "QueryColumn",
+                        name: "label",
+                        dtype: "str",
+                      },
+                    ],
+                    rows: [[text.match(/history-(\w)/)?.[1] ?? "accounts"]],
+                    t: null,
+                  },
+                  text: null,
+                  chart: null,
                 },
-                text: null,
-                chart: null,
               },
-            },
-          });
-          observer.complete();
+            });
+            observer.complete();
+          };
+          const decision = reply(text, runs.length);
+          if (decision === "hold") held.push(answer);
+          else answer(decision === "ok");
         }),
     ),
   });
-  return { client, runs };
+  return {
+    client,
+    runs,
+    /** Settles every held run (Apollo may send one execution twice). */
+    release: (ok: boolean) =>
+      act(() => held.splice(0).forEach((answer) => answer(ok))),
+  };
 }
 
-function renderPage() {
-  const { client, runs } = shellClient();
+function renderPage(reply?: (text: string, run: number) => Reply) {
+  const { client, runs, release } = shellClient(reply);
   render(
     <ApolloProvider client={client}>
       <LedgerQueryPage />
     </ApolloProvider>,
   );
-  return { runs };
+  return { runs, release };
 }
 
 /** The history card whose summary shows this query. */
@@ -169,6 +193,11 @@ describe("BQL history deletion focus", () => {
     // The only card: back to the editor, its draft untouched.
     const editor = screen.getByRole("textbox", { name: "bql-editor" });
     const draft = (editor as HTMLTextAreaElement).value;
+    await new Promise((r) => setTimeout(r, 200));
+    if (runs.length !== 1)
+      throw new Error(
+        "RUNS0 " + JSON.stringify(runs.map((x) => x.slice(20, 50))),
+      );
     deleteButton(C).focus();
     await user.keyboard("{Enter}");
     expect(shown()).toEqual([]);
@@ -235,5 +264,54 @@ describe("BQL history deletion keeps collapsed cards closed", () => {
     expect(shown()).toEqual([DEFAULT, C]);
     expect(details(DEFAULT)).toBe(rerun);
     await waitFor(() => expect(rerun.open).toBe(true));
+  });
+});
+
+/** A failed history card retries its own query, not the editor's (w4/995). */
+describe("BQL history card retry", () => {
+  beforeEach(() => {
+    seededHistory = [A];
+  });
+
+  it("re-runs only that card's query, keeping the editor draft", async () => {
+    const user = userEvent.setup();
+    const executions = () => vi.mocked(track).mock.calls.length;
+    // A's first read fails; its retries are held until the test settles them.
+    const { runs, release } = renderPage((_text, run) =>
+      run === 1 ? "fail" : "hold",
+    );
+    const retry = await within(card(A)).findByRole("button", {
+      name: "common.tryAgain",
+    });
+    const editor = screen.getByRole("textbox", { name: "bql-editor" });
+    const draft = (editor as HTMLTextAreaElement).value;
+    const before = executions();
+
+    retry.focus();
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(executions()).toBe(before + 1));
+    expect(retry).toBeDisabled();
+    await user.keyboard("{Enter}");
+    expect(executions()).toBe(before + 1);
+    // The browser drops focus from the control it disabled; jsdom keeps it.
+    const away = document.createElement("button");
+    document.body.appendChild(away);
+    away.focus();
+    away.remove();
+
+    await release(false);
+    await waitFor(() => expect(retry).toHaveFocus());
+    expect(within(card(A)).getByRole("alert")).toBeInTheDocument();
+
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(executions()).toBe(before + 2));
+    await release(true);
+    await waitFor(() =>
+      expect(within(card(A)).queryByRole("alert")).toBeNull(),
+    );
+    expect(within(card(A)).getByRole("cell", { name: "A" })).toBeVisible();
+    // Only A was read, never the editor's query, and its draft is unchanged.
+    expect(runs.every((text) => text === A)).toBe(true);
+    expect(editor).toHaveValue(draft);
   });
 });
