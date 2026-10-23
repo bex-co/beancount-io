@@ -19,7 +19,7 @@ from cli import context, output
 from cli.engine import launch
 from cli.errors import UsageError
 from cli.single_value import SingleValueCommand
-from cli.utils import account_filter, refuse_blank_filter, single_line
+from cli.utils import account_filter, refuse_blank_filter, single_line, strip_padding
 
 report_app = typer.Typer(help="Financial reports from a local ledger", no_args_is_help=True, rich_markup_mode=None)
 
@@ -202,7 +202,7 @@ def _ask(
         if not term.strip():
             raise UsageError(f"ACCOUNT argument {position} is empty; remove it, or pass an account name or substring.")
     # The terms checked are the terms matched: `" Assets:Cash"` matched no account (w5/626).
-    accounts = [term.strip() for term in accounts] if accounts else accounts
+    accounts = [strip_padding(term) for term in accounts] if accounts else accounts
     ctx = context.current()
     file = ctx.entry_file()
     argv: list[str]

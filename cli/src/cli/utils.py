@@ -116,6 +116,19 @@ def refuse_blank_filter(flag: str, value: str | None) -> None:
         raise UsageError(f"{flag} needs a non-empty value; drop {flag} to leave it unset.")
 
 
+_PADDING = " \t\r\n\f\v"
+
+
+def strip_padding(value: str) -> str:
+    """The value without the ASCII whitespace a shell or a paste adds around it.
+
+    Not `str.strip()`: that also removes the Unicode spaces (NBSP, U+3000,
+    U+202F) an account name may end with, so `Assets:Cash\u00a0` selected the
+    other account (w5/956).
+    """
+    return value.strip(_PADDING)
+
+
 def account_filter(flag: str, value: str | None) -> str | None:
     """An `--account` value as it is matched: stripped, and refused when it can never match.
 
@@ -126,7 +139,7 @@ def account_filter(flag: str, value: str | None) -> str | None:
     refuse_blank_filter(flag, value)
     if value is None:
         return None
-    stripped = value.strip()
+    stripped = strip_padding(value)
     if stripped.startswith("="):
         name = stripped.lstrip("=")
         raise UsageError(
