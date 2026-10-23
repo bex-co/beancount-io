@@ -50,6 +50,7 @@ import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { useWriteOutcome } from "@/common/hooks/use-write-outcome";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { usePendingAction } from "@/common/hooks/use-pending-action";
+import { useRefreshFailedToast } from "@/common/hooks/use-refresh-failed-toast";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { readEntrySourceLocation } from "@/features/journal/lib/entry-source-location";
 
@@ -149,6 +150,14 @@ function EntryContextMain({
   const [sourceText, setSourceText] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
   const [originalSource, setOriginalSource] = useState("");
+  // The version a draft was written against: a refresh does not move it, so
+  // a save still refuses if the entry changed meanwhile (w4/979).
+  const [baseSha, setBaseSha] = useState<string | null>(null);
+  const dirty = useRef(false);
+  // Before the source effect below, so it reads this commit's state.
+  useEffect(() => {
+    dirty.current = sourceText !== originalSource;
+  }, [sourceText, originalSource]);
   const [isContextOpen, setIsContextOpen] = useState(false);
   // One save at a time. While it is in flight the source is read-only: the
   // request already holds its text, and an edit made now would be marked
@@ -168,14 +177,15 @@ function EntryContextMain({
   const managedSource = data?.managed_source ?? null;
   const editable = canWrite && managedSource === null;
 
+  // Every write clears the cache, so this entry's source can arrive again
+  // while it is open. A clean editor takes it; an edited draft is kept.
   useEffect(() => {
-    if (data?.slice) {
-      const newSource = data.slice;
-      setSourceText(newSource);
-      setOriginalSource(newSource);
-      setHasChanges(false);
-    }
-  }, [data?.slice]);
+    if (!data?.slice || dirty.current) return;
+    setSourceText(data.slice);
+    setOriginalSource(data.slice);
+    setBaseSha(data.sha256sum ?? null);
+    setHasChanges(false);
+  }, [data?.slice, data?.sha256sum]);
 
   useEffect(() => {
     setHasChanges(sourceText !== originalSource);
@@ -199,7 +209,7 @@ function EntryContextMain({
     if (!editable || !entryHash || !hasChanges) return;
     void runSave(async () => {
       try {
-        await onSave(entryHash, sourceText, data.sha256sum);
+        await onSave(entryHash, sourceText, baseSha ?? data.sha256sum);
       } catch {
         // Error handling is done in the parent handler
         return false;
@@ -511,13 +521,17 @@ export function EntryContextPanel({
   const writeOutcome = useWriteOutcome(ledgerId);
   /** The edit a save could not land because the entry changed elsewhere. */
   const [staleDraft, setStaleDraft] = useState<string | null>(null);
-  const { data, loading, error } = useQuery(GetLedgerEntryContextDocument, {
-    variables: {
-      entryHash,
-      ledgerId,
+  const { data, loading, error, refetch } = useQuery(
+    GetLedgerEntryContextDocument,
+    {
+      variables: {
+        entryHash,
+        ledgerId,
+      },
+      skip: skip || !entryHash || !ledgerId,
     },
-    skip: skip || !entryHash || !ledgerId,
-  });
+  );
+  useRefreshFailedToast(data ? error : undefined, () => void refetch());
 
   const [deleteEntrySourceSlice] = useMutation<
     DeleteLedgerEntrySourceSliceMutation,
@@ -600,10 +614,12 @@ export function EntryContextPanel({
     else go();
   };
 
-  if (loading) {
+  // A refresh keeps the shown entry, and any draft in it, mounted; only a
+  // first read swaps in the loading or error view (dashboard AGENTS.md).
+  if (loading && !data) {
     return <EntryContextLoading />;
   }
-  if (error) {
+  if (error && !data) {
     return <EntryContextError error={error} />;
   }
   if (data?.getLedgerEntryContext) {
