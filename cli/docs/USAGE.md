@@ -1037,7 +1037,7 @@ without a Beancount.io login and never formats or commits them automatically.
 |---|---|
 | `--limit / -l` | Positive maximum results (default 50). The envelope reports `truncated` when more exist. |
 | `--sort oldest/newest` | Date order, applied before the limit, so it also decides which end of the ledger a truncated listing keeps. `transaction` defaults to `newest`; the other ten types default to `oldest`, so pass `--sort newest` for the latest prices or balance assertions. Specify the order in scripts that depend on it. |
-| `--details` | Transactions: render Beancount syntax with every posting, cost/price, metadata, and source location; strings exactly as the ledger holds them, so redirected output parses back (a terminal sees control characters as `\xNN`) |
+| `--details` | Transactions: render Beancount syntax with every posting, cost/price, metadata, and source location; strings exactly as the ledger holds them, each transaction headed by its source location as a `;` comment, so redirected output parses back (a terminal sees control characters as `\xNN`) |
 | `--flag` | Transactions: select a flag, such as `!` for entries needing review; applied before the limit. |
 | `--search TEXT` | Transactions: case-insensitive substring over payee and narration; every run of spaces, tabs and line breaks, in the entry or the term, compares as one space, so the text the table shows matches however it spaced a line break. Repeatable (AND — every term must match a row), applied before the limit. |
 | `--tag TAG` | Transactions: tag with or without `#`, matched case-sensitively. Repeatable (AND — a row must carry every tag given). |
