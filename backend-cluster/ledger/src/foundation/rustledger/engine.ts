@@ -755,10 +755,14 @@ async function parseLedgerFilesUncached(
   errors = [...errors, ...coherentCostErrors(directives, files, entryPoint)];
   // The engine validates before its plugins add close_tree's closes, and its
   // auto_accounts opens no account named only by a note or a close (w21/737).
-  errors = [
-    ...errors,
-    ...inactiveAfterGeneratedCloses(directives, files, entryPoint),
-  ];
+  // A stream revalidated after the fava plugins saw those closes already, and
+  // each posting was reported twice (w21/755).
+  if (!validatedTransformed) {
+    errors = [
+      ...errors,
+      ...inactiveAfterGeneratedCloses(directives, files, entryPoint),
+    ];
+  }
   ({ directives, errors } = openAutoAccounts(
     directives,
     errors,

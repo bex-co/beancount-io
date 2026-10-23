@@ -1677,6 +1677,26 @@ async function main(): Promise<void> {
       ]),
     `a posting after close_tree closes its account is refused (got ${JSON.stringify(lateChild)})`,
   );
+  // w21/755: with a fava plugin the transformed stream is revalidated, and it
+  // saw the generated close too: the posting was reported twice.
+  const withFava = await closeTree([
+    'plugin "beancount.plugins.close_tree"',
+    'plugin "fava.plugins.tag_discovered_documents"',
+    "2024-01-01 open Assets:Broker",
+    "2024-01-01 open Assets:Broker:VTI",
+    "2024-01-01 open Assets:Cash",
+    "2024-04-01 close Assets:Broker",
+    '2024-05-01 * "Late"',
+    "  Assets:Broker:VTI  1 USD",
+    "  Assets:Cash",
+  ]);
+  assert(
+    JSON.stringify(withFava) ===
+      JSON.stringify([
+        "E1003@7 Posting to inactive account Assets:Broker:VTI on 2024-05-01 (closed on 2024-04-01)",
+      ]),
+    `close_tree with a fava plugin reports the posting once (got ${JSON.stringify(withFava)})`,
+  );
   const autoParent = await closeTree([
     'plugin "beancount.plugins.auto_accounts"',
     'plugin "beancount.plugins.close_tree"',

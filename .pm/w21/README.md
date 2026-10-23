@@ -25,7 +25,6 @@
 - [759](./759.md) — A recurring merchant says "Next Oct 21, 2026" on Oct 23: a past date stays "Next" for a quarter of the cycle
 - [760](./760.md) — Brand logos miss payees typed with a curly apostrophe ("Trader Joe’s", from iOS Smart Punctuation)
 - [761](./761.md) — A merchant whose entries are all scheduled shows its first date as if it already happened
-- [755](./755.md) — w21/737 regression: E1003 reported twice when `close_tree` is combined with a fava plugin
 - [756](./756.md) — A `pad` into a child closed by `close_tree` still raises no error (w21/737 variant)
 - [757](./757.md) — `nounused` ignores plugin order, so a child closed by `close_tree` counts as used (w21/739 variant)
 - [758](./758.md) — A discovered statement dated before its account opened raises no error (w21/738 variant)
