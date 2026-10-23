@@ -12,6 +12,9 @@
 
 ## Inbox
 
+- [666](./666.md) — A pasted "−12.50" (typographic minus) is saved as negative but shows a green "+", and the sign toggle breaks it (w21/463 brings back w21/232)
+- [667](./667.md) — Account detail still shows a blank row for an entry whose payee is only spaces (w21/568 incomplete)
+- [668](./668.md) — Transaction detail repeats the narration under the title when the payee is only spaces or equals the narration
 - [661](./661.md) — Update Budget opens on a budget pre-entered for next year, so today's budget can't be corrected (w21/623 regression)
 - [662](./662.md) — A merchant marked Recurring still reads "Not enough history" when its last payments fall just inside the window (w21/617 incomplete)
 - [663](./663.md) — A merchant's header total still rounds BTC to 2 decimals: "0.00 BTC" (w21/595 incomplete)
