@@ -134,7 +134,7 @@
 
 - [x] **m36** — [Preserve profile and commit timestamps through hydration](./done/m36/README.md) (10 tasks) ← dashboard QA, 2026-10-20; minor. Done 2026-10-22: one shared `useHydratedTime()` keeps commit, activity and repository-card timestamps through hydration; deployed boundary/title controls and real SSR regressions pass.
 
-- [ ] **m35** — [Keep form fields usable when suggestions fail](./blocked/m35/README.md) (6 tasks) ← dashboard QA, 2026-10-20; minor, four form suggestion wrappers. — **blocked:** fields now survive; deployed keyboard retry still loses focus, follow-up recorded
+- [ ] **m35** — [Keep form fields usable when suggestions fail](./m35/README.md) (6 tasks) ← dashboard QA, 2026-10-20; minor, four form suggestion wrappers.
 
 - [ ] **m34** — [Resolve multiline entry sources without splitting quoted strings](./blocked/m34/README.md) (6 tasks) ← dashboard QA, 2026-10-20; minor, ledger source resolution. — **blocked:** fix shipped in `a0fa2e619`; awaiting deployed dashboard reopen check
 

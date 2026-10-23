@@ -32,7 +32,7 @@
 
 ## Scope and dedupe
 
-Own the pending/settled focus lifecycle at `common/hooks/use-pending-submit.ts` and the necessary owning Dialog/form integrations. New Entry Note is independently reproduced at both widths; the other five current hook callers are compatibility/audit scope until exercised. Completed [m33](../m33/README.md), [284](../284.md) and [295](../295.md) retain their draft/serialization work; this is its remaining focus boundary. Open [m35](../../blocked/m35/README.md) concerns a separate suggestions Retry helper, not a form submission. No persistent draft store, broad Radix rewrite or bank/credential action.
+Own the pending/settled focus lifecycle at `common/hooks/use-pending-submit.ts` and the necessary owning Dialog/form integrations. New Entry Note is independently reproduced at both widths; the other five current hook callers are compatibility/audit scope until exercised. Completed [m33](../m33/README.md), [284](../284.md) and [295](../295.md) retain their draft/serialization work; this is its remaining focus boundary. Open [m35](../../m35/README.md) concerns a separate suggestions Retry helper, not a form submission. No persistent draft store, broad Radix rewrite or bank/credential action.
 
 ## Closeout (2026-10-22)
 
