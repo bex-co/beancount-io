@@ -6,7 +6,6 @@
 
 - [1023 — Preserve multiline Payee text while editing CSV previews](./1023.md) — minor residual of w3/135; native appended text joins LLC/Branch in Payee while Description preserves lines; both widths and Configure/Back, no writes.
 
-- [1022 — Keep renamed roots in Cash Flow movements and opening cash](./1022.md) — major; valid declared ledger reports opening75/net0 instead of opening0/net75 in UI and exports; actual producer and both-width controls, no writes.
 
 
 
