@@ -142,6 +142,11 @@ const SYMBOL_CURRENCIES: Record<string, readonly string[]> = {
   "฿": ["THB"],
   "₱": ["PHP"],
   "₦": ["NGN"],
+  "₾": ["GEL"],
+  "₸": ["KZT"],
+  "₮": ["MNT"],
+  "₼": ["AZN"],
+  "₲": ["PYG"],
 };
 
 type AmountCurrencySymbol = {
@@ -149,15 +154,18 @@ type AmountCurrencySymbol = {
   currencies: readonly string[];
 };
 
-/** The currencies an amount cell's own symbol names, if it names any. */
-export function amountCurrencySymbol(
-  value: string,
-): AmountCurrencySymbol | null {
+/**
+ * Every distinct symbol an amount cell carries, in order, with the currencies
+ * it names. All of them are read: `-£4.50€` agrees with GBP only if the euro
+ * is ignored (w4/1002, the CLI's w5/927).
+ */
+export function amountCurrencySymbols(value: string): AmountCurrencySymbol[] {
+  const found = new Map<string, readonly string[]>();
   for (const character of value) {
     const currencies = SYMBOL_CURRENCIES[character];
-    if (currencies) return { symbol: character, currencies };
+    if (currencies && !found.has(character)) found.set(character, currencies);
   }
-  return null;
+  return [...found].map(([symbol, currencies]) => ({ symbol, currencies }));
 }
 
 type SplitAmount = { sign: string; core: string; negations: number };

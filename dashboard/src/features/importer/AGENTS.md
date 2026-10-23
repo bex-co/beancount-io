@@ -80,9 +80,10 @@ Preview. It clears on a new upload or reset/finish — never via localStorage.
   deleted when it could be a decimal mark. A mixed column's rows stay refused
   until their own amount is edited; editing another field keeps the refusal.
 - A currency symbol is stripped to read the number but still names the row's
-  unit. `amountCurrencySymbol` reads it with the CLI's table (`€` is EUR, `£`
-  GBP/GIP/FKP/SHP/EGP, …; `$` and `¥` name nothing), and Configure refuses
-  selected rows whose symbol rules out the chosen Currency: an alert names the
+  unit. `amountCurrencySymbols` reads every symbol in the cell with the CLI's
+  table (`€` is EUR, `£` GBP/GIP/FKP/SHP/EGP, …; `$` and `¥` name nothing), and
+  Configure refuses selected rows where any symbol rules out the chosen
+  Currency, so `-£4.50€` fits neither GBP nor EUR: an alert names the
   rows, and nothing is sent until the reader picks the matching currency,
   deselects them, or edits the amount. One import posts one currency; there is
   no conversion. AI-parsed rows arrive as bare numbers, without symbol evidence.

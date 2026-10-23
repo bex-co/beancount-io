@@ -176,6 +176,64 @@ describe("Configure refuses a currency the bank file contradicts", () => {
     ]);
   });
 
+  it.each([
+    ["-€4.50£", "EUR", "£"],
+    ["-€4.50£", "GBP", "€"],
+    ["-£4.50€", "EUR", "£"],
+    ["-£4.50€", "GBP", "€"],
+  ])(
+    "refuses %s under %s, naming the other symbol (w4/1002)",
+    async (amountInput, currency, symbol) => {
+      const user = userEvent.setup();
+      renderForm([row("both", amountInput), row("plain", "-1")]);
+      await mapAccounts(user);
+      await chooseCurrency(user, currency);
+
+      expect(conflictParams()).toEqual([
+        expect.objectContaining({ rows: "1", symbol, currency }),
+      ]);
+      await user.click(importButton());
+      await waitFor(() => expect(conflictAlert()).toHaveFocus());
+      expect(onSubmit).not.toHaveBeenCalled();
+
+      // Deselected, the contradicting row no longer holds the import back.
+      await user.click(
+        screen.getByRole("checkbox", {
+          name: "importer.accountMapping.selectTransaction 1",
+        }),
+      );
+      expect(conflictAlert()).toBeUndefined();
+      await user.click(importButton());
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0]![0]).toEqual([
+        expect.objectContaining({ amount: "-1", currency }),
+      ]);
+    },
+  );
+
+  it("refuses the five symbols the CLI already reads under USD", async () => {
+    const user = userEvent.setup();
+    const cells = ["-₾4.50", "-₸4.50", "-₮4.50", "-₼4.50", "-₲4.50"];
+    renderForm(cells.map((cell, index) => row(`s${index}`, cell)));
+    await mapAccounts(user);
+
+    expect(
+      conflictParams().map(({ symbol, currencies, rows }) => [
+        symbol,
+        currencies,
+        rows,
+      ]),
+    ).toEqual([
+      ["₾", "GEL", "1"],
+      ["₸", "KZT", "2"],
+      ["₮", "MNT", "3"],
+      ["₼", "AZN", "4"],
+      ["₲", "PYG", "5"],
+    ]);
+    await user.click(importButton());
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("clears once the source amount no longer names a currency", async () => {
     const user = userEvent.setup();
     // What Preview hands Configure after the reader edits `€-1.25` to `-1.25`.
@@ -203,6 +261,13 @@ describe("Configure refuses a currency the bank file contradicts", () => {
       "EUR",
       ["-1.25", "500"],
     ],
+    [
+      "repeated, ambiguous-dollar and suffix euros under EUR",
+      [row("a", "-€4.50€"), row("b", "-$4.50€"), row("c", "-4.50€")],
+      "EUR",
+      ["-4.50", "-4.50", "-4.50"],
+    ],
+    ["a lari amount under GEL", [row("a", "-₾4.50")], "GEL", ["-4.50"]],
   ])(
     "imports %s with their exact amounts",
     async (_name, rows, currency, amounts) => {

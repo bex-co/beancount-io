@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { amountCurrencySymbol } from "../../utils/csv-validator";
+import { amountCurrencySymbols } from "../../utils/csv-validator";
 import { findImportCurrencyConflicts } from "../import-currency-conflicts";
 
 /**
@@ -9,7 +9,7 @@ import { findImportCurrencyConflicts } from "../import-currency-conflicts";
  */
 const POUND = ["GBP", "GIP", "FKP", "SHP", "EGP"];
 
-describe("amountCurrencySymbol", () => {
+describe("amountCurrencySymbols", () => {
   it.each([
     ["€-1.25", "€", ["EUR"]],
     ["-4,50 €", "€", ["EUR"]],
@@ -17,17 +17,40 @@ describe("amountCurrencySymbol", () => {
     ["£2.50", "£", POUND],
     ["₩1,000", "₩", ["KRW", "KPW"]],
     ["₹ 99", "₹", ["INR"]],
+    // The CLI's table has these too (w5/924).
+    ["-₾4.50", "₾", ["GEL"]],
+    ["-₸4.50", "₸", ["KZT"]],
+    ["-₮4.50", "₮", ["MNT"]],
+    ["-₼4.50", "₼", ["AZN"]],
+    ["-₲4.50", "₲", ["PYG"]],
   ])("reads %s as %s", (cell, symbol, currencies) => {
-    expect(amountCurrencySymbol(cell)).toEqual({ symbol, currencies });
+    expect(amountCurrencySymbols(cell)).toEqual([{ symbol, currencies }]);
   });
 
   it.each(["-1.25", "$5.00", "¥500", "US$12", "1.000,00"])(
     "names no currency for %s",
     (cell) => {
       // `$` and `¥` are shared by several currencies, so they never refuse.
-      expect(amountCurrencySymbol(cell)).toBeNull();
+      expect(amountCurrencySymbols(cell)).toEqual([]);
     },
   );
+
+  it("reads every symbol, in order, once each (w4/1002)", () => {
+    expect(amountCurrencySymbols("-€4.50£")).toEqual([
+      { symbol: "€", currencies: ["EUR"] },
+      { symbol: "£", currencies: POUND },
+    ]);
+    expect(amountCurrencySymbols("-£4.50€")).toEqual([
+      { symbol: "£", currencies: POUND },
+      { symbol: "€", currencies: ["EUR"] },
+    ]);
+    expect(amountCurrencySymbols("-€4.50€")).toEqual([
+      { symbol: "€", currencies: ["EUR"] },
+    ]);
+    expect(amountCurrencySymbols("-$4.50€")).toEqual([
+      { symbol: "€", currencies: ["EUR"] },
+    ]);
+  });
 });
 
 describe("findImportCurrencyConflicts", () => {
@@ -49,6 +72,33 @@ describe("findImportCurrencyConflicts", () => {
     ]);
     // `£` is also the Egyptian pound, so EGP is not a conflict.
     expect(findImportCurrencyConflicts([row(0, "£2.50")], "EGP")).toEqual([]);
+  });
+
+  it("refuses a row whose two symbols disagree under either currency (w4/1002)", () => {
+    for (const cell of ["-€4.50£", "-£4.50€"]) {
+      expect(findImportCurrencyConflicts([row(0, cell)], "EUR")).toEqual([
+        { symbol: "£", currencies: POUND, rows: [1] },
+      ]);
+      expect(findImportCurrencyConflicts([row(0, cell)], "GBP")).toEqual([
+        { symbol: "€", currencies: ["EUR"], rows: [1] },
+      ]);
+    }
+    // Named once per symbol, in table order, beside a plain euro row.
+    expect(
+      findImportCurrencyConflicts(
+        [row(0, "€1"), row(1, "-€4.50£"), row(2, "£2")],
+        "USD",
+      ),
+    ).toEqual([
+      { symbol: "€", currencies: ["EUR"], rows: [1, 2] },
+      { symbol: "£", currencies: POUND, rows: [2, 3] },
+    ]);
+  });
+
+  it("keeps matching repeats and ambiguous dollars importable", () => {
+    for (const cell of ["-€4.50€", "-$4.50€", "-4.50€"]) {
+      expect(findImportCurrencyConflicts([row(0, cell)], "EUR")).toEqual([]);
+    }
   });
 
   it("ignores deselected rows", () => {
