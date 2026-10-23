@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1010 — Retain authored native-ID owners when weighted inference remains unresolved](./1010.md) — major CLI regression after completed 1005; filtered cost/price trades lose their B1 owner, allowing duplicate cash outflows and full broker acquisitions, reproduced 2026-10-23.
+
 
 
 
