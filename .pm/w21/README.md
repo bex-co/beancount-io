@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [798](./798.md) — Merchants shows a steady $10.99 bill as "~$10.99" because another currency's charges vary
 - [799](./799.md) — A biweekly series with one late payment reads "Twice a month"
 - [800](./800.md) — Profile throws away edits on Back without asking
 - [801](./801.md) — A ledger renamed on the web appears twice in the drawer; per-ledger state stays under the old id

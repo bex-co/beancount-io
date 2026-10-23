@@ -662,6 +662,32 @@ describe("detectRecurrence primary currency", () => {
     expect(verdict?.typicalAmountByCurrency.USD).toBe(2000);
   });
 
+  // w21/798: varying yen charges put a "~" before a steady $10.99.
+  it("is approximate only when the shown currency's amounts vary", () => {
+    const usd = (months: string[], amount = 10.99) =>
+      pointsOn(
+        months.map((month) => `2026-${month}-05`),
+        amount,
+      );
+    const steady = [
+      ...usd(["01", "02", "03", "05", "06", "08", "09", "10"]),
+      { date: "2026-04-05", currency: "JPY", amount: 980 },
+      { date: "2026-07-05", currency: "JPY", amount: 1500 },
+    ];
+    const verdict = detectRecurrence(steady, "2026-10-23");
+    expect([verdict?.primaryCurrency, verdict?.isApproximate]).toEqual([
+      "USD",
+      false,
+    ]);
+    const varying = [
+      ...usd(["01", "02", "03", "05"], 10.99),
+      ...usd(["06", "08", "09", "10"], 14.5),
+      { date: "2026-04-05", currency: "JPY", amount: 980 },
+      { date: "2026-07-05", currency: "JPY", amount: 1500 },
+    ];
+    expect(detectRecurrence(varying, "2026-10-23")?.isApproximate).toBe(true);
+  });
+
   it("keeps the usual currency when one recent charge was abroad", () => {
     const series = [
       ...monthlySeries("2026-01-05", 8, 10.99),

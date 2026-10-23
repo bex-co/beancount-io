@@ -608,7 +608,9 @@ export function detectRecurrence(
       ? recentCurrencies[0]!
       : null;
   const typicalAmountByCurrency: Record<string, number> = {};
-  let isApproximate = false;
+  // Per currency: the row shows the main one's amount, and yen charges that
+  // varied put a "~" before a steady $10.99 (w21/798).
+  const approximate = new Set<string>();
   let primaryCurrency = settledCurrency ?? latestCurrency;
   let primaryCount = 0;
   for (const [currency, amounts] of amountsByCurrency) {
@@ -639,9 +641,10 @@ export function detectRecurrence(
       !amountSpreadIsApproximate(recent);
     typicalAmountByCurrency[currency] = changed ? latest : overall;
     if (changed || amountSpreadIsApproximate(amounts)) {
-      isApproximate = true;
+      approximate.add(currency);
     }
   }
+  const isApproximate = approximate.has(primaryCurrency);
 
   if (Object.keys(typicalAmountByCurrency).length === 0) {
     return null;
