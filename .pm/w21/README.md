@@ -18,7 +18,6 @@
 - [738](./738.md) — `option "documents"` discovery never runs, so statements never appear in account detail
 - [739](./739.md) — `nounused` / `check_commodity` errors are hidden as warnings, and `pedantic` skips `nounused`
 - [740](./740.md) — Errors from built-in plugins carry no file or line, so their Notifications rows can't be tapped
-- [732](./732.md) — In a ledger without operating_currency, a USD merchant's header reads "120.00 USD" while its rows read "−$60.00"
 - [733](./733.md) — The AVERAGE error has no file or line when the sale posting carries a flag (w21/721 variant)
 - [734](./734.md) — Open Account still says a bare "already open" for a future account stored with decomposed accents (w21/723 vs w21/256)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
