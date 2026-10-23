@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CashFlowContent } from "../cash-flow-content";
 import type { CashAccountSnapshot, CashFlowStatement } from "../lib/model";
@@ -47,10 +48,17 @@ vi.mock("@/common/hooks/use-cookie-storage-state", () => ({
   useCookieStorageState: (_key: string, initial: unknown) => [initial, vi.fn()],
 }));
 
-// Heavy or irrelevant children: the test targets the statement lists.
+// Heavy children: the charts only report the props they were given.
+const { chartProps } = vi.hoisted(() => ({ chartProps: vi.fn() }));
 vi.mock("../cash-flow-charts", () => ({
-  NetCashFlowChart: () => null,
-  ActivityBreakdownChart: () => null,
+  NetCashFlowChart: (props: unknown) => {
+    chartProps("netCashFlow", props);
+    return null;
+  },
+  ActivityBreakdownChart: (props: unknown) => {
+    chartProps("byActivity", props);
+    return null;
+  },
 }));
 vi.mock("../export/statement-export-menu", () => ({
   StatementExportMenu: () => null,
@@ -111,11 +119,15 @@ const closingCashAccounts: CashAccountSnapshot[] = [
   },
 ];
 
-function renderContent() {
+function renderContent(
+  overrides: Partial<ComponentProps<typeof CashFlowContent>> = {},
+) {
   return render(
     <CashFlowContent
       selectedTab="netCashFlow"
       onSelectedTabChange={() => {}}
+      unitSelections={{}}
+      onUnitSelectionChange={() => {}}
       statement={statement}
       closingCashAccounts={closingCashAccounts}
       cashAccountRows={[]}
@@ -133,6 +145,7 @@ function renderContent() {
       filters={{ time: "", account: "", filter: "" }}
       fiscalYearEnd={{ month: 12, day: 31 }}
       collapsePatterns={[]}
+      {...overrides}
     />,
   );
 }
@@ -233,4 +246,38 @@ describe("CashFlowContent statement tables", () => {
     expect(openingAt).toBeGreaterThan(closingAt);
     expect(netChangeAt).toBeGreaterThan(openingAt);
   });
+});
+
+describe("CashFlowContent chart units (w4/1024)", () => {
+  // Each chart's legend choice is held by the page, keyed by its view, so a
+  // pending read that replaces this component does not discard it.
+  const unitSelections = {
+    netCashFlow: { USD: false, VACHR: true },
+    byActivity: { USD: true, VACHR: true },
+  };
+
+  it.each(["netCashFlow", "byActivity"])(
+    "gives the %s chart its own units and reports its changes",
+    (view) => {
+      chartProps.mockClear();
+      const onUnitSelectionChange = vi.fn();
+      renderContent({
+        selectedTab: view,
+        unitSelections,
+        onUnitSelectionChange,
+      });
+
+      const [shownView, props] = chartProps.mock.calls.at(-1)!;
+      expect(shownView).toBe(view);
+      expect(props.legendSelection).toEqual(
+        unitSelections[view as keyof typeof unitSelections],
+      );
+
+      props.onLegendSelectionChange({ USD: false, VACHR: false });
+      expect(onUnitSelectionChange).toHaveBeenCalledWith(view, {
+        USD: false,
+        VACHR: false,
+      });
+    },
+  );
 });

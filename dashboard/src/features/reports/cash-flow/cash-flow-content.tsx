@@ -26,6 +26,7 @@ import {
   type ReportingEntitySource,
 } from "../export/model";
 import type { FiscalYearEnd } from "../export/reporting-period";
+import type { LegendSelection } from "../lib/legend-selection";
 import { ActivityBreakdownChart, NetCashFlowChart } from "./cash-flow-charts";
 import { CashAccountStatusPanel } from "./cash-account-status-panel";
 import { CASH_FLOW_ROLES_DOC_PATH } from "./constants";
@@ -67,6 +68,13 @@ interface CashFlowContentProps {
    */
   selectedTab: string;
   onSelectedTabChange: (value: string) => void;
+  /**
+   * The units chosen in each chart's legend, by view. Page-owned for the
+   * same reason as the selected chart: a regrouped period keeps them
+   * (w4/1024).
+   */
+  unitSelections: Partial<Record<string, LegendSelection>>;
+  onUnitSelectionChange: (view: string, selected: LegendSelection) => void;
   filters: LedgerSearchParams;
   fiscalYearEnd: FiscalYearEnd;
   collapsePatterns: string[];
@@ -114,6 +122,8 @@ export function CashFlowContent({
   onTimeIntervalChange,
   selectedTab,
   onSelectedTabChange,
+  unitSelections,
+  onUnitSelectionChange,
   filters,
   fiscalYearEnd,
   collapsePatterns,
@@ -121,6 +131,11 @@ export function CashFlowContent({
 }: CashFlowContentProps) {
   const { t, i18n } = useTranslations();
   const chartTitleId = useId();
+  const unitsOf = (view: string) => ({
+    legendSelection: unitSelections[view],
+    onLegendSelectionChange: (selected: LegendSelection) =>
+      onUnitSelectionChange(view, selected),
+  });
   const activityTitles: Record<CashFlowActivity, string> = {
     operating: t("page.cashFlow.operating"),
     investing: t("page.cashFlow.investing"),
@@ -277,6 +292,7 @@ export function CashFlowContent({
               data={statement.intervals}
               interval={timeInterval}
               primarySeries={primaryCurrency}
+              {...unitsOf("netCashFlow")}
             />
           </TabsContent>
           <TabsContent value="byActivity" className="mt-0 space-y-3">
@@ -299,6 +315,7 @@ export function CashFlowContent({
               data={statement.intervals}
               interval={timeInterval}
               primarySeries={primaryCurrency}
+              {...unitsOf("byActivity")}
             />
           </TabsContent>
         </Tabs>

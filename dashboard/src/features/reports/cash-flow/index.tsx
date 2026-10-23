@@ -39,6 +39,7 @@ import { ConversionSelect } from "@/common/components/conversion-select";
 import { IntervalSelect } from "@/common/components/interval-select";
 import { cashFlowRootVariables, ledgerAccountRoots } from "./lib/account-roots";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
+import type { LegendSelection } from "../lib/legend-selection";
 
 /**
  * Cash Flow page component
@@ -75,6 +76,11 @@ export default function LedgerCashFlowPage() {
     CASH_FLOW_VIEWS,
     DEFAULT_VIEW,
   );
+  // The units chosen in each chart's legend, owned here for the same reason:
+  // regrouping the period unmounts the charts while it reads (w4/1024).
+  const [unitSelections, setUnitSelections] = useState<
+    Partial<Record<string, LegendSelection>>
+  >({});
 
   const {
     data,
@@ -241,6 +247,10 @@ export default function LedgerCashFlowPage() {
       onTimeIntervalChange={setTimeInterval}
       selectedTab={selectedTab}
       onSelectedTabChange={setSelectedTab}
+      unitSelections={unitSelections}
+      onUnitSelectionChange={(view, selected) =>
+        setUnitSelections((previous) => ({ ...previous, [view]: selected }))
+      }
       filters={ledgerFilters.searchParams}
       fiscalYearEnd={ledgerData.favaOptions.fiscalYearEnd}
       collapsePatterns={getCollapsePatterns(ledgerData)}

@@ -22,10 +22,13 @@ import {
   ChartPeriodTable,
   type ChartPeriodSeries,
 } from "../components/chart-period-table";
-import { legendSelectionFor } from "../lib/legend-selection";
+import {
+  useLegendSelection,
+  type LegendSelectionProps,
+} from "../lib/legend-selection";
 import { CASH_FLOW_ACTIVITIES, type CashFlowIntervalPoint } from "./lib/model";
 
-interface CashFlowChartProps {
+interface CashFlowChartProps extends LegendSelectionProps {
   data: CashFlowIntervalPoint[];
   interval?: ChartInterval;
   primarySeries?: string;
@@ -53,14 +56,21 @@ export function NetCashFlowChart({
   interval,
   primarySeries = "USD",
   labelledBy,
+  legendSelection,
+  onLegendSelectionChange,
 }: CashFlowChartProps) {
   const formatNum = useFormatNumber();
-  const { chartOption, periodSeries } = useMemo((): {
+  const built = useMemo((): {
     chartOption: EChartsOption;
     periodSeries: ChartPeriodSeries[];
+    units: string[];
   } => {
     if (!data || data.length === 0) {
-      return { chartOption: createEmptyChartOption(), periodSeries: [] };
+      return {
+        chartOption: createEmptyChartOption(),
+        periodSeries: [],
+        units: [],
+      };
     }
 
     const currencies = new Set<string>();
@@ -107,11 +117,10 @@ export function NetCashFlowChart({
       }) as TooltipComponentFormatterCallback<TooltipComponentFormatterCallbackParams>,
     };
 
-    const legendSelected = legendSelectionFor(currencyList, primarySeries);
-
     const { xAxis, yAxis } = createCommonAxisConfig(dates, interval);
 
     return {
+      units: currencyList,
       // The model's exact decimals, with the chart's plotted zero (w4/996).
       periodSeries: currencyList.map((currency) => ({
         unit: currency,
@@ -124,7 +133,6 @@ export function NetCashFlowChart({
           bottom: 0,
           type: "scroll",
           pageButtonItemGap: 5,
-          selected: legendSelected,
         },
         grid: createCommonGridConfig(),
         xAxis,
@@ -137,6 +145,12 @@ export function NetCashFlowChart({
       },
     };
   }, [data, interval, primarySeries, formatNum]);
+  const { chartOption, onLegendSelectChanged } = useLegendSelection(
+    built.chartOption,
+    built.units,
+    primarySeries,
+    { legendSelection, onLegendSelectionChange },
+  );
 
   return (
     <div className="w-full">
@@ -144,11 +158,12 @@ export function NetCashFlowChart({
         option={chartOption}
         style={{ height: "250px", width: "100%" }}
         className="w-full"
+        onLegendSelectChanged={onLegendSelectChanged}
       />
       {labelledBy && (
         <ChartPeriodTable
           data={data}
-          series={periodSeries}
+          series={built.periodSeries}
           labelledBy={labelledBy}
         />
       )}
@@ -166,22 +181,30 @@ export function ActivityBreakdownChart({
   interval,
   primarySeries = "USD",
   labelledBy,
+  legendSelection,
+  onLegendSelectionChange,
 }: CashFlowChartProps) {
   const formatNum = useFormatNumber();
   const { t } = useTranslations();
-  const { chartOption, periodSeries } = useMemo((): {
+  // The labels, not `t`, feed the option: `t` is new on every render, and an
+  // option rebuilt on every render never settles its legend choice (w4/1024).
+  const operating = t("page.cashFlow.operating");
+  const investing = t("page.cashFlow.investing");
+  const financing = t("page.cashFlow.financing");
+  const built = useMemo((): {
     chartOption: EChartsOption;
     periodSeries: ChartPeriodSeries[];
+    units: string[];
   } => {
     if (!data || data.length === 0) {
-      return { chartOption: createEmptyChartOption(), periodSeries: [] };
+      return {
+        chartOption: createEmptyChartOption(),
+        periodSeries: [],
+        units: [],
+      };
     }
 
-    const activityLabels = [
-      t("page.cashFlow.operating"),
-      t("page.cashFlow.investing"),
-      t("page.cashFlow.financing"),
-    ];
+    const activityLabels = [operating, investing, financing];
 
     const currencies = new Set<string>();
     data.forEach((point) => {
@@ -267,6 +290,7 @@ export function ActivityBreakdownChart({
     const { xAxis, yAxis } = createCommonAxisConfig(dates, interval);
 
     return {
+      units: currencyList,
       // One labelled segment per activity in each currency's column, with
       // the model's exact decimals and the chart's plotted zero (w4/996).
       periodSeries: currencyList.flatMap((currency) =>
@@ -285,9 +309,6 @@ export function ActivityBreakdownChart({
           bottom: 0,
           type: "scroll",
           pageButtonItemGap: 5,
-          // The operating unit, else the first unit the chart has: a scope
-          // without the operating unit must not start all hidden (w4/997).
-          selected: legendSelectionFor(currencyList, primarySeries),
         },
         grid: createCommonGridConfig(),
         xAxis,
@@ -299,7 +320,24 @@ export function ActivityBreakdownChart({
         animationEasing: "cubicOut",
       },
     };
-  }, [data, interval, primarySeries, formatNum, t]);
+  }, [
+    data,
+    interval,
+    primarySeries,
+    formatNum,
+    operating,
+    investing,
+    financing,
+  ]);
+  // The reader's units, else the operating unit, else the first unit the
+  // chart has: a scope without the operating unit must not start all hidden
+  // (w4/997).
+  const { chartOption, onLegendSelectChanged } = useLegendSelection(
+    built.chartOption,
+    built.units,
+    primarySeries,
+    { legendSelection, onLegendSelectionChange },
+  );
 
   return (
     <div className="w-full">
@@ -307,11 +345,12 @@ export function ActivityBreakdownChart({
         option={chartOption}
         style={{ height: "250px", width: "100%" }}
         className="w-full"
+        onLegendSelectChanged={onLegendSelectChanged}
       />
       {labelledBy && (
         <ChartPeriodTable
           data={data}
-          series={periodSeries}
+          series={built.periodSeries}
           labelledBy={labelledBy}
         />
       )}

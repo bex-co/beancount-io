@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ReactECharts } from "@/common/components/react-echarts";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import {
@@ -9,7 +9,6 @@ import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import type {
   EChartsOption,
-  LegendComponentOption,
   TooltipComponentFormatterCallback,
   TooltipComponentFormatterCallbackParams,
 } from "echarts";
@@ -24,24 +23,17 @@ import {
   type ChartPeriodSeries,
 } from "../components/chart-period-table";
 import {
-  legendSelectionFor,
-  type LegendSelection,
+  useLegendSelection,
+  type LegendSelectionProps,
 } from "../lib/legend-selection";
 
-interface LineChartProps {
+interface LineChartProps extends LegendSelectionProps {
   data: DateAndBalance[];
   className?: string;
   interval?: ChartInterval;
   primarySeries?: string;
   inverted?: boolean;
   labelledBy?: string;
-  /**
-   * The units the reader chose in the legend, held by a caller that outlives
-   * this chart (a report whose pending read unmounts it). Without one, the
-   * chart keeps the choice itself across its own data updates (w4/m51).
-   */
-  legendSelection?: LegendSelection;
-  onLegendSelectionChange?: (selected: LegendSelection) => void;
 }
 
 const styles = { height: "250px", width: "100%" };
@@ -61,9 +53,6 @@ export function LineChart({
   onLegendSelectionChange,
 }: LineChartProps) {
   const formatNum = useFormatNumber();
-  const [ownSelection, setOwnSelection] = useState<LegendSelection>();
-  const chosen = onLegendSelectionChange ? legendSelection : ownSelection;
-  const choose = onLegendSelectionChange ?? setOwnSelection;
   const built = useMemo((): {
     chartOption: EChartsOption;
     periodSeries: ChartPeriodSeries[];
@@ -212,34 +201,19 @@ export function LineChart({
     };
   }, [data, interval, primarySeries, inverted, formatNum]);
 
-  // The reader's legend choice survives a regrouped period or other data
-  // update; ECharts would otherwise take the new option's defaults. A click is
-  // already on screen, so it is stored without a new option: only new data,
-  // or a remount, folds the choice in (w4/m51).
-  const [applied, setApplied] = useState({ built, chosen });
-  if (applied.built !== built) setApplied({ built, chosen });
-  const chartOption = useMemo((): EChartsOption => {
-    const { chartOption: base, commodities } = applied.built;
-    if (commodities.length === 0) return base;
-    return {
-      ...base,
-      legend: {
-        ...(base.legend as LegendComponentOption),
-        selected: legendSelectionFor(
-          commodities,
-          primarySeries,
-          applied.chosen,
-        ),
-      },
-    };
-  }, [applied, primarySeries]);
+  const { chartOption, onLegendSelectChanged } = useLegendSelection(
+    built.chartOption,
+    built.commodities,
+    primarySeries,
+    { legendSelection, onLegendSelectionChange },
+  );
 
   return (
     <div className={className}>
       <ReactECharts
         option={chartOption}
         style={styles}
-        onLegendSelectChanged={choose}
+        onLegendSelectChanged={onLegendSelectChanged}
       />
       {labelledBy && (
         <ChartPeriodTable

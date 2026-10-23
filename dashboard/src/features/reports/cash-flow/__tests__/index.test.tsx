@@ -386,6 +386,43 @@ describe("LedgerCashFlowPage chart selection lifetime", () => {
     expect(captureProps.mock.calls.at(-1)![0].selectedTab).toBe("byActivity");
   });
 
+  it("keeps each chart's units across an uncached interval read (w4/1024)", () => {
+    vi.mocked(useQuery).mockReturnValue(settled() as never);
+    const { rerender } = render(<LedgerCashFlowPage />);
+    expect(captureProps.mock.calls.at(-1)![0].unitSelections).toEqual({});
+
+    // The reader shows vacation hours alone in By Activity.
+    act(() =>
+      captureProps.mock.calls
+        .at(-1)![0]
+        .onUnitSelectionChange("byActivity", { USD: false, VACHR: true }),
+    );
+    rerender(<LedgerCashFlowPage />);
+
+    // Quarterly's read is pending, so the content (and its charts) unmount.
+    vi.mocked(useQuery).mockReturnValue(pending() as never);
+    rerender(<LedgerCashFlowPage />);
+    expect(screen.queryByText("cash-flow-content")).not.toBeInTheDocument();
+
+    vi.mocked(useQuery).mockReturnValue(settled() as never);
+    rerender(<LedgerCashFlowPage />);
+    expect(captureProps.mock.calls.at(-1)![0].unitSelections).toEqual({
+      byActivity: { USD: false, VACHR: true },
+    });
+
+    // The other view keeps its own choice beside it.
+    act(() =>
+      captureProps.mock.calls
+        .at(-1)![0]
+        .onUnitSelectionChange("netCashFlow", { USD: true, VACHR: true }),
+    );
+    rerender(<LedgerCashFlowPage />);
+    expect(captureProps.mock.calls.at(-1)![0].unitSelections).toEqual({
+      byActivity: { USD: false, VACHR: true },
+      netCashFlow: { USD: true, VACHR: true },
+    });
+  });
+
   it("shows the pending state instead of the statement while a read is in flight", () => {
     vi.mocked(useQuery).mockReturnValue(pending() as never);
     render(<LedgerCashFlowPage />);

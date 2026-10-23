@@ -14,9 +14,11 @@ vi.mock("@/common/components/react-echarts", () => ({
   },
 }));
 
-vi.mock("@/common/hooks/use-format-number", () => ({
-  useFormatNumber: () => (value: number) => String(value),
-}));
+// Stable, like the real hook (a useCallback).
+vi.mock("@/common/hooks/use-format-number", () => {
+  const format = (value: number) => String(value);
+  return { useFormatNumber: () => format };
+});
 
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
