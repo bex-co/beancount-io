@@ -240,3 +240,28 @@ describe("a recurring row whose expected date has passed", () => {
     ).toBe(true);
   });
 });
+
+// w21/761: the row named the furthest pre-entered date, not the next one.
+describe("a merchant row with every entry scheduled", () => {
+  const prepaid = (firstDate: string) =>
+    ({
+      merchant: {
+        payee: "Prepaid",
+        transactionCount: 2,
+        firstDate,
+        lastDate: "2026-10-31",
+      },
+      resolved: { isRecurring: false, detection: null },
+      inRecurringSection: false,
+    }) as unknown as MerchantListItem;
+
+  it("names the next scheduled date, the first", () => {
+    const text = merchantRowText(prepaid("2026-10-25"), t, "en", "2026-10-23");
+    expect(text.lastDate.includes("Oct 25, 2026")).toBe(true);
+  });
+
+  it("keeps the last one when entries were made before", () => {
+    const text = merchantRowText(prepaid("2026-10-01"), t, "en", "2026-10-23");
+    expect(text.lastDate.includes("Oct 31, 2026")).toBe(true);
+  });
+});

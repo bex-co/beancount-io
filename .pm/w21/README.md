@@ -27,7 +27,6 @@
 - [763](./763.md) — An overspent $0 budget shows no progress bar on its Budget card, but a full red bar on Home
 - [764](./764.md) — On LY, a weekly budget's last bar is labelled "1/4" (2026), and VoiceOver reads the span as "1/5–1/4"
 - [765](./765.md) — A budget whose only entry is in the future highlights that entry as in effect while the card says "Starts"
-- [761](./761.md) — A merchant whose entries are all scheduled shows its first date as if it already happened
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client

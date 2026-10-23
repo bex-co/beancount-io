@@ -41,12 +41,18 @@ export function merchantRowText(
     count: merchant.transactionCount,
   });
   // A last date after today is a pre-entered payment, not one made
-  // (w21/167).
+  // (w21/167). With every entry pre-entered, the next is the first: the
+  // furthest read as the one coming (w21/761).
   const lastDate = !merchant.lastDate
     ? ""
     : merchant.lastDate > today
       ? t("merchantsScheduled", {
-          date: formatLedgerDateShort(merchant.lastDate, locale),
+          date: formatLedgerDateShort(
+            merchant.firstDate && merchant.firstDate > today
+              ? merchant.firstDate
+              : merchant.lastDate,
+            locale,
+          ),
         })
       : formatLedgerDateShort(merchant.lastDate, locale);
 

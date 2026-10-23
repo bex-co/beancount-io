@@ -33,3 +33,28 @@ describe("merchantDateRangeText", () => {
     );
   });
 });
+
+// w21/761: with every entry pre-entered, the first date read as one made.
+describe("a merchant whose entries are all scheduled", () => {
+  const t = ((key: string, options?: Record<string, string>) =>
+    key === "merchantsScheduled"
+      ? `Scheduled ${options?.date}`
+      : key === "merchantDetailDateRange"
+        ? `${options?.first} – ${options?.last}`
+        : key) as never;
+
+  it("reads the whole span as scheduled", () => {
+    expect(
+      merchantDateRangeText("2026-10-25", "2026-10-31", "2026-10-23", "en", t),
+    ).toBe("Scheduled Oct 25, 2026 – Oct 31, 2026");
+    expect(
+      merchantDateRangeText("2026-10-25", "2026-10-25", "2026-10-23", "en", t),
+    ).toBe("Scheduled Oct 25, 2026");
+  });
+
+  it("keeps a made first date beside a scheduled last one", () => {
+    expect(
+      merchantDateRangeText("2026-10-01", "2026-10-31", "2026-10-23", "en", t),
+    ).toBe("Oct 1, 2026 – Scheduled Oct 31, 2026");
+  });
+});
