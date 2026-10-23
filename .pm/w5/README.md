@@ -36,6 +36,8 @@
 
 ## Inbox
 
+- [1006 — Use effective unit costs when recognizing total-cost short covers](./1006.md) — major CLI regression after completed 1001; the new predicate ignores a total/compound component, changes the cover label and strands offsetting lots, reproduced 2026-10-23.
+
 - [1005 — Report native-ID conflicts when the ledger source amount was inferred](./1005.md) — minor CLI raw-source fallback blames an explicit incoming CSV for the existing ledger’s omitted amount; reproduced 2026-10-23.
 
 - [1004 — Compare every stated account and currency fact for calculated copies](./1004.md) — major CLI residual after completed 991; extra keys or a different inferred currency hide stated facts and falsely skip native-ID corrections, reproduced 2026-10-23.
