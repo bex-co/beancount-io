@@ -483,7 +483,7 @@ export const ca: Translations = {
   seeAll: "Mostra-ho tot",
   seeAllCard: "Mostra-ho tot: {{title}}",
   seeAllAccounts: "Mostra tots els comptes",
-  netWorth: "Patrimoni net",
+  netWorth: "Valor net",
   noAccounts: "Cap compte",
   reportsNoExpenses: "Cap despesa en aquest període",
   reportsNoIncome: "Cap ingrés en aquest període",

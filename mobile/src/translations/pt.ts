@@ -481,7 +481,7 @@ export const pt: Translations = {
   seeAll: "Ver tudo",
   seeAllCard: "Ver tudo: {{title}}",
   seeAllAccounts: "Ver todas as contas",
-  netWorth: "Patrimônio líquido",
+  netWorth: "Valor líquido",
   noAccounts: "Sem contas",
   reportsNoExpenses: "Sem despesas neste período",
   reportsNoIncome: "Sem receitas neste período",
