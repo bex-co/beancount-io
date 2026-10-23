@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fontSizes, fontWeights } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { haptics } from "@/common/haptics";
 import { CHROME, CONTROL_SIZE, SHUTTER_SIZE } from "./chrome";
 import { cameraPromptPending } from "./receipt-utils";
 
@@ -147,6 +148,11 @@ export const CameraView = ({
           filename: "receipt.jpg",
         });
       }
+    } catch {
+      // A tap before the preview is ready throws CameraNotReadyException on a
+      // device: say so with a haptic, and leave no unhandled rejection
+      // (w21/873). The shutter stays usable, to try again.
+      haptics.error();
     } finally {
       setCapturing(false);
     }
