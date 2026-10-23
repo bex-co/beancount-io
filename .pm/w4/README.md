@@ -66,7 +66,6 @@
 
 - [977 — Let the shared Dialog hold dismissal while a write is pending](./977.md) — maintenance; w4/m47 simplify altitude review, 2026-10-22; six dialogs copy the pending close guard and treat the Close button inconsistently; one Dialog prop would own it.
 
-- [976 — Reopen Gallery results with Arrow Down after Escape](./976.md) — minor; authenticated read-only dashboard QA,2026-10-22; both widths keep available results closed until blur/refocus; debounce ownership, actual selection/Back and IME guard controls retained, no writes.
 
 
 
