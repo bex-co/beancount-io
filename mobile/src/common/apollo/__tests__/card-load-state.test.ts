@@ -55,7 +55,13 @@ describe("empty states behind a failed query", () => {
   ]) {
     it(`${file} shows the load failure before any empty state`, () => {
       const source = fs.readFileSync(path.join(SRC, file), "utf8");
-      expect(source.includes("selectCardLoadState(")).toBe(true);
+      // Recent Transactions folds its two reads through `selectRecentCardState`,
+      // which is built on `selectCardLoadState` (w21/700).
+      expect(
+        source.includes("selectCardLoadState(") ||
+          (file.endsWith("recent-transactions-card.tsx") &&
+            source.includes("selectRecentCardState(")),
+      ).toBe(true);
       expect(/<CardLoadFailure\s+onRetry=/.test(source)).toBe(true);
     });
   }

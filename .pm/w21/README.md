@@ -13,7 +13,6 @@
 ## Inbox
 
 - [703](./703.md) — Home's net-worth hero draws its rolling digits misaligned for an Arabic-symbol currency (KWD)
-- [700](./700.md) — Home's Recent Transactions flashes "No transactions yet" with Add Transaction while its up-to-today read loads (w21/664 regression)
 - [701](./701.md) — Home's chart tabs: the selected Net Worth / Assets / Liabilities pill is nearly invisible (1.08:1 light, 2.07:1 dark)
 - [702](./702.md) — Files: main.bean's lock button (1.34:1) and the editor's new path line (1.78:1) are near-white in light mode
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window

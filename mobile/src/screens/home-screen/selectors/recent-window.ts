@@ -1,3 +1,8 @@
+import {
+  type CardLoadState,
+  selectCardLoadState,
+} from "../../../common/apollo/card-load-state";
+
 /**
  * Home's Recent Transactions shows what has happened: entries dated up to and
  * including today. The journal sorts newest first with no cap at today, so
@@ -52,4 +57,36 @@ export function pageEndedBeforeToday(
 /** The window ending today, for that second read (the key changes with the day, so it is kept to when it is needed). */
 export function recentTransactionsWindowToToday(today: string): string {
   return `0001-01-01 - ${today}`;
+}
+
+/** What one of the card's reads holds, as `selectRecentCardState` reads it. */
+type RecentRead = { loading: boolean; hasData: boolean; error: unknown };
+
+/**
+ * Which branch Recent Transactions renders, with both of its reads: the
+ * month-end page and, when that page ran out before today, the read up to
+ * today. Until that second read landed the card held only the page's past
+ * rows, often none, and said "No transactions yet" with Add Transaction; a
+ * failed one left that for good (w21/700). So it is part of the card's state:
+ * pending, it holds the skeleton, and failed, the failure tile. Rows already
+ * shown stay: they are the newest that have happened, just fewer.
+ */
+export function selectRecentCardState({
+  page,
+  past,
+  shown,
+}: {
+  page: RecentRead;
+  /** The read up to today; `null` while the page does not need it. */
+  past: Omit<RecentRead, "loading"> | null;
+  shown: number;
+}): CardLoadState {
+  if (selectCardLoadState(page) === "failed") return "failed";
+  if (shown > 0) return "ready";
+  const second =
+    past === null
+      ? "ready"
+      : selectCardLoadState({ ...past, loading: !past.hasData });
+  if (second === "failed") return "failed";
+  return page.loading || second === "loading" ? "loading" : "ready";
 }

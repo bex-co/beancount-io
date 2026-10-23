@@ -14,6 +14,7 @@ import {
   recentTransactionsUpTo,
   recentTransactionsWindow,
   recentTransactionsWindowToToday,
+  selectRecentCardState,
 } from "../selectors/recent-window";
 import { FadeInView } from "@/components/crossfade";
 import { DashboardCard } from "@/components";
@@ -26,7 +27,6 @@ import {
 } from "@/screens/transactions-screen/types";
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { CardLoadFailure } from "@/components/card-load-failure";
-import { selectCardLoadState } from "@/common/apollo/card-load-state";
 import { useGuest } from "@/common/guest/guest-context";
 import { Button } from "@/components/button";
 
@@ -79,12 +79,6 @@ export function RecentTransactionsCard({
     fetchPolicy: "cache-and-network",
   });
 
-  useEffect(() => {
-    if (refreshSignal > 0 && ledgerId) {
-      void refetch().catch(() => undefined);
-    }
-  }, [refreshSignal, ledgerId, refetch]);
-
   const page = (data?.getLedgerJournal.data ??
     []) as unknown as JournalDirectiveType[];
   // More than the buffer's worth of entries booked for later this month leave
@@ -96,7 +90,11 @@ export function RecentTransactionsCard({
     RECENT_LIMIT,
     RECENT_LIMIT + RECENT_FUTURE_BUFFER,
   );
-  const { data: pastData } = useGetLedgerJournalQuery({
+  const {
+    data: pastData,
+    error: pastError,
+    refetch: refetchPast,
+  } = useGetLedgerJournalQuery({
     variables: {
       ledgerId: ledgerId!,
       query: {
@@ -109,6 +107,17 @@ export function RecentTransactionsCard({
     skip: !ledgerId || !needsPast,
     fetchPolicy: "cache-and-network",
   });
+  // Both reads, so a pull to refresh or a Retry reaches the one ending today
+  // too (w21/700).
+  const refetchAll = () => {
+    void refetch().catch(() => undefined);
+    if (needsPast) void refetchPast().catch(() => undefined);
+  };
+  useEffect(() => {
+    if (refreshSignal > 0 && ledgerId) refetchAll();
+    // `needsPast` and the queries are read at the pull, not re-run by it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshSignal, ledgerId]);
   const entries = recentTransactionsUpTo(
     needsPast && pastData
       ? (pastData.getLedgerJournal.data as unknown as JournalDirectiveType[])
@@ -142,6 +151,13 @@ export function RecentTransactionsCard({
 
   // Twin entries share a hash: their keys carry the ordinal (w21/419, w21/524).
   const rowKeys = journalRowKeys(entries);
+  const cardState = selectRecentCardState({
+    page: { loading, hasData: data !== undefined, error },
+    past: needsPast
+      ? { hasData: pastData !== undefined, error: pastError }
+      : null,
+    shown: entries.length,
+  });
 
   const onSeeAll = () => {
     if (guest) {
@@ -153,15 +169,9 @@ export function RecentTransactionsCard({
 
   return (
     <DashboardCard title={t("recentTransactions")} onSeeAll={onSeeAll} bleed>
-      {selectCardLoadState({
-        loading: loading,
-        hasData: data !== undefined,
-        error: error,
-      }) === "failed" ? (
-        <CardLoadFailure
-          onRetry={() => void refetch().catch(() => undefined)}
-        />
-      ) : loading && entries.length === 0 ? (
+      {cardState === "failed" ? (
+        <CardLoadFailure onRetry={refetchAll} />
+      ) : cardState === "loading" ? (
         <RecentTransactionsSkeleton />
       ) : (
         <FadeInView>

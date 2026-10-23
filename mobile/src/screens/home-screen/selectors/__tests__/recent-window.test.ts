@@ -5,6 +5,7 @@ import {
   recentTransactionsWindowToToday,
   recentTransactionsUpTo,
   recentTransactionsWindow,
+  selectRecentCardState,
 } from "../recent-window";
 
 // w21/471: five pre-entered rent entries filled the "Recent Transactions" card
@@ -88,6 +89,118 @@ describe("a page that ran out before today", () => {
     expect(pageEndedBeforeToday(enough, "2026-10-22", 5, 25)).toBe(false);
     expect(pageEndedBeforeToday(future.slice(0, 10), "2026-10-22", 5, 25)).toBe(
       false,
+    );
+  });
+});
+
+// w21/700: while the read up to today loaded, Home's card held only the page's
+// past rows (none, with this month full of later entries) and said "No
+// transactions yet" with Add Transaction; a failed read left that for good.
+describe("selectRecentCardState", () => {
+  const settled = { loading: false, hasData: true, error: undefined };
+  const failure = new Error("Network request failed");
+
+  it("holds the skeleton while the read up to today is pending", () => {
+    expect(
+      selectRecentCardState({
+        page: settled,
+        past: { hasData: false, error: undefined },
+        shown: 0,
+      }),
+    ).toBe("loading");
+  });
+
+  it("shows the failure tile when the read up to today fails", () => {
+    expect(
+      selectRecentCardState({
+        page: settled,
+        past: { hasData: false, error: failure },
+        shown: 0,
+      }),
+    ).toBe("failed");
+  });
+
+  it("is ready once the read up to today lands, empty or not", () => {
+    for (const shown of [0, 5]) {
+      expect(
+        selectRecentCardState({
+          page: settled,
+          past: { hasData: true, error: undefined },
+          shown,
+        }),
+      ).toBe("ready");
+    }
+  });
+
+  it("keeps rows already shown while the second read loads or fails", () => {
+    for (const error of [undefined, failure]) {
+      expect(
+        selectRecentCardState({
+          page: settled,
+          past: { hasData: false, error },
+          shown: 2,
+        }),
+      ).toBe("ready");
+    }
+  });
+
+  it("reads as the page alone when no second read is needed", () => {
+    expect(selectRecentCardState({ page: settled, past: null, shown: 0 })).toBe(
+      "ready",
+    );
+    expect(
+      selectRecentCardState({
+        page: { loading: true, hasData: false, error: undefined },
+        past: null,
+        shown: 0,
+      }),
+    ).toBe("loading");
+    expect(
+      selectRecentCardState({
+        page: { loading: false, hasData: false, error: failure },
+        past: null,
+        shown: 0,
+      }),
+    ).toBe("failed");
+  });
+});
+
+describe("Home's Recent Transactions card with a second read", () => {
+  const card = fs
+    .readFileSync(
+      path.join(
+        __dirname,
+        "..",
+        "..",
+        "components",
+        "recent-transactions-card.tsx",
+      ),
+      "utf8",
+    )
+    .replace(/\s+/g, "");
+
+  it("renders the skeleton and the failure tile from both reads", () => {
+    expect(
+      card.includes(
+        "past:needsPast?{hasData:pastData!==undefined,error:pastError}:null,",
+      ),
+    ).toBe(true);
+    expect(
+      card.includes(
+        'cardState==="failed"?(<CardLoadFailureonRetry={refetchAll}/>',
+      ),
+    ).toBe(true);
+    expect(
+      card.includes('cardState==="loading"?(<RecentTransactionsSkeleton/>'),
+    ).toBe(true);
+  });
+
+  it("asks for the read up to today again on a pull to refresh or Retry", () => {
+    expect(
+      card.includes("if(needsPast)voidrefetchPast().catch(()=>undefined);"),
+    ).toBe(true);
+    expect(card.includes("if(refreshSignal>0&&ledgerId)refetchAll();")).toBe(
+      true,
     );
   });
 });
