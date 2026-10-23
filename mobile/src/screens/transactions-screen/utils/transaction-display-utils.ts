@@ -333,13 +333,28 @@ export const selectTransactionAmount = (
         // the cash that moved from one account to the other is neutral
         // (w21/570).
         const feeLines = postings.filter((p) => isFeeLine(p.account, roots));
-        // The exchange is priced (`@ 1.09 USD`), which is how an entry like it
-        // balances; a card purchase that also earns miles balances without one
-        // and keeps reading as the money spent.
+        // The exchange is priced (`@ 1.09 USD`) on the money that moved, and
+        // that money outweighs the fee: a priced hotel bill, or miles earned
+        // at `@ 0.01 USD` beside a $100 purchase, are spending, and read as an
+        // unsigned transfer or "−$95.00" when any price counted (w21/819).
+        const weight = (p: JournalPosting) =>
+          parseFloat(p.units.number) *
+          (p.price ? parseFloat(p.price.number) : 1);
+        const pricedMoney = postings.filter(
+          (p) => p.price && isBalanceSheet(p.account, roots),
+        );
+        const movedWeight = pricedMoney.reduce(
+          (sum, p) => sum + Math.abs(weight(p)),
+          0,
+        );
+        const feeWeight = Math.abs(
+          feeLines.reduce((sum, p) => sum + weight(p), 0),
+        );
         const exchangeWithFee =
           !isTrade &&
           feeLines.length > 0 &&
-          postings.some((p) => p.price) &&
+          pricedMoney.length > 0 &&
+          movedWeight > feeWeight &&
           postings.every(
             (p) =>
               isBalanceSheet(p.account, roots) || isFeeLine(p.account, roots),

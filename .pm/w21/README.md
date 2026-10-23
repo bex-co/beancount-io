@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [819](./819.md) — Since w21/570, a priced purchase reads as an exchange: "$130.00" unsigned, miles "−$95.00"
 - [820](./820.md) — Scrubbing a flat line chart turns its grey line green or red while the row stays grey
 - [821](./821.md) — VoiceOver's Budget chart summary reads unrounded float sums ("−$0.0000000000000036")
 - [822](./822.md) — Home Spending's two bars sit off-centre (28 pt left, 48 pt right)

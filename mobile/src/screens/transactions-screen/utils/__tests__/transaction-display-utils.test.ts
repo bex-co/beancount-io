@@ -430,6 +430,43 @@ describe("selectTransactionAmount", () => {
         ],
       });
 
+    // w21/819: priced purchases read as exchanges once any `@` counted.
+    it("leaves a priced purchase as the money spent", () => {
+      const trip = makeTransaction({
+        postings: [
+          makePosting("Liabilities:Card", "-130.00"),
+          {
+            ...makePosting("Expenses:Hotel", "100.00", "EUR"),
+            price: { number: "1.10", currency: "USD" },
+          },
+          makePosting("Expenses:Tips", "20.00"),
+          makePosting("Assets:CashEUR", "-10.00", "EUR"),
+          makePosting("Expenses:Food", "10.00", "EUR"),
+        ],
+      });
+      expect(selectTransactionAmount(trip, "USD")).toEqual({
+        text: "$130.00",
+        value: -130,
+        currency: "USD",
+      });
+      const miles = makeTransaction({
+        postings: [
+          makePosting("Liabilities:Card", "-100.00"),
+          makePosting("Expenses:Travel", "100.00"),
+          {
+            ...makePosting("Assets:Miles", "500", "MILES"),
+            price: { number: "0.01", currency: "USD" },
+          },
+          makePosting("Income:Miles", "-5.00"),
+        ],
+      });
+      expect(selectTransactionAmount(miles, "USD")).toEqual({
+        text: "$100.00",
+        value: -100,
+        currency: "USD",
+      });
+    });
+
     it("reads only the fee that left, not the cash that moved", () => {
       expect(
         selectTransactionAmount(
