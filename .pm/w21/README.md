@@ -49,3 +49,8 @@
 - [840](./840.md) — Share/Copy link on a plugin copy opens the dashboard's editable entry page, where Delete removes the series
 - [841](./841.md) — A padding entry says "A plugin generated this entry" and its pad source opens as "Transaction" with "Edit Transaction"
 - [842](./842.md) — After an edit, the detail header keeps the old entry's pencil and ⋯ while it reloads
+- [843](./843.md) — Same-day entries from different include files are ordered wrongly, so running balances are wrong
+- [844](./844.md) — A non-included .bean file in the repo brings back w21/134's "+100 → 500"
+- [845](./845.md) — Entry Context's balance before for a parent-account assertion leaves out its subaccounts
+- [846](./846.md) — sellgains never flags a price that disagrees with proceeds (bean-check does)
+- [847](./847.md) — noduplicates only catches duplicate transactions, not balance/note/event
