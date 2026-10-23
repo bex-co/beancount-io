@@ -4,7 +4,7 @@
 
 ## Inbox
 
-- **1027** — Preserve the source price date in Overview valuation details (20–30m, dashboard, A2/A3) ← dashboard QA; residual of 285 ([note](./1027.md))
+- **1027** — Preserve source dates and reporting months in Overview (40–50m, dashboard, A2/A3) ← dashboard QA; residual of 285 ([note](./1027.md))
 
 - **1026** — Let configured transaction tolerances reach ledger validation (40–55m, dashboard, A2) ← dashboard QA; residual of W3/499 ([note](./1026.md))
 
