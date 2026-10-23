@@ -175,10 +175,16 @@ export function selectBudgetCardStats(
   const status = judged === null ? null : standingStatus(judged, notInTotal);
   const favorable =
     status === null ? true : isFavorableVariance(status, direction);
+  // A budget of nothing is full the moment anything is spent against it, as
+  // Home draws it (w21/076); the card hid its meter instead (w21/763).
   const progressPercent =
-    actual === null || budget <= 0
+    actual === null
       ? null
-      : Math.max(0, (actual / budget) * 100);
+      : budget <= 0
+        ? actual > 0
+          ? 100
+          : 0
+        : Math.max(0, (actual / budget) * 100);
 
   return {
     budget,

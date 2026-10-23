@@ -87,13 +87,21 @@ describe("selectBudgetCardStats", () => {
     expect(stats.progressPercent).toBe(null);
   });
 
-  it("does not compute a progress percentage against a zero budget", () => {
+  // w21/763: the card hid its meter for a zero budget, where Home drew it
+  // full (w21/076).
+  it("fills a zero budget's meter once anything is spent, as Home does", () => {
     const stats = selectBudgetCardStats(
       group("0 USD", [["2025-01-01", "monthly", "0 USD"]]),
       [{ date: "2025-01-31", actual: 120, budget: 0 }],
     );
+    expect(stats.progressPercent).toBe(100);
+    expect(stats.favorable).toBe(false);
 
-    expect(stats.progressPercent).toBe(null);
+    const untouched = selectBudgetCardStats(
+      group("0 USD", [["2025-01-01", "monthly", "0 USD"]]),
+      [{ date: "2025-01-31", actual: 0, budget: 0 }],
+    );
+    expect(untouched.progressPercent).toBe(0);
   });
 });
 

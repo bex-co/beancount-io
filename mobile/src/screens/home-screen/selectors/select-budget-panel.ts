@@ -137,11 +137,7 @@ export function selectBudgetPanelRows(
         scale,
         budget: stats.budget,
         actual: spent,
-        progressPercent: noBudget
-          ? spent > 0
-            ? 100
-            : 0
-          : (stats.progressPercent ?? 0),
+        progressPercent: stats.progressPercent ?? 0,
         noBudget,
         favorable: stats.favorable,
         status: stats.status,
