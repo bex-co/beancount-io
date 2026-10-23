@@ -202,7 +202,11 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
       },
     }));
 
-    return <div ref={chartRef} className={className} style={style} />;
+    // Canvas text takes its direction from the page, and in Persian a
+    // weak leading minus then moved behind its number: "300.0-" on every
+    // negative axis tick. The drawing surface (axes, legend, tooltip) is
+    // left to right; the card around it keeps the page's direction (w4/1018).
+    return <div ref={chartRef} dir="ltr" className={className} style={style} />;
   },
 );
 

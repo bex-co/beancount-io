@@ -273,3 +273,16 @@ it("keeps observing the container after the theme recreates the chart", () => {
   expect(disconnected).toBe(1);
   vi.unstubAllGlobals();
 });
+
+it("draws left to right inside a right-to-left page (w4/1018)", () => {
+  const option = { series: [{ type: "bar" as const, data: [-300, 0] }] };
+  const { container } = render(
+    <div dir="rtl">
+      <ReactEChartsClient option={option} />
+    </div>,
+  );
+  const surface = container.querySelector("[dir=rtl] > div")!;
+  // The element ECharts draws its canvas, axes and tooltip into.
+  expect(surface.getAttribute("dir")).toBe("ltr");
+  expect(surface.closest("[dir=rtl]")).not.toBeNull();
+});
