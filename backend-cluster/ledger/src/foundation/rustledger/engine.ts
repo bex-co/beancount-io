@@ -39,6 +39,8 @@ import {
 } from "./plugins";
 import { reconcileDocumentErrors } from "./document-validation";
 import { averageBookingErrors } from "./average-booking";
+import { openAutoAccounts } from "./auto-accounts";
+import { inactiveAfterGeneratedCloses } from "./generated-closes";
 import { reconcileOneCommodityErrors } from "./one-commodity";
 import { reconcileUniquePriceErrors } from "./unique-prices";
 import { locateBookErrors } from "./book-errors";
@@ -721,6 +723,17 @@ async function parseLedgerFilesUncached(
   errors = reconcileUniquePriceErrors(errors, directives, files, entryPoint);
   // Beancount's onecommodity honours its opt-outs; rustledger's does not.
   errors = reconcileOneCommodityErrors(errors, directives, files, entryPoint);
+  // The engine validates before its plugins add close_tree's closes, and its
+  // auto_accounts opens no account named only by a note or a close (w21/737).
+  errors = [
+    ...errors,
+    ...inactiveAfterGeneratedCloses(directives, files, entryPoint),
+  ];
+  ({ directives, errors } = openAutoAccounts(
+    directives,
+    errors,
+    files[entryPoint],
+  ));
   errors = locateBookErrors(errors, files, entryPoint);
   errors = reportUrlIncludes(errors, files);
   errors = reportUndecodableSources(errors, files, entryPoint);

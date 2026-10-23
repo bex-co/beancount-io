@@ -1534,6 +1534,45 @@ async function main(): Promise<void> {
       ]),
     `onecommodity honours its opt-outs and reports an account once (got ${JSON.stringify(oneCommodity)})`,
   );
+  // w21/737: close_tree's child closes were added after the engine validated,
+  // and its auto_accounts opened no account named only by a close.
+  const closeTree = async (source: string[]) =>
+    (
+      await parseLedgerFiles(
+        { "main.beancount": source.join("\n") },
+        "main.beancount",
+        { today: "2099-01-01" },
+      )
+    ).errors.map((e) => `${e.code}@${e.line} ${e.message}`);
+  const lateChild = await closeTree([
+    'plugin "beancount.plugins.close_tree"',
+    "2024-01-01 open Assets:Broker",
+    "2024-01-01 open Assets:Broker:VTI",
+    "2024-01-01 open Assets:Cash",
+    "2024-04-01 close Assets:Broker",
+    '2024-05-01 * "Late"',
+    "  Assets:Broker:VTI  1 USD",
+    "  Assets:Cash",
+  ]);
+  assert(
+    JSON.stringify(lateChild) ===
+      JSON.stringify([
+        "E1003@6 Posting to inactive account Assets:Broker:VTI on 2024-05-01 (closed on 2024-04-01)",
+      ]),
+    `a posting after close_tree closes its account is refused (got ${JSON.stringify(lateChild)})`,
+  );
+  const autoParent = await closeTree([
+    'plugin "beancount.plugins.auto_accounts"',
+    'plugin "beancount.plugins.close_tree"',
+    '2024-01-02 * "Buy"',
+    "  Assets:Broker:VTI  1 USD",
+    "  Assets:Cash",
+    "2024-04-01 close Assets:Broker",
+  ]);
+  assert(
+    autoParent.length === 0,
+    `auto_accounts opens an account named only by its close (got ${JSON.stringify(autoParent)})`,
+  );
   // w21/733: a posting flag was read as the sale's account.
   const flagged = (
     await parseLedgerFiles(
