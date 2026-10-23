@@ -509,6 +509,51 @@ describe("detectRecurrence twice a month", () => {
       );
       expect(detectRecurrence(series, "2024-02-27")?.cadence).toBe("biweekly");
     });
+
+    // w21/799: one payment a day late read "Twice a month".
+    it("keeps a biweekly series with a payment a day off", () => {
+      const daycare = pointsOn(
+        ["2026-01-30", "2026-02-13", "2026-02-27", "2026-03-13", "2026-03-28"],
+        1850,
+      );
+      expect(detectRecurrence(daycare, "2026-04-01")?.cadence).toBe("biweekly");
+      // Every start day of 2024–25, 4 to 6 payments, one shifted a day.
+      const misread: string[] = [];
+      const first = parseLedgerDay("2024-01-01")!;
+      const last = parseLedgerDay("2025-12-31")!;
+      for (let start = first; start <= last; start += 1) {
+        for (const count of [4, 5, 6]) {
+          for (let shifted = 0; shifted < count; shifted += 1) {
+            for (const shift of [-1, 1]) {
+              const days = Array.from(
+                { length: count },
+                (_, i) => start + i * 14 + (i === shifted ? shift : 0),
+              );
+              const verdict = detectRecurrence(
+                pointsOn(days.map(formatLedgerDay), 1850),
+                formatLedgerDay(days[count - 1]! + 1),
+              );
+              if (verdict?.cadence === "semimonthly") {
+                misread.push(formatLedgerDay(start));
+              }
+            }
+          }
+        }
+      }
+      expect(misread.slice(0, 3)).toEqual([]);
+    });
+
+    it("keeps a 1st and 15th bill twice a month", () => {
+      const days = ["01", "15"];
+      const months = ["2026-03", "2026-04", "2026-05", "2026-06"];
+      const series = pointsOn(
+        months.flatMap((month) => days.map((day) => `${month}-${day}`)),
+        900,
+      );
+      expect(detectRecurrence(series, "2026-06-20")?.cadence).toBe(
+        "semimonthly",
+      );
+    });
   });
 
   it("keeps a monthly bill's day through a skipped month (w21/459)", () => {

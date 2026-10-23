@@ -555,10 +555,13 @@ export function detectRecurrence(
   }
 
   // Two stable days a month is its own cadence, not a biweekly one. Gaps of
-  // exactly 14 days throughout are biweekly: February is 28 days, so a short
-  // biweekly series spanning it shares a day of the month between two payments
-  // and fit two monthly anchors by chance (w21/530).
-  const steadyBiweekly = gaps.length >= 3 && gaps.every((gap) => gap === 14);
+  // 14 days throughout are biweekly: February is 28 days, so a short biweekly
+  // series spanning it shares a day of the month between two payments and fit
+  // two monthly anchors by chance (w21/530). A day either way still is: one
+  // payment a day late read "Twice a month" (w21/799). The 15th to the 1st is
+  // 16 or 17 days outside February, so a 1st/15th bill stays semimonthly.
+  const steadyBiweekly =
+    gaps.length >= 3 && gaps.every((gap) => Math.abs(gap - 14) <= 1);
   const semiMonthly = steadyBiweekly ? null : semiMonthlyDays(eventDays);
   if (!semiMonthly) {
     const dispersion = mad(gaps, medianGap) / medianGap;
