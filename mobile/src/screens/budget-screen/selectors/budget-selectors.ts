@@ -633,8 +633,13 @@ export function budgetForInterval(
   // settle it at money precision rather than carrying the noise into every
   // variance and progress figure downstream. A fractional commodity keeps its
   // recorded scale and a few guard digits: cents turned 0.003 BTC prorated to
-  // today into 0, a budget that read as none (w21/290).
-  const scale = budgetScale(ordered);
+  // today into 0, a budget that read as none (w21/290). Its currency's own
+  // minor unit is the floor: rounded to cents, 100 KWD prorated to 74.1935
+  // read 74.19, and 74.193 spent "Above target" (w21/805).
+  const currency = ordered
+    .map((entry) => entry.amount?.trim().split(/\s+/)[1])
+    .find((code) => code !== undefined && code !== "");
+  const scale = budgetScale(ordered, currency);
   const decimals = scale <= 2 ? 2 : scale + 4;
   const factor = 10 ** decimals;
   return Math.round(total * factor) / factor;

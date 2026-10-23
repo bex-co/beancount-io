@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [805](./805.md) — A KWD budget is prorated to cents, so on-target spending reads "Above target"
 - [806](./806.md) — Budgets on one account in two currencies cancel each other's status
 - [807](./807.md) — VoiceOver's budget chart summary counts spending from before the budget existed
 - [808](./808.md) — In a KWD ledger, the Accounts tree loses a parent's own sub-cent balance and folds it into a child

@@ -148,3 +148,51 @@ describe("a commodity budget's status at the precision it is shown", () => {
     expect(statusScale(btc("0.003 BTC"))).toBe(3);
   });
 });
+
+// w21/805: 100 KWD prorated to 23 days of October is 74.1935, rounded to
+// cents 74.19, so 74.193 spent read a red "Above target".
+describe("a three-decimal currency's budget", () => {
+  const kwd = btc("100 KWD", "monthly", "2026-01-01");
+
+  it("keeps its third decimal when prorated", () => {
+    const budget = calculateBudgetForInterval(
+      "2026-10-31",
+      "monthly",
+      kwd,
+      "2026-10-23",
+    );
+    expect(Math.abs(budget - (100 * 23) / 31) < 1e-6).toBe(true);
+    expect(budget).not.toBe(74.19);
+  });
+
+  it("is not above target for 74.193 spent", () => {
+    const budget = calculateBudgetForInterval(
+      "2026-10-31",
+      "monthly",
+      kwd,
+      "2026-10-23",
+    );
+    const stats = selectBudgetCardStats(
+      {
+        account: "Expenses:Rent",
+        interval: "monthly",
+        currency: "KWD",
+        amount: "100 KWD",
+        value: 100,
+        entry_hash: "h",
+        budgetHistory: kwd,
+      },
+      [{ date: "2026-10-31", actual: 74.193, budget }],
+    );
+    expect(stats.status === "above").toBe(false);
+    // Cents and yen prorate as before.
+    expect(
+      calculateBudgetForInterval(
+        "2026-10-31",
+        "monthly",
+        btc("100 USD", "monthly", "2026-01-01"),
+        "2026-10-23",
+      ),
+    ).toBe(74.19);
+  });
+});
