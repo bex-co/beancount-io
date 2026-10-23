@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useGetLedgerIntervalTotalsQuery } from "@/generated-graphql/graphql";
 import { resolveCurrencyBalance } from "@/common/balance-util";
+import { notInTotalOf, type Holding } from "@/common/balance-display";
+import { signed } from "@/screens/budget-screen/selectors/signed-holding";
 import { getFormatDate } from "@/common/format-util";
 import {
   budgetForInterval,
@@ -107,9 +109,14 @@ export function useBudgetActuals({
     const history = prepareBudgetHistory(group.budgetHistory);
     // And start where the window does: its first period is often partial.
     const windowStart = timeWindowStart(time, today);
-    const point = (date: string, actual: number) => ({
+    const point = (
+      date: string,
+      actual: number,
+      notInTotal: Holding[] = [],
+    ) => ({
       date,
       actual: actual * direction,
+      notInTotal: notInTotal.map((holding) => signed(holding, direction)),
       budget:
         budgetForInterval(
           date,
@@ -135,8 +142,14 @@ export function useBudgetActuals({
           points.push(point(date, 0));
         }
       }
+      // Activity in another currency cannot join the actual: it is carried
+      // beside it, so the card can say so (w21/709).
       points.push(
-        point(item.date, resolveCurrencyBalance(item.balance, currency)),
+        point(
+          item.date,
+          resolveCurrencyBalance(item.balance, currency),
+          notInTotalOf(item.balance, currency),
+        ),
       );
     });
     // A windowed range ends today on the server. All time ends at the last

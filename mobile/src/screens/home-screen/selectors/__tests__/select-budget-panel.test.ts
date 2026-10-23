@@ -189,6 +189,8 @@ describe("budgetPanelRowAccessibilityValue", () => {
     favorable: true,
     status: "below",
     income: false,
+    notInTotal: [],
+    unjudged: false,
     ...overrides,
   });
 

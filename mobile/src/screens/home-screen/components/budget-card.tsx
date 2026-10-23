@@ -21,6 +21,7 @@ import {
 import { AmountText, DashboardCard } from "@/components";
 import { FadeInView } from "@/components/crossfade";
 import { BudgetMeter } from "@/screens/budget-screen/components/budget-meter";
+import { notInTotalNotes } from "@/common/balance-display";
 import { useAccountCloseDates } from "@/common/hooks/use-account-close-dates";
 import { closedBefore } from "@/common/account-close-dates";
 import { useToday } from "@/common/hooks/use-today";
@@ -66,6 +67,12 @@ const getStyles = (theme: ColorTheme) =>
     amounts: {
       fontSize: fontSizes.sm,
       color: theme.black80,
+    },
+    notInTotal: {
+      marginTop: space.xs,
+      fontSize: fontSizes.xs,
+      color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     emptyRow: {
       paddingVertical: space.sm,
@@ -173,7 +180,15 @@ export function BudgetCard({
           {`${formatSignedMoneyWithCurrency(row.actual, row.currency, false, row.scale)} / ${formatMoneyWithCurrency(row.budget, row.currency, row.scale)}`}
         </AmountText>
       </View>
-      <BudgetMeter percent={row.progressPercent} favorable={row.favorable} />
+      <BudgetMeter
+        percent={row.progressPercent}
+        favorable={row.unjudged ? null : row.favorable}
+      />
+      {notInTotalNotes(row.notInTotal, t).map((note) => (
+        <Text key={note} style={styles.notInTotal}>
+          {note}
+        </Text>
+      ))}
     </TouchableOpacity>
   );
 

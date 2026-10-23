@@ -11,6 +11,7 @@ import {
   type BudgetGroup,
   type VarianceStatus,
 } from "./budget-selectors";
+import type { Holding } from "../../../common/balance-display";
 
 export type BudgetSeriesPoint = {
   date: string;
@@ -18,6 +19,11 @@ export type BudgetSeriesPoint = {
   actual: number;
   /** Prorated budget for the same period, same sign convention. */
   budget: number;
+  /**
+   * The account's activity in other currencies, which `actual` cannot include,
+   * same sign convention (w21/709).
+   */
+  notInTotal?: Holding[];
 };
 
 export type BudgetCardStats = {
@@ -37,7 +43,34 @@ export type BudgetCardStats = {
    * target existed yet, so nothing is judged (w21/101).
    */
   startsOn: string | null;
+  /** The latest period's activity in other currencies, left out of `actual`. */
+  notInTotal: Holding[];
+  /**
+   * True when those amounts could turn the status around, so none is given:
+   * neither green nor red (w21/709).
+   */
+  unjudged: boolean;
 };
+
+/**
+ * The status that stands with activity in other currencies left out of the
+ * actual. A budget spending €250 beside $0.00 read a green "Below target"
+ * (w21/709). "Above" stands while every such amount only adds to the actual,
+ * "below" while every one only takes from it; anything else is not judged.
+ */
+export function standingStatus(
+  status: VarianceStatus,
+  notInTotal: readonly Holding[] = [],
+): VarianceStatus | null {
+  if (notInTotal.length === 0) return status;
+  if (status === "above" && notInTotal.every((h) => h.number >= 0)) {
+    return status;
+  }
+  if (status === "below" && notInTotal.every((h) => h.number <= 0)) {
+    return status;
+  }
+  return null;
+}
 
 /** The earliest directive's date, or null with no history. */
 function firstBudgetDate(
@@ -86,14 +119,14 @@ export function selectPointFavorability(
 ): (boolean | null)[] {
   const firstBudget = firstBudgetDate(budgetHistory);
   const scale = budgetScale(budgetHistory, currency);
-  return series.map((point) =>
-    beforeFirstBudget(point, firstBudget, today)
-      ? null
-      : isFavorableVariance(
-          varianceStatus(point.actual - Math.abs(point.budget), scale),
-          direction,
-        ),
-  );
+  return series.map((point) => {
+    if (beforeFirstBudget(point, firstBudget, today)) return null;
+    const status = standingStatus(
+      varianceStatus(point.actual - Math.abs(point.budget), scale),
+      point.notInTotal,
+    );
+    return status === null ? null : isFavorableVariance(status, direction);
+  });
 }
 
 export function selectBudgetCardStats(
@@ -111,6 +144,7 @@ export function selectBudgetCardStats(
 
   const actual =
     latest && Number.isFinite(latest.actual) ? latest.actual : null;
+  const notInTotal = latest?.notInTotal ?? [];
 
   // Before the budget existed there is no target, so no status and no
   // variance: its zero budget read every dollar as "Above target" in red over
@@ -125,17 +159,20 @@ export function selectBudgetCardStats(
       favorable: true,
       progressPercent: null,
       startsOn: firstBudget,
+      notInTotal,
+      unjudged: false,
     };
   }
 
   const variance = actual === null ? null : actual - budget;
-  const status =
+  const judged =
     variance === null
       ? null
       : varianceStatus(
           variance,
           budgetScale(group.budgetHistory, group.currency),
         );
+  const status = judged === null ? null : standingStatus(judged, notInTotal);
   const favorable =
     status === null ? true : isFavorableVariance(status, direction);
   const progressPercent =
@@ -151,5 +188,7 @@ export function selectBudgetCardStats(
     favorable,
     progressPercent,
     startsOn: null,
+    notInTotal,
+    unjudged: judged !== null && status === null,
   };
 }

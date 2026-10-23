@@ -20,6 +20,8 @@ import type {
 } from "../../budget-screen/selectors/budget-selectors";
 import { STATUS_LABEL_KEYS } from "../../budget-screen/selectors/budget-labels";
 import { selectBudgetCardStats } from "../../budget-screen/selectors/select-budget-card-stats";
+import { signed } from "../../budget-screen/selectors/signed-holding";
+import { notInTotalNotes, type Holding } from "../../../common/balance-display";
 
 export type BudgetPanelInput = {
   group: BudgetGroup;
@@ -27,6 +29,8 @@ export type BudgetPanelInput = {
   actual: number | null;
   /** Last day of the period the actual covers. */
   periodEnd: string;
+  /** The period's activity in other currencies, as the ledger signs it. */
+  notInTotal?: Holding[];
 };
 
 export type BudgetPanelRow = {
@@ -54,6 +58,10 @@ export type BudgetPanelRow = {
   status: VarianceStatus | null;
   /** An income target, to be reached, rather than a spending cap. */
   income: boolean;
+  /** Activity in other currencies the actual leaves out (w21/709). */
+  notInTotal: Holding[];
+  /** True when that activity could turn the status around: none is given. */
+  unjudged: boolean;
 };
 
 /**
@@ -66,7 +74,7 @@ export function selectBudgetPanelRows(
   asOf?: string,
   windowStart?: string,
 ): BudgetPanelRow[] {
-  const ranked = inputs.map(({ group, actual, periodEnd }) => {
+  const ranked = inputs.map(({ group, actual, periodEnd, notInTotal = [] }) => {
     // Reuse the card's derivation so the two surfaces can't drift on the
     // favorability rules. It reads a series, so hand it the single period the
     // panel cares about, sign-corrected the way the card's series already is.
@@ -86,6 +94,7 @@ export function selectBudgetPanelRows(
               asOf,
               windowStart,
             ) * direction,
+          notInTotal: notInTotal.map((holding) => signed(holding, direction)),
         },
       ],
       asOf,
@@ -113,6 +122,8 @@ export function selectBudgetPanelRows(
           status: null,
           income: direction === -1,
           startsOn: stats.startsOn,
+          notInTotal: stats.notInTotal,
+          unjudged: false,
         },
       };
     }
@@ -135,6 +146,8 @@ export function selectBudgetPanelRows(
         favorable: stats.favorable,
         status: stats.status,
         income: direction === -1,
+        notInTotal: stats.notInTotal,
+        unjudged: stats.unjudged,
       },
     };
   });
@@ -237,18 +250,28 @@ export function budgetPanelRowAccessibilityValue(
   t: (key: string, options?: Record<string, string | number>) => string,
   locale = "en",
 ): string {
-  const status =
+  const [notInTotal] = notInTotalNotes(row.notInTotal, (key, params) =>
+    t(key, params as Record<string, string>),
+  );
+  const judged =
     row.startsOn !== undefined
       ? t("budgetStartsOn", { date: formatLedgerDate(row.startsOn, locale) })
-      : // The card's own wording: "Below target" over an income budget that
-        // was beaten, or for a spend exactly on target, was wrong (w21/218).
-        t(
-          row.status !== null
-            ? STATUS_LABEL_KEYS[row.status]
-            : row.favorable
-              ? "budgetBelowTarget"
-              : "budgetAboveTarget",
-        );
+      : row.unjudged
+        ? null
+        : // The card's own wording: "Below target" over an income budget that
+          // was beaten, or for a spend exactly on target, was wrong (w21/218).
+          t(
+            row.status !== null
+              ? STATUS_LABEL_KEYS[row.status]
+              : row.favorable
+                ? "budgetBelowTarget"
+                : "budgetAboveTarget",
+          );
+  // What the visible row says under its meter, spoken in the status's place
+  // when there is no status (w21/709).
+  const status = [judged, notInTotal]
+    .filter((part) => part !== null && part !== undefined)
+    .join(" · ");
   if (row.noBudget || row.startsOn !== undefined) {
     return t("budgetPanelRowValueNoBudget", {
       actual: formatSignedMoneyWithCurrency(

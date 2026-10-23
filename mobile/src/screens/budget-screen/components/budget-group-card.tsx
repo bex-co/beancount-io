@@ -51,6 +51,7 @@ import { withYearMarks } from "@/common/d3/axis-year-marks";
 import { BudgetHistoryRows } from "@/screens/budget-screen/components/budget-history-rows";
 import { BudgetMeter } from "@/screens/budget-screen/components/budget-meter";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
+import { notInTotalNotes } from "@/common/balance-display";
 
 const CHART_HEIGHT = 190;
 
@@ -157,6 +158,13 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: gutter,
       marginBottom: space.md,
     },
+    notInTotal: {
+      fontSize: fontSizes.xs,
+      color: theme.black80,
+      paddingHorizontal: gutter,
+      marginBottom: space.md,
+      textAlign: LEADING_TEXT_ALIGN,
+    },
     chartWrap: {
       paddingHorizontal: gutter,
     },
@@ -242,7 +250,14 @@ export function BudgetGroupCard({
   const formatAmount = (value: number) =>
     formatMoneyWithCurrency(value, currency, scale);
 
-  const statusColor = stats.favorable ? theme.success : theme.error;
+  // Spending in another currency could turn the status around: none is
+  // given, and the variance and meter read neutral (w21/709).
+  const statusColor = stats.unjudged
+    ? theme.text01
+    : stats.favorable
+      ? theme.success
+      : theme.error;
+  const [notInTotalNote] = notInTotalNotes(stats.notInTotal, t);
 
   return (
     // `bleed`: every section below applies its own gutter so the chart and the
@@ -346,9 +361,12 @@ export function BudgetGroupCard({
         <View style={styles.progressWrap}>
           <BudgetMeter
             percent={stats.progressPercent}
-            favorable={stats.favorable}
+            favorable={stats.unjudged ? null : stats.favorable}
           />
         </View>
+      )}
+      {notInTotalNote !== undefined && (
+        <Text style={styles.notInTotal}>{notInTotalNote}</Text>
       )}
 
       {stale ? <StaleDataBanner /> : null}

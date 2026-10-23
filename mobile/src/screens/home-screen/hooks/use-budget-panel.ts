@@ -7,6 +7,7 @@ import {
   type GetLedgerIntervalTotalsQueryVariables,
 } from "@/generated-graphql/graphql";
 import { resolveCurrencyBalance } from "@/common/balance-util";
+import { notInTotalOf } from "@/common/balance-display";
 import { useToday } from "@/common/hooks/use-today";
 import { mapInBatches } from "@/common/map-in-batches";
 import { ledgerRevisionVar } from "@/common/apollo/invalidate-ledger";
@@ -186,6 +187,9 @@ export function useBudgetPanel({
                 actual: last
                   ? resolveCurrencyBalance(last.balance, group.currency)
                   : null,
+                notInTotal: last
+                  ? notInTotalOf(last.balance, group.currency)
+                  : [],
               },
               failed: items === null,
             };
