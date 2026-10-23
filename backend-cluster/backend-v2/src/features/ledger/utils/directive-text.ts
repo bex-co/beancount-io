@@ -202,6 +202,8 @@ function directiveHead(
 }
 
 const isBlank = (line: string) => line.trim().length === 0;
+/** An org-mode heading, which Beancount reads as a section title. */
+const ORG_HEADING = /^\*+\s/;
 const isComment = (line: string) => line.trimStart().startsWith(";");
 /** Indented lines continue the directive above them. */
 const isContinuation = (line: string) => /^[ \t]/.test(line);
@@ -342,9 +344,7 @@ export function insertDirectives(
   // each insertion recomputes against the file as it now stands.
   for (const directive of directives) {
     const block = directive.text.split("\n");
-    const at = sorted
-      ? insertionPoint(working, directive.date)
-      : working.length;
+    const at = sorted ? placeUnderHeading(working, directive) : working.length;
     // `at > 0` already implies the file is non-empty and that `working[at-1]`
     // exists, so this is the whole condition.
     const prefix = at > 0 && !isBlank(working[at - 1]) ? [""] : [];
@@ -366,22 +366,57 @@ export function insertDirectives(
 /**
  * The line index a directive of this date belongs at: just past the end of
  * the last directive dated on or before it, so it follows that one rather
- * than splitting it from its postings.
+ * than splitting it from its postings. `after` is that directive's kind, null
+ * when the directive goes first.
  */
-function insertionPoint(lines: readonly string[], date: string | null): number {
-  if (date === null) return lines.length;
+function insertionPoint(
+  lines: readonly string[],
+  date: string | null,
+): { at: number; after: DirectiveKind | null } {
+  if (date === null) return { at: lines.length, after: null };
   // The end of the last directive dated on or before this one. Null until we
   // have seen one, which is also what "insert at the top" looks like.
-  let lastEligibleEnd: number | null = null;
+  let last: { end: number; kind: DirectiveKind } | null = null;
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     if (isBlank(line) || isComment(line) || isContinuation(line)) continue;
     const head = directiveHead(line);
     if (!head) continue;
-    if (head.date !== null && head.date > date) return lastEligibleEnd ?? index;
-    lastEligibleEnd = endOfBlock(lines, index);
+    if (head.date !== null && head.date > date) {
+      return last
+        ? { at: last.end, after: last.kind }
+        : { at: index, after: null };
+    }
+    last = { end: endOfBlock(lines, index), kind: head.kind };
   }
-  return lastEligibleEnd ?? lines.length;
+  return last
+    ? { at: last.end, after: last.kind }
+    : { at: lines.length, after: null };
+}
+
+/**
+ * Where a directive goes, past any org headings between its insertion point
+ * and the next directive when it follows one of another kind: it then starts
+ * the section those headings open. On the starter ledger the first
+ * transaction followed the last `1970-01-01 open`, inside `* Accounts`, and
+ * left `* Transactions` an empty heading at the bottom (w23/076). One of the
+ * same kind stays with its own, so a new `open` stays under `* Accounts` and a
+ * transaction dated before a `* 2022` heading stays in 2021. A comment stops
+ * the walk: it belongs to the directive below it.
+ */
+function placeUnderHeading(
+  lines: readonly string[],
+  directive: ParsedDirective,
+): number {
+  const { at, after } = insertionPoint(lines, directive.date);
+  if (after === null || after === directive.kind) return at;
+  let end = at;
+  for (let index = at; index < lines.length; index += 1) {
+    if (isBlank(lines[index])) continue;
+    if (!ORG_HEADING.test(lines[index])) break;
+    end = index + 1;
+  }
+  return end;
 }
 
 /** One past the last line belonging to the directive starting at `start`. */

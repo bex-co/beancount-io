@@ -3,6 +3,7 @@ import {
   parseDirectiveText,
 } from "@/features/ledger/utils/directive-text";
 import { BadUserInputError } from "@/shared/errors";
+import { simpleLedgerTemplate } from "../ledger-template";
 
 const txn = (date: string, payee: string) =>
   [
@@ -165,6 +166,68 @@ describe("parseDirectiveText", () => {
   it("refuses text with no directives at all", () => {
     expect(() => parseDirectiveText("\n\n; just a comment\n")).toThrow(
       /no Beancount directives/,
+    );
+  });
+});
+
+// w23/076: on the starter ledger the first transactions landed after the last
+// `1970-01-01 open`, inside `* Accounts`, above an empty `* Transactions`.
+describe("insertDirectives under org headings", () => {
+  const template = simpleLedgerTemplate["main.bean"];
+  const insert = (existing: string, text: string) =>
+    insertDirectives(existing, parseDirectiveText(text)).content;
+  // Each directive's first line and each heading, in file order.
+  const outline = (content: string) =>
+    content
+      .split("\n")
+      .filter((line) => /^(\*+ |\d{4}-\d{2}-\d{2} )/.test(line))
+      .slice(-5);
+
+  it("puts the first transactions under the starter ledger's * Transactions", () => {
+    const first = insert(template, txn("2021-06-01", "via-append"));
+    const next = insert(
+      insert(first, txn("2021-07-01", "later")),
+      txn("2021-05-01", "earlier"),
+    );
+    expect(outline(next)).toEqual([
+      "1970-01-01 open Equity:Initial",
+      "* Transactions",
+      '2021-05-01 * "earlier" "note"',
+      '2021-06-01 * "via-append" "note"',
+      '2021-07-01 * "later" "note"',
+    ]);
+    expect(next).toContain('* Transactions\n\n2021-05-01 * "earlier"');
+  });
+
+  it("keeps a new open with the opens, under * Accounts", () => {
+    const content = insert(template, "1970-01-01 open Assets:Bank USD");
+    expect(content).toContain(
+      "1970-01-01 open Equity:Initial\n\n1970-01-01 open Assets:Bank USD",
+    );
+    expect(content.trimEnd().endsWith("* Transactions")).toBe(true);
+  });
+
+  it("keeps an entry in its period's section, before the next one's heading", () => {
+    const yearly = [
+      "* 2021",
+      "",
+      txn("2021-03-01", "March"),
+      "",
+      "* 2022",
+      "",
+      txn("2022-02-01", "February"),
+      "",
+    ].join("\n");
+    const content = insert(yearly, txn("2021-12-31", "December"));
+    expect(content.indexOf('2021-12-31 * "December"')).toBeLessThan(
+      content.indexOf("* 2022"),
+    );
+  });
+
+  it("leaves a ledger without headings as it was", () => {
+    const plain = ["1970-01-01 open Assets:Cash", ""].join("\n");
+    expect(insert(plain, txn("2021-06-01", "x"))).toBe(
+      `1970-01-01 open Assets:Cash\n\n${txn("2021-06-01", "x")}\n`,
     );
   });
 });

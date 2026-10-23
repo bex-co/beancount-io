@@ -11,7 +11,6 @@
 ## Inbox
 
 - [077](./077.md) — MCP `VALIDATION_FAILED` envelope drops `newLedgerErrors` (promised by tool descriptions; REST/GraphQL carry it)
-- [076](./076.md) — on a new ledger `appendLedgerText` puts transactions above the template's `* Transactions` heading, unlike `addLedgerEntries`
 - [075](./blocked/075.md) — typed BQL results return NULL as `""` (undocumented), so a missing payee or price reads as an empty string — **blocked:** documented as `""` (option a shipped); owner picks `null` on REST/MCP, `null` everywhere, or keeping `""`
 - [072](./blocked/072.md) — concurrent writes (append, add entries, exact-text edits) still lose with `SERVICE_UNAVAILABLE` on production after w23/017; the production lost-race signature differs — **blocked:** needs one losing call's host status and body from the production ledger-service log (owner), then a post-deploy rerun
 - [065](./blocked/065.md) — a ledger-pinned credential keeps the old name after a rename — **blocked:** owner picks repository-ID pins, canonical-name pins, or an accurate refusal (credential trust boundary)

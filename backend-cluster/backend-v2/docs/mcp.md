@@ -374,7 +374,10 @@ not written, because each entry moves to its date position; a push that is
 never popped, or a pop with no push, is refused naming the line. Each directive goes to the file the
 ledger's own `bcio` options assign its type and date, unless `path` names one,
 and is inserted after the last directive dated on or before it rather than at
-the end of the file. A `path` must be a file the ledger loads — one of its
+the end of the file. When that directive is of another kind and org headings
+follow it, the new one goes under them, so the starter ledger's first
+transaction lands under `* Transactions`, not among the opens (w23/076). A
+`path` must be a file the ledger loads — one of its
 `source-files` — or the call is refused as `BAD_USER_INPUT`: an entry written
 anywhere else would never appear in a report. Create and `include` a new file
 first. A file the routing rules pick that nothing includes — a new year's file
