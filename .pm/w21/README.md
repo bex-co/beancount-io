@@ -12,6 +12,8 @@
 
 ## Inbox
 
+- [712](./712.md) — A reinvested $60 dividend shows as "+$0.48" (the cash residue) or "+0.5 VTI" instead of the income earned
+- [713](./713.md) — After a stock split, account detail's chart reads "+90 QANVDA (+900.00%)" in green (w21/571 gap)
 - [708](./708.md) — The ledger service books AVERAGE sales silently, while Beancount 3.2 refuses them
 - [709](./709.md) — Budget hides spending in other currencies: €250 on a USD budget reads "Actual $0.00 · Below target"
 - [710](./710.md) — The balance sheet without a time filter has no Equity:Conversions, so A+L+E doesn't net to zero
