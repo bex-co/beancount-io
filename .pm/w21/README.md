@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [812](./812.md) — The Merchants list still counts pre-entered entries ("4 transactions") while the detail says 3
 - [813](./813.md) — Edit Transaction save with a trailing indent line writes a stray "  " line and lands on "changed or removed"
 - [814](./814.md) — Edit Transaction calls an indented date line "an empty entry" and points at Delete
 - [815](./815.md) — The code editor turns a lone carriage return into a line break on save

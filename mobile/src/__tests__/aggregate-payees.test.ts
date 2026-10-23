@@ -271,3 +271,86 @@ describe("sortMerchants", () => {
     ).toEqual(["Amazon", "Netflix", "Starbucks"]);
   });
 });
+
+// w21/812: the list counted a payment pre-entered for November, "4
+// transactions", over a detail that reads "3 transactions".
+describe("the directory's count through today", () => {
+  const {
+    payeeCountsThroughBql,
+    withCountsThrough,
+  } = require("../screens/merchants-screen/selectors/aggregate-payees");
+  const counts = (rows: unknown[][]) =>
+    table(rows, [
+      { name: "payee", dtype: "str" },
+      { name: "transaction_count", dtype: "int" },
+    ]);
+
+  it("reads only entries on or before today", () => {
+    expect(payeeCountsThroughBql("2026-10-23")).toBe(
+      "SELECT payee, count(*) as transaction_count FROM #entries WHERE payee != '' AND date <= 2026-10-23 GROUP BY payee",
+    );
+    expect(payeeCountsThroughBql("today").includes("date <=")).toBe(false);
+  });
+
+  it("counts what was paid, and keeps the rollup's dates", () => {
+    const merchants = aggregatePayees(
+      table([["Qa20261020 Landlord", 4, "2026-08-01", "2026-11-01"]]),
+    );
+    expect(
+      withCountsThrough(merchants, counts([["Qa20261020 Landlord", 3]])),
+    ).toEqual([
+      {
+        payee: "Qa20261020 Landlord",
+        transactionCount: 3,
+        firstDate: "2026-08-01",
+        lastDate: "2026-11-01",
+      },
+    ]);
+  });
+
+  it("sums a merchant's spellings, and counts none for one only scheduled", () => {
+    const merchants = aggregatePayees(
+      table([
+        ["Burger King", 2, "2026-01-01", "2026-09-01"],
+        ["Burger king", 1, "2026-02-01", "2026-02-01"],
+        ["Gym", 1, "2026-11-01", "2026-11-01"],
+      ]),
+    );
+    const counted = withCountsThrough(
+      merchants,
+      counts([
+        ["Burger King", 2],
+        ["Burger king", 1],
+      ]),
+    );
+    expect(
+      counted.map((m: MerchantAggregate) => [m.payee, m.transactionCount]),
+    ).toEqual([
+      ["Burger King", 3],
+      ["Gym", 0],
+    ]);
+    // Before the read lands the rollup's counts stand.
+    expect(withCountsThrough(merchants, null)).toEqual(merchants);
+  });
+
+  it("is what the Merchants list shows", () => {
+    const screen = require("fs")
+      .readFileSync(
+        require("path").join(
+          __dirname,
+          "..",
+          "screens",
+          "merchants-screen",
+          "merchants-screen.tsx",
+        ),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(screen.includes("query:payeeCountsThroughBql(today)")).toBe(true);
+    expect(
+      screen.includes(
+        "withCountsThrough(aggregatePayees(rollupData?.queryShell?.table??null),countsData?.queryShell?.table??null,)",
+      ),
+    ).toBe(true);
+  });
+});

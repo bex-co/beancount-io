@@ -59,6 +59,51 @@ export const PAYEE_ROLLUP_BQL =
   "SELECT payee, count(*) as transaction_count, min(date) as first_date, max(date) as last_date FROM #entries WHERE payee != '' GROUP BY payee ORDER BY transaction_count DESC";
 
 /**
+ * Each payee's entries on or before `today`: the count the merchant's detail
+ * shows. The rollup's own count took in payments pre-entered for later, so the
+ * list read "4 transactions" over a detail of "3 transactions · $1,500.00
+ * scheduled" (w21/812). The rollup keeps its dates, its scheduled end among
+ * them.
+ */
+export function payeeCountsThroughBql(today: string): string {
+  const through = /^\d{4}-\d{2}-\d{2}$/.test(today)
+    ? ` AND date <= ${today}`
+    : "";
+  return `SELECT payee, count(*) as transaction_count FROM #entries WHERE payee != ''${through} GROUP BY payee`;
+}
+
+/**
+ * The directory with each merchant counted through today, its spellings
+ * summed as the rollup's are. Unchanged until that read lands; a merchant
+ * with entries only after today counts none.
+ */
+export function withCountsThrough(
+  merchants: readonly MerchantAggregate[],
+  table: QueryResultTableLike | null | undefined,
+): MerchantAggregate[] {
+  if (!table?.types || !table.rows) return [...merchants];
+  const payeeIdx = columnIndex(table.types, COL.payee);
+  const countIdx = columnIndex(table.types, COL.count);
+  if (payeeIdx < 0 || countIdx < 0) return [...merchants];
+  const counts = new Map<string, number>();
+  for (const row of table.rows) {
+    if (!Array.isArray(row)) continue;
+    const payee = asString(row[payeeIdx]);
+    const count = asCount(row[countIdx]);
+    if (!payee || count === null) continue;
+    const key = merchantKey(payee);
+    counts.set(key, (counts.get(key) ?? 0) + count);
+  }
+  return sortMerchants(
+    merchants.map((merchant) => ({
+      ...merchant,
+      transactionCount: counts.get(merchantKey(merchant.payee)) ?? 0,
+    })),
+    "count",
+  );
+}
+
+/**
  * Resolve column indexes by name. Missing any required column → soft failure
  * (empty list), never a throw — unexpected schema must not crash the screen.
  */

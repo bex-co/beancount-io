@@ -42,6 +42,8 @@ import { MerchantsListSkeleton } from "./merchants-list-skeleton";
 import {
   aggregatePayees,
   PAYEE_ROLLUP_BQL,
+  payeeCountsThroughBql,
+  withCountsThrough,
   type MerchantSort,
 } from "./selectors/aggregate-payees";
 import {
@@ -185,9 +187,18 @@ function MerchantsDirectory() {
     refetch: refetchSeries,
   } = usePayeeRecurrence(ledgerId);
 
+  // Counted to today, as the detail counts (w21/812).
+  const { data: countsData, refetch: refetchCounts } = useQueryShellQuery({
+    variables: { ledgerId: ledgerId!, query: payeeCountsThroughBql(today) },
+    skip: !ledgerId,
+  });
   const merchants = useMemo(
-    () => aggregatePayees(rollupData?.queryShell?.table ?? null),
-    [rollupData?.queryShell?.table],
+    () =>
+      withCountsThrough(
+        aggregatePayees(rollupData?.queryShell?.table ?? null),
+        countsData?.queryShell?.table ?? null,
+      ),
+    [rollupData?.queryShell?.table, countsData?.queryShell?.table],
   );
 
   const sections = useMemo(
@@ -228,11 +239,11 @@ function MerchantsDirectory() {
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([refetchRollup(), refetchSeries()]);
+      await Promise.all([refetchRollup(), refetchCounts(), refetchSeries()]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [refetchRollup, refetchSeries]);
+  }, [refetchRollup, refetchCounts, refetchSeries]);
 
   const onToggleSort = useCallback(() => {
     setSort((current) => {
