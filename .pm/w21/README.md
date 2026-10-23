@@ -65,3 +65,7 @@
 - [908](./908.md) — Reports' Recent transactions lists entries dated after today that the charts leave out
 - [909](./909.md) — Update Budget on a budget that hasn't started can't be dated before its start
 - [910](./910.md) — Identical budget entries highlight two history rows as current, with duplicate keys
+- [911](./911.md) — Two-word Transactions search finds nothing unless the words are adjacent in one field
+- [912](./912.md) — Full-width and half-width Japanese text doesn't match in search
+- [913](./913.md) — "Load more" skips a row after a deletion elsewhere, and repeats one after a reorder
+- [914](./914.md) — CLF, UYW and UYI postings show different decimals from the headline
