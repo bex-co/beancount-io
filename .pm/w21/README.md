@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [791](./791.md) — New Transaction pasting "-20" into a negative row makes it "--20" and refuses Done
 - [792](./792.md) — New Transaction refuses an amount starting with a decimal comma (",5")
 - [793](./793.md) — New Transaction shows a green "✓ $0.00" and no format error when an earlier row lacks an account
 - [794](./794.md) — In a zero-decimal ledger, "0.500" is read as 500 (w21/697 regression)

@@ -81,6 +81,7 @@ import {
   updatePostingAmount,
   validatePostings,
   signedAmountInput,
+  typedAmountInput,
 } from "./postings-utils";
 import { isTransactionDraftDirty, TransactionDraft } from "./draft-dirty";
 import { inlineSaveError } from "./inline-save-error";
@@ -334,7 +335,7 @@ const PostingRow = ({
 
   const handleAbsValueChange = (input: string) => {
     if (input.trim() === "") emptyNegative.current = shownNegative;
-    onChangeAmount(signedAmountInput(input, shownNegative));
+    onChangeAmount(typedAmountInput(input, shownNegative));
   };
 
   const handleToggleSign = () => {

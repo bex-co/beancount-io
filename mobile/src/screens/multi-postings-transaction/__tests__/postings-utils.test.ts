@@ -1127,14 +1127,36 @@ describe("an amount field emptied of its digits", () => {
       )
       .replace(/\s+/g, "");
     expect(
-      screen.includes(
-        "onChangeAmount(signedAmountInput(input,shownNegative));",
-      ),
+      screen.includes("onChangeAmount(typedAmountInput(input,shownNegative));"),
     ).toBe(true);
     expect(
       screen.includes(
         'constshownNegative=absValue===""?emptyNegative.current:isNegative;',
       ),
     ).toBe(true);
+  });
+});
+
+// w21/791: "-20" pasted into a negative row was put behind its minus, read
+// "--20", and blocked Done.
+describe("typedAmountInput", () => {
+  const { typedAmountInput, parseExactAmount } = require("../postings-utils");
+
+  it("takes a pasted amount's own sign over the row's", () => {
+    for (const pasted of ["-20", " -20", "\u221220", "\u200e-20"]) {
+      expect([pasted, typedAmountInput(pasted, true)]).toEqual([pasted, "-20"]);
+      expect([pasted, typedAmountInput(pasted, false)]).toEqual([
+        pasted,
+        "-20",
+      ]);
+    }
+    expect(parseExactAmount(typedAmountInput("-20", true))).toBe("-20");
+    expect(typedAmountInput("+20", true)).toBe("20");
+  });
+
+  it("keeps the row's sign for digits without one", () => {
+    expect(typedAmountInput("20", true)).toBe("-20");
+    expect(typedAmountInput("20", false)).toBe("20");
+    expect(typedAmountInput("", true)).toBe("");
   });
 });

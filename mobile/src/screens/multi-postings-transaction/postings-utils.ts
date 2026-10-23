@@ -73,6 +73,21 @@ export function signedAmountInput(absolute: string, negative: boolean): string {
   return negative ? `-${absolute}` : absolute;
 }
 
+/**
+ * What a row stores for text typed or pasted into its digits field, which
+ * shows the row's sign beside it. Text with a sign of its own takes that sign:
+ * "-20" pasted into a negative row was put behind the row's minus, read
+ * "--20", and blocked Done (w21/791). Unsigned text keeps the row's sign.
+ */
+export function typedAmountInput(input: string, rowNegative: boolean): string {
+  const { negative, absolute } = splitAmountSign(input);
+  if (negative) return signedAmountInput(absolute, true);
+  if (absolute.startsWith("+")) {
+    return signedAmountInput(absolute.slice(1), false);
+  }
+  return signedAmountInput(input, rowNegative);
+}
+
 export function parseExactAmount(input: string, minorUnits = 2): string | null {
   let trimmed = toAsciiNumerals(input)
     // Direction marks a right-to-left locale's formatting puts around a sign,
