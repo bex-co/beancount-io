@@ -24,7 +24,6 @@
 
 - [1009 — Explain rate-limited ledger loads in the primary error guidance](./1009.md) — minor; genuine refusal is hidden behind generic load text at two widths; native Retry recovers, full current source exact, no writes.
 
-- [1008 — Honor a return to the current view during pending navigation](./1008.md) — minor residual of142; four genuine held-read cases ignore a newer original-view choice in Holdings/Income; third-choice/recovery controls pass, sources exact, no writes.
 
 
 
