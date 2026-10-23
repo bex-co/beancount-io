@@ -34,7 +34,6 @@
 
 - [1003 — Keep tiny commodity price labels accurate](./1003.md) — minor residual of former W3/012; valid tiny quotes render zero ticks and exponent tooltips multiply two prices by1e9 at both widths; exact history/ordinary/zero controls pass, no writes.
 
-- [1002 — Validate amount currency symbols before import](./1002.md) — minor residual of M44; current local native UI misses later symbols and five established associations at both widths; matching/refusal controls pass, all preparations preblocked; production lag excluded.
 
 
 
