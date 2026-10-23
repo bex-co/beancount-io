@@ -351,7 +351,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       return this.buildEntry(input, filename);
     });
 
-    // Ensure each distinct target file exists before committing; a dry run
+    // Each distinct target file must exist before committing; a dry run
     // creates nothing, and the ledger checks a missing one as empty.
     const distinctFiles = [
       ...new Set(
@@ -360,13 +360,35 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           .filter((filename): filename is string => Boolean(filename)),
       ),
     ];
+    const missing: string[] = [];
     for (const filename of dryRun ? [] : distinctFiles) {
-      await this.ensureFileExists(
+      if (
+        !(await this.fileExists(
+          favaApiClient,
+          ledgerOwner,
+          ledgerName,
+          filename,
+        ))
+      ) {
+        missing.push(filename);
+      }
+    }
+    if (missing.length > 0) {
+      // Ask the ledger first: a refused write (unbalanced, a new bean-check
+      // error, the directive limit) must not leave an empty routed file and a
+      // "chore: create file" commit behind (w21/683).
+      await this.addEntries(
         favaApiClient,
         ledgerOwner,
         ledgerName,
-        filename,
+        entries,
+        platform,
+        allowInvalid,
+        true,
       );
+      for (const filename of missing) {
+        await this.createFile(favaApiClient, ledgerOwner, ledgerName, filename);
+      }
     }
 
     const { entryHashes, includedFiles } = await this.addEntries(
@@ -540,19 +562,26 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     return bcioResponse.data.success ? bcioResponse.data.data : undefined;
   }
 
-  private async ensureFileExists(
+  private async fileExists(
     favaApiClient: LedgerEntryFavaClient,
     ledgerOwner: string,
     ledgerName: string,
     filename: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const existsResponse = await favaApiClient.ledgers.getLedgerFile(
       ledgerOwner,
       ledgerName,
       { path: filename },
     );
-    if (existsResponse.data.success && existsResponse.data.data) return;
+    return Boolean(existsResponse.data.success && existsResponse.data.data);
+  }
 
+  private async createFile(
+    favaApiClient: LedgerEntryFavaClient,
+    ledgerOwner: string,
+    ledgerName: string,
+    filename: string,
+  ): Promise<void> {
     this.logger.info("Creating missing ledger file", {
       filename,
       ledgerOwner,

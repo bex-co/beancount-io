@@ -655,18 +655,14 @@ describe("LedgerEntryService", () => {
     });
 
     /**
-     * w1/m10/t016 — the documented partial-failure boundary, pinned.
+     * w21/683 (replacing w1/m10/t016's boundary, which kept the created file).
      *
-     * The routed-file creation is its own commit, made before the bulk write
-     * so the canonical endpoint can target the file. A bulk write that then
-     * fails leaves that empty-file commit in place: the write path attempts no
-     * compensating deletion (a cleanup that can itself fail converts one clear
-     * failure into two ambiguous ones). The creation is empty, additive, and
-     * derived from bcio routing — never a caller-chosen path — and a retry
-     * finds the file present and does not commit it again.
+     * A missing routed file is created only after the ledger has accepted the
+     * entries in a dry run, so a refused write leaves no empty file and no
+     * "chore: create file" commit. A retry then finds nothing to clean up.
      */
-    it("keeps the created routing file when the bulk write then fails, and does not recreate it on retry", async () => {
-      mockGetLedgerFile.mockResolvedValueOnce({ data: { success: false } });
+    it("creates nothing when the ledger refuses the entries, and creates the file once they are accepted", async () => {
+      mockGetLedgerFile.mockResolvedValue({ data: { success: false } });
       mockAddBulkEntries.mockResolvedValueOnce(failResponse);
 
       const entries = [
@@ -685,10 +681,13 @@ describe("LedgerEntryService", () => {
         ),
       ).rejects.toThrow();
 
-      expect(mockCreateLedgerFile).toHaveBeenCalledTimes(1);
+      expect(mockCreateLedgerFile).not.toHaveBeenCalled();
+      expect(mockAddBulkEntries).toHaveBeenCalledTimes(1);
+      expect(mockAddBulkEntries.mock.calls[0][2]).toMatchObject({
+        dryRun: true,
+      });
 
-      // Retry: the file now exists, so nothing is created twice and the
-      // write succeeds against the file the failed attempt left behind.
+      // Retry: accepted by the dry run, so the file is created and written.
       const retried = await service.addBulkEntries(
         IDENTITY,
         "testuser",
@@ -698,6 +697,22 @@ describe("LedgerEntryService", () => {
       );
       expect(retried.success).toBe(true);
       expect(mockCreateLedgerFile).toHaveBeenCalledTimes(1);
+      expect(mockAddBulkEntries).toHaveBeenCalledTimes(3);
+      expect(mockAddBulkEntries.mock.calls[1][2]).toMatchObject({
+        dryRun: true,
+      });
+      expect(mockAddBulkEntries.mock.calls[2][2].dryRun).toBeFalsy();
+    });
+
+    it("asks the ledger once when every target file exists", async () => {
+      await service.addBulkEntries(
+        IDENTITY,
+        "testuser",
+        "test-ledger",
+        [{ type: "commodity", entry: { date: "2024-01-01", currency: "USD" } }],
+        "web",
+      );
+      expect(mockAddBulkEntries).toHaveBeenCalledTimes(1);
     });
   });
 
