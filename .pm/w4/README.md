@@ -14,7 +14,6 @@
 
 - [1015 — Keep source digits and exact text in the rest of Overview's amounts](./1015.md) — minor; m52 /simplify follow-up: commodity digits in FormattedAmounts and the change line, plus tooltip/valuation/holdings text still from doubles; source-only.
 
-- [1014 — Honor native amount validity before transaction submit shortcuts](./1014.md) — major; both-width modifier shortcuts infer 12.50 from native-invalid `1e`/`-` while Create refuses; valid blank/exponent controls pass, all requests blocked before transport.
 
 
 
