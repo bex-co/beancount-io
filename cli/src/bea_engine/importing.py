@@ -2101,7 +2101,10 @@ def _written_identities(
     index: dict[tuple[str, str, str], list[Any]] = {}
     for path, content in sorted(snapshot.contents.items()):
         try:
-            text = content.decode("utf-8")
+            # `utf-8-sig`: a BOM before the first directive is no part of it,
+            # and left in, the parser read that transaction as nothing, so an
+            # unchanged repeat import was written again (w5/972).
+            text = content.decode("utf-8-sig")
         except UnicodeDecodeError:
             continue
         with localcontext() as exact:

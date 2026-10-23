@@ -66,7 +66,6 @@
 
 - [973 — Preserve native-ID conflicts across filtered and transformed views](./973.md) — major CLI follow-up to 881; corrections can be imported as new behind a filter or falsely skipped against transformed amounts; expanded native-ID source-fact evidence 2026-10-22.
 
-- [972 — Strip the BOM before indexing written import identities](./972.md) — major CLI follow-up to 881; an unchanged CSV transaction is written twice when its first source line carries a BOM, reproduced 2026-10-22.
 
 
 

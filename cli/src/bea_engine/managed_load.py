@@ -2394,7 +2394,9 @@ def _written_entries(snapshot: LedgerSnapshot) -> list[Any] | None:
     try:
         entries: list[Any] = []
         for path, content in snapshot.contents.items():
-            parsed, _, _ = parser.parse_string(content.decode("utf-8", errors="replace"), report_filename=str(path))
+            parsed, _, _ = parser.parse_string(
+                content.decode("utf-8", errors="replace").removeprefix("\ufeff"), report_filename=str(path)
+            )
             entries.extend(parsed)
         return list(data.sorted(entries))
     except Exception:  # noqa: BLE001 - the loaded entries stand in
