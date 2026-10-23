@@ -2137,6 +2137,15 @@ def _under_id(
     if not agreeing and source is not None:
         written = source(key)
         agreeing = [other for other in written if _same_row(key, other, account, fingerprint, lookup_only=lookup_only)]
+    if agreeing and _is_native_identity(key) and source is not None:
+        # A plugin's rewrite of the written row can agree with a different bank
+        # amount, so the file's own row under the ID has the last word: when
+        # it exists and nothing it spells agrees, the row is a change (w5/996).
+        written = source(key)
+        if written and not any(
+            _same_row(key, other, account, fingerprint, lookup_only=lookup_only) for other in written
+        ):
+            return min(written, key=lambda other: abs((entry.date - other.date).days))
     if agreeing:
         return min(agreeing, key=lambda other: abs((entry.date - other.date).days))
     # A plugin may have filtered the written row out of the loaded view. The
