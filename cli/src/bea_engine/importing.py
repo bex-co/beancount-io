@@ -514,9 +514,7 @@ def answer(
     if source.read_bytes() != source_bytes:
         raise ConflictError("The export changed during extraction; nothing was written. Retry.")
     source_hash = hashlib.sha256(source_bytes).hexdigest()
-    other_entries = {
-        _directive_key(entry, target.parent) for entry in written if not isinstance(entry, Transaction | Price)
-    }
+    other_entries = _authored_directive_keys(snapshot)
     quotes = _written_quotes(existing)
     price_conflicts = False
     rows: list[dict[str, Any]] = []
@@ -2164,6 +2162,29 @@ def _under_id(
         if pool:
             return min(pool, key=lambda other: abs((entry.date - other.date).days))
     return found
+
+
+def _authored_directive_keys(snapshot: Any) -> set[str]:
+    """What the ledger's files declare besides transactions and prices, as comparable keys.
+
+    Read from the files, not the loaded view: a plugin that filters or
+    rewrites a note, event or custom directive made an identical authored one
+    append every run, and a change matching only the rewritten view read as
+    already there (w5/1000).
+    """
+    from beancount.core.data import Price, Transaction
+    from beancount.parser import parser
+
+    keys: set[str] = set()
+    for path, content in sorted(snapshot.contents.items()):
+        try:
+            text = content.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            continue
+        parsed, _, _ = parser.parse_string(unicodedata.normalize("NFC", text), report_filename=str(path))
+        base = Path(path).parent
+        keys.update(_directive_key(entry, base) for entry in parsed if not isinstance(entry, Transaction | Price))
+    return keys
 
 
 def _written_identities(
