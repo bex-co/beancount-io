@@ -2221,7 +2221,7 @@ def _export_plugin_modules(loaded: LoadedLedger, snapshot: LedgerSnapshot, targe
     home = snapshot.root.parent.resolve()
     modules: dict[Path, Path] = {}
     plugins = [str(name) for name, _config in loaded.options.get("plugin") or []]
-    wanted = {name.split(".", 1)[0] for name in plugins} | _sibling_imports(homes, loaded)
+    wanted = {name.split(".", 1)[0] for name in plugins} | _sibling_imports(homes, loaded, snapshot)
     for top in sorted(wanted):
         holder = next(
             (directory for directory in homes if (directory / f"{top}.py").is_file() or (directory / top).is_dir()),
@@ -2290,7 +2290,7 @@ def _package_files(package: Path, top: str) -> list[Path]:
     return files
 
 
-def _sibling_imports(homes: list[Path], loaded: LoadedLedger) -> set[str]:
+def _sibling_imports(homes: list[Path], loaded: LoadedLedger, snapshot: LedgerSnapshot) -> set[str]:
     """Top-level modules under the ledger's module path that the local plugins import.
 
     A plugin importing `helper.py` from its own directory exported without
@@ -2305,8 +2305,15 @@ def _sibling_imports(homes: list[Path], loaded: LoadedLedger) -> set[str]:
     So each local plugin function runs once more here on a copy of the
     entries. A package without `__init__.py` has no `__file__`; its `__path__`
     locations say where it lives (w5/880).
+
+    The copy is of the entries as written, not the loaded ones: a plugin that
+    skips what it has already processed returned at once on the loaded
+    entries of a cached load, never reaching its import, and the snapshot
+    lacked the helper that a cold export carried (w5/968).
     """
     import importlib
+
+    written = _written_entries(snapshot)
 
     bases = [directory.resolve() for directory in homes]
 
@@ -2330,7 +2337,7 @@ def _sibling_imports(homes: list[Path], loaded: LoadedLedger) -> set[str]:
                 if not callable(function):
                     continue
                 try:
-                    arguments = (list(loaded.entries), dict(loaded.options))
+                    arguments = (list(written if written is not None else loaded.entries), dict(loaded.options))
                     function(*arguments) if config is None else function(*arguments, config)
                 except Exception:  # noqa: BLE001 - a plugin that fails is the load's to report
                     continue
@@ -2346,6 +2353,21 @@ def _sibling_imports(homes: list[Path], loaded: LoadedLedger) -> set[str]:
                     tops.add(top)
                 break
     return tops
+
+
+def _written_entries(snapshot: LedgerSnapshot) -> list[Any] | None:
+    """The ledger's directives as its files spell them, before any plugin; None when they cannot be read."""
+    from beancount.core import data
+    from beancount.parser import parser
+
+    try:
+        entries: list[Any] = []
+        for path, content in snapshot.contents.items():
+            parsed, _, _ = parser.parse_string(content.decode("utf-8", errors="replace"), report_filename=str(path))
+            entries.extend(parsed)
+        return list(data.sorted(entries))
+    except Exception:  # noqa: BLE001 - the loaded entries stand in
+        return None
 
 
 def _module_locations(module: Any) -> list[str]:

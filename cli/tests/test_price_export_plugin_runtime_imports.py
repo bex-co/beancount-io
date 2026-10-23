@@ -69,3 +69,42 @@ def test_a_namespace_package_resource_travels(tmp_path: Path) -> None:
     (books / "bankdata" / "settings.json").write_text('{"ok": true}\n')
 
     assert _export_and_check(tmp_path, books) == {"main.bean", "myplug.py", "bankdata/settings.json"}
+
+
+# w5/968: a plugin that skips entries it already processed.
+MARKED_PLUGIN = """import time
+from beancount.core.data import Transaction
+__plugins__ = ["mark"]
+def mark(entries, options):
+    if any(isinstance(e, Transaction) and e.meta.get("qa_done") for e in entries):
+        return entries, []
+    time.sleep(1.1)
+    import helper
+    changed = []
+    for entry in entries:
+        if isinstance(entry, Transaction):
+            entry = entry._replace(meta={**entry.meta, "qa_done": True, "label": helper.TEXT})
+        changed.append(entry)
+    return changed, []
+"""
+MARKED_LEDGER = """option "operating_currency" "USD"
+option "insert_pythonpath" "TRUE"
+plugin "myplug"
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Income:Services USD
+2026-01-02 * "Invoice"
+  Assets:Checking 100 USD
+  Income:Services -100 USD
+"""
+
+
+def test_a_helper_travels_when_the_plugin_skips_entries_it_already_marked(tmp_path: Path) -> None:
+    books = _books(tmp_path, MARKED_PLUGIN)
+    (books / "main.bean").write_text(MARKED_LEDGER)
+    (books / "helper.py").write_text('TEXT = "Synthetic"\n')
+    (books / "unrelated.py").write_text("X = 1\n")
+
+    for _ in range(2):
+        assert _bea(tmp_path, "-f", str(books / "main.bean"), "check").returncode == 0
+
+    assert _export_and_check(tmp_path, books) == {"main.bean", "myplug.py", "helper.py"}

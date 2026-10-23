@@ -73,7 +73,6 @@
 
 - [969 — Export every imported namespace-package portion](./969.md) — minor CLI follow-up to 880; split namespace resources/modules are omitted from successful snapshots, reproduced 2026-10-22.
 
-- [968 — Discover export helpers before plugin processing suppresses their import](./968.md) — minor CLI follow-up to 880; a cached idempotent plugin produces a successful snapshot missing its helper, reproduced 2026-10-22.
 
 
 
