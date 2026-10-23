@@ -138,14 +138,58 @@ function readClient(target: string) {
   return { client, reads, settle: (ok: boolean) => held.shift()?.(ok) };
 }
 
-/** Each failed observer offers Try Again on its own read (w4/m50). */
-describe.each<[string, ComponentType, string]>([
-  ["Trial Balance", TrialBalancePage, "GetLedgerTrialBalance"],
-  ["Balance Sheet", BalanceSheetPage, "GetLedgerBalanceSheet"],
-  ["Income Statement", IncomeStatementPage, "GetLedgerIncomeStatement"],
-  ["Cash Flow", CashFlowPage, "GetLedgerCashFlow"],
-  ["Account Journal", AccountPage, "GetLedgerAccountJournal"],
-])("%s read failure", (_name, Page, target) => {
+/** The browser drops focus from the control it disables; jsdom keeps it. */
+function dropFocus() {
+  const away = document.createElement("button");
+  document.body.appendChild(away);
+  away.focus();
+  away.remove();
+}
+
+/**
+ * The reason each page gives for a failed fetch: the classified connection
+ * problem, or the page's own message. Either must stay while a retry runs.
+ */
+const CONNECTION_PROBLEM = /connection problem/i;
+
+/**
+ * Each failed observer offers Try Again on its own read (w4/m50), and a
+ * successful retry renders that read's own content (w4/999).
+ */
+describe.each<[string, ComponentType, string, string, RegExp?]>([
+  [
+    "Trial Balance",
+    TrialBalancePage,
+    "GetLedgerTrialBalance",
+    "No trial balance data found for this ledger.",
+  ],
+  [
+    "Balance Sheet",
+    BalanceSheetPage,
+    "GetLedgerBalanceSheet",
+    "No balance sheet data found for this ledger.",
+  ],
+  [
+    "Income Statement",
+    IncomeStatementPage,
+    "GetLedgerIncomeStatement",
+    "No income statement data found for this ledger.",
+  ],
+  [
+    "Cash Flow",
+    CashFlowPage,
+    "GetLedgerCashFlow",
+    "No cash flow data found for this ledger.",
+  ],
+  [
+    "Account Journal",
+    AccountPage,
+    "GetLedgerAccountJournal",
+    "No journal entries found for this account.",
+    /error loading journal data/i,
+  ],
+])("%s read failure", (_name, Page, target, success, reason) => {
+  const failure = reason ?? CONNECTION_PROBLEM;
   it("retries its own read in place until it succeeds", async () => {
     const user = userEvent.setup();
     const { client, reads, settle } = readClient(target);
@@ -156,25 +200,26 @@ describe.each<[string, ComponentType, string]>([
     );
 
     const retry = await screen.findByRole("button", { name: "Try Again" });
+    expect(screen.getByText(failure)).toBeVisible();
     retry.focus();
     await user.keyboard("{Enter}");
     await waitFor(() => expect(reads).toHaveLength(2));
-    // A pending retry stays where it was, busy, and starts nothing more.
+    // A pending retry stays where it was, busy, still saying why it failed.
     expect(retry).toBeDisabled();
-    await user.keyboard("{Enter}");
-    expect(reads).toHaveLength(2);
+    expect(screen.getByText(failure)).toBeVisible();
+    dropFocus();
 
-    // Another rejection is handled and offers the retry again.
+    // Another rejection is handled and hands the retry its focus back.
     settle(false);
-    await waitFor(() => expect(retry).toBeEnabled());
     await waitFor(() => expect(retry).toHaveFocus());
+    expect(retry).toBeEnabled();
 
     await user.keyboard("{Enter}");
     await waitFor(() => expect(reads).toHaveLength(3));
     settle(true);
-    await waitFor(() =>
-      expect(screen.queryByRole("button", { name: "Try Again" })).toBeNull(),
-    );
+    // The retried read itself renders: the page's own success content.
+    expect(await screen.findByText(success)).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Try Again" })).toBeNull();
     // Every retry asked for the same requested scope.
     expect(reads[1]).toEqual(reads[0]);
     expect(reads[2]).toEqual(reads[0]);

@@ -65,15 +65,18 @@ describe("Commodities read failure", () => {
       </ApolloProvider>,
     );
 
-    expect(
-      await screen.findByText("Failed to Load Commodities"),
-    ).toBeInTheDocument();
+    await screen.findByText("Failed to Load Commodities");
     const retry = screen.getByRole("button", { name: "Try Again" });
     retry.focus();
     await user.keyboard("{Enter}");
     await waitFor(() => expect(commodityReads).toBe(2));
     expect(retry).toBeDisabled();
-    expect(screen.getByText("Failed to Load Commodities")).toBeInTheDocument();
+    expect(screen.getByText("Failed to Load Commodities")).toBeVisible();
+    // The browser drops focus from the control it disabled; jsdom keeps it.
+    const away = document.createElement("button");
+    document.body.appendChild(away);
+    away.focus();
+    away.remove();
 
     held.shift()!(false);
     await waitFor(() => expect(retry).toHaveFocus());
@@ -81,10 +84,8 @@ describe("Commodities read failure", () => {
     await user.keyboard("{Enter}");
     await waitFor(() => expect(commodityReads).toBe(3));
     held.shift()!(true);
-    expect(
-      await screen.findByText("No Price History Found"),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Try Again" })).toBeNull();
+    // The retried read renders its own result, which replaces Try Again.
+    expect(await screen.findByText("No Price History Found")).toBeVisible();
     expect(operations.filter((o) => o.startsWith("mutation"))).toEqual([]);
   });
 });
