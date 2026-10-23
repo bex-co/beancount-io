@@ -113,6 +113,47 @@ describe("ChartPeriodTable", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps each amount's sign, number and unit in order in an RTL page (w4/1005)", () => {
+    render(
+      <div dir="rtl" lang="fa">
+        <h2 id="card-title">Account Balance</h2>
+        <ChartPeriodTable
+          data={[
+            { date: "2016-01-31", balance: { USD: "-918.72", ACME: "150" } },
+            { date: "2016-02-29", balance: { USD: "0" } },
+            { date: "2016-03-31", balance: {} },
+          ]}
+          labelledBy="card-title"
+        />
+      </div>,
+    );
+
+    // Each unit's run is its own left-to-right island, holding exactly the
+    // source text; the date and the "no balance" dash stay in the page's flow.
+    const runs = within(screen.getByRole("table"))
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) =>
+        Array.from(row.querySelectorAll("bdi"), (run) => [
+          run.getAttribute("dir"),
+          run.textContent,
+        ]),
+      );
+    expect(runs).toEqual([
+      [
+        ["ltr", "-918.72 USD"],
+        ["ltr", "150 ACME"],
+      ],
+      [["ltr", "0 USD"]],
+      [],
+    ]);
+    expect(rows()).toEqual([
+      ["2016-01-31", "-918.72 USD150 ACME"],
+      ["2016-02-29", "0 USD"],
+      ["2016-03-31", "—"],
+    ]);
+  });
+
   it("follows the series it is given when the interval changes", () => {
     const monthly = [
       { date: "2016-01-31", balance: { USD: "100" } },

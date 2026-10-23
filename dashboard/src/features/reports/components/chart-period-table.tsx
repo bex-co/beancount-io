@@ -119,7 +119,9 @@ export function ChartPeriodTable({
                   ? "—"
                   : balances.map(([currency, value]) => (
                       <div key={currency} className="whitespace-nowrap">
-                        {String(value)} {currency}
+                        <Amount>
+                          {String(value)} {currency}
+                        </Amount>
                       </div>
                     ))}
               </TableCell>
