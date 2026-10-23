@@ -2059,8 +2059,9 @@ _OPTION_NAME = re.compile(_BOM + rb'option[ \t]+"([a-z_]+)"', re.MULTILINE)
 _PLUGIN_NAME = re.compile(_BOM + rb'plugin[ \t]+(?:"([^"]+)"|([A-Za-z_][\w.]*))', re.MULTILINE)
 #: Options that never define what a file reads.
 _REPEATED_OK = {b"title", b"render_commas"}
-#: A dated line: a transaction or directive, the entries an overlay adds.
-_ENTRY_LINE = re.compile(_DATE + rb"(?:[ \t]+\S|[A-Za-z])", re.MULTILINE)
+#: A dated line: a transaction or directive, the entries an overlay adds. A flag may touch
+#: the date (`2024-01-15*"Forecast"`), as a directive word may (w5/987).
+_ENTRY_LINE = re.compile(_DATE + rb"(?:[ \t]+\S|[A-Za-z*!&#?%])", re.MULTILINE)
 #: Accounts the closure opens, and accounts its entries post to. A name may
 #: start with and contain non-ASCII letters (`Áctivos:Cash`).
 _OPEN_ACCOUNT = re.compile(_DATE + rb"[ \t]*open[ \t]+(\S+)", re.MULTILINE)
