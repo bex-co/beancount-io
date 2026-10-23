@@ -18,6 +18,7 @@
 - [777](./777.md) — Transaction detail drops the Forecast mark and Upcoming label its row shows
 - [778](./778.md) — Transaction detail lists metadata in a different, arbitrary order on each load
 - [779](./779.md) — A sale's cost/price line still squeezes Money flow's account name to "Asset…guard"
+- [780](./780.md) — A commit diff draws an RTL account's amount inside the account path
 - [772](./772.md) — A missing file included from two places is listed twice at the first include's line (w21/189 gap)
 - [773](./773.md) — Include errors other than "file not found" (glob, duplicate, unknown plugin) have no file or line, so they can't be tapped
 - [770](./770.md) — New File accepts a name that differs from an existing file only by case or Unicode form ("Main" beside main.bean)
