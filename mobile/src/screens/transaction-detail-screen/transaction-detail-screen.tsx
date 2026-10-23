@@ -67,6 +67,10 @@ import {
   selectOwnEntry,
 } from "./selectors/select-own-entry";
 import { selectSourceSlice } from "./selectors/select-source-slice";
+import {
+  isShownEntryReplaced,
+  nextShownChecksum,
+} from "./selectors/select-shown-checksum";
 import { isPluginCopy } from "./selectors/select-plugin-copy";
 import { useTransactionContext } from "./use-transaction-context";
 import { shouldShowTransactionWriteActions } from "./selectors/select-transaction-write-actions";
@@ -396,6 +400,23 @@ const TransactionDetailImpl = ({
   // change and the later bump went unread (w21/527). Following the revision
   // re-runs the check while focused.
   const ledgerRevision = useReactiveVar(ledgerRevisionVar);
+  // The checksum of the slice first shown, which every write carries: a twin
+  // entry's ID can come to answer with the other twin's slice (w21/672).
+  const readSha = data?.getLedgerEntryContext?.sha256sum;
+  const [pinnedSha, setPinnedSha] = useState<string | undefined>();
+  // Set by this screen's own Edit, whose save legitimately changes the slice.
+  const adoptNextSha = useRef(false);
+  useEffect(() => {
+    const next = nextShownChecksum(pinnedSha, readSha, {
+      loading,
+      adoptNext: adoptNextSha.current,
+    });
+    if (next !== pinnedSha) {
+      adoptNextSha.current = false;
+      setPinnedSha(next);
+    }
+  }, [pinnedSha, readSha, loading]);
+  const entryReplaced = isShownEntryReplaced(pinnedSha, readSha, loading);
   useFocusEffect(
     useCallback(() => {
       if (!entryHash || !shouldLoadContext) return;
@@ -419,11 +440,17 @@ const TransactionDetailImpl = ({
   const [deleting, setDeleting] = useState(false);
   const deleteFlight = useRef(createSingleFlight(setDeleting)).current;
 
-  const sha256sum = data?.getLedgerEntryContext?.sha256sum;
+  const sha256sum = pinnedSha ?? readSha;
 
   const handleEdit = useCallback(() => {
     if (!canWrite || !sha256sum) return;
-    openEditTransaction(router, { entryHash, ledgerId, originAccount });
+    adoptNextSha.current = true;
+    openEditTransaction(router, {
+      entryHash,
+      ledgerId,
+      originAccount,
+      sha256sum,
+    });
   }, [canWrite, sha256sum, entryHash, ledgerId, originAccount, router]);
 
   const handleDelete = useCallback(() => {
@@ -534,6 +561,9 @@ const TransactionDetailImpl = ({
   useEffect(() => {
     if (entryGone) void invalidateLedgerData(client, "entries");
   }, [entryGone, client]);
+  useEffect(() => {
+    if (entryReplaced) void invalidateLedgerData(client, "entries");
+  }, [entryReplaced, client]);
 
   const handlePressAccount = useCallback(
     (account: string) => {
@@ -583,6 +613,17 @@ const TransactionDetailImpl = ({
   if (entryGone) {
     // Not the cached copy, and no Share or Copy link to an entry that no
     // longer exists (w21/013).
+    return (
+      <RouteLedgerUnavailable
+        title={t("transaction")}
+        message={t("transactionDetailRemoved")}
+      />
+    );
+  }
+
+  if (entryReplaced) {
+    // Another entry's slice now answers this ID (a twin moved onto it): not
+    // this entry, and a Delete on it would remove the other (w21/672).
     return (
       <RouteLedgerUnavailable
         title={t("transaction")}

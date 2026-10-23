@@ -58,6 +58,7 @@ import {
 import { applySavedIdentity, resolveSaveExit } from "./save-exit";
 import { saveToastMessage, selectOutcomeFailure } from "./save-failure";
 import { isEntryGone } from "@/screens/transaction-detail-screen/selectors/select-entry-gone";
+import { isOtherSlice } from "@/screens/transaction-detail-screen/selectors/select-shown-checksum";
 import { selectedTransactionVar } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { RouteLedgerUnavailable } from "@/components/route-ledger-unavailable";
 import { i18n } from "@/translations";
@@ -131,10 +132,16 @@ export const EditTransactionScreen = (): JSX.Element => {
   const client = useApolloClient();
   const { canWrite } = useLedgerAccess();
   const { userId } = useSession();
-  const { entryHash, ledgerId, originAccount } = useRouteParams<{
+  const {
+    entryHash,
+    ledgerId,
+    originAccount,
+    sha256sum: shownSha,
+  } = useRouteParams<{
     entryHash: string;
     ledgerId: string;
     originAccount?: string;
+    sha256sum?: string;
   }>();
   const { currencies: operatingCurrencies } = useLedgerMeta(userId, ledgerId);
 
@@ -185,6 +192,8 @@ export const EditTransactionScreen = (): JSX.Element => {
   useEffect(() => {
     const context = data?.getLedgerEntryContext;
     if (!context || initialized) return;
+    // Another entry's text now answers this ID (w21/672).
+    if (isOtherSlice(shownSha, context.sha256sum)) return;
     const epoch = documentEpochRef.current + 1;
     documentEpochRef.current = epoch;
     resetRevisionTracker(revisionTrackerRef.current);
@@ -193,7 +202,7 @@ export const EditTransactionScreen = (): JSX.Element => {
     setDocumentSpec({ value: context.slice, epoch });
     setHasUnsavedChanges(false);
     setInitialized(true);
-  }, [data, initialized]);
+  }, [data, initialized, shownSha]);
 
   // After a stale-checksum rejection the draft can never be saved as it is:
   // re-read the entry (under its current identity) and reseed the editor, the
@@ -522,9 +531,25 @@ export const EditTransactionScreen = (): JSX.Element => {
   // and the ledger is invalidated so the detail behind shows it on return
   // (w21/253).
   const contextGone = !initialized && isEntryGone(contextError);
+  // Or another entry's text answers the ID now (a twin moved onto it, w21/672).
+  const contextReplaced =
+    !initialized &&
+    isOtherSlice(shownSha, data?.getLedgerEntryContext?.sha256sum);
   useEffect(() => {
     if (contextGone) void invalidateLedgerData(client, "entries");
   }, [contextGone, client]);
+  useEffect(() => {
+    if (contextReplaced) void invalidateLedgerData(client, "entries");
+  }, [contextReplaced, client]);
+
+  if (contextReplaced) {
+    return (
+      <RouteLedgerUnavailable
+        title={t("editTransaction")}
+        message={t("transactionDetailRemoved")}
+      />
+    );
+  }
 
   if (entryGone || contextGone) {
     return (

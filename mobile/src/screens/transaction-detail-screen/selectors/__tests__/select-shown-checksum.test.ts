@@ -1,0 +1,49 @@
+import {
+  isOtherSlice,
+  isShownEntryReplaced,
+  nextShownChecksum,
+} from "../select-shown-checksum";
+
+// w21/672: deleting twin A moved twin B onto A's ID, so the stale screen of A
+// re-read B's checksum and its Delete removed B.
+describe("the checksum a detail screen keeps", () => {
+  const settled = { loading: false, adoptNext: false };
+
+  it("keeps the first settled read through a later one that differs", () => {
+    const first = nextShownChecksum(undefined, "sha-A", settled);
+    expect(first).toBe("sha-A");
+    // The twin B's slice now answers A's ID.
+    expect(nextShownChecksum(first, "sha-B", settled)).toBe("sha-A");
+    expect(isShownEntryReplaced(first, "sha-B", false)).toBe(true);
+  });
+
+  it("does not keep a cached copy the network is replacing", () => {
+    expect(
+      nextShownChecksum(undefined, "cached", { ...settled, loading: true }),
+    ).toBe(undefined);
+    expect(isShownEntryReplaced("sha-A", "sha-B", true)).toBe(false);
+  });
+
+  it("takes the next read after the user's own edit", () => {
+    expect(
+      nextShownChecksum("sha-A", "sha-A2", { ...settled, adoptNext: true }),
+    ).toBe("sha-A2");
+  });
+
+  it("reads an unchanged entry as the same", () => {
+    expect(isShownEntryReplaced("sha-A", "sha-A", false)).toBe(false);
+    expect(isShownEntryReplaced(undefined, "sha-A", false)).toBe(false);
+  });
+});
+
+describe("the editor opened from a detail screen", () => {
+  it("refuses a slice other than the one shown, never opening the twin's text", () => {
+    expect(isOtherSlice("sha-A", "sha-B")).toBe(true);
+    expect(isOtherSlice("sha-A", "sha-A")).toBe(false);
+  });
+
+  it("compares nothing when no checksum came with the route", () => {
+    expect(isOtherSlice(undefined, "sha-B")).toBe(false);
+    expect(isOtherSlice("", "sha-B")).toBe(false);
+  });
+});
