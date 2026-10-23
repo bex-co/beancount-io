@@ -12,6 +12,9 @@
 
 ## Inbox
 
+- [687](./687.md) — Create Ledger presets open every account restricted to the operating currency, so Portfolio refuses its own first share purchase
+- [688](./688.md) — File editor: Enter after a one-line directive indents the next line, so the next directive is a syntax error (w21/338 regression)
+- [689](./689.md) — File editor: text typed while "Saving…" is up is dropped by a later web-view restart, Overwrite or Recreate
 - [686](./686.md) — A link opened before sign-in is taken twice, and the sign-in finisher restores the guest example or Home over it
 - [684](./684.md) — At AX2, Entry Context's balance rows cut account names to "Asset…king" and "Expen…eries"
 - [685](./685.md) — At AX2, Home's budget panel cuts both "Housing:Rent" and "Housing:Utilities" to "Housing…"
