@@ -264,7 +264,11 @@ function BudgetScreenImpl(): JSX.Element {
                     {t("budgetNoBudgetsFound")}
                   </Text>
                   <Text style={styles.emptyBody}>
-                    {t("budgetNoBudgetsFoundDescription")}
+                    {t(
+                      canWrite
+                        ? "budgetNoBudgetsFoundDescription"
+                        : "budgetNoBudgetsFoundReader",
+                    )}
                   </Text>
                   {canWrite && (
                     <Button style={styles.cta} onPress={() => openAdd()}>

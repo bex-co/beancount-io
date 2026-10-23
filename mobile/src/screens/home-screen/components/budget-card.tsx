@@ -1,3 +1,4 @@
+import { budgetPanelEmptyKey } from "../selectors/budget-panel-empty";
 import { isolateAccountPath } from "@/common/bidi";
 import { useMemo } from "react";
 import { BudgetSkeleton } from "./home-skeletons";
@@ -86,6 +87,8 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 type BudgetCardProps = {
+  /** Whether the viewer may set a budget; a reader is not asked to (w21/868). */
+  canWrite?: boolean;
   ledgerId?: string;
   refreshSignal?: number;
 };
@@ -95,6 +98,7 @@ type BudgetCardProps = {
  * Taps through to the full budget page.
  */
 export function BudgetCard({
+  canWrite = true,
   ledgerId,
   refreshSignal = 0,
 }: BudgetCardProps): JSX.Element {
@@ -215,7 +219,7 @@ export function BudgetCard({
             accessibilityHint={guest ? t("guestSignInHint") : undefined}
           >
             <Text key={`empty-${fontScale}`} style={styles.emptyText}>
-              {t(guest ? "budgetPanelEmptyGuest" : "budgetPanelEmpty")}
+              {t(budgetPanelEmptyKey(Boolean(guest), canWrite))}
             </Text>
           </TouchableOpacity>
         </FadeInView>

@@ -621,6 +621,9 @@ export const zh: Translations = {
   budgetEmptyStateCta: "添加你的第一个预算",
   budgetPanelEmpty: "为任意账户设置目标金额",
   budgetPanelEmptyGuest: "登录以设置支出目标",
+  budgetPanelEmptyReader: "此账本没有预算",
+  budgetNoBudgetsFoundReader: "此账本中尚未设定支出目标。",
+  ledgerEmptyHintReader: "下拉即可刷新。",
   budgetPanelRowValue: "{{actual}} / {{budget}}，已用 {{percent}}%，{{status}}",
   budgetPanelRowValueIncome:
     "{{actual}} / 目标 {{budget}}，已达成 {{percent}}%，{{status}}",

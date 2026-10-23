@@ -691,6 +691,10 @@ export const nl: Translations = {
   budgetEmptyStateCta: "Je eerste budget toevoegen",
   budgetPanelEmpty: "Stel een doel in voor een rekening",
   budgetPanelEmptyGuest: "Meld je aan om uitgavendoelen in te stellen",
+  budgetPanelEmptyReader: "Dit grootboek heeft geen budgetten",
+  budgetNoBudgetsFoundReader:
+    "In dit grootboek zijn geen uitgavendoelen ingesteld.",
+  ledgerEmptyHintReader: "Trek omlaag om te vernieuwen.",
   budgetPanelRowValue:
     "{{actual}} van {{budget}}, {{percent}}% gebruikt, {{status}}",
   budgetPanelRowValueIncome:

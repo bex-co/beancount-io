@@ -702,6 +702,9 @@ export const uk: Translations = {
   budgetEmptyStateCta: "Додати перший бюджет",
   budgetPanelEmpty: "Задайте ціль для рахунку",
   budgetPanelEmptyGuest: "Увійдіть, щоб встановити цілі витрат",
+  budgetPanelEmptyReader: "У цій книзі немає бюджетів",
+  budgetNoBudgetsFoundReader: "У цій книзі не задано цілей щодо витрат.",
+  ledgerEmptyHintReader: "Потягніть вниз, щоб оновити.",
   budgetPanelRowValue:
     "{{actual}} з {{budget}}, використано {{percent}}%, {{status}}",
   budgetPanelRowValueIncome:

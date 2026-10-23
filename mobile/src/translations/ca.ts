@@ -705,6 +705,10 @@ export const ca: Translations = {
   budgetEmptyStateCta: "Afegeix el teu primer pressupost",
   budgetPanelEmpty: "Defineix un objectiu per a un compte",
   budgetPanelEmptyGuest: "Inicieu la sessió per fixar objectius de despesa",
+  budgetPanelEmptyReader: "Aquest llibre no té pressupostos",
+  budgetNoBudgetsFoundReader:
+    "No s'ha definit cap objectiu de despesa en aquest llibre.",
+  ledgerEmptyHintReader: "Llisca cap avall per actualitzar.",
   budgetPanelRowValue:
     "{{actual}} de {{budget}}, {{percent}}% utilitzat, {{status}}",
   budgetPanelRowValueIncome:

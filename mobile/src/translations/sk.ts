@@ -708,6 +708,10 @@ export const sk: Translations = {
   budgetEmptyStateCta: "Pridať prvý rozpočet",
   budgetPanelEmpty: "Nastavte cieľ pre účet",
   budgetPanelEmptyGuest: "Prihláste sa a nastavte ciele výdavkov",
+  budgetPanelEmptyReader: "Táto kniha nemá žiadne rozpočty",
+  budgetNoBudgetsFoundReader:
+    "V tejto knihe nie sú nastavené žiadne ciele výdavkov.",
+  ledgerEmptyHintReader: "Potiahnutím nadol obnovíte.",
   budgetPanelRowValue:
     "{{actual}} z {{budget}}, využité {{percent}}%, {{status}}",
   budgetPanelRowValueIncome:

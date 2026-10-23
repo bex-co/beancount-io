@@ -688,6 +688,9 @@ export const bg: Translations = {
   budgetEmptyStateCta: "Добавете първия си бюджет",
   budgetPanelEmpty: "Задайте цел за сметка",
   budgetPanelEmptyGuest: "Влезте, за да зададете цели за разходите",
+  budgetPanelEmptyReader: "Този регистър няма бюджети",
+  budgetNoBudgetsFoundReader: "В този регистър не са зададени цели за разходи.",
+  ledgerEmptyHintReader: "Дръпнете надолу за опресняване.",
   budgetPanelRowValue:
     "{{actual}} от {{budget}}, използвани {{percent}}%, {{status}}",
   budgetPanelRowValueIncome:

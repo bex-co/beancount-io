@@ -704,6 +704,9 @@ export const ru: Translations = {
   budgetEmptyStateCta: "Добавить первый бюджет",
   budgetPanelEmpty: "Задайте цель для счёта",
   budgetPanelEmptyGuest: "Войдите, чтобы задать цели расходов",
+  budgetPanelEmptyReader: "В этой книге нет бюджетов",
+  budgetNoBudgetsFoundReader: "В этой книге не заданы цели по расходам.",
+  ledgerEmptyHintReader: "Потяните вниз, чтобы обновить.",
   budgetPanelRowValue:
     "{{actual}} из {{budget}}, использовано {{percent}}%, {{status}}",
   budgetPanelRowValueIncome:

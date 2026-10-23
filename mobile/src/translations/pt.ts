@@ -702,6 +702,10 @@ export const pt: Translations = {
   budgetEmptyStateCta: "Adicionar seu primeiro orçamento",
   budgetPanelEmpty: "Defina uma meta para uma conta",
   budgetPanelEmptyGuest: "Entre para definir metas de gastos",
+  budgetPanelEmptyReader: "Este livro não tem orçamentos",
+  budgetNoBudgetsFoundReader:
+    "Nenhuma meta de gastos foi definida neste livro.",
+  ledgerEmptyHintReader: "Puxe para baixo para atualizar.",
   budgetPanelRowValue:
     "{{actual}} de {{budget}}, {{percent}}% utilizado, {{status}}",
   budgetPanelRowValueIncome:

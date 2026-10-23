@@ -706,6 +706,10 @@ export const fr: Translations = {
   budgetEmptyStateCta: "Ajouter votre premier budget",
   budgetPanelEmpty: "Définir un objectif pour un compte",
   budgetPanelEmptyGuest: "Connectez-vous pour fixer des objectifs de dépenses",
+  budgetPanelEmptyReader: "Ce registre n'a pas de budgets",
+  budgetNoBudgetsFoundReader:
+    "Aucun objectif de dépenses n'a été défini dans ce registre.",
+  ledgerEmptyHintReader: "Tirez vers le bas pour actualiser.",
   budgetPanelRowValue:
     "{{actual}} sur {{budget}}, {{percent}}% utilisé, {{status}}",
   budgetPanelRowValueIncome:

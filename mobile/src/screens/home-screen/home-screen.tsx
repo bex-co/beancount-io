@@ -293,7 +293,11 @@ const HomeScreenImpl = (): JSX.Element => {
           refreshSignal={refreshSignal}
         />
 
-        <BudgetCard ledgerId={ledgerId} refreshSignal={refreshSignal} />
+        <BudgetCard
+          canWrite={canWrite}
+          ledgerId={ledgerId}
+          refreshSignal={refreshSignal}
+        />
 
         {!guest && <FeedCard refreshSignal={refreshSignal} />}
       </DashboardScrollView>

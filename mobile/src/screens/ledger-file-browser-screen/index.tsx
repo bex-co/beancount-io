@@ -845,7 +845,9 @@ export function LedgerFileBrowserScreen(): JSX.Element {
                   {error ? t("ledgerLoadError") : t("ledgerEmpty")}
                 </Text>
                 <Text style={styles.stateHint}>
-                  {error ? t("ledgerRefreshHint") : t("ledgerEmptyHint")}
+                  {error
+                    ? t("ledgerRefreshHint")
+                    : t(canWrite ? "ledgerEmptyHint" : "ledgerEmptyHintReader")}
                 </Text>
                 {!error && canWrite && (
                   <TouchableOpacity

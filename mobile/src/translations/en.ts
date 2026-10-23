@@ -707,6 +707,10 @@ export const en = {
   budgetEmptyStateCta: "Add your first budget",
   budgetPanelEmpty: "Set a spending target for any account",
   budgetPanelEmptyGuest: "Sign in to set spending targets",
+  budgetPanelEmptyReader: "This ledger has no budgets",
+  budgetNoBudgetsFoundReader:
+    "No spending targets have been set in this ledger.",
+  ledgerEmptyHintReader: "Pull down to refresh.",
   budgetPanelRowValue:
     "{{actual}} of {{budget}}, {{percent}}% used, {{status}}",
   budgetPanelRowValueIncome:

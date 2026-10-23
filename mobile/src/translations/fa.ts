@@ -679,6 +679,9 @@ export const fa: Translations = {
   budgetEmptyStateCta: "افزودن اولین بودجه",
   budgetPanelEmpty: "برای یک حساب هدف تعیین کنید",
   budgetPanelEmptyGuest: "برای تعیین هدف هزینه وارد شوید",
+  budgetPanelEmptyReader: "این دفتر بودجه‌ای ندارد",
+  budgetNoBudgetsFoundReader: "در این دفتر هدف هزینه‌ای تعیین نشده است.",
+  ledgerEmptyHintReader: "برای تازه‌سازی به پایین بکشید.",
   budgetPanelRowValue:
     "{{actual}} از {{budget}}، {{percent}}% مصرف‌شده، {{status}}",
   budgetPanelRowValueIncome:

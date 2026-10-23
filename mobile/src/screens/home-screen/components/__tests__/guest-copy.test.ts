@@ -25,7 +25,7 @@ describe("guest copy", () => {
   it("labels every sign-in action on the Budget card", () => {
     const card = read("home-screen", "components", "budget-card.tsx");
     expect(
-      card.includes('t(guest?"budgetPanelEmptyGuest":"budgetPanelEmpty")'),
+      card.includes("t(budgetPanelEmptyKey(Boolean(guest),canWrite))"),
     ).toBe(true);
     // The empty row and each budget row carry the hint, and a guest gets no
     // unlabelled "See all".
