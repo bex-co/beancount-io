@@ -1,3 +1,4 @@
+import { foldArabicScript } from "./arabic-script-fold";
 /**
  * Which accounts a new posting may use on a given date (w21/045).
  *
@@ -174,6 +175,11 @@ export function listedAccountsAsOf(
  * so their exact name read as new and offered Create, which Open Account then
  * refused as "already open" (w21/122).
  */
+/** An account name as the picker compares it: NFC, lower-cased, one Arabic-script spelling (w21/836). */
+export function nameKey(text: string): string {
+  return foldArabicScript(text.normalize("NFC")).toLowerCase();
+}
+
 export function closedAccountNamed(
   query: string,
   onDate: string,
@@ -181,13 +187,10 @@ export function closedAccountNamed(
 ): { account: string; closedAt: string } | null {
   // As NFC, like the picker's search: a decomposed "Cafe" + U+0301 is the
   // account the user typed as "Café" (w21/256).
-  const wanted = query.trim().normalize("NFC").toLowerCase();
+  const wanted = nameKey(query.trim());
   if (!wanted) return null;
   for (const [account, closedAt] of closeDates) {
-    if (
-      account.normalize("NFC").toLowerCase() === wanted &&
-      !isOpenOn(account, onDate, closeDates)
-    ) {
+    if (nameKey(account) === wanted && !isOpenOn(account, onDate, closeDates)) {
       return { account, closedAt };
     }
   }
@@ -205,13 +208,10 @@ export function notYetOpenAccountNamed(
   onDate: string,
   closeDates: CloseDates,
 ): { account: string; openedAt: string } | null {
-  const wanted = query.trim().normalize("NFC").toLowerCase();
+  const wanted = nameKey(query.trim());
   if (!wanted) return null;
   for (const [account, openedAt] of closeDates.openedOn ?? []) {
-    if (
-      account.normalize("NFC").toLowerCase() === wanted &&
-      onDate < openedAt
-    ) {
+    if (nameKey(account) === wanted && onDate < openedAt) {
       return { account, openedAt };
     }
   }

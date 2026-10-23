@@ -5,7 +5,11 @@
  *
  * Kept free of any `@/` imports so the jest-lite runner can require it.
  */
-import { openOn, type CloseDates } from "../../common/account-close-dates";
+import {
+  nameKey,
+  openOn,
+  type CloseDates,
+} from "../../common/account-close-dates";
 import { filterAccounts } from "../../common/account-search";
 import {
   topAccounts,
@@ -177,37 +181,25 @@ export function showCreateBelowResults(
   ) {
     return false;
   }
-  const words = query
-    .trim()
-    .normalize("NFC")
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean);
+  const words = nameKey(query.trim()).split(/\s+/).filter(Boolean);
   if (words.length === 0) return false;
   // A query that starts at a root account ("Expenses:Food") is a whole name,
   // not a piece of one: it is a hit only when the ledger has exactly that
   // account, so a new "Expenses:Food" beside "Expenses:Food:Groceries" can
   // still be created (w21/452). A partial path ("food:groc") stays a piece.
-  const wholeName = query
-    .normalize("NFC")
-    .toLowerCase()
+  const wholeName = nameKey(query)
     .split(":")
     .map((part) => part.trim())
     .join(":");
   const rootOf = (name: string) => name.split(":")[0];
   if (
     wholeName.includes(":") &&
-    results.some(
-      (account) =>
-        rootOf(account.normalize("NFC").toLowerCase()) === rootOf(wholeName),
-    )
+    results.some((account) => rootOf(nameKey(account)) === rootOf(wholeName))
   ) {
-    return !results.some(
-      (account) => account.normalize("NFC").toLowerCase() === wholeName,
-    );
+    return !results.some((account) => nameKey(account) === wholeName);
   }
   return !results.some((account) => {
-    const name = account.normalize("NFC").toLowerCase();
+    const name = nameKey(account);
     return words.every((word) => name.includes(word));
   });
 }

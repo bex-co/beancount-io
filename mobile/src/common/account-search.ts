@@ -13,6 +13,7 @@
  * Kept free of any `@/` imports so the jest-lite runner can require it.
  */
 
+import { foldArabicLetters } from "./arabic-script-fold";
 import { SEGMENT_SEPARATOR } from "./account-util";
 import { frecencyScore, type RankingContext } from "./account-frecency";
 
@@ -47,7 +48,10 @@ function lowerAligned(text: string): string {
 
 function toNfc(text: string): string {
   // eslint-disable-next-line no-control-regex
-  return /^[\x00-\x7f]*$/.test(text) ? text : text.normalize("NFC");
+  if (/^[\x00-\x7f]*$/.test(text)) return text;
+  // And the Arabic letters one way, keeping every character in place: an
+  // account spelled with Arabic ي is found by a Persian ی (w21/836).
+  return foldArabicLetters(text.normalize("NFC"));
 }
 
 function isSegmentStart(text: string, index: number): boolean {

@@ -456,3 +456,22 @@ describe("the filter picker never offers Create", () => {
     );
   });
 });
+
+// w21/836: "No matching accounts" and a Create row for a look-alike duplicate.
+describe("the picker across Arabic-script spellings", () => {
+  const accounts = ["Assets:Qa20261020:بانك-ملي", "Expenses:Qa20261020:Coffee"];
+  const writer = { canWrite: true, loading: false };
+
+  test("finds the Arabic-spelled account from Persian typing", () => {
+    const sections = sectionsFor(accounts, "ملی", null);
+    expect(sections.length).toBe(1);
+    expect(sections[0].data).toEqual(["Assets:Qa20261020:بانك-ملي"]);
+    expect(showCreateAccountRow("ملی", sections.length, writer)).toBe(false);
+  });
+
+  test("offers no Create below results that already hold the name", () => {
+    expect(
+      showCreateBelowResults("ملی", ["Assets:Qa20261020:بانك-ملي"], writer),
+    ).toBe(false);
+  });
+});

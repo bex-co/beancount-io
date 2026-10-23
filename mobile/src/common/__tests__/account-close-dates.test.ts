@@ -373,3 +373,15 @@ describe("budgetHasEnded", () => {
     );
   });
 });
+
+// w21/836: an exact name is the same account in either spelling.
+describe("closed and not-yet-open names across Arabic-script spellings", () => {
+  const { closedAccountNamed: named } = require("../account-close-dates");
+  const closed = new Map([["Assets:Qa:بانك-ملي", "2026-01-31"]]);
+
+  test("closedAccountNamed finds the Arabic spelling from a Persian name", () => {
+    expect(named("Assets:Qa:بانک-ملی", "2026-06-01", closed)?.account).toBe(
+      "Assets:Qa:بانك-ملي",
+    );
+  });
+});

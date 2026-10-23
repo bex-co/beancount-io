@@ -265,3 +265,17 @@ describe("filterAccounts with decomposed Unicode", () => {
     ]);
   });
 });
+
+// w21/836: an account spelled with Arabic letters, searched from a Persian keyboard.
+describe("filterAccounts across Arabic-script spellings", () => {
+  const accounts = ["Assets:Qa:بانك-ملي", "Expenses:Qa:Coffee"];
+
+  test("finds the Arabic-spelled account from Persian typing", () => {
+    expect(filterAccounts("ملی", accounts)).toEqual(["Assets:Qa:بانك-ملي"]);
+    expect(filterAccounts("بانک", accounts)).toEqual(["Assets:Qa:بانك-ملي"]);
+  });
+
+  test("still finds it as typed", () => {
+    expect(filterAccounts("ملي", accounts)).toEqual(["Assets:Qa:بانك-ملي"]);
+  });
+});
