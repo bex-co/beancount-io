@@ -7,6 +7,7 @@ copy is what bea-engine import runs. Beangulp stays optional (ADR012).
 
 from __future__ import annotations
 
+import calendar
 import csv
 import hashlib
 import io
@@ -1313,10 +1314,54 @@ def infer_date_format(
 
 def _parses(value: str, date_format: str) -> bool:
     try:
-        datetime.strptime(value, date_format)
+        _strptime(value, date_format)
     except ValueError:
         return False
     return True
+
+
+def _strptime(value: str, date_format: str) -> datetime:
+    """`datetime.strptime`, refusing a day of the year its year does not have (w5/986).
+
+    `%Y-%j` read `2023-366` as 2024-01-01: 2023 has 365 days, and the date
+    rolled into the next year with no warning. Only a format that names both a
+    year and a day of the year is checked, by reading those two fields out of
+    the cell.
+    """
+    parsed = datetime.strptime(value, date_format)
+    directives = date_format.replace("%%", "")
+    if "%j" not in directives or ("%Y" not in directives and "%y" not in directives):
+        return parsed
+    pattern = ""
+    position = 0
+    while position < len(date_format):
+        character = date_format[position]
+        if character == "%" and position + 1 < len(date_format):
+            code = date_format[position + 1]
+            position += 2
+            pattern += {
+                "Y": r"(?P<year>\d{4})",
+                "y": r"(?P<short>\d{2})",
+                "j": r"(?P<ordinal>\d{1,3})",
+                "%": "%",
+            }.get(code, r".+?")
+        else:
+            pattern += r"\s*" if character.isspace() else re.escape(character)
+            position += 1
+    match = re.fullmatch(pattern, value.strip(), re.IGNORECASE)
+    if match is None or match.groupdict().get("ordinal") is None:
+        return parsed
+    year = match.groupdict().get("year")
+    short = match.groupdict().get("short")
+    if year is not None:
+        full = int(year)
+    elif short is not None:
+        full = 1900 + int(short) if int(short) >= 69 else 2000 + int(short)
+    else:
+        return parsed
+    if int(match.group("ordinal")) > (366 if calendar.isleap(full) else 365):
+        raise ValueError(f"day {match.group('ordinal')} does not exist in {full}")
+    return parsed
 
 
 def _has_year_directive(date_format: str) -> bool:
@@ -1776,7 +1821,7 @@ class CsvImporter:
                 where = _at(row_number, line)
                 date_column = columns["date"]
                 try:
-                    day = datetime.strptime(self._cell(row, where, "date"), self._date_format).date()
+                    day = _strptime(self._cell(row, where, "date"), self._date_format).date()
                 except ValueError:
                     # A pending charge often has no posted date: say so when an
                     # unmapped column marks this row pending (w5/831).
