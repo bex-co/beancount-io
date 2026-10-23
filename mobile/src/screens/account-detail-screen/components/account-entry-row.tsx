@@ -188,7 +188,12 @@ export function AccountEntryRow({
   const typeLabelKey = directiveTypeLabelKey(row.directiveType);
   // A split's units read neutral, not as a gain (w21/713). The neutral is
   // text, so it is the secondary-text stone, not the placeholder grey.
-  const tone = journalChangeTone(row.change, netWorthSign, units?.cost);
+  const tone = journalChangeTone(
+    row.change,
+    netWorthSign,
+    units?.cost,
+    units ? units.scale : (row.moneyScale ?? 2),
+  );
   const changeColor =
     tone === "up"
       ? theme.success

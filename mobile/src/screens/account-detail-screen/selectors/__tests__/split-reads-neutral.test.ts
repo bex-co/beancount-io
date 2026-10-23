@@ -28,6 +28,27 @@ describe("journalChangeTone", () => {
   });
 });
 
+// w21/784: a sub-cent change read "$0.00" in red.
+describe("journalChangeTone at the shown scale", () => {
+  it("leaves a change that rounds to nothing flat", () => {
+    expect(journalChangeTone(-0.003, 1, undefined, 2)).toBe("flat");
+    expect(journalChangeTone(-0.003, 1)).toBe("down");
+    expect(journalChangeTone(-0.006, 1, undefined, 2)).toBe("down");
+  });
+
+  it("is given the row's scale", () => {
+    const row = fs.readFileSync(
+      path.join(__dirname, "..", "..", "components", "account-entry-row.tsx"),
+      "utf8",
+    );
+    expect(
+      row
+        .replace(/\s+/g, "")
+        .includes("units?.cost,units?units.scale:(row.moneyScale??2),"),
+    ).toBe(true);
+  });
+});
+
 describe("account detail's chart of units", () => {
   const read = (...parts: string[]) =>
     fs

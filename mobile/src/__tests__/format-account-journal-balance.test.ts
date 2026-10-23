@@ -34,3 +34,17 @@ describe("formatAccountJournalChange", () => {
     );
   });
 });
+
+// w21/784: a change of −0.003 USD read a red "-$0.00" under a "$0.00" day.
+describe("a change or balance that rounds to nothing", () => {
+  it("reads without a sign at the shown scale", () => {
+    expect(formatAccountJournalChange(-0.003, "USD", 2)).toBe("$0.00");
+    expect(formatAccountJournalChange(0.004, "USD", 2)).toBe("$0.00");
+    expect(formatAccountJournalBalance(-0.004, "USD", 2)).toBe("$0.00");
+  });
+
+  it("keeps the sign of a change the scale shows", () => {
+    expect(formatAccountJournalChange(-0.005, "USD", 2)).toBe("-$0.01");
+    expect(formatAccountJournalChange(-0.003, "USD", 3)).toBe("-$0.003");
+  });
+});
