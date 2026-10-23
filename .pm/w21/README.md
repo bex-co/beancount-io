@@ -19,6 +19,11 @@
 - [810](./810.md) — Open Account's Back skips the discard prompt after changing only type, currency or date
 - [811](./811.md) — VoiceOver never reads commit detail's "N additions, N deletions" label
 - [812](./812.md) — The Merchants list still counts pre-entered entries ("4 transactions") while the detail says 3
+- [813](./813.md) — Edit Transaction save with a trailing indent line writes a stray "  " line and lands on "changed or removed"
+- [814](./814.md) — Edit Transaction calls an indented date line "an empty entry" and points at Delete
+- [815](./815.md) — The code editor turns a lone carriage return into a line break on save
+- [816](./816.md) — An entry containing a control character can never be edited; raw English API text
+- [817](./817.md) — Edit Transaction's conflict alert is a dead end (no Copy & Reload)
 - [064](./blocked/064.md) — A token refresh whose response is lost signs the user out on the next refresh (rotated token replayed → grant revoked) — **blocked:** needs an owner decision (ADR) on a refresh-token reuse grace window
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [180](./blocked/180.md) — Budget actuals use raw prefix match (`Transport` counts `Transportation`), unlike Reports — **blocked:** needs an owner decision between component matching on the server (a Fava break) and a per-account breakdown for the client
