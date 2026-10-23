@@ -12,6 +12,11 @@
 
 ## Inbox
 
+- [714](./714.md) — Delete Account's phrase field shows "Type the phrase exactly as shown." from the first correct letter (w21/158 regression)
+- [715](./715.md) — Home's Latest Updates rows carry only a date, so same-message commits on one day look like duplicates
+- [716](./716.md) — Home's Latest Updates shows only two lines of a multi-commit push and hides "+N more commit(s)"
+- [717](./717.md) — Server settings shows the "older server" result in red, with an advisory saying the server isn't available
+- [718](./718.md) — Home's Latest Updates ledger rows ("Committed to …") are English in every language
 - [712](./712.md) — A reinvested $60 dividend shows as "+$0.48" (the cash residue) or "+0.5 VTI" instead of the income earned
 - [713](./713.md) — After a stock split, account detail's chart reads "+90 QANVDA (+900.00%)" in green (w21/571 gap)
 - [711](./711.md) — A fixed $500 monthly investment shows in Merchants as "Monthly · ~1.5625 VTI"
