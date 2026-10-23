@@ -37,8 +37,11 @@ import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { MCP_PROMPTS } from "@/features/ai-agent/api/mcp-prompts";
+import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import type { Identity } from "@/server/api/identity";
 import { type BoundedRun, runBounded } from "./mcp-agent-eval/process";
 import {
@@ -520,6 +523,95 @@ export async function promptDrift(
 
 // --- one attempt ---------------------------------------------------------------
 
+/** The parts of a listed tool that an agent reads: its name, description and input schema. */
+export interface ListedTool {
+  readonly name: string;
+  readonly description?: string;
+  readonly inputSchema?: unknown;
+}
+
+const canonical = (value: unknown): string =>
+  JSON.stringify(value, (_key, v: unknown) =>
+    v && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(
+          Object.entries(v as Record<string, unknown>).sort(([a], [b]) =>
+            a < b ? -1 : 1,
+          ),
+        )
+      : v,
+  );
+
+/**
+ * Tools whose deployed description or input schema differs from this working
+ * tree's, and tools only one side has. The prompt drift line covers only
+ * `prompts/get`, so an undeployed tool-description repair read as live (w5/964).
+ */
+export function toolDrift(
+  deployed: readonly ListedTool[],
+  local: readonly ListedTool[],
+): string[] {
+  const live = new Map(deployed.map((tool) => [tool.name, tool]));
+  const tree = new Map(local.map((tool) => [tool.name, tool]));
+  const differing = [...tree.values()].filter((tool) => {
+    const other = live.get(tool.name);
+    return (
+      other === undefined ||
+      (other.description ?? "") !== (tool.description ?? "") ||
+      canonical(other.inputSchema) !== canonical(tool.inputSchema)
+    );
+  });
+  const extra = [...live.keys()].filter((name) => !tree.has(name));
+  return [...differing.map((tool) => tool.name), ...extra].sort();
+}
+
+async function listAllTools(
+  client: Pick<Client, "listTools">,
+): Promise<ListedTool[]> {
+  const tools: ListedTool[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await client.listTools(cursor ? { cursor } : undefined);
+    tools.push(...page.tools);
+    cursor = page.nextCursor;
+  } while (cursor);
+  return tools;
+}
+
+/** `tools/list` as this checkout would publish it, through the SDK's own schema conversion. */
+export async function workingTreeTools(): Promise<ListedTool[]> {
+  const server = new McpServer({ name: "working-tree", version: "0" });
+  for (const descriptor of MCP_TOOLS) {
+    server.registerTool(
+      descriptor.name,
+      {
+        description: descriptor.description,
+        inputSchema: descriptor.inputSchema,
+      },
+      async () => ({ content: [] }),
+    );
+  }
+  const [a, b] = InMemoryTransport.createLinkedPair();
+  const client = new Client({ name: "mcp-agent-eval-local", version: "1.0.0" });
+  await Promise.all([client.connect(a), server.connect(b)]);
+  try {
+    return await listAllTools(client);
+  } finally {
+    await client.close();
+    await server.close();
+  }
+}
+
+/** Tools the endpoint lists that differ from the working tree; null when the listing cannot be compared. */
+export async function deployedToolDrift(
+  client: Pick<Client, "listTools">,
+): Promise<string[] | null> {
+  try {
+    return toolDrift(await listAllTools(client), await workingTreeTools());
+  } catch {
+    return null;
+  }
+}
+
 interface RunContext {
   readonly harness: Client;
   readonly suite: Suite;
@@ -814,6 +906,7 @@ function buildReport(input: {
   installed: RunContext["installed"];
   models: RunContext["models"];
   promptDrift: readonly string[] | null;
+  toolDrift: readonly string[] | null;
   results: AttemptResult[];
   timeoutSec: number;
   maxMcpCalls: number;
@@ -828,6 +921,8 @@ function buildReport(input: {
       deployedRevision: "unavailable (the endpoint does not report one)",
       /** Invoked prompts whose deployed text differs from this working tree; null when no journey invokes one. */
       promptsDifferingFromWorkingTree: input.promptDrift,
+      /** Tools whose deployed description or input schema differs from this working tree; null when it could not be compared. */
+      toolsDifferingFromWorkingTree: input.toolDrift,
     },
     clients: Object.fromEntries(
       input.clients.map((c) => [
@@ -878,6 +973,7 @@ function renderMarkdown(report: Report): string {
       })`,
   );
   const drift = report.server.promptsDifferingFromWorkingTree;
+  const toolsDrifted = report.server.toolsDifferingFromWorkingTree;
   const failures = report.results
     .filter((r) => r.outcome !== "pass")
     .map(
@@ -895,6 +991,14 @@ function renderMarkdown(report: Report): string {
           drift.length
             ? `Deployed prompts that differ from this working tree (changes not yet deployed): ${drift.join(", ")}.`
             : "Every invoked prompt's deployed text matches this working tree.",
+          "",
+        ]),
+    ...(toolsDrifted === null
+      ? ["The deployed tool listing could not be compared with this working tree.", ""]
+      : [
+          toolsDrifted.length
+            ? `Deployed tools whose description or input schema differ from this working tree (changes not yet deployed): ${toolsDrifted.join(", ")}.`
+            : "Every deployed tool's description and input schema matches this working tree.",
           "",
         ]),
     `Clients: ${clients.join("; ")}. Limits: ${report.limits.timeoutSec}s per turn and ${report.limits.maxMcpCalls} MCP calls per attempt.`,
@@ -1078,6 +1182,12 @@ async function main(): Promise<number> {
         `note: deployed prompts differ from this working tree (changes not yet deployed): ${drift.join(", ")}`,
       );
     }
+    const toolsDrifted = await deployedToolDrift(harness);
+    if (toolsDrifted?.length) {
+      console.log(
+        `note: deployed tools differ from this working tree (changes not yet deployed): ${toolsDrifted.join(", ")}`,
+      );
+    }
     const installed = Object.fromEntries(
       options.clients.map((client) => {
         const bin = resolveClient(client, options.bins[client]);
@@ -1152,6 +1262,7 @@ async function main(): Promise<number> {
       installed,
       models: options.models,
       promptDrift: drift,
+      toolDrift: toolsDrifted,
       results,
       timeoutSec: options.timeoutSec,
       maxMcpCalls: options.maxMcpCalls,

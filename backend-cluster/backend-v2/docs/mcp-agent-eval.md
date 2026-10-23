@@ -91,7 +91,7 @@ The exit status is `0` when every attempt passed and the fixture was restored, `
 - **After the last attempt,** the fixture is restored again. A failed restore is reported and makes the exit status nonzero.
 - **Reports** go to `report.md`, `report.json`, and `transcripts/*.jsonl` in the output directory. API keys, the account owner, and your home directory are redacted.
 
-The report records the endpoint's server name and version, each client's version and executable, the model (when the client reports it), limits, attempt counts, outcomes, median wall time, and mean MCP calls. It also records turns and cost where Claude Code reports them, and input and output tokens. `n/a` means the client does not report that metric, not zero. The hosted endpoint does not expose a deployed revision, so the report says so rather than guessing.
+The report records the endpoint's server name and version, each client's version and executable, the model (when the client reports it), limits, attempt counts, outcomes, median wall time, and mean MCP calls. It also records turns and cost where Claude Code reports them, and input and output tokens. `n/a` means the client does not report that metric, not zero. The hosted endpoint does not expose a deployed revision, so the report says so rather than guessing. It instead compares the endpoint's deployed prompts (`prompts/get`) and tools (`tools/list`: each description and input schema) with this working tree, and names every one that differs; a merged description change that is not yet deployed shows up there, so a run against it is not mistaken for a run of the change (w5/964).
 
 ## When to compare
 

@@ -17,12 +17,15 @@ import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import {
   type AttemptResult,
   clientCommand,
+  deployedToolDrift,
   invocationFor,
   loadSuite,
   promptDrift,
   resolveClient,
   slashCommand,
   summarize,
+  toolDrift,
+  workingTreeTools,
 } from "../mcp-agent-eval";
 import { runBounded } from "../mcp-agent-eval/process";
 import {
@@ -818,6 +821,61 @@ describe("promptDrift", () => {
       target,
     );
     expect(drifted).toEqual(["close-month"]);
+  });
+});
+
+// w5/964: a merged tool-description change that was never deployed.
+describe("toolDrift", () => {
+  const listing = async (edit: (tool: { name: string; description?: string; inputSchema?: unknown }) => object) =>
+    ({
+      listTools: async () => ({ tools: (await workingTreeTools()).map(edit) }),
+    }) as unknown as Pick<Client, "listTools">;
+
+  it("lists the tools this checkout registers, with descriptions and input schemas", async () => {
+    const tools = await workingTreeTools();
+
+    expect(tools.length).toBe(MCP_TOOLS.length);
+    const staged = tools.find((t) => t.name === "listStagedBankTransactions");
+    expect(staged?.description).toContain("transactionId");
+    expect(staged?.inputSchema).toBeDefined();
+  });
+
+  it("finds no drift in a deployment that serves this working tree", async () => {
+    expect(await deployedToolDrift(await listing((tool) => tool))).toEqual([]);
+  });
+
+  it("names a tool whose deployed description is the pre-repair text", async () => {
+    const stale = await listing((tool) =>
+      tool.name === "listStagedBankTransactions"
+        ? {
+            ...tool,
+            description:
+              "List bank transactions staged for import (the ids importStagedBankTransactions and discardStagedBankTransactions take).",
+          }
+        : tool,
+    );
+
+    expect(await deployedToolDrift(stale)).toEqual(["listStagedBankTransactions"]);
+  });
+
+  it("names a tool whose input schema differs, and tools only one side has", async () => {
+    const tools = await workingTreeTools();
+    const [first, ...rest] = tools;
+
+    expect(
+      toolDrift(
+        [{ ...first, inputSchema: { type: "object", properties: { x: {} } } }, ...rest],
+        tools,
+      ),
+    ).toEqual([first.name]);
+    expect(toolDrift(rest, tools)).toEqual([first.name]);
+    expect(toolDrift([...tools, { name: "brandNewTool" }], tools)).toEqual(["brandNewTool"]);
+  });
+
+  it("claims nothing when the listing cannot be read", async () => {
+    const broken = { listTools: async () => { throw new Error("offline"); } } as unknown as Pick<Client, "listTools">;
+
+    expect(await deployedToolDrift(broken)).toBeNull();
   });
 });
 
