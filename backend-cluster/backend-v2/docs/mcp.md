@@ -1499,6 +1499,11 @@ Only pinned credentials can omit the ledger. It supports transaction, commodity,
 price, note, balance, open, close, budget, document, and event directives using
 the REST input shapes. GraphQL instead uses an uppercase enum and a payload field
 named after the directive; its budget interval enum maps to lowercase here.
+A budget's account must be one the ledger opens, a parent of one (a budget on
+`Expenses:Food` covers its children), or one the same call opens. bean-check
+never reads a `custom "budget"` account, so otherwise the budget would match no
+report. Any other account is refused with `VALIDATION_FAILED` naming it and the
+nearest opened accounts, unless `allowInvalid` records it anyway (w23/071).
 
 The tool uses the real entry writer, including file routing and the normal web
 quota policy. A routed file nothing includes is included from `main.bean` in

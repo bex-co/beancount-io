@@ -2,7 +2,7 @@ import {
   createLedgerEntryWriter,
   LedgerEntryService,
 } from "../ledger-entry-service";
-import { OperationNotAllowedError } from "@/shared/errors";
+import { OperationNotAllowedError, ValidationError } from "@/shared/errors";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
 
@@ -22,6 +22,7 @@ const mockAddBulkEntries = jest.fn();
 const mockGetLedgerFile = jest.fn();
 const mockCreateLedgerFile = jest.fn();
 const mockGetLedgerBcioOptions = jest.fn();
+const mockGetLedgerAccounts = jest.fn();
 
 const mockFavaApiClient = {
   entries: { addBulkEntries: mockAddBulkEntries },
@@ -29,7 +30,10 @@ const mockFavaApiClient = {
     getLedgerFile: mockGetLedgerFile,
     createLedgerFile: mockCreateLedgerFile,
   },
-  reports: { getLedgerBcioOptions: mockGetLedgerBcioOptions },
+  reports: {
+    getLedgerBcioOptions: mockGetLedgerBcioOptions,
+    getLedgerAccounts: mockGetLedgerAccounts,
+  },
 };
 
 const mockFavaClientFactory = {
@@ -73,6 +77,17 @@ describe("LedgerEntryService", () => {
       data: { success: true, data: null },
     });
     mockGetLedgerBcioOptions.mockResolvedValue(mockBcioOptionsResponse);
+    mockGetLedgerAccounts.mockResolvedValue({
+      data: {
+        success: true,
+        data: {
+          "Assets:Cash": {},
+          "Expenses:Food": {},
+          "Expenses:Food:Groceries": {},
+          "Expenses:Food:Restaurant": {},
+        },
+      },
+    });
     (authorizeLedger as jest.Mock).mockResolvedValue({
       ledgerRepoId: 1,
       ownerUserId: "user-123",
@@ -533,6 +548,75 @@ describe("LedgerEntryService", () => {
             { kind: "amount", number: "500.00", currency: "USD" },
           ],
         },
+      });
+    });
+
+    // w23/071: a budget's account is a `custom` argument bean-check never
+    // reads, so a misspelt one was committed and never applied.
+    describe("a budget's account", () => {
+      const budget = (account: string) => ({
+        type: "budget" as const,
+        entry: {
+          date: "2024-01-01",
+          account,
+          interval: "monthly",
+          amount: { number: "500.00", currency: "USD" },
+        },
+      });
+      const add = (
+        entries: Parameters<typeof service.addBulkEntries>[3],
+        allowInvalid = false,
+      ) =>
+        service.addBulkEntries(
+          IDENTITY,
+          "testuser",
+          "test-ledger",
+          entries,
+          "web",
+          allowInvalid,
+        );
+
+      it("is refused when the ledger opens neither it nor an account under it", async () => {
+        const refusal = add([budget("Expenses:Food:Grocery")]);
+        await expect(refusal).rejects.toThrow(ValidationError);
+        await expect(refusal).rejects.toMatchObject({
+          category: "VALIDATION_FAILED",
+          message: expect.stringContaining(
+            "entry 0: budget account Expenses:Food:Grocery is not opened in this ledger, nor is any account under it; nearest: Expenses:Food, Expenses:Food:Groceries, Expenses:Food:Restaurant",
+          ),
+          metadata: expect.objectContaining({
+            hint: expect.stringContaining("allowInvalid: true"),
+          }),
+        });
+        expect(mockAddBulkEntries).not.toHaveBeenCalled();
+      });
+
+      it.each([
+        ["an opened account", [budget("Expenses:Food:Groceries")]],
+        ["a parent of opened accounts", [budget("Expenses")]],
+        [
+          "an account the same call opens",
+          [
+            {
+              type: "open" as const,
+              entry: {
+                date: "2024-01-01",
+                account: "Expenses:Travel",
+                currencies: [],
+              },
+            },
+            budget("Expenses:Travel"),
+          ],
+        ],
+      ])("accepts %s", async (_case, entries) => {
+        await add(entries);
+        expect(mockAddBulkEntries).toHaveBeenCalledTimes(1);
+      });
+
+      it("is recorded anyway with allowInvalid, without reading the accounts", async () => {
+        await add([budget("Expenses:NopeQa")], true);
+        expect(mockAddBulkEntries).toHaveBeenCalledTimes(1);
+        expect(mockGetLedgerAccounts).not.toHaveBeenCalled();
       });
     });
 

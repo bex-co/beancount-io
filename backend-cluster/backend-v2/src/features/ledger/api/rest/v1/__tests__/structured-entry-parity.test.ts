@@ -120,6 +120,8 @@ async function fixture(
     accountFile: null as string | null,
     /** Files the ledger included from the entry point for this write. */
     includedFiles: [] as string[],
+    /** The accounts the ledger opens, which a budget's must be among. */
+    accounts: ["Assets:Cash", "Assets:Old", "Expenses:Food"],
   };
   const errorCalls = { count: 0 };
   const envelope = (data: unknown) => ({ data: { success: true, data } });
@@ -179,6 +181,10 @@ async function fixture(
             default_file: "main.bean",
             account_file: state.accountFile,
           }),
+        getLedgerAccounts: async () =>
+          envelope(
+            Object.fromEntries(state.accounts.map((account) => [account, {}])),
+          ),
       },
       ledgers: {
         getLedgerFile: async () => envelope({ path: "main.bean" }),
@@ -609,6 +615,65 @@ describe.each(["rest", "gql", "mcp"])(
             },
           });
         }
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
+// w23/071: a budget for an account the ledger lacks was added with "no new
+// bean-check errors" and never applied.
+describe.each(["rest", "gql", "mcp"])(
+  "a budget's account via %s",
+  (surface) => {
+    const budget = (account: string): LedgerEntryInput => ({
+      type: "budget",
+      entry: { date, account, interval: "monthly", amount },
+    });
+    it("refuses one the ledger does not open, naming it", async () => {
+      const f = await fixture();
+      try {
+        const outcome = await f.call(surface, [budget("Expenses:NopeQa")]);
+        expect(outcome.success).toBe(false);
+        const refusal = {
+          code: "VALIDATION_FAILED",
+          message: expect.stringContaining(
+            "budget account Expenses:NopeQa is not opened in this ledger, nor is any account under it; nearest: Expenses:Food",
+          ),
+        };
+        if (surface === "rest")
+          expect(outcome.result).toMatchObject({ error: refusal });
+        if (surface === "mcp")
+          expect(outcome.full).toMatchObject({ error: refusal });
+        if (surface === "gql") {
+          expect(outcome.errors?.[0].originalError).toMatchObject({
+            category: "VALIDATION_FAILED",
+            message: refusal.message,
+          });
+        }
+        expect(f.write).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+    it.each(["Expenses:Food", "Expenses"])("accepts %s", async (account) => {
+      const f = await fixture();
+      try {
+        expect((await f.call(surface, [budget(account)])).success).toBe(true);
+        expect(f.write).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    });
+    it("records an unknown one with allowInvalid", async () => {
+      const f = await fixture();
+      try {
+        const outcome = await f.call(surface, [budget("Expenses:NopeQa")], {
+          allowInvalid: true,
+        });
+        expect(outcome.success).toBe(true);
+        expect(f.committed).toHaveLength(1);
       } finally {
         await f.close();
       }

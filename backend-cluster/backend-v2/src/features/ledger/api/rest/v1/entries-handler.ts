@@ -216,7 +216,7 @@ export const ENTRY_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/entries",
     summary: "Add directives to the ledger",
     description:
-      "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose residual is outside the ledger's tolerance is refused with UNBALANCED, and directives that would add bean-check errors (a second open for an open account, a balance against an unopened account) are refused with VALIDATION_FAILED naming each new error; allowInvalid records either deliberately. One posting per transaction may omit its amount and is written elided.",
+      "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose residual is outside the ledger's tolerance is refused with UNBALANCED, and directives that would add bean-check errors (a second open for an open account, a balance against an unopened account), or a budget for an account the ledger lacks, are refused with VALIDATION_FAILED naming each new error; allowInvalid records either deliberately. One posting per transaction may omit its amount and is written elided.",
     params: ledgerPathSchema,
     body: entriesBodySchema,
     responses: {
