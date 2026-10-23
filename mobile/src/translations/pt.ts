@@ -69,8 +69,8 @@ export const pt: Translations = {
   settings: "Configurações",
   merchants: "Comerciantes",
   openInBrowser: "Abrir no navegador",
-  shareLink: "Partilhar ligação",
-  copyLink: "Copiar ligação",
+  shareLink: "Compartilhar link",
+  copyLink: "Copiar link",
   drawerCurrentLedger: "Livro atual",
   drawerNew: "Novo",
   drawerLedgerActions: "Ações para {{name}}",
@@ -136,7 +136,7 @@ export const pt: Translations = {
   // layout direction — only a switch that crosses it costs a restart
   restartForLayoutTitle: "Reiniciar para mudar o layout",
   restartForLayoutMessage:
-    "{{language}} lê-se na outra direção, por isso o Beancount tem de reiniciar para se dispor corretamente. Se ignorar, o idioma muda agora e o layout segue da próxima vez que abrir a aplicação.",
+    "{{language}} é lido na outra direção, então o Beancount precisa reiniciar para se ajustar corretamente. Se ignorar, o idioma muda agora e o layout segue da próxima vez que você abrir o aplicativo.",
   restartNow: "Reiniciar agora",
   // logout alert
   logoutAlertMsg: "Tem certeza de que deseja sair?",
@@ -174,16 +174,16 @@ export const pt: Translations = {
     "Conecte-se a um servidor compatível com o Beancount.io. Use apenas um servidor em que confia; ele receberá os seus dados de início de sessão.",
   serverUrl: "URL do servidor",
   serverUrlHelper:
-    "Introduza o URL base, por exemplo https://ledger.example.com/. HTTPS é obrigatório fora do desenvolvimento local.",
-  serverUrlEmpty: "Introduza um URL de servidor.",
-  serverUrlInvalid: "Introduza um URL HTTP ou HTTPS completo.",
+    "Digite o URL base, por exemplo https://ledger.example.com/. HTTPS é obrigatório fora do desenvolvimento local.",
+  serverUrlEmpty: "Digite um URL de servidor.",
+  serverUrlInvalid: "Digite um URL HTTP ou HTTPS completo.",
   serverUrlCredentials:
-    "Os URL de servidor não podem incluir nome de utilizador nem palavra-passe.",
+    "Os URLs de servidor não podem incluir nome de usuário nem senha.",
   serverUrlQuery:
     "Os URL de servidor não podem incluir consulta nem fragmento.",
   serverUrlInsecure:
     "Use HTTPS. HTTP só está disponível para localhost em versões de desenvolvimento.",
-  testConnection: "Testar ligação",
+  testConnection: "Testar conexão",
   serverConnectionSuccess:
     "Ligado a um servidor compatível com o Beancount.io.",
   serverConnectionTimeout: "O servidor não respondeu a tempo.",
@@ -193,13 +193,13 @@ export const pt: Translations = {
   serverConnectionOlder:
     "Este servidor é mais antigo que o app. Você pode se conectar, mas alguns recursos podem não funcionar.",
   serverConnectionNotConfigured:
-    "Este servidor ainda não está configurado para iniciar sessão.",
+    "Este servidor ainda não está configurado para entrar.",
   serverConnectionMismatch:
-    "Este endereço não corresponde ao que o servidor indica. Abra as definições do servidor e teste a ligação.",
+    "Este endereço não corresponde ao que o servidor indica. Abra as configurações do servidor e teste a conexão.",
   serverConnectionCanonical: "Este servidor identifica-se como {{url}}.",
   serverUseCanonical: "Usar esse endereço",
   serverConnectionAdvisory:
-    "Ainda pode guardar este URL e iniciar sessão quando o servidor estiver disponível.",
+    "Você ainda pode salvar este URL e entrar quando o servidor estiver disponível.",
   restoreDefaultServer: "Restaurar o predefinido do Beancount.io",
   backToSignIn: "Voltar para entrar",
   signInFailed: "Não foi possível concluir a entrada. Tente novamente.",
@@ -363,7 +363,7 @@ export const pt: Translations = {
   openAccountOtherCurrency: "Outra…",
   openAccountOtherCurrencyTitle: "Outra moeda",
   openAccountOtherCurrencyMessage:
-    "Introduza um código de moeda ou ativo, como EUR ou VTI.",
+    "Digite um código de moeda ou ativo, como EUR ou VTI.",
   openAccountCurrencyInvalid:
     "Use letras maiúsculas, dígitos e ' . _ -, começando por uma letra, como EUR ou VTI.",
   openAccountSaving: "Abrindo...",
@@ -759,7 +759,7 @@ export const pt: Translations = {
     "Esgotou a utilização de IA deste mês. É reposta no próximo mês.",
   agentApprovalTitle: "Aprove na web",
   agentApprovalBody:
-    "Esta alteração precisa da sua revisão antes de tocar no seu livro, e a aplicação ainda não consegue mostrar o diff completo. Abra este livro em beancount.io para aprovar.",
+    "Esta alteração precisa da sua revisão antes de chegar ao seu livro, e o aplicativo ainda não consegue mostrar o diff completo. Abra este livro em beancount.io para aprovar.",
   agentAskCard: "Pergunte sobre o seu livro",
   agentPresetNetWorth: "Qual é o meu património líquido?",
   agentPresetTopSpending: "Em que gastei mais este mês?",
@@ -769,7 +769,7 @@ export const pt: Translations = {
   createLedgerSubmit: "Criar",
   createLedgerName: "Nome",
   createLedgerNamePlaceholder: "my-book",
-  createLedgerNameRequired: "Introduza um nome de livro.",
+  createLedgerNameRequired: "Digite um nome de livro.",
   createLedgerNameMaxLength: "O nome deve ter 100 caracteres ou menos.",
   createLedgerNameInvalid:
     "O nome deve incluir pelo menos uma letra ou um número.",
@@ -790,7 +790,7 @@ export const pt: Translations = {
     "Livros vazios com um plano de contas padrão.",
   createLedgerTemplateSample: "Exemplo",
   createLedgerTemplateSampleHint:
-    "Transações de exemplo para explorar a aplicação.",
+    "Transações de exemplo para explorar o aplicativo.",
   createLedgerTierLimit:
     "Foi atingido o limite de livros. Não é possível criar outro.",
   createLedgerGenericError: "Não foi possível criar o livro. Tente novamente.",
@@ -860,15 +860,15 @@ export const pt: Translations = {
   signedInAs: "Sessão iniciada como {{name}}, {{email}}",
   openSettings: "Abre as configurações",
   profileFirstName: "Nome",
-  profileLastName: "Apelido",
-  profileUsername: "Nome de utilizador",
+  profileLastName: "Sobrenome",
+  profileUsername: "Nome de usuário",
   profileUsernameHint:
-    "Os endereços web dos seus livros-razão começam pelo seu nome de utilizador, por isso alterá-lo também os altera.",
-  profileUsernameRequired: "Introduza um nome de utilizador",
+    "Os endereços web dos seus livros-razão começam com o seu nome de usuário, então alterá-lo também os altera.",
+  profileUsernameRequired: "Digite um nome de usuário",
   profileNameTooLong: "No máximo 100 caracteres.",
   profileUsernameRule:
     "Use de 1 a 20 caracteres: minúsculas a–z, dígitos 0–9 ou sublinhados.",
-  profileUsernameTaken: "Esse nome de utilizador já está a ser usado",
+  profileUsernameTaken: "Esse nome de usuário já está em uso",
   profileEmail: "E-mail",
   profileEmailReadOnly: "O e-mail não pode ser alterado aqui",
   profileNotSet: "Não definido",

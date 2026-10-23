@@ -12,7 +12,6 @@
 
 ## Inbox
 
-- [828](./828.md) — pt-BR shows European words: Last name "Apelido" (nickname), links "ligação" (phone call)
 - [829](./829.md) — ca and pt give Equity and Net Worth the same label
 - [830](./830.md) — The Recurring switch's helper text is stale in all 12 locales ("Pin this merchant…")
 - [831](./831.md) — Slovak "clear account" filter button reads "Delete account"
