@@ -83,7 +83,7 @@ The exit status is `0` when every attempt passed and the fixture was restored, `
   - A timeout, the call limit, or Ctrl-C terminates the whole group, helpers included, and marks the attempt incomplete.
   - The ledger is still read back, because an interrupted write is still a write.
 - **Claude Code** gets only the eval server (`--mcp-config` with `--strict-mcp-config`) and may call only its tools.
-- **Codex** runs with `--ignore-user-config`, a read-only sandbox, and the eval server configured on the command line.
+- **Codex** runs with `--ignore-user-config`, a read-only sandbox, the `apps` and `shell_tool` features disabled, and the eval server configured on the command line. Like Claude Code's allow-list, that leaves it only the eval server: without it, codex-cli 0.163.0 reached the ChatGPT account's GitHub connector and a shell that reads the whole disk (w5/963). The report's _Outside calls_ column is the mean number of calls to anything else, so a client that still reaches outside the server shows how often. Baselines recorded before this change (such as `2026-10-21-prompts-codex.md`) ran with both on and are not directly comparable.
 - **Follow-up messages** resume the same session: `claude -p … --resume <session>` and `codex exec resume <thread> …`. Before a confirmation message, the harness reads the ledger to prove nothing was written early.
 - **The read-only journey** passes `BEANCOUNT_MCP_READONLY_TOKEN` to the client in place of the read/write key. The harness still resets and reads the ledger with the read/write key.
 - **The key reaches each client only through the `BEANCOUNT_MCP_TOKEN` environment variable,** never on a command line.

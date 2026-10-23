@@ -239,6 +239,13 @@ export function clientCommand(
   const shared = [
     "--json",
     "--ignore-user-config",
+    // Claude Code gets only the eval server. Codex also offers the ChatGPT
+    // account's apps (a GitHub connector fetched each prompt's playbook) and a
+    // shell that reads the whole disk, so both are off for parity (w5/963).
+    "--disable",
+    "apps",
+    "--disable",
+    "shell_tool",
     "--skip-git-repo-check",
     "-o",
     options.lastMessagePath,
@@ -316,6 +323,9 @@ export function summarize(results: readonly AttemptResult[]) {
       error: count("error"),
       medianWallMs: median(rs.map((r) => r.wallMs)),
       meanMcpCalls: mean(metric((m) => m.mcpCalls)),
+      // Calls to anything but the eval server, so a client that reaches
+      // outside it shows how often.
+      meanOutsideCalls: mean(metric((m) => m.otherToolCalls)),
       meanTurns: mean(metric((m) => m.turns)),
       meanCostUsd: mean(metric((m) => m.costUsd)),
       meanInputTokens: mean(metric((m) => m.inputTokens)),
@@ -859,7 +869,7 @@ function renderMarkdown(report: Report): string {
       `| ${s.journey} | ${s.client} | ${s.invocation} | ${s.pass}/${s.attempts} | ${s.fail} | ${s.incomplete} | ${s.error} | ${fmt(
         s.medianWallMs === null ? null : s.medianWallMs / 1000,
         1,
-      )} | ${fmt(s.meanMcpCalls, 1)} | ${fmt(s.meanTurns, 1)} | ${fmt(s.meanCostUsd, 3)} | ${fmt(s.meanInputTokens)} | ${fmt(s.meanOutputTokens)} |`,
+      )} | ${fmt(s.meanMcpCalls, 1)} | ${fmt(s.meanOutsideCalls, 1)} | ${fmt(s.meanTurns, 1)} | ${fmt(s.meanCostUsd, 3)} | ${fmt(s.meanInputTokens)} | ${fmt(s.meanOutputTokens)} |`,
   );
   const clients = Object.entries(report.clients).map(
     ([name, c]) =>
@@ -889,8 +899,8 @@ function renderMarkdown(report: Report): string {
         ]),
     `Clients: ${clients.join("; ")}. Limits: ${report.limits.timeoutSec}s per turn and ${report.limits.maxMcpCalls} MCP calls per attempt.`,
     "",
-    "| Journey | Client | Invocation | Pass | Fail | Incomplete | Error | Median wall s | MCP calls | Turns | Cost USD | Input tokens | Output tokens |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    "| Journey | Client | Invocation | Pass | Fail | Incomplete | Error | Median wall s | MCP calls | Outside calls | Turns | Cost USD | Input tokens | Output tokens |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...rows,
     "",
     "`n/a` means the client does not report that metric.",

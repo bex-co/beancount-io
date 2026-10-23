@@ -712,6 +712,18 @@ describe("client command lines", () => {
     expect([...claude.args, ...codex.args].join(" ")).not.toMatch(/bcio_/);
   });
 
+  // w5/963: Codex otherwise keeps the ChatGPT account's apps and a whole-disk
+  // shell, which Claude Code's allow-list never offered.
+  it("leaves Codex only the eval server, in a fresh session and a resumed one", () => {
+    for (const resume of [undefined, "thread-1"]) {
+      const codex = clientCommand("codex", "prompt", { ...options, resume });
+      const disabled = codex.args.flatMap((arg, i) =>
+        codex.args[i - 1] === "--disable" ? [arg] : [],
+      );
+      expect(disabled.sort()).toEqual(["apps", "shell_tool"]);
+    }
+  });
+
   it("continues the same session for a follow-up turn", () => {
     const claude = clientCommand("claude", "Yes.", {
       ...options,
@@ -1189,12 +1201,53 @@ describe("summarize", () => {
         error: 0,
         medianWallMs: 2000,
         meanMcpCalls: 0,
+        meanOutsideCalls: 0,
         meanTurns: null,
         meanCostUsd: null,
         meanInputTokens: 10,
         meanOutputTokens: 2,
       },
     ]);
+  });
+});
+
+describe("outside tool calls in the report", () => {
+  it("averages the calls a client made to anything but the eval server", () => {
+    const turn = parseClaudeStream(
+      [
+        JSON.stringify({
+          type: "assistant",
+          message: {
+            content: [
+              { type: "tool_use", id: "a", name: "Bash", input: {} },
+              { type: "tool_use", id: "b", name: "WebFetch", input: {} },
+            ],
+          },
+        }),
+        JSON.stringify({ type: "result", subtype: "success", result: "ok" }),
+      ],
+    );
+    const base = {
+      journey: "j",
+      client: "claude" as const,
+      source: "live" as const,
+      invocation: "retrieved prompt" as const,
+      userTurns: 1,
+      exitCode: 0,
+      assertions: [],
+      reason: null,
+      model: { requested: null, reported: null },
+      outcome: "pass" as const,
+      wallMs: 1,
+    };
+
+    const [summary] = summarize([
+      { ...base, attempt: 1, metrics: turn },
+      { ...base, attempt: 2, metrics: null },
+    ]);
+
+    expect(turn.otherToolCalls).toBe(2);
+    expect(summary.meanOutsideCalls).toBe(2);
   });
 });
 
