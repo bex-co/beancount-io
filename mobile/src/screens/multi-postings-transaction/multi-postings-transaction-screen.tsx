@@ -75,6 +75,7 @@ import {
   removePosting,
   remainder,
   shouldReseed,
+  splitAmountSign,
   toggleLastPostingAuto,
   updatePostingAccount,
   updatePostingAmount,
@@ -294,9 +295,9 @@ const PostingRow = ({
   // The sign is read from the trimmed text, as the parser reads it: a pasted
   // " -12.50" was saved as negative but shown positive, and the toggle then
   // wrote a second minus (w21/232).
-  const typed = posting.amountInput.trim();
-  const isNegative = typed.startsWith("-");
-  const absValue = isNegative ? typed.slice(1) : typed;
+  const { negative: isNegative, absolute: absValue } = splitAmountSign(
+    posting.amountInput,
+  );
   const hasAmount = hasNonZeroAmount(posting);
   const unparsed = hasUnparsedAmount(posting);
   const amountColor = unparsed

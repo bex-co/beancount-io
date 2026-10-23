@@ -12,6 +12,7 @@ import {
   lastPostingAutoToggle,
   makePosting,
   parseExactAmount,
+  splitAmountSign,
   postingAmountAccessibility,
   removePosting,
   remainder,
@@ -958,7 +959,7 @@ describe("an amount pasted with surrounding spaces", () => {
     expect(validatePostings(next)).toBe(null);
   });
 
-  it("keeps the row's reading of the sign tied to the trimmed text", () => {
+  it("keeps the row's reading of the sign tied to the parser's normalization", () => {
     const row = require("fs")
       .readFileSync(
         require("path").join(
@@ -971,7 +972,7 @@ describe("an amount pasted with surrounding spaces", () => {
       .replace(/\s+/g, "");
     expect(
       row.includes(
-        "consttyped=posting.amountInput.trim();constisNegative=typed.startsWith",
+        "const{negative:isNegative,absolute:absValue}=splitAmountSign(posting.amountInput,);",
       ),
     ).toBe(true);
   });
@@ -1019,4 +1020,31 @@ test("parseExactAmount refuses a grouping that is not threes", () => {
   expect(parseExactAmount("٬۱۲۳")).toBe(null);
   expect(parseExactAmount("۱٬۲۳۴٬")).toBe(null);
   expect(parseExactAmount("۱٬۲۳۴,۵۰")).toBe(null);
+});
+
+// w21/666: a pasted U+2212 saved negative but showed a green "+", and the sign
+// toggle then wrote a second minus.
+describe("splitAmountSign", () => {
+  it("reads the typographic minus and direction marks as the parser does", () => {
+    for (const typed of [
+      "\u221212.50",
+      "\u200e-12.50",
+      "\u200e\u221212.50",
+      " -12.50",
+    ]) {
+      expect(splitAmountSign(typed)).toEqual({
+        negative: true,
+        absolute: "12.50",
+      });
+      expect(parseExactAmount(typed)).toBe("-12.50");
+    }
+  });
+
+  it("leaves a positive amount whole", () => {
+    expect(splitAmountSign(" 12.50 ")).toEqual({
+      negative: false,
+      absolute: "12.50",
+    });
+    expect(splitAmountSign("")).toEqual({ negative: false, absolute: "" });
+  });
 });

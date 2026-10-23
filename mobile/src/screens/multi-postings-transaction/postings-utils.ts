@@ -42,6 +42,24 @@ type Scaled = { coeff: bigint; scale: number };
  * and any other junk — never silently takes a
  * numeric prefix the way parseFloat does.
  */
+/**
+ * An amount's typed text split into its sign and the rest, reading the sign as
+ * `parseExactAmount` does: past direction marks, and with the typographic minus
+ * (U+2212) as `-`. The row's badge and its toggle use this, so what shows
+ * negative is what saves negative (w21/232, w21/666).
+ */
+export function splitAmountSign(input: string): {
+  negative: boolean;
+  absolute: string;
+} {
+  const typed = input
+    .replace(/[\u200e\u200f\u061c]/g, "")
+    .replace(/\u2212/g, "-")
+    .trim();
+  const negative = typed.startsWith("-");
+  return { negative, absolute: negative ? typed.slice(1) : typed };
+}
+
 export function parseExactAmount(input: string): string | null {
   let trimmed = toAsciiNumerals(input)
     // Direction marks a right-to-left locale's formatting puts around a sign,
